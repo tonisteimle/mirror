@@ -250,6 +250,207 @@ Frame grid 4
 })
 
 // =============================================================================
+// 3.1 GRID CELL FILL (elements stretch to fill their grid cells)
+// =============================================================================
+
+describe('Grid Cell Fill', () => {
+  describe('IR Level - Grid children get width/height 100% to fill cells', () => {
+    test('w 4 in grid also adds width: 100%', () => {
+      const ir = toIR(parse(`
+Frame grid 12
+  Frame w 4
+`))
+      const child = ir.nodes[0].children[0]
+      expect(hasStyle(child, 'grid-column', 'span 4')).toBe(true)
+      expect(hasStyle(child, 'width', '100%')).toBe(true)
+    })
+
+    test('h 3 in grid also adds height: 100%', () => {
+      const ir = toIR(parse(`
+Frame grid 4
+  Frame h 3
+`))
+      const child = ir.nodes[0].children[0]
+      expect(hasStyle(child, 'grid-row', 'span 3')).toBe(true)
+      expect(hasStyle(child, 'height', '100%')).toBe(true)
+    })
+
+    test('w and h in grid add both 100%', () => {
+      const ir = toIR(parse(`
+Frame grid 12
+  Frame w 6 h 2
+`))
+      const child = ir.nodes[0].children[0]
+      expect(hasStyle(child, 'grid-column', 'span 6')).toBe(true)
+      expect(hasStyle(child, 'grid-row', 'span 2')).toBe(true)
+      expect(hasStyle(child, 'width', '100%')).toBe(true)
+      expect(hasStyle(child, 'height', '100%')).toBe(true)
+    })
+
+    test('x y w h combined all have fill', () => {
+      const ir = toIR(parse(`
+Frame grid 12
+  Frame x 2 y 3 w 4 h 2
+`))
+      const child = ir.nodes[0].children[0]
+      expect(getStyle(child, 'grid-column-start')).toBe('2')
+      expect(getStyle(child, 'grid-row-start')).toBe('3')
+      expect(getStyle(child, 'grid-column')).toBe('span 4')
+      expect(getStyle(child, 'grid-row')).toBe('span 2')
+      expect(getStyle(child, 'width')).toBe('100%')
+      expect(getStyle(child, 'height')).toBe('100%')
+    })
+
+    test('w 12 (full width) fills entire row', () => {
+      const ir = toIR(parse(`
+Frame grid 12
+  Frame w 12
+`))
+      const child = ir.nodes[0].children[0]
+      expect(hasStyle(child, 'grid-column', 'span 12')).toBe(true)
+      expect(hasStyle(child, 'width', '100%')).toBe(true)
+    })
+  })
+
+  describe('HTML Level - Visual verification of cell fill', () => {
+    it('w 6 in Grid → element fills its 6-column cell', () => {
+      const el = render(`
+Frame grid 12
+  Frame w 6, bg #f00
+`)
+      const child = el.firstElementChild as HTMLElement
+      expect(getStyleFromElement(child, 'grid-column')).toBe('span 6')
+      expect(getStyleFromElement(child, 'width')).toBe('100%')
+    })
+
+    it('h 2 in Grid → element fills its 2-row cell', () => {
+      const el = render(`
+Frame grid 4, row-height 50
+  Frame h 2, bg #f00
+`)
+      const child = el.firstElementChild as HTMLElement
+      expect(getStyleFromElement(child, 'grid-row')).toBe('span 2')
+      expect(getStyleFromElement(child, 'height')).toBe('100%')
+    })
+
+    it('Tutorial grid example: all elements fill their cells', () => {
+      const el = render(`
+Frame grid 12, gap 8
+  Frame w 12, bg #2563eb, rad 4, center
+    Text "w 12"
+  Frame w 6, bg #10b981, rad 4, center
+    Text "w 6"
+  Frame w 6, bg #10b981, rad 4, center
+    Text "w 6"
+  Frame w 4, bg #f59e0b, rad 4, center
+    Text "w 4"
+  Frame w 4, bg #f59e0b, rad 4, center
+    Text "w 4"
+  Frame w 4, bg #f59e0b, rad 4, center
+    Text "w 4"
+`)
+      const children = Array.from(el.children) as HTMLElement[]
+
+      // All children should have width: 100% to fill their cells
+      expect(getStyleFromElement(children[0], 'grid-column')).toBe('span 12')
+      expect(getStyleFromElement(children[0], 'width')).toBe('100%')
+
+      expect(getStyleFromElement(children[1], 'grid-column')).toBe('span 6')
+      expect(getStyleFromElement(children[1], 'width')).toBe('100%')
+
+      expect(getStyleFromElement(children[3], 'grid-column')).toBe('span 4')
+      expect(getStyleFromElement(children[3], 'width')).toBe('100%')
+    })
+
+    it('Dashboard layout: all sections fill their cells', () => {
+      const el = render(`
+Frame grid 12, gap 8, row-height 35
+  Frame x 1, y 1, w 12, h 2, bg #2563eb
+  Frame x 1, y 3, w 3, h 3, bg #10b981
+  Frame x 4, y 3, w 9, h 3, bg #333
+`)
+      const children = Array.from(el.children) as HTMLElement[]
+
+      // Hero section: full width, 2 rows
+      expect(getStyleFromElement(children[0], 'grid-column')).toBe('span 12')
+      expect(getStyleFromElement(children[0], 'grid-row')).toBe('span 2')
+      expect(getStyleFromElement(children[0], 'width')).toBe('100%')
+      expect(getStyleFromElement(children[0], 'height')).toBe('100%')
+
+      // Sidebar: 3 columns, 3 rows
+      expect(getStyleFromElement(children[1], 'grid-column')).toBe('span 3')
+      expect(getStyleFromElement(children[1], 'grid-row')).toBe('span 3')
+      expect(getStyleFromElement(children[1], 'width')).toBe('100%')
+      expect(getStyleFromElement(children[1], 'height')).toBe('100%')
+
+      // Content: 9 columns, 3 rows
+      expect(getStyleFromElement(children[2], 'grid-column')).toBe('span 9')
+      expect(getStyleFromElement(children[2], 'grid-row')).toBe('span 3')
+      expect(getStyleFromElement(children[2], 'width')).toBe('100%')
+      expect(getStyleFromElement(children[2], 'height')).toBe('100%')
+    })
+  })
+
+  describe('Nested Grids - Cell fill at each level', () => {
+    test('Nested grid children each fill their respective cells', () => {
+      const ir = toIR(parse(`
+Frame grid 12
+  Frame x 1 w 6 grid 2
+    Frame w 1
+    Frame w 1
+`))
+      const innerGrid = ir.nodes[0].children[0]
+      const innerChild1 = innerGrid.children[0]
+      const innerChild2 = innerGrid.children[1]
+
+      // Inner grid fills its cell in outer grid
+      expect(getStyle(innerGrid, 'grid-column')).toBe('span 6')
+      expect(getStyle(innerGrid, 'width')).toBe('100%')
+
+      // Inner grid children fill their cells in inner grid
+      expect(getStyle(innerChild1, 'grid-column')).toBe('span 1')
+      expect(getStyle(innerChild1, 'width')).toBe('100%')
+      expect(getStyle(innerChild2, 'grid-column')).toBe('span 1')
+      expect(getStyle(innerChild2, 'width')).toBe('100%')
+    })
+  })
+
+  describe('Edge Cases - Cell fill only for numeric w/h in grid', () => {
+    test('w full in Grid does NOT get cell fill (already 100%)', () => {
+      const ir = toIR(parse(`
+Frame grid 12
+  Frame w full
+`))
+      const child = ir.nodes[0].children[0]
+      // w full should NOT be interpreted as span
+      expect(getStyle(child, 'grid-column')).toBeUndefined()
+      // But should still work as width: 100%
+      // (handled by default w full logic, not grid-specific)
+    })
+
+    test('w hug in Grid does NOT get cell fill', () => {
+      const ir = toIR(parse(`
+Frame grid 12
+  Frame w hug
+`))
+      const child = ir.nodes[0].children[0]
+      expect(getStyle(child, 'grid-column')).toBeUndefined()
+      expect(getStyle(child, 'width')).toBe('fit-content')
+    })
+
+    test('w outside grid does NOT get cell fill', () => {
+      const ir = toIR(parse(`
+Frame
+  Frame w 200
+`))
+      const child = ir.nodes[0].children[0]
+      expect(getStyle(child, 'width')).toBe('200px')
+      expect(getStyle(child, 'grid-column')).toBeUndefined()
+    })
+  })
+})
+
+// =============================================================================
 // 4. BACKWARD COMPATIBILITY (x/y outside grid)
 // =============================================================================
 

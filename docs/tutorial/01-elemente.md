@@ -46,7 +46,7 @@ Frame gap 12, pad 16, bg #1a1a1a, rad 8
 Properties steuern das Aussehen. Zahlen sind Pixel, `#hex` sind Farben:
 
 ```mirror
-Frame gap 16
+Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Farben: bg = Hintergrund, col = Textfarbe
   Text "Farbiger Text", bg #2563eb, col white, pad 8 16, rad 4
@@ -102,7 +102,7 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
 Mit Layout-Properties steuerst du, wie Kinder innerhalb eines Frames angeordnet werden. Hier die wichtigsten – Details im [Layout-Kapitel](04-layout.html):
 
 ```mirror
-Frame gap 16
+Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // hor = horizontal anordnen
   Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
@@ -137,27 +137,22 @@ Frame gap 16
 
 ## Icons
 
-Icons kommen von [Lucide](https://lucide.dev/icons/) (Standard) oder [Material Icons](https://fonts.google.com/icons). Der Name kommt in Anführungszeichen:
+Icons kommen von [Lucide](https://lucide.dev/icons/). Der Name kommt in Anführungszeichen:
 
 ```mirror
-Frame gap 16
+Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Lucide Icons (Standard)
-  Frame hor, gap 16
+  Frame hor, gap 16, bg #1a1a1a, pad 12, rad 6
     Icon "check", ic #10b981, is 24
     Icon "x", ic #ef4444, is 24
     Icon "settings", ic #888, is 24
     Icon "user", ic #2563eb, is 24
 
   // fill = ausgefüllte Variante
-  Frame hor, gap 16
+  Frame hor, gap 16, bg #1a1a1a, pad 12, rad 6
     Icon "heart", ic #ef4444, is 24
     Icon "heart", ic #ef4444, is 24, fill
-
-  // material = Material Icons statt Lucide
-  Frame hor, gap 16
-    Icon "star", ic #f59e0b, is 24, material
-    Icon "star", ic #f59e0b, is 24, material, fill
 
   // Icons in Buttons
   Button pad 10 16, rad 6, bg #2563eb, col white
@@ -172,7 +167,6 @@ Frame gap 16
 | `ic` | Icon-Farbe | `ic #2563eb` |
 | `iw` | Strichstärke | `iw 1.5` |
 | `fill` | Ausgefüllte Variante | `Icon "heart", fill` |
-| `material` | Material Icons verwenden | `Icon "star", material` |
 
 ## Praxisbeispiel: Card
 

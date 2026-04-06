@@ -150,7 +150,7 @@ visible: true
 done: false
 count: 3
 
-Frame gap 12
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // Opacity basierend auf Sichtbarkeit
   Frame w 100, h 50, bg #2563eb, rad 6, opacity visible ? 1 : 0.3
 

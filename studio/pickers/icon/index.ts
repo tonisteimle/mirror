@@ -8,6 +8,7 @@ import { BasePicker, KeyboardNav, type PickerConfig, type PickerCallbacks } from
 import { ICONS, searchIcons, getIconsByCategory, getCategories } from './icon-data'
 import type { IconDefinition, IconCategory, IconCategoryName } from './types'
 import { getUserSettings } from '../../storage/user-settings'
+import { getTriggerManager } from '../../editor/trigger-manager'
 
 export { ICONS, searchIcons, getIconsByCategory, getCategories }
 export type { IconDefinition, IconCategory, IconCategoryName }
@@ -52,7 +53,7 @@ export class IconPicker extends BasePicker {
   private loadingIcons: Set<string> = new Set()
 
   constructor(config: IconPickerConfig, callbacks: PickerCallbacks) {
-    super(config, callbacks)
+    super(config, callbacks, 'icon')
 
     this.icons = config.icons || ICONS
     this.filteredIcons = this.icons
@@ -91,14 +92,18 @@ export class IconPicker extends BasePicker {
       }
 
       this.icons = lucideIcons
-      this.filteredIcons = lucideIcons
       this.lucideLoaded = true
 
       console.log(`Loaded ${lucideIcons.length} Lucide icons`)
 
-      // Refresh grid if open
-      if (this.isOpen) {
-        this.refreshGrid()
+      // Re-apply current search query if one exists, otherwise show all
+      if (this.searchQuery) {
+        this.search(this.searchQuery)
+      } else {
+        this.filteredIcons = lucideIcons
+        if (this.isOpen) {
+          this.refreshGrid()
+        }
       }
     } catch (err) {
       console.error('Failed to load Lucide icons:', err)
@@ -132,8 +137,12 @@ export class IconPicker extends BasePicker {
 
   render(): HTMLElement {
     const container = document.createElement('div')
-    container.className = 'icon-picker'
+    container.className = 'icon-picker visible'
     this.iconElements = []
+
+    // Reset search state when picker opens (singleton may have leftover state)
+    this.searchQuery = ''
+    this.filteredIcons = this.icons.length > 0 ? this.icons : ICONS
 
     // Recent icons section
     if (this.showRecent) {
@@ -289,7 +298,20 @@ export class IconPicker extends BasePicker {
   }
 
   getValue(): string {
-    return ''
+    // Return the currently selected icon name
+    const index = this.getSelectedIndex()
+
+    // Treat whitespace-only search queries as empty
+    const hasRealSearchQuery = this.searchQuery && this.searchQuery.trim().length > 0
+
+    // Use filteredIcons, but fall back to built-in ICONS if empty (regardless of loading state)
+    let iconsToUse = this.filteredIcons
+    if (iconsToUse.length === 0 && !hasRealSearchQuery) {
+      iconsToUse = ICONS
+    }
+
+    const icon = iconsToUse[index]
+    return icon?.name ?? ''
   }
 
   setValue(value: string): void {
@@ -297,13 +319,15 @@ export class IconPicker extends BasePicker {
   }
 
   search(query: string): void {
-    this.searchQuery = query
+    // Trim whitespace - treat whitespace-only queries as empty
+    const trimmedQuery = query.trim()
+    this.searchQuery = trimmedQuery
     this.activeCategory = null
 
-    if (!query) {
+    if (!trimmedQuery) {
       this.filteredIcons = this.icons
     } else {
-      const q = query.toLowerCase()
+      const q = trimmedQuery.toLowerCase()
       this.filteredIcons = this.icons.filter(icon =>
         icon.name.toLowerCase().includes(q) ||
         icon.tags.some(tag => tag.toLowerCase().includes(q))
@@ -353,33 +377,30 @@ export class IconPicker extends BasePicker {
    * Show picker at specific coordinates (for editor integration)
    */
   showAt(x: number, y: number): void {
-    if (this.isOpen) return
+    // Create a temporary anchor element
+    const anchor = document.createElement('div')
+    anchor.style.position = 'fixed'
+    anchor.style.left = `${x}px`
+    anchor.style.top = `${y}px`
+    anchor.style.width = '0'
+    anchor.style.height = '0'
+    document.body.appendChild(anchor)
 
-    this.element = this.render()
-    this.element.classList.add('picker', 'picker-container')
-    this.element.style.zIndex = String(this.config.zIndex)
-    this.element.style.position = 'absolute'
-    this.element.style.left = `${x}px`
-    this.element.style.top = `${y}px`
+    // Show using the base class method (handles events)
+    this.show(anchor)
 
-    const container = this.config.container ?? document.body
-    container.appendChild(this.element)
+    // Remove the anchor
+    anchor.remove()
 
-    this.setupEventListeners()
-
-    if (this.config.animate) {
-      this.element.classList.add('picker-enter')
-      requestAnimationFrame(() => {
-        this.element?.classList.remove('picker-enter')
-        this.element?.classList.add('picker-enter-active')
-      })
+    // Override the position to be exact
+    if (this.element) {
+      this.element.style.left = `${x}px`
+      this.element.style.top = `${y}px`
     }
 
-    this.isOpen = true
-    this.callbacks.onOpen?.()
-
-    // Focus search input
-    setTimeout(() => this.searchInput?.focus(), 0)
+    // Don't auto-focus search input - let editor keep focus
+    // TriggerManager handles keyboard navigation (arrows, Enter, Escape)
+    // liveFilter handles filtering based on editor input
   }
 
   /**
@@ -444,12 +465,31 @@ export class IconPicker extends BasePicker {
       this.search(this.searchInput!.value)
     })
 
+    // Keyboard handler for when user manually clicks search input
+    // Note: Normally editor keeps focus and TriggerManager handles keys
     this.searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
-        this.keyboardNav?.selectIndex(0)
-        this.iconElements[0]?.focus()
+        this.keyboardNav?.moveDown()
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        this.keyboardNav?.moveUp()
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        this.keyboardNav?.moveRight()
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        this.keyboardNav?.moveLeft()
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        // Let TriggerManager handle selection so it can insert the value
+        getTriggerManager().selectCurrentFromPicker()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        // Close picker on Escape
+        this.hide()
       }
+      // No special quote handling - if user is typing in search, let them search
     })
 
     container.appendChild(this.searchInput)
@@ -463,12 +503,24 @@ export class IconPicker extends BasePicker {
 
     // Limit displayed icons for performance
     const maxDisplay = 144
-    const iconsToShow = this.filteredIcons.slice(0, maxDisplay)
+
+    // Treat whitespace-only search queries as empty
+    const hasRealSearchQuery = this.searchQuery && this.searchQuery.trim().length > 0
+
+    // Use filteredIcons, but fall back to built-in ICONS if empty (regardless of loading state)
+    // This ensures the picker always has selectable icons even during CDN loading
+    let iconsToUse = this.filteredIcons
+    if (iconsToUse.length === 0 && !hasRealSearchQuery) {
+      // No icons and no meaningful search query - show built-in icons as fallback
+      iconsToUse = ICONS
+    }
+
+    const iconsToShow = iconsToUse.slice(0, maxDisplay)
 
     if (iconsToShow.length === 0) {
       const empty = document.createElement('div')
       empty.className = 'icon-picker-empty'
-      empty.textContent = this.lucideLoaded ? 'Keine Icons gefunden' : 'Icons laden...'
+      empty.textContent = hasRealSearchQuery ? 'Keine Icons gefunden' : 'Icons laden...'
       fragment.appendChild(empty)
       return fragment
     }
@@ -588,7 +640,14 @@ let globalIconPicker: IconPicker | null = null
 export function getGlobalIconPicker(): IconPicker {
   if (!globalIconPicker) {
     globalIconPicker = new IconPicker(
-      { useLucide: true, columns: 12, iconSize: 24 },
+      {
+        useLucide: true,
+        columns: 12,
+        iconSize: 24,
+        // TriggerManager handles keyboard navigation and click-outside
+        externalKeyboardHandling: true,
+        closeOnClickOutside: false,
+      },
       { onSelect: () => {} }
     )
   }

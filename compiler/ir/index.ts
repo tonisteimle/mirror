@@ -25,6 +25,11 @@ import type {
   TableNode,
   TableColumnNode,
   TableSlotNode,
+  TableStaticRowNode,
+  TableStaticCellNode,
+  DataAttribute,
+  DataReference,
+  DataReferenceArray,
 } from '../parser/ast'
 import {
   isComponent,
@@ -36,7 +41,7 @@ import {
   hasContent,
   isTable,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn } from './types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
@@ -290,14 +295,27 @@ class IRTransformer {
   }
 
   transform(): IR {
-    // Transform tokens (filter out data objects without values)
+    // Transform tokens - both simple values and data objects
     const tokens: IRToken[] = this.ast.tokens
-      .filter(t => t.value !== undefined)
-      .map(t => ({
-        name: t.name,
-        type: t.tokenType,
-        value: t.value as string | number,
-      }))
+      .filter(t => t.value !== undefined || t.attributes !== undefined)
+      .map(t => {
+        if (t.value !== undefined) {
+          // Simple token with value
+          return {
+            name: t.name,
+            type: t.tokenType,
+            value: t.value as string | number,
+          }
+        } else if (t.attributes !== undefined) {
+          // Data object with nested attributes
+          return {
+            name: t.name,
+            data: this.transformDataAttributes(t.attributes),
+          }
+        }
+        // Fallback (shouldn't happen due to filter)
+        return { name: t.name, value: '' }
+      })
 
     // Add component definitions to source map (for .com file cursor sync)
     if (this.includeSourceMap) {
@@ -334,6 +352,67 @@ class IRTransformer {
     const animations = this.ast.animations.map(anim => this.transformAnimation(anim))
 
     return { nodes, tokens, animations }
+  }
+
+  /**
+   * Transform AST DataAttribute[] to IRDataObject
+   * Handles nested structures like:
+   *   tasks:
+   *     task1:
+   *       title: "Design Review"
+   *       status: "todo"
+   */
+  private transformDataAttributes(attrs: DataAttribute[]): IRDataObject {
+    const result: IRDataObject = {}
+
+    for (const attr of attrs) {
+      if (attr.children && attr.children.length > 0) {
+        // Nested object - recurse
+        result[attr.key] = this.transformDataAttributes(attr.children)
+      } else if (attr.value !== undefined) {
+        // Simple value
+        result[attr.key] = this.transformDataValue(attr.value)
+      }
+    }
+
+    return result
+  }
+
+  /**
+   * Transform a single data value to IR format
+   */
+  private transformDataValue(
+    value: string | number | boolean | string[] | DataReference | DataReferenceArray
+  ): IRDataValue {
+    // Handle references
+    if (typeof value === 'object' && value !== null) {
+      if ('kind' in value) {
+        if (value.kind === 'reference') {
+          return {
+            __ref: true,
+            collection: value.collection,
+            entry: value.entry,
+          } as IRDataReference
+        }
+        if (value.kind === 'referenceArray') {
+          return {
+            __refArray: true,
+            references: value.references.map(ref => ({
+              __ref: true,
+              collection: ref.collection,
+              entry: ref.entry,
+            })),
+          } as IRDataReferenceArray
+        }
+      }
+      // String array
+      if (Array.isArray(value)) {
+        return value
+      }
+    }
+
+    // Primitive value (string, number, boolean)
+    return value as string | number | boolean
   }
 
   /**
@@ -1007,6 +1086,9 @@ class IRTransformer {
     const rowSlot = table.rowSlot
       ? this.transformTableSlotChildren(table.rowSlot)
       : undefined
+    const rowSlotStyles = table.rowSlot
+      ? this.transformTableSlotStyles(table.rowSlot)
+      : undefined
     const footerSlot = table.footerSlot
       ? this.transformTableSlotChildren(table.footerSlot)
       : undefined
@@ -1022,6 +1104,9 @@ class IRTransformer {
       endColumn: table.column ?? 0,
     }
 
+    // Transform static rows for manual tables
+    const staticRows = table.staticRows?.map(row => this.transformTableStaticRow(row))
+
     // Create the IRTable node
     const irTable: IRTable = {
       id: nodeId,
@@ -1029,9 +1114,9 @@ class IRTransformer {
       primitive: 'table',
       name: 'Table',
       isTableComponent: true,
-      dataSource: table.dataSource.startsWith('$')
-        ? table.dataSource.slice(1)  // Remove $ prefix
-        : table.dataSource,
+      dataSource: table.dataSource
+        ? (table.dataSource.startsWith('$') ? table.dataSource.slice(1) : table.dataSource)
+        : undefined,
       filter: table.filter,
       orderBy: table.orderBy,
       orderDesc: table.orderDesc,
@@ -1040,8 +1125,10 @@ class IRTransformer {
       selectionMode,
       headerSlot,
       rowSlot,
+      rowSlotStyles,
       footerSlot,
       groupSlot,
+      staticRows,
       properties: [],
       styles: [],
       events: [],
@@ -1079,7 +1166,7 @@ class IRTransformer {
       aggregation: col.aggregation as 'sum' | 'avg' | 'count' | undefined,
       inferredType: 'string',  // Default, will be overridden at runtime
       customCell: col.customCell
-        ? col.customCell.map(child => this.transformChild(child as any))
+        ? col.customCell.map(child => this.transformChild(child))
         : undefined,
     }
   }
@@ -1088,7 +1175,38 @@ class IRTransformer {
    * Transform table slot children to IRNode array
    */
   private transformTableSlotChildren(slot: TableSlotNode): IRNode[] {
-    return (slot.children || []).map(child => this.transformChild(child as any))
+    return (slot.children || []).map(child => this.transformChild(child))
+  }
+
+  /**
+   * Transform table slot properties to IRStyle array
+   */
+  private transformTableSlotStyles(slot: TableSlotNode): IRStyle[] {
+    if (!slot.properties || slot.properties.length === 0) {
+      return []
+    }
+    return this.transformProperties(slot.properties, 'frame')
+  }
+
+  /**
+   * Transform a static table row
+   */
+  private transformTableStaticRow(row: TableStaticRowNode): IRTableStaticRow {
+    return {
+      cells: row.cells.map(cell => this.transformTableStaticCell(cell)),
+      styles: [], // TODO: transform row properties to styles if needed
+    }
+  }
+
+  /**
+   * Transform a static table cell
+   */
+  private transformTableStaticCell(cell: TableStaticCellNode): IRTableStaticCell {
+    return {
+      text: cell.text,
+      children: cell.children?.map(child => this.transformChild(child)),
+      styles: [], // TODO: transform cell properties to styles if needed
+    }
   }
 
   /**
@@ -3664,7 +3782,11 @@ class IRTransformer {
       const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
       if (!isNaN(numVal) && numVal > 0) {
         // In grid context, numeric w means column span
-        return [{ property: 'grid-column', value: `span ${numVal}` }]
+        // Also add width: 100% so the element fills the cell horizontally
+        return [
+          { property: 'grid-column', value: `span ${numVal}` },
+          { property: 'width', value: '100%' }
+        ]
       }
       // If not numeric, fall through to default handling (hug, full, etc.)
     }
@@ -3674,7 +3796,11 @@ class IRTransformer {
       const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
       if (!isNaN(numVal) && numVal > 0) {
         // In grid context, numeric h means row span
-        return [{ property: 'grid-row', value: `span ${numVal}` }]
+        // Also add height: 100% so the element fills the cell vertically
+        return [
+          { property: 'grid-row', value: `span ${numVal}` },
+          { property: 'height', value: '100%' }
+        ]
       }
       // If not numeric, fall through to default handling (hug, full, etc.)
     }
@@ -3829,8 +3955,10 @@ class IRTransformer {
           { property: isWidth ? 'min-width' : 'min-height', value: '0' },
         ]
       } else {
-        // Cross axis: use align-self: stretch to fill without affecting main axis sizing
+        // Cross axis: use both explicit 100% and align-self: stretch
+        // align-self: stretch alone doesn't work if parent has no explicit size
         return [
+          { property: isWidth ? 'width' : 'height', value: '100%' },
           { property: 'align-self', value: 'stretch' },
           { property: isWidth ? 'min-width' : 'min-height', value: '0' },
         ]

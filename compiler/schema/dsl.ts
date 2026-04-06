@@ -246,12 +246,17 @@ export const DSL = {
     onkeyup: { dom: 'keyup', description: 'Keyup event', acceptsKey: true },
     'onclick-outside': { dom: 'click-outside', description: 'Click outside element' },
     onload: { dom: 'load', description: 'Load event' },
-    onenter: { dom: 'enter', description: 'Viewport enter (IntersectionObserver)' },
-    onexit: { dom: 'exit', description: 'Viewport exit (IntersectionObserver)' },
+    onviewenter: { dom: 'enter', description: 'Viewport enter (IntersectionObserver)' },
+    onviewexit: { dom: 'exit', description: 'Viewport exit (IntersectionObserver)' },
+    // Short keyboard event (Enter key) - most common use case
+    onenter: { dom: 'keydown', key: 'enter', description: 'Enter key pressed' },
     // Keyboard shorthand events (expanded to onkeydown + key)
     onkeyenter: { dom: 'keydown', key: 'enter', description: 'Enter key shorthand' },
     onkeyescape: { dom: 'keydown', key: 'escape', description: 'Escape key shorthand' },
     onkeyspace: { dom: 'keydown', key: 'space', description: 'Space key shorthand' },
+    // Short aliases for keyboard events (used in tutorials)
+    onescape: { dom: 'keydown', key: 'escape', description: 'Escape key (alias for onkeyescape)' },
+    onspace: { dom: 'keydown', key: 'space', description: 'Space key (alias for onkeyspace)' },
   } as Record<string, EventDef>,
 
   // ---------------------------------------------------------------------------
@@ -999,8 +1004,20 @@ export const SCHEMA: Record<string, PropertyDef> = {
     token: true,
   },
 
-  // NOTE: 'grow' was removed - use 'w full' or 'h full' instead
-  // full is context-aware and automatically uses flex-grow on the main axis
+  grow: {
+    name: 'grow',
+    aliases: [],
+    category: 'layout',
+    description: 'Flex grow - allow element to expand and fill available space',
+
+    keywords: {
+      _standalone: {
+        description: 'Allow element to grow to fill available space',
+        css: [{ property: 'flex-grow', value: '1' }],
+        example: 'Text "Hello", grow',
+      },
+    },
+  },
 
   shrink: {
     name: 'shrink',

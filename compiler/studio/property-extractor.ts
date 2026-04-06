@@ -8,7 +8,7 @@
  * - All available properties (from schema)
  */
 
-import type { AST, ComponentDefinition, Instance, Property, ZagNode } from '../parser/ast'
+import type { AST, ComponentDefinition, Instance, Property, ZagNode, Event, Action } from '../parser/ast'
 import type { SourceMap, NodeMapping } from '../ir/source-map'
 import {
   properties as allPropertyDefinitions,
@@ -65,6 +65,39 @@ export interface PropertyCategory {
 }
 
 /**
+ * Extracted interaction (toggle, exclusive, select)
+ */
+export interface ExtractedInteraction {
+  name: 'toggle' | 'exclusive' | 'select'
+  arguments?: string[]
+  line: number
+  column: number
+}
+
+/**
+ * Extracted action within an event
+ */
+export interface ExtractedAction {
+  name: string                // 'toggle', 'show', 'hide', 'navigate', etc.
+  target?: string             // target element name
+  arguments?: string[]
+  isFunctionCall: boolean     // true for toggle(), false for legacy syntax
+  line: number
+  column: number
+}
+
+/**
+ * Extracted event with its actions
+ */
+export interface ExtractedEvent {
+  name: string                // 'onclick', 'onhover', 'onkeydown', etc.
+  key?: string                // for keyboard events (e.g., 'enter', 'escape')
+  actions: ExtractedAction[]
+  line: number
+  column: number
+}
+
+/**
  * Extracted element info
  */
 export interface ExtractedElement {
@@ -78,6 +111,10 @@ export interface ExtractedElement {
   allProperties: ExtractedProperty[]
   /** If true, shows all available properties (not just set ones) */
   showAllProperties?: boolean
+  /** Interactions (toggle, exclusive, select) */
+  interactions: ExtractedInteraction[]
+  /** Events (onclick, onhover, etc.) with their actions */
+  events: ExtractedEvent[]
 }
 
 /**
@@ -412,6 +449,10 @@ export class PropertyExtractor {
       ? this.categorizeAllProperties(allProperties)
       : this.categorizeProperties(allProperties)
 
+    // Extract interactions and events
+    const interactions = this.extractInteractions(astNode as Instance | ComponentDefinition)
+    const events = this.extractEvents(astNode as Instance | ComponentDefinition)
+
     return {
       nodeId,
       componentName: nodeMapping.componentName,
@@ -422,6 +463,8 @@ export class PropertyExtractor {
       categories,
       allProperties,
       showAllProperties: this.showAllProperties,
+      interactions,
+      events,
     }
   }
 
@@ -469,6 +512,10 @@ export class PropertyExtractor {
       ? this.categorizeAllProperties(allProperties)
       : this.categorizeProperties(allProperties)
 
+    // Extract interactions and events
+    const interactions = this.extractInteractions(componentDef)
+    const events = this.extractEvents(componentDef)
+
     return {
       nodeId: componentDef.nodeId || `def-${componentName}`,
       componentName: componentName,
@@ -479,6 +526,8 @@ export class PropertyExtractor {
       categories,
       allProperties,
       showAllProperties: this.showAllProperties,
+      interactions,
+      events,
     }
   }
 
@@ -955,6 +1004,74 @@ export class PropertyExtractor {
     }
 
     return hidden
+  }
+
+  /**
+   * Extract interactions (toggle, exclusive, select) from an AST node
+   * Interactions can come from:
+   * 1. Events with function call actions (e.g., onclick toggle())
+   * 2. Direct function call properties (e.g., toggle() as property)
+   */
+  private extractInteractions(node: Instance | ComponentDefinition): ExtractedInteraction[] {
+    const interactions: ExtractedInteraction[] = []
+    const interactionNames = new Set(['toggle', 'exclusive', 'select'])
+
+    // Check events for interaction function calls
+    const events = 'events' in node ? (node.events || []) : []
+    for (const event of events) {
+      for (const action of event.actions) {
+        if (action.isFunctionCall && interactionNames.has(action.name)) {
+          interactions.push({
+            name: action.name as 'toggle' | 'exclusive' | 'select',
+            arguments: action.args,
+            line: action.line,
+            column: action.column,
+          })
+        }
+      }
+    }
+
+    // Check for direct interaction function calls in properties
+    // These are parsed as properties with no value but have special names
+    // The parser might also put them in a special location
+    if ('properties' in node) {
+      for (const prop of node.properties) {
+        // Check if property name looks like a function call (e.g., "toggle()")
+        const match = prop.name.match(/^(toggle|exclusive|select)\(\)$/)
+        if (match) {
+          interactions.push({
+            name: match[1] as 'toggle' | 'exclusive' | 'select',
+            arguments: prop.values.map(v => String(v)),
+            line: prop.line,
+            column: prop.column,
+          })
+        }
+      }
+    }
+
+    return interactions
+  }
+
+  /**
+   * Extract events from an AST node
+   */
+  private extractEvents(node: Instance | ComponentDefinition): ExtractedEvent[] {
+    const events: Event[] = 'events' in node ? (node.events || []) : []
+
+    return events.map(event => ({
+      name: event.name,
+      key: event.key,
+      actions: event.actions.map(action => ({
+        name: action.name,
+        target: action.target,
+        arguments: action.args,
+        isFunctionCall: action.isFunctionCall ?? false,
+        line: action.line,
+        column: action.column,
+      })),
+      line: event.line,
+      column: event.column,
+    }))
   }
 
   /**

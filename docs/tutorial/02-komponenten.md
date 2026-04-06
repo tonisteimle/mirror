@@ -12,7 +12,7 @@ In diesem Kapitel lernst du, wie du eigene Komponenten erstellst. Das Kernkonzep
 Wenn du mehrere Buttons mit dem gleichen Styling brauchst, musst du alles wiederholen:
 
 ```mirror
-Frame hor, gap 8
+Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Button "Speichern", pad 10 20, rad 6, bg #2563eb, col white
   Button "Abbrechen", pad 10 20, rad 6, bg #2563eb, col white
   Button "Löschen", pad 10 20, rad 6, bg #2563eb, col white
@@ -29,7 +29,7 @@ Mit einem **Doppelpunkt nach dem Namen** definierst du eine wiederverwendbare Ko
 Btn: pad 10 20, rad 6, bg #2563eb, col white
 
 // Verwendung: Name ohne :
-Frame hor, gap 8
+Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Btn "Speichern"
   Btn "Abbrechen"
   Btn "Löschen"
@@ -49,7 +49,7 @@ Bei der Verwendung kannst du einzelne Properties überschreiben. Die übrigen bl
 ```mirror
 Btn: pad 10 20, rad 6, bg #2563eb, col white
 
-Frame hor, gap 8, wrap
+Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Btn "Standard"
   Btn "Grau", bg #333
   Btn "Rot", bg #dc2626
@@ -83,7 +83,7 @@ Du hast gesehen, wie du Properties bei der Verwendung überschreibst (`Btn "Rot"
 Btn: pad 10 20, rad 6, bg #2563eb, col white
 
 // Immer wieder dieselbe Überschreibung...
-Frame hor, gap 8
+Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Btn "Löschen", bg #ef4444
   Btn "Entfernen", bg #ef4444
   Btn "Abbrechen", bg #ef4444
@@ -104,7 +104,7 @@ PrimaryBtn as Btn: bg #2563eb, col white
 DangerBtn as Btn: bg #ef4444, col white
 GhostBtn as Btn: bg transparent, col #888, bor 1, boc #333
 
-Frame hor, gap 8
+Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   PrimaryBtn "Speichern"
   DangerBtn "Löschen"
   GhostBtn "Abbrechen"
@@ -150,7 +150,7 @@ Card: bg #1a1a1a, pad 16, rad 8, gap 8
   Text "Projekt Alpha", fs 16, weight 500, col white
   Text "Beschreibung des Projekts.", col #888, fs 14
 
-Frame hor, gap 12
+Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Card
   Card
   Card
@@ -169,7 +169,7 @@ Card: bg #1a1a1a, pad 16, rad 8, gap 8, w 200
   Desc: col #888, fs 14
 
 // Bei Verwendung: Kind-Komponenten befüllen (ohne :)
-Frame hor, gap 12
+Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Card
     Title "Projekt Alpha"
     Desc "Das erste Projekt."

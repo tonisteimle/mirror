@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Anzeige</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Anzeige</h1>
+      <p class="subtitle">Tables, Media, Progress, Utility</p>
+    </header>
+
+    <p class="intro">Komponenten zur Darstellung von Daten und Medien. <strong>Tabellen</strong> für strukturierte Daten. <strong>Avatar</strong> und <strong>FileUpload</strong> für Medien. <strong>Progress</strong> und <strong>Toast</strong> für Feedback. <strong>Clipboard</strong>, <strong>QRCode</strong> und <strong>Splitter</strong> für spezielle Anwendungsfälle.</p>
+
+
+    <!-- ============================================================ -->
+    <!-- TABELLEN -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Tabellen – Grundsyntax</h2>
+      <p>Eine Table braucht eine Datenquelle und einen <code>Row:</code> Slot:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Design Review"
+    status: "done"
+  task2:
+    title: "API Integration"
+    status: "progress"
+  task3:
+    title: "Testing"
+    status: "todo"
+
+Table $tasks, gap 4, w full
+  Row: hor, gap 16, pad 12, bg #1a1a1a, rad 6, w full
+    Text row.title, col white, w 140
+    Text row.status, col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>Table $tasks</code> – Die Datenquelle (Datenobjekt mit Einträgen)</li>
+        <li><code>Row:</code> – Template für jede Zeile</li>
+        <li><code>row.title</code> – Zugriff auf Felder des aktuellen Eintrags</li>
+      </ul>
+      <p class="note"><strong>Hinweis:</strong> Daten werden im Entry-Format definiert: <code>name:</code> gefolgt von eingerückten <code>key: value</code> Paaren. Bei der Verwendung mit <code>$name</code> iteriert die Runtime automatisch über alle Einträge.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Row-Template stylen</h2>
+      <p>Der <code>Row:</code> Slot kann Properties haben:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>users:
+  anna:
+    name: "Anna"
+    role: "Designer"
+  max:
+    name: "Max"
+    role: "Developer"
+
+Table $users, gap 4, w full
+  Row: hor, gap 16, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Text row.name, col white, w 120, weight 500
+    Text row.role, col #666, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Mehrere Elemente pro Zeile</h2>
+      <p>Kombiniere beliebige Elemente im Row-Template. Mit verschachtelten Frames baust du mehrzeilige Zellen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>projects:
+  website:
+    name: "Website Relaunch"
+    info: "Neues Design und bessere Performance"
+    status: "Aktiv"
+  mobile:
+    name: "Mobile App"
+    info: "iOS und Android Version"
+    status: "In Arbeit"
+  api:
+    name: "Backend API"
+    info: "REST Endpoints für alle Services"
+    status: "Fertig"
+
+Table $projects, gap 4, w full
+  Row: hor, gap 16, pad 14 16, bg #1a1a1a, rad 8, ver-center, w full
+    Icon "folder", ic #2563eb, is 20
+    Frame gap 2, grow
+      Text row.name, col white, weight 500
+      Text row.info, col #666, fs 12
+    Text row.status, col #888, fs 12, pad 4 10, bg #252525, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Editierbare Tabellen</h2>
+      <p>Mit <code>Input</code> und <code>value row.field</code> werden Zellen editierbar:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>items:
+  item1:
+    name: "Item 1"
+    quantity: 5
+  item2:
+    name: "Item 2"
+    quantity: 3
+
+Table $items, gap 4, w full
+  Row: hor, gap 12, pad 10 12, bg #1a1a1a, rad 6, ver-center, w full
+    Input value row.name, bg #252525, col white, pad 8 12, rad 4, w 150, bor 0
+    Input value row.quantity, bg #252525, col white, pad 8 12, rad 4, w 80, type number, bor 0</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Änderungen werden automatisch in die Daten zurückgeschrieben (Two-Way Binding).</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Filtern mit where</h2>
+      <p>Mit <code>where</code> filterst du Einträge nach einer Bedingung:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Design Review"
+    done: true
+  task2:
+    title: "API Integration"
+    done: false
+  task3:
+    title: "Testing"
+    done: false
+  task4:
+    title: "Documentation"
+    done: true
+
+// Nur nicht erledigte Tasks
+Table $tasks where row.done == false, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+    Icon "circle", ic #f59e0b, is 16
+    Text row.title, col white, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Vergleichsoperatoren:</strong> <code>==</code>, <code>!=</code>, <code>></code>, <code><</code>, <code>>=</code>, <code><=</code></p>
+      <p><strong>Kombinieren mit and/or:</strong></p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Critical Bug"
+    priority: 1
+    done: false
+  task2:
+    title: "Minor Fix"
+    priority: 3
+    done: false
+  task3:
+    title: "Feature"
+    priority: 2
+    done: true
+
+// Nicht erledigt UND hohe Priorität
+Table $tasks where row.done == false and row.priority &lt; 3, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+    Icon "alert-circle", ic #ef4444, is 16
+    Text row.title, col white, grow
+    Text "P" + row.priority, col #ef4444, fs 12, weight 600</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Sortieren mit by</h2>
+      <p>Mit <code>by</code> sortierst du nach einem Feld. Mit <code>desc</code> wird absteigend sortiert:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Low Priority"
+    priority: 3
+  task2:
+    title: "High Priority"
+    priority: 1
+  task3:
+    title: "Medium Priority"
+    priority: 2
+
+// Sortiert nach Priorität (aufsteigend)
+Table $tasks by priority, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+    Text row.priority, col #2563eb, fs 14, weight 600, w 24
+    Text row.title, col white, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Absteigend sortieren:</strong></p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29
+  hoodie:
+    name: "Hoodie"
+    price: 59
+  cap:
+    name: "Cap"
+    price: 19
+
+// Teuerste zuerst
+Table $products by price desc, gap 4, w full
+  Row: hor, spread, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+    Text row.name, col white, weight 500
+    Text "€" + row.price, col #10b981, fs 14, weight 600</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Filtern und Sortieren kombinieren</h2>
+      <p><code>where</code> und <code>by</code> lassen sich kombinieren:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Urgent Bug"
+    priority: 1
+    done: false
+  task2:
+    title: "Feature Request"
+    priority: 2
+    done: false
+  task3:
+    title: "Completed Task"
+    priority: 1
+    done: true
+  task4:
+    title: "Low Priority"
+    priority: 3
+    done: false
+
+// Offene Tasks, sortiert nach Priorität
+Table $tasks where row.done == false by priority, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+    Frame w 24, h 24, rad 4, bg #ef4444, center
+      Text row.priority, col white, fs 11, weight 600
+    Text row.title, col white, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Gruppieren mit grouped by</h2>
+      <p>Mit <code>grouped by</code> werden Einträge nach einem Feld gruppiert. Jede Gruppe bekommt automatisch einen Header:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Design Homepage"
+    status: "done"
+  task2:
+    title: "API Integration"
+    status: "progress"
+  task3:
+    title: "Write Tests"
+    status: "todo"
+  task4:
+    title: "Code Review"
+    status: "done"
+  task5:
+    title: "Deploy"
+    status: "todo"
+
+Table $tasks grouped by status, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Icon "circle", ic #888, is 14
+    Text row.title, col white, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Mit Icons und Badges</h2>
+      <p>Zeige Status mit Icons und farbigen Badges:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  design:
+    title: "Design Review"
+    status: "done"
+  development:
+    title: "API Development"
+    status: "progress"
+  testing:
+    title: "Testing"
+    status: "todo"
+
+Table $tasks, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+    Icon "circle", ic #888, is 16
+    Text row.title, col white, fs 14, grow
+    Text row.status, col #888, fs 12, pad 4 8, bg #252525, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Aktionen pro Zeile</h2>
+      <p>Füge Buttons oder klickbare Elemente hinzu:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>users:
+  anna:
+    name: "Anna"
+    email: "anna@example.com"
+  max:
+    name: "Max"
+    email: "max@example.com"
+
+Table $users, gap 4, w full
+  Row: hor, spread, ver-center, pad 12 16, bg #1a1a1a, rad 8, w full
+    Frame hor, gap 12, ver-center
+      Frame w 40, h 40, bg #2563eb, rad 99, center
+        Text row.name[0], col white, fs 14, weight 600
+      Frame gap 2
+        Text row.name, col white, fs 14, weight 500
+        Text row.email, col #666, fs 12
+    Frame hor, gap 8
+      Button "Edit", pad 8 14, bg #333, col white, rad 6, fs 12
+      Button "Delete", pad 8 14, bg #ef4444, col white, rad 6, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Task-Liste</h2>
+      <p>Eine vollständige Task-Liste mit Status und Aktionen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Design Homepage"
+    priority: "High"
+  task2:
+    title: "Write API Docs"
+    priority: "Medium"
+  task3:
+    title: "Fix Login Bug"
+    priority: "High"
+
+Table $tasks, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+    Frame w 22, h 22, rad 4, bor 2, boc #444, center, cursor pointer
+      Icon "circle", ic #666, is 14
+    Frame gap 4, grow
+      Text row.title, col white, fs 14, weight 500
+      Text row.priority, col #888, fs 11
+    Frame hor, gap 4
+      Button pad 8, bg #252525, rad 6
+        Icon "edit", ic #888, is 14
+      Button pad 8, bg #252525, rad 6
+        Icon "trash", ic #888, is 14</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Editierbare Produktliste</h2>
+      <p>Eine Tabelle zum Bearbeiten von Produktdaten. Mit <code>Header:</code> definierst du die Kopfzeile:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29.99
+    stock: 150
+  hoodie:
+    name: "Hoodie"
+    price: 59.99
+    stock: 45
+  cap:
+    name: "Cap"
+    price: 19.99
+    stock: 200
+
+Table $products, gap 4, w full, bg #111, pad 20, rad 12
+  Header: hor, gap 12, pad 8 16, w full
+    Text "Produkt", col #666, fs 12, w 150, weight 500
+    Text "Preis", col #666, fs 12, w 100, weight 500
+    Text "Lager", col #666, fs 12, w 80, weight 500
+  Row: hor, gap 12, pad 10 16, bg #1a1a1a, rad 8, ver-center, w full
+    Input value row.name, bg #252525, col white, bor 0, w 150, pad 8 12, rad 4
+    Frame hor, ver-center, gap 4, w 100
+      Text "€", col #666, fs 14
+      Input value row.price, bg #252525, col white, bor 0, w 70, pad 8, rad 4, type number
+    Input value row.stock, bg #252525, col white, bor 0, w 80, pad 8, rad 4, type number</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- MEDIA & FILES -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Avatar</h2>
+      <p>Profilbild mit automatischem Fallback auf Initialen.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12
+  Avatar name "Anna Schmidt"
+    Root: w 48, h 48, rad 99, clip
+    Fallback: w full, h full, bg #10b981, center
+      Text "AS", col white, fs 14
+
+  Avatar name "Ben Weber"
+    Root: w 48, h 48, rad 99, clip
+    Fallback: w full, h full, bg #f59e0b, center
+      Text "BW", col white, fs 14
+
+  Avatar name "Clara Müller"
+    Root: w 48, h 48, rad 99, clip
+    Fallback: w full, h full, bg #ef4444, center
+      Text "CM", col white, fs 14</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>FileUpload</h2>
+      <p>Datei-Upload mit Drag & Drop und Vorschau.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>FileUpload multiple, accept "image/*"
+  Root: gap 12
+
+  Dropzone: bor 2, boc #333, rad 12, pad 32, center, gap 8, cursor pointer
+    border-style dashed
+    dragging:
+      boc #2563eb
+      bg #1e3a5f
+    Icon "upload", ic #666, is 32
+    Text "Dateien hierher ziehen", col #888
+    Text "oder klicken", col #666, fs 12
+
+  ItemGroup: gap 8
+  Item: hor, gap 12, bg #1a1a1a, pad 12, rad 8
+  ItemName: col white, fs 14
+  ItemSizeText: col #666, fs 12
+  ItemDeleteTrigger: col #888
+    Icon "x", is 16</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- FEEDBACK & STATUS -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Progress</h2>
+      <p>Linearer Fortschrittsbalken.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Progress value 60, max 100
+  Root: gap 8, w 300
+  Label: hor, spread
+    Text "Fortschritt", col white, fs 13
+    ValueText: col #888, fs 12
+  Track: h 8, bg #333, rad 99
+  Range: bg #2563eb, rad 99</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Verschiedene Farben</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, w 300
+  Progress value 90
+    Label: hor, spread
+      Text "CPU", col white, fs 12
+      ValueText: col #888, fs 11
+    Track: h 6, bg #333, rad 99
+    Range: bg #10b981, rad 99
+
+  Progress value 65
+    Label: hor, spread
+      Text "Memory", col white, fs 12
+      ValueText: col #888, fs 11
+    Track: h 6, bg #333, rad 99
+    Range: bg #f59e0b, rad 99
+
+  Progress value 95
+    Label: hor, spread
+      Text "Disk", col white, fs 12
+      ValueText: col #888, fs 11
+    Track: h 6, bg #333, rad 99
+    Range: bg #ef4444, rad 99</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>CircularProgress</h2>
+      <p>Kreisförmiger Fortschritt – gut für Dashboards.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 24
+  CircularProgress value 75
+    Root: w 100, h 100, center
+    Circle: w 80, h 80
+    CircleTrack: stroke #333, stroke-width 8
+    CircleRange: stroke #2563eb, stroke-width 8
+    ValueText: col white, fs 20, weight 600
+
+  CircularProgress value 42
+    Root: w 80, h 80, center
+    Circle: w 70, h 70
+    CircleTrack: stroke #333, stroke-width 6
+    CircleRange: stroke #10b981, stroke-width 6
+    ValueText: col white, fs 16</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Toast</h2>
+      <p>Temporäre Benachrichtigungen.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12
+  Toast type "success"
+    Root: hor, gap 12, bg #1a1a1a, bor 1, boc #10b981, pad 12, rad 8
+    Title: col white, fs 14
+      "Erfolgreich gespeichert"
+    CloseTrigger: col #666
+      Icon "x", is 14
+
+  Toast type "error"
+    Root: hor, gap 12, bg #1a1a1a, bor 1, boc #ef4444, pad 12, rad 8
+    Title: col white, fs 14
+      "Fehler beim Speichern"
+
+  Toast type "warning"
+    Root: hor, gap 12, bg #1a1a1a, bor 1, boc #f59e0b, pad 12, rad 8
+    Title: col white, fs 14
+      "Verbindung instabil"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- UTILITY -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Clipboard</h2>
+      <p>Kopiert Text in die Zwischenablage mit visuellem Feedback.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Clipboard value "npm install mirror-lang"
+  Root: hor, gap 0, bg #1a1a1a, bor 1, boc #333, rad 8
+  Input: w 250, bg transparent, col white, pad 12, bor 0, readonly
+  Trigger: pad 12, bor 0 0 0 1, boc #333, col #888, cursor pointer
+    hover:
+      col white
+    Icon "copy", is 18
+  Indicator: pad 12, bor 0 0 0 1, boc #333
+    copied:
+      Icon "check", ic #10b981, is 18</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>QRCode</h2>
+      <p>Generiert einen QR-Code aus Text oder URL.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16
+  QRCode value "Small"
+    Root: bg white, pad 8, rad 8
+    Frame: w 80, h 80
+
+  QRCode value "Medium"
+    Root: bg white, pad 12, rad 8
+    Frame: w 120, h 120
+
+  QRCode value "Large"
+    Root: bg white, pad 16, rad 12
+    Frame: w 180, h 180</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Splitter</h2>
+      <p>Teilbare Bereiche mit verstellbarer Größe.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Splitter orientation "horizontal"
+  Root: w full, h 200, bg #0a0a0a
+
+  Panel: bg #1a1a1a, pad 16
+    id "left"
+    defaultSize 30
+    minSize 20
+    Text "Linker Bereich", col white
+
+  ResizeTrigger: w 4, bg #333, cursor col-resize
+    hover:
+      bg #2563eb
+    dragging:
+      bg #2563eb
+
+  Panel: bg #1a1a1a, pad 16
+    id "right"
+    Text "Rechter Bereich", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- ZUSAMMENFASSUNG -->
+    <!-- ============================================================ -->
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+
+      <h3>Tabellen</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Beschreibung</th></tr>
+        <tr><td><code>Table $data</code></td><td>Datenquelle (Datenobjekt)</td></tr>
+        <tr><td><code>Header:</code></td><td>Kopfzeile (optional)</td></tr>
+        <tr><td><code>Row:</code></td><td>Zeilentemplate</td></tr>
+        <tr><td><code>row.field</code></td><td>Feld des aktuellen Eintrags</td></tr>
+        <tr><td><code>Input value row.field</code></td><td>Editierbares Feld</td></tr>
+        <tr><td><code>where bedingung</code></td><td>Filtern (<code>done == false</code>)</td></tr>
+        <tr><td><code>by feld</code></td><td>Sortieren aufsteigend</td></tr>
+        <tr><td><code>by feld desc</code></td><td>Sortieren absteigend</td></tr>
+        <tr><td><code>grouped by feld</code></td><td>Nach Feld gruppieren</td></tr>
+      </table>
+
+      <h3>Media & Files</h3>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Verwendung</th></tr>
+        <tr><td><code>Avatar</code></td><td>Profilbild mit Fallback</td></tr>
+        <tr><td><code>FileUpload</code></td><td>Datei-Upload mit Drag & Drop</td></tr>
+        <tr><td><code>Carousel</code></td><td>Bild-/Content-Slider</td></tr>
+        <tr><td><code>ImageCropper</code></td><td>Bild zuschneiden</td></tr>
+        <tr><td><code>SignaturePad</code></td><td>Unterschrift zeichnen</td></tr>
+      </table>
+
+      <h3>Feedback & Status</h3>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Verwendung</th></tr>
+        <tr><td><code>Progress</code></td><td>Linearer Fortschritt</td></tr>
+        <tr><td><code>CircularProgress</code></td><td>Runder Fortschritt</td></tr>
+        <tr><td><code>Toast</code></td><td>Temporäre Benachrichtigung</td></tr>
+        <tr><td><code>Marquee</code></td><td>Laufband-Text</td></tr>
+      </table>
+
+      <h3>Utility</h3>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Verwendung</th></tr>
+        <tr><td><code>Clipboard</code></td><td>Text in Zwischenablage kopieren</td></tr>
+        <tr><td><code>QRCode</code></td><td>QR-Code generieren</td></tr>
+        <tr><td><code>ScrollArea</code></td><td>Custom Scrollbars</td></tr>
+        <tr><td><code>Splitter</code></td><td>Verstellbare Bereiche</td></tr>
+      </table>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="12-overlays.html">&larr; Overlays</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <span class="next disabled">Ende</span>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

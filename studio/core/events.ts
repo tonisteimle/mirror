@@ -139,6 +139,12 @@ export interface StudioEvents {
   'layout-inference:error': { group?: unknown; error?: string }
   /** Draw events */
   'draw:error': { error: string; context?: string }
+  /** Picker events (for testing) */
+  'picker:opened': { pickerId: string; pickerType: 'token' | 'color' | 'icon' | 'animation' | 'unknown' }
+  'picker:closed': { pickerId: string; reason: 'select' | 'escape' | 'click-outside' | 'unknown' }
+  /** Trigger events (for testing) */
+  'trigger:activated': { triggerId: string; startPos: number }
+  'trigger:deactivated': { triggerId: string }
 }
 
 /** Component Panel item (simplified for event typing) */

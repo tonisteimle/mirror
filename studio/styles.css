@@ -5386,6 +5386,264 @@
       height: var(--size-icon-sm);
     }
 
+    /* ============================================
+       INTERACTIONS SECTION
+       ============================================ */
+    .pp-interaction-row {
+      display: flex;
+      gap: var(--space-2);
+      background: var(--bg-panel);
+      border-radius: var(--radius-md);
+      padding: var(--space-1);
+    }
+
+    .pp-interaction-btn {
+      flex: 1;
+      height: var(--size-icon-2xl);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: var(--font-xs);
+      font-weight: var(--weight-medium);
+      padding: 0 var(--space-3);
+      transition: all 0.12s;
+    }
+
+    .pp-interaction-btn:hover {
+      color: var(--text-secondary);
+      background: var(--white-5);
+    }
+
+    .pp-interaction-btn.active {
+      background: var(--bg-input);
+      color: var(--color-primary);
+      box-shadow: var(--focus-ring);
+    }
+
+    /* ============================================
+       EVENTS SECTION
+       ============================================ */
+    .pp-label-with-action {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: var(--font-xs);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      text-transform: var(--text-uppercase);
+      letter-spacing: var(--tracking-wide);
+      margin-bottom: 10px;
+    }
+
+    .pp-add-event-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      height: var(--size-icon-xl);
+      padding: 0 var(--space-2);
+      background: transparent;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: var(--font-xs);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .pp-add-event-btn:hover {
+      color: var(--text-secondary);
+      border-color: var(--border-hover);
+      background: var(--white-5);
+    }
+
+    .pp-add-event-btn svg {
+      width: var(--size-icon-xs);
+      height: var(--size-icon-xs);
+    }
+
+    .pp-events-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .pp-events-list.empty {
+      background: var(--bg-panel);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+    }
+
+    .pp-events-empty {
+      color: var(--text-placeholder);
+      font-size: var(--font-sm);
+      text-align: center;
+    }
+
+    .pp-event-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-panel);
+      border-radius: var(--radius-md);
+      font-size: var(--font-sm);
+    }
+
+    .pp-event-row:hover {
+      background: var(--bg-panel-hover);
+    }
+
+    .pp-event-name {
+      color: var(--color-primary);
+      font-weight: var(--weight-medium);
+      font-family: var(--font-mono);
+    }
+
+    .pp-event-arrow {
+      color: var(--text-muted);
+    }
+
+    .pp-event-action {
+      flex: 1;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .pp-event-edit,
+    .pp-event-delete {
+      width: var(--size-icon-lg);
+      height: var(--size-icon-lg);
+      padding: 0;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.12s;
+    }
+
+    .pp-event-row:hover .pp-event-edit,
+    .pp-event-row:hover .pp-event-delete {
+      opacity: 1;
+    }
+
+    .pp-event-edit:hover {
+      color: var(--text-secondary);
+      background: var(--white-5);
+    }
+
+    .pp-event-delete:hover {
+      color: var(--color-danger);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* ============================================
+       ACTION PICKER
+       ============================================ */
+    .action-picker {
+      width: 280px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: var(--space-4);
+    }
+
+    .action-picker-title {
+      font-size: var(--font-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .action-picker-section {
+      margin-bottom: var(--space-4);
+    }
+
+    .action-picker-label {
+      display: block;
+      font-size: var(--font-xs);
+      color: var(--text-muted);
+      margin-bottom: var(--space-2);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wide);
+    }
+
+    .action-picker-select {
+      width: 100%;
+      height: var(--input-height);
+      padding: 0 var(--space-3);
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: var(--font-sm);
+      cursor: pointer;
+    }
+
+    .action-picker-select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: var(--focus-ring);
+    }
+
+    .action-picker-select option {
+      background: var(--bg-panel);
+      color: var(--text-primary);
+    }
+
+    .action-picker-select optgroup {
+      font-weight: var(--weight-semibold);
+      color: var(--text-muted);
+    }
+
+    .action-picker-buttons {
+      display: flex;
+      gap: var(--space-2);
+      justify-content: flex-end;
+      margin-top: var(--space-4);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .action-picker-btn {
+      height: var(--size-icon-2xl);
+      padding: 0 var(--space-4);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: var(--font-sm);
+      font-weight: var(--weight-medium);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .action-picker-btn.cancel {
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .action-picker-btn.cancel:hover {
+      color: var(--text-secondary);
+      background: var(--white-5);
+    }
+
+    .action-picker-btn.primary {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .action-picker-btn.primary:hover {
+      background: var(--color-primary-hover);
+    }
+
     /* Studio module additions */
     .pp-empty {
       padding: var(--space-10);

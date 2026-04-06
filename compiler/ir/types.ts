@@ -196,7 +196,65 @@ export interface IRStateDependency {
 export interface IRToken {
   name: string
   type?: 'color' | 'size' | 'font' | 'icon'
-  value: string | number
+  /** Simple token value (e.g., $primary.bg: #2563eb) */
+  value?: string | number
+  /** Nested data object (e.g., tasks: task1: title: "...") */
+  data?: IRDataObject
+}
+
+/**
+ * Nested data object for inline data definitions
+ * Represents structured data like:
+ *   tasks:
+ *     task1:
+ *       title: "Design Review"
+ *       status: "todo"
+ */
+export interface IRDataObject {
+  [key: string]: IRDataValue
+}
+
+/**
+ * Value types supported in data objects
+ */
+export type IRDataValue =
+  | string
+  | number
+  | boolean
+  | string[]
+  | IRDataObject
+  | IRDataReference
+  | IRDataReferenceArray
+
+/**
+ * Reference to another data entry (e.g., $users.toni)
+ */
+export interface IRDataReference {
+  __ref: true
+  collection: string
+  entry: string
+}
+
+/**
+ * Array of references
+ */
+export interface IRDataReferenceArray {
+  __refArray: true
+  references: IRDataReference[]
+}
+
+/**
+ * Type guard to check if a value is an IRDataReference
+ */
+export function isIRDataReference(value: unknown): value is IRDataReference {
+  return typeof value === 'object' && value !== null && '__ref' in value && (value as IRDataReference).__ref === true
+}
+
+/**
+ * Type guard to check if a value is an IRDataReferenceArray
+ */
+export function isIRDataReferenceArray(value: unknown): value is IRDataReferenceArray {
+  return typeof value === 'object' && value !== null && '__refArray' in value && (value as IRDataReferenceArray).__refArray === true
 }
 
 /**
@@ -311,6 +369,12 @@ export interface IRItem {
   loadFromFile?: string
   /** Source position for bidirectional editing */
   sourcePosition?: SourcePosition
+  /** Icon name for items that support icons (Listbox, Select indicators) */
+  icon?: string
+  /** Whether this item is a group header */
+  isGroup?: boolean
+  /** Nested items for group items */
+  items?: IRItem[]
 
   // Form Field specific properties
   /** Field name for form binding */
@@ -391,15 +455,15 @@ export interface IRTableColumn {
 }
 
 /**
- * IR node for data-driven Table component
+ * IR node for Table component (data-driven or manual)
  *
  * Extends IRNode with table-specific data for code generation.
  */
 export interface IRTable extends IRNode {
   /** Indicates this is a Table component */
   isTableComponent: true
-  /** Data source reference (e.g., "$tasks" → "tasks") */
-  dataSource: string
+  /** Data source reference (e.g., "$tasks" → "tasks") - optional for manual tables */
+  dataSource?: string
   /** Filter expression (JavaScript) from where clause */
   filter?: string
   /** Field to sort by */
@@ -420,10 +484,36 @@ export interface IRTable extends IRNode {
   headerSlot?: IRNode[]
   /** Custom row slot */
   rowSlot?: IRNode[]
+  /** Row slot styles (from Row: properties) */
+  rowSlotStyles?: IRStyle[]
   /** Custom footer slot */
   footerSlot?: IRNode[]
   /** Custom group header slot */
   groupSlot?: IRNode[]
+  /** Static rows for manual tables (when no dataSource) */
+  staticRows?: IRTableStaticRow[]
+}
+
+/**
+ * Static row for manual tables
+ */
+export interface IRTableStaticRow {
+  /** Cell contents */
+  cells: IRTableStaticCell[]
+  /** Row styles */
+  styles?: IRStyle[]
+}
+
+/**
+ * Static cell for manual tables
+ */
+export interface IRTableStaticCell {
+  /** Simple text content */
+  text?: string
+  /** Complex content (child nodes) */
+  children?: IRNode[]
+  /** Cell styles */
+  styles?: IRStyle[]
 }
 
 /**

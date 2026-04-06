@@ -71,14 +71,16 @@ function getIRStyle(node: any, property: string): string | undefined {
 
 describe('Layout Context: Multi-Child Flex', () => {
   describe('Two children with w full share space equally', () => {
-    it('vertical parent: both get align-self: stretch', () => {
+    it('vertical parent: both get width 100% + align-self: stretch', () => {
       const styles = getAllStyles(`
 Frame w 400
   Frame w full, bg red
   Frame w full, bg blue`)
 
-      // Both children should stretch
+      // Cross-axis w full needs BOTH width: 100% AND align-self: stretch
+      expect(styles[1]['width']).toBe('100%')
       expect(styles[1]['align-self']).toBe('stretch')
+      expect(styles[2]['width']).toBe('100%')
       expect(styles[2]['align-self']).toBe('stretch')
     })
 
@@ -156,7 +158,9 @@ Frame hor, w 600
 Frame hor, h 200
   Frame h full, bg red`)
 
-      // h full in hor parent = cross-axis stretch
+      // Cross-axis h full needs BOTH height: 100% AND align-self: stretch
+      // align-self: stretch alone doesn't work if parent has no explicit size
+      expect(styles[1]['height']).toBe('100%')
       expect(styles[1]['align-self']).toBe('stretch')
     })
 
@@ -166,7 +170,9 @@ Frame hor, h 200
   Frame h full, w 100, bg red
   Frame h full, w 100, bg blue`)
 
+      expect(styles[1]['height']).toBe('100%')
       expect(styles[1]['align-self']).toBe('stretch')
+      expect(styles[2]['height']).toBe('100%')
       expect(styles[2]['align-self']).toBe('stretch')
     })
   })
@@ -177,6 +183,9 @@ Frame hor, h 200
 Frame w 400
   Frame w full, bg red`)
 
+      // Cross-axis w full needs BOTH width: 100% AND align-self: stretch
+      // align-self: stretch alone doesn't work if parent has no explicit size
+      expect(styles[1]['width']).toBe('100%')
       expect(styles[1]['align-self']).toBe('stretch')
     })
   })
@@ -280,10 +289,11 @@ Frame w 400
     Frame w full, bg red
     Frame w 100, bg blue`)
 
-      // Outer child (hor container) stretches to parent width
+      // Outer child (hor container) stretches to parent width (cross-axis)
+      expect(styles[1]['width']).toBe('100%')
       expect(styles[1]['align-self']).toBe('stretch')
 
-      // Inner w full child gets flex in horizontal context
+      // Inner w full child gets flex in horizontal context (main-axis)
       expect(styles[2]['flex']).toBe('1 1 0%')
 
       // Inner fixed child keeps width
@@ -297,10 +307,11 @@ Frame hor, h 400
     Frame h full, bg red
     Frame h 50, bg blue`)
 
-      // Outer child stretches to parent height
+      // Outer child stretches to parent height (cross-axis)
+      expect(styles[1]['height']).toBe('100%')
       expect(styles[1]['align-self']).toBe('stretch')
 
-      // Inner h full child gets flex in vertical context
+      // Inner h full child gets flex in vertical context (main-axis)
       expect(styles[2]['flex']).toBe('1 1 0%')
 
       // Inner fixed child keeps height
@@ -367,9 +378,12 @@ Frame w 400
     Frame w full
       Frame w full, bg red`)
 
-      // Each level should stretch/fill its parent
+      // Each level should have width: 100% + align-self: stretch (all cross-axis)
+      expect(styles[1]['width']).toBe('100%')
       expect(styles[1]['align-self']).toBe('stretch')
+      expect(styles[2]['width']).toBe('100%')
       expect(styles[2]['align-self']).toBe('stretch')
+      expect(styles[3]['width']).toBe('100%')
       expect(styles[3]['align-self']).toBe('stretch')
     })
   })
@@ -480,22 +494,28 @@ Frame w 800, h 600
       expect(styles[0]['width']).toBe('800px')
       expect(styles[0]['height']).toBe('600px')
 
-      // Header: full width, fixed height
+      // Header: full width (cross-axis), fixed height
       expect(styles[1]['height']).toBe('60px')
+      expect(styles[1]['width']).toBe('100%')
       expect(styles[1]['align-self']).toBe('stretch')
 
-      // Middle row: fills height
+      // Middle row: fills height (main-axis)
       expect(styles[2]['flex']).toBe('1 1 0%')
       expect(styles[2]['flex-direction']).toBe('row')
 
-      // Sidebar: fixed width
+      // Sidebar: fixed width, h full (cross-axis in hor)
       expect(styles[3]['width']).toBe('200px')
+      expect(styles[3]['height']).toBe('100%')
+      expect(styles[3]['align-self']).toBe('stretch')
 
-      // Content: fills width
+      // Content: fills width (main-axis in hor), h full (cross-axis)
       expect(styles[4]['flex']).toBe('1 1 0%')
+      expect(styles[4]['height']).toBe('100%')
+      expect(styles[4]['align-self']).toBe('stretch')
 
-      // Footer: full width, fixed height
+      // Footer: full width (cross-axis), fixed height
       expect(styles[5]['height']).toBe('40px')
+      expect(styles[5]['width']).toBe('100%')
       expect(styles[5]['align-self']).toBe('stretch')
     })
   })
@@ -589,9 +609,12 @@ Frame w 400
       Frame w full
         Frame w 100, bg red`)
 
-    // All intermediates stretch
+    // All intermediates get width: 100% + align-self: stretch (cross-axis)
+    expect(styles[1]['width']).toBe('100%')
     expect(styles[1]['align-self']).toBe('stretch')
+    expect(styles[2]['width']).toBe('100%')
     expect(styles[2]['align-self']).toBe('stretch')
+    expect(styles[3]['width']).toBe('100%')
     expect(styles[3]['align-self']).toBe('stretch')
 
     // Innermost has explicit size

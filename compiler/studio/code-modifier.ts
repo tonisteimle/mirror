@@ -2277,6 +2277,331 @@ export class CodeModifier {
     return line
   }
 
+  // ===========================================
+  // EVENT METHODS
+  // ===========================================
+
+  /**
+   * Format an event string for code insertion
+   *
+   * Examples:
+   * - formatEventString('onclick', 'toggle') → 'onclick toggle()'
+   * - formatEventString('onclick', 'show', 'Menu') → 'onclick show(Menu)'
+   * - formatEventString('onkeydown', 'toggle', undefined, 'escape') → 'onkeydown escape toggle()'
+   */
+  private formatEventString(
+    eventName: string,
+    actionName: string,
+    target?: string,
+    key?: string
+  ): string {
+    let result = eventName
+    if (key) {
+      result += ` ${key}`
+    }
+    if (target) {
+      result += ` ${actionName}(${target})`
+    } else {
+      result += ` ${actionName}()`
+    }
+    return result
+  }
+
+  /**
+   * Parse events from a line to find their positions
+   * Returns array of { eventStr, startIndex, endIndex }
+   */
+  private findEventsInLine(line: string): Array<{
+    eventStr: string
+    startIndex: number
+    endIndex: number
+    eventName: string
+    key?: string
+  }> {
+    const events: Array<{
+      eventStr: string
+      startIndex: number
+      endIndex: number
+      eventName: string
+      key?: string
+    }> = []
+
+    // Event pattern: onevent [key] action([target])
+    // Match: onclick toggle(), onclick show(Menu), onkeydown escape toggle()
+    const eventPattern = /\b(on[a-z-]+)(?:\s+([a-z-]+))?\s+([a-zA-Z_][a-zA-Z0-9_]*)\(([^)]*)\)/g
+    let match
+
+    while ((match = eventPattern.exec(line)) !== null) {
+      const eventName = match[1]
+      const key = match[2]
+      const startIndex = match.index
+      const endIndex = match.index + match[0].length
+
+      events.push({
+        eventStr: match[0],
+        startIndex,
+        endIndex,
+        eventName,
+        key,
+      })
+    }
+
+    return events
+  }
+
+  /**
+   * Add an event to a node
+   *
+   * Adds an event handler to the node's line.
+   * Example: Button "Click", pad 12 → Button "Click", pad 12, onclick toggle()
+   *
+   * @param nodeId - The node to add the event to
+   * @param eventName - Event name (onclick, onhover, onkeydown, etc.)
+   * @param actionName - Action to perform (toggle, show, hide, navigate, etc.)
+   * @param target - Optional target element for the action
+   * @param key - Optional key for keyboard events (escape, enter, etc.)
+   */
+  addEvent(
+    nodeId: string,
+    eventName: string,
+    actionName: string,
+    target?: string,
+    key?: string
+  ): ModificationResult {
+    const nodeMapping = this.sourceMap.getNodeById(nodeId)
+    if (!nodeMapping) {
+      return this.errorResult(`Node not found: ${nodeId}`)
+    }
+
+    // Get the node's line
+    const nodeLine = nodeMapping.position.line
+    const line = this.lines[nodeLine - 1]
+    if (!line) {
+      return this.errorResult(`Line not found: ${nodeLine}`)
+    }
+
+    // Format the event string
+    const eventStr = this.formatEventString(eventName, actionName, target, key)
+
+    // Check if line already has content (properties, text, etc.)
+    const trimmedLine = line.trimEnd()
+
+    // Add event after existing content
+    let newLine: string
+    if (trimmedLine.includes(',')) {
+      // Has properties - add with comma
+      newLine = `${trimmedLine}, ${eventStr}`
+    } else {
+      // Check if it's just the component name or has text
+      const hasTextOrProps = /\s/.test(trimmedLine.substring(trimmedLine.search(/[A-Z]/)))
+      if (hasTextOrProps) {
+        newLine = `${trimmedLine}, ${eventStr}`
+      } else {
+        // Just component name
+        newLine = `${trimmedLine} ${eventStr}`
+      }
+    }
+
+    // Calculate character offsets for the change
+    const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
+    const from = lineStartOffset
+    const to = lineStartOffset + line.length
+
+    // Apply the change
+    const newLines = [...this.lines]
+    newLines[nodeLine - 1] = newLine
+    const newSource = newLines.join('\n')
+
+    // Persist the changes
+    this.source = newSource
+    this.lines = newLines
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from,
+        to,
+        insert: newLine,
+      },
+    }
+  }
+
+  /**
+   * Remove an event from a node
+   *
+   * Removes an event handler from the node's line.
+   *
+   * @param nodeId - The node to remove the event from
+   * @param eventName - Event name to remove (onclick, onhover, etc.)
+   * @param key - Optional key to match (for keyboard events)
+   */
+  removeEvent(
+    nodeId: string,
+    eventName: string,
+    key?: string
+  ): ModificationResult {
+    const nodeMapping = this.sourceMap.getNodeById(nodeId)
+    if (!nodeMapping) {
+      return this.errorResult(`Node not found: ${nodeId}`)
+    }
+
+    // Get the node's line
+    const nodeLine = nodeMapping.position.line
+    const line = this.lines[nodeLine - 1]
+    if (!line) {
+      return this.errorResult(`Line not found: ${nodeLine}`)
+    }
+
+    // Find all events in the line
+    const events = this.findEventsInLine(line)
+
+    // Find the event to remove
+    const eventToRemove = events.find(e => {
+      if (e.eventName !== eventName) return false
+      if (key && e.key !== key) return false
+      if (!key && e.key) return false
+      return true
+    })
+
+    if (!eventToRemove) {
+      return this.errorResult(`Event not found: ${eventName}${key ? ' ' + key : ''}`)
+    }
+
+    // Remove the event from the line
+    // Handle comma before or after the event
+    let startIdx = eventToRemove.startIndex
+    let endIdx = eventToRemove.endIndex
+
+    // Check for leading comma and space
+    const beforeEvent = line.substring(0, startIdx)
+    const afterEvent = line.substring(endIdx)
+
+    let newLine: string
+
+    if (beforeEvent.trimEnd().endsWith(',')) {
+      // Remove trailing comma and space before event
+      const commaIdx = beforeEvent.lastIndexOf(',')
+      newLine = line.substring(0, commaIdx) + afterEvent
+    } else if (afterEvent.trimStart().startsWith(',')) {
+      // Remove leading comma and space after event
+      const afterComma = afterEvent.replace(/^\s*,\s*/, '')
+      newLine = beforeEvent + afterComma
+    } else {
+      // Just remove the event
+      newLine = beforeEvent + afterEvent
+    }
+
+    // Clean up any double spaces
+    newLine = newLine.replace(/\s{2,}/g, ' ').trimEnd()
+
+    // Calculate character offsets for the change
+    const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
+    const from = lineStartOffset
+    const to = lineStartOffset + line.length
+
+    // Apply the change
+    const newLines = [...this.lines]
+    newLines[nodeLine - 1] = newLine
+    const newSource = newLines.join('\n')
+
+    // Persist the changes
+    this.source = newSource
+    this.lines = newLines
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from,
+        to,
+        insert: newLine,
+      },
+    }
+  }
+
+  /**
+   * Update an event on a node
+   *
+   * Replaces an existing event with new event/action/target.
+   *
+   * @param nodeId - The node containing the event
+   * @param oldEventName - Current event name to replace
+   * @param oldKey - Current key to match (for keyboard events)
+   * @param newEventName - New event name
+   * @param newActionName - New action name
+   * @param newTarget - New target (optional)
+   * @param newKey - New key for keyboard events (optional)
+   */
+  updateEvent(
+    nodeId: string,
+    oldEventName: string,
+    oldKey: string | undefined,
+    newEventName: string,
+    newActionName: string,
+    newTarget?: string,
+    newKey?: string
+  ): ModificationResult {
+    const nodeMapping = this.sourceMap.getNodeById(nodeId)
+    if (!nodeMapping) {
+      return this.errorResult(`Node not found: ${nodeId}`)
+    }
+
+    // Get the node's line
+    const nodeLine = nodeMapping.position.line
+    const line = this.lines[nodeLine - 1]
+    if (!line) {
+      return this.errorResult(`Line not found: ${nodeLine}`)
+    }
+
+    // Find all events in the line
+    const events = this.findEventsInLine(line)
+
+    // Find the event to update
+    const eventToUpdate = events.find(e => {
+      if (e.eventName !== oldEventName) return false
+      if (oldKey && e.key !== oldKey) return false
+      if (!oldKey && e.key) return false
+      return true
+    })
+
+    if (!eventToUpdate) {
+      return this.errorResult(`Event not found: ${oldEventName}${oldKey ? ' ' + oldKey : ''}`)
+    }
+
+    // Format the new event string
+    const newEventStr = this.formatEventString(newEventName, newActionName, newTarget, newKey)
+
+    // Replace the old event with the new one
+    const newLine = line.substring(0, eventToUpdate.startIndex) +
+                    newEventStr +
+                    line.substring(eventToUpdate.endIndex)
+
+    // Calculate character offsets for the change
+    const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
+    const from = lineStartOffset
+    const to = lineStartOffset + line.length
+
+    // Apply the change
+    const newLines = [...this.lines]
+    newLines[nodeLine - 1] = newLine
+    const newSource = newLines.join('\n')
+
+    // Persist the changes
+    this.source = newSource
+    this.lines = newLines
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from,
+        to,
+        insert: newLine,
+      },
+    }
+  }
+
   /**
    * Create an error result
    */

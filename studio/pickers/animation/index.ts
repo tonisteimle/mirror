@@ -23,7 +23,7 @@ export class AnimationPicker extends BasePicker {
   private previewTarget: HTMLElement | null = null
 
   constructor(config: AnimationPickerConfig, callbacks: PickerCallbacks) {
-    super(config, callbacks)
+    super(config, callbacks, 'animation')
 
     this.presets = config.presets || ANIMATION_PRESETS
     this.filteredPresets = this.presets

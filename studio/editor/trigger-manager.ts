@@ -5,10 +5,11 @@
  * Replaces individual trigger extensions with a single, configurable manager.
  */
 
-import { EditorView, ViewUpdate } from '@codemirror/view'
+import { EditorView, ViewUpdate, keymap } from '@codemirror/view'
 import { Prec, Transaction } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import type { BasePicker } from '../pickers'
+import { events } from '../core/events'
 import type {
   TriggerConfig,
   TriggerState,
@@ -43,6 +44,29 @@ export class EditorTriggerManager {
   private componentPrimitives: ComponentPrimitivesMap = new Map()
   private clickOutsideHandler: ((e: MouseEvent) => void) | null = null
   private clickOutsideTimeoutId: ReturnType<typeof setTimeout> | null = null
+  private pickerClosedUnsubscribe: (() => void) | null = null
+  private currentView: EditorView | null = null
+
+  constructor() {
+    // Listen for picker:closed events to sync state when picker closes itself
+    // (e.g., via Escape key handled by the picker directly)
+    this.pickerClosedUnsubscribe = events.on('picker:closed', () => {
+      if (this.state.isOpen) {
+        const triggerId = this.state.triggerId
+        const view = this.currentView
+        this.state = createDefaultState()
+        this.currentView = null
+        this.teardownClickOutside()
+        if (triggerId) {
+          events.emit('trigger:deactivated', { triggerId })
+        }
+        // Return focus to editor
+        if (view) {
+          view.focus()
+        }
+      }
+    })
+  }
 
   /**
    * Register a trigger configuration
@@ -112,8 +136,9 @@ export class EditorTriggerManager {
     // Document change listener (for char/regex/component triggers)
     extensions.push(this.createUpdateListener())
 
-    // Keyboard handler (highest priority)
-    extensions.push(Prec.highest(this.createKeyboardHandler()))
+    // Keyboard handler (Prec.highest is applied inside createKeyboardHandler)
+    // Note: createKeyboardHandler returns an array [keymap, backspaceHandler]
+    extensions.push(...this.createKeyboardHandler())
 
     // Double-click handler
     extensions.push(this.createDoubleClickHandler())
@@ -140,6 +165,12 @@ export class EditorTriggerManager {
 
     if (this.state.isOpen) {
       this.hidePicker()
+    }
+
+    // Close CodeMirror autocomplete to prevent conflicts
+    const closeCompletion = (window as any).closeCompletion
+    if (typeof closeCompletion === 'function') {
+      closeCompletion(view)
     }
 
     // Create context
@@ -171,6 +202,9 @@ export class EditorTriggerManager {
       triggerId,
     }
 
+    // Store view for selectCurrentFromPicker
+    this.currentView = view
+
     // Show picker at position
     if ('showAt' in picker && typeof picker.showAt === 'function') {
       picker.showAt(x, y)
@@ -185,6 +219,9 @@ export class EditorTriggerManager {
       anchor.remove()
     }
 
+    // Emit event for testing
+    events.emit('trigger:activated', { triggerId, startPos })
+
     // Setup click outside handler
     this.setupClickOutside()
   }
@@ -195,12 +232,35 @@ export class EditorTriggerManager {
   hidePicker(): void {
     if (!this.state.isOpen || !this.state.picker) return
 
+    const triggerId = this.state.triggerId
+    const view = this.currentView
+
     // hide() is optional on MinimalPicker
     if ('hide' in this.state.picker && typeof this.state.picker.hide === 'function') {
       this.state.picker.hide()
     }
     this.state = createDefaultState()
+    this.currentView = null
     this.teardownClickOutside()
+
+    // Emit event for testing
+    if (triggerId) {
+      events.emit('trigger:deactivated', { triggerId })
+    }
+
+    // Return focus to editor
+    if (view) {
+      view.focus()
+    }
+  }
+
+  /**
+   * Select the current item from within a picker (e.g., on Enter key)
+   * This allows pickers to trigger selection without having access to the EditorView
+   */
+  selectCurrentFromPicker(): void {
+    if (!this.currentView) return
+    this.selectCurrent(this.currentView)
   }
 
   /**
@@ -243,9 +303,9 @@ export class EditorTriggerManager {
 
     // Try to get selected value from different picker APIs
     if ('getSelectedValue' in picker && typeof picker.getSelectedValue === 'function') {
-      selectedValue = picker.getSelectedValue() ?? undefined
+      selectedValue = picker.getSelectedValue() || undefined
     } else if ('getValue' in picker && typeof picker.getValue === 'function') {
-      selectedValue = picker.getValue()
+      selectedValue = picker.getValue() || undefined
     } else if ('getSelectedIndex' in picker && 'getFilteredIcons' in picker) {
       // Icon picker specific
       const index = (picker as any).getSelectedIndex()
@@ -363,14 +423,31 @@ export class EditorTriggerManager {
   }
 
   private createKeyboardHandler(): Extension {
-    return EditorView.domEventHandlers({
+    // Use domEventHandlers for key interception (more reliable than keymap for our use case)
+    // domEventHandlers fire before keymap bindings
+    const keyHandler = Prec.highest(EditorView.domEventHandlers({
       keydown: (event: KeyboardEvent, view: EditorView) => {
+        const key = event.key
+
+        // Only handle keys when picker is open
         if (!this.state.isOpen) return false
 
         const config = this.triggers.get(this.state.triggerId!)
         const keyboard = config?.keyboard ?? { orientation: 'vertical' }
 
-        switch (event.key) {
+        switch (key) {
+          case 'Enter':
+            event.preventDefault()
+            this.selectCurrent(view)
+            return true
+
+          case 'Escape':
+            event.preventDefault()
+            const trigger = config?.trigger
+            const removeText = trigger?.type === 'char'
+            this.cancelTrigger(view, removeText)
+            return true
+
           case 'ArrowDown':
             event.preventDefault()
             this.navigatePicker('down')
@@ -397,32 +474,20 @@ export class EditorTriggerManager {
             }
             return false
 
-          case 'Enter':
-            event.preventDefault()
-            this.selectCurrent(view)
-            return true
-
-          case 'Escape':
-            event.preventDefault()
-            // Remove typed text for char triggers
-            const trigger = config?.trigger
-            const removeText = trigger?.type === 'char'
-            this.cancelTrigger(view, removeText)
-            return true
-
           case 'Backspace': {
-            // Check if we should close (backspace past start)
             const cursorPos = view.state.selection.main.head
             if (this.state.startPos !== null && cursorPos <= this.state.startPos) {
               this.hidePicker()
             }
-            return false // Let editor handle the backspace
+            return false // Let editor handle backspace
           }
         }
 
         return false
       },
-    })
+    }))
+
+    return [keyHandler]
   }
 
   private createDoubleClickHandler(): Extension {
@@ -716,6 +781,10 @@ export class EditorTriggerManager {
     this.teardownClickOutside()
     this.triggers.clear()
     this.componentPrimitives.clear()
+    if (this.pickerClosedUnsubscribe) {
+      this.pickerClosedUnsubscribe()
+      this.pickerClosedUnsubscribe = null
+    }
   }
 }
 

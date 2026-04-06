@@ -1,8 +1,14 @@
-$tasks: [
-  { title: "Design Review", status: "todo" },
-  { title: "Code Review", status: "doing" },
-  { title: "Testing", status: "done" }
-]
+// Data im Entry-Format (jetzt inline unterstützt!)
+tasks:
+  task1:
+    title: "Design Review"
+    status: "todo"
+  task2:
+    title: "Code Review"
+    status: "doing"
+  task3:
+    title: "Testing"
+    status: "done"
 
 Frame pad 20, gap 16
   Text "Editierbare Tabelle", fs 18, weight bold, col white

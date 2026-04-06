@@ -31,10 +31,15 @@ export function createIconTriggerConfig(): TriggerConfig {
       return picker
     },
     onSelect: (value: string, context: TriggerContext, view: EditorView) => {
+      // Add to recent icons
+      const picker = getGlobalIconPicker()
+      if ('addToRecent' in picker) {
+        picker.addToRecent(value)
+      }
       insertIcon(value, context, view)
     },
     liveFilter: true,
-    closeOnChars: [' '], // Close on space (user doesn't want to pick)
+    closeOnChars: [' ', '"', "'"], // Close on space or quote (user wants to type value directly)
     keyboard: {
       orientation: 'grid',
       columns: 7, // Match icon picker grid layout

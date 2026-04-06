@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Overlays</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Overlays</h1>
+      <p class="subtitle">Tooltip, Popover, HoverCard, Dialog, FloatingPanel, Tour und Presence</p>
+    </header>
+
+    <p class="intro">Overlays sind Elemente, die über dem normalen Content erscheinen. Alle folgen dem gleichen Muster: <code>Trigger:</code> definiert das auslösende Element, <code>Content:</code> den Overlay-Inhalt.</p>
+
+      <p><strong>Tooltip</strong> zeigt kurze Hinweise bei Hover. <strong>Popover</strong> öffnet bei Klick und zeigt reicheren Inhalt. <strong>HoverCard</strong> ist wie Popover, aber öffnet bei Hover. <strong>Dialog</strong> ist ein modales Fenster, das den Rest der Seite blockiert. <strong>FloatingPanel</strong> ist ein verschiebbares/skalierbares Panel. <strong>Tour</strong> führt Benutzer durch die UI. <strong>Presence</strong> steuert Ein-/Ausblend-Animationen.</p>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tooltip</h2>
+      <p>Tooltips zeigen kurze Hilfetexte bei Hover. Der <code>Trigger:</code> ist das Element, über das man hovert – der <code>Content:</code> erscheint dann daneben:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tooltip
+  Trigger: Button "Hover me"
+  Content: Text "This is a tooltip"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit <code>positioning</code> bestimmst du, wo der Tooltip erscheint. Mit <code>openDelay</code> und <code>closeDelay</code> steuerst du die Verzögerung in Millisekunden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16, bg #0a0a0a, pad 16, rad 8
+  Tooltip positioning "top"
+    Trigger: Button "Top"
+    Content: Text "Tooltip on top"
+  Tooltip positioning "bottom", openDelay 500
+    Trigger: Button "Delayed"
+    Content: Text "Shows after 500ms"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Content kann auch gestylt werden – du kannst beliebige Elemente verwenden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tooltip
+  Trigger: Button "Multi-line"
+  Content: Frame ver, gap 4, pad 8
+    Text "Title", weight bold
+    Text "Description here", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Popover</h2>
+      <p>Popovers öffnen bei Klick und bleiben offen, bis man außerhalb klickt oder Escape drückt. Sie eignen sich für reicheren Inhalt wie Formulare oder Listen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover
+  Trigger: Button "Open Popover"
+  Content: Frame ver, gap 8
+    Text "Title", weight bold
+    Text "Some description text"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit <code>CloseTrigger:</code> kannst du einen expliziten Schließen-Button einbauen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover
+  Trigger: Button "Open"
+  Content: Frame ver, gap 12, pad 16, bg #1a1a1a, rad 8, w 200
+    Frame hor, spread, ver-center
+      Text "Popover Title", weight bold
+      CloseTrigger: Button "X", bg transparent, col #666
+    Text "Content goes here"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>positioning</code> funktioniert wie bei Tooltip. Mit <code>closeOnEscape</code> und <code>closeOnInteractOutside</code> steuerst du das Schließ-Verhalten:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover positioning "bottom", closeOnEscape
+  Trigger: Button "Settings"
+  Content: Frame ver, gap 8, pad 12, bg #1a1a1a, rad 8, w 180
+    Frame hor, spread, ver-center
+      Text "Notifications"
+      Switch
+    Frame hor, spread, ver-center
+      Text "Dark mode"
+      Switch</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>HoverCard</h2>
+      <p>HoverCard ist wie Popover, aber öffnet bei Hover statt Klick. Das ist nützlich für Vorschauen von Links oder User-Profilen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>HoverCard
+  Trigger: Text "Hover over me", underline, cursor pointer
+  Content: Text "HoverCard content"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Ein typisches Beispiel ist eine User-Vorschau bei Hover über einen @-Mention:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>HoverCard positioning "bottom"
+  Trigger: Text "@johndoe", col #3b82f6, underline, cursor pointer
+  Content: Frame ver, gap 12, pad 16, bg #1a1a1a, rad 12, w 250
+    Frame hor, gap 12, ver-center
+      Frame w 48, h 48, bg #3b82f6, rad 99, center
+        Text "JD", col white, weight 500
+      Frame ver
+        Text "John Doe", weight 600
+        Text "@johndoe", col #666, fs 14
+    Text "Software engineer building great tools.", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Dialog</h2>
+      <p>Dialoge sind modale Fenster – sie blockieren die Interaktion mit dem Rest der Seite. Neben <code>Trigger:</code> und <code>Content:</code> gibt es <code>Backdrop:</code> für den Hintergrund:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Open Dialog"
+  Content: Frame ver, gap 8, pad 16, bg #1a1a1a, rad 12
+    Text "Dialog Title", weight bold, fs 18
+    Text "This is the dialog content."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit <code>CloseTrigger:</code> baust du Schließen-Buttons ein. Diese können überall im Content platziert werden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Open"
+  Content: Frame ver, gap 12, pad 24, bg #1a1a1a, rad 12, w 320
+    Frame hor, spread, ver-center
+      Text "Settings", weight bold, fs 18
+      CloseTrigger: Button "X", bg transparent
+    Text "Dialog content here"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit <code>Backdrop:</code> kannst du den Overlay-Hintergrund stylen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Custom backdrop"
+  Backdrop: bg rgba(0,0,100,0.5)
+  Content: Frame pad 24, bg #1a1a1a, rad 12
+    Text "Dialog with blue backdrop"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Confirm Dialog</h2>
+      <p>Ein typischer Bestätigungs-Dialog mit zwei Buttons:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Delete item", bg #ef4444
+  Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 380
+    Frame hor, gap 12, ver-center
+      Frame w 40, h 40, rad 99, bg rgba(239,68,68,0.2), center
+        Icon "trash", col #ef4444
+      Frame ver
+        Text "Delete Item", weight bold, fs 16
+        Text "This action cannot be undone.", col #888, fs 14
+    Frame hor, gap 8
+      CloseTrigger: Button "Cancel" grow
+      Button "Delete", bg #ef4444, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Form Dialog</h2>
+      <p>Ein Dialog mit Eingabefeldern:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Create new"
+  Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 400
+    Frame hor, spread, ver-center
+      Text "Create Project", weight bold, fs 18
+      CloseTrigger: Button "X", bg transparent, col #666
+    Frame ver, gap 12
+      Frame ver, gap 4
+        Label "Project Name"
+        Input placeholder "Enter project name"
+      Frame ver, gap 4
+        Label "Description"
+        Textarea placeholder "Enter description", h 80
+    Frame hor, gap 8
+      CloseTrigger: Button "Cancel" grow
+      Button "Create", bg #3b82f6, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Icon Toolbar</h2>
+      <p>Tooltips für eine Icon-Leiste:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
+  Tooltip positioning "bottom"
+    Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
+      Icon "home"
+    Content: Text "Home", fs 12
+  Tooltip positioning "bottom"
+    Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
+      Icon "settings"
+    Content: Text "Settings", fs 12
+  Tooltip positioning "bottom"
+    Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
+      Icon "user"
+    Content: Text "Profile", fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>FloatingPanel</h2>
+      <p>Verschiebbares und skalierbares Panel – ideal für Tool-Paletten, Inspektoren oder Chat-Widgets.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>FloatingPanel draggable, resizable
+  Trigger: Button "Panel öffnen", pad 10 20, bg #2563eb, col white, rad 6
+  Content: Frame w 300, h 200, bg #1a1a1a, rad 12, shadow lg, clip
+    Header: Frame hor, spread, ver-center, pad 12 16, bg #252525, cursor grab
+      DragTrigger: Frame hor, gap 8, ver-center
+        Icon "grip-vertical", ic #666, is 14
+        Text "Tool-Palette", col white, weight 500
+      CloseTrigger: Frame pad 4, rad 4, cursor pointer
+        hover:
+          bg #333
+        Icon "x", ic #888, is 14
+    Body: Frame pad 16, gap 8
+      Text "Panel-Inhalt hier", col #888
+      Button "Aktion", pad 8 16, bg #333, col white, rad 4
+    ResizeTrigger: absolute, bottom 4, right 4, cursor nwse-resize
+      Icon "grip", ic #444, is 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit fester Position</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>FloatingPanel defaultPosition "{ x: 100, y: 50 }", draggable
+  Trigger: Button "Inspector", pad 8 16, bg #333, col white, rad 4
+  Content: Frame w 250, bg #1a1a1a, rad 8, shadow lg
+    Header: Frame hor, spread, pad 12, bg #252525, rad 8 8 0 0, cursor grab
+      DragTrigger: Text "Inspector", col white, fs 13, weight 500
+      CloseTrigger: Icon "x", ic #666, is 14, cursor pointer
+    Body: Frame pad 12, gap 8
+      Frame gap 4
+        Text "Position", col #666, fs 11
+        Text "x: 120, y: 340", col white, fs 12, font mono
+      Frame gap 4
+        Text "Size", col #666, fs 11
+        Text "200 × 150", col white, fs 12, font mono</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Skalierbar mit Limits</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>FloatingPanel resizable, minSize "{ width: 200, height: 150 }", maxSize "{ width: 500, height: 400 }"
+  Trigger: Button "Notes", pad 8 16, bg #333, col white, rad 4
+  Content: Frame w 280, h 200, bg #1a1a1a, rad 8, shadow lg
+    Header: Frame pad 12, bg #252525, rad 8 8 0 0
+      Text "Notizen", col white, weight 500
+    Body: Frame pad 12, h full
+      Textarea placeholder "Notizen hier...", w full, h full, bg #252525, col white, bor 0, rad 4
+    ResizeTrigger: absolute, bottom 0, right 0, w 16, h 16, cursor nwse-resize</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>open</code></td><td>boolean</td><td>Offen (controlled)</td></tr>
+        <tr><td><code>defaultOpen</code></td><td>boolean</td><td>Start-Zustand</td></tr>
+        <tr><td><code>position</code></td><td>object</td><td>Position <code>{ x, y }</code></td></tr>
+        <tr><td><code>defaultPosition</code></td><td>object</td><td>Start-Position</td></tr>
+        <tr><td><code>size</code></td><td>object</td><td>Größe <code>{ width, height }</code></td></tr>
+        <tr><td><code>defaultSize</code></td><td>object</td><td>Start-Größe</td></tr>
+        <tr><td><code>minSize</code></td><td>object</td><td>Minimale Größe</td></tr>
+        <tr><td><code>maxSize</code></td><td>object</td><td>Maximale Größe</td></tr>
+        <tr><td><code>draggable</code></td><td>boolean</td><td>Verschiebbar</td></tr>
+        <tr><td><code>resizable</code></td><td>boolean</td><td>Skalierbar</td></tr>
+        <tr><td><code>lockAspectRatio</code></td><td>boolean</td><td>Seitenverhältnis fixieren</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Auslöser</td></tr>
+        <tr><td><code>Positioner:</code></td><td>Positionierungs-Container</td></tr>
+        <tr><td><code>Content:</code></td><td>Panel-Inhalt</td></tr>
+        <tr><td><code>Header:</code></td><td>Header-Bereich</td></tr>
+        <tr><td><code>Body:</code></td><td>Body-Bereich</td></tr>
+        <tr><td><code>DragTrigger:</code></td><td>Drag-Handle</td></tr>
+        <tr><td><code>CloseTrigger:</code></td><td>Schließen-Button</td></tr>
+        <tr><td><code>ResizeTrigger:</code></td><td>Resize-Handle</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tour</h2>
+      <p>Geführte Tour durch die UI – zeigt Schritte mit Spotlight auf Elemente.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tour defaultStep 1
+  Backdrop: bg rgba(0,0,0,0.7)
+  Spotlight: rad 8
+  Content: Frame w 300, bg #1a1a1a, rad 12, pad 20, shadow lg, gap 12
+  Title: col white, fs 16, weight 600
+  Description: col #888, fs 14
+  Actions: hor, gap 8, margin 8 0 0 0
+  PrevTrigger: Button "Zurück", pad 8 16, bg #333, col white, rad 6
+  NextTrigger: Button "Weiter", pad 8 16, bg #2563eb, col white, rad 6
+  CloseTrigger: absolute, top 12, right 12
+    Icon "x", ic #666, is 16, cursor pointer
+  ProgressText: col #666, fs 12
+
+  TourStep target "[name=search]"
+    Title: "Suche"
+    Description: "Hier kannst du nach Inhalten suchen."
+  TourStep target "[name=sidebar]"
+    Title: "Navigation"
+    Description: "Die Sidebar enthält alle Bereiche."
+  TourStep target "[name=editor]"
+    Title: "Editor"
+    Description: "Hier bearbeitest du deine Dateien."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Kompakte Tour</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tour defaultStep 1, closeOnEscape, closeOnOutsideClick
+  Backdrop: bg rgba(0,0,0,0.5)
+  Spotlight: rad 4, spotlightOffset 8
+  Content: Frame w 260, bg #1a1a1a, rad 8, pad 16, shadow lg
+  Title: col white, fs 14, weight 500
+  Description: col #888, fs 13, margin 4 0 0 0
+  Actions: hor, spread, margin 12 0 0 0
+  PrevTrigger: col #888, fs 13, cursor pointer
+    "← Zurück"
+  NextTrigger: col #2563eb, fs 13, cursor pointer
+    "Weiter →"
+  ProgressText: col #444, fs 11
+
+  TourStep target "#feature-1"
+    Title: "Neue Funktion"
+    Description: "Das ist neu in Version 2.0."
+  TourStep target "#feature-2"
+    Title: "Verbesserung"
+    Description: "Das wurde verbessert."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit Fortschritts-Anzeige</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tour defaultStep 1
+  Backdrop: bg rgba(0,0,0,0.6)
+  Content: Frame w 320, bg #1a1a1a, rad 12, clip
+    Frame pad 16, gap 8
+      Title: col white, fs 16, weight 500
+      Description: col #888, fs 14
+    Frame pad 12 16, bg #252525, hor, spread, ver-center
+      ProgressText: col #666, fs 12
+      Actions: hor, gap 8
+        PrevTrigger: Button "←", pad 8, bg #333, col white, rad 4
+        NextTrigger: Button "→", pad 8, bg #2563eb, col white, rad 4
+
+  TourStep target "#step1"
+    Title: "Schritt 1"
+    Description: "Erster Schritt der Tour."
+  TourStep target "#step2"
+    Title: "Schritt 2"
+    Description: "Zweiter Schritt der Tour."
+  TourStep target "#step3"
+    Title: "Schritt 3"
+    Description: "Letzter Schritt."</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>step</code></td><td>number</td><td>Aktueller Schritt (controlled)</td></tr>
+        <tr><td><code>defaultStep</code></td><td>number</td><td>Start-Schritt</td></tr>
+        <tr><td><code>closeOnEscape</code></td><td>boolean</td><td>Mit Escape schließen</td></tr>
+        <tr><td><code>closeOnOutsideClick</code></td><td>boolean</td><td>Bei Klick außerhalb schließen</td></tr>
+        <tr><td><code>preventInteraction</code></td><td>boolean</td><td>Interaktion mit Hintergrund verhindern</td></tr>
+        <tr><td><code>spotlightOffset</code></td><td>number</td><td>Abstand um Spotlight</td></tr>
+        <tr><td><code>spotlightRadius</code></td><td>number</td><td>Radius des Spotlights</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Backdrop:</code></td><td>Dunkler Hintergrund</td></tr>
+        <tr><td><code>Spotlight:</code></td><td>Hervorgehobener Bereich</td></tr>
+        <tr><td><code>Positioner:</code></td><td>Positionierung</td></tr>
+        <tr><td><code>Content:</code></td><td>Tooltip-Box</td></tr>
+        <tr><td><code>Title:</code></td><td>Titel</td></tr>
+        <tr><td><code>Description:</code></td><td>Beschreibung</td></tr>
+        <tr><td><code>Arrow:</code></td><td>Pfeil zum Element</td></tr>
+        <tr><td><code>CloseTrigger:</code></td><td>Schließen-Button</td></tr>
+        <tr><td><code>PrevTrigger:</code></td><td>Zurück-Button</td></tr>
+        <tr><td><code>NextTrigger:</code></td><td>Weiter-Button</td></tr>
+        <tr><td><code>ProgressText:</code></td><td>"1 von 3"</td></tr>
+        <tr><td><code>Actions:</code></td><td>Button-Container</td></tr>
+      </table>
+
+      <h3>TourStep Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>target</code></td><td>string</td><td>CSS-Selector des Ziel-Elements</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Presence</h2>
+      <p>Steuert Ein- und Ausblend-Animationen von Elementen. Nützlich für sanfte Übergänge.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$visible: true
+
+Frame gap 16
+  Button "Toggle", pad 10 20, bg #333, col white, rad 6, toggle()
+    on:
+      "Ausblenden"
+    "Einblenden"
+
+  Presence present $visible
+    Root: Frame pad 20, bg #2563eb, rad 8
+      anim fade-in, duration 200
+      Text "Ich werde ein- und ausgeblendet", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit Slide-Animation</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$showPanel: false
+
+Frame gap 16
+  Button "Panel anzeigen", pad 10 20, bg #333, col white, rad 6, show(Panel)
+
+  Presence present $showPanel, lazyMount, unmountOnExit
+    Root: Frame w 300, bg #1a1a1a, pad 20, rad 12, shadow lg, name Panel
+      anim slide-in, direction left, duration 300
+      Frame hor, spread, ver-center, margin 0 0 16 0
+        Text "Side Panel", col white, weight 500
+        Button "X", bg transparent, col #666, hide(Panel)
+      Text "Panel-Inhalt hier", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Für Listen-Items</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>$items: ["A", "B", "C"]
+
+Frame gap 8
+  each item in $items
+    Presence present true, lazyMount
+      Root: Frame pad 12, bg #1a1a1a, rad 6
+        anim scale-in, duration 150, delay index * 50
+        Text item, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>present</code></td><td>boolean</td><td>Element sichtbar</td></tr>
+        <tr><td><code>lazyMount</code></td><td>boolean</td><td>Erst bei Anzeige mounten</td></tr>
+        <tr><td><code>unmountOnExit</code></td><td>boolean</td><td>Nach Ausblenden unmounten</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Das animierte Element</td></tr>
+      </table>
+
+      <h3>Typische Animationen</h3>
+      <table class="ref-table">
+        <tr><th>Animation</th><th>Beschreibung</th></tr>
+        <tr><td><code>fade-in</code> / <code>fade-out</code></td><td>Ein-/Ausblenden</td></tr>
+        <tr><td><code>slide-in</code> / <code>slide-out</code></td><td>Reinsliden</td></tr>
+        <tr><td><code>scale-in</code> / <code>scale-out</code></td><td>Skalieren</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- ZUSAMMENFASSUNG -->
+    <!-- ============================================================ -->
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Auslöser</th><th>Anwendung</th></tr>
+        <tr><td><code>Tooltip</code></td><td>Hover</td><td>Kurze Hilfetexte</td></tr>
+        <tr><td><code>Popover</code></td><td>Klick</td><td>Reicherer Inhalt, Menüs</td></tr>
+        <tr><td><code>HoverCard</code></td><td>Hover</td><td>Vorschauen, User-Profile</td></tr>
+        <tr><td><code>Dialog</code></td><td>Klick</td><td>Modale Fenster, Formulare</td></tr>
+        <tr><td><code>FloatingPanel</code></td><td>Klick</td><td>Verschiebbare/skalierbare Panels</td></tr>
+        <tr><td><code>Tour</code></td><td>Programmatisch</td><td>Geführte UI-Touren</td></tr>
+        <tr><td><code>Presence</code></td><td>Binding</td><td>Ein-/Ausblend-Animationen</td></tr>
+      </table>
+
+      <p><strong>Gemeinsame Slots:</strong> <code>Trigger:</code>, <code>Content:</code>, <code>CloseTrigger:</code></p>
+      <p><strong>Dialog:</strong> <code>Backdrop:</code>, <code>modal</code>, <code>preventScroll</code></p>
+      <p><strong>FloatingPanel:</strong> <code>Header:</code>, <code>Body:</code>, <code>DragTrigger:</code>, <code>ResizeTrigger:</code>, <code>draggable</code>, <code>resizable</code></p>
+      <p><strong>Tour:</strong> <code>Backdrop:</code>, <code>Spotlight:</code>, <code>PrevTrigger:</code>, <code>NextTrigger:</code>, <code>ProgressText:</code></p>
+      <p><strong>Presence:</strong> <code>present</code>, <code>lazyMount</code>, <code>unmountOnExit</code></p>
+      <p><strong>Optionen:</strong> <code>positioning</code>, <code>openDelay</code>, <code>closeDelay</code>, <code>closeOnEscape</code></p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="11-navigation.html">&larr; Navigation</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="13-anzeige.html">Anzeige &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

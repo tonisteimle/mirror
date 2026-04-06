@@ -6,7 +6,7 @@
  */
 
 import type { BreadcrumbItem } from '../../compiler/studio/selection-manager'
-import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../compiler/studio/property-extractor'
+import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory, ExtractedInteraction, ExtractedEvent, ExtractedAction } from '../../compiler/studio/property-extractor'
 import type { CodeModifier, ModificationResult, FilesAccess } from '../../compiler/studio/code-modifier'
 import { PROPERTY_ICONS, LAYOUT_ICONS, getLayoutIcon } from '../icons'
 
@@ -409,6 +409,8 @@ export class PropertyPanel {
     const showDefineBtn = !element.isDefinition && hasInlineProperties && this.options.filesAccess
 
     const categoriesHtml = this.renderCategories(element.categories)
+    const interactionsHtml = this.renderInteractionsSection(element.interactions)
+    const eventsHtml = this.renderEventsSection(element.events)
 
     this.container.innerHTML = `
       <div class="pp-header">
@@ -425,6 +427,8 @@ export class PropertyPanel {
         </div>
       ` : ''}
       <div class="pp-content">
+        ${interactionsHtml}
+        ${eventsHtml}
         ${categoriesHtml}
       </div>
     `
@@ -1810,6 +1814,94 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   }
 
   /**
+   * Render interactions section (toggle, exclusive, select)
+   */
+  private renderInteractionsSection(interactions: ExtractedInteraction[]): string {
+    // Always show the section for interactive elements (can add interaction even if none exist)
+    const interactionModes: Array<{ name: 'toggle' | 'exclusive' | 'select'; label: string; description: string }> = [
+      { name: 'toggle', label: 'Toggle', description: 'Toggle between states on click' },
+      { name: 'exclusive', label: 'Exclusive', description: 'Only one can be active (radio behavior)' },
+      { name: 'select', label: 'Select', description: 'Selection behavior for lists' },
+    ]
+
+    // Check which mode is active
+    const activeInteraction = interactions.length > 0 ? interactions[0] : null
+
+    const buttons = interactionModes.map(mode => {
+      const isActive = activeInteraction?.name === mode.name
+      return `
+        <button class="pp-interaction-btn ${isActive ? 'active' : ''}"
+                data-interaction="${mode.name}"
+                title="${mode.description}">
+          ${mode.label}
+        </button>
+      `
+    }).join('')
+
+    return `
+      <div class="pp-section">
+        <div class="pp-label">Interactions</div>
+        <div class="pp-interaction-row">
+          ${buttons}
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * Render events section (onclick, onhover, etc.)
+   */
+  private renderEventsSection(events: ExtractedEvent[]): string {
+    const eventRows = events.map((event, index) => {
+      // Format the event display
+      const eventName = event.key ? `${event.name} ${event.key}` : event.name
+      const actionsStr = event.actions.map(a => {
+        if (a.target) {
+          return `${a.name}(${a.target})`
+        }
+        return a.isFunctionCall ? `${a.name}()` : a.name
+      }).join(', ')
+
+      return `
+        <div class="pp-event-row" data-event-index="${index}">
+          <span class="pp-event-name">${this.escapeHtml(eventName)}</span>
+          <span class="pp-event-arrow">→</span>
+          <span class="pp-event-action">${this.escapeHtml(actionsStr)}</span>
+          <button class="pp-event-edit" data-event-index="${index}" title="Edit">
+            <svg viewBox="0 0 14 14" width="12" height="12">
+              <path d="M10.5 1.5L12.5 3.5L4.5 11.5L1.5 12.5L2.5 9.5L10.5 1.5Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            </svg>
+          </button>
+          <button class="pp-event-delete" data-event-index="${index}" title="Delete">
+            <svg viewBox="0 0 14 14" width="12" height="12">
+              <path d="M3 3L11 11M11 3L3 11" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </button>
+        </div>
+      `
+    }).join('')
+
+    const hasEvents = events.length > 0
+
+    return `
+      <div class="pp-section">
+        <div class="pp-label-with-action">
+          <span class="pp-label">Events</span>
+          <button class="pp-add-event-btn" title="Add event">
+            <svg viewBox="0 0 14 14" width="12" height="12">
+              <path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            Add
+          </button>
+        </div>
+        <div class="pp-events-list ${hasEvents ? '' : 'empty'}">
+          ${hasEvents ? eventRows : '<span class="pp-events-empty">No events defined</span>'}
+        </div>
+      </div>
+    `
+  }
+
+  /**
    * Shadow presets
    */
   private readonly SHADOW_PRESETS = ['none', 'sm', 'md', 'lg'] as const
@@ -2566,6 +2658,30 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     const behaviorInputs = this.container.querySelectorAll('[data-behavior-input]')
     behaviorInputs.forEach(input => {
       input.addEventListener('change', (e) => this.handleBehaviorInput(e))
+    })
+
+    // Interaction toggle buttons
+    const interactionBtns = this.container.querySelectorAll('.pp-interaction-btn')
+    interactionBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => this.handleInteractionToggle(e))
+    })
+
+    // Add event button
+    const addEventBtn = this.container.querySelector('.pp-add-event-btn')
+    if (addEventBtn) {
+      addEventBtn.addEventListener('click', () => this.handleAddEvent())
+    }
+
+    // Edit event buttons
+    const editEventBtns = this.container.querySelectorAll('.pp-event-edit')
+    editEventBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => this.handleEditEvent(e))
+    })
+
+    // Delete event buttons
+    const deleteEventBtns = this.container.querySelectorAll('.pp-event-delete')
+    deleteEventBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => this.handleDeleteEvent(e))
     })
 
     // Initialize Tom Select for dropdowns
@@ -4272,6 +4388,251 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
       const result = this.codeModifier.updateProperty(nodeId, propName, quotedValue)
       this.onCodeChange(result)
     }
+  }
+
+  // ===========================================
+  // INTERACTION & EVENT HANDLERS
+  // ===========================================
+
+  /**
+   * Handle interaction toggle (toggle, exclusive, select)
+   *
+   * Interaction modes are added as implicit onclick events:
+   * - toggle() → onclick toggle()
+   * - exclusive() → onclick exclusive()
+   * - select() → onclick select()
+   *
+   * IMPORTANT: Only modifies interaction events, not other onclick handlers.
+   */
+  private handleInteractionToggle(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.pp-interaction-btn') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const interactionName = btn.dataset.interaction as 'toggle' | 'exclusive' | 'select'
+    if (!interactionName) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+    const interactionNames = new Set(['toggle', 'exclusive', 'select'])
+
+    // Find ALL existing interactions
+    const allInteractions = this.currentElement.interactions.filter(i =>
+      interactionNames.has(i.name)
+    )
+
+    // Find the specific interaction that matches the clicked button
+    const thisInteraction = allInteractions.find(i => i.name === interactionName)
+
+    // Find any OTHER interaction (not the one clicked)
+    const otherInteraction = allInteractions.find(i => i.name !== interactionName)
+
+    // Check if THIS specific interaction is active (not just any interaction)
+    const isThisActive = !!thisInteraction
+
+    // Check if there are other onclick events that are NOT interactions
+    // (e.g., onclick navigate(View), onclick show(Menu))
+    const hasOtherOnclickEvents = this.currentElement.events.some(event => {
+      if (event.name !== 'onclick') return false
+      // Check if any action is NOT an interaction
+      return event.actions.some(action => !interactionNames.has(action.name))
+    })
+
+    if (hasOtherOnclickEvents && !thisInteraction && !otherInteraction) {
+      // Warn user: there are other onclick events that would be affected
+      console.warn('[PropertyPanel] Cannot add interaction: element has other onclick events')
+      this.showErrorFeedback(
+        'Element has other onclick events. Remove them first or edit manually.',
+        'interaction'
+      )
+      return
+    }
+
+    if (isThisActive) {
+      // This interaction is active → remove it
+      const result = this.codeModifier.removeEvent(nodeId, 'onclick')
+      if (result.success) {
+        this.onCodeChange(result)
+      } else {
+        this.showErrorFeedback(result.error || 'Failed to remove interaction', 'interaction')
+      }
+    } else if (otherInteraction) {
+      // Another interaction is active → replace it with this one
+      const result = this.codeModifier.updateEvent(
+        nodeId,
+        'onclick',
+        undefined, // no key
+        'onclick',
+        interactionName
+      )
+      if (result.success) {
+        this.onCodeChange(result)
+      } else {
+        this.showErrorFeedback(result.error || 'Failed to update interaction', 'interaction')
+      }
+    } else {
+      // No interaction active → add this one
+      const result = this.codeModifier.addEvent(nodeId, 'onclick', interactionName)
+      if (result.success) {
+        this.onCodeChange(result)
+      } else {
+        this.showErrorFeedback(result.error || 'Failed to add interaction', 'interaction')
+      }
+    }
+  }
+
+  /**
+   * Handle add event button click
+   *
+   * Opens the ActionPicker to configure a new event
+   */
+  private handleAddEvent(): void {
+    if (!this.currentElement) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Get named elements for target selection
+    const namedElements = this.getNamedElementsInScope()
+
+    // Create and show ActionPicker
+    const { createActionPicker } = require('../pickers/action')
+    const picker = createActionPicker(
+      {
+        availableElements: namedElements,
+      },
+      {
+        onSelect: (value: { event: string; action: string; target?: string; key?: string }) => {
+          const result = this.codeModifier.addEvent(
+            nodeId,
+            value.event,
+            value.action,
+            value.target,
+            value.key
+          )
+          if (result.success) {
+            this.onCodeChange(result)
+          } else {
+            this.showErrorFeedback(result.error || 'Failed to add event', 'event')
+          }
+        },
+        onCancel: () => {
+          // Picker handles its own closing
+        },
+        onClose: () => {
+          // Cleanup if needed
+        },
+      }
+    )
+
+    // Position the picker near the add button
+    const addBtn = this.container.querySelector('.pp-add-event-btn')
+    if (addBtn) {
+      const rect = addBtn.getBoundingClientRect()
+      picker.show(rect.left, rect.bottom + 4)
+    } else {
+      picker.show(100, 100)
+    }
+  }
+
+  /**
+   * Handle edit event button click
+   *
+   * Opens the ActionPicker with existing event values
+   */
+  private handleEditEvent(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.pp-event-edit') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const eventIndex = parseInt(btn.dataset.eventIndex || '0', 10)
+    const event = this.currentElement.events[eventIndex]
+    if (!event) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Get the first action for initial values
+    const firstAction = event.actions[0]
+    const initialValue = {
+      event: event.name,
+      key: event.key,
+      action: firstAction?.name || 'toggle',
+      target: firstAction?.target,
+    }
+
+    // Get named elements for target selection
+    const namedElements = this.getNamedElementsInScope()
+
+    // Create and show ActionPicker
+    const { createActionPicker } = require('../pickers/action')
+    const picker = createActionPicker(
+      {
+        initialValue,
+        availableElements: namedElements,
+      },
+      {
+        onSelect: (value: { event: string; action: string; target?: string; key?: string }) => {
+          // Update the event
+          const result = this.codeModifier.updateEvent(
+            nodeId,
+            event.name,
+            event.key,
+            value.event,
+            value.action,
+            value.target,
+            value.key
+          )
+          if (result.success) {
+            this.onCodeChange(result)
+          } else {
+            this.showErrorFeedback(result.error || 'Failed to update event', 'event')
+          }
+        },
+        onCancel: () => {
+          // Picker handles its own closing
+        },
+        onClose: () => {
+          // Cleanup if needed
+        },
+      }
+    )
+
+    // Position the picker near the edit button
+    const rect = btn.getBoundingClientRect()
+    picker.show(rect.left, rect.bottom + 4)
+  }
+
+  /**
+   * Handle delete event button click
+   *
+   * Removes the event from the element
+   */
+  private handleDeleteEvent(e: Event): void {
+    const btn = (e.target as HTMLElement).closest('.pp-event-delete') as HTMLElement
+    if (!btn || !this.currentElement) return
+
+    const eventIndex = parseInt(btn.dataset.eventIndex || '0', 10)
+    const event = this.currentElement.events[eventIndex]
+    if (!event) return
+
+    const nodeId = this.currentElement.templateId || this.currentElement.nodeId
+
+    // Remove the event
+    const result = this.codeModifier.removeEvent(nodeId, event.name, event.key)
+    if (result.success) {
+      this.onCodeChange(result)
+    } else {
+      this.showErrorFeedback(result.error || 'Failed to delete event', 'event')
+    }
+  }
+
+  /**
+   * Get named elements in scope for target selection
+   *
+   * Returns element names that can be used as targets for actions
+   * like show(Menu), navigate(View), etc.
+   */
+  private getNamedElementsInScope(): string[] {
+    // For now, return an empty array - this could be enhanced
+    // to query the AST for named elements (elements with `name` property)
+    // TODO: Implement proper scope analysis to find named elements
+    return []
   }
 
   /**

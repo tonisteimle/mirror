@@ -64,6 +64,40 @@
     .intro-desc { font-size: 12px; color: var(--text-dim); }
     .intro-arrow { color: #2563eb; font-size: 18px; }
 
+    .main-group {
+      margin-bottom: 48px;
+    }
+    .main-group-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .main-group-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-bright);
+      letter-spacing: -0.3px;
+    }
+    .main-group-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+    .main-group-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .main-group-icon.language { background: #2563eb22; }
+    .main-group-icon.components { background: #10b98122; }
+
     .section { margin-bottom: 24px; }
     .section-title {
       font-size: 11px;
@@ -159,150 +193,155 @@
       <span class="intro-arrow">→</span>
     </a>
 
-    <div class="section">
-      <div class="section-title">Grundlagen</div>
-      <div class="grid">
-        <a href="01-elemente.html" class="card">
-          <span class="card-num">01</span>
-          <div class="card-content">
-            <div class="card-title">Elemente</div>
-            <div class="card-desc">Frame, Text, Button und Properties</div>
-          </div>
-        </a>
-        <a href="02-komponenten.html" class="card">
-          <span class="card-num">02</span>
-          <div class="card-content">
-            <div class="card-title">Komponenten</div>
-            <div class="card-desc">Wiederverwendbare UI-Bausteine mit Slots</div>
-          </div>
-        </a>
-        <a href="03-tokens.html" class="card">
-          <span class="card-num">03</span>
-          <div class="card-content">
-            <div class="card-title">Tokens</div>
-            <div class="card-desc">Vererbung und Design-Variablen</div>
-          </div>
-        </a>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- DIE SPRACHE -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="main-group">
+      <div class="main-group-header">
+        <div class="main-group-icon language">📐</div>
+        <div>
+          <div class="main-group-title">Die Sprache</div>
+          <div class="main-group-desc">Syntax, Konzepte und Patterns der Mirror DSL</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Grundlagen</div>
+        <div class="grid">
+          <a href="01-elemente.html" class="card">
+            <span class="card-num">01</span>
+            <div class="card-content">
+              <div class="card-title">Elemente</div>
+              <div class="card-desc">Frame, Text, Button und Properties</div>
+            </div>
+          </a>
+          <a href="02-komponenten.html" class="card">
+            <span class="card-num">02</span>
+            <div class="card-content">
+              <div class="card-title">Komponenten</div>
+              <div class="card-desc">Wiederverwendbare UI-Bausteine mit Slots</div>
+            </div>
+          </a>
+          <a href="03-tokens.html" class="card">
+            <span class="card-num">03</span>
+            <div class="card-content">
+              <div class="card-title">Tokens</div>
+              <div class="card-desc">Vererbung und Design-Variablen</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Layout & Styling</div>
+        <div class="grid">
+          <a href="04-layout.html" class="card">
+            <span class="card-num">04</span>
+            <div class="card-content">
+              <div class="card-title">Layout</div>
+              <div class="card-desc">Flex, Grid und Positionierung</div>
+            </div>
+          </a>
+          <a href="05-styling.html" class="card">
+            <span class="card-num">05</span>
+            <div class="card-content">
+              <div class="card-title">Styling</div>
+              <div class="card-desc">Farben, Schriften und Effekte</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Interaktion</div>
+        <div class="grid">
+          <a href="06-states.html" class="card">
+            <span class="card-num">06</span>
+            <div class="card-content">
+              <div class="card-title">States</div>
+              <div class="card-desc">Hover, Toggle und Custom States</div>
+            </div>
+          </a>
+          <a href="07-functions.html" class="card">
+            <span class="card-num">07</span>
+            <div class="card-content">
+              <div class="card-title">Functions</div>
+              <div class="card-desc">show, hide, navigate und mehr</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Daten & Struktur</div>
+        <div class="grid">
+          <a href="08-daten.html" class="card">
+            <span class="card-num">08</span>
+            <div class="card-content">
+              <div class="card-title">Daten</div>
+              <div class="card-desc">Variablen, Binding, Bedingungen</div>
+            </div>
+          </a>
+          <a href="09-seiten.html" class="card">
+            <span class="card-num">09</span>
+            <div class="card-content">
+              <div class="card-title">Seiten</div>
+              <div class="card-desc">Multi-File Apps und use</div>
+            </div>
+          </a>
+        </div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">Layout & Styling</div>
-      <div class="grid">
-        <a href="04-layout.html" class="card">
-          <span class="card-num">04</span>
-          <div class="card-content">
-            <div class="card-title">Layout</div>
-            <div class="card-desc">Flex, Grid und Positionierung</div>
-          </div>
-        </a>
-        <a href="05-styling.html" class="card">
-          <span class="card-num">05</span>
-          <div class="card-content">
-            <div class="card-title">Styling</div>
-            <div class="card-desc">Farben, Schriften und Effekte</div>
-          </div>
-        </a>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- KOMPONENTEN-BIBLIOTHEK -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="main-group">
+      <div class="main-group-header">
+        <div class="main-group-icon components">🧩</div>
+        <div>
+          <div class="main-group-title">Komponenten-Bibliothek</div>
+          <div class="main-group-desc">50+ fertige UI-Bausteine mit Zag.js</div>
+        </div>
       </div>
-    </div>
 
-    <div class="section">
-      <div class="section-title">Interaktion</div>
-      <div class="grid">
-        <a href="06-states.html" class="card">
-          <span class="card-num">06</span>
-          <div class="card-content">
-            <div class="card-title">States</div>
-            <div class="card-desc">Hover, Toggle und Custom States</div>
-          </div>
-        </a>
-        <a href="07-functions.html" class="card">
-          <span class="card-num">07</span>
-          <div class="card-content">
-            <div class="card-title">Functions</div>
-            <div class="card-desc">show, hide, navigate und mehr</div>
-          </div>
-        </a>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Navigation & Overlays</div>
-      <div class="grid">
-        <a href="08-navigation.html" class="card">
-          <span class="card-num">08</span>
-          <div class="card-content">
-            <div class="card-title">Navigation</div>
-            <div class="card-desc">Tabs, Accordion und Collapsible</div>
-          </div>
-        </a>
-        <a href="09-overlays.html" class="card">
-          <span class="card-num">09</span>
-          <div class="card-content">
-            <div class="card-title">Overlays</div>
-            <div class="card-desc">Dialoge, Popovers und Tooltips</div>
-          </div>
-        </a>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Daten</div>
-      <div class="grid">
-        <a href="10-variablen.html" class="card">
-          <span class="card-num">10</span>
-          <div class="card-content">
-            <div class="card-title">Daten & Content</div>
-            <div class="card-desc">.data-Dateien, each-Loops und Two-Way Binding</div>
-          </div>
-        </a>
-        <a href="11-content.html" class="card">
-          <span class="card-num">11</span>
-          <div class="card-content">
-            <div class="card-title">Content Management</div>
-            <div class="card-desc">Markdown-Inhalte und redaktionelle Texte</div>
-          </div>
-        </a>
-        <a href="12-tabellen.html" class="card">
-          <span class="card-num">12</span>
-          <div class="card-content">
-            <div class="card-title">Tabellen</div>
-            <div class="card-desc">Daten in Zeilen und Spalten anzeigen</div>
-          </div>
-        </a>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Struktur</div>
-      <div class="grid">
-        <a href="13-bedingungen.html" class="card">
-          <span class="card-num">13</span>
-          <div class="card-content">
-            <div class="card-title">Bedingungen</div>
-            <div class="card-desc">if/else und bedingte Styles</div>
-          </div>
-        </a>
-        <a href="14-pages.html" class="card">
-          <span class="card-num">14</span>
-          <div class="card-content">
-            <div class="card-title">Seiten</div>
-            <div class="card-desc">Apps mit mehreren Dateien</div>
-          </div>
-        </a>
-        <a href="15-fehler.html" class="card">
-          <span class="card-num">15</span>
-          <div class="card-content">
-            <div class="card-title">Häufige Fehler</div>
-            <div class="card-desc">Was nicht funktioniert und warum</div>
-          </div>
-        </a>
+      <div class="section">
+        <div class="grid">
+          <a href="10-eingabe.html" class="card">
+            <span class="card-num">10</span>
+            <div class="card-content">
+              <div class="card-title">Eingabe</div>
+              <div class="card-desc">Forms, Selection, DateTime</div>
+            </div>
+          </a>
+          <a href="11-navigation.html" class="card">
+            <span class="card-num">11</span>
+            <div class="card-content">
+              <div class="card-title">Navigation</div>
+              <div class="card-desc">Tabs, Accordion, Steps, TreeView</div>
+            </div>
+          </a>
+          <a href="12-overlays.html" class="card">
+            <span class="card-num">12</span>
+            <div class="card-content">
+              <div class="card-title">Overlays</div>
+              <div class="card-desc">Dialog, Popover, Tooltip, Tour</div>
+            </div>
+          </a>
+          <a href="13-anzeige.html" class="card">
+            <span class="card-num">13</span>
+            <div class="card-content">
+              <div class="card-title">Anzeige</div>
+              <div class="card-desc">Tables, Media, Progress, Utility</div>
+            </div>
+          </a>
+        </div>
       </div>
     </div>
 
     <footer>
       <a href="../../studio/index.html">Studio öffnen</a>
-      <span>16 Tutorials</span>
+      <span>13 Kapitel</span>
     </footer>
 
   </main>

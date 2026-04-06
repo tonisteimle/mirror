@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirror – Eingebaute Funktionen</title>
+  <title>Mirror – Functions</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -15,8 +15,8 @@
   <main class="page">
 
     <header>
-      <h1>Eingebaute Funktionen</h1>
-      <p class="subtitle">Standard-Interaktionen ohne JavaScript</p>
+      <h1>Functions</h1>
+      <p class="subtitle">Eingebaute und eigene Funktionen</p>
     </header>
 
     <p class="intro">In <a href="06-states.html">Kapitel 6</a> hast du <code>toggle()</code> und <code>exclusive()</code> kennengelernt. Mirror bietet weitere <strong>eingebaute Funktionen</strong> für typische UI-Patterns.</p>
@@ -53,7 +53,7 @@
         <tr><td><code>hide(Element)</code></td><td>Element ausblenden</td></tr>
       </table>
 
-      <p class="note">Für Overlays (Dialoge, Dropdowns, Tooltips) siehe <a href="09-overlays.html">Kapitel 9: Overlays</a>. Für Navigation siehe <a href="08-navigation.html">Kapitel 8: Navigation</a>.</p>
+      <p class="note">Für Overlays (Dialoge, Dropdowns, Tooltips) siehe <a href="12-overlays.html">Overlays</a>. Für Navigation siehe <a href="11-navigation.html">Navigation</a>.</p>
 
     </section>
 
@@ -64,7 +64,7 @@
       <p>Mit <code>show(Element)</code> und <code>hide(Element)</code> steuerst du die Sichtbarkeit anderer Elemente:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame gap 12
+          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Button "Info anzeigen", pad 10 20, bg #2563eb, col white, rad 6, show(InfoBox)
 
   Frame name InfoBox, hidden, bg #1a1a1a, pad 16, rad 8, gap 8
@@ -84,7 +84,7 @@
       <p>Ein typisches Pattern: Button zeigt Menü, Schließen-Button versteckt es wieder:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame gap 8
+          <textarea>Frame gap 8, bg #0a0a0a, pad 16, rad 8
   Button "Menü öffnen", pad 10 20, bg #333, col white, rad 6, show(Menu)
 
   Frame name Menu, hidden, bg #1a1a1a, pad 8, rad 8, gap 2, w 180
@@ -109,7 +109,7 @@
       <p>Du kannst <code>show()</code>/<code>hide()</code> mit States kombinieren. Der Button ändert sein Aussehen UND zeigt das Menü:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame gap 8
+          <textarea>Frame gap 8, bg #0a0a0a, pad 16, rad 8
   Button "Filter", name FilterBtn, pad 10 20, bg #333, col white, rad 6, toggle(), show(FilterPanel)
     open:
       bg #2563eb
@@ -131,10 +131,58 @@
 
     <!-- ============================================================ -->
     <section>
-      <h2>Eigene JavaScript-Funktionen</h2>
-      <p>Die eingebauten Funktionen decken Standard-Patterns ab. Für API-Calls, Validierung oder komplexe Logik schreibst du eigene Funktionen:</p>
+      <h2>Eigene Funktionen</h2>
+      <p>Die eingebauten Funktionen decken Standard-Patterns ab. Für API-Calls, Validierung oder komplexe Logik schreibst du eigene Funktionen.</p>
+
+      <h3>Mirror-Syntax (vereinfacht)</h3>
+      <p>Mirror bietet eine vereinfachte Syntax für Funktionen – wie Mirror selbst: Einrückung statt Klammern, kein Boilerplate.</p>
+
+      <table class="ref-table">
+        <tr><th>JavaScript</th><th>Mirror</th></tr>
+        <tr><td><code>for (const x of items) { }</code></td><td><code>each x in items</code></td></tr>
+        <tr><td><code>if (cond) { }</code></td><td><code>if cond</code></td></tr>
+        <tr><td><code>} else {</code></td><td><code>else</code></td></tr>
+        <tr><td><code>const x = ...</code></td><td><code>x = ...</code></td></tr>
+        <tr><td><code>let x = ...</code></td><td><code>x = ...</code></td></tr>
+        <tr><td>Geschweifte Klammern <code>{ }</code></td><td>Einrückung</td></tr>
+        <tr><td>Semikolons <code>;</code></td><td>Keine</td></tr>
+      </table>
+
+      <h3>Variablen-Prefixe</h3>
+      <table class="ref-table">
+        <tr><th>Kontext</th><th>Syntax</th><th>Beispiel</th></tr>
+        <tr><td>Globale Daten</td><td><code>$name</code></td><td><code>$users</code>, <code>$tasks</code></td></tr>
+        <tr><td>Lokale Variable</td><td><code>name</code></td><td><code>tasks = ...</code></td></tr>
+        <tr><td>Parameter</td><td><code>name</code></td><td><code>function foo(project)</code></td></tr>
+      </table>
+
+      <p><code>$</code> markiert globale Daten. Lokale Variablen und Parameter brauchen kein Prefix.</p>
+
+      <h3>Beispiel: Statistik berechnen</h3>
       <div class="code-block">
-        <pre><span class=<span class="syn-string">"syn-comment"</span>>// Mirror-Code</span>
+        <pre><span class="syn-keyword">function</span> BerechneStats(project)
+  tasks = $tasks where project == project
+  total = tasks.count
+
+  <span class="syn-keyword">if</span> total == 0
+    <span class="syn-keyword">return</span> { done: 0, open: 0, progress: 0 }
+
+  done = tasks where done == true
+  open = tasks where done == false
+
+  <span class="syn-keyword">each</span> task <span class="syn-keyword">in</span> open
+    log(task.name + <span class="syn-string">" ist noch offen"</span>)
+
+  <span class="syn-keyword">return</span> {
+    done: done.count,
+    open: open.count,
+    progress: done.count / total
+  }</pre>
+      </div>
+
+      <h3>Beispiel: Button mit Funktion</h3>
+      <div class="code-block">
+        <pre><span class="syn-comment">// Mirror UI</span>
 <span class="syn-component">SaveBtn</span> as Button: <span class="syn-property">pad</span> 12 24, <span class="syn-property">bg</span> #333, <span class="syn-property">col</span> white, <span class="syn-property">rad</span> 6, save()
   loading:
     <span class="syn-property">bg</span> #666
@@ -147,19 +195,88 @@
       </div>
 
       <div class="code-block">
-        <pre><span class=<span class="syn-string">"syn-comment"</span>>// JavaScript</span>
-<span class="syn-keyword">async</span> <span class="syn-keyword">function</span> save(element) {
+        <pre><span class="syn-comment">// Funktion in vereinfachter Syntax</span>
+<span class="syn-keyword">async function</span> save(element)
   element.state = <span class="syn-string">'loading'</span>
-  <span class="syn-keyword">const</span> response = <span class="syn-keyword">await</span> fetch(<span class="syn-string">'/api/save'</span>)
-  element.state = response.ok ? <span class="syn-string">'success'</span> : <span class="syn-string">'base'</span>
+  response = <span class="syn-keyword">await</span> fetch(<span class="syn-string">'/api/save'</span>)
+
+  <span class="syn-keyword">if</span> response.ok
+    element.state = <span class="syn-string">'success'</span>
+  <span class="syn-keyword">else</span>
+    element.state = <span class="syn-string">'base'</span></pre>
+      </div>
+
+      <h3>JavaScript bleibt erlaubt</h3>
+      <p>Du kannst auch normales JavaScript schreiben – die vereinfachte Syntax ist optional:</p>
+      <div class="code-block">
+        <pre><span class="syn-comment">// Das geht auch</span>
+<span class="syn-keyword">async function</span> save(element) {
+  element.state = <span class="syn-string">'loading'</span>;
+  <span class="syn-keyword">const</span> response = <span class="syn-keyword">await</span> fetch(<span class="syn-string">'/api/save'</span>);
+  element.state = response.ok ? <span class="syn-string">'success'</span> : <span class="syn-string">'base'</span>;
 }</pre>
       </div>
 
-      <p><strong>Faustregel:</strong> Eingebaute Funktion wenn möglich, eigene Funktion wenn nötig.</p>
+      <p><strong>Faustregel:</strong> Eingebaute Funktion wenn möglich, eigene Funktion wenn nötig. Vereinfachte Syntax für cleanen Code.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Domänen-Methoden</h2>
+      <p>Funktionen können auch zu Daten-Collections gehören. Diese werden am Anfang der <code>.data</code>-Datei deklariert:</p>
+
+      <div class="code-block">
+        <pre><span class="syn-comment">// data/projects.data</span>
+
+<span class="syn-comment">// Methoden deklarieren</span>
+Gesamtaufwand()
+Fortschritt()
+
+<span class="syn-comment">// Daten</span>
+website:
+  name: Website Relaunch
+  status: active
+
+app:
+  name: Mobile App
+  status: planning</pre>
+      </div>
+
+      <div class="code-block">
+        <pre><span class="syn-comment">// Methoden definieren</span>
+<span class="syn-keyword">function</span> projects.Gesamtaufwand(project)
+  tasks = $tasks where project == project
+  <span class="syn-keyword">return</span> tasks.sum(aufwand)
+
+<span class="syn-keyword">function</span> projects.Fortschritt(project)
+  tasks = $tasks where project == project
+  done = tasks where done == true
+
+  <span class="syn-keyword">if</span> tasks.count == 0
+    <span class="syn-keyword">return</span> 0
+
+  <span class="syn-keyword">return</span> done.count / tasks.count</pre>
+      </div>
+
+      <h3>Methoden aufrufen</h3>
+      <div class="code-block">
+        <pre><span class="syn-comment">// In Mirror UI</span>
+Text $projects.website.Gesamtaufwand() + <span class="syn-string">"h"</span>
+Text ($projects.website.Fortschritt() * 100).toFixed(0) + <span class="syn-string">"%"</span></pre>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Typ</th><th>Syntax</th><th>Wann</th></tr>
+        <tr><td>Domänen-Methode</td><td><code>collection.name()</code></td><td>Operiert auf einem Datentyp</td></tr>
+        <tr><td>Allgemeine Funktion</td><td><code>name()</code></td><td>Utility, Helper, Actions</td></tr>
+      </table>
     </section>
 
     <div class="summary">
       <h2>Zusammenfassung</h2>
+
+      <h3>Eingebaute Funktionen</h3>
       <table class="ref-table">
         <tr><th>Funktion</th><th>Beispiel</th></tr>
         <tr><td><code>toggle()</code></td><td><code>Button "An/Aus", toggle()</code></td></tr>
@@ -169,7 +286,23 @@
         <tr><td><code>eigene()</code></td><td><code>Button "Speichern", save()</code></td></tr>
       </table>
 
-      <p class="note"><strong>Syntax:</strong> Funktionen als Properties → Klick-Event. Für andere Events: <code>onhover: show(Tooltip)</code></p>
+      <h3>Vereinfachte Funktions-Syntax</h3>
+      <table class="ref-table">
+        <tr><th>JavaScript</th><th>Mirror</th></tr>
+        <tr><td><code>for (const x of items) { }</code></td><td><code>each x in items</code></td></tr>
+        <tr><td><code>if (cond) { } else { }</code></td><td><code>if cond</code> / <code>else</code></td></tr>
+        <tr><td><code>const x = ...</code></td><td><code>x = ...</code></td></tr>
+        <tr><td>Klammern <code>{ }</code>, Semikolons <code>;</code></td><td>Einrückung, keine</td></tr>
+      </table>
+
+      <h3>Variablen</h3>
+      <table class="ref-table">
+        <tr><th>Kontext</th><th>Syntax</th></tr>
+        <tr><td>Globale Daten</td><td><code>$users</code>, <code>$tasks</code></td></tr>
+        <tr><td>Lokale Variable / Parameter</td><td><code>tasks = ...</code></td></tr>
+      </table>
+
+      <p class="note"><strong>Syntax:</strong> Funktionen als Properties → Klick-Event. Für andere Events: <code>onhover: show(Tooltip)</code>. Beide Syntaxen (Mirror & JavaScript) sind erlaubt.</p>
 
     </div>
 
@@ -177,7 +310,7 @@
     <nav>
       <a class="prev" href="06-states.html">&larr; States</a>
       <a class="index" href="index.html">Übersicht</a>
-      <a class="next" href="08-navigation.html">Navigation &rarr;</a>
+      <a class="next" href="08-daten.html">Daten &rarr;</a>
     </nav>
 
   </main>

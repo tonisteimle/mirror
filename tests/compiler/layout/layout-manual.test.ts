@@ -223,16 +223,16 @@ Frame
       expect(width).toBe('100px')
     })
 
-    test('w 100 w full - full wins when last (in vertical parent: stretch)', () => {
-      // In vertical parent, w full sets align-self: stretch (cross-axis)
+    test('w 100 w full - full wins when last (in vertical parent: width 100% + stretch)', () => {
+      // In vertical parent, w full sets width: 100% + align-self: stretch (cross-axis)
       // not flex, because width is the cross-axis in column layout
       const ir = toIR(parse(`
 Frame
   Frame w 100 w full
 `))
       const child = ir.nodes[0].children[0]
-      const alignSelf = getStyle(child, 'align-self')
-      expect(alignSelf).toBe('stretch')
+      expect(getStyle(child, 'width')).toBe('100%')
+      expect(getStyle(child, 'align-self')).toBe('stretch')
     })
   })
 })
@@ -277,13 +277,14 @@ Frame
 
 describe('Sizing in Context', () => {
   describe('w full behavior depends on parent axis', () => {
-    test('ver parent + w full child → stretch cross-axis', () => {
+    test('ver parent + w full child → width 100% + stretch (cross-axis)', () => {
       const ir = toIR(parse(`
 Frame ver, w 400, h 400
   Frame w full, h 50
 `))
       const child = ir.nodes[0].children[0]
-      // w is cross-axis in column parent
+      // w is cross-axis in column parent - needs width: 100% + align-self: stretch
+      expect(getStyle(child, 'width')).toBe('100%')
       expect(getStyle(child, 'align-self')).toBe('stretch')
       expect(getStyle(child, 'min-width')).toBe('0')
     })
@@ -312,13 +313,14 @@ Frame ver, h 400
       expect(getStyle(child, 'min-height')).toBe('0')
     })
 
-    test('hor parent + h full child → stretch cross-axis', () => {
+    test('hor parent + h full child → height 100% + stretch (cross-axis)', () => {
       const ir = toIR(parse(`
 Frame hor, h 400
   Frame h full
 `))
       const child = ir.nodes[0].children[0]
-      // h is cross-axis in row parent
+      // h is cross-axis in row parent - needs height: 100% + align-self: stretch
+      expect(getStyle(child, 'height')).toBe('100%')
       expect(getStyle(child, 'align-self')).toBe('stretch')
       expect(getStyle(child, 'min-height')).toBe('0')
     })

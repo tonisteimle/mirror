@@ -8,7 +8,7 @@
 import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode, IRStateMachine, IRStateTransition, IRTable, IRTableColumn } from '../ir/types'
-import { isIRZagNode, isIRTable } from '../ir/types'
+import { isIRZagNode, isIRTable, isIRDataReference, isIRDataReferenceArray } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import { generateTheme, isThemeToken } from '../schema/theme-generator'
 import type { DataFile } from '../parser/data-types'
@@ -215,12 +215,20 @@ class DOMGenerator {
     this.emit('const __mirrorData = window.__mirrorData = {')
     this.indent++
 
-    // Emit design tokens
+    // Emit design tokens and inline data objects
     for (const token of this.ir.tokens) {
-      const value = typeof token.value === 'string' ? `"${escapeJSString(token.value)}"` : token.value
       // Strip $ prefix, keep dots for object access
       const tokenKey = token.name.startsWith('$') ? token.name.slice(1) : token.name
-      this.emit(`"${tokenKey}": ${value},`)
+
+      if (token.value !== undefined) {
+        // Simple token with value
+        const value = typeof token.value === 'string' ? `"${escapeJSString(token.value)}"` : token.value
+        this.emit(`"${tokenKey}": ${value},`)
+      } else if (token.data !== undefined) {
+        // Inline data object - serialize nested structure
+        const dataJS = this.serializeDataObject(token.data)
+        this.emit(`"${tokenKey}": ${dataJS},`)
+      }
     }
 
     // Emit data files (from .data parser)
@@ -447,6 +455,70 @@ class DOMGenerator {
     }
   }
 
+  /**
+   * Serialize an inline data object to JavaScript code
+   * Handles nested structures and references
+   */
+  private serializeDataObject(data: Record<string, unknown>): string {
+    const entries: string[] = []
+
+    for (const [key, value] of Object.entries(data)) {
+      const serializedValue = this.serializeDataValue(value)
+      entries.push(`"${key}": ${serializedValue}`)
+    }
+
+    return `{ ${entries.join(', ')} }`
+  }
+
+  /**
+   * Serialize a single data value to JavaScript code
+   */
+  private serializeDataValue(value: unknown): string {
+    if (value === null || value === undefined) {
+      return 'null'
+    }
+
+    if (typeof value === 'string') {
+      return `"${escapeJSString(value)}"`
+    }
+
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return String(value)
+    }
+
+    if (Array.isArray(value)) {
+      // String array or reference array
+      if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null && '__ref' in value[0]) {
+        // Reference array
+        const refs = value.map(ref => this.serializeDataValue(ref))
+        return `[${refs.join(', ')}]`
+      }
+      // Regular string array
+      const items = value.map(item => typeof item === 'string' ? `"${escapeJSString(item)}"` : String(item))
+      return `[${items.join(', ')}]`
+    }
+
+    if (typeof value === 'object') {
+      // Check for reference
+      if (isIRDataReference(value)) {
+        return `{ __ref: true, collection: "${value.collection}", entry: "${value.entry}" }`
+      }
+
+      // Check for reference array
+      if (isIRDataReferenceArray(value)) {
+        const refs = value.references.map(ref =>
+          `{ __ref: true, collection: "${ref.collection}", entry: "${ref.entry}" }`
+        )
+        return `[${refs.join(', ')}]`
+      }
+
+      // Nested object - recurse
+      return this.serializeDataObject(value as Record<string, unknown>)
+    }
+
+    return 'null'
+  }
+
   private emitStyles(): void {
     this.emit('// Inject CSS styles')
     this.emit("const _style = document.createElement('style')")
@@ -467,7 +539,9 @@ class DOMGenerator {
     }
 
     // Emit user-defined CSS variables (non-theme tokens)
+    // Only simple tokens (with value) become CSS variables - data objects are skipped
     const customTokens = this.ir.tokens.filter(t => {
+      if (t.value === undefined) return false // Skip data objects
       const name = t.name.startsWith('$') ? t.name.slice(1) : t.name
       return !isThemeToken(name)
     })
@@ -477,6 +551,8 @@ class DOMGenerator {
       this.emit(':host, :root {')
       this.indent++
       for (const token of customTokens) {
+        // Skip tokens without value (data objects)
+        if (token.value === undefined) continue
         // Resolve token-to-token references (e.g., $primary.bg: $blue → #2563eb)
         let value = this.resolveTokenValueWithContext(token.value, token.name)
         // Strip $ prefix and convert dots to hyphens for valid CSS variable name
@@ -673,7 +749,7 @@ class DOMGenerator {
     // Handle Zag components
     if (isIRZagNode(node)) {
       // Also check Zag component isDefinition
-      if ((node as any).isDefinition) {
+      if (node.isDefinition) {
         return
       }
       this.emitZagComponent(node, parentVar)
@@ -1001,7 +1077,8 @@ class DOMGenerator {
       this.emit(`const ${collectionVarName} = ${rawCollection}`)
     } else {
       // Named collection: use $get() for __mirrorData/globalThis lookup
-      this.emit(`const ${collectionVarName}Data = $get('${rawCollection}') || []`)
+      // Convert objects to arrays using Object.values() for entry-format data
+      this.emit(`const ${collectionVarName}Data = (function(d) { return Array.isArray(d) ? d : (d && typeof d === 'object') ? Object.values(d) : []; })($get('${rawCollection}'))`)
     }
 
     let processedVarName = isInlineArray ? collectionVarName : `${collectionVarName}Data`
@@ -1110,10 +1187,9 @@ class DOMGenerator {
    */
   private emitTable(node: IRTable, parentVar: string): void {
     const tableVar = this.sanitizeVarName(node.id)
-    const dataVar = `${tableVar}_data`
-    const collectionName = node.dataSource.replace(/^\$/, '')
+    const isStaticTable = node.staticRows && node.staticRows.length > 0 && !node.dataSource
 
-    this.emit(`// Table: ${node.dataSource}`)
+    this.emit(`// Table${node.dataSource ? `: ${node.dataSource}` : ' (static)'}`)
     this.emit(`const ${tableVar} = document.createElement('div')`)
     this.emit(`${tableVar}.className = 'mirror-table'`)
     this.emit(`${tableVar}.dataset.mirrorId = '${node.id}'`)
@@ -1124,65 +1200,122 @@ class DOMGenerator {
     this.indent++
     this.emit(`display: 'flex',`)
     this.emit(`flexDirection: 'column',`)
-    this.emit(`background: 'var(--surface, #1a1a1a)',`)
-    this.emit(`borderRadius: '8px',`)
-    this.emit(`overflow: 'hidden',`)
     this.indent--
     this.emit(`})`)
     this.emit('')
 
-    // Load data
-    this.emit(`// Load data from collection`)
-    this.emit(`let ${dataVar} = $get("${collectionName}") || []`)
-    this.emit(`if (!Array.isArray(${dataVar})) ${dataVar} = Object.values(${dataVar})`)
-    this.emit('')
+    if (isStaticTable) {
+      // Static table: emit static rows directly
+      this.emitStaticTableRows(tableVar, node)
+    } else if (node.dataSource) {
+      // Data-driven table
+      const dataVar = `${tableVar}_data`
+      const collectionName = node.dataSource.replace(/^\$/, '')
 
-    // Apply filter (where clause)
-    if (node.filter) {
-      this.emit(`// Apply filter: where ${node.filter}`)
-      this.emit(`${dataVar} = ${dataVar}.filter(row => ${node.filter})`)
+      // Load data
+      this.emit(`// Load data from collection`)
+      this.emit(`let ${dataVar} = $get("${collectionName}") || []`)
+      this.emit(`if (!Array.isArray(${dataVar})) ${dataVar} = Object.values(${dataVar})`)
       this.emit('')
-    }
 
-    // Apply sorting (by clause)
-    if (node.orderBy) {
-      this.emit(`// Apply sort: by ${node.orderBy}${node.orderDesc ? ' desc' : ''}`)
-      this.emit(`${dataVar} = ${dataVar}.slice().sort((a, b) => {`)
-      this.indent++
-      this.emit(`const av = a.${node.orderBy}, bv = b.${node.orderBy}`)
-      this.emit(`const cmp = av < bv ? -1 : av > bv ? 1 : 0`)
-      this.emit(`return ${node.orderDesc ? '-cmp' : 'cmp'}`)
-      this.indent--
-      this.emit(`})`)
+      // Apply filter (where clause)
+      if (node.filter) {
+        this.emit(`// Apply filter: where ${node.filter}`)
+        this.emit(`${dataVar} = ${dataVar}.filter(row => ${node.filter})`)
+        this.emit('')
+      }
+
+      // Apply sorting (by clause)
+      if (node.orderBy) {
+        this.emit(`// Apply sort: by ${node.orderBy}${node.orderDesc ? ' desc' : ''}`)
+        this.emit(`${dataVar} = ${dataVar}.slice().sort((a, b) => {`)
+        this.indent++
+        this.emit(`const av = a.${node.orderBy}, bv = b.${node.orderBy}`)
+        this.emit(`const cmp = av < bv ? -1 : av > bv ? 1 : 0`)
+        this.emit(`return ${node.orderDesc ? '-cmp' : 'cmp'}`)
+        this.indent--
+        this.emit(`})`)
+        this.emit('')
+      }
+
+      // Generate header only if there are visible columns or a headerSlot
+      const hasVisibleColumns = node.columns.filter(c => !c.hidden).length > 0
+      if (hasVisibleColumns || node.headerSlot) {
+        this.emitTableHeader(tableVar, node)
+        this.emit('')
+      }
+
+      // Generate rows (with grouping if needed)
+      if (node.groupBy) {
+        this.emitTableGroupedRows(tableVar, dataVar, node)
+      } else {
+        this.emitTableRows(tableVar, dataVar, node)
+      }
       this.emit('')
-    }
 
-    // Generate header
-    this.emitTableHeader(tableVar, node)
-    this.emit('')
+      // Generate footer if aggregations exist
+      const hasAggregations = node.columns.some(c => c.aggregation)
+      if (hasAggregations || node.footerSlot) {
+        this.emitTableFooter(tableVar, dataVar, node)
+        this.emit('')
+      }
 
-    // Generate rows (with grouping if needed)
-    if (node.groupBy) {
-      this.emitTableGroupedRows(tableVar, dataVar, node)
-    } else {
-      this.emitTableRows(tableVar, dataVar, node)
-    }
-    this.emit('')
-
-    // Generate footer if aggregations exist
-    const hasAggregations = node.columns.some(c => c.aggregation)
-    if (hasAggregations || node.footerSlot) {
-      this.emitTableFooter(tableVar, dataVar, node)
-      this.emit('')
-    }
-
-    // Selection handling
-    if (node.selectionMode) {
-      this.emitTableSelection(tableVar, dataVar, node)
-      this.emit('')
+      // Selection handling
+      if (node.selectionMode) {
+        this.emitTableSelection(tableVar, dataVar, node)
+        this.emit('')
+      }
     }
 
     this.emit(`${parentVar}.appendChild(${tableVar})`)
+    this.emit('')
+  }
+
+  /**
+   * Emit static table rows for manual tables
+   */
+  private emitStaticTableRows(tableVar: string, node: IRTable): void {
+    if (!node.staticRows) return
+
+    this.emit(`// Static table rows`)
+    const bodyVar = `${tableVar}_body`
+    this.emit(`const ${bodyVar} = document.createElement('div')`)
+    this.emit(`${bodyVar}.className = 'mirror-table-body'`)
+    this.emit(`${bodyVar}.style.display = 'flex'`)
+    this.emit(`${bodyVar}.style.flexDirection = 'column'`)
+
+    for (let rowIndex = 0; rowIndex < node.staticRows.length; rowIndex++) {
+      const row = node.staticRows[rowIndex]
+      const rowVar = `${tableVar}_row_${rowIndex}`
+
+      this.emit(`const ${rowVar} = document.createElement('div')`)
+      this.emit(`${rowVar}.className = 'mirror-table-row'`)
+      this.emit(`${rowVar}.style.display = 'flex'`)
+
+      for (let cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
+        const cell = row.cells[cellIndex]
+        const cellVar = `${rowVar}_cell_${cellIndex}`
+
+        this.emit(`const ${cellVar} = document.createElement('div')`)
+        this.emit(`${cellVar}.className = 'mirror-table-cell'`)
+
+        if (cell.text !== undefined) {
+          // Simple text content
+          this.emit(`${cellVar}.textContent = ${JSON.stringify(cell.text)}`)
+        } else if (cell.children && cell.children.length > 0) {
+          // Complex content - emit children
+          for (const child of cell.children) {
+            this.emitNode(child, cellVar)
+          }
+        }
+
+        this.emit(`${rowVar}.appendChild(${cellVar})`)
+      }
+
+      this.emit(`${bodyVar}.appendChild(${rowVar})`)
+    }
+
+    this.emit(`${tableVar}.appendChild(${bodyVar})`)
     this.emit('')
   }
 
@@ -1195,50 +1328,63 @@ class DOMGenerator {
     this.emit(`// Table header`)
     this.emit(`const ${headerVar} = document.createElement('div')`)
     this.emit(`${headerVar}.className = 'mirror-table-header'`)
-    this.emit(`Object.assign(${headerVar}.style, {`)
-    this.indent++
-    this.emit(`display: 'flex',`)
-    this.emit(`background: 'var(--surface-elevated, #252525)',`)
-    this.emit(`padding: '12px',`)
-    this.emit(`borderBottom: '1px solid var(--border, #333)',`)
-    this.indent--
-    this.emit(`})`)
 
-    // Generate header cells for each visible column
-    for (const col of node.columns.filter(c => !c.hidden)) {
-      const cellVar = `${tableVar}_hc_${this.sanitizeVarName(col.field)}`
-      this.emit(`const ${cellVar} = document.createElement('div')`)
-      this.emit(`${cellVar}.className = 'mirror-table-header-cell'`)
-      this.emit(`${cellVar}.textContent = "${col.label}"`)
-      this.emit(`${cellVar}.dataset.field = "${col.field}"`)
+    // If headerSlot is defined, render custom header content
+    if (node.headerSlot && node.headerSlot.length > 0) {
+      // Apply minimal wrapper styles, let slot content define the rest
+      this.emit(`${headerVar}.style.display = 'flex'`)
 
-      // Header cell styles
-      this.emit(`Object.assign(${cellVar}.style, {`)
+      // Render header slot children
+      for (const child of node.headerSlot) {
+        this.emitNode(child, headerVar)
+      }
+    } else {
+      // Auto-generated header from columns
+      this.emit(`Object.assign(${headerVar}.style, {`)
       this.indent++
-      this.emit(`flex: '1',`)
-      this.emit(`fontWeight: '500',`)
-      this.emit(`color: 'var(--text-muted, #888)',`)
-      this.emit(`fontSize: '11px',`)
-      this.emit(`textTransform: 'uppercase',`)
-      if (col.width) {
-        this.emit(`width: '${col.width}px',`)
-        this.emit(`flex: 'none',`)
-      }
-      if (col.align === 'right') {
-        this.emit(`textAlign: 'right',`)
-      } else if (col.align === 'center') {
-        this.emit(`textAlign: 'center',`)
-      }
+      this.emit(`display: 'flex',`)
+      this.emit(`background: 'var(--surface-elevated, #252525)',`)
+      this.emit(`padding: '12px',`)
+      this.emit(`borderBottom: '1px solid var(--border, #333)',`)
       this.indent--
       this.emit(`})`)
 
-      // Sortable column
-      if (col.sortable) {
-        this.emit(`${cellVar}.dataset.sortable = 'true'`)
-        this.emit(`${cellVar}.style.cursor = 'pointer'`)
-      }
+      // Generate header cells for each visible column
+      for (const col of node.columns.filter(c => !c.hidden)) {
+        const cellVar = `${tableVar}_hc_${this.sanitizeVarName(col.field)}`
+        this.emit(`const ${cellVar} = document.createElement('div')`)
+        this.emit(`${cellVar}.className = 'mirror-table-header-cell'`)
+        this.emit(`${cellVar}.textContent = "${col.label}"`)
+        this.emit(`${cellVar}.dataset.field = "${col.field}"`)
 
-      this.emit(`${headerVar}.appendChild(${cellVar})`)
+        // Header cell styles
+        this.emit(`Object.assign(${cellVar}.style, {`)
+        this.indent++
+        this.emit(`flex: '1',`)
+        this.emit(`fontWeight: '500',`)
+        this.emit(`color: 'var(--text-muted, #888)',`)
+        this.emit(`fontSize: '11px',`)
+        this.emit(`textTransform: 'uppercase',`)
+        if (col.width) {
+          this.emit(`width: '${col.width}px',`)
+          this.emit(`flex: 'none',`)
+        }
+        if (col.align === 'right') {
+          this.emit(`textAlign: 'right',`)
+        } else if (col.align === 'center') {
+          this.emit(`textAlign: 'center',`)
+        }
+        this.indent--
+        this.emit(`})`)
+
+        // Sortable column
+        if (col.sortable) {
+          this.emit(`${cellVar}.dataset.sortable = 'true'`)
+          this.emit(`${cellVar}.style.cursor = 'pointer'`)
+        }
+
+        this.emit(`${headerVar}.appendChild(${cellVar})`)
+      }
     }
 
     this.emit(`${tableVar}.appendChild(${headerVar})`)
@@ -1271,14 +1417,31 @@ class DOMGenerator {
     this.emit(`${tableVar}_row.dataset.index = ${indexVar}`)
     this.emit(`Object.assign(${tableVar}_row.style, {`)
     this.indent++
-    this.emit(`display: 'flex',`)
-    this.emit(`padding: '12px',`)
-    this.emit(`borderBottom: '1px solid var(--border-subtle, #222)',`)
-    this.emit(`cursor: 'pointer',`)
+    // If custom rowSlotStyles exist, use them; otherwise use defaults
+    if (node.rowSlotStyles && node.rowSlotStyles.length > 0) {
+      // Apply custom Row: styles
+      for (const style of node.rowSlotStyles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      // Ensure display: flex is set if not already specified
+      const hasDisplay = node.rowSlotStyles.some(s => s.property === 'display')
+      if (!hasDisplay) {
+        this.emit(`display: 'flex',`)
+      }
+    } else {
+      // Default styles
+      this.emit(`display: 'flex',`)
+      this.emit(`padding: '12px',`)
+      this.emit(`borderBottom: '1px solid var(--border-subtle, #222)',`)
+      this.emit(`cursor: 'pointer',`)
+    }
     this.indent--
     this.emit(`})`)
 
-    // Hover effect
+    // Hover effect - store original background
+    const bgStyle = node.rowSlotStyles?.find(s => s.property === 'background')
+    const originalBg = bgStyle ? `'${bgStyle.value}'` : "''"
+    this.emit(`const ${tableVar}_row_origBg = ${originalBg}`)
     this.emit(`${tableVar}_row.addEventListener('mouseenter', () => {`)
     this.indent++
     this.emit(`${tableVar}_row.style.background = 'var(--surface-hover, #252525)'`)
@@ -1288,7 +1451,7 @@ class DOMGenerator {
     this.indent++
     this.emit(`if (!${tableVar}_row.classList.contains('selected')) {`)
     this.indent++
-    this.emit(`${tableVar}_row.style.background = ''`)
+    this.emit(`${tableVar}_row.style.background = ${tableVar}_row_origBg`)
     this.indent--
     this.emit(`}`)
     this.indent--
@@ -1303,7 +1466,7 @@ class DOMGenerator {
     } else {
       // Generate cells for each visible column
       for (const col of node.columns.filter(c => !c.hidden)) {
-        this.emitTableCell(tableVar, rowVar, col)
+        this.emitTableCell(tableVar, rowVar, col, indexVar, dataVar)
       }
     }
   }
@@ -1451,7 +1614,7 @@ class DOMGenerator {
   /**
    * Generate a table cell with type-specific rendering
    */
-  private emitTableCell(tableVar: string, rowVar: string, col: IRTableColumn): void {
+  private emitTableCell(tableVar: string, rowVar: string, col: IRTableColumn, indexVar: string = 'i', dataVar?: string): void {
     const cellVar = `${tableVar}_cell_${this.sanitizeVarName(col.field)}`
 
     this.emit(`const ${cellVar} = document.createElement('div')`)
@@ -1469,11 +1632,12 @@ class DOMGenerator {
     this.indent--
     this.emit(`})`)
 
-    // Custom cell template
+    // Custom cell template - render child nodes with row context
     if (col.customCell && col.customCell.length > 0) {
-      // TODO: Render custom cell template
       this.emit(`// Custom cell template for ${col.field}`)
-      this.emit(`${cellVar}.textContent = ${rowVar}.${col.field}`)
+      for (const templateNode of col.customCell) {
+        this.emitTableRowSlotNode(templateNode, cellVar, rowVar, indexVar, dataVar)
+      }
     } else {
       // Simple value rendering
       const formatValue = (expr: string) => {
@@ -2046,7 +2210,7 @@ class DOMGenerator {
     // Create Trigger for each item (inside List)
     const triggerSlot = node.slots['Trigger']
     for (let i = 0; i < node.items.length; i++) {
-      const item = node.items[i] as any
+      const item = node.items[i]
       const triggerVar = `${varName}_trigger${i}`
       this.emit(`// Tab trigger: ${item.label}`)
       this.emit(`const ${triggerVar} = document.createElement('button')`)
@@ -2102,7 +2266,7 @@ class DOMGenerator {
     // Create Content panel for each item (after List)
     const contentSlot = node.slots['Content']
     for (let i = 0; i < node.items.length; i++) {
-      const item = node.items[i] as any
+      const item = node.items[i]
       const contentVar = `${varName}_content${i}`
       this.emit(`// Tab content: ${item.label}`)
       this.emit(`const ${contentVar} = document.createElement('div')`)
@@ -2883,7 +3047,7 @@ class DOMGenerator {
     const indicatorSlot = node.slots['ItemIndicator']
 
     for (let i = 0; i < node.items.length; i++) {
-      const item = node.items[i] as any
+      const item = node.items[i]
       const itemVar = `${varName}_item${i}`
       const itemValue = item.value || `item-${i}`
 
@@ -3072,7 +3236,7 @@ class DOMGenerator {
     const indicatorSlot = node.slots['ItemIndicator']
 
     for (let i = 0; i < node.items.length; i++) {
-      const item = node.items[i] as any
+      const item = node.items[i]
       const itemVar = `${varName}_item${i}`
       const itemValue = item.value || `item-${i}`
 
@@ -3260,7 +3424,7 @@ class DOMGenerator {
     const selectIcon = node.machineConfig.icon || 'check'
 
     for (let i = 0; i < node.items.length; i++) {
-      const item = node.items[i] as any
+      const item = node.items[i]
       const itemVar = `${varName}_item${i}`
       const itemValue = item.value || item.label || `item-${i}`
       const itemLabel = item.label || itemValue
@@ -3397,7 +3561,7 @@ class DOMGenerator {
     const textSlot = node.slots['ItemText']
 
     for (let i = 0; i < node.items.length; i++) {
-      const item = node.items[i] as any
+      const item = node.items[i]
       const itemVar = `${varName}_item${i}`
       const itemValue = item.value || item.label || `item-${i}`
       const itemLabel = item.label || itemValue
@@ -5245,7 +5409,7 @@ class DOMGenerator {
     const textSlot = node.slots['ItemText']
 
     for (let i = 0; i < node.items.length; i++) {
-      const item = node.items[i] as any
+      const item = node.items[i]
       const itemVar = `${varName}_item${i}`
       const itemValue = item.value || item.label || `item-${i}`
       const itemLabel = item.label || itemValue
@@ -5345,7 +5509,7 @@ class DOMGenerator {
     const itemSlot = node.slots['Item']
 
     for (let i = 0; i < node.items.length; i++) {
-      const item = node.items[i] as any
+      const item = node.items[i]
       const itemVar = `${varName}_item${i}`
       const itemValue = item.value || item.label || `item-${i}`
       const itemLabel = item.label || itemValue
@@ -6484,7 +6648,9 @@ class DOMGenerator {
         }
         break
       default:
-        this.emit(`// TODO: Template action '${action.type}' not implemented`)
+        // For unrecognized actions in template context, try emitting as regular action
+        // This handles custom functions and other action types
+        this.emitAction(action, currentVar)
     }
   }
 

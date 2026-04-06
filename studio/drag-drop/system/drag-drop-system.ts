@@ -465,11 +465,11 @@ export class DragDropSystem implements IDragDropSystem {
    */
   private dropExecuted = false
 
-  private executeDrop(source: DragSource, result: DropResult): void {
+  private executeDrop(source: DragSource, result: DropResult): { success: boolean; error?: string } {
     // Prevent double execution
     if (this.dropExecuted) {
       console.log('[DragDrop] Drop already executed, skipping')
-      return
+      return { success: false, error: 'Drop already executed' }
     }
     this.dropExecuted = true
 
@@ -480,13 +480,15 @@ export class DragDropSystem implements IDragDropSystem {
       console.warn('[DragDrop] No code executor configured')
       // Just call the callback if no executor
       this.config.onDrop?.(source, result)
-      return
+      return { success: true }
     }
+
+    let execResult: { success: boolean; error?: string }
 
     // Duplicate if Alt is pressed and this is a canvas element
     if (this.config.enableAltDuplicate && this.state.isAltKeyPressed && source.type === 'canvas') {
       console.log('[DragDrop] Executing duplicate')
-      const execResult = executor.duplicate(source, result)
+      execResult = executor.duplicate(source, result)
       if (!execResult.success) {
         console.error('[DragDrop] Duplicate failed:', execResult.error)
       } else {
@@ -494,7 +496,7 @@ export class DragDropSystem implements IDragDropSystem {
       }
     } else {
       console.log('[DragDrop] Executing drop')
-      const execResult = executor.execute(source, result)
+      execResult = executor.execute(source, result)
       if (!execResult.success) {
         console.error('[DragDrop] Drop failed:', execResult.error)
       } else {
@@ -503,6 +505,8 @@ export class DragDropSystem implements IDragDropSystem {
     }
 
     this.config.onDrop?.(source, result)
+
+    return execResult
   }
 
   /**
@@ -707,6 +711,181 @@ export class DragDropSystem implements IDragDropSystem {
       properties: options?.properties,
       textContent: options?.textContent,
       children: options?.children,
+    })
+  }
+
+  // ========================================
+  // Test API - Programmatic drag & drop
+  // ========================================
+
+  /**
+   * TEST API: Simulate a complete drop operation programmatically.
+   * This method bypasses mouse events and directly executes the drop logic,
+   * following the same code path as real user interactions.
+   *
+   * @param params - Drop parameters
+   * @returns Result object with success status and optional error
+   */
+  simulateDrop(params: {
+    source: DragSource
+    targetNodeId: string
+    placement: 'before' | 'after' | 'inside'
+    insertionIndex?: number
+  }): { success: boolean; error?: string } {
+    const { source, targetNodeId, placement, insertionIndex } = params
+
+    // Find target element
+    const targetElement = this.config.container.querySelector(
+      `[${this.nodeIdAttr}="${targetNodeId}"]`
+    ) as HTMLElement | null
+
+    if (!targetElement) {
+      return { success: false, error: `Target element with nodeId "${targetNodeId}" not found` }
+    }
+
+    // Detect target properties
+    const target = detectTarget(targetElement, this.nodeIdAttr)
+    if (!target) {
+      return { success: false, error: `Could not detect target properties for "${targetNodeId}"` }
+    }
+
+    // Build drop result
+    const result: DropResult = {
+      target,
+      placement,
+      targetId: targetNodeId,
+      insertionIndex,
+    }
+
+    // Execute drop through same path as real drops
+    try {
+      // Reset dropExecuted flag before executing (normally reset in onDragStart)
+      this.dropExecuted = false
+      const execResult = this.executeDrop(source, result)
+      return execResult
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    }
+  }
+
+  /**
+   * TEST API: Simulate dragging to a position and get the calculated drop result.
+   * Does NOT execute the drop - only calculates where it would land.
+   *
+   * @param cursor - The cursor position (clientX, clientY)
+   * @returns The calculated DropResult or null if no valid drop target
+   */
+  simulateDragTo(cursor: Point): DropResult | null {
+    // Temporarily set a placeholder source for calculation
+    const originalSource = this.state.source
+    const originalActive = this.state.isActive
+
+    this.state.source = { type: 'palette', componentName: '__test__' }
+    this.state.isActive = true
+
+    // Run the calculation (this also updates visual indicators)
+    this.updateDropIndicator({ clientX: cursor.x, clientY: cursor.y })
+
+    // Capture the result
+    const result = this.state.currentResult
+
+    // Restore original state
+    this.state.source = originalSource
+    this.state.isActive = originalActive
+
+    return result
+  }
+
+  /**
+   * TEST API: Get the current internal drag state.
+   * Useful for assertions in tests.
+   *
+   * @returns A readonly copy of the current state
+   */
+  getState(): Readonly<DragState> {
+    return { ...this.state }
+  }
+
+  /**
+   * TEST API: Get the visual system state for assertions.
+   *
+   * @returns Visual state including indicator visibility and rects
+   */
+  getVisualState(): {
+    indicatorVisible: boolean
+    indicatorRect: Rect | null
+    parentOutlineVisible: boolean
+    parentOutlineRect: Rect | null
+  } {
+    return this.visual.getState()
+  }
+
+  /**
+   * TEST API: Move an element from one position to another.
+   * Convenience method that wraps simulateDrop for canvas elements.
+   *
+   * @param params - Move parameters
+   * @returns Result object with success status
+   */
+  simulateMove(params: {
+    sourceNodeId: string
+    targetNodeId: string
+    placement: 'before' | 'after' | 'inside'
+  }): { success: boolean; error?: string } {
+    const { sourceNodeId, targetNodeId, placement } = params
+
+    // Find source element
+    const sourceElement = this.config.container.querySelector(
+      `[${this.nodeIdAttr}="${sourceNodeId}"]`
+    ) as HTMLElement | null
+
+    if (!sourceElement) {
+      return { success: false, error: `Source element with nodeId "${sourceNodeId}" not found` }
+    }
+
+    const source: DragSource = {
+      type: 'canvas',
+      nodeId: sourceNodeId,
+      element: sourceElement,
+    }
+
+    return this.simulateDrop({
+      source,
+      targetNodeId,
+      placement,
+    })
+  }
+
+  /**
+   * TEST API: Insert a new component at a specific position.
+   * Convenience method that wraps simulateDrop for palette items.
+   *
+   * @param params - Insert parameters
+   * @returns Result object with success status
+   */
+  simulateInsert(params: {
+    componentName: string
+    targetNodeId: string
+    placement: 'before' | 'after' | 'inside'
+    properties?: string
+    textContent?: string
+  }): { success: boolean; error?: string } {
+    const { componentName, targetNodeId, placement, properties, textContent } = params
+
+    const source: DragSource = {
+      type: 'palette',
+      componentName,
+      properties,
+      textContent,
+    }
+
+    return this.simulateDrop({
+      source,
+      targetNodeId,
+      placement,
     })
   }
 }

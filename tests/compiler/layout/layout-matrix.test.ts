@@ -24,6 +24,13 @@ import {
   CHILD_IN_PARENT_MATRIX,
   CONFLICT_TESTS,
   EDGE_CASE_TESTS,
+  SCROLL_TESTS,
+  POSITION_TESTS,
+  SIZING_TESTS,
+  VISIBILITY_TESTS,
+  ASPECT_TESTS,
+  FLEX_ITEM_TESTS,
+  HUG_TESTS,
   buildMirrorCode,
   lookupExpectedCSS,
 } from './layout-matrix-definition'
@@ -211,6 +218,132 @@ describe('Layout Matrix: Edge Cases', () => {
 })
 
 // =============================================================================
+// 4b. SCROLL & OVERFLOW TESTS
+// =============================================================================
+
+describe('Layout Matrix: Scroll & Overflow', () => {
+  for (const testCase of SCROLL_TESTS) {
+    const { code, expectedCSS, description } = testCase
+
+    it(description, () => {
+      const styles = getRootStyles(code)
+
+      for (const [prop, expectedValue] of Object.entries(expectedCSS)) {
+        expect(styles[prop], `${code}: ${prop}`).toBe(expectedValue)
+      }
+    })
+  }
+})
+
+// =============================================================================
+// 4c. POSITION TESTS
+// =============================================================================
+
+describe('Layout Matrix: Position', () => {
+  for (const testCase of POSITION_TESTS) {
+    const { code, expectedCSS, description } = testCase
+
+    it(description, () => {
+      const styles = getRootStyles(code)
+
+      for (const [prop, expectedValue] of Object.entries(expectedCSS)) {
+        expect(styles[prop], `${code}: ${prop}`).toBe(expectedValue)
+      }
+    })
+  }
+})
+
+// =============================================================================
+// 4d. SIZING TESTS (min/max)
+// =============================================================================
+
+describe('Layout Matrix: Sizing (min/max)', () => {
+  for (const testCase of SIZING_TESTS) {
+    const { code, expectedCSS, description } = testCase
+
+    it(description, () => {
+      const styles = getRootStyles(code)
+
+      for (const [prop, expectedValue] of Object.entries(expectedCSS)) {
+        expect(styles[prop], `${code}: ${prop}`).toBe(expectedValue)
+      }
+    })
+  }
+})
+
+// =============================================================================
+// 4e. VISIBILITY TESTS
+// =============================================================================
+
+describe('Layout Matrix: Visibility', () => {
+  for (const testCase of VISIBILITY_TESTS) {
+    const { code, expectedCSS, description } = testCase
+
+    it(description, () => {
+      const styles = getRootStyles(code)
+
+      for (const [prop, expectedValue] of Object.entries(expectedCSS)) {
+        expect(styles[prop], `${code}: ${prop}`).toBe(expectedValue)
+      }
+    })
+  }
+})
+
+// =============================================================================
+// 4f. ASPECT RATIO TESTS
+// =============================================================================
+
+describe('Layout Matrix: Aspect Ratio', () => {
+  for (const testCase of ASPECT_TESTS) {
+    const { code, expectedCSS, description } = testCase
+
+    it(description, () => {
+      const styles = getRootStyles(code)
+
+      for (const [prop, expectedValue] of Object.entries(expectedCSS)) {
+        expect(styles[prop], `${code}: ${prop}`).toBe(expectedValue)
+      }
+    })
+  }
+})
+
+// =============================================================================
+// 4g. FLEX ITEM BEHAVIOR TESTS
+// =============================================================================
+
+describe('Layout Matrix: Flex Item Behavior', () => {
+  for (const testCase of FLEX_ITEM_TESTS) {
+    const { code, expectedCSS, description } = testCase
+
+    it(description, () => {
+      const styles = getRootStyles(code)
+
+      for (const [prop, expectedValue] of Object.entries(expectedCSS)) {
+        expect(styles[prop], `${code}: ${prop}`).toBe(expectedValue)
+      }
+    })
+  }
+})
+
+// =============================================================================
+// 4h. HUG SIZING TESTS
+// =============================================================================
+
+describe('Layout Matrix: Hug Sizing', () => {
+  for (const testCase of HUG_TESTS) {
+    const { code, expectedCSS, description } = testCase
+
+    it(description, () => {
+      const styles = getRootStyles(code)
+
+      for (const [prop, expectedValue] of Object.entries(expectedCSS)) {
+        expect(styles[prop], `${code}: ${prop}`).toBe(expectedValue)
+      }
+    })
+  }
+})
+
+// =============================================================================
 // 5. STRATEGIC PAIRWISE COMBINATIONS
 // =============================================================================
 
@@ -384,10 +517,12 @@ describe('Layout Matrix: Sizing (Deep)', () => {
     expect(styles['height']).toBe('fit-content')
   })
 
-  it('w full as child → stretch alignment', () => {
+  it('w full as child in vertical parent → width 100% + stretch (cross-axis)', () => {
     const styles = getStyleAt(`
 Frame w 400
   Frame w full, bg red`, 1)
+    // Cross-axis w full needs BOTH width: 100% AND align-self: stretch
+    expect(styles['width']).toBe('100%')
     expect(styles['min-width']).toBe('0')
     expect(styles['align-self']).toBe('stretch')
   })
@@ -538,23 +673,29 @@ Frame hor, w 400, h 200
     expect(styles[3]['flex-shrink']).toBe('0')
   })
 
-  it('multiple w full children share space', () => {
+  it('multiple w full children in vertical parent get width 100%', () => {
     const styles = getStyles(`
 Frame h 200
   Frame w full, bg red
   Frame w full, bg blue`)
 
+    // Cross-axis w full needs BOTH width: 100% AND align-self: stretch
+    expect(styles[1]['width']).toBe('100%')
     expect(styles[1]['align-self']).toBe('stretch')
+    expect(styles[2]['width']).toBe('100%')
     expect(styles[2]['align-self']).toBe('stretch')
   })
 
-  it('nested full widths cascade correctly', () => {
+  it('nested full widths cascade correctly with width 100%', () => {
     const styles = getStyles(`
 Frame w 400
   Frame w full
     Frame w full, bg red`)
 
+    // All cross-axis w full get width: 100% + align-self: stretch
+    expect(styles[1]['width']).toBe('100%')
     expect(styles[1]['align-self']).toBe('stretch')
+    expect(styles[2]['width']).toBe('100%')
     expect(styles[2]['align-self']).toBe('stretch')
   })
 

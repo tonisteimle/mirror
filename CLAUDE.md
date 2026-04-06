@@ -1485,7 +1485,7 @@ Dafür brauchst du zwei Dinge:
 
 ```mirror
 Frame gap 12
-  Button "Menü", name MenuBtn, pad 10 20, rad 6, bg #333, col white, toggle()
+  Button name MenuBtn "Menü", pad 10 20, rad 6, bg #333, col white, toggle()
     open:
       bg #2563eb
 
@@ -1536,7 +1536,7 @@ SearchStatus: col #888, fs 12, name Status
 
 SearchBox: hor, gap 8, bg #1a1a1a, pad 12, rad 8
   Icon "search", ic #888, is 18
-  Input placeholder "Suche...", bg transparent, col white, bor 0, w full, name SearchInput, onenter toggle()
+  Input name SearchInput placeholder "Suche...", bg transparent, col white, bor 0, w full, onenter toggle()
     searching:
       bg #252525
 
@@ -1732,7 +1732,7 @@ Frame gap 2, bg #1a1a1a, pad 8, rad 8, w 200
 ### showBelow(element) – Dropdown positionieren
 
 ```mirror
-MenuBtn: Button "Datei", pad 10 20, bg #333, col white, rad 6, name MenuBtn, showBelow(FileMenu)
+MenuBtn: Button name MenuBtn "Datei", pad 10 20, bg #333, col white, rad 6, showBelow(FileMenu)
 
 FileMenu: Frame hidden, bg #1a1a1a, pad 4, rad 8, shadow lg, w 180, name FileMenu
   Button "Neu", w full, pad 10 16, bg transparent
@@ -2365,34 +2365,31 @@ Frame hor, gap 8
 
 ### 10-variablen: Variablen & Daten
 
-Mit `$` definierst du Variablen – lokal im Code oder in externen `.data`-Dateien.
+Mit `name:` definierst du Variablen – lokal im Code oder in externen `.data`-Dateien. Bei der Verwendung steht `$` davor.
 
-## Lokale Variablen
+## Einfache Variablen
 
 ```mirror
-$name: "Max"
-$count: 42
+name: "Max"
+count: 42
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Name: " + $name, col white
   Text "Count: " + $count, col #888
 ```
 
-## Arrays und each
+## Datenobjekte mit Einträgen (Entry-Format)
+
+Das **Entry-Format** ist die bevorzugte Art, strukturierte Daten zu definieren:
 
 ```mirror
-each color in ["Rot", "Grün", "Blau"]
-  Frame bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
-    Text color, col white
-```
-
-## Objekt-Arrays
-
-```mirror
-$users: [
-  { name: "Max", role: "Admin" },
-  { name: "Anna", role: "User" }
-]
+users:
+  max:
+    name: "Max"
+    role: "Admin"
+  anna:
+    name: "Anna"
+    role: "User"
 
 each user in $users
   Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
@@ -2400,18 +2397,22 @@ each user in $users
     Text user.role, col #888, fs 12
 ```
 
+Einträge sind direkt adressierbar: `$users.max.name`
+
 ## Externe .data-Dateien
+
+Die Syntax in `.data`-Dateien ist identisch:
 
 ```
 // data/customers.data
 
 max:
-name: Max Mustermann
-email: max@example.com
+  name: Max Mustermann
+  email: max@example.com
 
 anna:
-name: Anna Schmidt
-email: anna@example.com
+  name: Anna Schmidt
+  email: anna@example.com
 ```
 
 In Mirror: `$dateiname.eintrag.attribut`
@@ -2426,9 +2427,9 @@ each customer in $customers
 
 | Konzept | Syntax |
 |---------|--------|
-| Variable definieren | `$name: "Wert"` |
-| Array | `["a", "b", "c"]` |
-| Objekt-Array | `[{ key: "value" }]` |
+| Variable definieren | `name: "Wert"` |
+| Datenobjekt (Entry-Format) | `users:` + eingerückte Einträge |
+| Eintrag adressieren | `$users.max.name` |
 | Iteration | `each item in $list` |
 | .data-Datei | `$datei.eintrag.attribut` |
 
@@ -2660,9 +2661,32 @@ Mirror-Funktionen sind wie JavaScript – nur sauberer:
 
 Tabellen für Business-Anwendungen. Zero Config wenn möglich, volle Kontrolle wenn nötig.
 
-## Die einfachste Tabelle
+## Statische Tabellen (manuell)
+
+Die einfachste Art, eine Tabelle zu erstellen - ohne Datenbindung:
 
 ```mirror
+Table
+  Row "Name", "Alter", "Stadt"
+  Row "Max", "25", "Berlin"
+  Row "Anna", "30", "München"
+```
+
+Jede `Row` enthält die Zell-Inhalte als Strings oder Zahlen, getrennt durch Kommas. Das ist der Normalfall für einfache Tabellen ohne dynamische Daten.
+
+## Datengebundene Tabellen
+
+Definiere Daten im Entry-Format und referenziere sie mit `Table $name`:
+
+```mirror
+tasks:
+  task1:
+    title: "Design Review"
+    done: true
+  task2:
+    title: "API Integration"
+    done: false
+
 Table $tasks
 ```
 
@@ -2729,7 +2753,8 @@ Table $tasks, select(multi)
 
 | Konzept | Syntax |
 |---------|--------|
-| Einfache Table | `Table $data` |
+| Statische Table | `Table` + `Row "A", "B"` |
+| Datengebundene Table | `Table $data` |
 | Mit Query | `Table $data where x by y` |
 | Selection | `Table $data, select()` |
 | Column Override | `Column field, w 200, suffix "h"` |
@@ -3503,7 +3528,7 @@ Frame hidden
 
 ```mirror
 // RICHTIG – name setzen
-Button "Menu", name MenuBtn, pad 12, toggle()
+Button name MenuBtn "Menu", pad 12, toggle()
   open:
     bg #2563eb
 

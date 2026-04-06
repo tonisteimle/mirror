@@ -52,6 +52,7 @@ const SWATCH_ROWS = 10
  */
 class GlobalColorPickerWrapper {
   private isHashTrigger: boolean
+  public readonly pickerType = 'color' as const
 
   constructor(isHashTrigger: boolean) {
     this.isHashTrigger = isHashTrigger

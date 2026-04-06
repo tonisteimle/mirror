@@ -4,7 +4,7 @@
  * Tests: showBelow, showAbove, showLeft, showRight, showAt, showModal, dismiss
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { JSDOM } from 'jsdom'
 import {
   showBelow,
@@ -25,6 +25,8 @@ describe('Positioning Functions', () => {
   let window: Window & typeof globalThis
 
   beforeEach(() => {
+    vi.useFakeTimers()
+
     dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
       url: 'http://localhost',
     })
@@ -32,10 +34,23 @@ describe('Positioning Functions', () => {
     window = dom.window as unknown as Window & typeof globalThis
     global.document = document
     global.window = window
+
+    // Mock requestAnimationFrame for jsdom (uses fake timers)
+    global.requestAnimationFrame = (callback: FrameRequestCallback) => {
+      return setTimeout(callback, 16) as unknown as number
+    }
+    global.cancelAnimationFrame = (id: number) => {
+      clearTimeout(id)
+    }
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     dom.window.close()
+    // @ts-expect-error - cleanup global mocks
+    delete global.requestAnimationFrame
+    // @ts-expect-error - cleanup global mocks
+    delete global.cancelAnimationFrame
   })
 
   function createTestElement(opts: {
@@ -77,6 +92,7 @@ describe('Positioning Functions', () => {
       })
 
       showBelow(overlay, trigger)
+      vi.runAllTimers()
 
       expect(overlay.style.display).not.toBe('none')
       expect(overlay.hidden).toBe(false)
@@ -100,6 +116,7 @@ describe('Positioning Functions', () => {
       })
 
       showBelow('MyOverlay', trigger)
+      vi.runAllTimers()
 
       expect(overlay.style.display).not.toBe('none')
     })
@@ -123,6 +140,7 @@ describe('Positioning Functions', () => {
       })
 
       showAbove(overlay, trigger)
+      vi.runAllTimers()
 
       expect(overlay.style.display).not.toBe('none')
       expect(overlay.style.position).toBe('fixed')
@@ -169,6 +187,7 @@ describe('Positioning Functions', () => {
       overlay.dataset.originalPosition = ''
 
       dismiss(overlay)
+      vi.runAllTimers()
 
       expect(overlay.style.display).toBe('none')
       expect(overlay.hidden).toBe(true)
@@ -193,6 +212,7 @@ describe('Positioning Functions', () => {
       const overlay = createTestElement({ name: 'MyOverlay' })
 
       dismiss('MyOverlay')
+      vi.runAllTimers()
 
       expect(overlay.style.display).toBe('none')
     })
@@ -216,6 +236,7 @@ describe('Positioning Functions', () => {
       })
 
       showAt(overlay, trigger, 'below', { offset: 8 })
+      vi.runAllTimers()
 
       expect(overlay.style.display).not.toBe('none')
       expect(overlay.style.position).toBe('fixed')

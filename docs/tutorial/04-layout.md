@@ -16,7 +16,9 @@ Standardmäßig fließen Kinder vertikal (untereinander). Mit `hor` wechselst du
 > **Wichtig – Defaults:** Sowohl `hor` als auch `ver` haben dieselben Defaults: Kinder werden am **Anfang** ausgerichtet (`flex-start`). Bei `ver` = oben, bei `hor` = links. **Keine automatische Zentrierung!** Wenn du Zentrierung willst, sagst du es explizit mit `center` (beide Achsen) oder `ver-center` (nur vertikal).
 
 ```mirror
-Frame gap 12
+Box: w 50, h 50, rad 6, center
+
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // Vertikal (Standard)
   Frame bg #1a1a1a, pad 16, rad 8, gap 8
     Text "Zeile 1", col white
@@ -25,12 +27,9 @@ Frame gap 12
 
   // Horizontal
   Frame hor, bg #1a1a1a, pad 16, rad 8, gap 12
-    Frame w 50, h 50, bg #2563eb, rad 6, center
-      Text "1", col white
-    Frame w 50, h 50, bg #10b981, rad 6, center
-      Text "2", col white
-    Frame w 50, h 50, bg #f59e0b, rad 6, center
-      Text "3", col white
+    Box "1", bg #2563eb
+    Box "2", bg #10b981
+    Box "3", bg #f59e0b
 ```
 
 ### Größen: w und h
@@ -55,7 +54,7 @@ Frame gap 8, w 300, bg #0a0a0a, pad 16, rad 8
 ### Zentrieren und Verteilen
 
 ```mirror
-Frame gap 12
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // center – beide Achsen
   Frame w 200, h 80, bg #1a1a1a, rad 8, center
     Text "center", col white
@@ -82,29 +81,31 @@ Frame gap 12
 Kinder an einer von 9 Positionen platzieren:
 
 ```mirror
-Frame hor, gap 8
-  Frame w 70, h 70, bg #1a1a1a, rad 6, tl
-    Text "tl", col #888, fs 11
-  Frame w 70, h 70, bg #1a1a1a, rad 6, tc
-    Text "tc", col #888, fs 11
-  Frame w 70, h 70, bg #1a1a1a, rad 6, tr
-    Text "tr", col #888, fs 11
+Box: w 70, h 70, bg #1a1a1a, rad 6
+  Label: col #888, fs 11
 
-Frame hor, gap 8, margin 8 0 0 0
-  Frame w 70, h 70, bg #1a1a1a, rad 6, cl
-    Text "cl", col #888, fs 11
-  Frame w 70, h 70, bg #1a1a1a, rad 6, center
-    Text "cen", col #888, fs 11
-  Frame w 70, h 70, bg #1a1a1a, rad 6, cr
-    Text "cr", col #888, fs 11
-
-Frame hor, gap 8, margin 8 0 0 0
-  Frame w 70, h 70, bg #1a1a1a, rad 6, bl
-    Text "bl", col #888, fs 11
-  Frame w 70, h 70, bg #1a1a1a, rad 6, bc
-    Text "bc", col #888, fs 11
-  Frame w 70, h 70, bg #1a1a1a, rad 6, br
-    Text "br", col #888, fs 11
+Frame gap 8, bg #0a0a0a, pad 12, rad 8
+  Frame hor, gap 8
+    Box tl
+      Label "tl"
+    Box tc
+      Label "tc"
+    Box tr
+      Label "tr"
+  Frame hor, gap 8
+    Box cl
+      Label "cl"
+    Box center
+      Label "cen"
+    Box cr
+      Label "cr"
+  Frame hor, gap 8
+    Box bl
+      Label "bl"
+    Box bc
+      Label "bc"
+    Box br
+      Label "br"
 ```
 
 ### Wrap
@@ -112,17 +113,14 @@ Frame hor, gap 8, margin 8 0 0 0
 Bei Überlauf in die nächste Zeile umbrechen:
 
 ```mirror
+Box: w 60, h 40, bg #2563eb, rad 4, center
+
 Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 240
-  Frame w 60, h 40, bg #2563eb, rad 4, center
-    Text "1", col white
-  Frame w 60, h 40, bg #2563eb, rad 4, center
-    Text "2", col white
-  Frame w 60, h 40, bg #2563eb, rad 4, center
-    Text "3", col white
-  Frame w 60, h 40, bg #2563eb, rad 4, center
-    Text "4", col white
-  Frame w 60, h 40, bg #2563eb, rad 4, center
-    Text "5", col white
+  Box "1"
+  Box "2"
+  Box "3"
+  Box "4"
+  Box "5"
 ```
 
 ## Grid Layout
@@ -136,17 +134,17 @@ Mit `grid N` aktivierst du ein N-Spalten-Grid:
 ```mirror
 Frame grid 12, gap 8, bg #111, pad 16, rad 8
   // w = Spalten-Span (nicht Pixel!)
-  Frame w 12, h 40, bg #2563eb, rad 4, center
+  Frame w 12, h full, bg #2563eb, rad 4, center
     Text "w 12 (volle Breite)", col white, fs 12
-  Frame w 6, h 40, bg #10b981, rad 4, center
+  Frame w 6, h full, bg #10b981, rad 4, center
     Text "w 6", col white, fs 12
-  Frame w 6, h 40, bg #10b981, rad 4, center
+  Frame w 6, h full, bg #10b981, rad 4, center
     Text "w 6", col white, fs 12
-  Frame w 4, h 40, bg #f59e0b, rad 4, center
+  Frame w 4, h full, bg #f59e0b, rad 4, center
     Text "w 4", col white, fs 12
-  Frame w 4, h 40, bg #f59e0b, rad 4, center
+  Frame w 4, h full, bg #f59e0b, rad 4, center
     Text "w 4", col white, fs 12
-  Frame w 4, h 40, bg #f59e0b, rad 4, center
+  Frame w 4, h full, bg #f59e0b, rad 4, center
     Text "w 4", col white, fs 12
 ```
 
@@ -219,19 +217,26 @@ Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
 ### Praktisch: Badge auf Icon
 
 ```mirror
-Frame hor, gap 24
+// Badge-Komponente
+Badge: x 30, y -4, w 18, h 18, bg #ef4444, rad 99, center
+  Count: col white, fs 10, weight 600
+
+// Status-Punkt
+Status: x 30, y 30, w 14, h 14, bg #10b981, rad 99, bor 2, boc #111
+
+Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
   // Icon mit Badge
   Frame w 44, h 44, stacked
-    Frame x 0, y 0, w 44, h 44, bg #1a1a1a, rad 8, center
+    Frame w 44, h 44, bg #1a1a1a, rad 8, center
       Icon "bell", ic #888, is 22
-    Frame x 30, y -4, w 18, h 18, bg #ef4444, rad 99, center
-      Text "3", col white, fs 10, weight 600
+    Badge
+      Count "3"
 
   // Avatar mit Status
   Frame w 44, h 44, stacked
-    Frame x 0, y 0, w 44, h 44, bg #2563eb, rad 99, center
+    Frame w 44, h 44, bg #2563eb, rad 99, center
       Text "TS", col white, fs 14, weight 500
-    Frame x 30, y 30, w 14, h 14, bg #10b981, rad 99, bor 2, boc #111
+    Status
 ```
 
 ---

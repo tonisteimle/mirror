@@ -6646,6 +6646,7 @@ setupDesktopMenuHandler()
 window.editor = editor
 window.studioSelectionManager = studioSelectionManager
 window.startCompletion = startCompletion
+window.closeCompletion = closeCompletion
 window.files = files
 window.studio = studio  // New architecture
 window.resetCode = async () => {

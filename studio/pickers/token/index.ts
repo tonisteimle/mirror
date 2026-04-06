@@ -47,7 +47,7 @@ export class TokenPicker extends BasePicker {
   private searchInput: HTMLInputElement | null = null
 
   constructor(config: TokenPickerConfig, callbacks: PickerCallbacks) {
-    super(config, callbacks)
+    super(config, callbacks, 'token')
 
     this.tokens = config.tokens || []
     this.context = config.context || null
@@ -250,8 +250,8 @@ export class TokenPicker extends BasePicker {
 
     searchContainer.appendChild(this.searchInput)
 
-    // Focus search on open
-    setTimeout(() => this.searchInput?.focus(), 0)
+    // Don't auto-focus search input - let editor keep focus
+    // TriggerManager handles keyboard navigation and liveFilter handles filtering
 
     return searchContainer
   }

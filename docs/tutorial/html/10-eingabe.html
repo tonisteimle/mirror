@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Eingabe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Eingabe</h1>
+      <p class="subtitle">Forms, Selection, DateTime</p>
+    </header>
+
+    <p class="intro">Interaktive Formular-Komponenten mit vollständiger Tastatursteuerung und Accessibility. Alle Komponenten folgen dem Slot-Pattern: Du definierst Slots wie <code>Root:</code>, <code>Control:</code>, <code>Label:</code> um das Aussehen anzupassen.</p>
+
+
+    <!-- ============================================================ -->
+    <!-- FORM CONTROLS -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Checkbox</h2>
+      <p>Eine Checkbox mit Label und optionalem Indeterminate-State.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Checkbox
+  Root: hor, gap 10, cursor pointer
+  Control: w 20, h 20, bor 2, boc #444, rad 4
+  Label: col white, fs 14
+  "Newsletter abonnieren"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit Custom Icon</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Checkbox checked, icon "check"
+  Root: hor, gap 10, cursor pointer
+  Control: w 20, h 20, bor 2, boc #444, rad 4
+    checked:
+      bg #2563eb
+      boc #2563eb
+  Label: col white, fs 14
+  "Ich akzeptiere die AGB"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>checked</code></td><td>boolean</td><td>Aktiviert</td></tr>
+        <tr><td><code>defaultChecked</code></td><td>boolean</td><td>Initial aktiviert</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>indeterminate</code></td><td>boolean</td><td>Teilweise ausgewählt</td></tr>
+        <tr><td><code>name</code></td><td>string</td><td>Formular-Name</td></tr>
+        <tr><td><code>value</code></td><td>string</td><td>Wert</td></tr>
+        <tr><td><code>icon</code></td><td>string</td><td>Custom Icon (default: "check")</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container (label)</td></tr>
+        <tr><td><code>Control:</code></td><td>Die Checkbox selbst</td></tr>
+        <tr><td><code>Label:</code></td><td>Label-Text</td></tr>
+        <tr><td><code>Indicator:</code></td><td>Das Häkchen-Icon</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Switch</h2>
+      <p>Ein Toggle-Switch für An/Aus-Zustände.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Switch
+  Root: hor, gap 12
+  Track: w 44, h 24, bg #333, rad 99, pad 2
+    checked:
+      bg #2563eb
+  Thumb: w 20, h 20, bg white, rad 99
+  Label: col white, fs 14
+  "Dark Mode"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>checked</code></td><td>boolean</td><td>Aktiviert</td></tr>
+        <tr><td><code>defaultChecked</code></td><td>boolean</td><td>Initial aktiviert</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>name</code></td><td>string</td><td>Formular-Name</td></tr>
+        <tr><td><code>label</code></td><td>string</td><td>Aria-Label</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Track:</code></td><td>Die Schiene</td></tr>
+        <tr><td><code>Thumb:</code></td><td>Der bewegliche Knopf</td></tr>
+        <tr><td><code>Label:</code></td><td>Label-Text</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>RadioGroup</h2>
+      <p>Eine Gruppe von Radio-Buttons – nur einer kann ausgewählt sein.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>RadioGroup value "monthly"
+  Root: gap 10
+  Item: hor, gap 10, cursor pointer
+  ItemControl: w 20, h 20, bor 2, boc #444, rad 99
+    checked:
+      boc #2563eb
+  ItemText: col white, fs 14
+
+  RadioItem "Monatlich – €9/Monat", value "monthly"
+  RadioItem "Jährlich – €99/Jahr", value "yearly"
+  RadioItem "Lifetime – €299", value "lifetime"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit Indicator</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>RadioGroup defaultValue "a"
+  Root: gap 8
+  Item: hor, gap 10, pad 12, bg #1a1a1a, rad 8, cursor pointer
+    checked:
+      bg #1e3a5f
+      bor 1
+      boc #2563eb
+  ItemControl: w 18, h 18, bor 2, boc #444, rad 99
+  Indicator: w 10, h 10, bg #2563eb, rad 99
+
+  RadioItem "Option A", value "a"
+  RadioItem "Option B", value "b"
+  RadioItem "Option C", value "c"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string</td><td>Ausgewählter Wert</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string</td><td>Initial ausgewählt</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Alle deaktiviert</td></tr>
+        <tr><td><code>orientation</code></td><td>"horizontal" | "vertical"</td><td>Ausrichtung</td></tr>
+        <tr><td><code>name</code></td><td>string</td><td>Formular-Name</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelner Radio-Button</td></tr>
+        <tr><td><code>ItemControl:</code></td><td>Der Kreis</td></tr>
+        <tr><td><code>ItemText:</code></td><td>Label des Items</td></tr>
+        <tr><td><code>Indicator:</code></td><td>Der innere Punkt</td></tr>
+        <tr><td><code>Label:</code></td><td>Gruppen-Label</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Slider</h2>
+      <p>Ein Schieberegler für numerische Werte.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Slider value 50, min 0, max 100
+  Root: gap 8, w 200
+  Label: hor, spread
+    Text "Lautstärke", col white, fs 13
+    ValueText: col #888, fs 12
+  Track: h 6, bg #333, rad 99
+  Range: bg #2563eb, rad 99
+  Thumb: w 18, h 18, bg white, rad 99, shadow md</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit Markern</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Slider defaultValue 50, min 0, max 100, step 25
+  Root: gap 12, w 240
+  Track: h 6, bg #333, rad 99
+  Range: bg #2563eb, rad 99
+  Thumb: w 18, h 18, bg white, rad 99
+  MarkerGroup: margin 8 0 0 0
+    Marker: col #666, fs 10</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>number</td><td>Aktueller Wert</td></tr>
+        <tr><td><code>defaultValue</code></td><td>number</td><td>Startwert</td></tr>
+        <tr><td><code>min</code></td><td>number</td><td>Minimum</td></tr>
+        <tr><td><code>max</code></td><td>number</td><td>Maximum</td></tr>
+        <tr><td><code>step</code></td><td>number</td><td>Schrittweite</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>orientation</code></td><td>"horizontal" | "vertical"</td><td>Ausrichtung</td></tr>
+        <tr><td><code>origin</code></td><td>"start" | "center"</td><td>Ursprung der Range</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Track:</code></td><td>Die Schiene</td></tr>
+        <tr><td><code>Range:</code></td><td>Der gefüllte Bereich</td></tr>
+        <tr><td><code>Thumb:</code></td><td>Der Griff</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>ValueText:</code></td><td>Wert-Anzeige</td></tr>
+        <tr><td><code>MarkerGroup:</code></td><td>Container für Marker</td></tr>
+        <tr><td><code>Marker:</code></td><td>Einzelner Marker</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>RangeSlider</h2>
+      <p>Slider mit zwei Griffen für einen Bereich.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>RangeSlider defaultValue [20, 80], min 0, max 100
+  Root: gap 8, w 240
+  Label: hor, spread
+    Text "Preisbereich", col white, fs 13
+    ValueText: col #888, fs 12
+  Track: h 6, bg #333, rad 99
+  Range: bg #2563eb, rad 99
+  Thumb: w 18, h 18, bg white, rad 99</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Props und Slots wie Slider, aber <code>value</code> ist ein Array <code>[min, max]</code>.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>NumberInput</h2>
+      <p>Eingabefeld für Zahlen mit +/- Buttons.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>NumberInput defaultValue 5, min 0, max 10
+  Root: hor, gap 0, bg #1a1a1a, rad 8, bor 1, boc #333
+  DecrementTrigger: pad 12, col white, cursor pointer
+    hover:
+      bg #333
+    Icon "minus", is 16
+  Input: w 60, bg transparent, col white, text-align center, bor 0
+  IncrementTrigger: pad 12, col white, cursor pointer
+    hover:
+      bg #333
+    Icon "plus", is 16</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>number</td><td>Aktueller Wert</td></tr>
+        <tr><td><code>defaultValue</code></td><td>number</td><td>Startwert</td></tr>
+        <tr><td><code>min</code></td><td>number</td><td>Minimum</td></tr>
+        <tr><td><code>max</code></td><td>number</td><td>Maximum</td></tr>
+        <tr><td><code>step</code></td><td>number</td><td>Schrittweite</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>allowMouseWheel</code></td><td>boolean</td><td>Scrollen erlaubt</td></tr>
+        <tr><td><code>clampValueOnBlur</code></td><td>boolean</td><td>Wert begrenzen bei Blur</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>Control:</code></td><td>Input-Container</td></tr>
+        <tr><td><code>Input:</code></td><td>Das Eingabefeld</td></tr>
+        <tr><td><code>IncrementTrigger:</code></td><td>Plus-Button</td></tr>
+        <tr><td><code>DecrementTrigger:</code></td><td>Minus-Button</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>PinInput</h2>
+      <p>Eingabe für PINs und Verifizierungscodes.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>PinInput length 6, otp
+  Root: gap 8
+  Control: hor, gap 8
+  Input: w 48, h 56, bg #1a1a1a, bor 1, boc #333, rad 8, col white, fs 24, text-align center
+    focus:
+      boc #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>length</code></td><td>number</td><td>Anzahl der Felder</td></tr>
+        <tr><td><code>otp</code></td><td>boolean</td><td>One-Time-Password Modus</td></tr>
+        <tr><td><code>mask</code></td><td>boolean</td><td>Eingabe maskieren</td></tr>
+        <tr><td><code>type</code></td><td>"alphanumeric" | "numeric"</td><td>Erlaubte Zeichen</td></tr>
+        <tr><td><code>placeholder</code></td><td>string</td><td>Platzhalter</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>Control:</code></td><td>Input-Container</td></tr>
+        <tr><td><code>Input:</code></td><td>Einzelnes Eingabefeld</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>PasswordInput</h2>
+      <p>Passwort-Eingabe mit Sichtbarkeits-Toggle.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>PasswordInput
+  Root: gap 4
+  Label: col #888, fs 12
+    "Passwort"
+  Control: hor, bg #1a1a1a, bor 1, boc #333, rad 8
+  Input: w full, bg transparent, col white, pad 12, bor 0
+  VisibilityTrigger: pad 12, col #666, cursor pointer
+    hover:
+      col white
+    Icon "eye", is 18
+    visible:
+      Icon "eye-off", is 18</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>visible</code></td><td>boolean</td><td>Passwort sichtbar</td></tr>
+        <tr><td><code>defaultVisible</code></td><td>boolean</td><td>Initial sichtbar</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>Control:</code></td><td>Input-Container</td></tr>
+        <tr><td><code>Input:</code></td><td>Das Eingabefeld</td></tr>
+        <tr><td><code>VisibilityTrigger:</code></td><td>Auge-Button</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>TagsInput</h2>
+      <p>Eingabe für mehrere Tags/Chips.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>TagsInput defaultValue ["React", "Vue"]
+  Root: gap 4
+  Label: col #888, fs 12
+    "Skills"
+  Control: hor, wrap, gap 8, bg #1a1a1a, bor 1, boc #333, rad 8, pad 8
+  Tag: hor, gap 4, bg #333, pad 4 8, rad 4
+  TagText: col white, fs 13
+  TagDeleteTrigger: col #888, cursor pointer
+    hover:
+      col #ef4444
+    Icon "x", is 14
+  Input: bg transparent, col white, bor 0, w 100</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string[]</td><td>Tags</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string[]</td><td>Initiale Tags</td></tr>
+        <tr><td><code>maxTags</code></td><td>number</td><td>Maximum</td></tr>
+        <tr><td><code>allowDuplicate</code></td><td>boolean</td><td>Duplikate erlaubt</td></tr>
+        <tr><td><code>addOnPaste</code></td><td>boolean</td><td>Bei Paste hinzufügen</td></tr>
+        <tr><td><code>addOnBlur</code></td><td>boolean</td><td>Bei Blur hinzufügen</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>Control:</code></td><td>Tags + Input Container</td></tr>
+        <tr><td><code>Tag:</code></td><td>Einzelner Tag</td></tr>
+        <tr><td><code>TagText:</code></td><td>Tag-Text</td></tr>
+        <tr><td><code>TagDeleteTrigger:</code></td><td>Löschen-Button</td></tr>
+        <tr><td><code>Input:</code></td><td>Eingabefeld</td></tr>
+        <tr><td><code>ClearTrigger:</code></td><td>Alle löschen</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Editable</h2>
+      <p>Inline-editierbarer Text – Klick zum Bearbeiten.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Editable defaultValue "Klick zum Bearbeiten"
+  Root: gap 8
+  Area: pad 8, rad 4
+    hover:
+      bg #252525
+  Preview: col white, fs 14, cursor pointer
+  Input: col white, fs 14, bg transparent, bor 0, w full
+  Control: hor, gap 4, margin 4 0 0 0
+  SubmitTrigger: pad 6, bg #2563eb, col white, rad 4, fs 12
+    "Speichern"
+  CancelTrigger: pad 6, bg #333, col white, rad 4, fs 12
+    "Abbrechen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string</td><td>Aktueller Wert</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string</td><td>Startwert</td></tr>
+        <tr><td><code>placeholder</code></td><td>string</td><td>Platzhalter</td></tr>
+        <tr><td><code>submitMode</code></td><td>"blur" | "enter" | "both"</td><td>Wann speichern</td></tr>
+        <tr><td><code>selectOnFocus</code></td><td>boolean</td><td>Text markieren</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Area:</code></td><td>Klickbarer Bereich</td></tr>
+        <tr><td><code>Preview:</code></td><td>Anzeigetext</td></tr>
+        <tr><td><code>Input:</code></td><td>Eingabefeld</td></tr>
+        <tr><td><code>Control:</code></td><td>Button-Container</td></tr>
+        <tr><td><code>EditTrigger:</code></td><td>Bearbeiten-Button</td></tr>
+        <tr><td><code>SubmitTrigger:</code></td><td>Speichern-Button</td></tr>
+        <tr><td><code>CancelTrigger:</code></td><td>Abbrechen-Button</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>RatingGroup</h2>
+      <p>Sterne-Bewertung.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>RatingGroup defaultValue 3, count 5
+  Root: gap 8
+  Label: col #888, fs 12
+    "Bewertung"
+  Control: hor, gap 4
+  Item: cursor pointer
+    Icon "star", ic #333, is 24
+    highlighted:
+      Icon "star", ic #f59e0b, is 24
+    checked:
+      Icon "star", ic #f59e0b, is 24, fill</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit halben Sternen</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>RatingGroup defaultValue 3.5, count 5, allowHalf
+  Control: hor
+  Item: cursor pointer
+    Icon "star", ic #333, is 28
+    half:
+      Icon "star-half", ic #f59e0b, is 28
+    checked:
+      Icon "star", ic #f59e0b, is 28, fill</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>number</td><td>Aktuelle Bewertung</td></tr>
+        <tr><td><code>defaultValue</code></td><td>number</td><td>Startwert</td></tr>
+        <tr><td><code>count</code></td><td>number</td><td>Anzahl Sterne</td></tr>
+        <tr><td><code>allowHalf</code></td><td>boolean</td><td>Halbe Sterne erlaubt</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>readOnly</code></td><td>boolean</td><td>Nur Anzeige</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label</td></tr>
+        <tr><td><code>Control:</code></td><td>Sterne-Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelner Stern</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>SegmentedControl</h2>
+      <p>Button-Gruppe zur Auswahl – wie iOS Segmented Control.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SegmentedControl defaultValue "list"
+  Root: hor, bg #1a1a1a, pad 4, rad 8, gap 4
+  Indicator: bg #333, rad 6
+  Item: pad 8 16, rad 6, col #888, cursor pointer, z 1
+    checked:
+      col white
+
+  Segment "Liste", value "list"
+  Segment "Grid", value "grid"
+  Segment "Tabelle", value "table"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string</td><td>Ausgewählter Wert</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string</td><td>Startwert</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>orientation</code></td><td>"horizontal" | "vertical"</td><td>Ausrichtung</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelnes Segment</td></tr>
+        <tr><td><code>ItemText:</code></td><td>Text im Segment</td></tr>
+        <tr><td><code>Indicator:</code></td><td>Hintergrund des aktiven Segments</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>ToggleGroup</h2>
+      <p>Gruppe von Toggle-Buttons – mehrere können aktiv sein.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ToggleGroup multiple
+  Root: hor, gap 4
+  Item: pad 10, bg #1a1a1a, rad 6, col #888, cursor pointer
+    checked:
+      bg #2563eb
+      col white
+
+  Toggle value "bold"
+    Icon "bold", is 18
+  Toggle value "italic"
+    Icon "italic", is 18
+  Toggle value "underline"
+    Icon "underline", is 18</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string | string[]</td><td>Ausgewählte Werte</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string | string[]</td><td>Startwerte</td></tr>
+        <tr><td><code>multiple</code></td><td>boolean</td><td>Mehrfachauswahl</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>loopFocus</code></td><td>boolean</td><td>Tastatur-Loop</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelner Toggle</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>AngleSlider</h2>
+      <p>Kreisförmiger Winkel-Regler.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>AngleSlider defaultValue 45
+  Root: w 120, h 120
+  Control: w full, h full, bg #1a1a1a, rad 99, bor 2, boc #333
+  Thumb: w 16, h 16, bg #2563eb, rad 99
+  ValueText: col white, fs 14</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>number</td><td>Winkel (0-360)</td></tr>
+        <tr><td><code>defaultValue</code></td><td>number</td><td>Startwert</td></tr>
+        <tr><td><code>step</code></td><td>number</td><td>Schrittweite</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Control:</code></td><td>Der Kreis</td></tr>
+        <tr><td><code>Thumb:</code></td><td>Der Griff</td></tr>
+        <tr><td><code>ValueText:</code></td><td>Winkel-Anzeige</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Form</h2>
+      <p>Formular mit automatischer Datenbindung an eine Collection.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Form $users
+  Field name
+  Field email
+  Field role, display "select"
+
+  Actions:
+    Button "Speichern", save()
+    Button "Abbrechen", revert()</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit Custom Fields</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Form $tasks
+  Field title, label "Titel", placeholder "Task eingeben..."
+  Field description, label "Beschreibung", multiline
+  Field priority, label "Priorität", display "slider", max 5
+  Field done, label "Erledigt", display "switch"
+
+  Actions:
+    Button "Erstellen", bg #2563eb, col white, pad 12, rad 6, save()</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>collection</code></td><td>$collection</td><td>Gebundene Collection</td></tr>
+        <tr><td><code>auto</code></td><td>boolean</td><td>Auto-Generierung</td></tr>
+        <tr><td><code>validateOnBlur</code></td><td>boolean</td><td>Bei Blur validieren</td></tr>
+        <tr><td><code>validateOnChange</code></td><td>boolean</td><td>Bei Änderung validieren</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Alle Felder deaktiviert</td></tr>
+      </table>
+
+      <h3>Field Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>name</code></td><td>string</td><td>Feldname</td></tr>
+        <tr><td><code>label</code></td><td>string</td><td>Anzeige-Label</td></tr>
+        <tr><td><code>placeholder</code></td><td>string</td><td>Platzhalter</td></tr>
+        <tr><td><code>multiline</code></td><td>boolean</td><td>Textarea statt Input</td></tr>
+        <tr><td><code>display</code></td><td>string</td><td>"input" | "select" | "checkbox" | "switch" | "slider"</td></tr>
+        <tr><td><code>required</code></td><td>boolean</td><td>Pflichtfeld</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Field:</code></td><td>Einzelnes Feld</td></tr>
+        <tr><td><code>Actions:</code></td><td>Button-Container</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- SELECTION & MENUS -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Select</h2>
+      <p>Ein Dropdown zur Auswahl eines oder mehrerer Werte.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Select placeholder "Wähle..."
+  Trigger: hor, spread, ver-center, bg #1a1a1a, bor 1, boc #333, pad 12, rad 8, w 200, cursor pointer
+    Text placeholder, col #888
+    Icon "chevron-down", ic #666, is 16
+  Content: bg #1a1a1a, rad 8, pad 4, shadow lg, w 200
+  Item: pad 10 12, rad 4, col white, cursor pointer
+    hover:
+      bg #333
+    selected:
+      bg #2563eb
+
+  Option "Berlin", value "berlin"
+  Option "Hamburg", value "hamburg"
+  Option "München", value "munich"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>placeholder</code></td><td>string</td><td>Platzhalter</td></tr>
+        <tr><td><code>multiple</code></td><td>boolean</td><td>Mehrfachauswahl</td></tr>
+        <tr><td><code>searchable</code></td><td>boolean</td><td>Suche aktivieren</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Menu</h2>
+      <p>Dropdown-Menü für Aktionen.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Menu
+  Trigger: Button "Aktionen", pad 10 16, bg #1a1a1a, col white, rad 6
+    Icon "chevron-down", is 16, margin 0 0 0 8
+  Content: bg #1a1a1a, rad 8, pad 4, shadow lg, w 180
+  Item: pad 10 12, rad 4, col white, cursor pointer
+    hover:
+      bg #333
+  Separator: h 1, bg #333, margin 4 0
+
+  Item "Bearbeiten"
+    Icon "edit", ic #888, is 16, margin 0 8 0 0
+  Item "Duplizieren"
+  Separator
+  Item "Löschen", col #ef4444</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- DATE & TIME -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>DatePicker</h2>
+      <p>Ein Kalender zur Datumsauswahl mit Navigation zwischen Monaten und Jahren.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>DatePicker
+  Root: gap 4
+  Label: col #888, fs 12
+    "Datum"
+  Control: hor, bg #1a1a1a, bor 1, boc #333, rad 8
+  Input: w 160, bg transparent, col white, pad 12, bor 0
+  Trigger: pad 12, col #666, cursor pointer
+    Icon "calendar", is 18
+
+  Content: bg #1a1a1a, rad 12, pad 16, shadow lg, w 300
+  ViewControl: hor, spread, ver-center, margin 0 0 12 0
+  PrevTrigger: pad 8, col #888, cursor pointer
+    Icon "chevron-left", is 18
+  NextTrigger: pad 8, col #888, cursor pointer
+    Icon "chevron-right", is 18
+
+  TableCellTrigger: w 36, h 36, rad 6, col white
+    hover:
+      bg #333
+    selected:
+      bg #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>selectionMode</code></td><td>"single" | "range"</td><td>Auswahlmodus</td></tr>
+        <tr><td><code>min</code></td><td>Date</td><td>Frühestes Datum</td></tr>
+        <tr><td><code>max</code></td><td>Date</td><td>Spätestes Datum</td></tr>
+        <tr><td><code>locale</code></td><td>string</td><td>Sprache (z.B. "de-DE")</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Timer</h2>
+      <p>Countdown oder Stoppuhr mit Start/Stop/Reset.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Timer countdown, defaultValue 300000
+  Root: gap 16, center
+  Area: hor, gap 0
+  Segment: col white, fs 48, weight 200, font mono
+  Separator: col #666, fs 48
+    ":"
+
+  Control: hor, gap 8
+  ActionTrigger: pad 12 24, rad 8, col white
+    action "start"
+      bg #2563eb
+      "Start"
+    action "pause"
+      bg #f59e0b
+      "Pause"
+    action "reset"
+      bg #333
+      "Reset"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- ZUSAMMENFASSUNG -->
+    <!-- ============================================================ -->
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+
+      <h3>Form Controls</h3>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Verwendung</th></tr>
+        <tr><td><code>Checkbox</code></td><td>Einzelne Ja/Nein-Auswahl</td></tr>
+        <tr><td><code>Switch</code></td><td>An/Aus-Toggle</td></tr>
+        <tr><td><code>RadioGroup</code></td><td>Eine aus mehreren Optionen</td></tr>
+        <tr><td><code>Slider</code></td><td>Numerischer Bereich</td></tr>
+        <tr><td><code>RangeSlider</code></td><td>Bereich mit Min/Max</td></tr>
+        <tr><td><code>NumberInput</code></td><td>Zahl mit +/- Buttons</td></tr>
+        <tr><td><code>PinInput</code></td><td>PIN/OTP Codes</td></tr>
+        <tr><td><code>PasswordInput</code></td><td>Passwort mit Sichtbarkeit</td></tr>
+        <tr><td><code>TagsInput</code></td><td>Mehrere Tags/Chips</td></tr>
+        <tr><td><code>Editable</code></td><td>Inline-Bearbeitung</td></tr>
+        <tr><td><code>RatingGroup</code></td><td>Sterne-Bewertung</td></tr>
+        <tr><td><code>SegmentedControl</code></td><td>Button-Gruppe (exklusiv)</td></tr>
+        <tr><td><code>ToggleGroup</code></td><td>Button-Gruppe (mehrfach)</td></tr>
+        <tr><td><code>AngleSlider</code></td><td>Winkel-Auswahl</td></tr>
+        <tr><td><code>Form</code></td><td>Collection-gebundenes Formular</td></tr>
+      </table>
+
+      <h3>Selection & Menus</h3>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Verwendung</th></tr>
+        <tr><td><code>Select</code></td><td>Klassisches Dropdown</td></tr>
+        <tr><td><code>Combobox</code></td><td>Dropdown mit Suche</td></tr>
+        <tr><td><code>Listbox</code></td><td>Alle Optionen sichtbar</td></tr>
+        <tr><td><code>Menu</code></td><td>Aktions-Dropdown</td></tr>
+        <tr><td><code>ContextMenu</code></td><td>Rechtsklick-Menü</td></tr>
+        <tr><td><code>NestedMenu</code></td><td>Menü mit Untermenüs</td></tr>
+        <tr><td><code>NavigationMenu</code></td><td>Horizontale Nav</td></tr>
+      </table>
+
+      <h3>Date & Time</h3>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Verwendung</th></tr>
+        <tr><td><code>DatePicker</code></td><td>Kalender mit Dropdown</td></tr>
+        <tr><td><code>DateInput</code></td><td>Segmentierte Eingabe</td></tr>
+        <tr><td><code>Timer</code></td><td>Countdown/Stoppuhr</td></tr>
+      </table>
+
+      <p><strong>Gemeinsame Props:</strong> <code>disabled</code>, <code>readOnly</code>, <code>required</code>, <code>invalid</code>, <code>name</code>, <code>value</code>, <code>defaultValue</code></p>
+      <p><strong>Gemeinsame States:</strong> <code>checked:</code>, <code>disabled:</code>, <code>focus:</code>, <code>invalid:</code>, <code>hover:</code></p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="09-seiten.html">&larr; Seiten</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="11-navigation.html">Navigation &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

@@ -233,9 +233,7 @@ a:hover { text-decoration: underline; }
 /* Summary Box */
 .summary {
   margin-top: 48px;
-  padding: 24px;
-  background: var(--bg-code);
-  border-radius: 8px;
+  padding: 24px 0;
 }
 .summary h2 { margin-bottom: 16px; }
 .summary ul { list-style: none; }
@@ -250,7 +248,6 @@ a:hover { text-decoration: underline; }
 nav {
   margin-top: 48px;
   padding-top: 24px;
-  border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -262,9 +259,7 @@ nav {
 .props div {
   display: flex;
   padding: 8px 0;
-  border-bottom: 1px solid var(--border);
 }
-.props div:last-child { border-bottom: none; }
 .props code {
   width: 100px;
   flex-shrink: 0;
@@ -322,7 +317,6 @@ details pre {
 .ref-table th,
 .ref-table td {
   padding: 6px 0;
-  border-bottom: 1px solid var(--border);
   vertical-align: top;
   text-align: left;
 }
@@ -330,7 +324,6 @@ details pre {
   font-weight: 500;
   color: var(--text-dim);
 }
-.ref-table tr:last-child td { border-bottom: none; }
 .ref-table td:first-child {
   width: auto;
   white-space: nowrap;
@@ -366,7 +359,6 @@ details pre {
 .lektion .summary {
   padding: 0;
   padding-top: 32px;
-  border-top: 1px solid var(--border);
   background: transparent;
   border-radius: 0;
 }
@@ -382,8 +374,7 @@ details pre {
   left: 0;
   width: 240px;
   height: 100vh;
-  background: #0a0a0a;
-  border-right: 1px solid var(--border);
+  background: var(--bg);
   padding: 24px 0;
   overflow-y: auto;
   z-index: 100;
@@ -391,7 +382,6 @@ details pre {
 
 .tutorial-sidebar-header {
   padding: 0 20px 20px;
-  border-bottom: 1px solid var(--border);
   margin-bottom: 16px;
 }
 
@@ -446,7 +436,6 @@ details pre {
 
 .tutorial-sidebar-link.active {
   color: var(--accent);
-  background: #2563eb15;
 }
 
 .tutorial-sidebar-link-num {

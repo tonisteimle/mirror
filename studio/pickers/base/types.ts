@@ -14,6 +14,11 @@ export interface PickerConfig {
   closeOnEscape?: boolean
   animate?: boolean
   zIndex?: number
+  /**
+   * When true, disables the picker's internal keyboard handling (Enter, Escape, arrows).
+   * Use this when an external system (like TriggerManager) is handling keyboard navigation.
+   */
+  externalKeyboardHandling?: boolean
 }
 
 export interface PickerCallbacks {
@@ -39,4 +44,5 @@ export const DEFAULT_CONFIG: Required<PickerConfig> = {
   closeOnEscape: true,
   animate: true,
   zIndex: 1000,
+  externalKeyboardHandling: false,
 }

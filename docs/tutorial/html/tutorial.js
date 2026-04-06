@@ -128,29 +128,31 @@ function initializePlaygrounds() {
  * The navigation structure is defined here and injected into the DOM.
  */
 
-// Format: "dateiname: Titel" - Dateiname wird zu XX-dateiname.html
-const tutorialNavigation = `
-intro: Intro
-elemente: Elemente
-komponenten: Komponenten
-tokens: Tokens
-layout: Layout
-styling: Styling
-states: States
-functions: Functions
-navigation: Navigation
-overlays: Overlays
-variablen: Variablen
-content: Content
-tabellen: Tabellen
-bedingungen: Bedingungen
-pages: Seiten
-fehler: Häufige Fehler
-`.trim().split('\n').map((line, i) => {
-  const [file, title] = line.split(': ')
-  const num = String(i).padStart(2, '0')
-  return { num, title, file: `${num}-${file}.html` }
-})
+// Format: "num-dateiname: Titel"
+const tutorialNavigation = [
+  { num: '00', file: '00-intro.html', title: 'Intro' },
+  { num: '01', file: '01-elemente.html', title: 'Elemente' },
+  { num: '02', file: '02-komponenten.html', title: 'Komponenten' },
+  { num: '03', file: '03-tokens.html', title: 'Tokens' },
+  { num: '04', file: '04-layout.html', title: 'Layout' },
+  { num: '05', file: '05-styling.html', title: 'Styling' },
+  { num: '06', file: '06-states.html', title: 'States' },
+  { num: '07', file: '07-functions.html', title: 'Functions' },
+  { num: '08', file: '08-navigation.html', title: 'Navigation' },
+  { num: '09', file: '09-overlays.html', title: 'Overlays' },
+  { num: '10', file: '10-variablen.html', title: 'Variablen' },
+  { num: '11', file: '11-content.html', title: 'Content' },
+  { num: '12', file: '12-tabellen.html', title: 'Tabellen' },
+  { num: '13', file: '13-bedingungen.html', title: 'Bedingungen' },
+  { num: '14', file: '14-pages.html', title: 'Seiten' },
+  // Zag Components
+  { num: '16', file: '16-form-controls.html', title: 'Form Controls' },
+  { num: '17', file: '17-selection.html', title: 'Selection & Menus' },
+  { num: '18', file: '18-datetime.html', title: 'Date & Time' },
+  { num: '19', file: '19-media.html', title: 'Media & Files' },
+  { num: '20', file: '20-feedback.html', title: 'Feedback & Status' },
+  { num: '21', file: '21-utility.html', title: 'Utility' },
+]
 
 function createTutorialSidebar() {
   // Don't create sidebar on index page

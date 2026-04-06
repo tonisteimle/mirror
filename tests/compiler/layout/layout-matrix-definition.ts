@@ -230,8 +230,10 @@ export const EXPECTED_CSS: Record<string, Record<string, string>> = {
     'align-items': 'flex-end',
   },
 
-  // Spacing
+  // Spacing - WICHTIG: Default ist column!
   'Frame gap 12': {
+    'display': 'flex',
+    'flex-direction': 'column',
     'gap': '12px',
   },
   'Frame pad 16': {
@@ -244,23 +246,59 @@ export const EXPECTED_CSS: Record<string, Record<string, string>> = {
     'padding': '8px 12px 16px 20px',
   },
   'Frame gap 12, pad 16': {
+    'display': 'flex',
+    'flex-direction': 'column',
     'gap': '12px',
     'padding': '16px',
   },
 
-  // Flex behavior
+  // Flex behavior - Default ist column!
   'Frame wrap': {
+    'display': 'flex',
+    'flex-direction': 'column',
     'flex-wrap': 'wrap',
   },
   'Frame hor, wrap': {
     'flex-direction': 'row',
     'flex-wrap': 'wrap',
   },
+  'Frame ver, wrap': {
+    'flex-direction': 'column',
+    'flex-wrap': 'wrap',
+  },
   'Frame shrink': {
     'flex-shrink': '1',
   },
 
-  // Combined properties
+  // VER Kombinationen (parallel zu HOR)
+  'Frame ver, gap 12': {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'gap': '12px',
+  },
+  'Frame ver, gap 12, pad 16': {
+    'flex-direction': 'column',
+    'gap': '12px',
+    'padding': '16px',
+  },
+  'Frame ver, center': {
+    'flex-direction': 'column',
+    'justify-content': 'center',
+    'align-items': 'center',
+  },
+  'Frame ver, center, gap 12': {
+    'flex-direction': 'column',
+    'justify-content': 'center',
+    'align-items': 'center',
+    'gap': '12px',
+  },
+  'Frame ver, spread, gap 12': {
+    'flex-direction': 'column',
+    'justify-content': 'space-between',
+    'gap': '12px',
+  },
+
+  // HOR Kombinationen
   'Frame hor, gap 12, pad 16': {
     'flex-direction': 'row',
     'gap': '12px',
@@ -277,9 +315,30 @@ export const EXPECTED_CSS: Record<string, Record<string, string>> = {
     'justify-content': 'space-between',
     'gap': '12px',
   },
+  'Frame hor, wrap, gap 12': {
+    'flex-direction': 'row',
+    'flex-wrap': 'wrap',
+    'gap': '12px',
+  },
+
+  // Default (column) + Alignment
   'Frame center, gap 12': {
+    'display': 'flex',
+    'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
+    'gap': '12px',
+  },
+  'Frame spread, gap 12': {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'justify-content': 'space-between',
+    'gap': '12px',
+  },
+  'Frame wrap, gap 12': {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'flex-wrap': 'wrap',
     'gap': '12px',
   },
 
@@ -361,13 +420,13 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
   },
 
   // w full in flex context - behavior depends on parent axis
-  // In column parent (cross-axis): align-self: stretch
+  // In column parent (cross-axis): width: 100% + align-self: stretch
   // In row parent (main-axis): flex: 1 1 0%
   {
     parent: 'Frame w 400',
     child: 'Frame w full',
-    expectedCSS: { 'min-width': '0', 'align-self': 'stretch' },
-    description: 'w full child in vertical parent gets stretch (cross-axis)',
+    expectedCSS: { 'width': '100%', 'min-width': '0', 'align-self': 'stretch' },
+    description: 'w full child in vertical parent gets width 100% + stretch (cross-axis)',
   },
   {
     parent: 'Frame hor, w 400',
@@ -385,18 +444,18 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
     description: 'h full child in vertical parent gets flex (main-axis)',
   },
 
-  // Grid children
+  // Grid children - span AND fill their cells
   {
     parent: 'Frame grid 12',
     child: 'Frame w 4',
-    expectedCSS: { 'grid-column': 'span 4' },
-    description: 'w in grid child is column span',
+    expectedCSS: { 'grid-column': 'span 4', 'width': '100%' },
+    description: 'w in grid child is column span + fills cell width',
   },
   {
     parent: 'Frame grid 12',
     child: 'Frame h 2',
-    expectedCSS: { 'grid-row': 'span 2' },
-    description: 'h in grid child is row span',
+    expectedCSS: { 'grid-row': 'span 2', 'height': '100%' },
+    description: 'h in grid child is row span + fills cell height',
   },
   {
     parent: 'Frame grid 12',
@@ -418,8 +477,10 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
       'grid-row-start': '3',
       'grid-column': 'span 4',
       'grid-row': 'span 2',
+      'width': '100%',
+      'height': '100%',
     },
-    description: 'Combined grid positioning',
+    description: 'Combined grid positioning + cell fill',
   },
 
   // Stacked children
@@ -549,6 +610,311 @@ export const EDGE_CASE_TESTS: Array<{
     code: 'Frame gap 0',
     expectedCSS: { 'gap': '0px' },
     description: 'Zero gap is valid',
+  },
+]
+
+// =============================================================================
+// SCROLL & OVERFLOW COMBINATIONS
+// =============================================================================
+
+/**
+ * Tests for scroll and overflow properties combined with layout.
+ */
+export const SCROLL_TESTS: Array<{
+  code: string
+  expectedCSS: Record<string, string>
+  description: string
+}> = [
+  // Scroll basics
+  {
+    code: 'Frame scroll',
+    expectedCSS: { 'overflow-y': 'auto' },
+    description: 'Vertical scroll',
+  },
+  {
+    code: 'Frame scroll-hor',
+    expectedCSS: { 'overflow-x': 'auto' },
+    description: 'Horizontal scroll',
+  },
+  {
+    code: 'Frame scroll-both',
+    expectedCSS: { 'overflow': 'auto' },
+    description: 'Both directions scroll',
+  },
+  // Scroll + sizing
+  {
+    code: 'Frame scroll, h 200',
+    expectedCSS: { 'overflow-y': 'auto', 'height': '200px' },
+    description: 'Scroll with fixed height',
+  },
+  {
+    code: 'Frame scroll-hor, w 300',
+    expectedCSS: { 'overflow-x': 'auto', 'width': '300px' },
+    description: 'Horizontal scroll with fixed width',
+  },
+  // Scroll + layout
+  {
+    code: 'Frame hor, scroll-hor',
+    expectedCSS: { 'flex-direction': 'row', 'overflow-x': 'auto' },
+    description: 'Horizontal layout with horizontal scroll',
+  },
+  {
+    code: 'Frame ver, scroll, gap 12',
+    expectedCSS: { 'flex-direction': 'column', 'overflow-y': 'auto', 'gap': '12px' },
+    description: 'Vertical layout with scroll and gap',
+  },
+  // Clip
+  {
+    code: 'Frame clip',
+    expectedCSS: { 'overflow': 'hidden' },
+    description: 'Clip overflow',
+  },
+  {
+    code: 'Frame clip, rad 12',
+    expectedCSS: { 'overflow': 'hidden', 'border-radius': '12px' },
+    description: 'Clip with border radius (common pattern)',
+  },
+]
+
+// =============================================================================
+// POSITION COMBINATIONS
+// =============================================================================
+
+/**
+ * Tests for position properties combined with layout.
+ */
+export const POSITION_TESTS: Array<{
+  code: string
+  expectedCSS: Record<string, string>
+  description: string
+}> = [
+  // Position basics
+  {
+    code: 'Frame absolute',
+    expectedCSS: { 'position': 'absolute' },
+    description: 'Absolute positioning',
+  },
+  {
+    code: 'Frame relative',
+    expectedCSS: { 'position': 'relative' },
+    description: 'Relative positioning',
+  },
+  {
+    code: 'Frame fixed',
+    expectedCSS: { 'position': 'fixed' },
+    description: 'Fixed positioning',
+  },
+  // Position + coordinates
+  {
+    code: 'Frame absolute, x 10, y 20',
+    expectedCSS: { 'position': 'absolute', 'left': '10px', 'top': '20px' },
+    description: 'Absolute with coordinates',
+  },
+  // Position + sizing
+  {
+    code: 'Frame absolute, w full',
+    expectedCSS: { 'position': 'absolute', 'width': '100%' },
+    description: 'Absolute with full width',
+  },
+  {
+    code: 'Frame fixed, w full, h 60',
+    expectedCSS: { 'position': 'fixed', 'width': '100%', 'height': '60px' },
+    description: 'Fixed header pattern',
+  },
+  // Z-index
+  {
+    code: 'Frame z 10',
+    expectedCSS: { 'z-index': '10' },
+    description: 'Z-index',
+  },
+  {
+    code: 'Frame absolute, z 100',
+    expectedCSS: { 'position': 'absolute', 'z-index': '100' },
+    description: 'Absolute with z-index',
+  },
+]
+
+// =============================================================================
+// SIZING COMBINATIONS
+// =============================================================================
+
+/**
+ * Tests for min/max sizing combined with layout.
+ */
+export const SIZING_TESTS: Array<{
+  code: string
+  expectedCSS: Record<string, string>
+  description: string
+}> = [
+  // Min/Max basics
+  {
+    code: 'Frame minw 100',
+    expectedCSS: { 'min-width': '100px' },
+    description: 'Minimum width',
+  },
+  {
+    code: 'Frame maxw 500',
+    expectedCSS: { 'max-width': '500px' },
+    description: 'Maximum width',
+  },
+  {
+    code: 'Frame minh 50',
+    expectedCSS: { 'min-height': '50px' },
+    description: 'Minimum height',
+  },
+  {
+    code: 'Frame maxh 300',
+    expectedCSS: { 'max-height': '300px' },
+    description: 'Maximum height',
+  },
+  // Min/Max combinations
+  {
+    code: 'Frame minw 100, maxw 500',
+    expectedCSS: { 'min-width': '100px', 'max-width': '500px' },
+    description: 'Min and max width together',
+  },
+  // Min/Max + layout
+  {
+    code: 'Frame hor, maxw 800, gap 16',
+    expectedCSS: { 'flex-direction': 'row', 'max-width': '800px', 'gap': '16px' },
+    description: 'Horizontal layout with max-width (container pattern)',
+  },
+  {
+    code: 'Frame ver, minh 400, scroll',
+    expectedCSS: { 'flex-direction': 'column', 'min-height': '400px', 'overflow-y': 'auto' },
+    description: 'Vertical layout with min-height and scroll',
+  },
+]
+
+// =============================================================================
+// VISIBILITY COMBINATIONS
+// =============================================================================
+
+/**
+ * Tests for visibility properties.
+ */
+export const VISIBILITY_TESTS: Array<{
+  code: string
+  expectedCSS: Record<string, string>
+  description: string
+}> = [
+  {
+    code: 'Frame hidden',
+    expectedCSS: { 'display': 'none' },
+    description: 'Hidden element',
+  },
+  {
+    code: 'Frame opacity 0.5',
+    expectedCSS: { 'opacity': '0.5' },
+    description: 'Semi-transparent',
+  },
+  {
+    code: 'Frame opacity 0',
+    expectedCSS: { 'opacity': '0' },
+    description: 'Fully transparent (but still in layout)',
+  },
+  {
+    code: 'Frame disabled',
+    expectedCSS: { 'pointer-events': 'none', 'opacity': '0.5' },
+    description: 'Disabled element',
+  },
+]
+
+// =============================================================================
+// ASPECT RATIO TESTS
+// =============================================================================
+
+/**
+ * Tests for aspect ratio property.
+ */
+export const ASPECT_TESTS: Array<{
+  code: string
+  expectedCSS: Record<string, string>
+  description: string
+}> = [
+  {
+    code: 'Frame aspect square',
+    expectedCSS: { 'aspect-ratio': '1' },
+    description: 'Square aspect ratio (1:1)',
+  },
+  {
+    code: 'Frame aspect video',
+    expectedCSS: { 'aspect-ratio': '16/9' },
+    description: 'Video aspect ratio (16:9)',
+  },
+  {
+    code: 'Frame aspect square, w 200',
+    expectedCSS: { 'aspect-ratio': '1', 'width': '200px' },
+    description: 'Square with fixed width',
+  },
+  {
+    code: 'Frame aspect video, w full',
+    expectedCSS: { 'aspect-ratio': '16/9', 'width': '100%' },
+    description: 'Video ratio responsive',
+  },
+]
+
+// =============================================================================
+// FLEX ITEM BEHAVIOR TESTS
+// =============================================================================
+
+/**
+ * Tests for flex item properties (shrink, grow via w full).
+ */
+export const FLEX_ITEM_TESTS: Array<{
+  code: string
+  expectedCSS: Record<string, string>
+  description: string
+}> = [
+  {
+    code: 'Frame shrink',
+    expectedCSS: { 'flex-shrink': '1' },
+    description: 'Allow shrinking',
+  },
+  {
+    code: 'Frame shrink, w 200',
+    expectedCSS: { 'flex-shrink': '1', 'width': '200px' },
+    description: 'Shrink with preferred width',
+  },
+  // Note: 'grow' is removed - use 'w full' in horizontal context
+]
+
+// =============================================================================
+// HUG SIZING TESTS
+// =============================================================================
+
+/**
+ * Tests for hug sizing (fit-content).
+ */
+export const HUG_TESTS: Array<{
+  code: string
+  expectedCSS: Record<string, string>
+  description: string
+}> = [
+  {
+    code: 'Frame w hug',
+    expectedCSS: { 'width': 'fit-content' },
+    description: 'Width hugs content',
+  },
+  {
+    code: 'Frame h hug',
+    expectedCSS: { 'height': 'fit-content' },
+    description: 'Height hugs content',
+  },
+  {
+    code: 'Frame w hug, h hug',
+    expectedCSS: { 'width': 'fit-content', 'height': 'fit-content' },
+    description: 'Both dimensions hug content',
+  },
+  {
+    code: 'Frame hor, w hug',
+    expectedCSS: { 'flex-direction': 'row', 'width': 'fit-content' },
+    description: 'Horizontal layout with hug width',
+  },
+  {
+    code: 'Frame w hug, pad 16',
+    expectedCSS: { 'width': 'fit-content', 'padding': '16px' },
+    description: 'Hug with padding',
   },
 ]
 

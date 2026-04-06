@@ -10,7 +10,7 @@ next: 06-states
 Hex-Farben, benannte Farben und rgba:
 
 ```mirror
-Frame hor, gap 8, wrap
+Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   // Hex-Farben
   Frame w 50, h 50, bg #2563eb, rad 6
   Frame w 50, h 50, bg #10b981, rad 6
@@ -31,7 +31,7 @@ Frame hor, gap 8, wrap
 Farbverläufe mit `grad`:
 
 ```mirror
-Frame gap 8
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
   // Horizontal (Standard)
   Frame w full, h 50, rad 8, bg grad #2563eb #7c3aed
 
@@ -58,7 +58,7 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 8
 `bor` für Breite, `boc` für Farbe:
 
 ```mirror
-Frame hor, gap 12
+Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   // Border rundum
   Frame w 70, h 70, bor 2, boc #2563eb, rad 8, center
     Text "2px", col #888, fs 11
@@ -77,7 +77,7 @@ Frame hor, gap 12
 Von eckig bis rund:
 
 ```mirror
-Frame hor, gap 12
+Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Frame w 60, h 60, bg #2563eb, rad 0, center
     Text "0", col white, fs 11
   Frame w 60, h 60, bg #2563eb, rad 4, center
@@ -146,7 +146,7 @@ Frame hor, gap 16, pad 20, bg #0a0a0a
 Transparenz des gesamten Elements:
 
 ```mirror
-Frame hor, gap 8
+Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 1
     Text "1", col white, fs 11
   Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 0.7
@@ -162,7 +162,7 @@ Frame hor, gap 8
 Mauszeiger-Stil ändern:
 
 ```mirror
-Frame hor, gap 8, wrap
+Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Frame w 70, h 50, bg #1a1a1a, rad 6, center, cursor pointer
     Text "pointer", col #888, fs 10
   Frame w 70, h 50, bg #1a1a1a, rad 6, center, cursor grab
@@ -178,7 +178,7 @@ Frame hor, gap 8, wrap
 Verschiedene Button-Stile:
 
 ```mirror
-Frame gap 12
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // Filled Buttons
   Frame hor, gap 8
     Button "Primary", bg #2563eb, col white, pad 10 20, rad 6
@@ -201,7 +201,7 @@ Frame gap 12
 Verschiedene Card-Designs:
 
 ```mirror
-Frame hor, gap 12
+Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   // Elevated
   Frame w 120, bg #1a1a1a, pad 16, rad 12, shadow md, gap 8
     Text "Elevated", col white, fs 13, weight 500

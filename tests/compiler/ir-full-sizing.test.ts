@@ -117,7 +117,9 @@ Container
       expect(minWidth.value).toBe('0')
     })
 
-    it('does not generate width: 100% for w full', () => {
+    it('generates width: 100% for w full in vertical parent (cross-axis)', () => {
+      // w full on cross-axis needs explicit width: 100% because align-self: stretch
+      // alone doesn't work if the parent has no explicit width
       const styles = getStyles(`
 Container:
   Box w full
@@ -125,7 +127,8 @@ Container:
 Container
 `)
       const width = findStyle(styles, 'width')
-      expect(width).toBeUndefined()
+      expect(width).toBeDefined()
+      expect(width.value).toBe('100%')
     })
 
     it('works with width full (long form) in horizontal parent', () => {

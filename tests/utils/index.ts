@@ -42,3 +42,9 @@ export type {
 
 // Custom matchers (for manual extension if needed)
 export * as matchers from './matchers'
+
+// Mock factories
+export * from './mocks'
+
+// Test helpers
+export * from './helpers'

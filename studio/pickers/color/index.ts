@@ -63,7 +63,7 @@ export class ColorPicker extends BasePicker {
   private swatchElements: HTMLElement[] = []
 
   constructor(config: ColorPickerConfig, callbacks: ColorPickerCallbacks) {
-    super(config, callbacks)
+    super(config, callbacks, 'color')
 
     this.currentColor = config.initialColor?.toUpperCase() || '#000000'
     this.palettes = config.palettes || DEFAULT_PALETTES

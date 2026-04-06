@@ -176,6 +176,5 @@ Die folgenden Kapitel führen durch alle Konzepte:
 | 08-09 | **Navigation** – Tabs, Accordion, Overlays |
 | 10-12 | **Daten** – Variablen, Content, Tabellen |
 | 13-14 | **Struktur** – Bedingungen, Seiten |
-| 15 | **Referenz** – Häufige Fehler und Checkliste |
 
 Jedes Kapitel enthält interaktive Beispiele – der Code kann direkt bearbeitet werden, das Ergebnis erscheint live.

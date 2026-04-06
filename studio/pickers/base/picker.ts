@@ -5,6 +5,9 @@
 import type { PickerConfig, PickerCallbacks } from './types'
 import { DEFAULT_CONFIG } from './types'
 import { KeyboardNav } from './keyboard-nav'
+import { events } from '../../core/events'
+
+export type PickerType = 'token' | 'color' | 'icon' | 'animation' | 'unknown'
 
 export abstract class BasePicker {
   protected config: Required<PickerConfig>
@@ -14,12 +17,20 @@ export abstract class BasePicker {
   protected anchor: HTMLElement | null = null
   protected keyboardNav: KeyboardNav | null = null
 
+  /** Unique identifier for this picker instance (for testing) */
+  public readonly pickerId: string
+  /** Type of picker (for testing) */
+  public readonly pickerType: PickerType
+
   private boundHandleClickOutside: (e: MouseEvent) => void
   private boundHandleKeyDown: (e: KeyboardEvent) => void
+  private closeReason: 'select' | 'escape' | 'click-outside' | 'unknown' = 'unknown'
 
-  constructor(config: Partial<PickerConfig>, callbacks: PickerCallbacks) {
+  constructor(config: Partial<PickerConfig>, callbacks: PickerCallbacks, pickerType: PickerType = 'unknown') {
     this.config = { ...DEFAULT_CONFIG, ...config }
     this.callbacks = callbacks
+    this.pickerId = `picker-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    this.pickerType = pickerType
 
     this.boundHandleClickOutside = this.handleClickOutside.bind(this)
     this.boundHandleKeyDown = this.handleKeyDown.bind(this)
@@ -61,7 +72,11 @@ export abstract class BasePicker {
     }
 
     this.isOpen = true
+    this.closeReason = 'unknown'
     this.callbacks.onOpen?.()
+
+    // Emit event for testing
+    events.emit('picker:opened', { pickerId: this.pickerId, pickerType: this.pickerType })
   }
 
   hide(): void {
@@ -80,6 +95,9 @@ export abstract class BasePicker {
     this.teardownEventListeners()
     this.isOpen = false
     this.callbacks.onClose?.()
+
+    // Emit event for testing
+    events.emit('picker:closed', { pickerId: this.pickerId, reason: this.closeReason })
   }
 
   toggle(anchor: HTMLElement): void {
@@ -189,7 +207,9 @@ export abstract class BasePicker {
       }, 0)
     }
 
-    if (this.config.closeOnEscape) {
+    // Only set up keyboard listener if NOT using external keyboard handling
+    // When external (like TriggerManager) handles keyboard, skip this to avoid conflicts
+    if (this.config.closeOnEscape && !this.config.externalKeyboardHandling) {
       // Use capturing phase to intercept events before CodeMirror
       document.addEventListener('keydown', this.boundHandleKeyDown, true)
     }
@@ -205,6 +225,7 @@ export abstract class BasePicker {
 
     const target = event.target as Node
     if (!this.element.contains(target) && !this.anchor?.contains(target)) {
+      this.closeReason = 'click-outside'
       this.hide()
     }
   }
@@ -213,6 +234,7 @@ export abstract class BasePicker {
     if (event.key === 'Escape' && this.config.closeOnEscape) {
       event.preventDefault()
       event.stopPropagation()
+      this.closeReason = 'escape'
       this.hide()
       return
     }
@@ -229,6 +251,7 @@ export abstract class BasePicker {
   protected selectValue(value: string): void {
     this.callbacks.onSelect(value)
     if (this.config.closeOnSelect) {
+      this.closeReason = 'select'
       this.hide()
     }
   }

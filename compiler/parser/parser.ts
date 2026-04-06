@@ -6,7 +6,7 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
-import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ComputedExpression, LoopVarReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride, StateDependency, StateAnimation, DataAttribute, DataBlock, SchemaDefinition, SchemaField, SchemaType, SchemaConstraint, TableNode, TableColumnNode, TableSlotNode, DataReference, DataReferenceArray } from './ast'
+import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ComputedExpression, LoopVarReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride, StateDependency, StateAnimation, DataAttribute, DataBlock, SchemaDefinition, SchemaField, SchemaType, SchemaConstraint, TableNode, TableColumnNode, TableSlotNode, TableStaticRowNode, TableStaticCellNode, DataReference, DataReferenceArray } from './ast'
 import {
   PROPERTY_STARTERS,
   BOOLEAN_PROPERTIES,
@@ -1495,6 +1495,18 @@ export class Parser {
       instance.name = this.advance().value
     }
 
+    // Alternative name syntax: Component name InstanceName "Text"
+    // This allows: Button name MenuBtn "Menü", pad 10 20
+    // Instead of:  Button "Menü", name MenuBtn, pad 10 20
+    if (this.check('IDENTIFIER') && this.current().value === 'name') {
+      const nextToken = this.peekAt(1)
+      // Only consume if followed by an identifier (the name value)
+      if (nextToken?.type === 'IDENTIFIER') {
+        this.advance() // consume 'name'
+        instance.name = this.advance().value // consume the actual name
+      }
+    }
+
     // Check if this line uses child override syntax (contains semicolon)
     // Syntax: NavItem Icon "home"; Label "Home"
     if (this.hasChildOverrideSyntax()) {
@@ -1631,7 +1643,6 @@ export class Parser {
   private parseTable(nameToken: Token): TableNode {
     const table: TableNode = {
       type: 'Table',
-      dataSource: '',
       properties: [],
       columns: [],
       line: nameToken.line,
@@ -1639,18 +1650,12 @@ export class Parser {
     }
 
     // Parse data source: $collection (parsed as IDENTIFIER starting with $)
+    // Data source is optional - manual tables don't have one
     if (this.check('IDENTIFIER') && this.current().value.startsWith('$')) {
       table.dataSource = this.advance().value
-    } else {
-      this.errors.push({
-        message: `Expected data source (e.g., $tasks) after Table`,
-        line: nameToken.line,
-        column: nameToken.column,
-      })
+      // Parse optional clauses: where, by, grouped by (only for data-driven tables)
+      this.parseTableClauses(table)
     }
-
-    // Parse optional clauses: where, by, grouped by
-    this.parseTableClauses(table)
 
     // Parse inline properties (select, pageSize, etc.)
     const events: Event[] = []
@@ -1781,7 +1786,7 @@ export class Parser {
   }
 
   /**
-   * Parse Table body (columns and slots)
+   * Parse Table body (columns, slots, and static rows)
    */
   private parseTableBody(table: TableNode): void {
     while (!this.check('DEDENT') && !this.isAtEnd()) {
@@ -1803,9 +1808,16 @@ export class Parser {
           this.advance() // :
           table.headerSlot = this.parseTableSlot('Header')
         } else if (name === 'Row' && this.checkNext('COLON')) {
+          // Row: slot for data-driven tables
           this.advance() // Row
           this.advance() // :
           table.rowSlot = this.parseTableSlot('Row')
+        } else if (name === 'Row' && !this.checkNext('COLON')) {
+          // Row without colon = static row for manual tables
+          this.advance() // Row
+          const staticRow = this.parseTableStaticRow()
+          if (!table.staticRows) table.staticRows = []
+          table.staticRows.push(staticRow)
         } else if (name === 'Footer' && this.checkNext('COLON')) {
           this.advance() // Footer
           this.advance() // :
@@ -1827,6 +1839,111 @@ export class Parser {
     if (this.check('DEDENT')) {
       this.advance()
     }
+  }
+
+  /**
+   * Parse a static Row for manual tables
+   *
+   * Syntax:
+   *   Row "Cell1", "Cell2", "Cell3"
+   *   Row
+   *     Text "Content"
+   *     Frame ...
+   */
+  private parseTableStaticRow(): TableStaticRowNode {
+    const startToken = this.previous()
+    const row: TableStaticRowNode = {
+      type: 'TableStaticRow',
+      cells: [],
+      properties: [],
+      line: startToken?.line ?? 0,
+      column: startToken?.column ?? 0,
+    }
+
+    // Parse inline cells (strings separated by commas)
+    // Row "Name", "Age", "Email"
+    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.isAtEnd()) {
+      if (this.check('STRING')) {
+        const token = this.advance()
+        row.cells.push({
+          type: 'TableStaticCell',
+          text: token.value,
+          properties: [],
+          line: token.line,
+          column: token.column,
+        })
+      } else if (this.check('NUMBER')) {
+        const token = this.advance()
+        row.cells.push({
+          type: 'TableStaticCell',
+          text: String(token.value),
+          properties: [],
+          line: token.line,
+          column: token.column,
+        })
+      } else if (this.check('COMMA')) {
+        this.advance()
+      } else if (this.check('IDENTIFIER')) {
+        // Could be a property like bg, pad, etc.
+        // For now, skip unknown identifiers in inline position
+        break
+      } else {
+        break
+      }
+    }
+
+    // Skip newline
+    if (this.check('NEWLINE')) {
+      this.advance()
+    }
+
+    // Parse child content (indented block)
+    if (this.check('INDENT')) {
+      this.advance()
+      // If we had inline cells, children are additional content
+      // If no inline cells, children become the cell content
+      const children: (Instance | Slot)[] = []
+
+      while (!this.check('DEDENT') && !this.isAtEnd()) {
+        if (this.check('NEWLINE')) {
+          this.advance()
+          continue
+        }
+
+        if (this.check('IDENTIFIER')) {
+          const child = this.parseInstance(this.advance())
+          // Only accept Instance and Slot in static cells (not Table/Zag)
+          if (child && (child.type === 'Instance' || child.type === 'Slot')) {
+            children.push(child)
+          }
+        } else {
+          this.advance()
+        }
+      }
+
+      // If we have children but no cells, wrap children in a single cell
+      if (row.cells.length === 0 && children.length > 0) {
+        row.cells.push({
+          type: 'TableStaticCell',
+          children,
+          properties: [],
+          line: startToken?.line ?? 0,
+          column: startToken?.column ?? 0,
+        })
+      } else if (children.length > 0) {
+        // Add children to the last cell or create new cell
+        const lastCell = row.cells[row.cells.length - 1]
+        if (lastCell && !lastCell.children) {
+          lastCell.children = children
+        }
+      }
+
+      if (this.check('DEDENT')) {
+        this.advance()
+      }
+    }
+
+    return row
   }
 
   /**
@@ -4804,8 +4921,41 @@ export class Parser {
     // onclick:
     //   Menu open
     //   Backdrop visible
-    this.skipNewlines()
+    //
+    // IMPORTANT: Only skip newlines if followed by INDENT (block actions).
+    // If followed by same-level content (another sibling), we must NOT consume
+    // the NEWLINE, as it's the separator between siblings.
+    //
+    // Example that should NOT consume NEWLINE:
+    //   Button "A", onenter toggle()
+    //   Button "B", onescape toggle()   ← NEWLINE before this is a sibling separator
+    if (this.check('NEWLINE') && this.peekAt(1)?.type === 'INDENT') {
+      this.skipNewlines()
+    }
     if (this.check('INDENT')) {
+      // Don't consume INDENT if it's followed by a state block pattern (e.g., "on:", "hover:")
+      // This happens when an inline event like "onenter toggle()" is followed by a state block
+      // Example:
+      //   Button "A", onenter toggle()
+      //     on:          ← This is a state block, not event actions
+      //       bg red
+      // Token sequence: INDENT NEWLINE IDENTIFIER COLON
+      // We need to skip NEWLINE when checking
+      let offset = 1
+      while (this.peekAt(offset)?.type === 'NEWLINE') {
+        offset++
+      }
+      const afterIndent = this.peekAt(offset) // first non-NEWLINE after INDENT
+      const afterIndent2 = this.peekAt(offset + 1) // token after that
+      if (afterIndent?.type === 'IDENTIFIER' && afterIndent2?.type === 'COLON') {
+        const name = afterIndent.value
+        // State names are lowercase and not event names
+        if (name[0] === name[0].toLowerCase() && !EVENT_NAMES.has(name)) {
+          // This is a state block - don't consume the INDENT, let parseInstanceBody handle it
+          return event
+        }
+      }
+
       this.advance() // consume INDENT
       while (!this.check('DEDENT') && !this.isAtEnd()) {
         this.skipNewlines()

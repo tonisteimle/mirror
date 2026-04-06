@@ -110,7 +110,7 @@ Btn "An/Aus"</textarea>
     Icon "heart", ic white, is 16, fill
     "Gemerkt"
 
-Frame hor, gap 12
+Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   FavBtn
   FavBtn on</textarea>
         </div>
@@ -213,7 +213,7 @@ Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
       </ul>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame gap 12
+          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Button "Menü", name MenuBtn, pad 10 20, rad 6, bg #333, col white, toggle()
     open:
       bg #2563eb
@@ -238,11 +238,11 @@ Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Panel: bg #1a1a1a, rad 8, clip, toggle()
-  Frame hor, spread, pad 16, cursor pointer
+  Frame hor, spread, ver-center, pad 16, cursor pointer
     Text "Mehr anzeigen", col white, fs 14
     Icon "chevron-down", ic #888, is 18
   open:
-    Frame hor, spread, pad 16, cursor pointer
+    Frame hor, spread, ver-center, pad 16, cursor pointer
       Text "Weniger anzeigen", col white, fs 14
       Icon "chevron-up", ic #888, is 18
     Frame pad 0 16 16 16, gap 8
@@ -277,7 +277,7 @@ SearchBox: hor, gap 8, bg #1a1a1a, pad 10 12, rad 6
     searching:
       bg #252525
 
-Frame gap 8
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
   SearchBox
   SearchStatus
     SearchInput.searching:
@@ -308,7 +308,7 @@ Frame gap 8
   hover:
     bg #444
 
-Frame gap 8
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
   Btn "Enter drücken", onenter toggle()
     on:
       bg #2563eb

@@ -18,6 +18,7 @@ import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
 import { createDragDropSystem, createCodeExecutor, type DragDropSystem } from './drag-drop'
 import { initUserSettings } from './storage/user-settings'
+import { initStudioTestAPI } from './test-api'
 import type { AST } from '../compiler/parser/ast'
 import type { IR } from '../compiler/ir/types'
 import type { SourceMap } from '../compiler/ir/source-map'
@@ -700,6 +701,10 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
 
   dragDropSystem.init()
   studio.dragDrop = dragDropSystem
+
+  // Expose DragDropSystem globally for E2E testing
+  // This allows Playwright tests to use the programmatic Test API
+  initStudioTestAPI(studio, dragDropSystem)
 
   // Disable drag during compile to prevent stale SourceMap issues
   eventUnsubscribes.push(

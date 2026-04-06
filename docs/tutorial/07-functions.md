@@ -40,7 +40,7 @@ Button "Klick"
 Mit `show(Element)` und `hide(Element)` steuerst du die Sichtbarkeit anderer Elemente:
 
 ```mirror
-Frame gap 12
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Button "Info anzeigen", pad 10 20, bg #2563eb, col white, rad 6, show(InfoBox)
 
   Frame name InfoBox, hidden, bg #1a1a1a, pad 16, rad 8, gap 8
@@ -55,7 +55,7 @@ Frame gap 12
 Ein typisches Pattern: Button zeigt Menü, Schließen-Button versteckt es wieder:
 
 ```mirror
-Frame gap 8
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
   Button "Menü öffnen", pad 10 20, bg #333, col white, rad 6, show(Menu)
 
   Frame name Menu, hidden, bg #1a1a1a, pad 8, rad 8, gap 2, w 180
@@ -74,7 +74,7 @@ Frame gap 8
 Du kannst `show()`/`hide()` mit States kombinieren. Der Button ändert sein Aussehen UND zeigt das Menü:
 
 ```mirror
-Frame gap 8
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
   Button "Filter", name FilterBtn, pad 10 20, bg #333, col white, rad 6, toggle(), show(FilterPanel)
     open:
       bg #2563eb

@@ -20,6 +20,8 @@ export type NodeType =
   | 'ZagComponent'
   | 'Table'
   | 'TableColumn'
+  | 'TableStaticRow'
+  | 'TableStaticCell'
 
 export interface BaseNode {
   type: NodeType
@@ -505,11 +507,16 @@ export interface SourcePosition {
  *   Table $tasks where done == false by priority desc
  *     Column titel, w 250
  *     Column aufwand, suffix "h"
+ *
+ * Manual Table (without data source):
+ *   Table
+ *     Row "Name", "Age"
+ *     Row "Max", "25"
  */
 export interface TableNode extends BaseNode {
   type: 'Table'
-  /** Data source reference (e.g., "$tasks") */
-  dataSource: string
+  /** Data source reference (e.g., "$tasks") - optional for manual tables */
+  dataSource?: string
   /** Filter expression (where clause) */
   filter?: string
   /** Field to sort by */
@@ -530,6 +537,39 @@ export interface TableNode extends BaseNode {
   footerSlot?: TableSlotNode
   /** Group header slot customization */
   groupSlot?: TableSlotNode
+  /** Static rows for manual tables (when no dataSource) */
+  staticRows?: TableStaticRowNode[]
+}
+
+/**
+ * Static row for manual tables
+ *
+ * Syntax:
+ *   Row "Cell1", "Cell2", "Cell3"
+ *   Row
+ *     Cell "Content"
+ *     Cell
+ *       Frame ...
+ */
+export interface TableStaticRowNode extends BaseNode {
+  type: 'TableStaticRow'
+  /** Cell contents - can be strings or complex content */
+  cells: TableStaticCellNode[]
+  /** Row-level properties (e.g., bg, pad) */
+  properties: Property[]
+}
+
+/**
+ * Static cell for manual tables
+ */
+export interface TableStaticCellNode extends BaseNode {
+  type: 'TableStaticCell'
+  /** Simple text content */
+  text?: string
+  /** Complex content (child elements) */
+  children?: (Instance | Slot)[]
+  /** Cell-level properties */
+  properties: Property[]
 }
 
 /**

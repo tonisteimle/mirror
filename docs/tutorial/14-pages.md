@@ -2,7 +2,6 @@
 title: Seiten
 subtitle: Apps mit mehreren Dateien
 prev: 13-bedingungen
-next: 15-fehler
 ---
 
 Du kennst bereits Tabs – mehrere Inhalte, einer ist sichtbar. Für größere Apps funktioniert das gleiche Prinzip mit Dateien.

@@ -16,7 +16,7 @@ Btn: pad 10 20, rad 6, bg #2563eb, col white
 Link: col #2563eb, underline
 Badge: bg #2563eb, col white, pad 4 8, rad 4, fs 12
 
-Frame gap 12
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Btn "Speichern"
   Link "Mehr erfahren"
   Badge "Neu"
@@ -35,7 +35,7 @@ $primary.bg: #2563eb
 // Token verwenden (ohne Suffix!)
 Btn: bg $primary, col white, pad 10 20, rad 6
 
-Frame hor, gap 8
+Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Btn "Speichern"
   Btn "Senden"
   Btn "Weiter"

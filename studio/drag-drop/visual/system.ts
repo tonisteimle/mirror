@@ -14,6 +14,12 @@ export class VisualSystem implements IVisualSystem {
   private indicatorElement: HTMLElement | null = null
   private parentOutlineElement: HTMLElement | null = null
 
+  // Test API state tracking
+  private _indicatorVisible = false
+  private _indicatorRect: { x: number; y: number; width: number; height: number } | null = null
+  private _parentOutlineVisible = false
+  private _parentOutlineRect: { x: number; y: number; width: number; height: number } | null = null
+
   constructor(container: HTMLElement) {
     this.container = container
   }
@@ -48,6 +54,10 @@ export class VisualSystem implements IVisualSystem {
 
     document.body.appendChild(indicator)
     this.indicatorElement = indicator
+
+    // Track state for Test API
+    this._indicatorVisible = true
+    this._indicatorRect = { ...hint.rect }
   }
 
   hideIndicator(): void {
@@ -55,6 +65,10 @@ export class VisualSystem implements IVisualSystem {
       this.indicatorElement.remove()
       this.indicatorElement = null
     }
+
+    // Track state for Test API
+    this._indicatorVisible = false
+    this._indicatorRect = null
   }
 
   // ==========================================================================
@@ -83,6 +97,10 @@ export class VisualSystem implements IVisualSystem {
 
     document.body.appendChild(outline)
     this.parentOutlineElement = outline
+
+    // Track state for Test API
+    this._parentOutlineVisible = true
+    this._parentOutlineRect = { ...rect }
   }
 
   hideParentOutline(): void {
@@ -90,6 +108,10 @@ export class VisualSystem implements IVisualSystem {
       this.parentOutlineElement.remove()
       this.parentOutlineElement = null
     }
+
+    // Track state for Test API
+    this._parentOutlineVisible = false
+    this._parentOutlineRect = null
   }
 
   // ==========================================================================
@@ -115,6 +137,28 @@ export class VisualSystem implements IVisualSystem {
 
   dispose(): void {
     this.clear()
+  }
+
+  // ==========================================================================
+  // Test API
+  // ==========================================================================
+
+  /**
+   * Get current visual state for test assertions
+   * @returns Object containing visibility and rect information
+   */
+  getState(): {
+    indicatorVisible: boolean
+    indicatorRect: { x: number; y: number; width: number; height: number } | null
+    parentOutlineVisible: boolean
+    parentOutlineRect: { x: number; y: number; width: number; height: number } | null
+  } {
+    return {
+      indicatorVisible: this._indicatorVisible,
+      indicatorRect: this._indicatorRect ? { ...this._indicatorRect } : null,
+      parentOutlineVisible: this._parentOutlineVisible,
+      parentOutlineRect: this._parentOutlineRect ? { ...this._parentOutlineRect } : null,
+    }
   }
 }
 

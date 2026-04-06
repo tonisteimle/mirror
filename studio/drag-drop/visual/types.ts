@@ -28,6 +28,14 @@ export interface VisualSystem {
   // Cleanup
   clear(): void
   dispose(): void
+
+  // Test API
+  getState(): {
+    indicatorVisible: boolean
+    indicatorRect: { x: number; y: number; width: number; height: number } | null
+    parentOutlineVisible: boolean
+    parentOutlineRect: { x: number; y: number; width: number; height: number } | null
+  }
 }
 
 /**

@@ -84,7 +84,7 @@ FavBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, gap 8, toggle
     Icon "heart", ic white, is 16, fill
     "Gemerkt"
 
-Frame hor, gap 12
+Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   FavBtn
   FavBtn on
 ```
@@ -167,7 +167,7 @@ Dafür brauchst du zwei Dinge:
 - Referenziere diesen Namen mit `Name.state:`
 
 ```mirror
-Frame gap 12
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Button "Menü", name MenuBtn, pad 10 20, rad 6, bg #333, col white, toggle()
     open:
       bg #2563eb
@@ -223,7 +223,7 @@ SearchBox: hor, gap 8, bg #1a1a1a, pad 10 12, rad 6
     searching:
       bg #252525
 
-Frame gap 8
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
   SearchBox
   SearchStatus
     SearchInput.searching:
@@ -252,7 +252,7 @@ Btn as Button: pad 12 24, rad 6, bg #333, col white, cursor pointer
   hover:
     bg #444
 
-Frame gap 8
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
   Btn "Enter drücken", onenter toggle()
     on:
       bg #2563eb

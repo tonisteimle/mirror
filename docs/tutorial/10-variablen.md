@@ -65,22 +65,35 @@ each item, index in ["Erster", "Zweiter", "Dritter"]
   Text (index + 1) + ". " + item, col white, pad 4
 ```
 
-## Objekt-Arrays
+## Datenobjekte mit Einträgen
 
-Arrays mit strukturierten Daten:
+Das **Entry-Format** ist die bevorzugte Art, Daten in Mirror zu definieren. Jeder Eintrag hat einen Namen und enthält `key: value` Paare:
 
 ```mirror
-users: [
-  { name: "Max", role: "Admin" },
-  { name: "Anna", role: "User" },
-  { name: "Tom", role: "User" }
-]
+users:
+  max:
+    name: "Max"
+    role: "Admin"
+  anna:
+    name: "Anna"
+    role: "User"
+  tom:
+    name: "Tom"
+    role: "User"
 
 each user in $users
   Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
     Text user.name, col white, weight 500
     Text user.role, col #888, fs 12
 ```
+
+**Vorteile des Entry-Formats:**
+- Lesbar wie YAML/JSON
+- Einträge haben eindeutige IDs (`max`, `anna`, `tom`)
+- Direkt adressierbar: `$users.max.name`
+- Relationen zwischen Daten möglich
+
+> **Alternative:** Arrays sind auch möglich (`users: [{ name: "Max" }]`), aber das Entry-Format ist lesbarer und flexibler.
 
 ## Datenobjekte
 
@@ -255,13 +268,21 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 ## Praktisch: Produktliste
 
 ```mirror
-products: [
-  { name: "Basic", price: 9, features: "5 Users" },
-  { name: "Pro", price: 29, features: "Unlimited" },
-  { name: "Enterprise", price: 99, features: "Custom" }
-]
+products:
+  basic:
+    name: "Basic"
+    price: 9
+    features: "5 Users"
+  pro:
+    name: "Pro"
+    price: 29
+    features: "Unlimited"
+  enterprise:
+    name: "Enterprise"
+    price: 99
+    features: "Custom"
 
-Frame hor, gap 12
+Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   each product in $products
     Frame bg #1a1a1a, pad 20, rad 12, gap 8, w 140, center
       Text product.name, col white, fs 16, weight 600
@@ -275,22 +296,30 @@ Frame hor, gap 12
 
 | Konzept | Syntax |
 |---------|--------|
+| **Einfache Variablen** | |
 | Variable definieren | `name: "Wert"` |
-| Datenobjekt | `user:` + Einrückung |
-| Verschachtelt | `steps:` + eingerückte Objekte |
-| Attribut | `  name: "Max"` |
 | Variable verwenden | `$name` |
-| Attribut verwenden | `$user.name` |
-| Verschachtelt verwenden | `$method.steps.planning.title` |
 | Concatenation | `"Hallo " + $name` |
 | Arithmetik | `$a * $b` |
-| Array | `["a", "b", "c"]` |
-| Objekt-Array | `[{ key: "value" }]` |
-| Iteration | `each item in $list` |
-| Mit Index | `each item, index in $list` |
-| .data-Datei | `$datei.eintrag.attribut` |
+| **Entry-Format (empfohlen)** | |
+| Datenobjekt mit Einträgen | `users:` + eingerückte Einträge |
+| Eintrag | `  max:` + `key: value` Paare |
+| Eintrag adressieren | `$users.max.name` |
+| Iteration | `each user in $users` |
+| **Verschachtelung** | |
+| Verschachtelt | `steps:` + eingerückte Objekte |
+| Verschachtelt verwenden | `$method.steps.planning.title` |
+| **Relationen** | |
 | Relation (N:1) | `assignee: $users.toni` |
 | Relation (N:N) | `members: $users.toni, $users.anna` |
 | Durch Relation | `$tasks.task1.assignee.name` |
+| **.data-Dateien** | |
+| Externe Datei | `$datei.eintrag.attribut` |
+| **Arrays (alternativ)** | |
+| Einfaches Array | `["a", "b", "c"]` |
+| Objekt-Array | `[{ key: "value" }]` |
+| Mit Index | `each item, index in $list` |
 
 **Die Regel:** Definition mit `name:`, Verwendung mit `$name`.
+
+**Empfehlung:** Verwende das Entry-Format für strukturierte Daten – es ist lesbarer und ermöglicht direkten Zugriff auf einzelne Einträge.

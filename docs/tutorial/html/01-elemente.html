@@ -74,7 +74,7 @@
       <p>Properties steuern das Aussehen. Zahlen sind Pixel, <code>#hex</code> sind Farben:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame gap 16
+          <textarea>Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Farben: bg = Hintergrund, col = Textfarbe
   Text "Farbiger Text", bg #2563eb, col white, pad 8 16, rad 4
@@ -142,7 +142,7 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
       <p>Mit Layout-Properties steuerst du, wie Kinder innerhalb eines Frames angeordnet werden. Hier die wichtigsten – Details im <a href="04-layout.html">Layout-Kapitel</a>:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame gap 16
+          <textarea>Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // hor = horizontal anordnen
   Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
@@ -155,7 +155,7 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
     Text "Zentriert", col white
 
   // spread = Kinder an den Rändern verteilen
-  Frame hor, spread, w 300, bg #1a1a1a, pad 12, rad 6
+  Frame hor, spread, ver-center, w 300, bg #1a1a1a, pad 12, rad 6
     Text "Links", col white
     Text "Rechts", col white
 
@@ -184,27 +184,22 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
     <!-- ============================================================ -->
     <section>
       <h2>Icons</h2>
-      <p>Icons kommen von <a href="https://lucide.dev/icons/" target="_blank">Lucide</a> (Standard) oder <a href="https://fonts.google.com/icons" target="_blank">Material Icons</a>. Der Name kommt in Anführungszeichen:</p>
+      <p>Icons kommen von <a href="https://lucide.dev/icons/" target="_blank">Lucide</a>. Der Name kommt in Anführungszeichen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame gap 16
+          <textarea>Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Lucide Icons (Standard)
-  Frame hor, gap 16
+  Frame hor, gap 16, bg #1a1a1a, pad 12, rad 6
     Icon "check", ic #10b981, is 24
     Icon "x", ic #ef4444, is 24
     Icon "settings", ic #888, is 24
     Icon "user", ic #2563eb, is 24
 
   // fill = ausgefüllte Variante
-  Frame hor, gap 16
+  Frame hor, gap 16, bg #1a1a1a, pad 12, rad 6
     Icon "heart", ic #ef4444, is 24
     Icon "heart", ic #ef4444, is 24, fill
-
-  // material = Material Icons statt Lucide
-  Frame hor, gap 16
-    Icon "star", ic #f59e0b, is 24, material
-    Icon "star", ic #f59e0b, is 24, material, fill
 
   // Icons in Buttons
   Button pad 10 16, rad 6, bg #2563eb, col white
@@ -221,7 +216,6 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
         <tr><td><code>ic</code></td><td>Icon-Farbe</td><td><code>ic #2563eb</code></td></tr>
         <tr><td><code>iw</code></td><td>Strichstärke</td><td><code>iw 1.5</code></td></tr>
         <tr><td><code>fill</code></td><td>Ausgefüllte Variante</td><td><code>Icon "heart", fill</code></td></tr>
-        <tr><td><code>material</code></td><td>Material Icons verwenden</td><td><code>Icon "star", material</code></td></tr>
       </table>
 
     </section>
