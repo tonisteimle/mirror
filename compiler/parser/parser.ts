@@ -2732,11 +2732,11 @@ export class Parser {
       }
 
       // String as label (shorthand)
+      // Note: value is NOT auto-derived from label here - that happens in IR transformation
+      // This ensures loadFromFile is only set when value is explicitly provided
       if (this.check('STRING') && !item.label) {
         const str = this.advance()
         item.label = str.value
-        // Use label as value if no explicit value
-        if (!item.value) item.value = str.value
         continue
       }
 
