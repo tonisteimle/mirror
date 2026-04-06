@@ -286,7 +286,7 @@
     .activity-bar {
       display: flex;
       flex-direction: column;
-      margin-top: -4px;
+      margin-top: -2px;
       gap: 0;
     }
 
@@ -295,7 +295,7 @@
       align-items: center;
       justify-content: center;
       width: 40px;
-      height: 40px;
+      height: 28px;
       background: transparent;
       border: none;
       cursor: pointer;
