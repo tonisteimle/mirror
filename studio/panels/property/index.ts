@@ -1,7 +1,7 @@
 /**
  * Property Panel Module
  *
- * Re-exports the main PropertyPanel class and utilities.
+ * Re-exports the main PropertyPanel class, utilities, sections, and base classes.
  */
 
 // Re-export main PropertyPanel
@@ -22,3 +22,9 @@ export type {
 
 // Re-export utilities
 export * from './utils'
+
+// Re-export base classes
+export * from './base'
+
+// Re-export sections
+export * from './sections'
