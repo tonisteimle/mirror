@@ -41,7 +41,7 @@
       </div>
 
       <p>Die Kinder jedes Tabs werden zum Panel-Content. Das erste Tab muss nicht "home" heißen – der <code>value</code> ist nur eine ID, die mit <code>defaultValue</code> übereinstimmen muss.</p>
-      <p>Für Custom-Styling gibt es zwei Slots: <code>List:</code> ist der Container um alle Tab-Header. <code>Indicator:</code> ist die Linie oder Fläche, die den aktiven Tab markiert:</p>
+      <p>Für Custom-Styling gibt es Slots: <code>List:</code> ist der Container um alle Tab-Header. <code>Indicator:</code> ist die Linie oder Fläche, die den aktiven Tab markiert:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Tabs defaultValue "a"
@@ -54,6 +54,34 @@
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string</td><td>Aktiver Tab (controlled)</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string</td><td>Start-Tab</td></tr>
+        <tr><td><code>orientation</code></td><td>"horizontal" | "vertical"</td><td>Ausrichtung</td></tr>
+        <tr><td><code>activationMode</code></td><td>"automatic" | "manual"</td><td>Wann Tab aktiviert wird</td></tr>
+        <tr><td><code>loopFocus</code></td><td>boolean</td><td>Fokus am Ende umbrechen</td></tr>
+        <tr><td><code>deselectable</code></td><td>boolean</td><td>Erlaubt Abwahl</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>List:</code></td><td>Tab-Header-Leiste</td></tr>
+        <tr><td><code>Trigger:</code></td><td>Einzelner Tab-Button</td></tr>
+        <tr><td><code>Content:</code></td><td>Tab-Panel-Inhalt</td></tr>
+        <tr><td><code>Indicator:</code></td><td>Aktiv-Indikator (animiert)</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>selected:</code></td><td>Tab ist aktiv</td></tr>
+        <tr><td><code>disabled:</code></td><td>Tab deaktiviert</td></tr>
+      </table>
 
     </section>
 
@@ -104,6 +132,36 @@
         <div class="playground-preview"></div>
       </div>
 
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string | string[]</td><td>Offene Items (controlled)</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string | string[]</td><td>Start-offene Items</td></tr>
+        <tr><td><code>multiple</code></td><td>boolean</td><td>Mehrere gleichzeitig offen</td></tr>
+        <tr><td><code>collapsible</code></td><td>boolean</td><td>Alle schließbar (default: true)</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Alle Items deaktiviert</td></tr>
+        <tr><td><code>orientation</code></td><td>"horizontal" | "vertical"</td><td>Ausrichtung</td></tr>
+        <tr><td><code>icon</code></td><td>string</td><td>Custom Expand-Icon (default: chevron)</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelnes Accordion-Item</td></tr>
+        <tr><td><code>ItemTrigger:</code></td><td>Klickbarer Header</td></tr>
+        <tr><td><code>ItemContent:</code></td><td>Aufklappbarer Inhalt</td></tr>
+        <tr><td><code>ItemIndicator:</code></td><td>Expand/Collapse Icon</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>open:</code></td><td>Item ist geöffnet</td></tr>
+        <tr><td><code>closed:</code></td><td>Item ist geschlossen</td></tr>
+        <tr><td><code>disabled:</code></td><td>Item deaktiviert</td></tr>
+      </table>
+
     </section>
 
 
@@ -133,6 +191,30 @@
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>open</code></td><td>boolean</td><td>Offen (controlled)</td></tr>
+        <tr><td><code>defaultOpen</code></td><td>boolean</td><td>Startet offen</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Trigger:</code></td><td>Klickbarer Bereich zum Öffnen/Schließen</td></tr>
+        <tr><td><code>Content:</code></td><td>Aufklappbarer Inhalt</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>open:</code></td><td>Bereich ist geöffnet</td></tr>
+        <tr><td><code>closed:</code></td><td>Bereich ist geschlossen</td></tr>
+        <tr><td><code>disabled:</code></td><td>Deaktiviert</td></tr>
+      </table>
 
     </section>
 
@@ -219,6 +301,53 @@
         <tr><td><code>ArrowRight/Left</code></td><td>Gruppe öffnen/schließen</td></tr>
         <tr><td><code>Enter/Space</code></td><td>Item aktivieren</td></tr>
         <tr><td><code>Home/End</code></td><td>Erstes/Letztes Item</td></tr>
+      </table>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string</td><td>Aktives Item (controlled)</td></tr>
+        <tr><td><code>defaultValue</code></td><td>string</td><td>Start-aktives Item</td></tr>
+        <tr><td><code>collapsed</code></td><td>boolean</td><td>Nur Icons anzeigen</td></tr>
+      </table>
+
+      <h3>NavItem Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>string</td><td>Eindeutige ID (required)</td></tr>
+        <tr><td><code>icon</code></td><td>string</td><td>Icon-Name (Lucide)</td></tr>
+        <tr><td><code>badge</code></td><td>string</td><td>Badge-Text</td></tr>
+        <tr><td><code>navigate(View)</code></td><td>function</td><td>Welches Element anzeigen</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+      </table>
+
+      <h3>NavGroup Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>collapsible</code></td><td>boolean</td><td>Aufklappbar</td></tr>
+        <tr><td><code>defaultOpen</code></td><td>boolean</td><td>Startet offen</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Header:</code></td><td>Header-Bereich</td></tr>
+        <tr><td><code>Footer:</code></td><td>Footer-Bereich</td></tr>
+        <tr><td><code>Item:</code></td><td>Alle NavItems</td></tr>
+        <tr><td><code>ItemIcon:</code></td><td>Icons</td></tr>
+        <tr><td><code>ItemBadge:</code></td><td>Badges</td></tr>
+        <tr><td><code>Group:</code></td><td>NavGroup Container</td></tr>
+        <tr><td><code>GroupLabel:</code></td><td>Gruppen-Überschrift</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>selected:</code></td><td>Item ist aktiv</td></tr>
+        <tr><td><code>expanded:</code></td><td>Gruppe geöffnet</td></tr>
+        <tr><td><code>collapsed:</code></td><td>Gruppe geschlossen</td></tr>
+        <tr><td><code>disabled:</code></td><td>Deaktiviert</td></tr>
       </table>
 
     </section>
