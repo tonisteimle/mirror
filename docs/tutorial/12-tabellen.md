@@ -259,6 +259,216 @@ Table $tasks grouped by status, gap 4, w full
     Text row.title, col white, grow
 ```
 
+### Custom Group Header
+
+Mit `Group:` definierst du einen eigenen Gruppen-Header. Dabei hast du Zugriff auf `group.key` (Gruppenwert) und `group.count` (Anzahl Einträge):
+
+```mirror
+tasks:
+  task1:
+    title: "Design Homepage"
+    status: "done"
+  task2:
+    title: "API Integration"
+    status: "progress"
+  task3:
+    title: "Write Tests"
+    status: "todo"
+  task4:
+    title: "Code Review"
+    status: "done"
+
+Table $tasks grouped by status, gap 4, w full
+  Group: hor, spread, pad 12, bg #252525, rad 4
+    Text group.key, col white, weight bold, uppercase
+    Text group.count + " Einträge", col #888, fs 12
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Icon "circle", ic #888, is 14
+    Text row.title, col white, grow
+```
+
+## Sticky Header
+
+Mit `stickyHeader` bleibt der Header beim Scrollen fixiert. Damit das funktioniert, braucht die Tabelle eine feste Höhe (`h`) und `scroll`:
+
+```mirror
+products:
+  p1:
+    name: "T-Shirt"
+    price: 29
+  p2:
+    name: "Hoodie"
+    price: 59
+  p3:
+    name: "Cap"
+    price: 19
+  p4:
+    name: "Sneakers"
+    price: 89
+
+Table $products, stickyHeader, gap 4, w full, h 150, scroll
+  Header: hor, gap 12, pad 12 16, bg #0a0a0a, w full
+    Text "Produkt", col #888, fs 12, w 120, weight 500
+    Text "Preis", col #888, fs 12, w 80, weight 500
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Text row.name, col white, w 120
+    Text "€" + row.price, col #10b981, w 80
+```
+
+> **Wichtig:** Ohne `h` (feste Höhe) und `scroll` hat die Tabelle keinen Scrollbereich – der Header kann dann nicht "kleben".
+
+## Pagination
+
+Mit `pageSize N` zeigt die Tabelle nur N Einträge pro Seite. Ein Paginator mit Vor-/Zurück-Buttons erscheint automatisch unter der Tabelle:
+
+```mirror
+tasks:
+  task1:
+    title: "Task 1"
+    done: false
+  task2:
+    title: "Task 2"
+    done: true
+  task3:
+    title: "Task 3"
+    done: false
+  task4:
+    title: "Task 4"
+    done: true
+  task5:
+    title: "Task 5"
+    done: false
+
+Table $tasks, pageSize 2, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Text row.title, col white, grow
+```
+
+Klicke auf die Pfeile um zwischen Seiten zu wechseln. Die Anzeige "Page 1 of 3" zeigt die aktuelle Position.
+
+### Paginator stylen
+
+Mit `Paginator:` und Sub-Slots (`Prev:`, `Next:`, `PageInfo:`) kannst du den Paginator anpassen:
+
+```mirror
+tasks:
+  task1:
+    title: "Task 1"
+  task2:
+    title: "Task 2"
+  task3:
+    title: "Task 3"
+  task4:
+    title: "Task 4"
+
+Table $tasks, pageSize 2, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Text row.title, col white, grow
+  Paginator: hor, spread, pad 12, bg #0a0a0a, rad 6
+    Prev: pad 8 12, bg #333, col white, rad 4
+    PageInfo: col #888, fs 12
+    Next: pad 8 12, bg #333, col white, rad 4
+```
+
+## Sortierbare Spalten
+
+Die `Column`-Syntax ist eine Alternative zu `Row:`. Statt ein eigenes Template zu definieren, gibst du nur die Feldnamen an – Mirror rendert automatisch eine klassische Tabelle mit Header und Zellen.
+
+Mit `sortable` werden Spalten interaktiv sortierbar. Klick auf den Header sortiert die Daten:
+
+```mirror
+products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29
+  hoodie:
+    name: "Hoodie"
+    price: 59
+  cap:
+    name: "Cap"
+    price: 19
+
+Table $products
+  Column name, sortable
+  Column price, sortable
+```
+
+> **Row: vs Column:** Verwende `Row:` für volle Kontrolle über das Layout. Verwende `Column` für klassische Tabellen mit automatischem Header und Sortierung.
+
+### Initial absteigend sortieren
+
+Mit `desc` startet eine Spalte absteigend sortiert:
+
+```mirror
+products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29
+  hoodie:
+    name: "Hoodie"
+    price: 59
+  cap:
+    name: "Cap"
+    price: 19
+
+Table $products
+  Column name, sortable
+  Column price, sortable, desc
+```
+
+### Custom Sort Icons
+
+Mit `SortAsc:` und `SortDesc:` definierst du eigene Icons für die Sortierrichtung:
+
+```mirror
+products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29
+  hoodie:
+    name: "Hoodie"
+    price: 59
+
+Table $products
+  SortAsc: Icon "chevron-up", ic #2563eb, is 12
+  SortDesc: Icon "chevron-down", ic #2563eb, is 12
+  Column name, sortable
+  Column price, sortable
+```
+
+## Features kombinieren
+
+Alle Features lassen sich kombinieren. Hier eine Tabelle mit Sortierung, Pagination und Sticky Header:
+
+```mirror
+products:
+  p1:
+    name: "T-Shirt"
+    price: 29
+    stock: 150
+  p2:
+    name: "Hoodie"
+    price: 59
+    stock: 45
+  p3:
+    name: "Cap"
+    price: 19
+    stock: 200
+  p4:
+    name: "Sneakers"
+    price: 89
+    stock: 30
+  p5:
+    name: "Jacket"
+    price: 129
+    stock: 15
+
+Table $products, stickyHeader, pageSize 3, h 200, scroll
+  Column name, sortable
+  Column price, sortable, desc
+  Column stock, sortable
+```
+
 ## Mit Icons und Badges
 
 Zeige Status mit Icons und farbigen Badges:
@@ -385,5 +595,13 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
 | `by feld` | Sortieren aufsteigend |
 | `by feld desc` | Sortieren absteigend |
 | `grouped by feld` | Nach Feld gruppieren |
+| `Group:` | Custom Gruppen-Header (mit `group.key`, `group.count`) |
+| `stickyHeader` | Header bleibt beim Scrollen fixiert |
+| `pageSize N` | Pagination mit N Einträgen pro Seite |
+| `Paginator:` | Custom Paginator-Style |
+| `Prev:`, `Next:`, `PageInfo:` | Paginator-Elemente stylen |
+| `Column feld, sortable` | Spalte mit Klick-Sortierung |
+| `Column feld, sortable, desc` | Initial absteigend sortiert |
+| `SortAsc:`, `SortDesc:` | Custom Sort-Icons |
 
-**Das Prinzip:** Table iteriert über Daten. Mit `Header:` definierst du eine Kopfzeile, mit `Row:` das Aussehen jeder Zeile. Mit `where` filterst du, mit `by` sortierst du, mit `grouped by` gruppierst du.
+**Das Prinzip:** Table iteriert über Daten. Mit `Header:` definierst du eine Kopfzeile, mit `Row:` das Aussehen jeder Zeile. Mit `where` filterst du, mit `by` sortierst du, mit `grouped by` gruppierst du. Mit `Column` definierst du sortierbare Spalten, mit `pageSize` aktivierst du Pagination.

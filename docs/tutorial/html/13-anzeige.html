@@ -19,7 +19,7 @@
       <p class="subtitle">Tables, Media, Progress, Utility</p>
     </header>
 
-    <p class="intro">Komponenten zur Darstellung von Daten und Medien. <strong>Tabellen</strong> für strukturierte Daten. <strong>Avatar</strong> und <strong>FileUpload</strong> für Medien. <strong>Progress</strong> und <strong>Toast</strong> für Feedback. <strong>Clipboard</strong>, <strong>QRCode</strong> und <strong>Splitter</strong> für spezielle Anwendungsfälle.</p>
+    <p class="intro">Komponenten zur Darstellung von Daten und Medien. <strong>Tabellen</strong> für strukturierte Daten. <strong>Avatar</strong>, <strong>FileUpload</strong>, <strong>Carousel</strong>, <strong>ImageCropper</strong> und <strong>SignaturePad</strong> für Medien. <strong>Progress</strong>, <strong>Toast</strong> und <strong>Marquee</strong> für Feedback. <strong>Clipboard</strong>, <strong>QRCode</strong>, <strong>ScrollArea</strong> und <strong>Splitter</strong> für spezielle Anwendungsfälle.</p>
 
 
     <!-- ============================================================ -->
@@ -325,6 +325,243 @@ Table $tasks grouped by status, gap 4, w full
         <div class="playground-preview"></div>
       </div>
 
+      <h3>Custom Group Header</h3>
+      <p>Mit <code>Group:</code> definierst du einen eigenen Gruppen-Header. Dabei hast du Zugriff auf <code>group.key</code> (Gruppenwert) und <code>group.count</code> (Anzahl Einträge):</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Design Homepage"
+    status: "done"
+  task2:
+    title: "API Integration"
+    status: "progress"
+  task3:
+    title: "Write Tests"
+    status: "todo"
+  task4:
+    title: "Code Review"
+    status: "done"
+
+Table $tasks grouped by status, gap 4, w full
+  Group: hor, spread, pad 12, bg #252525, rad 4
+    Text group.key, col white, weight bold, uppercase
+    Text group.count + " Einträge", col #888, fs 12
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Icon "circle", ic #888, is 14
+    Text row.title, col white, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Sticky Header</h2>
+      <p>Mit <code>stickyHeader</code> bleibt der Header beim Scrollen fixiert. Damit das funktioniert, braucht die Tabelle eine feste Höhe (<code>h</code>) und <code>scroll</code>:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  p1:
+    name: "T-Shirt"
+    price: 29
+  p2:
+    name: "Hoodie"
+    price: 59
+  p3:
+    name: "Cap"
+    price: 19
+  p4:
+    name: "Sneakers"
+    price: 89
+
+Table $products, stickyHeader, gap 4, w full, h 150, scroll
+  Header: hor, gap 12, pad 12 16, bg #0a0a0a, w full
+    Text "Produkt", col #888, fs 12, w 120, weight 500
+    Text "Preis", col #888, fs 12, w 80, weight 500
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Text row.name, col white, w 120
+    Text "€" + row.price, col #10b981, w 80</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p class="note"><strong>Wichtig:</strong> Ohne <code>h</code> (feste Höhe) und <code>scroll</code> hat die Tabelle keinen Scrollbereich – der Header kann dann nicht "kleben".</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Pagination</h2>
+      <p>Mit <code>pageSize N</code> zeigt die Tabelle nur N Einträge pro Seite. Ein Paginator mit Vor-/Zurück-Buttons erscheint automatisch unter der Tabelle:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Task 1"
+    done: false
+  task2:
+    title: "Task 2"
+    done: true
+  task3:
+    title: "Task 3"
+    done: false
+  task4:
+    title: "Task 4"
+    done: true
+  task5:
+    title: "Task 5"
+    done: false
+
+Table $tasks, pageSize 2, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Text row.title, col white, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Klicke auf die Pfeile um zwischen Seiten zu wechseln. Die Anzeige "Page 1 of 3" zeigt die aktuelle Position.</p>
+
+      <h3>Paginator stylen</h3>
+      <p>Mit <code>Paginator:</code> und Sub-Slots (<code>Prev:</code>, <code>Next:</code>, <code>PageInfo:</code>) kannst du den Paginator anpassen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Task 1"
+  task2:
+    title: "Task 2"
+  task3:
+    title: "Task 3"
+  task4:
+    title: "Task 4"
+
+Table $tasks, pageSize 2, gap 4, w full
+  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 6, ver-center, w full
+    Text row.title, col white, grow
+  Paginator: hor, spread, pad 12, bg #0a0a0a, rad 6
+    Prev: pad 8 12, bg #333, col white, rad 4
+    PageInfo: col #888, fs 12
+    Next: pad 8 12, bg #333, col white, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Sortierbare Spalten</h2>
+      <p>Die <code>Column</code>-Syntax ist eine Alternative zu <code>Row:</code>. Statt ein eigenes Template zu definieren, gibst du nur die Feldnamen an – Mirror rendert automatisch eine klassische Tabelle mit Header und Zellen.</p>
+      <p>Mit <code>sortable</code> werden Spalten interaktiv sortierbar. Klick auf den Header sortiert die Daten:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29
+  hoodie:
+    name: "Hoodie"
+    price: 59
+  cap:
+    name: "Cap"
+    price: 19
+
+Table $products
+  Column name, sortable
+  Column price, sortable</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p class="note"><strong>Row: vs Column:</strong> Verwende <code>Row:</code> für volle Kontrolle über das Layout. Verwende <code>Column</code> für klassische Tabellen mit automatischem Header und Sortierung.</p>
+
+      <h3>Initial absteigend sortieren</h3>
+      <p>Mit <code>desc</code> startet eine Spalte absteigend sortiert:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29
+  hoodie:
+    name: "Hoodie"
+    price: 59
+  cap:
+    name: "Cap"
+    price: 19
+
+Table $products
+  Column name, sortable
+  Column price, sortable, desc</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Custom Sort Icons</h3>
+      <p>Mit <code>SortAsc:</code> und <code>SortDesc:</code> definierst du eigene Icons für die Sortierrichtung:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29
+  hoodie:
+    name: "Hoodie"
+    price: 59
+
+Table $products
+  SortAsc: Icon "chevron-up", ic #2563eb, is 12
+  SortDesc: Icon "chevron-down", ic #2563eb, is 12
+  Column name, sortable
+  Column price, sortable</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Features kombinieren</h2>
+      <p>Alle Features lassen sich kombinieren. Hier eine Tabelle mit Sortierung, Pagination und Sticky Header:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  p1:
+    name: "T-Shirt"
+    price: 29
+    stock: 150
+  p2:
+    name: "Hoodie"
+    price: 59
+    stock: 45
+  p3:
+    name: "Cap"
+    price: 19
+    stock: 200
+  p4:
+    name: "Sneakers"
+    price: 89
+    stock: 30
+  p5:
+    name: "Jacket"
+    price: 129
+    stock: 15
+
+Table $products, stickyHeader, pageSize 3, h 200, scroll
+  Column name, sortable
+  Column price, sortable, desc
+  Column stock, sortable</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
     </section>
 
 
@@ -490,6 +727,21 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>src</code></td><td>Bild-URL</td></tr>
+        <tr><td><code>name</code></td><td>Name für Fallback-Initialen</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Image:</code></td><td>Bild-Element</td></tr>
+        <tr><td><code>Fallback:</code></td><td>Fallback wenn kein Bild</td></tr>
+      </table>
     </section>
 
 
@@ -520,6 +772,265 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>accept</code></td><td>Erlaubte Dateitypen (z.B. "image/*")</td></tr>
+        <tr><td><code>multiple</code></td><td>Mehrere Dateien erlauben</td></tr>
+        <tr><td><code>maxFiles</code></td><td>Maximale Anzahl Dateien</td></tr>
+        <tr><td><code>maxFileSize</code></td><td>Maximale Dateigröße</td></tr>
+        <tr><td><code>disabled</code></td><td>Deaktiviert</td></tr>
+        <tr><td><code>allowDrop</code></td><td>Drag & Drop erlauben</td></tr>
+        <tr><td><code>directory</code></td><td>Ordner-Upload erlauben</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Dropzone:</code></td><td>Drag & Drop Bereich</td></tr>
+        <tr><td><code>Trigger:</code></td><td>Klick-Button</td></tr>
+        <tr><td><code>ItemGroup:</code></td><td>Liste der Dateien</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelne Datei</td></tr>
+        <tr><td><code>ItemName:</code></td><td>Dateiname</td></tr>
+        <tr><td><code>ItemSizeText:</code></td><td>Dateigröße</td></tr>
+        <tr><td><code>ItemPreview:</code></td><td>Vorschau-Container</td></tr>
+        <tr><td><code>ItemDeleteTrigger:</code></td><td>Löschen-Button</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>dragging:</code></td><td>Datei wird über Dropzone gezogen</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Carousel</h2>
+      <p>Bild- oder Content-Slider mit Navigation und Indikatoren.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Carousel slidesPerView 1, loop
+  Root: w 320, bg #1a1a1a, rad 12, clip
+
+  ItemGroup: w full, h 180
+  Item: w full, h full, center
+    index 0
+    Frame w full, h full, bg #2563eb, center
+      Text "Slide 1", col white, fs 24, weight 600
+  Item: w full, h full, center
+    index 1
+    Frame w full, h full, bg #10b981, center
+      Text "Slide 2", col white, fs 24, weight 600
+  Item: w full, h full, center
+    index 2
+    Frame w full, h full, bg #f59e0b, center
+      Text "Slide 3", col white, fs 24, weight 600
+
+  Control: hor, spread, pad 12, ver-center
+    PrevTrigger: w 36, h 36, bg #333, rad 99, center, cursor pointer
+      hover:
+        bg #444
+      Icon "chevron-left", ic white, is 20
+    IndicatorGroup: hor, gap 8
+    Indicator: w 8, h 8, bg #555, rad 99
+      current:
+        bg white
+    NextTrigger: w 36, h 36, bg #333, rad 99, center, cursor pointer
+      hover:
+        bg #444
+      Icon "chevron-right", ic white, is 20</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Autoplay Carousel</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Carousel slidesPerView 1, loop, autoplay, autoplayInterval 3000
+  Root: w 280, bg #111, rad 8, clip
+
+  ItemGroup: w full, h 120
+  Item: w full, h full, center, pad 20
+    index 0
+    Frame gap 4
+      Icon "zap", ic #f59e0b, is 32
+      Text "Schnell", col white, fs 16, weight 500
+  Item: w full, h full, center, pad 20
+    index 1
+    Frame gap 4
+      Icon "shield", ic #10b981, is 32
+      Text "Sicher", col white, fs 16, weight 500
+  Item: w full, h full, center, pad 20
+    index 2
+    Frame gap 4
+      Icon "sparkles", ic #8b5cf6, is 32
+      Text "Modern", col white, fs 16, weight 500
+
+  Control: center, pad 8
+    IndicatorGroup: hor, gap 6
+    Indicator: w 6, h 6, bg #444, rad 99
+      current:
+        bg #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>index</code></td><td>Aktueller Slide-Index</td></tr>
+        <tr><td><code>defaultIndex</code></td><td>Start-Index</td></tr>
+        <tr><td><code>loop</code></td><td>Endlos-Schleife</td></tr>
+        <tr><td><code>slidesPerView</code></td><td>Sichtbare Slides gleichzeitig</td></tr>
+        <tr><td><code>spacing</code></td><td>Abstand zwischen Slides</td></tr>
+        <tr><td><code>orientation</code></td><td>horizontal / vertical</td></tr>
+        <tr><td><code>autoplay</code></td><td>Automatisch abspielen</td></tr>
+        <tr><td><code>autoplayInterval</code></td><td>Intervall in ms</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>ItemGroup:</code></td><td>Slide-Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelner Slide</td></tr>
+        <tr><td><code>Control:</code></td><td>Navigation-Container</td></tr>
+        <tr><td><code>PrevTrigger:</code></td><td>Zurück-Button</td></tr>
+        <tr><td><code>NextTrigger:</code></td><td>Weiter-Button</td></tr>
+        <tr><td><code>IndicatorGroup:</code></td><td>Indikator-Container</td></tr>
+        <tr><td><code>Indicator:</code></td><td>Einzelner Indikator</td></tr>
+        <tr><td><code>AutoplayTrigger:</code></td><td>Play/Pause-Button</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>current:</code></td><td>Aktueller Slide/Indikator</td></tr>
+        <tr><td><code>inview:</code></td><td>Slide ist sichtbar</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>ImageCropper</h2>
+      <p>Bild zuschneiden mit einstellbarem Ausschnitt und Zoom.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ImageCropper aspectRatio 1
+  Root: w 300, gap 12
+
+  Cropper: w full, h 200, bg #111, rad 8, clip
+  CropperBackground: opacity 0.5
+  CropperForeground: bor 2, boc white
+  Guide: bg white, opacity 0.3
+
+  Frame hor, gap 12, ver-center
+    Text "Zoom", col #888, fs 12
+    ZoomSlider: w full
+      Track: h 4, bg #333, rad 99
+      Range: bg #2563eb, rad 99
+      Thumb: w 16, h 16, bg white, rad 99</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p class="note"><strong>Hinweis:</strong> Für den ImageCropper muss ein Bild-Pfad (<code>src</code>) angegeben werden. Das Beispiel zeigt die Struktur – in der Praxis ersetzt du den Platzhalter mit einer echten Bild-URL.</p>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>src</code></td><td>Bild-URL</td></tr>
+        <tr><td><code>aspectRatio</code></td><td>Seitenverhältnis (z.B. 1 für quadratisch)</td></tr>
+        <tr><td><code>zoom</code></td><td>Aktueller Zoom-Wert</td></tr>
+        <tr><td><code>defaultZoom</code></td><td>Start-Zoom</td></tr>
+        <tr><td><code>minZoom</code></td><td>Minimaler Zoom</td></tr>
+        <tr><td><code>maxZoom</code></td><td>Maximaler Zoom</td></tr>
+        <tr><td><code>rotation</code></td><td>Aktuelle Rotation</td></tr>
+        <tr><td><code>disabled</code></td><td>Deaktiviert</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Image:</code></td><td>Bild-Element</td></tr>
+        <tr><td><code>Cropper:</code></td><td>Crop-Bereich</td></tr>
+        <tr><td><code>CropperBackground:</code></td><td>Hintergrund (ausgegraut)</td></tr>
+        <tr><td><code>CropperForeground:</code></td><td>Vordergrund (sichtbar)</td></tr>
+        <tr><td><code>Guide:</code></td><td>Hilfslinien</td></tr>
+        <tr><td><code>ZoomSlider:</code></td><td>Zoom-Regler (mit Track, Range, Thumb)</td></tr>
+        <tr><td><code>ZoomInTrigger:</code></td><td>Zoom-In-Button</td></tr>
+        <tr><td><code>ZoomOutTrigger:</code></td><td>Zoom-Out-Button</td></tr>
+        <tr><td><code>RotateTrigger:</code></td><td>Rotieren-Button</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>SignaturePad</h2>
+      <p>Unterschriften-Feld zum Zeichnen mit dem Finger oder der Maus.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SignaturePad
+  Root: gap 12, w 320
+
+  Control: w full, h 150, bg #1a1a1a, bor 1, boc #333, rad 8
+  Segment: stroke #2563eb, stroke-width 2
+  Guide: col #333, fs 12
+    "Hier unterschreiben"
+
+  Frame hor, gap 8
+    ClearTrigger: pad 8 16, bg #333, col white, rad 6, cursor pointer
+      hover:
+        bg #444
+      Frame hor, gap 6, ver-center
+        Icon "trash", ic white, is 14
+        Text "Löschen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Kompakte Variante</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SignaturePad
+  Root: gap 8, w 240
+
+  Frame hor, spread, ver-center
+    Text "Unterschrift", col #888, fs 12
+    ClearTrigger: pad 4 8, bg transparent, col #666, rad 4, cursor pointer, fs 11
+      hover:
+        col white
+      "Löschen"
+
+  Control: w full, h 80, bg #0a0a0a, bor 1, boc #252525, rad 6
+  Segment: stroke white, stroke-width 1.5</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>disabled</code></td><td>Deaktiviert</td></tr>
+        <tr><td><code>readOnly</code></td><td>Nur lesen</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Control:</code></td><td>Zeichenfläche</td></tr>
+        <tr><td><code>Segment:</code></td><td>Gezeichneter Pfad (SVG)</td></tr>
+        <tr><td><code>Guide:</code></td><td>Hilfstext</td></tr>
+        <tr><td><code>ClearTrigger:</code></td><td>Löschen-Button</td></tr>
+      </table>
     </section>
 
 
@@ -570,6 +1081,24 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>Aktueller Wert</td></tr>
+        <tr><td><code>min</code></td><td>Minimum (default: 0)</td></tr>
+        <tr><td><code>max</code></td><td>Maximum (default: 100)</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label-Bereich</td></tr>
+        <tr><td><code>ValueText:</code></td><td>Prozentwert-Anzeige</td></tr>
+        <tr><td><code>Track:</code></td><td>Hintergrund-Balken</td></tr>
+        <tr><td><code>Range:</code></td><td>Fortschritts-Balken</td></tr>
+      </table>
     </section>
 
 
@@ -596,6 +1125,25 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>Aktueller Wert</td></tr>
+        <tr><td><code>min</code></td><td>Minimum (default: 0)</td></tr>
+        <tr><td><code>max</code></td><td>Maximum (default: 100)</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Circle:</code></td><td>SVG-Container</td></tr>
+        <tr><td><code>CircleTrack:</code></td><td>Hintergrund-Kreis</td></tr>
+        <tr><td><code>CircleRange:</code></td><td>Fortschritts-Kreis</td></tr>
+        <tr><td><code>Label:</code></td><td>Label-Text</td></tr>
+        <tr><td><code>ValueText:</code></td><td>Prozentwert-Anzeige</td></tr>
+      </table>
     </section>
 
 
@@ -625,6 +1173,85 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>type</code></td><td>success, error, warning, info</td></tr>
+        <tr><td><code>duration</code></td><td>Anzeigedauer in ms</td></tr>
+        <tr><td><code>placement</code></td><td>Position (top-right, bottom-right, etc.)</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Title:</code></td><td>Überschrift</td></tr>
+        <tr><td><code>Description:</code></td><td>Beschreibungstext</td></tr>
+        <tr><td><code>CloseTrigger:</code></td><td>Schließen-Button</td></tr>
+        <tr><td><code>ActionTrigger:</code></td><td>Aktions-Button</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Marquee</h2>
+      <p>Laufband für Text oder Elemente – pausiert bei Hover.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Marquee speed 50, pauseOnHover
+  Root: w 300, bg #1a1a1a, pad 12, rad 8, clip
+
+  Content: hor, gap 24
+    Text "Breaking News", col #ef4444, weight 600
+    Text "Mirror v2.0 released", col white
+    Text "•", col #444
+    Text "New components available", col #888
+    Text "•", col #444
+    Text "Performance improvements", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Logo-Band</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Marquee speed 30, gap 48
+  Root: w full, bg #111, pad 16, clip
+
+  Content: hor, gap 48, ver-center
+    Frame hor, gap 8, ver-center
+      Icon "github", ic #888, is 24
+      Text "GitHub", col #888
+    Frame hor, gap 8, ver-center
+      Icon "twitter", ic #888, is 24
+      Text "Twitter", col #888
+    Frame hor, gap 8, ver-center
+      Icon "linkedin", ic #888, is 24
+      Text "LinkedIn", col #888
+    Frame hor, gap 8, ver-center
+      Icon "youtube", ic #888, is 24
+      Text "YouTube", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>speed</code></td><td>Geschwindigkeit</td></tr>
+        <tr><td><code>direction</code></td><td>Richtung (left, right)</td></tr>
+        <tr><td><code>pauseOnHover</code></td><td>Bei Hover pausieren</td></tr>
+        <tr><td><code>gap</code></td><td>Abstand zwischen Wiederholungen</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Content:</code></td><td>Scrollender Inhalt</td></tr>
+      </table>
     </section>
 
 
@@ -650,6 +1277,30 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>Zu kopierender Text</td></tr>
+        <tr><td><code>timeout</code></td><td>Dauer des Feedback-States in ms</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Label:</code></td><td>Label-Text</td></tr>
+        <tr><td><code>Control:</code></td><td>Input-Container</td></tr>
+        <tr><td><code>Input:</code></td><td>Eingabefeld (readonly)</td></tr>
+        <tr><td><code>Trigger:</code></td><td>Kopieren-Button</td></tr>
+        <tr><td><code>Indicator:</code></td><td>Erfolgs-Indikator</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>copied:</code></td><td>Text wurde kopiert</td></tr>
+      </table>
     </section>
 
 
@@ -674,6 +1325,98 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>Text oder URL für QR-Code</td></tr>
+        <tr><td><code>encoding</code></td><td>Encoding-Typ</td></tr>
+        <tr><td><code>errorCorrection</code></td><td>Fehlerkorrektur-Level (L, M, Q, H)</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Frame:</code></td><td>SVG-Container</td></tr>
+        <tr><td><code>Pattern:</code></td><td>QR-Muster</td></tr>
+        <tr><td><code>Overlay:</code></td><td>Optionales Logo/Overlay</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>ScrollArea</h2>
+      <p>Container mit anpassbaren Scrollbars – verschwindet automatisch wenn nicht nötig.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ScrollArea scrollHideDelay 500
+  Root: w 280, h 200, bg #1a1a1a, rad 8
+
+  Viewport: pad 16
+  Content: gap 12
+    Text "Scrollbarer Bereich", col white, fs 16, weight 500
+    Text "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.", col #888, fs 13
+    Text "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.", col #888, fs 13
+    Text "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.", col #888, fs 13
+    Text "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.", col #888, fs 13
+    Text "Ende des Inhalts", col #666, fs 12
+
+  Scrollbar: w 8, bg #252525, rad 99, margin 4
+    orientation "vertical"
+  Thumb: bg #444, rad 99
+    hover:
+      bg #555</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Horizontaler Scroll</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ScrollArea
+  Root: w 300, bg #1a1a1a, rad 8
+
+  Viewport: pad 12
+  Content: hor, gap 12
+    Frame w 100, h 80, bg #2563eb, rad 6, center, shrink
+      Text "1", col white, fs 18
+    Frame w 100, h 80, bg #10b981, rad 6, center, shrink
+      Text "2", col white, fs 18
+    Frame w 100, h 80, bg #f59e0b, rad 6, center, shrink
+      Text "3", col white, fs 18
+    Frame w 100, h 80, bg #ef4444, rad 6, center, shrink
+      Text "4", col white, fs 18
+    Frame w 100, h 80, bg #8b5cf6, rad 6, center, shrink
+      Text "5", col white, fs 18
+
+  Scrollbar: h 6, bg #252525, rad 99, margin 4
+    orientation "horizontal"
+  Thumb: bg #444, rad 99
+    hover:
+      bg #555</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>orientation</code></td><td>vertical / horizontal</td></tr>
+        <tr><td><code>scrollHideDelay</code></td><td>Verzögerung bis Scrollbar verschwindet (ms)</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Viewport:</code></td><td>Sichtbarer Bereich</td></tr>
+        <tr><td><code>Content:</code></td><td>Scrollbarer Inhalt</td></tr>
+        <tr><td><code>Scrollbar:</code></td><td>Scrollbar-Track</td></tr>
+        <tr><td><code>Thumb:</code></td><td>Scrollbar-Griff</td></tr>
+        <tr><td><code>Corner:</code></td><td>Ecke bei beiden Scrollbars</td></tr>
+      </table>
     </section>
 
 
@@ -704,6 +1447,30 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
         </div>
         <div class="playground-preview"></div>
       </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Beschreibung</th></tr>
+        <tr><td><code>orientation</code></td><td>horizontal / vertical</td></tr>
+        <tr><td><code>size</code></td><td>Aktuelle Panel-Größen</td></tr>
+        <tr><td><code>defaultSize</code></td><td>Start-Größe in %</td></tr>
+        <tr><td><code>minSize</code></td><td>Minimale Größe in %</td></tr>
+        <tr><td><code>maxSize</code></td><td>Maximale Größe in %</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Root:</code></td><td>Container</td></tr>
+        <tr><td><code>Panel:</code></td><td>Einzelner Bereich</td></tr>
+        <tr><td><code>ResizeTrigger:</code></td><td>Ziehbarer Trenner</td></tr>
+      </table>
+
+      <h3>States</h3>
+      <table class="ref-table">
+        <tr><th>State</th><th>Beschreibung</th></tr>
+        <tr><td><code>dragging:</code></td><td>Trenner wird gezogen</td></tr>
+      </table>
     </section>
 
 
@@ -726,6 +1493,14 @@ Table $products, gap 4, w full, bg #111, pad 20, rad 12
         <tr><td><code>by feld</code></td><td>Sortieren aufsteigend</td></tr>
         <tr><td><code>by feld desc</code></td><td>Sortieren absteigend</td></tr>
         <tr><td><code>grouped by feld</code></td><td>Nach Feld gruppieren</td></tr>
+        <tr><td><code>Group:</code></td><td>Custom Gruppen-Header (mit <code>group.key</code>, <code>group.count</code>)</td></tr>
+        <tr><td><code>stickyHeader</code></td><td>Header bleibt beim Scrollen fixiert</td></tr>
+        <tr><td><code>pageSize N</code></td><td>Pagination mit N Einträgen pro Seite</td></tr>
+        <tr><td><code>Paginator:</code></td><td>Custom Paginator-Style</td></tr>
+        <tr><td><code>Prev:</code>, <code>Next:</code>, <code>PageInfo:</code></td><td>Paginator-Elemente stylen</td></tr>
+        <tr><td><code>Column feld, sortable</code></td><td>Spalte mit Klick-Sortierung</td></tr>
+        <tr><td><code>Column feld, sortable, desc</code></td><td>Initial absteigend sortiert</td></tr>
+        <tr><td><code>SortAsc:</code>, <code>SortDesc:</code></td><td>Custom Sort-Icons</td></tr>
       </table>
 
       <h3>Media & Files</h3>

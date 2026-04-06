@@ -16,12 +16,12 @@
 
     <header>
       <h1>Overlays</h1>
-      <p class="subtitle">Tooltip, Popover, HoverCard, Dialog, FloatingPanel, Tour und Presence</p>
+      <p class="subtitle">Tooltip, Popover, Dialog, Menu und mehr</p>
     </header>
 
     <p class="intro">Overlays sind Elemente, die über dem normalen Content erscheinen. Alle folgen dem gleichen Muster: <code>Trigger:</code> definiert das auslösende Element, <code>Content:</code> den Overlay-Inhalt.</p>
 
-      <p><strong>Tooltip</strong> zeigt kurze Hinweise bei Hover. <strong>Popover</strong> öffnet bei Klick und zeigt reicheren Inhalt. <strong>HoverCard</strong> ist wie Popover, aber öffnet bei Hover. <strong>Dialog</strong> ist ein modales Fenster, das den Rest der Seite blockiert. <strong>FloatingPanel</strong> ist ein verschiebbares/skalierbares Panel. <strong>Tour</strong> führt Benutzer durch die UI. <strong>Presence</strong> steuert Ein-/Ausblend-Animationen.</p>
+      <p><strong>Tooltip</strong> zeigt kurze Hinweise bei Hover. <strong>Popover</strong> öffnet bei Klick. <strong>HoverCard</strong> öffnet bei Hover. <strong>Dialog</strong> ist ein modales Fenster. <strong>Menu</strong>, <strong>ContextMenu</strong> und <strong>NestedMenu</strong> für Dropdown-Menüs. <strong>FloatingPanel</strong> ist ein verschiebbares Panel. <strong>Tour</strong> führt durch die UI. <strong>Presence</strong> steuert Animationen.</p>
 
     <!-- ============================================================ -->
     <section>
@@ -62,6 +62,28 @@
         <div class="playground-preview"></div>
       </div>
 
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>open</code></td><td>boolean</td><td>Offen (controlled)</td></tr>
+        <tr><td><code>defaultOpen</code></td><td>boolean</td><td>Start-Zustand</td></tr>
+        <tr><td><code>openDelay</code></td><td>number</td><td>Verzögerung beim Öffnen (ms)</td></tr>
+        <tr><td><code>closeDelay</code></td><td>number</td><td>Verzögerung beim Schließen (ms)</td></tr>
+        <tr><td><code>positioning</code></td><td>string</td><td>Position: top, bottom, left, right</td></tr>
+        <tr><td><code>disabled</code></td><td>boolean</td><td>Deaktiviert</td></tr>
+        <tr><td><code>interactive</code></td><td>boolean</td><td>Tooltip bleibt bei Hover offen</td></tr>
+        <tr><td><code>closeOnClick</code></td><td>boolean</td><td>Bei Klick schließen</td></tr>
+        <tr><td><code>closeOnScroll</code></td><td>boolean</td><td>Bei Scroll schließen</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Das Element, das den Tooltip auslöst</td></tr>
+        <tr><td><code>Content:</code></td><td>Der Tooltip-Inhalt</td></tr>
+        <tr><td><code>Positioner:</code></td><td>Container für Positionierung</td></tr>
+        <tr><td><code>Arrow:</code></td><td>Pfeil zum Trigger</td></tr>
+      </table>
     </section>
 
 
@@ -110,6 +132,31 @@
         <div class="playground-preview"></div>
       </div>
 
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>open</code></td><td>boolean</td><td>Offen (controlled)</td></tr>
+        <tr><td><code>defaultOpen</code></td><td>boolean</td><td>Start-Zustand</td></tr>
+        <tr><td><code>positioning</code></td><td>string</td><td>Position: top, bottom, left, right</td></tr>
+        <tr><td><code>modal</code></td><td>boolean</td><td>Als Modal öffnen</td></tr>
+        <tr><td><code>closeOnOutsideClick</code></td><td>boolean</td><td>Bei Klick außerhalb schließen</td></tr>
+        <tr><td><code>closeOnEscape</code></td><td>boolean</td><td>Mit Escape schließen</td></tr>
+        <tr><td><code>autoFocus</code></td><td>boolean</td><td>Ersten focussierbaren Element fokussieren</td></tr>
+        <tr><td><code>trapFocus</code></td><td>boolean</td><td>Fokus im Popover halten</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Das Element, das das Popover öffnet</td></tr>
+        <tr><td><code>Content:</code></td><td>Der Popover-Inhalt</td></tr>
+        <tr><td><code>Positioner:</code></td><td>Container für Positionierung</td></tr>
+        <tr><td><code>Title:</code></td><td>Titel (für Accessibility)</td></tr>
+        <tr><td><code>Description:</code></td><td>Beschreibung (für Accessibility)</td></tr>
+        <tr><td><code>CloseTrigger:</code></td><td>Schließen-Button</td></tr>
+        <tr><td><code>Arrow:</code></td><td>Pfeil zum Trigger</td></tr>
+        <tr><td><code>Anchor:</code></td><td>Alternatives Anker-Element</td></tr>
+      </table>
     </section>
 
 
@@ -143,6 +190,24 @@
         <div class="playground-preview"></div>
       </div>
 
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>open</code></td><td>boolean</td><td>Offen (controlled)</td></tr>
+        <tr><td><code>defaultOpen</code></td><td>boolean</td><td>Start-Zustand</td></tr>
+        <tr><td><code>openDelay</code></td><td>number</td><td>Verzögerung beim Öffnen (ms)</td></tr>
+        <tr><td><code>closeDelay</code></td><td>number</td><td>Verzögerung beim Schließen (ms)</td></tr>
+        <tr><td><code>positioning</code></td><td>string</td><td>Position: top, bottom, left, right</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Das Element, das die HoverCard auslöst</td></tr>
+        <tr><td><code>Content:</code></td><td>Der HoverCard-Inhalt</td></tr>
+        <tr><td><code>Positioner:</code></td><td>Container für Positionierung</td></tr>
+        <tr><td><code>Arrow:</code></td><td>Pfeil zum Trigger</td></tr>
+      </table>
     </section>
 
 
@@ -187,6 +252,31 @@
         <div class="playground-preview"></div>
       </div>
 
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>open</code></td><td>boolean</td><td>Offen (controlled)</td></tr>
+        <tr><td><code>defaultOpen</code></td><td>boolean</td><td>Start-Zustand</td></tr>
+        <tr><td><code>modal</code></td><td>boolean</td><td>Als Modal (blockiert Hintergrund)</td></tr>
+        <tr><td><code>preventScroll</code></td><td>boolean</td><td>Body-Scroll verhindern</td></tr>
+        <tr><td><code>closeOnOutsideClick</code></td><td>boolean</td><td>Bei Klick auf Backdrop schließen</td></tr>
+        <tr><td><code>closeOnEscape</code></td><td>boolean</td><td>Mit Escape schließen</td></tr>
+        <tr><td><code>trapFocus</code></td><td>boolean</td><td>Fokus im Dialog halten</td></tr>
+        <tr><td><code>restoreFocus</code></td><td>boolean</td><td>Fokus nach Schließen wiederherstellen</td></tr>
+        <tr><td><code>role</code></td><td>string</td><td>ARIA role: dialog, alertdialog</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Das Element, das den Dialog öffnet</td></tr>
+        <tr><td><code>Backdrop:</code></td><td>Der dunkle Hintergrund</td></tr>
+        <tr><td><code>Positioner:</code></td><td>Container für Zentrierung</td></tr>
+        <tr><td><code>Content:</code></td><td>Der Dialog-Inhalt</td></tr>
+        <tr><td><code>Title:</code></td><td>Titel (für Accessibility)</td></tr>
+        <tr><td><code>Description:</code></td><td>Beschreibung (für Accessibility)</td></tr>
+        <tr><td><code>CloseTrigger:</code></td><td>Schließen-Button</td></tr>
+      </table>
     </section>
 
 
@@ -201,7 +291,7 @@
   Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 380
     Frame hor, gap 12, ver-center
       Frame w 40, h 40, rad 99, bg rgba(239,68,68,0.2), center
-        Icon "trash", col #ef4444
+        Icon "trash", ic #ef4444
       Frame ver
         Text "Delete Item", weight bold, fs 16
         Text "This action cannot be undone.", col #888, fs 14
@@ -267,6 +357,223 @@
         <div class="playground-preview"></div>
       </div>
 
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Menu</h2>
+      <p>Dropdown-Menü mit Tastaturnavigation – öffnet bei Klick auf den Trigger.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Menu
+  Trigger: Button "Aktionen", pad 10 20, bg #333, col white, rad 6
+    Frame hor, gap 8, ver-center
+      Text "Aktionen"
+      Icon "chevron-down", ic white, is 14
+  Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 180
+    Item: Frame pad 10 12, rad 4, col white, cursor pointer
+      hover:
+        bg #333
+      Frame hor, gap 10, ver-center
+        Icon "edit", ic #888, is 14
+        Text "Bearbeiten"
+    Item: Frame pad 10 12, rad 4, col white, cursor pointer
+      hover:
+        bg #333
+      Frame hor, gap 10, ver-center
+        Icon "copy", ic #888, is 14
+        Text "Duplizieren"
+    Separator: Frame h 1, bg #333, margin 4 0
+    Item: Frame pad 10 12, rad 4, col #ef4444, cursor pointer
+      hover:
+        bg #331a1a
+      Frame hor, gap 10, ver-center
+        Icon "trash", ic #ef4444, is 14
+        Text "Löschen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Mit Gruppen</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Menu
+  Trigger: Button "Datei", pad 8 16, bg #252525, col white, rad 4
+  Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 200
+    ItemGroup:
+      ItemGroupLabel: Text "Dokument", col #666, fs 11, pad 8 12, uppercase
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, spread, ver-center
+          Frame hor, gap 8, ver-center
+            Icon "file-plus", ic #888, is 14
+            Text "Neu"
+          Text "⌘N", col #555, fs 11
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, spread, ver-center
+          Frame hor, gap 8, ver-center
+            Icon "folder-open", ic #888, is 14
+            Text "Öffnen"
+          Text "⌘O", col #555, fs 11
+    Separator: Frame h 1, bg #333, margin 4 0
+    ItemGroup:
+      ItemGroupLabel: Text "Export", col #666, fs 11, pad 8 12, uppercase
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, gap 8, ver-center
+          Icon "download", ic #888, is 14
+          Text "Als PDF"
+      Item: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, gap 8, ver-center
+          Icon "image", ic #888, is 14
+          Text "Als PNG"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <table class="ref-table">
+        <tr><th>Prop</th><th>Typ</th><th>Beschreibung</th></tr>
+        <tr><td><code>open</code></td><td>boolean</td><td>Offen (controlled)</td></tr>
+        <tr><td><code>defaultOpen</code></td><td>boolean</td><td>Start-Zustand</td></tr>
+        <tr><td><code>positioning</code></td><td>string</td><td>Position relativ zum Trigger</td></tr>
+        <tr><td><code>closeOnSelect</code></td><td>boolean</td><td>Nach Auswahl schließen</td></tr>
+        <tr><td><code>loopFocus</code></td><td>boolean</td><td>Fokus am Ende umbrechen</td></tr>
+        <tr><td><code>typeahead</code></td><td>boolean</td><td>Tippen zum Suchen</td></tr>
+      </table>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Button der das Menü öffnet</td></tr>
+        <tr><td><code>Content:</code></td><td>Menü-Container</td></tr>
+        <tr><td><code>Item:</code></td><td>Einzelner Menüpunkt</td></tr>
+        <tr><td><code>ItemGroup:</code></td><td>Gruppe von Items</td></tr>
+        <tr><td><code>ItemGroupLabel:</code></td><td>Label für Gruppe</td></tr>
+        <tr><td><code>Separator:</code></td><td>Trennlinie</td></tr>
+        <tr><td><code>Arrow:</code></td><td>Pfeil zum Trigger</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>ContextMenu</h2>
+      <p>Kontextmenü das bei Rechtsklick erscheint.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ContextMenu
+  Trigger: Frame w 300, h 120, bg #1a1a1a, rad 8, center, cursor context-menu
+    Text "Rechtsklick für Kontextmenü", col #888
+
+  Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 180
+    Item: Frame pad 10 12, rad 4, col white, cursor pointer
+      hover:
+        bg #333
+      Frame hor, gap 10, ver-center
+        Icon "copy", ic #888, is 14
+        Text "Kopieren"
+    Item: Frame pad 10 12, rad 4, col white, cursor pointer
+      hover:
+        bg #333
+      Frame hor, gap 10, ver-center
+        Icon "scissors", ic #888, is 14
+        Text "Ausschneiden"
+    Item: Frame pad 10 12, rad 4, col white, cursor pointer
+      hover:
+        bg #333
+      Frame hor, gap 10, ver-center
+        Icon "clipboard", ic #888, is 14
+        Text "Einfügen"
+    Separator: Frame h 1, bg #333, margin 4 0
+    Item: Frame pad 10 12, rad 4, col #ef4444, cursor pointer
+      hover:
+        bg #331a1a
+      Frame hor, gap 10, ver-center
+        Icon "trash", ic #ef4444, is 14
+        Text "Löschen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props & Slots</h3>
+      <p>ContextMenu hat die gleichen Props und Slots wie Menu – der einzige Unterschied ist der Auslöser (Rechtsklick statt Klick).</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>NestedMenu</h2>
+      <p>Menü mit verschachtelten Untermenüs.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>NestedMenu
+  Trigger: Button "Menü", pad 10 20, bg #333, col white, rad 6
+
+  Content: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 200
+    Item: Frame pad 10 12, rad 4, col white, cursor pointer
+      hover:
+        bg #333
+      Frame hor, gap 10, ver-center
+        Icon "file", ic #888, is 14
+        Text "Neu"
+
+    Submenu:
+      SubmenuTrigger: Frame pad 10 12, rad 4, col white, cursor pointer
+        hover:
+          bg #333
+        Frame hor, spread, ver-center
+          Frame hor, gap 10, ver-center
+            Icon "share", ic #888, is 14
+            Text "Teilen"
+          Icon "chevron-right", ic #666, is 14
+
+      SubmenuContent: Frame bg #1a1a1a, pad 4, rad 8, shadow lg, w 160
+        Item: Frame pad 10 12, rad 4, col white, cursor pointer
+          hover:
+            bg #333
+          Frame hor, gap 10, ver-center
+            Icon "mail", ic #888, is 14
+            Text "Per E-Mail"
+        Item: Frame pad 10 12, rad 4, col white, cursor pointer
+          hover:
+            bg #333
+          Frame hor, gap 10, ver-center
+            Icon "link", ic #888, is 14
+            Text "Link kopieren"
+        Item: Frame pad 10 12, rad 4, col white, cursor pointer
+          hover:
+            bg #333
+          Frame hor, gap 10, ver-center
+            Icon "twitter", ic #888, is 14
+            Text "Twitter"
+
+    Separator: Frame h 1, bg #333, margin 4 0
+    Item: Frame pad 10 12, rad 4, col white, cursor pointer
+      hover:
+        bg #333
+      Frame hor, gap 10, ver-center
+        Icon "settings", ic #888, is 14
+        Text "Einstellungen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Slots</h3>
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Submenu:</code></td><td>Container für Untermenü</td></tr>
+        <tr><td><code>SubmenuTrigger:</code></td><td>Item das Untermenü öffnet</td></tr>
+        <tr><td><code>SubmenuContent:</code></td><td>Inhalt des Untermenüs</td></tr>
+      </table>
+      <p class="note">Alle anderen Props und Slots sind identisch mit Menu.</p>
     </section>
 
 
@@ -574,20 +881,24 @@ Frame gap 8
       <table class="ref-table">
         <tr><th>Komponente</th><th>Auslöser</th><th>Anwendung</th></tr>
         <tr><td><code>Tooltip</code></td><td>Hover</td><td>Kurze Hilfetexte</td></tr>
-        <tr><td><code>Popover</code></td><td>Klick</td><td>Reicherer Inhalt, Menüs</td></tr>
+        <tr><td><code>Popover</code></td><td>Klick</td><td>Reicherer Inhalt</td></tr>
         <tr><td><code>HoverCard</code></td><td>Hover</td><td>Vorschauen, User-Profile</td></tr>
         <tr><td><code>Dialog</code></td><td>Klick</td><td>Modale Fenster, Formulare</td></tr>
-        <tr><td><code>FloatingPanel</code></td><td>Klick</td><td>Verschiebbare/skalierbare Panels</td></tr>
+        <tr><td><code>Menu</code></td><td>Klick</td><td>Dropdown-Menüs</td></tr>
+        <tr><td><code>ContextMenu</code></td><td>Rechtsklick</td><td>Kontextmenüs</td></tr>
+        <tr><td><code>NestedMenu</code></td><td>Klick</td><td>Menüs mit Untermenüs</td></tr>
+        <tr><td><code>FloatingPanel</code></td><td>Klick</td><td>Verschiebbare Panels</td></tr>
         <tr><td><code>Tour</code></td><td>Programmatisch</td><td>Geführte UI-Touren</td></tr>
         <tr><td><code>Presence</code></td><td>Binding</td><td>Ein-/Ausblend-Animationen</td></tr>
       </table>
 
       <p><strong>Gemeinsame Slots:</strong> <code>Trigger:</code>, <code>Content:</code>, <code>CloseTrigger:</code></p>
       <p><strong>Dialog:</strong> <code>Backdrop:</code>, <code>modal</code>, <code>preventScroll</code></p>
-      <p><strong>FloatingPanel:</strong> <code>Header:</code>, <code>Body:</code>, <code>DragTrigger:</code>, <code>ResizeTrigger:</code>, <code>draggable</code>, <code>resizable</code></p>
-      <p><strong>Tour:</strong> <code>Backdrop:</code>, <code>Spotlight:</code>, <code>PrevTrigger:</code>, <code>NextTrigger:</code>, <code>ProgressText:</code></p>
+      <p><strong>Menu:</strong> <code>Item:</code>, <code>ItemGroup:</code>, <code>ItemGroupLabel:</code>, <code>Separator:</code></p>
+      <p><strong>NestedMenu:</strong> <code>Submenu:</code>, <code>SubmenuTrigger:</code>, <code>SubmenuContent:</code></p>
+      <p><strong>FloatingPanel:</strong> <code>Header:</code>, <code>Body:</code>, <code>DragTrigger:</code>, <code>ResizeTrigger:</code></p>
+      <p><strong>Tour:</strong> <code>Backdrop:</code>, <code>Spotlight:</code>, <code>PrevTrigger:</code>, <code>NextTrigger:</code></p>
       <p><strong>Presence:</strong> <code>present</code>, <code>lazyMount</code>, <code>unmountOnExit</code></p>
-      <p><strong>Optionen:</strong> <code>positioning</code>, <code>openDelay</code>, <code>closeDelay</code>, <code>closeOnEscape</code></p>
     </div>
 
 
