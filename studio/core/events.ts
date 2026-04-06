@@ -145,6 +145,14 @@ export interface StudioEvents {
   /** Trigger events (for testing) */
   'trigger:activated': { triggerId: string; startPos: number }
   'trigger:deactivated': { triggerId: string }
+  /** Rename symbol events */
+  'rename:ui-opened': { symbolName: string; symbolType: 'component' | 'token' }
+  'rename:ui-closed': Record<string, never>
+  'rename:no-symbol': { line: number; column: number }
+  'rename:completed': { oldName: string; newName: string; symbolType: 'component' | 'token'; fileCount: number; locationCount: number }
+  'rename:undone': { oldName: string; newName: string; symbolType: 'component' | 'token' }
+  /** File update requested (from rename or other cross-file operations) */
+  'file:update-requested': { filename: string; content: string }
 }
 
 /** Component Panel item (simplified for event typing) */

@@ -19,6 +19,7 @@ import { InlineEditController, createInlineEditController } from './inline-edit'
 import { createDragDropSystem, createCodeExecutor, type DragDropSystem } from './drag-drop'
 import { initUserSettings } from './storage/user-settings'
 import { initStudioTestAPI } from './test-api'
+import { triggerRename, isRenameActive, closeRename } from './rename'
 import type { AST } from '../compiler/parser/ast'
 import type { IR } from '../compiler/ir/types'
 import type { SourceMap } from '../compiler/ir/source-map'
@@ -572,6 +573,37 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       inlineEditController.setSourceMap(state.get().sourceMap)
     })
   )
+
+  // ============================================
+  // F2 Rename Symbol Handler
+  // ============================================
+  const handleF2Rename = (e: KeyboardEvent) => {
+    // Only handle F2 when editor has focus
+    if (e.key !== 'F2' || e.ctrlKey || e.metaKey || e.altKey) return
+    if (!state.get().editorHasFocus) return
+
+    e.preventDefault()
+    e.stopPropagation()
+
+    // Trigger rename at cursor position
+    triggerRename({
+      editor: editorController,
+      getFiles: () => {
+        // Get all project files for cross-file rename
+        if (config.getFiles) {
+          return config.getFiles().map(f => ({ name: f.name, content: f.code }))
+        }
+        // Fallback: only current file
+        return [{ name: state.get().currentFile, content: editorController.getContent() }]
+      },
+      getCurrentFile: () => config.getCurrentFile?.() || state.get().currentFile,
+    })
+  }
+
+  document.addEventListener('keydown', handleF2Rename)
+  eventUnsubscribes.push(() => document.removeEventListener('keydown', handleF2Rename))
+
+  console.log('[Studio] F2 Rename Symbol handler initialized')
 
   // Initialize DrawManager
   const drawManager = createDrawManager({

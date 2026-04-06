@@ -52,6 +52,9 @@ export * from './desktop-files'
 // UI Components (Zag.js-based)
 export * from './ui'
 
+// Rename (IDE-style F2 rename symbol)
+export * from './rename'
+
 // Bootstrap
 export {
   studio,
