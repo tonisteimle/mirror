@@ -5435,13 +5435,11 @@
     }
 
     .pp-color-trigger .pp-color-swatch.empty {
-      background: repeating-linear-gradient(
-        45deg,
-        var(--border-subtle),
-        var(--border-subtle) 4px,
-        var(--border-subtle) 4px,
-        var(--border-subtle) 8px
-      ) !important;
+      background: repeating-conic-gradient(
+        var(--bg-input) 0% 25%,
+        var(--border-default) 0% 50%
+      ) 50% / 8px 8px !important;
+      border: 1px solid var(--border-default) !important;
     }
 
     .pp-color-trigger .pp-color-value {
