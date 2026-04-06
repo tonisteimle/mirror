@@ -16,52 +16,33 @@ import { isAbsoluteLayoutContainer } from '../../compiler/studio/utils/layout-de
 import { state, events } from '../core'
 import TomSelect from 'tom-select'
 
-/**
- * Interface for selection providers (both SelectionManager and StateSelectionAdapter implement this)
- */
-export interface SelectionProvider {
-  subscribe(listener: (nodeId: string | null, previousNodeId: string | null) => void): () => void
-  subscribeBreadcrumb(listener: (chain: BreadcrumbItem[]) => void): () => void
-  getSelection(): string | null
-  clearSelection(): void
-  select(nodeId: string | null): void
-}
+// Import utilities from property module
+import {
+  escapeHtml as escapeHtmlUtil,
+  getDisplayLabel as getDisplayLabelUtil,
+  getSelectOptions as getSelectOptionsUtil,
+  validatePropertyValue as validatePropertyValueUtil,
+  VALIDATION_RULES,
+  PROPERTY_VALIDATION_TYPE,
+  TokenCache,
+  getTokenSuffixForProperty,
+  getTokenShortLabel
+} from './property/utils'
 
-/**
- * Token info extracted from source
- */
-interface SpacingToken {
-  name: string    // e.g., "sm", "md", "lg"
-  fullName: string // e.g., "sm.pad", "md.rad"
-  value: string   // e.g., "4", "8"
-}
+import type {
+  SelectionProvider,
+  SpacingToken,
+  ColorToken,
+  OnCodeChangeCallback,
+  GetAllSourceCallback,
+  PropertyPanelOptions
+} from './property/types'
+
+// Re-export types for backwards compatibility
+export type { SelectionProvider, OnCodeChangeCallback, GetAllSourceCallback, PropertyPanelOptions }
 
 // Backwards compatibility alias
 type PaddingToken = SpacingToken
-
-/**
- * Callback when code changes
- */
-export type OnCodeChangeCallback = (result: ModificationResult) => void
-
-/**
- * Callback to get all project source in processing order (data -> tokens -> components -> layouts)
- */
-export type GetAllSourceCallback = () => string
-
-/**
- * PropertyPanel options
- */
-export interface PropertyPanelOptions {
-  /** Debounce time for input changes (ms) */
-  debounceTime?: number
-  /** Show source indicators (instance/component/inherited) */
-  showSourceIndicators?: boolean
-  /** Callback to get all project source for token extraction */
-  getAllSource?: GetAllSourceCallback
-  /** Access to multiple files for cross-file operations */
-  filesAccess?: FilesAccess
-}
 
 /**
  * PropertyPanel class
@@ -77,11 +58,6 @@ export class PropertyPanel {
   private unsubscribeSelection: (() => void) | null = null
   private currentElement: ExtractedElement | null = null
   private debounceTimers: Map<string, number> = new Map()
-
-  // Token caching for performance
-  private cachedSpacingTokens: Map<string, SpacingToken[]> = new Map()
-  private cachedColorTokens: Array<{ name: string; value: string }> | null = null
-  private cachedSourceHash: string = ''
 
   // AbortController for autocomplete event cleanup
   private autocompleteAbortController: AbortController | null = null
@@ -100,69 +76,8 @@ export class PropertyPanel {
   // Active dropdown close handlers for cleanup
   private activeDropdownCloseHandlers: Set<(e: MouseEvent) => void> = new Set()
 
-  // Validation patterns for different property types
-  private static readonly VALIDATION_RULES: Record<string, {
-    pattern: RegExp
-    allowEmpty: boolean
-    message: string
-  }> = {
-    // Numeric properties (gap, padding, margin, radius, border width, x, y, z, etc.)
-    numeric: {
-      pattern: /^(\$[\w.-]+|\d+(\.\d+)?|)$/,
-      allowEmpty: true,
-      message: 'Nur Zahlen oder $token erlaubt'
-    },
-    // Size properties (width, height) - can also be "full", "hug"
-    size: {
-      pattern: /^(\$[\w.-]+|\d+(\.\d+)?|full|hug|auto|)$/i,
-      allowEmpty: true,
-      message: 'Nur Zahlen, full, hug oder $token erlaubt'
-    },
-    // Color properties - hex colors or tokens
-    color: {
-      pattern: /^(\$[\w.-]+|#[0-9A-Fa-f]{3,8}|transparent|)$/,
-      allowEmpty: true,
-      message: 'Nur #hex oder $token erlaubt'
-    },
-    // Opacity (0-1 or 0-100)
-    opacity: {
-      pattern: /^(\$[\w.-]+|\d+(\.\d+)?|)$/,
-      allowEmpty: true,
-      message: 'Nur 0-1 oder 0-100 erlaubt'
-    }
-  }
-
-  // Map property names to validation types
-  private static readonly PROPERTY_VALIDATION_TYPE: Record<string, string> = {
-    // Numeric
-    gap: 'numeric', g: 'numeric',
-    x: 'numeric', y: 'numeric', z: 'numeric',
-    rotate: 'numeric', rot: 'numeric',
-    scale: 'numeric',
-    'font-size': 'numeric', fs: 'numeric',
-    line: 'numeric',
-    blur: 'numeric',
-    'backdrop-blur': 'numeric', 'blur-bg': 'numeric',
-    // Size
-    width: 'numeric', w: 'numeric',
-    height: 'numeric', h: 'numeric',
-    'min-width': 'numeric', minw: 'numeric',
-    'max-width': 'numeric', maxw: 'numeric',
-    'min-height': 'numeric', minh: 'numeric',
-    'max-height': 'numeric', maxh: 'numeric',
-    // Padding/margin - handled by pad handler
-    padding: 'numeric', pad: 'numeric', p: 'numeric',
-    margin: 'numeric', m: 'numeric',
-    // Border/radius
-    radius: 'numeric', rad: 'numeric',
-    border: 'numeric', bor: 'numeric',
-    // Colors
-    background: 'color', bg: 'color',
-    color: 'color', col: 'color', c: 'color',
-    'border-color': 'color', boc: 'color',
-    // Opacity
-    opacity: 'opacity', o: 'opacity', opa: 'opacity'
-  }
+  // Token cache instance
+  private tokenCache = new TokenCache()
 
   constructor(
     container: HTMLElement,
@@ -273,9 +188,7 @@ export class PropertyPanel {
    * Clear token cache (memory management)
    */
   private invalidateTokenCache(): void {
-    this.cachedSpacingTokens.clear()
-    this.cachedColorTokens = null
-    this.cachedSourceHash = ''
+    this.tokenCache.invalidate()
   }
 
   /**
@@ -745,70 +658,19 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   private readonly PADDING_PRESETS = ['2', '4', '8', '16', '32']
 
   /**
-   * Simple hash for cache invalidation
+   * Get source for token extraction
    */
-  private hashSource(source: string): string {
-    let hash = 0
-    for (let i = 0; i < source.length; i++) {
-      const char = source.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
-      hash = hash & hash // Convert to 32bit integer
-    }
-    return hash.toString(36)
+  private getSourceForTokens(): string {
+    return this.options.getAllSource
+      ? this.options.getAllSource()
+      : this.codeModifier.getSource()
   }
 
   /**
    * Get spacing tokens from source for a specific property type (cached)
-   * Parses tokens like "$s.pad: 4", "$m.rad: 8", "$l.gap: 16" from the source code
-   * Uses getAllSource callback if available to get tokens from all project files
-   * @param propType - The property type to extract (pad, rad, gap, etc.)
    */
   private getSpacingTokens(propType: string): SpacingToken[] {
-    // Use getAllSource callback if available, otherwise fall back to current file
-    const source = this.options.getAllSource
-      ? this.options.getAllSource()
-      : this.codeModifier.getSource()
-    const hash = this.hashSource(source)
-
-    // Check cache - invalidate all if source changed
-    if (hash !== this.cachedSourceHash) {
-      this.cachedSpacingTokens.clear()
-      this.cachedSourceHash = hash
-    }
-
-    // Return cached if available
-    const cached = this.cachedSpacingTokens.get(propType)
-    if (cached) {
-      return cached
-    }
-
-    const lines = source.split('\n')
-    // Use Map to deduplicate tokens by name (later definitions override earlier ones)
-    const tokenMap = new Map<string, SpacingToken>()
-
-    // Build regex for the specific property type
-    // Matches: $name.propType: value (e.g., "$s.pad: 4", "$m.rad: 8")
-    const regex = new RegExp(`^\\$?([a-zA-Z0-9_-]+)\\.${propType}\\s*:\\s*(\\d+)$`)
-
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed || trimmed.startsWith('//')) continue
-
-      const match = trimmed.match(regex)
-      if (match) {
-        const name = match[1]
-        tokenMap.set(name, {
-          name,                     // e.g., "sm"
-          fullName: `${name}.${propType}`, // e.g., "sm.pad"
-          value: match[2]           // e.g., "4"
-        })
-      }
-    }
-
-    // Convert to array and cache
-    const tokens = Array.from(tokenMap.values())
-    this.cachedSpacingTokens.set(propType, tokens)
-    return tokens
+    return this.tokenCache.getSpacingTokens(propType, () => this.getSourceForTokens())
   }
 
   /**
@@ -841,117 +703,23 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
 
   /**
    * Resolve token value - get numeric value for a token reference
-   * Token ref can be "sm.pad" or "$s.pad" - we normalize it
    */
   private resolveTokenValue(tokenRef: string): string | null {
-    // Normalize: remove $ prefix if present
-    const normalizedRef = tokenRef.startsWith('$') ? tokenRef.slice(1) : tokenRef
-
-    // Determine the property type from the token ref (e.g., "sm.pad" -> "pad")
-    const parts = normalizedRef.split('.')
-    if (parts.length < 2) return null
-
-    const propType = parts[parts.length - 1] // last part is the property type
-    const tokens = this.getSpacingTokens(propType)
-    const token = tokens.find(t => t.fullName === normalizedRef)
-    return token?.value || null
+    return this.tokenCache.resolveTokenValue(tokenRef, () => this.getSourceForTokens())
   }
 
   /**
    * Get color tokens from source (cached)
-   * Parses tokens with hex colors like "$accent.bg: #3B82F6"
-   * Uses getAllSource callback if available to get tokens from all project files
    */
   private getColorTokens(): Array<{ name: string; value: string }> {
-    // Use getAllSource callback if available, otherwise fall back to current file
-    const source = this.options.getAllSource
-      ? this.options.getAllSource()
-      : this.codeModifier.getSource()
-    const hash = this.hashSource(source)
-
-    // Return cached if source hasn't changed
-    if (hash === this.cachedSourceHash && this.cachedColorTokens) {
-      return this.cachedColorTokens
-    }
-
-    // Use Map to deduplicate tokens by name (later definitions override earlier ones)
-    const tokenMap = new Map<string, { name: string; value: string }>()
-
-    // Match token definitions with hex colors
-    const tokenRegex = /\$?([\w.-]+):\s*(#[0-9A-Fa-f]{3,8})/g
-    let match
-    while ((match = tokenRegex.exec(source)) !== null) {
-      tokenMap.set(match[1], {
-        name: match[1],
-        value: match[2]
-      })
-    }
-
-    // Convert to array and cache
-    const tokens = Array.from(tokenMap.values())
-    this.cachedColorTokens = tokens
-    this.cachedSourceHash = hash
-    return tokens
+    return this.tokenCache.getColorTokens(() => this.getSourceForTokens())
   }
 
   /**
    * Get all tokens from source, optionally filtered by property suffix
-   * Uses getAllSource callback if available to get tokens from all project files
-   * @param propertySuffix Optional suffix to filter (e.g., 'pad', 'bg', 'col')
    */
   private getAllTokens(propertySuffix?: string): Array<{ name: string; value: string }> {
-    // Use getAllSource callback if available, otherwise fall back to current file
-    const source = this.options.getAllSource
-      ? this.options.getAllSource()
-      : this.codeModifier.getSource()
-    const tokens: Array<{ name: string; value: string }> = []
-
-    // Match token definitions: $name.suffix: value or name.suffix: value
-    // Allow leading whitespace for indented tokens
-    const tokenRegex = /^\s*\$?([\w.-]+):\s*(.+)$/gm
-    let match
-    while ((match = tokenRegex.exec(source)) !== null) {
-      const name = match[1]
-      const value = match[2].trim()
-
-      // Skip if name doesn't contain a dot (not a semantic token)
-      if (!name.includes('.')) continue
-
-      // Filter by suffix if provided
-      if (propertySuffix) {
-        if (name.endsWith('.' + propertySuffix)) {
-          tokens.push({ name, value })
-        }
-      } else {
-        tokens.push({ name, value })
-      }
-    }
-
-    return tokens
-  }
-
-  /**
-   * Map property name to token suffix for filtering
-   */
-  private getTokenSuffixForProperty(propName: string): string | undefined {
-    const mapping: Record<string, string> = {
-      'pad': 'pad',
-      'padding': 'pad',
-      'p': 'pad',
-      'gap': 'gap',
-      'g': 'gap',
-      'bg': 'bg',
-      'background': 'bg',
-      'col': 'col',
-      'color': 'col',
-      'c': 'col',
-      'rad': 'rad',
-      'radius': 'rad',
-      'border-radius': 'rad',
-      'font-size': 'font.size',
-      'fs': 'font.size',
-    }
-    return mapping[propName]
+    return this.tokenCache.getAllTokens(() => this.getSourceForTokens(), propertySuffix)
   }
 
   // Autocomplete state
@@ -981,7 +749,7 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     this.hideTokenAutocomplete()
 
     // Get filtered tokens based on property
-    const suffix = this.getTokenSuffixForProperty(propName)
+    const suffix = getTokenSuffixForProperty(propName)
     this.autocompleteTokens = this.getAllTokens(suffix)
 
     if (this.autocompleteTokens.length === 0) {
@@ -2020,17 +1788,10 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   }
 
   /**
-   * Get short label from token name for display
-   * e.g., "sm.pad" -> "SM", "spacing.small.pad" -> "Sma"
+   * Get short label from token name for display (delegates to utility)
    */
   private getTokenShortLabel(tokenName: string): string {
-    // Remove .pad suffix
-    const name = tokenName.replace(/\.pad$/, '')
-    // Get the most descriptive part
-    const parts = name.split('.')
-    // Use first part if short, otherwise abbreviate
-    const label = parts[0]
-    return label.length <= 3 ? label.toUpperCase() : label.charAt(0).toUpperCase() + label.slice(1, 3)
+    return getTokenShortLabel(tokenName)
   }
 
   /**
@@ -3521,41 +3282,10 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   }
 
   /**
-   * Validate a property value
-   * Returns true if valid, false otherwise
+   * Validate a property value (delegates to utility)
    */
   private validatePropertyValue(propName: string, value: string, input?: HTMLInputElement): boolean {
-    const validationType = PropertyPanel.PROPERTY_VALIDATION_TYPE[propName]
-    if (!validationType) {
-      // No validation defined, allow anything
-      return true
-    }
-
-    const rule = PropertyPanel.VALIDATION_RULES[validationType]
-    if (!rule) return true
-
-    // Allow empty if permitted
-    if (value === '' && rule.allowEmpty) {
-      if (input) {
-        input.classList.remove('invalid')
-        input.title = ''
-      }
-      return true
-    }
-
-    const isValid = rule.pattern.test(value.trim())
-
-    if (input) {
-      if (isValid) {
-        input.classList.remove('invalid')
-        input.title = ''
-      } else {
-        input.classList.add('invalid')
-        input.title = rule.message
-      }
-    }
-
-    return isValid
+    return validatePropertyValueUtil(propName, value, input)
   }
 
   /**
@@ -4358,155 +4088,24 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
   }
 
   /**
-   * Get display label for property
+   * Get display label for property (delegates to utility)
    */
   private getDisplayLabel(name: string): string {
-    const labels: Record<string, string> = {
-      // Layout
-      horizontal: 'Horizontal',
-      hor: 'Horizontal',
-      vertical: 'Vertical',
-      ver: 'Vertical',
-      center: 'Center',
-      cen: 'Center',
-      gap: 'Gap',
-      g: 'Gap',
-      spread: 'Spread',
-      wrap: 'Wrap',
-      stacked: 'Stacked',
-      grid: 'Grid',
-
-      // Alignment
-      left: 'Left',
-      right: 'Right',
-      'hor-center': 'H-Center',
-      top: 'Top',
-      bottom: 'Bottom',
-      'ver-center': 'V-Center',
-
-      // Size
-      width: 'Width',
-      w: 'Width',
-      height: 'Height',
-      h: 'Height',
-      size: 'Size',
-      'min-width': 'Min W',
-      minw: 'Min W',
-      'max-width': 'Max W',
-      maxw: 'Max W',
-      'min-height': 'Min H',
-      minh: 'Min H',
-      'max-height': 'Max H',
-      maxh: 'Max H',
-
-      // Spacing
-      padding: 'Padding',
-      pad: 'Padding',
-      p: 'Padding',
-      margin: 'Margin',
-      m: 'Margin',
-
-      // Colors
-      color: 'Color',
-      col: 'Color',
-      c: 'Color',
-      background: 'Background',
-      bg: 'Background',
-      'border-color': 'Border Color',
-      boc: 'Border Color',
-
-      // Border
-      border: 'Border',
-      bor: 'Border',
-      radius: 'Radius',
-      rad: 'Radius',
-
-      // Typography
-      'font-size': 'Font Size',
-      fs: 'Font Size',
-      weight: 'Weight',
-      line: 'Line Height',
-      font: 'Font',
-      'text-align': 'Text Align',
-      italic: 'Italic',
-      underline: 'Underline',
-      truncate: 'Truncate',
-      uppercase: 'Uppercase',
-      lowercase: 'Lowercase',
-
-      // Icon
-      'icon-size': 'Icon Size',
-      is: 'Icon Size',
-      'icon-weight': 'Icon Weight',
-      iw: 'Icon Weight',
-      'icon-color': 'Icon Color',
-      ic: 'Icon Color',
-      fill: 'Fill',
-
-      // Visual
-      opacity: 'Opacity',
-      o: 'Opacity',
-      shadow: 'Shadow',
-      cursor: 'Cursor',
-      z: 'Z-Index',
-      hidden: 'Hidden',
-      visible: 'Visible',
-      disabled: 'Disabled',
-      rotate: 'Rotate',
-      rot: 'Rotate',
-      translate: 'Translate',
-
-      // Scroll
-      scroll: 'Scroll',
-      'scroll-ver': 'Scroll Y',
-      'scroll-hor': 'Scroll X',
-      'scroll-both': 'Scroll Both',
-      clip: 'Clip',
-
-      // Hover
-      'hover-background': 'Hover BG',
-      'hover-bg': 'Hover BG',
-      'hover-color': 'Hover Color',
-      'hover-col': 'Hover Color',
-      'hover-opacity': 'Hover Opacity',
-      'hover-opa': 'Hover Opacity',
-      'hover-scale': 'Hover Scale',
-      'hover-border': 'Hover Border',
-      'hover-bor': 'Hover Border',
-      'hover-border-color': 'Hover Border Color',
-      'hover-boc': 'Hover Border Color',
-      'hover-radius': 'Hover Radius',
-      'hover-rad': 'Hover Radius',
-
-      // Content
-      content: 'Content',
-      placeholder: 'Placeholder',
-      src: 'Source',
-      href: 'Link',
-      value: 'Value',
-    }
-    return labels[name] || name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, ' ')
+    return getDisplayLabelUtil(name)
   }
 
   /**
-   * Get select options for a property
+   * Get select options for a property (delegates to utility)
    */
   private getSelectOptions(name: string): string[] {
-    const options: Record<string, string[]> = {
-      cursor: ['default', 'pointer', 'text', 'move', 'not-allowed', 'grab', 'grabbing'],
-      shadow: ['none', 'sm', 'md', 'lg'],
-      'text-align': ['left', 'center', 'right', 'justify'],
-    }
-    return options[name] || []
+    return getSelectOptionsUtil(name)
   }
 
   /**
-   * Escape HTML
+   * Escape HTML (delegates to utility)
    */
   private escapeHtml(str: string): string {
-    const div = document.createElement('div')
-    div.textContent = str
-    return div.innerHTML
+    return escapeHtmlUtil(str)
   }
 
   /**
