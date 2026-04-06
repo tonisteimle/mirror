@@ -38,6 +38,20 @@ import type {
   PropertyPanelOptions
 } from './property/types'
 
+// Import section classes
+import {
+  SpacingSection,
+  BorderSection,
+  ColorSection,
+  TypographySection,
+  LayoutSection,
+  SizingSection,
+  BehaviorSection,
+  VisualSection,
+  type SectionDependencies,
+  type SectionData
+} from './property/sections'
+
 // Re-export types for backwards compatibility
 export type { SelectionProvider, OnCodeChangeCallback, GetAllSourceCallback, PropertyPanelOptions }
 
@@ -79,6 +93,18 @@ export class PropertyPanel {
   // Token cache instance
   private tokenCache = new TokenCache()
 
+  // Section instances
+  private sections: {
+    spacing: SpacingSection
+    border: BorderSection
+    color: ColorSection
+    typography: TypographySection
+    layout: LayoutSection
+    sizing: SizingSection
+    behavior: BehaviorSection
+    visual: VisualSection
+  } | null = null
+
   constructor(
     container: HTMLElement,
     selectionManager: SelectionProvider,
@@ -100,7 +126,94 @@ export class PropertyPanel {
       filesAccess: options.filesAccess,
     }
 
+    this.initializeSections()
     this.attach()
+  }
+
+  /**
+   * Create section dependencies
+   */
+  private getSectionDependencies(): SectionDependencies {
+    return {
+      escapeHtml: (str: string) => this.escapeHtml(str),
+      getDisplayLabel: (name: string) => this.getDisplayLabel(name),
+      onPropertyChange: (propName: string, value: string, source: string) => {
+        this.handleSectionPropertyChange(propName, value, source)
+      },
+      onToggleProperty: (propName: string, currentValue: boolean) => {
+        this.handleToggleProperty(propName, currentValue)
+      }
+    }
+  }
+
+  /**
+   * Initialize section instances
+   */
+  private initializeSections(): void {
+    const deps = this.getSectionDependencies()
+    this.sections = {
+      spacing: new SpacingSection(deps),
+      border: new BorderSection(deps),
+      color: new ColorSection(deps),
+      typography: new TypographySection(deps),
+      layout: new LayoutSection(deps),
+      sizing: new SizingSection(deps),
+      behavior: new BehaviorSection(deps),
+      visual: new VisualSection(deps)
+    }
+  }
+
+  /**
+   * Handle property changes from sections
+   */
+  private handleSectionPropertyChange(propName: string, value: string, source: string): void {
+    // Delegate to existing property change handling
+    // Special property names are handled by specific methods
+    if (propName.startsWith('__')) {
+      this.handleSpecialProperty(propName, value, source)
+    } else {
+      this.handlePropertyInput(propName, value, source)
+    }
+  }
+
+  /**
+   * Handle special property names from sections
+   */
+  private handleSpecialProperty(propName: string, value: string, source: string): void {
+    switch (propName) {
+      case '__PAD_TOKEN__':
+      case '__PAD_INPUT__': {
+        const { value: val, dir } = JSON.parse(value)
+        this.handlePaddingChange(val, dir)
+        break
+      }
+      case '__RADIUS_CORNER__': {
+        const { corner, value: val } = JSON.parse(value)
+        this.handleRadiusCornerChange(corner, val)
+        break
+      }
+      case '__BORDER_WIDTH__':
+        this.handleBorderWidthChange(value)
+        break
+      case '__BORDER_COLOR_PICKER__': {
+        const { property, currentValue, borderWidth } = JSON.parse(value)
+        this.handleBorderColorPickerOpen(property, currentValue, borderWidth)
+        break
+      }
+      case '__COLOR_PICKER__': {
+        const { property, currentValue } = JSON.parse(value)
+        this.handleColorPickerOpen(property, currentValue)
+        break
+      }
+      case '__LAYOUT_MODE__':
+        this.handleLayoutModeChange(value)
+        break
+      case '__ALIGN__':
+        this.handleAlignmentChange(value)
+        break
+      default:
+        console.warn('Unknown special property:', propName)
+    }
   }
 
   /**

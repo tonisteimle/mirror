@@ -1823,49 +1823,12 @@
       visibility: hidden;
     }
 
-    /* Preview Zoom Controls - hidden for v1 */
-    .preview-zoom {
-      display: none;
-    }
-
-    .preview-zoom .zoom-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: var(--size-icon-2xl);
-      height: var(--size-icon-2xl);
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .preview-zoom .zoom-btn:hover {
-      background: var(--bg-hover);
-      color: var(--text-secondary);
-    }
-
-    .preview-zoom .zoom-btn:active {
-      background: var(--bg-active);
-    }
-
-    .preview-zoom .zoom-level {
-      color: var(--text-muted);
-      font-size: var(--font-sm);
-      min-width: 40px;
-      text-align: center;
-      user-select: none;
-    }
-
     /* Play Mode Button */
     .preview-toolbar-actions {
       display: flex;
       align-items: center;
       gap: var(--space-2);
       margin-left: auto;
-      margin-right: 8px;
     }
 
     .play-btn {
@@ -1924,7 +1887,6 @@
       flex: 1;
       overflow: auto;
       background: var(--color-black) !important;
-      padding: var(--space-2);
     }
 
     #preview .mirror-root {
@@ -3555,7 +3517,16 @@
       text-transform: var(--text-uppercase);
       letter-spacing: var(--tracking-wide);
       margin-bottom: 10px;
-      padding: 0;
+      padding: 8px 0;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    /* First section label: no top border (already has one above) */
+    .pp-content .section:first-child .section-label,
+    .pp-content .pp-section:first-child .pp-label {
+      border-top: none;
+      padding-top: 0;
     }
 
     /* Section expand/collapse button */
