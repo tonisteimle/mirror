@@ -242,18 +242,44 @@ export class CodeExecutor implements ICodeExecutor {
 
     // Use template-based insertion if template exists
     if (template) {
+      // For absolute positioning, inject x/y into the template's first line
+      let adjustedTemplate = template
+      if (result.placement === 'absolute' && result.position) {
+        const posProps = `x ${result.position.x}, y ${result.position.y}`
+        // Insert position props after the first element name
+        const firstLineEnd = template.indexOf('\n')
+        const firstLine = firstLineEnd >= 0 ? template.substring(0, firstLineEnd) : template
+        const rest = firstLineEnd >= 0 ? template.substring(firstLineEnd) : ''
+
+        // Check if first line already has properties (contains comma or space after name)
+        const hasProps = firstLine.includes(',') || /^\w+\s+\S/.test(firstLine)
+        if (hasProps) {
+          // Insert after existing props on first line
+          adjustedTemplate = firstLine + ', ' + posProps + rest
+        } else {
+          // Add props after element name
+          adjustedTemplate = firstLine + ' ' + posProps + rest
+        }
+      }
+
       switch (result.placement) {
         case 'before':
         case 'after':
           return modifier.addChildWithTemplateRelativeTo(
             result.targetId,
-            template,
+            adjustedTemplate,
             result.placement
           )
 
         case 'inside':
-          return modifier.addChildWithTemplate(result.target.nodeId, template, {
+          return modifier.addChildWithTemplate(result.target.nodeId, adjustedTemplate, {
             position: result.insertionIndex ?? 'last',
+          })
+
+        case 'absolute':
+          // For absolute positioning, insert inside the positioned container
+          return modifier.addChildWithTemplate(result.target.nodeId, adjustedTemplate, {
+            position: 'last',
           })
 
         default:
