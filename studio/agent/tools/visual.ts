@@ -546,7 +546,7 @@ Useful when discussing specific elements.`,
       required: false
     }
   },
-  execute: async ({ selector, color = '#3B82F6', duration = 2000 }, ctx: any): Promise<ToolResult> => {
+  execute: async ({ selector, color = '#5BA8F5', duration = 2000 }, ctx: any): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
 
     if (visualCtx.highlightElement) {

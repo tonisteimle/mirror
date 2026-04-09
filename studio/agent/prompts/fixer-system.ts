@@ -79,7 +79,7 @@ l.fs: 18
 xl.fs: 24
 
 // Background Colors
-accent.bg: #3b82f6
+accent.bg: #5BA8F5
 surface.bg: #27272a
 canvas.bg: #18181b
 
@@ -106,7 +106,7 @@ Wiederverwendbare Komponenten-Definitionen:
 \`\`\`
 PrimaryButton as Button:
   bg $accent, col white, pad $s $m, rad $s
-  hover bg #2563eb
+  hover bg #2271C1
 
 Card as Box:
   bg $surface, pad $m, rad $m, gap $s

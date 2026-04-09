@@ -906,13 +906,13 @@ ${(activeMode === 'horizontal' || activeMode === 'vertical') ? `
     bg: [
       { label: 'Surface', value: '#1a1a23' },
       { label: 'Elevated', value: '#27272A' },
-      { label: 'Primary', value: '#3B82F6' },
+      { label: 'Primary', value: '#5BA8F5' },
       { label: 'Secondary', value: '#6B7280' },
     ],
     text: [
       { label: 'Text', value: '#E5E5E5' },
       { label: 'Muted', value: '#71717A' },
-      { label: 'Primary', value: '#3B82F6' },
+      { label: 'Primary', value: '#5BA8F5' },
     ],
   } as const
 

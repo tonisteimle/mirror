@@ -255,7 +255,7 @@ function analyzeCode(lines: string[], selector?: string): any {
     if (!trimmed) continue
 
     // Token definitions (legacy with $ or new without $)
-    // e.g., "$primary.bg: #2563eb" or "primary.bg: #2563eb"
+    // e.g., "$primary.bg: #2271C1" or "primary.bg: #2271C1"
     if (trimmed.startsWith('$') || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(trimmed)) {
       tokens.push(trimmed.split(':')[0])
       continue

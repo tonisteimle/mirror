@@ -115,7 +115,7 @@ function Component() {
 \`\`\`
 
 STYLE GUIDELINES:
-- Use hex colors (e.g., '#3B82F6')
+- Use hex colors (e.g., '#5BA8F5')
 - Use pixel values for spacing (e.g., '16px', '12px 24px')
 - Common properties: padding, backgroundColor, color, borderRadius, display, flexDirection, gap, alignItems, justifyContent
 `

@@ -478,7 +478,7 @@ const FILE_TYPES = {
   layout: {
     label: 'Layout',
     placeholder: 'home',
-    color: '#3B82F6',
+    color: '#5BA8F5',
     extension: '.mir',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -512,8 +512,8 @@ Box pad 24, gap 16, bg #0a0a0f
 // Komponenten-Definitionen
 
 // Button Komponente
-Button: pad 12 24, bg #3B82F6, rad 8, cursor pointer
-  state hover bg #2563EB
+Button: pad 12 24, bg #5BA8F5, rad 8, cursor pointer
+  state hover bg #2271C1
 
 // Card Komponente
 Card: pad 16, bg #1a1a23, rad 8
@@ -553,7 +553,7 @@ grey-800.bg: #27272A
 grey-700.bg: #3F3F46
 
 // Background Colors
-accent.bg: #3B82F6
+accent.bg: #5BA8F5
 surface.bg: #27272A
 canvas.bg: #18181B
 
@@ -950,7 +950,7 @@ const TAILWIND_COLORS = [
   { name: 'teal', shades: ['#f0fdfa', '#ccfbf1', '#99f6e4', '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e', '#115e59', '#134e4a'] },
   { name: 'cyan', shades: ['#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63'] },
   { name: 'sky', shades: ['#f0f9ff', '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#0284c7', '#0369a1', '#075985', '#0c4a6e'] },
-  { name: 'blue', shades: ['#eff6ff', '#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a'] },
+  { name: 'blue', shades: ['#eff6ff', '#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#5BA8F5', '#2271C1', '#1d4ed8', '#1e40af', '#1e3a8a'] },
   { name: 'indigo', shades: ['#eef2ff', '#e0e7ff', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca', '#3730a3', '#312e81'] },
   { name: 'violet', shades: ['#f5f3ff', '#ede9fe', '#ddd6fe', '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6', '#4c1d95'] },
   { name: 'purple', shades: ['#faf5ff', '#f3e8ff', '#e9d5ff', '#d8b4fe', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8', '#581c87'] },
@@ -1459,7 +1459,7 @@ function extractColorTokens() {
     // Match token definitions: $name: #hex or name: #hex
     const lines = content.split('\n')
     for (const line of lines) {
-      // Match patterns like: $accent.bg: #3B82F6 or primary: #3B82F6
+      // Match patterns like: $accent.bg: #5BA8F5 or primary: #5BA8F5
       const tokenMatch = line.match(/^\s*\$?([\w.-]+)\s*:\s*(#[0-9A-Fa-f]{3,8})\s*(?:\/\/.*)?$/)
       if (tokenMatch) {
         const name = tokenMatch[1]
@@ -1573,7 +1573,7 @@ function showColorPicker(x, y, insertPos, replaceRange = null, initialColor = nu
   colorPicker.style.top = finalY + 'px'
   colorPicker.classList.add('visible')
   colorPickerVisible = true
-  const displayColor = initialColor || '#3b82f6'
+  const displayColor = initialColor || '#5BA8F5'
   colorPreview.style.backgroundColor = displayColor
   colorHex.textContent = displayColor.toUpperCase()
 
@@ -1587,7 +1587,7 @@ function showColorPicker(x, y, insertPos, replaceRange = null, initialColor = nu
 
   // Reset and show selection for hash trigger mode
   if (isHashTrigger) {
-    // Start selection at blue-500 (#3b82f6) which is column 4 (blue), row 5 (500)
+    // Start selection at blue-500 (#5BA8F5) which is column 4 (blue), row 5 (500)
     selectedSwatchIndex = 4 * SWATCH_ROWS + 5
     updateSelectedSwatch()
   } else {
@@ -2345,8 +2345,8 @@ function injectAnimationPickerStyles() {
     }
     .ap-btn-secondary { background: #333; color: #999; }
     .ap-btn-secondary:hover { background: #444; color: #fff; }
-    .ap-btn-primary { background: #3B82F6; color: #fff; }
-    .ap-btn-primary:hover { background: #2563EB; }
+    .ap-btn-primary { background: #5BA8F5; color: #fff; }
+    .ap-btn-primary:hover { background: #2271C1; }
     .ap-body { padding: 12px; }
     .ap-playback {
       display: flex;
@@ -2357,7 +2357,7 @@ function injectAnimationPickerStyles() {
     .ap-play-btn {
       width: 28px;
       height: 28px;
-      background: #3B82F6;
+      background: #5BA8F5;
       border: none;
       border-radius: 6px;
       cursor: pointer;
@@ -2367,7 +2367,7 @@ function injectAnimationPickerStyles() {
       transition: background 0.15s;
       flex-shrink: 0;
     }
-    .ap-play-btn:hover { background: #2563EB; }
+    .ap-play-btn:hover { background: #2271C1; }
     .ap-play-btn svg { width: 14px; height: 14px; }
     .ap-scrubber {
       flex: 1;
@@ -2379,7 +2379,7 @@ function injectAnimationPickerStyles() {
     }
     .ap-scrubber-progress {
       height: 100%;
-      background: #3B82F6;
+      background: #5BA8F5;
       border-radius: 3px;
       width: 0%;
     }
@@ -2460,7 +2460,7 @@ function injectAnimationPickerStyles() {
       position: absolute;
       top: 5px;
       height: 18px;
-      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      background: linear-gradient(135deg, #5BA8F5 0%, #2271C1 100%);
       border-radius: 3px;
       cursor: pointer;
       display: flex;
@@ -2546,7 +2546,7 @@ function injectAnimationPickerStyles() {
       transition: all 0.15s;
     }
     .ap-easing-btn:hover { color: #fff; border-color: #444; }
-    .ap-easing-btn.active { background: #3B82F6; border-color: #3B82F6; color: #fff; }
+    .ap-easing-btn.active { background: #5BA8F5; border-color: #5BA8F5; color: #fff; }
     .ap-curve-preview {
       width: 48px;
       height: 48px;
@@ -2561,7 +2561,7 @@ function injectAnimationPickerStyles() {
       width: calc(100% - 12px);
       height: calc(100% - 12px);
     }
-    .ap-curve-preview path { fill: none; stroke: #3B82F6; stroke-width: 2; }
+    .ap-curve-preview path { fill: none; stroke: #5BA8F5; stroke-width: 2; }
     .ap-values-grid {
       display: grid;
       grid-template-columns: auto 1fr auto 1fr;
@@ -2579,7 +2579,7 @@ function injectAnimationPickerStyles() {
       color: #e4e4e7;
       width: 100%;
     }
-    .ap-value-input:focus { outline: none; border-color: #3B82F6; }
+    .ap-value-input:focus { outline: none; border-color: #5BA8F5; }
     .ap-options-row {
       display: flex;
       gap: 12px;
@@ -2598,7 +2598,7 @@ function injectAnimationPickerStyles() {
       border-radius: 4px;
       color: #e4e4e7;
     }
-    .ap-option-input:focus { outline: none; border-color: #3B82F6; }
+    .ap-option-input:focus { outline: none; border-color: #5BA8F5; }
     .ap-option-checkbox {
       display: flex;
       align-items: center;
@@ -2607,7 +2607,7 @@ function injectAnimationPickerStyles() {
       color: #666;
       cursor: pointer;
     }
-    .ap-option-checkbox input { accent-color: #3B82F6; }
+    .ap-option-checkbox input { accent-color: #5BA8F5; }
   `
   document.head.appendChild(style)
 }
@@ -3933,7 +3933,7 @@ function renderComponentsPreview(ast) {
         <p style="font-size: 16px; margin-bottom: 8px;">Keine Komponenten definiert</p>
         <p style="font-size: 13px; opacity: 0.7;">
           Komponenten definieren mit:<br>
-          <code style="background: #18181b; padding: 2px 6px; border-radius: 4px;">Button: pad 12, bg #3B82F6</code>
+          <code style="background: #18181b; padding: 2px 6px; border-radius: 4px;">Button: pad 12, bg #5BA8F5</code>
         </p>
       </div>
     `
@@ -5797,7 +5797,7 @@ const LAYOUT_PRESETS = [
 // NOTE: defaultSize should match the w/h in properties for accurate ghost rendering
 const PRIMITIVE_COMPONENTS = [
   { name: 'Box', category: 'Basic', properties: 'w hug, h hug, pad 16, bg #27272a, rad 8', defaultSize: { width: 32, height: 32 }, icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' },
-  { name: 'Button', category: 'Basic', properties: 'w hug, h hug, pad 10 20, bg #3B82F6, rad 6, bor 0', text: 'Button', defaultSize: { width: 80, height: 36 }, icon: '<rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>' },
+  { name: 'Button', category: 'Basic', properties: 'w hug, h hug, pad 10 20, bg #5BA8F5, rad 6, bor 0', text: 'Button', defaultSize: { width: 80, height: 36 }, icon: '<rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>' },
   { name: 'Text', category: 'Basic', properties: 'w hug, h hug', text: 'Text', defaultSize: { width: 80, height: 24 }, icon: '<polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line>' },
   { name: 'Input', category: 'Basic', properties: 'w 200, h hug, pad 10, bg #27272a, rad 6, bor 0', text: 'placeholder...', defaultSize: { width: 200, height: 36 }, icon: '<rect x="3" y="6" width="18" height="12" rx="2" ry="2"></rect><line x1="7" y1="12" x2="11" y2="12"></line>' },
   { name: 'Icon', category: 'Basic', properties: 'w 24, h 24, "star"', defaultSize: { width: 24, height: 24 }, icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' },
@@ -7322,7 +7322,7 @@ function Component() {
 \`\`\`
 
 STYLE GUIDELINES:
-- Use hex colors (e.g., '#3B82F6')
+- Use hex colors (e.g., '#5BA8F5')
 - Use pixel values for spacing (e.g., '16px', '12px 24px')
 - Common properties: padding, backgroundColor, color, borderRadius, display, flexDirection, gap, alignItems, justifyContent`
 

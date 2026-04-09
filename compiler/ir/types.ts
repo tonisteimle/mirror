@@ -197,7 +197,7 @@ export interface IRStateDependency {
 export interface IRToken {
   name: string
   type?: 'color' | 'size' | 'font' | 'icon'
-  /** Simple token value (e.g., $primary.bg: #2563eb) */
+  /** Simple token value (e.g., $primary.bg: #2271C1) */
   value?: string | number
   /** Nested data object (e.g., tasks: task1: title: "...") */
   data?: IRDataObject

@@ -6,351 +6,350 @@
   <title>Mirror Tutorial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="tutorial.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/docs/tutorial/tutorial.css">
+  <link rel="stylesheet" href="/assets/mirror-defaults.css">
+  <script src="/studio/dist/browser/index.global.js"></script>
   <style>
-    .page {
-      max-width: 800px;
+    body { background: #0a0a0a; }
+
+    .toc-page {
+      max-width: 900px;
       margin: 0 auto;
-      padding: 48px 32px 80px;
+      padding: 60px 32px 100px;
     }
 
-    header {
-      margin-bottom: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo {
-      display: inline-flex;
-      align-items: center;
-      text-decoration: none;
-    }
-
-    .logo img {
-      height: 20px;
-      width: auto;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: 500;
-      color: var(--text-bright);
-      letter-spacing: -0.3px;
-    }
-
-    .intro-card {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 16px 20px;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      border: 1px solid #2563eb44;
-      border-radius: 12px;
-      text-decoration: none;
-      margin-bottom: 32px;
-      transition: border-color 0.15s;
-    }
-    .intro-card:hover { border-color: #2563eb; }
-    .intro-icon {
-      width: 40px; height: 40px;
-      background: #2563eb22;
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-    }
-    .intro-content { flex: 1; }
-    .intro-title { font-size: 14px; font-weight: 500; color: var(--text-bright); margin-bottom: 2px; }
-    .intro-desc { font-size: 12px; color: var(--text-dim); }
-    .intro-arrow { color: #2563eb; font-size: 18px; }
-
-    .main-group {
+    /* Header */
+    .toc-header {
       margin-bottom: 48px;
     }
-    .main-group-header {
+    .toc-logo {
+      margin-bottom: 32px;
+    }
+    .toc-logo img {
+      height: 24px;
+      width: auto;
+    }
+    .toc-header h1 {
+      font-size: 32px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .toc-header p {
+      font-size: 16px;
+      color: #888;
+      line-height: 1.6;
+      max-width: 600px;
+    }
+
+    /* Quick Example */
+    .quick-example {
+      margin-bottom: 56px;
+      padding: 24px;
+      background: #111;
+      border: 1px solid #1a1a1a;
+      border-radius: 12px;
+    }
+    .quick-example-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    .quick-example .playground {
+      margin: 0;
+      border-radius: 8px;
+    }
+    .quick-example .playground-code {
+      background: #0a0a0a;
+    }
+    .quick-example .playground-preview {
+      min-height: 70px;
+      background: #0a0a0a;
+    }
+
+    /* Chapter Groups */
+    .chapter-group {
+      margin-bottom: 40px;
+    }
+    .chapter-group-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1a1a1a;
     }
-    .main-group-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-bright);
-      letter-spacing: -0.3px;
-    }
-    .main-group-desc {
-      font-size: 13px;
-      color: var(--text-dim);
-    }
-    .main-group-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+    .chapter-group-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
     }
-    .main-group-icon.language { background: #2563eb22; }
-    .main-group-icon.components { background: #10b98122; }
-
-    .section { margin-bottom: 24px; }
-    .section-title {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
+    .chapter-group-icon.lang { background: #5BA8F522; color: #5BA8F5; }
+    .chapter-group-icon.comp { background: #10b98122; color: #34d399; }
+    .chapter-group-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px;
-    }
-
-    a.card, a.card:hover {
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      padding: 20px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      text-decoration: none !important;
-      color: inherit;
-      transition: border-color 0.15s, background 0.15s, transform 0.15s;
-    }
-    .card:hover {
-      border-color: #444;
-      background: #1e1e1e;
-      transform: translateY(-2px);
-    }
-
-    .card-num {
+    .chapter-group-range {
+      font-size: 12px;
+      color: #555;
       font-family: var(--mono);
-      font-size: 28px;
-      font-weight: 600;
-      color: #444;
-      line-height: 1;
-      min-width: 44px;
-      flex-shrink: 0;
-    }
-    .card-content {
-      flex: 1;
-      min-width: 0;
-    }
-    .card-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-bright);
-      margin-bottom: 6px;
-    }
-    .card-desc {
-      font-size: 12px;
-      color: var(--text-dim);
-      line-height: 1.5;
     }
 
-    footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
+    /* Chapter List */
+    .chapter-list {
       display: flex;
-      justify-content: space-between;
-      color: var(--text-dim);
-      font-size: 12px;
+      flex-direction: column;
+      gap: 2px;
     }
-    footer a {
-      color: var(--text-dim);
+    .chapter-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      background: transparent;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.1s;
+    }
+    .chapter-item:hover {
+      background: #151515;
       text-decoration: none;
     }
-    footer a:hover { color: var(--text); }
+    .chapter-num {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+      width: 28px;
+      flex-shrink: 0;
+    }
+    .chapter-item:hover .chapter-num {
+      color: #5BA8F5;
+    }
+    .chapter-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #ddd;
+      flex: 1;
+    }
+    .chapter-desc {
+      font-size: 13px;
+      color: #555;
+    }
+    @media (max-width: 600px) {
+      .chapter-desc { display: none; }
+    }
+
+    /* Start Button */
+    .start-section {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .start-hint {
+      font-size: 13px;
+      color: #555;
+    }
+    .btn-start {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: #5BA8F5;
+      color: white;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .btn-start:hover {
+      background: #2271C1;
+      text-decoration: none;
+    }
+    .btn-start svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Footer */
+    .toc-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid #1a1a1a;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #444;
+    }
+    .toc-footer a {
+      color: #666;
+      text-decoration: none;
+    }
+    .toc-footer a:hover {
+      color: #888;
+    }
   </style>
 </head>
 <body>
-  <main class="page">
+  <main class="toc-page">
 
-    <header>
-      <a href="../../studio/index.html" class="logo">
-        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
-      </a>
-      <h1>Tutorials</h1>
+    <!-- Header -->
+    <header class="toc-header">
+      <div class="toc-logo">
+        <img src="/docs/tutorial/logo-mirror-tutorial.png" alt="Mirror">
+      </div>
+      <h1>Tutorial</h1>
+      <p>Lerne Mirror in 15 Kapiteln – von den Grundlagen bis zu interaktiven Komponenten. Jedes Kapitel enthält Beispiele zum Ausprobieren.</p>
     </header>
 
-    <a href="00-intro.html" class="intro-card">
-      <div class="intro-icon">💡</div>
-      <div class="intro-content">
-        <div class="intro-title">Was ist Mirror?</div>
-        <div class="intro-desc">Die Sprache für AI-unterstütztes UI-Design</div>
-      </div>
-      <span class="intro-arrow">→</span>
-    </a>
+    <!-- Quick Example -->
+    <div class="quick-example">
+      <div class="quick-example-label">So sieht Mirror aus</div>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Card: bg #1a1a1a, pad 16, rad 8, gap 8
+  Title: col white, fs 15, weight 500
+  Desc: col #666, fs 13
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- DIE SPRACHE -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <div class="main-group">
-      <div class="main-group-header">
-        <div class="main-group-icon language">📐</div>
-        <div>
-          <div class="main-group-title">Die Sprache</div>
-          <div class="main-group-desc">Syntax, Konzepte und Patterns der Mirror DSL</div>
+Card
+  Title "Lesbar wie ein Dokument"
+  Desc "Komponenten definieren, dann verwenden."</textarea>
         </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Grundlagen</div>
-        <div class="grid">
-          <a href="01-elemente.html" class="card">
-            <span class="card-num">01</span>
-            <div class="card-content">
-              <div class="card-title">Elemente</div>
-              <div class="card-desc">Frame, Text, Button und Properties</div>
-            </div>
-          </a>
-          <a href="02-komponenten.html" class="card">
-            <span class="card-num">02</span>
-            <div class="card-content">
-              <div class="card-title">Komponenten</div>
-              <div class="card-desc">Wiederverwendbare UI-Bausteine</div>
-            </div>
-          </a>
-          <a href="03-tokens.html" class="card">
-            <span class="card-num">03</span>
-            <div class="card-content">
-              <div class="card-title">Tokens</div>
-              <div class="card-desc">Vererbung und Design-Variablen</div>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Layout & Styling</div>
-        <div class="grid">
-          <a href="04-layout.html" class="card">
-            <span class="card-num">04</span>
-            <div class="card-content">
-              <div class="card-title">Layout</div>
-              <div class="card-desc">Flex, Grid und Positionierung</div>
-            </div>
-          </a>
-          <a href="05-styling.html" class="card">
-            <span class="card-num">05</span>
-            <div class="card-content">
-              <div class="card-title">Styling</div>
-              <div class="card-desc">Farben, Schriften und Effekte</div>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Interaktion</div>
-        <div class="grid">
-          <a href="06-states.html" class="card">
-            <span class="card-num">06</span>
-            <div class="card-content">
-              <div class="card-title">States</div>
-              <div class="card-desc">Hover, Toggle und Custom States</div>
-            </div>
-          </a>
-          <a href="07-animationen.html" class="card">
-            <span class="card-num">07</span>
-            <div class="card-content">
-              <div class="card-title">Animationen</div>
-              <div class="card-desc">Transitions, Presets und Timing</div>
-            </div>
-          </a>
-          <a href="08-functions.html" class="card">
-            <span class="card-num">08</span>
-            <div class="card-content">
-              <div class="card-title">Functions</div>
-              <div class="card-desc">Eingebaute und eigene Funktionen</div>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Daten & Struktur</div>
-        <div class="grid">
-          <a href="09-daten.html" class="card">
-            <span class="card-num">09</span>
-            <div class="card-content">
-              <div class="card-title">Daten</div>
-              <div class="card-desc">Variablen, Binding, Bedingungen</div>
-            </div>
-          </a>
-          <a href="10-seiten.html" class="card">
-            <span class="card-num">10</span>
-            <div class="card-content">
-              <div class="card-title">Seiten</div>
-              <div class="card-desc">Multi-File Apps und use</div>
-            </div>
-          </a>
-        </div>
+        <div class="playground-preview"></div>
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- KOMPONENTEN-BIBLIOTHEK -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <div class="main-group">
-      <div class="main-group-header">
-        <div class="main-group-icon components">🧩</div>
-        <div>
-          <div class="main-group-title">Komponenten-Bibliothek</div>
-          <div class="main-group-desc">Interaktive UI-Bausteine mit Zag.js</div>
+    <!-- Die Sprache -->
+    <section class="chapter-group">
+      <div class="chapter-group-header">
+        <div class="chapter-group-icon lang">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         </div>
+        <span class="chapter-group-title">Die Sprache</span>
+        <span class="chapter-group-range">00–10</span>
       </div>
+      <div class="chapter-list">
+        <a href="00-intro.html" class="chapter-item">
+          <span class="chapter-num">00</span>
+          <span class="chapter-title">Intro</span>
+          <span class="chapter-desc">Was ist Mirror?</span>
+        </a>
+        <a href="01-elemente.html" class="chapter-item">
+          <span class="chapter-num">01</span>
+          <span class="chapter-title">Elemente & Hierarchie</span>
+          <span class="chapter-desc">Frame, Text, Button, Einrückung</span>
+        </a>
+        <a href="02-komponenten.html" class="chapter-item">
+          <span class="chapter-num">02</span>
+          <span class="chapter-title">Komponenten</span>
+          <span class="chapter-desc">Wiederverwendbare Bausteine</span>
+        </a>
+        <a href="03-tokens.html" class="chapter-item">
+          <span class="chapter-num">03</span>
+          <span class="chapter-title">Design Tokens</span>
+          <span class="chapter-desc">Farben, Abstände zentral definieren</span>
+        </a>
+        <a href="04-layout.html" class="chapter-item">
+          <span class="chapter-num">04</span>
+          <span class="chapter-title">Layout</span>
+          <span class="chapter-desc">Flex, Grid, Stacked</span>
+        </a>
+        <a href="05-styling.html" class="chapter-item">
+          <span class="chapter-num">05</span>
+          <span class="chapter-title">Styling</span>
+          <span class="chapter-desc">Farben, Typografie, Effekte</span>
+        </a>
+        <a href="06-states.html" class="chapter-item">
+          <span class="chapter-num">06</span>
+          <span class="chapter-title">States</span>
+          <span class="chapter-desc">Hover, Toggle, Exclusive</span>
+        </a>
+        <a href="07-animationen.html" class="chapter-item">
+          <span class="chapter-num">07</span>
+          <span class="chapter-title">Animationen</span>
+          <span class="chapter-desc">Transitions und Presets</span>
+        </a>
+        <a href="08-functions.html" class="chapter-item">
+          <span class="chapter-num">08</span>
+          <span class="chapter-title">Functions</span>
+          <span class="chapter-desc">Eingebaute und eigene</span>
+        </a>
+        <a href="09-daten.html" class="chapter-item">
+          <span class="chapter-num">09</span>
+          <span class="chapter-title">Daten</span>
+          <span class="chapter-desc">Variablen, Listen, Conditionals</span>
+        </a>
+        <a href="10-seiten.html" class="chapter-item">
+          <span class="chapter-num">10</span>
+          <span class="chapter-title">Seiten & Navigation</span>
+          <span class="chapter-desc">show, use, Multi-Page Apps</span>
+        </a>
+      </div>
+    </section>
 
-      <div class="section">
-        <div class="grid">
-          <a href="11-eingabe.html" class="card">
-            <span class="card-num">11</span>
-            <div class="card-content">
-              <div class="card-title">Eingabe</div>
-              <div class="card-desc">Checkbox, Switch, Slider, Select, DatePicker</div>
-            </div>
-          </a>
-          <a href="12-navigation.html" class="card">
-            <span class="card-num">12</span>
-            <div class="card-content">
-              <div class="card-title">Navigation</div>
-              <div class="card-desc">Tabs, SideNav</div>
-            </div>
-          </a>
-          <a href="13-overlays.html" class="card">
-            <span class="card-num">13</span>
-            <div class="card-content">
-              <div class="card-title">Overlays</div>
-              <div class="card-desc">Dialog</div>
-            </div>
-          </a>
-          <a href="14-tabellen.html" class="card">
-            <span class="card-num">14</span>
-            <div class="card-content">
-              <div class="card-title">Tabellen</div>
-              <div class="card-desc">Statische und datengebundene Tabellen</div>
-            </div>
-          </a>
+    <!-- Komponenten-Bibliothek -->
+    <section class="chapter-group">
+      <div class="chapter-group-header">
+        <div class="chapter-group-icon comp">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         </div>
+        <span class="chapter-group-title">Komponenten-Bibliothek</span>
+        <span class="chapter-group-range">11–14</span>
       </div>
+      <div class="chapter-list">
+        <a href="11-eingabe.html" class="chapter-item">
+          <span class="chapter-num">11</span>
+          <span class="chapter-title">Eingabe</span>
+          <span class="chapter-desc">Input, Checkbox, Select, DatePicker</span>
+        </a>
+        <a href="12-navigation.html" class="chapter-item">
+          <span class="chapter-num">12</span>
+          <span class="chapter-title">Navigation</span>
+          <span class="chapter-desc">Tabs und SideNav</span>
+        </a>
+        <a href="13-overlays.html" class="chapter-item">
+          <span class="chapter-num">13</span>
+          <span class="chapter-title">Overlays</span>
+          <span class="chapter-desc">Dialog und Tooltip</span>
+        </a>
+        <a href="14-tabellen.html" class="chapter-item">
+          <span class="chapter-num">14</span>
+          <span class="chapter-title">Tabellen</span>
+          <span class="chapter-desc">Statisch und datengebunden</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Start -->
+    <div class="start-section">
+      <span class="start-hint">Bereit?</span>
+      <a href="00-intro.html" class="btn-start">
+        Tutorial starten
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
     </div>
 
-    <footer>
-      <a href="../../studio/index.html">Studio öffnen</a>
+    <!-- Footer -->
+    <footer class="toc-footer">
+      <a href="../../studio/index.html">→ Mirror Studio öffnen</a>
       <span>15 Kapitel</span>
     </footer>
 
   </main>
+
+  <script src="/docs/tutorial/tutorial.js"></script>
 </body>
 </html>

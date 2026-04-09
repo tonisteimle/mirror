@@ -110,7 +110,7 @@ export function validateReactCode(code: string): ValidationResult {
               rule: 'tokens-format',
               message: 'tokens sollte ein Objekt-Literal sein.',
               line: path.node.loc?.start.line,
-              suggestion: 'const tokens = { \'$primary\': \'#3B82F6\', ... }',
+              suggestion: 'const tokens = { \'$primary\': \'#5BA8F5\', ... }',
               severity: 'warning'
             })
           }
@@ -250,7 +250,7 @@ export function validateReactCode(code: string): ValidationResult {
       errors.push({
         rule: 'tokens-required',
         message: 'Ein "const tokens = { ... }" Block mit Farbdefinitionen fehlt.',
-        suggestion: 'Füge hinzu: const tokens = { \'$primary\': \'#3B82F6\', \'$bg.app\': \'#09090B\', ... }',
+        suggestion: 'Füge hinzu: const tokens = { \'$primary\': \'#5BA8F5\', \'$bg.app\': \'#09090B\', ... }',
         severity: 'error'
       })
     }
@@ -323,7 +323,7 @@ export const REACT_GUIDELINES = `
 
 ### Required Structure:
 1. Import React: \`import React, { useState } from 'react'\`
-2. Define tokens: \`const tokens = { '$primary': '#3B82F6', '$bg.app': '#09090B', ... }\`
+2. Define tokens: \`const tokens = { '$primary': '#5BA8F5', '$bg.app': '#09090B', ... }\`
 3. Define components as arrow functions with destructured props
 4. Export App component: \`export default function App() { ... }\`
 
@@ -344,7 +344,7 @@ const InteractiveComponent = ({ children, style, isSelected, ...props }) => {
   const dynamicStyle = {
     /* base styles */,
     ...(isHovered ? { backgroundColor: '#333' } : {}),
-    ...(isSelected ? { backgroundColor: '#3B82F6' } : {}),
+    ...(isSelected ? { backgroundColor: '#5BA8F5' } : {}),
     ...style
   }
 

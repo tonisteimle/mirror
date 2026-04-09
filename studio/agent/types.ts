@@ -292,7 +292,7 @@ export interface FixerResponse {
 /** Extracted token/component info for quick lookup */
 export interface ProjectContext {
   tokenNames: string[]                  // ['$primary', '$surface', ...]
-  tokenValues: Record<string, string>   // { '$primary': '#3b82f6', ... }
+  tokenValues: Record<string, string>   // { '$primary': '#5BA8F5', ... }
   componentNames: string[]              // ['Card', 'PrimaryButton', ...]
   componentDefinitions: Record<string, string>  // { 'Card': 'Card as Box:\n  ...' }
 }

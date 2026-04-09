@@ -409,7 +409,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplate> = {
     category: 'feedback',
     code: `Progress value 50, min 0, max 100
   ProgressTrack h 8, bg #e0e0e0, rad 4
-    ProgressRange bg #3b82f6, rad 4`,
+    ProgressRange bg #5BA8F5, rad 4`,
   },
 
   CircularProgress: {

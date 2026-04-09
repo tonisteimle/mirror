@@ -117,7 +117,7 @@ export class ResizeManager {
         width: '8px',
         height: '8px',
         background: 'white',
-        border: '2px solid #3B82F6',
+        border: '2px solid #5BA8F5',
         borderRadius: '50%',
         cursor: this.getCursor(pos),
         pointerEvents: 'auto',

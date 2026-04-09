@@ -291,9 +291,9 @@ App = Box w full, h full, pos
 App = Box w full, h full, pos
   Canvas = Box x 200, y 50, w 400, h 500, pos, bg #f5f5f5
   Sidebar = Box x 20, y 50, w 150, h 300, ver, gap 8
-    NavItem1 = Box w full, h 40, bg #3b82f6
-    NavItem2 = Box w full, h 40, bg #3b82f6
-    NavItem3 = Box w full, h 40, bg #3b82f6
+    NavItem1 = Box w full, h 40, bg #5BA8F5
+    NavItem2 = Box w full, h 40, bg #5BA8F5
+    NavItem3 = Box w full, h 40, bg #5BA8F5
 `)
 
       const sidebar = env.getContainer('Sidebar')!
@@ -390,9 +390,9 @@ describe('Verschachtelte Container verschieben', () => {
 App = Box w full, h full, pos
   LeftPanel = Box x 20, y 20, w 200, h 400, pos, bg #f0f0f0
     NavList = Box x 10, y 10, w 180, h 200, ver, gap 4
-      Nav1 = Box w full, h 30, bg #3b82f6
-      Nav2 = Box w full, h 30, bg #3b82f6
-      Nav3 = Box w full, h 30, bg #3b82f6
+      Nav1 = Box w full, h 30, bg #5BA8F5
+      Nav2 = Box w full, h 30, bg #5BA8F5
+      Nav3 = Box w full, h 30, bg #5BA8F5
   RightPanel = Box x 250, y 20, w 300, h 400, pos, bg #e0e0e0
 `)
 

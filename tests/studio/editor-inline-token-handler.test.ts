@@ -14,12 +14,12 @@ describe('extractInlineToken', () => {
   })
 
   it('extracts token with hex color value', () => {
-    const result = extractInlineToken('Button bg $primary: #3B82F6')
+    const result = extractInlineToken('Button bg $primary: #5BA8F5')
     expect(result).toEqual({
       tokenName: 'primary',
-      tokenValue: '#3B82F6',
+      tokenValue: '#5BA8F5',
       propertyName: 'bg',
-      fullMatch: '$primary: #3B82F6',
+      fullMatch: '$primary: #5BA8F5',
       replacement: '$primary',
     })
   })

@@ -66,9 +66,9 @@ export function getTokenTypesForProperty(property: string): TokenType[] {
 /**
  * Parse token definitions from source code
  * Supports multiple formats:
- * - $name.property: value (e.g., $accent.bg: #3B82F6)
- * - $name: value (e.g., $primary: #3B82F6)
- * - name: value (e.g., primary: #3B82F6 - without $)
+ * - $name.property: value (e.g., $accent.bg: #5BA8F5)
+ * - $name: value (e.g., $primary: #5BA8F5)
+ * - name: value (e.g., primary: #5BA8F5 - without $)
  */
 export function parseTokens(source: string): TokenDefinition[] {
   const tokens: TokenDefinition[] = []

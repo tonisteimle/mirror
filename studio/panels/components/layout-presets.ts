@@ -185,7 +185,7 @@ export const FORM_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 200, height: 24 },
     children: [
       { template: 'Track', isSlot: true, properties: 'h 4, bg #333, rad 2' },
-      { template: 'Range', isSlot: true, properties: 'bg #3b82f6' },
+      { template: 'Range', isSlot: true, properties: 'bg #5BA8F5' },
       { template: 'Thumb', isSlot: true, properties: 'w 16, h 16, rad 8, bg #fff' },
     ],
   },
@@ -247,7 +247,7 @@ export const OVERLAY_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 400, height: 300 },
     children: [
       { template: 'Trigger', isSlot: true, children: [
-        { template: 'Button', properties: 'pad 12 24, bg #3b82f6, col #fff, rad 6', textContent: 'Open' },
+        { template: 'Button', properties: 'pad 12 24, bg #5BA8F5, col #fff, rad 6', textContent: 'Open' },
       ]},
       { template: 'Backdrop', isSlot: true, properties: 'bg #00000080' },
       { template: 'Content', isSlot: true, properties: 'w 400, bg #1e1e2e, rad 12, pad 24, shadow lg' },

@@ -44,13 +44,13 @@ export const THEME_TOKENS: Record<string, ThemeTokenDefinition> = {
   'accent.bg': {
     cssVar: 'accent-bg',
     description: 'Primary accent background',
-    defaultValue: '#3b82f6',
+    defaultValue: '#5BA8F5',
     category: 'color',
   },
   'accent-hover.bg': {
     cssVar: 'accent-hover-bg',
     description: 'Accent color on hover',
-    defaultValue: '#2563eb',
+    defaultValue: '#2271C1',
     category: 'color',
     derivedFrom: { token: 'accent.bg', transform: 'darken', amount: 10 },
   },
@@ -194,7 +194,7 @@ export const THEME_TOKENS: Record<string, ThemeTokenDefinition> = {
   'focus.boc': {
     cssVar: 'focus-boc',
     description: 'Focus ring/border color',
-    defaultValue: '#3b82f6',
+    defaultValue: '#5BA8F5',
     category: 'color',
   },
 

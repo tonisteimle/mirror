@@ -534,7 +534,7 @@ export function showColorPickerForProperty(
   // Create new picker
   globalColorPicker = new ColorPicker(
     {
-      initialColor: currentValue || '#3b82f6',
+      initialColor: currentValue || '#5BA8F5',
       showCustomTab: true,
       showRecentColors: true,
     },

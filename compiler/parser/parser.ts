@@ -109,7 +109,7 @@ export class Parser {
       }
 
       // Token definition: name: value (simplified syntax)
-      // e.g., primary: #3B82F6 or spacing: 16 or font: "Inter"
+      // e.g., primary: #5BA8F5 or spacing: 16 or font: "Inter"
       // Also handles legacy: $name: value (without .)
       // Note: Excludes names with . which are handled by other rules
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
@@ -121,7 +121,7 @@ export class Parser {
       }
 
       // Token definition with suffix (single token): name.suffix: value
-      // e.g., primary.bg: #2563eb or card.rad: 12 or btn.col: white
+      // e.g., primary.bg: #2271C1 or card.rad: 12 or btn.col: white
       // The lexer combines name.suffix into one IDENTIFIER token
       // Note: No $ prefix at definition - $ is only used when referencing
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
@@ -159,7 +159,7 @@ export class Parser {
       }
 
       // Legacy token definition with $ prefix (still supported for backwards compatibility)
-      // e.g., $primary.bg: #2563eb
+      // e.g., $primary.bg: #2271C1
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
           this.peekAt(0)?.value.startsWith('$') &&
           this.peekAt(0)?.value.includes('.') &&
@@ -201,7 +201,7 @@ export class Parser {
       //
       // Note: No $ prefix at definition - $ is only used when referencing
       // Important: Names with . are regular tokens, not data objects or property sets
-      // e.g., $primary.bg: #2563eb is a token, not a data object
+      // e.g., $primary.bg: #2271C1 is a token, not a data object
       if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
         const name = this.peekAt(0)?.value
         // Strip $ prefix for checking - the name after $ must not contain .
@@ -369,8 +369,8 @@ export class Parser {
   }
 
   // Token with suffix (single token from lexer): name.suffix: value
-  // e.g., primary.bg: #2563eb or card.rad: 12 or btn.col: white
-  // Also supports legacy syntax: $primary.bg: #2563eb
+  // e.g., primary.bg: #2271C1 or card.rad: 12 or btn.col: white
+  // Also supports legacy syntax: $primary.bg: #2271C1
   // The name is stored WITHOUT $ - $ is only used when referencing
   private parseTokenWithSuffixSingleToken(section?: string): TokenDefinition | null {
     const nameToken = this.advance() // primary.bg or $primary.bg (single token)
@@ -407,7 +407,7 @@ export class Parser {
   }
 
   // Token with suffix (legacy: separate tokens): name.suffix: value
-  // e.g., primary.bg: #2563eb or $primary.bg: #2563eb
+  // e.g., primary.bg: #2271C1 or $primary.bg: #2271C1
   private parseTokenWithSuffix(section?: string): TokenDefinition | null {
     const baseName = this.advance() // primary or $primary
     this.advance() // .

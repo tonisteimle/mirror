@@ -44,7 +44,7 @@ export const COMPONENT_DEFINITIONS: Record<string, string> = {
   // Slider - Track, Range, Thumb
   Slider: `Slider:
   Track: h 6, bg #27272a, rad 3
-  Range: bg #3b82f6
+  Range: bg #5BA8F5
   Thumb: w 16, h 16, bg #e4e4e7, rad 8`,
 
   // RadioGroup - Item and Control
@@ -55,7 +55,7 @@ export const COMPONENT_DEFINITIONS: Record<string, string> = {
 
   // Dialog - Trigger, Backdrop, Content
   Dialog: `Dialog:
-  Trigger: pad 8 16, bg #3b82f6, col white, rad 6
+  Trigger: pad 8 16, bg #5BA8F5, col white, rad 6
   Backdrop: bg rgba(0,0,0,0.6)
   Content: bg #27272a, rad 12, pad 24, w 400, shadow lg
   Title: fs 20, weight bold, col #e4e4e7
@@ -186,7 +186,7 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplates> = {
   },
   'layout-stack': {
     mir: `Frame stacked, w 200, h 150
-  Frame w full, h full, bg #3b82f6, rad 8
+  Frame w full, h full, bg #5BA8F5, rad 8
   Frame w 150, h 100, bg #27272a, rad 8, center
     Text "Overlay"`,
     com: `Frame stacked, w 300, h 200
@@ -282,14 +282,14 @@ PageLayout: ver, w full, h 400
   'form-button': {
     mir: 'Button "Click"',
     com: `Button "Click"
-  pad 12 24, bg #3b82f6, col white, rad 6
-  hover bg #2563eb`,
+  pad 12 24, bg #5BA8F5, col white, rad 6
+  hover bg #2271C1`,
   },
   'form-input': {
     mir: 'Input placeholder "Enter..."',
     com: `Input placeholder "Enter..."
   pad 12, bg #27272a, bor 1 #3f3f46, rad 6, col white
-  focus bor 1 #3b82f6`,
+  focus bor 1 #5BA8F5`,
   },
 
   // ============================================================================
@@ -357,7 +357,7 @@ PageLayout: ver, w full, h 400
       Text "Main content goes here"
     Frame hor, gap 8, spread
       CloseTrigger: Button "Cancel", bg transparent, bor 1 #3f3f46
-      Button "Confirm", bg #3b82f6`,
+      Button "Confirm", bg #5BA8F5`,
   },
 
   // ============================================================================

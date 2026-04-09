@@ -49,7 +49,7 @@ describe('Fixer Integration Tests', () => {
       harness = createFixerTestHarness({
         files: {
           'app.mir': 'Button "Click"',
-          'tokens.tok': '$primary: #3b82f6'
+          'tokens.tok': '$primary: #5BA8F5'
         },
         currentFile: 'tokens.tok'
       })
@@ -57,7 +57,7 @@ describe('Fixer Integration Tests', () => {
       expect(harness.getCurrentFile()).toBe('tokens.tok')
       expect(harness.getFiles()).toEqual({
         'app.mir': 'Button "Click"',
-        'tokens.tok': '$primary: #3b82f6'
+        'tokens.tok': '$primary: #5BA8F5'
       })
     })
 
@@ -148,7 +148,7 @@ describe('Fixer Integration Tests', () => {
 
     test('should handle append action', async () => {
       harness = createFixerTestHarness({
-        files: { 'tokens.tok': 'primary.bg: #3b82f6' },
+        files: { 'tokens.tok': 'primary.bg: #5BA8F5' },
         useMockCli: true,
         mockResponse: createMockFixerResponse([
           { file: 'tokens.tok', action: 'append', code: 'secondary.bg: #22c55e' }
@@ -231,7 +231,7 @@ describe('Fixer Integration Tests', () => {
         },
         useMockCli: true,
         mockResponse: createMockFixerResponse([
-          { file: 'tokens.tok', action: 'replace', code: '$primary: #3b82f6' },
+          { file: 'tokens.tok', action: 'replace', code: '$primary: #5BA8F5' },
           { file: 'app.mir', action: 'replace', code: 'Button bg $primary' }
         ])
       })
@@ -241,7 +241,7 @@ describe('Fixer Integration Tests', () => {
       expect(result.success).toBe(true)
       expect(result.filesChanged).toContain('app.mir')
       expect(result.filesChanged).toContain('tokens.tok')
-      expect(harness.getFileContent('tokens.tok')).toContain('#3b82f6')
+      expect(harness.getFileContent('tokens.tok')).toContain('#5BA8F5')
       expect(harness.getFileContent('app.mir')).toContain('$primary')
     })
 

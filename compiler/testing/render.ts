@@ -23,7 +23,7 @@ import type { IR } from '../ir/types'
  *
  * @example
  * ```typescript
- * const ctx = renderMirror('Frame hor, gap 12, bg #2563eb')
+ * const ctx = renderMirror('Frame hor, gap 12, bg #2271C1')
  * // ... validate styles ...
  * ctx.cleanup()
  * ```

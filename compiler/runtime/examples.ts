@@ -38,20 +38,20 @@ export const card = M('Box', { bg: '#1a1a23', pad: 16, rad: 8 }, [
 /**
  * MIRROR:
  * ```
- * Button "Click me", pad 12, bg #3B82F6, col white, rad 6, cursor pointer
- *   state hover bg #2563EB
+ * Button "Click me", pad 12, bg #5BA8F5, col white, rad 6, cursor pointer
+ *   state hover bg #2271C1
  * ```
  *
  * JAVASCRIPT:
  */
 export const button = M('Button', 'Click me', {
   pad: 12,
-  bg: '#3B82F6',
+  bg: '#5BA8F5',
   col: 'white',
   rad: 6,
   cursor: 'pointer',
   states: {
-    hover: { bg: '#2563EB' }
+    hover: { bg: '#2271C1' }
   }
 })
 
@@ -229,7 +229,7 @@ export const navigation = M('Box', { hor: true, w: 'full', h: 'full' }, [
  *     state invalid bor 1 #EF4444
  *     state valid bor 1 #22C55E
  *   Input named Password, type password, placeholder "Password"
- *   Button "Submit", bg #3B82F6, col white, pad 12
+ *   Button "Submit", bg #5BA8F5, col white, pad 12
  *     onclick call submitForm
  * ```
  *
@@ -250,7 +250,7 @@ export const form = M('Box', { ver: true, gap: 16 }, [
     placeholder: 'Password'
   }),
   M('Button', 'Submit', {
-    bg: '#3B82F6',
+    bg: '#5BA8F5',
     col: 'white',
     pad: 12,
     onclick: 'call submitForm'

@@ -181,7 +181,7 @@ export const IDE_THEME = {
   // Colors (inherit from studio theme)
   '--ui-bg': 'var(--bg-secondary, #1c1c22)',
   '--ui-bg-hover': 'var(--bg-tertiary, #25252d)',
-  '--ui-bg-selected': 'var(--accent, #3b82f6)',
+  '--ui-bg-selected': 'var(--accent, #5BA8F5)',
   '--ui-text': 'var(--text-primary, #e4e4e7)',
   '--ui-text-muted': 'var(--text-secondary, #71717a)',
   '--ui-border': 'var(--border, #2e2e38)',

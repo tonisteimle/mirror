@@ -262,7 +262,7 @@ describe('FileTreeView File Icons', () => {
   it('should show correct icon color for .mir files', () => {
     const mirFile = container.querySelector('[data-path="index.mir"] .file-icon') as HTMLElement
     expect(mirFile).not.toBeNull()
-    expect(mirFile.style.color).toBe('rgb(59, 130, 246)') // #3B82F6
+    expect(mirFile.style.color).toBe('rgb(91, 168, 245)') // #5BA8F5
   })
 
   it('should show correct icon color for .tok files', () => {

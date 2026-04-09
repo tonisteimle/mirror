@@ -44,7 +44,7 @@ function createMockFilesAccess(files: Record<string, string>, currentFile: strin
 
 describe('CodeModifier.extractToComponentFile', () => {
   it('extracts inline properties to component definition', () => {
-    const source = 'Button pad 12, bg #3B82F6, "Click me"'
+    const source = 'Button pad 12, bg #5BA8F5, "Click me"'
     const sourceMap = createTestSourceMap({
       nodes: [
         { id: 'node-1', componentName: 'Button', line: 1, endLine: 1 },
@@ -59,7 +59,7 @@ describe('CodeModifier.extractToComponentFile', () => {
 
     expect(result.success).toBe(true)
     expect(result.componentFileChange.path).toBe('components.mirror')
-    expect(result.componentFileChange.content).toContain('Button: pad 12, bg #3B82F6')
+    expect(result.componentFileChange.content).toContain('Button: pad 12, bg #5BA8F5')
     expect(result.importAdded).toBe(true)
 
     // The change should include both the import and the simplified instance
@@ -68,7 +68,7 @@ describe('CodeModifier.extractToComponentFile', () => {
   })
 
   it('preserves named instances', () => {
-    const source = 'Button named SaveBtn pad 12, bg #3B82F6, "Save"'
+    const source = 'Button named SaveBtn pad 12, bg #5BA8F5, "Save"'
     const sourceMap = createTestSourceMap({
       nodes: [
         { id: 'node-1', componentName: 'Button', line: 1, endLine: 1 },
@@ -115,14 +115,14 @@ describe('CodeModifier.extractToComponentFile', () => {
     const codeModifier = new CodeModifier(source, sourceMap)
 
     const files: Record<string, string> = {
-      'components.mirror': 'Button: pad 12, bg #3B82F6\n'
+      'components.mirror': 'Button: pad 12, bg #5BA8F5\n'
     }
     const filesAccess = createMockFilesAccess(files, 'index.mirror')
 
     const result = codeModifier.extractToComponentFile('node-1', filesAccess)
 
     expect(result.success).toBe(true)
-    expect(result.componentFileChange.content).toContain('Button: pad 12, bg #3B82F6')
+    expect(result.componentFileChange.content).toContain('Button: pad 12, bg #5BA8F5')
     expect(result.componentFileChange.content).toContain('Card: pad 16, bg #333')
   })
 

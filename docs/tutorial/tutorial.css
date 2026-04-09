@@ -9,7 +9,8 @@
   --text-bright: #eee;
   --text-dim: #666;
   --border: #282828;
-  --accent: #4a9eff;
+  --accent: #5BA8F5;
+  --accent-dark: #2271C1;
   --font: 'Inter', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
 
@@ -239,19 +240,19 @@ a:hover { text-decoration: underline; }
 /* Note/Callout Box */
 .note {
   background: #1a2332;
-  border-left: 3px solid #2563eb;
+  border-left: 3px solid var(--accent);
   padding: 12px 16px;
   margin: 16px 0;
   border-radius: 0 6px 6px 0;
   font-size: 14px;
-  color: #8ab4f8;
+  color: var(--accent);
 }
 
 /* Key Badge */
 .key {
   display: inline-block;
-  background: #2563eb22;
-  border: 1px solid #2563eb44;
+  background: #5BA8F522;
+  border: 1px solid #5BA8F544;
   color: var(--accent);
   padding: 2px 8px;
   border-radius: 4px;
@@ -391,8 +392,8 @@ details pre {
   padding-right: 24px;
 }
 .ref-table td:first-child code {
-  background: #2563eb22;
-  border: 1px solid #2563eb44;
+  background: #5BA8F522;
+  border: 1px solid #5BA8F544;
   color: var(--accent);
   padding: 2px 8px;
   border-radius: 4px;

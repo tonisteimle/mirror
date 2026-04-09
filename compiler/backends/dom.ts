@@ -133,7 +133,7 @@ class DOMGenerator {
   /**
    * Resolve a token value, following token-to-token references.
    * Uses the context (suffix) from the target token name to find the right source token.
-   * E.g., $primary.bg: $blue → looks for $blue.bg and resolves to #2563eb
+   * E.g., $primary.bg: $blue → looks for $blue.bg and resolves to #2271C1
    *
    * @param value The token value to resolve
    * @param targetName The name of the token being defined (for suffix context)
@@ -605,7 +605,7 @@ class DOMGenerator {
       for (const token of customTokens) {
         // Skip tokens without value (data objects)
         if (token.value === undefined) continue
-        // Resolve token-to-token references (e.g., $primary.bg: $blue → #2563eb)
+        // Resolve token-to-token references (e.g., $primary.bg: $blue → #2271C1)
         let value = this.resolveTokenValueWithContext(token.value, token.name)
         // Strip $ prefix and convert dots to hyphens for valid CSS variable name
         const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name)
@@ -959,6 +959,59 @@ class DOMGenerator {
       this.emit(`${varName}_label.className = 'mirror-slot-label'`)
       this.emit(`${varName}_label.textContent = "${this.escapeString(slotLabel)}"`)
       this.emit(`${varName}.appendChild(${varName}_label)`)
+    }
+
+    // Handle Chart primitive - create Chart.js chart
+    const isChart = node.primitive === 'chart'
+    if (isChart) {
+      this.emit(`// Chart initialization`)
+      this.emit(`${varName}.dataset.mirrorChart = 'true'`)
+
+      // Extract chart config from properties
+      const chartType = node.properties.find(p => p.name === 'chartType')?.value || 'line'
+      const dataBinding = node.properties.find(p => p.name === 'data')?.value
+      const xField = node.properties.find(p => p.name === 'xField')?.value
+      const yField = node.properties.find(p => p.name === 'yField')?.value
+      const colors = node.properties.find(p => p.name === 'colors')?.value
+      const title = node.properties.find(p => p.name === 'title')?.value
+      const legend = node.properties.find(p => p.name === 'legend')?.value
+      const stacked = node.properties.find(p => p.name === 'stacked')?.value
+      const fill = node.properties.find(p => p.name === 'fill')?.value
+      const tension = node.properties.find(p => p.name === 'tension')?.value
+      const grid = node.properties.find(p => p.name === 'grid')?.value
+      const axes = node.properties.find(p => p.name === 'axes')?.value
+
+      // Build chart config object
+      this.emit(`const ${varName}_config = {`)
+      this.indent++
+      this.emit(`type: '${chartType}',`)
+
+      // Resolve data - either from $variable or inline
+      if (dataBinding && String(dataBinding).startsWith('$')) {
+        const dataPath = String(dataBinding).slice(1) // Remove $
+        this.emit(`data: $get('${dataPath}'),`)
+      } else if (dataBinding) {
+        this.emit(`data: ${JSON.stringify(dataBinding)},`)
+      } else {
+        this.emit(`data: [],`)
+      }
+
+      if (xField) this.emit(`xField: '${xField}',`)
+      if (yField) this.emit(`yField: '${yField}',`)
+      if (colors) this.emit(`colors: ${JSON.stringify(String(colors).split(','))},`)
+      if (title) this.emit(`title: '${this.escapeString(String(title))}',`)
+      if (legend !== undefined) this.emit(`legend: ${legend},`)
+      if (stacked !== undefined) this.emit(`stacked: ${stacked},`)
+      if (fill !== undefined) this.emit(`fill: ${fill},`)
+      if (tension !== undefined) this.emit(`tension: ${tension},`)
+      if (grid !== undefined) this.emit(`grid: ${grid},`)
+      if (axes !== undefined) this.emit(`axes: ${axes},`)
+
+      this.indent--
+      this.emit(`}`)
+
+      // Call runtime to create the chart
+      this.emit(`_runtime.createChart(${varName}, ${varName}_config)`)
     }
 
     // Apply base styles

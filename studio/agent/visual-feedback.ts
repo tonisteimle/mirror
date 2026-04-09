@@ -76,7 +76,7 @@ export class VisualFeedbackManager {
 
   highlight(selector: string, options: HighlightOptions = {}): void {
     const {
-      color = '#3B82F6',
+      color = '#5BA8F5',
       style = 'outline',
       duration = 2000,
       label
@@ -284,7 +284,7 @@ export class VisualFeedbackManager {
 
     const colors = {
       add: '#22C55E',
-      modify: '#3B82F6',
+      modify: '#5BA8F5',
       delete: '#EF4444'
     }
 
@@ -312,7 +312,7 @@ export class VisualFeedbackManager {
 
     if (selector) {
       this.highlight(selector, {
-        color: '#3B82F6',
+        color: '#5BA8F5',
         style: 'pulse',
         duration: 0 // Keep until tool ends
       })

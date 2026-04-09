@@ -64,7 +64,7 @@ describe('getFileType', () => {
   })
 
   it('should return correct colors', () => {
-    expect(getFileType('index.mir').color).toBe('#3B82F6')
+    expect(getFileType('index.mir').color).toBe('#5BA8F5')
     expect(getFileType('theme.tok').color).toBe('#F59E0B')
     expect(getFileType('button.com').color).toBe('#8B5CF6')
   })
@@ -447,7 +447,7 @@ describe('generateDefaultContent', () => {
   it('should generate token content for .tok', () => {
     const content = generateDefaultContent('theme.tok')
     expect(content).toContain('// theme.tok')
-    // New syntax: token definitions without $ (e.g., primary.bg: #3b82f6)
+    // New syntax: token definitions without $ (e.g., primary.bg: #5BA8F5)
     expect(content).toMatch(/\w+\.\w+:/)
   })
 

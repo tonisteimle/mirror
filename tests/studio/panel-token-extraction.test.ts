@@ -23,7 +23,7 @@ interface SpacingToken {
 
 interface ColorToken {
   name: string      // e.g., "accent.bg", "text.col"
-  value: string     // e.g., "#3B82F6"
+  value: string     // e.g., "#5BA8F5"
 }
 
 /**
@@ -164,7 +164,7 @@ $m.gap: 8
 
   it('ignores non-matching tokens', () => {
     const source = `
-$accent.bg: #3B82F6
+$accent.bg: #5BA8F5
 $s.pad: 4
 $button.hover: #2563EB
 `
@@ -227,28 +227,28 @@ $s.pad: 8
 describe('Color Token Extraction', () => {
   it('extracts simple color tokens', () => {
     const source = `
-$primary: #3B82F6
+$primary: #5BA8F5
 $secondary: #10B981
 $danger: #EF4444
 `
     const tokens = extractColorTokens(source)
 
     expect(tokens).toHaveLength(3)
-    expect(tokens.find(t => t.name === 'primary')?.value).toBe('#3B82F6')
+    expect(tokens.find(t => t.name === 'primary')?.value).toBe('#5BA8F5')
     expect(tokens.find(t => t.name === 'secondary')?.value).toBe('#10B981')
     expect(tokens.find(t => t.name === 'danger')?.value).toBe('#EF4444')
   })
 
   it('extracts namespaced color tokens', () => {
     const source = `
-$accent.bg: #3B82F6
+$accent.bg: #5BA8F5
 $primary.hover: #2563EB
 $text.col: #FFFFFF
 `
     const tokens = extractColorTokens(source)
 
     expect(tokens).toHaveLength(3)
-    expect(tokens.find(t => t.name === 'accent.bg')?.value).toBe('#3B82F6')
+    expect(tokens.find(t => t.name === 'accent.bg')?.value).toBe('#5BA8F5')
     expect(tokens.find(t => t.name === 'primary.hover')?.value).toBe('#2563EB')
     expect(tokens.find(t => t.name === 'text.col')?.value).toBe('#FFFFFF')
   })
@@ -288,7 +288,7 @@ $text.col: #FFFFFF
   it('ignores non-color tokens', () => {
     const source = `
 $s.pad: 4
-$primary: #3B82F6
+$primary: #5BA8F5
 $l.rad: 16
 `
     const tokens = extractColorTokens(source)
@@ -326,17 +326,17 @@ describe('Token Resolution', () => {
   })
 
   it('resolves color token', () => {
-    const source = `$accent.bg: #3B82F6`
+    const source = `$accent.bg: #5BA8F5`
     const value = resolveTokenValue(source, '$accent.bg')
 
-    expect(value).toBe('#3B82F6')
+    expect(value).toBe('#5BA8F5')
   })
 
   it('resolves simple color token', () => {
-    const source = `$primary: #3B82F6`
+    const source = `$primary: #5BA8F5`
     const value = resolveTokenValue(source, '$primary')
 
-    expect(value).toBe('#3B82F6')
+    expect(value).toBe('#5BA8F5')
   })
 
   it('returns null for non-existent token', () => {
@@ -353,7 +353,7 @@ $s.pad: 4
 $m.pad: 8
 $l.pad: 16
 
-$accent.bg: #3B82F6
+$accent.bg: #5BA8F5
 $secondary.bg: #10B981
 
 Card pad $m.pad, bg $accent.bg
@@ -361,7 +361,7 @@ Card pad $m.pad, bg $accent.bg
     expect(resolveTokenValue(source, '$s.pad')).toBe('4')
     expect(resolveTokenValue(source, '$m.pad')).toBe('8')
     expect(resolveTokenValue(source, '$l.pad')).toBe('16')
-    expect(resolveTokenValue(source, '$accent.bg')).toBe('#3B82F6')
+    expect(resolveTokenValue(source, '$accent.bg')).toBe('#5BA8F5')
     expect(resolveTokenValue(source, '$secondary.bg')).toBe('#10B981')
   })
 
@@ -402,7 +402,7 @@ $xl.rad: 16
 // Color Tokens
 $grey-900: #18181B
 $grey-800: #27272A
-$accent.bg: #3B82F6
+$accent.bg: #5BA8F5
 $primary.hover: #2563EB
 $text.col: #E4E4E7
 `
@@ -485,7 +485,7 @@ $l.pad:  16
   })
 
   it('handles deeply namespaced tokens', () => {
-    const source = `$button.primary.bg: #3B82F6`
+    const source = `$button.primary.bg: #5BA8F5`
     const tokens = extractColorTokens(source)
 
     expect(tokens).toHaveLength(1)
@@ -545,8 +545,8 @@ $grey-800: #27272A
 $grey-900: #18181B
 
 // Colors - Primary
-$primary: #3B82F6
-$accent.bg: #3B82F6
+$primary: #5BA8F5
+$accent.bg: #5BA8F5
 $primary.hover: #2563EB
 $primary.active: #1D4ED8
 
@@ -554,7 +554,7 @@ $primary.active: #1D4ED8
 $success: #10B981
 $warning: #F59E0B
 $danger: #EF4444
-$info: #3B82F6
+$info: #5BA8F5
 
 // Text Colors
 $text.primary: #18181B
@@ -575,13 +575,13 @@ $text.muted: #A1A1AA
     // Verify specific values
     expect(resolveTokenValue(source, '$m.pad')).toBe('8')
     expect(resolveTokenValue(source, '$l.rad')).toBe('8')
-    expect(resolveTokenValue(source, '$primary')).toBe('#3B82F6')
+    expect(resolveTokenValue(source, '$primary')).toBe('#5BA8F5')
     expect(resolveTokenValue(source, '$grey-800')).toBe('#27272A')
   })
 
   it('Component using tokens', () => {
     const source = `
-$accent.bg: #3B82F6
+$accent.bg: #5BA8F5
 $m.pad: 8
 $m.rad: 4
 
@@ -604,7 +604,7 @@ Button
 // tokens.mirror
 $s.pad: 4
 $m.pad: 8
-$accent.bg: #3B82F6
+$accent.bg: #5BA8F5
 `
     const componentsFile = `
 // components.mirror

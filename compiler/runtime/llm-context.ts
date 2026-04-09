@@ -38,7 +38,7 @@ export interface ComponentContext {
 
 export interface TokenContext {
   name: string             // e.g., "$accent.bg"
-  value: string            // e.g., "#3B82F6"
+  value: string            // e.g., "#5BA8F5"
   category: 'color' | 'spacing' | 'radius' | 'typography' | 'other'
 }
 
@@ -487,7 +487,7 @@ onclick: 'actionName'
 ## Dark Mode Palette (use if no tokens provided)
 #0a0a0f (app bg), #12121a (surface), #1a1a23 (card), #2a2a33 (hover), #333 (border)
 #f0f0f5 (heading), #e0e0e5 (text), #a0a0aa (muted), #888 (hint), #666 (disabled)
-#3B82F6 (primary), #2563EB (primary hover), #22C55E (success), #EF4444 (danger)
+#5BA8F5 (primary), #2271C1 (primary hover), #22C55E (success), #EF4444 (danger)
 
 ## Icons (Lucide)
 home, settings, user, search, x, check, plus, edit, trash, bell, mail, chevron-down, chevron-up, moon, sun`

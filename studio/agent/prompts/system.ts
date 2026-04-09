@@ -34,7 +34,7 @@ Du schreibst UI-Code in Mirror DSL. Diese Referenz ist die einzige Wahrheit.
 ## Grundsyntax
 
 \`\`\`mirror
-Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6
+Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6
 \`\`\`
 
 - Element-Name, optionaler Text in \`"..."\`, Properties mit Komma getrennt
@@ -51,7 +51,7 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 16
   Text "Beschreibung", col #888, fs 14
   Frame hor, gap 8
     Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
-    Button "OK", pad 10 20, rad 6, bg #2563eb, col white
+    Button "OK", pad 10 20, rad 6, bg #2271C1, col white
 \`\`\`
 
 ## Primitives
@@ -117,7 +117,7 @@ Icon "heart", ic #ef4444, is 24, fill
 
 \`\`\`mirror
 // Definition: Name: = Primitive Properties
-PrimaryBtn: = Button bg #2563eb, col white, pad 12 24, rad 6
+PrimaryBtn: = Button bg #2271C1, col white, pad 12 24, rad 6
 
 // Verwendung (OHNE :)
 PrimaryBtn "Speichern"
@@ -142,7 +142,7 @@ Card
 
 \`\`\`mirror
 BaseBtn: = Button pad 12 24, rad 6, weight 500
-PrimaryBtn as BaseBtn: = bg #2563eb, col white
+PrimaryBtn as BaseBtn: = bg #2271C1, col white
 DangerBtn as BaseBtn: = bg #ef4444, col white
 \`\`\`
 
@@ -154,7 +154,7 @@ DangerBtn as BaseBtn: = bg #ef4444, col white
 
 \`\`\`mirror
 // Definition: name.suffix: value (ohne $)
-primary.bg: #2563eb
+primary.bg: #2271C1
 card.bg: #1a1a1a
 card.rad: 8
 spacing.pad: 16
@@ -183,7 +183,7 @@ Btn: pad 12 24, bg #333, col white, cursor pointer
 \`\`\`mirror
 Btn: pad 12 24, bg #333, col white, cursor pointer
   on:
-    bg #2563eb
+    bg #2271C1
   onclick: toggle()
 
 Btn "Normal"           // startet in Base
@@ -218,7 +218,7 @@ StatusBtn "Task"        // startet in "todo" (erster = Initial)
 \`\`\`mirror
 Button name MenuBtn, pad 12
   open:
-    bg #2563eb
+    bg #2271C1
   onclick: toggle()
 
 Frame hidden
@@ -308,10 +308,10 @@ Frame pad 16, gap 8
 
 \`\`\`mirror
 // FALSCH – $ bei Definition
-$primary.bg: #2563eb
+$primary.bg: #2271C1
 
 // RICHTIG – Ohne $ bei Definition
-primary.bg: #2563eb
+primary.bg: #2271C1
 \`\`\`
 
 ### Token mit Suffix verwenden
@@ -338,10 +338,10 @@ Btn "Speichern"
 
 \`\`\`mirror
 // FALSCH
-PrimaryBtn: Button pad 12, bg #2563eb
+PrimaryBtn: Button pad 12, bg #2271C1
 
 // RICHTIG
-PrimaryBtn: = Button pad 12, bg #2563eb
+PrimaryBtn: = Button pad 12, bg #2271C1
 \`\`\`
 
 ### = mit Slots mischen (WICHTIG!)

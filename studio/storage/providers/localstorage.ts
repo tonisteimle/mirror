@@ -46,14 +46,14 @@ xl.fs: 24
 xxl.fs: 32
 
 // Colors
-accent.bg: #3b82f6
+accent.bg: #5BA8F5
 surface.bg: #27272a
 canvas.bg: #18181b
 input.bg: #1f1f1f
 text.col: #ffffff
 muted.col: #a1a1aa
 border.boc: #333333
-focus.boc: #3b82f6
+focus.boc: #5BA8F5
 
 // Spacing
 s.pad: 4
@@ -80,7 +80,7 @@ Title: fs $xl, weight bold, col $text
 TextMuted: fs $m, col $muted
 
 Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
-  hover bg #2563eb
+  hover bg #2271C1
 
 Card: bg $surface, pad $l, rad $m, gap $l
 

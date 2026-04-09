@@ -186,7 +186,7 @@ IMPORTANT:
    - Radius: $s.rad, $m.rad, $l.rad
 3. Token will be added to the tokens file automatically
 
-Example: add_token("accent.bg", "#3B82F6")
+Example: add_token("accent.bg", "#5BA8F5")
 Example: add_token("m.pad", "8")`,
   parameters: {
     name: {

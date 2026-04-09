@@ -219,12 +219,12 @@ describe('PropertyPanel', () => {
       const element = createSampleElement({
         nodeId: 'test-node',
         componentName: 'Button',
-        allProperties: [createSampleProperty({ name: 'bg', value: '#3B82F6' })],
+        allProperties: [createSampleProperty({ name: 'bg', value: '#5BA8F5' })],
         categories: [
           createSampleCategory({
             name: 'color',
             label: 'Color',
-            properties: [createSampleProperty({ name: 'bg', value: '#3B82F6' })]
+            properties: [createSampleProperty({ name: 'bg', value: '#5BA8F5' })]
           })
         ]
       })

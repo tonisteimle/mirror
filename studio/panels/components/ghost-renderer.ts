@@ -541,13 +541,13 @@ export class GhostRenderer {
       width: `${size.width}px`,
       height: `${size.height}px`,
       backgroundColor: 'rgba(59, 130, 246, 0.1)',
-      border: '2px dashed #3b82f6',
+      border: '2px dashed #5BA8F5',
       borderRadius: '4px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: '11px',
-      color: '#3b82f6',
+      color: '#5BA8F5',
       fontFamily: 'system-ui, sans-serif',
     })
 

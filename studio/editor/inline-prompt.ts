@@ -591,8 +591,8 @@ export const inlinePromptStyles = `
 }
 
 .inline-prompt-status[data-status="pending"] {
-  color: var(--color-info, #3b82f6);
-  border-left-color: var(--color-info, #3b82f6);
+  color: var(--color-info, #5BA8F5);
+  border-left-color: var(--color-info, #5BA8F5);
 }
 
 .inline-prompt-status[data-status="success"] {

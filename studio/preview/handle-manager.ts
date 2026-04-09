@@ -239,7 +239,7 @@ export class HandleManager {
       width: `${size}px`,
       height: `${size}px`,
       background: 'white',
-      border: '2px solid #3B82F6',
+      border: '2px solid #5BA8F5',
       borderRadius: isGap ? '2px' : '50%',
       cursor: this.getCursor(direction),
       zIndex: String(LAYOUT.Z_INDEX),

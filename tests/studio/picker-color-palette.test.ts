@@ -119,17 +119,17 @@ describe('Color Palette Utilities', () => {
 
   describe('generateShades', () => {
     it('should generate 10 shades by default', () => {
-      const shades = generateShades('#3b82f6')
+      const shades = generateShades('#5BA8F5')
       expect(shades).toHaveLength(10)
     })
 
     it('should generate custom count of shades', () => {
-      const shades = generateShades('#3b82f6', 5)
+      const shades = generateShades('#5BA8F5', 5)
       expect(shades).toHaveLength(5)
     })
 
     it('should have lighter variants first', () => {
-      const shades = generateShades('#3b82f6')
+      const shades = generateShades('#5BA8F5')
       const firstHSL = hexToHSL(shades[0])
       const middleHSL = hexToHSL(shades[4])
 
@@ -137,7 +137,7 @@ describe('Color Palette Utilities', () => {
     })
 
     it('should have darker variants last', () => {
-      const shades = generateShades('#3b82f6')
+      const shades = generateShades('#5BA8F5')
       const lastHSL = hexToHSL(shades[9])
       const middleHSL = hexToHSL(shades[4])
 

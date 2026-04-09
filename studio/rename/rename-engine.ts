@@ -248,7 +248,7 @@ export class RenameEngine {
     }
 
     // Token definition (new syntax without $): name.suffix: value
-    // e.g., "primary.bg: #2563eb" or "s.pad: 4"
+    // e.g., "primary.bg: #2271C1" or "s.pad: 4"
     if (word.includes('.') && /^[a-z]/.test(word)) {
       const afterWord = lineText.substring(wordStart + word.length).trimStart()
       if (afterWord.startsWith(':')) {

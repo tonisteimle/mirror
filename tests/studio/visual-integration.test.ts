@@ -352,7 +352,7 @@ App = Box w full, h full, pos
     const dropResult = env.simulatePaletteDrag({
       componentName: 'Box',
       to: { x: dropX, y: dropY },
-      properties: 'w full, h 60, bg #3b82f6',
+      properties: 'w full, h 60, bg #5BA8F5',
       textContent: 'Neue Box',
     })
 

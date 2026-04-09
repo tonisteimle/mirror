@@ -61,6 +61,7 @@ import {
 import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 import { isZagPrimitive, ZAG_PRIMITIVES, getItemKeywords, getZagPrimitive } from '../schema/zag-primitives'
 import { isCompoundPrimitive, getCompoundPrimitive, getCompoundSlotDef, isCompoundSlot } from '../schema/compound-primitives'
+import { isChartPrimitive, getChartPrimitive } from '../schema/chart-primitives'
 import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helpers'
 import {
   isContainer as isContainerPrimitive,
@@ -1450,6 +1451,99 @@ class IRTransformer {
   }
 
   /**
+   * Transform a Chart primitive (Line, Bar, Pie, etc.) into an IRNode
+   *
+   * Chart primitives create a container div that the runtime fills with a Chart.js canvas.
+   * Properties like w, h, colors, title, legend, etc. are passed to the runtime.
+   */
+  private transformChartPrimitive(
+    instance: Instance,
+    resolvedComponent: ComponentDefinition | null,
+    primitive: string,
+    parentLayoutContext?: ParentLayoutContext
+  ): IRNode {
+    const nodeId = this.generateId()
+    const chartDef = getChartPrimitive(instance.component) || getChartPrimitive(primitive)
+    const chartType = chartDef?.chartType || 'line'
+
+    // Merge properties
+    const properties = this.mergeProperties(
+      resolvedComponent?.properties || [],
+      instance.properties
+    )
+
+    // Extract chart-specific properties
+    const dataBinding = properties.find(p => p.name === 'textContent')?.values[0]
+    const xField = properties.find(p => p.name === 'x')?.values[0]
+    const yField = properties.find(p => p.name === 'y')?.values[0]
+    const colors = properties.find(p => p.name === 'colors')?.values
+    const title = properties.find(p => p.name === 'title')?.values[0]
+    const legend = properties.find(p => p.name === 'legend')?.values[0]
+    const stacked = properties.find(p => p.name === 'stacked')?.values[0]
+    const fill = properties.find(p => p.name === 'fill')?.values[0]
+    const tension = properties.find(p => p.name === 'tension')?.values[0]
+    const grid = properties.find(p => p.name === 'grid')?.values[0]
+    const axes = properties.find(p => p.name === 'axes')?.values[0]
+
+    // Transform sizing properties to styles
+    const styles = this.transformProperties(properties, 'frame', parentLayoutContext)
+
+    // Build IRProperties for chart config
+    const irProperties: IRProperty[] = [
+      { name: 'chartType', value: chartType },
+    ]
+
+    if (dataBinding) {
+      irProperties.push({ name: 'data', value: String(dataBinding) })
+    }
+    if (xField) {
+      irProperties.push({ name: 'xField', value: String(xField) })
+    }
+    if (yField) {
+      irProperties.push({ name: 'yField', value: String(yField) })
+    }
+    if (colors && colors.length > 0) {
+      irProperties.push({ name: 'colors', value: colors.join(',') })
+    }
+    if (title) {
+      irProperties.push({ name: 'title', value: String(title) })
+    }
+    if (legend !== undefined) {
+      irProperties.push({ name: 'legend', value: Boolean(legend) })
+    }
+    if (stacked !== undefined) {
+      irProperties.push({ name: 'stacked', value: Boolean(stacked) })
+    }
+    if (fill !== undefined) {
+      irProperties.push({ name: 'fill', value: Boolean(fill) })
+    }
+    if (tension !== undefined) {
+      irProperties.push({ name: 'tension', value: Number(tension) })
+    }
+    if (grid !== undefined) {
+      irProperties.push({ name: 'grid', value: Boolean(grid) })
+    }
+    if (axes !== undefined) {
+      irProperties.push({ name: 'axes', value: Boolean(axes) })
+    }
+
+    return {
+      id: nodeId,
+      tag: 'div',
+      primitive: 'chart',
+      name: instance.name || instance.component,
+      instanceName: instance.name || undefined,
+      properties: irProperties,
+      styles,
+      events: [],
+      children: [],
+      sourcePosition: instance.line !== undefined
+        ? { line: instance.line, column: instance.column ?? 0, endLine: instance.line, endColumn: instance.column ?? 0 }
+        : undefined,
+    }
+  }
+
+  /**
    * Transform a Compound primitive (Shell, etc.) into an IRNode
    *
    * Compound primitives are pre-built layout components with:
@@ -1681,6 +1775,11 @@ class IRTransformer {
       // Build a synthetic ZagNode from the instance + resolved component
       const zagNode = this.buildZagNodeFromInstance(instance, resolvedComponent, primitive)
       return this.transformZagComponent(zagNode, parentLayoutContext)
+    }
+
+    // Handle Chart primitives (Line, Bar, Pie, etc.)
+    if (isChartPrimitive(instance.component) || isChartPrimitive(primitive)) {
+      return this.transformChartPrimitive(instance, resolvedComponent, primitive, parentLayoutContext)
     }
 
     // Handle Compound primitives (Shell, etc.)
@@ -3391,7 +3490,7 @@ class IRTransformer {
     // Filter custom states for state machine:
     // 1. States NOT in SYSTEM_STATES (like "on", "open", "loading"), OR
     // 2. States in SYSTEM_STATES but used as custom states (have properties defined)
-    //    e.g., "active: bg #2563eb" is a custom state, not CSS :active pseudo-class
+    //    e.g., "active: bg #2271C1" is a custom state, not CSS :active pseudo-class
     const customStates = states.filter(s =>
       !SYSTEM_STATES.has(s.name) ||
       (s.properties && s.properties.length > 0)

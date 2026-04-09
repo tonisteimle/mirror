@@ -787,7 +787,7 @@ const _runtime = {
       el._baseStyles = {}
       const stateProps = new Set()
       for (const state of Object.values(sm.states)) {
-        // styles is an object like { 'background': '#2563eb' }
+        // styles is an object like { 'background': '#2271C1' }
         for (const prop of Object.keys(state.styles || {})) {
           stateProps.add(prop)
         }
@@ -4384,10 +4384,10 @@ const _runtime = {
       // Update visual state
       if (isChecked || isIndet) {
         if (!control.style.background || control.style.background === 'transparent') {
-          control.style.background = '#3b82f6'
+          control.style.background = '#5BA8F5'
         }
         if (!control.style.borderColor || control.style.borderColor === '#555' || control.style.borderColor === 'rgb(85, 85, 85)') {
-          control.style.borderColor = '#3b82f6'
+          control.style.borderColor = '#5BA8F5'
         }
         if (indicator) {
           indicator.style.opacity = '1'
@@ -4899,7 +4899,7 @@ const _runtime = {
         setDefault(indicator, 'justifyContent', 'center')
         setDefault(indicator, 'width', '16px')
         setDefault(indicator, 'height', '16px')
-        setDefault(indicator, 'color', '#3b82f6')
+        setDefault(indicator, 'color', '#5BA8F5')
         setDefault(indicator, 'flexShrink', '0')
         setDefault(indicator, 'transition', 'opacity 0.15s')
 
@@ -5571,7 +5571,7 @@ const _runtime = {
         dot.style.width = '8px'
         dot.style.height = '8px'
         dot.style.borderRadius = '50%'
-        dot.style.background = '#3b82f6'
+        dot.style.background = '#5BA8F5'
         dot.style.transform = 'scale(0)'
         dot.style.transition = 'transform 0.15s'
         control.appendChild(dot)
@@ -5649,7 +5649,7 @@ const _runtime = {
           if (controlStateStyles.checked) {
             applyStateStyles(control, controlStateStyles, 'checked', selected)
           } else {
-            control.style.borderColor = selected ? '#3b82f6' : '#555'
+            control.style.borderColor = selected ? '#5BA8F5' : '#555'
           }
 
           const dot = control.querySelector('[data-slot="ItemDot"]')
@@ -5808,7 +5808,7 @@ const _runtime = {
     // Range styles
     if (range) {
       setDefault(range, 'position', 'absolute')
-      setDefault(range, 'background', '#3b82f6')
+      setDefault(range, 'background', '#5BA8F5')
       setDefault(range, 'borderRadius', '4px')
       if (isHorizontal) {
         setDefault(range, 'height', '100%')
@@ -6098,7 +6098,7 @@ const _runtime = {
     // Range styles - positioned between thumbs
     if (range) {
       setDefault(range, 'position', 'absolute')
-      setDefault(range, 'background', '#3b82f6')
+      setDefault(range, 'background', '#5BA8F5')
       setDefault(range, 'borderRadius', '4px')
       if (isHorizontal) {
         setDefault(range, 'height', '100%')
@@ -6529,7 +6529,7 @@ const _runtime = {
       // Focus styling
       input.addEventListener('focus', () => {
         el._pinInputState.focusedIndex = index
-        input.style.borderColor = '#3b82f6'
+        input.style.borderColor = '#5BA8F5'
         input.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)'
         input.select()
       })
@@ -6790,7 +6790,7 @@ const _runtime = {
 
       // Focus styling on input
       input.addEventListener('focus', () => {
-        input.style.borderColor = '#3b82f6'
+        input.style.borderColor = '#5BA8F5'
         input.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)'
       })
       input.addEventListener('blur', () => {
@@ -6863,7 +6863,7 @@ const _runtime = {
 
     // Range styles
     setDefault(range, 'height', '100%')
-    setDefault(range, 'background', '#3b82f6')
+    setDefault(range, 'background', '#5BA8F5')
     setDefault(range, 'borderRadius', '4px')
     setDefault(range, 'transition', 'width 0.3s ease')
 
@@ -6978,7 +6978,7 @@ const _runtime = {
     circleTrack.setAttribute('stroke-width', String(strokeWidth))
 
     // CircleRange styles
-    circleRange.setAttribute('stroke', '#3b82f6')
+    circleRange.setAttribute('stroke', '#5BA8F5')
     circleRange.setAttribute('stroke-width', String(strokeWidth))
     circleRange.setAttribute('stroke-linecap', 'round')
     circleRange.style.transition = 'stroke-dashoffset 0.3s ease'
@@ -7266,7 +7266,7 @@ const _runtime = {
     // Trigger styles
     if (trigger) {
       setDefault(trigger, 'padding', '8px 16px')
-      setDefault(trigger, 'backgroundColor', '#3b82f6')
+      setDefault(trigger, 'backgroundColor', '#5BA8F5')
       setDefault(trigger, 'color', '#fff')
       setDefault(trigger, 'border', 'none')
       setDefault(trigger, 'borderRadius', '6px')
@@ -7366,7 +7366,7 @@ const _runtime = {
 
       // Update dropzone state
       if (el._fileUploadState.isDragging) {
-        dropzone.style.borderColor = '#3b82f6'
+        dropzone.style.borderColor = '#5BA8F5'
         dropzone.style.backgroundColor = '#1a1a2e'
         el.setAttribute('data-dragging', 'true')
       } else {
@@ -7640,7 +7640,7 @@ const _runtime = {
         const indicators = indicatorGroup.querySelectorAll('[data-slot="Indicator"]')
         indicators.forEach((ind, i) => {
           if (i === currentIndex) {
-            ind.style.backgroundColor = '#3b82f6'
+            ind.style.backgroundColor = '#5BA8F5'
           } else {
             ind.style.backgroundColor = '#444'
           }
@@ -7868,7 +7868,7 @@ const _runtime = {
     // NextTrigger styles
     if (nextTrigger) {
       setDefault(nextTrigger, 'padding', '8px 16px')
-      setDefault(nextTrigger, 'backgroundColor', '#3b82f6')
+      setDefault(nextTrigger, 'backgroundColor', '#5BA8F5')
       setDefault(nextTrigger, 'color', '#fff')
       setDefault(nextTrigger, 'border', 'none')
       setDefault(nextTrigger, 'borderRadius', '6px')
@@ -7962,7 +7962,7 @@ const _runtime = {
           // Current
           item.setAttribute('data-state', 'current')
           if (indicator) {
-            indicator.style.backgroundColor = '#3b82f6'
+            indicator.style.backgroundColor = '#5BA8F5'
             indicator.style.color = '#fff'
             indicator.style.border = 'none'
             indicator.textContent = String(i + 1)
@@ -8250,8 +8250,8 @@ const _runtime = {
 
         if (page === currentPage) {
           item.classList.add('active')
-          item.style.backgroundColor = '#3b82f6'
-          item.style.borderColor = '#3b82f6'
+          item.style.backgroundColor = '#5BA8F5'
+          item.style.borderColor = '#5BA8F5'
           item.style.color = '#fff'
         }
 
@@ -8546,7 +8546,7 @@ const _runtime = {
         const trigger = li.querySelector('[data-slot="BranchTrigger"], [data-slot="ItemContent"]')
         if (trigger) {
           trigger.classList.add('selected')
-          trigger.style.backgroundColor = '#3b82f6'
+          trigger.style.backgroundColor = '#5BA8F5'
           trigger.style.color = '#fff'
         }
       }
@@ -8606,7 +8606,7 @@ const _runtime = {
         selectedKeys.add(id)
         if (trigger) {
           trigger.classList.add('selected')
-          trigger.style.backgroundColor = '#3b82f6'
+          trigger.style.backgroundColor = '#5BA8F5'
           trigger.style.color = '#fff'
         }
         if (itemEl) itemEl.setAttribute('aria-selected', 'true')
@@ -9223,7 +9223,7 @@ const _runtime = {
     // Indicator styles
     if (indicator) {
       setDefault(indicator, 'position', 'absolute')
-      setDefault(indicator, 'backgroundColor', '#3b82f6')
+      setDefault(indicator, 'backgroundColor', '#5BA8F5')
       setDefault(indicator, 'borderRadius', '6px')
       setDefault(indicator, 'transition', 'all 0.2s ease')
       setDefault(indicator, 'zIndex', '0')
@@ -9437,7 +9437,7 @@ const _runtime = {
         if (isPressed) {
           itemEl.dataset.pressed = 'true'
           itemEl.setAttribute('aria-pressed', 'true')
-          itemEl.style.backgroundColor = '#3b82f6'
+          itemEl.style.backgroundColor = '#5BA8F5'
           itemEl.style.color = '#fff'
         } else {
           delete itemEl.dataset.pressed
@@ -9883,7 +9883,7 @@ const _runtime = {
 
     // Trigger styles
     setDefault(trigger, 'padding', '8px 16px')
-    setDefault(trigger, 'backgroundColor', '#3b82f6')
+    setDefault(trigger, 'backgroundColor', '#5BA8F5')
     setDefault(trigger, 'color', '#fff')
     setDefault(trigger, 'border', 'none')
     setDefault(trigger, 'borderRadius', '6px')
@@ -10042,7 +10042,7 @@ const _runtime = {
     el.style.position = 'relative'
 
     // Trigger styles
-    setDefault(trigger, 'color', '#3b82f6')
+    setDefault(trigger, 'color', '#5BA8F5')
     setDefault(trigger, 'textDecoration', 'underline')
     setDefault(trigger, 'cursor', 'pointer')
 
@@ -10168,7 +10168,7 @@ const _runtime = {
 
     // Trigger styles
     setDefault(trigger, 'padding', '8px 16px')
-    setDefault(trigger, 'backgroundColor', '#3b82f6')
+    setDefault(trigger, 'backgroundColor', '#5BA8F5')
     setDefault(trigger, 'color', '#fff')
     setDefault(trigger, 'border', 'none')
     setDefault(trigger, 'borderRadius', '6px')

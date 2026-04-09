@@ -27,7 +27,7 @@ const DEFAULT_GRID: GridSettings = {
   enabled: true,
   size: 8,
   showVisual: false,
-  color: '#3B82F6',
+  color: '#5BA8F5',
 }
 
 // In-memory state

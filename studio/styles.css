@@ -35,17 +35,17 @@
       --color-white: #ffffff;
       --color-black: #000000;
 
-      /* Primary Colors */
-      --color-primary: #3B82F6;
-      --color-primary-hover: #2563EB;
-      --color-primary-light: #60A5FA;
+      /* Primary Colors - Brand: #5BA8F5 (light), #2271C1 (dark) */
+      --color-primary: #5BA8F5;
+      --color-primary-hover: #2271C1;
+      --color-primary-light: #5BA8F5;
       --color-primary-muted: var(--primary-30);
-      --color-primary-selection: rgba(59, 130, 246, 0.25);
+      --color-primary-selection: rgba(91, 168, 245, 0.25);
       --color-primary-bg: var(--primary-10);
 
       /* Accent Colors (Alias for Primary) */
-      --accent: #3B82F6;
-      --accent-hover: #2563EB;
+      --accent: #5BA8F5;
+      --accent-hover: #2271C1;
 
       /* Semantic Colors */
       --color-success: #22c55e;
@@ -58,7 +58,7 @@
       --color-error-dark: #1c1012;
       --color-error-light: #fca5a5;
       --color-error-lighter: #fecaca;
-      --color-info: #3B82F6;
+      --color-info: #5BA8F5;
       --color-purple: #8B5CF6;
       --color-purple-light: #A78BFA;
       --color-purple-muted: rgba(139, 92, 246, 0.2);
@@ -66,10 +66,10 @@
       --color-override: #f97316;
 
       /* Slot Colors (drag & drop targets) */
-      --slot-border: #93C5FD;
-      --slot-border-hover: #60A5FA;
-      --slot-bg: rgba(147, 197, 253, 0.03);
-      --slot-bg-hover: rgba(59, 130, 246, 0.06);
+      --slot-border: #5BA8F5;
+      --slot-border-hover: #2271C1;
+      --slot-bg: rgba(91, 168, 245, 0.03);
+      --slot-bg-hover: rgba(91, 168, 245, 0.06);
       --slot-bg-active: var(--primary-10);
 
       /* Zone Indicator Colors */
@@ -106,7 +106,7 @@
       /* Icon Colors */
       --icon-default: #71717a;
       --icon-muted: #555;
-      --icon-accent: #00ADFF;
+      --icon-accent: #5BA8F5;
 
       /* Syntax Highlighting */
       --syntax-keyword: #c9a87c;
@@ -149,16 +149,16 @@
       --black-80: rgba(0, 0, 0, 0.8);
       --black-85: rgba(0, 0, 0, 0.85);
 
-      /* Transparent Colors - Primary (Blue #3B82F6 = rgb(59, 130, 246)) */
-      --primary-8: rgba(59, 130, 246, 0.08);
-      --primary-10: rgba(59, 130, 246, 0.1);
-      --primary-15: rgba(59, 130, 246, 0.15);
-      --primary-30: rgba(59, 130, 246, 0.3);
-      --primary-40: rgba(59, 130, 246, 0.4);
-      --primary-50: rgba(59, 130, 246, 0.5);
-      --primary-60: rgba(59, 130, 246, 0.6);
-      --primary-80: rgba(59, 130, 246, 0.8);
-      --primary-90: rgba(59, 130, 246, 0.9);
+      /* Transparent Colors - Primary (Brand #5BA8F5 = rgb(91, 168, 245)) */
+      --primary-8: rgba(91, 168, 245, 0.08);
+      --primary-10: rgba(91, 168, 245, 0.1);
+      --primary-15: rgba(91, 168, 245, 0.15);
+      --primary-30: rgba(91, 168, 245, 0.3);
+      --primary-40: rgba(91, 168, 245, 0.4);
+      --primary-50: rgba(91, 168, 245, 0.5);
+      --primary-60: rgba(91, 168, 245, 0.6);
+      --primary-80: rgba(91, 168, 245, 0.8);
+      --primary-90: rgba(91, 168, 245, 0.9);
 
       /* Transparent Colors - Semantic */
       --error-10: rgba(239, 68, 68, 0.1);
@@ -7464,7 +7464,7 @@ select.tomselected,
 /* Floating input field */
 .inline-edit-input {
   font-family: inherit;
-  caret-color: var(--color-primary, #3B82F6);
+  caret-color: var(--color-primary, #5BA8F5);
 }
 
 .inline-edit-input::selection {

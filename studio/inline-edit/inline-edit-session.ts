@@ -149,7 +149,7 @@ export class InlineEditSession {
       min-width: 60px;
       padding: 0 4px;
       margin: 0;
-      border: 2px solid var(--color-primary, #3B82F6);
+      border: 2px solid var(--color-primary, #5BA8F5);
       border-radius: 3px;
       background: transparent;
       color: ${computed.color};

@@ -38,6 +38,29 @@ function getLexerErrorCode(message: string): string {
 }
 
 /**
+ * Map parser error message to error code
+ */
+function getParserErrorCode(message: string): string {
+  if (message.includes('Expected COLON')) return ERROR_CODES.MISSING_COLON
+  if (message.includes('Expected')) return ERROR_CODES.UNEXPECTED_TOKEN
+  return ERROR_CODES.PARSER_ERROR
+}
+
+/**
+ * Convert parser errors to validation errors
+ */
+function convertParserErrors(parserErrors: Array<{ message: string; line: number; column: number; hint?: string }>): ValidationError[] {
+  return parserErrors.map(err => ({
+    severity: 'error' as const,
+    code: getParserErrorCode(err.message),
+    message: err.message,
+    line: err.line,
+    column: err.column,
+    suggestion: err.hint,
+  }))
+}
+
+/**
  * Check if a lexer error should be treated as a warning
  */
 function isLexerWarning(message: string): boolean {
@@ -99,12 +122,19 @@ export function validate(source: string): ValidationResult {
   const parser = new Parser(lexerResult.tokens, source)
   const ast = parser.parse()
 
+  // Convert parser errors
+  const parserValidationErrors = convertParserErrors(ast.errors)
+
   // Validate AST
   const validator = new Validator()
   const validatorResult = validator.validate(ast)
 
-  // Merge lexer errors into validation result
-  const allErrors = [...lexerValidationErrors.filter(e => e.severity === 'error'), ...validatorResult.errors]
+  // Merge lexer errors, parser errors, and validator errors
+  const allErrors = [
+    ...lexerValidationErrors.filter(e => e.severity === 'error'),
+    ...parserValidationErrors,
+    ...validatorResult.errors
+  ]
   const allWarnings = [...lexerValidationErrors.filter(e => e.severity === 'warning'), ...validatorResult.warnings]
 
   return {

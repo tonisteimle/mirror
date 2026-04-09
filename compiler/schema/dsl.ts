@@ -52,6 +52,19 @@ import {
   type CompoundSlotDef,
 } from './compound-primitives'
 
+// Import Chart primitives
+import {
+  CHART_PRIMITIVES,
+  CHART_PROPERTIES,
+  isChartPrimitive,
+  getChartPrimitive,
+  getChartProperty,
+  getAllChartPrimitives,
+  DEFAULT_CHART_COLORS,
+  type ChartPrimitiveDef,
+  type ChartPropertyDef,
+} from './chart-primitives'
+
 // Re-export Zag primitives
 export {
   ZAG_PRIMITIVES,
@@ -81,6 +94,19 @@ export {
   getAllCompoundPrimitives,
   type CompoundPrimitiveDef,
   type CompoundSlotDef,
+}
+
+// Re-export Chart primitives
+export {
+  CHART_PRIMITIVES,
+  CHART_PROPERTIES,
+  isChartPrimitive,
+  getChartPrimitive,
+  getChartProperty,
+  getAllChartPrimitives,
+  DEFAULT_CHART_COLORS,
+  type ChartPrimitiveDef,
+  type ChartPropertyDef,
 }
 
 // ============================================================================
@@ -350,7 +376,7 @@ export const DSL = {
   //
   // DEFINING STATES:
   //   selected:                            // state without trigger
-  //     bg #2563eb
+  //     bg #2271C1
   //
   // INSTANCE WITH STATE:
   //   Btn "Normal"                         // starts in default state
@@ -2228,6 +2254,9 @@ export function isPrimitive(name: string): boolean {
 
   // Check compound primitives (Shell, etc.)
   if (isCompoundPrimitive(name)) return true
+
+  // Check chart primitives (Line, Bar, Pie, etc.)
+  if (isChartPrimitive(name)) return true
 
   return false
 }

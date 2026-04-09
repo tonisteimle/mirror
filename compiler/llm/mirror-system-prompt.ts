@@ -35,8 +35,8 @@ $col.text: #FAFAFA         // Primary text
 $col.muted: #A1A1AA        // Secondary text
 $col.subtle: #71717A       // Tertiary/labels
 
-$primary: #3B82F6          // Primary accent
-$primary.hover: #2563EB    // Primary hover
+$primary: #5BA8F5          // Primary accent
+$primary.hover: #2271C1    // Primary hover
 
 $border: #27272A           // Border color
 \`\`\`
@@ -178,8 +178,8 @@ $bg.surface: #18181B
 $bg.hover: #27272A
 $col.text: #FAFAFA
 $col.muted: #A1A1AA
-$primary: #3B82F6
-$primary.hover: #2563EB
+$primary: #5BA8F5
+$primary.hover: #2271C1
 \`\`\`
 
 Properties: hor, ver, center, gap, pad, margin, w, h, bg, col, rad, bor,
@@ -232,8 +232,8 @@ $col.text: #FAFAFA         // Primary text
 $col.muted: #A1A1AA        // Secondary text
 $col.subtle: #71717A       // Tertiary/labels
 
-$primary: #3B82F6          // Primary accent
-$primary.hover: #2563EB    // Primary hover
+$primary: #5BA8F5          // Primary accent
+$primary.hover: #2271C1    // Primary hover
 
 $border: #27272A           // Border color
 \`\`\`

@@ -32,7 +32,7 @@ describe('Settings Store', () => {
         expect(settings.enabled).toBe(true)
         expect(settings.size).toBe(8)
         expect(settings.showVisual).toBe(false)
-        expect(settings.color).toBe('#3B82F6')
+        expect(settings.color).toBe('#5BA8F5')
       })
 
       it('returns a copy (not mutable)', () => {
