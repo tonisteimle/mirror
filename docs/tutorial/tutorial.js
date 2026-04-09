@@ -12,7 +12,7 @@ const patterns = [
   { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
   { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
   { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-  { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder)\b/g, cls: 'syn-property' },
+  { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder|row-height)\b/g, cls: 'syn-property' },
   { regex: /\b(hover|focus|active|disabled|onclick|onhover|onfocus|onblur|oninput|onchange|onkeydown|onclick-outside|selected|state|show|hide|toggle|cycle|exclusive|open|close|as|on|todo|doing|done|loading|valid|invalid|error|loaded|default)\b/g, cls: 'syn-keyword' },
   { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
 ]
@@ -129,7 +129,7 @@ function initializePlaygrounds() {
  */
 
 // Tutorial Navigation Structure
-// Die Sprache (00-09) + Komponenten-Bibliothek (10-13)
+// Die Sprache (00-10) + Komponenten-Bibliothek (11-14)
 const tutorialNavigation = [
   // Die Sprache
   { num: '00', file: '00-intro.html', title: 'Intro', section: 'Sprache' },
@@ -139,14 +139,15 @@ const tutorialNavigation = [
   { num: '04', file: '04-layout.html', title: 'Layout' },
   { num: '05', file: '05-styling.html', title: 'Styling' },
   { num: '06', file: '06-states.html', title: 'States' },
-  { num: '07', file: '07-functions.html', title: 'Functions' },
-  { num: '08', file: '08-daten.html', title: 'Daten' },
-  { num: '09', file: '09-seiten.html', title: 'Seiten' },
+  { num: '07', file: '07-animationen.html', title: 'Animationen' },
+  { num: '08', file: '08-functions.html', title: 'Functions' },
+  { num: '09', file: '09-daten.html', title: 'Daten' },
+  { num: '10', file: '10-seiten.html', title: 'Seiten' },
   // Komponenten-Bibliothek
-  { num: '10', file: '10-eingabe.html', title: 'Eingabe', section: 'Komponenten' },
-  { num: '11', file: '11-navigation.html', title: 'Navigation' },
-  { num: '12', file: '12-overlays.html', title: 'Overlays' },
-  { num: '13', file: '13-anzeige.html', title: 'Anzeige' },
+  { num: '11', file: '11-eingabe.html', title: 'Eingabe', section: 'Komponenten' },
+  { num: '12', file: '12-navigation.html', title: 'Navigation' },
+  { num: '13', file: '13-overlays.html', title: 'Overlays' },
+  { num: '14', file: '14-tabellen.html', title: 'Tabellen' },
 ]
 
 function createTutorialSidebar() {

@@ -47,7 +47,7 @@ Frame`)
     it('converts $name to $get("name") for text content', () => {
       const ast = parse(`
 $userName: "Test"
-Text $userName`)
+Text "$userName"`)
       const code = generateDOM(ast)
 
       expect(code).toContain('$get("userName")')
@@ -55,7 +55,7 @@ Text $userName`)
 
     it('handles nested property access: $user.name', () => {
       const ast = parse(`
-Text $user.name`)
+Text "$user.name"`)
       const code = generateDOM(ast)
 
       expect(code).toContain('$get("user.name")')
@@ -79,7 +79,7 @@ Text $user.name`)
     })
 
     it('converts underscore-prefixed: $_private', () => {
-      const ast = parse('Text $_private')
+      const ast = parse('Text "$_private"')
       const code = generateDOM(ast)
 
       expect(code).toContain('$get("_private")')
@@ -90,7 +90,7 @@ Text $user.name`)
     it('converts each in $collection to $get()', () => {
       const ast = parse(`
 each user in $users
-  Text user.name`)
+  Text "$user.name"`)
       const code = generateDOM(ast)
 
       expect(code).toContain("$get('users')")
@@ -99,7 +99,7 @@ each user in $users
     it('inline arrays still work', () => {
       const ast = parse(`
 each item in ["a", "b", "c"]
-  Text item`)
+  Text "$item"`)
       const code = generateDOM(ast)
 
       // Inline array should be used directly, not via $get

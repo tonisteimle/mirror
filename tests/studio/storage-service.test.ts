@@ -362,7 +362,8 @@ describe('StorageService Prelude', () => {
   it('should build prelude string', async () => {
     const prelude = await service.buildPrelude()
 
-    expect(prelude).toContain('$') // Token definitions
+    // Prelude contains components that use tokens (e.g., bg $accent)
+    expect(prelude).toContain('$')
     expect(typeof prelude).toBe('string')
   })
 

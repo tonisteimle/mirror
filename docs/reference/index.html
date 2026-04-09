@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Referenz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="reference.css">
+  <style>
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 32px 0;
+    }
+
+    .card {
+      display: block;
+      padding: 20px;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .card:hover {
+      border-color: #444;
+      transform: translateY(-2px);
+      text-decoration: none;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 4px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-dim);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .back-link:hover {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+  <main class="page">
+
+    <a href="../tutorial/index.html" class="back-link">&larr; Zurück zum Tutorial</a>
+
+    <header>
+      <h1>Referenz</h1>
+      <p class="subtitle">Props, Kind-Komponenten und States nachschlagen</p>
+    </header>
+
+    <p>Die Referenz zeigt für jede Komponente: ein Minimal-Beispiel, verfügbare Props, ein Kind-Komponenten-Beispiel zum Kopieren, und die States.</p>
+
+    <div class="cards">
+      <a href="eingabe.html" class="card">
+        <div class="card-title">Eingabe</div>
+        <div class="card-desc">Checkbox, Switch, Slider, Select, DatePicker</div>
+      </a>
+      <a href="navigation.html" class="card">
+        <div class="card-title">Navigation</div>
+        <div class="card-desc">Tabs, SideNav, Accordion, Steps</div>
+      </a>
+      <a href="overlays.html" class="card">
+        <div class="card-title">Overlays</div>
+        <div class="card-desc">Dialog, Tooltip, Popover, HoverCard</div>
+      </a>
+      <a href="tabellen.html" class="card">
+        <div class="card-title">Tabellen</div>
+        <div class="card-desc">Statisch, Datengebunden, Filter, Sort</div>
+      </a>
+    </div>
+
+  </main>
+
+</body>
+</html>

@@ -367,8 +367,12 @@ export interface IRItem {
   properties?: any[]
   /** Custom children for complex item rendering */
   children?: IRNode[]
-  /** Load content from external file (filename without .mirror extension) */
+  /** Load content from external file (filename without .mirror extension) - legacy */
   loadFromFile?: string
+  /** Target view/element to show: "show X" or "show X from Y" */
+  shows?: string
+  /** Source file to load the view from: "show X from Y" */
+  showsFrom?: string
   /** Source position for bidirectional editing */
   sourcePosition?: SourcePosition
   /** Icon name for items that support icons (Listbox, Select indicators) */
@@ -488,6 +492,8 @@ export interface IRTable extends IRNode {
   stickyHeader?: boolean
   /** Custom header slot */
   headerSlot?: IRNode[]
+  /** Static header row (from Header: Row "A", "B", "C" syntax) */
+  headerStaticRow?: IRTableStaticRow
   /** Custom row slot */
   rowSlot?: IRNode[]
   /** Row slot styles (from Row: properties) */

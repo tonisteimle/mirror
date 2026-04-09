@@ -158,6 +158,48 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
 
     <!-- ============================================================ -->
     <section>
+      <h2>Kurzschreibweise mit Semicolon</h2>
+      <p>Für einfache Strukturen kannst du Kinder auch in <strong>einer Zeile</strong> schreiben. Trenne sie mit Semikolon:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Mit Einrückung (3 Zeilen)
+Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
+  Icon "check", ic #10b981, is 20
+  Text "Erfolgreich gespeichert", col white
+
+// Gleiche Struktur in einer Zeile
+Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6; Icon "check", ic #10b981, is 20; Text "Erfolgreich gespeichert", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>Frame hor, gap 12, ...</code> – das Eltern-Element mit seinen Properties</li>
+        <li><code>;</code> – Semicolon trennt Eltern von Kindern</li>
+        <li><code>Icon "check", ...</code> – erstes Kind-Element</li>
+        <li><code>; Text "Erfolgreich", ...</code> – zweites Kind-Element</li>
+      </ul>
+
+      <p><strong>Die Regel:</strong> Alles vor dem ersten Semicolon sind Properties des Eltern-Elements. Alles nach Semicolons (mit Großbuchstaben beginnend) sind Kinder.</p>
+
+      <p>Wenn das Eltern-Element keine Properties braucht, startest du direkt mit Semicolon:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Frame ohne Properties, nur Kinder
+Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="note">
+        <strong>Wann verwenden?</strong> Die Semicolon-Syntax eignet sich für einfache, flache Strukturen wie Status-Meldungen oder Icon-Text-Kombinationen. Für komplexere Verschachtelungen ist Einrückung besser lesbar.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>Layout-Properties (Vorschau)</h2>
       <p>Mit Layout-Properties steuerst du, wie Kinder innerhalb eines Frames angeordnet werden. Hier die wichtigsten – Details im <a href="04-layout.html">Layout-Kapitel</a>:</p>
       <div class="playground" data-playground>
@@ -292,6 +334,7 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
         <tr><td><code>bg, col, pad, rad, w, h, fs</code></td><td>Styling</td></tr>
         <tr><td><code>hor, ver, gap, center, spread</code></td><td>Layout</td></tr>
         <tr><td><code>2 Leerzeichen Einrückung</code></td><td>Kind-Element</td></tr>
+        <tr><td><code>Frame props; Kind1; Kind2</code></td><td>Kurzschreibweise</td></tr>
       </table>
 
     </div>

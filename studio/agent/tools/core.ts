@@ -311,7 +311,8 @@ export const validateTool: Tool = {
         const line = lines[i]
         const trimmed = line.trim()
 
-        if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('$')) {
+        // Skip empty lines, comments, and token definitions (legacy with $ or new syntax name.suffix:)
+        if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('$') || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(trimmed)) {
           continue
         }
 

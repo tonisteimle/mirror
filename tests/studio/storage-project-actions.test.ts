@@ -262,9 +262,9 @@ describe('Default Project Template', () => {
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
     const tokensContent = stored['tokens.tok']
 
-    // Should have token definitions
-    expect(tokensContent).toContain('$')
-    expect(tokensContent).toMatch(/\$\w+/)
+    // Should have token definitions (new syntax without $ in definition)
+    expect(tokensContent).toMatch(/\w+\.\w+:\s*[#\w]/)
+    expect(tokensContent).toContain('accent.bg:')
   })
 
   it('should have component definitions in components.com', async () => {

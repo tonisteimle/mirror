@@ -150,16 +150,16 @@ DangerBtn as BaseBtn: = bg #ef4444, col white
 
 ## Tokens
 
-**Definition MIT Suffix, Verwendung OHNE Suffix.**
+**Definition OHNE $, Verwendung MIT $.**
 
 \`\`\`mirror
-// Definition: $name.suffix: value
-$primary.bg: #2563eb
-$card.bg: #1a1a1a
-$card.rad: 8
-$spacing.pad: 16
+// Definition: name.suffix: value (ohne $)
+primary.bg: #2563eb
+card.bg: #1a1a1a
+card.rad: 8
+spacing.pad: 16
 
-// Verwendung: OHNE Suffix (das Property zeigt den Typ)
+// Verwendung: mit $ (ohne Suffix - das Property zeigt den Typ)
 Button bg $primary, col white
 Frame bg $card, rad $card, pad $spacing
 \`\`\`
@@ -304,23 +304,23 @@ Box pad 16, gap 8
 Frame pad 16, gap 8
 \`\`\`
 
-### Token ohne Suffix definieren
+### Token mit $ definieren
 
 \`\`\`mirror
-// FALSCH
-$primary: #2563eb
-
-// RICHTIG
+// FALSCH – $ bei Definition
 $primary.bg: #2563eb
+
+// RICHTIG – Ohne $ bei Definition
+primary.bg: #2563eb
 \`\`\`
 
 ### Token mit Suffix verwenden
 
 \`\`\`mirror
-// FALSCH
+// FALSCH – Suffix bei Verwendung
 Frame bg $primary.bg
 
-// RICHTIG
+// RICHTIG – Ohne Suffix bei Verwendung
 Frame bg $primary
 \`\`\`
 

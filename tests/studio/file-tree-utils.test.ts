@@ -447,7 +447,8 @@ describe('generateDefaultContent', () => {
   it('should generate token content for .tok', () => {
     const content = generateDefaultContent('theme.tok')
     expect(content).toContain('// theme.tok')
-    expect(content).toContain('$')
+    // New syntax: token definitions without $ (e.g., primary.bg: #3b82f6)
+    expect(content).toMatch(/\w+\.\w+:/)
   })
 
   it('should generate component content for .com', () => {

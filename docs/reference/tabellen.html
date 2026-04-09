@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Referenz – Tabellen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="reference.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Tabellen</h1>
+      <p class="subtitle">Referenz für Tabellen-Komponenten</p>
+    </header>
+
+    <nav class="toc">
+      <a href="#static">Statische Tabelle</a>
+      <a href="#databound">Datengebunden</a>
+      <a href="#filter">Filtern</a>
+      <a href="#sort">Sortieren</a>
+    </nav>
+
+
+    <!-- ============================================================ -->
+    <section id="static">
+      <h2>Statische Tabelle</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table
+  Header:
+    Row "Name", "Alter", "Stadt"
+  Row "Max", "25", "Berlin"
+  Row "Anna", "30", "München"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table bg #111, pad 16, rad 12, w full
+  Header: bg #1a1a1a
+    Row "Name", "Rolle", "Status"
+  Row "Anna", "Designer", "Aktiv"
+  Row "Max", "Developer", "Aktiv"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="databound">
+      <h2>Datengebundene Tabelle</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Design Review"
+    status: "done"
+  task2:
+    title: "API Integration"
+    status: "progress"
+
+Table $tasks, gap 4, w full
+  Row: hor, gap 16, pad 12, bg #1a1a1a, rad 6, w full
+    Text row.title, col white, w 140
+    Text row.status, col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Syntax</h3>
+      <p class="props-list"><code>Table $data</code> <code>Row:</code> <code>row.field</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="filter">
+      <h2>Filtern mit where</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Design Review"
+    done: true
+  task2:
+    title: "API Integration"
+    done: false
+  task3:
+    title: "Testing"
+    done: false
+
+Table $tasks where row.done == false, gap 4, w full
+  Row: hor, gap 12, pad 12, bg #1a1a1a, rad 6, w full
+    Icon "circle", ic #f59e0b, is 16
+    Text row.title, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Operatoren</h3>
+      <p class="props-list"><code>==</code> <code>!=</code> <code>></code> <code><</code> <code>>=</code> <code><=</code> <code>and</code> <code>or</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="sort">
+      <h2>Sortieren mit by</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29
+  hoodie:
+    name: "Hoodie"
+    price: 59
+  cap:
+    name: "Cap"
+    price: 19
+
+Table $products by price desc, gap 4, w full
+  Row: hor, spread, pad 12, bg #1a1a1a, rad 6, w full
+    Text row.name, col white
+    Text row.price, col #10b981</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Syntax</h3>
+      <p class="props-list"><code>by field</code> <code>by field desc</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+
+    <div class="summary">
+      <h2>Kombinieren</h2>
+      <p>Filter und Sortierung können kombiniert werden:</p>
+      <p><code>Table $tasks where row.done == false by priority</code></p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="overlays.html">&larr; Overlays</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <span class="next disabled">Ende</span>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="../tutorial/tutorial.js"></script>
+</body>
+</html>

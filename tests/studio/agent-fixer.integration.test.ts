@@ -148,10 +148,10 @@ describe('Fixer Integration Tests', () => {
 
     test('should handle append action', async () => {
       harness = createFixerTestHarness({
-        files: { 'tokens.tok': '$primary: #3b82f6' },
+        files: { 'tokens.tok': 'primary.bg: #3b82f6' },
         useMockCli: true,
         mockResponse: createMockFixerResponse([
-          { file: 'tokens.tok', action: 'append', code: '$secondary: #22c55e' }
+          { file: 'tokens.tok', action: 'append', code: 'secondary.bg: #22c55e' }
         ])
       })
 
@@ -159,7 +159,7 @@ describe('Fixer Integration Tests', () => {
 
       expect(result.success).toBe(true)
       const content = harness.getFileContent('tokens.tok')
-      expect(content).toContain('$secondary: #22c55e')
+      expect(content).toContain('secondary.bg: #22c55e')
     })
 
     test('should handle mock error', async () => {

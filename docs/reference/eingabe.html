@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Referenz – Eingabe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="reference.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Eingabe</h1>
+      <p class="subtitle">Referenz für Formular-Komponenten</p>
+    </header>
+
+    <nav class="toc">
+      <a href="#checkbox">Checkbox</a>
+      <a href="#switch">Switch</a>
+      <a href="#radiogroup">RadioGroup</a>
+      <a href="#slider">Slider</a>
+      <a href="#select">Select</a>
+      <a href="#datepicker">DatePicker</a>
+    </nav>
+
+
+    <!-- ============================================================ -->
+    <section id="checkbox">
+      <h2>Checkbox</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Checkbox "Newsletter", checked</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>checked</code> <code>disabled</code> <code>indeterminate</code> <code>name</code> <code>value</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Checkbox "Custom Checkbox"
+  Root: hor, gap 12, pad 12, bg #1a1a1a, rad 8
+  Control: w 24, h 24, rad 6, bg #333
+  Label: col white, fs 14
+  Indicator: ic white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>checked:</code> <code>disabled:</code> <code>focus:</code> <code>hover:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="switch">
+      <h2>Switch</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Switch "Dark Mode", checked</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>checked</code> <code>disabled</code> <code>name</code> <code>label</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Switch "Dark Mode"
+  Root: hor, gap 12
+  Track: w 52, h 28, rad 99, bg #333
+  Thumb: w 24, h 24, rad 99, bg white
+  Label: col white, fs 14</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>checked:</code> <code>disabled:</code> <code>focus:</code> <code>hover:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="radiogroup">
+      <h2>RadioGroup</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>RadioGroup value "monthly"
+  RadioItem "Monatlich", value "monthly"
+  RadioItem "Jährlich", value "yearly"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>value</code> <code>defaultValue</code> <code>disabled</code> <code>orientation</code> <code>name</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>RadioGroup value "monthly"
+  Root: gap 8
+  Item: hor, gap 10, pad 8, cursor pointer
+  ItemControl: w 20, h 20, bor 2, boc #444, rad 99
+  ItemText: col white, fs 14
+  Indicator: w 10, h 10, bg #2563eb, rad 99
+
+  RadioItem "Monatlich", value "monthly"
+  RadioItem "Jährlich", value "yearly"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>checked:</code> <code>disabled:</code> <code>focus:</code> <code>hover:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="slider">
+      <h2>Slider</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Slider value 50, min 0, max 100, w 200</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>value</code> <code>defaultValue</code> <code>min</code> <code>max</code> <code>step</code> <code>disabled</code> <code>orientation</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Slider value 50, min 0, max 100, w 200
+  Root: gap 8
+  Track: h 6, bg #333, rad 99
+  Range: bg #2563eb, rad 99
+  Thumb: w 18, h 18, bg white, rad 99</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>disabled:</code> <code>focus:</code> <code>hover:</code> <code>dragging:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="select">
+      <h2>Select</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Select placeholder "Stadt wählen..."
+  Option "Berlin", value "berlin"
+  Option "Hamburg", value "hamburg"
+  Option "München", value "munich"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>value</code> <code>defaultValue</code> <code>placeholder</code> <code>multiple</code> <code>disabled</code> <code>positioning</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Select placeholder "Wähle..."
+  Trigger: bg #1a1a1a, bor 1, boc #333, pad 12, rad 6, hor, spread, w 200
+  Content: bg #1a1a1a, rad 8, pad 4, shadow lg
+  Item: pad 10 12, rad 4, col white, cursor pointer
+    hover:
+      bg #333
+
+  Option "Berlin", value "berlin"
+  Option "Hamburg", value "hamburg"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>open:</code> <code>selected:</code> <code>highlighted:</code> <code>disabled:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="datepicker">
+      <h2>DatePicker</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>DatePicker</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>value</code> <code>defaultValue</code> <code>min</code> <code>max</code> <code>locale</code> <code>disabled</code> <code>selectionMode</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>DatePicker
+  Root: gap 8
+  Control: hor, bg #1a1a1a, bor 1, boc #333, rad 6
+  Input: bg transparent, pad 12, col white, bor 0
+  Trigger: pad 12
+    Icon "calendar", ic #666
+  Content: bg #1a1a1a, pad 16, rad 12, shadow lg</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>open:</code> <code>selected:</code> <code>today:</code> <code>disabled:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+
+    <div class="summary">
+      <h2>Weitere Komponenten</h2>
+      <p>Diese Referenz zeigt die wichtigsten Eingabe-Komponenten. Weitere verfügbar:</p>
+      <p class="props-list">
+        <code>Input</code> <code>Textarea</code> <code>NumberInput</code> <code>PinInput</code>
+        <code>RangeSlider</code> <code>TagsInput</code> <code>Combobox</code> <code>DateInput</code>
+      </p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="../tutorial/11-eingabe.html">&larr; Tutorial</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="navigation.html">Navigation &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="../tutorial/tutorial.js"></script>
+</body>
+</html>

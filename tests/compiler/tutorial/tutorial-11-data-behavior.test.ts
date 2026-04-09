@@ -34,10 +34,11 @@ describe('Tutorial: $-Zeichen: Variablen lesen', () => {
 
   it('Tutorial Beispiel 1: Text $userName zeigt Variablenwert', () => {
     // docs/tutorial/10-data.html Zeile 32-34
+    // Note: Variables in text must be in quotes
     const { root } = renderWithRuntime(`
 $userName: "Max Mustermann"
 
-Text $userName, col white, fs 14`, container)
+Text "$userName", col white, fs 14`, container)
 
     const text = root.querySelector('span')
     expect(text).toBeTruthy()
@@ -65,6 +66,7 @@ describe('Tutorial: Drei Wege, Daten zu definieren - In Mirror', () => {
 
   it('Tutorial Beispiel 3: Mehrere Variablen im UI', () => {
     // docs/tutorial/10-data.html Zeile 63-74
+    // Note: Variables in text must be in quotes
     const { root } = renderWithRuntime(`
 $userName: "Anna Schmidt"
 $userRole: "Admin"
@@ -72,10 +74,10 @@ $itemCount: 42
 
 Frame bg #1a1a1a, pad 16, rad 8, gap 8
   Frame hor, gap 8
-    Text $userName, col white, fs 14, weight 500
+    Text "$userName", col white, fs 14, weight 500
     Frame pad 4 8, bg #2563eb, rad 4
-      Text $userRole, col white, fs 11
-  Text $itemCount + " Einträge", col #888, fs 12`, container)
+      Text "$userRole", col white, fs 11
+  Text "$itemCount Einträge", col #888, fs 12`, container)
 
     const spans = root.querySelectorAll('span')
     const textContents = Array.from(spans).map(s => s.textContent)
@@ -214,6 +216,7 @@ Text $firstName + " " + $lastName, col white`, container)
 
   it('Tutorial Beispiel 9: Mathematische Operationen (Warenkorb)', () => {
     // docs/tutorial/10-data.html Zeile 415-432
+    // Note: Variables in text must be in quotes: "$quantity" or "text with $quantity"
     const { root } = renderWithRuntime(`
 $quantity: 3
 $unitPrice: 49
@@ -222,13 +225,13 @@ $discount: 10
 Frame bg #1a1a1a, pad 16, rad 8, gap 8
   Frame hor, spread
     Text "Menge:", col #888
-    Text $quantity, col white
+    Text "$quantity", col white
   Frame hor, spread
     Text "Einzelpreis:", col #888
-    Text "€" + $unitPrice, col white
+    Text "€$unitPrice", col white
   Frame hor, spread
     Text "Rabatt:", col #888
-    Text $discount + "%", col #ef4444
+    Text "$discount%", col #ef4444
   Divider boc #333
   Frame hor, spread
     Text "Gesamt:", col white, weight 500
@@ -406,15 +409,16 @@ describe('Tutorial: YAML-ähnliche Datenstrukturen', () => {
   it('Tutorial Beispiel 14: Verschachtelte Konfiguration ($config.app.name)', () => {
     // docs/tutorial/10-data.html Zeile 209-214
     // Simulating: $config = { app: { name: "Meine App", version: "2.1.0" }}
+    // Note: Variables in text must be in quotes
     const { root } = renderWithRuntime(`
 $appName: "Meine App"
 $appVersion: "2.1.0"
 
 Frame bg #1a1a1a, pad 16, rad 8, gap 12
   Frame hor, spread
-    Text $appName, col white, fs 16, weight 500
+    Text "$appName", col white, fs 16, weight 500
     Frame pad 4 8, bg #333, rad 4
-      Text "v" + $appVersion, col #888, fs 11`, container)
+      Text "v$appVersion", col #888, fs 11`, container)
 
     const spans = root.querySelectorAll('span')
     const textContents = Array.from(spans).map(s => s.textContent)

@@ -28,6 +28,7 @@
     "typecheck": "tsc --noEmit",
     "generate": "npx tsx scripts/generate-from-schema.ts",
     "generate:check": "npx tsx scripts/generate-from-schema.ts --check",
+    "generate:claude": "npx tsx scripts/generate-claude-tutorial.ts",
     "build:tutorial": "npx tsx scripts/generate-tutorial.ts"
   },
   "dependencies": {

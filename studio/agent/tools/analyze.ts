@@ -254,8 +254,9 @@ function analyzeCode(lines: string[], selector?: string): any {
 
     if (!trimmed) continue
 
-    // Token definitions
-    if (trimmed.startsWith('$')) {
+    // Token definitions (legacy with $ or new without $)
+    // e.g., "$primary.bg: #2563eb" or "primary.bg: #2563eb"
+    if (trimmed.startsWith('$') || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(trimmed)) {
       tokens.push(trimmed.split(':')[0])
       continue
     }
@@ -505,14 +506,18 @@ function getOrganizationSuggestions(code: string): Suggestion[] {
   const suggestions: Suggestion[] = []
 
   const lines = code.split('\n')
-  const tokenLines = lines.filter(l => l.trim().startsWith('$')).length
+  // Count token lines (legacy with $ or new syntax name.suffix:)
+  const tokenLines = lines.filter(l => {
+    const trimmed = l.trim()
+    return trimmed.startsWith('$') || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(trimmed)
+  }).length
 
   if (tokenLines === 0 && code.match(/#[0-9a-fA-F]{3,6}/g)?.length || 0 > 3) {
     suggestions.push({
       title: 'Extract design tokens',
       description: 'Define colors, spacing, and other values as tokens for consistency.',
       impact: 'high',
-      action: 'Add $accent.bg: #007bff and similar tokens at the top'
+      action: 'Add accent.bg: #007bff and similar tokens at the top'
     })
   }
 
@@ -621,7 +626,8 @@ function calculateStats(lines: string[]): any {
       continue
     }
 
-    if (trimmed.startsWith('$')) {
+    // Token definitions (legacy with $ or new syntax name.suffix:)
+    if (trimmed.startsWith('$') || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(trimmed)) {
       tokenCount++
       continue
     }

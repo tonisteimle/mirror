@@ -2,9 +2,10 @@
 
 :root {
   --bg: #111;
-  --bg-code: #191919;
+  --bg-code: #1a1a1a;
+  --bg-code-inline: #333;
   --bg-preview: #0c0c0c;
-  --text: #a0a0a0;
+  --text: #909090;
   --text-bright: #eee;
   --text-dim: #666;
   --border: #282828;
@@ -13,14 +14,14 @@
   --mono: 'JetBrains Mono', monospace;
 
   /* Syntax highlighting */
-  --syn-comment: #5c6370;
-  --syn-string: #a88fb0;
-  --syn-hex: #a88fb0;
-  --syn-number: #c9a87c;
-  --syn-property: #7fb3a8;
-  --syn-component: #8aabbd;
-  --syn-keyword: #7a9ec2;
-  --syn-token: #c9a87c;
+  --syn-comment: #888;
+  --syn-string: #c9a8c8;
+  --syn-hex: #c9a8c8;
+  --syn-number: #dbc198;
+  --syn-property: #9cd4c8;
+  --syn-component: #a8c8d8;
+  --syn-keyword: #9cc0db;
+  --syn-token: #dbc198;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,10 +67,13 @@ h3 {
 }
 
 p { margin-bottom: 12px; }
+ul, ol { padding-left: 24px; margin-bottom: 12px; }
+li { margin-bottom: 4px; }
+strong, b { font-weight: normal; color: var(--text-bright); }
 code {
   font-family: var(--mono);
   font-size: 13px;
-  background: var(--bg-code);
+  background: var(--bg-code-inline);
   padding: 2px 6px;
   border-radius: 3px;
   color: var(--text-bright);
@@ -105,6 +109,7 @@ a:hover { text-decoration: underline; }
   white-space: pre-wrap;
   word-wrap: break-word;
   pointer-events: none;
+  color: #ccc;
 }
 .playground-code textarea {
   position: absolute;
@@ -269,27 +274,58 @@ nav {
 }
 .props span { color: var(--text-dim); }
 
-/* Exercise Box (Lektion) */
+/* Exercise Box */
 .exercise {
   margin: 32px 0;
-  padding: 24px;
+  padding: 20px;
   background: var(--bg-code);
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 .exercise h3 {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-bright);
   margin-bottom: 12px;
 }
-.exercise p { margin-bottom: 16px; font-size: 13px; }
-.exercise .target {
-  background: var(--bg-preview);
-  padding: 20px;
-  border-radius: 4px;
+.exercise > p {
   margin-bottom: 16px;
-  display: flex;
-  justify-content: center;
+  font-size: 14px;
+  color: var(--text);
+}
+.exercise .exercise-preview {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.exercise .exercise-preview .playground-code {
+  position: absolute;
+  left: -9999px;
+}
+.exercise .exercise-preview .playground-preview {
+  min-height: 60px;
+}
+.exercise details {
+  margin-top: 0;
+}
+.exercise summary {
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.exercise summary:hover {
+  color: var(--text);
+}
+.exercise details pre {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--bg-preview);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text);
 }
 
 /* Details/Solution (Lektion) */

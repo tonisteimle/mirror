@@ -300,7 +300,7 @@ export function generateDefaultContent(filename: string): string {
 
   switch (type.type) {
     case 'tokens':
-      return `// ${filename}\n\n$primary.bg: #3b82f6\n$surface.bg: #1a1a1a\n`
+      return `// ${filename}\n\nprimary.bg: #3b82f6\nsurface.bg: #1a1a1a\n`
     case 'component':
       return `// ${filename}\n\nMyComponent: pad 16, bg #1a1a1a, rad 8\n`
     case 'layout':

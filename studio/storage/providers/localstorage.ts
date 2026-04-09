@@ -37,39 +37,39 @@ const DEFAULT_PROJECT: Record<string, string> = {
   'tokens.tok': `// Theme Tokens
 
 // Typography
-$font: Inter, system-ui, -apple-system, sans-serif
+font: Inter, system-ui, -apple-system, sans-serif
 
-$s.fs: 12
-$m.fs: 14
-$l.fs: 18
-$xl.fs: 24
-$xxl.fs: 32
+s.fs: 12
+m.fs: 14
+l.fs: 18
+xl.fs: 24
+xxl.fs: 32
 
 // Colors
-$accent: #3b82f6
-$surface: #27272a
-$canvas: #18181b
-$input: #1f1f1f
-$text: #ffffff
-$muted: #a1a1aa
-$border: #333333
-$focus: #3b82f6
+accent.bg: #3b82f6
+surface.bg: #27272a
+canvas.bg: #18181b
+input.bg: #1f1f1f
+text.col: #ffffff
+muted.col: #a1a1aa
+border.boc: #333333
+focus.boc: #3b82f6
 
 // Spacing
-$s.pad: 4
-$m.pad: 8
-$l.pad: 16
-$xl.pad: 32
+s.pad: 4
+m.pad: 8
+l.pad: 16
+xl.pad: 32
 
-$s.gap: 4
-$m.gap: 8
-$l.gap: 16
-$xl.gap: 32
+s.gap: 4
+m.gap: 8
+l.gap: 16
+xl.gap: 32
 
 // Radius
-$s.rad: 4
-$m.rad: 8
-$l.rad: 12`,
+s.rad: 4
+m.rad: 8
+l.rad: 12`,
 
   'components.com': `// Component Definitions
 
@@ -84,8 +84,8 @@ Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
 
 Card: bg $surface, pad $l, rad $m, gap $l
 
-Input: pad $m, bg $input, rad $s, bor 1 $border, col $text
-  focus bor 1 $focus`
+Input: pad $m, bg $input, rad $s, bor 1, boc $border, col $text
+  focus boc $focus`
 }
 
 // =============================================================================

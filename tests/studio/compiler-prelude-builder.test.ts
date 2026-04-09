@@ -15,7 +15,7 @@ describe('buildPrelude', () => {
   it('should return empty prelude for token files', () => {
     const result = buildPrelude({
       files: {
-        'tokens.mirror': '$accent.bg: #007bff',
+        'tokens.mirror': 'accent.bg: #007bff',
         'main.mirror': 'Box bg $accent.bg',
       },
       currentFile: 'tokens.mirror',
@@ -31,21 +31,21 @@ describe('buildPrelude', () => {
   it('should include tokens in prelude for layout files', () => {
     const result = buildPrelude({
       files: {
-        'tokens.mirror': '$accent.bg: #007bff',
+        'tokens.mirror': 'accent.bg: #007bff',
         'main.mirror': 'Box bg $accent.bg',
       },
       currentFile: 'main.mirror',
       getFileType,
     })
 
-    expect(result.prelude).toContain('$accent.bg: #007bff')
+    expect(result.prelude).toContain('accent.bg: #007bff')
     expect(result.tokenCount).toBe(1)
   })
 
   it('should include both tokens and components for layout files', () => {
     const result = buildPrelude({
       files: {
-        'tokens.mirror': '$accent.bg: #007bff',
+        'tokens.mirror': 'accent.bg: #007bff',
         'button.mirror': 'Button: = Box pad 16',
         'main.mirror': 'Button',
       },
@@ -53,7 +53,7 @@ describe('buildPrelude', () => {
       getFileType,
     })
 
-    expect(result.prelude).toContain('$accent.bg: #007bff')
+    expect(result.prelude).toContain('accent.bg: #007bff')
     expect(result.prelude).toContain('Button: = Box pad 16')
     expect(result.tokenCount).toBe(1)
     expect(result.componentCount).toBe(1)
@@ -62,7 +62,7 @@ describe('buildPrelude', () => {
   it('should only include tokens for component files', () => {
     const result = buildPrelude({
       files: {
-        'tokens.mirror': '$accent.bg: #007bff',
+        'tokens.mirror': 'accent.bg: #007bff',
         'button.mirror': 'Button: = Box bg $accent.bg',
         'card.component.mirror': 'Card: = Box\n  Button',
       },
@@ -70,7 +70,7 @@ describe('buildPrelude', () => {
       getFileType,
     })
 
-    expect(result.prelude).toContain('$accent.bg: #007bff')
+    expect(result.prelude).toContain('accent.bg: #007bff')
     expect(result.prelude).not.toContain('Card')
     expect(result.tokenCount).toBe(1)
     expect(result.componentCount).toBe(0)

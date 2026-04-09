@@ -41,9 +41,9 @@ Frame gap 8
 Frame gap 8
   each user in [{ name: "Anna", role: "Admin" }, { name: "Ben", role: "User" }, { name: "Clara", role: "Editor" }]
     Frame hor, spread, bg #1a1a1a, pad 12, rad 6
-      Text $user.name, col white, fs 13
+      Text "$user.name", col white, fs 13
       Frame bg #333, pad 4 10, rad 4
-        Text $user.role, col #888, fs 11
+        Text "$user.role", col #888, fs 11
       `)
       cleanup = c
 
@@ -155,8 +155,8 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 240
   Text "Warenkorb", col white, fs 16, weight 600
   each row in [{ label: "Anzahl", value: "3 Stück" }, { label: "Preis/Stück", value: "€29" }]
     Frame hor, spread, pad 12, bg #252525, rad 6
-      Text $row.label, col #888, fs 13
-      Text $row.value, col white, fs 13
+      Text "$row.label", col #888, fs 13
+      Text "$row.value", col white, fs 13
   Frame hor, spread
     Text "Gesamt", col white, fs 14, weight 500
     Text "€87", col #10b981, fs 16, weight 600
@@ -181,8 +181,8 @@ Frame grid 2, gap 12
       Frame w full, h 80, bg #2563eb, center
         Icon "package", ic white, is 32
       Frame pad 12, gap 4
-        Text $product.name, col white, fs 14, weight 500
-        Text $product.price, col #888, fs 13
+        Text "$product.name", col white, fs 14, weight 500
+        Text "$product.price", col #888, fs 13
       `)
       cleanup = c
 
@@ -206,11 +206,11 @@ Frame gap 12
   Frame hor, gap 12
     each stat in [{ label: "Besucher", value: "12.4k", change: "+12%" }, { label: "Umsatz", value: "8.2k", change: "+8%" }]
       Frame w full, bg #1a1a1a, pad 16, rad 12, gap 8
-        Text $stat.label, col #888, fs 11
-        Text $stat.value, col white, fs 24, weight 600
+        Text "$stat.label", col #888, fs 11
+        Text "$stat.value", col white, fs 24, weight 600
         Frame hor, gap 4
           Icon "trending-up", ic #10b981, is 14
-          Text $stat.change, col #10b981, fs 12
+          Text "$stat.change", col #10b981, fs 12
       `)
       cleanup = c
 

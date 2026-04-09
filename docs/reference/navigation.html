@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Referenz – Navigation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="reference.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Navigation</h1>
+      <p class="subtitle">Referenz für Navigation-Komponenten</p>
+    </header>
+
+    <nav class="toc">
+      <a href="#tabs">Tabs</a>
+      <a href="#sidenav">SideNav</a>
+      <a href="#accordion">Accordion</a>
+      <a href="#steps">Steps</a>
+    </nav>
+
+
+    <!-- ============================================================ -->
+    <section id="tabs">
+      <h2>Tabs</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "Home"
+  Tab "Home"
+    Text "Home content"
+  Tab "Settings"
+    Text "Settings content"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>defaultValue</code> <code>value</code> <code>orientation</code> <code>activationMode</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "Home"
+  List: bor 0 0 1 0, boc #333, gap 24
+  Trigger: pad 12 0, col #888
+  Indicator: h 2, bg #2563eb
+  Content: pad 16 0
+
+  Tab "Home"
+    Text "Home content"
+  Tab "Settings"
+    Text "Settings content"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>selected:</code> <code>disabled:</code> <code>focus:</code> <code>hover:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="sidenav">
+      <h2>SideNav</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "home", w 180
+  NavItem "Home", icon "home", value "home"
+  NavItem "Settings", icon "settings", value "settings"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>defaultValue</code> <code>value</code> <code>collapsed</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "home", w 200
+  Root: bg #0a0a0a, bor 0 1 0 0, boc #222
+  Item: pad 10 14, rad 6, margin 2 8, col #888
+  ItemBadge: bg #ef4444, col white, pad 2 6, rad 99, fs 10
+  GroupLabel: pad 8 14, col #444, fs 10, uppercase
+
+  NavItem "Home", icon "home", value "home"
+  NavItem "Messages", icon "mail", value "msg", badge "3"
+  NavGroup "Settings"
+    NavItem "Account", icon "user", value "account"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>selected:</code> <code>disabled:</code> <code>hover:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="accordion">
+      <h2>Accordion</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Accordion
+  AccordionItem "Section 1"
+    Text "Content for section 1"
+  AccordionItem "Section 2"
+    Text "Content for section 2"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>defaultValue</code> <code>value</code> <code>multiple</code> <code>collapsible</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Accordion
+  Item: bg #1a1a1a, rad 8, margin 0 0 4 0
+  ItemTrigger: pad 16, col white
+  ItemIndicator: ic #666
+  ItemContent: pad 0 16 16 16, col #888
+
+  AccordionItem "Section 1"
+    Text "Content for section 1"
+  AccordionItem "Section 2"
+    Text "Content for section 2"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>open:</code> <code>disabled:</code> <code>focus:</code> <code>hover:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="steps">
+      <h2>Steps</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Steps defaultValue 1
+  Step "Account"
+  Step "Profile"
+  Step "Done"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>defaultValue</code> <code>value</code> <code>orientation</code> <code>linear</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Steps defaultValue 1
+  List: hor, gap 8
+  Item: hor, gap 8, ver-center
+  ItemIndicator: w 32, h 32, rad 99, bg #333, center, col white
+    active:
+      bg #2563eb
+    complete:
+      bg #10b981
+  ItemSeparator: h 2, w 32, bg #333
+
+  Step "Account"
+  Step "Profile"
+  Step "Done"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>active:</code> <code>complete:</code> <code>incomplete:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+
+    <div class="summary">
+      <h2>Weitere Komponenten</h2>
+      <p>Weitere Navigation-Komponenten:</p>
+      <p class="props-list">
+        <code>Collapsible</code> <code>Pagination</code> <code>TreeView</code> <code>Breadcrumb</code>
+      </p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="eingabe.html">&larr; Eingabe</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="overlays.html">Overlays &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="../tutorial/tutorial.js"></script>
+</body>
+</html>

@@ -19,9 +19,7 @@
       <p class="subtitle">Werte zentral definieren und überall verwenden</p>
     </header>
 
-    <p class="intro">Im letzten Kapitel hast du gelernt, Struktur zu abstrahieren – mit Komponenten. Dieses Kapitel zeigt, wie du <strong>Werte</strong> abstrahierst: Farben, Abstände, Radien. Statt <code>#2563eb</code> überall zu wiederholen, definierst du es einmal als Token.</p>
-
-    <p>Das Konzept ist einfach: Ein <strong>Token</strong> ist ein Name für einen Wert. Statt einer "magischen Zahl" wie <code>#2563eb</code> schreibst du <code>$primary</code> – einen Namen, der die <em>Bedeutung</em> beschreibt, nicht den konkreten Wert.</p>
+    <p class="intro">Im letzten Kapitel hast du gelernt, Struktur zu abstrahieren – mit Komponenten. Dieses Kapitel zeigt, wie du <strong>Werte</strong> abstrahierst: Farben, Abstände, Radien. Statt Hex-Codes überall zu wiederholen, definierst du sie einmal als Token.</p>
 
 
     <!-- ============================================================ -->
@@ -51,17 +49,17 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
     <!-- ============================================================ -->
     <section>
       <h2>Tokens definieren</h2>
-      <p>Ein Token ist ein Name für einen Wert. Die Syntax hat zwei Teile:</p>
+      <p>Ein Token ist ein Name für einen Wert. Die Syntax:</p>
       <ul>
-        <li><strong>Definition:</strong> <code>$name.suffix: wert</code> – mit Suffix</li>
-        <li><strong>Verwendung:</strong> <code>bg $name</code> – ohne Suffix</li>
+        <li><strong>Definition:</strong> <code>name.suffix: wert</code> – ohne <code>$</code></li>
+        <li><strong>Verwendung:</strong> <code>bg $name</code> – mit <code>$</code></li>
       </ul>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Token definieren
-$primary.bg: #2563eb
+          <textarea>// Token definieren (ohne $)
+primary.bg: #2563eb
 
-// Token verwenden (ohne Suffix!)
+// Token verwenden (mit $, ohne Suffix)
 Btn: bg $primary, col white, pad 10 20, rad 6
 
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
@@ -74,13 +72,13 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 
       <p><strong>Was passiert hier?</strong></p>
       <ul>
-        <li><code>$primary.bg: #2563eb</code> – definiert einen Token namens "primary" für Hintergrundfarben</li>
-        <li><code>bg $primary</code> – verwendet den Token (ohne <code>.bg</code>, weil <code>bg</code> schon sagt, dass es eine Hintergrundfarbe ist)</li>
-        <li>Änderst du jetzt <code>$primary.bg</code> auf <code>#10b981</code>, werden alle drei Buttons grün</li>
+        <li><code>primary.bg: #2563eb</code> – definiert einen Token namens "primary" für Hintergrundfarben</li>
+        <li><code>bg $primary</code> – verwendet den Token (<code>$</code> bedeutet "hole den Wert")</li>
+        <li>Änderst du jetzt <code>primary.bg</code> auf <code>#10b981</code>, werden alle drei Buttons grün</li>
       </ul>
 
       <div class="note">
-        <strong>Die Regel:</strong> Bei der Definition schreibst du den Suffix (<code>.bg</code>), bei der Verwendung nicht. Das Property (<code>bg</code>) zeigt bereits, welcher Typ gemeint ist.
+        <strong>Die Regel:</strong> Definition ohne <code>$</code>, Verwendung mit <code>$</code>. Das <code>$</code> ist ein Platzhalter – "hier den Wert einsetzen".
       </div>
     </section>
 
@@ -91,12 +89,12 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
       <p>Der Suffix sagt, wofür der Token gedacht ist:</p>
       <table class="ref-table">
         <tr><th>Suffix</th><th>Bedeutung</th><th>Beispiel</th></tr>
-        <tr><td><code>.bg</code></td><td>Hintergrundfarbe</td><td><code>$primary.bg: #2563eb</code></td></tr>
-        <tr><td><code>.col</code></td><td>Textfarbe</td><td><code>$muted.col: #888</code></td></tr>
-        <tr><td><code>.boc</code></td><td>Border-Farbe</td><td><code>$border.boc: #333</code></td></tr>
-        <tr><td><code>.rad</code></td><td>Radius</td><td><code>$card.rad: 8</code></td></tr>
-        <tr><td><code>.pad</code></td><td>Padding</td><td><code>$space.pad: 16</code></td></tr>
-        <tr><td><code>.gap</code></td><td>Abstand</td><td><code>$space.gap: 12</code></td></tr>
+        <tr><td><code>.bg</code></td><td>Hintergrundfarbe</td><td><code>primary.bg: #2563eb</code></td></tr>
+        <tr><td><code>.col</code></td><td>Textfarbe</td><td><code>muted.col: #888</code></td></tr>
+        <tr><td><code>.boc</code></td><td>Border-Farbe</td><td><code>border.boc: #333</code></td></tr>
+        <tr><td><code>.rad</code></td><td>Radius</td><td><code>card.rad: 8</code></td></tr>
+        <tr><td><code>.pad</code></td><td>Padding</td><td><code>space.pad: 16</code></td></tr>
+        <tr><td><code>.gap</code></td><td>Abstand</td><td><code>space.gap: 12</code></td></tr>
       </table>
 
       <div class="note">
@@ -106,10 +104,10 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
       <p>Hier ein Beispiel mit mehreren Token-Typen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>$primary.bg: #2563eb
-$primary.col: white
-$card.bg: #1a1a1a
-$card.rad: 8
+          <textarea>primary.bg: #2563eb
+primary.col: white
+card.bg: #1a1a1a
+card.rad: 8
 
 // Jeder Token am richtigen Property
 Btn: bg $primary, col $primary, pad 10 20, rad 6
@@ -123,8 +121,8 @@ Card
 
       <p><strong>Was passiert hier?</strong></p>
       <ul>
-        <li><code>$primary.bg</code> und <code>$primary.col</code> – zwei Tokens mit dem gleichen Namen aber unterschiedlichen Suffixen</li>
-        <li><code>$card.bg</code> und <code>$card.rad</code> – Tokens für die Card: Hintergrund und Radius</li>
+        <li><code>primary.bg</code> und <code>primary.col</code> – zwei Tokens mit dem gleichen Namen aber unterschiedlichen Suffixen</li>
+        <li><code>card.bg</code> und <code>card.rad</code> – Tokens für die Card: Hintergrund und Radius</li>
         <li>Bei <code>bg $primary</code> wird automatisch <code>$primary.bg</code> verwendet</li>
         <li>Bei <code>rad $card</code> wird automatisch <code>$card.rad</code> verwendet</li>
       </ul>
@@ -134,33 +132,22 @@ Card
     <!-- ============================================================ -->
     <section>
       <h2>Semantische Tokens</h2>
-      <p>Jetzt wird es interessant: Tokens können <em>andere Tokens referenzieren</em>. Damit trennst du zwei Ebenen:</p>
-      <ul>
-        <li><strong>Primitive Tokens</strong> – die Rohwerte deiner Farbpalette (<code>$blue</code>, <code>$red</code>)</li>
-        <li><strong>Semantische Tokens</strong> – die Bedeutung (<code>$primary</code>, <code>$danger</code>)</li>
-      </ul>
-      <p>Warum das wichtig ist? Deine Komponenten verwenden nur semantische Tokens. Sie wissen nicht, dass "primary" gerade blau ist – sie wissen nur, dass es die Hauptfarbe ist.</p>
+      <p>Der wichtigste Tipp: Benenne Tokens nach ihrer <em>Bedeutung</em>, nicht nach ihrem Wert. Statt <code>$blue</code> schreib <code>$primary</code> – das beschreibt die Funktion, nicht die Farbe.</p>
+      <p>Warum? Deine Komponenten wissen dann nicht, dass "primary" gerade blau ist – sie wissen nur, dass es die Hauptfarbe ist. Willst du später die Primärfarbe ändern, änderst du nur den Token.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// 1. PRIMITIVE – Rohwerte (deine Farbpalette)
-$blue.bg: #2563eb
-$red.bg: #ef4444
-$gray.bg: #1a1a1a
+          <textarea>// SEMANTISCHE TOKENS – benenne nach Bedeutung
+primary.bg: #2563eb
+danger.bg: #ef4444
+card.bg: #1a1a1a
 
-// 2. SEMANTISCH – Bedeutung zuweisen
-// Diese Tokens referenzieren primitive mit $
-$primary.bg: $blue    // "primary" = aktuell "blue"
-$danger.bg: $red      // "danger" = aktuell "red"
-$card.bg: $gray
-
-// 3. KOMPONENTEN – nur semantische Tokens
-// Sie wissen nicht, welche Farbe dahinter steckt
+// KOMPONENTEN – verwenden semantische Tokens
 Btn: bg $primary, col white, pad 10 20, rad 6
 DangerBtn: bg $danger, col white, pad 10 20, rad 6
 Card: bg $card, rad 8, pad 16, gap 8
   Title: col white, fs 16, weight 500
 
-// 4. INSTANZEN
+// INSTANZEN
 Card
   Title "Semantische Tokens"
   Frame hor, gap 8
@@ -172,13 +159,79 @@ Card
 
       <p><strong>Was passiert hier?</strong></p>
       <ul>
-        <li><strong>Zeile 1-3:</strong> Primitive Tokens definieren die Farbpalette – das sind die "echten" Hex-Werte</li>
-        <li><strong>Zeile 6-8:</strong> Semantische Tokens referenzieren Primitive mit <code>$</code> – sie sagen nur "primary bedeutet aktuell blue"</li>
-        <li><strong>Zeile 11-12:</strong> Komponenten verwenden nur semantische Tokens – sie kennen keine konkreten Farben</li>
+        <li><code>primary</code>, <code>danger</code>, <code>card</code> – semantische Namen beschreiben die Funktion</li>
+        <li>Komponenten verwenden nur <code>$token</code> – sie kennen keine konkreten Farben</li>
+        <li>Willst du die Primärfarbe ändern, änderst du nur <code>primary.bg</code> – alle Buttons passen sich an</li>
+      </ul>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Style-Bündel (Property Sets)</h2>
+      <p>Manchmal willst du nicht nur einen einzelnen Wert speichern, sondern eine <strong>Kombination von Styles</strong>. Das nennt sich Property Set – ein Bündel von Properties unter einem Namen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Property Sets definieren (ohne Suffix, mehrere Properties)
+standardtext: fs 14, col #888, weight 500
+cardstyle: bg #1a1a1a, pad 16, rad 8
+centeredrow: hor, center, gap 12
+
+// Property Sets verwenden
+Frame $cardstyle, gap 12
+  Text "Normaler Text", $standardtext
+  Text "Noch ein Text", $standardtext
+  Frame $centeredrow
+    Text "Zentriert", col white
+    Text "•", col #444
+    Text "In einer Reihe", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>standardtext: fs 14, col #888, weight 500</code> – drei Properties in einem Namen gebündelt</li>
+        <li><code>$standardtext</code> – wendet alle drei Properties auf einmal an</li>
+        <li><code>$cardstyle</code> – setzt Hintergrund, Padding und Radius in einem</li>
+        <li><code>$centeredrow</code> – kombiniert Layout-Properties (horizontal, zentriert, Abstand)</li>
       </ul>
 
       <div class="note">
-        <strong>Der Vorteil:</strong> Willst du die Primary-Farbe ändern, änderst du nur <code>$primary.bg: $green</code>. Alle Buttons passen sich automatisch an – ohne dass du eine einzige Komponente anfassen musst. Das ist die Basis für Theming.
+        <strong>Syntax-Unterschied:</strong> Einzelne Tokens haben einen Suffix (<code>primary.bg: #2563eb</code>), Property Sets haben keinen (<code>cardstyle: bg #1a1a1a, pad 16</code>). Das macht den Unterschied klar: Suffix = ein Wert, kein Suffix = mehrere Properties.
+      </div>
+
+      <h3>Property Sets mit Tokens kombinieren</h3>
+      <p>Property Sets können auch andere Tokens referenzieren:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Einzelne Tokens
+primary.bg: #2563eb
+card.bg: #1a1a1a
+
+// Property Sets die Tokens verwenden
+primarybutton: bg $primary, col white, pad 10 20, rad 6
+cardbase: bg $card, pad 16, rad 8, gap 8
+
+Frame $cardbase
+  Text "Card mit Token-Referenz", col white
+  Frame $primarybutton
+    Text "Button"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Wann Property Sets nutzen?</strong></p>
+      <ul>
+        <li>Für wiederkehrende Style-Kombinationen, die keine eigene Komponente brauchen</li>
+        <li>Für typografische Stile: <code>heading: fs 24, weight bold, col white</code></li>
+        <li>Für Layout-Patterns: <code>stackedcenter: stacked, center</code></li>
+      </ul>
+
+      <div class="note">
+        <strong>Property Set vs Komponente:</strong> Ein Property Set ist nur ein Bündel von Styles. Eine Komponente kann zusätzlich Kinder, States und Events haben. Nutze Property Sets für reine Style-Wiederverwendung, Komponenten für strukturelle Bausteine.
       </div>
     </section>
 
@@ -196,11 +249,11 @@ Card
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// 1. TOKENS – Werte zentral definieren
-$btn.bg: #2563eb
-$btn.col: white
-$card.bg: #1a1a1a
-$card.rad: 8
-$space.pad: 16
+btn.bg: #2563eb
+btn.col: white
+card.bg: #1a1a1a
+card.rad: 8
+space.pad: 16
 
 // 2. KOMPONENTEN – Tokens verwenden
 Card: bg $card, rad $card, pad $space, gap 12
@@ -234,15 +287,25 @@ Card
 
     <div class="summary">
       <h2>Das Wichtigste</h2>
+
+      <h3>Einzelne Tokens</h3>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>$primary.bg: #2563eb</code></td><td>Token definieren (mit Suffix)</td></tr>
-        <tr><td><code>bg $primary</code></td><td>Token verwenden (ohne Suffix)</td></tr>
-        <tr><td><code>$primary.bg: $blue</code></td><td>Semantischer Token (referenziert anderen)</td></tr>
+        <tr><td><code>primary.bg: #2563eb</code></td><td>Token definieren (mit Suffix)</td></tr>
+        <tr><td><code>bg $primary</code></td><td>Token verwenden (mit <code>$</code>)</td></tr>
+        <tr><td><code>primary</code> statt <code>blue</code></td><td>Semantisch benennen</td></tr>
+      </table>
+
+      <h3>Property Sets (Style-Bündel)</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>cardstyle: bg #1a1a1a, pad 16, rad 8</code></td><td>Property Set definieren (ohne Suffix)</td></tr>
+        <tr><td><code>Frame $cardstyle</code></td><td>Alle Properties auf einmal anwenden</td></tr>
+        <tr><td><code>heading: fs 24, weight bold</code></td><td>Typografie-Stile bündeln</td></tr>
       </table>
 
       <p><strong>Drei Stufen:</strong> Tokens → Komponenten → Instanzen</p>
-      <p>Tokens abstrahieren Werte, Komponenten abstrahieren Struktur. Zusammen ergeben sie ein konsistentes Design System.</p>
+      <p>Tokens abstrahieren Werte, Property Sets bündeln Styles, Komponenten abstrahieren Struktur. Zusammen ergeben sie ein konsistentes Design System.</p>
     </div>
 
 

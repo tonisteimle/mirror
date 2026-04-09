@@ -704,6 +704,18 @@ export class Parser {
         continue
       }
 
+      // Check for simple list item: identifier without colon
+      // e.g., colors: \n  rot \n  grün \n  blau
+      if (this.check('IDENTIFIER') && (this.checkNext('NEWLINE') || this.checkNext('DEDENT') || this.peekAt(1) === undefined)) {
+        const token = this.advance()
+        attributes.push({
+          key: token.value,
+          value: token.value,  // key IS the value for simple list items
+          line: token.line,
+        })
+        continue
+      }
+
       // Unknown content - skip
       this.advance()
     }
@@ -879,6 +891,31 @@ export class Parser {
         items.push(this.advance().value)
       } else if (this.check('NUMBER')) {
         items.push(this.advance().value)
+      } else if (this.check('COMMA')) {
+        this.advance()
+      } else {
+        break
+      }
+    }
+
+    if (this.check('RBRACKET')) {
+      this.advance()
+    }
+
+    return items
+  }
+
+  /**
+   * Parse a numeric array: [20, 80] → number[]
+   * Used for properties like defaultValue in RangeSlider
+   */
+  private parseNumericArray(): number[] {
+    const items: number[] = []
+    this.advance() // [
+
+    while (!this.isAtEnd() && !this.check('RBRACKET')) {
+      if (this.check('NUMBER')) {
+        items.push(parseFloat(this.advance().value))
       } else if (this.check('COMMA')) {
         this.advance()
       } else {
@@ -1507,10 +1544,11 @@ export class Parser {
       }
     }
 
-    // Check if this line uses child override syntax (contains semicolon)
-    // Syntax: NavItem Icon "home"; Label "Home"
-    if (this.hasChildOverrideSyntax()) {
-      instance.childOverrides = this.parseChildOverridesFromStart()
+    // Check if this line uses inline child syntax (contains semicolon followed by PascalCase)
+    // Syntax: Frame bg #333; Text "Hello"; Button "OK"
+    // → Frame with Text and Button as children
+    if (this.hasInlineChildSyntax()) {
+      this.parseInlineChildrenAfterSemicolon(instance)
     } else {
       // Parse inline properties, events, and content
       this.parseInlineProperties(instance.properties, instance.events)
@@ -2186,9 +2224,17 @@ export class Parser {
         }
 
         if (this.check('IDENTIFIER')) {
-          const child = this.parseInstance(this.advance())
-          if (child.type !== 'ZagComponent') {
-            slot.children.push(child as Instance | Slot)
+          const name = this.current().value
+
+          // Special case: Row without colon inside Header slot = static row
+          if (slotName === 'Header' && name === 'Row' && !this.checkNext('COLON')) {
+            this.advance() // Row
+            slot.staticRow = this.parseTableStaticRow()
+          } else {
+            const child = this.parseInstance(this.advance())
+            if (child.type !== 'ZagComponent') {
+              slot.children.push(child as Instance | Slot)
+            }
           }
         } else {
           this.advance()
@@ -2346,7 +2392,7 @@ export class Parser {
         const propName = this.current().value
 
         // Boolean Zag properties (e.g., multiple, searchable, clearable, disabled)
-        if (validProps.has(propName) && !this.checkNext('STRING') && !this.checkNext('NUMBER')) {
+        if (validProps.has(propName) && !this.checkNext('STRING') && !this.checkNext('NUMBER') && !this.checkNext('LBRACKET')) {
           const token = this.advance()
           zagNode.properties.push({
             type: 'Property',
@@ -2358,7 +2404,7 @@ export class Parser {
           continue
         }
 
-        // Zag property with value (e.g., placeholder "Choose...")
+        // Zag property with value (e.g., placeholder "Choose...", defaultValue [20, 80])
         if (validProps.has(propName)) {
           const token = this.advance()
           const values: any[] = []
@@ -2369,6 +2415,9 @@ export class Parser {
               values.push(this.advance().value)
             } else if (this.check('NUMBER')) {
               values.push(parseFloat(this.advance().value))
+            } else if (this.check('LBRACKET')) {
+              // Array value: [20, 80]
+              values.push(this.parseNumericArray())
             } else if (this.check('IDENTIFIER') && validProps.has(this.current().value)) {
               // Next property starting
               break
@@ -2799,7 +2848,25 @@ export class Parser {
         continue
       }
 
-      // shows property (SideNav): shows ViewName
+      // show syntax: show ViewName [from FileName]
+      // - show Settings → local element or Settings.mirror
+      // - show Settings from Content → Settings element from Content.mirror
+      if (this.check('IDENTIFIER') && this.current().value === 'show') {
+        this.advance() // consume 'show'
+        if (this.check('IDENTIFIER')) {
+          item.shows = this.advance().value
+          // Check for "from FileName"
+          if (this.check('IDENTIFIER') && this.current().value === 'from') {
+            this.advance() // consume 'from'
+            if (this.check('IDENTIFIER')) {
+              item.showsFrom = this.advance().value
+            }
+          }
+        }
+        continue
+      }
+
+      // Legacy: shows property (SideNav): shows ViewName
       if (this.check('IDENTIFIER') && this.current().value === 'shows') {
         this.advance()
         if (this.check('IDENTIFIER')) {
@@ -3090,12 +3157,12 @@ export class Parser {
   }
 
   /**
-   * Look ahead to check if the current line contains child override syntax (semicolons)
-   * Child override syntax: NavItem Icon "home"; Label "Home"
-   * Property syntax: Frame bg #f00; w 100 (NOT child override)
-   * Difference: Child overrides have PascalCase names after semicolon
+   * Look ahead to check if the current line contains inline child syntax (semicolons)
+   * Inline child syntax: Frame bg #333; Text "Hello"; Button "OK"
+   * Property syntax: Frame bg #f00; w 100 (NOT inline child)
+   * Difference: Inline children have PascalCase names after semicolon
    */
-  private hasChildOverrideSyntax(): boolean {
+  private hasInlineChildSyntax(): boolean {
     let ahead = 0
     while (this.pos + ahead < this.tokens.length) {
       const token = this.tokens[this.pos + ahead]
@@ -3106,7 +3173,7 @@ export class Parser {
         // Check what follows the semicolon
         const nextToken = this.tokens[this.pos + ahead + 1]
         if (nextToken && nextToken.type === 'IDENTIFIER') {
-          // If next token is PascalCase (starts with uppercase), it's child override
+          // If next token is PascalCase (starts with uppercase), it's an inline child
           // If lowercase, it's just a property separator
           const firstChar = nextToken.value[0]
           return firstChar === firstChar.toUpperCase()
@@ -3138,44 +3205,70 @@ export class Parser {
   }
 
   /**
-   * Parse child overrides from the start of the line
-   * Syntax: ChildName prop value; ChildName2 prop2 value2
+   * Parse inline children with semicolon syntax
+   *
+   * Two patterns:
+   * 1. All children: NavItem Icon "home"; Label "Home"
+   *    → First token is PascalCase, ALL elements are children
+   * 2. Properties then children: Frame bg #333; Text "Hello"
+   *    → First token is lowercase, properties before ;, children after ;
    */
-  private parseChildOverridesFromStart(): import('./ast').ChildOverride[] {
-    const overrides: import('./ast').ChildOverride[] = []
+  private parseInlineChildrenAfterSemicolon(parent: Instance): void {
+    // Check if the first token is PascalCase (all children mode) or lowercase (properties mode)
+    const firstToken = this.current()
+    const firstIsPascalCase = firstToken?.type === 'IDENTIFIER' &&
+      firstToken.value[0] === firstToken.value[0].toUpperCase()
 
-    // Parse first child override (no leading semicolon)
-    if (this.check('IDENTIFIER')) {
-      const childName = this.advance()
-      const properties: Property[] = []
-      this.parseInlineProperties(properties, undefined, { stopAtSemicolon: true })
-      overrides.push({
-        childName: childName.value,
-        properties,
-      })
+    if (firstIsPascalCase) {
+      // All elements are children (e.g., NavItem Icon "home"; Label "Home")
+      this.parseInlineChild(parent)
+
+      // Parse remaining children after semicolons
+      while (this.check('SEMICOLON')) {
+        this.advance() // consume semicolon
+        if (this.check('NEWLINE') || this.check('INDENT') || this.isAtEnd()) break
+        if (!this.check('IDENTIFIER')) break
+        this.parseInlineChild(parent)
+      }
+    } else {
+      // First part is properties, children come after semicolons
+      // (e.g., Frame bg #333; Text "Hello")
+      this.parseInlineProperties(parent.properties, parent.events, { stopAtSemicolon: true })
+
+      // Parse child elements (after semicolons)
+      while (this.check('SEMICOLON')) {
+        this.advance() // consume semicolon
+        if (this.check('NEWLINE') || this.check('INDENT') || this.isAtEnd()) break
+        if (!this.check('IDENTIFIER')) break
+        this.parseInlineChild(parent)
+      }
+    }
+  }
+
+  /**
+   * Parse a single inline child element and add it to parent
+   */
+  private parseInlineChild(parent: Instance): void {
+    const childName = this.advance()
+
+    // Create child instance
+    const child: Instance = {
+      type: 'Instance',
+      component: childName.value,
+      name: null,
+      properties: [],
+      children: [],
+      states: [],
+      events: [],
+      line: childName.line,
+      column: childName.column,
+      nodeId: this.generateNodeId(),
     }
 
-    // Parse subsequent child overrides (separated by semicolons)
-    while (this.check('SEMICOLON')) {
-      this.advance() // consume semicolon
+    // Parse child's properties (until next semicolon or newline)
+    this.parseInlineProperties(child.properties, child.events, { stopAtSemicolon: true })
 
-      // Skip any whitespace
-      if (this.check('NEWLINE') || this.check('INDENT') || this.isAtEnd()) break
-
-      // Expect child name
-      if (!this.check('IDENTIFIER')) break
-
-      const childName = this.advance()
-      const properties: Property[] = []
-      this.parseInlineProperties(properties, undefined, { stopAtSemicolon: true })
-
-      overrides.push({
-        childName: childName.value,
-        properties,
-      })
-    }
-
-    return overrides
+    parent.children.push(child)
   }
 
   private parseComponentBody(component: ComponentDefinition): void {
@@ -4158,13 +4251,13 @@ export class Parser {
           continue
         }
 
-        // Token reference as content: $userName, $item.name
-        // Identifiers starting with $ are token/variable references for text content
+        // Token reference as property set: $cardstyle applies styles from the token
+        // For text content, use quotes: "$firstName" or "Hello $firstName"
         if (name.startsWith('$')) {
           const token = this.advance()
           instance.properties.push({
             type: 'Property',
-            name: 'content',
+            name: 'propset',  // Property set reference, expanded in IR
             values: [{ kind: 'token' as const, name: token.value.slice(1) }],
             line: token.line,
             column: token.column,
@@ -4375,9 +4468,9 @@ export class Parser {
         continue
       }
 
-      // Token reference as content: Text $userName, Text $item.name
-      // Also handles expressions like: Text $count + " items"
-      // Identifiers starting with $ are token/variable references for text content
+      // Token reference as property set: Frame $cardstyle applies styles
+      // Also handles expressions like: Text $count + " items" (computed expression)
+      // For text content, use quotes: Text "$firstName" or Text "Hello $firstName"
       if (this.check('IDENTIFIER') && this.current().value.startsWith('$')) {
         const token = this.advance()
         const startLine = token.line
@@ -4475,10 +4568,11 @@ export class Parser {
             column: startColumn,
           })
         } else {
-          // Simple token reference
+          // Simple token reference → property set (styles)
+          // For text content, use quotes: "$token" or "text with $token"
           properties.push({
             type: 'Property',
-            name: 'content',
+            name: 'propset',
             values: [tokenRef],
             line: startLine,
             column: startColumn,
@@ -5819,6 +5913,26 @@ export class Parser {
       const isLikelyState = currentName[0] === currentName[0].toLowerCase()
       if (!isLikelyState) return false
       return true
+    }
+
+    // Check for duration directly after state name (no trigger required)
+    // Enables: hover 0.2s: or hover 0.3s ease-out:
+    if (token1?.type === 'NUMBER') {
+      const val = token1.value
+      if (val.endsWith('s') || val.endsWith('ms')) {
+        let durationOffset = 2
+        // Check for optional easing after duration
+        const easingToken = this.peekAt(durationOffset)
+        if (easingToken?.type === 'IDENTIFIER' && EASING_FUNCTIONS.has(easingToken.value)) {
+          durationOffset++
+        }
+        const colonToken = this.peekAt(durationOffset)
+        if (colonToken?.type === 'COLON') {
+          // Verify this is a valid state name (lowercase, not an event)
+          const isLikelyState = currentName[0] === currentName[0].toLowerCase() && !EVENT_NAMES.has(currentName)
+          return isLikelyState
+        }
+      }
     }
 
     // Check for external state reference: ElementName.state:

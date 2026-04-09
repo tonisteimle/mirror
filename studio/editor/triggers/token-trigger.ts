@@ -60,9 +60,9 @@ const PROPERTY_TYPES: Record<string, 'color' | 'spacing'> = {
 
 // Context pattern for $ trigger
 // Matches: property + optional space + $ (e.g., "bg $", "pad$")
-// Also matches token definition with suffix (e.g., "$name.bg: $")
+// Also matches token definition with suffix (e.g., "name.bg: $" or legacy "$name.bg: $")
 const TOKEN_CONTEXT_PATTERN =
-  /\b(bg|background|col|color|boc|border-color|hover-bg|hover-col|hover-boc|pad|padding|gap|margin|rad|radius)\s*$|\$([\w-]+)\.(bg|col|boc|pad|gap|margin|rad):\s*$/
+  /\b(bg|background|col|color|boc|border-color|hover-bg|hover-col|hover-boc|pad|padding|gap|margin|rad|radius)\s*$|\$?([\w-]+)\.(bg|col|boc|pad|gap|margin|rad):\s*$/
 
 // State for token picker
 interface TokenTriggerState {

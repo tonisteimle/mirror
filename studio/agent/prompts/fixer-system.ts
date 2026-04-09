@@ -68,55 +68,56 @@ const FILE_CONVENTIONS = `
 Mirror-Projekte haben drei Datei-Typen:
 
 ### .tok Dateien (Tokens)
-Design-Tokens mit semantischen Suffixen (bg, col, fs, pad, gap, rad):
+Design-Tokens mit semantischen Suffixen (bg, col, fs, pad, gap, rad).
+**Syntax:** Definition OHNE $, Verwendung MIT $.
 \`\`\`
 // Typography
-$font: Inter, system-ui, -apple-system, sans-serif
-$s.fs: 12
-$m.fs: 14
-$l.fs: 18
-$xl.fs: 24
+font: Inter, system-ui, -apple-system, sans-serif
+s.fs: 12
+m.fs: 14
+l.fs: 18
+xl.fs: 24
 
 // Background Colors
-$accent.bg: #3b82f6
-$surface.bg: #27272a
-$canvas.bg: #18181b
+accent.bg: #3b82f6
+surface.bg: #27272a
+canvas.bg: #18181b
 
 // Text Colors
-$text.col: #ffffff
-$muted.col: #a1a1aa
+text.col: #ffffff
+muted.col: #a1a1aa
 
 // Spacing (s=4, m=8, l=16)
-$s.pad: 4
-$m.pad: 8
-$l.pad: 16
-$s.gap: 4
-$m.gap: 8
-$l.gap: 16
+s.pad: 4
+m.pad: 8
+l.pad: 16
+s.gap: 4
+m.gap: 8
+l.gap: 16
 
 // Radius (s=4, m=8, l=12)
-$s.rad: 4
-$m.rad: 8
-$l.rad: 12
+s.rad: 4
+m.rad: 8
+l.rad: 12
 \`\`\`
 
 ### .com Dateien (Komponenten)
 Wiederverwendbare Komponenten-Definitionen:
 \`\`\`
 PrimaryButton as Button:
-  bg $accent.bg, col white, pad $s.pad $m.pad, rad $s.rad
+  bg $accent, col white, pad $s $m, rad $s
   hover bg #2563eb
 
 Card as Box:
-  bg $surface.bg, pad $m.pad, rad $m.rad, gap $s.gap
+  bg $surface, pad $m, rad $m, gap $s
 \`\`\`
 
 ### .mir Dateien (Layout/App)
 Die eigentliche App-Struktur mit Instanzen:
 \`\`\`
-App bg $canvas.bg, pad $l.pad, gap $m.gap
+App bg $canvas, pad $l, gap $m
   Card
-    Text "Willkommen", weight bold, col $text.col
+    Text "Willkommen", weight bold, col $text
     PrimaryButton "Weiter"
 \`\`\`
 
@@ -158,7 +159,7 @@ Antworte IMMER als JSON mit diesem Format:
     {
       "file": "tokens.tok",
       "action": "append",
-      "code": "$warning: #f59e0b"
+      "code": "warning.bg: #f59e0b"
     },
     {
       "file": "components.com",
@@ -172,7 +173,7 @@ Antworte IMMER als JSON mit diesem Format:
       "code": "  WarningButton \\"Achtung\\""
     }
   ],
-  "explanation": "Token $warning erstellt, WarningButton definiert und eingefügt."
+  "explanation": "Token warning.bg erstellt, WarningButton definiert und eingefügt."
 }
 \`\`\`
 

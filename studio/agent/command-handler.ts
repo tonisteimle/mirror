@@ -259,9 +259,10 @@ export class AgentCommandHandler {
     let needsLeadingNewline = false
 
     if (type === 'token') {
-      // Find last token line (starts with $)
+      // Find last token line (starts with $ or is new syntax name.suffix:)
       for (let i = lines.length - 1; i >= 0; i--) {
-        if (lines[i].trim().startsWith('$')) {
+        const trimmed = lines[i].trim()
+        if (trimmed.startsWith('$') || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(trimmed)) {
           insertIndex = i + 1
           break
         }
@@ -307,8 +308,8 @@ export class AgentCommandHandler {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim()
-      // Insert after comments and existing tokens
-      if (line.startsWith('//') || line.startsWith('$') || line === '') {
+      // Insert after comments and existing tokens (legacy with $ or new syntax name.suffix:)
+      if (line.startsWith('//') || line.startsWith('$') || line === '' || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(line)) {
         pos += lines[i].length + 1
         continue
       }

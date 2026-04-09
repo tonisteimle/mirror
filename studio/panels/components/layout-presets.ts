@@ -5,17 +5,14 @@
  * 1. Layout - Shell and layout structures
  * 2. Basic - Frame, Text, Icon, Image
  * 3. Form - Input controls
- * 4. Overlay - Dialogs, tooltips, popovers
- * 5. Navigation - Tabs, accordion, steps
- * 6. Media - Avatar, file upload, carousel
- * 7. Feedback - Progress indicators
+ * 4. Overlay - Dialogs
+ * 5. Navigation - Tabs, SideNav
  */
 
 import type { ComponentItem } from './types'
 
 /**
  * 1. LAYOUT - Simple layout containers
- * Note: Shell compound primitive was removed - these are simple Frame-based containers
  */
 export const LAYOUT_COMPONENTS: ComponentItem[] = [
   {
@@ -57,24 +54,6 @@ export const LAYOUT_COMPONENTS: ComponentItem[] = [
     icon: 'grid',
     description: 'Grid layout',
     defaultSize: { width: 200, height: 150 },
-  },
-  {
-    id: 'layout-sidebar',
-    name: 'Sidebar',
-    category: 'Layout',
-    template: 'Frame',
-    icon: 'sidebar',
-    description: 'Sidebar with navigation',
-    defaultSize: { width: 300, height: 200 },
-  },
-  {
-    id: 'layout-header-footer',
-    name: 'Header/Footer',
-    category: 'Layout',
-    template: 'Frame',
-    icon: 'headerFooter',
-    description: 'Page with header and footer',
-    defaultSize: { width: 300, height: 200 },
   },
 ]
 
@@ -225,116 +204,6 @@ export const FORM_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'form-number-input',
-    name: 'Number Input',
-    category: 'Form',
-    template: 'NumberInput',
-    properties: 'min 0, max 100',
-    icon: 'numberInput',
-    description: 'Numeric stepper',
-    defaultSize: { width: 120, height: 40 },
-    children: [
-      { template: 'Input', isSlot: true },
-      { template: 'IncrementTrigger', isSlot: true },
-      { template: 'DecrementTrigger', isSlot: true },
-    ],
-  },
-  {
-    id: 'form-pin-input',
-    name: 'Pin Input',
-    category: 'Form',
-    template: 'PinInput',
-    properties: 'length 6',
-    icon: 'pinInput',
-    description: 'Code/PIN entry',
-    defaultSize: { width: 240, height: 40 },
-    children: [
-      { template: 'Input', isSlot: true },
-    ],
-  },
-  {
-    id: 'form-password-input',
-    name: 'Password Input',
-    category: 'Form',
-    template: 'PasswordInput',
-    icon: 'passwordInput',
-    description: 'Password with visibility toggle',
-    defaultSize: { width: 200, height: 40 },
-    children: [
-      { template: 'Input', isSlot: true },
-      { template: 'VisibilityTrigger', isSlot: true },
-    ],
-  },
-  {
-    id: 'form-tags-input',
-    name: 'Tags Input',
-    category: 'Form',
-    template: 'TagsInput',
-    icon: 'tagsInput',
-    description: 'Tag/chip input',
-    defaultSize: { width: 250, height: 40 },
-    children: [
-      { template: 'Control', isSlot: true },
-      { template: 'Tag', isSlot: true },
-      { template: 'Input', isSlot: true },
-    ],
-  },
-  {
-    id: 'form-editable',
-    name: 'Editable',
-    category: 'Form',
-    template: 'Editable',
-    properties: 'defaultValue "Click to edit"',
-    icon: 'editable',
-    description: 'Inline edit text',
-    defaultSize: { width: 200, height: 32 },
-    children: [
-      { template: 'Preview', isSlot: true },
-      { template: 'Input', isSlot: true },
-    ],
-  },
-  {
-    id: 'form-segmented-control',
-    name: 'Segmented Control',
-    category: 'Form',
-    template: 'SegmentedControl',
-    icon: 'segmentedControl',
-    description: 'Button group selector',
-    defaultSize: { width: 200, height: 36 },
-    children: [
-      { template: 'Segment', isItem: true, textContent: 'List' },
-      { template: 'Segment', isItem: true, textContent: 'Grid' },
-    ],
-  },
-  {
-    id: 'form-toggle-group',
-    name: 'Toggle Group',
-    category: 'Form',
-    template: 'ToggleGroup',
-    icon: 'toggleGroup',
-    description: 'Multi-select toggles',
-    defaultSize: { width: 150, height: 36 },
-    children: [
-      { template: 'Toggle', isItem: true, textContent: 'B' },
-      { template: 'Toggle', isItem: true, textContent: 'I' },
-      { template: 'Toggle', isItem: true, textContent: 'U' },
-    ],
-  },
-  {
-    id: 'form-listbox',
-    name: 'Listbox',
-    category: 'Form',
-    template: 'Listbox',
-    icon: 'listbox',
-    description: 'List selection',
-    defaultSize: { width: 200, height: 150 },
-    children: [
-      { template: 'ListItem', isItem: true, textContent: 'Item 1' },
-      { template: 'ListItem', isItem: true, textContent: 'Item 2' },
-      { template: 'ListItem', isItem: true, textContent: 'Item 3' },
-    ],
-  },
-  {
     id: 'form-date-picker',
     name: 'Date Picker',
     category: 'Form',
@@ -349,10 +218,23 @@ export const FORM_COMPONENTS: ComponentItem[] = [
       { template: 'Content', isSlot: true },
     ],
   },
+  {
+    id: 'form-date-input',
+    name: 'Date Input',
+    category: 'Form',
+    template: 'DateInput',
+    icon: 'datePicker',
+    description: 'Segmented date input',
+    defaultSize: { width: 200, height: 40 },
+    children: [
+      { template: 'Control', isSlot: true },
+      { template: 'Input', isSlot: true },
+    ],
+  },
 ]
 
 /**
- * 4. OVERLAY - Dialogs, tooltips, popovers
+ * 4. OVERLAY - Dialogs
  */
 export const OVERLAY_COMPONENTS: ComponentItem[] = [
   {
@@ -371,72 +253,10 @@ export const OVERLAY_COMPONENTS: ComponentItem[] = [
       { template: 'Content', isSlot: true, properties: 'w 400, bg #1e1e2e, rad 12, pad 24, shadow lg' },
     ],
   },
-  {
-    id: 'overlay-tooltip',
-    name: 'Tooltip',
-    category: 'Overlay',
-    template: 'Tooltip',
-    icon: 'tooltip',
-    description: 'Hover tooltip',
-    defaultSize: { width: 100, height: 40 },
-    children: [
-      { template: 'Trigger', isSlot: true, children: [
-        { template: 'Button', properties: 'pad 8 16, bg #374151, rad 6', textContent: 'Hover' },
-      ]},
-      { template: 'Content', isSlot: true, properties: 'bg #1f2937, col #fff, pad 8 12, rad 6, fs 12', children: [
-        { template: 'Text', textContent: 'Tooltip text' },
-      ]},
-    ],
-  },
-  {
-    id: 'overlay-popover',
-    name: 'Popover',
-    category: 'Overlay',
-    template: 'Popover',
-    icon: 'popover',
-    description: 'Click popover',
-    defaultSize: { width: 200, height: 150 },
-    children: [
-      { template: 'Trigger', isSlot: true, children: [
-        { template: 'Button', properties: 'pad 8 16, bg #374151, rad 6', textContent: 'Click' },
-      ]},
-      { template: 'Content', isSlot: true, properties: 'w 200, bg #1e1e2e, rad 8, pad 16, shadow lg' },
-    ],
-  },
-  {
-    id: 'overlay-hover-card',
-    name: 'Hover Card',
-    category: 'Overlay',
-    template: 'HoverCard',
-    icon: 'hoverCard',
-    description: 'Hover preview card',
-    defaultSize: { width: 100, height: 40 },
-    children: [
-      { template: 'Trigger', isSlot: true },
-      { template: 'Content', isSlot: true, properties: 'w 200, bg #1e1e2e, rad 8, pad 16, shadow lg' },
-    ],
-  },
-  {
-    id: 'overlay-collapsible',
-    name: 'Collapsible',
-    category: 'Overlay',
-    template: 'Collapsible',
-    icon: 'collapsible',
-    description: 'Expand/collapse content',
-    defaultSize: { width: 250, height: 120 },
-    children: [
-      { template: 'Trigger', isSlot: true, children: [
-        { template: 'Button', textContent: 'Toggle' },
-      ]},
-      { template: 'Content', isSlot: true, children: [
-        { template: 'Text', textContent: 'Collapsible content' },
-      ]},
-    ],
-  },
 ]
 
 /**
- * 5. NAVIGATION - Tabs, accordion, steps
+ * 5. NAVIGATION - Tabs, SideNav
  */
 export const NAVIGATION_COMPONENTS: ComponentItem[] = [
   {
@@ -462,146 +282,36 @@ export const NAVIGATION_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'nav-accordion',
-    name: 'Accordion',
+    id: 'nav-sidenav',
+    name: 'SideNav',
     category: 'Navigation',
-    template: 'Accordion',
-    icon: 'accordion',
-    description: 'Collapsible sections',
-    defaultSize: { width: 300, height: 200 },
+    template: 'SideNav',
+    icon: 'sidebar',
+    description: 'Sidebar navigation',
+    defaultSize: { width: 220, height: 300 },
     children: [
-      { template: 'AccordionItem', isItem: true, textContent: 'Section 1' },
-      { template: 'AccordionItem', isItem: true, textContent: 'Section 2' },
-      { template: 'AccordionItem', isItem: true, textContent: 'Section 3' },
-    ],
-  },
-  {
-    id: 'nav-steps',
-    name: 'Steps',
-    category: 'Navigation',
-    template: 'Steps',
-    icon: 'steps',
-    description: 'Wizard steps',
-    defaultSize: { width: 400, height: 60 },
-    children: [
-      { template: 'Step', isItem: true, textContent: 'Step 1' },
-      { template: 'Step', isItem: true, textContent: 'Step 2' },
-      { template: 'Step', isItem: true, textContent: 'Step 3' },
-    ],
-  },
-  {
-    id: 'nav-pagination',
-    name: 'Pagination',
-    category: 'Navigation',
-    template: 'Pagination',
-    properties: 'count 100, pageSize 10',
-    icon: 'pagination',
-    description: 'Page navigation',
-    defaultSize: { width: 300, height: 40 },
-  },
-  {
-    id: 'nav-tree-view',
-    name: 'Tree View',
-    category: 'Navigation',
-    template: 'TreeView',
-    icon: 'treeView',
-    description: 'Hierarchical tree',
-    defaultSize: { width: 250, height: 200 },
-    children: [
-      { template: 'Branch', isItem: true, textContent: 'Folder' },
-      { template: 'TreeItem', isItem: true, textContent: 'File' },
+      { template: 'NavItem', isItem: true, textContent: 'Dashboard', properties: 'icon "home"' },
+      { template: 'NavItem', isItem: true, textContent: 'Projects', properties: 'icon "folder"' },
+      { template: 'NavItem', isItem: true, textContent: 'Settings', properties: 'icon "settings"' },
     ],
   },
 ]
 
 /**
- * 6. MEDIA - Avatar, file upload, carousel
+ * 6. MEDIA - Empty (removed)
  */
-export const MEDIA_COMPONENTS: ComponentItem[] = [
-  {
-    id: 'media-avatar',
-    name: 'Avatar',
-    category: 'Media',
-    template: 'Avatar',
-    properties: 'fallback "AB"',
-    icon: 'avatar',
-    description: 'User avatar',
-    defaultSize: { width: 48, height: 48 },
-  },
-  {
-    id: 'media-file-upload',
-    name: 'File Upload',
-    category: 'Media',
-    template: 'FileUpload',
-    properties: 'multiple',
-    icon: 'fileUpload',
-    description: 'File drop zone',
-    defaultSize: { width: 300, height: 150 },
-    children: [
-      { template: 'Dropzone', isSlot: true },
-      { template: 'Trigger', isSlot: true },
-      { template: 'ItemGroup', isSlot: true },
-    ],
-  },
-  {
-    id: 'media-carousel',
-    name: 'Carousel',
-    category: 'Media',
-    template: 'Carousel',
-    properties: 'loop',
-    icon: 'carousel',
-    description: 'Image slideshow',
-    defaultSize: { width: 400, height: 250 },
-    children: [
-      { template: 'Slide', isItem: true, textContent: 'Slide 1' },
-      { template: 'Slide', isItem: true, textContent: 'Slide 2' },
-    ],
-  },
-]
+export const MEDIA_COMPONENTS: ComponentItem[] = []
 
 /**
- * 7. FEEDBACK - Progress indicators
+ * 7. FEEDBACK - Empty (removed)
  */
-export const FEEDBACK_COMPONENTS: ComponentItem[] = [
-  {
-    id: 'feedback-progress',
-    name: 'Progress',
-    category: 'Feedback',
-    template: 'Progress',
-    properties: 'value 60',
-    icon: 'progress',
-    description: 'Progress bar',
-    defaultSize: { width: 200, height: 8 },
-    children: [
-      { template: 'Track', isSlot: true },
-      { template: 'Range', isSlot: true },
-    ],
-  },
-  {
-    id: 'feedback-circular-progress',
-    name: 'Circular Progress',
-    category: 'Feedback',
-    template: 'CircularProgress',
-    properties: 'value 75',
-    icon: 'circularProgress',
-    description: 'Circular progress',
-    defaultSize: { width: 60, height: 60 },
-    children: [
-      { template: 'Circle', isSlot: true },
-      { template: 'Range', isSlot: true },
-      { template: 'ValueText', isSlot: true },
-    ],
-  },
-]
+export const FEEDBACK_COMPONENTS: ComponentItem[] = []
 
 /**
  * Legacy export for backwards compatibility
- * Combines all non-layout, non-basic components
  */
 export const BASIC_COMPONENTS: ComponentItem[] = [
   ...FORM_COMPONENTS,
   ...OVERLAY_COMPONENTS,
   ...NAVIGATION_COMPONENTS,
-  ...MEDIA_COMPONENTS,
-  ...FEEDBACK_COMPONENTS,
 ]

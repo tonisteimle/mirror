@@ -1485,8 +1485,9 @@ export function stateMachineToggle(
 
   const sm = el._stateMachine
 
-  // Get custom states (exclude 'default')
-  const order = stateOrder || Object.keys(sm.states).filter(s => s !== 'default')
+  // Get custom states (exclude 'default' and CSS pseudo-states like hover, focus, active, disabled)
+  const cssStates = ['default', 'hover', 'focus', 'active', 'disabled']
+  const order = stateOrder || Object.keys(sm.states).filter(s => !cssStates.includes(s))
   if (order.length === 0) return
 
   if (order.length === 1) {
@@ -1582,8 +1583,17 @@ export function transitionTo(
 
     // 3. Restore base styles before applying new state
     // This ensures toggling back to 'default' properly resets styles
+    // EXCEPTION: If there's an exit animation, don't restore display yet
+    // (the animation needs the element visible during playback)
     if (el._baseStyles) {
-      Object.assign(el.style, el._baseStyles)
+      const hasExitAnim = anim && prevState?.exit
+      if (hasExitAnim && el._baseStyles.display === 'none') {
+        // Restore all base styles EXCEPT display (will be set after exit animation)
+        const { display: _, ...otherBaseStyles } = el._baseStyles
+        Object.assign(el.style, otherBaseStyles)
+      } else {
+        Object.assign(el.style, el._baseStyles)
+      }
     }
 
     // 4. Swap children if state has children defined (like Figma Variants)
@@ -1607,8 +1617,17 @@ export function transitionTo(
 
     // 5. Apply new styles (with or without animation)
     if (anim) {
+      // Check if this is an exit animation that needs to hide the element after
+      const hasExitAnim = prevState?.exit
+      const shouldHideAfter = hasExitAnim && el._baseStyles?.display === 'none'
+
       // Play animation and apply styles
       playStateAnimation(el, anim, newState.styles).then(() => {
+        // After exit animation: hide the element
+        if (shouldHideAfter) {
+          el.style.display = 'none'
+          el.hidden = true
+        }
         (el as any)._isTransitioning = false
       })
     } else {
@@ -2189,6 +2208,14 @@ export function playStateAnimation(
       // Preset animation (keyframe-based)
       const preset = ANIMATION_PRESETS[anim.preset]
       if (preset) {
+        // For enter animations: set display BEFORE animation so element is visible
+        // This ensures fade-in, slide-in etc. are actually visible during animation
+        // Note: check 'display' in styles, not styles.display, because '' is falsy but valid
+        if (styles && 'display' in styles) {
+          el.style.display = styles.display || 'flex'  // Default to flex if empty string
+          el.hidden = false
+        }
+
         const animation = el.animate(preset.keyframes, {
           duration,
           delay,

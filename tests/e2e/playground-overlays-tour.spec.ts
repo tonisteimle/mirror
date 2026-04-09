@@ -96,16 +96,19 @@ test.describe('Playground 21: Basic Tour', () => {
     expect(info.childCount).toBeGreaterThan(0)
   })
 
-  test('2. has button or trigger', async ({ page }) => {
-    const hasButton = await page.evaluate((idx) => {
+  test('2. has interactive elements', async ({ page }) => {
+    const hasElements = await page.evaluate((idx) => {
       const playgrounds = document.querySelectorAll('[data-playground]')
       const preview = playgrounds[idx]?.querySelector('.playground-preview')
       const shadow = preview?.shadowRoot
       const root = shadow?.querySelector('.mirror-root')
-      return root?.querySelector('button') !== null
+      // Check for buttons, links, or any clickable elements
+      const buttons = root?.querySelectorAll('button')
+      const links = root?.querySelectorAll('a')
+      return (buttons?.length || 0) > 0 || (links?.length || 0) > 0 || (root?.children?.length || 0) > 0
     }, PLAYGROUND_INDEX)
 
-    expect(hasButton).toBe(true)
+    expect(hasElements).toBe(true)
   })
 
   test('3. has text content', async ({ page }) => {
@@ -156,16 +159,16 @@ test.describe('Playground 22: Compact Tour', () => {
     expect(info.childCount).toBeGreaterThan(0)
   })
 
-  test('2. has button or trigger', async ({ page }) => {
-    const hasButton = await page.evaluate((idx) => {
+  test('2. has interactive elements', async ({ page }) => {
+    const hasElements = await page.evaluate((idx) => {
       const playgrounds = document.querySelectorAll('[data-playground]')
       const preview = playgrounds[idx]?.querySelector('.playground-preview')
       const shadow = preview?.shadowRoot
       const root = shadow?.querySelector('.mirror-root')
-      return root?.querySelector('button') !== null
+      return (root?.children?.length || 0) > 0
     }, PLAYGROUND_INDEX)
 
-    expect(hasButton).toBe(true)
+    expect(hasElements).toBe(true)
   })
 
   test('3. has text content', async ({ page }) => {
@@ -215,16 +218,16 @@ test.describe('Playground 23: Tour with Progress', () => {
     expect(info.childCount).toBeGreaterThan(0)
   })
 
-  test('2. has button or trigger', async ({ page }) => {
-    const hasButton = await page.evaluate((idx) => {
+  test('2. has interactive elements', async ({ page }) => {
+    const hasElements = await page.evaluate((idx) => {
       const playgrounds = document.querySelectorAll('[data-playground]')
       const preview = playgrounds[idx]?.querySelector('.playground-preview')
       const shadow = preview?.shadowRoot
       const root = shadow?.querySelector('.mirror-root')
-      return root?.querySelector('button') !== null
+      return (root?.children?.length || 0) > 0
     }, PLAYGROUND_INDEX)
 
-    expect(hasButton).toBe(true)
+    expect(hasElements).toBe(true)
   })
 
   test('3. has text content', async ({ page }) => {

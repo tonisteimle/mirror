@@ -235,7 +235,7 @@ export class RenameEngine {
     lines: string[],
     lineNum: number
   ): SymbolInfo | null {
-    // Token (starts with $)
+    // Token reference (starts with $)
     if (word.startsWith('$')) {
       // Extract base name without suffix
       // e.g., "$primary.bg" → "$primary", "$primary" → "$primary"
@@ -244,6 +244,22 @@ export class RenameEngine {
         name: baseName,
         type: 'token',
         fullName: word,
+      }
+    }
+
+    // Token definition (new syntax without $): name.suffix: value
+    // e.g., "primary.bg: #2563eb" or "s.pad: 4"
+    if (word.includes('.') && /^[a-z]/.test(word)) {
+      const afterWord = lineText.substring(wordStart + word.length).trimStart()
+      if (afterWord.startsWith(':')) {
+        // It's a token definition - extract base name
+        const dotIndex = word.indexOf('.')
+        const baseName = `$${word.substring(0, dotIndex)}`
+        return {
+          name: baseName,
+          type: 'token',
+          fullName: `$${word}`,
+        }
       }
     }
 
@@ -403,14 +419,19 @@ export class RenameEngine {
     tokenBaseName: string,
     locations: SymbolLocation[]
   ): void {
-    // Token definition pattern: `$name.suffix:` (e.g., `$primary.bg:`)
+    // Token definition patterns:
+    // - Legacy: `$name.suffix:` (e.g., `$primary.bg:`)
+    // - New: `name.suffix:` (e.g., `primary.bg:`)
     // Token reference pattern: `$name` (e.g., `bg $primary`)
+
+    // Get the name without $ for searching new syntax definitions
+    const nameWithoutDollar = tokenBaseName.startsWith('$') ? tokenBaseName.slice(1) : tokenBaseName
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
       const lineNum = i + 1
 
-      // Find all occurrences of the token
+      // Find all occurrences of the token (with $)
       let searchStart = 0
       while (searchStart < line.length) {
         const idx = line.indexOf(tokenBaseName, searchStart)
@@ -457,6 +478,38 @@ export class RenameEngine {
               type: 'reference',
               text: tokenBaseName,
             })
+          }
+        }
+
+        searchStart = idx + 1
+      }
+
+      // Also search for new syntax definitions (without $): `name.suffix:`
+      searchStart = 0
+      while (searchStart < line.length) {
+        const idx = line.indexOf(nameWithoutDollar, searchStart)
+        if (idx === -1) break
+
+        // Check what's before - must be start of line or whitespace (not $ which is legacy)
+        const before = idx > 0 ? line[idx - 1] : '\n'
+        if (before !== '$' && /^[\s\n]/.test(before) || idx === 0) {
+          const after = line.substring(idx + nameWithoutDollar.length)
+          const defMatch = after.match(/^(\.[a-zA-Z_][a-zA-Z0-9_-]*)\s*:/)
+          if (defMatch) {
+            // Avoid duplicates
+            const alreadyAdded = locations.some(
+              loc => loc.file === filename && loc.line === lineNum && loc.column === idx + 1
+            )
+            if (!alreadyAdded) {
+              locations.push({
+                file: filename,
+                line: lineNum,
+                column: idx + 1,
+                length: nameWithoutDollar.length,
+                type: 'definition',
+                text: nameWithoutDollar,
+              })
+            }
           }
         }
 

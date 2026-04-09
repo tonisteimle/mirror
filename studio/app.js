@@ -548,31 +548,31 @@ Card: pad 16, bg #1a1a23, rad 8
 // Farben, Abstände und Typografie
 
 // Farb-Palette
-$grey-900: #18181B
-$grey-800: #27272A
-$grey-700: #3F3F46
+grey-900.bg: #18181B
+grey-800.bg: #27272A
+grey-700.bg: #3F3F46
 
 // Background Colors
-$accent.bg: #3B82F6
-$surface.bg: $grey-800
-$canvas.bg: $grey-900
+accent.bg: #3B82F6
+surface.bg: #27272A
+canvas.bg: #18181B
 
 // Text Colors
-$text.col: #ffffff
-$muted.col: #a1a1aa
+text.col: #ffffff
+muted.col: #a1a1aa
 
 // Spacing (s=4, m=8, l=16)
-$s.pad: 4
-$m.pad: 8
-$l.pad: 16
-$s.gap: 4
-$m.gap: 8
-$l.gap: 16
+s.pad: 4
+m.pad: 8
+l.pad: 16
+s.gap: 4
+m.gap: 8
+l.gap: 16
 
 // Radius (s=4, m=8, l=12)
-$s.rad: 4
-$m.rad: 8
-$l.rad: 12
+s.rad: 4
+m.rad: 8
+l.rad: 12
 `,
     detect: (lines) => {
       // Token definitions: $name: value or lowercase: value

@@ -848,8 +848,10 @@ const _runtime = {
   stateMachineToggle(el, stateOrder) {
     if (!el?._stateMachine) return
     const sm = el._stateMachine
-    // Get custom states (exclude 'default')
-    const order = stateOrder || Object.keys(sm.states).filter(s => s !== 'default')
+    // Get custom states (exclude 'default' and CSS pseudo-states like hover, focus, disabled)
+    // Note: 'active' is NOT excluded because it's commonly used as a custom toggle state
+    const cssStates = ['default', 'hover', 'focus', 'disabled']
+    const order = stateOrder || Object.keys(sm.states).filter(s => !cssStates.includes(s))
     if (order.length === 0) return
 
     if (order.length === 1) {
@@ -1771,7 +1773,7 @@ const _runtime = {
     // ========================================
 
     document.addEventListener('click', (e) => {
-      if (el._zagState.open && !el.contains(e.target)) {
+      if (el._zagState.open && !e.composedPath().includes(el)) {
         el._zagState.open = false
         content.hidden = true
         content.style.display = 'none'
@@ -2101,9 +2103,13 @@ const _runtime = {
         content.setAttribute('data-state', isActive ? 'active' : 'inactive')
         if (isActive) {
           content.setAttribute('data-selected', 'true')
-          // Lazy load content from file if needed
-          if (content.dataset.loadFromFile && !content.dataset.loaded) {
-            loadContentFromFile(content)
+          // Lazy load content if needed
+          if (!content.dataset.loaded) {
+            if (content.dataset.shows) {
+              loadShowContent(content)
+            } else if (content.dataset.loadFromFile) {
+              loadContentFromFile(content)
+            }
           }
         } else {
           content.removeAttribute('data-selected')
@@ -2168,6 +2174,90 @@ const _runtime = {
         detail: { value: newValue, previousValue },
         bubbles: true
       }))
+    }
+
+    // Handle "show X [from Y]" syntax
+    const loadShowContent = (container) => {
+      const showsTarget = container.dataset.shows
+      const showsFrom = container.dataset.showsFrom
+      if (!showsTarget) return
+
+      const root = el.getRootNode()
+
+      if (showsFrom) {
+        // Load element from external file: show X from Y
+        loadElementFromFile(container, showsTarget, showsFrom)
+      } else {
+        // Try to find local element first
+        const localEl = root.querySelector ? root.querySelector('[name="' + showsTarget + '"]') : document.querySelector('[name="' + showsTarget + '"]')
+        if (localEl) {
+          // Clone local element content into container
+          container.innerHTML = ''
+          const clone = localEl.cloneNode(true)
+          // Remove name attribute from clone to avoid conflicts
+          clone.removeAttribute('name')
+          container.appendChild(clone)
+          container.dataset.loaded = 'true'
+        } else {
+          // No local element found, treat as file name: show X → X.mirror
+          loadElementFromFile(container, null, showsTarget)
+        }
+      }
+    }
+
+    // Load content from external file, optionally extracting a specific element
+    const loadElementFromFile = (container, elementName, filename) => {
+      const fullFilename = filename.endsWith('.mirror') ? filename : filename + '.mirror'
+
+      const readFile = window._mirrorReadFile
+      if (!readFile) {
+        console.warn('No readFile callback available for lazy loading')
+        return
+      }
+
+      const content = readFile(fullFilename)
+      if (!content) {
+        console.warn('Page not found: ' + fullFilename)
+        return
+      }
+
+      const Mirror = window.Mirror
+      if (!Mirror?.compile) {
+        console.warn('Mirror compiler not available for lazy loading')
+        return
+      }
+
+      try {
+        const pageCode = Mirror.compile(content, { readFile })
+        const execCode = pageCode.replace('export function createUI', 'function createUI')
+        const fn = new Function(execCode + '\\nreturn createUI();')
+        const ui = fn()
+
+        if (ui?.root) {
+          container.innerHTML = ''
+          if (elementName) {
+            // Find specific named element in loaded content
+            const targetEl = ui.root.querySelector('[name="' + elementName + '"]')
+            if (targetEl) {
+              container.appendChild(targetEl)
+            } else {
+              console.warn('Element "' + elementName + '" not found in ' + fullFilename)
+              // Fallback: show entire file content
+              while (ui.root.firstChild) {
+                container.appendChild(ui.root.firstChild)
+              }
+            }
+          } else {
+            // No specific element, show entire file content
+            while (ui.root.firstChild) {
+              container.appendChild(ui.root.firstChild)
+            }
+          }
+        }
+        container.dataset.loaded = 'true'
+      } catch (err) {
+        console.error('Failed to load from ' + fullFilename + ':', err)
+      }
     }
 
     const loadContentFromFile = (container) => {
@@ -2554,12 +2644,39 @@ const _runtime = {
     if (!el || !el._zagConfig) return
 
     const config = el._zagConfig
-    const control = el.querySelector('[data-slot="Control"]')
-    const input = el.querySelector('[data-slot="Input"]')
-    const trigger = el.querySelector('[data-slot="Trigger"]')
-    const content = el.querySelector('[data-slot="Content"]')
 
-    if (!control || !input || !trigger || !content) return
+    // Create missing elements if needed (robust initialization)
+    let control = el.querySelector('[data-slot="Control"]')
+    let input = el.querySelector('[data-slot="Input"]')
+    let trigger = el.querySelector('[data-slot="Trigger"]')
+    let content = el.querySelector('[data-slot="Content"]')
+
+    // Auto-create structure if missing
+    if (!control) {
+      control = document.createElement('div')
+      control.dataset.slot = 'Control'
+      el.appendChild(control)
+    }
+    if (!input) {
+      input = document.createElement('input')
+      input.type = 'text'
+      input.dataset.slot = 'Input'
+      input.placeholder = config.machineConfig?.placeholder || 'Select date...'
+      control.appendChild(input)
+    }
+    if (!trigger) {
+      trigger = document.createElement('button')
+      trigger.type = 'button'
+      trigger.dataset.slot = 'Trigger'
+      trigger.setAttribute('aria-label', 'Open calendar')
+      trigger.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+      control.appendChild(trigger)
+    }
+    if (!content) {
+      content = document.createElement('div')
+      content.dataset.slot = 'Content'
+      el.appendChild(content)
+    }
 
     // Get config values
     const locale = config.machineConfig?.locale || 'en-US'
@@ -3050,26 +3167,60 @@ const _runtime = {
     // EVENT HANDLERS
     // ========================================
 
-    // Trigger click
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault()
+    // Debounce flag to prevent double-firing from pointerdown + click
+    let lastToggleTime = 0
+
+    // Toggle calendar helper with debounce
+    const toggleCalendar = (e) => {
+      const now = Date.now()
+      if (now - lastToggleTime < 100) return // Debounce 100ms
+      lastToggleTime = now
+
+      if (e) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
       if (el._datePickerState.open) {
         closeCalendar()
       } else {
         openCalendar()
       }
+    }
+
+    // Trigger click - multiple event types for robustness
+    // Using both click and pointerdown ensures compatibility with
+    // different browsers, Shadow DOM, and automation tools
+    trigger.addEventListener('click', toggleCalendar)
+    trigger.addEventListener('pointerdown', (e) => {
+      // Only handle primary button (left click)
+      if (e.button !== 0) return
+      toggleCalendar(e)
     })
 
-    // Input click (also opens)
-    input.addEventListener('click', () => {
+    // Input click (also opens) - same robust handling
+    let lastInputOpenTime = 0
+    const openFromInput = (e) => {
+      const now = Date.now()
+      if (now - lastInputOpenTime < 100) return
+      lastInputOpenTime = now
+
+      if (e) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
       if (!el._datePickerState.open) {
         openCalendar()
       }
+    }
+    input.addEventListener('click', openFromInput)
+    input.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return
+      openFromInput(e)
     })
 
-    // Click outside to close
+    // Click outside to close (use composedPath for Shadow DOM compatibility)
     document.addEventListener('click', (e) => {
-      if (el._datePickerState.open && !el.contains(e.target)) {
+      if (el._datePickerState.open && !e.composedPath().includes(el)) {
         closeCalendar()
       }
     })
@@ -3109,6 +3260,302 @@ const _runtime = {
     if (isInline) {
       renderCalendar()
     }
+  },
+
+  // ========================================
+  // DATE INPUT COMPONENT
+  // ========================================
+  initDateInputComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+
+    // Get control container
+    let control = el.querySelector('[data-slot="Control"]')
+    if (!control) {
+      control = document.createElement('div')
+      control.dataset.slot = 'Control'
+      el.appendChild(control)
+    }
+
+    // Configuration
+    const locale = config.locale || 'de-DE'
+    const isDisabled = config.disabled === true
+    const isReadOnly = config.readOnly === true
+
+    // Parse locale to determine segment order
+    // Common patterns: de-DE (DD.MM.YYYY), en-US (MM/DD/YYYY), en-GB (DD/MM/YYYY)
+    let segments = ['day', 'month', 'year']
+    let separator = '.'
+    if (locale.startsWith('en-US')) {
+      segments = ['month', 'day', 'year']
+      separator = '/'
+    } else if (locale.startsWith('en')) {
+      segments = ['day', 'month', 'year']
+      separator = '/'
+    }
+
+    // Initialize state
+    const today = new Date()
+    el._dateInputState = {
+      day: '',
+      month: '',
+      year: '',
+      focusedSegment: null
+    }
+
+    // Parse initial value
+    if (config.value || config.defaultValue) {
+      const dateStr = config.value || config.defaultValue
+      const parsed = new Date(dateStr)
+      if (!isNaN(parsed.getTime())) {
+        el._dateInputState.day = String(parsed.getDate()).padStart(2, '0')
+        el._dateInputState.month = String(parsed.getMonth() + 1).padStart(2, '0')
+        el._dateInputState.year = String(parsed.getFullYear())
+      }
+    }
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, value) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = value
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'inline-flex')
+    setDefault(el, 'flexDirection', 'column')
+    setDefault(el, 'gap', '4px')
+
+    // Control styles
+    setDefault(control, 'display', 'inline-flex')
+    setDefault(control, 'alignItems', 'center')
+    setDefault(control, 'background', '#1a1a1a')
+    setDefault(control, 'border', '1px solid #333')
+    setDefault(control, 'borderRadius', '6px')
+    setDefault(control, 'padding', '8px 12px')
+    setDefault(control, 'gap', '2px')
+
+    // ========================================
+    // CREATE SEGMENTS
+    // ========================================
+
+    // Get slot styles
+    const segmentSlot = el._zagConfig?.slots?.Segment
+    const separatorSlot = el._zagConfig?.slots?.Separator
+
+    const createSegment = (type, maxLength, placeholder, minVal, maxVal) => {
+      const segment = document.createElement('input')
+      segment.type = 'text'
+      segment.inputMode = 'numeric'
+      segment.dataset.slot = 'Segment'
+      segment.dataset.segmentType = type
+      segment.placeholder = placeholder
+      segment.maxLength = maxLength
+      segment.size = maxLength
+
+      // Apply slot styles if defined
+      if (segmentSlot?.styles) {
+        for (const style of segmentSlot.styles) {
+          segment.style[style.property] = style.value
+        }
+      }
+
+      // Default segment styles
+      setDefault(segment, 'width', type === 'year' ? '44px' : '28px')
+      setDefault(segment, 'textAlign', 'center')
+      setDefault(segment, 'background', 'transparent')
+      setDefault(segment, 'border', 'none')
+      setDefault(segment, 'outline', 'none')
+      setDefault(segment, 'color', '#e0e0e0')
+      setDefault(segment, 'fontSize', '14px')
+      setDefault(segment, 'fontFamily', 'inherit')
+      setDefault(segment, 'padding', '0')
+
+      if (isDisabled) {
+        segment.disabled = true
+        segment.style.cursor = 'not-allowed'
+      }
+      if (isReadOnly) {
+        segment.readOnly = true
+      }
+
+      // Set initial value
+      segment.value = el._dateInputState[type] || ''
+
+      // Handle input
+      segment.addEventListener('input', (e) => {
+        let val = segment.value.replace(/\D/g, '')
+        if (val.length > maxLength) {
+          val = val.slice(0, maxLength)
+        }
+        segment.value = val
+        el._dateInputState[type] = val
+
+        // Auto-advance to next segment
+        if (val.length === maxLength) {
+          const nextSegment = segment.nextElementSibling?.nextElementSibling
+          if (nextSegment && nextSegment.dataset.slot === 'Segment') {
+            nextSegment.focus()
+            nextSegment.select()
+          }
+        }
+
+        // Emit change event
+        emitChange()
+      })
+
+      // Handle blur - pad values
+      segment.addEventListener('blur', () => {
+        el._dateInputState.focusedSegment = null
+        el.setAttribute('data-focus', 'false')
+
+        let val = segment.value
+        if (val && type !== 'year') {
+          val = val.padStart(maxLength, '0')
+          // Clamp to valid range
+          const num = parseInt(val, 10)
+          if (num < minVal) val = String(minVal).padStart(maxLength, '0')
+          if (num > maxVal) val = String(maxVal).padStart(maxLength, '0')
+          segment.value = val
+          el._dateInputState[type] = val
+        }
+      })
+
+      // Handle focus
+      segment.addEventListener('focus', () => {
+        el._dateInputState.focusedSegment = type
+        el.setAttribute('data-focus', 'true')
+        segment.select()
+      })
+
+      // Handle keyboard
+      segment.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          let val = parseInt(segment.value || '0', 10)
+          if (e.key === 'ArrowUp') val++
+          else val--
+          // Clamp
+          if (val < minVal) val = maxVal
+          if (val > maxVal) val = minVal
+          segment.value = type === 'year' ? String(val) : String(val).padStart(maxLength, '0')
+          el._dateInputState[type] = segment.value
+          emitChange()
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          const currentPos = segment.selectionStart
+          const targetSibling = e.key === 'ArrowLeft'
+            ? segment.previousElementSibling?.previousElementSibling
+            : segment.nextElementSibling?.nextElementSibling
+
+          if (targetSibling && targetSibling.dataset.slot === 'Segment') {
+            if (e.key === 'ArrowLeft' && currentPos === 0) {
+              e.preventDefault()
+              targetSibling.focus()
+              targetSibling.setSelectionRange(targetSibling.value.length, targetSibling.value.length)
+            } else if (e.key === 'ArrowRight' && currentPos === segment.value.length) {
+              e.preventDefault()
+              targetSibling.focus()
+              targetSibling.setSelectionRange(0, 0)
+            }
+          }
+        } else if (e.key === 'Backspace' && segment.value === '') {
+          // Move to previous segment if empty
+          const prevSeg = segment.previousElementSibling?.previousElementSibling
+          if (prevSeg && prevSeg.dataset.slot === 'Segment') {
+            e.preventDefault()
+            prevSeg.focus()
+          }
+        }
+      })
+
+      return segment
+    }
+
+    const createSeparator = () => {
+      const sep = document.createElement('span')
+      sep.dataset.slot = 'Separator'
+      sep.textContent = separator
+
+      // Apply slot styles if defined
+      if (separatorSlot?.styles) {
+        for (const style of separatorSlot.styles) {
+          sep.style[style.property] = style.value
+        }
+      }
+
+      // Default separator styles
+      setDefault(sep, 'color', '#666')
+      setDefault(sep, 'fontSize', '14px')
+      setDefault(sep, 'userSelect', 'none')
+
+      return sep
+    }
+
+    // Clear control and create segments in order
+    control.innerHTML = ''
+
+    const segmentConfigs = {
+      day: { maxLength: 2, placeholder: 'TT', min: 1, max: 31 },
+      month: { maxLength: 2, placeholder: 'MM', min: 1, max: 12 },
+      year: { maxLength: 4, placeholder: 'JJJJ', min: 1900, max: 2100 }
+    }
+
+    segments.forEach((type, index) => {
+      const cfg = segmentConfigs[type]
+      const segment = createSegment(type, cfg.maxLength, cfg.placeholder, cfg.min, cfg.max)
+      control.appendChild(segment)
+
+      if (index < segments.length - 1) {
+        control.appendChild(createSeparator())
+      }
+    })
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const getDateValue = () => {
+      const { day, month, year } = el._dateInputState
+      if (day && month && year && year.length === 4) {
+        const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+        if (!isNaN(d.getTime())) {
+          return d
+        }
+      }
+      return null
+    }
+
+    const emitChange = () => {
+      const date = getDateValue()
+      el.dispatchEvent(new CustomEvent('change', {
+        detail: { value: date, segments: { ...el._dateInputState } },
+        bubbles: true
+      }))
+    }
+
+    // ========================================
+    // ACCESSIBILITY
+    // ========================================
+
+    el.setAttribute('role', 'group')
+    el.setAttribute('aria-label', 'Date input')
+
+    // ========================================
+    // DISABLED STATE
+    // ========================================
+
+    if (isDisabled) {
+      el.setAttribute('data-disabled', 'true')
+      el.style.opacity = '0.5'
+      el.style.pointerEvents = 'none'
+    }
+
+    // Set initial state
+    el.setAttribute('data-focus', 'false')
   },
 
   // ========================================
@@ -4947,7 +5394,7 @@ const _runtime = {
     // ========================================
 
     document.addEventListener('click', (e) => {
-      if (el._selectState.isOpen && !el.contains(e.target)) {
+      if (el._selectState.isOpen && !e.composedPath().includes(el)) {
         close()
       }
     })
@@ -4984,6 +5431,11 @@ const _runtime = {
 
     const config = el._zagConfig.machineConfig || {}
     const itemsConfig = el._zagConfig.items || []
+
+    // State styles from slots
+    const itemStateStyles = el._zagConfig.itemStateStyles || {}
+    const controlStateStyles = el._zagConfig.controlStateStyles || {}
+    const textStateStyles = el._zagConfig.textStateStyles || {}
 
     // Get elements
     const items = el.querySelectorAll('[data-slot="Item"]')
@@ -5051,7 +5503,12 @@ const _runtime = {
       if (isDisabled || isReadOnly) return
 
       el._radioState.selectedValue = value
-      updateItemStates()
+      // Use enhanced update if available (set up later), fallback to basic
+      if (el._updateRadioStates) {
+        el._updateRadioStates()
+      } else {
+        updateItemStates()
+      }
 
       el.dispatchEvent(new CustomEvent('change', {
         detail: { value },
@@ -5126,16 +5583,30 @@ const _runtime = {
         })
       }
 
-      // Set initial state
-      if (isSelected(value)) {
-        const control = item.querySelector('[data-slot="ItemControl"]')
-        if (control) {
-          control.style.borderColor = '#3b82f6'
-          const dot = control.querySelector('[data-slot="ItemDot"]')
-          if (dot) dot.style.transform = 'scale(1)'
+      // Set initial state - handled by enhancedUpdateItemStates below
+    })
+
+    // Helper to apply/remove state styles
+    const applyStateStyles = (element, stateStyles, stateName, apply) => {
+      const styles = stateStyles[stateName]
+      if (!styles) return
+
+      for (const [prop, value] of Object.entries(styles)) {
+        if (apply) {
+          // Store original value if not stored yet
+          if (!element._originalStyles) element._originalStyles = {}
+          if (!(prop in element._originalStyles)) {
+            element._originalStyles[prop] = element.style[prop] || ''
+          }
+          element.style[prop] = value
+        } else {
+          // Restore original value
+          if (element._originalStyles && prop in element._originalStyles) {
+            element.style[prop] = element._originalStyles[prop]
+          }
         }
       }
-    })
+    }
 
     // Update states based on selection
     const originalUpdateItemStates = updateItemStates
@@ -5144,18 +5615,33 @@ const _runtime = {
         const value = item.dataset.value
         const selected = isSelected(value)
         const control = item.querySelector('[data-slot="ItemControl"]')
+        const text = item.querySelector('[data-slot="ItemText"]')
 
         item.setAttribute('data-state', selected ? 'checked' : 'unchecked')
+
+        // Apply/remove item state styles
+        applyStateStyles(item, itemStateStyles, 'checked', selected)
 
         if (control) {
           control.setAttribute('aria-checked', String(selected))
           control.setAttribute('data-state', selected ? 'checked' : 'unchecked')
-          control.style.borderColor = selected ? '#3b82f6' : '#555'
+
+          // Apply custom control state styles or fallback to defaults
+          if (controlStateStyles.checked) {
+            applyStateStyles(control, controlStateStyles, 'checked', selected)
+          } else {
+            control.style.borderColor = selected ? '#3b82f6' : '#555'
+          }
 
           const dot = control.querySelector('[data-slot="ItemDot"]')
           if (dot) {
             dot.style.transform = selected ? 'scale(1)' : 'scale(0)'
           }
+        }
+
+        // Apply/remove text state styles
+        if (text) {
+          applyStateStyles(text, textStateStyles, 'checked', selected)
         }
       })
     }
@@ -5511,6 +5997,367 @@ const _runtime = {
     if (isDisabled) {
       el.setAttribute('data-disabled', 'true')
       thumb.setAttribute('tabindex', '-1')
+    }
+
+    // Initial render
+    updateUI()
+  },
+
+  initRangeSliderComponent(el) {
+    if (!el || !el._zagConfig) return
+
+    const config = el._zagConfig.machineConfig || {}
+
+    // Get elements
+    const track = el.querySelector('[data-slot="Track"]')
+    const range = el.querySelector('[data-slot="Range"]')
+    const thumbTemplate = el.querySelector('[data-slot="Thumb"]')
+    const valueText = el.querySelector('[data-slot="ValueText"]')
+    const label = el.querySelector('[data-slot="Label"]')
+
+    if (!track || !thumbTemplate) return
+
+    // Configuration
+    const min = Number(config.min ?? 0)
+    const max = Number(config.max ?? 100)
+    const step = Number(config.step ?? 1)
+    const minStepsBetweenThumbs = Number(config.minStepsBetweenThumbs ?? 0)
+    const isDisabled = config.disabled === true
+    const isReadOnly = config.readOnly === true
+    const orientation = config.orientation || 'horizontal'
+    const isHorizontal = orientation === 'horizontal'
+
+    // Parse defaultValue - must be array [minVal, maxVal]
+    let defaultValue = config.defaultValue || config.value || [min, max]
+    if (!Array.isArray(defaultValue)) {
+      defaultValue = [min, max]
+    }
+    if (defaultValue.length < 2) {
+      defaultValue = [min, max]
+    }
+
+    // State
+    el._sliderState = {
+      values: [Number(defaultValue[0]), Number(defaultValue[1])],
+      activeThumb: null,
+      isDragging: false
+    }
+
+    // Create second thumb by cloning the template
+    const thumb1 = thumbTemplate
+    const thumb2 = thumbTemplate.cloneNode(true)
+    thumb1.setAttribute('data-thumb-index', '0')
+    thumb2.setAttribute('data-thumb-index', '1')
+    thumbTemplate.parentNode.appendChild(thumb2)
+
+    const thumbs = [thumb1, thumb2]
+
+    // ========================================
+    // DEFAULT STYLES
+    // ========================================
+
+    const setDefault = (element, prop, value) => {
+      if (element && !element.style[prop]) {
+        element.style[prop] = value
+      }
+    }
+
+    // Root styles
+    setDefault(el, 'display', 'flex')
+    setDefault(el, 'flexDirection', 'column')
+    setDefault(el, 'gap', '8px')
+    setDefault(el, 'width', isHorizontal ? '200px' : 'auto')
+
+    // Track styles
+    setDefault(track, 'position', 'relative')
+    setDefault(track, 'width', isHorizontal ? '100%' : '8px')
+    setDefault(track, 'height', isHorizontal ? '8px' : '200px')
+    setDefault(track, 'background', '#333')
+    setDefault(track, 'borderRadius', '4px')
+    setDefault(track, 'cursor', isDisabled ? 'not-allowed' : 'pointer')
+
+    // Range styles - positioned between thumbs
+    if (range) {
+      setDefault(range, 'position', 'absolute')
+      setDefault(range, 'background', '#3b82f6')
+      setDefault(range, 'borderRadius', '4px')
+      if (isHorizontal) {
+        setDefault(range, 'height', '100%')
+      } else {
+        setDefault(range, 'width', '100%')
+      }
+    }
+
+    // Thumb styles
+    thumbs.forEach(thumb => {
+      setDefault(thumb, 'position', 'absolute')
+      setDefault(thumb, 'width', '20px')
+      setDefault(thumb, 'height', '20px')
+      setDefault(thumb, 'background', '#fff')
+      setDefault(thumb, 'borderRadius', '50%')
+      setDefault(thumb, 'boxShadow', '0 2px 4px rgba(0,0,0,0.3)')
+      setDefault(thumb, 'cursor', isDisabled ? 'not-allowed' : 'grab')
+      setDefault(thumb, 'transform', 'translate(-50%, -50%)')
+      setDefault(thumb, 'transition', 'box-shadow 0.15s')
+      setDefault(thumb, 'zIndex', '1')
+      if (isHorizontal) {
+        setDefault(thumb, 'top', '50%')
+      } else {
+        setDefault(thumb, 'left', '50%')
+      }
+      thumb.setAttribute('tabindex', '0')
+      thumb.setAttribute('role', 'slider')
+    })
+
+    // ValueText styles
+    if (valueText) {
+      setDefault(valueText, 'fontSize', '14px')
+      setDefault(valueText, 'color', '#e0e0e0')
+    }
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    const getPercent = (value) => ((value - min) / (max - min)) * 100
+
+    const clamp = (value, minVal, maxVal) => Math.min(maxVal, Math.max(minVal, value))
+
+    const roundToStep = (value) => {
+      const steps = Math.round((value - min) / step)
+      return clamp(min + steps * step, min, max)
+    }
+
+    const updateUI = () => {
+      const [val0, val1] = el._sliderState.values
+      const percent0 = getPercent(val0)
+      const percent1 = getPercent(val1)
+
+      if (isHorizontal) {
+        thumbs[0].style.left = percent0 + '%'
+        thumbs[1].style.left = percent1 + '%'
+        if (range) {
+          range.style.left = percent0 + '%'
+          range.style.width = (percent1 - percent0) + '%'
+        }
+      } else {
+        thumbs[0].style.bottom = percent0 + '%'
+        thumbs[1].style.bottom = percent1 + '%'
+        if (range) {
+          range.style.bottom = percent0 + '%'
+          range.style.height = (percent1 - percent0) + '%'
+        }
+      }
+
+      thumbs[0].setAttribute('aria-valuenow', String(val0))
+      thumbs[1].setAttribute('aria-valuenow', String(val1))
+      thumbs.forEach(t => {
+        t.setAttribute('aria-valuemin', String(min))
+        t.setAttribute('aria-valuemax', String(max))
+      })
+
+      if (valueText) {
+        valueText.textContent = val0 + ' - ' + val1
+      }
+    }
+
+    const setValues = (newValues, dispatchEvent = true) => {
+      const oldValues = [...el._sliderState.values]
+      let [v0, v1] = newValues
+      v0 = roundToStep(v0)
+      v1 = roundToStep(v1)
+
+      // Ensure min < max with minimum steps between
+      const minGap = minStepsBetweenThumbs * step
+      if (v1 - v0 < minGap) {
+        if (el._sliderState.activeThumb === 0) {
+          v0 = Math.min(v0, v1 - minGap)
+        } else {
+          v1 = Math.max(v1, v0 + minGap)
+        }
+      }
+
+      el._sliderState.values = [v0, v1]
+
+      if (oldValues[0] !== v0 || oldValues[1] !== v1) {
+        updateUI()
+        if (dispatchEvent) {
+          el.dispatchEvent(new CustomEvent('change', {
+            detail: { value: el._sliderState.values },
+            bubbles: true
+          }))
+        }
+      }
+    }
+
+    const getValueFromPosition = (clientX, clientY) => {
+      const rect = track.getBoundingClientRect()
+      let percent
+
+      if (isHorizontal) {
+        percent = (clientX - rect.left) / rect.width
+      } else {
+        percent = 1 - (clientY - rect.top) / rect.height
+      }
+
+      percent = clamp(percent, 0, 1)
+      return min + percent * (max - min)
+    }
+
+    const getClosestThumbIndex = (value) => {
+      const [v0, v1] = el._sliderState.values
+      const dist0 = Math.abs(value - v0)
+      const dist1 = Math.abs(value - v1)
+      return dist0 <= dist1 ? 0 : 1
+    }
+
+    // ========================================
+    // DRAG HANDLING
+    // ========================================
+
+    if (!isDisabled && !isReadOnly) {
+      const startDrag = (e, thumbIndex = null) => {
+        e.preventDefault()
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY
+
+        const value = getValueFromPosition(clientX, clientY)
+        const index = thumbIndex !== null ? thumbIndex : getClosestThumbIndex(value)
+
+        el._sliderState.isDragging = true
+        el._sliderState.activeThumb = index
+        thumbs[index].style.cursor = 'grabbing'
+        thumbs[index].style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.5)'
+        thumbs[index].style.zIndex = '2'
+        thumbs[1 - index].style.zIndex = '1'
+
+        const newValues = [...el._sliderState.values]
+        newValues[index] = value
+        setValues(newValues)
+      }
+
+      const moveDrag = (e) => {
+        if (!el._sliderState.isDragging) return
+        e.preventDefault()
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY
+
+        const value = getValueFromPosition(clientX, clientY)
+        const index = el._sliderState.activeThumb
+        const newValues = [...el._sliderState.values]
+        newValues[index] = value
+        setValues(newValues)
+      }
+
+      const endDrag = () => {
+        if (el._sliderState.isDragging) {
+          el._sliderState.isDragging = false
+          const index = el._sliderState.activeThumb
+          if (index !== null) {
+            thumbs[index].style.cursor = 'grab'
+            thumbs[index].style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)'
+          }
+          el._sliderState.activeThumb = null
+
+          el.dispatchEvent(new CustomEvent('changeend', {
+            detail: { value: el._sliderState.values },
+            bubbles: true
+          }))
+        }
+      }
+
+      // Track click
+      track.addEventListener('mousedown', (e) => startDrag(e))
+      track.addEventListener('touchstart', (e) => startDrag(e), { passive: false })
+
+      // Thumb-specific drag
+      thumbs.forEach((thumb, index) => {
+        thumb.addEventListener('mousedown', (e) => {
+          e.stopPropagation()
+          startDrag(e, index)
+        })
+        thumb.addEventListener('touchstart', (e) => {
+          e.stopPropagation()
+          startDrag(e, index)
+        }, { passive: false })
+
+        thumb.addEventListener('mouseenter', () => {
+          if (!el._sliderState.isDragging) {
+            thumb.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.5)'
+          }
+        })
+        thumb.addEventListener('mouseleave', () => {
+          if (!el._sliderState.isDragging) {
+            thumb.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)'
+          }
+        })
+      })
+
+      // Document events for dragging
+      document.addEventListener('mousemove', moveDrag)
+      document.addEventListener('touchmove', moveDrag, { passive: false })
+      document.addEventListener('mouseup', endDrag)
+      document.addEventListener('touchend', endDrag)
+    }
+
+    // ========================================
+    // KEYBOARD NAVIGATION
+    // ========================================
+
+    thumbs.forEach((thumb, index) => {
+      thumb.addEventListener('keydown', (e) => {
+        if (isDisabled || isReadOnly) return
+
+        const newValues = [...el._sliderState.values]
+        let newValue = newValues[index]
+
+        switch (e.key) {
+          case 'ArrowRight':
+          case 'ArrowUp':
+            e.preventDefault()
+            newValue += step
+            break
+          case 'ArrowLeft':
+          case 'ArrowDown':
+            e.preventDefault()
+            newValue -= step
+            break
+          case 'Home':
+            e.preventDefault()
+            newValue = min
+            break
+          case 'End':
+            e.preventDefault()
+            newValue = max
+            break
+          case 'PageUp':
+            e.preventDefault()
+            newValue += step * 10
+            break
+          case 'PageDown':
+            e.preventDefault()
+            newValue -= step * 10
+            break
+          default:
+            return
+        }
+
+        el._sliderState.activeThumb = index
+        newValues[index] = newValue
+        setValues(newValues)
+      })
+    })
+
+    // ========================================
+    // INITIAL STATE
+    // ========================================
+
+    el.setAttribute('data-orientation', orientation)
+
+    if (isDisabled) {
+      el.setAttribute('data-disabled', 'true')
+      thumbs.forEach(t => t.setAttribute('tabindex', '-1'))
     }
 
     // Initial render
@@ -7997,8 +8844,9 @@ const _runtime = {
           groupArrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'
 
           // Set initial rotation based on state
-          if (group.getAttribute('data-state') === 'closed') {
-            groupArrow.style.transform = 'rotate(-90deg)'
+          // Open: rotate(180deg) = UP, Closed: no rotation = DOWN
+          if (group.getAttribute('data-state') === 'open') {
+            groupArrow.style.transform = 'rotate(180deg)'
           }
         }
       }
@@ -8027,11 +8875,11 @@ const _runtime = {
             if (isOpen) {
               group.setAttribute('data-state', 'closed')
               content.style.display = 'none'
-              if (arrow) arrow.style.transform = 'rotate(-90deg)'
+              if (arrow) arrow.style.transform = ''  // DOWN when closed
             } else {
               group.setAttribute('data-state', 'open')
               content.style.display = ''
-              if (arrow) arrow.style.transform = ''
+              if (arrow) arrow.style.transform = 'rotate(180deg)'  // UP when open
             }
           }
 
@@ -8053,7 +8901,7 @@ const _runtime = {
     // Cache for loaded pages to avoid reloading
     const loadedPages = new Map()
 
-    const loadContentFromFile = (filename) => {
+    const loadContentFromFile = (filename, elementName = null) => {
       // Find the page container (sibling of SideNav)
       const container = el.parentElement?.querySelector('[data-page-container]')
         || el.nextElementSibling
@@ -8064,10 +8912,13 @@ const _runtime = {
         return
       }
 
+      // Cache key includes element name for "show X from Y" syntax
+      const cacheKey = elementName ? filename + '::' + elementName : filename
+
       // Check if already loaded
-      if (loadedPages.has(filename)) {
+      if (loadedPages.has(cacheKey)) {
         // Just show the cached content
-        const cachedContent = loadedPages.get(filename)
+        const cachedContent = loadedPages.get(cacheKey)
         // Hide all children
         Array.from(container.children).forEach(child => {
           child.style.display = 'none'
@@ -8113,18 +8964,32 @@ const _runtime = {
 
           // Create wrapper for this page's content
           const pageWrapper = document.createElement('div')
-          pageWrapper.dataset.loadedPage = filename
+          pageWrapper.dataset.loadedPage = cacheKey
 
-          // Move children from generated root to wrapper
-          while (ui.root.firstChild) {
-            pageWrapper.appendChild(ui.root.firstChild)
+          if (elementName) {
+            // Find specific named element in loaded content: show X from Y
+            const targetEl = ui.root.querySelector('[name="' + elementName + '"]')
+            if (targetEl) {
+              pageWrapper.appendChild(targetEl)
+            } else {
+              console.warn('Element "' + elementName + '" not found in ' + fullFilename)
+              // Fallback: show entire file content
+              while (ui.root.firstChild) {
+                pageWrapper.appendChild(ui.root.firstChild)
+              }
+            }
+          } else {
+            // Move children from generated root to wrapper
+            while (ui.root.firstChild) {
+              pageWrapper.appendChild(ui.root.firstChild)
+            }
           }
 
           // Add to container
           container.appendChild(pageWrapper)
 
           // Cache the wrapper
-          loadedPages.set(filename, pageWrapper)
+          loadedPages.set(cacheKey, pageWrapper)
         }
       } catch (err) {
         console.error('Failed to load page ' + fullFilename + ':', err)
@@ -8167,24 +9032,37 @@ const _runtime = {
       const selectedItem = el.querySelector(\`[data-slot="Item"][data-value="\${value}"]\`)
       if (selectedItem && selectedItem.dataset.shows) {
         const showsTarget = selectedItem.dataset.shows
+        const showsFrom = selectedItem.dataset.showsFrom
         // Use getRootNode() to support Shadow DOM (tutorial playgrounds) and main document
         const root = el.getRootNode()
 
-        // Collect all view names from NavItems with data-shows
-        const allViewNames = new Set()
-        navItems.forEach(item => {
-          if (item.dataset.shows) {
-            allViewNames.add(item.dataset.shows)
-          }
-        })
+        if (showsFrom) {
+          // Load element from external file: show X from Y
+          loadContentFromFile(showsFrom, showsTarget)
+        } else {
+          // Try to find local element first
+          const localEl = root.querySelector ? root.querySelector(\`[data-mirror-name="\${showsTarget}"]\`) : document.querySelector(\`[data-mirror-name="\${showsTarget}"]\`)
+          if (localEl) {
+            // Collect all view names from NavItems with data-shows
+            const allViewNames = new Set()
+            navItems.forEach(item => {
+              if (item.dataset.shows) {
+                allViewNames.add(item.dataset.shows)
+              }
+            })
 
-        // Hide all views that are linked to NavItems, show only the target
-        allViewNames.forEach(viewName => {
-          const viewEls = root.querySelectorAll(\`[data-mirror-name="\${viewName}"]\`)
-          viewEls.forEach(viewEl => {
-            viewEl.style.display = viewName === showsTarget ? '' : 'none'
-          })
-        })
+            // Hide all views that are linked to NavItems, show only the target
+            allViewNames.forEach(viewName => {
+              const viewEls = root.querySelectorAll(\`[data-mirror-name="\${viewName}"]\`)
+              viewEls.forEach(viewEl => {
+                viewEl.style.display = viewName === showsTarget ? '' : 'none'
+              })
+            })
+          } else {
+            // No local element found, treat as file name: show X → X.mirror
+            loadContentFromFile(showsTarget)
+          }
+        }
       } else if (selectedItem && selectedItem.dataset.loadFromFile) {
         loadContentFromFile(selectedItem.dataset.loadFromFile)
       }
@@ -8962,7 +9840,7 @@ const _runtime = {
     // Get elements
     const trigger = el.querySelector('[data-slot="Trigger"]')
     const content = el.querySelector('[data-slot="Content"]')
-    const closeTrigger = el.querySelector('[data-slot="CloseTrigger"]')
+    const closeTriggers = el.querySelectorAll('[data-slot="CloseTrigger"]')
 
     if (!trigger || !content) return
 
@@ -9003,18 +9881,10 @@ const _runtime = {
     setDefault(content, 'boxShadow', '0 4px 16px rgba(0,0,0,0.3)')
     content.style.display = 'none'
 
-    // Close trigger styles
-    if (closeTrigger) {
-      setDefault(closeTrigger, 'position', 'absolute')
-      setDefault(closeTrigger, 'top', '8px')
-      setDefault(closeTrigger, 'right', '8px')
-      setDefault(closeTrigger, 'padding', '4px 8px')
-      setDefault(closeTrigger, 'backgroundColor', 'transparent')
-      setDefault(closeTrigger, 'border', 'none')
-      setDefault(closeTrigger, 'color', '#888')
-      setDefault(closeTrigger, 'cursor', 'pointer')
-      setDefault(closeTrigger, 'fontSize', '18px')
-    }
+    // Close trigger styles - apply cursor pointer to all
+    closeTriggers.forEach(ct => {
+      setDefault(ct, 'cursor', 'pointer')
+    })
 
     // ========================================
     // HELPER FUNCTIONS
@@ -9079,9 +9949,10 @@ const _runtime = {
 
     trigger.onclick = toggle
 
-    if (closeTrigger) {
-      closeTrigger.onclick = close
-    }
+    // Attach close handler to all CloseTriggers
+    closeTriggers.forEach(ct => {
+      ct.onclick = close
+    })
 
     if (closeOnOutsideClick) {
       document.addEventListener('click', (e) => {
@@ -9256,7 +10127,7 @@ const _runtime = {
     const trigger = el.querySelector('[data-slot="Trigger"]')
     const backdrop = el.querySelector('[data-slot="Backdrop"]')
     const content = el.querySelector('[data-slot="Content"]')
-    const closeTrigger = el.querySelector('[data-slot="CloseTrigger"]')
+    const closeTriggers = el.querySelectorAll('[data-slot="CloseTrigger"]')
 
     if (!trigger || !content) return
 
@@ -9311,18 +10182,10 @@ const _runtime = {
     setDefault(content, 'overflow', 'auto')
     content.style.display = 'none'
 
-    // Close trigger styles
-    if (closeTrigger) {
-      setDefault(closeTrigger, 'position', 'absolute')
-      setDefault(closeTrigger, 'top', '12px')
-      setDefault(closeTrigger, 'right', '12px')
-      setDefault(closeTrigger, 'padding', '4px 8px')
-      setDefault(closeTrigger, 'backgroundColor', 'transparent')
-      setDefault(closeTrigger, 'border', 'none')
-      setDefault(closeTrigger, 'color', '#888')
-      setDefault(closeTrigger, 'cursor', 'pointer')
-      setDefault(closeTrigger, 'fontSize', '20px')
-    }
+    // Close trigger styles - apply cursor pointer to all
+    closeTriggers.forEach(ct => {
+      setDefault(ct, 'cursor', 'pointer')
+    })
 
     // ========================================
     // HELPER FUNCTIONS
@@ -9361,9 +10224,10 @@ const _runtime = {
 
     trigger.onclick = open
 
-    if (closeTrigger) {
-      closeTrigger.onclick = close
-    }
+    // Attach close handler to all CloseTriggers
+    closeTriggers.forEach(ct => {
+      ct.onclick = close
+    })
 
     if (backdrop && closeOnOutsideClick) {
       backdrop.onclick = close

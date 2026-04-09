@@ -197,7 +197,7 @@ Text "Hello, " + $name
       const code = `
 $title: "Welcome"
 
-Text $title
+Text "$title"
 `
       const ast = parse(code)
       const output = generateDOM(ast)

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Referenz – Overlays</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="reference.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Overlays</h1>
+      <p class="subtitle">Referenz für Overlay-Komponenten</p>
+    </header>
+
+    <nav class="toc">
+      <a href="#dialog">Dialog</a>
+      <a href="#tooltip">Tooltip</a>
+      <a href="#popover">Popover</a>
+      <a href="#hovercard">HoverCard</a>
+    </nav>
+
+
+    <!-- ============================================================ -->
+    <section id="dialog">
+      <h2>Dialog</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Open Dialog"
+  Content: Frame pad 24, bg #1a1a1a, rad 12
+    Text "Dialog content"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>open</code> <code>modal</code> <code>closeOnEscape</code> <code>closeOnOutsideClick</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Open"
+  Backdrop: bg rgba(0,0,0,0.7)
+  Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 320
+    Text "Dialog Title", weight bold, fs 18
+    Text "Content here", col #888
+    Frame hor, gap 8
+      CloseTrigger: Button "Cancel", bg #333
+      CloseTrigger: Button "Confirm", bg #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>open:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="tooltip">
+      <h2>Tooltip</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tooltip
+  Trigger: Button "Hover me"
+  Content: Text "Tooltip text"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>positioning</code> <code>openDelay</code> <code>closeDelay</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tooltip positioning "bottom"
+  Trigger: Frame pad 8, bg #222, rad 4, cursor pointer
+    Icon "info", ic #888
+  Content: Frame pad 8 12, bg #333, rad 6
+    Text "Helpful info", fs 12, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>open:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="popover">
+      <h2>Popover</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover
+  Trigger: Button "Click me"
+  Content: Frame pad 16, bg #1a1a1a, rad 8
+    Text "Popover content"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>positioning</code> <code>open</code> <code>closeOnEscape</code> <code>closeOnOutsideClick</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Popover
+  Trigger: Button "Settings", bg #333
+  Content: Frame ver, gap 12, pad 16, bg #1a1a1a, rad 8, w 200
+    Text "Options", weight bold
+    Frame ver, gap 8
+      Checkbox "Notifications"
+      Checkbox "Dark mode", checked
+    CloseTrigger: Button "Close", bg #333, w full</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>open:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section id="hovercard">
+      <h2>HoverCard</h2>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>HoverCard
+  Trigger: Text "@user", col #2563eb, underline, cursor pointer
+  Content: Frame pad 16, bg #1a1a1a, rad 8
+    Text "User profile preview"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Props</h3>
+      <p class="props-list"><code>positioning</code> <code>openDelay</code> <code>closeDelay</code></p>
+
+      <h3>Kind-Komponenten</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>HoverCard positioning "bottom"
+  Trigger: Text "@johndoe", col #2563eb, underline, cursor pointer
+  Content: Frame hor, gap 12, pad 16, bg #1a1a1a, rad 12, w 250
+    Frame w 48, h 48, bg #2563eb, rad 99, center
+      Text "JD", col white, weight bold
+    Frame ver, gap 2
+      Text "John Doe", weight 600, col white
+      Text "Designer at Acme", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>States</h3>
+      <p class="props-list"><code>open:</code></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+
+    <div class="summary">
+      <h2>Weitere Komponenten</h2>
+      <p>Weitere Overlay-Komponenten:</p>
+      <p class="props-list">
+        <code>Toast</code> <code>FloatingPanel</code> <code>Tour</code>
+      </p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="navigation.html">&larr; Navigation</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="tabellen.html">Tabellen &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="../tutorial/tutorial.js"></script>
+</body>
+</html>

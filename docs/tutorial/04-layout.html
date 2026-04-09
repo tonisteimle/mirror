@@ -96,7 +96,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
     Text "center", col white
 
   // ver-center – nur vertikal (nützlich bei hor + spread)
-  Frame hor, spread, ver-center, bg #1a1a1a, pad 16, rad 8
+  Frame hor, spread, ver-center, w full, bg #1a1a1a, pad 16, rad 8
     Text "Links", col white
     Text "Rechts", col white
 
@@ -176,19 +176,19 @@ Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 240
       <p>Mit <code>grid N</code> aktivierst du ein N-Spalten-Grid. Wichtig: Im Grid-Kontext bedeutet <code>w</code> nicht mehr Pixel, sondern <strong>Spalten-Span</strong>:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame grid 12, gap 8, bg #111, pad 16, rad 8
+          <textarea>Frame w 500, grid 12, gap 8, bg #111, pad 16, rad 8, row-height 40
   // w = Spalten-Span (nicht Pixel!)
-  Frame w 12, h full, bg #2563eb, rad 4, center
+  Frame w 12, bg #2563eb, rad 4, center
     Text "w 12 (volle Breite)", col white, fs 12
-  Frame w 6, h full, bg #10b981, rad 4, center
+  Frame w 6, bg #10b981, rad 4, center
     Text "w 6", col white, fs 12
-  Frame w 6, h full, bg #10b981, rad 4, center
+  Frame w 6, bg #10b981, rad 4, center
     Text "w 6", col white, fs 12
-  Frame w 4, h full, bg #f59e0b, rad 4, center
+  Frame w 4, bg #f59e0b, rad 4, center
     Text "w 4", col white, fs 12
-  Frame w 4, h full, bg #f59e0b, rad 4, center
+  Frame w 4, bg #f59e0b, rad 4, center
     Text "w 4", col white, fs 12
-  Frame w 4, h full, bg #f59e0b, rad 4, center
+  Frame w 4, bg #f59e0b, rad 4, center
     Text "w 4", col white, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
@@ -197,20 +197,21 @@ Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 240
       <p><strong>Was passiert hier?</strong></p>
       <ul>
         <li><code>grid 12</code> – teilt den Container in 12 gleich breite Spalten</li>
+        <li><code>row-height 40</code> – jede Zeile ist 40 Pixel hoch</li>
         <li><code>w 12</code> – das Element spannt alle 12 Spalten (volle Breite)</li>
         <li><code>w 6</code> – das Element spannt 6 Spalten (halbe Breite)</li>
         <li><code>w 4</code> – das Element spannt 4 Spalten (ein Drittel)</li>
       </ul>
 
       <div class="note">
-        <strong>Achtung:</strong> Im Grid-Kontext hat <code>w</code> eine andere Bedeutung! <code>w 200</code> würde 200 Spalten bedeuten – nicht 200 Pixel. Das ist ein häufiger Fehler.
+        <strong>Achtung:</strong> Im Grid-Kontext haben <code>w</code> und <code>h</code> eine andere Bedeutung! <code>w 6</code> bedeutet 6 Spalten, <code>h 2</code> bedeutet 2 Zeilen – nicht Pixel. Für die Zeilenhöhe in Pixel nutzt du <code>row-height</code>.
       </div>
 
       <h3>Explizite Platzierung</h3>
       <p>Mit <code>x</code> und <code>y</code> platzierst du Elemente exakt (1-indexed):</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame grid 12, gap 8, bg #111, pad 16, rad 8, row-height 35
+          <textarea>Frame w 600, grid 12, gap 8, bg #111, pad 16, rad 8, row-height 35
   Frame x 1, y 1, w 12, h 2, bg #2563eb, rad 4, center
     Text "Hero", col white, fs 12
 

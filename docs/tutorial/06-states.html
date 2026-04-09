@@ -103,7 +103,7 @@ Frame gap 8
       <p>Für eigene Interaktionen definierst du <strong>Custom States</strong>. Anders als System-States brauchst du eine Funktion, die sie auslöst:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>FavBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, gap 8, toggle()
+          <textarea>FavBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center, gap 8, toggle()
   Icon "heart", ic #666, is 16
   "Merken"
   hover:
@@ -114,7 +114,7 @@ Frame gap 8
     Icon "heart", ic white, is 16, fill
     "Gemerkt"
 
-Frame hor, gap 8
+Frame hor, ver-center, gap 8
   FavBtn
   FavBtn on</textarea>
         </div>
@@ -129,19 +129,9 @@ Frame hor, gap 8
       </ul>
 
       <h3>State-Namen sind frei wählbar</h3>
-      <p>Du kannst jeden Namen verwenden – <code>on</code>, <code>open</code>, <code>active</code>, <code>selected</code>:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Toggle: w 44, h 24, rad 99, bg #333, pad 2, cursor pointer, toggle()
-  Frame w 20, h 20, rad 99, bg #666
-  active:
-    bg #2563eb
-    Frame w 20, h 20, rad 99, bg white, margin 0 0 0 20
+      <p>Du kannst jeden Namen verwenden – <code>on</code>, <code>open</code>, <code>selected</code>, <code>expanded</code>. <strong>Ausnahme:</strong> Vermeide <code>hover</code>, <code>focus</code>, <code>active</code>, <code>disabled</code> – diese sind für CSS-Pseudo-States reserviert.</p>
 
-Toggle</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <p class="note"><strong>Tipp:</strong> Für Toggle-Switches gibt es die fertige <code>Switch</code> Zag-Komponente (siehe <a href="11-eingabe.html">Eingabe-Komponenten</a>) mit Accessibility und Keyboard-Navigation.</p>
 
     </section>
 
@@ -152,7 +142,7 @@ Toggle</textarea>
       <p>Bisher haben States nur Styles geändert (Farben, Größen). Aber States können auch <strong>komplett andere Kinder</strong> haben – wie Figma Variants:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>ExpandBtn: pad 12, bg #333, col white, rad 6, hor, gap 8, cursor pointer, toggle()
+          <textarea>ExpandBtn: pad 12, bg #333, col white, rad 6, hor, ver-center, gap 8, cursor pointer, toggle()
   "Mehr zeigen"
   Icon "chevron-down", ic white, is 16
   open:
@@ -176,7 +166,7 @@ ExpandBtn</textarea>
       <p>Was wenn du mehr als zwei Zustände brauchst? Ein Task kann "todo", "doing" oder "done" sein. <code>toggle()</code> erkennt das automatisch und cyclet durch alle States:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, gap 8, toggle()
+          <textarea>StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, ver-center, gap 8, toggle()
   todo:
     bg #333
     Icon "circle", ic white, is 14
@@ -210,13 +200,13 @@ StatusBtn</textarea>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Tab: pad 12 20, rad 6, bg #333, col #888, cursor pointer, exclusive()
-  active:
+  selected:
     bg #2563eb
     col white
 
-Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
+Frame hor, ver-center, gap 4, bg #1a1a1a, pad 4, rad 8
   Tab "Home"
-  Tab "Projekte", active
+  Tab "Projekte", selected
   Tab "Settings"</textarea>
         </div>
         <div class="playground-preview"></div>
@@ -263,11 +253,11 @@ Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Panel: bg #1a1a1a, rad 8, clip, toggle()
-  Frame hor, spread, ver-center, pad 16, cursor pointer
+  Frame hor, spread, ver-center, gap 8, pad 16, cursor pointer
     Text "Mehr anzeigen", col white, fs 14
     Icon "chevron-down", ic #888, is 18
   open:
-    Frame hor, spread, ver-center, pad 16, cursor pointer
+    Frame hor, spread, ver-center, gap 8, pad 16, cursor pointer
       Text "Weniger anzeigen", col white, fs 14
       Icon "chevron-up", ic #888, is 18
     Frame pad 0 16 16 16, gap 8
@@ -360,7 +350,7 @@ Frame gap 8
     <nav>
       <a class="prev" href="05-styling.html">&larr; Styling</a>
       <a class="index" href="index.html">Übersicht</a>
-      <a class="next" href="07-functions.html">Functions &rarr;</a>
+      <a class="next" href="07-animationen.html">Animationen &rarr;</a>
     </nav>
 
   </main>

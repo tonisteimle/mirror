@@ -18,10 +18,10 @@ export const COLOR_DOUBLECLICK_TRIGGER_ID = 'color-doubleclick'
 
 // Context pattern for # trigger
 // Matches: color property + space (e.g., "bg ", "col ")
-// Also matches token definition with color suffix (e.g., "$name.bg: ")
-// Also matches simple token definition (e.g., "$name: ")
+// Also matches token definition with color suffix (e.g., "name.bg: " or legacy "$name.bg: ")
+// Also matches simple token definition (e.g., "name: " or legacy "$name: ")
 const COLOR_CONTEXT_PATTERN =
-  /\b(bg|col|color|background|boc|border-color|hover-bg|hover-col|hover-boc)\s+$|\$[\w.-]+\.(bg|col|color|boc):\s*$|\$[\w.-]+:\s*$/
+  /\b(bg|col|color|background|boc|border-color|hover-bg|hover-col|hover-boc)\s+$|\$?[\w-]+\.(bg|col|color|boc):\s*$|\$?[\w-]+:\s*$/
 
 // Hex color pattern for double-click
 const HEX_COLOR_PATTERN = /#[0-9A-Fa-f]{3,8}\b/

@@ -29,6 +29,22 @@ function escapeJSString(s: string): string {
 }
 
 /**
+ * Known Zag component slot names that should get data-slot attribute
+ * when used as inline component definitions (e.g., CloseTrigger: Icon "x")
+ */
+const ZAG_SLOT_NAMES = new Set([
+  'CloseTrigger', 'Trigger', 'Content', 'Backdrop', 'Title', 'Description',
+  'Root', 'Label', 'Control', 'Track', 'Thumb', 'Range',
+  'Item', 'ItemControl', 'ItemText', 'ItemIndicator', 'ItemContent', 'ItemTrigger',
+  'List', 'Indicator', 'Input', 'ValueText', 'HiddenInput',
+  'Dropzone', 'ItemGroup', 'Positioner', 'Arrow',
+  'PrevTrigger', 'NextTrigger', 'Circle', 'CircleTrack', 'CircleRange',
+  'Image', 'Fallback', 'Area', 'Preview', 'VisibilityTrigger',
+  'DecrementTrigger', 'IncrementTrigger', 'ActionTrigger',
+  'Header', 'Footer', 'Group', 'GroupLabel', 'GroupContent',
+])
+
+/**
  * Options for DOM code generation
  */
 export interface GenerateDOMOptions {
@@ -579,12 +595,46 @@ class DOMGenerator {
     this.emit('  box-sizing: border-box;')
     this.emit('}')
 
+    // Animation keyframes for presets (pulse, bounce, shake, spin, etc.)
+    this.emitAnimationKeyframes()
+
     // Emit CSS for system states (hover, focus, active, disabled)
     this.emitSystemStateCSS()
 
     this.emit('`')
     this.emit('_root.appendChild(_style)')
     this.emit('')
+  }
+
+  private emitAnimationKeyframes(): void {
+    // Animation keyframes for built-in presets
+    // These match the animation names used in IR (compiler/ir/index.ts)
+    this.emit('')
+    this.emit('/* Animation Keyframes */')
+
+    // fade-in / fade-out
+    this.emit('@keyframes mirror-fade-in { from { opacity: 0; } to { opacity: 1; } }')
+    this.emit('@keyframes mirror-fade-out { from { opacity: 1; } to { opacity: 0; } }')
+
+    // slide-in / slide-out (default: from left)
+    this.emit('@keyframes mirror-slide-in { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }')
+    this.emit('@keyframes mirror-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-20px); opacity: 0; } }')
+
+    // scale-in / scale-out
+    this.emit('@keyframes mirror-scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }')
+    this.emit('@keyframes mirror-scale-out { from { transform: scale(1); opacity: 1; } to { transform: scale(0.9); opacity: 0; } }')
+
+    // bounce (attention-grabbing, loops)
+    this.emit('@keyframes mirror-bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }')
+
+    // pulse (attention-grabbing, loops)
+    this.emit('@keyframes mirror-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }')
+
+    // shake (error feedback)
+    this.emit('@keyframes mirror-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }')
+
+    // spin (loading indicator, loops)
+    this.emit('@keyframes mirror-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }')
   }
 
   private emitSystemStateCSS(): void {
@@ -819,9 +869,9 @@ class DOMGenerator {
           const getMatches = value.match(/\$get\("([^"]+)"\)/g)
           if (getMatches) {
             // Store the expression template for re-evaluation
-            // Escape backticks and ${} in the template
-            const escapedValue = value.replace(/`/g, '\\`').replace(/\$\{/g, '\\${')
-            this.emit(`${varName}._textTemplate = () => ${escapedValue}`)
+            // Note: value is already valid JavaScript (either $get("...") or a template literal)
+            // so we don't need to escape it further
+            this.emit(`${varName}._textTemplate = () => ${value}`)
 
             for (const match of getMatches) {
               const pathMatch = match.match(/\$get\("([^"]+)"\)/)
@@ -864,6 +914,7 @@ class DOMGenerator {
 
       this.emit(`// Slot placeholder`)
       this.emit(`${varName}.dataset.mirrorSlot = 'true'`)
+      this.emit(`${varName}.dataset.slot = "${this.escapeString(slotLabel)}"`)
       this.emit(`${varName}.dataset.slotLabel = "${this.escapeString(slotLabel)}"`)
       this.emit(`${varName}.classList.add('mirror-slot')`)
 
@@ -953,6 +1004,11 @@ class DOMGenerator {
     // Component name (for navigation targets)
     if (node.name) {
       this.emit(`${varName}.dataset.component = '${node.name}'`)
+      // Also set data-slot for known Zag slot names (e.g., CloseTrigger inside Dialog)
+      // This allows the runtime to find these elements via [data-slot="CloseTrigger"]
+      if (ZAG_SLOT_NAMES.has(node.name)) {
+        this.emit(`${varName}.dataset.slot = '${node.name}'`)
+      }
     }
 
     // Route (for navigation)
@@ -1077,8 +1133,10 @@ class DOMGenerator {
       this.emit(`const ${collectionVarName} = ${rawCollection}`)
     } else {
       // Named collection: use $get() for __mirrorData/globalThis lookup
-      // Convert objects to arrays using Object.values() for entry-format data
-      this.emit(`const ${collectionVarName}Data = (function(d) { return Array.isArray(d) ? d : (d && typeof d === 'object') ? Object.values(d) : []; })($get('${rawCollection}'))`)
+      // Convert objects to arrays using Object.entries() for entry-format data
+      // - For simple lists (key === value): returns the value directly
+      // - For objects: injects _key so the entry name is accessible
+      this.emit(`const ${collectionVarName}Data = (function(d) { if (Array.isArray(d)) return d; if (d && typeof d === 'object') { return Object.entries(d).map(([k, v]) => typeof v === 'object' && v !== null ? { _key: k, ...v } : v); } return []; })($get('${rawCollection}'))`)
     }
 
     let processedVarName = isInlineArray ? collectionVarName : `${collectionVarName}Data`
@@ -1205,17 +1263,20 @@ class DOMGenerator {
     this.emit('')
 
     if (isStaticTable) {
-      // Static table: emit static rows directly
+      // Static table: emit header (if present) and static rows
+      if (node.headerStaticRow) {
+        this.emitStaticTableHeader(tableVar, node)
+      }
       this.emitStaticTableRows(tableVar, node)
     } else if (node.dataSource) {
       // Data-driven table
       const dataVar = `${tableVar}_data`
       const collectionName = node.dataSource.replace(/^\$/, '')
 
-      // Load data
+      // Load data - convert entry-format objects to arrays with _key
       this.emit(`// Load data from collection`)
       this.emit(`let ${dataVar} = $get("${collectionName}") || []`)
-      this.emit(`if (!Array.isArray(${dataVar})) ${dataVar} = Object.values(${dataVar})`)
+      this.emit(`if (!Array.isArray(${dataVar})) ${dataVar} = Object.entries(${dataVar}).map(([k, v]) => typeof v === 'object' && v !== null ? { _key: k, ...v } : { _key: k, value: v })`)
       this.emit('')
 
       // Apply filter (where clause)
@@ -1274,6 +1335,54 @@ class DOMGenerator {
     }
 
     this.emit(`${parentVar}.appendChild(${tableVar})`)
+    this.emit('')
+  }
+
+  /**
+   * Emit static table header for manual tables (from Header: Row "A", "B" syntax)
+   */
+  private emitStaticTableHeader(tableVar: string, node: IRTable): void {
+    if (!node.headerStaticRow) return
+
+    this.emit(`// Static table header`)
+    const headerVar = `${tableVar}_header`
+    this.emit(`const ${headerVar} = document.createElement('div')`)
+    this.emit(`${headerVar}.className = 'mirror-table-header'`)
+    this.emit(`Object.assign(${headerVar}.style, {`)
+    this.indent++
+    this.emit(`display: 'flex',`)
+    this.emit(`background: 'var(--surface-elevated, #252525)',`)
+    this.emit(`padding: '12px',`)
+    this.emit(`borderBottom: '1px solid var(--border, #333)',`)
+    this.indent--
+    this.emit(`})`)
+
+    // Render header cells
+    const row = node.headerStaticRow
+    for (let cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
+      const cell = row.cells[cellIndex]
+      const cellVar = `${headerVar}_cell_${cellIndex}`
+
+      this.emit(`const ${cellVar} = document.createElement('div')`)
+      this.emit(`${cellVar}.className = 'mirror-table-header-cell'`)
+      this.emit(`Object.assign(${cellVar}.style, {`)
+      this.indent++
+      this.emit(`flex: '1',`)
+      this.emit(`fontWeight: '500',`)
+      this.emit(`color: 'var(--text-muted, #888)',`)
+      this.emit(`fontSize: '11px',`)
+      this.emit(`textTransform: 'uppercase',`)
+      this.indent--
+      this.emit(`})`)
+
+      if (cell.text !== undefined) {
+        this.emit(`${cellVar}.textContent = ${JSON.stringify(cell.text)}`)
+      }
+
+      this.emit(`${headerVar}.appendChild(${cellVar})`)
+    }
+
+    this.emit(`${tableVar}.appendChild(${headerVar})`)
     this.emit('')
   }
 
@@ -2156,6 +2265,10 @@ class DOMGenerator {
       this.emitDatePickerComponent(node, parentVar)
       return
     }
+    if (node.zagType === 'date-input' || node.zagType === 'dateinput') {
+      this.emitDateInputComponent(node, parentVar)
+      return
+    }
     if (node.zagType === 'number-input' || node.zagType === 'numberinput') {
       this.emitNumberInputComponent(node, parentVar)
       return
@@ -2188,7 +2301,7 @@ class DOMGenerator {
       this.emitRadioGroupComponent(node, parentVar)
       return
     }
-    if (node.zagType === 'slider') {
+    if (node.zagType === 'slider' || node.zagType === 'rangeslider') {
       this.emitSliderComponent(node, parentVar)
       return
     }
@@ -2593,8 +2706,14 @@ class DOMGenerator {
         for (const child of item.children) {
           this.emitNode(child, contentVar)
         }
+      } else if (item.shows) {
+        // "show X [from Y]" syntax
+        this.emit(`${contentVar}.dataset.shows = '${this.escapeString(item.shows)}'`)
+        if (item.showsFrom) {
+          this.emit(`${contentVar}.dataset.showsFrom = '${this.escapeString(item.showsFrom)}'`)
+        }
       } else if (item.loadFromFile) {
-        // Mark for lazy loading from external file
+        // Legacy: Mark for lazy loading from external file
         this.emit(`${contentVar}.dataset.loadFromFile = '${this.escapeString(item.loadFromFile)}'`)
       }
       this.emit(`${varName}.appendChild(${contentVar})`)
@@ -2821,6 +2940,98 @@ class DOMGenerator {
     this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initDatePickerComponent) {`)
     this.indent++
     this.emit(`_runtime.initDatePickerComponent(${varName})`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+  }
+
+  /**
+   * Emit DateInput component
+   * Structure: Root > Label + Control (Segments + Separators)
+   */
+  private emitDateInputComponent(node: IRZagNode, parentVar: string): void {
+    const varName = this.sanitizeVarName(node.id)
+
+    this.emit(`// DateInput Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`_elements['${node.id}'] = ${varName}`)
+    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+    this.emit(`${varName}.dataset.zagComponent = 'dateinput'`)
+    if (node.name) {
+      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+    }
+
+    // Emit machine configuration
+    this.emit(`${varName}._zagConfig = {`)
+    this.indent++
+    this.emit(`type: 'dateinput',`)
+    this.emit(`id: '${node.id}',`)
+    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+    this.indent--
+    this.emit(`}`)
+    this.emit('')
+
+    // Apply root styles
+    const rootSlot = node.slots['Root']
+    if (rootSlot?.styles && rootSlot.styles.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of rootSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    // Create Label if present
+    const labelText = (node.machineConfig?.label as string) || ''
+    if (labelText) {
+      const labelSlot = node.slots['Label']
+      const labelVar = `${varName}_label`
+      this.emit(`// Label`)
+      this.emit(`const ${labelVar} = document.createElement('label')`)
+      this.emit(`${labelVar}.dataset.slot = 'Label'`)
+      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
+      if (labelSlot?.styles && labelSlot.styles.length > 0) {
+        this.emit(`Object.assign(${labelVar}.style, {`)
+        this.indent++
+        for (const style of labelSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+      this.emit(`${varName}.appendChild(${labelVar})`)
+      this.emit('')
+    }
+
+    // Create Control container
+    const controlSlot = node.slots['Control']
+    const controlVar = `${varName}_control`
+    this.emit(`// Control (segment container)`)
+    this.emit(`const ${controlVar} = document.createElement('div')`)
+    this.emit(`${controlVar}.dataset.slot = 'Control'`)
+    if (controlSlot?.styles && controlSlot.styles.length > 0) {
+      this.emit(`Object.assign(${controlVar}.style, {`)
+      this.indent++
+      for (const style of controlSlot.styles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+    this.emit(`${varName}.appendChild(${controlVar})`)
+    this.emit('')
+
+    // Append to parent
+    this.emit(`${parentVar}.appendChild(${varName})`)
+    this.emit('')
+
+    // Initialize DateInput via runtime
+    this.emit(`// Initialize DateInput`)
+    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initDateInputComponent) {`)
+    this.indent++
+    this.emit(`_runtime.initDateInputComponent(${varName})`)
     this.indent--
     this.emit(`}`)
     this.emit('')
@@ -3810,6 +4021,40 @@ class DOMGenerator {
       this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
     }
 
+    // Extract state styles from slot children
+    // Filter out container defaults that were automatically added by IR transformation
+    const CONTAINER_DEFAULTS = new Set([
+      'display:flex',
+      'flex-direction:column',
+      'width:fit-content',
+      'align-items:flex-start',
+    ])
+    const extractSlotStateStyles = (slot: any): Record<string, Record<string, string>> => {
+      const stateStyles: Record<string, Record<string, string>> = {}
+      if (slot?.children) {
+        for (const child of slot.children) {
+          if (child.primitive && child.styles) {
+            const stateName = child.primitive
+            stateStyles[stateName] = {}
+            for (const style of child.styles) {
+              if (style.property && style.value) {
+                // Skip container defaults that were added automatically
+                const styleKey = `${style.property}:${style.value}`
+                if (!CONTAINER_DEFAULTS.has(styleKey)) {
+                  stateStyles[stateName][style.property] = style.value
+                }
+              }
+            }
+          }
+        }
+      }
+      return stateStyles
+    }
+
+    const itemSlotStateStyles = extractSlotStateStyles(node.slots['Item'])
+    const controlSlotStateStyles = extractSlotStateStyles(node.slots['ItemControl'])
+    const textSlotStateStyles = extractSlotStateStyles(node.slots['ItemText'])
+
     // Emit machine configuration
     this.emit(`${varName}._zagConfig = {`)
     this.indent++
@@ -3821,6 +4066,16 @@ class DOMGenerator {
       label: item.label,
       disabled: item.disabled
     })))},`)
+    // Include slot state styles for runtime
+    if (Object.keys(itemSlotStateStyles).length > 0) {
+      this.emit(`itemStateStyles: ${JSON.stringify(itemSlotStateStyles)},`)
+    }
+    if (Object.keys(controlSlotStateStyles).length > 0) {
+      this.emit(`controlStateStyles: ${JSON.stringify(controlSlotStateStyles)},`)
+    }
+    if (Object.keys(textSlotStateStyles).length > 0) {
+      this.emit(`textStateStyles: ${JSON.stringify(textSlotStateStyles)},`)
+    }
     this.indent--
     this.emit(`}`)
     this.emit('')
@@ -3945,7 +4200,8 @@ class DOMGenerator {
     this.emit(`const ${varName} = document.createElement('div')`)
     this.emit(`_elements['${node.id}'] = ${varName}`)
     this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'slider'`)
+    const isRangeSlider = node.name === 'RangeSlider'
+    this.emit(`${varName}.dataset.zagComponent = '${isRangeSlider ? 'rangeslider' : 'slider'}'`)
     if (node.name) {
       this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
     }
@@ -4074,12 +4330,21 @@ class DOMGenerator {
     this.emit('')
 
     // Initialize Slider via runtime
-    this.emit(`// Initialize Slider`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initSliderComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initSliderComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
+    if (isRangeSlider) {
+      this.emit(`// Initialize RangeSlider`)
+      this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initRangeSliderComponent) {`)
+      this.indent++
+      this.emit(`_runtime.initRangeSliderComponent(${varName})`)
+      this.indent--
+      this.emit(`}`)
+    } else {
+      this.emit(`// Initialize Slider`)
+      this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initSliderComponent) {`)
+      this.indent++
+      this.emit(`_runtime.initSliderComponent(${varName})`)
+      this.indent--
+      this.emit(`}`)
+    }
     this.emit('')
   }
 
@@ -5595,8 +5860,11 @@ class DOMGenerator {
         this.emit(`${itemVar}.setAttribute('tabindex', '0')`)
         if (item.shows) {
           this.emit(`${itemVar}.dataset.shows = '${this.escapeString(item.shows)}'`)
+          if (item.showsFrom) {
+            this.emit(`${itemVar}.dataset.showsFrom = '${this.escapeString(item.showsFrom)}'`)
+          }
         } else if (item.loadFromFile) {
-          // Mark for lazy loading from external file
+          // Legacy: Mark for lazy loading from external file
           this.emit(`${itemVar}.dataset.loadFromFile = '${this.escapeString(item.loadFromFile)}'`)
         }
         if (item.disabled) {
@@ -6167,26 +6435,28 @@ class DOMGenerator {
       this.emit('')
     }
 
-    // CloseTrigger (optional)
+    // CloseTrigger - only created if explicitly defined as slot (not auto-generated)
     const closeSlot = node.slots['CloseTrigger']
-    const closeVar = `${varName}_close`
-    this.emit(`// Close trigger`)
-    this.emit(`const ${closeVar} = document.createElement('button')`)
-    this.emit(`${closeVar}.type = 'button'`)
-    this.emit(`${closeVar}.dataset.slot = 'CloseTrigger'`)
-    this.emit(`${closeVar}.textContent = '×'`)
-    this.emit(`${closeVar}.setAttribute('aria-label', 'Close')`)
-    if (closeSlot?.styles && closeSlot.styles.length > 0) {
-      this.emit(`Object.assign(${closeVar}.style, {`)
-      this.indent++
-      for (const style of closeSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
+    if (closeSlot && closeSlot.children && closeSlot.children.length > 0) {
+      const closeVar = `${varName}_close`
+      this.emit(`// Close trigger (user-defined)`)
+      this.emit(`const ${closeVar} = document.createElement('div')`)
+      this.emit(`${closeVar}.dataset.slot = 'CloseTrigger'`)
+      if (closeSlot.styles && closeSlot.styles.length > 0) {
+        this.emit(`Object.assign(${closeVar}.style, {`)
+        this.indent++
+        for (const style of closeSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
       }
-      this.indent--
-      this.emit('})')
+      for (const child of closeSlot.children) {
+        this.emitNode(child as IRNode, closeVar)
+      }
+      this.emit(`${contentVar}.appendChild(${closeVar})`)
+      this.emit('')
     }
-    this.emit(`${contentVar}.appendChild(${closeVar})`)
-    this.emit('')
 
     // Emit Content slot children (children defined inside Content: in DSL)
     const contentSlotChildren = node.slots['Content']?.children || []
@@ -6419,26 +6689,30 @@ class DOMGenerator {
       this.emit('')
     }
 
-    // CloseTrigger
+    // CloseTrigger - only created if explicitly defined as slot (not auto-generated)
+    // User defines CloseTrigger inside Content: children if needed
     const closeSlot = node.slots['CloseTrigger']
-    const closeVar = `${varName}_close`
-    this.emit(`// Close trigger`)
-    this.emit(`const ${closeVar} = document.createElement('button')`)
-    this.emit(`${closeVar}.type = 'button'`)
-    this.emit(`${closeVar}.dataset.slot = 'CloseTrigger'`)
-    this.emit(`${closeVar}.textContent = '×'`)
-    this.emit(`${closeVar}.setAttribute('aria-label', 'Close')`)
-    if (closeSlot?.styles && closeSlot.styles.length > 0) {
-      this.emit(`Object.assign(${closeVar}.style, {`)
-      this.indent++
-      for (const style of closeSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
+    if (closeSlot && closeSlot.children && closeSlot.children.length > 0) {
+      // User defined a root-level CloseTrigger slot
+      const closeVar = `${varName}_close`
+      this.emit(`// Close trigger (user-defined)`)
+      this.emit(`const ${closeVar} = document.createElement('div')`)
+      this.emit(`${closeVar}.dataset.slot = 'CloseTrigger'`)
+      if (closeSlot.styles && closeSlot.styles.length > 0) {
+        this.emit(`Object.assign(${closeVar}.style, {`)
+        this.indent++
+        for (const style of closeSlot.styles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
       }
-      this.indent--
-      this.emit('})')
+      for (const child of closeSlot.children) {
+        this.emitNode(child, closeVar)
+      }
+      this.emit(`${contentVar}.appendChild(${closeVar})`)
+      this.emit('')
     }
-    this.emit(`${contentVar}.appendChild(${closeVar})`)
-    this.emit('')
 
     // Emit Content slot children (children defined inside Content: in DSL)
     const contentSlotChildren = node.slots['Content']?.children || []
@@ -6909,7 +7183,11 @@ class DOMGenerator {
   }
 
   private resolveTemplateStyleValue(value: string, itemVar: string): string {
-    // Check if value contains item variable reference
+    // Check if value is exactly the item variable (e.g., $color -> color)
+    if (value === `$${itemVar}`) {
+      return itemVar
+    }
+    // Check if value contains item variable reference with property access
     if (value.includes(`$${itemVar}.`) || value.includes(`\${${itemVar}.`)) {
       const resolved = value.replace(new RegExp(`\\$${itemVar}\\.`, 'g'), `${itemVar}.`)
       return resolved
@@ -7544,13 +7822,39 @@ class DOMGenerator {
         return this.resolveExpressionVariables(value)
       }
 
-      // Check for simple $-variable reference (must start with letter or underscore after $)
+      // Check for simple $-variable reference (ONLY the variable, nothing else)
       // $name, $user.name → variable
+      // $discount% → needs interpolation (has suffix)
       // $12.4k, $100 → literal (currency/number)
-      if (value.startsWith('$') && !value.startsWith('$get(') && /^\$[a-zA-Z_]/.test(value)) {
-        const varName = value.slice(1) // Remove $ prefix
-        return `$get("${varName}")`
+      const simpleVarMatch = value.match(/^\$([a-zA-Z_][a-zA-Z0-9_.]*)$/)
+      if (simpleVarMatch && !value.startsWith('$get(')) {
+        return `$get("${simpleVarMatch[1]}")`
       }
+
+      // String interpolation: "Hello $firstName" or "$discount%" → template literal
+      // Handle $$ as escape for literal $ sign
+      if (/\$[a-zA-Z_][a-zA-Z0-9_.]*/.test(value)) {
+        // First, replace $$ with a placeholder to preserve literal $ signs
+        const DOLLAR_PLACEHOLDER = '\x00DOLLAR\x00'
+        let processed = value.replace(/\$\$/g, DOLLAR_PLACEHOLDER)
+
+        // Convert $varName to ${$get("varName")}
+        processed = processed.replace(
+          /\$([a-zA-Z_][a-zA-Z0-9_.]*)/g,
+          (match, varName) => `\${$get("${varName}")}`
+        )
+
+        // Restore literal $ signs
+        processed = processed.replace(new RegExp(DOLLAR_PLACEHOLDER, 'g'), '$')
+
+        return `\`${this.escapeTemplateString(processed)}\``
+      }
+
+      // Handle $$ in strings without other variables (e.g., "$$100")
+      if (value.includes('$$')) {
+        return `"${this.escapeString(value.replace(/\$\$/g, '$'))}"`
+      }
+
       // Regular string literal
       return `"${this.escapeString(value)}"`
     }
@@ -7583,6 +7887,17 @@ class DOMGenerator {
   private escapeString(str: string | number | boolean | undefined | null): string {
     const s = String(str ?? '')
     return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')
+  }
+
+  /**
+   * Escape a template string (for backtick literals)
+   * Escapes backticks and backslashes, but preserves ${...} interpolations
+   */
+  private escapeTemplateString(str: string): string {
+    return str
+      .replace(/\\/g, '\\\\')
+      .replace(/`/g, '\\`')
+      .replace(/\n/g, '\\n')
   }
 
   /**

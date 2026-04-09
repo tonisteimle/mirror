@@ -239,12 +239,23 @@ export function parseDataFile(source: string, filename: string): DataFile {
       continue
     }
 
+    // Check for simple list item: identifier without colon (e.g., "rot" in a colors list)
+    const simpleItemMatch = /^[\w-]+$/.exec(trimmed)
+    if (simpleItemMatch && currentEntry && inAttributeSection) {
+      currentEntry.attributes.push({
+        key: trimmed,
+        value: trimmed,  // key IS the value for simple list items
+        line: lineNum,
+      })
+      continue
+    }
+
     // Unknown line
     if (currentEntry) {
       errors.push({
         message: `Unexpected content: "${trimmed}"`,
         line: lineNum,
-        hint: 'Expected "key: value" or "@blockname"',
+        hint: 'Expected "key: value", simple list item, or "@blockname"',
       })
     } else {
       errors.push({

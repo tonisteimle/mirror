@@ -16,18 +16,19 @@
 
     <header>
       <h1>Was ist Mirror?</h1>
-      <p class="subtitle">Die Sprache für AI-unterstütztes UI-Design</p>
+      <p class="subtitle">Die Entwicklungsumgebung für Designer</p>
     </header>
 
-    <p class="intro">Mirror ist eine DSL für <strong>AI-unterstütztes UI-Design</strong>. AI generiert Code, du verfeinerst ihn – ohne Framework-Wissen, ohne Build-Tools. Dieses Kapitel zeigt dir, was Mirror ist und warum es existiert.</p>
+    <p class="intro">Mirror ist eine einfache Programmiersprache, um UIs zu beschreiben und zu steuern. Du kannst direkt Code schreiben, visuell im Editor arbeiten, oder AI generieren lassen – alle drei Wege führen zum selben lesbaren Code.</p>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Die Zukunft des Designs</h2>
-      <p>Die Zukunft liegt im AI-unterstützten Design. AI generiert Code – aber heutige Programmiersprachen sind für Designer nicht lesbar. Kleine Änderungen werden zum Pain. Du bist abhängig von Entwicklern oder musst hoffen, dass die AI versteht was du meinst.</p>
+      <h2>Code, den du verstehst</h2>
+      <p>AI kann UI generieren. Das Ergebnis sieht oft gut aus – aber der Code dahinter bleibt eine <strong>Black Box</strong>. Du kannst nicht beurteilen, ob er sauber ist. Du hast kein Gefühl der Kontrolle.</p>
+      <p>Und wenn du etwas ändern willst? Für "mach den Button etwas größer" musst du wieder die AI fragen. Dabei wäre es oft viel schneller, selbst drei Zeichen im Code zu ändern – wenn du ihn nur verstehen würdest.</p>
       <p><strong>Mirror löst dieses Problem.</strong></p>
-      <p>Mirror ist eine Sprache, die AI versteht <em>und</em> Menschen lesen können. AI generiert, du verfeinerst. Ohne Framework-Wissen, ohne Build-Tools, ohne Abhängigkeiten.</p>
+      <p>Mirror ist eine Sprache, die AI versteht <em>und</em> Menschen lesen können:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
@@ -35,36 +36,29 @@
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern. <code>bg #2563eb</code> → <code>bg #10b981</code> und der Button ist grün. Keine Magie, keine versteckten Dateien.</p>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Lesbar wie ein Dokument</h2>
-      <p>Mirror verwendet kurze, eindeutige Abkürzungen:</p>
+      <p>Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern. <code>bg #2563eb</code> → <code>bg #10b981</code> und der Button ist grün. <code>pad 12 24</code> → <code>pad 16 32</code> und er ist größer. Keine Magie, keine versteckten Dateien.</p>
+      <p>Aber es wird noch besser. Wenn du Komponenten definierst, wird die Verwendung komplett clean:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 12, pad 16, bg #1a1a1a, rad 8
-  Icon "user", ic #2563eb, is 24
-  Frame gap 2
-    Text "Max Mustermann", col white, fs 14, weight 500
-    Text "Designer", col #888, fs 12</textarea>
+          <textarea>// Einmal definieren (mit Styling)
+Card: bg #1a1a1a, pad 16, rad 8, gap 8
+  Title: col white, fs 16, weight 500
+  Desc: col #888, fs 14
+
+// Dann verwenden (clean wie ein Dokument)
+Card
+  Title "Projekt Alpha"
+  Desc "Das erste Projekt"
+
+Card
+  Title "Projekt Beta"
+  Desc "Ein anderes Projekt"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <table class="ref-table">
-        <tr><th>Property</th><th>Bedeutung</th></tr>
-        <tr><td><code>hor</code></td><td>horizontal</td></tr>
-        <tr><td><code>gap</code></td><td>Abstand zwischen Kindern</td></tr>
-        <tr><td><code>pad</code></td><td>Padding</td></tr>
-        <tr><td><code>bg</code></td><td>Hintergrund</td></tr>
-        <tr><td><code>rad</code></td><td>Radius</td></tr>
-        <tr><td><code>col</code></td><td>Farbe</td></tr>
-        <tr><td><code>fs</code></td><td>Schriftgröße</td></tr>
-      </table>
-      <p>Die Abkürzungen sind der Anfang des Wortes. Nach wenigen Minuten liest sich Mirror-Code wie eine Beschreibung des UIs.</p>
+      <p>Keine Attribute mehr bei der Verwendung. Nur noch Struktur und Inhalt – wie ein Dokument, das das UI beschreibt.</p>
+      <p>Die Styling-Eigenschaften verwenden kurze Abkürzungen: <code>bg</code> (background), <code>pad</code> (padding), <code>rad</code> (radius), <code>col</code> (color), <code>fs</code> (font-size). Du lernst sie nebenbei.</p>
     </section>
 
 
@@ -116,9 +110,9 @@ Frame hor, gap 8
       <p>Farben, Abstände, Radien – definiere sie einmal, verwende sie überall:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>$primary.bg: #2563eb
-$card.bg: #1a1a1a
-$card.rad: 8
+          <textarea>primary.bg: #2563eb
+card.bg: #1a1a1a
+card.rad: 8
 
 Card: bg $card, rad $card, pad 16, gap 8
   Title: col white, fs 16, weight 500
@@ -172,21 +166,29 @@ ExpandBtn</textarea>
 
     <!-- ============================================================ -->
     <section>
-      <h2>JavaScript wenn nötig</h2>
-      <p>Mirror hat eingebaute Funktionen für typische Patterns – <code>toggle()</code>, <code>show()</code>, <code>hide()</code>, <code>navigate()</code>. Für komplexe Logik schreibst du JavaScript:</p>
-      <div class="code-block">
-        <pre><span class="syn-component">Button</span> <span class="syn-string">"Speichern"</span>, save()</pre>
+      <h2>Animation und Logik</h2>
+      <p>States können animiert werden – füge einfach eine Dauer hinzu:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
+  hover 0.2s:
+    bg #2563eb
+    scale 1.02
+
+Btn "Hover mich"</textarea>
+        </div>
+        <div class="playground-preview"></div>
       </div>
 
+      <p><code>hover:</code> springt, <code>hover 0.2s:</code> gleitet. Für Logik schreibst du eigene Funktionen – in einer einfachen Syntax ohne Klammern:</p>
       <div class="code-block">
-        <pre><span class="syn-keyword">async</span> <span class="syn-keyword">function</span> saveData(element) {
-  element.state = <span class="syn-string">'loading'</span>
-  <span class="syn-keyword">await</span> fetch(<span class="syn-string">'/api/save'</span>)
-  element.state = <span class="syn-string">'success'</span>
-}</pre>
-      </div>
+        <pre><span class="syn-component">Input</span> <span class="syn-keyword">name</span> EmailInput
+<span class="syn-component">Button</span> <span class="syn-string">"Absenden"</span>, absenden()
 
-      <p>Mirror definiert das UI. JavaScript steuert die Logik. Beide arbeiten zusammen.</p>
+<span class="syn-keyword">function</span> absenden()
+  wert = EmailInput.value
+  Hinweis.content = <span class="syn-string">"Gesendet: "</span> + wert</pre>
+      </div>
     </section>
 
 
@@ -226,13 +228,13 @@ Du: siehst die Änderung, verstehst sie, kannst selbst weiter tweaken</pre>
         <tr><th colspan="2">Die Sprache</th></tr>
         <tr><td>01-03</td><td><strong>Grundlagen</strong> – Elemente, Komponenten, Tokens</td></tr>
         <tr><td>04-05</td><td><strong>Layout & Styling</strong> – Flex, Grid, Farben, Effekte</td></tr>
-        <tr><td>06-07</td><td><strong>Interaktion</strong> – States, Functions</td></tr>
-        <tr><td>08-09</td><td><strong>Daten & Struktur</strong> – Variablen, Binding, Seiten</td></tr>
+        <tr><td>06-08</td><td><strong>Interaktion</strong> – States, Animationen, Functions</td></tr>
+        <tr><td>09-10</td><td><strong>Daten & Struktur</strong> – Variablen, Binding, Seiten</td></tr>
         <tr><th colspan="2">Komponenten-Bibliothek</th></tr>
-        <tr><td>10</td><td><strong>Eingabe</strong> – Forms, Selection, DateTime</td></tr>
-        <tr><td>11</td><td><strong>Navigation</strong> – Tabs, Accordion, SideNav, Steps</td></tr>
-        <tr><td>12</td><td><strong>Overlays</strong> – Dialog, Popover, Tooltip, Tour</td></tr>
-        <tr><td>13</td><td><strong>Anzeige</strong> – Tables, Media, Progress, Utility</td></tr>
+        <tr><td>11</td><td><strong>Eingabe</strong> – Forms, Selection, DateTime</td></tr>
+        <tr><td>12</td><td><strong>Navigation</strong> – Tabs, SideNav</td></tr>
+        <tr><td>13</td><td><strong>Overlays</strong> – Dialog, Popover, Tooltip</td></tr>
+        <tr><td>14</td><td><strong>Tabellen</strong> – Statische und datengebundene Tabellen</td></tr>
       </table>
 
       <p>Jedes Kapitel enthält interaktive Beispiele – der Code kann direkt bearbeitet werden, das Ergebnis erscheint live.</p>
@@ -248,7 +250,7 @@ Du: siehst die Änderung, verstehst sie, kannst selbst weiter tweaken</pre>
         <tr><td>Hierarchie</td><td>2 Leerzeichen Einrückung</td></tr>
         <tr><td>Komponente definieren</td><td><code>Btn:</code> (mit Doppelpunkt)</td></tr>
         <tr><td>Komponente verwenden</td><td><code>Btn "Text"</code> (ohne Doppelpunkt)</td></tr>
-        <tr><td>Token definieren</td><td><code>$primary.bg: #2563eb</code></td></tr>
+        <tr><td>Token definieren</td><td><code>primary.bg: #2563eb</code></td></tr>
         <tr><td>Token verwenden</td><td><code>bg $primary</code></td></tr>
         <tr><td>State definieren</td><td><code>on:</code> oder <code>hover:</code></td></tr>
         <tr><td>State wechseln</td><td><code>toggle()</code></td></tr>

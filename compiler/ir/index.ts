@@ -151,6 +151,7 @@ class IRTransformer {
   private ast: AST
   private componentMap: Map<string, ComponentDefinition> = new Map()
   private tokenSet: Set<string> = new Set()
+  private propertySetMap: Map<string, Property[]> = new Map()  // Property sets (tokens with multiple properties)
   private nodeIdCounter = 0
   private includeSourceMap: boolean
   private sourceMapBuilder: SourceMapBuilder
@@ -165,9 +166,13 @@ class IRTransformer {
     for (const comp of ast.components) {
       this.registerComponent(comp)
     }
-    // Build token lookup set
+    // Build token lookup set and property set map
     for (const token of ast.tokens) {
       this.tokenSet.add(token.name)
+      // Store property sets (tokens with properties array instead of single value)
+      if (token.properties && token.properties.length > 0) {
+        this.propertySetMap.set(token.name, token.properties)
+      }
     }
   }
 
@@ -620,7 +625,13 @@ class IRTransformer {
           if (nonEmptyValues.length === 0) {
             // No valid values, skip
           } else if (nonEmptyValues.length === 1) {
-            machineConfig[prop.name] = String(nonEmptyValues[0])
+            const val = nonEmptyValues[0]
+            // If value is already an array (e.g., RangeSlider defaultValue [20, 80]), preserve it
+            if (Array.isArray(val)) {
+              machineConfig[prop.name] = val
+            } else {
+              machineConfig[prop.name] = String(val)
+            }
           } else {
             machineConfig[prop.name] = nonEmptyValues.map((v: any) => String(v))
           }
@@ -951,6 +962,9 @@ class IRTransformer {
       if (item.shows) {
         irItem.shows = item.shows
       }
+      if (item.showsFrom) {
+        irItem.showsFrom = item.showsFrom
+      }
       // Form Field-specific item properties
       if (item.name) {
         irItem.name = item.name
@@ -986,10 +1000,18 @@ class IRTransformer {
       // Include children if present (custom content like Icon, Text)
       if (item.children && item.children.length > 0) {
         irItem.children = item.children.map((child: any) => this.transformChild(child))
+      } else if (item.shows) {
+        // No children but has "show X [from Y]" → load content
+        // show Settings → shows local element or Settings.mirror
+        // show Settings from Content → loads Settings from Content.mirror
+        // Runtime resolves whether it's local or from file
+        irItem.shows = item.shows
+        if (item.showsFrom) {
+          irItem.showsFrom = item.showsFrom
+        }
       } else if (item.value) {
-        // No children but has EXPLICIT value → load content from file
+        // Legacy: No children but has EXPLICIT value → load content from file
         // e.g., Tab "Home", value "home" → loads home.mirror
-        // Only when value was explicitly set, not derived from label
         irItem.loadFromFile = item.value
       }
       return irItem
@@ -1089,6 +1111,10 @@ class IRTransformer {
     const headerSlot = table.headerSlot
       ? this.transformTableSlotChildren(table.headerSlot)
       : undefined
+    // Transform static header row from Header: Row "A", "B" syntax
+    const headerStaticRow = table.headerSlot?.staticRow
+      ? this.transformTableStaticRow(table.headerSlot.staticRow)
+      : undefined
     const rowSlot = table.rowSlot
       ? this.transformTableSlotChildren(table.rowSlot)
       : undefined
@@ -1173,6 +1199,7 @@ class IRTransformer {
       pageSize,
       stickyHeader: table.stickyHeader,
       headerSlot,
+      headerStaticRow,
       rowSlot,
       rowSlotStyles,
       footerSlot,
@@ -2755,6 +2782,37 @@ class IRTransformer {
   }
 
   /**
+   * Expand property sets in a list of properties.
+   * A property set reference looks like: { name: 'content', values: [{ kind: 'token', name: 'cardstyle' }] }
+   * If 'cardstyle' is a property set (token with properties), expand it to its properties.
+   */
+  private expandPropertySets(properties: Property[]): Property[] {
+    const expanded: Property[] = []
+
+    for (const prop of properties) {
+      // Check if this is a property set reference (propset property from parser)
+      // Syntax: Frame $cardstyle → propset: { kind: 'token', name: 'cardstyle' }
+      if (prop.name === 'propset' && prop.values.length === 1) {
+        const val = prop.values[0]
+        if (typeof val === 'object' && val.kind === 'token') {
+          const tokenName = val.name
+          const propertySet = this.propertySetMap.get(tokenName)
+          if (propertySet) {
+            // Expand the property set - add all its properties
+            expanded.push(...propertySet)
+            continue
+          }
+        }
+      }
+
+      // Regular property - keep as is
+      expanded.push(prop)
+    }
+
+    return expanded
+  }
+
+  /**
    * Transform Mirror properties to CSS styles
    *
    * This method uses intelligent layout merging to handle flexbox properties correctly.
@@ -2762,6 +2820,9 @@ class IRTransformer {
    * It also collects transform properties to combine them into a single transform value.
    */
   private transformProperties(properties: Property[], primitive: string = 'frame', parentLayoutContext?: ParentLayoutContext): IRStyle[] {
+    // First, expand any property set references
+    const expandedProperties = this.expandPropertySets(properties)
+
     const styles: IRStyle[] = []
     const layoutContext: LayoutContext = {
       direction: null,
@@ -2782,15 +2843,15 @@ class IRTransformer {
 
     // Check for explicit min/max width/height properties
     // These should NOT be overwritten by automatic min-width: 0 from w full
-    const hasExplicitMinWidth = properties.some(p => p.name === 'minw' || p.name === 'min-width')
-    const hasExplicitMinHeight = properties.some(p => p.name === 'minh' || p.name === 'min-height')
-    const hasExplicitMaxWidth = properties.some(p => p.name === 'maxw' || p.name === 'max-width')
-    const hasExplicitMaxHeight = properties.some(p => p.name === 'maxh' || p.name === 'max-height')
+    const hasExplicitMinWidth = expandedProperties.some(p => p.name === 'minw' || p.name === 'min-width')
+    const hasExplicitMinHeight = expandedProperties.some(p => p.name === 'minh' || p.name === 'min-height')
+    const hasExplicitMaxWidth = expandedProperties.some(p => p.name === 'maxw' || p.name === 'max-width')
+    const hasExplicitMaxHeight = expandedProperties.some(p => p.name === 'maxh' || p.name === 'max-height')
 
     // Check for explicit width/height properties (for hug-by-default behavior)
     // When no width is set, containers should hug their content (fit-content)
-    const hasExplicitWidth = properties.some(p => p.name === 'w' || p.name === 'width' || p.name === 'size')
-    const hasExplicitHeight = properties.some(p => p.name === 'h' || p.name === 'height' || p.name === 'size')
+    const hasExplicitWidth = expandedProperties.some(p => p.name === 'w' || p.name === 'width' || p.name === 'size')
+    const hasExplicitHeight = expandedProperties.some(p => p.name === 'h' || p.name === 'height' || p.name === 'size')
     layoutContext.hasExplicitWidth = hasExplicitWidth
     layoutContext.hasExplicitHeight = hasExplicitHeight
 
@@ -2799,7 +2860,7 @@ class IRTransformer {
     const layoutValues: string[] = []
 
     // First pass: collect layout properties into context
-    for (const prop of properties) {
+    for (const prop of expandedProperties) {
       const name = prop.name
       // Boolean property: either [true] or [] (empty values)
       const isBoolean = (prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0
@@ -2910,7 +2971,7 @@ class IRTransformer {
 
     // Second pass: process non-layout properties
     // Transform emission moved to AFTER this pass so properties can add to transformContext
-    for (const prop of properties) {
+    for (const prop of expandedProperties) {
       const name = prop.name
       const isBoolean = (prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0
 
@@ -3267,14 +3328,40 @@ class IRTransformer {
   private transformStates(states: State[]): IRStyle[] {
     const styles: IRStyle[] = []
 
+    // Collect transition info for system states with animation/duration
+    const transitionProps: Map<string, { duration: number; easing?: string }> = new Map()
+
     for (const state of states) {
       for (const prop of state.properties) {
         const cssStyles = this.propertyToCSS(prop)
         for (const style of cssStyles) {
           styles.push({ ...style, state: state.name })
+
+          // Track CSS properties that need transitions for system states
+          if (SYSTEM_STATES.has(state.name) && state.animation?.duration) {
+            transitionProps.set(style.property, {
+              duration: state.animation.duration,
+              easing: state.animation.easing,
+            })
+          }
         }
       }
       // Note: childOverrides are handled separately in applyStateChildOverrides
+    }
+
+    // Generate CSS transition property for base element if any system states have animations
+    if (transitionProps.size > 0) {
+      const transitions: string[] = []
+      for (const [prop, { duration, easing }] of transitionProps) {
+        const durationMs = duration * 1000
+        const easingStr = easing || 'ease'
+        transitions.push(`${prop} ${durationMs}ms ${easingStr}`)
+      }
+      // Add transition style without state (applies to base element)
+      styles.push({
+        property: 'transition',
+        value: transitions.join(', '),
+      })
     }
 
     return styles
@@ -3326,9 +3413,31 @@ class IRTransformer {
 
     // First pass: collect all unique state names and their styles
     for (const state of states) {
-      // Skip creating state definition for synthetic 'when' states that have a targetState
-      // These are just transition triggers, not actual states to render
+      // For synthetic 'when' states that have a targetState, transfer their
+      // enter/exit animations to the target state (e.g., Btn.open: visible enter: fade-in)
       if (state.when && state.targetState && state.name.startsWith('_')) {
+        // Ensure target state exists
+        if (!stateDefinitions[state.targetState]) {
+          stateDefinitions[state.targetState] = {
+            name: state.targetState,
+            styles: [],
+            isInitial: false,
+          }
+        }
+        // Transfer enter/exit animations to the target state
+        if (state.enter) {
+          stateDefinitions[state.targetState].enter = this.convertStateAnimation(state.enter)
+        }
+        if (state.exit) {
+          stateDefinitions[state.targetState].exit = this.convertStateAnimation(state.exit)
+        }
+        // Transfer styles from the synthetic state to the target state
+        for (const prop of state.properties) {
+          const cssStyles = this.propertyToCSS(prop)
+          for (const style of cssStyles) {
+            stateDefinitions[state.targetState].styles.push(style)
+          }
+        }
         continue
       }
 
@@ -4433,6 +4542,8 @@ class IRTransformer {
     }
 
     for (const prop of properties) {
+      // content = text content (from strings like "Hello" or "$name")
+      // propset = property set reference (handled in transformProperties, skip here)
       if (prop.name === 'content') {
         htmlProps.push({ name: 'textContent', value: this.resolveContentValue(prop.values) })
       }

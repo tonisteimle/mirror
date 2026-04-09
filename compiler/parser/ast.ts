@@ -455,8 +455,10 @@ export interface ZagItem {
   badge?: string
   /** Show drilldown arrow (SideNav) */
   arrow?: boolean
-  /** Target view to show when selected (SideNav) */
+  /** Target view/element to show when selected */
   shows?: string
+  /** Source file to load the view from (optional, for "show X from Y" syntax) */
+  showsFrom?: string
   /** Whether this group is collapsible (SideNav groups) */
   collapsible?: boolean
   /** Whether this group is open by default (SideNav groups) */
@@ -643,6 +645,8 @@ export interface TableSlotNode {
   children: (Instance | Slot | Text)[]
   /** Source position */
   sourcePosition: SourcePosition
+  /** Static row for header slots (Row "A", "B", "C" syntax) */
+  staticRow?: TableStaticRowNode
 }
 
 export type Node =

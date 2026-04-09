@@ -1,0 +1,83 @@
+/* Reference Styles - imports tutorial base and adds reference-specific styles */
+@import url('../tutorial/tutorial.css');
+
+/* Table of Contents */
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.toc a {
+  color: var(--text);
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--bg-code);
+}
+
+.toc a:hover {
+  background: var(--bg-code-inline);
+  text-decoration: none;
+}
+
+/* Props/States list - compact inline format */
+.props-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.props-list code {
+  background: var(--bg-code);
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Sections - tighter spacing for reference */
+section {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+section:last-of-type {
+  border-bottom: none;
+}
+
+h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Playground - smaller for reference */
+.playground {
+  margin: 8px 0 16px;
+}
+
+/* Summary section */
+.summary {
+  background: var(--bg-code);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 32px;
+}
+
+.summary h2 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.summary p {
+  margin-bottom: 8px;
+  font-size: 14px;
+}

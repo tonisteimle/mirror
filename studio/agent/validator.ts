@@ -76,8 +76,8 @@ function parseLine(line: string, lineNum: number): ParsedLine {
     return { lineNum, indent, element: null, text: null, properties: [], raw }
   }
 
-  // Skip token definitions
-  if (trimmed.startsWith('$')) {
+  // Skip token definitions (legacy with $ or new syntax name.suffix:)
+  if (trimmed.startsWith('$') || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(trimmed)) {
     return { lineNum, indent, element: null, text: null, properties: [], raw }
   }
 

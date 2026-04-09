@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Functions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Functions</h1>
+      <p class="subtitle">Eingebaute und eigene Funktionen</p>
+    </header>
+
+    <p class="intro">In <a href="06-states.html">Kapitel 6</a> hast du <code>toggle()</code> und <code>exclusive()</code> kennengelernt – zwei eingebaute Funktionen für State-Wechsel. Mirror bietet weitere <strong>eingebaute Funktionen</strong> für typische UI-Patterns. Wenn die nicht reichen, schreibst du eigene.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Syntax: Funktionen als Properties</h2>
+      <p>Funktionen werden direkt als Properties geschrieben – genau wie <code>bg</code> oder <code>pad</code>. Der Unterschied: Sie lösen Aktionen aus statt Styles zu setzen.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Kurzschreibweise – Klick ist Default
+Btn: Button pad 10 20, rad 6, bg #333, col white, toggle()
+  on:
+    bg #2563eb
+
+Btn "An/Aus"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Wenn du eine Funktion als Property schreibst, wird sie automatisch bei <strong>Klick</strong> ausgeführt. Das ist der häufigste Fall – deshalb ist Klick der Default.</p>
+
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>Button "X", toggle()</code></td><td>Funktion bei Klick (Kurzform)</td></tr>
+        <tr><td><code>Button "X", show(Menu)</code></td><td>Element zeigen bei Klick</td></tr>
+        <tr><td><code>Button "X", toggle(), show(Panel)</code></td><td>Mehrere Funktionen</td></tr>
+      </table>
+
+      <p class="note"><strong>Faustregel:</strong> Kurzschreibweise für Klick-Events (99% der Fälle). Für andere Events wie Enter oder Escape gibt es Shorthands (<code>onenter</code>, <code>onescape</code>) – siehe <a href="06-states.html">States</a>.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Eingebaute Funktionen: Übersicht</h2>
+      <p>Mirror hat eingebaute Funktionen für die häufigsten UI-Patterns. Du musst sie nicht importieren – sie sind einfach da:</p>
+
+      <table class="ref-table">
+        <tr><th>Kategorie</th><th>Funktion</th><th>Was sie tut</th></tr>
+        <tr><td rowspan="2"><strong>State</strong></td><td><code>toggle()</code></td><td>State wechseln (an/aus oder durch mehrere cyclen)</td></tr>
+        <tr><td><code>exclusive()</code></td><td>Diesen aktivieren, alle Geschwister deaktivieren</td></tr>
+        <tr><td rowspan="2"><strong>Visibility</strong></td><td><code>show(Element)</code></td><td>Element sichtbar machen</td></tr>
+        <tr><td><code>hide(Element)</code></td><td>Element verstecken</td></tr>
+      </table>
+
+      <p>Für <strong>Overlays</strong> (Dialoge, Dropdowns, Tooltips) gibt es spezialisierte Zag-Komponenten – siehe <a href="13-overlays.html">Overlays</a>. Für <strong>Navigation</strong> (Tabs, SideNav) siehe <a href="12-navigation.html">Navigation</a>.</p>
+
+      <p>Diese Funktionen decken 90% der typischen Interaktionen ab. Für komplexere Logik (API-Calls, Validierung, Berechnungen) schreibst du eigene Funktionen – dazu später mehr.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>show() und hide(): Sichtbarkeit steuern</h2>
+      <p>Mit <code>show(Element)</code> und <code>hide(Element)</code> machst du Elemente sichtbar oder versteckst sie. Das ist nützlich für:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li>Info-Boxen die bei Klick erscheinen</li>
+        <li>Menüs die sich öffnen und schließen</li>
+        <li>Hinweise die nach einer Aktion angezeigt werden</li>
+      </ul>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
+  Button "Info anzeigen", pad 10 20, bg #2563eb, col white, rad 6, show(InfoBox)
+
+  Frame name InfoBox, hidden, bg #1a1a1a, pad 16, rad 8, gap 8
+    Text "Hier sind weitere Informationen.", col #ccc, fs 14
+    Button "Schließen", pad 8 16, bg #333, col white, rad 4, hide(InfoBox)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Was passiert hier?</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>name InfoBox</code> gibt dem Element einen Namen, damit wir es referenzieren können</li>
+        <li><code>hidden</code> macht das Element initial unsichtbar</li>
+        <li><code>show(InfoBox)</code> macht es sichtbar wenn der Button geklickt wird</li>
+        <li><code>hide(InfoBox)</code> versteckt es wieder</li>
+      </ul>
+
+      <p class="note"><strong>Wichtig:</strong> Das Ziel-Element braucht einen <code>name</code>. Ohne Namen kann die Funktion das Element nicht finden. Der Name muss eindeutig sein – wie eine ID.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Aufklappbares Menü</h2>
+      <p>Ein klassisches Pattern: Ein Button öffnet ein Menü, ein "Schließen"-Button (oder Klick außerhalb) versteckt es wieder. So baust du das mit <code>show()</code> und <code>hide()</code>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, bg #0a0a0a, pad 16, rad 8
+  Button "Menü öffnen", pad 10 20, bg #333, col white, rad 6, show(Menu)
+
+  Frame name Menu, hidden, bg #1a1a1a, pad 8, rad 8, gap 2, w 180
+    Button "Profil", pad 10 16, bg transparent, col white, rad 4, w full
+      hover:
+        bg #333
+    Button "Einstellungen", pad 10 16, bg transparent, col white, rad 4, w full
+      hover:
+        bg #333
+    Divider bg #333, margin 4 0
+    Button "Schließen", pad 10 16, bg #333, col white, rad 4, w full, hide(Menu)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Das Menü startet <code>hidden</code>. Der "Menü öffnen"-Button macht es sichtbar, der "Schließen"-Button versteckt es wieder. Einfach und klar.</p>
+
+      <p class="note"><strong>Für echte Menüs:</strong> In Produktion würdest du die <code>Menu</code>-Komponente aus <a href="13-overlays.html">Overlays</a> verwenden – die hat bereits Positionierung, Tastatur-Navigation und "Klick außerhalb schließt". Hier zeigen wir das manuelle Pattern zum Verständnis.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Funktionen kombinieren</h2>
+      <p>Du kannst mehrere Funktionen bei einem Klick ausführen. Einfach alle hintereinander schreiben:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, bg #0a0a0a, pad 16, rad 8
+  Button "Filter", name FilterBtn, pad 10 20, bg #333, col white, rad 6, toggle(), show(FilterPanel)
+    open:
+      bg #2563eb
+
+  Frame name FilterPanel, hidden, bg #1a1a1a, pad 16, rad 8, gap 12
+    Text "Filter-Optionen", col white, fs 14, weight 500
+    Frame gap 8
+      Button "Aktiv", pad 8 12, bg #252525, col white, rad 4
+      Button "Archiviert", pad 8 12, bg #252525, col white, rad 4
+    Button "Schließen", pad 8 16, bg #333, col white, rad 4, hide(FilterPanel), toggle(FilterBtn)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Was passiert hier?</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li>Der "Filter"-Button hat <strong>zwei</strong> Funktionen: <code>toggle()</code> und <code>show(FilterPanel)</code></li>
+        <li><code>toggle()</code> wechselt den State des Buttons (grau ↔ blau)</li>
+        <li><code>show(FilterPanel)</code> zeigt das Panel</li>
+        <li>Der "Schließen"-Button macht das Gegenteil: <code>hide(FilterPanel)</code> und <code>toggle(FilterBtn)</code></li>
+      </ul>
+
+      <p>Beachte: <code>toggle(FilterBtn)</code> referenziert ein <em>anderes</em> Element – den Button mit <code>name FilterBtn</code>. So bleiben Button und Panel synchron.</p>
+
+      <p class="note"><strong>Reihenfolge:</strong> Die Funktionen werden in der Reihenfolge ausgeführt, wie du sie schreibst. Meistens ist die Reihenfolge egal, aber bei komplexer Logik kann es wichtig sein.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Eigene Funktionen: UI steuern</h2>
+      <p>Die eingebauten Funktionen (<code>toggle</code>, <code>show</code>, <code>hide</code>) decken die häufigsten Fälle ab. Aber manchmal brauchst du mehr Kontrolle — zum Beispiel einen Wert aus einem Input lesen und woanders anzeigen, oder mehrere Elemente gleichzeitig steuern.</p>
+      <p>Dafür schreibst du eigene Funktionen. Das Prinzip: <strong>Du greifst auf Elemente zu und änderst ihre Eigenschaften.</strong></p>
+
+      <h3>Elemente ansprechen</h3>
+      <p>Jedes Element mit einem <code>name</code> kannst du in einer Funktion ansprechen:</p>
+
+      <div class="code-block">
+        <pre><span class="syn-comment">// Im Mirror-UI</span>
+<span class="syn-component">Input</span> <span class="syn-keyword">name</span> EmailInput, <span class="syn-property">placeholder</span> <span class="syn-string">"E-Mail"</span>
+<span class="syn-component">Button</span> <span class="syn-string">"Absenden"</span>, absenden()
+
+<span class="syn-comment">// In der Funktion</span>
+<span class="syn-keyword">function</span> absenden()
+  wert = EmailInput.value      <span class="syn-comment">// Eingabewert lesen</span>
+  log(wert)                    <span class="syn-comment">// In Konsole ausgeben</span></pre>
+      </div>
+
+      <p>Der <code>name</code> wird zur Referenz. In der Funktion schreibst du einfach <code>EmailInput.value</code> um den eingegebenen Text zu lesen.</p>
+
+      <h3>Was du steuern kannst</h3>
+      <p>Jedes UI-Element hat Eigenschaften die du lesen und ändern kannst:</p>
+
+      <table class="ref-table">
+        <tr><th>Eigenschaft</th><th>Lesen</th><th>Schreiben</th></tr>
+        <tr><td><code>.state</code></td><td>Aktueller State</td><td>State wechseln</td></tr>
+        <tr><td><code>.visible</code></td><td>Ist sichtbar?</td><td>Sichtbarkeit ändern</td></tr>
+        <tr><td><code>.value</code></td><td>Eingabewert (Input)</td><td>Wert setzen</td></tr>
+        <tr><td><code>.content</code></td><td>Textinhalt</td><td>Text ändern</td></tr>
+      </table>
+
+      <h3>Beispiel: State ändern</h3>
+      <p>Du kannst den State eines Elements direkt setzen:</p>
+
+      <div class="code-block">
+        <pre><span class="syn-keyword">function</span> aktivieren()
+  MeinButton.state = <span class="syn-string">'active'</span>
+
+<span class="syn-keyword">function</span> zuruecksetzen()
+  MeinButton.state = <span class="syn-string">'base'</span>       <span class="syn-comment">// 'base' ist der Normalzustand</span></pre>
+      </div>
+
+      <h3>Beispiel: Eingabe auswerten</h3>
+      <p>Ein häufiges Pattern — Wert aus Input lesen und etwas damit machen:</p>
+
+      <div class="code-block">
+        <pre><span class="syn-comment">// UI</span>
+<span class="syn-component">Input</span> <span class="syn-keyword">name</span> SucheInput, <span class="syn-property">placeholder</span> <span class="syn-string">"Suchen..."</span>
+<span class="syn-component">Button</span> <span class="syn-string">"Suchen"</span>, suchen()
+<span class="syn-component">Text</span> <span class="syn-keyword">name</span> Ergebnis, <span class="syn-property">col</span> #888
+
+<span class="syn-comment">// Funktion</span>
+<span class="syn-keyword">function</span> suchen()
+  begriff = SucheInput.value
+  <span class="syn-keyword">if</span> begriff == <span class="syn-string">""</span>
+    Ergebnis.content = <span class="syn-string">"Bitte Suchbegriff eingeben"</span>
+  <span class="syn-keyword">else</span>
+    Ergebnis.content = <span class="syn-string">"Suche nach: "</span> + begriff</pre>
+      </div>
+
+      <h3>Beispiel: Mehrere Elemente steuern</h3>
+      <p>Eine Funktion kann mehrere Elemente gleichzeitig ändern:</p>
+
+      <div class="code-block">
+        <pre><span class="syn-keyword">function</span> formularZuruecksetzen()
+  NameInput.value = <span class="syn-string">""</span>
+  EmailInput.value = <span class="syn-string">""</span>
+  SubmitBtn.state = <span class="syn-string">'base'</span>
+  Hinweis.visible = false</pre>
+      </div>
+
+      <h3>Für komplexere Logik</h3>
+      <p>Manche Dinge gehen über UI-Steuerung hinaus:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><strong>API-Calls</strong> — Daten vom Server laden oder speichern</li>
+        <li><strong>Validierung</strong> — E-Mail-Format prüfen, Pflichtfelder checken</li>
+        <li><strong>Berechnungen</strong> — Summen, Durchschnitte, komplexe Logik</li>
+      </ul>
+      <p>Hier arbeitet man typischerweise mit einem Entwickler zusammen. Als Designer definierst du die States und das UI — die Funktion steuert, wann welcher State aktiv wird:</p>
+
+      <div class="code-block">
+        <pre><span class="syn-comment">// Du definierst die States</span>
+<span class="syn-component">SaveBtn</span> as Button: <span class="syn-property">pad</span> 12 24, <span class="syn-property">bg</span> #333, <span class="syn-property">col</span> white, <span class="syn-property">rad</span> 6, save()
+  loading:
+    <span class="syn-property">bg</span> #666
+    <span class="syn-string">"Wird gespeichert..."</span>
+  success:
+    <span class="syn-property">bg</span> #10b981
+    <span class="syn-string">"Gespeichert!"</span>
+
+<span class="syn-comment">// Der Entwickler schreibt die Funktion</span>
+<span class="syn-comment">// Sie setzt element.state = 'loading', macht den API-Call,</span>
+<span class="syn-comment">// und setzt dann element.state = 'success' oder 'error'</span></pre>
+      </div>
+
+      <p class="note"><strong>Zusammenspiel:</strong> Du als Designer bestimmst <em>wie</em> jeder State aussieht. Die Funktion bestimmt <em>wann</em> welcher State aktiv wird. So könnt ihr unabhängig arbeiten.</p>
+    </section>
+
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+
+      <h3>Eingebaute Funktionen</h3>
+      <table class="ref-table">
+        <tr><th>Funktion</th><th>Was sie tut</th></tr>
+        <tr><td><code>toggle()</code></td><td>State wechseln (an/aus oder durch mehrere cyclen)</td></tr>
+        <tr><td><code>exclusive()</code></td><td>Diesen aktivieren, alle Geschwister deaktivieren</td></tr>
+        <tr><td><code>show(Name)</code></td><td>Element sichtbar machen</td></tr>
+        <tr><td><code>hide(Name)</code></td><td>Element verstecken</td></tr>
+      </table>
+
+      <h3>Eigene Funktionen: UI steuern</h3>
+      <table class="ref-table">
+        <tr><th>Zugriff</th><th>Beispiel</th></tr>
+        <tr><td>State ändern</td><td><code>MeinBtn.state = 'active'</code></td></tr>
+        <tr><td>Sichtbarkeit</td><td><code>Hinweis.visible = false</code></td></tr>
+        <tr><td>Eingabewert lesen</td><td><code>wert = MeinInput.value</code></td></tr>
+        <tr><td>Text ändern</td><td><code>Label.content = "Neuer Text"</code></td></tr>
+      </table>
+
+      <h3>Syntax</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>Button "X", toggle()</code></td><td>Funktion bei Klick</td></tr>
+        <tr><td><code>name MeinElement</code></td><td>Element benennen (für Zugriff in Funktionen)</td></tr>
+        <tr><td><code>toggle(), show(X)</code></td><td>Mehrere Funktionen kombinieren</td></tr>
+      </table>
+
+    </div>
+
+
+    <nav>
+      <a class="prev" href="07-animationen.html">&larr; Animationen</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="09-daten.html">Daten &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Animationen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <header>
+      <h1>Animationen</h1>
+      <p class="subtitle">Bewegung und Übergänge</p>
+    </header>
+
+    <p class="intro">Im letzten Kapitel hast du States kennengelernt – wie Elemente ihr Aussehen ändern. Dieses Kapitel zeigt, wie diese Änderungen <strong>animiert</strong> werden: <strong>Transitions</strong> für sanfte Übergänge, <strong>Presets</strong> für typische Effekte (fade, bounce, shake), und <strong>Enter/Exit</strong> für Erscheinen und Verschwinden.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Transitions: Sanfte Übergänge</h2>
+      <p>Ohne Transition springen Änderungen sofort. Mit Transition gleiten sie smooth. Du fügst einfach eine <strong>Dauer</strong> zum State hinzu:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Ohne Transition: springt
+BtnHart: pad 12 24, rad 6, bg #333, col white, cursor pointer
+  hover:
+    bg #2563eb
+
+// Mit Transition: gleitet
+BtnSoft: pad 12 24, rad 6, bg #333, col white, cursor pointer
+  hover 0.2s:
+    bg #2563eb
+
+Frame hor, gap 12
+  BtnHart "Ohne"
+  BtnSoft "Mit 0.2s"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>hover:</code> — Änderung springt sofort</li>
+        <li><code>hover 0.2s:</code> — Änderung gleitet über 200 Millisekunden</li>
+        <li>Die Dauer macht den Unterschied. Alles andere bleibt gleich.</li>
+      </ul>
+
+      <div class="note">
+        <strong>Faustregel für Dauer:</strong> 100-200ms für Hover-Effekte, 200-300ms für State-Wechsel, 300-500ms für größere Übergänge. Im Zweifel lieber zu schnell als zu langsam.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Easing: Wie sich Bewegung anfühlt</h2>
+      <p>Easing bestimmt die Beschleunigungskurve. Du kannst es nach der Dauer angeben:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
+
+// Verschiedene Easings
+Frame gap 8
+  Btn "ease-out"
+    hover 0.3s ease-out:
+      bg #2563eb
+  Btn "ease-in"
+    hover 0.3s ease-in:
+      bg #2563eb
+  Btn "ease-in-out"
+    hover 0.3s ease-in-out:
+      bg #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>ease-out</code> — startet schnell, endet langsam (gut für Erscheinen)</li>
+        <li><code>ease-in</code> — startet langsam, endet schnell (gut für Verschwinden)</li>
+        <li><code>ease-in-out</code> — beides kombiniert (gut für Hin-und-her)</li>
+      </ul>
+
+      <table class="ref-table">
+        <tr><th>Easing</th><th>Gefühl</th><th>Typische Verwendung</th></tr>
+        <tr><td><code>ease</code></td><td>Natürlich (Default)</td><td>Allgemein</td></tr>
+        <tr><td><code>ease-out</code></td><td>Langsames Ende</td><td>Elemente erscheinen</td></tr>
+        <tr><td><code>ease-in</code></td><td>Langsamer Start</td><td>Elemente verschwinden</td></tr>
+        <tr><td><code>ease-in-out</code></td><td>Beides</td><td>Hin-und-her</td></tr>
+        <tr><td><code>linear</code></td><td>Gleichmäßig</td><td>Spinner, Fortschritt</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Animation Presets</h2>
+      <p>Für typische Bewegungen gibt es vordefinierte Animationen. Du schreibst einfach <code>anim</code> mit dem Namen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12, wrap, bg #0a0a0a, pad 16, rad 8
+  Frame w 60, h 60, bg #2563eb, rad 8, center, anim pulse
+    Text "pulse", col white, fs 10
+  Frame w 60, h 60, bg #10b981, rad 8, center, anim bounce
+    Text "bounce", col white, fs 10
+  Frame w 60, h 60, bg #f59e0b, rad 8, center, anim shake
+    Text "shake", col white, fs 10
+  Frame w 60, h 60, bg #ef4444, rad 8, center, anim spin
+    Text "spin", col white, fs 10</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>anim pulse</code> — Element pulsiert (gut für "neu" oder "Aufmerksamkeit")</li>
+        <li><code>anim bounce</code> — Element hüpft (gut für Bestätigung)</li>
+        <li><code>anim shake</code> — Element schüttelt sich (gut für Fehler)</li>
+        <li><code>anim spin</code> — Element dreht sich (gut für Loading)</li>
+      </ul>
+
+      <table class="ref-table">
+        <tr><th>Preset</th><th>Effekt</th><th>Typische Verwendung</th></tr>
+        <tr><td><code>fade-in</code></td><td>Einblenden</td><td>Elemente erscheinen</td></tr>
+        <tr><td><code>fade-out</code></td><td>Ausblenden</td><td>Elemente verschwinden</td></tr>
+        <tr><td><code>slide-in</code></td><td>Reingleiten</td><td>Panels, Menüs</td></tr>
+        <tr><td><code>slide-out</code></td><td>Rausgleiten</td><td>Panels schließen</td></tr>
+        <tr><td><code>scale-in</code></td><td>Reinzoomen</td><td>Modals, Popups</td></tr>
+        <tr><td><code>scale-out</code></td><td>Rauszoomen</td><td>Modals schließen</td></tr>
+        <tr><td><code>bounce</code></td><td>Hüpfen</td><td>Bestätigung, Erfolg</td></tr>
+        <tr><td><code>pulse</code></td><td>Pulsieren</td><td>Hinweis, "neu"</td></tr>
+        <tr><td><code>shake</code></td><td>Schütteln</td><td>Fehler, ungültig</td></tr>
+        <tr><td><code>spin</code></td><td>Drehen</td><td>Loading</td></tr>
+      </table>
+
+      <div class="note">
+        <strong>Weniger ist mehr:</strong> Nicht alles animieren — nur was Bedeutung hat. <code>shake</code> = Fehler, <code>bounce</code> = Erfolg, <code>pulse</code> = Aufmerksamkeit. Nutze das bewusst.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Animation bei State-Wechsel</h2>
+      <p>Animationen sind besonders nützlich bei State-Wechseln. Du kannst sie direkt im State definieren:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center, gap 8, toggle()
+  Icon "heart", ic #666, is 18
+  "Gefällt mir"
+  hover 0.15s:
+    bg #252525
+  on:
+    bg #dc2626
+    col white
+    anim bounce
+    Icon "heart", ic white, is 18, fill
+    "Gefällt mir!"
+
+LikeBtn</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Hover-Effekt (<code>hover 0.15s:</code>) gleitet sanft. Beim Aktivieren (<code>on:</code>) hüpft der Button mit <code>anim bounce</code> — sofortiges Feedback: "Dein Klick wurde registriert!"</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Enter und Exit</h2>
+      <p>Oft soll ein Element anders animieren wenn es <strong>erscheint</strong> vs wenn es <strong>verschwindet</strong>. Dafür gibt es <code>enter:</code> und <code>exit:</code>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
+  Button name Btn, "Hinweis zeigen", pad 10 20, bg #2563eb, col white, rad 6, toggle()
+    open:
+      "Hinweis verstecken"
+
+  Frame bg #1a1a1a, pad 16, rad 8, hidden
+    Btn.open:
+      visible
+      enter: fade-in
+      exit: fade-out
+    Text "Dies ist ein Hinweis mit Animation.", col #ccc</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>enter: fade-in</code> animiert beim Erscheinen, <code>exit: fade-out</code> beim Verschwinden. Das fühlt sich natürlicher an als abruptes Ein-/Ausblenden.</p>
+
+      <div class="note">
+        <strong>Konsistenz:</strong> Gleiche Aktionen, gleiche Animationen. Wenn ein Element mit <code>fade-in</code> erscheint, sollten ähnliche Elemente das auch tun.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Slide-In Menü</h2>
+      <p>Ein klassisches Pattern — Menü gleitet von der Seite rein:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
+  Button name Btn, "Menü", pad 10 20, bg #333, col white, rad 6, toggle()
+    open:
+      bg #2563eb
+
+  Frame bg #1a1a1a, pad 12, rad 8, gap 4, w 160, hidden
+    Btn.open:
+      visible
+      enter: slide-in
+      exit: slide-out
+    Text "Dashboard", col white, pad 8 12
+    Text "Einstellungen", col white, pad 8 12
+    Text "Logout", col #888, pad 8 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>slide-in</code> lässt das Menü reingleiten, <code>slide-out</code> lässt es wieder verschwinden. Das zeigt visuell: "Das Menü kommt von irgendwo und geht wieder dorthin."</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Loading Spinner</h2>
+      <p>Ein einfacher Spinner mit <code>spin</code>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, ver-center, gap 12, bg #1a1a1a, pad 16, rad 8
+  Icon "loader-2", ic #2563eb, is 24, anim spin
+  Text "Lädt...", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>anim spin</code> auf dem Icon dreht es endlos. Das Lucide-Icon "loader-2" ist genau dafür designed.</p>
+    </section>
+
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+
+      <h3>Transitions</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>hover 0.2s:</code></td><td>State mit 200ms Übergang</td></tr>
+        <tr><td><code>hover 0.3s ease-out:</code></td><td>Mit Easing-Funktion</td></tr>
+      </table>
+
+      <h3>Animation Presets</h3>
+      <table class="ref-table">
+        <tr><th>Preset</th><th>Effekt</th></tr>
+        <tr><td><code>fade-in</code> / <code>fade-out</code></td><td>Ein-/Ausblenden</td></tr>
+        <tr><td><code>slide-in</code> / <code>slide-out</code></td><td>Rein-/Rausgleiten</td></tr>
+        <tr><td><code>scale-in</code> / <code>scale-out</code></td><td>Rein-/Rauszoomen</td></tr>
+        <tr><td><code>bounce</code></td><td>Hüpfen (Erfolg)</td></tr>
+        <tr><td><code>pulse</code></td><td>Pulsieren (Aufmerksamkeit)</td></tr>
+        <tr><td><code>shake</code></td><td>Schütteln (Fehler)</td></tr>
+        <tr><td><code>spin</code></td><td>Drehen (Loading)</td></tr>
+      </table>
+
+      <h3>Enter/Exit</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Wann</th></tr>
+        <tr><td><code>enter: fade-in</code></td><td>Beim Erscheinen</td></tr>
+        <tr><td><code>exit: fade-out</code></td><td>Beim Verschwinden</td></tr>
+      </table>
+
+      <h3>Easing</h3>
+      <table class="ref-table">
+        <tr><th>Easing</th><th>Gefühl</th></tr>
+        <tr><td><code>ease</code></td><td>Natürlich (Default)</td></tr>
+        <tr><td><code>ease-out</code></td><td>Erscheinen</td></tr>
+        <tr><td><code>ease-in</code></td><td>Verschwinden</td></tr>
+        <tr><td><code>ease-in-out</code></td><td>Hin-und-her</td></tr>
+      </table>
+
+    </div>
+
+
+    <nav>
+      <a class="prev" href="06-states.html">&larr; States</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="08-functions.html">Functions &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>
