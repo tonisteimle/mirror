@@ -1007,6 +1007,12 @@ class DOMGenerator {
       if (grid !== undefined) this.emit(`grid: ${grid},`)
       if (axes !== undefined) this.emit(`axes: ${axes},`)
 
+      // Add chart slots configuration
+      const chartSlots = node.properties.find(p => p.name === 'chartSlots')?.value
+      if (chartSlots) {
+        this.emit(`slots: ${chartSlots},`)
+      }
+
       this.indent--
       this.emit(`}`)
 
@@ -1172,6 +1178,39 @@ class DOMGenerator {
       this.emit(`if (!${parentVar}.dataset.layout) ${parentVar}.dataset.mirrorAbs = 'true'`)
       this.indent--
       this.emit(`}`)
+    }
+
+    // Motion One: In-view animations (scroll reveal)
+    if (node.inView) {
+      const animations = JSON.stringify(node.inView.animations)
+      const config: string[] = []
+      if (node.inView.threshold !== undefined) config.push(`threshold: ${node.inView.threshold}`)
+      if (node.inView.once !== undefined) config.push(`once: ${node.inView.once}`)
+      if (node.inView.stagger !== undefined) config.push(`stagger: ${node.inView.stagger}`)
+      const configStr = config.length > 0 ? `, { ${config.join(', ')} }` : ''
+      this.emit(`// In-view animation: ${node.inView.animations.join(', ')}`)
+      this.emit(`_runtime.setupInViewAnimation(${varName}, ${animations}${configStr})`)
+    }
+
+    // Motion One: Scroll-linked animations (parallax)
+    if (node.scrollLinked) {
+      const { axis, from, to } = node.scrollLinked
+      const fromStr = typeof from === 'string' ? `"${from}"` : from
+      const toStr = typeof to === 'string' ? `"${to}"` : to
+      this.emit(`// Scroll-linked animation: ${axis === 'y' ? 'vertical' : 'horizontal'} parallax`)
+      this.emit(`_runtime.setupScrollAnimation(${varName}, "transform", ${fromStr}, ${toStr}, { axis: "${axis}" })`)
+    }
+
+    // Motion One: Stagger animation for container children
+    if (node.stagger && node.children.length > 0) {
+      this.emit(`// Stagger animation for children (${node.stagger}s delay)`)
+      this.emit(`_runtime.setupStaggerAnimation(${varName}, "> *", "fade-in", { staggerDelay: ${node.stagger} })`)
+    }
+
+    // Motion One: Store spring config for state transitions
+    if (node.spring) {
+      this.emit(`// Spring physics config for state transitions`)
+      this.emit(`${varName}.dataset.springPreset = "${node.spring.preset || 'default'}"`)
     }
 
     // Append to parent
@@ -2047,8 +2086,17 @@ class DOMGenerator {
         this.emitTableGroupSlotNode(child, 'groupHeader')
       }
     } else {
-      // Default group header content
-      this.emit(`groupHeader.innerHTML = \`<span style="font-weight:500;color:var(--text,white)">\${key?.name ?? key}</span><span style="color:var(--text-muted,#888);font-size:12px">\${items.length}</span>\``)
+      // Default group header content - using createElement to prevent XSS
+      this.emit(`const groupKeySpan = document.createElement('span')`)
+      this.emit(`groupKeySpan.style.fontWeight = '500'`)
+      this.emit(`groupKeySpan.style.color = 'var(--text,white)'`)
+      this.emit(`groupKeySpan.textContent = key?.name ?? key`)
+      this.emit(`groupHeader.appendChild(groupKeySpan)`)
+      this.emit(`const groupCountSpan = document.createElement('span')`)
+      this.emit(`groupCountSpan.style.color = 'var(--text-muted,#888)'`)
+      this.emit(`groupCountSpan.style.fontSize = '12px'`)
+      this.emit(`groupCountSpan.textContent = items.length`)
+      this.emit(`groupHeader.appendChild(groupCountSpan)`)
     }
 
     this.emit(`${tableVar}_body.appendChild(groupHeader)`)
@@ -6604,6 +6652,50 @@ class DOMGenerator {
               }
             }
             break
+          // Feedback functions
+          case 'toast':
+            if (action.args && action.args.length > 0) {
+              const message = action.args[0]
+              if (action.args.length > 1) {
+                // toast("message", type) or toast("message", type, position)
+                const type = action.args[1] || 'info'
+                const position = action.args[2] || 'bottom'
+                this.emit(`_runtime.toast('${message}', { type: '${type}', position: '${position}' })`)
+              } else {
+                this.emit(`_runtime.toast('${message}')`)
+              }
+            }
+            break
+          case 'shake':
+            if (action.args && action.args.length > 0) {
+              const target = action.args[0]
+              this.emit(`_runtime.shake(_elements['${target}'])`)
+            } else {
+              this.emit(`_runtime.shake(${currentVar})`)
+            }
+            break
+          case 'pulse':
+            if (action.args && action.args.length > 0) {
+              const target = action.args[0]
+              this.emit(`_runtime.pulse(_elements['${target}'])`)
+            } else {
+              this.emit(`_runtime.pulse(${currentVar})`)
+            }
+            break
+          // Browser navigation
+          case 'back':
+            this.emit(`_runtime.back()`)
+            break
+          case 'forward':
+            this.emit(`_runtime.forward()`)
+            break
+          case 'openUrl':
+            if (action.args && action.args.length > 0) {
+              const url = action.args[0]
+              const newTab = action.args.length > 1 ? action.args[1] === 'true' : true
+              this.emit(`_runtime.openUrl('${url}', { newTab: ${newTab} })`)
+            }
+            break
           default:
             // Custom function: inject element as first parameter
             if (action.args && action.args.length > 0) {
@@ -6743,8 +6835,35 @@ class DOMGenerator {
     }
   }
 
+  /**
+   * Sanitize an ID to create a valid JavaScript variable name.
+   * - Replaces invalid characters with underscores
+   * - Ensures the name starts with a letter or underscore
+   * - Prefixes reserved words
+   */
   private sanitizeVarName(id: string): string {
-    return id.replace(/-/g, '_')
+    // Replace all non-alphanumeric characters (except underscore) with underscore
+    let sanitized = id.replace(/[^a-zA-Z0-9_]/g, '_')
+
+    // Ensure it starts with a letter or underscore (not a digit)
+    if (/^[0-9]/.test(sanitized)) {
+      sanitized = '_' + sanitized
+    }
+
+    // Prefix JavaScript reserved words to avoid syntax errors
+    const reserved = new Set([
+      'break', 'case', 'catch', 'continue', 'debugger', 'default', 'delete',
+      'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof',
+      'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var',
+      'void', 'while', 'with', 'class', 'const', 'enum', 'export', 'extends',
+      'import', 'super', 'implements', 'interface', 'let', 'package', 'private',
+      'protected', 'public', 'static', 'yield', 'null', 'true', 'false'
+    ])
+    if (reserved.has(sanitized.toLowerCase())) {
+      sanitized = '_' + sanitized
+    }
+
+    return sanitized
   }
 
   /**
@@ -6840,9 +6959,20 @@ class DOMGenerator {
     return result
   }
 
+  /**
+   * Escape a string for use in JavaScript string literals.
+   * Handles backslashes, quotes, newlines, carriage returns, tabs, and other control characters.
+   */
   private escapeString(str: string | number | boolean | undefined | null): string {
     const s = String(str ?? '')
-    return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')
+    return s
+      .replace(/\\/g, '\\\\')   // Backslashes first
+      .replace(/"/g, '\\"')     // Double quotes
+      .replace(/\n/g, '\\n')    // Newlines
+      .replace(/\r/g, '\\r')    // Carriage returns
+      .replace(/\t/g, '\\t')    // Tabs
+      .replace(/\u2028/g, '\\u2028')  // Line separator
+      .replace(/\u2029/g, '\\u2029')  // Paragraph separator
   }
 
   /**

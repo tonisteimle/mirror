@@ -11,9 +11,38 @@
  * 3. Tree-shakeable for production builds
  */
 
+// Motion One for advanced animations (springs, scroll, in-view)
+import { animate as motionAnimateFn, inView, scroll, stagger } from 'motion'
+
 // ============================================
 // TYPES
 // ============================================
+
+/**
+ * Chart.js interface for dynamically loaded CDN library
+ */
+interface ChartJSConstructor {
+  new (ctx: CanvasRenderingContext2D | null, config: Record<string, unknown>): ChartJSInstance
+  getChart?: (canvas: HTMLCanvasElement) => ChartJSInstance | undefined
+}
+
+interface ChartJSInstance {
+  config: { type: string }
+  data: {
+    labels: string[]
+    datasets: Array<{ data: unknown[] }>
+  }
+  update(): void
+}
+
+/**
+ * Extend Window interface for Chart.js
+ */
+declare global {
+  interface Window {
+    Chart?: ChartJSConstructor
+  }
+}
 
 /**
  * Element with Mirror runtime metadata
@@ -28,6 +57,11 @@ export interface MirrorElement extends HTMLElement {
   _textPlaceholder?: string
   _savedDisplay?: string
   _clickOutsideHandler?: (e: MouseEvent) => void
+  _escapeHandler?: (e: KeyboardEvent) => void
+  _isTransitioning?: boolean
+  _baseDisplay?: string
+  _valueBinding?: string
+  _textTemplate?: () => string
   _eachConfig?: {
     itemVar: string
     collection: string
@@ -72,6 +106,86 @@ export const PROP_MAP: Record<string, string> = {
   'w': 'width',
   'h': 'height',
   'opacity': 'opacity',
+}
+
+// ============================================
+// EVENT LISTENER CLEANUP
+// ============================================
+
+/**
+ * Registry of elements with document-level event listeners.
+ * Used for automatic cleanup when elements are removed from DOM.
+ */
+const _elementsWithDocListeners = new WeakSet<MirrorElement>()
+
+/**
+ * Clean up document-level event listeners for an element.
+ * Call this when removing an element from DOM.
+ * @param el Element to clean up
+ */
+export function cleanupElement(el: MirrorElement): void {
+  // Clean up click-outside handler
+  if (el._clickOutsideHandler) {
+    document.removeEventListener('click', el._clickOutsideHandler)
+    delete el._clickOutsideHandler
+  }
+
+  // Clean up escape handler
+  if (el._escapeHandler) {
+    document.removeEventListener('keydown', el._escapeHandler)
+    delete el._escapeHandler
+  }
+
+  _elementsWithDocListeners.delete(el)
+}
+
+/**
+ * Register an element for automatic cleanup.
+ * The element will be cleaned up when removed from DOM.
+ * @param el Element to register
+ */
+export function registerForCleanup(el: MirrorElement): void {
+  _elementsWithDocListeners.add(el)
+}
+
+// MutationObserver for automatic cleanup when elements are removed
+let _cleanupObserver: MutationObserver | null = null
+
+/**
+ * Initialize the cleanup observer (call once on app start).
+ * Automatically cleans up document-level listeners when elements are removed.
+ */
+export function initCleanupObserver(): void {
+  if (_cleanupObserver || typeof MutationObserver === 'undefined') return
+
+  _cleanupObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.removedNodes) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as MirrorElement
+          // Clean up this element
+          if (_elementsWithDocListeners.has(el)) {
+            cleanupElement(el)
+          }
+          // Clean up any children with listeners
+          const children = el.querySelectorAll?.('[data-mirror-id]')
+          if (children) {
+            for (const child of children) {
+              const mirrorChild = child as MirrorElement
+              if (_elementsWithDocListeners.has(mirrorChild)) {
+                cleanupElement(mirrorChild)
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+
+  _cleanupObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+  })
 }
 
 // ============================================
@@ -650,7 +764,8 @@ export function showModal(
     }
   }
   document.addEventListener('keydown', escapeHandler)
-  ;(el as any)._escapeHandler = escapeHandler
+  el._escapeHandler = escapeHandler
+  registerForCleanup(el)
 }
 
 /**
@@ -690,9 +805,9 @@ export function dismiss(element: MirrorElement | string | null): void {
   }
 
   // Clean up escape handler
-  if ((el as any)._escapeHandler) {
-    document.removeEventListener('keydown', (el as any)._escapeHandler)
-    delete (el as any)._escapeHandler
+  if (el._escapeHandler) {
+    document.removeEventListener('keydown', el._escapeHandler)
+    delete el._escapeHandler
   }
 
   // Clear positioning styles
@@ -731,6 +846,7 @@ function setupClickOutsideHandler(
     }
 
     document.addEventListener('click', element._clickOutsideHandler)
+    registerForCleanup(element)
   }, 10)
 }
 
@@ -1239,6 +1355,238 @@ export async function copy(
 }
 
 // ============================================
+// FEEDBACK: TOAST
+// ============================================
+
+/**
+ * Active toast element (for dismissal)
+ */
+let _activeToast: HTMLElement | null = null
+
+/**
+ * Show a toast notification
+ * @param message - Message to display
+ * @param options - Options: { duration?, type?, position? }
+ */
+export function toast(
+  message: string,
+  options?: {
+    duration?: number
+    type?: 'info' | 'success' | 'error' | 'warning'
+    position?: 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+  }
+): void {
+  const { duration = 3000, type = 'info', position = 'bottom' } = options || {}
+
+  // Dismiss existing toast
+  if (_activeToast) {
+    _activeToast.remove()
+  }
+
+  // Create toast element
+  const toastEl = document.createElement('div')
+  toastEl.className = 'mirror-toast'
+  toastEl.dataset.type = type
+  toastEl.dataset.position = position
+  toastEl.textContent = message
+
+  // Base styles
+  Object.assign(toastEl.style, {
+    position: 'fixed',
+    zIndex: '10000',
+    padding: '12px 20px',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+    transition: 'opacity 0.2s, transform 0.2s',
+    opacity: '0',
+    transform: 'translateY(10px)',
+  })
+
+  // Position
+  const positionStyles: Record<string, Record<string, string>> = {
+    'top': { top: '20px', left: '50%', transform: 'translateX(-50%) translateY(-10px)' },
+    'bottom': { bottom: '20px', left: '50%', transform: 'translateX(-50%) translateY(10px)' },
+    'top-left': { top: '20px', left: '20px', transform: 'translateY(-10px)' },
+    'top-right': { top: '20px', right: '20px', transform: 'translateY(-10px)' },
+    'bottom-left': { bottom: '20px', left: '20px', transform: 'translateY(10px)' },
+    'bottom-right': { bottom: '20px', right: '20px', transform: 'translateY(10px)' },
+  }
+  Object.assign(toastEl.style, positionStyles[position])
+
+  // Type colors
+  const typeColors: Record<string, { bg: string, color: string }> = {
+    'info': { bg: '#1a1a1a', color: '#fff' },
+    'success': { bg: '#10b981', color: '#fff' },
+    'error': { bg: '#ef4444', color: '#fff' },
+    'warning': { bg: '#f59e0b', color: '#000' },
+  }
+  const colors = typeColors[type]
+  toastEl.style.background = colors.bg
+  toastEl.style.color = colors.color
+
+  document.body.appendChild(toastEl)
+  _activeToast = toastEl
+
+  // Animate in
+  requestAnimationFrame(() => {
+    toastEl.style.opacity = '1'
+    toastEl.style.transform = position.includes('top')
+      ? (position === 'top' ? 'translateX(-50%) translateY(0)' : 'translateY(0)')
+      : (position === 'bottom' ? 'translateX(-50%) translateY(0)' : 'translateY(0)')
+  })
+
+  // Auto-dismiss
+  setTimeout(() => {
+    toastEl.style.opacity = '0'
+    setTimeout(() => {
+      if (toastEl.parentNode) {
+        toastEl.remove()
+      }
+      if (_activeToast === toastEl) {
+        _activeToast = null
+      }
+    }, 200)
+  }, duration)
+}
+
+// ============================================
+// FEEDBACK: ANIMATIONS
+// ============================================
+
+/**
+ * Shake an element (error feedback)
+ * @param el - Element to shake
+ * @param options - Options: { intensity?, duration? }
+ */
+export function shake(
+  el: MirrorElement | null,
+  options?: { intensity?: number, duration?: number }
+): void {
+  if (!el) return
+  const { intensity = 5, duration = 400 } = options || {}
+
+  // Use CSS animation
+  const keyframes = [
+    { transform: 'translateX(0)' },
+    { transform: `translateX(-${intensity}px)` },
+    { transform: `translateX(${intensity}px)` },
+    { transform: `translateX(-${intensity}px)` },
+    { transform: `translateX(${intensity}px)` },
+    { transform: 'translateX(0)' },
+  ]
+
+  el.animate(keyframes, {
+    duration,
+    easing: 'ease-in-out',
+  })
+}
+
+/**
+ * Pulse an element (attention feedback)
+ * @param el - Element to pulse
+ * @param options - Options: { scale?, duration? }
+ */
+export function pulse(
+  el: MirrorElement | null,
+  options?: { scale?: number, duration?: number }
+): void {
+  if (!el) return
+  const { scale = 1.05, duration = 300 } = options || {}
+
+  const keyframes = [
+    { transform: 'scale(1)' },
+    { transform: `scale(${scale})` },
+    { transform: 'scale(1)' },
+  ]
+
+  el.animate(keyframes, {
+    duration,
+    easing: 'ease-in-out',
+  })
+}
+
+// ============================================
+// TIMER: DELAY
+// ============================================
+
+/**
+ * Execute a function after a delay
+ * @param ms - Delay in milliseconds
+ * @param fn - Function to execute
+ * @returns Timer ID (for cancellation)
+ */
+export function delay(ms: number, fn: () => void): number {
+  return window.setTimeout(fn, ms)
+}
+
+/**
+ * Cancel a delayed function
+ * @param timerId - Timer ID from delay()
+ */
+export function cancelDelay(timerId: number): void {
+  window.clearTimeout(timerId)
+}
+
+/**
+ * Create a debounced version of a function
+ * @param ms - Debounce delay in milliseconds
+ * @param fn - Function to debounce
+ * @returns Debounced function
+ */
+export function debounce<T extends (...args: unknown[]) => void>(
+  ms: number,
+  fn: T
+): (...args: Parameters<T>) => void {
+  let timerId: number | null = null
+  return (...args: Parameters<T>) => {
+    if (timerId) {
+      window.clearTimeout(timerId)
+    }
+    timerId = window.setTimeout(() => {
+      fn(...args)
+      timerId = null
+    }, ms)
+  }
+}
+
+// ============================================
+// NAVIGATION: BROWSER
+// ============================================
+
+/**
+ * Go back in browser history
+ */
+export function back(): void {
+  window.history.back()
+}
+
+/**
+ * Go forward in browser history
+ */
+export function forward(): void {
+  window.history.forward()
+}
+
+/**
+ * Open a URL in a new tab or current window
+ * @param url - URL to open
+ * @param options - Options: { newTab? }
+ */
+export function openUrl(
+  url: string,
+  options?: { newTab?: boolean }
+): void {
+  const { newTab = true } = options || {}
+  if (newTab) {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  } else {
+    window.location.href = url
+  }
+}
+
+// ============================================
 // SELECTION
 // ============================================
 
@@ -1532,8 +1880,8 @@ export function transitionTo(
   if (prevStateName === stateName) return
 
   // Prevent concurrent transitions - if already transitioning, skip
-  if ((el as any)._isTransitioning) return
-  (el as any)._isTransitioning = true
+  if (el._isTransitioning) return
+  el._isTransitioning = true
 
   // Store base styles on first transition (for toggle back to default)
   if (!el._baseStyles) {
@@ -1577,7 +1925,7 @@ export function transitionTo(
 
     // 2. Handle visibility states (before any style changes)
     if (stateName === 'visible') {
-      el.style.display = (el as any)._baseDisplay || 'flex'
+      el.style.display = el._baseDisplay || 'flex'
       el.hidden = false
     }
 
@@ -1628,12 +1976,12 @@ export function transitionTo(
           el.style.display = 'none'
           el.hidden = true
         }
-        (el as any)._isTransitioning = false
+        el._isTransitioning = false
       })
     } else {
       // No animation, apply styles immediately
       Object.assign(el.style, newState.styles as Partial<CSSStyleDeclaration>)
-      ;(el as any)._isTransitioning = false
+      el._isTransitioning = false
     }
 
     // 6. Handle visibility when leaving visible state (after styles applied)
@@ -1778,6 +2126,71 @@ export function watchStates(
 }
 
 /**
+ * Safe condition evaluator - replaces dangerous eval()/new Function()
+ * Only allows known state names and logical operators
+ */
+function evaluateCondition(condition: string, currentState: string | undefined): boolean {
+  // Build state context with common state names
+  const states: Record<string, boolean> = {
+    open: currentState === 'open',
+    closed: currentState === 'closed',
+    expanded: currentState === 'expanded',
+    collapsed: currentState === 'collapsed',
+    active: currentState === 'active',
+    inactive: currentState === 'inactive',
+    selected: currentState === 'selected',
+    disabled: currentState === 'disabled',
+    loading: currentState === 'loading',
+    error: currentState === 'error',
+    on: currentState === 'on',
+    off: currentState === 'off',
+  }
+  // Also support the current state name directly
+  if (currentState) {
+    states[currentState] = true
+  }
+
+  // Tokenize: split by && and || while preserving operators
+  const tokens = condition.split(/(\s*&&\s*|\s*\|\|\s*)/).filter(t => t.trim())
+
+  let result: boolean | null = null
+  let pendingOp: string | null = null
+
+  for (const token of tokens) {
+    const trimmed = token.trim()
+
+    if (trimmed === '&&' || trimmed === '||') {
+      pendingOp = trimmed
+      continue
+    }
+
+    // Handle negation
+    let negate = false
+    let stateName = trimmed
+    if (stateName.startsWith('!')) {
+      negate = true
+      stateName = stateName.slice(1).trim()
+    }
+
+    // Get state value (default to checking against current state)
+    let value = states[stateName] !== undefined ? states[stateName] : (currentState === stateName)
+    if (negate) value = !value
+
+    // Apply operator
+    if (result === null) {
+      result = value
+    } else if (pendingOp === '&&') {
+      result = result && value
+    } else if (pendingOp === '||') {
+      result = result || value
+    }
+    pendingOp = null
+  }
+
+  return result === true
+}
+
+/**
  * Update visibility of children based on parent state
  */
 export function updateVisibility(el: MirrorElement | null): void {
@@ -1791,15 +2204,9 @@ export function updateVisibility(el: MirrorElement | null): void {
       const condition = child._visibleWhen
       let visible = false
 
-      if (condition.includes('&&') || condition.includes('||')) {
+      if (condition.includes('&&') || condition.includes('||') || condition.includes('!')) {
         try {
-          const open = state === 'open'
-          const closed = state === 'closed'
-          const expanded = state === 'expanded'
-          const collapsed = state === 'collapsed'
-          // Using Function constructor instead of eval for slightly better security
-          visible = new Function('open', 'closed', 'expanded', 'collapsed',
-            `return ${condition}`)(open, closed, expanded, collapsed)
+          visible = evaluateCondition(condition, state)
         } catch (err) {
           // Invalid condition expression - log for debugging and default to hidden
           console.warn(`[Mirror] Invalid visibility condition "${condition}":`, err)
@@ -2402,6 +2809,359 @@ export function setupEnterExitObserver(
 }
 
 // ============================================
+// MOTION ONE INTEGRATION
+// ============================================
+
+/**
+ * Motion One animation configuration
+ */
+export interface MotionConfig {
+  duration?: number
+  delay?: number
+  easing?: string | number[]  // string easing or cubic-bezier array
+  spring?: {
+    stiffness?: number
+    damping?: number
+    mass?: number
+  }
+}
+
+/**
+ * Spring presets for natural motion
+ */
+const SPRING_PRESETS: Record<string, { stiffness: number; damping: number; mass?: number }> = {
+  'default': { stiffness: 100, damping: 15 },
+  'gentle': { stiffness: 50, damping: 20 },
+  'bouncy': { stiffness: 200, damping: 10 },
+  'stiff': { stiffness: 400, damping: 30 },
+  'slow': { stiffness: 60, damping: 25 },
+}
+
+/**
+ * Animation presets with Motion One (enhanced with springs)
+ * Maps preset names to Motion One animation options
+ */
+const MOTION_PRESETS: Record<string, {
+  keyframes: Record<string, unknown[]>
+  options: { duration?: number; easing?: string | number[] }
+}> = {
+  'fade-in': {
+    keyframes: { opacity: [0, 1] },
+    options: { duration: 0.3, easing: 'ease-out' },
+  },
+  'fade-out': {
+    keyframes: { opacity: [1, 0] },
+    options: { duration: 0.3, easing: 'ease-out' },
+  },
+  'slide-up': {
+    keyframes: { transform: ['translateY(20px)', 'translateY(0)'], opacity: [0, 1] },
+    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] },  // ease-out-expo
+  },
+  'slide-down': {
+    keyframes: { transform: ['translateY(-20px)', 'translateY(0)'], opacity: [0, 1] },
+    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] },
+  },
+  'slide-left': {
+    keyframes: { transform: ['translateX(20px)', 'translateX(0)'], opacity: [0, 1] },
+    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] },
+  },
+  'slide-right': {
+    keyframes: { transform: ['translateX(-20px)', 'translateX(0)'], opacity: [0, 1] },
+    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] },
+  },
+  'scale-in': {
+    keyframes: { transform: ['scale(0.9)', 'scale(1)'], opacity: [0, 1] },
+    options: { duration: 0.3, easing: [0.34, 1.56, 0.64, 1] },  // back-out for bounce
+  },
+  'scale-out': {
+    keyframes: { transform: ['scale(1)', 'scale(0.9)'], opacity: [1, 0] },
+    options: { duration: 0.2, easing: 'ease-in' },
+  },
+  'bounce': {
+    keyframes: { transform: ['scale(1)', 'scale(1.15)', 'scale(0.95)', 'scale(1.02)', 'scale(1)'] },
+    options: { duration: 0.5, easing: 'ease-out' },
+  },
+  'pulse': {
+    keyframes: { transform: ['scale(1)', 'scale(1.05)', 'scale(1)'], opacity: [1, 0.85, 1] },
+    options: { duration: 0.6, easing: 'ease-in-out' },
+  },
+  'shake': {
+    keyframes: { transform: ['translateX(0)', 'translateX(-8px)', 'translateX(8px)', 'translateX(-4px)', 'translateX(4px)', 'translateX(0)'] },
+    options: { duration: 0.4, easing: 'ease-in-out' },
+  },
+  'spin': {
+    keyframes: { transform: ['rotate(0deg)', 'rotate(360deg)'] },
+    options: { duration: 1, easing: 'linear' },
+  },
+  // New scroll-reveal presets
+  'reveal-up': {
+    keyframes: { transform: ['translateY(40px)', 'translateY(0)'], opacity: [0, 1] },
+    options: { duration: 0.6, easing: [0.22, 1, 0.36, 1] },
+  },
+  'reveal-scale': {
+    keyframes: { transform: ['scale(0.8)', 'scale(1)'], opacity: [0, 1] },
+    options: { duration: 0.5, easing: [0.34, 1.56, 0.64, 1] },
+  },
+  'reveal-fade': {
+    keyframes: { opacity: [0, 1] },
+    options: { duration: 0.8, easing: 'ease-out' },
+  },
+}
+
+/**
+ * Active scroll animation cleanup functions
+ */
+const _scrollAnimationCleanups: Map<HTMLElement, () => void> = new Map()
+
+/**
+ * Active in-view animation cleanup functions
+ */
+const _inViewCleanups: Map<HTMLElement, () => void> = new Map()
+
+/**
+ * Play animation using Motion One
+ * @param el Element to animate
+ * @param preset Preset name or custom keyframes
+ * @param config Optional configuration
+ */
+export function motionAnimate(
+  el: HTMLElement,
+  preset: string | Record<string, unknown[]>,
+  config?: MotionConfig
+): Promise<void> {
+  return new Promise((resolve) => {
+    let keyframes: Record<string, unknown[]>
+    let baseOptions: { duration?: number; easing?: string | number[] } = {}
+
+    // Get preset or use custom keyframes
+    if (typeof preset === 'string' && MOTION_PRESETS[preset]) {
+      keyframes = MOTION_PRESETS[preset].keyframes
+      baseOptions = MOTION_PRESETS[preset].options
+    } else if (typeof preset === 'object') {
+      keyframes = preset
+    } else {
+      // Unknown preset, resolve immediately
+      console.warn(`Motion preset "${preset}" not found`)
+      resolve()
+      return
+    }
+
+    // Build animation options
+    const options: Record<string, unknown> = {
+      duration: config?.duration || baseOptions.duration || 0.3,
+      delay: config?.delay || 0,
+    }
+
+    // Use spring if specified, otherwise use easing
+    if (config?.spring) {
+      const springPreset = typeof config.spring === 'object'
+        ? config.spring
+        : SPRING_PRESETS[config.spring as unknown as string] || SPRING_PRESETS.default
+      options.type = 'spring'
+      options.stiffness = springPreset.stiffness
+      options.damping = springPreset.damping
+      if (springPreset.mass) options.mass = springPreset.mass
+    } else {
+      options.easing = config?.easing || baseOptions.easing || 'ease-out'
+    }
+
+    // Run animation
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const animation = motionAnimateFn(el, keyframes as any, options as any)
+    animation.finished.then(() => resolve())
+  })
+}
+
+/**
+ * Setup in-view animation (scroll reveal)
+ * Animation plays when element enters viewport
+ * @param el Element to animate
+ * @param preset Animation preset or custom keyframes
+ * @param config Configuration including threshold
+ */
+export function setupInViewAnimation(
+  el: HTMLElement,
+  preset: string | Record<string, unknown[]>,
+  config?: MotionConfig & {
+    threshold?: number  // 0-1, how much of element must be visible
+    once?: boolean      // Only animate once (default: true)
+  }
+): () => void {
+  const threshold = config?.threshold ?? 0.2
+  const once = config?.once ?? true
+
+  // Set initial hidden state
+  el.style.opacity = '0'
+
+  // Setup in-view observer
+  const cleanup = inView(
+    el,
+    (info) => {
+      // Reset opacity before animating
+      el.style.opacity = ''
+
+      // Play animation
+      motionAnimate(el, preset, config)
+
+      // Return cleanup function if we want to repeat
+      if (!once) {
+        return () => {
+          // Reset for next entrance
+          el.style.opacity = '0'
+        }
+      }
+    },
+    { amount: threshold }
+  )
+
+  // Store cleanup
+  _inViewCleanups.set(el, cleanup)
+  return cleanup
+}
+
+/**
+ * Setup scroll-linked animation (parallax, progress)
+ * Animation progress is tied to scroll position
+ * @param el Element to animate
+ * @param property CSS property to animate
+ * @param from Start value
+ * @param to End value
+ * @param config Configuration
+ */
+export function setupScrollAnimation(
+  el: HTMLElement,
+  property: string,
+  from: number | string,
+  to: number | string,
+  config?: {
+    axis?: 'x' | 'y'
+    target?: HTMLElement  // Scroll container (default: viewport)
+    offset?: [string, string]  // When to start/end (default: ['start end', 'end start'])
+  }
+): () => void {
+  const axis = config?.axis ?? 'y'
+  const target = config?.target
+  const offset = config?.offset ?? ['start end', 'end start']
+
+  // Build keyframes based on property
+  const keyframes: Record<string, unknown[]> = {}
+
+  // Handle different property types
+  if (property === 'y' || property === 'translateY') {
+    keyframes.transform = [`translateY(${from}px)`, `translateY(${to}px)`]
+  } else if (property === 'x' || property === 'translateX') {
+    keyframes.transform = [`translateX(${from}px)`, `translateX(${to}px)`]
+  } else if (property === 'scale') {
+    keyframes.transform = [`scale(${from})`, `scale(${to})`]
+  } else if (property === 'rotate') {
+    keyframes.transform = [`rotate(${from}deg)`, `rotate(${to}deg)`]
+  } else if (property === 'opacity') {
+    keyframes.opacity = [from, to]
+  } else {
+    // Generic property
+    keyframes[property] = [from, to]
+  }
+
+  // Setup scroll-linked animation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cleanup = scroll(
+    motionAnimateFn(el, keyframes as any, { duration: 0 }),  // duration 0 = scroll-controlled
+    {
+      target: el,
+      container: target,
+      axis,
+      offset: offset as any,  // Motion One scroll offset type
+    }
+  )
+
+  // Store cleanup
+  _scrollAnimationCleanups.set(el, cleanup)
+  return cleanup
+}
+
+/**
+ * Setup staggered animation for list items
+ * @param container Parent element containing items
+ * @param itemSelector Selector for items to animate
+ * @param preset Animation preset
+ * @param config Configuration including stagger delay
+ */
+export function setupStaggerAnimation(
+  container: HTMLElement,
+  itemSelector: string,
+  preset: string,
+  config?: MotionConfig & { staggerDelay?: number }
+): Promise<void> {
+  return new Promise((resolve) => {
+    const items = container.querySelectorAll(itemSelector)
+    if (items.length === 0) {
+      resolve()
+      return
+    }
+
+    // Get preset
+    const presetConfig = MOTION_PRESETS[preset]
+    if (!presetConfig) {
+      console.warn(`Motion preset "${preset}" not found for stagger`)
+      resolve()
+      return
+    }
+
+    const staggerDelay = config?.staggerDelay ?? 0.05
+
+    // Animate with stagger
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const animation = motionAnimateFn(
+      items as any,  // NodeList needs casting for Motion One
+      presetConfig.keyframes as any,
+      {
+        duration: config?.duration || presetConfig.options.duration || 0.3,
+        delay: stagger(staggerDelay),
+        easing: (config?.easing as string) || presetConfig.options.easing || 'ease-out',
+      }
+    )
+
+    animation.finished.then(() => resolve())
+  })
+}
+
+/**
+ * Cleanup all scroll animations for an element
+ */
+export function cleanupScrollAnimation(el: HTMLElement): void {
+  const cleanup = _scrollAnimationCleanups.get(el)
+  if (cleanup) {
+    cleanup()
+    _scrollAnimationCleanups.delete(el)
+  }
+}
+
+/**
+ * Cleanup all in-view animations for an element
+ */
+export function cleanupInViewAnimation(el: HTMLElement): void {
+  const cleanup = _inViewCleanups.get(el)
+  if (cleanup) {
+    cleanup()
+    _inViewCleanups.delete(el)
+  }
+}
+
+/**
+ * Get spring preset by name
+ */
+export function getSpringPreset(name: string): { stiffness: number; damping: number; mass?: number } | undefined {
+  return SPRING_PRESETS[name]
+}
+
+/**
+ * Get motion preset by name
+ */
+export function getMotionPreset(name: string): typeof MOTION_PRESETS[string] | undefined {
+  return MOTION_PRESETS[name]
+}
+
+// ============================================
 // TWO-WAY DATA BINDING
 // ============================================
 
@@ -2423,7 +3183,7 @@ const _textBindings: Map<string, Set<MirrorElement>> = new Map()
  * @param path The data path (e.g., "user.name")
  */
 export function bindValue(el: MirrorElement, path: string): void {
-  (el as any)._valueBinding = path
+  el._valueBinding = path
 
   if (!_valueBindings.has(path)) {
     _valueBindings.set(path, new Set())
@@ -2437,7 +3197,7 @@ export function bindValue(el: MirrorElement, path: string): void {
  * @param path The data path (e.g., "user.name")
  */
 export function bindText(el: MirrorElement, path: string): void {
-  (el as any)._textBinding = path
+  el._textBinding = path
 
   if (!_textBindings.has(path)) {
     _textBindings.set(path, new Set())
@@ -2470,10 +3230,10 @@ export function notifyDataChange(path: string, value: unknown): void {
   const textElements = _textBindings.get(path)
   if (textElements) {
     for (const el of textElements) {
-      if ((el as any)._textTemplate) {
+      if (el._textTemplate) {
         // Re-evaluate the template expression
         try {
-          el.textContent = (el as any)._textTemplate()
+          el.textContent = el._textTemplate()
         } catch (e) {
           console.warn('Failed to re-evaluate text template:', e)
           el.textContent = stringValue
@@ -2490,7 +3250,7 @@ export function notifyDataChange(path: string, value: unknown): void {
  * @param el The element to unbind
  */
 export function unbindValue(el: MirrorElement): void {
-  const path = (el as any)._valueBinding
+  const path = el._valueBinding
   if (path && _valueBindings.has(path)) {
     _valueBindings.get(path)!.delete(el)
   }
@@ -2499,6 +3259,15 @@ export function unbindValue(el: MirrorElement): void {
 // ============================================
 // CHARTS
 // ============================================
+
+/**
+ * Chart slot configuration
+ * Maps Chart.js config paths to values
+ */
+export interface ChartSlotConfig {
+  name: string
+  config: Record<string, string | number | boolean>
+}
 
 /**
  * Chart configuration for Mirror charts
@@ -2516,6 +3285,7 @@ export interface ChartConfig {
   tension?: number
   grid?: boolean
   axes?: boolean
+  slots?: ChartSlotConfig[]
 }
 
 /**
@@ -2541,7 +3311,7 @@ let chartJsPromise: Promise<void> | null = null
 function loadChartJs(): Promise<void> {
   if (chartJsPromise) return chartJsPromise
 
-  if (typeof (window as any).Chart !== 'undefined') {
+  if (typeof window.Chart !== 'undefined') {
     return Promise.resolve()
   }
 
@@ -2625,6 +3395,57 @@ function parseChartData(
 }
 
 /**
+ * Set a nested value in an object using a dot-separated path
+ * Handles array notation like 'data.datasets[0].pointRadius'
+ *
+ * @param obj The object to modify
+ * @param path Dot-separated path (e.g., 'options.scales.x.ticks.color')
+ * @param value The value to set
+ */
+function setNestedValue(obj: any, path: string, value: unknown): void {
+  const parts = path.split('.')
+  let current = obj
+
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i]
+
+    // Handle array notation like 'datasets[0]'
+    const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/)
+    if (arrayMatch) {
+      const arrayName = arrayMatch[1]
+      const index = parseInt(arrayMatch[2], 10)
+
+      if (!(arrayName in current)) {
+        current[arrayName] = []
+      }
+      if (!current[arrayName][index]) {
+        current[arrayName][index] = {}
+      }
+      current = current[arrayName][index]
+    } else {
+      if (!(part in current)) {
+        current[part] = {}
+      }
+      current = current[part]
+    }
+  }
+
+  // Set the final value
+  const lastPart = parts[parts.length - 1]
+  const arrayMatch = lastPart.match(/^(\w+)\[(\d+)\]$/)
+  if (arrayMatch) {
+    const arrayName = arrayMatch[1]
+    const index = parseInt(arrayMatch[2], 10)
+    if (!(arrayName in current)) {
+      current[arrayName] = []
+    }
+    current[arrayName][index] = value
+  } else {
+    current[lastPart] = value
+  }
+}
+
+/**
  * Create a chart in the given element
  */
 export async function createChart(
@@ -2633,9 +3454,19 @@ export async function createChart(
 ): Promise<void> {
   await loadChartJs()
 
+  // Chart.js requires a container with position:relative and overflow:hidden
+  // to properly constrain the canvas size when responsive:true
+  element.style.position = 'relative'
+  element.style.overflow = 'hidden'
+
+  // Create a wrapper that fills the container - Chart.js needs this structure
+  const wrapper = document.createElement('div')
+  wrapper.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;'
+  element.appendChild(wrapper)
+
   // Create canvas element
   const canvas = document.createElement('canvas')
-  element.appendChild(canvas)
+  wrapper.appendChild(canvas)
 
   // Parse data
   const { labels, values } = parseChartData(
@@ -2692,8 +3523,26 @@ export async function createChart(
     },
   }
 
+  // Apply slot configurations
+  if (config.slots && config.slots.length > 0) {
+    for (const slot of config.slots) {
+      for (const [path, value] of Object.entries(slot.config)) {
+        // Special handling for axis title display
+        // If setting title.text, also enable title.display
+        if (path.includes('.title.text')) {
+          const displayPath = path.replace('.title.text', '.title.display')
+          setNestedValue(chartConfig, displayPath, true)
+        }
+
+        setNestedValue(chartConfig, path, value)
+      }
+    }
+  }
+
   // Create chart
-  new (window as any).Chart(canvas.getContext('2d'), chartConfig)
+  if (window.Chart) {
+    new window.Chart(canvas.getContext('2d'), chartConfig)
+  }
 }
 
 /**
@@ -2708,8 +3557,7 @@ export function updateChart(
   const canvas = element.querySelector('canvas') as HTMLCanvasElement
   if (!canvas) return
 
-  const Chart = (window as any).Chart
-  const chartInstance = Chart?.getChart?.(canvas)
+  const chartInstance = window.Chart?.getChart?.(canvas)
   if (!chartInstance) return
 
   const { labels, values } = parseChartData(data, chartInstance.config.type, xField, yField)
@@ -2756,6 +3604,19 @@ export const runtime = {
   reset,
   // Clipboard
   copy,
+  // Feedback
+  toast,
+  shake,
+  pulse,
+  // Timer
+  delay,
+  cancelDelay,
+  debounce,
+  // Browser Navigation
+  back,
+  forward,
+  openUrl,
+  // Selection
   select,
   deselect,
   selectHighlighted,
@@ -2788,6 +3649,15 @@ export const runtime = {
   animate,
   playStateAnimation,
   setupEnterExitObserver,
+  // Motion One integration
+  motionAnimate,
+  setupInViewAnimation,
+  setupScrollAnimation,
+  setupStaggerAnimation,
+  cleanupScrollAnimation,
+  cleanupInViewAnimation,
+  getSpringPreset,
+  getMotionPreset,
   // State machine function (handles both binary toggle and multi-state cycle)
   stateMachineToggle,
   transitionTo,

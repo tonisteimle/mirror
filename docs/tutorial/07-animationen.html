@@ -259,6 +259,239 @@ LikeBtn</textarea>
     </section>
 
 
+    <!-- ============================================================ -->
+    <section>
+      <h2>Scroll Reveal: in-view</h2>
+      <p>Elemente animieren wenn sie in den sichtbaren Bereich scrollen — der klassische "Scroll Reveal" Effekt:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 200, scroll
+
+  Text "Scrolle nach unten...", col #666, fs 12
+
+  Spacer h 150
+
+  Frame in-view fade-in slide-up, bg #1a1a1a, pad 20, rad 8
+    Text "Ich erscheine!", col white, fs 16, weight 500
+    Text "Animiert beim Scrollen", col #888, fs 13
+
+  Spacer h 100
+
+  Frame in-view scale-in, bg #2563eb, pad 20, rad 8
+    Text "Und ich auch!", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>in-view</code> — aktiviert Scroll-Reveal</li>
+        <li><code>fade-in slide-up</code> — kombinierte Animationen (einblenden + hochgleiten)</li>
+        <li><code>scale-in</code> — alternative Animation (reinzoomen)</li>
+      </ul>
+
+      <div class="note">
+        <strong>Performance:</strong> In-view nutzt IntersectionObserver — extrem effizient, keine Scroll-Events.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>In-view mit Threshold</h2>
+      <p>Mit <code>threshold</code> bestimmst du, wie viel vom Element sichtbar sein muss:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 200, scroll
+
+  Text "Scrolle langsam...", col #666, fs 12
+
+  Spacer h 120
+
+  // Erscheint früh (20% sichtbar)
+  Frame in-view fade-in, threshold 0.2, bg #10b981, pad 16, rad 8
+    Text "Früh (20%)", col white
+
+  Spacer h 80
+
+  // Erscheint spät (80% sichtbar)
+  Frame in-view fade-in, threshold 0.8, bg #f59e0b, pad 16, rad 8
+    Text "Spät (80%)", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <ul>
+        <li><code>threshold 0.2</code> — Animation startet wenn 20% sichtbar</li>
+        <li><code>threshold 0.8</code> — Animation startet wenn 80% sichtbar</li>
+      </ul>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Parallax: scroll-y</h2>
+      <p>Elemente bewegen sich mit unterschiedlicher Geschwindigkeit beim Scrollen — der Parallax-Effekt:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame h 250, scroll, bg #0a0a0a, rad 8, clip
+
+  Frame stacked, h 400, w full
+
+    // Hintergrund bewegt sich langsam
+    Frame scroll-y 0 -50, w full, h 300, bg grad-ver #1a1a2e #0f0f1a
+
+    // Vordergrund bewegt sich normal
+    Frame y 100, pad 20, center
+      Text "Parallax", col white, fs 32, weight bold
+      Text "Scrolle für den Effekt", col #888, fs 14
+
+  Spacer h 200</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>scroll-y 0 -50</code> — Element bewegt sich von 0 nach -50px beim Scrollen</li>
+        <li>Negative Werte = langsamer als der normale Scroll</li>
+        <li>Positive Werte = schneller als der normale Scroll</li>
+      </ul>
+
+      <table class="ref-table">
+        <tr><th>Property</th><th>Beschreibung</th></tr>
+        <tr><td><code>scroll-y 0 -100</code></td><td>Vertikaler Parallax</td></tr>
+        <tr><td><code>scroll-x 0 50</code></td><td>Horizontaler Parallax</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Spring Physics</h2>
+      <p>Statt linearer Bewegung: natürliche, federnde Animation wie in der echten Welt:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
+
+  // Standard (keine Spring)
+  Button "Normal", pad 12 24, rad 6, bg #333, col white, toggle()
+    on:
+      bg #2563eb
+      scale 1.05
+
+  // Mit Spring: bouncy
+  Button "Spring Bouncy", pad 12 24, rad 6, bg #333, col white, spring bouncy, toggle()
+    on:
+      bg #10b981
+      scale 1.05
+
+  // Mit Spring: gentle
+  Button "Spring Gentle", pad 12 24, rad 6, bg #333, col white, spring gentle, toggle()
+    on:
+      bg #f59e0b
+      scale 1.05</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Spring Presets:</strong></p>
+      <table class="ref-table">
+        <tr><th>Preset</th><th>Gefühl</th><th>Verwendung</th></tr>
+        <tr><td><code>spring</code></td><td>Ausgewogen</td><td>Allgemein</td></tr>
+        <tr><td><code>spring gentle</code></td><td>Weich, langsam</td><td>Subtile UI</td></tr>
+        <tr><td><code>spring bouncy</code></td><td>Federnd, verspielt</td><td>Interaktive Elemente</td></tr>
+        <tr><td><code>spring stiff</code></td><td>Straff, schnell</td><td>Schnelle Reaktion</td></tr>
+      </table>
+
+      <div class="note">
+        <strong>Wann Spring?</strong> Für UI-Elemente die "lebendig" wirken sollen — Buttons, Cards, Modals. Nicht für Loading-Animationen oder Scroll.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Stagger: Versetzte Animationen</h2>
+      <p>Listen-Elemente nacheinander animieren statt alle gleichzeitig:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
+
+  Text "Scrolle...", col #666, fs 12
+
+  Spacer h 100
+
+  // Container mit stagger: Kinder erscheinen versetzt
+  Frame in-view fade-in, stagger 0.1, gap 8
+
+    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
+      Frame w 8, h 8, rad 99, bg #2563eb
+      Text "Erster Eintrag", col white
+
+    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
+      Frame w 8, h 8, rad 99, bg #10b981
+      Text "Zweiter Eintrag", col white
+
+    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
+      Frame w 8, h 8, rad 99, bg #f59e0b
+      Text "Dritter Eintrag", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>stagger 0.1</code> — 100ms Verzögerung zwischen jedem Kind</li>
+        <li>Kombiniert mit <code>in-view</code> für Scroll-Reveal</li>
+        <li>Erzeugt einen eleganten "Kaskaden"-Effekt</li>
+      </ul>
+
+      <div class="note">
+        <strong>Timing:</strong> 0.05-0.1s für schnelle Listen, 0.15-0.2s für dramatischere Effekte.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Feature Cards</h2>
+      <p>Alles kombiniert — Feature-Cards mit Scroll-Reveal und Stagger:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Card: bg #1a1a1a, pad 20, rad 12, gap 8
+  Title: col white, fs 16, weight 600
+  Desc: col #888, fs 13
+
+Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 280, scroll
+
+  Text "Scrolle für Animation...", col #666, fs 12, pad 0 0 20 0
+
+  Frame in-view slide-up, stagger 0.15, gap 12
+
+    Card
+      Title "Schnell"
+      Desc "Optimiert für Performance"
+
+    Card
+      Title "Einfach"
+      Desc "Intuitive Syntax"
+
+    Card
+      Title "Flexibel"
+      Desc "Für jedes Projekt"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
     <div class="summary">
       <h2>Zusammenfassung</h2>
 

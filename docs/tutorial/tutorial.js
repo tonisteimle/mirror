@@ -132,7 +132,7 @@ function initializePlaygrounds() {
 // Die Sprache (00-10) + Komponenten-Bibliothek (11-15)
 const tutorialNavigation = [
   // Die Sprache
-  { num: '00', file: '00-intro.html', title: 'Intro', section: 'Sprache' },
+  { num: '00', file: 'index.html', title: 'Intro', section: 'Sprache' },
   { num: '01', file: '01-elemente.html', title: 'Elemente' },
   { num: '02', file: '02-komponenten.html', title: 'Komponenten' },
   { num: '03', file: '03-tokens.html', title: 'Tokens' },
@@ -152,9 +152,9 @@ const tutorialNavigation = [
 ]
 
 function createTutorialSidebar() {
-  // Don't create sidebar on index page
+  // Don't create sidebar on playground page
   const currentFile = window.location.pathname.split('/').pop() || 'index.html'
-  if (currentFile === 'index.html' || currentFile === 'playground.html') return
+  if (currentFile === 'playground.html') return
 
   // Create sidebar element
   const sidebar = document.createElement('aside')

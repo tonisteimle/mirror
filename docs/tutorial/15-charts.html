@@ -245,6 +245,156 @@ Line $data, w 350, h 180, grid false</textarea>
 
     <!-- ============================================================ -->
     <section>
+      <h2>Subkomponenten</h2>
+      <p>Für präzise Kontrolle über jeden Aspekt eines Charts gibt es <strong>Subkomponenten</strong>. Sie funktionieren wie Kind-Komponenten – mit Doppelpunkt definiert, eingerückt unter dem Chart:</p>
+
+      <h3>Achsen anpassen</h3>
+      <p>Mit <code>XAxis:</code> und <code>YAxis:</code> kontrollierst du Farben, Labels und Wertebereiche:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>revenue:
+  Jan: 45
+  Feb: 62
+  Mar: 78
+  Apr: 95
+  May: 88
+  Jun: 110
+
+Line $revenue, w 400, h 220
+  XAxis: col #888, label "Monat", fs 11
+  YAxis: col #888, label "Umsatz (k€)", min 0, max 120</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>label</code> fügt einen Achsentitel hinzu. <code>min</code> und <code>max</code> fixieren den Wertebereich.</p>
+
+      <h3>Datenpunkte stylen</h3>
+      <p><code>Point:</code> kontrolliert die Datenpunkte bei Line- und Scatter-Charts:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>data:
+  Q1: 30
+  Q2: 45
+  Q3: 60
+  Q4: 52
+
+Line $data, w 350, h 180
+  Point: size 8, bg #2563eb, hover-size 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Grid anpassen</h3>
+      <p><code>Grid:</code> steuert die Rasterlinien:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>sales:
+  Mon: 120
+  Tue: 180
+  Wed: 150
+  Thu: 200
+  Fri: 240
+
+Bar $sales, w 350, h 180
+  Grid: col #333, dash 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>dash 4</code> macht die Linien gestrichelt (4px Segmente).</p>
+
+      <h3>Legende und Titel</h3>
+      <p>Für volle Kontrolle über Legende und Titel:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>status:
+  Done: 45
+  Progress: 30
+  Todo: 25
+
+Pie $status, w 280, h 220, colors #10b981 #f59e0b #ef4444
+  Title: text "Projektstatus", col white, fs 16
+  Legend: pos right, col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Linien anpassen</h3>
+      <p><code>Line:</code> (bei Line/Area-Charts) kontrolliert die Liniendarstellung:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>trend:
+  Jan: 20
+  Feb: 35
+  Mar: 28
+  Apr: 45
+  May: 52
+
+Line $trend, w 350, h 180
+  Line: width 3, tension 0.4, fill true</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>tension</code> steuert die Kurvenstärke (0 = eckig, 1 = sehr rund). <code>fill</code> füllt die Fläche unter der Linie.</p>
+
+      <h3>Balken stylen</h3>
+      <p><code>Bar:</code> für Balken-spezifische Optionen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>teams:
+  Design: 8
+  Dev: 12
+  Marketing: 5
+
+Bar $teams, w 300, h 180, colors #2563eb
+  Bar: rad 6, bor 2, boc #1d4ed8</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Alle Subkomponenten kombinieren</h3>
+      <p>Ein vollständig angepasstes Chart:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>revenue:
+  Jan: 45
+  Feb: 62
+  Mar: 78
+  Apr: 95
+  May: 88
+  Jun: 110
+
+Frame bg #0a0a0a, pad 20, rad 12
+  Line $revenue, w 420, h 240, colors #2563eb
+    Title: text "Umsatzentwicklung 2024", col white, fs 14
+    XAxis: col #666, fs 10
+    YAxis: col #666, label "Umsatz (k€)", fs 10, min 0
+    Grid: col #222
+    Point: size 5, bg #2563eb, hover-size 8
+    Line: width 2, tension 0.3</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Subkomponente</th><th>Charts</th><th>Properties</th></tr>
+        <tr><td><code>XAxis:</code></td><td>Line, Bar, Scatter</td><td>col, label, fs, min, max, visible</td></tr>
+        <tr><td><code>YAxis:</code></td><td>Line, Bar, Scatter</td><td>col, label, fs, min, max, visible</td></tr>
+        <tr><td><code>Grid:</code></td><td>Line, Bar, Scatter, Radar</td><td>col, width, dash, visible</td></tr>
+        <tr><td><code>Point:</code></td><td>Line, Scatter, Radar</td><td>size, bg, boc, bor, hover-size</td></tr>
+        <tr><td><code>Legend:</code></td><td>Alle</td><td>visible, pos, col, fs</td></tr>
+        <tr><td><code>Title:</code></td><td>Alle</td><td>text, col, fs, weight, pos, visible</td></tr>
+        <tr><td><code>Line:</code></td><td>Line, Area</td><td>width, tension, fill, dash</td></tr>
+        <tr><td><code>Bar:</code></td><td>Bar</td><td>rad, bor, boc</td></tr>
+        <tr><td><code>Arc:</code></td><td>Pie, Donut</td><td>bor, boc, offset, hover-offset</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>In Layouts einbetten</h2>
       <p>Charts sind normale Elemente – du kannst sie in Frames, Cards oder Grids einbetten:</p>
       <div class="playground" data-playground>

@@ -21,9 +21,14 @@ import { SCHEMA, DSL, PropertyDef } from './dsl'
  * because they are handled separately in component body parsing.
  */
 export const PROPERTY_STARTERS = new Set<string>([
-  // ALL from schema - properties that take values (numeric, color, or keywords)
+  // ALL from schema - properties that take values (numeric, color, keywords, or custom)
   ...Object.values(SCHEMA)
-    .filter(prop => prop.numeric || prop.color || (prop.keywords && Object.keys(prop.keywords).length > 0 && !prop.keywords._standalone))
+    .filter(prop =>
+      prop.numeric ||
+      prop.color ||
+      prop.custom ||  // Custom properties like scroll-y, scroll-x
+      (prop.keywords && Object.keys(prop.keywords).length > 0 && !prop.keywords._standalone)
+    )
     .flatMap(prop => [prop.name, ...prop.aliases]),
   // Special keywords that take a value
   'bind',  // bind varName - tracks active exclusive() child content

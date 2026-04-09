@@ -4172,6 +4172,12 @@ Table $products by price desc, gap 4, w full
 | decrement | - |
 | reset | - |
 | copy | - |
+| toast | message, type?, position? |
+| shake | element? |
+| pulse | element? |
+| back | - |
+| forward | - |
+| openUrl | url, newTab? |
 
 ### States
 

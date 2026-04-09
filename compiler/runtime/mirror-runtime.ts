@@ -849,10 +849,10 @@ function applyAttributes(el: HTMLElement, props: MirrorProps): void {
 function applyEvents(el: HTMLElement, props: MirrorProps): void {
   const eventProps = [
     'onclick', 'onhover', 'onfocus', 'onblur', 'onchange', 'oninput', 'onclick-outside'
-  ]
+  ] as const
 
   for (const eventProp of eventProps) {
-    const actions = (props as any)[eventProp]
+    const actions = props[eventProp]
     if (actions) {
       const eventName = eventProp === 'onhover' ? 'mouseenter'
         : eventProp === 'onclick-outside' ? 'click-outside'
@@ -1472,10 +1472,10 @@ function eventsToMirror(props: MirrorProps, indent: number): string[] {
   const lines: string[] = []
   const spaces = '  '.repeat(indent)
 
-  const simpleEvents = ['onclick', 'onhover', 'onfocus', 'onblur', 'onchange', 'oninput']
+  const simpleEvents = ['onclick', 'onhover', 'onfocus', 'onblur', 'onchange', 'oninput'] as const
 
   for (const event of simpleEvents) {
-    const actions = (props as any)[event]
+    const actions = props[event]
     if (actions) {
       const actionStr = normalizeActions(actions).join(', ')
       lines.push(`${spaces}${event} ${actionStr}`)

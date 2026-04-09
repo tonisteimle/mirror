@@ -101,7 +101,7 @@ import {
   hasContent,
   isTable,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRZagNode, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray } from './types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRZagNode, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray, IRInView, IRScrollLinked, IRSpring } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
@@ -121,7 +121,8 @@ import {
 import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 import { isZagPrimitive, ZAG_PRIMITIVES, getItemKeywords, getZagPrimitive } from '../schema/zag-primitives'
 import { isCompoundPrimitive, getCompoundPrimitive, getCompoundSlotDef, isCompoundSlot } from '../schema/compound-primitives'
-import { isChartPrimitive, getChartPrimitive } from '../schema/chart-primitives'
+import { isChartPrimitive, getChartPrimitive, getChartSlotProperty } from '../schema/chart-primitives'
+import type { IRChartSlot } from './types'
 import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helpers'
 import {
   isContainer as isContainerPrimitive,
@@ -1216,23 +1217,23 @@ class IRTransformer {
       ? this.transformTableSlotStyles(table.paginatorSlot)
       : undefined
     // Handle paginator sub-slots (children and styles)
-    const paginatorPrevSlot = (table.paginatorSlot as any)?.prevSlot
-      ? this.transformTableSlotChildren((table.paginatorSlot as any).prevSlot)
+    const paginatorPrevSlot = table.paginatorSlot?.prevSlot
+      ? this.transformTableSlotChildren(table.paginatorSlot.prevSlot)
       : undefined
-    const paginatorPrevSlotStyles = (table.paginatorSlot as any)?.prevSlot
-      ? this.transformTableSlotStyles((table.paginatorSlot as any).prevSlot)
+    const paginatorPrevSlotStyles = table.paginatorSlot?.prevSlot
+      ? this.transformTableSlotStyles(table.paginatorSlot.prevSlot)
       : undefined
-    const paginatorNextSlot = (table.paginatorSlot as any)?.nextSlot
-      ? this.transformTableSlotChildren((table.paginatorSlot as any).nextSlot)
+    const paginatorNextSlot = table.paginatorSlot?.nextSlot
+      ? this.transformTableSlotChildren(table.paginatorSlot.nextSlot)
       : undefined
-    const paginatorNextSlotStyles = (table.paginatorSlot as any)?.nextSlot
-      ? this.transformTableSlotStyles((table.paginatorSlot as any).nextSlot)
+    const paginatorNextSlotStyles = table.paginatorSlot?.nextSlot
+      ? this.transformTableSlotStyles(table.paginatorSlot.nextSlot)
       : undefined
-    const paginatorPageInfoSlot = (table.paginatorSlot as any)?.pageInfoSlot
-      ? this.transformTableSlotChildren((table.paginatorSlot as any).pageInfoSlot)
+    const paginatorPageInfoSlot = table.paginatorSlot?.pageInfoSlot
+      ? this.transformTableSlotChildren(table.paginatorSlot.pageInfoSlot)
       : undefined
-    const paginatorPageInfoSlotStyles = (table.paginatorSlot as any)?.pageInfoSlot
-      ? this.transformTableSlotStyles((table.paginatorSlot as any).pageInfoSlot)
+    const paginatorPageInfoSlotStyles = table.paginatorSlot?.pageInfoSlot
+      ? this.transformTableSlotStyles(table.paginatorSlot.pageInfoSlot)
       : undefined
 
     // Build source position
@@ -1532,6 +1533,7 @@ class IRTransformer {
     const nodeId = this.generateId()
     const chartDef = getChartPrimitive(instance.component) || getChartPrimitive(primitive)
     const chartType = chartDef?.chartType || 'line'
+    const chartDefaults = chartDef?.defaults || {}
 
     // Merge properties
     const properties = this.mergeProperties(
@@ -1571,9 +1573,12 @@ class IRTransformer {
     const stacked = stackedProp ? (stackedProp.values[0] ?? true) : undefined
 
     const fillProp = properties.find(p => p.name === 'fill')
-    const fill = fillProp ? (fillProp.values[0] ?? true) : undefined
+    // Use chart defaults for fill if not explicitly set (important for Area charts)
+    const fill = fillProp ? (fillProp.values[0] ?? true) : chartDefaults.fill
 
-    const tension = properties.find(p => p.name === 'tension')?.values[0]
+    const tensionProp = properties.find(p => p.name === 'tension')
+    // Use chart defaults for tension if not explicitly set
+    const tension = tensionProp ? tensionProp.values[0] : chartDefaults.tension
 
     // For grid and axes, check the actual value (not just presence)
     const gridProp = properties.find(p => p.name === 'grid')
@@ -1629,6 +1634,39 @@ class IRTransformer {
     }
     if (axes !== undefined) {
       irProperties.push({ name: 'axes', value: toBool(axes) })
+    }
+
+    // Process chart slots (XAxis:, YAxis:, Legend:, etc.)
+    const chartSlots: IRChartSlot[] = []
+    if (instance.chartSlots) {
+      for (const [slotName, slotNode] of Object.entries(instance.chartSlots)) {
+        const slotConfig: Record<string, string | number | boolean> = {}
+
+        // Map each property to its Chart.js path
+        for (const prop of slotNode.properties) {
+          const slotPropDef = getChartSlotProperty(slotName, prop.name)
+          if (slotPropDef && prop.values.length > 0) {
+            const value = prop.values[0]
+            // Convert value to appropriate type
+            if (slotPropDef.type === 'number') {
+              slotConfig[slotPropDef.chartJsPath] = Number(value)
+            } else if (slotPropDef.type === 'boolean') {
+              slotConfig[slotPropDef.chartJsPath] = toBool(value)
+            } else {
+              slotConfig[slotPropDef.chartJsPath] = String(value)
+            }
+          }
+        }
+
+        if (Object.keys(slotConfig).length > 0) {
+          chartSlots.push({ name: slotName, config: slotConfig })
+        }
+      }
+    }
+
+    // Add chart slots to properties if any exist
+    if (chartSlots.length > 0) {
+      irProperties.push({ name: 'chartSlots', value: JSON.stringify(chartSlots) })
     }
 
     return {
@@ -2216,6 +2254,12 @@ class IRTransformer {
       ? this.extractValueBinding(properties)
       : undefined
 
+    // Extract Motion One animation properties
+    const inView = this.extractInView(properties)
+    const scrollLinked = this.extractScrollLinked(properties)
+    const spring = this.extractSpring(properties)
+    const stagger = this.extractStagger(properties)
+
     return {
       id: nodeId,
       tag,
@@ -2237,6 +2281,11 @@ class IRTransformer {
       layoutType,
       isDefinition: instance.isDefinition ?? false,
       valueBinding,
+      // Motion One animation properties
+      inView,
+      scrollLinked,
+      spring,
+      stagger,
     }
   }
 
@@ -4881,6 +4930,117 @@ class IRTransformer {
     }
 
     return undefined
+  }
+
+  // ============================================================================
+  // MOTION ONE PROPERTY EXTRACTION
+  // ============================================================================
+
+  /**
+   * Extract in-view animation properties from properties.
+   * Syntax: `in-view fade-in slide-up` or `in-view` (defaults to fade-in + slide-up)
+   */
+  private extractInView(properties: Property[]): IRInView | undefined {
+    const inViewProp = properties.find(p => p.name === 'in-view' || p.name === 'inview')
+    if (!inViewProp) return undefined
+
+    // Extract animation presets from values
+    const animations: string[] = []
+    if (inViewProp.values && inViewProp.values.length > 0) {
+      for (const val of inViewProp.values) {
+        if (typeof val === 'string') {
+          animations.push(val)
+        }
+      }
+    }
+
+    // Default animation if none specified
+    if (animations.length === 0) {
+      animations.push('fade-in', 'slide-up')
+    }
+
+    // Check for threshold property
+    const thresholdProp = properties.find(p => p.name === 'threshold')
+    const threshold = thresholdProp?.values?.[0]
+      ? (typeof thresholdProp.values[0] === 'number' ? thresholdProp.values[0] : parseFloat(String(thresholdProp.values[0])))
+      : undefined
+
+    // Check for stagger property
+    const staggerProp = properties.find(p => p.name === 'stagger')
+    const stagger = staggerProp?.values?.[0]
+      ? (typeof staggerProp.values[0] === 'number' ? staggerProp.values[0] : parseFloat(String(staggerProp.values[0])))
+      : undefined
+
+    return {
+      animations,
+      threshold: !isNaN(threshold as number) ? threshold : undefined,
+      stagger: !isNaN(stagger as number) ? stagger : undefined,
+      once: true, // Default: only animate once on first view
+    }
+  }
+
+  /**
+   * Extract scroll-linked animation properties.
+   * Syntax: `scroll-y 0 -100` or `scroll-x 0 50`
+   */
+  private extractScrollLinked(properties: Property[]): IRScrollLinked | undefined {
+    const scrollYProp = properties.find(p =>
+      p.name === 'scroll-y' || p.name === 'scroll-ver' || p.name === 'parallax-y'
+    )
+    const scrollXProp = properties.find(p =>
+      p.name === 'scroll-x' || p.name === 'scroll-hor' || p.name === 'parallax-x'
+    )
+
+    const prop = scrollYProp || scrollXProp
+    if (!prop || !prop.values || prop.values.length < 2) return undefined
+
+    const axis = scrollYProp ? 'y' : 'x'
+    const from = prop.values[0]
+    const to = prop.values[1]
+
+    // Convert values to proper format (number or px string)
+    const formatValue = (val: unknown): string | number => {
+      if (typeof val === 'number') return val
+      const numVal = parseFloat(String(val))
+      if (!isNaN(numVal)) return numVal
+      return String(val)
+    }
+
+    return {
+      axis,
+      property: 'transform',
+      from: formatValue(from),
+      to: formatValue(to),
+    }
+  }
+
+  /**
+   * Extract spring animation properties.
+   * Syntax: `spring bouncy` or just `spring` (uses default preset)
+   */
+  private extractSpring(properties: Property[]): IRSpring | undefined {
+    const springProp = properties.find(p => p.name === 'spring')
+    if (!springProp) return undefined
+
+    // Check for preset name in values
+    const preset = springProp.values?.[0]
+      ? String(springProp.values[0])
+      : 'default'
+
+    return { preset }
+  }
+
+  /**
+   * Extract stagger delay for parent containers.
+   * Syntax: `stagger 0.1` (seconds)
+   */
+  private extractStagger(properties: Property[]): number | undefined {
+    const staggerProp = properties.find(p => p.name === 'stagger')
+    if (!staggerProp?.values?.[0]) return undefined
+
+    const val = staggerProp.values[0]
+    const numVal = typeof val === 'number' ? val : parseFloat(String(val))
+    return !isNaN(numVal) ? numVal : undefined
   }
 
   /**

@@ -20,6 +20,24 @@ const _runtime = {
     'opacity': 'opacity',
   },
 
+  // SVG Icon Constants (extracted to avoid duplication)
+  _icons: {
+    chevronDown: (size = 14) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>\`,
+    chevronUp: (size = 14) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"></polyline></svg>\`,
+    chevronLeft: (size = 16) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>\`,
+    chevronRight: (size = 16) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>\`,
+    chevronDouble: (size = 12) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>\`,
+    check: (size = 14, strokeWidth = 2) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="\${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>\`,
+    x: (size = 14) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>\`,
+    minus: (size = 12) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>\`,
+    calendar: (size = 16) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>\`,
+    user: (size = 24) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>\`,
+    upload: (size = 40) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>\`,
+    file: (size = 20) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>\`,
+    eyeOff: (size = 20) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>\`,
+    eye: (size = 20) => \`<svg width="\${size}" height="\${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>\`,
+  },
+
   // Alignment helpers
   _alignToCSS(el, prop, value) {
     const dir = el.style.flexDirection || 'column'
@@ -978,6 +996,66 @@ const _runtime = {
     }
   },
 
+  // Safe condition evaluator - replaces dangerous eval()
+  _evaluateCondition(condition, state) {
+    // Build state context
+    const states = {
+      open: state === 'open',
+      closed: state === 'closed',
+      expanded: state === 'expanded',
+      collapsed: state === 'collapsed',
+      active: state === 'active',
+      inactive: state === 'inactive',
+      selected: state === 'selected',
+      disabled: state === 'disabled',
+      loading: state === 'loading',
+      error: state === 'error',
+      on: state === 'on',
+      off: state === 'off',
+    }
+    // Also support the current state name directly
+    states[state] = true
+
+    // Tokenize: split by && and || while preserving operators
+    const tokens = condition.split(/(\s*&&\s*|\s*\|\|\s*)/).filter(t => t.trim())
+
+    let result = null
+    let pendingOp = null
+
+    for (const token of tokens) {
+      const trimmed = token.trim()
+
+      if (trimmed === '&&' || trimmed === '||') {
+        pendingOp = trimmed
+        continue
+      }
+
+      // Handle negation
+      let negate = false
+      let stateName = trimmed
+      if (stateName.startsWith('!')) {
+        negate = true
+        stateName = stateName.slice(1).trim()
+      }
+
+      // Get state value (default to checking against current state)
+      let value = states[stateName] !== undefined ? states[stateName] : (state === stateName)
+      if (negate) value = !value
+
+      // Apply operator
+      if (result === null) {
+        result = value
+      } else if (pendingOp === '&&') {
+        result = result && value
+      } else if (pendingOp === '||') {
+        result = result || value
+      }
+      pendingOp = null
+    }
+
+    return result === true
+  },
+
   updateVisibility(el) {
     if (!el) return
     const state = el.dataset.state
@@ -986,14 +1064,13 @@ const _runtime = {
       if (child._visibleWhen) {
         const condition = child._visibleWhen
         let visible = false
-        if (condition.includes('&&') || condition.includes('||')) {
+        if (condition.includes('&&') || condition.includes('||') || condition.includes('!')) {
           try {
-            const open = state === 'open'
-            const closed = state === 'closed'
-            const expanded = state === 'expanded'
-            const collapsed = state === 'collapsed'
-            visible = eval(condition)
-          } catch (e) { visible = false }
+            visible = this._evaluateCondition(condition, state)
+          } catch (e) {
+            console.warn('[Mirror] Invalid visibility condition:', condition, e)
+            visible = false
+          }
         } else {
           visible = state === condition
         }
@@ -1302,7 +1379,7 @@ const _runtime = {
       indicator = document.createElement('span')
       indicator.dataset.slot = 'Indicator'
       indicator.style.cssText = 'color:#666;display:flex;transition:transform 0.15s;flex-shrink:0;'
-      indicator.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'
+      indicator.innerHTML = _runtime._icons.chevronDown(14)
       trigger.appendChild(indicator)
     }
     el._zagIndicator = indicator
@@ -1323,7 +1400,7 @@ const _runtime = {
         } else {
           // Single: Checkmark style (appears on right when selected)
           check.style.cssText = 'margin-left:auto;display:none;color:#4f46e5;flex-shrink:0;'
-          check.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+          check.innerHTML = _runtime._icons.check(14)
           item.appendChild(check)
         }
       }
@@ -1341,7 +1418,7 @@ const _runtime = {
         clearButton.type = 'button'
         clearButton.dataset.slot = 'ClearButton'
         clearButton.style.cssText = 'color:#666;padding:2px;border-radius:4px;cursor:pointer;display:none;background:none;border:none;flex-shrink:0;align-items:center;justify-content:center;'
-        clearButton.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+        clearButton.innerHTML = _runtime._icons.x(14)
         clearButton.title = 'Auswahl löschen'
         // Insert before indicator
         trigger.insertBefore(clearButton, indicator)
@@ -1560,7 +1637,7 @@ const _runtime = {
         const removeBtn = document.createElement('span')
         removeBtn.dataset.slot = 'PillRemove'
         removeBtn.style.cssText = 'color:#888;cursor:pointer;display:flex;'
-        removeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+        removeBtn.innerHTML = _runtime._icons.x(12)
         removeBtn.addEventListener('mouseenter', () => removeBtn.style.color = '#fff')
         removeBtn.addEventListener('mouseleave', () => removeBtn.style.color = '#888')
         removeBtn.addEventListener('click', (e) => {
@@ -2688,7 +2765,7 @@ const _runtime = {
       trigger.type = 'button'
       trigger.dataset.slot = 'Trigger'
       trigger.setAttribute('aria-label', 'Open calendar')
-      trigger.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+      trigger.innerHTML = _runtime._icons.calendar(16)
       control.appendChild(trigger)
     }
     if (!content) {
@@ -4395,9 +4472,9 @@ const _runtime = {
           indicator.style.transform = 'scale(1)'
           // Show minus for indeterminate
           if (isIndet) {
-            indicator.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+            indicator.innerHTML = _runtime._icons.minus(12)
           } else {
-            indicator.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+            indicator.innerHTML = _runtime._icons.check(12, 3)
           }
         }
       } else {
@@ -7151,7 +7228,7 @@ const _runtime = {
       fallback.textContent = getInitials(name)
     } else {
       // Default icon (user silhouette)
-      fallback.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>'
+      fallback.innerHTML = _runtime._icons.user(24)
     }
 
     if (src) {
@@ -7314,7 +7391,7 @@ const _runtime = {
 
       // File icon
       const icon = document.createElement('span')
-      icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>'
+      icon.innerHTML = _runtime._icons.file(20)
       icon.style.cssText = 'flex-shrink: 0; color: #888;'
       item.appendChild(icon)
 
@@ -7340,7 +7417,7 @@ const _runtime = {
       const deleteBtn = document.createElement('button')
       deleteBtn.type = 'button'
       deleteBtn.dataset.slot = 'ItemDelete'
-      deleteBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+      deleteBtn.innerHTML = _runtime._icons.x(16)
       deleteBtn.style.cssText = 'padding: 4px; background: transparent; border: none; cursor: pointer; color: #666; border-radius: 4px;'
       deleteBtn.onmouseenter = () => { deleteBtn.style.backgroundColor = '#333'; deleteBtn.style.color = '#ef4444'; }
       deleteBtn.onmouseleave = () => { deleteBtn.style.backgroundColor = 'transparent'; deleteBtn.style.color = '#666'; }
@@ -7560,7 +7637,7 @@ const _runtime = {
       setDefault(prevTrigger, 'border', 'none')
       setDefault(prevTrigger, 'cursor', 'pointer')
       setDefault(prevTrigger, 'color', '#e0e0e0')
-      prevTrigger.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>'
+      prevTrigger.innerHTML = _runtime._icons.chevronLeft(20)
     }
 
     // NextTrigger styles
@@ -7575,7 +7652,7 @@ const _runtime = {
       setDefault(nextTrigger, 'border', 'none')
       setDefault(nextTrigger, 'cursor', 'pointer')
       setDefault(nextTrigger, 'color', '#e0e0e0')
-      nextTrigger.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+      nextTrigger.innerHTML = _runtime._icons.chevronRight(20)
     }
 
     // IndicatorGroup styles
@@ -7951,7 +8028,7 @@ const _runtime = {
             indicator.style.backgroundColor = '#22c55e'
             indicator.style.color = '#fff'
             indicator.style.border = 'none'
-            indicator.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+            indicator.innerHTML = _runtime._icons.check(16, 3)
           }
           if (separator) {
             separator.style.backgroundColor = '#22c55e'
@@ -8148,7 +8225,7 @@ const _runtime = {
       setDefault(prevTrigger, 'border', '1px solid #333')
       setDefault(prevTrigger, 'cursor', 'pointer')
       setDefault(prevTrigger, 'color', '#e0e0e0')
-      prevTrigger.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>'
+      prevTrigger.innerHTML = _runtime._icons.chevronLeft(16)
     }
 
     // NextTrigger styles
@@ -8163,7 +8240,7 @@ const _runtime = {
       setDefault(nextTrigger, 'border', '1px solid #333')
       setDefault(nextTrigger, 'cursor', 'pointer')
       setDefault(nextTrigger, 'color', '#e0e0e0')
-      nextTrigger.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+      nextTrigger.innerHTML = _runtime._icons.chevronRight(16)
     }
 
     // ========================================
@@ -8816,7 +8893,7 @@ const _runtime = {
           setDefault(arrow, 'color', 'var(--m-sidenav-arrow-color, #444)')
           setDefault(arrow, 'marginLeft', 'auto')
         }
-        arrow.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+        arrow.innerHTML = _runtime._icons.chevronRight(16)
       }
 
       // Hover effect
@@ -8861,7 +8938,7 @@ const _runtime = {
           if (!groupArrow.hasAttribute('data-styled')) {
             setDefault(groupArrow, 'transition', 'transform 0.2s')
           }
-          groupArrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'
+          groupArrow.innerHTML = _runtime._icons.chevronDown(14)
 
           // Set initial rotation based on state
           // Open: rotate(180deg) = UP, Closed: no rotation = DOWN
@@ -10400,8 +10477,18 @@ const _runtime = {
   async createChart(element, config) {
     await this._loadChartJs()
 
+    // Chart.js requires a container with position:relative and overflow:hidden
+    // to properly constrain the canvas size when responsive:true
+    element.style.position = 'relative'
+    element.style.overflow = 'hidden'
+
+    // Create a wrapper that fills the container - Chart.js needs this structure
+    const wrapper = document.createElement('div')
+    wrapper.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;'
+    element.appendChild(wrapper)
+
     const canvas = document.createElement('canvas')
-    element.appendChild(canvas)
+    wrapper.appendChild(canvas)
 
     const { labels, values } = this._parseChartData(config.data, config.xField, config.yField)
 
@@ -10411,19 +10498,30 @@ const _runtime = {
       '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
     ]
     const colors = config.colors || defaultColors
+    const chartType = config.type || 'line'
+    const isPieOrDoughnut = chartType === 'pie' || chartType === 'doughnut'
+
+    // Determine fill based on config (Area charts have fill: true by default)
+    const shouldFill = config.fill === true || (chartType === 'line' && config.fill === 'origin')
 
     // Build Chart.js config
     const chartConfig = {
-      type: config.type || 'line',
+      type: chartType,
       data: {
         labels: labels,
         datasets: [{
+          label: config.title || '', // Empty string fallback for legend
           data: values,
-          backgroundColor: config.type === 'pie' || config.type === 'doughnut' ? colors : colors[0] + '80',
-          borderColor: colors[0],
-          borderWidth: config.type === 'pie' || config.type === 'doughnut' ? 0 : 2,
-          fill: config.type === 'line' && config.fill !== false ? 'origin' : false,
-          tension: 0.3,
+          backgroundColor: isPieOrDoughnut
+            ? colors.slice(0, values.length)
+            : (shouldFill ? colors[0] + '40' : colors[0] + '80'),
+          borderColor: isPieOrDoughnut ? colors.slice(0, values.length) : colors[0],
+          borderWidth: isPieOrDoughnut ? 1 : 2,
+          fill: shouldFill ? 'origin' : false,
+          tension: config.tension !== undefined ? config.tension : 0.3,
+          pointBackgroundColor: colors[0],
+          pointBorderColor: colors[0],
+          pointRadius: chartType === 'scatter' ? 5 : 3,
         }]
       },
       options: {
@@ -10431,7 +10529,17 @@ const _runtime = {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: config.legend === true || config.type === 'pie' || config.type === 'doughnut'
+            display: config.legend === true || isPieOrDoughnut,
+            labels: {
+              color: '#ccc',
+              // For pie/doughnut: use labels from data (each slice = label)
+              // For others: use dataset labels (but we only have one dataset)
+              generateLabels: isPieOrDoughnut ? undefined : (chart) => {
+                // Hide legend for single-dataset charts unless explicitly requested
+                if (!config.legend) return []
+                return Chart.defaults.plugins.legend.labels.generateLabels(chart)
+              }
+            }
           },
           title: {
             display: !!config.title,
@@ -10439,7 +10547,7 @@ const _runtime = {
             color: '#fff'
           }
         },
-        scales: config.type === 'pie' || config.type === 'doughnut' ? {} : {
+        scales: isPieOrDoughnut ? {} : {
           x: {
             display: config.axes !== false,
             grid: { display: config.grid !== false, color: '#333' },
@@ -10448,8 +10556,20 @@ const _runtime = {
           y: {
             display: config.axes !== false,
             grid: { display: config.grid !== false, color: '#333' },
-            ticks: { color: '#888' }
+            ticks: { color: '#888' },
+            beginAtZero: true
           }
+        }
+      }
+    }
+
+    // Special handling for radar charts
+    if (chartType === 'radar') {
+      chartConfig.options.scales = {
+        r: {
+          grid: { color: '#333' },
+          pointLabels: { color: '#888' },
+          ticks: { color: '#888', backdropColor: 'transparent' }
         }
       }
     }
@@ -10986,6 +11106,206 @@ const __MIRROR_TEST__ = {
   resetNavigationHistory() {
     this._navigationHistory = []
     this._historyIndex = -1
+  },
+
+  // ========================================
+  // MOTION ONE INTEGRATION
+  // Motion One for scroll-reveal, parallax, spring physics
+  // Falls back to CSS animations when Motion One not available
+  // ========================================
+
+  _motionOne: null, // Will be set if motion library is loaded
+
+  // Check if Motion One is available
+  _hasMotionOne() {
+    if (this._motionOne) return true
+    // Check for global motion library (loaded via script tag)
+    if (typeof window !== 'undefined' && window.motion) {
+      this._motionOne = window.motion
+      return true
+    }
+    return false
+  },
+
+  // Spring presets for natural motion
+  _springPresets: {
+    'default': { stiffness: 100, damping: 15 },
+    'gentle': { stiffness: 50, damping: 20 },
+    'bouncy': { stiffness: 200, damping: 10 },
+    'stiff': { stiffness: 400, damping: 30 },
+    'slow': { stiffness: 60, damping: 25 },
+  },
+
+  // Motion presets for in-view animations
+  _motionPresets: {
+    'fade-in': { opacity: [0, 1] },
+    'fade-out': { opacity: [1, 0] },
+    'slide-up': { transform: ['translateY(20px)', 'translateY(0)'], opacity: [0, 1] },
+    'slide-down': { transform: ['translateY(-20px)', 'translateY(0)'], opacity: [0, 1] },
+    'slide-left': { transform: ['translateX(20px)', 'translateX(0)'], opacity: [0, 1] },
+    'slide-right': { transform: ['translateX(-20px)', 'translateX(0)'], opacity: [0, 1] },
+    'scale-in': { transform: ['scale(0.9)', 'scale(1)'], opacity: [0, 1] },
+    'scale-out': { transform: ['scale(1)', 'scale(0.9)'], opacity: [1, 0] },
+    'reveal-up': { transform: ['translateY(40px)', 'translateY(0)'], opacity: [0, 1] },
+    'reveal-scale': { transform: ['scale(0.95)', 'scale(1)'], opacity: [0, 1] },
+    'reveal-fade': { opacity: [0, 1] },
+  },
+
+  // Setup in-view animation (scroll reveal)
+  setupInViewAnimation(el, presets, config = {}) {
+    if (!el) return () => {}
+
+    const animations = Array.isArray(presets) ? presets : [presets]
+    const threshold = config.threshold ?? 0.2
+    const once = config.once ?? true
+
+    // Build combined keyframes from presets
+    const keyframes = {}
+    for (const preset of animations) {
+      const presetKeyframes = this._motionPresets[preset]
+      if (presetKeyframes) {
+        Object.assign(keyframes, presetKeyframes)
+      }
+    }
+
+    // Set initial state (hidden)
+    if (keyframes.opacity) el.style.opacity = keyframes.opacity[0]
+    if (keyframes.transform) el.style.transform = keyframes.transform[0]
+
+    if (this._hasMotionOne()) {
+      // Use Motion One inView for better performance
+      return this._motionOne.inView(el, () => {
+        this._motionOne.animate(el, {
+          opacity: keyframes.opacity ? keyframes.opacity[1] : undefined,
+          transform: keyframes.transform ? keyframes.transform[1] : undefined,
+        }, {
+          duration: config.duration || 0.4,
+          easing: config.easing || [0.22, 1, 0.36, 1],
+        })
+      }, { amount: threshold })
+    }
+
+    // Fallback: Use IntersectionObserver with CSS transitions
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          el.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out'
+          if (keyframes.opacity) el.style.opacity = keyframes.opacity[1]
+          if (keyframes.transform) el.style.transform = keyframes.transform[1]
+          if (once) observer.unobserve(el)
+        }
+      })
+    }, { threshold })
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  },
+
+  // Setup scroll-linked animation (parallax)
+  setupScrollAnimation(el, property, from, to, config = {}) {
+    if (!el) return () => {}
+
+    const axis = config.axis || 'y'
+
+    if (this._hasMotionOne()) {
+      // Use Motion One scroll for smooth parallax
+      return this._motionOne.scroll(
+        this._motionOne.animate(el, {
+          transform: axis === 'y'
+            ? [\`translateY(\${from}px)\`, \`translateY(\${to}px)\`]
+            : [\`translateX(\${from}px)\`, \`translateX(\${to}px)\`]
+        }),
+        { target: el }
+      )
+    }
+
+    // Fallback: Use scroll event listener
+    const handleScroll = () => {
+      const rect = el.getBoundingClientRect()
+      const viewHeight = window.innerHeight
+      const progress = Math.max(0, Math.min(1, 1 - (rect.top / viewHeight)))
+      const value = from + (to - from) * progress
+      el.style.transform = axis === 'y' ? \`translateY(\${value}px)\` : \`translateX(\${value}px)\`
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // Initial position
+    return () => window.removeEventListener('scroll', handleScroll)
+  },
+
+  // Setup stagger animation for container children
+  setupStaggerAnimation(container, selector, preset, config = {}) {
+    if (!container) return Promise.resolve()
+
+    const items = container.querySelectorAll(selector)
+    if (items.length === 0) return Promise.resolve()
+
+    const keyframes = this._motionPresets[preset] || this._motionPresets['fade-in']
+    const staggerDelay = config.staggerDelay || 0.1
+
+    // Set initial state for all items
+    items.forEach(item => {
+      if (keyframes.opacity) item.style.opacity = keyframes.opacity[0]
+      if (keyframes.transform) item.style.transform = keyframes.transform[0]
+    })
+
+    if (this._hasMotionOne()) {
+      // Use Motion One stagger
+      return this._motionOne.animate(items, {
+        opacity: keyframes.opacity ? keyframes.opacity[1] : undefined,
+        transform: keyframes.transform ? keyframes.transform[1] : undefined,
+      }, {
+        duration: config.duration || 0.4,
+        delay: this._motionOne.stagger(staggerDelay),
+        easing: [0.22, 1, 0.36, 1],
+      })
+    }
+
+    // Fallback: Use setTimeout for staggered animation
+    return new Promise(resolve => {
+      items.forEach((item, index) => {
+        setTimeout(() => {
+          item.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out'
+          if (keyframes.opacity) item.style.opacity = keyframes.opacity[1]
+          if (keyframes.transform) item.style.transform = keyframes.transform[1]
+          if (index === items.length - 1) resolve()
+        }, index * staggerDelay * 1000)
+      })
+    })
+  },
+
+  // Get spring config from preset name or element dataset
+  getSpringConfig(presetOrElement) {
+    let preset = 'default'
+    if (typeof presetOrElement === 'string') {
+      preset = presetOrElement
+    } else if (presetOrElement && presetOrElement.dataset) {
+      preset = presetOrElement.dataset.springPreset || 'default'
+    }
+    return this._springPresets[preset] || this._springPresets['default']
+  },
+
+  // Animate with spring physics (for state transitions)
+  springAnimate(el, properties, config = {}) {
+    if (!el) return Promise.resolve()
+
+    const springConfig = this.getSpringConfig(config.spring || el)
+
+    if (this._hasMotionOne()) {
+      return this._motionOne.animate(el, properties, {
+        type: 'spring',
+        stiffness: springConfig.stiffness,
+        damping: springConfig.damping,
+        mass: springConfig.mass || 1,
+      })
+    }
+
+    // Fallback: Use CSS transition with custom cubic-bezier approximating spring
+    return new Promise(resolve => {
+      el.style.transition = 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)'
+      Object.assign(el.style, properties)
+      setTimeout(resolve, 400)
+    })
   },
 }
 

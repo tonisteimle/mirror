@@ -6,7 +6,7 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
-import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, TokenReference, ComputedExpression, LoopVarReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride, StateDependency, StateAnimation, DataAttribute, DataBlock, SchemaDefinition, SchemaField, SchemaType, SchemaConstraint, TableNode, TableColumnNode, TableSlotNode, TableStaticRowNode, TableStaticCellNode, DataReference, DataReferenceArray } from './ast'
+import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, ConditionalNode, TokenReference, ComputedExpression, LoopVarReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride, StateDependency, StateAnimation, DataAttribute, DataBlock, SchemaDefinition, SchemaField, SchemaType, SchemaConstraint, TableNode, TableColumnNode, TableSlotNode, TableStaticRowNode, TableStaticCellNode, DataReference, DataReferenceArray } from './ast'
 import {
   PROPERTY_STARTERS,
   BOOLEAN_PROPERTIES,
@@ -28,6 +28,8 @@ import {
 import { isPrimitive, getEvent } from '../schema/dsl'
 import { isZagPrimitive, getZagPrimitive, isZagSlot, isZagItemKeyword, isZagGroupKeyword } from '../schema/zag-primitives'
 import { isCompoundPrimitive, isCompoundSlot } from '../schema/compound-primitives'
+import { isChartPrimitive, isChartSlot, getChartSlot, getChartSlotProperty } from '../schema/chart-primitives'
+import type { ChartSlotNode } from './ast'
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
@@ -246,14 +248,14 @@ export class Parser {
       // Each loop: each item in collection
       if (this.check('EACH')) {
         const each = this.parseEach()
-        if (each) program.instances.push(each as any) // Each is treated as instance-level
+        if (each) program.instances.push(each)
         continue
       }
 
       // If conditional: if condition
       if (this.check('IF')) {
         const conditional = this.parseConditionalBlock()
-        if (conditional) program.instances.push(conditional as any)
+        if (conditional) program.instances.push(conditional)
         continue
       }
 
@@ -276,7 +278,7 @@ export class Parser {
             program.animations.push(node as AnimationDefinition)
           } else if (node.type === 'ZagComponent') {
             // ZagNode is treated as an instance for now
-            program.instances.push(node as any)
+            program.instances.push(node as ZagNode)
           } else {
             program.instances.push(node as Instance)
           }
@@ -1981,18 +1983,15 @@ export class Parser {
             this.advance() // Prev
             this.advance() // :
             // Store in slot's children with a marker
-            const prevSlot = this.parseTableSlot('Prev')
-            ;(slot as any).prevSlot = prevSlot
+            slot.prevSlot = this.parseTableSlot('Prev')
           } else if (subName === 'Next' && this.checkNext('COLON')) {
             this.advance() // Next
             this.advance() // :
-            const nextSlot = this.parseTableSlot('Next')
-            ;(slot as any).nextSlot = nextSlot
+            slot.nextSlot = this.parseTableSlot('Next')
           } else if (subName === 'PageInfo' && this.checkNext('COLON')) {
             this.advance() // PageInfo
             this.advance() // :
-            const pageInfoSlot = this.parseTableSlot('PageInfo')
-            ;(slot as any).pageInfoSlot = pageInfoSlot
+            slot.pageInfoSlot = this.parseTableSlot('PageInfo')
           } else {
             // Regular child element
             const child = this.parseInstance(this.advance())
@@ -2955,16 +2954,18 @@ export class Parser {
         const propName = this.advance().value
 
         // Check for value - can be STRING, NUMBER, or boolean (no value)
+        // Use type assertion for dynamic property assignment on ZagItem
+        const itemRecord = item as unknown as Record<string, unknown>
         if (this.check('STRING')) {
           const value = this.advance().value
           // Set directly on item for these well-known properties
-          ;(item as any)[propName] = value
+          itemRecord[propName] = value
         } else if (this.check('NUMBER')) {
           const value = Number(this.advance().value)
-          ;(item as any)[propName] = value
+          itemRecord[propName] = value
         } else {
           // Boolean flag (e.g., "multiline", "required")
-          ;(item as any)[propName] = true
+          itemRecord[propName] = true
         }
         continue
       }
@@ -3865,7 +3866,7 @@ export class Parser {
 
         // If NOT followed by INDENT, it's a visibility condition for current component
         if (!this.check('INDENT')) {
-          ;(component as any).visibleWhen = visibleWhen
+          component.visibleWhen = visibleWhen
           continue
         }
 
@@ -3879,8 +3880,11 @@ export class Parser {
           if (this.check('IDENTIFIER') && this.checkNext('AS')) {
             const childName = this.advance()
             const child = this.parseComponentDefinition(childName)
-            ;(child as any).visibleWhen = visibleWhen
-            component.children.push(child as any)
+            if (child) {
+              child.visibleWhen = visibleWhen
+              // ComponentDefinition children are treated as Instances in this context
+              component.children.push(child as unknown as Instance)
+            }
             continue
           }
 
@@ -3888,9 +3892,11 @@ export class Parser {
           if (this.check('IDENTIFIER')) {
             const name = this.advance()
             const child = this.parseInstance(name)
-            if (child.type !== 'ZagComponent') {
-              ;(child as any).visibleWhen = visibleWhen
-              component.children.push(child as Instance | Slot)
+            if (child.type === 'Instance') {
+              child.visibleWhen = visibleWhen
+              component.children.push(child)
+            } else if (child.type === 'Slot') {
+              component.children.push(child)
             }
             continue
           }
@@ -3905,7 +3911,10 @@ export class Parser {
       if (this.check('IDENTIFIER') && this.checkNext('AS')) {
         const childName = this.advance()
         const child = this.parseComponentDefinition(childName)
-        component.children.push(child as any)
+        if (child) {
+          // ComponentDefinition children are treated as Instances in this context
+          component.children.push(child as unknown as Instance)
+        }
         continue
       }
 
@@ -3985,9 +3994,15 @@ export class Parser {
           if (this.check('IDENTIFIER')) {
             const name = this.advance()
             const child = this.parseInstance(name)
-            ;(child as any).visibleWhen = visibleWhen
+            if (child.type === 'Instance') {
+              child.visibleWhen = visibleWhen
+            }
             if (!instance.children) instance.children = []
-            instance.children.push(child as any)
+            if (child.type === 'Instance' || child.type === 'Slot') {
+              instance.children.push(child)
+            } else if (child.type === 'ZagComponent') {
+              instance.children.push(child as ZagNode)
+            }
             continue
           }
 
@@ -3998,11 +4013,13 @@ export class Parser {
       }
 
       // Each loop: each item in collection
+      // Note: Each is treated as a special child type (not standard Instance.children)
       if (this.check('EACH')) {
         const each = this.parseEach()
         if (each) {
           if (!instance.children) instance.children = []
-          instance.children.push(each as any)
+          // Each loops are handled specially in IR transformation
+          instance.children.push(each as unknown as Instance)
         }
         continue
       }
@@ -4341,9 +4358,32 @@ export class Parser {
           continue
         }
 
+        // Chart slot: XAxis:, YAxis:, Legend:, etc.
+        // Only parse if this is a chart primitive and the identifier is a valid chart slot
+        const isChartSlotSyntax =
+          isChartSlot(name) &&
+          this.checkNext('COLON') &&
+          isChartPrimitive(instance.component)
+
+        if (isChartSlotSyntax) {
+          const slotToken = this.advance() // consume slot name
+          this.advance() // consume :
+
+          const chartSlot = this.parseChartSlot(slotToken)
+          if (chartSlot) {
+            if (!instance.chartSlots) instance.chartSlots = {}
+            instance.chartSlots[chartSlot.name] = chartSlot
+          }
+          continue
+        }
+
         // Child instance (including Zag components)
         const child = this.parseInstance(this.advance())
-        instance.children.push(child as any)
+        if (child.type === 'Instance' || child.type === 'Slot') {
+          instance.children.push(child)
+        } else if (child.type === 'ZagComponent') {
+          instance.children.push(child as ZagNode)
+        }
         continue
       }
 
@@ -4351,6 +4391,32 @@ export class Parser {
     }
 
     if (this.check('DEDENT')) this.advance()
+  }
+
+  /**
+   * Parse a chart slot definition
+   * Syntax: XAxis: col #888, label "Month", fs 12
+   */
+  private parseChartSlot(slotToken: Token): ChartSlotNode | null {
+    const slotName = slotToken.value
+    const slotDef = getChartSlot(slotName)
+    if (!slotDef) return null
+
+    const properties: Property[] = []
+
+    // Parse inline properties on the same line
+    this.parseInlineProperties(properties)
+
+    return {
+      name: slotName,
+      properties,
+      sourcePosition: {
+        line: slotToken.line,
+        column: slotToken.column,
+        endLine: slotToken.line,
+        endColumn: slotToken.column + slotName.length,
+      },
+    }
   }
 
   /**
@@ -5448,10 +5514,10 @@ export class Parser {
           }
         } else if (this.check('EACH')) {
           const nestedEach = this.parseEach()
-          if (nestedEach) each.children.push(nestedEach as any)
+          if (nestedEach) each.children.push(nestedEach)
         } else if (this.check('IF')) {
           const conditional = this.parseConditionalBlock()
-          if (conditional) each.children.push(conditional as any)
+          if (conditional) each.children.push(conditional)
         } else {
           this.advance()
         }
@@ -5575,17 +5641,17 @@ export class Parser {
   // CONDITIONAL PARSING
   // ============================================================================
 
-  private parseConditionalBlock(): any {
+  private parseConditionalBlock(): ConditionalNode {
     const ifToken = this.advance() // if
 
     // Parse condition
     const condition = this.parseExpression()
 
-    const conditional = {
+    const conditional: ConditionalNode = {
       type: 'Conditional',
       condition,
-      then: [] as (Instance | Slot)[],
-      else: [] as (Instance | Slot)[],
+      then: [],
+      else: [],
       line: ifToken.line,
       column: ifToken.column,
     }
@@ -5605,10 +5671,10 @@ export class Parser {
           }
         } else if (this.check('EACH')) {
           const each = this.parseEach()
-          if (each) conditional.then.push(each as any)
+          if (each) conditional.then.push(each)
         } else if (this.check('IF')) {
           const nested = this.parseConditionalBlock()
-          if (nested) conditional.then.push(nested as any)
+          if (nested) conditional.then.push(nested)
         } else {
           this.advance()
         }
@@ -5634,10 +5700,10 @@ export class Parser {
             }
           } else if (this.check('EACH')) {
             const each = this.parseEach()
-            if (each) conditional.else.push(each as any)
+            if (each) conditional.else.push(each)
           } else if (this.check('IF')) {
             const nested = this.parseConditionalBlock()
-            if (nested) conditional.else.push(nested as any)
+            if (nested) conditional.else.push(nested)
           } else {
             this.advance()
           }

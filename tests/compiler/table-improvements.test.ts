@@ -107,7 +107,9 @@ Table $tasks grouped by status
       const code = `Table $tasks grouped by status`
       const js = compile(code)
       expect(js).toContain('mirror-table-group-header')
-      expect(js).toContain('groupHeader.innerHTML')
+      // XSS-safe: uses createElement and textContent instead of innerHTML
+      expect(js).toContain('groupKeySpan.textContent')
+      expect(js).toContain('groupHeader.appendChild')
     })
   })
 

@@ -9,6 +9,15 @@
 declare const Chart: any
 
 /**
+ * Chart slot configuration
+ * Maps Chart.js config paths to values
+ */
+export interface ChartSlotConfig {
+  name: string
+  config: Record<string, string | number | boolean>
+}
+
+/**
  * Chart configuration extracted from Mirror properties
  */
 export interface ChartConfig {
@@ -24,6 +33,7 @@ export interface ChartConfig {
   tension?: number
   grid?: boolean
   axes?: boolean
+  slots?: ChartSlotConfig[]
 }
 
 /**
@@ -120,6 +130,57 @@ function parseData(
 }
 
 /**
+ * Set a nested value in an object using a dot-separated path
+ * Handles array notation like 'data.datasets[0].pointRadius'
+ *
+ * @param obj The object to modify
+ * @param path Dot-separated path (e.g., 'options.scales.x.ticks.color')
+ * @param value The value to set
+ */
+function setNestedValue(obj: any, path: string, value: unknown): void {
+  const parts = path.split('.')
+  let current = obj
+
+  for (let i = 0; i < parts.length - 1; i++) {
+    let part = parts[i]
+
+    // Handle array notation like 'datasets[0]'
+    const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/)
+    if (arrayMatch) {
+      const arrayName = arrayMatch[1]
+      const index = parseInt(arrayMatch[2], 10)
+
+      if (!(arrayName in current)) {
+        current[arrayName] = []
+      }
+      if (!current[arrayName][index]) {
+        current[arrayName][index] = {}
+      }
+      current = current[arrayName][index]
+    } else {
+      if (!(part in current)) {
+        current[part] = {}
+      }
+      current = current[part]
+    }
+  }
+
+  // Set the final value
+  const lastPart = parts[parts.length - 1]
+  const arrayMatch = lastPart.match(/^(\w+)\[(\d+)\]$/)
+  if (arrayMatch) {
+    const arrayName = arrayMatch[1]
+    const index = parseInt(arrayMatch[2], 10)
+    if (!(arrayName in current)) {
+      current[arrayName] = []
+    }
+    current[arrayName][index] = value
+  } else {
+    current[lastPart] = value
+  }
+}
+
+/**
  * Create a chart in the given element
  */
 export async function createChart(
@@ -128,9 +189,19 @@ export async function createChart(
 ): Promise<void> {
   await loadChartJs()
 
+  // Chart.js requires a container with position:relative and overflow:hidden
+  // to properly constrain the canvas size when responsive:true
+  element.style.position = 'relative'
+  element.style.overflow = 'hidden'
+
+  // Create a wrapper that fills the container - Chart.js needs this structure
+  const wrapper = document.createElement('div')
+  wrapper.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;'
+  element.appendChild(wrapper)
+
   // Create canvas element
   const canvas = document.createElement('canvas')
-  element.appendChild(canvas)
+  wrapper.appendChild(canvas)
 
   // Parse data
   const { labels, values } = parseData(
@@ -185,6 +256,22 @@ export async function createChart(
         },
       },
     },
+  }
+
+  // Apply slot configurations
+  if (config.slots && config.slots.length > 0) {
+    for (const slot of config.slots) {
+      for (const [path, value] of Object.entries(slot.config)) {
+        // Special handling for axis title display
+        // If setting title.text, also enable title.display
+        if (path.includes('.title.text')) {
+          const displayPath = path.replace('.title.text', '.title.display')
+          setNestedValue(chartConfig, displayPath, true)
+        }
+
+        setNestedValue(chartConfig, path, value)
+      }
+    }
   }
 
   // Create chart

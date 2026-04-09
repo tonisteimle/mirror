@@ -43,7 +43,7 @@ export interface Program extends BaseNode {
   tokens: TokenDefinition[]
   components: ComponentDefinition[]
   animations: AnimationDefinition[]  // Animation definitions
-  instances: (Instance | Slot | TableNode | Each)[]
+  instances: (Instance | Slot | TableNode | Each | ConditionalNode | ZagNode)[]
   javascript?: JavaScriptBlock  // JavaScript code at end of file
   schema?: SchemaDefinition  // Schema definition for data collections
   errors: ParseError[]
@@ -190,6 +190,7 @@ export interface Instance extends BaseNode {
   isDefinition?: boolean      // true if ends with : (definition, not rendered)
   isCompound?: boolean        // true if this is a Compound primitive (Shell, etc.)
   compoundType?: string       // Compound primitive type (e.g., 'Shell')
+  chartSlots?: Record<string, ChartSlotNode>  // chart subcomponents: XAxis:, Legend:, etc.
 }
 
 export interface Property extends BaseNode {
@@ -347,7 +348,24 @@ export interface Each extends BaseNode {
   filter?: Expression
   orderBy?: string              // Field to sort by: each task in $tasks by priority
   orderDesc?: boolean           // Descending order: each task in $tasks by priority desc
-  children: (Instance | Slot)[]
+  children: (Instance | Slot | ConditionalNode | Each)[]
+}
+
+/**
+ * Conditional node for if/else blocks at the document level
+ *
+ * Syntax:
+ *   if condition
+ *     Child1
+ *     Child2
+ *   else
+ *     Child3
+ */
+export interface ConditionalNode extends BaseNode {
+  type: 'Conditional'
+  condition: Expression
+  then: (Instance | Slot | ConditionalNode | Each)[]
+  else: (Instance | Slot | ConditionalNode | Each)[]
 }
 
 export interface Slot extends BaseNode {
@@ -498,6 +516,27 @@ export interface SourcePosition {
 }
 
 // ============================================================================
+// Chart Slot Types
+// ============================================================================
+
+/**
+ * Chart slot definition (XAxis:, YAxis:, Legend:, etc.)
+ *
+ * Example:
+ *   Line $sales
+ *     XAxis: col #888, label "Month", fs 12
+ *     Point: size 6, bg #2563eb
+ */
+export interface ChartSlotNode {
+  /** Slot name (e.g., 'XAxis', 'Legend') */
+  name: string
+  /** Slot properties */
+  properties: Property[]
+  /** Source position for bidirectional editing */
+  sourcePosition: SourcePosition
+}
+
+// ============================================================================
 // Table Component Types
 // ============================================================================
 
@@ -636,7 +675,7 @@ export interface TableColumnNode extends BaseNode {
 }
 
 /**
- * Slot customization within a Table (Header:, Row:, Footer:, Group:)
+ * Slot customization within a Table (Header:, Row:, Footer:, Group:, Paginator:)
  */
 export interface TableSlotNode {
   /** Slot name */
@@ -649,6 +688,12 @@ export interface TableSlotNode {
   sourcePosition: SourcePosition
   /** Static row for header slots (Row "A", "B", "C" syntax) */
   staticRow?: TableStaticRowNode
+  /** Paginator sub-slot: Previous button customization */
+  prevSlot?: TableSlotNode
+  /** Paginator sub-slot: Next button customization */
+  nextSlot?: TableSlotNode
+  /** Paginator sub-slot: Page info display customization */
+  pageInfoSlot?: TableSlotNode
 }
 
 export type Node =

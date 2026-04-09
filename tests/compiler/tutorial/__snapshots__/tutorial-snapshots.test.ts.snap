@@ -1,1399 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Tutorial IR Snapshots > 00 - intro > Example 1 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Button",
-      "primitive": "button",
-      "properties": [
-        {
-          "name": "textContent",
-          "value": "Speichern",
-        },
-      ],
-      "styles": [
-        {
-          "property": "height",
-          "value": "36px",
-        },
-        {
-          "property": "padding",
-          "value": "12px 24px",
-        },
-        {
-          "property": "border-radius",
-          "value": "6px",
-        },
-        {
-          "property": "border",
-          "value": "0px solid currentColor",
-        },
-        {
-          "property": "cursor",
-          "value": "pointer",
-        },
-        {
-          "property": "background",
-          "value": "#2563eb",
-        },
-        {
-          "property": "color",
-          "value": "white",
-        },
-      ],
-      "tag": "button",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 00 - intro > Example 2 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Title",
-          "primitive": "title",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Projekt Alpha",
-            },
-          ],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "font-size",
-              "value": "16px",
-            },
-            {
-              "property": "font-weight",
-              "value": "500",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "Desc",
-          "primitive": "desc",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Das erste Projekt",
-            },
-          ],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "color",
-              "value": "#888",
-            },
-            {
-              "property": "font-size",
-              "value": "14px",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Card",
-      "primitive": "Frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "8px",
-        },
-        {
-          "property": "background",
-          "value": "#1a1a1a",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-      ],
-      "tag": "div",
-    },
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-5",
-          "isDefinition": false,
-          "name": "Title",
-          "primitive": "title",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Projekt Beta",
-            },
-          ],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "font-size",
-              "value": "16px",
-            },
-            {
-              "property": "font-weight",
-              "value": "500",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-6",
-          "isDefinition": false,
-          "name": "Desc",
-          "primitive": "desc",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Ein anderes Projekt",
-            },
-          ],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "color",
-              "value": "#888",
-            },
-            {
-              "property": "font-size",
-              "value": "14px",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
-      "events": [],
-      "id": "node-4",
-      "isDefinition": false,
-      "name": "Card",
-      "primitive": "Frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "8px",
-        },
-        {
-          "property": "background",
-          "value": "#1a1a1a",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 00 - intro > Example 3 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Titel",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "font-size",
-              "value": "18px",
-            },
-            {
-              "property": "font-weight",
-              "value": "700",
-            },
-          ],
-          "tag": "span",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Beschreibung hier",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "#888",
-            },
-            {
-              "property": "font-size",
-              "value": "14px",
-            },
-          ],
-          "tag": "span",
-        },
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-5",
-              "isDefinition": false,
-              "name": "Button",
-              "primitive": "button",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Abbrechen",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "height",
-                  "value": "36px",
-                },
-                {
-                  "property": "flex-shrink",
-                  "value": "0",
-                },
-                {
-                  "property": "padding",
-                  "value": "10px 20px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "6px",
-                },
-                {
-                  "property": "border",
-                  "value": "0px solid currentColor",
-                },
-                {
-                  "property": "cursor",
-                  "value": "pointer",
-                },
-                {
-                  "property": "background",
-                  "value": "#333",
-                },
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-              ],
-              "tag": "button",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-6",
-              "isDefinition": false,
-              "name": "Button",
-              "primitive": "button",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "OK",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "height",
-                  "value": "36px",
-                },
-                {
-                  "property": "flex-shrink",
-                  "value": "0",
-                },
-                {
-                  "property": "padding",
-                  "value": "10px 20px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "6px",
-                },
-                {
-                  "property": "border",
-                  "value": "0px solid currentColor",
-                },
-                {
-                  "property": "cursor",
-                  "value": "pointer",
-                },
-                {
-                  "property": "background",
-                  "value": "#2563eb",
-                },
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-              ],
-              "tag": "button",
-            },
-          ],
-          "events": [],
-          "id": "node-4",
-          "isDefinition": false,
-          "layoutType": "flex",
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "row",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "8px",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "16px",
-        },
-        {
-          "property": "background",
-          "value": "#1a1a1a",
-        },
-        {
-          "property": "padding",
-          "value": "20px",
-        },
-        {
-          "property": "border-radius",
-          "value": "12px",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 00 - intro > Example 4 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "PrimaryBtn",
-          "primitive": "Button",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Speichern",
-            },
-          ],
-          "styles": [
-            {
-              "property": "height",
-              "value": "36px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "12px 24px",
-            },
-            {
-              "property": "border-radius",
-              "value": "6px",
-            },
-            {
-              "property": "border",
-              "value": "0px solid currentColor",
-            },
-            {
-              "property": "cursor",
-              "value": "pointer",
-            },
-            {
-              "property": "background",
-              "value": "#2563eb",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-          ],
-          "tag": "button",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "PrimaryBtn",
-          "primitive": "Button",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Senden",
-            },
-          ],
-          "styles": [
-            {
-              "property": "height",
-              "value": "36px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "12px 24px",
-            },
-            {
-              "property": "border-radius",
-              "value": "6px",
-            },
-            {
-              "property": "border",
-              "value": "0px solid currentColor",
-            },
-            {
-              "property": "cursor",
-              "value": "pointer",
-            },
-            {
-              "property": "background",
-              "value": "#2563eb",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-          ],
-          "tag": "button",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-4",
-          "isDefinition": false,
-          "name": "PrimaryBtn",
-          "primitive": "Button",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Weiter",
-            },
-          ],
-          "styles": [
-            {
-              "property": "height",
-              "value": "36px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "12px 24px",
-            },
-            {
-              "property": "border-radius",
-              "value": "6px",
-            },
-            {
-              "property": "border",
-              "value": "0px solid currentColor",
-            },
-            {
-              "property": "cursor",
-              "value": "pointer",
-            },
-            {
-              "property": "background",
-              "value": "#2563eb",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-          ],
-          "tag": "button",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "layoutType": "flex",
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "row",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "8px",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 00 - intro > Example 5 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Title",
-          "primitive": "title",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Mit Tokens",
-            },
-          ],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "font-size",
-              "value": "16px",
-            },
-            {
-              "property": "font-weight",
-              "value": "500",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Änderst du den Token, ändert sich alles.",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "#888",
-            },
-            {
-              "property": "font-size",
-              "value": "13px",
-            },
-          ],
-          "tag": "span",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Card",
-      "primitive": "Frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "8px",
-        },
-        {
-          "property": "background",
-          "value": "var(--card-bg)",
-        },
-        {
-          "property": "border-radius",
-          "value": "var(--card-rad)",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [
-    {
-      "name": "primary.bg",
-      "type": "color",
-      "value": "#2563eb",
-    },
-    {
-      "name": "card.bg",
-      "type": "color",
-      "value": "#1a1a1a",
-    },
-    {
-      "name": "card.rad",
-      "type": "size",
-      "value": 8,
-    },
-  ],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 00 - intro > Example 6 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [],
-      "events": [
-        {
-          "actions": [
-            {
-              "args": [],
-              "isBuiltinStateFunction": true,
-              "isFunctionCall": true,
-              "type": "toggle",
-            },
-          ],
-          "name": "click",
-        },
-      ],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Btn",
-      "primitive": "Frame",
-      "properties": [
-        {
-          "name": "textContent",
-          "value": "Anklicken",
-        },
-      ],
-      "stateMachine": {
-        "initial": "default",
-        "states": {
-          "default": {
-            "isInitial": true,
-            "name": "default",
-            "styles": [],
-          },
-          "hover": {
-            "isInitial": false,
-            "name": "hover",
-            "styles": [
-              {
-                "property": "background",
-                "value": "#444",
-              },
-            ],
-          },
-          "on": {
-            "isInitial": false,
-            "name": "on",
-            "styles": [
-              {
-                "property": "background",
-                "value": "#2563eb",
-              },
-            ],
-          },
-        },
-        "transitions": [
-          {
-            "modifier": "toggle",
-            "to": "on",
-            "trigger": "onclick",
-          },
-        ],
-      },
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "padding",
-          "value": "12px 24px",
-        },
-        {
-          "property": "border-radius",
-          "value": "6px",
-        },
-        {
-          "property": "background",
-          "value": "#333",
-        },
-        {
-          "property": "color",
-          "value": "white",
-        },
-        {
-          "property": "cursor",
-          "value": "pointer",
-        },
-        {
-          "property": "background",
-          "state": "hover",
-          "value": "#444",
-        },
-        {
-          "property": "background",
-          "state": "on",
-          "value": "#2563eb",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 00 - intro > Example 7 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-4",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Mehr zeigen",
-            },
-          ],
-          "styles": [],
-          "tag": "span",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-5",
-          "isDefinition": false,
-          "name": "Icon",
-          "primitive": "icon",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "chevron-down",
-            },
-            {
-              "name": "data-icon-color",
-              "value": "#888",
-            },
-            {
-              "name": "data-icon-size",
-              "value": "16",
-            },
-          ],
-          "styles": [
-            {
-              "property": "width",
-              "value": "20px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "height",
-              "value": "20px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "color",
-              "value": "#888",
-            },
-            {
-              "property": "font-size",
-              "value": "16px",
-            },
-            {
-              "property": "width",
-              "value": "16px",
-            },
-            {
-              "property": "height",
-              "value": "16px",
-            },
-          ],
-          "tag": "span",
-        },
-      ],
-      "events": [
-        {
-          "actions": [
-            {
-              "args": [],
-              "isBuiltinStateFunction": true,
-              "isFunctionCall": true,
-              "type": "toggle",
-            },
-          ],
-          "name": "click",
-        },
-      ],
-      "id": "node-3",
-      "isDefinition": false,
-      "layoutType": "flex",
-      "name": "ExpandBtn",
-      "primitive": "Frame",
-      "properties": [],
-      "stateMachine": {
-        "initial": "default",
-        "states": {
-          "default": {
-            "children": [
-              {
-                "children": [],
-                "events": [],
-                "id": "node-4",
-                "isDefinition": false,
-                "name": "Text",
-                "primitive": "text",
-                "properties": [
-                  {
-                    "name": "textContent",
-                    "value": "Mehr zeigen",
-                  },
-                ],
-                "styles": [],
-                "tag": "span",
-              },
-              {
-                "children": [],
-                "events": [],
-                "id": "node-5",
-                "isDefinition": false,
-                "name": "Icon",
-                "primitive": "icon",
-                "properties": [
-                  {
-                    "name": "textContent",
-                    "value": "chevron-down",
-                  },
-                  {
-                    "name": "data-icon-color",
-                    "value": "#888",
-                  },
-                  {
-                    "name": "data-icon-size",
-                    "value": "16",
-                  },
-                ],
-                "styles": [
-                  {
-                    "property": "width",
-                    "value": "20px",
-                  },
-                  {
-                    "property": "flex-shrink",
-                    "value": "0",
-                  },
-                  {
-                    "property": "height",
-                    "value": "20px",
-                  },
-                  {
-                    "property": "flex-shrink",
-                    "value": "0",
-                  },
-                  {
-                    "property": "color",
-                    "value": "#888",
-                  },
-                  {
-                    "property": "font-size",
-                    "value": "16px",
-                  },
-                  {
-                    "property": "width",
-                    "value": "16px",
-                  },
-                  {
-                    "property": "height",
-                    "value": "16px",
-                  },
-                ],
-                "tag": "span",
-              },
-            ],
-            "isInitial": true,
-            "name": "default",
-            "styles": [],
-          },
-          "open": {
-            "children": [
-              {
-                "children": [],
-                "events": [],
-                "id": "state-child-0",
-                "name": "Text",
-                "primitive": "text",
-                "properties": [
-                  {
-                    "name": "textContent",
-                    "value": "Weniger zeigen",
-                  },
-                ],
-                "styles": [],
-                "tag": "span",
-              },
-              {
-                "children": [],
-                "events": [],
-                "id": "state-child-1",
-                "name": "Icon",
-                "primitive": "icon",
-                "properties": [
-                  {
-                    "name": "textContent",
-                    "value": "chevron-up",
-                  },
-                ],
-                "styles": [
-                  {
-                    "property": "width",
-                    "value": "20px",
-                  },
-                  {
-                    "property": "height",
-                    "value": "20px",
-                  },
-                  {
-                    "property": "color",
-                    "value": "#888",
-                  },
-                  {
-                    "property": "font-size",
-                    "value": "16px",
-                  },
-                  {
-                    "property": "width",
-                    "value": "16px",
-                  },
-                  {
-                    "property": "height",
-                    "value": "16px",
-                  },
-                ],
-                "tag": "span",
-              },
-            ],
-            "isInitial": false,
-            "name": "open",
-            "styles": [],
-          },
-        },
-        "transitions": [
-          {
-            "modifier": "toggle",
-            "to": "open",
-            "trigger": "onclick",
-          },
-        ],
-      },
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "row",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "8px",
-        },
-        {
-          "property": "padding",
-          "value": "12px 20px",
-        },
-        {
-          "property": "background",
-          "value": "#1a1a1a",
-        },
-        {
-          "property": "color",
-          "value": "white",
-        },
-        {
-          "property": "border-radius",
-          "value": "6px",
-        },
-        {
-          "property": "cursor",
-          "value": "pointer",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 00 - intro > Example 8 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Btn",
-      "primitive": "Frame",
-      "properties": [
-        {
-          "name": "textContent",
-          "value": "Hover mich",
-        },
-      ],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "padding",
-          "value": "12px 24px",
-        },
-        {
-          "property": "border-radius",
-          "value": "6px",
-        },
-        {
-          "property": "background",
-          "value": "#333",
-        },
-        {
-          "property": "color",
-          "value": "white",
-        },
-        {
-          "property": "cursor",
-          "value": "pointer",
-        },
-        {
-          "property": "background",
-          "state": "hover",
-          "value": "#2563eb",
-        },
-        {
-          "property": "transform",
-          "state": "hover",
-          "value": "scale(1.02)",
-        },
-        {
-          "property": "transition",
-          "value": "background 200ms ease, transform 200ms ease",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 1 1`] = `
 {
   "animations": [],
@@ -22536,6 +21142,1794 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
               "actions": [
                 {
                   "args": [
+                    "Das ist eine Info",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "toast",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Info",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "Gespeichert!",
+                    "success",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "toast",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Erfolg",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#10b981",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "Fehler aufgetreten",
+                    "error",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "toast",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Fehler",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#ef4444",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "Achtung!",
+                    "warning",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "toast",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-5",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Warnung",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#f59e0b",
+            },
+            {
+              "property": "color",
+              "value": "black",
+            },
+          ],
+          "tag": "button",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "flex-wrap",
+          "value": "wrap",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "instanceName": "EmailInput",
+              "isDefinition": false,
+              "name": "Input",
+              "primitive": "input",
+              "properties": [
+                {
+                  "name": "placeholder",
+                  "value": "E-Mail eingeben...",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "padding",
+                  "value": "12px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "width",
+                  "value": "200px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "background",
+                  "value": "#1a1a1a",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "input",
+            },
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [
+                        "EmailInput",
+                      ],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "shake",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Prüfen",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "padding",
+                  "value": "10px 20px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#2563eb",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "button",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "12px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-7",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "3 neu",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-6",
+              "instanceName": "Badge",
+              "isDefinition": false,
+              "name": "Frame",
+              "primitive": "frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 16px",
+                },
+                {
+                  "property": "background",
+                  "value": "#ef4444",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "99px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [
+                        "Badge",
+                      ],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "pulse",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-8",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Hinweis",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "padding",
+                  "value": "10px 20px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#333",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "button",
+            },
+          ],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "12px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "count",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "decrement",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "-",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "font-size",
+              "value": "18px",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "$count",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "font-size",
+              "value": "24px",
+            },
+            {
+              "property": "font-weight",
+              "value": "600",
+            },
+            {
+              "property": "width",
+              "value": "60px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "count",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "increment",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "+",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#2563eb",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "font-size",
+              "value": "18px",
+            },
+          ],
+          "tag": "button",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "center",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "count",
+      "type": "size",
+      "value": 0,
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-4",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "shopping-bag",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "24",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "24px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "24px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "24px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Frame",
+              "primitive": "frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "justify-content",
+                  "value": "center",
+                },
+                {
+                  "property": "align-items",
+                  "value": "center",
+                },
+                {
+                  "property": "width",
+                  "value": "60px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "height",
+                  "value": "60px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "background",
+                  "value": "#252525",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "8px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-6",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Premium T-Shirt",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "color",
+                      "value": "white",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "16px",
+                    },
+                    {
+                      "property": "font-weight",
+                      "value": "500",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-7",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "€$price pro Stück",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "13px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Frame",
+              "primitive": "frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "gap",
+                  "value": "4px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "gap",
+              "value": "16px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [
+                    {
+                      "actions": [
+                        {
+                          "args": [
+                            "qty",
+                          ],
+                          "isBuiltinStateFunction": false,
+                          "isFunctionCall": true,
+                          "type": "decrement",
+                        },
+                      ],
+                      "name": "click",
+                    },
+                  ],
+                  "id": "node-10",
+                  "isDefinition": false,
+                  "name": "Button",
+                  "primitive": "button",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "-",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "height",
+                      "value": "36px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "padding",
+                      "value": "6px 12px",
+                    },
+                    {
+                      "property": "border-radius",
+                      "value": "4px",
+                    },
+                    {
+                      "property": "border",
+                      "value": "0px solid currentColor",
+                    },
+                    {
+                      "property": "cursor",
+                      "value": "pointer",
+                    },
+                    {
+                      "property": "background",
+                      "value": "#333",
+                    },
+                    {
+                      "property": "color",
+                      "value": "white",
+                    },
+                  ],
+                  "tag": "button",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-11",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "$qty",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "justify-content",
+                      "value": "center",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "center",
+                    },
+                    {
+                      "property": "color",
+                      "value": "white",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "16px",
+                    },
+                    {
+                      "property": "font-weight",
+                      "value": "600",
+                    },
+                    {
+                      "property": "width",
+                      "value": "32px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [
+                    {
+                      "actions": [
+                        {
+                          "args": [
+                            "qty",
+                          ],
+                          "isBuiltinStateFunction": false,
+                          "isFunctionCall": true,
+                          "type": "increment",
+                        },
+                      ],
+                      "name": "click",
+                    },
+                  ],
+                  "id": "node-12",
+                  "isDefinition": false,
+                  "name": "Button",
+                  "primitive": "button",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "+",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "height",
+                      "value": "36px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "padding",
+                      "value": "6px 12px",
+                    },
+                    {
+                      "property": "border-radius",
+                      "value": "4px",
+                    },
+                    {
+                      "property": "border",
+                      "value": "0px solid currentColor",
+                    },
+                    {
+                      "property": "cursor",
+                      "value": "pointer",
+                    },
+                    {
+                      "property": "background",
+                      "value": "#333",
+                    },
+                    {
+                      "property": "color",
+                      "value": "white",
+                    },
+                  ],
+                  "tag": "button",
+                },
+              ],
+              "events": [],
+              "id": "node-9",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "Frame",
+              "primitive": "frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "row",
+                },
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "align-items",
+                  "value": "center",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-13",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": ""€" + ($price * $qty)",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#10b981",
+                },
+                {
+                  "property": "font-size",
+                  "value": "18px",
+                },
+                {
+                  "property": "font-weight",
+                  "value": "600",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-8",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "justify-content",
+              "value": "space-between",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "background",
+              "value": "#0a0a0a",
+            },
+            {
+              "property": "padding",
+              "value": "12px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "16px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "20px",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "280px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "qty",
+      "type": "size",
+      "value": 1,
+    },
+    {
+      "name": "price",
+      "type": "size",
+      "value": 29,
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Dein Rabattcode:",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+            {
+              "property": "font-size",
+              "value": "13px",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-5",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "$code",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "color",
+                      "value": "#10b981",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "16px",
+                    },
+                    {
+                      "property": "font-weight",
+                      "value": "600",
+                    },
+                    {
+                      "property": "font-family",
+                      "value": "ui-monospace, monospace",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Frame",
+              "primitive": "frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "padding",
+                  "value": "12px 16px",
+                },
+                {
+                  "property": "background",
+                  "value": "#0a0a0a",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "1px solid currentColor",
+                },
+                {
+                  "property": "border-color",
+                  "value": "#333",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [
+                        "$code",
+                      ],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "copy",
+                    },
+                    {
+                      "args": [
+                        "Code kopiert!",
+                        "success",
+                      ],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "toast",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-6",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Kopieren",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "padding",
+                  "value": "10px 16px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#2563eb",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "background",
+                  "state": "copied",
+                  "value": "#10b981",
+                },
+              ],
+              "tag": "button",
+            },
+          ],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "code",
+      "type": "font",
+      "value": "SUMMER2024",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
                     "InfoBox",
                   ],
                   "isBuiltinStateFunction": false,
@@ -22778,7 +23172,386 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
+exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "back",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "← Zurück",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "padding",
+                  "value": "10px 20px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#333",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "button",
+            },
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "forward",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Vorwärts →",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "padding",
+                  "value": "10px 20px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#333",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "button",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "name": "Divider",
+          "primitive": "divider",
+          "properties": [],
+          "styles": [
+            {
+              "property": "width",
+              "value": "100%",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "min-width",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "1px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "margin",
+              "value": "8px 0px",
+            },
+          ],
+          "tag": "hr",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Icon",
+              "primitive": "icon",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "external-link",
+                },
+                {
+                  "name": "data-icon-color",
+                  "value": "white",
+                },
+                {
+                  "name": "data-icon-size",
+                  "value": "16",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "font-size",
+                  "value": "16px",
+                },
+                {
+                  "property": "width",
+                  "value": "16px",
+                },
+                {
+                  "property": "height",
+                  "value": "16px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-6",
+          "initialState": "openUrl",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Mirror Website öffnen",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#2563eb",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -22790,12 +23563,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
             {
               "actions": [
                 {
-                  "args": [
-                    "Menu",
-                  ],
+                  "args": [],
                   "isBuiltinStateFunction": false,
                   "isFunctionCall": true,
-                  "type": "show",
+                  "type": "scrollToBottom",
                 },
               ],
               "name": "click",
@@ -22808,7 +23579,255 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
           "properties": [
             {
               "name": "textContent",
-              "value": "Menü öffnen",
+              "value": "Zum Ende scrollen",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#2563eb",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Abschnitt 1",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "16px",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Lorem ipsum dolor sit amet...",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-6",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Abschnitt 2",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "16px",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Consectetur adipiscing elit...",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-8",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Abschnitt 3",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "16px",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-9",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Sed do eiusmod tempor...",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "padding",
+              "value": "40px 0px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "scrollToTop",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-10",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Nach oben",
             },
           ],
           "styles": [
@@ -22847,6 +23866,68 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
           ],
           "tag": "button",
         },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+        {
+          "property": "height",
+          "value": "200px",
+        },
+        {
+          "property": "overflow-y",
+          "value": "auto",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
         {
           "children": [
             {
@@ -22854,260 +23935,260 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
               "events": [],
               "id": "node-4",
               "isDefinition": false,
-              "name": "Button",
-              "primitive": "button",
+              "name": "Icon",
+              "primitive": "icon",
               "properties": [
                 {
                   "name": "textContent",
-                  "value": "Profil",
+                  "value": "heart",
+                },
+                {
+                  "name": "data-icon-color",
+                  "value": "#888",
+                },
+                {
+                  "name": "data-icon-size",
+                  "value": "18",
                 },
               ],
               "styles": [
                 {
-                  "property": "height",
-                  "value": "36px",
+                  "property": "width",
+                  "value": "20px",
                 },
                 {
                   "property": "flex-shrink",
                   "value": "0",
                 },
                 {
-                  "property": "padding",
-                  "value": "10px 16px",
+                  "property": "height",
+                  "value": "20px",
                 },
                 {
-                  "property": "border-radius",
-                  "value": "4px",
-                },
-                {
-                  "property": "border",
-                  "value": "0px solid currentColor",
-                },
-                {
-                  "property": "cursor",
-                  "value": "pointer",
-                },
-                {
-                  "property": "background",
-                  "value": "transparent",
-                },
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "width",
-                  "value": "100%",
-                },
-                {
-                  "property": "align-self",
-                  "value": "stretch",
-                },
-                {
-                  "property": "min-width",
+                  "property": "flex-shrink",
                   "value": "0",
                 },
                 {
-                  "property": "background",
-                  "state": "hover",
-                  "value": "#333",
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "18px",
+                },
+                {
+                  "property": "width",
+                  "value": "18px",
+                },
+                {
+                  "property": "height",
+                  "value": "18px",
                 },
               ],
-              "tag": "button",
+              "tag": "span",
             },
             {
               "children": [],
               "events": [],
               "id": "node-5",
               "isDefinition": false,
-              "name": "Button",
-              "primitive": "button",
+              "name": "Text",
+              "primitive": "text",
               "properties": [
                 {
                   "name": "textContent",
-                  "value": "Einstellungen",
+                  "value": "$count",
                 },
               ],
-              "styles": [
-                {
-                  "property": "height",
-                  "value": "36px",
-                },
-                {
-                  "property": "flex-shrink",
-                  "value": "0",
-                },
-                {
-                  "property": "padding",
-                  "value": "10px 16px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "4px",
-                },
-                {
-                  "property": "border",
-                  "value": "0px solid currentColor",
-                },
-                {
-                  "property": "cursor",
-                  "value": "pointer",
-                },
-                {
-                  "property": "background",
-                  "value": "transparent",
-                },
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "width",
-                  "value": "100%",
-                },
-                {
-                  "property": "align-self",
-                  "value": "stretch",
-                },
-                {
-                  "property": "min-width",
-                  "value": "0",
-                },
-                {
-                  "property": "background",
-                  "state": "hover",
-                  "value": "#333",
-                },
-              ],
-              "tag": "button",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-6",
-              "isDefinition": false,
-              "name": "Divider",
-              "primitive": "divider",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "width",
-                  "value": "100%",
-                },
-                {
-                  "property": "align-self",
-                  "value": "stretch",
-                },
-                {
-                  "property": "min-width",
-                  "value": "0",
-                },
-                {
-                  "property": "height",
-                  "value": "1px",
-                },
-                {
-                  "property": "flex-shrink",
-                  "value": "0",
-                },
-                {
-                  "property": "border",
-                  "value": "0px solid currentColor",
-                },
-                {
-                  "property": "background",
-                  "value": "#333",
-                },
-                {
-                  "property": "margin",
-                  "value": "4px 0px",
-                },
-              ],
-              "tag": "hr",
-            },
-            {
-              "children": [],
-              "events": [
-                {
-                  "actions": [
-                    {
-                      "args": [
-                        "Menu",
-                      ],
-                      "isBuiltinStateFunction": false,
-                      "isFunctionCall": true,
-                      "type": "hide",
-                    },
-                  ],
-                  "name": "click",
-                },
-              ],
-              "id": "node-7",
-              "isDefinition": false,
-              "name": "Button",
-              "primitive": "button",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Schließen",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "height",
-                  "value": "36px",
-                },
-                {
-                  "property": "flex-shrink",
-                  "value": "0",
-                },
-                {
-                  "property": "padding",
-                  "value": "10px 16px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "4px",
-                },
-                {
-                  "property": "border",
-                  "value": "0px solid currentColor",
-                },
-                {
-                  "property": "cursor",
-                  "value": "pointer",
-                },
-                {
-                  "property": "background",
-                  "value": "#333",
-                },
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "width",
-                  "value": "100%",
-                },
-                {
-                  "property": "align-self",
-                  "value": "stretch",
-                },
-                {
-                  "property": "min-width",
-                  "value": "0",
-                },
-              ],
-              "tag": "button",
+              "styles": [],
+              "tag": "span",
             },
           ],
-          "events": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [],
+                  "isBuiltinStateFunction": true,
+                  "isFunctionCall": true,
+                  "type": "toggle",
+                },
+                {
+                  "args": [
+                    "count",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "increment",
+                },
+                {
+                  "args": [
+                    "LikeBtn",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "pulse",
+                },
+              ],
+              "name": "click",
+            },
+          ],
           "id": "node-3",
-          "instanceName": "Menu",
+          "instanceName": "LikeBtn",
           "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
+          "layoutType": "flex",
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Like",
+            },
+            {
+              "name": "name",
+              "value": "LikeBtn",
+            },
+          ],
+          "stateMachine": {
+            "initial": "default",
+            "states": {
+              "default": {
+                "children": [
+                  {
+                    "children": [],
+                    "events": [],
+                    "id": "node-4",
+                    "isDefinition": false,
+                    "name": "Icon",
+                    "primitive": "icon",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "heart",
+                      },
+                      {
+                        "name": "data-icon-color",
+                        "value": "#888",
+                      },
+                      {
+                        "name": "data-icon-size",
+                        "value": "18",
+                      },
+                    ],
+                    "styles": [
+                      {
+                        "property": "width",
+                        "value": "20px",
+                      },
+                      {
+                        "property": "flex-shrink",
+                        "value": "0",
+                      },
+                      {
+                        "property": "height",
+                        "value": "20px",
+                      },
+                      {
+                        "property": "flex-shrink",
+                        "value": "0",
+                      },
+                      {
+                        "property": "color",
+                        "value": "#888",
+                      },
+                      {
+                        "property": "font-size",
+                        "value": "18px",
+                      },
+                      {
+                        "property": "width",
+                        "value": "18px",
+                      },
+                      {
+                        "property": "height",
+                        "value": "18px",
+                      },
+                    ],
+                    "tag": "span",
+                  },
+                  {
+                    "children": [],
+                    "events": [],
+                    "id": "node-5",
+                    "isDefinition": false,
+                    "name": "Text",
+                    "primitive": "text",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "$count",
+                      },
+                    ],
+                    "styles": [],
+                    "tag": "span",
+                  },
+                ],
+                "isInitial": true,
+                "name": "default",
+                "styles": [],
+              },
+              "on": {
+                "children": [
+                  {
+                    "children": [],
+                    "events": [],
+                    "id": "state-child-1",
+                    "name": "Icon",
+                    "primitive": "icon",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "heart",
+                      },
+                    ],
+                    "styles": [
+                      {
+                        "property": "width",
+                        "value": "20px",
+                      },
+                      {
+                        "property": "height",
+                        "value": "20px",
+                      },
+                      {
+                        "property": "font-size",
+                        "value": "18px",
+                      },
+                      {
+                        "property": "width",
+                        "value": "18px",
+                      },
+                      {
+                        "property": "height",
+                        "value": "18px",
+                      },
+                    ],
+                    "tag": "span",
+                  },
+                ],
+                "isInitial": false,
+                "name": "on",
+                "styles": [
+                  {
+                    "property": "background",
+                    "value": "#ef4444",
+                  },
+                ],
+              },
+            },
+            "transitions": [
+              {
+                "modifier": "toggle",
+                "to": "on",
+                "trigger": "onclick",
+              },
+            ],
+          },
           "styles": [
             {
               "property": "display",
@@ -23115,7 +24196,11 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
             },
             {
               "property": "flex-direction",
-              "value": "column",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
             },
             {
               "property": "align-items",
@@ -23123,34 +24208,47 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
             },
             {
               "property": "gap",
-              "value": "2px",
-            },
-            {
-              "property": "display",
-              "value": "none",
-            },
-            {
-              "property": "background",
-              "value": "#1a1a1a",
-            },
-            {
-              "property": "padding",
               "value": "8px",
             },
             {
-              "property": "border-radius",
-              "value": "8px",
-            },
-            {
-              "property": "width",
-              "value": "180px",
+              "property": "height",
+              "value": "36px",
             },
             {
               "property": "flex-shrink",
               "value": "0",
             },
+            {
+              "property": "padding",
+              "value": "12px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "background",
+              "state": "on",
+              "value": "#ef4444",
+            },
           ],
-          "tag": "div",
+          "tag": "button",
         },
       ],
       "events": [],
@@ -23196,11 +24294,17 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
       "tag": "div",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "count",
+      "type": "size",
+      "value": 0,
+    },
+  ],
 }
 `;
 
-exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
+exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -23208,109 +24312,32 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
       "children": [
         {
           "children": [],
-          "events": [
-            {
-              "actions": [
-                {
-                  "args": [],
-                  "isBuiltinStateFunction": true,
-                  "isFunctionCall": true,
-                  "type": "toggle",
-                },
-                {
-                  "args": [
-                    "FilterPanel",
-                  ],
-                  "isBuiltinStateFunction": false,
-                  "isFunctionCall": true,
-                  "type": "show",
-                },
-              ],
-              "name": "click",
-            },
-          ],
+          "events": [],
           "id": "node-2",
-          "instanceName": "FilterBtn",
           "isDefinition": false,
-          "name": "Button",
-          "primitive": "button",
+          "name": "Text",
+          "primitive": "text",
           "properties": [
             {
               "name": "textContent",
-              "value": "Filter",
-            },
-            {
-              "name": "name",
-              "value": "FilterBtn",
+              "value": "Newsletter",
             },
           ],
-          "stateMachine": {
-            "initial": "default",
-            "states": {
-              "default": {
-                "isInitial": true,
-                "name": "default",
-                "styles": [],
-              },
-              "open": {
-                "isInitial": false,
-                "name": "open",
-                "styles": [
-                  {
-                    "property": "background",
-                    "value": "#2563eb",
-                  },
-                ],
-              },
-            },
-            "transitions": [
-              {
-                "modifier": "toggle",
-                "to": "open",
-                "trigger": "onclick",
-              },
-            ],
-          },
           "styles": [
-            {
-              "property": "height",
-              "value": "36px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "10px 20px",
-            },
-            {
-              "property": "border-radius",
-              "value": "6px",
-            },
-            {
-              "property": "border",
-              "value": "0px solid currentColor",
-            },
-            {
-              "property": "cursor",
-              "value": "pointer",
-            },
-            {
-              "property": "background",
-              "value": "#333",
-            },
             {
               "property": "color",
               "value": "white",
             },
             {
-              "property": "background",
-              "state": "open",
-              "value": "#2563eb",
+              "property": "font-size",
+              "value": "18px",
+            },
+            {
+              "property": "font-weight",
+              "value": "600",
             },
           ],
-          "tag": "button",
+          "tag": "span",
         },
         {
           "children": [
@@ -23318,195 +24345,14 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
               "children": [],
               "events": [],
               "id": "node-4",
+              "instanceName": "EmailInput",
               "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
+              "name": "Input",
+              "primitive": "input",
               "properties": [
                 {
-                  "name": "textContent",
-                  "value": "Filter-Optionen",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "14px",
-                },
-                {
-                  "property": "font-weight",
-                  "value": "500",
-                },
-              ],
-              "tag": "span",
-            },
-            {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-6",
-                  "isDefinition": false,
-                  "name": "Button",
-                  "primitive": "button",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Aktiv",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "height",
-                      "value": "36px",
-                    },
-                    {
-                      "property": "flex-shrink",
-                      "value": "0",
-                    },
-                    {
-                      "property": "padding",
-                      "value": "8px 12px",
-                    },
-                    {
-                      "property": "border-radius",
-                      "value": "4px",
-                    },
-                    {
-                      "property": "border",
-                      "value": "0px solid currentColor",
-                    },
-                    {
-                      "property": "cursor",
-                      "value": "pointer",
-                    },
-                    {
-                      "property": "background",
-                      "value": "#252525",
-                    },
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                  ],
-                  "tag": "button",
-                },
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-7",
-                  "isDefinition": false,
-                  "name": "Button",
-                  "primitive": "button",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Archiviert",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "height",
-                      "value": "36px",
-                    },
-                    {
-                      "property": "flex-shrink",
-                      "value": "0",
-                    },
-                    {
-                      "property": "padding",
-                      "value": "8px 12px",
-                    },
-                    {
-                      "property": "border-radius",
-                      "value": "4px",
-                    },
-                    {
-                      "property": "border",
-                      "value": "0px solid currentColor",
-                    },
-                    {
-                      "property": "cursor",
-                      "value": "pointer",
-                    },
-                    {
-                      "property": "background",
-                      "value": "#252525",
-                    },
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                  ],
-                  "tag": "button",
-                },
-              ],
-              "events": [],
-              "id": "node-5",
-              "isDefinition": false,
-              "name": "Frame",
-              "primitive": "frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-                {
-                  "property": "gap",
-                  "value": "8px",
-                },
-              ],
-              "tag": "div",
-            },
-            {
-              "children": [],
-              "events": [
-                {
-                  "actions": [
-                    {
-                      "args": [
-                        "FilterPanel",
-                      ],
-                      "isBuiltinStateFunction": false,
-                      "isFunctionCall": true,
-                      "type": "hide",
-                    },
-                    {
-                      "args": [
-                        "FilterBtn",
-                      ],
-                      "isBuiltinStateFunction": true,
-                      "isFunctionCall": true,
-                      "type": "toggle",
-                    },
-                  ],
-                  "name": "click",
-                },
-              ],
-              "id": "node-8",
-              "isDefinition": false,
-              "name": "Button",
-              "primitive": "button",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Schließen",
+                  "name": "placeholder",
+                  "value": "E-Mail Adresse",
                 },
               ],
               "styles": [
@@ -23520,11 +24366,83 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
                 },
                 {
                   "property": "padding",
-                  "value": "8px 16px",
+                  "value": "12px",
                 },
                 {
                   "property": "border-radius",
-                  "value": "4px",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "width",
+                  "value": "100%",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "min-width",
+                  "value": "0",
+                },
+                {
+                  "property": "background",
+                  "value": "#0a0a0a",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "input",
+            },
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [
+                        "Erfolgreich angemeldet!",
+                        "success",
+                      ],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "toast",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Anmelden",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "padding",
+                  "value": "12px 20px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
                 },
                 {
                   "property": "border",
@@ -23536,11 +24454,28 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#333",
+                  "value": "#2563eb",
                 },
                 {
                   "property": "color",
                   "value": "white",
+                },
+                {
+                  "property": "width",
+                  "value": "100%",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "min-width",
+                  "value": "0",
+                },
+                {
+                  "property": "background",
+                  "state": "hover",
+                  "value": "#1d4ed8",
                 },
               ],
               "tag": "button",
@@ -23548,7 +24483,6 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
           ],
           "events": [],
           "id": "node-3",
-          "instanceName": "FilterPanel",
           "isDefinition": false,
           "name": "Frame",
           "primitive": "frame",
@@ -23574,24 +24508,53 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
               "property": "gap",
               "value": "12px",
             },
-            {
-              "property": "display",
-              "value": "none",
-            },
-            {
-              "property": "background",
-              "value": "#1a1a1a",
-            },
-            {
-              "property": "padding",
-              "value": "16px",
-            },
-            {
-              "property": "border-radius",
-              "value": "8px",
-            },
           ],
           "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Spam-frei. Jederzeit abmeldbar.",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "color",
+              "value": "#666",
+            },
+            {
+              "property": "font-size",
+              "value": "11px",
+            },
+          ],
+          "tag": "span",
         },
       ],
       "events": [],
@@ -23610,28 +24573,28 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
           "property": "align-items",
           "value": "flex-start",
         },
         {
           "property": "gap",
-          "value": "8px",
-        },
-        {
-          "property": "background",
-          "value": "#0a0a0a",
-        },
-        {
-          "property": "padding",
           "value": "16px",
         },
         {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "20px",
+        },
+        {
           "property": "border-radius",
-          "value": "8px",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "300px",
         },
       ],
       "tag": "div",
@@ -36484,6 +37447,14 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 1 1`] = `
           "name": "data",
           "value": "$sales",
         },
+        {
+          "name": "fill",
+          "value": false,
+        },
+        {
+          "name": "tension",
+          "value": 0.3,
+        },
       ],
       "sourcePosition": {
         "column": 5,
@@ -36549,6 +37520,14 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 2 1`] = `
         {
           "name": "data",
           "value": "$revenue",
+        },
+        {
+          "name": "fill",
+          "value": false,
+        },
+        {
+          "name": "tension",
+          "value": 0.3,
         },
       ],
       "sourcePosition": {
@@ -36808,6 +37787,14 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 6 1`] = `
         {
           "name": "data",
           "value": "$users",
+        },
+        {
+          "name": "fill",
+          "value": true,
+        },
+        {
+          "name": "tension",
+          "value": 0.3,
         },
       ],
       "sourcePosition": {
@@ -37114,6 +38101,14 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 10 1`] = `
           "name": "title",
           "value": "Quartalsumsatz 2024",
         },
+        {
+          "name": "fill",
+          "value": false,
+        },
+        {
+          "name": "tension",
+          "value": 0.3,
+        },
       ],
       "sourcePosition": {
         "column": 5,
@@ -37246,6 +38241,14 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 12 1`] = `
         {
           "name": "data",
           "value": "$data",
+        },
+        {
+          "name": "fill",
+          "value": false,
+        },
+        {
+          "name": "tension",
+          "value": 0.3,
         },
         {
           "name": "grid",
@@ -37406,6 +38409,14 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 13 1`] = `
             {
               "name": "data",
               "value": "$sales",
+            },
+            {
+              "name": "fill",
+              "value": false,
+            },
+            {
+              "name": "tension",
+              "value": 0.3,
             },
           ],
           "sourcePosition": {
@@ -37597,6 +38608,14 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 14 1`] = `
                     {
                       "name": "data",
                       "value": "$revenue",
+                    },
+                    {
+                      "name": "fill",
+                      "value": false,
+                    },
+                    {
+                      "name": "tension",
+                      "value": 0.3,
                     },
                     {
                       "name": "grid",

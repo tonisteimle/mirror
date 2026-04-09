@@ -79,6 +79,11 @@ export interface IRNode {
   layoutType?: LayoutType                      // Explicit layout type (for drop strategy detection)
   valueBinding?: string                        // Token path for two-way binding (e.g., "user.name")
   _sizing?: SizingFlags                        // Internal: tracks how width/height were sized (not CSS marker)
+  // Motion One animations
+  inView?: IRInView                            // In-view animation (scroll reveal)
+  scrollLinked?: IRScrollLinked                // Scroll-linked animation (parallax)
+  spring?: IRSpring                            // Spring physics for state transitions
+  stagger?: number                             // Stagger delay for list items
 }
 
 export interface IRProperty {
@@ -159,6 +164,8 @@ export interface IRStateAnimation {
   easing?: string
   /** Delay in seconds */
   delay?: number
+  /** Spring physics configuration */
+  spring?: IRSpring
 }
 
 /**
@@ -192,6 +199,60 @@ export interface IRStateDependency {
   condition?: 'and' | 'or'
   /** Next dependency in chain */
   next?: IRStateDependency
+}
+
+// ============================================================================
+// Motion One Animation IR Types (Scroll, In-View, Spring)
+// ============================================================================
+
+/**
+ * In-view animation configuration (scroll reveal)
+ * Triggered when element enters viewport
+ */
+export interface IRInView {
+  /** Animation presets to play (e.g., ['fade-in', 'slide-up']) */
+  animations: string[]
+  /** Visibility threshold 0-1 (default: 0.2) */
+  threshold?: number
+  /** Stagger delay for list items in seconds */
+  stagger?: number
+  /** Animation duration in seconds */
+  duration?: number
+  /** Easing function or spring preset */
+  easing?: string
+  /** Only animate once (default: true) */
+  once?: boolean
+}
+
+/**
+ * Scroll-linked animation configuration (parallax)
+ * Animation progress tied to scroll position
+ */
+export interface IRScrollLinked {
+  /** Scroll axis */
+  axis: 'x' | 'y'
+  /** CSS property to animate (y, x, opacity, scale, rotate) */
+  property: string
+  /** Start value */
+  from: string | number
+  /** End value */
+  to: string | number
+  /** When to start/end animation */
+  offset?: [string, string]
+}
+
+/**
+ * Spring physics configuration
+ */
+export interface IRSpring {
+  /** Spring preset name (gentle, bouncy, stiff, slow) */
+  preset?: string
+  /** Custom stiffness (overrides preset) */
+  stiffness?: number
+  /** Custom damping (overrides preset) */
+  damping?: number
+  /** Custom mass (overrides preset) */
+  mass?: number
 }
 
 export interface IRToken {
@@ -558,4 +619,23 @@ export interface IRTableStaticCell {
  */
 export function isIRTable(node: IRNode): node is IRTable {
   return (node as IRTable).isTableComponent === true
+}
+
+// ============================================================================
+// Chart Component IR Types
+// ============================================================================
+
+/**
+ * IR representation of a chart slot configuration
+ *
+ * Contains Chart.js path mappings for slot properties.
+ * Example:
+ *   XAxis: col #888, fs 12
+ *   →  { 'options.scales.x.ticks.color': '#888', 'options.scales.x.ticks.font.size': 12 }
+ */
+export interface IRChartSlot {
+  /** Slot name (e.g., 'XAxis', 'Legend') */
+  name: string
+  /** Chart.js config paths mapped to values */
+  config: Record<string, string | number | boolean>
 }
