@@ -6471,13 +6471,6 @@ class DOMGenerator {
               this.emit(`_runtime.setState(${currentVar}, '${action.args[0]}')`)
             }
             break
-          case 'focus':
-            if (action.args && action.args.length > 0) {
-              this.emit(`_elements['${action.args[0]}']?.focus()`)
-            } else {
-              this.emit(`${currentVar}.focus()`)
-            }
-            break
           // Overlay & Positioning actions
           case 'showBelow':
             if (action.args && action.args.length > 0) {
@@ -6666,20 +6659,58 @@ class DOMGenerator {
               }
             }
             break
-          case 'shake':
+          // Input control
+          case 'focus':
             if (action.args && action.args.length > 0) {
               const target = action.args[0]
-              this.emit(`_runtime.shake(_elements['${target}'])`)
+              this.emit(`_runtime.focus(_elements['${target}'])`)
             } else {
-              this.emit(`_runtime.shake(${currentVar})`)
+              this.emit(`_runtime.focus(${currentVar})`)
             }
             break
-          case 'pulse':
+          case 'blur':
             if (action.args && action.args.length > 0) {
               const target = action.args[0]
-              this.emit(`_runtime.pulse(_elements['${target}'])`)
+              this.emit(`_runtime.blur(_elements['${target}'])`)
             } else {
-              this.emit(`_runtime.pulse(${currentVar})`)
+              this.emit(`_runtime.blur(${currentVar})`)
+            }
+            break
+          case 'clear':
+            if (action.args && action.args.length > 0) {
+              const target = action.args[0]
+              this.emit(`_runtime.clear(_elements['${target}'])`)
+            } else {
+              this.emit(`_runtime.clear(${currentVar})`)
+            }
+            break
+          case 'selectText':
+            if (action.args && action.args.length > 0) {
+              const target = action.args[0]
+              this.emit(`_runtime.selectText(_elements['${target}'])`)
+            } else {
+              this.emit(`_runtime.selectText(${currentVar})`)
+            }
+            break
+          case 'setError':
+            if (action.args && action.args.length > 0) {
+              const target = action.args[0]
+              const message = action.args[1] || ''
+              if (message) {
+                this.emit(`_runtime.setError(_elements['${target}'], '${message}')`)
+              } else {
+                this.emit(`_runtime.setError(_elements['${target}'])`)
+              }
+            } else {
+              this.emit(`_runtime.setError(${currentVar})`)
+            }
+            break
+          case 'clearError':
+            if (action.args && action.args.length > 0) {
+              const target = action.args[0]
+              this.emit(`_runtime.clearError(_elements['${target}'])`)
+            } else {
+              this.emit(`_runtime.clearError(${currentVar})`)
             }
             break
           // Browser navigation

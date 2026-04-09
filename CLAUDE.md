@@ -123,203 +123,6 @@ Bei Änderungen an `studio/app.js` oder `studio/styles.css`:
 
 Das folgende Tutorial ist die vollständige Referenz für die Mirror DSL. Es wird automatisch aus den HTML-Tutorials generiert.
 
-## Was ist Mirror?
-
-*Die Entwicklungsumgebung für Designer*
-
-Mirror ist eine einfache Programmiersprache, um UIs zu beschreiben und zu steuern. Du kannst direkt Code schreiben, visuell im Editor arbeiten, oder AI generieren lassen – alle drei Wege führen zum selben lesbaren Code.
-
-### Code, den du verstehst
-
-AI kann UI generieren. Das Ergebnis sieht oft gut aus – aber der Code dahinter bleibt eine **Black Box**. Du kannst nicht beurteilen, ob er sauber ist. Du hast kein Gefühl der Kontrolle.
-
-Und wenn du etwas ändern willst? Für "mach den Button etwas größer" musst du wieder die AI fragen. Dabei wäre es oft viel schneller, selbst drei Zeichen im Code zu ändern – wenn du ihn nur verstehen würdest.
-
-**Mirror löst dieses Problem.**
-
-Mirror ist eine Sprache, die AI versteht *und* Menschen lesen können:
-
-```mirror
-Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6
-```
-
-Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern. `bg #2563eb` → `bg #10b981` und der Button ist grün. `pad 12 24` → `pad 16 32` und er ist größer. Keine Magie, keine versteckten Dateien.
-
-```mirror
-// Einmal definieren (mit Styling)
-Card: bg #1a1a1a, pad 16, rad 8, gap 8
-  Title: col white, fs 16, weight 500
-  Desc: col #888, fs 14
-
-// Dann verwenden (clean wie ein Dokument)
-Card
-  Title "Projekt Alpha"
-  Desc "Das erste Projekt"
-
-Card
-  Title "Projekt Beta"
-  Desc "Ein anderes Projekt"
-```
-
-### Hierarchie durch Einrückung
-
-Kinder werden eingerückt. Keine schließenden Tags, keine Klammern. Die Struktur ist sichtbar:
-
-```mirror
-Frame bg #1a1a1a, pad 20, rad 12, gap 16
-  Text "Titel", col white, fs 18, weight bold
-  Text "Beschreibung hier", col #888, fs 14
-  Frame hor, gap 8
-    Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
-    Button "OK", pad 10 20, rad 6, bg #2563eb, col white
-```
-
-Der Code sieht aus wie ein Baum, weil er ein Baum ist.
-
-### Von Element zu Komponente: Ein Zeichen
-
-Du hast einen Button gebaut und willst ihn wiederverwenden? Füge einen Namen mit Doppelpunkt hinzu:
-
-```mirror
-// Komponente definieren: Name mit :
-PrimaryBtn as Button: bg #2563eb, col white, pad 12 24, rad 6
-
-// Verwenden: Name ohne :
-Frame hor, gap 8
-  PrimaryBtn "Speichern"
-  PrimaryBtn "Senden"
-  PrimaryBtn "Weiter"
-```
-
-Keine separate Datei. Kein Import. Kein Export. Die Definition ist dort, wo du sie brauchst.
-
-### Tokens für Design-Systeme
-
-Farben, Abstände, Radien – definiere sie einmal, verwende sie überall:
-
-```mirror
-primary.bg: #2563eb
-card.bg: #1a1a1a
-card.rad: 8
-
-Card: bg $card, rad $card, pad 16, gap 8
-  Title: col white, fs 16, weight 500
-
-Card
-  Title "Mit Tokens"
-  Text "Änderst du den Token, ändert sich alles.", col #888, fs 13
-```
-
-Tokens + Komponenten = konsistentes Design ohne Wiederholung.
-
-### States ohne Komplexität
-
-Interaktionen sind States. Ein State beschreibt, wie ein Element in einem Zustand aussieht:
-
-```mirror
-Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
-  hover:
-    bg #444
-  on:
-    bg #2563eb
-
-Btn "Anklicken"
-```
-
-`hover:` – wenn die Maus darüber ist. `on:` – wenn aktiviert. `toggle()` – bei Klick den State wechseln (Klick ist Default).
-
-```mirror
-ExpandBtn: pad 12 20, bg #1a1a1a, col white, rad 6, hor, gap 8, cursor pointer, toggle()
-  "Mehr zeigen"
-  Icon "chevron-down", ic #888, is 16
-  open:
-    "Weniger zeigen"
-    Icon "chevron-up", ic #888, is 16
-
-ExpandBtn
-```
-
-### Animation und Logik
-
-States können animiert werden – füge einfach eine Dauer hinzu:
-
-```mirror
-Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
-  hover 0.2s:
-    bg #2563eb
-    scale 1.02
-
-Btn "Hover mich"
-```
-
-`hover:` springt, `hover 0.2s:` gleitet. Für Logik schreibst du eigene Funktionen – in einer einfachen Syntax ohne Klammern:
-
-```mirror
-Input name EmailInput
-Button "Absenden", absenden()
-
-function absenden()
-  wert = EmailInput.value
-  Hinweis.content = "Gesendet: " + wert
-```
-
-### Arbeite wie du willst
-
-Mirror ist Text. Du kannst es schreiben in:
-
-- **Jedem Texteditor** – VS Code, Sublime, vim
-- **Mirror Studio** – einer IDE mit Live-Preview, visuellem Editing und Property-Panel
-
-In Mirror Studio siehst du Code und Ergebnis nebeneinander. Ändere den Code, das Preview aktualisiert sich. Klicke ins Preview, der Code wird selektiert. Beides bleibt synchron.
-
-### Mensch + AI = besseres Design
-
-Mirror wurde für die Zusammenarbeit mit AI entwickelt:
-
-```mirror
-Du: "Erstelle eine Card mit Avatar, Name und Rolle"
-AI: generiert Mirror-Code
-Du: "Der Avatar soll größer sein"
-AI: ändert `is 24` → `is 32`
-Du: siehst die Änderung, verstehst sie, kannst selbst weiter tweaken
-```
-
-Du: "Erstelle eine Card mit Avatar, Name und Rolle" AI: generiert Mirror-Code Du: "Der Avatar soll größer sein" AI: ändert `is 24` → `is 32` Du: siehst die Änderung, verstehst sie, kannst selbst weiter tweaken **Das ist der entscheidende Unterschied:** Du bist nicht ausgeliefert. Du verstehst was die AI generiert hat. Du kannst selbst eingreifen – eine Farbe ändern, einen Abstand anpassen, ein Element verschieben. Der Code gehört dir.
-
-### Dieses Tutorial
-
-Die folgenden Kapitel führen durch alle Konzepte:
-
-| Die Sprache |  |
-| --- | --- |
-| 01-03 | **Grundlagen** – Elemente, Komponenten, Tokens |
-| 04-05 | **Layout & Styling** – Flex, Grid, Farben, Effekte |
-| 06-08 | **Interaktion** – States, Animationen, Functions |
-| 09-10 | **Daten & Struktur** – Variablen, Binding, Seiten |
-| Komponenten-Bibliothek |  |
-| 11 | **Eingabe** – Forms, Selection, DateTime |
-| 12 | **Navigation** – Tabs, SideNav |
-| 13 | **Overlays** – Dialog, Popover, Tooltip |
-| 14 | **Tabellen** – Statische und datengebundene Tabellen |
-
-Jedes Kapitel enthält interaktive Beispiele – der Code kann direkt bearbeitet werden, das Ergebnis erscheint live.
-
----
-
-### Das Wichtigste
-
-| Konzept | Syntax |
-| --- | --- |
-| Element mit Properties | `Button "Text", bg #2563eb, pad 12` |
-| Hierarchie | 2 Leerzeichen Einrückung |
-| Komponente definieren | `Btn:` (mit Doppelpunkt) |
-| Komponente verwenden | `Btn "Text"` (ohne Doppelpunkt) |
-| Token definieren | `primary.bg: #2563eb` |
-| Token verwenden | `bg $primary` |
-| State definieren | `on:` oder `hover:` |
-| State wechseln | `toggle()` |
-
-**Das Prinzip:** Mirror ist lesbar wie ein Dokument. AI generiert Code, du verfeinerst ihn – ohne Framework-Wissen.
 
 
 ---
@@ -1845,22 +1648,15 @@ Frame hor, ver-center, gap 4, bg #1a1a1a, pad 4, rad 8
 Bei `exclusive()` ist immer nur ein Element aktiv – aber welcher Wert ist ausgewählt? Mit `bind varName` speicherst du den Textinhalt des aktiven Elements automatisch in einer Variable:
 
 ```mirror
-Dropdown: Frame w 200, stacked, bind value
-  Trigger: Button pad 12, bg #1a1a1a, col white, rad 6, hor, spread, w full, toggle()
-    Text $value || "Auswählen..."
-    Icon "chevron-down", ic #888, is 16
-    open:
-      Icon "chevron-up", ic #888, is 16
-  Options: Frame y 44, w full, bg #1a1a1a, rad 6, pad 4, hidden, z 10
-    Trigger.open:
-      visible
-  Option: Frame pad 10, rad 4, col #888, cursor pointer, w full, exclusive()
-    hover:
-      bg #333
-    on:
-      col white
+Option: pad 10, rad 6, bg #333, col #888, cursor pointer, exclusive()
+  hover:
+    bg #444
+  on:
+    bg #2563eb
+    col white
 
-Dropdown
+Frame gap 8, bind city
+  Text "Ausgewählt: $city", col #888, fs 12
   Option "Berlin"
   Option "Hamburg"
   Option "München"
@@ -1868,12 +1664,12 @@ Dropdown
 
 **Was passiert hier?**
 
-- `bind value` auf dem Dropdown-Container – speichert den aktiven Wert
-- `$value || "Auswählen..."` – zeigt den Wert oder Fallback-Text
+- `bind city` auf dem Frame – speichert den Textinhalt des aktiven Elements
+- `$city` im Text – zeigt den aktuell ausgewählten Wert
 - `exclusive()` auf Option – nur eine Option kann aktiv sein
-- Bei Klick auf eine Option wird deren Textinhalt in `$value` gespeichert
+- Bei Klick auf eine Option wird deren Textinhalt ("Berlin", "Hamburg", etc.) in `$city` gespeichert
 
-> **Hinweis:** **bind + exclusive() = Custom Select.** Das ist die Basis für eigene Dropdown-Komponenten. Für Standard-Selects mit Accessibility und Keyboard-Navigation gibt es die fertige `Select` Zag-Komponente (siehe Eingabe).
+> **Hinweis:** **bind + exclusive() = Custom Select.** Für vollständige Dropdowns mit Auf-/Zuklappen, Accessibility und Keyboard-Navigation gibt es die fertige `Select` Zag-Komponente (siehe Eingabe).
 
 ### Auf andere Elemente reagieren
 
@@ -2175,6 +1971,191 @@ Frame hor, ver-center, gap 12, bg #1a1a1a, pad 16, rad 8
 
 `anim spin` auf dem Icon dreht es endlos. Das Lucide-Icon "loader-2" ist genau dafür designed.
 
+### Scroll Reveal: in-view
+
+Elemente animieren wenn sie in den sichtbaren Bereich scrollen — der klassische "Scroll Reveal" Effekt:
+
+```mirror
+Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 200, scroll
+
+  Text "Scrolle nach unten...", col #666, fs 12
+
+  Spacer h 150
+
+  Frame in-view fade-in slide-up, bg #1a1a1a, pad 20, rad 8
+    Text "Ich erscheine!", col white, fs 16, weight 500
+    Text "Animiert beim Scrollen", col #888, fs 13
+
+  Spacer h 100
+
+  Frame in-view scale-in, bg #2563eb, pad 20, rad 8
+    Text "Und ich auch!", col white
+```
+
+**Was passiert hier?**
+
+- `in-view` — aktiviert Scroll-Reveal
+- `fade-in slide-up` — kombinierte Animationen (einblenden + hochgleiten)
+- `scale-in` — alternative Animation (reinzoomen)
+
+> **Hinweis:** **Performance:** In-view nutzt IntersectionObserver — extrem effizient, keine Scroll-Events.
+
+### In-view mit Threshold
+
+Mit `threshold` bestimmst du, wie viel vom Element sichtbar sein muss:
+
+```mirror
+Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 200, scroll
+
+  Text "Scrolle langsam...", col #666, fs 12
+
+  Spacer h 120
+
+  // Erscheint früh (20% sichtbar)
+  Frame in-view fade-in, threshold 0.2, bg #10b981, pad 16, rad 8
+    Text "Früh (20%)", col white
+
+  Spacer h 80
+
+  // Erscheint spät (80% sichtbar)
+  Frame in-view fade-in, threshold 0.8, bg #f59e0b, pad 16, rad 8
+    Text "Spät (80%)", col white
+```
+
+- `threshold 0.2` — Animation startet wenn 20% sichtbar
+- `threshold 0.8` — Animation startet wenn 80% sichtbar
+
+### Parallax: scroll-y
+
+Elemente bewegen sich mit unterschiedlicher Geschwindigkeit beim Scrollen — der Parallax-Effekt:
+
+```mirror
+Frame h 250, scroll, bg #0a0a0a, rad 8, clip
+
+  Frame stacked, h 400, w full
+
+    // Hintergrund bewegt sich langsam
+    Frame scroll-y 0 -50, w full, h 300, bg grad-ver #1a1a2e #0f0f1a
+
+    // Vordergrund bewegt sich normal
+    Frame y 100, pad 20, center
+      Text "Parallax", col white, fs 32, weight bold
+      Text "Scrolle für den Effekt", col #888, fs 14
+
+  Spacer h 200
+```
+
+**Was passiert hier?**
+
+- `scroll-y 0 -50` — Element bewegt sich von 0 nach -50px beim Scrollen
+- Negative Werte = langsamer als der normale Scroll
+- Positive Werte = schneller als der normale Scroll
+
+| Property | Beschreibung |
+| --- | --- |
+| `scroll-y 0 -100` | Vertikaler Parallax |
+| `scroll-x 0 50` | Horizontaler Parallax |
+
+### Spring Physics
+
+Statt linearer Bewegung: natürliche, federnde Animation wie in der echten Welt:
+
+```mirror
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
+
+  // Standard (keine Spring)
+  Button "Normal", pad 12 24, rad 6, bg #333, col white, toggle()
+    on:
+      bg #2563eb
+      scale 1.05
+
+  // Mit Spring: bouncy
+  Button "Spring Bouncy", pad 12 24, rad 6, bg #333, col white, spring bouncy, toggle()
+    on:
+      bg #10b981
+      scale 1.05
+
+  // Mit Spring: gentle
+  Button "Spring Gentle", pad 12 24, rad 6, bg #333, col white, spring gentle, toggle()
+    on:
+      bg #f59e0b
+      scale 1.05
+```
+
+**Spring Presets:**
+
+| Preset | Gefühl | Verwendung |
+| --- | --- | --- |
+| `spring` | Ausgewogen | Allgemein |
+| `spring gentle` | Weich, langsam | Subtile UI |
+| `spring bouncy` | Federnd, verspielt | Interaktive Elemente |
+| `spring stiff` | Straff, schnell | Schnelle Reaktion |
+
+> **Hinweis:** **Wann Spring?** Für UI-Elemente die "lebendig" wirken sollen — Buttons, Cards, Modals. Nicht für Loading-Animationen oder Scroll.
+
+### Stagger: Versetzte Animationen
+
+Listen-Elemente nacheinander animieren statt alle gleichzeitig:
+
+```mirror
+Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
+
+  Text "Scrolle...", col #666, fs 12
+
+  Spacer h 100
+
+  // Container mit stagger: Kinder erscheinen versetzt
+  Frame in-view fade-in, stagger 0.1, gap 8
+
+    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
+      Frame w 8, h 8, rad 99, bg #2563eb
+      Text "Erster Eintrag", col white
+
+    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
+      Frame w 8, h 8, rad 99, bg #10b981
+      Text "Zweiter Eintrag", col white
+
+    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
+      Frame w 8, h 8, rad 99, bg #f59e0b
+      Text "Dritter Eintrag", col white
+```
+
+**Was passiert hier?**
+
+- `stagger 0.1` — 100ms Verzögerung zwischen jedem Kind
+- Kombiniert mit `in-view` für Scroll-Reveal
+- Erzeugt einen eleganten "Kaskaden"-Effekt
+
+> **Hinweis:** **Timing:** 0.05-0.1s für schnelle Listen, 0.15-0.2s für dramatischere Effekte.
+
+### Praktisch: Feature Cards
+
+Alles kombiniert — Feature-Cards mit Scroll-Reveal und Stagger:
+
+```mirror
+Card: bg #1a1a1a, pad 20, rad 12, gap 8
+  Title: col white, fs 16, weight 600
+  Desc: col #888, fs 13
+
+Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 280, scroll
+
+  Text "Scrolle für Animation...", col #666, fs 12, pad 0 0 20 0
+
+  Frame in-view slide-up, stagger 0.15, gap 12
+
+    Card
+      Title "Schnell"
+      Desc "Optimiert für Performance"
+
+    Card
+      Title "Einfach"
+      Desc "Intuitive Syntax"
+
+    Card
+      Title "Flexibel"
+      Desc "Für jedes Projekt"
+```
+
 ---
 
 ### Zusammenfassung
@@ -2197,6 +2178,37 @@ Frame hor, ver-center, gap 12, bg #1a1a1a, pad 16, rad 8
 | `pulse` | Pulsieren (Aufmerksamkeit) |
 | `shake` | Schütteln (Fehler) |
 | `spin` | Drehen (Loading) |
+
+#### Scroll Reveal (in-view)
+
+| Syntax | Bedeutung |
+| --- | --- |
+| `in-view fade-in` | Animation bei Scroll in Viewport |
+| `in-view slide-up` | Von unten reingleiten |
+| `in-view fade-in, threshold 0.5` | 50% sichtbar bevor Animation |
+
+#### Parallax (scroll-y)
+
+| Syntax | Bedeutung |
+| --- | --- |
+| `scroll-y 0 -100` | Bewegt sich von 0 bis -100px beim Scrollen |
+| `scroll-y 0 50` | Langsamere Bewegung nach unten |
+
+#### Spring Physics
+
+| Preset | Gefühl |
+| --- | --- |
+| `spring` | Ausgewogen (Default) |
+| `spring gentle` | Weich, langsam |
+| `spring bouncy` | Federnd, verspielt |
+| `spring stiff` | Straff, schnell |
+
+#### Stagger
+
+| Syntax | Bedeutung |
+| --- | --- |
+| `stagger 0.1` | 100ms Verzögerung zwischen Kindern |
+| `in-view fade-in, stagger 0.1` | Kombiniert mit Scroll-Reveal |
 
 #### Enter/Exit
 
@@ -2221,7 +2233,7 @@ Frame hor, ver-center, gap 12, bg #1a1a1a, pad 16, rad 8
 
 *Eingebaute und eigene Funktionen*
 
-In Kapitel 6 hast du `toggle()` und `exclusive()` kennengelernt – zwei eingebaute Funktionen für State-Wechsel. Mirror bietet weitere **eingebaute Funktionen** für typische UI-Patterns. Wenn die nicht reichen, schreibst du eigene.
+In Kapitel 6 hast du `toggle()` und `exclusive()` kennengelernt – zwei eingebaute Funktionen für State-Wechsel. Mirror bietet viele weitere **eingebaute Funktionen** für typische UI-Patterns: Feedback, Navigation, Zähler, Scroll und mehr.
 
 ### Syntax: Funktionen als Properties
 
@@ -2242,32 +2254,157 @@ Wenn du eine Funktion als Property schreibst, wird sie automatisch bei **Klick**
 | --- | --- |
 | `Button "X", toggle()` | Funktion bei Klick (Kurzform) |
 | `Button "X", show(Menu)` | Element zeigen bei Klick |
-| `Button "X", toggle(), show(Panel)` | Mehrere Funktionen |
+| `Button "X", toggle(), toast("OK")` | Mehrere Funktionen |
 
 > **Hinweis:** **Faustregel:** Kurzschreibweise für Klick-Events (99% der Fälle). Für andere Events wie Enter oder Escape gibt es Shorthands (`onenter`, `onescape`) – siehe States.
 
-### Eingebaute Funktionen: Übersicht
+### Alle eingebauten Funktionen
 
 Mirror hat eingebaute Funktionen für die häufigsten UI-Patterns. Du musst sie nicht importieren – sie sind einfach da:
 
 | Kategorie | Funktion | Was sie tut |
 | --- | --- | --- |
-| **State** | `toggle()` | State wechseln (an/aus oder durch mehrere cyclen) |
-| `exclusive()` | Diesen aktivieren, alle Geschwister deaktivieren |  |
-| **Visibility** | `show(Element)` | Element sichtbar machen |
+| **State** | `toggle()` | State wechseln (an/aus oder cyclen) |
+| `exclusive()` | Nur diesen aktivieren |  |
+| **Sichtbarkeit** | `show(Element)` | Element sichtbar machen |
 | `hide(Element)` | Element verstecken |  |
+| **Feedback** | `toast("Text")` | Toast-Benachrichtigung |
+| **Input** | `focus(Element)` | Fokus setzen |
+| `blur(Element)` | Fokus entfernen |  |
+| `clear(Element)` | Eingabewert löschen |  |
+| `selectText(Element)` | Text markieren |  |
+| `setError(Element, "msg")` | Fehler-State setzen |  |
+| `clearError(Element)` | Fehler-State entfernen |  |
+| **Zähler** | `increment(token)` | Token +1 |
+| `decrement(token)` | Token -1 |  |
+| `set(token, value)` | Token auf Wert setzen |  |
+| `reset(token)` | Auf Initialwert zurücksetzen |  |
+| **Scroll** | `scrollTo(Element)` | Zu Element scrollen |
+| `scrollToTop()` | Zum Seitenanfang |  |
+| `scrollToBottom()` | Zum Seitenende |  |
+| **Clipboard** | `copy("Text")` | In Zwischenablage kopieren |
+| **Navigation** | `navigate(View)` | Zu View wechseln |
+| `back()` | Browser zurück |  |
+| `forward()` | Browser vorwärts |  |
+| `openUrl("...")` | URL öffnen (neuer Tab) |  |
 
-Für **Overlays** (Dialoge, Dropdowns, Tooltips) gibt es spezialisierte Zag-Komponenten – siehe Overlays. Für **Navigation** (Tabs, SideNav) siehe Navigation.
+### Feedback: toast()
 
-Diese Funktionen decken 90% der typischen Interaktionen ab. Für komplexere Logik (API-Calls, Validierung, Berechnungen) schreibst du eigene Funktionen – dazu später mehr.
+Toast-Benachrichtigungen erscheinen kurz und verschwinden automatisch – perfekt für Bestätigungen ohne Modal:
 
-### show() und hide(): Sichtbarkeit steuern
+```mirror
+Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
+  Button "Info", pad 10 20, bg #333, col white, rad 6, toast("Das ist eine Info")
+  Button "Erfolg", pad 10 20, bg #10b981, col white, rad 6, toast("Gespeichert!", "success")
+  Button "Fehler", pad 10 20, bg #ef4444, col white, rad 6, toast("Fehler aufgetreten", "error")
+  Button "Warnung", pad 10 20, bg #f59e0b, col black, rad 6, toast("Achtung!", "warning")
+```
 
-Mit `show(Element)` und `hide(Element)` machst du Elemente sichtbar oder versteckst sie. Das ist nützlich für:
+| Syntax | Beschreibung |
+| --- | --- |
+| `toast("Text")` | Standard-Toast (info) |
+| `toast("Text", "success")` | Grüner Erfolgs-Toast |
+| `toast("Text", "error")` | Roter Fehler-Toast |
+| `toast("Text", "warning")` | Gelber Warn-Toast |
+| `toast("Text", "info", "top")` | Position: top, bottom, top-left, etc. |
 
-- Info-Boxen die bei Klick erscheinen
-- Menüs die sich öffnen und schließen
-- Hinweise die nach einer Aktion angezeigt werden
+### Input: focus(), clear(), setError()
+
+Funktionen zur Steuerung von Eingabefeldern – Fokus setzen, Werte löschen, Validierung anzeigen:
+
+```mirror
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
+  Frame gap 8
+    Input name EmailInput, placeholder "E-Mail eingeben...", bg #1a1a1a, col white, pad 12, rad 6, w 260, bor 1, boc #333
+      invalid:
+        boc #ef4444
+    Frame hor, gap 8
+      Button "Fokus", pad 8 16, bg #333, col white, rad 6, focus(EmailInput)
+      Button "Löschen", pad 8 16, bg #333, col white, rad 6, clear(EmailInput)
+      Button "Fehler", pad 8 16, bg #ef4444, col white, rad 6, setError(EmailInput, "Ungültige E-Mail")
+      Button "OK", pad 8 16, bg #10b981, col white, rad 6, clearError(EmailInput)
+```
+
+| Funktion | Beschreibung |
+| --- | --- |
+| `focus(Element)` | Fokus auf Element setzen |
+| `blur(Element)` | Fokus entfernen |
+| `clear(Element)` | Eingabewert löschen |
+| `selectText(Element)` | Text im Feld markieren |
+| `setError(Element, "msg")` | Fehler-State + Nachricht setzen |
+| `clearError(Element)` | Fehler-State entfernen |
+
+> **Hinweis:** `setError()` aktiviert den `invalid:` State und zeigt die Fehlermeldung an. Mit `clearError()` wird beides zurückgesetzt.
+
+### Zähler: increment() und decrement()
+
+Perfekt für Warenkorb, Likes, oder jede Art von Zähler:
+
+```mirror
+count: 0
+
+Frame hor, gap 12, ver-center, bg #1a1a1a, pad 16, rad 8
+  Button "-", pad 8 16, bg #333, col white, rad 6, fs 18, decrement(count)
+  Text "$count", col white, fs 24, weight 600, w 60, center
+  Button "+", pad 8 16, bg #2563eb, col white, rad 6, fs 18, increment(count)
+```
+
+| Funktion | Beschreibung |
+| --- | --- |
+| `increment(token)` | Token-Wert um 1 erhöhen |
+| `decrement(token)` | Token-Wert um 1 verringern |
+| `set(token, 5)` | Token auf bestimmten Wert setzen |
+| `reset(token)` | Auf Initialwert zurücksetzen |
+
+> **Hinweis:** **Hinweis:** Die Funktionen arbeiten mit Tokens (Variablen). Definiere den Token mit Startwert (`count: 0`) und verwende ihn mit `$count`.
+
+### Praktisch: Warenkorb-Zähler
+
+Ein typisches E-Commerce Pattern – Artikelmenge mit Plus/Minus Buttons:
+
+```mirror
+qty: 1
+price: 29
+
+Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 280
+  Frame hor, gap 16, ver-center
+    Frame w 60, h 60, bg #252525, rad 8, center
+      Icon "shopping-bag", ic #888, is 24
+    Frame gap 4
+      Text "Premium T-Shirt", col white, fs 16, weight 500
+      Text "€$price pro Stück", col #888, fs 13
+
+  Frame hor, spread, ver-center, bg #0a0a0a, pad 12, rad 8
+    Frame hor, gap 8, ver-center
+      Button "-", pad 6 12, bg #333, col white, rad 4, decrement(qty)
+      Text "$qty", col white, fs 16, weight 600, w 32, center
+      Button "+", pad 6 12, bg #333, col white, rad 4, increment(qty)
+    Text "€" + ($price * $qty), col #10b981, fs 18, weight 600
+```
+
+### Clipboard: copy()
+
+Text in die Zwischenablage kopieren – nützlich für Code-Snippets, Links, oder Referenz-Codes:
+
+```mirror
+code: "SUMMER2024"
+
+Frame bg #1a1a1a, pad 16, rad 8, gap 12
+  Text "Dein Rabattcode:", col #888, fs 13
+  Frame hor, gap 8, ver-center
+    Frame pad 12 16, bg #0a0a0a, rad 6, bor 1, boc #333
+      Text "$code", col #10b981, fs 16, weight 600, font mono
+    Button "Kopieren", pad 10 16, bg #2563eb, col white, rad 6, copy("$code"), toast("Code kopiert!", "success")
+      copied:
+        bg #10b981
+        "Kopiert!"
+```
+
+`copy()` kann mit einem `copied:` State kombiniert werden – der Button zeigt dann kurz "Kopiert!" an.
+
+### show() und hide(): Sichtbarkeit
+
+Mit `show(Element)` und `hide(Element)` machst du Elemente sichtbar oder versteckst sie:
 
 ```mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
@@ -2278,70 +2415,104 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
     Button "Schließen", pad 8 16, bg #333, col white, rad 4, hide(InfoBox)
 ```
 
-Was passiert hier?
-
-- `name InfoBox` gibt dem Element einen Namen, damit wir es referenzieren können
+- `name InfoBox` gibt dem Element einen Namen
 - `hidden` macht das Element initial unsichtbar
-- `show(InfoBox)` macht es sichtbar wenn der Button geklickt wird
+- `show(InfoBox)` macht es sichtbar
 - `hide(InfoBox)` versteckt es wieder
 
-> **Hinweis:** **Wichtig:** Das Ziel-Element braucht einen `name`. Ohne Namen kann die Funktion das Element nicht finden. Der Name muss eindeutig sein – wie eine ID.
+> **Hinweis:** **Wichtig:** Das Ziel-Element braucht einen `name`. Ohne Namen kann die Funktion das Element nicht finden.
 
-### Praktisch: Aufklappbares Menü
+### Navigation: navigate(), back(), openUrl()
 
-Ein klassisches Pattern: Ein Button öffnet ein Menü, ein "Schließen"-Button (oder Klick außerhalb) versteckt es wieder. So baust du das mit `show()` und `hide()`:
+Funktionen für Navigation zwischen Views und Browser-History:
 
 ```mirror
-Frame gap 8, bg #0a0a0a, pad 16, rad 8
-  Button "Menü öffnen", pad 10 20, bg #333, col white, rad 6, show(Menu)
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
+  Frame hor, gap 8
+    Button "← Zurück", pad 10 20, bg #333, col white, rad 6, back()
+    Button "Vorwärts →", pad 10 20, bg #333, col white, rad 6, forward()
 
-  Frame name Menu, hidden, bg #1a1a1a, pad 8, rad 8, gap 2, w 180
-    Button "Profil", pad 10 16, bg transparent, col white, rad 4, w full
-      hover:
-        bg #333
-    Button "Einstellungen", pad 10 16, bg transparent, col white, rad 4, w full
-      hover:
-        bg #333
-    Divider bg #333, margin 4 0
-    Button "Schließen", pad 10 16, bg #333, col white, rad 4, w full, hide(Menu)
+  Divider bg #333, margin 8 0
+
+  Button "Mirror Website öffnen", pad 10 20, bg #2563eb, col white, rad 6, hor, gap 8
+    Icon "external-link", ic white, is 16
+    openUrl("https://mirror-lang.dev")
 ```
 
-Das Menü startet `hidden`. Der "Menü öffnen"-Button macht es sichtbar, der "Schließen"-Button versteckt es wieder. Einfach und klar.
+| Funktion | Beschreibung |
+| --- | --- |
+| `navigate(ViewName)` | Zu einer View wechseln (siehe Seiten) |
+| `back()` | Browser-History zurück |
+| `forward()` | Browser-History vorwärts |
+| `openUrl("...")` | URL in neuem Tab öffnen |
 
-> **Hinweis:** **Für echte Menüs:** In Produktion würdest du die `Menu`-Komponente aus Overlays verwenden – die hat bereits Positionierung, Tastatur-Navigation und "Klick außerhalb schließt". Hier zeigen wir das manuelle Pattern zum Verständnis.
+### Scroll: scrollTo(), scrollToTop()
+
+Smooth-Scroll zu Elementen oder Seitenposition:
+
+```mirror
+Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
+  Button "Zum Ende scrollen", pad 10 20, bg #2563eb, col white, rad 6, scrollToBottom()
+
+  Frame gap 8, pad 40 0
+    Text "Abschnitt 1", col white, fs 16
+    Text "Lorem ipsum dolor sit amet...", col #888, fs 13
+    Text "Abschnitt 2", col white, fs 16
+    Text "Consectetur adipiscing elit...", col #888, fs 13
+    Text "Abschnitt 3", col white, fs 16
+    Text "Sed do eiusmod tempor...", col #888, fs 13
+
+  Button "Nach oben", pad 10 20, bg #333, col white, rad 6, scrollToTop()
+```
+
+| Funktion | Beschreibung |
+| --- | --- |
+| `scrollTo(Element)` | Zu benanntem Element scrollen |
+| `scrollToTop()` | Zum Anfang scrollen |
+| `scrollToBottom()` | Zum Ende scrollen |
 
 ### Funktionen kombinieren
 
-Du kannst mehrere Funktionen bei einem Klick ausführen. Einfach alle hintereinander schreiben:
+Du kannst mehrere Funktionen bei einem Klick ausführen:
 
 ```mirror
-Frame gap 8, bg #0a0a0a, pad 16, rad 8
-  Button "Filter", name FilterBtn, pad 10 20, bg #333, col white, rad 6, toggle(), show(FilterPanel)
-    open:
-      bg #2563eb
+count: 0
 
-  Frame name FilterPanel, hidden, bg #1a1a1a, pad 16, rad 8, gap 12
-    Text "Filter-Optionen", col white, fs 14, weight 500
-    Frame gap 8
-      Button "Aktiv", pad 8 12, bg #252525, col white, rad 4
-      Button "Archiviert", pad 8 12, bg #252525, col white, rad 4
-    Button "Schließen", pad 8 16, bg #333, col white, rad 4, hide(FilterPanel), toggle(FilterBtn)
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
+  Button "Like", name LikeBtn, pad 12 20, bg #333, col white, rad 6, hor, gap 8, toggle(), increment(count), toast("Gefällt dir!", "success")
+    Icon "heart", ic #888, is 18
+    Text "$count"
+    on:
+      bg #ef4444
+      Icon "heart", ic white, is 18, fill
 ```
 
-Was passiert hier?
+Der Button hat **drei** Funktionen: `toggle()` wechselt den State, `increment(count)` erhöht den Zähler, und `toast()` zeigt eine Bestätigung.
 
-- Der "Filter"-Button hat **zwei** Funktionen: `toggle()` und `show(FilterPanel)`
-- `toggle()` wechselt den State des Buttons (grau ↔ blau)
-- `show(FilterPanel)` zeigt das Panel
-- Der "Schließen"-Button macht das Gegenteil: `hide(FilterPanel)` und `toggle(FilterBtn)`
+> **Hinweis:** **Reihenfolge:** Die Funktionen werden in der Reihenfolge ausgeführt, wie du sie schreibst.
 
-> **Hinweis:** **Reihenfolge:** Die Funktionen werden in der Reihenfolge ausgeführt, wie du sie schreibst. Meistens ist die Reihenfolge egal, aber bei komplexer Logik kann es wichtig sein.
+### Praktisch: Formular mit Feedback
 
-### Eigene Funktionen: UI steuern
+Ein komplettes Beispiel das mehrere Funktionen kombiniert:
 
-Die eingebauten Funktionen (`toggle`, `show`, `hide`) decken die häufigsten Fälle ab. Aber manchmal brauchst du mehr Kontrolle — zum Beispiel einen Wert aus einem Input lesen und woanders anzeigen, oder mehrere Elemente gleichzeitig steuern.
+```mirror
+Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 300
+  Text "Newsletter", col white, fs 18, weight 600
 
-Dafür schreibst du eigene Funktionen. Das Prinzip: **Du greifst auf Elemente zu und änderst ihre Eigenschaften.**
+  Frame gap 12
+    Input name EmailInput, placeholder "E-Mail Adresse", bg #0a0a0a, col white, pad 12, rad 6, w full
+    Button "Anmelden", pad 12 20, bg #2563eb, col white, rad 6, w full, toast("Erfolgreich angemeldet!", "success")
+      hover:
+        bg #1d4ed8
+
+  Text "Spam-frei. Jederzeit abmeldbar.", col #666, fs 11, center
+```
+
+### Eigene Funktionen
+
+Die eingebauten Funktionen decken die häufigsten Fälle ab. Für komplexere Logik (API-Calls, Validierung) schreibst du eigene Funktionen in JavaScript.
+
+Das Prinzip: **Du greifst auf Elemente zu und änderst ihre Eigenschaften.**
 
 #### Elemente ansprechen
 
@@ -2352,17 +2523,14 @@ Jedes Element mit einem `name` kannst du in einer Funktion ansprechen:
 Input name EmailInput, placeholder "E-Mail"
 Button "Absenden", absenden()
 
-// In der Funktion
-function absenden()
-  wert = EmailInput.value      // Eingabewert lesen
-  log(wert)                    // In Konsole ausgeben
+// In der Funktion (JavaScript)
+function absenden() {
+  const wert = api.EmailInput.value
+  console.log(wert)
+}
 ```
 
-// Im Mirror-UI Input name EmailInput, placeholder "E-Mail" Button "Absenden", absenden() // In der Funktion function absenden() wert = EmailInput.value // Eingabewert lesen log(wert) // In Konsole ausgeben Der `name` wird zur Referenz. In der Funktion schreibst du einfach `EmailInput.value` um den eingegebenen Text zu lesen.
-
-#### Was du steuern kannst
-
-Jedes UI-Element hat Eigenschaften die du lesen und ändern kannst:
+#### Element-Eigenschaften
 
 | Eigenschaft | Lesen | Schreiben |
 | --- | --- | --- |
@@ -2371,75 +2539,7 @@ Jedes UI-Element hat Eigenschaften die du lesen und ändern kannst:
 | `.value` | Eingabewert (Input) | Wert setzen |
 | `.content` | Textinhalt | Text ändern |
 
-#### Beispiel: State ändern
-
-Du kannst den State eines Elements direkt setzen:
-
-```mirror
-function aktivieren()
-  MeinButton.state = 'active'
-
-function zuruecksetzen()
-  MeinButton.state = 'base'       // 'base' ist der Normalzustand
-```
-
-#### Beispiel: Eingabe auswerten
-
-Ein häufiges Pattern — Wert aus Input lesen und etwas damit machen:
-
-```mirror
-// UI
-Input name SucheInput, placeholder "Suchen..."
-Button "Suchen", suchen()
-Text name Ergebnis, col #888
-
-// Funktion
-function suchen()
-  begriff = SucheInput.value
-  if begriff == ""
-    Ergebnis.content = "Bitte Suchbegriff eingeben"
-  else
-    Ergebnis.content = "Suche nach: " + begriff
-```
-
-#### Beispiel: Mehrere Elemente steuern
-
-Eine Funktion kann mehrere Elemente gleichzeitig ändern:
-
-```mirror
-function formularZuruecksetzen()
-  NameInput.value = ""
-  EmailInput.value = ""
-  SubmitBtn.state = 'base'
-  Hinweis.visible = false
-```
-
-#### Für komplexere Logik
-
-Manche Dinge gehen über UI-Steuerung hinaus:
-
-- **API-Calls** — Daten vom Server laden oder speichern
-- **Validierung** — E-Mail-Format prüfen, Pflichtfelder checken
-- **Berechnungen** — Summen, Durchschnitte, komplexe Logik
-
-Hier arbeitet man typischerweise mit einem Entwickler zusammen. Als Designer definierst du die States und das UI — die Funktion steuert, wann welcher State aktiv wird:
-
-```mirror
-// Du definierst die States
-SaveBtn as Button: pad 12 24, bg #333, col white, rad 6, save()
-  loading:
-    bg #666
-    "Wird gespeichert..."
-  success:
-    bg #10b981
-    "Gespeichert!"
-
-// Der Entwickler schreibt die Funktion
-// Sie setzt element.state = 'loading', macht den API-Call,
-// und setzt dann element.state = 'success' oder 'error'
-```
-
-// Du definierst die States SaveBtn as Button: pad 12 24, bg #333, col white, rad 6, save() loading: bg #666 "Wird gespeichert..." success: bg #10b981 "Gespeichert!" // Der Entwickler schreibt die Funktion // Sie setzt element.state = 'loading', macht den API-Call, // und setzt dann element.state = 'success' oder 'error' **Zusammenspiel:** Du als Designer bestimmst *wie* jeder State aussieht. Die Funktion bestimmt *wann* welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
+**Zusammenspiel:** Du als Designer bestimmst *wie* jeder State aussieht. Die Funktion bestimmt *wann* welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
 
 > **Hinweis:** **Zusammenspiel:** Du als Designer bestimmst *wie* jeder State aussieht. Die Funktion bestimmt *wann* welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
 
@@ -2447,31 +2547,53 @@ SaveBtn as Button: pad 12 24, bg #333, col white, rad 6, save()
 
 ### Zusammenfassung
 
-#### Eingebaute Funktionen
+#### State & Sichtbarkeit
 
-| Funktion | Was sie tut |
+| `toggle()` | State wechseln |
 | --- | --- |
-| `toggle()` | State wechseln (an/aus oder durch mehrere cyclen) |
-| `exclusive()` | Diesen aktivieren, alle Geschwister deaktivieren |
-| `show(Name)` | Element sichtbar machen |
+| `exclusive()` | Nur diesen aktivieren |
+| `show(Name)` | Element zeigen |
 | `hide(Name)` | Element verstecken |
 
-#### Eigene Funktionen: UI steuern
+#### Feedback
 
-| Zugriff | Beispiel |
+| `toast("Text")` | Toast-Benachrichtigung |
 | --- | --- |
-| State ändern | `MeinBtn.state = 'active'` |
-| Sichtbarkeit | `Hinweis.visible = false` |
-| Eingabewert lesen | `wert = MeinInput.value` |
-| Text ändern | `Label.content = "Neuer Text"` |
+| `toast("Text", "success")` | Mit Type: info, success, error, warning |
 
-#### Syntax
+#### Input Control
 
-| Syntax | Bedeutung |
+| `focus(Element)` | Fokus setzen |
 | --- | --- |
-| `Button "X", toggle()` | Funktion bei Klick |
-| `name MeinElement` | Element benennen (für Zugriff in Funktionen) |
-| `toggle(), show(X)` | Mehrere Funktionen kombinieren |
+| `blur(Element)` | Fokus entfernen |
+| `clear(Element)` | Eingabe löschen |
+| `selectText(Element)` | Text markieren |
+| `setError(Element, "msg")` | Fehler setzen |
+| `clearError(Element)` | Fehler entfernen |
+
+#### Zähler & Werte
+
+| `increment(token)` | Token +1 |
+| --- | --- |
+| `decrement(token)` | Token -1 |
+| `set(token, value)` | Wert setzen |
+| `reset(token)` | Zurücksetzen |
+
+#### Clipboard & Scroll
+
+| `copy("Text")` | In Zwischenablage |
+| --- | --- |
+| `scrollTo(Element)` | Zu Element scrollen |
+| `scrollToTop()` | Zum Anfang |
+| `scrollToBottom()` | Zum Ende |
+
+#### Navigation
+
+| `navigate(View)` | Zu View wechseln |
+| --- | --- |
+| `back()` | Browser zurück |
+| `forward()` | Browser vorwärts |
+| `openUrl("...")` | URL öffnen |
 
 
 ---
@@ -3847,6 +3969,431 @@ Table $products by price desc, gap 4, w full
 
 ---
 
+## Charts
+
+*Datenvisualisierung mit Chart.js*
+
+Charts machen Daten sichtbar. Mirror bietet einfache Primitives für die häufigsten Chart-Typen – **Line**, **Bar**, **Pie** und mehr. Die Daten kommen aus Variablen, das Styling ist minimal.
+
+### Das Prinzip
+
+Ein Chart ist ein Primitive wie `Frame` oder `Button`. Du gibst ihm Daten und optional Größe – fertig:
+
+```mirror
+sales:
+  Jan: 120
+  Feb: 180
+  Mar: 240
+  Apr: 200
+  May: 280
+
+Line $sales, w 400, h 200
+```
+
+`Line $sales` erzeugt ein Liniendiagramm. Die Daten kommen aus dem `sales`-Objekt – die Keys werden zu Labels (Jan, Feb, ...), die Werte zur Linie.
+
+### Chart-Typen
+
+Mirror unterstützt sieben Chart-Typen. Jeder hat seinen Einsatzzweck:
+
+#### Line – Trends über Zeit
+
+```mirror
+revenue:
+  Q1: 45
+  Q2: 62
+  Q3: 78
+  Q4: 95
+
+Line $revenue, w 350, h 180
+```
+
+#### Bar – Werte vergleichen
+
+```mirror
+teams:
+  Design: 8
+  Engineering: 12
+  Marketing: 5
+  Sales: 7
+
+Bar $teams, w 350, h 180
+```
+
+#### Pie – Anteile zeigen
+
+```mirror
+browsers:
+  Chrome: 65
+  Safari: 20
+  Firefox: 10
+  Other: 5
+
+Pie $browsers, w 250, h 200
+```
+
+#### Donut – Anteile mit Loch
+
+```mirror
+status:
+  Done: 45
+  Progress: 30
+  Todo: 25
+
+Donut $status, w 200, h 200
+```
+
+#### Area – Gefüllte Linie
+
+```mirror
+users:
+  Jan: 1200
+  Feb: 1800
+  Mar: 2400
+  Apr: 3100
+
+Area $users, w 350, h 180
+```
+
+| Typ | Verwendung |
+| --- | --- |
+| `Line` | Trends, Entwicklung über Zeit |
+| `Bar` | Kategorien vergleichen |
+| `Pie` | Anteile eines Ganzen |
+| `Donut` | Anteile (mit Platz für Zahl in der Mitte) |
+| `Area` | Volumen, kumulative Werte |
+| `Scatter` | Korrelationen zwischen zwei Werten |
+| `Radar` | Mehrdimensionale Vergleiche |
+
+### Datenformate
+
+Charts akzeptieren verschiedene Datenformate:
+
+#### Key-Value Objekte
+
+Das einfachste Format – Keys werden Labels, Werte die Datenpunkte:
+
+```mirror
+// Keys = Labels, Values = Datenpunkte
+sales:
+  Jan: 120
+  Feb: 180
+  Mar: 240
+
+Bar $sales, w 300, h 160
+```
+
+#### Objekte mit Feldern
+
+Für komplexere Daten mit `x` und `y` die Felder angeben:
+
+```mirror
+products:
+  a:
+    name: "Widget"
+    sales: 120
+  b:
+    name: "Gadget"
+    sales: 85
+  c:
+    name: "Tool"
+    sales: 200
+
+Bar $products, x "name", y "sales", w 300, h 180
+```
+
+`x "name"` sagt: "Nimm das `name`-Feld für die Labels." `y "sales"` sagt: "Nimm `sales` für die Werte."
+
+### Styling
+
+#### Farben
+
+Mit `colors` definierst du die Farbpalette:
+
+```mirror
+data:
+  A: 30
+  B: 50
+  C: 20
+
+Pie $data, w 200, h 180, colors #2563eb #10b981 #f59e0b
+```
+
+#### Titel
+
+```mirror
+revenue:
+  Q1: 45
+  Q2: 62
+  Q3: 78
+  Q4: 95
+
+Line $revenue, w 350, h 200, title "Quartalsumsatz 2024"
+```
+
+#### Legende
+
+Bei Pie/Donut ist die Legende automatisch an. Bei anderen Charts mit `legend true` aktivieren:
+
+```mirror
+months:
+  Jan: 120
+  Feb: 180
+  Mar: 240
+
+Bar $months, w 350, h 200, legend true
+```
+
+#### Raster ausblenden
+
+```mirror
+data:
+  A: 30
+  B: 50
+  C: 40
+  D: 60
+
+Line $data, w 350, h 180, grid false
+```
+
+### Subkomponenten
+
+Für präzise Kontrolle über jeden Aspekt eines Charts gibt es **Subkomponenten**. Sie funktionieren wie Kind-Komponenten – mit Doppelpunkt definiert, eingerückt unter dem Chart:
+
+#### Achsen anpassen
+
+Mit `XAxis:` und `YAxis:` kontrollierst du Farben, Labels und Wertebereiche:
+
+```mirror
+revenue:
+  Jan: 45
+  Feb: 62
+  Mar: 78
+  Apr: 95
+  May: 88
+  Jun: 110
+
+Line $revenue, w 400, h 220
+  XAxis: col #888, label "Monat", fs 11
+  YAxis: col #888, label "Umsatz (k€)", min 0, max 120
+```
+
+`label` fügt einen Achsentitel hinzu. `min` und `max` fixieren den Wertebereich.
+
+#### Datenpunkte stylen
+
+`Point:` kontrolliert die Datenpunkte bei Line- und Scatter-Charts:
+
+```mirror
+data:
+  Q1: 30
+  Q2: 45
+  Q3: 60
+  Q4: 52
+
+Line $data, w 350, h 180
+  Point: size 8, bg #2563eb, hover-size 12
+```
+
+#### Grid anpassen
+
+`Grid:` steuert die Rasterlinien:
+
+```mirror
+sales:
+  Mon: 120
+  Tue: 180
+  Wed: 150
+  Thu: 200
+  Fri: 240
+
+Bar $sales, w 350, h 180
+  Grid: col #333, dash 4
+```
+
+`dash 4` macht die Linien gestrichelt (4px Segmente).
+
+#### Legende und Titel
+
+Für volle Kontrolle über Legende und Titel:
+
+```mirror
+status:
+  Done: 45
+  Progress: 30
+  Todo: 25
+
+Pie $status, w 280, h 220, colors #10b981 #f59e0b #ef4444
+  Title: text "Projektstatus", col white, fs 16
+  Legend: pos right, col #888, fs 12
+```
+
+#### Linien anpassen
+
+`Line:` (bei Line/Area-Charts) kontrolliert die Liniendarstellung:
+
+```mirror
+trend:
+  Jan: 20
+  Feb: 35
+  Mar: 28
+  Apr: 45
+  May: 52
+
+Line $trend, w 350, h 180
+  Line: width 3, tension 0.4, fill true
+```
+
+`tension` steuert die Kurvenstärke (0 = eckig, 1 = sehr rund). `fill` füllt die Fläche unter der Linie.
+
+#### Balken stylen
+
+`Bar:` für Balken-spezifische Optionen:
+
+```mirror
+teams:
+  Design: 8
+  Dev: 12
+  Marketing: 5
+
+Bar $teams, w 300, h 180, colors #2563eb
+  Bar: rad 6, bor 2, boc #1d4ed8
+```
+
+#### Alle Subkomponenten kombinieren
+
+Ein vollständig angepasstes Chart:
+
+```mirror
+revenue:
+  Jan: 45
+  Feb: 62
+  Mar: 78
+  Apr: 95
+  May: 88
+  Jun: 110
+
+Frame bg #0a0a0a, pad 20, rad 12
+  Line $revenue, w 420, h 240, colors #2563eb
+    Title: text "Umsatzentwicklung 2024", col white, fs 14
+    XAxis: col #666, fs 10
+    YAxis: col #666, label "Umsatz (k€)", fs 10, min 0
+    Grid: col #222
+    Point: size 5, bg #2563eb, hover-size 8
+    Line: width 2, tension 0.3
+```
+
+| Subkomponente | Charts | Properties |
+| --- | --- | --- |
+| `XAxis:` | Line, Bar, Scatter | col, label, fs, min, max, visible |
+| `YAxis:` | Line, Bar, Scatter | col, label, fs, min, max, visible |
+| `Grid:` | Line, Bar, Scatter, Radar | col, width, dash, visible |
+| `Point:` | Line, Scatter, Radar | size, bg, boc, bor, hover-size |
+| `Legend:` | Alle | visible, pos, col, fs |
+| `Title:` | Alle | text, col, fs, weight, pos, visible |
+| `Line:` | Line, Area | width, tension, fill, dash |
+| `Bar:` | Bar | rad, bor, boc |
+| `Arc:` | Pie, Donut | bor, boc, offset, hover-offset |
+
+### In Layouts einbetten
+
+Charts sind normale Elemente – du kannst sie in Frames, Cards oder Grids einbetten:
+
+```mirror
+sales:
+  Jan: 120
+  Feb: 180
+  Mar: 240
+  Apr: 200
+
+Card: bg #1a1a1a, pad 20, rad 12, gap 12
+  Title: col white, fs 16, weight 600
+  Subtitle: col #888, fs 13
+
+Card
+  Title "Monatsumsatz"
+  Subtitle "Januar - April 2024"
+  Line $sales, w full, h 160
+```
+
+### Dashboard-Beispiel
+
+Mehrere Charts in einem Grid:
+
+```mirror
+revenue:
+  Q1: 45
+  Q2: 62
+  Q3: 78
+  Q4: 95
+
+users:
+  Free: 1200
+  Pro: 450
+  Team: 180
+
+Stat: bg #1a1a1a, pad 16, rad 8, gap 8
+  Label: col #888, fs 12
+  Value: col white, fs 24, weight 600
+
+Frame gap 16
+  Frame hor, gap 16
+    Stat
+      Label "Revenue"
+      Line $revenue, w 180, h 80, grid false, axes false
+    Stat
+      Label "Users"
+      Donut $users, w 100, h 100
+```
+
+---
+
+### Zusammenfassung
+
+#### Chart-Typen
+
+| Primitive | Beschreibung |
+| --- | --- |
+| `Line` | Liniendiagramm (Trends) |
+| `Bar` | Balkendiagramm (Vergleiche) |
+| `Pie` | Kreisdiagramm (Anteile) |
+| `Donut` | Ring-Diagramm |
+| `Area` | Flächendiagramm |
+| `Scatter` | Streudiagramm |
+| `Radar` | Netzdiagramm |
+
+#### Properties
+
+| Property | Beschreibung |
+| --- | --- |
+| `$data` | Datenquelle (Variable) |
+| `x "field"` | Feld für Labels |
+| `y "field"` | Feld für Werte |
+| `colors #a #b` | Farbpalette |
+| `title "Text"` | Chart-Titel |
+| `legend true` | Legende anzeigen |
+| `grid false` | Rasterlinien ausblenden |
+| `axes false` | Achsen ausblenden |
+
+#### Subkomponenten
+
+| Slot | Wichtige Properties |
+| --- | --- |
+| `XAxis:` / `YAxis:` | col, label, fs, min, max |
+| `Grid:` | col, dash, visible |
+| `Point:` | size, bg, hover-size |
+| `Legend:` | pos, col, fs, visible |
+| `Title:` | text, col, fs, weight |
+| `Line:` | width, tension, fill |
+| `Bar:` | rad, bor, boc |
+
+**Sizing:** Charts nehmen `w` und `h` wie jedes andere Element. Mit `w full` füllen sie den Container.
+
+**Subkomponenten:** Mit `XAxis:`, `Point:` etc. passt du jeden Aspekt des Charts an – konsistent mit Mirrors Komponenten-Syntax.
+
+
+---
+
 <!-- GENERATED:TUTORIAL:END -->
 
 ## Häufige Fehler
@@ -4150,8 +4697,6 @@ Table $products by price desc, gap 4, w full
 | page | - |
 | call | - |
 | assign | - |
-| focus | - |
-| blur | - |
 | submit | - |
 | reset | - |
 | navigate | - |
@@ -4173,8 +4718,12 @@ Table $products by price desc, gap 4, w full
 | reset | - |
 | copy | - |
 | toast | message, type?, position? |
-| shake | element? |
-| pulse | element? |
+| focus | element? |
+| blur | element? |
+| clear | element? |
+| selectText | element? |
+| setError | element, message? |
+| clearError | element? |
 | back | - |
 | forward | - |
 | openUrl | url, newTab? |

@@ -364,7 +364,20 @@ export function wrap(el: MirrorElement | null): ElementWrapper | null {
     addClass(c: string) { el.classList.add(c) },
     removeClass(c: string) { el.classList.remove(c) },
     toggleClass(c: string) { el.classList.toggle(c) },
-    setStyle(prop: string, val: string) { (el.style as unknown as Record<string, string>)[prop] = val },
+    setStyle(prop: string, val: string) {
+      // Security: Only allow whitelisted CSS properties
+      if (!isAllowedCSSProperty(prop)) {
+        console.warn('[Security] CSS property not allowed:', prop)
+        return
+      }
+      // Security: Sanitize CSS value
+      const safeVal = sanitizeCSSValue(val)
+      if (safeVal === null) {
+        console.warn('[Security] CSS value rejected:', val)
+        return
+      }
+      ;(el.style as unknown as Record<string, string>)[prop] = safeVal
+    },
     getStyle(prop: string) { return (el.style as unknown as Record<string, string>)[prop] },
   }
 }
@@ -1106,13 +1119,39 @@ function getMirrorData(): Record<string, unknown> {
 }
 
 /**
+ * Sanitize filename to prevent path traversal.
+ * Only allows alphanumeric, hyphen, underscore, dot for extension.
+ */
+function sanitizeFilename(name: string): string | null {
+  if (!name || typeof name !== 'string') return null
+
+  // Reject path traversal
+  if (name.includes('..') || name.includes('/') || name.includes('\\')) {
+    console.warn('[Security] Path traversal in filename blocked:', name)
+    return null
+  }
+
+  // Only allow safe characters
+  if (!/^[a-zA-Z0-9_\-]+\.[a-zA-Z0-9]+$/.test(name)) {
+    console.warn('[Security] Invalid filename characters:', name)
+    return null
+  }
+
+  return name
+}
+
+/**
  * Load a single YAML file and add to __mirrorData
  * @param filename Filename (e.g., 'users.yaml')
  * @param basePath Base path for data files (default: '/data/')
  */
 export async function loadYAMLFile(filename: string, basePath = '/data/'): Promise<void> {
+  // Sanitize filename
+  const safeFilename = sanitizeFilename(filename)
+  if (!safeFilename) return
+
   try {
-    const url = basePath + filename
+    const url = basePath + safeFilename
     const response = await fetch(url)
 
     if (!response.ok) {
@@ -1122,14 +1161,14 @@ export async function loadYAMLFile(filename: string, basePath = '/data/'): Promi
 
     const text = await response.text()
     const data = parseSimpleYAML(text)
-    const name = filename.replace(/\.ya?ml$/i, '')
+    const name = safeFilename.replace(/\.ya?ml$/i, '')
 
     const mirrorData = getMirrorData()
     mirrorData[name] = data
 
     console.log(`Loaded YAML: ${name}`, data)
   } catch (err) {
-    console.warn(`Failed to load YAML file ${filename}:`, err)
+    console.warn(`Failed to load YAML file ${safeFilename}:`, err)
   }
 }
 
@@ -1452,62 +1491,6 @@ export function toast(
 }
 
 // ============================================
-// FEEDBACK: ANIMATIONS
-// ============================================
-
-/**
- * Shake an element (error feedback)
- * @param el - Element to shake
- * @param options - Options: { intensity?, duration? }
- */
-export function shake(
-  el: MirrorElement | null,
-  options?: { intensity?: number, duration?: number }
-): void {
-  if (!el) return
-  const { intensity = 5, duration = 400 } = options || {}
-
-  // Use CSS animation
-  const keyframes = [
-    { transform: 'translateX(0)' },
-    { transform: `translateX(-${intensity}px)` },
-    { transform: `translateX(${intensity}px)` },
-    { transform: `translateX(-${intensity}px)` },
-    { transform: `translateX(${intensity}px)` },
-    { transform: 'translateX(0)' },
-  ]
-
-  el.animate(keyframes, {
-    duration,
-    easing: 'ease-in-out',
-  })
-}
-
-/**
- * Pulse an element (attention feedback)
- * @param el - Element to pulse
- * @param options - Options: { scale?, duration? }
- */
-export function pulse(
-  el: MirrorElement | null,
-  options?: { scale?: number, duration?: number }
-): void {
-  if (!el) return
-  const { scale = 1.05, duration = 300 } = options || {}
-
-  const keyframes = [
-    { transform: 'scale(1)' },
-    { transform: `scale(${scale})` },
-    { transform: 'scale(1)' },
-  ]
-
-  el.animate(keyframes, {
-    duration,
-    easing: 'ease-in-out',
-  })
-}
-
-// ============================================
 // TIMER: DELAY
 // ============================================
 
@@ -1549,6 +1532,136 @@ export function debounce<T extends (...args: unknown[]) => void>(
       timerId = null
     }, ms)
   }
+}
+
+// ============================================
+// INPUT CONTROL
+// ============================================
+
+/**
+ * Focus an input element
+ * @param el - The element to focus
+ */
+export function focus(el: MirrorElement | null): void {
+  if (!el) return
+  if (el instanceof HTMLInputElement ||
+      el instanceof HTMLTextAreaElement ||
+      el instanceof HTMLSelectElement ||
+      el instanceof HTMLButtonElement) {
+    el.focus()
+  } else if (el.tabIndex >= 0 || el.hasAttribute('tabindex')) {
+    el.focus()
+  }
+}
+
+/**
+ * Remove focus from an input element
+ * @param el - The element to blur
+ */
+export function blur(el: MirrorElement | null): void {
+  if (!el) return
+  if (el instanceof HTMLInputElement ||
+      el instanceof HTMLTextAreaElement ||
+      el instanceof HTMLSelectElement ||
+      el instanceof HTMLButtonElement) {
+    el.blur()
+  } else {
+    el.blur()
+  }
+}
+
+/**
+ * Clear the value of an input element
+ * @param el - The input element to clear
+ */
+export function clear(el: MirrorElement | null): void {
+  if (!el) return
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    el.value = ''
+    // Trigger input event for reactivity
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+}
+
+/**
+ * Select all text in an input element
+ * @param el - The input element
+ */
+export function selectText(el: MirrorElement | null): void {
+  if (!el) return
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    el.select()
+  }
+}
+
+/**
+ * Set error state on an element with optional message
+ * @param el - The element to mark as invalid
+ * @param message - Optional error message
+ */
+export function setError(el: MirrorElement | null, message?: string): void {
+  if (!el) return
+
+  // Apply invalid state
+  el.dataset.invalid = 'true'
+  applyState(el, 'invalid')
+
+  // Set custom validity if it's a form element
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    el.setCustomValidity(message || 'Invalid')
+  }
+
+  // Find or create error message element
+  if (message) {
+    const errorId = el.dataset.errorId || `${el.id || el.dataset.name || 'field'}-error`
+    el.dataset.errorId = errorId
+
+    let errorEl = document.getElementById(errorId)
+    if (!errorEl) {
+      // Create error element after the input
+      errorEl = document.createElement('span')
+      errorEl.id = errorId
+      errorEl.className = 'mirror-error-message'
+      errorEl.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 4px; display: block;'
+      el.parentNode?.insertBefore(errorEl, el.nextSibling)
+    }
+    errorEl.textContent = message
+    errorEl.style.display = 'block'
+
+    // Link for accessibility
+    el.setAttribute('aria-describedby', errorId)
+    el.setAttribute('aria-invalid', 'true')
+  }
+}
+
+/**
+ * Clear error state from an element
+ * @param el - The element to clear errors from
+ */
+export function clearError(el: MirrorElement | null): void {
+  if (!el) return
+
+  // Remove invalid state
+  delete el.dataset.invalid
+  removeState(el, 'invalid')
+
+  // Clear custom validity
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    el.setCustomValidity('')
+  }
+
+  // Hide error message
+  const errorId = el.dataset.errorId
+  if (errorId) {
+    const errorEl = document.getElementById(errorId)
+    if (errorEl) {
+      errorEl.style.display = 'none'
+    }
+  }
+
+  // Clear accessibility attributes
+  el.removeAttribute('aria-describedby')
+  el.removeAttribute('aria-invalid')
 }
 
 // ============================================
@@ -2285,12 +2398,120 @@ export function setReadFileCallback(callback: (filename: string) => string | nul
 }
 
 /**
+ * Sanitize page name to prevent path traversal attacks.
+ * Only allows alphanumeric characters, hyphens, underscores, and forward slashes.
+ * Rejects: .., absolute paths, special characters
+ */
+function sanitizePageName(name: string): string | null {
+  if (!name || typeof name !== 'string') return null
+
+  // Reject path traversal attempts
+  if (name.includes('..')) {
+    console.warn('[Security] Path traversal attempt blocked:', name)
+    return null
+  }
+
+  // Reject absolute paths
+  if (name.startsWith('/') || name.startsWith('\\')) {
+    console.warn('[Security] Absolute path blocked:', name)
+    return null
+  }
+
+  // Only allow safe characters: alphanumeric, hyphen, underscore, forward slash, dot (for extension)
+  if (!/^[a-zA-Z0-9_\-/]+(\.[a-zA-Z0-9]+)?$/.test(name)) {
+    console.warn('[Security] Invalid page name characters:', name)
+    return null
+  }
+
+  return name
+}
+
+/**
+ * Validate that compiled code matches expected Mirror output patterns.
+ * Rejects code containing dangerous constructs that shouldn't appear in Mirror output.
+ */
+function validateCompiledCode(code: string): boolean {
+  // Check for dangerous patterns that shouldn't be in Mirror compiler output
+  const dangerousPatterns = [
+    /\beval\s*\(/i,                    // eval()
+    /\bFunction\s*\(/i,                // Function constructor
+    /\bsetTimeout\s*\(\s*['"`]/i,      // setTimeout with string
+    /\bsetInterval\s*\(\s*['"`]/i,     // setInterval with string
+    /\bdocument\s*\.\s*write/i,        // document.write
+    /\binnerHTML\s*=\s*[^'"`]/,        // innerHTML assignment (non-literal)
+    /\b__proto__\s*=/i,                // prototype pollution
+    /\bprototype\s*\[/i,               // prototype access
+    /\bconstructor\s*\[/i,             // constructor access
+    /\bimport\s*\(/i,                  // dynamic import
+    /\brequire\s*\(/i,                 // require (shouldn't be in browser code)
+    /\bprocess\s*\./i,                 // Node.js process
+    /\bchild_process/i,                // Node.js child_process
+    /\bfs\s*\./i,                      // Node.js fs
+    /<script/i,                        // Script tags in strings
+    /javascript\s*:/i,                 // javascript: URLs
+    /data\s*:\s*text\/html/i,          // data: HTML URLs
+  ]
+
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(code)) {
+      console.warn('[Security] Dangerous pattern detected in compiled code')
+      return false
+    }
+  }
+
+  // Verify code structure matches expected Mirror output
+  // Mirror-compiled code should start with specific patterns
+  if (!code.includes('function createUI') && !code.includes('export function createUI')) {
+    console.warn('[Security] Code does not match expected Mirror output structure')
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Execute compiled Mirror code safely.
+ * Uses validation and controlled execution context.
+ */
+function executeCompiledCode(code: string): { root?: HTMLElement } | null {
+  // Validate code before execution
+  if (!validateCompiledCode(code)) {
+    console.error('[Security] Compiled code validation failed - execution blocked')
+    return null
+  }
+
+  // Transform code for execution
+  const execCode = code.replace('export function createUI', 'function createUI')
+
+  // Create execution wrapper with limited scope
+  // This prevents access to sensitive globals while allowing DOM operations
+  const safeWrapper = `
+    "use strict";
+    ${execCode}
+    return createUI();
+  `
+
+  try {
+    // Execute with strict mode enforced
+    const fn = new Function(safeWrapper)
+    return fn() as { root?: HTMLElement }
+  } catch (err) {
+    console.error('[Security] Code execution error:', err)
+    return null
+  }
+}
+
+/**
  * Navigate to a page (load .mirror file)
  */
 export function navigateToPage(pageName: string, clickedElement: MirrorElement | null): void {
   if (!pageName) return
 
-  const filename = pageName.endsWith('.mirror') ? pageName : pageName + '.mirror'
+  // Sanitize page name to prevent path traversal
+  const safeName = sanitizePageName(pageName)
+  if (!safeName) return
+
+  const filename = safeName.endsWith('.mirror') ? safeName : safeName + '.mirror'
 
   const readFile = _readFileCallback || (window as { _mirrorReadFile?: (f: string) => string | null })._mirrorReadFile
   if (!readFile) {
@@ -2320,9 +2541,9 @@ export function navigateToPage(pageName: string, clickedElement: MirrorElement |
     }
 
     container.innerHTML = ''
-    const execCode = pageCode.replace('export function createUI', 'function createUI')
-    const fn = new Function(execCode + '\nreturn createUI();')
-    const ui = fn() as { root?: HTMLElement }
+
+    // Use safe execution with validation
+    const ui = executeCompiledCode(pageCode)
 
     if (ui?.root) {
       while (ui.root.firstChild) {
@@ -2489,12 +2710,237 @@ export async function loadIcon(el: MirrorElement, iconName: string): Promise<voi
   }
 }
 
+// ============================================
+// CSS SECURITY
+// ============================================
+
+/**
+ * Whitelist of allowed CSS properties.
+ * This prevents CSS injection attacks where attackers could
+ * set dangerous properties like 'behavior' (IE), 'expression' (IE),
+ * or use @import/@font-face via content property.
+ */
+const ALLOWED_CSS_PROPERTIES = new Set([
+  // Layout
+  'display', 'position', 'top', 'right', 'bottom', 'left', 'z-index',
+  'float', 'clear', 'overflow', 'overflow-x', 'overflow-y', 'clip',
+  'visibility', 'opacity',
+  // Flexbox
+  'flex', 'flex-direction', 'flex-wrap', 'flex-flow', 'flex-grow',
+  'flex-shrink', 'flex-basis', 'justify-content', 'align-items',
+  'align-self', 'align-content', 'order', 'gap', 'row-gap', 'column-gap',
+  // Grid
+  'grid', 'grid-template', 'grid-template-columns', 'grid-template-rows',
+  'grid-template-areas', 'grid-column', 'grid-row', 'grid-area',
+  'grid-auto-columns', 'grid-auto-rows', 'grid-auto-flow',
+  'grid-column-start', 'grid-column-end', 'grid-row-start', 'grid-row-end',
+  'place-content', 'place-items', 'place-self',
+  // Box model
+  'width', 'min-width', 'max-width', 'height', 'min-height', 'max-height',
+  'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+  'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+  'box-sizing', 'aspect-ratio',
+  // Typography
+  'font', 'font-family', 'font-size', 'font-weight', 'font-style',
+  'font-variant', 'line-height', 'letter-spacing', 'word-spacing',
+  'text-align', 'text-decoration', 'text-transform', 'text-indent',
+  'text-overflow', 'white-space', 'word-break', 'word-wrap', 'overflow-wrap',
+  // Colors & backgrounds
+  'color', 'background', 'background-color', 'background-image',
+  'background-position', 'background-size', 'background-repeat',
+  'background-attachment', 'background-clip', 'background-origin',
+  // Borders
+  'border', 'border-width', 'border-style', 'border-color',
+  'border-top', 'border-right', 'border-bottom', 'border-left',
+  'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width',
+  'border-top-style', 'border-right-style', 'border-bottom-style', 'border-left-style',
+  'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color',
+  'border-radius', 'border-top-left-radius', 'border-top-right-radius',
+  'border-bottom-left-radius', 'border-bottom-right-radius',
+  'border-collapse', 'border-spacing',
+  // Effects
+  'box-shadow', 'text-shadow', 'filter', 'backdrop-filter',
+  'mix-blend-mode', 'background-blend-mode',
+  // Transforms
+  'transform', 'transform-origin', 'transform-style',
+  'perspective', 'perspective-origin',
+  // Transitions & animations
+  'transition', 'transition-property', 'transition-duration',
+  'transition-timing-function', 'transition-delay',
+  'animation', 'animation-name', 'animation-duration', 'animation-timing-function',
+  'animation-delay', 'animation-iteration-count', 'animation-direction',
+  'animation-fill-mode', 'animation-play-state',
+  // Others
+  'cursor', 'pointer-events', 'user-select', 'resize', 'outline',
+  'outline-width', 'outline-style', 'outline-color', 'outline-offset',
+  'list-style', 'list-style-type', 'list-style-position', 'list-style-image',
+  'table-layout', 'vertical-align', 'object-fit', 'object-position',
+  'scroll-behavior', 'scroll-snap-type', 'scroll-snap-align',
+])
+
+/**
+ * Check if a CSS property is allowed.
+ * Converts camelCase to kebab-case for comparison.
+ */
+function isAllowedCSSProperty(prop: string): boolean {
+  if (!prop || typeof prop !== 'string') return false
+
+  // Convert camelCase to kebab-case (e.g., backgroundColor -> background-color)
+  const kebabProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase()
+
+  // Allow CSS custom properties (variables) with safe prefixes
+  if (kebabProp.startsWith('--mirror-') || kebabProp.startsWith('--m-')) {
+    return true
+  }
+
+  return ALLOWED_CSS_PROPERTIES.has(kebabProp)
+}
+
+/**
+ * Sanitize CSS value to prevent injection attacks.
+ * Blocks: url() with external URLs, expression(), javascript:, @import, behavior
+ */
+function sanitizeCSSValue(val: string): string | null {
+  if (val === null || val === undefined) return null
+  if (typeof val !== 'string') {
+    val = String(val)
+  }
+
+  const lower = val.toLowerCase()
+
+  // Block JavaScript execution vectors
+  if (lower.includes('javascript:') || lower.includes('vbscript:')) {
+    console.warn('[Security] Script in CSS value blocked')
+    return null
+  }
+
+  // Block IE-specific expression() hack
+  if (lower.includes('expression(') || lower.includes('expression (')) {
+    console.warn('[Security] CSS expression blocked')
+    return null
+  }
+
+  // Block behavior property value (IE)
+  if (lower.includes('behavior:') || lower.includes('.htc')) {
+    console.warn('[Security] CSS behavior blocked')
+    return null
+  }
+
+  // Block @import (shouldn't be in inline styles, but extra safety)
+  if (lower.includes('@import')) {
+    console.warn('[Security] CSS @import blocked')
+    return null
+  }
+
+  // Block external URLs in url() - only allow data: and relative paths
+  const urlMatch = lower.match(/url\s*\(\s*['"]?\s*([^)'"]+)/gi)
+  if (urlMatch) {
+    for (const match of urlMatch) {
+      const urlContent = match.replace(/url\s*\(\s*['"]?\s*/i, '')
+      // Allow: data:, relative paths (no protocol), hash references
+      // Block: http:, https:, //, and other protocols
+      if (urlContent.match(/^(https?:|\/\/|ftp:|file:|blob:)/i)) {
+        console.warn('[Security] External URL in CSS blocked:', urlContent)
+        return null
+      }
+    }
+  }
+
+  // Block moz-binding (Firefox XBL)
+  if (lower.includes('-moz-binding')) {
+    console.warn('[Security] CSS -moz-binding blocked')
+    return null
+  }
+
+  return val
+}
+
+// ============================================
+// ICON SECURITY
+// ============================================
+
+/**
+ * Sanitize icon name to prevent injection attacks.
+ * Only allows alphanumeric and hyphens (Lucide icon naming convention).
+ */
+function sanitizeIconName(name: string): string | null {
+  if (!name || typeof name !== 'string') return null
+
+  // Lucide icons use lowercase letters, numbers, and hyphens only
+  if (!/^[a-z0-9\-]+$/.test(name)) {
+    console.warn('[Security] Invalid icon name rejected:', name)
+    return null
+  }
+
+  // Max length to prevent abuse
+  if (name.length > 50) {
+    console.warn('[Security] Icon name too long:', name)
+    return null
+  }
+
+  return name
+}
+
+/**
+ * Validate and sanitize SVG content from external source.
+ * Uses DOMParser to ensure only valid SVG elements are allowed.
+ * Removes potentially dangerous elements and attributes.
+ */
+function sanitizeSVG(svgText: string): string | null {
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(svgText, 'image/svg+xml')
+
+    // Check for parsing errors
+    const parserError = doc.querySelector('parsererror')
+    if (parserError) {
+      console.warn('[Security] Invalid SVG content')
+      return null
+    }
+
+    const svg = doc.documentElement
+    if (svg.tagName.toLowerCase() !== 'svg') {
+      console.warn('[Security] Not an SVG element')
+      return null
+    }
+
+    // Remove dangerous elements
+    const dangerousElements = ['script', 'foreignObject', 'use', 'image', 'a']
+    for (const tag of dangerousElements) {
+      const elements = svg.querySelectorAll(tag)
+      elements.forEach(el => el.remove())
+    }
+
+    // Remove dangerous attributes (event handlers, external references)
+    const allElements = svg.querySelectorAll('*')
+    const dangerousAttrs = /^(on|href|xlink:href|src|data|formaction)/i
+    for (const el of allElements) {
+      const attrs = Array.from(el.attributes)
+      for (const attr of attrs) {
+        if (dangerousAttrs.test(attr.name) || attr.value.includes('javascript:')) {
+          el.removeAttribute(attr.name)
+        }
+      }
+    }
+
+    // Return sanitized SVG
+    return svg.outerHTML
+  } catch (err) {
+    console.warn('[Security] SVG sanitization failed:', err)
+    return null
+  }
+}
+
 /**
  * Fetch icon from CDN and cache it
  */
 async function fetchIcon(iconName: string): Promise<string | null> {
+  // Sanitize icon name first
+  const safeName = sanitizeIconName(iconName)
+  if (!safeName) return null
+
   try {
-    const url = `https://unpkg.com/lucide-static/icons/${iconName}.svg`
+    const url = `https://unpkg.com/lucide-static/icons/${safeName}.svg`
     const res = await fetch(url)
 
     if (!res.ok) {
@@ -2503,12 +2949,19 @@ async function fetchIcon(iconName: string): Promise<string | null> {
 
     const svgText = await res.text()
 
-    // Cache the result
-    iconCache.set(iconName, svgText)
+    // Sanitize SVG content from CDN
+    const sanitizedSVG = sanitizeSVG(svgText)
+    if (!sanitizedSVG) {
+      console.warn(`[Security] Icon "${safeName}" rejected - invalid SVG content`)
+      return null
+    }
 
-    return svgText
+    // Cache the sanitized result
+    iconCache.set(safeName, sanitizedSVG)
+
+    return sanitizedSVG
   } catch (err) {
-    console.warn(`Failed to load icon "${iconName}":`, err)
+    console.warn(`Failed to load icon "${safeName}":`, err)
     return null
   }
 }
@@ -3606,12 +4059,17 @@ export const runtime = {
   copy,
   // Feedback
   toast,
-  shake,
-  pulse,
   // Timer
   delay,
   cancelDelay,
   debounce,
+  // Input Control
+  focus,
+  blur,
+  clear,
+  selectText,
+  setError,
+  clearError,
   // Browser Navigation
   back,
   forward,

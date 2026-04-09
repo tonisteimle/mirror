@@ -70,9 +70,11 @@ Btn "An/Aus"</textarea>
         <tr><td><code>exclusive()</code></td><td>Nur diesen aktivieren</td></tr>
         <tr><td rowspan="2"><strong>Sichtbarkeit</strong></td><td><code>show(Element)</code></td><td>Element sichtbar machen</td></tr>
         <tr><td><code>hide(Element)</code></td><td>Element verstecken</td></tr>
-        <tr><td rowspan="3"><strong>Feedback</strong></td><td><code>toast("Text")</code></td><td>Toast-Benachrichtigung</td></tr>
-        <tr><td><code>shake(Element)</code></td><td>Schüttel-Animation (Fehler)</td></tr>
-        <tr><td><code>pulse(Element)</code></td><td>Puls-Animation (Aufmerksamkeit)</td></tr>
+        <tr><td><strong>Feedback</strong></td><td><code>toast("Text")</code></td><td>Toast-Benachrichtigung</td></tr>
+        <tr><td rowspan="4"><strong>Input</strong></td><td><code>focus(Element)</code></td><td>Fokus setzen</td></tr>
+        <tr><td><code>clear(Element)</code></td><td>Eingabe löschen</td></tr>
+        <tr><td><code>setError(Element, "msg")</code></td><td>Fehler-State setzen</td></tr>
+        <tr><td><code>clearError(Element)</code></td><td>Fehler-State entfernen</td></tr>
         <tr><td rowspan="4"><strong>Zähler</strong></td><td><code>increment(token)</code></td><td>Token +1</td></tr>
         <tr><td><code>decrement(token)</code></td><td>Token -1</td></tr>
         <tr><td><code>set(token, value)</code></td><td>Token auf Wert setzen</td></tr>
@@ -120,25 +122,36 @@ Btn "An/Aus"</textarea>
 
     <!-- ============================================================ -->
     <section>
-      <h2>Feedback: shake() und pulse()</h2>
-      <p>Visuelle Feedback-Animationen für Fehler (<code>shake</code>) und Aufmerksamkeit (<code>pulse</code>):</p>
+      <h2>Input: focus(), clear(), setError()</h2>
+      <p>Funktionen zur Steuerung von Eingabefeldern – Fokus setzen, Werte löschen, Validierung anzeigen:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
-  Frame hor, gap 12
-    Input name EmailInput, placeholder "E-Mail eingeben...", bg #1a1a1a, col white, pad 12, rad 6, w 200
-    Button "Prüfen", pad 10 20, bg #2563eb, col white, rad 6, shake(EmailInput)
-
-  Frame hor, gap 12
-    Frame name Badge, pad 8 16, bg #ef4444, col white, rad 99
-      Text "3 neu"
-    Button "Hinweis", pad 10 20, bg #333, col white, rad 6, pulse(Badge)</textarea>
+  Frame gap 8
+    Input name EmailInput, placeholder "E-Mail eingeben...", bg #1a1a1a, col white, pad 12, rad 6, w 260, bor 1, boc #333
+      invalid:
+        boc #ef4444
+    Frame hor, gap 8
+      Button "Fokus", pad 8 16, bg #333, col white, rad 6, focus(EmailInput)
+      Button "Löschen", pad 8 16, bg #333, col white, rad 6, clear(EmailInput)
+      Button "Fehler", pad 8 16, bg #ef4444, col white, rad 6, setError(EmailInput, "Ungültige E-Mail")
+      Button "OK", pad 8 16, bg #10b981, col white, rad 6, clearError(EmailInput)</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>shake()</code> ist ideal für Fehler bei Validierung – das Eingabefeld schüttelt sich. <code>pulse()</code> lenkt Aufmerksamkeit auf ein Element, z.B. einen Badge mit neuen Nachrichten.</p>
+      <table class="ref-table">
+        <tr><th>Funktion</th><th>Beschreibung</th></tr>
+        <tr><td><code>focus(Element)</code></td><td>Fokus auf Element setzen</td></tr>
+        <tr><td><code>blur(Element)</code></td><td>Fokus entfernen</td></tr>
+        <tr><td><code>clear(Element)</code></td><td>Eingabewert löschen</td></tr>
+        <tr><td><code>selectText(Element)</code></td><td>Text im Feld markieren</td></tr>
+        <tr><td><code>setError(Element, "msg")</code></td><td>Fehler-State + Nachricht setzen</td></tr>
+        <tr><td><code>clearError(Element)</code></td><td>Fehler-State entfernen</td></tr>
+      </table>
+
+      <p class="note"><strong>Hinweis:</strong> <code>setError()</code> aktiviert den <code>invalid:</code> State und zeigt die Fehlermeldung an. Mit <code>clearError()</code> wird beides zurückgesetzt.</p>
 
     </section>
 
@@ -334,7 +347,7 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 12
           <textarea>count: 0
 
 Frame gap 8, bg #0a0a0a, pad 16, rad 8
-  Button "Like", name LikeBtn, pad 12 20, bg #333, col white, rad 6, hor, gap 8, toggle(), increment(count), pulse(LikeBtn)
+  Button "Like", name LikeBtn, pad 12 20, bg #333, col white, rad 6, hor, gap 8, toggle(), increment(count), toast("Gefällt dir!", "success")
     Icon "heart", ic #888, is 18
     Text "$count"
     on:
@@ -344,7 +357,7 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der Button hat <strong>drei</strong> Funktionen: <code>toggle()</code> wechselt den State, <code>increment(count)</code> erhöht den Zähler, und <code>pulse(LikeBtn)</code> zeigt visuelles Feedback.</p>
+      <p>Der Button hat <strong>drei</strong> Funktionen: <code>toggle()</code> wechselt den State, <code>increment(count)</code> erhöht den Zähler, und <code>toast()</code> zeigt eine Bestätigung.</p>
 
       <p class="note"><strong>Reihenfolge:</strong> Die Funktionen werden in der Reihenfolge ausgeführt, wie du sie schreibst.</p>
 
@@ -424,8 +437,16 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8
       <table class="ref-table">
         <tr><td><code>toast("Text")</code></td><td>Toast-Benachrichtigung</td></tr>
         <tr><td><code>toast("Text", "success")</code></td><td>Mit Type: info, success, error, warning</td></tr>
-        <tr><td><code>shake(Element)</code></td><td>Schüttel-Animation</td></tr>
-        <tr><td><code>pulse(Element)</code></td><td>Puls-Animation</td></tr>
+      </table>
+
+      <h3>Input Control</h3>
+      <table class="ref-table">
+        <tr><td><code>focus(Element)</code></td><td>Fokus setzen</td></tr>
+        <tr><td><code>blur(Element)</code></td><td>Fokus entfernen</td></tr>
+        <tr><td><code>clear(Element)</code></td><td>Eingabe löschen</td></tr>
+        <tr><td><code>selectText(Element)</code></td><td>Text markieren</td></tr>
+        <tr><td><code>setError(Element, "msg")</code></td><td>Fehler setzen</td></tr>
+        <tr><td><code>clearError(Element)</code></td><td>Fehler entfernen</td></tr>
       </table>
 
       <h3>Zähler & Werte</h3>
