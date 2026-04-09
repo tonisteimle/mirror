@@ -20,6 +20,7 @@ import type {
   AnimationDefinition,
   AnimationKeyframe,
   AnimationKeyframeProperty,
+  ZagNode,
   ZagSlotDef,
   ZagItem,
   TableNode,
@@ -39,6 +40,9 @@ import type {
 /** Property value type from AST - can be literal, token ref, loop var, conditional, or expression */
 type PropertyValue = string | number | boolean | TokenReference | LoopVarReference | ASTConditional | ComputedExpression
 
+/** Expression part type - operands in computed expressions */
+type ExpressionPart = string | number | TokenReference | LoopVarReference
+
 /** Child node type that can be transformed - matches transformChild parameter */
 type TransformableChild = Instance | Text | Slot
 
@@ -51,6 +55,38 @@ interface ConditionalBlock {
   line: number
   column: number
 }
+
+/** Extended IRItem with additional properties for SideNav and group items */
+interface ExtendedIRItem extends Omit<IRItem, 'items'> {
+  /** Item type for identification (e.g., 'group') */
+  type?: string
+  /** Badge text for navigation items */
+  badge?: string
+  /** Show arrow indicator */
+  arrow?: boolean
+  /** Whether the group is collapsible */
+  collapsible?: boolean
+  /** Whether the group starts open */
+  defaultOpen?: boolean
+  /** Nested items for group items */
+  items?: ExtendedIRItem[]
+}
+
+/** Simplified slot definition for synthetic ZagNode construction */
+interface SyntheticSlotDef {
+  properties: Property[]
+  sourcePosition?: { line: number; column: number }
+}
+
+/** Synthetic ZagItem with minimal required fields */
+interface SyntheticZagItem {
+  value?: string
+  label?: string
+  disabled?: boolean
+  icon?: string
+  children?: (Instance | Slot | Text | ZagNode)[]
+  properties?: Property[]
+}
 import {
   isComponent,
   isInstance,
@@ -61,7 +97,7 @@ import {
   hasContent,
   isTable,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray } from './types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRZagNode, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
@@ -585,7 +621,7 @@ class IRTransformer {
   /**
    * Transform a ZagComponent AST node into an IRZagNode
    */
-  private transformZagComponent(zagNode: any, parentLayoutContext?: ParentLayoutContext): IRNode {
+  private transformZagComponent(zagNode: ZagNode, parentLayoutContext?: ParentLayoutContext): IRNode {
     const nodeId = this.generateId()
 
     // Build machine configuration from properties
@@ -953,8 +989,8 @@ class IRTransformer {
     }
 
     // Transform items (including children for custom item content)
-    const transformItem = (item: ZagItem): any => {
-      const irItem: any = {
+    const transformItem = (item: ZagItem): ExtendedIRItem => {
+      const irItem: ExtendedIRItem = {
         value: item.value ?? item.label ?? '',
         label: item.label ?? item.value ?? '',
         disabled: item.disabled,
@@ -1058,7 +1094,7 @@ class IRTransformer {
     const styles = this.transformProperties(stylingProperties, 'div', parentLayoutContext)
 
     // Create IRZagNode
-    const irNode: any = {
+    const irNode: IRZagNode = {
       id: nodeId,
       tag: 'div',
       primitive: zagNode.name?.toLowerCase() ?? 'select',
@@ -1349,7 +1385,7 @@ class IRTransformer {
     instance: Instance,
     resolvedComponent: ComponentDefinition | null,
     primitive: string
-  ): any {
+  ): ZagNode {
     // Merge properties from instance and component definition
     const properties = this.mergeProperties(
       resolvedComponent?.properties || [],
@@ -1357,8 +1393,8 @@ class IRTransformer {
     )
 
     // Extract slots from component children
-    const slots: Record<string, any> = {}
-    const items: any[] = []
+    const slots: Record<string, SyntheticSlotDef> = {}
+    const items: SyntheticZagItem[] = []
 
     // Process children from both component definition and instance
     const allChildren = [
@@ -1464,12 +1500,13 @@ class IRTransformer {
 
     // Build the synthetic ZagNode
     return {
-      type: 'ZagComponent',
+      type: 'ZagComponent' as const,
       name: primitive.charAt(0).toUpperCase() + primitive.slice(1), // Capitalize
       machine: primitive.toLowerCase(),
       properties,
       slots,
       items,
+      events: [],
       line: instance.line,
       column: instance.column,
     }
@@ -4486,7 +4523,7 @@ class IRTransformer {
    * - pad x 16                       → padding-left: 16px, padding-right: 16px
    * - pad y 8                        → padding-top: 8px, padding-bottom: 8px
    */
-  private parseDirectionalSpacing(property: string, values: any[]): IRStyle[] {
+  private parseDirectionalSpacing(property: string, values: PropertyValue[]): IRStyle[] {
     const styles: IRStyle[] = []
 
     let i = 0
@@ -4524,7 +4561,7 @@ class IRTransformer {
   /**
    * Format border value: 1 #333 → 1px solid #333, 2 dashed #666 → 2px dashed #666
    */
-  private formatBorderValue(values: any[]): string {
+  private formatBorderValue(values: PropertyValue[]): string {
     const parts: string[] = []
     let hasStyle = false
     const styles = ['solid', 'dashed', 'dotted', 'double', 'groove', 'ridge', 'inset', 'outset', 'none']
@@ -4575,7 +4612,7 @@ class IRTransformer {
    * @param values The property values to resolve
    * @param propertyName Optional property name for context-aware token resolution
    */
-  private resolveValue(values: any[], propertyName?: string): string {
+  private resolveValue(values: PropertyValue[], propertyName?: string): string {
     return values
       .map(v => {
         // Explicit token reference object
@@ -4628,7 +4665,7 @@ class IRTransformer {
    * Unlike resolveValue which converts to CSS variables, this keeps $name format
    * for runtime resolution via $get()
    */
-  private resolveContentValue(values: any[]): string {
+  private resolveContentValue(values: PropertyValue[]): string {
     return values
       .map(v => {
         // Computed expression - build JavaScript expression string
@@ -4662,7 +4699,7 @@ class IRTransformer {
    * For: parts = ["Summe: €", "(", {count}, {price}, ")"], operators = ["+", "*"]
    * Output: "Summe: €" + ($count * $price)
    */
-  private buildExpressionString(parts: any[], operators: string[]): string {
+  private buildExpressionString(parts: ExpressionPart[], operators: string[]): string {
     const result: string[] = []
     let opIndex = 0
 

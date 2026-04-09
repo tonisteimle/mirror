@@ -36464,3 +36464,1468 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
   ],
 }
 `;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 1 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Line",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "line",
+        },
+        {
+          "name": "data",
+          "value": "$sales",
+        },
+      ],
+      "sourcePosition": {
+        "column": 5,
+        "endColumn": 5,
+        "endLine": 8,
+        "line": 8,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "400px",
+        },
+        {
+          "property": "height",
+          "value": "200px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Apr": 200,
+        "Feb": 180,
+        "Jan": 120,
+        "Mar": 240,
+        "May": 280,
+      },
+      "name": "sales",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 2 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Line",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "line",
+        },
+        {
+          "name": "data",
+          "value": "$revenue",
+        },
+      ],
+      "sourcePosition": {
+        "column": 5,
+        "endColumn": 5,
+        "endLine": 7,
+        "line": 7,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "350px",
+        },
+        {
+          "property": "height",
+          "value": "180px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Q1": 45,
+        "Q2": 62,
+        "Q3": 78,
+        "Q4": 95,
+      },
+      "name": "revenue",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 3 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Bar",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "bar",
+        },
+        {
+          "name": "data",
+          "value": "$teams",
+        },
+      ],
+      "sourcePosition": {
+        "column": 4,
+        "endColumn": 4,
+        "endLine": 7,
+        "line": 7,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "350px",
+        },
+        {
+          "property": "height",
+          "value": "180px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Design": 8,
+        "Engineering": 12,
+        "Marketing": 5,
+        "Sales": 7,
+      },
+      "name": "teams",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 4 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Pie",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "pie",
+        },
+        {
+          "name": "data",
+          "value": "$browsers",
+        },
+      ],
+      "sourcePosition": {
+        "column": 4,
+        "endColumn": 4,
+        "endLine": 7,
+        "line": 7,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "250px",
+        },
+        {
+          "property": "height",
+          "value": "200px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Chrome": 65,
+        "Firefox": 10,
+        "Other": 5,
+        "Safari": 20,
+      },
+      "name": "browsers",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 5 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Donut",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "doughnut",
+        },
+        {
+          "name": "data",
+          "value": "$status",
+        },
+      ],
+      "sourcePosition": {
+        "column": 6,
+        "endColumn": 6,
+        "endLine": 6,
+        "line": 6,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "200px",
+        },
+        {
+          "property": "height",
+          "value": "200px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Done": 45,
+        "Progress": 30,
+        "Todo": 25,
+      },
+      "name": "status",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 6 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Area",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "line",
+        },
+        {
+          "name": "data",
+          "value": "$users",
+        },
+      ],
+      "sourcePosition": {
+        "column": 5,
+        "endColumn": 5,
+        "endLine": 7,
+        "line": 7,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "350px",
+        },
+        {
+          "property": "height",
+          "value": "180px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Apr": 3100,
+        "Feb": 1800,
+        "Jan": 1200,
+        "Mar": 2400,
+      },
+      "name": "users",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 7 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Bar",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "bar",
+        },
+        {
+          "name": "data",
+          "value": "$sales",
+        },
+      ],
+      "sourcePosition": {
+        "column": 4,
+        "endColumn": 4,
+        "endLine": 7,
+        "line": 7,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "300px",
+        },
+        {
+          "property": "height",
+          "value": "160px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Feb": 180,
+        "Jan": 120,
+        "Mar": 240,
+      },
+      "name": "sales",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 8 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Bar",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "bar",
+        },
+        {
+          "name": "data",
+          "value": "$products",
+        },
+        {
+          "name": "xField",
+          "value": "name",
+        },
+        {
+          "name": "yField",
+          "value": "sales",
+        },
+      ],
+      "sourcePosition": {
+        "column": 4,
+        "endColumn": 4,
+        "endLine": 12,
+        "line": 12,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "position",
+          "value": "absolute",
+        },
+        {
+          "property": "left",
+          "value": "name",
+        },
+        {
+          "property": "position",
+          "value": "absolute",
+        },
+        {
+          "property": "top",
+          "value": "sales",
+        },
+        {
+          "property": "width",
+          "value": "300px",
+        },
+        {
+          "property": "height",
+          "value": "180px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "a": {
+          "name": "Widget",
+          "sales": 120,
+        },
+        "b": {
+          "name": "Gadget",
+          "sales": 85,
+        },
+        "c": {
+          "name": "Tool",
+          "sales": 200,
+        },
+      },
+      "name": "products",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 9 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Pie",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "pie",
+        },
+        {
+          "name": "data",
+          "value": "$data",
+        },
+        {
+          "name": "colors",
+          "value": "#2563eb,#10b981,#f59e0b",
+        },
+      ],
+      "sourcePosition": {
+        "column": 4,
+        "endColumn": 4,
+        "endLine": 6,
+        "line": 6,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "200px",
+        },
+        {
+          "property": "height",
+          "value": "180px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "A",
+      "type": "size",
+      "value": 30,
+    },
+    {
+      "name": "B",
+      "type": "size",
+      "value": 50,
+    },
+    {
+      "name": "C",
+      "type": "size",
+      "value": 20,
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 10 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Line",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "line",
+        },
+        {
+          "name": "data",
+          "value": "$revenue",
+        },
+        {
+          "name": "title",
+          "value": "Quartalsumsatz 2024",
+        },
+      ],
+      "sourcePosition": {
+        "column": 5,
+        "endColumn": 5,
+        "endLine": 7,
+        "line": 7,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "350px",
+        },
+        {
+          "property": "height",
+          "value": "200px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Q1": 45,
+        "Q2": 62,
+        "Q3": 78,
+        "Q4": 95,
+      },
+      "name": "revenue",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 11 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Bar",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "bar",
+        },
+        {
+          "name": "data",
+          "value": "$months",
+        },
+        {
+          "name": "legend",
+          "value": true,
+        },
+      ],
+      "sourcePosition": {
+        "column": 4,
+        "endColumn": 4,
+        "endLine": 6,
+        "line": 6,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "350px",
+        },
+        {
+          "property": "height",
+          "value": "200px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Feb": 180,
+        "Jan": 120,
+        "Mar": 240,
+      },
+      "name": "months",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 12 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "name": "Line",
+      "primitive": "chart",
+      "properties": [
+        {
+          "name": "chartType",
+          "value": "line",
+        },
+        {
+          "name": "data",
+          "value": "$data",
+        },
+        {
+          "name": "grid",
+          "value": false,
+        },
+      ],
+      "sourcePosition": {
+        "column": 5,
+        "endColumn": 5,
+        "endLine": 7,
+        "line": 7,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "grid",
+        },
+        {
+          "property": "width",
+          "value": "350px",
+        },
+        {
+          "property": "height",
+          "value": "180px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "A",
+      "type": "size",
+      "value": 30,
+    },
+    {
+      "name": "B",
+      "type": "size",
+      "value": 50,
+    },
+    {
+      "name": "C",
+      "type": "size",
+      "value": 40,
+    },
+    {
+      "name": "D",
+      "type": "size",
+      "value": 60,
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 13 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Title",
+          "primitive": "title",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Monatsumsatz",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "font-size",
+              "value": "16px",
+            },
+            {
+              "property": "font-weight",
+              "value": "600",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Subtitle",
+          "primitive": "subtitle",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Januar - April 2024",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "color",
+              "value": "#888",
+            },
+            {
+              "property": "font-size",
+              "value": "13px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "name": "Line",
+          "primitive": "chart",
+          "properties": [
+            {
+              "name": "chartType",
+              "value": "line",
+            },
+            {
+              "name": "data",
+              "value": "$sales",
+            },
+          ],
+          "sourcePosition": {
+            "column": 7,
+            "endColumn": 7,
+            "endLine": 14,
+            "line": 14,
+          },
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "width",
+              "value": "100%",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "min-width",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "160px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Card",
+      "primitive": "Frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "20px",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Apr": 200,
+        "Feb": 180,
+        "Jan": 120,
+        "Mar": 240,
+      },
+      "name": "sales",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 15 - charts > Example 14 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-4",
+                  "isDefinition": false,
+                  "name": "Label",
+                  "primitive": "label",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Revenue",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "12px",
+                    },
+                  ],
+                  "tag": "label",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-5",
+                  "isDefinition": false,
+                  "name": "Value",
+                  "primitive": "value",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "color",
+                      "value": "white",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "24px",
+                    },
+                    {
+                      "property": "font-weight",
+                      "value": "600",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-6",
+                  "name": "Line",
+                  "primitive": "chart",
+                  "properties": [
+                    {
+                      "name": "chartType",
+                      "value": "line",
+                    },
+                    {
+                      "name": "data",
+                      "value": "$revenue",
+                    },
+                    {
+                      "name": "grid",
+                      "value": false,
+                    },
+                    {
+                      "name": "axes",
+                      "value": false,
+                    },
+                  ],
+                  "sourcePosition": {
+                    "column": 11,
+                    "endColumn": 11,
+                    "endLine": 20,
+                    "line": 20,
+                  },
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "grid",
+                    },
+                    {
+                      "property": "width",
+                      "value": "180px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "80px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Stat",
+              "primitive": "Frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+                {
+                  "property": "background",
+                  "value": "#1a1a1a",
+                },
+                {
+                  "property": "padding",
+                  "value": "16px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "8px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-8",
+                  "isDefinition": false,
+                  "name": "Label",
+                  "primitive": "label",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Users",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "12px",
+                    },
+                  ],
+                  "tag": "label",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-9",
+                  "isDefinition": false,
+                  "name": "Value",
+                  "primitive": "value",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "color",
+                      "value": "white",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "24px",
+                    },
+                    {
+                      "property": "font-weight",
+                      "value": "600",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-10",
+                  "name": "Donut",
+                  "primitive": "chart",
+                  "properties": [
+                    {
+                      "name": "chartType",
+                      "value": "doughnut",
+                    },
+                    {
+                      "name": "data",
+                      "value": "$users",
+                    },
+                  ],
+                  "sourcePosition": {
+                    "column": 12,
+                    "endColumn": 12,
+                    "endLine": 23,
+                    "line": 23,
+                  },
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "width",
+                      "value": "100px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "100px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Stat",
+              "primitive": "Frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+                {
+                  "property": "background",
+                  "value": "#1a1a1a",
+                },
+                {
+                  "property": "padding",
+                  "value": "16px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "8px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "16px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "16px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "Q1": 45,
+        "Q2": 62,
+        "Q3": 78,
+        "Q4": 95,
+      },
+      "name": "revenue",
+    },
+    {
+      "data": {
+        "Free": 1200,
+        "Pro": 450,
+        "Team": 180,
+      },
+      "name": "users",
+    },
+  ],
+}
+`;

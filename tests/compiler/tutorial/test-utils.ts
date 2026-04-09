@@ -7,6 +7,18 @@
 import { parse } from '../../../compiler/parser'
 import { generateDOM } from '../../../compiler/backends/dom'
 
+// Mock chart functions for test environment
+// These are async in production but we mock them as no-ops
+const mockChartRuntime = {
+  createChart: async () => {},
+  updateChart: () => {},
+}
+
+// Make mock available globally for generated code
+if (typeof globalThis !== 'undefined') {
+  (globalThis as any)._chartMock = mockChartRuntime
+}
+
 /**
  * Rendert Mirror-Code und gibt UI-Objekt zurück.
  * Inkludiert die Runtime, sodass Events funktionieren.
@@ -25,6 +37,16 @@ export function renderWithRuntime(code: string, container: HTMLElement): {
 
   // Remove 'export' keyword for eval
   domCode = domCode.replace(/^export\s+function/gm, 'function')
+
+  // Inject chart mock - replace _runtime.createChart with mock
+  domCode = domCode.replace(
+    /_runtime\.createChart/g,
+    '(globalThis._chartMock?.createChart || (async () => {}))'
+  )
+  domCode = domCode.replace(
+    /_runtime\.updateChart/g,
+    '(globalThis._chartMock?.updateChart || (() => {}))'
+  )
 
   // Execute the code
   const fn = new Function(domCode + '\nreturn createUI();')

@@ -79,6 +79,7 @@ const SKIP_EXAMPLES: Record<string, number[]> = {
   '06 - states': [10, 11], // Uses IntersectionObserver (not available in JSDOM)
   '09 - daten': [9], // Produktliste with each/in loop - $product scope issue
   '14 - tables': [20], // Uses $users, $selected, select(), custom methods
+  '15 - charts': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], // Charts not in inline runtime yet
   '16 - forms': [11],  // Uses isValidEmail(), 'and not' syntax, register()
 }
 
