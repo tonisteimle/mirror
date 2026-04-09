@@ -1160,6 +1160,25 @@
       margin: 0 4px;
     }
 
+    .editor-action-spacer {
+      flex: 1;
+    }
+
+    .tutorial-link {
+      display: flex;
+      align-items: center;
+      opacity: 0.6;
+      transition: opacity 0.15s;
+    }
+
+    .tutorial-link:hover {
+      opacity: 1;
+    }
+
+    .tutorial-link img {
+      height: 18px;
+    }
+
     /* Cleanup Button */
     .cleanup-btn {
       width: auto !important;
