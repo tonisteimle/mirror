@@ -383,6 +383,162 @@ Card as Box:
     })
   })
 
+  describe('Lexer Error Integration', () => {
+    it('includes unclosed string errors in validation result', () => {
+      const result = validate('Text "unclosed')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.UNCLOSED_STRING)).toBe(true)
+    })
+
+    it('includes invalid hex color errors', () => {
+      const result = validate('Box bg #12')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.INVALID_HEX_COLOR)).toBe(true)
+    })
+
+    it('includes empty hex color errors', () => {
+      const result = validate('Box bg #')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.INVALID_HEX_COLOR)).toBe(true)
+    })
+
+    it('includes unknown character errors', () => {
+      const result = validate('Box ~ w 100')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_CHARACTER)).toBe(true)
+    })
+
+    it('includes number parsing errors as warnings', () => {
+      const result = validate('Box w .5')
+      // Leading decimal is a warning, not an error
+      expect(result.warnings.some(e => e.code === ERROR_CODES.INVALID_NUMBER)).toBe(true)
+    })
+
+    it('merges lexer errors with validator errors', () => {
+      const result = validate('UnknownComponent "unclosed')
+      // Should have both lexer error (unclosed string) and validator error (undefined component)
+      expect(result.errors.some(e => e.code === ERROR_CODES.UNCLOSED_STRING)).toBe(true)
+      expect(result.errors.some(e => e.code === ERROR_CODES.UNDEFINED_COMPONENT)).toBe(true)
+    })
+
+    it('accepts valid code without lexer errors', () => {
+      const result = validate('Box w 100 h 200 bg #333')
+      expect(result.valid).toBe(true)
+      expect(result.errors.filter(e => e.code.startsWith('E01'))).toHaveLength(0)
+    })
+  })
+
+  describe('Layout Conflicts', () => {
+    it('detects hor + ver conflict', () => {
+      const result = validate('Box hor ver')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
+      expect(result.errors[0].message).toContain('hor')
+      expect(result.errors[0].message).toContain('ver')
+    })
+
+    it('detects center + spread conflict', () => {
+      const result = validate('Box center spread')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
+    })
+
+    it('detects grid + hor conflict', () => {
+      const result = validate('Box grid 12 hor')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
+    })
+
+    it('detects multiple zone alignments', () => {
+      const result = validate('Box tl br')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
+    })
+
+    it('accepts single direction', () => {
+      const result = validate('Box hor gap 8')
+      expect(result.errors.filter(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toHaveLength(0)
+    })
+
+    it('accepts hor with ver-center', () => {
+      const result = validate('Box hor ver-center')
+      expect(result.errors.filter(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toHaveLength(0)
+    })
+  })
+
+  describe('Duplicate Properties', () => {
+    it('warns on duplicate property', () => {
+      const result = validate('Box bg #f00 bg #00f')
+      expect(result.warnings.some(e => e.code === ERROR_CODES.DUPLICATE_PROPERTY)).toBe(true)
+    })
+
+    it('warns on duplicate property with different case', () => {
+      const result = validate('Box BG #f00 bg #00f')
+      expect(result.warnings.some(e => e.code === ERROR_CODES.DUPLICATE_PROPERTY)).toBe(true)
+    })
+
+    it('accepts different properties', () => {
+      const result = validate('Box bg #f00 col white')
+      expect(result.warnings.filter(e => e.code === ERROR_CODES.DUPLICATE_PROPERTY)).toHaveLength(0)
+    })
+  })
+
+  describe('Required Properties', () => {
+    it('errors when Image missing src', () => {
+      const result = validate('Image w 100 h 100')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.MISSING_REQUIRED)).toBe(true)
+      expect(result.errors[0].message).toContain('src')
+    })
+
+    it('errors when Link missing href', () => {
+      const result = validate('Link "Click me"')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.MISSING_REQUIRED)).toBe(true)
+      expect(result.errors[0].message).toContain('href')
+    })
+
+    it('accepts Image with src', () => {
+      const result = validate('Image src "photo.jpg"')
+      expect(result.errors.filter(e => e.code === ERROR_CODES.MISSING_REQUIRED)).toHaveLength(0)
+    })
+
+    it('accepts Link with href', () => {
+      const result = validate('Link href "https://example.com"')
+      expect(result.errors.filter(e => e.code === ERROR_CODES.MISSING_REQUIRED)).toHaveLength(0)
+    })
+  })
+
+  describe('Property Ranges', () => {
+    it('errors when opacity > 1', () => {
+      const result = validate('Box opacity 5')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.VALUE_OUT_OF_RANGE)).toBe(true)
+    })
+
+    it('errors when opacity < 0', () => {
+      const result = validate('Box opacity -1')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.VALUE_OUT_OF_RANGE)).toBe(true)
+    })
+
+    it('accepts opacity in valid range', () => {
+      const result = validate('Box opacity 0.5')
+      expect(result.errors.filter(e => e.code === ERROR_CODES.VALUE_OUT_OF_RANGE)).toHaveLength(0)
+    })
+
+    it('errors when scale <= 0', () => {
+      const result = validate('Box scale -1')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.VALUE_OUT_OF_RANGE)).toBe(true)
+    })
+
+    it('accepts positive scale', () => {
+      const result = validate('Box scale 1.5')
+      expect(result.errors.filter(e => e.code === ERROR_CODES.VALUE_OUT_OF_RANGE)).toHaveLength(0)
+    })
+  })
+
   describe('formatErrors', () => {
     it('formats errors with source context', () => {
       const source = 'Box unknownProp 123'

@@ -13,6 +13,8 @@ import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import { generateTheme, isThemeToken } from '../schema/theme-generator'
 import type { DataFile } from '../parser/data-types'
 import { mergeDataFiles, serializeDataForJS } from '../parser/data-parser'
+import { dispatchZagEmitter } from './dom/zag-emitters'
+import type { ZagEmitterContext } from './dom/zag-emitter-context'
 
 /**
  * Escape a string for safe inclusion in JavaScript code
@@ -95,6 +97,36 @@ class DOMGenerator {
       if (token.value !== undefined) {
         this.tokenMap.set(token.name, token.value)
       }
+    }
+  }
+
+  /**
+   * Create a ZagEmitterContext that delegates to this generator's methods.
+   * This allows Zag emitters to be extracted into separate files while
+   * still having access to the generator's functionality.
+   */
+  private createZagEmitterContext(): ZagEmitterContext {
+    return {
+      emit: (line: string) => this.emit(line),
+      getIndent: () => this.indent,
+      setIndent: (level: number) => { this.indent = level },
+      indentIn: () => { this.indent++ },
+      indentOut: () => { this.indent-- },
+      sanitizeVarName: (id: string) => this.sanitizeVarName(id),
+      escapeString: (str) => this.escapeString(str),
+      emitNode: (node: IRNode, parentVar: string) => this.emitNode(node, parentVar),
+      emitSlotStyles: (varName: string, slot) => {
+        if (slot?.styles && slot.styles.length > 0) {
+          this.emit(`${varName}.setAttribute('data-styled', 'true')`)
+          this.emit(`Object.assign(${varName}.style, {`)
+          this.indent++
+          for (const style of slot.styles) {
+            this.emit(`'${style.property}': '${style.value}',`)
+          }
+          this.indent--
+          this.emit('})')
+        }
+      },
     }
   }
 
@@ -417,6 +449,10 @@ class DOMGenerator {
     this.emit('return result')
     this.indent--
     this.emit('}')
+    this.emit('')
+
+    // Check _mirrorState first (for bind variables set by exclusiveTransition)
+    this.emit('if (window._mirrorState && name in window._mirrorState) return window._mirrorState[name]')
     this.emit('')
 
     // First try full key (for tokens like "user.profile.name")
@@ -995,10 +1031,19 @@ class DOMGenerator {
       this.emit(`${varName}.style.display = 'none'`)
     }
 
-    // Selection binding
+    // Selection binding - for exclusive() to update a variable with selected content
     if (node.selection) {
       const selectionVar = node.selection.startsWith('$') ? node.selection.slice(1) : node.selection
       this.emit(`${varName}._selectionBinding = '${selectionVar}'`)
+      // Set data-selection so runtime can find this container when exclusive() fires
+      this.emit(`${varName}.dataset.selection = '${selectionVar}'`)
+    }
+
+    // Bind - track active exclusive() child content in a variable
+    if (node.bind) {
+      const bindVar = node.bind.startsWith('$') ? node.bind.slice(1) : node.bind
+      // Set data-bind so runtime can find this container when exclusive() fires
+      this.emit(`${varName}.dataset.bind = '${bindVar}'`)
     }
 
     // Component name (for navigation targets)
@@ -1023,6 +1068,12 @@ class DOMGenerator {
       this.emit(`${varName}.setAttribute('tabindex', '0')`)
     }
     for (const event of node.events) {
+      // Skip events that are fully handled by state machine transitions
+      // These have only isBuiltinStateFunction actions (toggle, exclusive, cycle)
+      const allActionsAreStateMachine = event.actions.every(a => a.isBuiltinStateFunction)
+      if (allActionsAreStateMachine && node.stateMachine) {
+        continue  // State machine will handle this event via transitions
+      }
       this.emitEventListener(varName, event)
     }
 
@@ -2268,15 +2319,18 @@ class DOMGenerator {
   }
 
   private emitZagComponent(node: IRZagNode, parentVar: string): void {
-    // Route to specialized emitters for complex components
+    // Try extracted emitters first (gradual migration)
+    const ctx = this.createZagEmitterContext()
+    if (dispatchZagEmitter(node, parentVar, ctx)) {
+      return
+    }
+
+    // Route to specialized emitters for complex components (legacy - being migrated)
     if (node.zagType === 'tabs') {
       this.emitTabsComponent(node, parentVar)
       return
     }
-    if (node.zagType === 'switch') {
-      this.emitSwitchComponent(node, parentVar)
-      return
-    }
+    // switch: migrated to zag-emitters.ts
     if (node.zagType === 'datepicker' || node.zagType === 'date-picker') {
       this.emitDatePickerComponent(node, parentVar)
       return
@@ -2297,10 +2351,7 @@ class DOMGenerator {
       this.emitEditableComponent(node, parentVar)
       return
     }
-    if (node.zagType === 'checkbox') {
-      this.emitCheckboxComponent(node, parentVar)
-      return
-    }
+    // checkbox: migrated to zag-emitters.ts
     if (node.zagType === 'accordion') {
       this.emitAccordionComponent(node, parentVar)
       return
@@ -2329,34 +2380,11 @@ class DOMGenerator {
       this.emitPasswordInputComponent(node, parentVar)
       return
     }
-    if (node.zagType === 'progress') {
-      this.emitProgressComponent(node, parentVar)
-      return
-    }
-    if (node.zagType === 'circular-progress' || node.zagType === 'circularprogress') {
-      this.emitCircularProgressComponent(node, parentVar)
-      return
-    }
-    if (node.zagType === 'avatar') {
-      this.emitAvatarComponent(node, parentVar)
-      return
-    }
-    if (node.zagType === 'file-upload' || node.zagType === 'fileupload') {
-      this.emitFileUploadComponent(node, parentVar)
-      return
-    }
-    if (node.zagType === 'carousel') {
-      this.emitCarouselComponent(node, parentVar)
-      return
-    }
-    if (node.zagType === 'steps' || node.zagType === 'stepper') {
-      this.emitStepsComponent(node, parentVar)
-      return
-    }
-    if (node.zagType === 'pagination') {
-      this.emitPaginationComponent(node, parentVar)
-      return
-    }
+    // circular-progress: migrated to zag-emitters.ts
+    // file-upload: migrated to zag-emitters.ts
+    // carousel: migrated to zag-emitters.ts
+    // steps: migrated to zag-emitters.ts
+    // pagination: migrated to zag-emitters.ts
     if (node.zagType === 'tree-view' || node.zagType === 'treeview') {
       this.emitTreeViewComponent(node, parentVar)
       return
@@ -2750,103 +2778,7 @@ class DOMGenerator {
     this.emit('')
   }
 
-  /**
-   * Emit Switch component (slots-only pattern)
-   * Structure: label > [track > thumb] [labelText]
-   */
-  private emitSwitchComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// Switch Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('label')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'switch'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'switch',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Create Track (the sliding background)
-    const trackSlot = node.slots['Track']
-    const trackVar = `${varName}_track`
-    this.emit(`// Track (background)`)
-    this.emit(`const ${trackVar} = document.createElement('span')`)
-    this.emit(`${trackVar}.dataset.slot = 'Track'`)
-    if (trackSlot?.styles && trackSlot.styles.length > 0) {
-      this.emit(`Object.assign(${trackVar}.style, {`)
-      this.indent++
-      for (const style of trackSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${trackVar})`)
-    this.emit('')
-
-    // Create Thumb (the sliding circle)
-    const thumbSlot = node.slots['Thumb']
-    const thumbVar = `${varName}_thumb`
-    this.emit(`// Thumb (slider)`)
-    this.emit(`const ${thumbVar} = document.createElement('span')`)
-    this.emit(`${thumbVar}.dataset.slot = 'Thumb'`)
-    if (thumbSlot?.styles && thumbSlot.styles.length > 0) {
-      this.emit(`Object.assign(${thumbVar}.style, {`)
-      this.indent++
-      for (const style of thumbSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${trackVar}.appendChild(${thumbVar})`)
-    this.emit('')
-
-    // Create Label (text)
-    const labelText = (node.machineConfig?.label as string) || ''
-    if (labelText) {
-      const labelSlot = node.slots['Label']
-      const labelVar = `${varName}_label`
-      this.emit(`// Label text`)
-      this.emit(`const ${labelVar} = document.createElement('span')`)
-      this.emit(`${labelVar}.dataset.slot = 'Label'`)
-      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
-      if (labelSlot?.styles && labelSlot.styles.length > 0) {
-        this.emit(`Object.assign(${labelVar}.style, {`)
-        this.indent++
-        for (const style of labelSlot.styles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('})')
-      }
-      this.emit(`${varName}.appendChild(${labelVar})`)
-      this.emit('')
-    }
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Switch via runtime
-    this.emit(`// Initialize Switch`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initSwitchComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initSwitchComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
+  // emitSwitchComponent: migrated to compiler/backends/dom/zag-emitters.ts
 
   private emitDatePickerComponent(node: IRZagNode, parentVar: string): void {
     const varName = this.sanitizeVarName(node.id)
@@ -3400,137 +3332,7 @@ class DOMGenerator {
     this.emit('')
   }
 
-  private emitCheckboxComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// Checkbox Component: ${node.name}`)
-    // Root is a label element for accessibility
-    this.emit(`const ${varName} = document.createElement('label')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'checkbox'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'checkbox',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Apply root styles
-    const rootSlot = node.slots['Root']
-    if (rootSlot?.styles && rootSlot.styles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of rootSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create HiddenInput (for form submission)
-    const hiddenInputVar = `${varName}_hiddenInput`
-    this.emit(`// HiddenInput (form submission)`)
-    this.emit(`const ${hiddenInputVar} = document.createElement('input')`)
-    this.emit(`${hiddenInputVar}.type = 'checkbox'`)
-    this.emit(`${hiddenInputVar}.dataset.slot = 'HiddenInput'`)
-    this.emit(`${hiddenInputVar}.style.position = 'absolute'`)
-    this.emit(`${hiddenInputVar}.style.width = '1px'`)
-    this.emit(`${hiddenInputVar}.style.height = '1px'`)
-    this.emit(`${hiddenInputVar}.style.padding = '0'`)
-    this.emit(`${hiddenInputVar}.style.margin = '-1px'`)
-    this.emit(`${hiddenInputVar}.style.overflow = 'hidden'`)
-    this.emit(`${hiddenInputVar}.style.clip = 'rect(0, 0, 0, 0)'`)
-    this.emit(`${hiddenInputVar}.style.whiteSpace = 'nowrap'`)
-    this.emit(`${hiddenInputVar}.style.border = '0'`)
-    const formName = (node.machineConfig?.name as string) || ''
-    if (formName) {
-      this.emit(`${hiddenInputVar}.name = '${this.escapeString(formName)}'`)
-    }
-    this.emit(`${varName}.appendChild(${hiddenInputVar})`)
-    this.emit('')
-
-    // Create Control (the visual checkbox box)
-    const controlSlot = node.slots['Control']
-    const controlVar = `${varName}_control`
-    this.emit(`// Control (visual checkbox)`)
-    this.emit(`const ${controlVar} = document.createElement('div')`)
-    this.emit(`${controlVar}.dataset.slot = 'Control'`)
-    if (controlSlot?.styles && controlSlot.styles.length > 0) {
-      this.emit(`Object.assign(${controlVar}.style, {`)
-      this.indent++
-      for (const style of controlSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${controlVar})`)
-    this.emit('')
-
-    // Create Indicator (checkmark icon inside Control)
-    const indicatorSlot = node.slots['Indicator']
-    const indicatorVar = `${varName}_indicator`
-    this.emit(`// Indicator (checkmark)`)
-    this.emit(`const ${indicatorVar} = document.createElement('span')`)
-    this.emit(`${indicatorVar}.dataset.slot = 'Indicator'`)
-    // Icon can be customized via machineConfig
-    const checkboxIcon = node.machineConfig.icon || 'check'
-    this.emit(`${indicatorVar}.dataset.icon = '${this.escapeString(String(checkboxIcon))}'`)
-    if (indicatorSlot?.styles && indicatorSlot.styles.length > 0) {
-      this.emit(`Object.assign(${indicatorVar}.style, {`)
-      this.indent++
-      for (const style of indicatorSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${controlVar}.appendChild(${indicatorVar})`)
-    this.emit('')
-
-    // Create Label (text)
-    const labelText = (node.machineConfig?.label as string) || ''
-    if (labelText) {
-      const labelSlot = node.slots['Label']
-      const labelVar = `${varName}_label`
-      this.emit(`// Label`)
-      this.emit(`const ${labelVar} = document.createElement('span')`)
-      this.emit(`${labelVar}.dataset.slot = 'Label'`)
-      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
-      if (labelSlot?.styles && labelSlot.styles.length > 0) {
-        this.emit(`Object.assign(${labelVar}.style, {`)
-        this.indent++
-        for (const style of labelSlot.styles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('})')
-      }
-      this.emit(`${varName}.appendChild(${labelVar})`)
-      this.emit('')
-    }
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Checkbox via runtime
-    this.emit(`// Initialize Checkbox`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initCheckboxComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initCheckboxComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
+  // emitCheckboxComponent: migrated to compiler/backends/dom/zag-emitters.ts
 
   private emitAccordionComponent(node: IRZagNode, parentVar: string): void {
     const varName = this.sanitizeVarName(node.id)
@@ -4622,929 +4424,8 @@ class DOMGenerator {
     this.emit('')
   }
 
-  private emitProgressComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// Progress Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('div')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'progress'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'progress',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Apply root styles
-    const rootSlot = node.slots['Root']
-    if (rootSlot?.styles && rootSlot.styles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of rootSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create Label if exists
-    const labelText = node.machineConfig.label as string
-    if (labelText) {
-      const labelSlot = node.slots['Label']
-      const labelVar = `${varName}_label`
-      this.emit(`// Label`)
-      this.emit(`const ${labelVar} = document.createElement('label')`)
-      this.emit(`${labelVar}.dataset.slot = 'Label'`)
-      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
-      if (labelSlot?.styles && labelSlot.styles.length > 0) {
-        this.emit(`Object.assign(${labelVar}.style, {`)
-        this.indent++
-        for (const style of labelSlot.styles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('})')
-      }
-      this.emit(`${varName}.appendChild(${labelVar})`)
-      this.emit('')
-    }
-
-    // Create Track
-    const trackSlot = node.slots['Track']
-    const trackVar = `${varName}_track`
-    this.emit(`// Track`)
-    this.emit(`const ${trackVar} = document.createElement('div')`)
-    this.emit(`${trackVar}.dataset.slot = 'Track'`)
-    if (trackSlot?.styles && trackSlot.styles.length > 0) {
-      this.emit(`Object.assign(${trackVar}.style, {`)
-      this.indent++
-      for (const style of trackSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create Range (filled portion)
-    const rangeSlot = node.slots['Range']
-    const rangeVar = `${varName}_range`
-    this.emit(`// Range (filled portion)`)
-    this.emit(`const ${rangeVar} = document.createElement('div')`)
-    this.emit(`${rangeVar}.dataset.slot = 'Range'`)
-    if (rangeSlot?.styles && rangeSlot.styles.length > 0) {
-      this.emit(`Object.assign(${rangeVar}.style, {`)
-      this.indent++
-      for (const style of rangeSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${trackVar}.appendChild(${rangeVar})`)
-
-    this.emit(`${varName}.appendChild(${trackVar})`)
-    this.emit('')
-
-    // Create ValueText if slot is defined
-    const valueTextSlot = node.slots['ValueText']
-    if (valueTextSlot) {
-      const valueTextVar = `${varName}_valueText`
-      this.emit(`// ValueText`)
-      this.emit(`const ${valueTextVar} = document.createElement('span')`)
-      this.emit(`${valueTextVar}.dataset.slot = 'ValueText'`)
-      if (valueTextSlot.styles && valueTextSlot.styles.length > 0) {
-        this.emit(`Object.assign(${valueTextVar}.style, {`)
-        this.indent++
-        for (const style of valueTextSlot.styles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('})')
-      }
-      this.emit(`${varName}.appendChild(${valueTextVar})`)
-      this.emit('')
-    }
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Progress via runtime
-    this.emit(`// Initialize Progress`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initProgressComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initProgressComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
-
-  private emitCircularProgressComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// CircularProgress Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('div')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'circular-progress'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'circular-progress',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Apply root styles
-    const rootSlot = node.slots['Root']
-    if (rootSlot?.styles && rootSlot.styles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of rootSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create Label if exists
-    const labelText = node.machineConfig.label as string
-    if (labelText) {
-      const labelSlot = node.slots['Label']
-      const labelVar = `${varName}_label`
-      this.emit(`// Label`)
-      this.emit(`const ${labelVar} = document.createElement('label')`)
-      this.emit(`${labelVar}.dataset.slot = 'Label'`)
-      this.emit(`${labelVar}.textContent = '${this.escapeString(labelText)}'`)
-      if (labelSlot?.styles && labelSlot.styles.length > 0) {
-        this.emit(`Object.assign(${labelVar}.style, {`)
-        this.indent++
-        for (const style of labelSlot.styles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('})')
-      }
-      this.emit(`${varName}.appendChild(${labelVar})`)
-      this.emit('')
-    }
-
-    // Create SVG Circle container
-    const circleSlot = node.slots['Circle']
-    const circleVar = `${varName}_circle`
-    this.emit(`// Circle (SVG container)`)
-    this.emit(`const ${circleVar} = document.createElementNS('http://www.w3.org/2000/svg', 'svg')`)
-    this.emit(`${circleVar}.dataset.slot = 'Circle'`)
-    this.emit(`${circleVar}.setAttribute('viewBox', '0 0 100 100')`)
-    if (circleSlot?.styles && circleSlot.styles.length > 0) {
-      this.emit(`Object.assign(${circleVar}.style, {`)
-      this.indent++
-      for (const style of circleSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create CircleTrack
-    const circleTrackSlot = node.slots['CircleTrack']
-    const circleTrackVar = `${varName}_circleTrack`
-    this.emit(`// CircleTrack`)
-    this.emit(`const ${circleTrackVar} = document.createElementNS('http://www.w3.org/2000/svg', 'circle')`)
-    this.emit(`${circleTrackVar}.dataset.slot = 'CircleTrack'`)
-    this.emit(`${circleTrackVar}.setAttribute('cx', '50')`)
-    this.emit(`${circleTrackVar}.setAttribute('cy', '50')`)
-    this.emit(`${circleTrackVar}.setAttribute('r', '42')`)
-    this.emit(`${circleTrackVar}.setAttribute('fill', 'none')`)
-    if (circleTrackSlot?.styles && circleTrackSlot.styles.length > 0) {
-      this.emit(`Object.assign(${circleTrackVar}.style, {`)
-      this.indent++
-      for (const style of circleTrackSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${circleVar}.appendChild(${circleTrackVar})`)
-
-    // Create CircleRange
-    const circleRangeSlot = node.slots['CircleRange']
-    const circleRangeVar = `${varName}_circleRange`
-    this.emit(`// CircleRange`)
-    this.emit(`const ${circleRangeVar} = document.createElementNS('http://www.w3.org/2000/svg', 'circle')`)
-    this.emit(`${circleRangeVar}.dataset.slot = 'CircleRange'`)
-    this.emit(`${circleRangeVar}.setAttribute('cx', '50')`)
-    this.emit(`${circleRangeVar}.setAttribute('cy', '50')`)
-    this.emit(`${circleRangeVar}.setAttribute('r', '42')`)
-    this.emit(`${circleRangeVar}.setAttribute('fill', 'none')`)
-    if (circleRangeSlot?.styles && circleRangeSlot.styles.length > 0) {
-      this.emit(`Object.assign(${circleRangeVar}.style, {`)
-      this.indent++
-      for (const style of circleRangeSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${circleVar}.appendChild(${circleRangeVar})`)
-
-    this.emit(`${varName}.appendChild(${circleVar})`)
-    this.emit('')
-
-    // Create ValueText if slot is defined
-    const valueTextSlot = node.slots['ValueText']
-    if (valueTextSlot) {
-      const valueTextVar = `${varName}_valueText`
-      this.emit(`// ValueText`)
-      this.emit(`const ${valueTextVar} = document.createElement('span')`)
-      this.emit(`${valueTextVar}.dataset.slot = 'ValueText'`)
-      if (valueTextSlot.styles && valueTextSlot.styles.length > 0) {
-        this.emit(`Object.assign(${valueTextVar}.style, {`)
-        this.indent++
-        for (const style of valueTextSlot.styles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('})')
-      }
-      this.emit(`${varName}.appendChild(${valueTextVar})`)
-      this.emit('')
-    }
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize CircularProgress via runtime
-    this.emit(`// Initialize CircularProgress`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initCircularProgressComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initCircularProgressComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
-
-  private emitAvatarComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// Avatar Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('div')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'avatar'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'avatar',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Apply root styles
-    const rootSlot = node.slots['Root']
-    if (rootSlot?.styles && rootSlot.styles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of rootSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create Image
-    const imageSlot = node.slots['Image']
-    const imageVar = `${varName}_image`
-    this.emit(`// Image`)
-    this.emit(`const ${imageVar} = document.createElement('img')`)
-    this.emit(`${imageVar}.dataset.slot = 'Image'`)
-    const src = node.machineConfig.src as string
-    if (src) {
-      this.emit(`${imageVar}.src = '${this.escapeString(src)}'`)
-    }
-    const name = node.machineConfig.name as string
-    if (name) {
-      this.emit(`${imageVar}.alt = '${this.escapeString(name)}'`)
-    }
-    if (imageSlot?.styles && imageSlot.styles.length > 0) {
-      this.emit(`Object.assign(${imageVar}.style, {`)
-      this.indent++
-      for (const style of imageSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${imageVar})`)
-    this.emit('')
-
-    // Create Fallback
-    const fallbackSlot = node.slots['Fallback']
-    const fallbackVar = `${varName}_fallback`
-    this.emit(`// Fallback`)
-    this.emit(`const ${fallbackVar} = document.createElement('span')`)
-    this.emit(`${fallbackVar}.dataset.slot = 'Fallback'`)
-    if (fallbackSlot?.styles && fallbackSlot.styles.length > 0) {
-      this.emit(`Object.assign(${fallbackVar}.style, {`)
-      this.indent++
-      for (const style of fallbackSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${fallbackVar})`)
-    this.emit('')
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Avatar via runtime
-    this.emit(`// Initialize Avatar`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initAvatarComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initAvatarComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
-
-  private emitFileUploadComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// FileUpload Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('div')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'file-upload'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'file-upload',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Apply root styles
-    const rootSlot = node.slots['Root']
-    if (rootSlot?.styles && rootSlot.styles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of rootSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create Label (optional)
-    const label = node.machineConfig.label as string
-    if (label) {
-      const labelSlot = node.slots['Label']
-      const labelVar = `${varName}_label`
-      this.emit(`// Label`)
-      this.emit(`const ${labelVar} = document.createElement('label')`)
-      this.emit(`${labelVar}.dataset.slot = 'Label'`)
-      this.emit(`${labelVar}.textContent = '${this.escapeString(label)}'`)
-      if (labelSlot?.styles && labelSlot.styles.length > 0) {
-        this.emit(`Object.assign(${labelVar}.style, {`)
-        this.indent++
-        for (const style of labelSlot.styles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('})')
-      }
-      this.emit(`${varName}.appendChild(${labelVar})`)
-      this.emit('')
-    }
-
-    // Create Dropzone
-    const dropzoneSlot = node.slots['Dropzone']
-    const dropzoneVar = `${varName}_dropzone`
-    this.emit(`// Dropzone`)
-    this.emit(`const ${dropzoneVar} = document.createElement('div')`)
-    this.emit(`${dropzoneVar}.dataset.slot = 'Dropzone'`)
-    if (dropzoneSlot?.styles && dropzoneSlot.styles.length > 0) {
-      this.emit(`Object.assign(${dropzoneVar}.style, {`)
-      this.indent++
-      for (const style of dropzoneSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${dropzoneVar})`)
-    this.emit('')
-
-    // Create HiddenInput
-    const hiddenInputVar = `${varName}_input`
-    this.emit(`// HiddenInput`)
-    this.emit(`const ${hiddenInputVar} = document.createElement('input')`)
-    this.emit(`${hiddenInputVar}.type = 'file'`)
-    this.emit(`${hiddenInputVar}.dataset.slot = 'HiddenInput'`)
-    this.emit(`${dropzoneVar}.appendChild(${hiddenInputVar})`)
-    this.emit('')
-
-    // Create Trigger
-    const triggerSlot = node.slots['Trigger']
-    const triggerVar = `${varName}_trigger`
-    this.emit(`// Trigger`)
-    this.emit(`const ${triggerVar} = document.createElement('button')`)
-    this.emit(`${triggerVar}.type = 'button'`)
-    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
-    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
-      this.emit(`Object.assign(${triggerVar}.style, {`)
-      this.indent++
-      for (const style of triggerSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${dropzoneVar}.appendChild(${triggerVar})`)
-    this.emit('')
-
-    // Create DropzoneContent (icon + text)
-    const contentSlot = node.slots['Content']
-    const contentVar = `${varName}_content`
-    this.emit(`// Content`)
-    this.emit(`const ${contentVar} = document.createElement('div')`)
-    this.emit(`${contentVar}.dataset.slot = 'Content'`)
-    if (contentSlot?.styles && contentSlot.styles.length > 0) {
-      this.emit(`Object.assign(${contentVar}.style, {`)
-      this.indent++
-      for (const style of contentSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${dropzoneVar}.appendChild(${contentVar})`)
-    this.emit('')
-
-    // Create ItemGroup
-    const itemGroupSlot = node.slots['ItemGroup']
-    const itemGroupVar = `${varName}_itemgroup`
-    this.emit(`// ItemGroup`)
-    this.emit(`const ${itemGroupVar} = document.createElement('div')`)
-    this.emit(`${itemGroupVar}.dataset.slot = 'ItemGroup'`)
-    if (itemGroupSlot?.styles && itemGroupSlot.styles.length > 0) {
-      this.emit(`Object.assign(${itemGroupVar}.style, {`)
-      this.indent++
-      for (const style of itemGroupSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${itemGroupVar})`)
-    this.emit('')
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize FileUpload via runtime
-    this.emit(`// Initialize FileUpload`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initFileUploadComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initFileUploadComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
-
-  private emitCarouselComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// Carousel Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('div')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'carousel'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'carousel',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Apply root styles
-    const rootSlot = node.slots['Root']
-    if (rootSlot?.styles && rootSlot.styles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of rootSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create Viewport
-    const viewportSlot = node.slots['Viewport']
-    const viewportVar = `${varName}_viewport`
-    this.emit(`// Viewport`)
-    this.emit(`const ${viewportVar} = document.createElement('div')`)
-    this.emit(`${viewportVar}.dataset.slot = 'Viewport'`)
-    if (viewportSlot?.styles && viewportSlot.styles.length > 0) {
-      this.emit(`Object.assign(${viewportVar}.style, {`)
-      this.indent++
-      for (const style of viewportSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${viewportVar})`)
-    this.emit('')
-
-    // Create ItemGroup
-    const itemGroupSlot = node.slots['ItemGroup']
-    const itemGroupVar = `${varName}_itemgroup`
-    this.emit(`// ItemGroup`)
-    this.emit(`const ${itemGroupVar} = document.createElement('div')`)
-    this.emit(`${itemGroupVar}.dataset.slot = 'ItemGroup'`)
-    if (itemGroupSlot?.styles && itemGroupSlot.styles.length > 0) {
-      this.emit(`Object.assign(${itemGroupVar}.style, {`)
-      this.indent++
-      for (const style of itemGroupSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${viewportVar}.appendChild(${itemGroupVar})`)
-    this.emit('')
-
-    // Create Control
-    const controlSlot = node.slots['Control']
-    const controlVar = `${varName}_control`
-    this.emit(`// Control`)
-    this.emit(`const ${controlVar} = document.createElement('div')`)
-    this.emit(`${controlVar}.dataset.slot = 'Control'`)
-    if (controlSlot?.styles && controlSlot.styles.length > 0) {
-      this.emit(`Object.assign(${controlVar}.style, {`)
-      this.indent++
-      for (const style of controlSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${controlVar})`)
-    this.emit('')
-
-    // Create PrevTrigger
-    const prevTriggerSlot = node.slots['PrevTrigger']
-    const prevTriggerVar = `${varName}_prev`
-    this.emit(`// PrevTrigger`)
-    this.emit(`const ${prevTriggerVar} = document.createElement('button')`)
-    this.emit(`${prevTriggerVar}.type = 'button'`)
-    this.emit(`${prevTriggerVar}.dataset.slot = 'PrevTrigger'`)
-    if (prevTriggerSlot?.styles && prevTriggerSlot.styles.length > 0) {
-      this.emit(`Object.assign(${prevTriggerVar}.style, {`)
-      this.indent++
-      for (const style of prevTriggerSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${controlVar}.appendChild(${prevTriggerVar})`)
-    this.emit('')
-
-    // Create IndicatorGroup
-    const indicatorGroupSlot = node.slots['IndicatorGroup']
-    const indicatorGroupVar = `${varName}_indicators`
-    this.emit(`// IndicatorGroup`)
-    this.emit(`const ${indicatorGroupVar} = document.createElement('div')`)
-    this.emit(`${indicatorGroupVar}.dataset.slot = 'IndicatorGroup'`)
-    if (indicatorGroupSlot?.styles && indicatorGroupSlot.styles.length > 0) {
-      this.emit(`Object.assign(${indicatorGroupVar}.style, {`)
-      this.indent++
-      for (const style of indicatorGroupSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${controlVar}.appendChild(${indicatorGroupVar})`)
-    this.emit('')
-
-    // Create NextTrigger
-    const nextTriggerSlot = node.slots['NextTrigger']
-    const nextTriggerVar = `${varName}_next`
-    this.emit(`// NextTrigger`)
-    this.emit(`const ${nextTriggerVar} = document.createElement('button')`)
-    this.emit(`${nextTriggerVar}.type = 'button'`)
-    this.emit(`${nextTriggerVar}.dataset.slot = 'NextTrigger'`)
-    if (nextTriggerSlot?.styles && nextTriggerSlot.styles.length > 0) {
-      this.emit(`Object.assign(${nextTriggerVar}.style, {`)
-      this.indent++
-      for (const style of nextTriggerSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${controlVar}.appendChild(${nextTriggerVar})`)
-    this.emit('')
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Carousel via runtime
-    this.emit(`// Initialize Carousel`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initCarouselComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initCarouselComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
-
-  private emitStepsComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// Steps Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('div')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'steps'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'steps',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Apply root styles
-    const rootSlot = node.slots['Root']
-    if (rootSlot?.styles && rootSlot.styles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of rootSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create List
-    const listSlot = node.slots['List']
-    const listVar = `${varName}_list`
-    this.emit(`// List`)
-    this.emit(`const ${listVar} = document.createElement('div')`)
-    this.emit(`${listVar}.dataset.slot = 'List'`)
-    if (listSlot?.styles && listSlot.styles.length > 0) {
-      this.emit(`Object.assign(${listVar}.style, {`)
-      this.indent++
-      for (const style of listSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${listVar})`)
-    this.emit('')
-
-    // Create Content container
-    const contentSlot = node.slots['Content']
-    const contentVar = `${varName}_content`
-    this.emit(`// Content`)
-    this.emit(`const ${contentVar} = document.createElement('div')`)
-    this.emit(`${contentVar}.dataset.slot = 'Content'`)
-    if (contentSlot?.styles && contentSlot.styles.length > 0) {
-      this.emit(`Object.assign(${contentVar}.style, {`)
-      this.indent++
-      for (const style of contentSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${contentVar})`)
-    this.emit('')
-
-    // Create navigation buttons container
-    const navSlot = node.slots['Navigation']
-    const navVar = `${varName}_nav`
-    this.emit(`// Navigation`)
-    this.emit(`const ${navVar} = document.createElement('div')`)
-    this.emit(`${navVar}.dataset.slot = 'Navigation'`)
-    if (navSlot?.styles && navSlot.styles.length > 0) {
-      this.emit(`Object.assign(${navVar}.style, {`)
-      this.indent++
-      for (const style of navSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${navVar})`)
-    this.emit('')
-
-    // Create PrevTrigger
-    const prevTriggerSlot = node.slots['PrevTrigger']
-    const prevTriggerVar = `${varName}_prev`
-    this.emit(`// PrevTrigger`)
-    this.emit(`const ${prevTriggerVar} = document.createElement('button')`)
-    this.emit(`${prevTriggerVar}.type = 'button'`)
-    this.emit(`${prevTriggerVar}.dataset.slot = 'PrevTrigger'`)
-    if (prevTriggerSlot?.styles && prevTriggerSlot.styles.length > 0) {
-      this.emit(`Object.assign(${prevTriggerVar}.style, {`)
-      this.indent++
-      for (const style of prevTriggerSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${navVar}.appendChild(${prevTriggerVar})`)
-    this.emit('')
-
-    // Create NextTrigger
-    const nextTriggerSlot = node.slots['NextTrigger']
-    const nextTriggerVar = `${varName}_next`
-    this.emit(`// NextTrigger`)
-    this.emit(`const ${nextTriggerVar} = document.createElement('button')`)
-    this.emit(`${nextTriggerVar}.type = 'button'`)
-    this.emit(`${nextTriggerVar}.dataset.slot = 'NextTrigger'`)
-    if (nextTriggerSlot?.styles && nextTriggerSlot.styles.length > 0) {
-      this.emit(`Object.assign(${nextTriggerVar}.style, {`)
-      this.indent++
-      for (const style of nextTriggerSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${navVar}.appendChild(${nextTriggerVar})`)
-    this.emit('')
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Steps via runtime
-    this.emit(`// Initialize Steps`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initStepsComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initStepsComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
-
-  private emitPaginationComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// Pagination Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('nav')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'pagination'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'pagination',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Apply root styles
-    const rootSlot = node.slots['Root']
-    if (rootSlot?.styles && rootSlot.styles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of rootSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Create PrevTrigger
-    const prevTriggerSlot = node.slots['PrevTrigger']
-    const prevTriggerVar = `${varName}_prev`
-    this.emit(`// PrevTrigger`)
-    this.emit(`const ${prevTriggerVar} = document.createElement('button')`)
-    this.emit(`${prevTriggerVar}.type = 'button'`)
-    this.emit(`${prevTriggerVar}.dataset.slot = 'PrevTrigger'`)
-    if (prevTriggerSlot?.styles && prevTriggerSlot.styles.length > 0) {
-      this.emit(`Object.assign(${prevTriggerVar}.style, {`)
-      this.indent++
-      for (const style of prevTriggerSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${prevTriggerVar})`)
-    this.emit('')
-
-    // Create ItemGroup
-    const itemGroupSlot = node.slots['ItemGroup']
-    const itemGroupVar = `${varName}_items`
-    this.emit(`// ItemGroup`)
-    this.emit(`const ${itemGroupVar} = document.createElement('div')`)
-    this.emit(`${itemGroupVar}.dataset.slot = 'ItemGroup'`)
-    if (itemGroupSlot?.styles && itemGroupSlot.styles.length > 0) {
-      this.emit(`Object.assign(${itemGroupVar}.style, {`)
-      this.indent++
-      for (const style of itemGroupSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${itemGroupVar})`)
-    this.emit('')
-
-    // Create NextTrigger
-    const nextTriggerSlot = node.slots['NextTrigger']
-    const nextTriggerVar = `${varName}_next`
-    this.emit(`// NextTrigger`)
-    this.emit(`const ${nextTriggerVar} = document.createElement('button')`)
-    this.emit(`${nextTriggerVar}.type = 'button'`)
-    this.emit(`${nextTriggerVar}.dataset.slot = 'NextTrigger'`)
-    if (nextTriggerSlot?.styles && nextTriggerSlot.styles.length > 0) {
-      this.emit(`Object.assign(${nextTriggerVar}.style, {`)
-      this.indent++
-      for (const style of nextTriggerSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${nextTriggerVar})`)
-    this.emit('')
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Pagination via runtime
-    this.emit(`// Initialize Pagination`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initPaginationComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initPaginationComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
+  // emitStepsComponent: migrated to zag-emitters.ts
+  // emitPaginationComponent: migrated to zag-emitters.ts
 
   private emitTreeViewComponent(node: IRZagNode, parentVar: string): void {
     const varName = this.sanitizeVarName(node.id)
@@ -7021,6 +5902,11 @@ class DOMGenerator {
 
     // Add event listeners
     for (const event of node.events) {
+      // Skip events that are fully handled by state machine transitions
+      const allActionsAreStateMachine = event.actions.every(a => a.isBuiltinStateFunction)
+      if (allActionsAreStateMachine && node.stateMachine) {
+        continue  // State machine will handle this event via transitions
+      }
       this.emitEventListener(varName, event)
     }
 
@@ -8135,16 +7021,26 @@ class DOMGenerator {
         const animArg = t.animation ? `, ${this.serializeAnimation(t.animation)}` : ''
 
         if (t.modifier === 'toggle') {
-          // Toggle: if already in this state, go back to initial
-          this.emit(`if (current === '${t.to}') {`)
-          this.indent++
-          this.emit(`_runtime.transitionTo(${varName}, sm.initial)`)
-          this.indent--
-          this.emit(`} else {`)
-          this.indent++
-          this.emit(`_runtime.transitionTo(${varName}, '${t.to}'${animArg})`)
-          this.indent--
-          this.emit(`}`)
+          // Check if this is multi-state cycle or binary toggle
+          // Multi-state: 2+ custom states (excluding 'default')
+          const customStates = Object.keys(sm.states).filter(s => s !== 'default')
+          if (customStates.length >= 2) {
+            // Multi-state cycle: use stateMachineToggle to cycle through states
+            this.emit(`_runtime.stateMachineToggle(${varName})`)
+          } else {
+            // Binary toggle: switch between target state and 'default'
+            // Note: We use 'default' directly, not sm.initial, because initial
+            // might be set to 'on' if the instance starts with that state modifier
+            this.emit(`if (current === '${t.to}') {`)
+            this.indent++
+            this.emit(`_runtime.transitionTo(${varName}, 'default')`)
+            this.indent--
+            this.emit(`} else {`)
+            this.indent++
+            this.emit(`_runtime.transitionTo(${varName}, '${t.to}'${animArg})`)
+            this.indent--
+            this.emit(`}`)
+          }
         } else if (t.modifier === 'exclusive') {
           // Exclusive: deselect siblings first
           this.emit(`_runtime.exclusiveTransition(${varName}, '${t.to}'${animArg})`)

@@ -4,7 +4,9 @@
  * Testet DOM-Struktur von:
  * - Dialog
  * - Tooltip
- * - Popover
+ *
+ * Tutorial Set: Dialog und Tooltip
+ * Entfernt: Popover, HoverCard, Toast, FloatingPanel, Tour
  *
  * Hinweis: Zag-Interaktionen (öffnen/schließen) erfordern
  * vollständige Zag-Runtime, hier nur DOM-Struktur.
@@ -105,48 +107,6 @@ Tooltip positioning "top"
 
     const tooltip = root.querySelector('[data-zag-component="tooltip"]')
     expect(tooltip).toBeTruthy()
-  })
-})
-
-// ============================================================
-// POPOVER
-// ============================================================
-describe('Popover Struktur', () => {
-
-  it('Popover hat Trigger und Content', () => {
-    const { root } = renderWithRuntime(`
-Popover
-  Trigger: Button "Click me"
-  Content: w 250, pad 16, bg #1a1a1a, rad 8
-    Text "Popover content"
-`, container)
-
-    const popover = root.querySelector('[data-zag-component="popover"]')
-    expect(popover).toBeTruthy()
-
-    const trigger = root.querySelector('[data-slot="Trigger"]')
-    expect(trigger).toBeTruthy()
-
-    const content = root.querySelector('[data-slot="Content"]')
-    expect(content).toBeTruthy()
-  })
-})
-
-// ============================================================
-// HOVER CARD
-// ============================================================
-describe('HoverCard Struktur', () => {
-
-  it('HoverCard hat Trigger und Content', () => {
-    const { root } = renderWithRuntime(`
-HoverCard
-  Trigger: Text "@username", col #2563eb
-  Content: w 300, pad 16, bg #1a1a1a, rad 8
-    Text "User profile preview"
-`, container)
-
-    const hoverCard = root.querySelector('[data-zag-component="hover-card"]')
-    expect(hoverCard).toBeTruthy()
   })
 })
 

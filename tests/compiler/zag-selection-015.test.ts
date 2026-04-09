@@ -1,11 +1,7 @@
 /**
- * Zag Selection 015: Select, Combobox, Listbox kaputt machen
+ * Zag Selection 015: Select
  *
- * Hypothesen:
- * - Select mit Layout-Properties (w, pad) ignoriert diese
- * - Select in verschachtelter Struktur verliert Items
- * - Combobox/Listbox werden gar nicht erkannt
- * - Slots werden nicht korrekt erzeugt
+ * Tutorial Set - nur Select wird unterstützt (Combobox, Listbox entfernt)
  */
 
 import { parse } from '../../compiler/parser'
@@ -31,7 +27,6 @@ Select
   Item "B"
 `))
       expect(ir.nodes.length).toBeGreaterThan(0)
-      console.log('Select node:', ir.nodes[0]?.tag, ir.nodes[0]?.zagType)
     })
 
     test('Select Items werden in items-Array gespeichert', () => {
@@ -104,13 +99,12 @@ Frame hor gap 10
     Item "B"
 `))
       const frame = ir.nodes[0]
-      console.log('Frame children:', frame?.children?.length)
 
       // Frame sollte 2 Kinder haben: Text und Select
       expect(frame?.children?.length).toBe(2)
 
       const select = frame?.children?.[1]
-      console.log('Nested Select:', select?.tag, select?.zagType)
+      expect(select).toBeDefined()
     })
 
     test('Select in Frame in Frame (3 Ebenen)', () => {
@@ -121,7 +115,6 @@ Frame
       Item "A"
 `))
       const deepSelect = ir.nodes[0]?.children?.[0]?.children?.[0]
-      console.log('Deep Select:', deepSelect?.tag, deepSelect?.zagType)
       expect(deepSelect).toBeDefined()
     })
 
@@ -142,62 +135,7 @@ Frame hor gap 10
   })
 
   // ============================================================
-  // 4. Combobox
-  // ============================================================
-  describe('Combobox', () => {
-
-    test('Combobox wird erkannt', () => {
-      const ir = toIR(parse(`
-Combobox
-  Item "A"
-  Item "B"
-`))
-      expect(ir.nodes.length).toBeGreaterThan(0)
-      console.log('Combobox node:', ir.nodes[0]?.tag, ir.nodes[0]?.zagType)
-    })
-
-    test('Combobox mit Layout-Properties', () => {
-      const ir = toIR(parse(`Combobox w 300 pad 8`))
-      const node = ir.nodes[0]
-
-      console.log('Combobox styles:', {
-        width: getStyle(node, 'width'),
-        padding: getStyle(node, 'padding')
-      })
-    })
-
-  })
-
-  // ============================================================
-  // 5. Listbox
-  // ============================================================
-  describe('Listbox', () => {
-
-    test('Listbox wird erkannt', () => {
-      const ir = toIR(parse(`
-Listbox
-  Item "A"
-  Item "B"
-`))
-      expect(ir.nodes.length).toBeGreaterThan(0)
-      console.log('Listbox node:', ir.nodes[0]?.tag, ir.nodes[0]?.zagType)
-    })
-
-    test('Listbox mit Layout-Properties', () => {
-      const ir = toIR(parse(`Listbox w 200 h 300 scroll`))
-      const node = ir.nodes[0]
-
-      console.log('Listbox styles:', {
-        width: getStyle(node, 'width'),
-        height: getStyle(node, 'height'),
-        overflow: getStyle(node, 'overflow-y')
-      })
-    })
-
-  })
-
-  // ============================================================
-  // 6. Select Slots
+  // 4. Select Slots
   // ============================================================
   describe('Select Slots', () => {
 
@@ -209,7 +147,7 @@ Select
   Content
     Item "A"
 `)
-      console.log('Select AST:', JSON.stringify(ast.instances[0], null, 2).slice(0, 500))
+      expect(ast.instances.length).toBeGreaterThan(0)
     })
 
     test('Select mit expliziten Slots', () => {
@@ -221,13 +159,13 @@ Select
     Item "B"
 `))
       const node = ir.nodes[0]
-      console.log('Select with slots children:', node?.children?.length)
+      expect(node).toBeDefined()
     })
 
   })
 
   // ============================================================
-  // 7. Edge Cases
+  // 5. Edge Cases
   // ============================================================
   describe('Edge Cases', () => {
 
@@ -251,7 +189,7 @@ Select
   Item "B" value "b" disabled
 `))
       const node = ir.nodes[0]
-      console.log('Select with item props:', node?.children)
+      expect(node).toBeDefined()
     })
 
   })

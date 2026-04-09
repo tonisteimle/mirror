@@ -18,11 +18,48 @@
  *   const result2 = validator.validate(ast2)
  */
 
-import { tokenize } from '../parser/lexer'
+import { tokenizeWithErrors, LexerError } from '../parser/lexer'
 import { Parser } from '../parser/parser'
 import { AST } from '../parser/ast'
 import { Validator } from './validator'
 import { ValidationResult, ValidationError, ERROR_CODES } from './types'
+
+/**
+ * Map lexer error message to error code
+ */
+function getLexerErrorCode(message: string): string {
+  if (message.includes('Unclosed string')) return ERROR_CODES.UNCLOSED_STRING
+  if (message.includes('hex') || message.includes("'#'")) return ERROR_CODES.INVALID_HEX_COLOR
+  if (message.includes('Unexpected character')) return ERROR_CODES.UNKNOWN_CHARACTER
+  if (message.includes('too deep')) return ERROR_CODES.INDENTATION_TOO_DEEP
+  if (message.includes('decimal') || message.includes('multiple')) return ERROR_CODES.INVALID_NUMBER
+  if (message.includes('Inconsistent indentation')) return ERROR_CODES.INCONSISTENT_INDENTATION
+  return 'E010' // Fallback
+}
+
+/**
+ * Check if a lexer error should be treated as a warning
+ */
+function isLexerWarning(message: string): boolean {
+  // These are style suggestions, not critical errors
+  return message.includes('Leading decimal') ||
+         message.includes('Trailing decimal') ||
+         message.includes('Inconsistent indentation')
+}
+
+/**
+ * Convert lexer errors to validation errors
+ */
+function convertLexerErrors(lexerErrors: LexerError[]): ValidationError[] {
+  return lexerErrors.map(err => ({
+    severity: isLexerWarning(err.message) ? 'warning' as const : 'error' as const,
+    code: getLexerErrorCode(err.message),
+    message: err.message,
+    line: err.line,
+    column: err.column,
+    suggestion: err.hint,
+  }))
+}
 
 // Re-export types
 export { Validator } from './validator'
@@ -54,12 +91,29 @@ export type {
  * @returns Validation result with errors and warnings
  */
 export function validate(source: string): ValidationResult {
-  const tokens = tokenize(source)
-  const parser = new Parser(tokens, source)
+  // Tokenize with error collection
+  const lexerResult = tokenizeWithErrors(source)
+  const lexerValidationErrors = convertLexerErrors(lexerResult.errors)
+
+  // Parse
+  const parser = new Parser(lexerResult.tokens, source)
   const ast = parser.parse()
 
+  // Validate AST
   const validator = new Validator()
-  return validator.validate(ast)
+  const validatorResult = validator.validate(ast)
+
+  // Merge lexer errors into validation result
+  const allErrors = [...lexerValidationErrors.filter(e => e.severity === 'error'), ...validatorResult.errors]
+  const allWarnings = [...lexerValidationErrors.filter(e => e.severity === 'warning'), ...validatorResult.warnings]
+
+  return {
+    valid: allErrors.length === 0,
+    errors: allErrors,
+    warnings: allWarnings,
+    errorCount: allErrors.length,
+    warningCount: allWarnings.length,
+  }
 }
 
 /**

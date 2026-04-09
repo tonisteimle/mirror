@@ -1840,6 +1840,41 @@ Frame hor, ver-center, gap 4, bg #1a1a1a, pad 4, rad 8
 
 `exclusive()` macht zwei Dinge: Es aktiviert das geklickte Element und deaktiviert alle Geschwister des gleichen Typs.
 
+### Auswahl-Wert verfolgen: bind
+
+Bei `exclusive()` ist immer nur ein Element aktiv – aber welcher Wert ist ausgewählt? Mit `bind varName` speicherst du den Textinhalt des aktiven Elements automatisch in einer Variable:
+
+```mirror
+Dropdown: Frame w 200, stacked, bind value
+  Trigger: Button pad 12, bg #1a1a1a, col white, rad 6, hor, spread, w full, toggle()
+    Text $value || "Auswählen..."
+    Icon "chevron-down", ic #888, is 16
+    open:
+      Icon "chevron-up", ic #888, is 16
+  Options: Frame y 44, w full, bg #1a1a1a, rad 6, pad 4, hidden, z 10
+    Trigger.open:
+      visible
+  Option: Frame pad 10, rad 4, col #888, cursor pointer, w full, exclusive()
+    hover:
+      bg #333
+    on:
+      col white
+
+Dropdown
+  Option "Berlin"
+  Option "Hamburg"
+  Option "München"
+```
+
+**Was passiert hier?**
+
+- `bind value` auf dem Dropdown-Container – speichert den aktiven Wert
+- `$value || "Auswählen..."` – zeigt den Wert oder Fallback-Text
+- `exclusive()` auf Option – nur eine Option kann aktiv sein
+- Bei Klick auf eine Option wird deren Textinhalt in `$value` gespeichert
+
+> **Hinweis:** **bind + exclusive() = Custom Select.** Das ist die Basis für eigene Dropdown-Komponenten. Für Standard-Selects mit Accessibility und Keyboard-Navigation gibt es die fertige `Select` Zag-Komponente (siehe Eingabe).
+
 ### Auf andere Elemente reagieren
 
 Manchmal soll ein Element sein Aussehen ändern, wenn ein *anderes* Element seinen State wechselt. Klassisches Beispiel: Ein Menü wird sichtbar, wenn ein Button aktiviert wird.
@@ -1935,6 +1970,7 @@ Frame gap 8
 | `on:` | Custom State definieren (Name frei wählbar) |
 | `toggle()` | State bei Klick wechseln |
 | `exclusive()` | Nur einer aktiv (Geschwister aus) |
+| `bind varName` | Aktiven Wert in Variable speichern |
 | `Btn "Text", on` | Instanz startet im State |
 
 #### Cross-Element

@@ -906,6 +906,25 @@ const _runtime = {
       })
     }
     this.transitionTo(el, stateName)
+
+    // Update bind variable if parent has one
+    // Walk up to find container with data-bind attribute
+    let container = el.parentElement
+    while (container) {
+      const bindVar = container.dataset?.bind
+      if (bindVar) {
+        // Get the text content of the activated element
+        const activeText = el.textContent?.trim() || ''
+        // Update the global state and notify bound elements
+        if (typeof window !== 'undefined') {
+          window._mirrorState = window._mirrorState || {}
+          window._mirrorState[bindVar] = activeText
+        }
+        this.notifyDataChange && this.notifyDataChange(bindVar, activeText)
+        break
+      }
+      container = container.parentElement
+    }
   },
 
   // Wrapper for exclusive selection (used by template actions)
@@ -10501,7 +10520,8 @@ const __MIRROR_TEST__ = {
   },
 
   findByName(name) {
-    return document.querySelector(\`[data-instance-name="\${name}"]\`) ||
+    return document.querySelector(\`[data-mirror-name="\${name}"]\`) ||
+           document.querySelector(\`[data-instance-name="\${name}"]\`) ||
            document.querySelector(\`[data-component-name="\${name}"]\`) ||
            document.querySelector(\`[name="\${name}"]\`)
   },

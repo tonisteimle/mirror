@@ -326,7 +326,10 @@ describe('IconPicker', () => {
       const event = new KeyboardEvent('keydown', { key: 'ArrowDown' })
       input.dispatchEvent(event)
 
-      expect(document.activeElement?.classList.contains('icon-picker-item')).toBe(true)
+      // Keyboard navigation uses visual selection (picker-selected class), not DOM focus
+      // Focus stays in search input for typeahead pattern
+      const selectedItem = document.querySelector('.icon-picker-item.picker-selected')
+      expect(selectedItem).not.toBeNull()
     })
   })
 })

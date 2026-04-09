@@ -234,7 +234,7 @@ export const FORM_COMPONENTS: ComponentItem[] = [
 ]
 
 /**
- * 4. OVERLAY - Dialogs
+ * 4. OVERLAY - Dialog, Tooltip
  */
 export const OVERLAY_COMPONENTS: ComponentItem[] = [
   {
@@ -251,6 +251,23 @@ export const OVERLAY_COMPONENTS: ComponentItem[] = [
       ]},
       { template: 'Backdrop', isSlot: true, properties: 'bg #00000080' },
       { template: 'Content', isSlot: true, properties: 'w 400, bg #1e1e2e, rad 12, pad 24, shadow lg' },
+    ],
+  },
+  {
+    id: 'overlay-tooltip',
+    name: 'Tooltip',
+    category: 'Overlay',
+    template: 'Tooltip',
+    icon: 'tooltip',
+    description: 'Hover tooltip',
+    defaultSize: { width: 150, height: 40 },
+    children: [
+      { template: 'Trigger', isSlot: true, children: [
+        { template: 'Button', textContent: 'Hover me' },
+      ]},
+      { template: 'Content', isSlot: true, properties: 'pad 8 12, bg #333, col #fff, rad 4, fs 12', children: [
+        { template: 'Text', textContent: 'Tooltip text' },
+      ]},
     ],
   },
 ]

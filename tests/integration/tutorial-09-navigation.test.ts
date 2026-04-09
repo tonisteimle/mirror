@@ -1,7 +1,10 @@
 /**
  * Tutorial Kapitel 9: Navigation - Integration Tests
  *
- * Tabs, Accordion und Collapsible sind Zag-Komponenten.
+ * Tabs und SideNav sind Zag-Komponenten.
+ *
+ * Tutorial Set: Tabs und SideNav
+ * Entfernt: Accordion, Collapsible, Steps, Pagination, TreeView
  *
  * @vitest-environment jsdom
  */
@@ -53,91 +56,23 @@ Tabs orientation "vertical", defaultValue "general"
     })
   })
 
-  describe('Accordion', () => {
-    it('Accordion mit AccordionItem sollte rendern', async () => {
+  describe('SideNav', () => {
+    it('SideNav mit NavItems sollte rendern', async () => {
       const { container, cleanup: c } = await renderMirror(`
-Accordion
-  AccordionItem "Section 1"
-    Text "Content for section 1"
-  AccordionItem "Section 2"
-    Text "Content for section 2"
-  AccordionItem "Section 3"
-    Text "Content for section 3"
+SideNav defaultValue "home"
+  NavItem "Home" icon "home" value "home"
+  NavItem "Profile" icon "user" value "profile"
+  NavItem "Settings" icon "settings" value "settings"
       `)
       cleanup = c
 
-      // Accordion-Triggers sollten existieren (Mirror verwendet data-slot)
-      const triggers = container.querySelectorAll('[data-slot="ItemTrigger"]')
-      expect(triggers.length).toBe(3)
-    })
-
-    it('Accordion sollte Text-Inhalte rendern', async () => {
-      const { container, cleanup: c } = await renderMirror(`
-Accordion
-  AccordionItem "Section 1"
-    Text "Content for section 1"
-  AccordionItem "Section 2"
-    Text "Content for section 2"
-      `)
-      cleanup = c
-
-      // Verify text content is rendered
-      const texts = container.querySelectorAll('span')
-      const textContents = Array.from(texts).map(t => t.textContent)
-      expect(textContents.some(t => t?.includes('Content for section'))).toBe(true)
+      // SideNav sollte existieren
+      const sidenav = container.querySelector('[data-zag-component="sidenav"]')
+      expect(sidenav).not.toBeNull()
     })
   })
 
-  describe('Collapsible', () => {
-    it('Collapsible mit Trigger und Content sollte rendern', async () => {
-      const { container, cleanup: c } = await renderMirror(`
-Collapsible
-  Trigger: Button "Toggle content"
-  Content: Text "Hidden content revealed."
-      `)
-      cleanup = c
-
-      // Trigger sollte existieren (Mirror verwendet data-slot)
-      const trigger = container.querySelector('[data-slot="Trigger"]')
-      expect(trigger).not.toBeNull()
-    })
-
-    it('Collapsible sollte Button rendern', async () => {
-      const { container, cleanup: c } = await renderMirror(`
-Collapsible
-  Trigger: Button "Toggle"
-  Content: Text "Hidden content revealed."
-      `)
-      cleanup = c
-
-      // Check that button is rendered
-      const button = container.querySelector('button')
-      expect(button).not.toBeNull()
-      expect(button!.textContent).toContain('Toggle')
-    })
-  })
-
-  describe('FAQ Accordion', () => {
-    it('gestyltes FAQ sollte rendern', async () => {
-      const { container, cleanup: c } = await renderMirror(`
-Accordion
-  Item: bor 0 0 1 0, boc #222
-  ItemTrigger: pad 16
-  ItemContent: pad 0 16 16 16, col #888
-  AccordionItem "What is Mirror?"
-    Text "A DSL for rapid UI prototyping that compiles to DOM or React."
-  AccordionItem "How do I get started?"
-    Text "Install via npm and start writing components."
-      `)
-      cleanup = c
-
-      // Mirror verwendet data-slot statt data-part
-      const triggers = container.querySelectorAll('[data-slot="ItemTrigger"]')
-      expect(triggers.length).toBe(2)
-    })
-  })
-
-  describe('Settings Panel mit Collapsible', () => {
+  describe('Settings Panel', () => {
     it('Settings Panel sollte Text-Inhalte rendern', async () => {
       const { container, cleanup: c } = await renderMirror(`
 Frame ver, w 350, pad 16, bg #111, rad 8, gap 12

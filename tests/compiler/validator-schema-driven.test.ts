@@ -10,6 +10,28 @@ import { validate } from '../../compiler/validator/index'
 import { clearRulesCache } from '../../compiler/validator/generator'
 import { DSL, SCHEMA } from '../../compiler/schema/dsl'
 
+// Properties with range restrictions - use valid test values
+const PROPERTY_TEST_VALUES: Record<string, number> = {
+  'opacity': 0.5,
+  'opa': 0.5,
+  'o': 0.5,
+  'scale': 1.5,
+  'hover-opacity': 0.8,
+  'hover-opa': 0.8,
+  'hover-o': 0.8,
+  'hover-scale': 1.1,
+}
+
+// Primitives with required properties
+const PRIMITIVE_REQUIRED_PROPS: Record<string, string> = {
+  'Image': 'src "test.png"',
+  'image': 'src "test.png"',
+  'Img': 'src "test.png"',
+  'img': 'src "test.png"',
+  'Link': 'href "https://example.com"',
+  'link': 'href "https://example.com"',
+}
+
 // Clear cache before tests to ensure fresh rules
 beforeAll(() => {
   clearRulesCache()
@@ -20,12 +42,16 @@ describe('Schema-Driven: Primitives', () => {
 
   for (const name of primitiveNames) {
     it(`accepts primitive "${name}"`, () => {
-      const result = validate(`${name} w 100`)
+      const requiredProps = PRIMITIVE_REQUIRED_PROPS[name] || ''
+      const code = requiredProps ? `${name} ${requiredProps}, w 100` : `${name} w 100`
+      const result = validate(code)
       expect(result.valid).toBe(true)
     })
 
     it(`accepts primitive "${name.toLowerCase()}" (lowercase)`, () => {
-      const result = validate(`${name.toLowerCase()} w 100`)
+      const requiredProps = PRIMITIVE_REQUIRED_PROPS[name.toLowerCase()] || ''
+      const code = requiredProps ? `${name.toLowerCase()} ${requiredProps}, w 100` : `${name.toLowerCase()} w 100`
+      const result = validate(code)
       expect(result.valid).toBe(true)
     })
   }
@@ -35,7 +61,9 @@ describe('Schema-Driven: Primitives', () => {
     if (def.aliases) {
       for (const alias of def.aliases) {
         it(`accepts primitive alias "${alias}" for "${name}"`, () => {
-          const result = validate(`${alias} w 100`)
+          const requiredProps = PRIMITIVE_REQUIRED_PROPS[alias] || ''
+          const code = requiredProps ? `${alias} ${requiredProps}, w 100` : `${alias} w 100`
+          const result = validate(code)
           expect(result.valid).toBe(true)
         })
       }
@@ -89,15 +117,17 @@ describe('Schema-Driven: Properties', () => {
 
       // Test numeric values
       if (propDef.numeric) {
+        const testValue = PROPERTY_TEST_VALUES[propName] ?? 100
         it(`accepts numeric value`, () => {
-          const result = validate(`Box ${propName} 100`)
+          const result = validate(`Box ${propName} ${testValue}`)
           expect(result.valid).toBe(true)
         })
 
         // Test with alias
         if (propDef.aliases.length > 0) {
+          const aliasTestValue = PROPERTY_TEST_VALUES[propDef.aliases[0]] ?? 100
           it(`accepts numeric value with alias "${propDef.aliases[0]}"`, () => {
-            const result = validate(`Box ${propDef.aliases[0]} 100`)
+            const result = validate(`Box ${propDef.aliases[0]} ${aliasTestValue}`)
             expect(result.valid).toBe(true)
           })
         }

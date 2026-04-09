@@ -5,7 +5,10 @@
  * - Input, Textarea
  * - Checkbox, Switch
  * - Select, RadioGroup
- * - Slider, NumberInput
+ * - Slider
+ *
+ * Tutorial Set: Checkbox, Switch, RadioGroup, Slider, Select, DatePicker
+ * Entfernt: NumberInput, PinInput, TagsInput, RatingGroup, etc.
  *
  * @vitest-environment jsdom
  */
@@ -181,24 +184,6 @@ Slider min 0, max 100, defaultValue 50
 
     const slider = root.querySelector('[data-zag-component="slider"]')
     expect(slider).toBeTruthy()
-  })
-})
-
-// ============================================================
-// NUMBER INPUT (Zag)
-// ============================================================
-describe('NumberInput', () => {
-
-  it('NumberInput hat Increment/Decrement', () => {
-    const { root } = renderWithRuntime(`
-NumberInput min 0, max 10, defaultValue 5
-`, container)
-
-    // NumberInput kann verschiedene Selektoren haben
-    const numberInput = root.querySelector('[data-zag-component="number-input"]') ||
-                        root.querySelector('[data-zag-component="numberinput"]') ||
-                        root.querySelector('[data-mirror-name="NumberInput"]')
-    expect(numberInput).toBeTruthy()
   })
 })
 

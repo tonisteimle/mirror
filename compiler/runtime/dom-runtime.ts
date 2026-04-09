@@ -1684,6 +1684,25 @@ export function exclusiveTransition(
 
   // Now transition this element with animation
   transitionTo(el, stateName, animation)
+
+  // Update bind variable if parent has one
+  // Walk up to find container with data-bind attribute
+  let container = el.parentElement as MirrorElement | null
+  while (container) {
+    const bindVar = container.dataset.bind
+    if (bindVar) {
+      // Get the text content of the activated element
+      const activeText = el.textContent?.trim() || ''
+      // Update the global state and notify bound elements
+      if (typeof window !== 'undefined') {
+        window._mirrorState = window._mirrorState || {}
+        window._mirrorState[bindVar] = activeText
+      }
+      notifyDataChange(bindVar, activeText)
+      break
+    }
+    container = container.parentElement as MirrorElement | null
+  }
 }
 
 /**

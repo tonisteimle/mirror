@@ -69,6 +69,7 @@ export interface IRNode {
   visibleWhen?: string           // State-based visibility: "if (open)" → "open"
   initialState?: string          // Initial state: "closed", "open", etc.
   selection?: string             // Selection binding: "$selected"
+  bind?: string                  // Bind active exclusive() child: "bind value" → "value"
   route?: string                 // Navigation target: "Home"
   navContainer?: string          // ID of parent Nav container (for selected sync)
   stateMachine?: IRStateMachine  // State machine configuration (interaction model)

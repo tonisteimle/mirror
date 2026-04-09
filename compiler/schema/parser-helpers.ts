@@ -25,6 +25,8 @@ export const PROPERTY_STARTERS = new Set<string>([
   ...Object.values(SCHEMA)
     .filter(prop => prop.numeric || prop.color || (prop.keywords && Object.keys(prop.keywords).length > 0 && !prop.keywords._standalone))
     .flatMap(prop => [prop.name, ...prop.aliases]),
+  // Special keywords that take a value
+  'bind',  // bind varName - tracks active exclusive() child content
 ])
 
 /**

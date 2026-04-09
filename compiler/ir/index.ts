@@ -1816,6 +1816,7 @@ class IRTransformer {
     const visibleWhen = instance.visibleWhen || resolvedComponent?.visibleWhen
     const initialState = instance.initialState || resolvedComponent?.initialState
     const selection = instance.selection || resolvedComponent?.selection
+    const bind = instance.bind || resolvedComponent?.bind
     const route = instance.route || resolvedComponent?.route
 
     // If instance specifies an initialState, update the state machine's initial state
@@ -2025,6 +2026,7 @@ class IRTransformer {
       visibleWhen,
       initialState,
       selection,
+      bind,
       route,
       stateMachine,
       sourcePosition,
@@ -3525,6 +3527,58 @@ class IRTransformer {
         }
 
         transitions.push(transition)
+      }
+    }
+
+    // Third pass: create transitions from events with builtin state functions
+    // This handles the case where toggle() or exclusive() is used as a property
+    // without an explicit trigger on a state (e.g., "Button toggle()" instead of "on onclick:")
+    if (events) {
+      for (const event of events) {
+        for (const action of event.actions) {
+          if (action.isBuiltinStateFunction) {
+            // Determine the target state
+            // Priority: 'on' if exists, otherwise first custom state
+            const customStateNames = Object.keys(stateDefinitions).filter(s => s !== 'default')
+            const targetState = customStateNames.includes('on') ? 'on' : (customStateNames[0] || 'on')
+
+            // Determine the modifier based on the action type
+            let modifier: 'exclusive' | 'toggle' | undefined
+            if (action.type === 'exclusive') {
+              modifier = 'exclusive'
+            } else if (action.type === 'toggle' || action.type === 'cycle') {
+              modifier = 'toggle'
+            }
+
+            // Create the transition
+            const transition: IRStateTransition = {
+              to: targetState,
+              trigger: `on${event.name}`,  // e.g., 'onclick' for click event
+              modifier,
+            }
+
+            // Ensure the target state exists in stateDefinitions
+            // This handles the case where toggle() is used without defining states
+            if (!stateDefinitions[targetState]) {
+              stateDefinitions[targetState] = {
+                name: targetState,
+                styles: [],
+                isInitial: false,
+              }
+            }
+
+            // Check if this transition already exists (avoid duplicates)
+            const exists = transitions.some(t =>
+              t.trigger === transition.trigger &&
+              t.to === transition.to &&
+              t.modifier === transition.modifier
+            )
+
+            if (!exists) {
+              transitions.push(transition)
+            }
+          }
+        }
       }
     }
 

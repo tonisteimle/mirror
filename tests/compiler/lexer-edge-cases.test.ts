@@ -201,9 +201,11 @@ describe('Lexer: Boundary Conditions', () => {
     expect(result[0].value).toBe('#')
   })
 
-  it('float starting with dot parsed as dot + number', () => {
+  it('float starting with dot parsed as number with warning', () => {
+    // .5 is now parsed as 0.5 (NUMBER) with a warning
     const result = tokens('.5')
-    expect(result[0].type).toBe('DOT')
+    expect(result[0].type).toBe('NUMBER')
+    expect(result[0].value).toBe('0.5')
   })
 
   it('consecutive punctuation', () => {

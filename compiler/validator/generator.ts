@@ -14,15 +14,48 @@ import { ValidationRules, ValueValidator, ValueValidationResult } from './types'
 
 const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
 
+// Gradient keywords that can appear in color values
+const GRADIENT_KEYWORDS = new Set(['grad', 'grad-ver'])
+
+// Named colors (CSS basic + common)
+const NAMED_COLORS = new Set([
+  'transparent', 'currentcolor', 'inherit',
+  'black', 'white', 'red', 'green', 'blue', 'yellow', 'orange', 'purple',
+  'cyan', 'magenta', 'gray', 'grey', 'pink', 'brown', 'navy', 'teal',
+  'lime', 'aqua', 'maroon', 'olive', 'silver', 'fuchsia',
+])
+
 export function isValidColor(value: string): boolean {
   if (value.startsWith('$')) return true // Token reference
   if (HEX_COLOR_REGEX.test(value)) return true
-  // Named colors (basic set)
-  const namedColors = new Set([
-    'transparent', 'currentColor', 'inherit',
-    'black', 'white', 'red', 'green', 'blue', 'yellow', 'orange', 'purple',
-  ])
-  return namedColors.has(value.toLowerCase())
+  return NAMED_COLORS.has(value.toLowerCase())
+}
+
+/**
+ * Check if a value is valid in a color context (color property values).
+ * This includes colors, gradient keywords, and rgba() syntax.
+ */
+export function isValidColorValue(value: string | number): boolean {
+  // Numbers are valid (gradient angles like `grad 45 #a #b`)
+  if (typeof value === 'number') return true
+
+  // Token references
+  if (value.startsWith('$')) return true
+
+  // Hex colors
+  if (HEX_COLOR_REGEX.test(value)) return true
+
+  // Named colors
+  if (NAMED_COLORS.has(value.toLowerCase())) return true
+
+  // Gradient keywords
+  if (GRADIENT_KEYWORDS.has(value.toLowerCase())) return true
+
+  // rgba() syntax (e.g., "rgba(255,0,0,0.5)")
+  if (value.toLowerCase().startsWith('rgba(') && value.endsWith(')')) return true
+  if (value.toLowerCase().startsWith('rgb(') && value.endsWith(')')) return true
+
+  return false
 }
 
 // ============================================================================
@@ -156,12 +189,20 @@ function createValidatorForProperty(prop: PropertyDef): ValueValidator {
       }
 
       // Check color values
-      if (prop.color && typeof val === 'string') {
-        if (val.startsWith('#')) {
-          if (!isValidColor(val)) {
+      if (prop.color) {
+        if (!isValidColorValue(val)) {
+          if (typeof val === 'string' && val.startsWith('#')) {
+            // Invalid hex format
+            errors.push(
+              `Invalid hex color "${val}" for "${prop.name}". ` +
+              `Use #RGB, #RGBA, #RRGGBB, or #RRGGBBAA format`
+            )
+          } else {
+            // Invalid color value (not a recognized color, gradient, or function)
             errors.push(
               `Invalid color "${val}" for "${prop.name}". ` +
-              `Use #RGB, #RGBA, #RRGGBB, or #RRGGBBAA format`
+              `Use hex (#RGB, #RRGGBB), named colors (white, black), ` +
+              `gradients (grad #a #b), or rgba(r,g,b,a)`
             )
           }
         }

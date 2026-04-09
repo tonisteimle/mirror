@@ -49,7 +49,7 @@ function extractFromFile(filePath: string): string[] {
  * Extrahiert Beispiele aus allen Tutorial-Kapiteln
  */
 export function extractTutorialExamples(tutorialDir?: string): TutorialChapter[] {
-  const dir = tutorialDir || join(__dirname, '../../../docs/tutorial/html')
+  const dir = tutorialDir || join(__dirname, '../../../docs/tutorial')
   const chapters: TutorialChapter[] = []
 
   // Alle HTML-Dateien im Tutorial-Verzeichnis (sortiert)

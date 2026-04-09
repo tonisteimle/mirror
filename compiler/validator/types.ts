@@ -85,6 +85,14 @@ export interface ValidationRules {
 // ============================================================================
 
 export const ERROR_CODES = {
+  // Lexer (E01x errors, W01x warnings)
+  UNCLOSED_STRING: 'E010',
+  INVALID_HEX_COLOR: 'E011',
+  UNKNOWN_CHARACTER: 'E012',
+  INDENTATION_TOO_DEEP: 'E013',
+  INVALID_NUMBER: 'E014',
+  INCONSISTENT_INDENTATION: 'W015',
+
   // Components (E0xx)
   UNKNOWN_COMPONENT: 'E001',
   UNDEFINED_COMPONENT: 'E002',
@@ -98,6 +106,10 @@ export const ERROR_CODES = {
   INVALID_COLOR: 'E104',
   VALUE_OUT_OF_RANGE: 'E105',
   INVALID_KEYWORD: 'E106',
+  LAYOUT_CONFLICT: 'E110',
+  DUPLICATE_PROPERTY: 'W110',
+  INVALID_COMBINATION: 'E111',
+  MISSING_REQUIRED: 'E120',
 
   // Events (E2xx)
   UNKNOWN_EVENT: 'E200',
@@ -118,6 +130,7 @@ export const ERROR_CODES = {
   UNDEFINED_TOKEN: 'W500',
   UNUSED_TOKEN: 'W501',
   INVALID_TOKEN_TYPE: 'W502',
+  UNUSED_COMPONENT: 'W503',
 
   // Structure (E6xx)
   INVALID_NESTING: 'E600',

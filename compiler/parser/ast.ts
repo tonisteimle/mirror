@@ -168,6 +168,7 @@ export interface ComponentDefinition extends BaseNode {
   children: (Instance | Slot)[]
   initialState?: string       // initial state: "closed" → initialState: "closed"
   selection?: string          // selection binding: "selection $selected" → selection: "$selected"
+  bind?: string               // bind active exclusive() child: "bind value" → bind: "value"
   visibleWhen?: string        // state-based visibility: "if (open)" → visibleWhen: "open"
   route?: string              // navigation target: "route Home" → route: "Home"
 }
@@ -184,6 +185,7 @@ export interface Instance extends BaseNode {
   visibleWhen?: string        // state-based visibility: "if open" → visibleWhen: "open"
   initialState?: string       // initial state: "closed" → initialState: "closed"
   selection?: string          // selection binding: "selection $selected" → selection: "$selected"
+  bind?: string               // bind active exclusive() child: "bind value" → bind: "value"
   route?: string              // navigation target: "route Home" → route: "Home"
   isDefinition?: boolean      // true if ends with : (definition, not rendered)
   isCompound?: boolean        // true if this is a Compound primitive (Shell, etc.)

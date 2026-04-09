@@ -183,6 +183,7 @@ export const DSL = {
     reserved: [
       'as', 'extends', 'named', 'each', 'in', 'if', 'else', 'then', 'where',
       'and', 'or', 'not', 'data', 'keys', 'selection',
+      'bind',   // Bind active exclusive() child content to variable
       'route',  // @deprecated - use navigate() or Tab/NavItem without children instead
       'with', 'by', 'asc', 'desc', 'grouped',
       'use',    // Import components: use components

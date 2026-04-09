@@ -29,8 +29,12 @@ export function createCoreAPI(runtime: RuntimeFunctions): CoreTestAPI {
     },
 
     findByName(name: string): MirrorElement | null {
-      // Try data-instance-name first (explicit name property)
-      let el = document.querySelector(`[data-instance-name="${name}"]`) as MirrorElement | null
+      // Try data-mirror-name first (current compiler output)
+      let el = document.querySelector(`[data-mirror-name="${name}"]`) as MirrorElement | null
+      if (el) return el
+
+      // Try data-instance-name (explicit name property)
+      el = document.querySelector(`[data-instance-name="${name}"]`) as MirrorElement | null
       if (el) return el
 
       // Try data-component-name (component definition name)

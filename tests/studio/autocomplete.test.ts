@@ -456,9 +456,10 @@ describe('Autocomplete Constants', () => {
 
     it('should include Zag components', () => {
       const labels = ALL_COMPLETIONS.map(c => c.label)
-      expect(labels).toContain('Accordion')
+      // Tutorial Set: Dialog, Select, Tabs, Checkbox, Switch, RadioGroup, Slider, DatePicker, Tooltip, SideNav
       expect(labels).toContain('Dialog')
       expect(labels).toContain('Select')
+      expect(labels).toContain('Tabs')
     })
   })
 

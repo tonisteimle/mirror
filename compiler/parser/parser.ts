@@ -1208,6 +1208,16 @@ export class Parser {
     // Parse inline properties (including implicit onclick events)
     this.parseInlineProperties(component.properties, component.events)
 
+    // Extract bind from properties if present (bind varName on same line as definition)
+    const bindIndex = component.properties.findIndex(p => p.name === 'bind')
+    if (bindIndex >= 0) {
+      const bindProp = component.properties[bindIndex]
+      if (bindProp.values[0]) {
+        component.bind = String(bindProp.values[0])
+      }
+      component.properties.splice(bindIndex, 1)
+    }
+
     // Skip newline before checking for indented block
     this.skipNewlines()
 
@@ -1246,6 +1256,16 @@ export class Parser {
     }
 
     this.parseInlineProperties(component.properties, component.events)
+
+    // Extract bind from properties if present (bind varName on same line as definition)
+    const bindIndex = component.properties.findIndex(p => p.name === 'bind')
+    if (bindIndex >= 0) {
+      const bindProp = component.properties[bindIndex]
+      if (bindProp.values[0]) {
+        component.bind = String(bindProp.values[0])
+      }
+      component.properties.splice(bindIndex, 1)
+    }
 
     // Skip newline before checking for indented block
     this.skipNewlines()
@@ -1479,6 +1499,16 @@ export class Parser {
     // Parse inline properties (including implicit onclick events)
     this.parseInlineProperties(component.properties, component.events)
 
+    // Extract bind from properties if present (bind varName on same line as definition)
+    const bindIndex = component.properties.findIndex(p => p.name === 'bind')
+    if (bindIndex >= 0) {
+      const bindProp = component.properties[bindIndex]
+      if (bindProp.values[0]) {
+        component.bind = String(bindProp.values[0])
+      }
+      component.properties.splice(bindIndex, 1)
+    }
+
     // Skip newline before checking for indented block
     this.skipNewlines()
 
@@ -1552,6 +1582,16 @@ export class Parser {
     } else {
       // Parse inline properties, events, and content
       this.parseInlineProperties(instance.properties, instance.events)
+    }
+
+    // Extract bind from properties if present (bind varName on same line)
+    const bindIndex = instance.properties.findIndex(p => p.name === 'bind')
+    if (bindIndex >= 0) {
+      const bindProp = instance.properties[bindIndex]
+      if (bindProp.values[0]) {
+        instance.bind = String(bindProp.values[0])
+      }
+      instance.properties.splice(bindIndex, 1)
     }
 
     // Check for inline states: "Frame bg #333 hover: bg light"
@@ -3313,6 +3353,16 @@ export class Parser {
         continue
       }
 
+      // Bind: bind varName (track active exclusive() child content)
+      if (this.check('BIND')) {
+        this.advance() // consume 'bind'
+        if (this.check('IDENTIFIER')) {
+          const varToken = this.advance()
+          component.bind = varToken.value
+        }
+        continue
+      }
+
       // Route: route TargetComponent or route path/to/page
       if (this.check('ROUTE')) {
         this.advance() // consume 'route'
@@ -3967,6 +4017,16 @@ export class Parser {
         continue
       }
 
+      // Bind: bind varName (track active exclusive() child content)
+      if (this.check('BIND')) {
+        this.advance() // consume 'bind'
+        if (this.check('IDENTIFIER')) {
+          const varToken = this.advance()
+          instance.bind = varToken.value
+        }
+        continue
+      }
+
       // Route: route TargetComponent or route path/to/page
       if (this.check('ROUTE')) {
         this.advance() // consume 'route'
@@ -4463,6 +4523,23 @@ export class Parser {
             values: [routePath],
             line: routeToken.line,
             column: routeToken.column,
+          })
+        }
+        continue
+      }
+
+      // Bind: bind varName - track active exclusive() child content in a variable
+      if (this.check('BIND')) {
+        const bindToken = this.advance()
+        // Get the variable name (could be an identifier or $token)
+        if (this.check('IDENTIFIER')) {
+          const varName = this.advance()
+          properties.push({
+            type: 'Property',
+            name: 'bind',
+            values: [varName.value],
+            line: bindToken.line,
+            column: bindToken.column,
           })
         }
         continue

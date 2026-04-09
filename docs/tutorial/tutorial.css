@@ -42,6 +42,31 @@ body {
   padding: 60px 32px 100px;
 }
 
+/* Page Logo (visible when sidebar is hidden) */
+.page-logo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.page-logo a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.page-logo img {
+  height: 20px;
+  width: auto;
+}
+
+/* Hide page logo when sidebar is visible */
+@media (min-width: 1100px) {
+  body.has-sidebar .page-logo {
+    display: none;
+  }
+}
+
 /* Typography */
 .page > header { margin-bottom: 48px; }
 h1 {

@@ -83,7 +83,10 @@ export class Validator {
   private definedComponents: Set<string> = new Set()
   private definedTokens: Set<string> = new Set()
   private usedComponents: Map<string, { line: number; column: number }> = new Map()
+  private usedTokens: Set<string> = new Set() // Track actually used tokens
   private componentExtends: Map<string, string> = new Map() // For circular reference detection
+  private componentDefinitions: Map<string, { line: number; column: number }> = new Map() // Track definition locations
+  private tokenDefinitions: Map<string, { line: number; column: number }> = new Map() // Track token definition locations
   private errors: ValidationError[] = []
   private warnings: ValidationError[] = []
 
@@ -99,7 +102,10 @@ export class Validator {
     this.definedComponents.clear()
     this.definedTokens.clear()
     this.usedComponents.clear()
+    this.usedTokens.clear()
     this.componentExtends.clear()
+    this.componentDefinitions.clear()
+    this.tokenDefinitions.clear()
     this.errors = []
     this.warnings = []
 
@@ -129,6 +135,9 @@ export class Validator {
     // Phase 4: Check for undefined references
     this.checkUndefinedReferences()
 
+    // Phase 5: Check for unused definitions
+    this.checkUnusedDefinitions()
+
     return {
       valid: this.errors.length === 0,
       errors: this.errors,
@@ -150,9 +159,11 @@ export class Validator {
       const rootName = baseName.split('.')[0]
       this.definedTokens.add(rootName)
       this.definedTokens.add(baseName) // Also add full name
+      // Track definition location for unused warnings
+      this.tokenDefinitions.set(rootName, { line: token.line, column: token.column })
     }
 
-    // Collect component definitions and extends relationships
+    // First pass: collect all component names
     for (const component of ast.components) {
       if (this.definedComponents.has(component.name)) {
         this.addError(
@@ -163,10 +174,20 @@ export class Validator {
         )
       }
       this.definedComponents.add(component.name)
+      // Track definition location for unused warnings
+      this.componentDefinitions.set(component.name, { line: component.line, column: component.column })
+    }
 
+    // Second pass: track extends relationships (need all names first)
+    for (const component of ast.components) {
       // Track extends relationships for circular reference detection
       if (component.extends) {
         this.componentExtends.set(component.name, component.extends)
+      }
+      // Also check primitive - it might reference another component (e.g., "PrimaryBtn as BaseBtn:")
+      // The parser uses 'primitive' for both primitives and component references
+      if (component.primitive && this.definedComponents.has(component.primitive)) {
+        this.componentExtends.set(component.name, component.primitive)
       }
     }
   }
@@ -245,7 +266,10 @@ export class Validator {
       }
     }
 
-    // Validate properties
+    // Validate property set (layout conflicts, duplicates, required, ranges)
+    this.validatePropertySet(component.properties, component.primitive || component.name, component.line, component.column)
+
+    // Validate individual properties
     for (const prop of component.properties) {
       this.validateProperty(prop)
     }
@@ -283,11 +307,17 @@ export class Validator {
     const isAlias = this.rules.primitiveAliases.has(compLower)
     const isDefined = this.definedComponents.has(instance.component)
 
-    if (!isPrimitive && !isAlias && !isDefined) {
+    // Track component usage:
+    // - For defined components: track for unused detection
+    // - For undefined components: track for E002 error reporting
+    if (!isPrimitive && !isAlias) {
       this.trackUsedComponent(instance.component, instance.line, instance.column)
     }
 
-    // Validate properties
+    // Validate property set (layout conflicts, duplicates, required, ranges)
+    this.validatePropertySet(instance.properties, instance.component, instance.line, instance.column)
+
+    // Validate individual properties
     for (const prop of instance.properties) {
       this.validateProperty(prop)
     }
@@ -644,6 +674,9 @@ export class Validator {
     const name = tokenRef.slice(1) // Remove $
     const rootName = name.split('.')[0]
 
+    // Track that this token is used
+    this.usedTokens.add(rootName)
+
     if (!this.definedTokens.has(rootName) && !this.definedTokens.has(name)) {
       this.addWarning(
         ERROR_CODES.UNDEFINED_TOKEN,
@@ -791,6 +824,245 @@ export class Validator {
           pos.column,
           suggestion ? `Did you mean "${suggestion}"?` : undefined
         )
+      }
+    }
+  }
+
+  /**
+   * Check for unused token and component definitions.
+   * Reports W501 for unused tokens and W503 for unused components.
+   */
+  private checkUnusedDefinitions(): void {
+    // Check for unused tokens
+    for (const [name, pos] of this.tokenDefinitions) {
+      if (!this.usedTokens.has(name)) {
+        this.addWarning(
+          ERROR_CODES.UNUSED_TOKEN,
+          `Token "${name}" is defined but never used`,
+          pos.line,
+          pos.column,
+          'Remove unused token or add a reference with $' + name
+        )
+      }
+    }
+
+    // Check for unused components
+    // A component is "used" if:
+    // 1. It appears in usedComponents (used as instance)
+    // 2. It's extended by another component (used as base)
+    const usedAsBase = new Set(this.componentExtends.values())
+
+    for (const [name, pos] of this.componentDefinitions) {
+      const isUsedAsInstance = this.usedComponents.has(name)
+      const isUsedAsBase = usedAsBase.has(name)
+
+      if (!isUsedAsInstance && !isUsedAsBase) {
+        this.addWarning(
+          ERROR_CODES.UNUSED_COMPONENT,
+          `Component "${name}" is defined but never used`,
+          pos.line,
+          pos.column,
+          'Remove unused component or create an instance'
+        )
+      }
+    }
+  }
+
+  // ==========================================================================
+  // Property Set Validation (Sprint 2)
+  // ==========================================================================
+
+  /**
+   * Validate a set of properties for conflicts and duplicates.
+   */
+  private validatePropertySet(properties: Property[], componentName: string, line: number, column: number): void {
+    this.checkLayoutConflicts(properties, line, column)
+    this.checkDuplicateProperties(properties)
+    this.checkRequiredProperties(componentName, properties, line, column)
+    this.checkPropertyRanges(properties)
+  }
+
+  /**
+   * Layout conflict pairs - these should not be used together
+   */
+  private static readonly LAYOUT_CONFLICTS: [string[], string][] = [
+    // Direction conflicts
+    [['hor', 'horizontal', 'ver', 'vertical'], 'Cannot use both horizontal and vertical layout'],
+    // Alignment conflicts
+    [['center', 'cen', 'spread'], 'Cannot use both center and spread'],
+    // Grid vs Flex conflicts
+    [['grid', 'hor', 'horizontal'], 'Cannot combine grid with horizontal flex'],
+    [['grid', 'ver', 'vertical'], 'Cannot combine grid with vertical flex'],
+    // 9-zone alignment conflicts (only one can be active)
+    [['tl', 'top-left', 'tc', 'top-center', 'tr', 'top-right',
+      'cl', 'center-left', 'cr', 'center-right',
+      'bl', 'bottom-left', 'bc', 'bottom-center', 'br', 'bottom-right'],
+      'Cannot use multiple position alignments'],
+  ]
+
+  /**
+   * Check for conflicting layout properties
+   */
+  private checkLayoutConflicts(properties: Property[], line: number, column: number): void {
+    const propNames = new Set(properties.map(p => p.name.toLowerCase()))
+
+    // Check direction conflicts: hor vs ver
+    const hasHor = propNames.has('hor') || propNames.has('horizontal')
+    const hasVer = propNames.has('ver') || propNames.has('vertical')
+    if (hasHor && hasVer) {
+      this.addError(
+        ERROR_CODES.LAYOUT_CONFLICT,
+        'Layout conflict: cannot use both "hor" and "ver" on the same element',
+        line,
+        column,
+        'Remove one of the direction properties'
+      )
+    }
+
+    // Check center vs spread
+    const hasCenter = propNames.has('center') || propNames.has('cen')
+    const hasSpread = propNames.has('spread')
+    if (hasCenter && hasSpread) {
+      this.addError(
+        ERROR_CODES.LAYOUT_CONFLICT,
+        'Layout conflict: cannot use both "center" and "spread" on the same element',
+        line,
+        column,
+        'Remove one of the alignment properties'
+      )
+    }
+
+    // Check grid vs flex direction
+    const hasGrid = propNames.has('grid')
+    if (hasGrid && (hasHor || hasVer)) {
+      this.addError(
+        ERROR_CODES.LAYOUT_CONFLICT,
+        'Layout conflict: cannot combine "grid" with flex direction ("hor"/"ver")',
+        line,
+        column,
+        'Use either grid or flex layout, not both'
+      )
+    }
+
+    // Check 9-zone alignment (only one allowed)
+    const zoneProps = ['tl', 'top-left', 'tc', 'top-center', 'tr', 'top-right',
+                       'cl', 'center-left', 'cr', 'center-right',
+                       'bl', 'bottom-left', 'bc', 'bottom-center', 'br', 'bottom-right']
+    const activeZones = zoneProps.filter(z => propNames.has(z))
+    if (activeZones.length > 1) {
+      this.addError(
+        ERROR_CODES.LAYOUT_CONFLICT,
+        `Layout conflict: cannot use multiple position alignments (${activeZones.join(', ')})`,
+        line,
+        column,
+        'Use only one position alignment'
+      )
+    }
+  }
+
+  /**
+   * Check for duplicate property definitions
+   */
+  private checkDuplicateProperties(properties: Property[]): void {
+    const seen = new Map<string, Property>()
+
+    for (const prop of properties) {
+      const name = prop.name.toLowerCase()
+      const existing = seen.get(name)
+
+      if (existing) {
+        this.addWarning(
+          ERROR_CODES.DUPLICATE_PROPERTY,
+          `Duplicate property "${prop.name}" - previous definition on line ${existing.line}`,
+          prop.line,
+          prop.column,
+          'The second value will override the first'
+        )
+      } else {
+        seen.set(name, prop)
+      }
+    }
+  }
+
+  /**
+   * Required properties per component type
+   */
+  private static readonly REQUIRED_PROPERTIES: Record<string, string[]> = {
+    'image': ['src'],
+    'img': ['src'],
+    'link': ['href'],
+    'a': ['href'],
+  }
+
+  /**
+   * Check that required properties are present
+   */
+  private checkRequiredProperties(componentName: string, properties: Property[], line: number, column: number): void {
+    const compLower = componentName.toLowerCase()
+    const required = Validator.REQUIRED_PROPERTIES[compLower]
+
+    if (!required) return
+
+    const propNames = new Set(properties.map(p => p.name.toLowerCase()))
+
+    for (const req of required) {
+      if (!propNames.has(req)) {
+        this.addError(
+          ERROR_CODES.MISSING_REQUIRED,
+          `${componentName} requires "${req}" property`,
+          line,
+          column,
+          `Add ${req} property`
+        )
+      }
+    }
+  }
+
+  /**
+   * Property value ranges
+   */
+  private static readonly PROPERTY_RANGES: Record<string, { min?: number; max?: number; description: string }> = {
+    'opacity': { min: 0, max: 1, description: 'between 0 and 1' },
+    'opa': { min: 0, max: 1, description: 'between 0 and 1' },
+    'o': { min: 0, max: 1, description: 'between 0 and 1' },
+    'scale': { min: 0, description: 'greater than 0' },
+  }
+
+  /**
+   * Check numeric property ranges
+   */
+  private checkPropertyRanges(properties: Property[]): void {
+    for (const prop of properties) {
+      const range = Validator.PROPERTY_RANGES[prop.name.toLowerCase()]
+      if (!range) continue
+
+      for (const val of prop.values) {
+        // Handle both number and string representations
+        let numVal: number | undefined
+        if (typeof val === 'number') {
+          numVal = val
+        } else if (typeof val === 'string' && /^-?\d+(\.\d+)?$/.test(val)) {
+          numVal = parseFloat(val)
+        }
+
+        if (numVal !== undefined) {
+          if (range.min !== undefined && numVal < range.min) {
+            this.addError(
+              ERROR_CODES.VALUE_OUT_OF_RANGE,
+              `"${prop.name}" value ${numVal} is out of range: must be ${range.description}`,
+              prop.line,
+              prop.column
+            )
+          }
+          if (range.max !== undefined && numVal > range.max) {
+            this.addError(
+              ERROR_CODES.VALUE_OUT_OF_RANGE,
+              `"${prop.name}" value ${numVal} is out of range: must be ${range.description}`,
+              prop.line,
+              prop.column
+            )
+          }
+        }
       }
     }
   }

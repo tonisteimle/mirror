@@ -14,6 +14,12 @@
 
   <main class="page">
 
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
     <header>
       <h1>States</h1>
       <p class="subtitle">Wie Elemente ihr Aussehen ändern</p>
@@ -219,6 +225,40 @@ Frame hor, ver-center, gap 4, bg #1a1a1a, pad 4, rad 8
 
     <!-- ============================================================ -->
     <section>
+      <h2>Auswahl-Wert verfolgen: bind</h2>
+      <p>Bei <code>exclusive()</code> ist immer nur ein Element aktiv – aber welcher Wert ist ausgewählt? Mit <code>bind varName</code> speicherst du den Textinhalt des aktiven Elements automatisch in einer Variable:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Option: pad 10, rad 6, bg #333, col #888, cursor pointer, exclusive()
+  hover:
+    bg #444
+  on:
+    bg #2563eb
+    col white
+
+Frame gap 8, bind city
+  Text "Ausgewählt: $city", col #888, fs 12
+  Option "Berlin"
+  Option "Hamburg"
+  Option "München"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>bind city</code> auf dem Frame – speichert den Textinhalt des aktiven Elements</li>
+        <li><code>$city</code> im Text – zeigt den aktuell ausgewählten Wert</li>
+        <li><code>exclusive()</code> auf Option – nur eine Option kann aktiv sein</li>
+        <li>Bei Klick auf eine Option wird deren Textinhalt ("Berlin", "Hamburg", etc.) in <code>$city</code> gespeichert</li>
+      </ul>
+
+      <p class="note"><strong>bind + exclusive() = Custom Select.</strong> Für vollständige Dropdowns mit Auf-/Zuklappen, Accessibility und Keyboard-Navigation gibt es die fertige <code>Select</code> Zag-Komponente (siehe <a href="11-eingabe.html">Eingabe</a>).</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>Auf andere Elemente reagieren</h2>
       <p>Manchmal soll ein Element sein Aussehen ändern, wenn ein <em>anderes</em> Element seinen State wechselt. Klassisches Beispiel: Ein Menü wird sichtbar, wenn ein Button aktiviert wird.</p>
       <p>Dafür brauchst du zwei Dinge:</p>
@@ -326,6 +366,7 @@ Frame gap 8
         <tr><td><code>on:</code></td><td>Custom State definieren (Name frei wählbar)</td></tr>
         <tr><td><code>toggle()</code></td><td>State bei Klick wechseln</td></tr>
         <tr><td><code>exclusive()</code></td><td>Nur einer aktiv (Geschwister aus)</td></tr>
+        <tr><td><code>bind varName</code></td><td>Aktiven Wert in Variable speichern</td></tr>
         <tr><td><code>Btn "Text", on</code></td><td>Instanz startet im State</td></tr>
       </table>
 
