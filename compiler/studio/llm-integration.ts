@@ -4,6 +4,8 @@
  * Handles the workflow: User Prompt → LLM (React) → Mirror → Editor
  */
 
+import { convertToMirrorCode } from '../converters/react-to-mirror'
+
 // =============================================================================
 // Types (inline definitions - originally from __tests__/llm/types)
 // =============================================================================
@@ -39,36 +41,13 @@ function buildEditorContextPrompt(context: EditorContext): string {
 }
 
 /**
- * Simple React to Mirror converter (placeholder implementation)
- * TODO: Import from proper converter module when available
+ * React to Mirror converter using proper AST-based conversion
  */
 class ReactToMirrorConverter {
   convert(reactCode: string): { mirror?: string; errors?: string[] } {
-    // Basic conversion - strip JSX syntax
-    // This is a placeholder; the real implementation should be more sophisticated
     try {
-      // Remove function wrapper
-      let code = reactCode
-        .replace(/function\s+\w+\s*\(\)\s*\{/, '')
-        .replace(/return\s*\(/, '')
-        .replace(/\)\s*\}\s*$/, '')
-        .trim()
-
-      // Very basic JSX to Mirror conversion
-      code = code
-        .replace(/<div/g, 'Frame')
-        .replace(/<span/g, 'Text')
-        .replace(/<button/g, 'Button')
-        .replace(/<\/\w+>/g, '')
-        .replace(/>/g, '')
-        .replace(/style=\{\{([^}]+)\}\}/g, (_, styles) => {
-          // Convert inline styles
-          return styles
-            .replace(/['"](\w+)['"]/g, '$1')
-            .replace(/,\s*/g, ', ')
-        })
-
-      return { mirror: code }
+      const mirror = convertToMirrorCode(reactCode)
+      return { mirror }
     } catch (error) {
       return { errors: [(error as Error).message] }
     }

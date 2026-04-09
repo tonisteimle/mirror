@@ -375,7 +375,7 @@ each $task in $tasks where $task.done == false
 `)
     const js = generateDOM(ast)
 
-    expect(js).toContain('filter:')
+    expect(js).toContain('filterFn:')  // Function instead of string to avoid eval()
     expect(js).toContain('tasksFiltered')
   })
 

@@ -1283,7 +1283,7 @@ class IRTransformer {
   private transformTableStaticRow(row: TableStaticRowNode): IRTableStaticRow {
     return {
       cells: row.cells.map(cell => this.transformTableStaticCell(cell)),
-      styles: [], // TODO: transform row properties to styles if needed
+      styles: this.transformProperties(row.properties, 'frame'),
     }
   }
 
@@ -1294,7 +1294,7 @@ class IRTransformer {
     return {
       text: cell.text,
       children: cell.children?.map(child => this.transformChild(child)),
-      styles: [], // TODO: transform cell properties to styles if needed
+      styles: this.transformProperties(cell.properties, 'frame'),
     }
   }
 

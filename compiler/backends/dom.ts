@@ -1151,7 +1151,8 @@ class DOMGenerator {
     this.emit(`itemVar: '${itemVar}',`)
     this.emit(`collection: ${isInlineArray ? rawCollection : `'${rawCollection}'`},`)
     if (each.filter) {
-      this.emit(`filter: ${JSON.stringify(each.filter)},`)
+      // Store as function to avoid eval() at runtime
+      this.emit(`filterFn: (${itemVar}) => ${each.filter},`)
     }
     if (each.orderBy) {
       this.emit(`orderBy: ${JSON.stringify(each.orderBy)},`)
@@ -6616,9 +6617,9 @@ class DOMGenerator {
     this.indent++
     this.emit('if (el._eachConfig) {')
     this.indent++
-    this.emit('const { collection, renderItem, filter } = el._eachConfig')
+    this.emit('const { collection, renderItem, filterFn } = el._eachConfig')
     this.emit('const items = _state[collection] || []')
-    this.emit('const filtered = filter ? items.filter(item => eval(filter)) : items')
+    this.emit('const filtered = filterFn ? items.filter(filterFn) : items')
     this.emit('el.innerHTML = ""')
     this.emit('filtered.forEach((item, index) => el.appendChild(renderItem(item, index)))')
     this.indent--

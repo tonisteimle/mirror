@@ -3,6 +3,9 @@
  *
  * Generates static HTML output.
  * For SSG/SSR scenarios.
+ *
+ * @deprecated This backend is incomplete and not exported.
+ * Use generateDOM() for full functionality.
  */
 
 import type { AST } from '../parser/ast'

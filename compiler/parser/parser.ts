@@ -4039,9 +4039,8 @@ export class Parser {
 
       // Keys block
       if (this.check('KEYS')) {
-        // Instances can have events via instance.events (but Instance type doesn't have events)
-        // For now, skip keys in instances - they should be in component definitions
-        // TODO: Consider adding events to Instance type
+        // Note: Instances skip keys blocks - keyboard events are defined in component definitions
+        // This is intentional: instances inherit behavior from their components
         this.advance()
         this.skipNewlines()
         if (this.check('INDENT')) {
