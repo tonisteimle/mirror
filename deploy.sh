@@ -48,9 +48,10 @@ prepare_tutorial() {
         sed -i '' 's|../../studio/|../|g' "$file"
     done
 
-    # Transform paths in JS files (tutorial.js uses ../../studio/)
+    # Transform paths in JS files (tutorial.js uses ../../studio/ and ../../assets/)
     for file in "$TEMP_DIR/tutorial"/*.js; do
         sed -i '' 's|../../studio/|../|g' "$file"
+        sed -i '' 's|../../assets/|../assets/|g' "$file"
     done
 
     echo "✅ Tutorial files prepared"
