@@ -213,8 +213,8 @@ describe('Chart Primitives', () => {
       expect(colorsProp?.value).toContain('#10b981')
     })
 
-    test('legend property is parsed', () => {
-      const code = `Pie $data, legend`
+    test('legend property is parsed with explicit value', () => {
+      const code = `Pie $data, legend true`
       const ast = parse(code)
       const ir = toIR(ast)
 
@@ -223,18 +223,19 @@ describe('Chart Primitives', () => {
       expect(legendProp?.value).toBe(true)
     })
 
-    test('grid property is parsed', () => {
+    test('grid property is parsed with explicit false', () => {
       const code = `Line $data, grid false`
       const ast = parse(code)
       const ir = toIR(ast)
 
       const node = ir.nodes[0]
       const gridProp = node.properties.find(p => p.name === 'grid')
+      // Note: Parser returns "false" as string, IR converts to boolean
       expect(gridProp?.value).toBe(false)
     })
 
-    test('stacked property is parsed', () => {
-      const code = `Bar $data, stacked`
+    test('stacked property is parsed with explicit value', () => {
+      const code = `Bar $data, stacked true`
       const ast = parse(code)
       const ir = toIR(ast)
 

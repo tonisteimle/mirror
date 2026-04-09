@@ -30,7 +30,27 @@ import type {
   DataAttribute,
   DataReference,
   DataReferenceArray,
+  TokenReference,
+  LoopVarReference,
+  Conditional as ASTConditional,
+  ComputedExpression,
 } from '../parser/ast'
+
+/** Property value type from AST - can be literal, token ref, loop var, conditional, or expression */
+type PropertyValue = string | number | boolean | TokenReference | LoopVarReference | ASTConditional | ComputedExpression
+
+/** Child node type that can be transformed - matches transformChild parameter */
+type TransformableChild = Instance | Text | Slot
+
+/** Conditional block node structure - 'if condition' blocks in Mirror DSL */
+interface ConditionalBlock {
+  type: 'Conditional'
+  condition: string
+  then: (Instance | Slot)[]
+  else?: (Instance | Slot)[]
+  line: number
+  column: number
+}
 import {
   isComponent,
   isInstance,
@@ -622,7 +642,7 @@ class IRTransformer {
         case 'value':
         case 'defaultValue':
           // Filter out empty values (can occur in nested components)
-          const nonEmptyValues = prop.values.filter((v: any) => v !== '' && v !== undefined && v !== null)
+          const nonEmptyValues = prop.values.filter((v: PropertyValue) => v !== '' && v !== undefined && v !== null)
           if (nonEmptyValues.length === 0) {
             // No valid values, skip
           } else if (nonEmptyValues.length === 1) {
@@ -634,7 +654,7 @@ class IRTransformer {
               machineConfig[prop.name] = String(val)
             }
           } else {
-            machineConfig[prop.name] = nonEmptyValues.map((v: any) => String(v))
+            machineConfig[prop.name] = nonEmptyValues.map((v: PropertyValue) => String(v))
           }
           break
         // NumberInput-specific props
@@ -875,7 +895,7 @@ class IRTransformer {
     for (const [slotName, slotDefUnknown] of Object.entries(zagNode.slots || {})) {
       const slotDef = slotDefUnknown as ZagSlotDef
       // Transform slot children if present
-      const slotChildren = (slotDef.children || []).map((child: any) => this.transformChild(child))
+      const slotChildren = (slotDef.children || []).map((child: TransformableChild) => this.transformChild(child))
       slots[slotName] = {
         name: slotName,
         apiMethod: `get${slotName}Props`,
@@ -1005,7 +1025,7 @@ class IRTransformer {
       }
       // Include children if present (custom content like Icon, Text)
       if (item.children && item.children.length > 0) {
-        irItem.children = item.children.map((child: any) => this.transformChild(child))
+        irItem.children = item.children.map((child: TransformableChild) => this.transformChild(child))
       } else if (item.shows) {
         // No children but has "show X [from Y]" → load content
         // show Settings → shows local element or Settings.mirror
@@ -1543,23 +1563,30 @@ class IRTransformer {
     if (title) {
       irProperties.push({ name: 'title', value: String(title) })
     }
+    // Helper to convert string booleans ("true"/"false") to actual booleans
+    const toBool = (v: unknown): boolean => {
+      if (typeof v === 'boolean') return v
+      if (typeof v === 'string') return v.toLowerCase() !== 'false'
+      return Boolean(v)
+    }
+
     if (legend !== undefined) {
-      irProperties.push({ name: 'legend', value: Boolean(legend) })
+      irProperties.push({ name: 'legend', value: toBool(legend) })
     }
     if (stacked !== undefined) {
-      irProperties.push({ name: 'stacked', value: Boolean(stacked) })
+      irProperties.push({ name: 'stacked', value: toBool(stacked) })
     }
     if (fill !== undefined) {
-      irProperties.push({ name: 'fill', value: Boolean(fill) })
+      irProperties.push({ name: 'fill', value: toBool(fill) })
     }
     if (tension !== undefined) {
       irProperties.push({ name: 'tension', value: Number(tension) })
     }
     if (grid !== undefined) {
-      irProperties.push({ name: 'grid', value: Boolean(grid) })
+      irProperties.push({ name: 'grid', value: toBool(grid) })
     }
     if (axes !== undefined) {
-      irProperties.push({ name: 'axes', value: Boolean(axes) })
+      irProperties.push({ name: 'axes', value: toBool(axes) })
     }
 
     return {
@@ -2264,14 +2291,14 @@ class IRTransformer {
     }
   }
 
-  private transformConditional(cond: any): IRNode {
+  private transformConditional(cond: ConditionalBlock): IRNode {
     const nodeId = this.generateId()
     const conditionalData: IRConditional = {
       id: nodeId,
       condition: cond.condition,
-      then: cond.then.map((child: any) => this.transformInstance(child, nodeId, false, true)),
-      else: cond.else?.length > 0
-        ? cond.else.map((child: any) => this.transformInstance(child, nodeId, false, true))
+      then: cond.then.map((child: Instance | Slot) => this.transformInstance(child, nodeId, false, true)),
+      else: cond.else?.length
+        ? cond.else.map((child: Instance | Slot) => this.transformInstance(child, nodeId, false, true))
         : undefined,
     }
 
