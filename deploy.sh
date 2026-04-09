@@ -36,6 +36,7 @@ prepare_tutorial() {
     cp "$TUTORIAL_DIR"/*.html "$TEMP_DIR/tutorial/"
     cp "$TUTORIAL_DIR"/*.css "$TEMP_DIR/tutorial/"
     cp "$TUTORIAL_DIR"/*.js "$TEMP_DIR/tutorial/"
+    cp "$TUTORIAL_DIR"/*.png "$TEMP_DIR/tutorial/" 2>/dev/null || true
 
     # Transform paths in HTML files:
     # ../../assets/ -> ../assets/
@@ -165,6 +166,7 @@ lcd $TEMP_DIR/tutorial
 mput *.html
 mput *.css
 mput *.js
+mput *.png
 
 quit
 EOF
