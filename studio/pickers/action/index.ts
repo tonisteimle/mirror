@@ -297,7 +297,7 @@ export class ActionPicker extends BasePicker {
     cancelBtn.textContent = 'Cancel'
     cancelBtn.addEventListener('click', () => {
       this.onCancelCallback?.()
-      this.close()
+      this.hide()
     })
 
     const addBtn = document.createElement('button')
@@ -305,7 +305,7 @@ export class ActionPicker extends BasePicker {
     addBtn.textContent = 'Add'
     addBtn.addEventListener('click', () => {
       this.onSelectCallback?.(this.currentValue)
-      this.close()
+      this.hide()
     })
 
     buttons.appendChild(cancelBtn)
@@ -325,11 +325,27 @@ export class ActionPicker extends BasePicker {
     }
   }
 
-  getValue(): ActionPickerValue {
+  getValue(): string {
+    return JSON.stringify(this.currentValue)
+  }
+
+  setValue(value: string): void {
+    try {
+      this.currentValue = JSON.parse(value) as ActionPickerValue
+    } catch {
+      // If parsing fails, treat as action name
+      this.currentValue = { event: 'onclick', action: value }
+    }
+    this.updateContent()
+  }
+
+  /** Get the typed action value directly */
+  getActionValue(): ActionPickerValue {
     return this.currentValue
   }
 
-  setValue(value: ActionPickerValue): void {
+  /** Set the typed action value directly */
+  setActionValue(value: ActionPickerValue): void {
     this.currentValue = value
     this.updateContent()
   }

@@ -189,7 +189,7 @@ function createValidatorForProperty(prop: PropertyDef): ValueValidator {
       }
 
       // Check color values
-      if (prop.color) {
+      if (prop.color && typeof val !== 'boolean') {
         if (!isValidColorValue(val)) {
           if (typeof val === 'string' && val.startsWith('#')) {
             // Invalid hex format

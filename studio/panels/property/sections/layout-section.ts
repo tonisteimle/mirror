@@ -57,7 +57,7 @@ export class LayoutSection extends BaseSection {
 
     // Find wrap property
     const wrapProp = props.find(p => p.name === 'wrap')
-    const wrapActive = wrapProp && (wrapProp.value === 'true' || (wrapProp.value === '' && wrapProp.hasValue !== false))
+    const wrapActive = !!(wrapProp && (wrapProp.value === 'true' || (wrapProp.value === '' && wrapProp.hasValue !== false)))
 
     // Get dynamic gap tokens
     const gapTokens = data.getSpacingTokens?.('gap') || []

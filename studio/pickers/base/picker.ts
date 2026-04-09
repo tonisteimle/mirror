@@ -7,7 +7,7 @@ import { DEFAULT_CONFIG } from './types'
 import { KeyboardNav } from './keyboard-nav'
 import { events } from '../../core/events'
 
-export type PickerType = 'token' | 'color' | 'icon' | 'animation' | 'unknown'
+export type PickerType = 'token' | 'color' | 'icon' | 'animation' | 'action' | 'unknown'
 
 export abstract class BasePicker {
   protected config: Required<PickerConfig>

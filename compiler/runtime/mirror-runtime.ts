@@ -993,12 +993,12 @@ function executeAction(el: HTMLElement, action: string): void {
       (targetEl || el)?.focus()
       break
     case 'call':
-      const fn = (window as WindowWithMirrorFunctions)[target]
+      const fn = (window as unknown as WindowWithMirrorFunctions)[target]
       if (typeof fn === 'function') fn(...args)
       break
     default:
       // Unknown action = try as function call
-      const func = (window as WindowWithMirrorFunctions)[type]
+      const func = (window as unknown as WindowWithMirrorFunctions)[type]
       if (typeof func === 'function') func(target, ...args)
   }
 }

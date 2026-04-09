@@ -422,7 +422,7 @@ export class EditorTriggerManager {
     })
   }
 
-  private createKeyboardHandler(): Extension {
+  private createKeyboardHandler(): Extension[] {
     // Use domEventHandlers for key interception (more reliable than keymap for our use case)
     // domEventHandlers fire before keymap bindings
     const keyHandler = Prec.highest(EditorView.domEventHandlers({

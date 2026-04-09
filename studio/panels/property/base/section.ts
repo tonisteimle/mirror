@@ -4,7 +4,7 @@
  * All property panel sections extend this base class for consistency.
  */
 
-import type { PropertyCategory, ExtractedProperty } from '../../../compiler/studio/property-extractor'
+import type { PropertyCategory, ExtractedProperty } from '../../../../compiler/studio/property-extractor'
 import type { SpacingToken, ColorToken } from '../types'
 
 /**

@@ -89,18 +89,18 @@ export class SpacingSection extends BaseSection {
           </button>
         </div>
         <div class="section-content" data-expand-container="spacing">
-          ${this.renderRow('Horizontal', hPad, 'h', tokens, hasTokens, padIsOverride, 'collapsed-row')}
-          ${this.renderRow('Vertical', vPad, 'v', tokens, hasTokens, padIsOverride, 'collapsed-row')}
-          ${this.renderRow('Top', tPad, 't', tokens, hasTokens, padIsOverride, 'expanded-row')}
-          ${this.renderRow('Right', rPad, 'r', tokens, hasTokens, padIsOverride, 'expanded-row')}
-          ${this.renderRow('Bottom', bPad, 'b', tokens, hasTokens, padIsOverride, 'expanded-row')}
-          ${this.renderRow('Left', lPad, 'l', tokens, hasTokens, padIsOverride, 'expanded-row')}
+          ${this.renderSpacingRow('Horizontal', hPad, 'h', tokens, hasTokens, padIsOverride, 'collapsed-row')}
+          ${this.renderSpacingRow('Vertical', vPad, 'v', tokens, hasTokens, padIsOverride, 'collapsed-row')}
+          ${this.renderSpacingRow('Top', tPad, 't', tokens, hasTokens, padIsOverride, 'expanded-row')}
+          ${this.renderSpacingRow('Right', rPad, 'r', tokens, hasTokens, padIsOverride, 'expanded-row')}
+          ${this.renderSpacingRow('Bottom', bPad, 'b', tokens, hasTokens, padIsOverride, 'expanded-row')}
+          ${this.renderSpacingRow('Left', lPad, 'l', tokens, hasTokens, padIsOverride, 'expanded-row')}
         </div>
       </div>
     `
   }
 
-  private renderRow(
+  private renderSpacingRow(
     label: string,
     value: string,
     direction: string,
