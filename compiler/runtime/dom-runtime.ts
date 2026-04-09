@@ -59,6 +59,7 @@ export interface MirrorElement extends HTMLElement {
   _textPlaceholder?: string
   _savedDisplay?: string
   _clickOutsideHandler?: (e: MouseEvent) => void
+  _clickOutsideTimeout?: ReturnType<typeof setTimeout>
   _escapeHandler?: (e: KeyboardEvent) => void
   _focusTrap?: FocusTrap
   _previouslyFocused?: Element | null
@@ -128,7 +129,11 @@ const _elementsWithDocListeners = new WeakSet<MirrorElement>()
  * @param el Element to clean up
  */
 export function cleanupElement(el: MirrorElement): void {
-  // Clean up click-outside handler
+  // Clean up click-outside handler and pending timeout
+  if (el._clickOutsideTimeout) {
+    clearTimeout(el._clickOutsideTimeout)
+    delete el._clickOutsideTimeout
+  }
   if (el._clickOutsideHandler) {
     document.removeEventListener('click', el._clickOutsideHandler)
     delete el._clickOutsideHandler
@@ -877,7 +882,11 @@ export function dismiss(element: MirrorElement | string | null): void {
     delete el.dataset.hasBackdrop
   }
 
-  // Clean up click-outside handler
+  // Clean up click-outside handler and pending timeout
+  if (el._clickOutsideTimeout) {
+    clearTimeout(el._clickOutsideTimeout)
+    delete el._clickOutsideTimeout
+  }
   if (el._clickOutsideHandler) {
     document.removeEventListener('click', el._clickOutsideHandler)
     delete el._clickOutsideHandler
@@ -1059,10 +1068,19 @@ function setupClickOutsideHandler(
   // Remove existing handler
   if (element._clickOutsideHandler) {
     document.removeEventListener('click', element._clickOutsideHandler)
+    delete element._clickOutsideHandler
+  }
+
+  // Cancel any pending handler setup (prevents race condition)
+  if (element._clickOutsideTimeout) {
+    clearTimeout(element._clickOutsideTimeout)
+    delete element._clickOutsideTimeout
   }
 
   // Create new handler with delay to avoid immediate trigger
-  setTimeout(() => {
+  element._clickOutsideTimeout = setTimeout(() => {
+    delete element._clickOutsideTimeout
+
     element._clickOutsideHandler = (e: MouseEvent) => {
       const target = e.target as HTMLElement
 
@@ -2299,15 +2317,34 @@ export function transitionTo(
       const hasExitAnim = prevState?.exit
       const shouldHideAfter = hasExitAnim && el._baseStyles?.display === 'none'
 
-      // Play animation and apply styles
-      playStateAnimation(el, anim, newState.styles).then(() => {
-        // After exit animation: hide the element
-        if (shouldHideAfter) {
-          el.style.display = 'none'
-          el.hidden = true
+      // Safety timeout: ensure _isTransitioning is always reset
+      // Animation duration + delay + buffer (max 10 seconds)
+      const maxDuration = Math.min(
+        ((anim.duration || 0.3) + (anim.delay || 0)) * 1000 + 500,
+        10000
+      )
+      const safetyTimeout = setTimeout(() => {
+        if (el._isTransitioning) {
+          el._isTransitioning = false
         }
-        el._isTransitioning = false
-      })
+      }, maxDuration)
+
+      // Play animation and apply styles
+      playStateAnimation(el, anim, newState.styles)
+        .then(() => {
+          clearTimeout(safetyTimeout)
+          // After exit animation: hide the element
+          if (shouldHideAfter) {
+            el.style.display = 'none'
+            el.hidden = true
+          }
+          el._isTransitioning = false
+        })
+        .catch(() => {
+          // Animation failed - ensure we still unlock the element
+          clearTimeout(safetyTimeout)
+          el._isTransitioning = false
+        })
     } else {
       // No animation, apply styles immediately
       Object.assign(el.style, newState.styles as Partial<CSSStyleDeclaration>)
@@ -2424,8 +2461,24 @@ export function watchStates(
     }
   }
 
+  // Track if observers are still active
+  let isActive = true
+
+  // Cleanup function to disconnect all observers
+  function cleanup(): void {
+    if (!isActive) return
+    isActive = false
+    observer.disconnect()
+    cleanupObserver.disconnect()
+  }
+
   // Update state based on condition
   function updateState(): void {
+    // If element is no longer in document, cleanup and stop
+    if (!el.isConnected) {
+      cleanup()
+      return
+    }
     if (checkCondition()) {
       transitionTo(el, targetState)
     } else {
@@ -2438,6 +2491,11 @@ export function watchStates(
 
   // Watch for state changes on target elements
   const observer = new MutationObserver((mutations) => {
+    // Check if element still connected (handles root removal case)
+    if (!el.isConnected) {
+      cleanup()
+      return
+    }
     for (const mutation of mutations) {
       if (mutation.attributeName === 'data-state') {
         updateState()
@@ -2453,6 +2511,30 @@ export function watchStates(
       attributeFilter: ['data-state'],
     })
   }
+
+  // Cleanup: disconnect observer when element is removed from DOM
+  // Use another MutationObserver on the parent to detect removal
+  const cleanupObserver = new MutationObserver((mutations) => {
+    // Check if element still connected (handles root removal case)
+    if (!el.isConnected) {
+      cleanup()
+      return
+    }
+    for (const mutation of mutations) {
+      for (const removedNode of mutation.removedNodes) {
+        if (removedNode === el || (removedNode instanceof Element && removedNode.contains(el))) {
+          cleanup()
+          return
+        }
+      }
+    }
+  })
+
+  // Observe the root for child removals
+  cleanupObserver.observe(root, {
+    childList: true,
+    subtree: true,
+  })
 }
 
 /**
@@ -3323,6 +3405,15 @@ export function playStateAnimation(
 
         animation.onfinish = () => {
           // Apply final styles after animation
+          if (styles) {
+            Object.assign(el.style, styles)
+          }
+          resolve()
+        }
+
+        // Handle animation cancellation (element removed, new animation started, etc.)
+        animation.oncancel = () => {
+          // Still apply final styles to maintain consistent state
           if (styles) {
             Object.assign(el.style, styles)
           }
