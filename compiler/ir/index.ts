@@ -1174,9 +1174,17 @@ class IRTransformer {
     // If no columns defined, they will be inferred at runtime from data schema
     // The backend will handle this
 
+    // Transform table-level styles (excluding behavioral props)
+    const behavioralProps = new Set(['selectionMode', 'pageSize', 'stickyHeader'])
+    const tableStyleProps = table.properties.filter(p => !behavioralProps.has(p.name))
+    const tableStyles = this.transformProperties(tableStyleProps, 'frame')
+
     // Transform slots to IRNode arrays
     const headerSlot = table.headerSlot
       ? this.transformTableSlotChildren(table.headerSlot)
+      : undefined
+    const headerSlotStyles = table.headerSlot
+      ? this.transformTableSlotStyles(table.headerSlot)
       : undefined
     // Transform static header row from Header: Row "A", "B" syntax
     const headerStaticRow = table.headerSlot?.staticRow
@@ -1188,8 +1196,18 @@ class IRTransformer {
     const rowSlotStyles = table.rowSlot
       ? this.transformTableSlotStyles(table.rowSlot)
       : undefined
+    // Zebra striping: odd/even row styles
+    const rowOddStyles = table.rowOddSlot
+      ? this.transformTableSlotStyles(table.rowOddSlot)
+      : undefined
+    const rowEvenStyles = table.rowEvenSlot
+      ? this.transformTableSlotStyles(table.rowEvenSlot)
+      : undefined
     const footerSlot = table.footerSlot
       ? this.transformTableSlotChildren(table.footerSlot)
+      : undefined
+    const footerSlotStyles = table.footerSlot
+      ? this.transformTableSlotStyles(table.footerSlot)
       : undefined
     const groupSlot = table.groupSlot
       ? this.transformTableSlotChildren(table.groupSlot)
@@ -1266,10 +1284,14 @@ class IRTransformer {
       pageSize,
       stickyHeader: table.stickyHeader,
       headerSlot,
+      headerSlotStyles,
       headerStaticRow,
       rowSlot,
       rowSlotStyles,
+      rowOddStyles,
+      rowEvenStyles,
       footerSlot,
+      footerSlotStyles,
       groupSlot,
       groupSlotStyles,
       staticRows,
@@ -1285,7 +1307,7 @@ class IRTransformer {
       paginatorPageInfoSlot,
       paginatorPageInfoSlotStyles,
       properties: [],
-      styles: [],
+      styles: tableStyles,
       events: [],
       children: [],
       sourcePosition,
@@ -1323,6 +1345,12 @@ class IRTransformer {
       inferredType: 'string',  // Default, will be overridden at runtime
       customCell: col.customCell
         ? col.customCell.map(child => this.transformChild(child))
+        : undefined,
+      cellStyles: col.cellProperties
+        ? this.transformProperties(col.cellProperties, 'frame')
+        : undefined,
+      headerCellStyles: col.headerCellProperties
+        ? this.transformProperties(col.headerCellProperties, 'frame')
         : undefined,
     }
   }
@@ -1900,7 +1928,11 @@ class IRTransformer {
 
     // Guard against missing component name
     if (!instance.component) {
-      console.warn('Instance missing component name:', instance)
+      this.addWarning({
+        type: 'invalid-instance',
+        message: 'Instance missing component name',
+        position: instance.position
+      })
       return this.createEmptyNode(instance)
     }
 

@@ -329,6 +329,7 @@ export type IRWarningType =
   | 'unknown-action'
   | 'unknown-state'
   | 'unknown-token'
+  | 'invalid-instance'
 
 /**
  * Validation warning
@@ -520,6 +521,10 @@ export interface IRTableColumn {
   aggregation?: 'sum' | 'avg' | 'count'
   /** Custom cell template (when Column has Cell: slot) */
   customCell?: IRNode[]
+  /** Cell styles (from Column properties) */
+  cellStyles?: IRStyle[]
+  /** Header cell styles (column-specific header styling) */
+  headerCellStyles?: IRStyle[]
   /** Target collection for relation types */
   relationTo?: string
 }
@@ -554,14 +559,22 @@ export interface IRTable extends IRNode {
   stickyHeader?: boolean
   /** Custom header slot */
   headerSlot?: IRNode[]
+  /** Header slot styles (from Header: properties) */
+  headerSlotStyles?: IRStyle[]
   /** Static header row (from Header: Row "A", "B", "C" syntax) */
   headerStaticRow?: IRTableStaticRow
   /** Custom row slot */
   rowSlot?: IRNode[]
   /** Row slot styles (from Row: properties) */
   rowSlotStyles?: IRStyle[]
+  /** Odd row styles for zebra striping */
+  rowOddStyles?: IRStyle[]
+  /** Even row styles for zebra striping */
+  rowEvenStyles?: IRStyle[]
   /** Custom footer slot */
   footerSlot?: IRNode[]
+  /** Footer slot styles (from Footer: properties) */
+  footerSlotStyles?: IRStyle[]
   /** Custom group header slot */
   groupSlot?: IRNode[]
   /** Group slot styles (from Group: properties) */

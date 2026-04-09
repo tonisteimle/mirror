@@ -13,6 +13,8 @@
 
 // Motion One for advanced animations (springs, scroll, in-view)
 import { animate as motionAnimateFn, inView, scroll, stagger } from 'motion'
+// Focus trap for modal dialogs - accessibility
+import { createFocusTrap, FocusTrap } from 'focus-trap'
 
 // ============================================
 // TYPES
@@ -58,6 +60,8 @@ export interface MirrorElement extends HTMLElement {
   _savedDisplay?: string
   _clickOutsideHandler?: (e: MouseEvent) => void
   _escapeHandler?: (e: KeyboardEvent) => void
+  _focusTrap?: FocusTrap
+  _previouslyFocused?: Element | null
   _isTransitioning?: boolean
   _baseDisplay?: string
   _valueBinding?: string
@@ -134,6 +138,16 @@ export function cleanupElement(el: MirrorElement): void {
   if (el._escapeHandler) {
     document.removeEventListener('keydown', el._escapeHandler)
     delete el._escapeHandler
+  }
+
+  // Clean up focus trap
+  if (el._focusTrap) {
+    try {
+      el._focusTrap.deactivate()
+    } catch {
+      // Ignore errors during deactivation
+    }
+    delete el._focusTrap
   }
 
   _elementsWithDocListeners.delete(el)
@@ -388,10 +402,19 @@ export function wrap(el: MirrorElement | null): ElementWrapper | null {
 
 /**
  * Toggle element visibility or state
+ * Uses stateMachineToggle for elements with state machines,
+ * falls back to simple visibility toggle otherwise.
  */
 export function toggle(el: MirrorElement | null): void {
   if (!el) return
 
+  // If element has a state machine, use proper state machine toggle
+  if (el._stateMachine) {
+    stateMachineToggle(el)
+    return
+  }
+
+  // Fallback for elements without state machine
   const currentState = el.dataset.state || el._initialState
 
   if (currentState === 'closed' || currentState === 'open') {
@@ -769,15 +792,58 @@ export function showModal(
 
   show(el)
 
-  // Setup escape key handler
-  const escapeHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      dismiss(el)
-      document.removeEventListener('keydown', escapeHandler)
+  // Store previously focused element for restoration
+  el._previouslyFocused = document.activeElement
+
+  // Setup focus trap for accessibility
+  // This keeps keyboard focus within the modal
+  // Only attempt if we're in a browser environment with MutationObserver (required by focus-trap)
+  const isBrowserEnv = typeof MutationObserver !== 'undefined'
+
+  if (isBrowserEnv) {
+    try {
+      el._focusTrap = createFocusTrap(el, {
+        escapeDeactivates: true,
+        allowOutsideClick: true,
+        returnFocusOnDeactivate: true,
+        // Find the first focusable element, or the modal itself
+        initialFocus: () => {
+          const autofocus = el.querySelector('[autofocus]') as HTMLElement
+          if (autofocus) return autofocus
+          const firstFocusable = el.querySelector(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          ) as HTMLElement
+          return firstFocusable || el
+        },
+        // When escape is pressed, dismiss the modal
+        onDeactivate: () => {
+          dismiss(el)
+        },
+        // Prevent scroll on body when modal is open
+        preventScroll: true,
+      })
+      el._focusTrap.activate()
+    } catch (err) {
+      // Fallback: focus trap creation failed, use manual escape handler
+      console.warn('[Accessibility] Focus trap creation failed:', err)
+      setupFallbackEscapeHandler(el)
     }
+  } else {
+    // Non-browser environment: use simple escape handler
+    setupFallbackEscapeHandler(el)
   }
-  document.addEventListener('keydown', escapeHandler)
-  el._escapeHandler = escapeHandler
+
+  function setupFallbackEscapeHandler(element: MirrorElement) {
+    const escapeHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        dismiss(element)
+        document.removeEventListener('keydown', escapeHandler)
+      }
+    }
+    document.addEventListener('keydown', escapeHandler)
+    element._escapeHandler = escapeHandler
+  }
+
   registerForCleanup(el)
 }
 
@@ -817,7 +883,23 @@ export function dismiss(element: MirrorElement | string | null): void {
     delete el._clickOutsideHandler
   }
 
-  // Clean up escape handler
+  // Clean up focus trap
+  if (el._focusTrap) {
+    try {
+      el._focusTrap.deactivate({ returnFocus: false })
+    } catch {
+      // Ignore errors during deactivation
+    }
+    delete el._focusTrap
+  }
+
+  // Restore focus to previously focused element
+  if (el._previouslyFocused && typeof el._previouslyFocused === 'object' && 'focus' in el._previouslyFocused) {
+    (el._previouslyFocused as HTMLElement).focus()
+    delete el._previouslyFocused
+  }
+
+  // Clean up escape handler (fallback when focus-trap not available)
   if (el._escapeHandler) {
     document.removeEventListener('keydown', el._escapeHandler)
     delete el._escapeHandler
@@ -831,6 +913,141 @@ export function dismiss(element: MirrorElement | string | null): void {
   // Clear trigger reference
   delete el.dataset.triggerId
 }
+
+// ============================================
+// FORM KEYBOARD NAVIGATION
+// ============================================
+
+/**
+ * Get all focusable form elements within a container
+ */
+function getFormFocusables(container: HTMLElement): HTMLElement[] {
+  const selector = [
+    'input:not([type="hidden"]):not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    'button:not([disabled])',
+    '[tabindex]:not([tabindex="-1"]):not([disabled])'
+  ].join(', ')
+
+  return Array.from(container.querySelectorAll<HTMLElement>(selector))
+    .filter(el => {
+      // Check if element is visible
+      const style = window.getComputedStyle(el)
+      return style.display !== 'none' && style.visibility !== 'hidden'
+    })
+    .sort((a, b) => {
+      // Sort by tabindex (0 or positive) then by DOM order
+      const tabA = parseInt(a.getAttribute('tabindex') || '0', 10)
+      const tabB = parseInt(b.getAttribute('tabindex') || '0', 10)
+      if (tabA === tabB) return 0
+      if (tabA === 0) return 1
+      if (tabB === 0) return -1
+      return tabA - tabB
+    })
+}
+
+/**
+ * Focus the next form element after the current one
+ */
+export function focusNextInput(current: HTMLElement): boolean {
+  const container = current.closest('form') || current.closest('[data-mirror-form]') || document.body
+  const focusables = getFormFocusables(container)
+  const currentIndex = focusables.indexOf(current)
+
+  if (currentIndex >= 0 && currentIndex < focusables.length - 1) {
+    focusables[currentIndex + 1].focus()
+    return true
+  }
+  return false
+}
+
+/**
+ * Focus the previous form element before the current one
+ */
+export function focusPrevInput(current: HTMLElement): boolean {
+  const container = current.closest('form') || current.closest('[data-mirror-form]') || document.body
+  const focusables = getFormFocusables(container)
+  const currentIndex = focusables.indexOf(current)
+
+  if (currentIndex > 0) {
+    focusables[currentIndex - 1].focus()
+    return true
+  }
+  return false
+}
+
+/**
+ * Setup form keyboard navigation
+ * - Enter in input moves to next field (or submits if last)
+ * - Shift+Tab moves to previous field
+ * - Escape blurs current field
+ */
+export function setupFormNavigation(form: HTMLElement): void {
+  form.dataset.mirrorForm = 'true'
+
+  form.addEventListener('keydown', (e: KeyboardEvent) => {
+    const target = e.target as HTMLElement
+    const tagName = target.tagName.toLowerCase()
+
+    // Handle Enter key
+    if (e.key === 'Enter' && !e.shiftKey) {
+      // Skip for textarea and submit buttons
+      if (tagName === 'textarea') return
+      if (tagName === 'button' && (target as HTMLButtonElement).type === 'submit') return
+
+      // For inputs, move to next field or submit
+      if (tagName === 'input') {
+        const inputType = (target as HTMLInputElement).type
+        // Skip for submit/button inputs
+        if (inputType === 'submit' || inputType === 'button') return
+
+        e.preventDefault()
+
+        const focusables = getFormFocusables(form)
+        const currentIndex = focusables.indexOf(target)
+        const isLast = currentIndex === focusables.length - 1
+
+        if (isLast) {
+          // Submit the form if it's the last field
+          const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]') as HTMLElement
+          if (submitBtn) {
+            submitBtn.click()
+          } else if (form.tagName.toLowerCase() === 'form') {
+            (form as HTMLFormElement).requestSubmit()
+          }
+        } else {
+          // Move to next field
+          focusNextInput(target)
+        }
+      }
+    }
+
+    // Handle Escape key - blur current field
+    if (e.key === 'Escape') {
+      if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
+        (target as HTMLElement).blur()
+      }
+    }
+  })
+}
+
+/**
+ * Setup auto-select on focus for input fields
+ * When user tabs into an input, select all text
+ */
+export function setupAutoSelect(input: HTMLInputElement | HTMLTextAreaElement): void {
+  input.addEventListener('focus', () => {
+    // Small delay to ensure text is selected after focus
+    requestAnimationFrame(() => {
+      input.select()
+    })
+  })
+}
+
+// ============================================
+// OVERLAY HANDLERS
+// ============================================
 
 /**
  * Setup click-outside handler for auto-dismissing overlays
