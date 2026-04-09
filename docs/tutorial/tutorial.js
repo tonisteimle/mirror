@@ -164,8 +164,7 @@ function createTutorialSidebar() {
   header.className = 'tutorial-sidebar-header'
   header.innerHTML = `
     <a href="index.html">
-      <img src="logo.svg" alt="Mirror">
-      <span>Tutorial</span>
+      <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
     </a>
   `
   sidebar.appendChild(header)
