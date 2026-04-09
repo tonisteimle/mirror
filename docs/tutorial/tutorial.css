@@ -430,13 +430,8 @@ details pre {
 }
 
 .tutorial-sidebar-header img {
-  width: 24px;
-  height: 24px;
-}
-
-.tutorial-sidebar-header span {
-  font-size: 14px;
-  font-weight: 500;
+  height: 20px;
+  width: auto;
 }
 
 .tutorial-sidebar-section {
