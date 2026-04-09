@@ -727,10 +727,11 @@ class IRTransformer {
           break
         // Carousel-specific props
         case 'items':
-          // Items can be passed as JSON array
+          // Items can be passed as JSON array or as plain values
           try {
             machineConfig.items = JSON.parse(String(prop.values[0] ?? '[]'))
           } catch {
+            // Not valid JSON - use raw values (this is expected for inline item definitions)
             machineConfig.items = prop.values
           }
           break
@@ -748,10 +749,11 @@ class IRTransformer {
           break
         // Steps-specific props
         case 'steps':
-          // Steps can be passed as JSON array
+          // Steps can be passed as JSON array or as plain values
           try {
             machineConfig.steps = JSON.parse(String(prop.values[0] ?? '[]'))
           } catch {
+            // Not valid JSON - use raw values (this is expected for inline step definitions)
             machineConfig.steps = prop.values
           }
           break
@@ -779,6 +781,7 @@ class IRTransformer {
           try {
             machineConfig.items = JSON.parse(String(prop.values[0] ?? '[]'))
           } catch {
+            // Not valid JSON - use raw values (this is expected for inline data definitions)
             machineConfig.items = prop.values
           }
           break
@@ -787,6 +790,7 @@ class IRTransformer {
           try {
             machineConfig.expandedKeys = JSON.parse(String(prop.values[0] ?? '[]'))
           } catch {
+            // Not valid JSON - convert raw values to strings (expected for inline key lists)
             machineConfig.expandedKeys = prop.values.map(String)
           }
           break
@@ -795,6 +799,7 @@ class IRTransformer {
           try {
             machineConfig.selectedKeys = JSON.parse(String(prop.values[0] ?? '[]'))
           } catch {
+            // Not valid JSON - convert raw values to strings (expected for inline key lists)
             machineConfig.selectedKeys = prop.values.map(String)
           }
           break
