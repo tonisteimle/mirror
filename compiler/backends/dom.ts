@@ -1258,6 +1258,9 @@ class DOMGenerator {
     this.indent++
     this.emit(`display: 'flex',`)
     this.emit(`flexDirection: 'column',`)
+    this.emit(`background: 'var(--surface, #1a1a1a)',`)
+    this.emit(`borderRadius: '8px',`)
+    this.emit(`overflow: 'hidden',`)
     this.indent--
     this.emit(`})`)
     this.emit('')
@@ -1405,7 +1408,13 @@ class DOMGenerator {
 
       this.emit(`const ${rowVar} = document.createElement('div')`)
       this.emit(`${rowVar}.className = 'mirror-table-row'`)
-      this.emit(`${rowVar}.style.display = 'flex'`)
+      this.emit(`Object.assign(${rowVar}.style, {`)
+      this.indent++
+      this.emit(`display: 'flex',`)
+      this.emit(`padding: '12px',`)
+      this.emit(`borderBottom: '1px solid var(--border-subtle, #222)',`)
+      this.indent--
+      this.emit(`})`)
 
       for (let cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
         const cell = row.cells[cellIndex]
@@ -1413,6 +1422,13 @@ class DOMGenerator {
 
         this.emit(`const ${cellVar} = document.createElement('div')`)
         this.emit(`${cellVar}.className = 'mirror-table-cell'`)
+        this.emit(`Object.assign(${cellVar}.style, {`)
+        this.indent++
+        this.emit(`flex: '1',`)
+        this.emit(`color: 'var(--text, white)',`)
+        this.emit(`fontSize: '14px',`)
+        this.indent--
+        this.emit(`})`)
 
         if (cell.text !== undefined) {
           // Simple text content
