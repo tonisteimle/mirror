@@ -10341,6 +10341,122 @@ const _runtime = {
     })
   },
 
+  // Chart.js integration
+  _chartJsLoaded: false,
+  _chartJsLoading: null,
+
+  async _loadChartJs() {
+    if (this._chartJsLoaded) return
+    if (this._chartJsLoading) return this._chartJsLoading
+
+    this._chartJsLoading = new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js'
+      script.onload = () => {
+        this._chartJsLoaded = true
+        resolve()
+      }
+      script.onerror = () => reject(new Error('Failed to load Chart.js'))
+      document.head.appendChild(script)
+    })
+
+    return this._chartJsLoading
+  },
+
+  _parseChartData(data, xField, yField) {
+    if (!data) return { labels: [], values: [] }
+
+    // Handle array of objects with x/y fields
+    if (Array.isArray(data)) {
+      if (xField && yField) {
+        return {
+          labels: data.map(item => item[xField]),
+          values: data.map(item => item[yField])
+        }
+      }
+      return { labels: data.map((_, i) => String(i)), values: data }
+    }
+
+    // Handle key-value object (most common case)
+    if (typeof data === 'object') {
+      const entries = Object.entries(data)
+      // Check if values are objects with x/y fields
+      if (entries.length > 0 && typeof entries[0][1] === 'object' && xField && yField) {
+        return {
+          labels: entries.map(([_, v]) => v[xField]),
+          values: entries.map(([_, v]) => v[yField])
+        }
+      }
+      // Simple key-value pairs
+      return {
+        labels: entries.map(([k]) => k),
+        values: entries.map(([_, v]) => v)
+      }
+    }
+
+    return { labels: [], values: [] }
+  },
+
+  async createChart(element, config) {
+    await this._loadChartJs()
+
+    const canvas = document.createElement('canvas')
+    element.appendChild(canvas)
+
+    const { labels, values } = this._parseChartData(config.data, config.xField, config.yField)
+
+    // Default colors
+    const defaultColors = [
+      '#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+      '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+    ]
+    const colors = config.colors || defaultColors
+
+    // Build Chart.js config
+    const chartConfig = {
+      type: config.type || 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: config.type === 'pie' || config.type === 'doughnut' ? colors : colors[0] + '80',
+          borderColor: colors[0],
+          borderWidth: config.type === 'pie' || config.type === 'doughnut' ? 0 : 2,
+          fill: config.type === 'line' && config.fill !== false ? 'origin' : false,
+          tension: 0.3,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: config.legend === true || config.type === 'pie' || config.type === 'doughnut'
+          },
+          title: {
+            display: !!config.title,
+            text: config.title || '',
+            color: '#fff'
+          }
+        },
+        scales: config.type === 'pie' || config.type === 'doughnut' ? {} : {
+          x: {
+            display: config.axes !== false,
+            grid: { display: config.grid !== false, color: '#333' },
+            ticks: { color: '#888' }
+          },
+          y: {
+            display: config.axes !== false,
+            grid: { display: config.grid !== false, color: '#333' },
+            ticks: { color: '#888' }
+          }
+        }
+      }
+    }
+
+    new window.Chart(canvas.getContext('2d'), chartConfig)
+  },
+
   // Animation registry
   _animations: new Map(),
 

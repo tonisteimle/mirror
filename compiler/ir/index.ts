@@ -74,7 +74,10 @@ interface ExtendedIRItem extends Omit<IRItem, 'items'> {
 
 /** Simplified slot definition for synthetic ZagNode construction */
 interface SyntheticSlotDef {
+  name?: string
   properties: Property[]
+  states?: State[]
+  children?: (Instance | Slot | Text | ZagNode)[]
   sourcePosition?: { line: number; column: number }
 }
 
@@ -86,6 +89,7 @@ interface SyntheticZagItem {
   icon?: string
   children?: (Instance | Slot | Text | ZagNode)[]
   properties?: Property[]
+  sourcePosition?: { line: number; column: number }
 }
 import {
   isComponent,
@@ -1499,13 +1503,14 @@ class IRTransformer {
     }
 
     // Build the synthetic ZagNode
+    // Type assertion needed: synthetic slots/items have partial structure but work at runtime
     return {
       type: 'ZagComponent' as const,
       name: primitive.charAt(0).toUpperCase() + primitive.slice(1), // Capitalize
       machine: primitive.toLowerCase(),
       properties,
-      slots,
-      items,
+      slots: slots as unknown as Record<string, ZagSlotDef>,
+      items: items as unknown as ZagItem[],
       events: [],
       line: instance.line,
       column: instance.column,

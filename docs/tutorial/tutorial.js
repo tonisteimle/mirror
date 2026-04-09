@@ -129,7 +129,7 @@ function initializePlaygrounds() {
  */
 
 // Tutorial Navigation Structure
-// Die Sprache (00-10) + Komponenten-Bibliothek (11-14)
+// Die Sprache (00-10) + Komponenten-Bibliothek (11-15)
 const tutorialNavigation = [
   // Die Sprache
   { num: '00', file: '00-intro.html', title: 'Intro', section: 'Sprache' },
@@ -148,6 +148,7 @@ const tutorialNavigation = [
   { num: '12', file: '12-navigation.html', title: 'Navigation' },
   { num: '13', file: '13-overlays.html', title: 'Overlays' },
   { num: '14', file: '14-tabellen.html', title: 'Tabellen' },
+  { num: '15', file: '15-charts.html', title: 'Charts' },
 ]
 
 function createTutorialSidebar() {

@@ -279,10 +279,18 @@ a:hover { text-decoration: underline; }
 nav {
   margin-top: 48px;
   padding-top: 24px;
+  border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 14px;
+}
+nav a {
+  color: var(--accent);
+}
+nav .prev:empty,
+nav .next:empty {
+  display: none;
 }
 
 /* Props Table (Lektion) */
