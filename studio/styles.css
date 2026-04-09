@@ -1167,16 +1167,17 @@
     .tutorial-link {
       display: flex;
       align-items: center;
-      opacity: 0.6;
-      transition: opacity 0.15s;
+      color: var(--text-secondary);
+      transition: color 0.15s;
     }
 
     .tutorial-link:hover {
-      opacity: 1;
+      color: #5BA8F5;
     }
 
-    .tutorial-link img {
-      height: 18px;
+    .tutorial-link svg {
+      width: 16px;
+      height: 16px;
     }
 
     /* Cleanup Button */

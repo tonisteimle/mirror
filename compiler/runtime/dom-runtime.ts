@@ -1800,7 +1800,9 @@ export function updateVisibility(el: MirrorElement | null): void {
           // Using Function constructor instead of eval for slightly better security
           visible = new Function('open', 'closed', 'expanded', 'collapsed',
             `return ${condition}`)(open, closed, expanded, collapsed)
-        } catch {
+        } catch (err) {
+          // Invalid condition expression - log for debugging and default to hidden
+          console.warn(`[Mirror] Invalid visibility condition "${condition}":`, err)
           visible = false
         }
       } else {

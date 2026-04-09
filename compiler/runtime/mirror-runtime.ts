@@ -1257,7 +1257,11 @@ async function loadIcon(el: HTMLElement, name: string, props: MirrorProps): Prom
       svgEl.setAttribute('stroke-width', String(weight))
       svgEl.style.display = 'block'
     }
-  } catch {
+  } catch (err) {
+    // Network error loading icon - fall back to showing icon name as text
+    if (typeof console !== 'undefined' && console.debug) {
+      console.debug(`[Mirror] Failed to load icon "${name}":`, err)
+    }
     el.textContent = name
   }
 }

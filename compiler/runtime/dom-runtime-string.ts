@@ -2737,6 +2737,7 @@ const _runtime = {
       try {
         return new Intl.DateTimeFormat(locale, { dateStyle: fmt }).format(date)
       } catch {
+        // Intl.DateTimeFormat failed (unsupported format/locale) - use basic fallback
         return date.toLocaleDateString()
       }
     }

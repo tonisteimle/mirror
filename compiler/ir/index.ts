@@ -498,7 +498,7 @@ class IRTransformer {
   /**
    * Create an empty placeholder node for invalid instances
    */
-  private createEmptyNode(instance: any): IRNode {
+  private createEmptyNode(instance: { line?: number; column?: number } | null | undefined): IRNode {
     return {
       id: this.generateId(),
       tag: 'div',
@@ -1478,17 +1478,47 @@ class IRTransformer {
     )
 
     // Extract chart-specific properties
-    const dataBinding = properties.find(p => p.name === 'textContent')?.values[0]
+    // Data binding can come from:
+    // 1. textContent property (for string data references like "$sales")
+    // 2. propset property with token kind (for $variable references like $data)
+    let dataBinding: string | undefined
+    const textContentProp = properties.find(p => p.name === 'textContent')
+    const propsetProp = properties.find(p => p.name === 'propset')
+
+    if (textContentProp?.values[0]) {
+      dataBinding = String(textContentProp.values[0])
+    } else if (propsetProp?.values[0]) {
+      const val = propsetProp.values[0]
+      if (typeof val === 'object' && val !== null && 'kind' in val && (val as any).kind === 'token') {
+        dataBinding = '$' + (val as any).name
+      } else if (typeof val === 'string' && val.startsWith('$')) {
+        dataBinding = val
+      }
+    }
+
     const xField = properties.find(p => p.name === 'x')?.values[0]
     const yField = properties.find(p => p.name === 'y')?.values[0]
     const colors = properties.find(p => p.name === 'colors')?.values
     const title = properties.find(p => p.name === 'title')?.values[0]
-    const legend = properties.find(p => p.name === 'legend')?.values[0]
-    const stacked = properties.find(p => p.name === 'stacked')?.values[0]
-    const fill = properties.find(p => p.name === 'fill')?.values[0]
+
+    // Handle standalone boolean properties (e.g., "legend" without a value means true)
+    const legendProp = properties.find(p => p.name === 'legend')
+    const legend = legendProp ? (legendProp.values[0] ?? true) : undefined
+
+    const stackedProp = properties.find(p => p.name === 'stacked')
+    const stacked = stackedProp ? (stackedProp.values[0] ?? true) : undefined
+
+    const fillProp = properties.find(p => p.name === 'fill')
+    const fill = fillProp ? (fillProp.values[0] ?? true) : undefined
+
     const tension = properties.find(p => p.name === 'tension')?.values[0]
-    const grid = properties.find(p => p.name === 'grid')?.values[0]
-    const axes = properties.find(p => p.name === 'axes')?.values[0]
+
+    // For grid and axes, check the actual value (not just presence)
+    const gridProp = properties.find(p => p.name === 'grid')
+    const grid = gridProp?.values[0]
+
+    const axesProp = properties.find(p => p.name === 'axes')
+    const axes = axesProp?.values[0]
 
     // Transform sizing properties to styles
     const styles = this.transformProperties(properties, 'frame', parentLayoutContext)
