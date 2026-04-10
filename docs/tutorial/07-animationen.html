@@ -72,28 +72,27 @@ Frame hor, gap 12
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Hover über die Zeilen um den Unterschied zu sehen
-Row: hor, gap 12, ver-center, pad 8, cursor pointer
-  Label: col #888, fs 12, w 80
+          <textarea>// Klicke auf die Boxen um den Unterschied zu sehen
+Box: w 30, h 30, rad 6, cursor pointer, toggle()
 
 Frame gap 8, bg #0a0a0a, pad 12, rad 8
-  Row
-    Label "ease-out"
-    Frame w 30, h 30, bg #2271C1, rad 6
-      hover 1s ease-out:
-        translate 150 0
+  Frame hor, gap 12, ver-center
+    Text "ease-out", col #888, fs 12, w 70
+    Box bg #2271C1
+      on 1s ease-out:
+        x 150
 
-  Row
-    Label "ease-in"
-    Frame w 30, h 30, bg #10b981, rad 6
-      hover 1s ease-in:
-        translate 150 0
+  Frame hor, gap 12, ver-center
+    Text "ease-in", col #888, fs 12, w 70
+    Box bg #10b981
+      on 1s ease-in:
+        x 150
 
-  Row
-    Label "linear"
-    Frame w 30, h 30, bg #f59e0b, rad 6
-      hover 1s linear:
-        translate 150 0</textarea>
+  Frame hor, gap 12, ver-center
+    Text "linear", col #888, fs 12, w 70
+    Box bg #f59e0b
+      on 1s linear:
+        x 150</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
