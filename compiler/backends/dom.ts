@@ -1374,16 +1374,22 @@ class DOMGenerator {
     this.emit(`_elements['${node.id}'] = ${tableVar}`)
 
     // Apply default table styles
+    // IMPORTANT: alignItems: 'stretch' ensures table body and rows fill container width
+    // This overrides the default 'flex-start' from IR transformation which would prevent
+    // children from stretching, causing w full on rows to not work properly
     this.emit(`Object.assign(${tableVar}.style, {`)
     this.indent++
     this.emit(`display: 'flex',`)
     this.emit(`flexDirection: 'column',`)
+    this.emit(`alignItems: 'stretch',`)
     this.emit(`overflow: 'hidden',`)
     this.indent--
     this.emit(`})`)
 
     // Apply custom table styles (overrides defaults)
-    const baseStyles = node.styles.filter(s => !s.state)
+    // IMPORTANT: Filter out align-items from custom styles to preserve alignItems: 'stretch'
+    // which is required for table body and rows to fill container width
+    const baseStyles = node.styles.filter(s => !s.state && s.property !== 'align-items')
     if (baseStyles.length > 0) {
       this.emit(`Object.assign(${tableVar}.style, {`)
       this.indent++
