@@ -26189,6 +26189,11 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 7 1`] = `
       "value": "max@example.com",
     },
     {
+      "name": "userActive",
+      "type": "font",
+      "value": true,
+    },
+    {
       "data": {
         "active": true,
         "email": "max@example.com",
@@ -26833,7 +26838,13 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
       "tag": "div",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "loggedIn",
+      "type": "font",
+      "value": true,
+    },
+  ],
 }
 `;
 
@@ -26925,7 +26936,13 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
       "tag": "div",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "loggedIn",
+      "type": "font",
+      "value": false,
+    },
+  ],
 }
 `;
 
@@ -27110,7 +27127,13 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
       "tag": "div",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "showDetails",
+      "type": "font",
+      "value": true,
+    },
+  ],
 }
 `;
 
@@ -27229,7 +27252,18 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
       "tag": "div",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "isAdmin",
+      "type": "font",
+      "value": true,
+    },
+    {
+      "name": "hasPermission",
+      "type": "font",
+      "value": true,
+    },
+  ],
 }
 `;
 
@@ -27401,7 +27435,13 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
       "tag": "div",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "disabled",
+      "type": "font",
+      "value": false,
+    },
+  ],
 }
 `;
 
@@ -27660,7 +27700,18 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
       "tag": "div",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "hasData",
+      "type": "font",
+      "value": true,
+    },
+    {
+      "name": "isLoading",
+      "type": "font",
+      "value": false,
+    },
+  ],
 }
 `;
 
@@ -27988,7 +28039,13 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
       "tag": "button",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "active",
+      "type": "font",
+      "value": true,
+    },
+  ],
 }
 `;
 
@@ -28227,6 +28284,16 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
     },
   ],
   "tokens": [
+    {
+      "name": "visible",
+      "type": "font",
+      "value": true,
+    },
+    {
+      "name": "done",
+      "type": "font",
+      "value": false,
+    },
     {
       "name": "count",
       "type": "size",
@@ -28489,7 +28556,13 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
       "tag": "div",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "hasItems",
+      "type": "font",
+      "value": false,
+    },
+  ],
 }
 `;
 
@@ -28677,7 +28750,13 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
       "tag": "div",
     },
   ],
-  "tokens": [],
+  "tokens": [
+    {
+      "name": "loading",
+      "type": "font",
+      "value": true,
+    },
+  ],
 }
 `;
 
@@ -37405,15 +37484,15 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 2 1`] = `
         },
         {
           "property": "padding",
-          "value": "12px",
+          "value": "12px 16px",
         },
         {
-          "property": "background",
-          "value": "#1a1a1a",
+          "property": "border",
+          "value": "0px solid 0px 1px 0px",
         },
         {
-          "property": "border-radius",
-          "value": "6px",
+          "property": "border-color",
+          "value": "#222",
         },
         {
           "property": "width",
@@ -37448,8 +37527,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 2 1`] = `
           "value": "flex-start",
         },
         {
-          "property": "gap",
-          "value": "4px",
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
         },
         {
           "property": "width",
@@ -37566,15 +37649,15 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 3 1`] = `
         },
         {
           "property": "padding",
-          "value": "12px",
+          "value": "12px 16px",
         },
         {
-          "property": "background",
-          "value": "#1a1a1a",
+          "property": "border",
+          "value": "0px solid 0px 1px 0px",
         },
         {
-          "property": "border-radius",
-          "value": "6px",
+          "property": "border-color",
+          "value": "#222",
         },
         {
           "property": "width",
@@ -37611,10 +37694,6 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 3 1`] = `
         {
           "property": "align-items",
           "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "8px",
         },
         {
           "property": "background",
@@ -37659,41 +37738,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
       "columns": [],
       "dataSource": "tasks",
       "events": [],
-      "footerSlot": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-4",
-          "isDefinition": false,
-          "name": "Row",
-          "primitive": "row",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "8h",
-            },
-          ],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
+      "footerSlot": [],
       "footerSlotStyles": [
         {
           "property": "display",
@@ -37724,6 +37769,70 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
           "value": "0px 0px 8px 8px",
         },
       ],
+      "footerStaticRow": {
+        "cells": [
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Total",
+          },
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "8h",
+          },
+        ],
+        "styles": [
+          {
+            "property": "display",
+            "value": "flex",
+          },
+          {
+            "property": "flex-direction",
+            "value": "column",
+          },
+          {
+            "property": "width",
+            "value": "fit-content",
+          },
+          {
+            "property": "align-items",
+            "value": "flex-start",
+          },
+        ],
+      },
       "headerSlot": [],
       "headerSlotStyles": [
         {
@@ -38525,7 +38634,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
         },
         {
           "property": "border-radius",
-          "value": "8px",
+          "value": "8px 8px 0px 0px",
         },
       ],
       "headerStaticRow": {
@@ -38639,10 +38748,6 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
           "property": "background",
           "value": "#111",
         },
-        {
-          "property": "border-radius",
-          "value": "6px",
-        },
       ],
       "rowOddStyles": [
         {
@@ -38664,10 +38769,6 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
         {
           "property": "background",
           "value": "#151515",
-        },
-        {
-          "property": "border-radius",
-          "value": "6px",
         },
       ],
       "rowSlot": [
@@ -38797,20 +38898,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
           "value": "flex-start",
         },
         {
-          "property": "gap",
-          "value": "2px",
-        },
-        {
           "property": "background",
           "value": "#0a0a0a",
         },
         {
           "property": "border-radius",
           "value": "16px",
-        },
-        {
-          "property": "padding",
-          "value": "12px",
         },
         {
           "property": "width",
@@ -38966,12 +39059,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 8 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "background",
-          "value": "#1a1a1a",
+          "property": "border",
+          "value": "0px solid 0px 1px 0px",
         },
         {
-          "property": "border-radius",
-          "value": "8px",
+          "property": "border-color",
+          "value": "#222",
         },
         {
           "property": "width",
@@ -39006,8 +39099,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 8 1`] = `
           "value": "flex-start",
         },
         {
-          "property": "gap",
-          "value": "4px",
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
         },
         {
           "property": "width",
@@ -39193,12 +39290,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 9 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "background",
-          "value": "#1a1a1a",
+          "property": "border",
+          "value": "0px solid 0px 1px 0px",
         },
         {
-          "property": "border-radius",
-          "value": "8px",
+          "property": "border-color",
+          "value": "#222",
         },
         {
           "property": "width",
@@ -39233,8 +39330,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 9 1`] = `
           "value": "flex-start",
         },
         {
-          "property": "gap",
-          "value": "4px",
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
         },
         {
           "property": "width",
@@ -39309,7 +39410,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 10 1`] = `
           "styles": [
             {
               "property": "color",
-              "value": "#2271C1",
+              "value": "#2563eb",
             },
             {
               "property": "font-size",
@@ -39374,12 +39475,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 10 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "background",
-          "value": "#1a1a1a",
+          "property": "border",
+          "value": "0px solid 0px 1px 0px",
         },
         {
-          "property": "border-radius",
-          "value": "8px",
+          "property": "border-color",
+          "value": "#222",
         },
         {
           "property": "width",
@@ -39414,8 +39515,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 10 1`] = `
           "value": "flex-start",
         },
         {
-          "property": "gap",
-          "value": "4px",
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
         },
         {
           "property": "width",
@@ -39549,12 +39654,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 11 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "background",
-          "value": "#1a1a1a",
+          "property": "border",
+          "value": "0px solid 0px 1px 0px",
         },
         {
-          "property": "border-radius",
-          "value": "8px",
+          "property": "border-color",
+          "value": "#222",
         },
         {
           "property": "width",
@@ -39589,8 +39694,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 11 1`] = `
           "value": "flex-start",
         },
         {
-          "property": "gap",
-          "value": "4px",
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
         },
         {
           "property": "width",

@@ -16,6 +16,7 @@
 
 import type { SourceMap, NodeMapping } from '../ir/source-map'
 import type { SourcePosition } from '../ir/types'
+import { logCodeModifier as log } from '../utils/logger'
 // SemanticZone type for insertWithWrapper
 type SemanticZone =
   | 'top-left' | 'top-center' | 'top-right'
@@ -481,7 +482,7 @@ export class CodeModifier {
     // Validate line position
     const lineIndex = siblingMapping.position.line - 1
     if (lineIndex < 0 || lineIndex >= this.lines.length) {
-      console.error('[CodeModifier] Invalid line position in addChildWithTemplateRelativeTo', {
+      log.error('Invalid line position in addChildWithTemplateRelativeTo', {
         siblingId,
         line: siblingMapping.position.line,
         lineIndex,
@@ -554,7 +555,7 @@ export class CodeModifier {
     // Validate line position
     const lineIndex = siblingMapping.position.line - 1
     if (lineIndex < 0 || lineIndex >= this.lines.length) {
-      console.error('[CodeModifier] Invalid line position in addChildRelativeTo', {
+      log.error('Invalid line position in addChildRelativeTo', {
         siblingId,
         line: siblingMapping.position.line,
         lineIndex,
@@ -2619,7 +2620,7 @@ export class CodeModifier {
    * Create an error result
    */
   private errorResult(error: string): ModificationResult {
-    console.warn(`[CodeModifier] Operation failed: ${error}`)
+    log.warn('Operation failed:', error)
     return {
       success: false,
       newSource: this.source,

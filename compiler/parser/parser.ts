@@ -28,8 +28,12 @@ import {
 import { isPrimitive, getEvent } from '../schema/dsl'
 import { isZagPrimitive, getZagPrimitive, isZagSlot, isZagItemKeyword, isZagGroupKeyword } from '../schema/zag-primitives'
 import { isCompoundPrimitive, isCompoundSlot } from '../schema/compound-primitives'
+import { logParser as log } from '../utils/logger'
 import { isChartPrimitive, isChartSlot, getChartSlot, getChartSlotProperty } from '../schema/chart-primitives'
 import type { ChartSlotNode } from './ast'
+
+/** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
+type PropertyValue = string | number | boolean | number[] | TokenReference | LoopVarReference | Conditional | ComputedExpression
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
@@ -1927,7 +1931,7 @@ export class Parser {
 
       // Verify progress to prevent infinite loop
       if (this.pos === lastPos) {
-        console.warn('[Parser] parseTableExpression: no progress made, breaking to prevent infinite loop')
+        log.warn('parseTableExpression: no progress made, breaking to prevent infinite loop')
         break
       }
       lastPos = this.pos
@@ -2564,7 +2568,7 @@ export class Parser {
         // Zag property with value (e.g., placeholder "Choose...", defaultValue [20, 80])
         if (validProps.has(propName)) {
           const token = this.advance()
-          const values: any[] = []
+          const values: PropertyValue[] = []
 
           // Parse value(s) - stop at COLON (end of Select line), NEWLINE, INDENT, COMMA, SEMICOLON
           while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('COMMA') && !this.check('SEMICOLON') && !this.check('COLON') && !this.isAtEnd()) {
@@ -2586,7 +2590,8 @@ export class Parser {
           zagNode.properties.push({
             type: 'Property',
             name: propName,
-            values,
+            // Cast needed: PropertyValue includes number[] for array props (e.g., slider defaultValue [20, 80])
+            values: values as Property['values'],
             line: token.line,
             column: token.column,
           })
@@ -2698,7 +2703,7 @@ export class Parser {
         }
 
         // Property with value(s)
-        const values: any[] = []
+        const values: PropertyValue[] = []
         while (!this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd()) {
           if (this.check('STRING')) {
             values.push(this.advance().value)
@@ -2717,7 +2722,7 @@ export class Parser {
           zagNode.properties.push({
             type: 'Property',
             name: propName,
-            values,
+            values: values as Property['values'],
             line: token.line,
             column: token.column,
           })
@@ -3447,14 +3452,15 @@ export class Parser {
         const dataToken = this.advance()
         const binding = this.parseDataBindingValues()
         if (binding) {
-          const values: any[] = [binding.collection]
+          // Data binding values have special structure (collection + optional filter)
+          const values: unknown[] = [binding.collection]
           if (binding.filter) {
             values.push({ filter: binding.filter })
           }
           component.properties.push({
             type: 'Property',
             name: 'data',
-            values,
+            values: values as Property['values'],
             line: dataToken.line,
             column: dataToken.column,
           })
@@ -4680,14 +4686,15 @@ export class Parser {
         const dataToken = this.advance()
         const binding = this.parseDataBindingValues()
         if (binding) {
-          const values: any[] = [binding.collection]
+          // Data binding values have special structure (collection + optional filter)
+          const values: unknown[] = [binding.collection]
           if (binding.filter) {
             values.push({ filter: binding.filter })
           }
           properties.push({
             type: 'Property',
             name: 'data',
-            values,
+            values: values as Property['values'],
             line: dataToken.line,
             column: dataToken.column,
           })

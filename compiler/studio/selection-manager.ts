@@ -9,6 +9,8 @@
  * It will be removed in a future version.
  */
 
+import { logSelectionManager as log } from '../utils/logger'
+
 export type SelectionListener = (nodeId: string | null, previousNodeId: string | null) => void
 
 /**
@@ -159,7 +161,7 @@ export class SelectionManager {
       try {
         listener(nodeId, previousNodeId)
       } catch (error) {
-        console.error('Error in selection listener:', error)
+        log.error('Error in selection listener:', error)
       }
     }
   }
@@ -172,7 +174,7 @@ export class SelectionManager {
       try {
         listener(nodeId, previousNodeId)
       } catch (error) {
-        console.error('Error in hover listener:', error)
+        log.error('Error in hover listener:', error)
       }
     }
   }
@@ -185,7 +187,7 @@ export class SelectionManager {
       try {
         listener(chain)
       } catch (error) {
-        console.error('Error in breadcrumb listener:', error)
+        log.error('Error in breadcrumb listener:', error)
       }
     }
   }

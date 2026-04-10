@@ -4,8 +4,11 @@
  * Type definitions for the Zag compilation pipeline.
  */
 
-import type { Property, State, Event } from '../../parser/ast'
+import type { Property, State, Event, Instance, Text, Slot, ComponentDefinition } from '../../parser/ast'
 import type { IRStyle, IRNode, SourcePosition } from '../../ir/types'
+
+/** AST child node type - can be Instance, Text, or Slot */
+export type ASTChild = Instance | Text | Slot
 
 /**
  * Configuration for Zag machine instantiation
@@ -27,8 +30,8 @@ export interface ZagMachineConfig {
   value?: string | string[]
   /** Default value (uncontrolled) */
   defaultValue?: string | string[]
-  /** Custom collection of items */
-  collection?: any
+  /** Custom collection of items (Zag ListCollection) */
+  collection?: unknown
 }
 
 /**
@@ -38,7 +41,7 @@ export interface ParsedSlot {
   name: string
   properties: Property[]
   states: State[]
-  children: any[]
+  children: ASTChild[]
   sourcePosition: SourcePosition
 }
 
@@ -49,7 +52,7 @@ export interface ParsedItem {
   value: string
   label: string
   disabled?: boolean
-  children?: any[]
+  children?: ASTChild[]
   sourcePosition: SourcePosition
 }
 
@@ -60,13 +63,13 @@ export interface ZagCompileContext {
   /** ID counter for generating unique IDs */
   idCounter: number
   /** Map of component definitions */
-  componentMap: Map<string, any>
+  componentMap: Map<string, ComponentDefinition>
   /** Set of token names for variable resolution */
   tokenSet: Set<string>
   /** Whether to include source maps */
   includeSourceMap: boolean
   /** Optional callback to transform child nodes using main IR transformer */
-  transformChild?: (child: any) => IRNode | null
+  transformChild?: (child: ASTChild) => IRNode | null
 }
 
 /**

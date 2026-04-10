@@ -87,6 +87,56 @@ export interface IRProperty {
   value: string | number | boolean
 }
 
+/**
+ * Token reference value in properties
+ */
+export interface IRTokenReference {
+  kind: 'token'
+  name: string
+}
+
+/**
+ * Loop variable reference value in properties
+ */
+export interface IRLoopVarReference {
+  kind: 'loopVar'
+  name: string
+  property?: string
+}
+
+/**
+ * Computed expression value in properties
+ */
+export interface IRComputedExpression {
+  kind: 'expression'
+  parts: (string | number | IRTokenReference | IRLoopVarReference)[]
+  operators: string[]
+}
+
+/**
+ * Conditional value in properties
+ */
+export interface IRConditionalValue {
+  kind: 'conditional'
+  condition: string
+  then: string | number
+  else: string | number
+}
+
+/**
+ * Property value type - all possible values in properties
+ */
+export type IRPropertyValue = string | number | boolean | IRTokenReference | IRLoopVarReference | IRComputedExpression | IRConditionalValue
+
+/**
+ * Layout property for items - supports multiple values for properties like padding
+ * Uses `values` array (like AST Property) because item properties can have multiple values
+ */
+export interface IRItemProperty {
+  name: string
+  values: IRPropertyValue[]
+}
+
 export interface IRStyle {
   property: string              // CSS property (padding, background, etc.)
   value: string                 // CSS value
@@ -368,7 +418,7 @@ export interface IRItem {
   /** Whether the item is disabled */
   disabled?: boolean
   /** Layout properties for the item (ver, hor, gap, pad, spread, etc.) */
-  properties?: any[]
+  properties?: IRItemProperty[]
   /** Custom children for complex item rendering */
   children?: IRNode[]
   /** Load content from external file (filename without .mirror extension) - legacy */
@@ -385,6 +435,16 @@ export interface IRItem {
   isGroup?: boolean
   /** Nested items for group items */
   items?: IRItem[]
+
+  // SideNav specific properties
+  /** Badge text/number to display on the item */
+  badge?: string | number
+  /** Whether to show an arrow indicator */
+  arrow?: boolean
+  /** Whether the group/item is collapsible */
+  collapsible?: boolean
+  /** Whether the collapsible group is open by default */
+  defaultOpen?: boolean
 
   // Form Field specific properties
   /** Field name for form binding */

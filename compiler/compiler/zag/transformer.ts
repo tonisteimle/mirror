@@ -9,7 +9,8 @@ import type { ZagNode, ZagSlotDef, ZagItem, Property, State, Event, Instance, Te
 import type { IRZagNode, IRSlot, IRItem, IRStyle, IRNode, IREvent, IRAction, SourcePosition } from '../../ir/types'
 import { getSlotDefinition, getSlotApiMethod, getSlotElement, isPortaledSlot } from './slots'
 import { getZagMachineType } from './detector'
-import type { ZagMachineConfig, ZagCompileContext, ParsedSlot, ParsedItem } from './types'
+import type { ZagMachineConfig, ZagCompileContext, ParsedSlot, ParsedItem, ASTChild } from './types'
+import { logZagTransformer as log } from '../../utils/logger'
 
 /**
  * Transform a ZagNode AST to IRZagNode
@@ -81,7 +82,7 @@ function transformSlot(
   // Validate slot name
   const slotDef = getSlotDefinition(componentName, slotName)
   if (!slotDef) {
-    console.warn(`Unknown slot "${slotName}" for component "${componentName}"`)
+    log.warn(`Unknown slot "${slotName}" for component "${componentName}"`)
   }
 
   const apiMethod = getSlotApiMethod(componentName, slotName) ?? `get${slotName}Props`
@@ -393,7 +394,7 @@ function generateItemValue(context: ZagCompileContext): string {
  * @param transformChild Optional callback to transform child nodes
  */
 export function createZagCompileContext(
-  transformChild?: (child: any) => IRNode | null
+  transformChild?: (child: ASTChild) => IRNode | null
 ): ZagCompileContext {
   return {
     idCounter: 0,

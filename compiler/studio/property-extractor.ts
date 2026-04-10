@@ -18,6 +18,7 @@ import {
   categoryLabels,
 } from '../schema/properties'
 import { isZagPrimitive } from '../schema/zag-primitives'
+import { logPropertyExtractor as log } from '../utils/logger'
 import { getZagPropMetadata, type ZagPropMeta } from '../schema/zag-prop-metadata'
 
 /**
@@ -402,14 +403,14 @@ export class PropertyExtractor {
 
     const nodeMapping = this.sourceMap.getNodeById(nodeId)
     if (!nodeMapping) {
-      console.warn(`[PropertyExtractor] Node not found in SourceMap: ${nodeId}`)
+      log.warn('Node not found in SourceMap:', nodeId)
       return null
     }
 
     // Find the AST node (instance or component definition)
     const astNode = this.findAstNode(nodeMapping)
     if (!astNode) {
-      console.warn(`[PropertyExtractor] AST node not found for: ${nodeId} at line ${nodeMapping.position.line}`)
+      log.warn('AST node not found for:', nodeId, 'at line', nodeMapping.position.line)
       return null
     }
 
@@ -482,7 +483,7 @@ export class PropertyExtractor {
   getPropertiesForComponentDefinition(componentName: string): ExtractedElement | null {
     const componentDef = this.componentMap.get(componentName)
     if (!componentDef) {
-      console.warn(`[PropertyExtractor] Component definition not found: ${componentName}`)
+      log.warn('Component definition not found:', componentName)
       return null
     }
 

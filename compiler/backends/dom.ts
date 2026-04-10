@@ -7,7 +7,7 @@
 
 import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode, IRStateMachine, IRStateTransition, IRTable, IRTableColumn } from '../ir/types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode, IRStateMachine, IRStateTransition, IRTable, IRTableColumn, IRItem, IRProperty, IRSlot, IRItemProperty } from '../ir/types'
 import { isIRZagNode, isIRTable, isIRDataReference, isIRDataReferenceArray } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import { generateTheme, isThemeToken } from '../schema/theme-generator'
@@ -1604,36 +1604,22 @@ class DOMGenerator {
     this.emit(`const ${headerVar} = document.createElement('div')`)
     this.emit(`${headerVar}.className = 'mirror-table-header'`)
 
-    // If headerSlot is defined, render custom header content
-    if (node.headerSlot && node.headerSlot.length > 0) {
-      // Apply minimal wrapper styles, let slot content define the rest
-      this.emit(`${headerVar}.style.display = 'flex'`)
-
-      // Apply header slot styles
-      if (node.headerSlotStyles && node.headerSlotStyles.length > 0) {
-        this.emit(`Object.assign(${headerVar}.style, {`)
-        this.indent++
-        for (const style of node.headerSlotStyles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit(`})`)
-      }
-
-      // Render header slot children
-      for (const child of node.headerSlot) {
-        this.emitNode(child, headerVar)
-      }
-    } else if (node.headerStaticRow) {
+    // Prefer headerStaticRow if it exists (Header: Row "A", "B" syntax)
+    // This handles both standalone Row and Row inside Header: slot
+    if (node.headerStaticRow) {
       // Header: Row "A", "B" syntax - render static row cells
       this.emit(`Object.assign(${headerVar}.style, {`)
       this.indent++
       this.emit(`display: 'flex',`)
       this.emit(`flexDirection: 'row',`)
       this.emit(`gap: '24px',`)
-      // Apply header slot styles or use defaults
+      // Apply header slot styles, but FILTER OUT layout properties that would override row direction
+      // The slot styles may contain flex-direction: column from default Frame styles
       if (node.headerSlotStyles && node.headerSlotStyles.length > 0) {
+        const layoutPropsToFilter = new Set(['display', 'flex-direction', 'align-items', 'width'])
         for (const style of node.headerSlotStyles) {
+          // Skip layout properties that would interfere with horizontal row layout
+          if (layoutPropsToFilter.has(style.property)) continue
           this.emit(`'${style.property}': '${style.value}',`)
         }
       } else {
@@ -1668,6 +1654,25 @@ class DOMGenerator {
         }
 
         this.emit(`${headerVar}.appendChild(${cellVar})`)
+      }
+    } else if (node.headerSlot && node.headerSlot.length > 0) {
+      // Custom header content (non-static Row, e.g. custom elements)
+      this.emit(`${headerVar}.style.display = 'flex'`)
+
+      // Apply header slot styles
+      if (node.headerSlotStyles && node.headerSlotStyles.length > 0) {
+        this.emit(`Object.assign(${headerVar}.style, {`)
+        this.indent++
+        for (const style of node.headerSlotStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit(`})`)
+      }
+
+      // Render header slot children
+      for (const child of node.headerSlot) {
+        this.emitNode(child, headerVar)
       }
     } else {
       // Auto-generated header from columns - apply default styles
@@ -1864,31 +1869,41 @@ class DOMGenerator {
     this.emit(`})`)
 
     // Zebra striping: apply odd/even styles based on index
+    // IMPORTANT: Filter out layout properties that would override Row: styles
+    // RowOdd/RowEven are Frames that get default flex-direction: column, which would
+    // override the Row: hor setting. Only visual styles (background, etc.) should apply.
+    const zebraLayoutPropsToFilter = new Set(['display', 'flex-direction', 'align-items', 'width', 'justify-content'])
     if (node.rowOddStyles && node.rowOddStyles.length > 0) {
-      this.emit(`if (${indexVar} % 2 === 1) {`)
-      this.indent++
-      this.emit(`Object.assign(${tableVar}_row.style, {`)
-      this.indent++
-      for (const style of node.rowOddStyles) {
-        this.emit(`'${style.property}': '${style.value}',`)
+      const filteredOddStyles = node.rowOddStyles.filter(s => !zebraLayoutPropsToFilter.has(s.property))
+      if (filteredOddStyles.length > 0) {
+        this.emit(`if (${indexVar} % 2 === 1) {`)
+        this.indent++
+        this.emit(`Object.assign(${tableVar}_row.style, {`)
+        this.indent++
+        for (const style of filteredOddStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit(`})`)
+        this.indent--
+        this.emit(`}`)
       }
-      this.indent--
-      this.emit(`})`)
-      this.indent--
-      this.emit(`}`)
     }
     if (node.rowEvenStyles && node.rowEvenStyles.length > 0) {
-      this.emit(`if (${indexVar} % 2 === 0) {`)
-      this.indent++
-      this.emit(`Object.assign(${tableVar}_row.style, {`)
-      this.indent++
-      for (const style of node.rowEvenStyles) {
-        this.emit(`'${style.property}': '${style.value}',`)
+      const filteredEvenStyles = node.rowEvenStyles.filter(s => !zebraLayoutPropsToFilter.has(s.property))
+      if (filteredEvenStyles.length > 0) {
+        this.emit(`if (${indexVar} % 2 === 0) {`)
+        this.indent++
+        this.emit(`Object.assign(${tableVar}_row.style, {`)
+        this.indent++
+        for (const style of filteredEvenStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit(`})`)
+        this.indent--
+        this.emit(`}`)
       }
-      this.indent--
-      this.emit(`})`)
-      this.indent--
-      this.emit(`}`)
     }
 
     // Hover effect - store original background
@@ -2302,37 +2317,22 @@ class DOMGenerator {
     this.emit(`const ${footerVar} = document.createElement('div')`)
     this.emit(`${footerVar}.className = 'mirror-table-footer'`)
 
-    // If footerSlot is defined, render custom footer content
-    if (node.footerSlot && node.footerSlot.length > 0) {
-      // Apply wrapper styles with flex layout
-      this.emit(`Object.assign(${footerVar}.style, {`)
-      this.indent++
-      this.emit(`display: 'flex',`)
-      this.emit(`flexDirection: 'row',`)
-      this.emit(`gap: '16px',`)
-      // Apply footer slot styles
-      if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
-        for (const style of node.footerSlotStyles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-      }
-      this.indent--
-      this.emit(`})`)
-
-      // Render footer slot children
-      for (const child of node.footerSlot) {
-        this.emitNode(child, footerVar)
-      }
-    } else if (node.footerStaticRow) {
+    // Prefer footerStaticRow if it exists (Footer: Row "A", "B" syntax)
+    // This handles both standalone Row and Row inside Footer: slot
+    if (node.footerStaticRow) {
       // Footer: Row "A", "B" syntax - render static row cells
       this.emit(`Object.assign(${footerVar}.style, {`)
       this.indent++
       this.emit(`display: 'flex',`)
       this.emit(`flexDirection: 'row',`)
       this.emit(`gap: '24px',`)
-      // Apply footer slot styles or use defaults
+      // Apply footer slot styles, but FILTER OUT layout properties that would override row direction
+      // The slot styles may contain flex-direction: column from default Frame styles
       if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
+        const layoutPropsToFilter = new Set(['display', 'flex-direction', 'align-items', 'width'])
         for (const style of node.footerSlotStyles) {
+          // Skip layout properties that would interfere with horizontal row layout
+          if (layoutPropsToFilter.has(style.property)) continue
           this.emit(`'${style.property}': '${style.value}',`)
         }
       } else {
@@ -2365,6 +2365,26 @@ class DOMGenerator {
         }
 
         this.emit(`${footerVar}.appendChild(${cellVar})`)
+      }
+    } else if (node.footerSlot && node.footerSlot.length > 0) {
+      // Custom footer content (non-static Row, e.g. custom elements)
+      this.emit(`Object.assign(${footerVar}.style, {`)
+      this.indent++
+      this.emit(`display: 'flex',`)
+      this.emit(`flexDirection: 'row',`)
+      this.emit(`gap: '16px',`)
+      // Apply footer slot styles
+      if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
+        for (const style of node.footerSlotStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+      }
+      this.indent--
+      this.emit(`})`)
+
+      // Render footer slot children
+      for (const child of node.footerSlot) {
+        this.emitNode(child, footerVar)
       }
     } else {
       // Auto-generated footer from columns - apply default styles
@@ -2832,7 +2852,7 @@ class DOMGenerator {
    * Emit Zag items (including groups)
    */
   private emitZagItems(
-    items: any[],
+    items: IRItem[],
     varNamePrefix: string,
     parentVar: string,
     indexOffset: number = 0
@@ -2909,7 +2929,7 @@ class DOMGenerator {
         // Render children if present, otherwise use label as text
         if (item.children && item.children.length > 0) {
           // Default to horizontal layout with centered alignment if no explicit layout
-          const hasLayoutProp = item.properties?.some((p: any) =>
+          const hasLayoutProp = item.properties?.some((p: IRItemProperty) =>
             ['ver', 'hor', 'vertical', 'horizontal', 'spread', 'center'].includes(p.name)
           )
           if (!hasLayoutProp) {
@@ -2951,7 +2971,7 @@ class DOMGenerator {
     this.emit(`type: 'tabs',`)
     this.emit(`id: '${node.id}',`)
     this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+    this.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
       value: item.value,
       label: item.label,
       disabled: item.disabled
@@ -3664,7 +3684,7 @@ class DOMGenerator {
     this.emit(`type: 'accordion',`)
     this.emit(`id: '${node.id}',`)
     this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+    this.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
       value: item.value,
       label: item.label,
       disabled: item.disabled
@@ -3820,7 +3840,7 @@ class DOMGenerator {
     this.emit(`type: 'listbox',`)
     this.emit(`id: '${node.id}',`)
     this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+    this.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
       value: item.value,
       label: item.label,
       disabled: item.disabled
@@ -3985,7 +4005,7 @@ class DOMGenerator {
     this.emit(`type: 'select',`)
     this.emit(`id: '${node.id}',`)
     this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+    this.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
       value: item.value,
       label: item.label,
       disabled: item.disabled,
@@ -4159,7 +4179,7 @@ class DOMGenerator {
       'width:fit-content',
       'align-items:flex-start',
     ])
-    const extractSlotStateStyles = (slot: any): Record<string, Record<string, string>> => {
+    const extractSlotStateStyles = (slot: IRSlot | undefined): Record<string, Record<string, string>> => {
       const stateStyles: Record<string, Record<string, string>> = {}
       if (slot?.children) {
         for (const child of slot.children) {
@@ -4191,7 +4211,7 @@ class DOMGenerator {
     this.emit(`type: 'radio-group',`)
     this.emit(`id: '${node.id}',`)
     this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+    this.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
       value: item.value,
       label: item.label,
       disabled: item.disabled
@@ -4851,7 +4871,7 @@ class DOMGenerator {
     this.emit(`type: 'sidenav',`)
     this.emit(`id: '${node.id}',`)
     this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+    this.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
       value: item.value,
       label: item.label,
       icon: item.icon,
@@ -4999,7 +5019,7 @@ class DOMGenerator {
    * Emit SideNav items (NavItems and NavGroups)
    */
   private emitSideNavItems(
-    items: any[],
+    items: IRItem[],
     rootVar: string,
     parentVar: string,
     collapsed: boolean,
@@ -5146,7 +5166,7 @@ class DOMGenerator {
     this.emit(`type: 'segmented-control',`)
     this.emit(`id: '${node.id}',`)
     this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+    this.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
       value: item.value,
       label: item.label,
       disabled: item.disabled
@@ -5265,7 +5285,7 @@ class DOMGenerator {
     this.emit(`type: 'toggle-group',`)
     this.emit(`id: '${node.id}',`)
     this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.emit(`items: ${JSON.stringify(node.items.map((item: any) => ({
+    this.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
       value: item.value,
       label: item.label,
       disabled: item.disabled

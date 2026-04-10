@@ -36,6 +36,7 @@ import type {
   Conditional as ASTConditional,
   ComputedExpression,
 } from '../parser/ast'
+import { logIR as log } from '../utils/logger'
 
 /** Property value type from AST - can be literal, token ref, loop var, conditional, or expression */
 type PropertyValue = string | number | boolean | TokenReference | LoopVarReference | ASTConditional | ComputedExpression
@@ -101,7 +102,7 @@ import {
   hasContent,
   isTable,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRZagNode, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray } from './types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRItemProperty, IRZagNode, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
@@ -1061,8 +1062,9 @@ class IRTransformer {
         irItem.readOnly = true
       }
       // Include properties if present (layout props like ver, gap, pad)
+      // Cast to IRItemProperty[] since AST Property structure is compatible
       if (item.properties && item.properties.length > 0) {
-        irItem.properties = item.properties
+        irItem.properties = item.properties as unknown as IRItemProperty[]
       }
       // Include children if present (custom content like Icon, Text)
       if (item.children && item.children.length > 0) {
@@ -1586,8 +1588,8 @@ class IRTransformer {
       dataBinding = String(textContentProp.values[0])
     } else if (propsetProp?.values[0]) {
       const val = propsetProp.values[0]
-      if (typeof val === 'object' && val !== null && 'kind' in val && (val as any).kind === 'token') {
-        dataBinding = '$' + (val as any).name
+      if (typeof val === 'object' && val !== null && 'kind' in val && (val as TokenReference).kind === 'token') {
+        dataBinding = '$' + (val as TokenReference).name
       } else if (typeof val === 'string' && val.startsWith('$')) {
         dataBinding = val
       }
@@ -2951,7 +2953,7 @@ class IRTransformer {
     // Add parent states first (with null-check for state name)
     for (const state of parentStates) {
       if (!state.name) {
-        console.warn('[IR] State without name detected in parent, skipping')
+        log.warn('State without name detected in parent, skipping')
         continue
       }
       stateMap.set(state.name, { ...state })
@@ -2960,7 +2962,7 @@ class IRTransformer {
     // Merge child states (child properties override parent)
     for (const state of childStates) {
       if (!state.name) {
-        console.warn('[IR] State without name detected in child, skipping')
+        log.warn('State without name detected in child, skipping')
         continue
       }
       const existing = stateMap.get(state.name)
