@@ -81,7 +81,7 @@ export class Parser {
    * Report an iteration limit error - indicates a likely bug in the parser.
    */
   private reportIterationLimit(context: string): void {
-    const token = this.peek()
+    const token = this.peekAt(0)
     this.errors.push({
       message: `Parser iteration limit exceeded in ${context}. This is likely a bug.`,
       line: token?.line ?? 0,
