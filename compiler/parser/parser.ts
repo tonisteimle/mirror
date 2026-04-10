@@ -934,7 +934,7 @@ export class Parser {
     const items: number[] = []
     this.advance() // [
 
-    while (!this.isAtEnd() && !this.check('RBRACKET')) {
+    for (let iter = 0; !this.isAtEnd() && !this.check('RBRACKET') && iter < Parser.MAX_ITERATIONS; iter++) {
       if (this.check('NUMBER')) {
         items.push(parseFloat(this.advance().value))
       } else if (this.check('COMMA')) {
@@ -1008,7 +1008,7 @@ export class Parser {
     // Token types that should not have space after them
     const noSpaceAfter = new Set(['STAR', 'LPAREN', 'LBRACKET', 'AT'])
 
-    while (!this.isAtEnd() && !this.check('DEDENT')) {
+    for (let outerIter = 0; !this.isAtEnd() && !this.check('DEDENT') && outerIter < Parser.MAX_ITERATIONS; outerIter++) {
       if (this.check('NEWLINE')) {
         contentLines.push('')
         this.advance()
@@ -1017,7 +1017,7 @@ export class Parser {
 
       // Collect all tokens on this line as raw content
       const lineTokens: { type: string; value: string }[] = []
-      while (!this.isAtEnd() && !this.check('NEWLINE') && !this.check('DEDENT')) {
+      for (let innerIter = 0; !this.isAtEnd() && !this.check('NEWLINE') && !this.check('DEDENT') && innerIter < Parser.MAX_ITERATIONS; innerIter++) {
         const token = this.advance()
         lineTokens.push({ type: token.type, value: token.value })
       }

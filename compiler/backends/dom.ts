@@ -1615,6 +1615,48 @@ class DOMGenerator {
       for (const child of node.headerSlot) {
         this.emitNode(child, headerVar)
       }
+    } else if (node.headerStaticRow) {
+      // Header: Row "A", "B" syntax - render static row cells
+      this.emit(`Object.assign(${headerVar}.style, {`)
+      this.indent++
+      this.emit(`display: 'flex',`)
+      // Apply header slot styles or use defaults
+      if (node.headerSlotStyles && node.headerSlotStyles.length > 0) {
+        for (const style of node.headerSlotStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+      } else {
+        this.emit(`background: 'var(--surface-elevated, #252525)',`)
+        this.emit(`padding: '12px',`)
+        this.emit(`borderBottom: '1px solid var(--border, #333)',`)
+      }
+      this.indent--
+      this.emit(`})`)
+
+      // Render header cells from static row
+      const row = node.headerStaticRow
+      for (let cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
+        const cell = row.cells[cellIndex]
+        const cellVar = `${headerVar}_cell_${cellIndex}`
+
+        this.emit(`const ${cellVar} = document.createElement('div')`)
+        this.emit(`${cellVar}.className = 'mirror-table-header-cell'`)
+        this.emit(`Object.assign(${cellVar}.style, {`)
+        this.indent++
+        this.emit(`flex: '1',`)
+        this.emit(`fontWeight: '500',`)
+        this.emit(`color: 'var(--text-muted, #888)',`)
+        this.emit(`fontSize: '11px',`)
+        this.emit(`textTransform: 'uppercase',`)
+        this.indent--
+        this.emit(`})`)
+
+        if (cell.text !== undefined) {
+          this.emit(`${cellVar}.textContent = ${JSON.stringify(cell.text)}`)
+        }
+
+        this.emit(`${headerVar}.appendChild(${cellVar})`)
+      }
     } else {
       // Auto-generated header from columns - apply default styles
       this.emit(`Object.assign(${headerVar}.style, {`)

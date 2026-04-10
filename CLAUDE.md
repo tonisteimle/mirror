@@ -180,9 +180,11 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
   // Farben: bg = Hintergrund, col = Textfarbe
   Text "Farbiger Text", bg #2271C1, col white, pad 8 16, rad 4
 
-  // Abstände: pad = innen, mar = außen
-  Text "Mit Padding", pad 16, bg #333, col white, rad 4
-  Text "Mit Margin", mar 16, bg #333, col white, rad 4
+  // pad = Innenabstand (zwischen Rand und Inhalt)
+  // mar = Außenabstand (zwischen Elementen)
+  Frame hor, gap 0, bg #444, rad 4
+    Text "pad 16", pad 16, bg #2271C1, col white
+    Text "mar 16", mar 16, bg #10b981, col white
 
   // Größen: w = Breite, h = Höhe (in Pixel)
   Frame w 200, h 50, bg #10b981, rad 4, center
@@ -199,8 +201,8 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
 | --- | --- | --- |
 | `bg` | Hintergrundfarbe | `bg #2271C1` |
 | `col` | Textfarbe | `col white` |
-| `pad` | Innenabstand (Padding) | `pad 12` oder `pad 12 24` |
-| `mar` | Außenabstand (Margin) | `mar 16` |
+| `pad` | Innenabstand (zwischen Rand und Inhalt) | `pad 12` oder `pad 12 24` |
+| `mar` | Außenabstand (zwischen Elementen) | `mar 16` |
 | `w` / `h` | Breite / Höhe | `w 200, h 100` |
 | `rad` | Eckenradius | `rad 8` |
 | `fs` | Schriftgröße | `fs 18` |
