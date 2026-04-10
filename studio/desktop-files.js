@@ -764,7 +764,8 @@ function showContextMenu(e, target) {
   hideContextMenu()
 
   const isFile = target?.classList.contains('file-tree-file')
-  const folderElement = target?.classList.contains('file-tree-folder') ? target : target?.closest('.file-tree-folder')
+  // Only detect folder if target is NOT a file (files are inside folders, so closest() would find parent)
+  const folderElement = !isFile && (target?.classList.contains('file-tree-folder') ? target : target?.closest('.file-tree-folder'))
   const isFolder = !!folderElement
   const isRoot = folderElement?.dataset?.root === 'true'
   const path = target?.dataset?.path || target?.closest('[data-path]')?.dataset?.path
