@@ -1940,6 +1940,9 @@ export function forward(): void {
   window.history.forward()
 }
 
+// Allowed URL protocols for security
+const ALLOWED_URL_PROTOCOLS = ['http:', 'https:', 'mailto:', 'tel:']
+
 /**
  * Open a URL in a new tab or current window
  * @param url - URL to open
@@ -1950,6 +1953,22 @@ export function openUrl(
   options?: { newTab?: boolean }
 ): void {
   const { newTab = true } = options || {}
+
+  // Security: Validate URL protocol to prevent XSS via javascript: or data: URLs
+  try {
+    const parsedUrl = new URL(url, window.location.href)
+    if (!ALLOWED_URL_PROTOCOLS.includes(parsedUrl.protocol)) {
+      console.warn(`[Security] Blocked unsafe URL protocol: ${parsedUrl.protocol}`)
+      return
+    }
+  } catch {
+    // If URL parsing fails, check for dangerous protocols directly
+    if (url.toLowerCase().startsWith('javascript:') || url.toLowerCase().startsWith('data:')) {
+      console.warn(`[Security] Blocked unsafe URL: ${url.slice(0, 50)}...`)
+      return
+    }
+  }
+
   if (newTab) {
     window.open(url, '_blank', 'noopener,noreferrer')
   } else {
@@ -3226,8 +3245,19 @@ function sanitizeSVG(svgText: string): string | null {
       return null
     }
 
-    // Remove dangerous elements
-    const dangerousElements = ['script', 'foreignObject', 'use', 'image', 'a']
+    // Remove dangerous elements (XSS vectors and external resource loaders)
+    const dangerousElements = [
+      'script',         // JavaScript execution
+      'foreignObject',  // Can embed HTML/scripts
+      'use',            // Can reference external resources
+      'image',          // Can load external images
+      'a',              // Links with javascript: href
+      'style',          // CSS injection, can exfiltrate data
+      'defs',           // Can contain style elements
+      'metadata',       // Can contain arbitrary XML
+      'animate',        // Can trigger events via onbegin/onend
+      'set',            // Can modify attributes dynamically
+    ]
     for (const tag of dangerousElements) {
       const elements = svg.querySelectorAll(tag)
       elements.forEach(el => el.remove())

@@ -2883,8 +2883,21 @@ class IRTransformer {
    * Supports two syntaxes:
    * - `Extended extends Base:` → component.extends = 'Base'
    * - `Extended as Base:` → component.primitive = 'Base' (if Base is a component)
+   *
+   * @param visited - Set of component names already visited (for cycle detection)
    */
-  private resolveComponent(component: ComponentDefinition): ComponentDefinition {
+  private resolveComponent(component: ComponentDefinition, visited: Set<string> = new Set()): ComponentDefinition {
+    // Circular reference detection
+    if (visited.has(component.name)) {
+      this.addError(
+        `Circular component inheritance detected: ${[...visited, component.name].join(' → ')}`,
+        component.sourcePosition?.line ?? 0,
+        component.sourcePosition?.column ?? 0
+      )
+      return component // Return unresolved to prevent infinite recursion
+    }
+    visited.add(component.name)
+
     // Determine the parent - either from explicit extends or from primitive if it's a component name
     let parentName = component.extends
     let inheritFromPrimitive = false
@@ -2907,7 +2920,8 @@ class IRTransformer {
       return component
     }
 
-    const resolvedParent = this.resolveComponent(parent)
+    // Pass the visited set to detect cycles in the inheritance chain
+    const resolvedParent = this.resolveComponent(parent, visited)
 
     // Merge parent + child (child overrides)
     return {
@@ -2935,13 +2949,21 @@ class IRTransformer {
     // Create a map of state name -> merged state
     const stateMap = new Map<string, State>()
 
-    // Add parent states first
+    // Add parent states first (with null-check for state name)
     for (const state of parentStates) {
+      if (!state.name) {
+        console.warn('[IR] State without name detected in parent, skipping')
+        continue
+      }
       stateMap.set(state.name, { ...state })
     }
 
     // Merge child states (child properties override parent)
     for (const state of childStates) {
+      if (!state.name) {
+        console.warn('[IR] State without name detected in child, skipping')
+        continue
+      }
       const existing = stateMap.get(state.name)
       if (existing) {
         // Merge properties: child overrides parent

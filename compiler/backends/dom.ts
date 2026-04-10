@@ -1677,7 +1677,7 @@ class DOMGenerator {
         const cellVar = `${tableVar}_hc_${this.sanitizeVarName(col.field)}`
         this.emit(`const ${cellVar} = document.createElement('div')`)
         this.emit(`${cellVar}.className = 'mirror-table-header-cell'`)
-        this.emit(`${cellVar}.dataset.field = "${col.field}"`)
+        this.emit(`${cellVar}.dataset.field = "${this.escapeString(col.field)}"`)
 
         // Header cell styles - use flex for alignment with sort icon
         this.emit(`Object.assign(${cellVar}.style, {`)
@@ -1717,7 +1717,7 @@ class DOMGenerator {
           const sortIconVar = `${cellVar}_sortIcon`
           this.emit(`const ${sortIconVar} = document.createElement('span')`)
           this.emit(`${sortIconVar}.className = 'mirror-sort-icon'`)
-          this.emit(`${sortIconVar}.dataset.field = '${col.field}'`)
+          this.emit(`${sortIconVar}.dataset.field = '${this.escapeString(col.field)}'`)
           this.emit(`${sortIconVar}.style.display = 'inline-flex'`)
           this.emit(`${sortIconVar}.style.alignItems = 'center'`)
           this.emit(`${sortIconVar}.style.opacity = '0.5'`)
@@ -1771,7 +1771,7 @@ class DOMGenerator {
           this.indent++
           this.emit(`if (typeof _runtime !== 'undefined' && _runtime.tableSort) {`)
           this.indent++
-          this.emit(`_runtime.tableSort(${tableVar}, '${col.field}')`)
+          this.emit(`_runtime.tableSort(${tableVar}, '${this.escapeString(col.field)}')`)
           this.indent--
           this.emit(`}`)
           this.indent--
@@ -2042,7 +2042,7 @@ class DOMGenerator {
 
     this.emit(`const ${cellVar} = document.createElement('div')`)
     this.emit(`${cellVar}.className = 'mirror-table-cell'`)
-    this.emit(`${cellVar}.dataset.field = '${col.field}'`)
+    this.emit(`${cellVar}.dataset.field = '${this.escapeString(col.field)}'`)
 
     // Cell styles - apply defaults
     this.emit(`Object.assign(${cellVar}.style, {`)
@@ -2074,11 +2074,13 @@ class DOMGenerator {
         this.emitTableRowSlotNode(templateNode, cellVar, rowVar, indexVar, dataVar)
       }
     } else {
-      // Simple value rendering
+      // Simple value rendering (escape prefix/suffix to prevent injection)
       const formatValue = (expr: string) => {
-        if (col.prefix && col.suffix) return `'${col.prefix}' + ${expr} + '${col.suffix}'`
-        if (col.prefix) return `'${col.prefix}' + ${expr}`
-        if (col.suffix) return `${expr} + '${col.suffix}'`
+        const safePrefix = col.prefix ? this.escapeString(col.prefix) : ''
+        const safeSuffix = col.suffix ? this.escapeString(col.suffix) : ''
+        if (col.prefix && col.suffix) return `'${safePrefix}' + ${expr} + '${safeSuffix}'`
+        if (col.prefix) return `'${safePrefix}' + ${expr}`
+        if (col.suffix) return `${expr} + '${safeSuffix}'`
         return expr
       }
 
@@ -2291,12 +2293,13 @@ class DOMGenerator {
       this.emit(`})`)
 
       if (col.aggregation) {
+        const safeSuffix = col.suffix ? this.escapeString(col.suffix) : ''
         switch (col.aggregation) {
           case 'sum':
-            this.emit(`${cellVar}.textContent = ${dataVar}.reduce((s, r) => s + (r.${col.field} || 0), 0)${col.suffix ? ` + "${col.suffix}"` : ''}`)
+            this.emit(`${cellVar}.textContent = ${dataVar}.reduce((s, r) => s + (r.${col.field} || 0), 0)${col.suffix ? ` + "${safeSuffix}"` : ''}`)
             break
           case 'avg':
-            this.emit(`${cellVar}.textContent = (${dataVar}.reduce((s, r) => s + (r.${col.field} || 0), 0) / ${dataVar}.length).toFixed(1)${col.suffix ? ` + "${col.suffix}"` : ''}`)
+            this.emit(`${cellVar}.textContent = (${dataVar}.reduce((s, r) => s + (r.${col.field} || 0), 0) / ${dataVar}.length).toFixed(1)${col.suffix ? ` + "${safeSuffix}"` : ''}`)
             break
           case 'count':
             this.emit(`${cellVar}.textContent = ${dataVar}.length`)

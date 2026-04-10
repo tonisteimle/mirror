@@ -423,6 +423,15 @@ export class Lexer {
         this.indentStack.pop()
         this.addToken('DEDENT', '')
       }
+      // Verify indentation stack consistency after dedenting
+      // The current indent should match the new stack top
+      const newCurrentIndent = this.indentStack[this.indentStack.length - 1]
+      if (indent !== newCurrentIndent) {
+        this.addError(
+          `Invalid indentation: ${indent} spaces doesn't match any indentation level`,
+          `Expected ${newCurrentIndent} spaces or a multiple of ${this.indentUnit || 2} spaces`
+        )
+      }
     }
 
     this.addToken('NEWLINE', '')

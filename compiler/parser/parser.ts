@@ -1395,6 +1395,11 @@ export class Parser {
    * 1.00 all opacity 1, y-offset 0
    */
   private parseAnimationKeyframe(): AnimationKeyframe | null {
+    // Safety: Check bounds before advancing
+    if (this.isAtEnd()) {
+      return null
+    }
+
     // Time value (e.g., 0.00, 0.30, 1.00, or 300 for ms)
     const timeToken = this.advance()
     const time = parseFloat(timeToken.value)
@@ -1404,8 +1409,11 @@ export class Parser {
       properties: [],
     }
 
-    // Parse properties on this line
-    while (!this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd()) {
+    // Parse properties on this line with loop guard
+    let lastPos = this.pos
+    const maxIterations = 100 // Reasonable limit for keyframe properties
+
+    for (let i = 0; i < maxIterations && !this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd(); i++) {
       if (this.check('COMMA') || this.check('SEMICOLON')) {
         this.advance()
         continue
@@ -1419,6 +1427,12 @@ export class Parser {
       } else {
         break
       }
+
+      // Verify progress to prevent infinite loop
+      if (this.pos === lastPos) {
+        break
+      }
+      lastPos = this.pos
     }
 
     return keyframe
@@ -1835,7 +1849,11 @@ export class Parser {
     const parts: string[] = []
     const comparisonTokens = new Set(['EQUALS', 'GT', 'LT', 'GTE', 'LTE', 'NOT_EQUAL', 'STRICT_EQUAL', 'STRICT_NOT_EQUAL', 'AND_AND', 'OR_OR', 'BANG'])
 
-    while (!this.isAtEnd() && !this.check('COMMA') && !this.check('NEWLINE') && !this.check('INDENT')) {
+    // Safety guard to prevent infinite loops
+    let lastPos = this.pos
+    const maxIterations = 1000 // Reasonable limit for expression parsing
+
+    for (let i = 0; i < maxIterations && !this.isAtEnd() && !this.check('COMMA') && !this.check('NEWLINE') && !this.check('INDENT'); i++) {
       const token = this.current()
 
       // Stop at clause keywords (these have their own token types)
@@ -1875,6 +1893,13 @@ export class Parser {
       }
 
       this.advance()
+
+      // Verify progress to prevent infinite loop
+      if (this.pos === lastPos) {
+        console.warn('[Parser] parseTableExpression: no progress made, breaking to prevent infinite loop')
+        break
+      }
+      lastPos = this.pos
     }
 
     return parts.join(' ')
@@ -2313,41 +2338,43 @@ export class Parser {
       this.loopVariables.add('index')
     }
 
-    // Parse children
-    if (this.check('INDENT')) {
-      this.advance()
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
-        if (this.check('NEWLINE')) {
-          this.advance()
-          continue
-        }
-
-        if (this.check('IDENTIFIER')) {
-          const name = this.current().value
-
-          // Special case: Row without colon inside Header slot = static row
-          if (slotName === 'Header' && name === 'Row' && !this.checkNext('COLON')) {
-            this.advance() // Row
-            slot.staticRow = this.parseTableStaticRow()
-          } else {
-            const child = this.parseInstance(this.advance())
-            if (child.type !== 'ZagComponent') {
-              slot.children.push(child as Instance | Slot)
-            }
-          }
-        } else {
-          this.advance()
-        }
-      }
-      if (this.check('DEDENT')) {
+    // Parse children - use try-finally to guarantee loop variable cleanup
+    try {
+      if (this.check('INDENT')) {
         this.advance()
-      }
-    }
+        while (!this.check('DEDENT') && !this.isAtEnd()) {
+          if (this.check('NEWLINE')) {
+            this.advance()
+            continue
+          }
 
-    // Clean up loop variables for Row: slot
-    if (isRowSlot) {
-      this.loopVariables.delete('row')
-      this.loopVariables.delete('index')
+          if (this.check('IDENTIFIER')) {
+            const name = this.current().value
+
+            // Special case: Row without colon inside Header slot = static row
+            if (slotName === 'Header' && name === 'Row' && !this.checkNext('COLON')) {
+              this.advance() // Row
+              slot.staticRow = this.parseTableStaticRow()
+            } else {
+              const child = this.parseInstance(this.advance())
+              if (child.type !== 'ZagComponent') {
+                slot.children.push(child as Instance | Slot)
+              }
+            }
+          } else {
+            this.advance()
+          }
+        }
+        if (this.check('DEDENT')) {
+          this.advance()
+        }
+      }
+    } finally {
+      // Clean up loop variables for Row: slot - guaranteed to run
+      if (isRowSlot) {
+        this.loopVariables.delete('row')
+        this.loopVariables.delete('index')
+      }
     }
 
     return slot
