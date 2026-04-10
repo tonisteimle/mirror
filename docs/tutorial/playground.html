@@ -16,8 +16,8 @@
       --border: #2a2a2e;
       --text: #fafafa;
       --text-muted: #71717a;
-      --accent: #3b82f6;
-      --accent-hover: #2563eb;
+      --accent: #5BA8F5;
+      --accent-hover: #2271C1;
       --success: #22c55e;
       --error: #ef4444;
       --font-sans: 'Inter', -apple-system, sans-serif;
@@ -365,7 +365,7 @@ Card
   Text "Welcome", fs 20, weight semibold, col white
   Text "This is a reusable card component with slots.", col #888, line 1.5
   Frame hor, gap 8
-    Button "Learn More", pad 10 16, bg #3b82f6, col white, rad 6
+    Button "Learn More", pad 10 16, bg #5BA8F5, col white, rad 6
     Button "Dismiss", pad 10 16, bg transparent, col #888, rad 6`,
 
       layout: `// Flexbox Layouts
@@ -373,7 +373,7 @@ Frame bg #18181b, pad 24, gap 24
 
   // Horizontal layout
   Frame hor, gap 12
-    Frame bg #3b82f6, pad 16, rad 8
+    Frame bg #5BA8F5, pad 16, rad 8
       Text "One", col white
     Frame bg #8b5cf6, pad 16, rad 8
       Text "Two", col white
@@ -393,14 +393,14 @@ Frame bg #18181b, pad 24, gap 24
       button: `// Interactive Button with Hover State
 Frame bg #18181b, pad 40, center, gap 16
 
-  Button "Hover me!", pad 14 28, bg #3b82f6, col white, rad 8, fs 16, cursor pointer
+  Button "Hover me!", pad 14 28, bg #5BA8F5, col white, rad 8, fs 16, cursor pointer
     hover:
-      bg #2563eb
+      bg #2271C1
       scale 1.05
 
-  Button "Ghost Button", pad 14 28, bg transparent, bor 1 #3b82f6, col #3b82f6, rad 8, cursor pointer
+  Button "Ghost Button", pad 14 28, bg transparent, bor 1 #5BA8F5, col #5BA8F5, rad 8, cursor pointer
     hover:
-      bg #3b82f620
+      bg #5BA8F520
       col white`,
 
       form: `// Form Layout
@@ -418,8 +418,8 @@ Frame bg #18181b, pad 32, center
       Label "Password", col #888, fs 13
       Input type password, placeholder "••••••••", pad 12, bg #1f1f1f, rad 6, bor 1 #333, col white, w full
 
-    Button "Sign In", pad 14, bg #3b82f6, col white, rad 8, w full, cursor pointer
-      hover bg #2563eb
+    Button "Sign In", pad 14, bg #5BA8F5, col white, rad 8, w full, cursor pointer
+      hover bg #2271C1
 
     Text "Don't have an account? Sign up", col #888, fs 13, center`,
 
@@ -431,7 +431,7 @@ Frame bg #18181b, gap 0
 
     // Logo
     Frame hor, gap 10
-      Frame bg #3b82f6, w 32, h 32, rad 6, center
+      Frame bg #5BA8F5, w 32, h 32, rad 6, center
         Text "M", col white, weight bold
       Text "Mirror", col white, weight semibold, fs 18
 
@@ -443,7 +443,7 @@ Frame bg #18181b, gap 0
       Text "Pricing", col #888, cursor pointer
 
     // CTA
-    Button "Get Started", pad 10 16, bg #3b82f6, col white, rad 6, cursor pointer
+    Button "Get Started", pad 10 16, bg #5BA8F5, col white, rad 6, cursor pointer
 
   // Content
   Frame pad 40, center, h 200

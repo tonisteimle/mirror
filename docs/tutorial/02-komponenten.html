@@ -35,9 +35,9 @@
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
-  Button "Speichern", pad 10 20, rad 6, bg #2563eb, col white
-  Button "Abbrechen", pad 10 20, rad 6, bg #2563eb, col white
-  Button "Löschen", pad 10 20, rad 6, bg #2563eb, col white</textarea>
+  Button "Speichern", pad 10 20, rad 6, bg #2271C1, col white
+  Button "Abbrechen", pad 10 20, rad 6, bg #2271C1, col white
+  Button "Löschen", pad 10 20, rad 6, bg #2271C1, col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -53,7 +53,7 @@
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// Definition: Name endet mit :
-Btn: pad 10 20, rad 6, bg #2563eb, col white
+Btn: pad 10 20, rad 6, bg #2271C1, col white
 
 // Verwendung: Name ohne :
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
@@ -80,7 +80,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
       <p>Bei der Verwendung kannst du einzelne Properties überschreiben. Die übrigen bleiben erhalten:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Btn: pad 10 20, rad 6, bg #2563eb, col white
+          <textarea>Btn: pad 10 20, rad 6, bg #2271C1, col white
 
 Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Btn "Standard"
@@ -106,7 +106,7 @@ Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
 Card
   Text "Titel", col white, fs 16, weight 500
   Text "Beschreibung", col #888, fs 14
-  Button "Aktion", pad 8 16, rad 6, bg #2563eb, col white</textarea>
+  Button "Aktion", pad 8 16, rad 6, bg #2271C1, col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -122,7 +122,7 @@ Card
       <p>Du hast gesehen, wie du Properties bei der Verwendung überschreibst (<code>Btn "Rot", bg #333</code>). Das funktioniert gut für Einzelfälle. Aber was, wenn du dieselbe Variation mehrmals brauchst?</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Btn: pad 10 20, rad 6, bg #2563eb, col white
+          <textarea>Btn: pad 10 20, rad 6, bg #2271C1, col white
 
 // Immer wieder dieselbe Überschreibung...
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
@@ -142,7 +142,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 Btn: pad 10 20, rad 6, cursor pointer
 
 // Variationen als eigene Komponenten
-PrimaryBtn as Btn: bg #2563eb, col white
+PrimaryBtn as Btn: bg #2271C1, col white
 DangerBtn as Btn: bg #ef4444, col white
 GhostBtn as Btn: bg transparent, col #888, bor 1, boc #333
 
@@ -156,7 +156,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 
       <p><code>DangerBtn as Btn:</code> bedeutet: "DangerBtn ist ein Btn, aber mit rotem Hintergrund." Alle drei Varianten erben <code>pad 10 20, rad 6, cursor pointer</code> von <code>Btn</code>.</p>
       <p>Der Vorteil: Änderst du das Padding in <code>Btn</code>, wirkt es in allen Varianten. Änderst du die Farbe in <code>DangerBtn</code>, wirkt es überall wo <code>DangerBtn</code> verwendet wird.</p>
-      <p class="note"><strong>Tipp:</strong> Du kannst auch direkt von Primitives erben. <code>PrimaryBtn as Button: bg #2563eb</code> erzeugt einen Button mit allen Standard-Button-Eigenschaften plus blauem Hintergrund.</p>
+      <p class="note"><strong>Tipp:</strong> Du kannst auch direkt von Primitives erben. <code>PrimaryBtn as Button: bg #2271C1</code> erzeugt einen Button mit allen Standard-Button-Eigenschaften plus blauem Hintergrund.</p>
 
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
@@ -171,7 +171,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
     <!-- ============================================================ -->
     <section>
       <h2>Komplexe Komponenten</h2>
-      <p>Bisher waren unsere Komponenten einfach: Ein Element mit Properties (<code>Btn: pad 10 20, bg #2563eb</code>). Aber eine Komponente kann beliebig komplex sein – eine ganze Struktur mit mehreren Kindern. Stell dir einen Footer vor:</p>
+      <p>Bisher waren unsere Komponenten einfach: Ein Element mit Properties (<code>Btn: pad 10 20, bg #2271C1</code>). Aber eine Komponente kann beliebig komplex sein – eine ganze Struktur mit mehreren Kindern. Stell dir einen Footer vor:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Footer: w full, pad 20, bg #0a0a0a, hor, spread
@@ -306,7 +306,7 @@ Card: w 260, bg #1a1a1a, rad 12, clip
   Desc: w full, pad 16, col #888, fs 14
   Footer: w full, pad 12 16, bg #151515, hor, spread
     Status: col #666, fs 12
-    Action: pad 8 16, rad 6, bg #2563eb, col white
+    Action: pad 8 16, rad 6, bg #2271C1, col white
 
 // Verwendung: Nur noch die Texte einfügen
 Card

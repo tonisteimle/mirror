@@ -31,12 +31,12 @@
     <!-- ============================================================ -->
     <section>
       <h2>Farben</h2>
-      <p>Mirror unterstützt verschiedene Farbformate. Am häufigsten verwendest du Hex-Farben (<code>#2563eb</code>), aber auch benannte Farben und rgba sind möglich:</p>
+      <p>Mirror unterstützt verschiedene Farbformate. Am häufigsten verwendest du Hex-Farben (<code>#2271C1</code>), aber auch benannte Farben und rgba sind möglich:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   // Hex-Farben
-  Frame w 50, h 50, bg #2563eb, rad 6
+  Frame w 50, h 50, bg #2271C1, rad 6
   Frame w 50, h 50, bg #10b981, rad 6
   Frame w 50, h 50, bg #f59e0b, rad 6
   Frame w 50, h 50, bg #ef4444, rad 6
@@ -46,18 +46,18 @@
   Frame w 50, h 50, bg black, rad 6
 
   // Mit Transparenz
-  Frame w 50, h 50, bg rgba(37,99,235,0.5), rad 6
-  Frame w 50, h 50, bg #2563eb88, rad 6</textarea>
+  Frame w 50, h 50, bg rgba(34,113,193,0.5), rad 6
+  Frame w 50, h 50, bg #2271C188, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <p><strong>Was passiert hier?</strong></p>
       <ul>
-        <li><code>#2563eb</code> – Hex-Farbe (6 Zeichen für RGB)</li>
+        <li><code>#2271C1</code> – Hex-Farbe (6 Zeichen für RGB)</li>
         <li><code>white</code>, <code>black</code> – benannte CSS-Farben funktionieren direkt</li>
-        <li><code>rgba(37,99,235,0.5)</code> – Farbe mit 50% Transparenz</li>
-        <li><code>#2563eb88</code> – Hex mit Alpha-Kanal (8 Zeichen, die letzten zwei sind Transparenz)</li>
+        <li><code>rgba(34,113,193,0.5)</code> – Farbe mit 50% Transparenz</li>
+        <li><code>#2271C188</code> – Hex mit Alpha-Kanal (8 Zeichen, die letzten zwei sind Transparenz)</li>
       </ul>
 
       <div class="note">
@@ -74,16 +74,16 @@
         <div class="playground-code">
           <textarea>Frame w 400, gap 8, bg #0a0a0a, pad 16, rad 8
   // Horizontal (Standard)
-  Frame w full, h 50, rad 8, bg grad #2563eb #7c3aed
+  Frame w full, h 50, rad 8, bg grad #2271C1 #7c3aed
 
   // Vertikal
   Frame w full, h 50, rad 8, bg grad-ver #f59e0b #ef4444
 
   // Mit Winkel (45°)
-  Frame w full, h 50, rad 8, bg grad 45 #10b981 #2563eb
+  Frame w full, h 50, rad 8, bg grad 45 #10b981 #2271C1
 
   // Drei Farben
-  Frame w full, h 50, rad 8, bg grad #10b981 #2563eb #7c3aed</textarea>
+  Frame w full, h 50, rad 8, bg grad #10b981 #2271C1 #7c3aed</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -100,7 +100,7 @@
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 8
-  Text "Gradient Text", fs 24, weight bold, col grad #2563eb #7c3aed
+  Text "Gradient Text", fs 24, weight bold, col grad #2271C1 #7c3aed
   Text "Vertical Gradient", fs 24, weight bold, col grad-ver #f59e0b #ef4444</textarea>
         </div>
         <div class="playground-preview"></div>
@@ -117,7 +117,7 @@
         <div class="playground-code">
           <textarea>Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   // Border rundum
-  Frame w 70, h 70, bor 2, boc #2563eb, rad 8, center
+  Frame w 70, h 70, bor 2, boc #2271C1, rad 8, center
     Text "2px", col #888, fs 11
 
   // Dickerer Border
@@ -144,13 +144,13 @@
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
-  Frame w 60, h 60, bg #2563eb, rad 0, center
+  Frame w 60, h 60, bg #2271C1, rad 0, center
     Text "0", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 4, center
+  Frame w 60, h 60, bg #2271C1, rad 4, center
     Text "4", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 12, center
+  Frame w 60, h 60, bg #2271C1, rad 12, center
     Text "12", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 99, center
+  Frame w 60, h 60, bg #2271C1, rad 99, center
     Text "99", col white, fs 11</textarea>
         </div>
         <div class="playground-preview"></div>
@@ -251,13 +251,13 @@
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
-  Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 1
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 1
     Text "1", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 0.7
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.7
     Text "0.7", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 0.4
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.4
     Text "0.4", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 0.2
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.2
     Text "0.2", col white, fs 11</textarea>
         </div>
         <div class="playground-preview"></div>
@@ -297,19 +297,19 @@
           <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // Filled Buttons
   Frame hor, gap 8
-    Button "Primary", bg #2563eb, col white, pad 10 20, rad 6
+    Button "Primary", bg #2271C1, col white, pad 10 20, rad 6
     Button "Success", bg #10b981, col white, pad 10 20, rad 6
     Button "Danger", bg #ef4444, col white, pad 10 20, rad 6
 
   // Outlined Buttons
   Frame hor, gap 8
-    Button "Outline", bor 1, boc #2563eb, col #2563eb, pad 10 20, rad 6
-    Button "Subtle", bg #2563eb22, col #2563eb, pad 10 20, rad 6
+    Button "Outline", bor 1, boc #2271C1, col #2271C1, pad 10 20, rad 6
+    Button "Subtle", bg #2271C122, col #2271C1, pad 10 20, rad 6
 
   // Ghost &amp; Link
   Frame hor, gap 8
     Button "Ghost", col #888, pad 10 20, rad 6
-    Button "Link →", col #2563eb, pad 10 20, underline</textarea>
+    Button "Link →", col #2271C1, pad 10 20, underline</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -318,7 +318,7 @@
       <ul>
         <li><strong>Filled:</strong> Volle Hintergrundfarbe – für primäre Aktionen</li>
         <li><strong>Outline:</strong> Nur Border, kein Hintergrund – für sekundäre Aktionen</li>
-        <li><strong>Subtle:</strong> Transparenter Hintergrund mit <code>bg #2563eb22</code> (22 = 13% Opacity)</li>
+        <li><strong>Subtle:</strong> Transparenter Hintergrund mit <code>bg #2271C122</code> (22 = 13% Opacity)</li>
         <li><strong>Ghost:</strong> Nur Text, kein visueller Container – für tertiäre Aktionen</li>
         <li><strong>Link:</strong> Mit <code>underline</code> – für Inline-Navigation</li>
       </ul>

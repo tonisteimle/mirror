@@ -31,12 +31,12 @@
     <!-- ============================================================ -->
     <section>
       <h2>Das Problem: Magische Werte</h2>
-      <p>Schau dir diesen Code an – die Farbe <code>#2563eb</code> taucht dreimal auf:</p>
+      <p>Schau dir diesen Code an – die Farbe <code>#2271C1</code> taucht dreimal auf:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Btn: pad 10 20, rad 6, bg #2563eb, col white
-Link: col #2563eb, underline
-Badge: bg #2563eb, col white, pad 4 8, rad 4, fs 12
+          <textarea>Btn: pad 10 20, rad 6, bg #2271C1, col white
+Link: col #2271C1, underline
+Badge: bg #2271C1, col white, pad 4 8, rad 4, fs 12
 
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Btn "Speichern"
@@ -63,7 +63,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// Token definieren (ohne $)
-primary.bg: #2563eb
+primary.bg: #2271C1
 
 // Token verwenden (mit $, ohne Suffix)
 Btn: bg $primary, col white, pad 10 20, rad 6
@@ -78,7 +78,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 
       <p><strong>Was passiert hier?</strong></p>
       <ul>
-        <li><code>primary.bg: #2563eb</code> – definiert einen Token namens "primary" für Hintergrundfarben</li>
+        <li><code>primary.bg: #2271C1</code> – definiert einen Token namens "primary" für Hintergrundfarben</li>
         <li><code>bg $primary</code> – verwendet den Token (<code>$</code> bedeutet "hole den Wert")</li>
         <li>Änderst du jetzt <code>primary.bg</code> auf <code>#10b981</code>, werden alle drei Buttons grün</li>
       </ul>
@@ -95,7 +95,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
       <p>Der Suffix sagt, wofür der Token gedacht ist:</p>
       <table class="ref-table">
         <tr><th>Suffix</th><th>Bedeutung</th><th>Beispiel</th></tr>
-        <tr><td><code>.bg</code></td><td>Hintergrundfarbe</td><td><code>primary.bg: #2563eb</code></td></tr>
+        <tr><td><code>.bg</code></td><td>Hintergrundfarbe</td><td><code>primary.bg: #2271C1</code></td></tr>
         <tr><td><code>.col</code></td><td>Textfarbe</td><td><code>muted.col: #888</code></td></tr>
         <tr><td><code>.boc</code></td><td>Border-Farbe</td><td><code>border.boc: #333</code></td></tr>
         <tr><td><code>.rad</code></td><td>Radius</td><td><code>card.rad: 8</code></td></tr>
@@ -110,7 +110,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
       <p>Hier ein Beispiel mit mehreren Token-Typen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>primary.bg: #2563eb
+          <textarea>primary.bg: #2271C1
 primary.col: white
 card.bg: #1a1a1a
 card.rad: 8
@@ -143,7 +143,7 @@ Card
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// SEMANTISCHE TOKENS – benenne nach Bedeutung
-primary.bg: #2563eb
+primary.bg: #2271C1
 danger.bg: #ef4444
 card.bg: #1a1a1a
 
@@ -205,7 +205,7 @@ Frame $cardstyle, gap 12
       </ul>
 
       <div class="note">
-        <strong>Syntax-Unterschied:</strong> Einzelne Tokens haben einen Suffix (<code>primary.bg: #2563eb</code>), Property Sets haben keinen (<code>cardstyle: bg #1a1a1a, pad 16</code>). Das macht den Unterschied klar: Suffix = ein Wert, kein Suffix = mehrere Properties.
+        <strong>Syntax-Unterschied:</strong> Einzelne Tokens haben einen Suffix (<code>primary.bg: #2271C1</code>), Property Sets haben keinen (<code>cardstyle: bg #1a1a1a, pad 16</code>). Das macht den Unterschied klar: Suffix = ein Wert, kein Suffix = mehrere Properties.
       </div>
 
       <h3>Property Sets mit Tokens kombinieren</h3>
@@ -214,7 +214,7 @@ Frame $cardstyle, gap 12
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// Einzelne Tokens
-primary.bg: #2563eb
+primary.bg: #2271C1
 card.bg: #1a1a1a
 
 // Property Sets die Tokens verwenden
@@ -255,7 +255,7 @@ Frame $cardbase
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// 1. TOKENS – Werte zentral definieren
-btn.bg: #2563eb
+btn.bg: #2271C1
 btn.col: white
 card.bg: #1a1a1a
 card.rad: 8
@@ -297,7 +297,7 @@ Card
       <h3>Einzelne Tokens</h3>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>primary.bg: #2563eb</code></td><td>Token definieren (mit Suffix)</td></tr>
+        <tr><td><code>primary.bg: #2271C1</code></td><td>Token definieren (mit Suffix)</td></tr>
         <tr><td><code>bg $primary</code></td><td>Token verwenden (mit <code>$</code>)</td></tr>
         <tr><td><code>primary</code> statt <code>blue</code></td><td>Semantisch benennen</td></tr>
       </table>

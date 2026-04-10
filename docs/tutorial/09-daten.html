@@ -254,7 +254,7 @@ anna:
         <pre><span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
   <span class="syn-component">Text</span> <span class="syn-string">"$customers.max.name"</span>, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
   <span class="syn-component">Text</span> <span class="syn-string">"$customers.max.email"</span>, <span class="syn-property">col</span> #888
-  <span class="syn-component">Text</span> <span class="syn-string">"$customers.max.plan"</span>, <span class="syn-property">col</span> #2563eb</pre>
+  <span class="syn-component">Text</span> <span class="syn-string">"$customers.max.plan"</span>, <span class="syn-property">col</span> #2271C1</pre>
       </div>
 
     </section>
@@ -270,7 +270,7 @@ anna:
     <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 2
       <span class="syn-component">Text</span> <span class="syn-string">"$customer.name"</span>, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
       <span class="syn-component">Text</span> <span class="syn-string">"$customer.email"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
-    <span class="syn-component">Text</span> <span class="syn-string">"$customer.plan"</span>, <span class="syn-property">col</span> #2563eb, <span class="syn-property">fs</span> 12</pre>
+    <span class="syn-component">Text</span> <span class="syn-string">"$customer.plan"</span>, <span class="syn-property">col</span> #2271C1, <span class="syn-property">fs</span> 12</pre>
       </div>
 
     </section>
@@ -359,7 +359,7 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   each product in $products
     Frame bg #1a1a1a, pad 20, rad 12, gap 8, w 140, center
       Text "$product.name", col white, fs 16, weight 600
-      Text "$$product.price", col #2563eb, fs 24, weight 700
+      Text "$$product.price", col #2271C1, fs 24, weight 700
       Text "$product.features", col #888, fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
@@ -391,7 +391,7 @@ if loggedIn
 if loggedIn
   Text "Willkommen zurück!", col white
 else
-  Button "Anmelden", bg #2563eb, col white, pad 10 20, rad 6</textarea>
+  Button "Anmelden", bg #2271C1, col white, pad 10 20, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -407,7 +407,7 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
   if showDetails
     Text "Beschreibung des Produkts", col #888, fs 13
     Text "Preis: €29", col #10b981, fs 14
-    Button "Kaufen", bg #2563eb, col white, pad 8 16, rad 4</textarea>
+    Button "Kaufen", bg #2271C1, col white, pad 8 16, rad 4</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -453,7 +453,7 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
           <textarea>disabled: false
 
 if !disabled
-  Button "Absenden", bg #2563eb, col white, pad 10 20, rad 6</textarea>
+  Button "Absenden", bg #2271C1, col white, pad 10 20, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -540,12 +540,12 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
         <div class="playground-code">
           <textarea>active: true
 
-Button "Status", bg active ? #2563eb : #333, col white, pad 10 20, rad 6</textarea>
+Button "Status", bg active ? #2271C1 : #333, col white, pad 10 20, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das entspricht: "Wenn <code>active</code> wahr ist, nimm <code>#2563eb</code>, sonst <code>#333</code>."</p>
+      <p>Das entspricht: "Wenn <code>active</code> wahr ist, nimm <code>#2271C1</code>, sonst <code>#333</code>."</p>
       <h3>Weitere Beispiele</h3>
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -555,7 +555,7 @@ count: 3
 
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // Opacity basierend auf Sichtbarkeit
-  Frame w 100, h 50, bg #2563eb, rad 6, opacity visible ? 1 : 0.3
+  Frame w 100, h 50, bg #2271C1, rad 6, opacity visible ? 1 : 0.3
 
   // Icon basierend auf Status
   Frame hor, gap 8, ver-center, bg #1a1a1a, pad 12, rad 6
@@ -572,7 +572,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>theme: "dark"
-primary.bg: #2563eb
+primary.bg: #2271C1
 muted.bg: #333
 
 Button "Themed", bg theme === "dark" ? $primary : $muted, col white, pad 10 20, rad 6</textarea>
@@ -658,13 +658,13 @@ Frame bg #1a1a1a, pad 20, rad 12, w 200, center
 Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
   if $user.loggedIn
     Frame hor, gap 10, ver-center
-      Frame w 36, h 36, rad 99, bg #2563eb, center
+      Frame w 36, h 36, rad 99, bg #2271C1, center
         Text $user.avatar ? "$user.avatar" : "$user.name[0]", col white, fs 14
       Frame gap 2
         Text "$user.name", col white, fs 14, weight 500
         Text "Online", col #10b981, fs 11
   else
-    Button "Anmelden", bg #2563eb, col white, pad 8 16, rad 6</textarea>
+    Button "Anmelden", bg #2271C1, col white, pad 8 16, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -700,7 +700,7 @@ Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
         <tr><td><code>if ... else</code></td><td><code>if count > 0 ... else</code></td></tr>
         <tr><td><code>&&</code>, <code>||</code>, <code>!</code></td><td><code>if isAdmin && hasAccess</code></td></tr>
         <tr><td><code>===</code>, <code>></code>, <code><</code></td><td><code>if status === "active"</code></td></tr>
-        <tr><td>Ternary</td><td><code>bg active ? #2563eb : #333</code></td></tr>
+        <tr><td>Ternary</td><td><code>bg active ? #2271C1 : #333</code></td></tr>
       </table>
 
       <p><strong>Variablen:</strong> Definition mit <code>name:</code>, Verwendung in Text mit <code>"$name"</code>.</p>

@@ -37,12 +37,12 @@
       <p>Mirror ist eine Sprache, die AI versteht <em>und</em> Menschen lesen können:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
+          <textarea>Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern. <code>bg #2563eb</code> → <code>bg #10b981</code> und der Button ist grün. <code>pad 12 24</code> → <code>pad 16 32</code> und er ist größer. Keine Magie, keine versteckten Dateien.</p>
+      <p>Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern. <code>bg #2271C1</code> → <code>bg #10b981</code> und der Button ist grün. <code>pad 12 24</code> → <code>pad 16 32</code> und er ist größer. Keine Magie, keine versteckten Dateien.</p>
       <p>Aber es wird noch besser. Wenn du Komponenten definierst, wird die Verwendung komplett clean:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -79,7 +79,7 @@ Card
   Text "Beschreibung hier", col #888, fs 14
   Frame hor, gap 8
     Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
-    Button "OK", pad 10 20, rad 6, bg #2563eb, col white</textarea>
+    Button "OK", pad 10 20, rad 6, bg #2271C1, col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -95,7 +95,7 @@ Card
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// Komponente definieren: Name mit :
-PrimaryBtn as Button: bg #2563eb, col white, pad 12 24, rad 6
+PrimaryBtn as Button: bg #2271C1, col white, pad 12 24, rad 6
 
 // Verwenden: Name ohne :
 Frame hor, gap 8
@@ -116,7 +116,7 @@ Frame hor, gap 8
       <p>Farben, Abstände, Radien – definiere sie einmal, verwende sie überall:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>primary.bg: #2563eb
+          <textarea>primary.bg: #2271C1
 card.bg: #1a1a1a
 card.rad: 8
 
@@ -144,7 +144,7 @@ Card
   hover:
     bg #444
   on:
-    bg #2563eb
+    bg #2271C1
 
 Btn "Anklicken"</textarea>
         </div>
@@ -178,7 +178,7 @@ ExpandBtn</textarea>
         <div class="playground-code">
           <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
   hover 0.2s:
-    bg #2563eb
+    bg #2271C1
     scale 1.02
 
 Btn "Hover mich"</textarea>
@@ -252,11 +252,11 @@ Du: siehst die Änderung, verstehst sie, kannst selbst weiter tweaken</pre>
 
       <table class="ref-table">
         <tr><th>Konzept</th><th>Syntax</th></tr>
-        <tr><td>Element mit Properties</td><td><code>Button "Text", bg #2563eb, pad 12</code></td></tr>
+        <tr><td>Element mit Properties</td><td><code>Button "Text", bg #2271C1, pad 12</code></td></tr>
         <tr><td>Hierarchie</td><td>2 Leerzeichen Einrückung</td></tr>
         <tr><td>Komponente definieren</td><td><code>Btn:</code> (mit Doppelpunkt)</td></tr>
         <tr><td>Komponente verwenden</td><td><code>Btn "Text"</code> (ohne Doppelpunkt)</td></tr>
-        <tr><td>Token definieren</td><td><code>primary.bg: #2563eb</code></td></tr>
+        <tr><td>Token definieren</td><td><code>primary.bg: #2271C1</code></td></tr>
         <tr><td>Token verwenden</td><td><code>bg $primary</code></td></tr>
         <tr><td>State definieren</td><td><code>on:</code> oder <code>hover:</code></td></tr>
         <tr><td>State wechseln</td><td><code>toggle()</code></td></tr>

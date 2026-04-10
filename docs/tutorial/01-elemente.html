@@ -34,7 +34,7 @@
       <p>Ein Mirror-Element besteht aus dem <strong>Element-Namen</strong>, optionalem <strong>Text-Inhalt</strong> in Anführungszeichen, und <strong>Properties</strong> getrennt durch Kommas:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6</textarea>
+          <textarea>Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -43,7 +43,7 @@
       <ul>
         <li><code>Button</code> – der Element-Typ</li>
         <li><code>"Speichern"</code> – der sichtbare Text</li>
-        <li><code>bg #2563eb</code> – Hintergrundfarbe (Hex)</li>
+        <li><code>bg #2271C1</code> – Hintergrundfarbe (Hex)</li>
         <li><code>col white</code> – Textfarbe</li>
         <li><code>pad 12 24</code> – Padding: 12px oben/unten, 24px links/rechts</li>
         <li><code>rad 6</code> – Eckenradius von 6px</li>
@@ -62,7 +62,7 @@
           <textarea>Frame gap 12, pad 16, bg #1a1a1a, rad 8
   Text "Eine Überschrift", col white, fs 18
   Text "Normaler Text darunter", col #888
-  Button "Klick mich", bg #2563eb, col white, pad 10 20, rad 6
+  Button "Klick mich", bg #2271C1, col white, pad 10 20, rad 6
   Input placeholder "E-Mail eingeben...", bg #333, col white, pad 10, rad 4</textarea>
         </div>
         <div class="playground-preview"></div>
@@ -93,7 +93,7 @@
           <textarea>Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Farben: bg = Hintergrund, col = Textfarbe
-  Text "Farbiger Text", bg #2563eb, col white, pad 8 16, rad 4
+  Text "Farbiger Text", bg #2271C1, col white, pad 8 16, rad 4
 
   // Abstände: pad = innen, margin = außen
   Text "Mit Padding", pad 16, bg #333, col white, rad 4
@@ -113,7 +113,7 @@
 
       <table class="ref-table">
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
-        <tr><td><code>bg</code></td><td>Hintergrundfarbe</td><td><code>bg #2563eb</code></td></tr>
+        <tr><td><code>bg</code></td><td>Hintergrundfarbe</td><td><code>bg #2271C1</code></td></tr>
         <tr><td><code>col</code></td><td>Textfarbe</td><td><code>col white</code></td></tr>
         <tr><td><code>pad</code></td><td>Innenabstand (Padding)</td><td><code>pad 12</code> oder <code>pad 12 24</code></td></tr>
         <tr><td><code>margin</code></td><td>Außenabstand</td><td><code>margin 16</code></td></tr>
@@ -143,7 +143,7 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
   // Kind 3: Frame mit eigenen Kindern
   Frame hor, gap 8
     Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
-    Button "OK", pad 10 20, rad 6, bg #2563eb, col white</textarea>
+    Button "OK", pad 10 20, rad 6, bg #2271C1, col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -214,7 +214,7 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
 
   // hor = horizontal anordnen
   Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
-    Frame w 40, h 40, bg #2563eb, rad 4
+    Frame w 40, h 40, bg #2271C1, rad 4
     Frame w 40, h 40, bg #10b981, rad 4
     Frame w 40, h 40, bg #f59e0b, rad 4
 
@@ -262,7 +262,7 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
     Icon "check", ic #10b981, is 24
     Icon "x", ic #ef4444, is 24
     Icon "settings", ic #888, is 24
-    Icon "user", ic #2563eb, is 24
+    Icon "user", ic #2271C1, is 24
 
   // fill = ausgefüllte Variante
   Frame hor, gap 16, bg #1a1a1a, pad 12, rad 6
@@ -270,7 +270,7 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
     Icon "heart", ic #ef4444, is 24, fill
 
   // Icons in Buttons
-  Button pad 10 16, rad 6, bg #2563eb, col white
+  Button pad 10 16, rad 6, bg #2271C1, col white
     Frame hor, gap 8, center
       Icon "save", ic white, is 16
       Text "Speichern"</textarea>
@@ -281,7 +281,7 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
       <table class="ref-table">
         <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
         <tr><td><code>is</code></td><td>Icon-Größe in Pixel</td><td><code>is 24</code></td></tr>
-        <tr><td><code>ic</code></td><td>Icon-Farbe</td><td><code>ic #2563eb</code></td></tr>
+        <tr><td><code>ic</code></td><td>Icon-Farbe</td><td><code>ic #2271C1</code></td></tr>
         <tr><td><code>iw</code></td><td>Strichstärke</td><td><code>iw 1.5</code></td></tr>
         <tr><td><code>fill</code></td><td>Ausgefüllte Variante</td><td><code>Icon "heart", fill</code></td></tr>
       </table>
@@ -299,7 +299,7 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
 
   // Header mit Icon
   Frame hor, gap 12, center
-    Icon "user", ic #2563eb, is 32
+    Icon "user", ic #2271C1, is 32
     Frame gap 2
       Text "Max Mustermann", col white, fs 16, weight semibold
       Text "Software Engineer", col #888, fs 13
@@ -309,7 +309,7 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
 
   // Action-Buttons
   Frame hor, gap 8
-    Button pad 10 16, rad 6, bg #2563eb, col white
+    Button pad 10 16, rad 6, bg #2271C1, col white
       Frame hor, gap 6, center
         Icon "mail", ic white, is 14
         Text "Nachricht"
