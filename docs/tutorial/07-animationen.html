@@ -72,28 +72,37 @@ Frame hor, gap 12
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
+          <textarea>// Hover über die Zeilen um den Unterschied zu sehen
+Row: hor, gap 12, ver-center, pad 8, cursor pointer
+  Label: col #888, fs 12, w 80
 
-// Verschiedene Easings
-Frame gap 8
-  Btn "ease-out"
-    hover 0.8s ease-out:
-      bg #2271C1
-  Btn "ease-in"
-    hover 0.8s ease-in:
-      bg #2271C1
-  Btn "ease-in-out"
-    hover 0.8s ease-in-out:
-      bg #2271C1</textarea>
+Frame gap 8, bg #0a0a0a, pad 12, rad 8
+  Row
+    Label "ease-out"
+    Frame w 30, h 30, bg #2271C1, rad 6
+      hover 1s ease-out:
+        translate 150 0
+
+  Row
+    Label "ease-in"
+    Frame w 30, h 30, bg #10b981, rad 6
+      hover 1s ease-in:
+        translate 150 0
+
+  Row
+    Label "linear"
+    Frame w 30, h 30, bg #f59e0b, rad 6
+      hover 1s linear:
+        translate 150 0</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <p><strong>Was passiert hier?</strong></p>
       <ul>
-        <li><code>ease-out</code> — startet schnell, endet langsam (gut für Erscheinen)</li>
-        <li><code>ease-in</code> — startet langsam, endet schnell (gut für Verschwinden)</li>
-        <li><code>ease-in-out</code> — beides kombiniert (gut für Hin-und-her)</li>
+        <li><code>ease-out</code> — startet schnell, bremst am Ende ab</li>
+        <li><code>ease-in</code> — startet langsam, beschleunigt zum Ende</li>
+        <li><code>linear</code> — gleichmäßige Geschwindigkeit (zum Vergleich)</li>
       </ul>
 
       <table class="ref-table">
