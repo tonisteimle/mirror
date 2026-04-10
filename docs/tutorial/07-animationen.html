@@ -42,12 +42,12 @@ BtnHart: pad 12 24, rad 6, bg #333, col white, cursor pointer
 
 // Mit Transition: gleitet
 BtnSoft: pad 12 24, rad 6, bg #333, col white, cursor pointer
-  hover 0.2s:
+  hover 0.8s:
     bg #2271C1
 
 Frame hor, gap 12
   BtnHart "Ohne"
-  BtnSoft "Mit 0.2s"</textarea>
+  BtnSoft "Mit 0.8s"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -55,7 +55,7 @@ Frame hor, gap 12
       <p><strong>Was passiert hier?</strong></p>
       <ul>
         <li><code>hover:</code> — Änderung springt sofort</li>
-        <li><code>hover 0.2s:</code> — Änderung gleitet über 200 Millisekunden</li>
+        <li><code>hover 0.8s:</code> — Änderung gleitet über 800 Millisekunden</li>
         <li>Die Dauer macht den Unterschied. Alles andere bleibt gleich.</li>
       </ul>
 
@@ -77,13 +77,13 @@ Frame hor, gap 12
 // Verschiedene Easings
 Frame gap 8
   Btn "ease-out"
-    hover 0.3s ease-out:
+    hover 0.8s ease-out:
       bg #2271C1
   Btn "ease-in"
-    hover 0.3s ease-in:
+    hover 0.8s ease-in:
       bg #2271C1
   Btn "ease-in-out"
-    hover 0.3s ease-in-out:
+    hover 0.8s ease-in-out:
       bg #2271C1</textarea>
         </div>
         <div class="playground-preview"></div>
@@ -165,7 +165,7 @@ Frame gap 8
           <textarea>LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center, gap 8, toggle()
   Icon "heart", ic #666, is 18
   "Gefällt mir"
-  hover 0.15s:
+  hover 0.5s:
     bg #252525
   on:
     bg #dc2626
@@ -179,7 +179,7 @@ LikeBtn</textarea>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der Hover-Effekt (<code>hover 0.15s:</code>) gleitet sanft. Beim Aktivieren (<code>on:</code>) hüpft der Button mit <code>anim bounce</code> — sofortiges Feedback: "Dein Klick wurde registriert!"</p>
+      <p>Der Hover-Effekt (<code>hover 0.5s:</code>) gleitet sanft. Beim Aktivieren (<code>on:</code>) hüpft der Button mit <code>anim bounce</code> — sofortiges Feedback: "Dein Klick wurde registriert!"</p>
     </section>
 
 
@@ -498,8 +498,8 @@ Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 280, scroll
       <h3>Transitions</h3>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>hover 0.2s:</code></td><td>State mit 200ms Übergang</td></tr>
-        <tr><td><code>hover 0.3s ease-out:</code></td><td>Mit Easing-Funktion</td></tr>
+        <tr><td><code>hover 0.8s:</code></td><td>State mit 800ms Übergang</td></tr>
+        <tr><td><code>hover 0.8s ease-out:</code></td><td>Mit Easing-Funktion</td></tr>
       </table>
 
       <h3>Animation Presets</h3>
