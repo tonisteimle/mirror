@@ -1,0 +1,24 @@
+// Staff Item - Mirror Version
+
+// Tokens
+bg.primary: #0a0a0f
+bg.secondary: #12121a
+text.primary: #ffffff
+text.muted: #55556a
+status.stable: #10b981
+status.warning: #f59e0b
+
+// The Staff Item
+Frame hor, ver-center, gap 12, pad 12, rad 8, bg $bg.secondary, w full
+
+  // Avatar with gradient
+  Frame w 40, h 40, rad 99, center, bg grad 135 #3b82f6 #8b5cf6
+    Text "MW", col white, fs 14, weight 600
+
+  // Details (name + role)
+  Frame gap 0, grow
+    Text "Dr. Maria Weber", col $text.primary, fs 13, weight 500
+    Text "Oberärztin", col $text.muted, fs 12
+
+  // Status
+  Text "3 Patienten", col $status.warning, fs 12, weight 500

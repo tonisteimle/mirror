@@ -1,0 +1,569 @@
+// ============================================
+// PORTFOLIO DASHBOARD - OPTIMIZED
+// ============================================
+
+// === TOKENS ===
+bg.app: #0a0a0f
+bg.panel: #0f0f14
+bg.card: #14141a
+bg.hover: #1c1c24
+bg.header: #12121a
+border.boc: #1e1e28
+text.col: #e8e8ed
+muted.col: #55556a
+secondary.col: #8888a0
+accent.bg: #3b82f6
+accent.col: #3b82f6
+positive.col: #10b981
+negative.col: #ef4444
+warning.col: #f59e0b
+
+// === PROPERTY SETS ===
+mono: font mono, fs 11, col $text
+monomuted: font mono, fs 10, col $muted
+monobold: font mono, fs 11, weight 500, col $text
+label: fs 10, col $muted, uppercase, weight 600
+rowbase: hor, ver-center, pad 10 12, bor b 1 $border, cursor pointer
+
+// === COMPONENTS ===
+
+// Navigation
+NavItem: Frame pad 6 12, rad 4, col $secondary, fs 12, weight 500, cursor pointer, exclusive()
+  hover 0.15s: col $text, bg $bg.card
+  on: col white, bg $accent
+
+// Sidebar Portfolio Item
+PortfolioItem: Frame hor, spread, ver-center, pad 8, rad 6, cursor pointer, w full, exclusive()
+  hover 0.15s: bg $bg.card
+  on: bg rgba(59,130,246,0.15)
+
+// Action Button
+ActionBtn: Frame hor, ver-center, gap 6, pad 6 12, rad 5, cursor pointer
+  Icon: ic $secondary, is 14
+  Label: col $secondary, fs 11, weight 500
+
+// KPI Card
+KpiCard: Frame grow, bg $bg.panel, pad 12 16, gap 4
+  Title: fs 10, col $muted, uppercase
+  Value: font mono, fs 16, weight 600
+  Sub: fs 10, col $muted
+
+// Type Badge
+EquityBadge: Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+  Text "EQUITY", fs 9, weight 600, col $accent
+EtfBadge: Frame pad 2 6, rad 3, bg rgba(139,92,246,0.15)
+  Text "ETF", fs 9, weight 600, col #8b5cf6
+
+// Rating Badges
+BuyBadge: Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+  Text "Buy", fs 10, weight 600, col $positive
+HoldBadge: Frame pad 2 6, rad 3, bg rgba(245,158,11,0.15)
+  Text "Hold", fs 10, weight 600, col $warning
+SellBadge: Frame pad 2 6, rad 3, bg rgba(239,68,68,0.08)
+  Text "Sell", fs 10, weight 600, col $negative
+
+// Alert Icons
+AlertActive: Frame w 18, h 18, rad 4, bg rgba(245,158,11,0.15), center, cursor pointer
+  Text "⚡", fs 10
+AlertInactive: Frame w 18, h 18, rad 4, bg $bg.card, center, cursor pointer
+  Text "○", fs 10, col $muted
+
+// Table Row
+TableRow: Frame $rowbase
+  hover 0.1s: bg $bg.hover
+  Checkbox: Frame w 40, center
+    Frame w 14, h 14, rad 2, bor 1, boc $muted
+  Instrument: Frame w 180, gap 2
+    Name: col $text, fs 11, weight 500
+    ISIN: font mono, fs 10, col $muted
+  Ticker: Frame w 70
+    Text: font mono, fs 11, weight 600, col $accent
+  Type: Frame w 60
+  Sector: Frame w 90
+    Text: fs 10, col $secondary
+  Qty: Frame w 60, right
+    Text: $mono
+  AvgCost: Frame w 80, right
+    Text: $mono
+  LastPrice: Frame w 80, right
+    Text: $mono
+  Change: Frame w 80, right, hor, ver-center, gap 4
+    Arrow: fs 10
+    Pct: font mono, fs 11
+  MktValue: Frame w 90, right
+    Text: $mono
+  Weight: Frame w 80, center, gap 2
+    Bar: Frame w 60, h 4, bg $border, rad 2
+      Fill: h full, bg $accent, rad 2
+    Pct: $monomuted
+  PL: Frame w 90, right, gap 1
+    Value: font mono, fs 11, weight 500
+    Pct: font mono, fs 10
+  Rating: Frame w 60, center
+  Alert: Frame w 50, center
+
+// Table Header
+TableHeader: Frame hor, ver-center, pad 8 12, bg $bg.header, bor b 1 $border
+  Col: Text fs 10, col $muted, weight 600, uppercase
+
+// === APP STRUCTURE ===
+
+Frame w full, h full, bg $bg.app
+
+  // HEADER
+  Frame hor, spread, ver-center, h 48, pad 0 20, bg $bg.panel, bor b 1 $border, w full
+    Frame hor, ver-center, gap 24
+      Frame hor, ver-center, gap 8
+        Frame w 24, h 24, bg grad 135 #3b82f6 #8b5cf6, rad 6, center
+          Text "W", col white, fs 12, weight 700
+        Text "Wealth Advisory", col $text, fs 14, weight 600
+      Frame hor, gap 4
+        NavItem "Portfolio", on
+        NavItem "Watchlist"
+        NavItem "Orders"
+        NavItem "Research"
+        NavItem "Reports"
+    Frame hor, ver-center, gap 16
+      Frame hor, ver-center, gap 6
+        Frame w 8, h 8, bg $positive, rad 99, anim pulse
+        Text "Markets Open", fs 11, col $positive
+      Text "10:34:22 CET", font mono, fs 11, col $muted
+
+  // MAIN
+  Frame hor, w full, h full
+
+    // SIDEBAR
+    Frame w 240, h full, bg $bg.panel, bor r 1 $border, pad 16, gap 20
+      Frame gap 8
+        Text "CLIENT", $label, pad 0 8
+        Frame bg $bg.card, rad 8, pad 12, gap 8
+          Frame hor, ver-center, gap 10
+            Frame w 36, h 36, bg grad 135 #06b6d4 #3b82f6, rad 8, center
+              Text "MK", col white, fs 13, weight 600
+            Frame gap 2
+              Text "Dr. Michael Krüger", col $text, fs 13, weight 600
+              Text "ID 847291 · Private Banking", col $muted, fs 11
+          Frame grid 2, gap 8, pad 8 0 0 0, bor t 1 $border
+            Frame gap 2
+              Text "Total AuM", fs 10, col $muted
+              Text "€2.847.291", $monobold
+            Frame gap 2
+              Text "YTD Return", fs 10, col $muted
+              Text "+12.4%", font mono, fs 12, weight 500, col $positive
+            Frame gap 2
+              Text "Risk Profile", fs 10, col $muted
+              Text "Balanced", $monobold
+            Frame gap 2
+              Text "Since", fs 10, col $muted
+              Text "2019", $monobold
+
+      Frame gap 8, w full
+        Text "PORTFOLIOS", $label, pad 0 8
+        Frame gap 2, w full
+          PortfolioItem on
+            Text "Core Equity", col $accent, fs 12
+            Text "€1.42M", font mono, fs 11, col $secondary
+          PortfolioItem
+            Text "Fixed Income", col $text, fs 12
+            Text "€847K", font mono, fs 11, col $secondary
+          PortfolioItem
+            Text "Alternatives", col $text, fs 12
+            Text "€328K", font mono, fs 11, col $secondary
+          PortfolioItem
+            Text "Cash & MM", col $text, fs 12
+            Text "€251K", font mono, fs 11, col $secondary
+
+    // CONTENT
+    Frame w full, h full, bg $bg.app
+
+      // Content Header
+      Frame hor, spread, ver-center, pad 12 20, bg $bg.panel, bor b 1 $border
+        Frame hor, ver-center, gap 12
+          Text "Core Equity Portfolio", col $text, fs 15, weight 600
+          Frame pad 3 8, rad 4, bg rgba(59,130,246,0.15)
+            Text "18 Positions", col $accent, fs 10, weight 600
+        Frame hor, gap 8
+          ActionBtn bg $bg.card, bor 1, boc $border
+            Icon "download"
+            Label "Export"
+          ActionBtn bg $bg.card, bor 1, boc $border
+            Icon "settings-2"
+            Label "Columns"
+          ActionBtn bg $accent
+            Icon ic white
+            Label col white, "Add Position"
+
+      // KPI Bar
+      Frame hor, w full, bg $border, bor b 1 $border
+        KpiCard
+          Title "MARKET VALUE"
+          Frame hor, ver-center, gap 8
+            Value "€1,423,847", col $text
+            Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+              Text "+1.24%", font mono, fs 11, weight 500, col $positive
+          Sub "Updated 10:34 CET"
+        KpiCard
+          Title "DAY P&L"
+          Value "+€17,456", col $positive
+          Sub "vs. prev close"
+        KpiCard
+          Title "TOTAL P&L"
+          Frame hor, ver-center, gap 8
+            Value "+€189,234", col $positive
+            Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+              Text "+15.3%", font mono, fs 11, weight 500, col $positive
+          Sub "Cost basis €1,234,613"
+        KpiCard
+          Title "UNREALIZED"
+          Value "+€142,891", col $positive
+          Sub "Realized: +€46,343"
+        KpiCard
+          Title "DIV. YIELD"
+          Value "2.8%", col $text
+          Sub "Est. €39,868/yr"
+
+      // TABLE
+      Frame w full, h full, scroll
+
+        TableHeader
+          Frame w 40
+          Frame w 180
+            Col "INSTRUMENT"
+          Frame w 70
+            Col "TICKER"
+          Frame w 60
+            Col "TYPE"
+          Frame w 90
+            Col "SECTOR"
+          Frame w 60, right
+            Col "QTY"
+          Frame w 80, right
+            Col "AVG COST"
+          Frame w 80, right
+            Col "LAST PRICE"
+          Frame w 80, right
+            Col "CHANGE"
+          Frame w 90, right
+            Col "MKT VALUE"
+          Frame w 80, center
+            Col "WEIGHT"
+          Frame w 90, right
+            Col "P&L"
+          Frame w 60, center
+            Col "RATING"
+          Frame w 50, center
+            Col "ALERT"
+
+        Frame w full, gap 0
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "Apple Inc."
+              ISIN "US0378331005"
+            Ticker "AAPL"
+            Type; EquityBadge
+            Sector "Technology"
+            Qty "450"
+            AvgCost "€142.30"
+            LastPrice "€178.45"
+            Change col $positive
+              Arrow "▲"
+              Pct "+2.34%"
+            MktValue "€80,302"
+            Weight
+              Bar
+                Fill w 56%
+              Pct "5.6%"
+            PL col $positive
+              Value "+€16,268"
+              Pct "+25.4%"
+            Rating; BuyBadge
+            Alert; AlertActive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "Microsoft Corp."
+              ISIN "US5949181045"
+            Ticker "MSFT"
+            Type; EquityBadge
+            Sector "Technology"
+            Qty "280"
+            AvgCost "€298.50"
+            LastPrice "€412.85"
+            Change col $positive
+              Arrow "▲"
+              Pct "+1.82%"
+            MktValue "€115,598"
+            Weight
+              Bar
+                Fill w 81%
+              Pct "8.1%"
+            PL col $positive
+              Value "+€32,018"
+              Pct "+38.3%"
+            Rating; BuyBadge
+            Alert; AlertInactive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "iShares Core MSCI World"
+              ISIN "IE00B4L5Y983"
+            Ticker "IWDA"
+            Type; EtfBadge
+            Sector "Diversified"
+            Qty "1,250"
+            AvgCost "€72.40"
+            LastPrice "€84.92"
+            Change col $positive
+              Arrow "▲"
+              Pct "+0.94%"
+            MktValue "€106,150"
+            Weight
+              Bar
+                Fill w 75%
+              Pct "7.5%"
+            PL col $positive
+              Value "+€15,650"
+              Pct "+17.3%"
+            Rating; HoldBadge
+            Alert; AlertInactive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "NVIDIA Corp."
+              ISIN "US67066G1040"
+            Ticker "NVDA"
+            Type; EquityBadge
+            Sector "Technology"
+            Qty "120"
+            AvgCost "€285.00"
+            LastPrice "€824.50"
+            Change col $positive
+              Arrow "▲"
+              Pct "+4.21%"
+            MktValue "€98,940"
+            Weight
+              Bar
+                Fill w 69%
+              Pct "6.9%"
+            PL col $positive
+              Value "+€64,740"
+              Pct "+189.3%"
+            Rating; BuyBadge
+            Alert; AlertActive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "ASML Holding N.V."
+              ISIN "NL0010273215"
+            Ticker "ASML"
+            Type; EquityBadge
+            Sector "Technology"
+            Qty "85"
+            AvgCost "€542.00"
+            LastPrice "€892.40"
+            Change col $negative
+              Arrow "▼"
+              Pct "-1.23%"
+            MktValue "€75,854"
+            Weight
+              Bar
+                Fill w 53%
+              Pct "5.3%"
+            PL col $positive
+              Value "+€29,784"
+              Pct "+64.6%"
+            Rating; BuyBadge
+            Alert; AlertInactive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "Novo Nordisk A/S"
+              ISIN "DK0062498333"
+            Ticker "NOVO.B"
+            Type; EquityBadge
+            Sector "Healthcare"
+            Qty "340"
+            AvgCost "€98.50"
+            LastPrice "€127.80"
+            Change col $positive
+              Arrow "▲"
+              Pct "+0.67%"
+            MktValue "€43,452"
+            Weight
+              Bar
+                Fill w 31%
+              Pct "3.1%"
+            PL col $positive
+              Value "+€9,962"
+              Pct "+29.7%"
+            Rating; BuyBadge
+            Alert; AlertInactive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "SAP SE"
+              ISIN "DE0007164600"
+            Ticker "SAP"
+            Type; EquityBadge
+            Sector "Technology"
+            Qty "420"
+            AvgCost "€124.80"
+            LastPrice "€184.65"
+            Change col $positive
+              Arrow "▲"
+              Pct "+1.12%"
+            MktValue "€77,553"
+            Weight
+              Bar
+                Fill w 54%
+              Pct "5.4%"
+            PL col $positive
+              Value "+€25,137"
+              Pct "+47.9%"
+            Rating; HoldBadge
+            Alert; AlertInactive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "Allianz SE"
+              ISIN "DE0008404005"
+            Ticker "ALV"
+            Type; EquityBadge
+            Sector "Financials"
+            Qty "180"
+            AvgCost "€198.40"
+            LastPrice "€278.50"
+            Change col $positive
+              Arrow "▲"
+              Pct "+0.89%"
+            MktValue "€50,130"
+            Weight
+              Bar
+                Fill w 35%
+              Pct "3.5%"
+            PL col $positive
+              Value "+€14,418"
+              Pct "+40.4%"
+            Rating; HoldBadge
+            Alert; AlertInactive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "LVMH Moët Hennessy"
+              ISIN "FR0000121014"
+            Ticker "MC"
+            Type; EquityBadge
+            Sector "Consumer"
+            Qty "65"
+            AvgCost "€724.00"
+            LastPrice "€685.20"
+            Change col $negative
+              Arrow "▼"
+              Pct "-2.14%"
+            MktValue "€44,538"
+            Weight
+              Bar
+                Fill w 31%
+              Pct "3.1%"
+            PL col $negative
+              Value "-€2,522"
+              Pct "-5.4%"
+            Rating; HoldBadge
+            Alert; AlertActive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "Nestlé S.A."
+              ISIN "CH0038863350"
+            Ticker "NESN"
+            Type; EquityBadge
+            Sector "Consumer"
+            Qty "380"
+            AvgCost "€112.50"
+            LastPrice "€98.45"
+            Change col $negative
+              Arrow "▼"
+              Pct "-0.45%"
+            MktValue "€37,411"
+            Weight
+              Bar
+                Fill w 26%
+              Pct "2.6%"
+            PL col $negative
+              Value "-€5,339"
+              Pct "-12.5%"
+            Rating; SellBadge
+            Alert; AlertActive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "Xtrackers Euro Stoxx 50"
+              ISIN "LU0274211217"
+            Ticker "XESX"
+            Type; EtfBadge
+            Sector "Diversified"
+            Qty "850"
+            AvgCost "€48.20"
+            LastPrice "€54.85"
+            Change col $positive
+              Arrow "▲"
+              Pct "+0.52%"
+            MktValue "€46,623"
+            Weight
+              Bar
+                Fill w 33%
+              Pct "3.3%"
+            PL col $positive
+              Value "+€5,653"
+              Pct "+13.8%"
+            Rating; HoldBadge
+            Alert; AlertInactive
+
+          TableRow
+            Checkbox
+            Instrument
+              Name "Siemens AG"
+              ISIN "DE0007236101"
+            Ticker "SIE"
+            Type; EquityBadge
+            Sector "Industrials"
+            Qty "240"
+            AvgCost "€142.80"
+            LastPrice "€178.90"
+            Change col $positive
+              Arrow "▲"
+              Pct "+0.78%"
+            MktValue "€42,936"
+            Weight
+              Bar
+                Fill w 30%
+              Pct "3.0%"
+            PL col $positive
+              Value "+€8,664"
+              Pct "+25.3%"
+            Rating; BuyBadge
+            Alert; AlertInactive
+
+      // FOOTER
+      Frame hor, spread, ver-center, pad 8 20, bg $bg.panel, bor t 1 $border
+        Frame hor, gap 16
+          Frame hor, gap 4
+            Text "Showing", fs 10, col $muted
+            Text "12 of 18", fs 10, col $secondary
+            Text "positions", fs 10, col $muted
+          Frame hor, gap 4
+            Text "Last sync:", fs 10, col $muted
+            Text "10:34:22 CET", fs 10, col $secondary
+        Text "Data provided by Refinitiv · Prices delayed 15 min", fs 10, col $muted

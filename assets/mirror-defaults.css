@@ -2179,3 +2179,152 @@
   scrollbar-width: thin;
   scrollbar-color: var(--m-surface-active) transparent;
 }
+
+
+/* ========================================
+   8. Focus Visible (Keyboard Navigation)
+   ======================================== */
+
+/* Base focus-visible styles for all interactive elements */
+.mirror-root :focus-visible {
+  outline: 2px solid var(--m-primary);
+  outline-offset: 2px;
+}
+
+/* Remove default focus ring (we use focus-visible instead) */
+.mirror-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Buttons - inset focus ring */
+.mirror-root button:focus-visible,
+.mirror-root [data-component="Button"]:focus-visible,
+.mirror-root [role="button"]:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Inputs - subtle ring */
+.mirror-root input:focus-visible,
+.mirror-root textarea:focus-visible,
+.mirror-root select:focus-visible,
+.mirror-root [contenteditable="true"]:focus-visible {
+  outline-offset: 0;
+  box-shadow: 0 0 0 2px var(--m-primary);
+}
+
+/* Links */
+.mirror-root a:focus-visible,
+.mirror-root [data-component="Link"]:focus-visible {
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Tabs & Navigation Items */
+.mirror-root [role="tab"]:focus-visible,
+.mirror-root [data-slot="Trigger"]:focus-visible,
+.mirror-root [data-slot="Item"]:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Checkbox & Radio - ring around control */
+.mirror-root input[type="checkbox"]:focus-visible,
+.mirror-root input[type="radio"]:focus-visible,
+.mirror-root [data-slot="Control"]:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Slider thumb */
+.mirror-root [data-slot="Thumb"]:focus-visible {
+  outline-offset: 0;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Dialog - focus the content container */
+.mirror-root [data-slot="Content"]:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Skip link (for screen readers) */
+.mirror-root .skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  padding: var(--m-pad);
+  background: var(--m-primary);
+  color: white;
+  z-index: 9999;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.mirror-root .skip-link:focus {
+  top: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .mirror-root :focus-visible {
+    outline-width: 3px;
+    outline-color: currentColor;
+  }
+}
+
+/* Reduced motion - no outline transitions */
+@media (prefers-reduced-motion: reduce) {
+  .mirror-root :focus-visible {
+    transition: none;
+  }
+}
+
+
+/* ========================================
+   9. Form Accessibility
+   ======================================== */
+
+/* Required field indicator */
+.mirror-root [data-required="true"] label::after,
+.mirror-root [aria-required="true"]::after {
+  content: ' *';
+  color: var(--m-error);
+}
+
+/* Invalid field styling */
+.mirror-root [aria-invalid="true"],
+.mirror-root :invalid:not(:placeholder-shown) {
+  border-color: var(--m-error);
+  box-shadow: 0 0 0 1px var(--m-error);
+}
+
+/* Error message styling */
+.mirror-root [role="alert"],
+.mirror-root .error-message {
+  color: var(--m-error);
+  font-size: var(--m-font-size-sm);
+  margin-top: var(--m-spacing);
+}
+
+/* Success/valid styling */
+.mirror-root [aria-invalid="false"]:not(:placeholder-shown),
+.mirror-root :valid:not(:placeholder-shown):not([type="submit"]):not([type="button"]) {
+  border-color: var(--m-success);
+}
+
+/* Disabled state improvements */
+.mirror-root [disabled],
+.mirror-root [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Screen reader only content */
+.mirror-root .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

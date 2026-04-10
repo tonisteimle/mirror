@@ -1932,6 +1932,21 @@ export const SCHEMA: Record<string, PropertyDef> = {
     },
   },
 
+  'keyboard-nav': {
+    name: 'keyboard-nav',
+    aliases: ['keynav'],
+    category: 'input',
+    description: 'Enable keyboard navigation for form container',
+
+    keywords: {
+      _standalone: {
+        description: 'Enter moves to next field, Escape blurs, Tab cycles through fields',
+        css: [],  // Runtime behavior, not CSS
+        example: 'Frame keyboard-nav',
+      },
+    },
+  },
+
   readonly: {
     name: 'readonly',
     aliases: [],

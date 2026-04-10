@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Dashboard - Mirror Example</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0f;
+      min-height: 100vh;
+    }
+    #app {
+      width: 100%;
+      min-height: 100vh;
+    }
+    .error {
+      color: #ef4444;
+      padding: 40px;
+      font-family: monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      background: #1a1a1a;
+      border-radius: 8px;
+      margin: 20px;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="loading">Loading Mirror Dashboard...</div>
+</div>
+
+<script src="../../dist/browser/index.global.js"></script>
+<script>
+fetch('dashboard.mirror')
+  .then(response => {
+    if (!response.ok) throw new Error('Failed to load dashboard.mirror');
+    return response.text();
+  })
+  .then(mirrorCode => {
+    try {
+      const compiled = MirrorLang.compile(mirrorCode);
+      const execCode = compiled.replace('export function createUI', 'function createUI');
+      const fn = new Function(execCode + '\nreturn createUI();');
+      const ui = fn();
+
+      if (ui && ui.root) {
+        document.getElementById('app').innerHTML = '';
+        document.getElementById('app').appendChild(ui.root);
+        setTimeout(() => lucide.createIcons(), 100);
+      }
+    } catch (e) {
+      console.error('Compile error:', e);
+      document.getElementById('app').innerHTML =
+        '<div class="error">Compile Error:\n\n' + e.message + '\n\n' + (e.stack || '') + '</div>';
+    }
+  })
+  .catch(error => {
+    document.getElementById('app').innerHTML =
+      '<div class="error">Load Error:\n\n' + error.message + '</div>';
+  });
+</script>
+
+</body>
+</html>

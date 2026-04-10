@@ -1120,6 +1120,12 @@ class DOMGenerator {
       this.emit(`${varName}.dataset.route = '${node.route}'`)
     }
 
+    // Keyboard navigation for form containers
+    if (node.keyboardNav) {
+      this.emit(`// Enable keyboard navigation (Enter to next, Escape to blur)`)
+      this.emit(`_runtime.setupKeyboardNav(${varName})`)
+    }
+
     // Add event listeners
     // Check if there are keyboard events and make element focusable
     const hasKeyboardEvents = node.events.some(e => e.key || e.name === 'keydown' || e.name === 'keyup')
@@ -1402,11 +1408,29 @@ class DOMGenerator {
     this.indent++
     this.emit(`display: 'flex',`)
     this.emit(`flexDirection: 'column',`)
-    this.emit(`background: 'var(--surface, #1a1a1a)',`)
-    this.emit(`borderRadius: '8px',`)
     this.emit(`overflow: 'hidden',`)
     this.indent--
     this.emit(`})`)
+
+    // Apply custom table styles (overrides defaults)
+    const baseStyles = node.styles.filter(s => !s.state)
+    if (baseStyles.length > 0) {
+      this.emit(`Object.assign(${tableVar}.style, {`)
+      this.indent++
+      for (const style of baseStyles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit(`})`)
+    } else {
+      // Apply default visual styles only if no custom styles
+      this.emit(`Object.assign(${tableVar}.style, {`)
+      this.indent++
+      this.emit(`background: 'var(--surface, #1a1a1a)',`)
+      this.emit(`borderRadius: '8px',`)
+      this.indent--
+      this.emit(`})`)
+    }
     this.emit('')
 
     if (isStaticTable) {
@@ -1609,18 +1633,36 @@ class DOMGenerator {
       // Apply minimal wrapper styles, let slot content define the rest
       this.emit(`${headerVar}.style.display = 'flex'`)
 
+      // Apply header slot styles
+      if (node.headerSlotStyles && node.headerSlotStyles.length > 0) {
+        this.emit(`Object.assign(${headerVar}.style, {`)
+        this.indent++
+        for (const style of node.headerSlotStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit(`})`)
+      }
+
       // Render header slot children
       for (const child of node.headerSlot) {
         this.emitNode(child, headerVar)
       }
     } else {
-      // Auto-generated header from columns
+      // Auto-generated header from columns - apply default styles
       this.emit(`Object.assign(${headerVar}.style, {`)
       this.indent++
       this.emit(`display: 'flex',`)
-      this.emit(`background: 'var(--surface-elevated, #252525)',`)
-      this.emit(`padding: '12px',`)
-      this.emit(`borderBottom: '1px solid var(--border, #333)',`)
+      // Apply header slot styles or use defaults
+      if (node.headerSlotStyles && node.headerSlotStyles.length > 0) {
+        for (const style of node.headerSlotStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+      } else {
+        this.emit(`background: 'var(--surface-elevated, #252525)',`)
+        this.emit(`padding: '12px',`)
+        this.emit(`borderBottom: '1px solid var(--border, #333)',`)
+      }
       // Sticky header support
       if (node.stickyHeader) {
         this.emit(`position: 'sticky',`)
@@ -1790,6 +1832,34 @@ class DOMGenerator {
     }
     this.indent--
     this.emit(`})`)
+
+    // Zebra striping: apply odd/even styles based on index
+    if (node.rowOddStyles && node.rowOddStyles.length > 0) {
+      this.emit(`if (${indexVar} % 2 === 1) {`)
+      this.indent++
+      this.emit(`Object.assign(${tableVar}_row.style, {`)
+      this.indent++
+      for (const style of node.rowOddStyles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit(`})`)
+      this.indent--
+      this.emit(`}`)
+    }
+    if (node.rowEvenStyles && node.rowEvenStyles.length > 0) {
+      this.emit(`if (${indexVar} % 2 === 0) {`)
+      this.indent++
+      this.emit(`Object.assign(${tableVar}_row.style, {`)
+      this.indent++
+      for (const style of node.rowEvenStyles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit(`})`)
+      this.indent--
+      this.emit(`}`)
+    }
 
     // Hover effect - store original background
     const bgStyle = node.rowSlotStyles?.find(s => s.property === 'background')
@@ -1974,7 +2044,7 @@ class DOMGenerator {
     this.emit(`${cellVar}.className = 'mirror-table-cell'`)
     this.emit(`${cellVar}.dataset.field = '${col.field}'`)
 
-    // Cell styles
+    // Cell styles - apply defaults
     this.emit(`Object.assign(${cellVar}.style, {`)
     this.indent++
     this.emit(`flex: '1',`)
@@ -1985,6 +2055,17 @@ class DOMGenerator {
     }
     this.indent--
     this.emit(`})`)
+
+    // Apply custom cell styles from Column definition
+    if (col.cellStyles && col.cellStyles.length > 0) {
+      this.emit(`Object.assign(${cellVar}.style, {`)
+      this.indent++
+      for (const style of col.cellStyles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit(`})`)
+    }
 
     // Custom cell template - render child nodes with row context
     if (col.customCell && col.customCell.length > 0) {
@@ -2173,9 +2254,16 @@ class DOMGenerator {
     this.emit(`Object.assign(${tableVar}_footer.style, {`)
     this.indent++
     this.emit(`display: 'flex',`)
-    this.emit(`padding: '12px',`)
-    this.emit(`background: 'var(--surface-elevated, #252525)',`)
-    this.emit(`borderTop: '1px solid var(--border, #333)',`)
+    // Apply custom footer styles or use defaults
+    if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
+      for (const style of node.footerSlotStyles) {
+        this.emit(`'${style.property}': '${style.value}',`)
+      }
+    } else {
+      this.emit(`padding: '12px',`)
+      this.emit(`background: 'var(--surface-elevated, #252525)',`)
+      this.emit(`borderTop: '1px solid var(--border, #333)',`)
+    }
     this.indent--
     this.emit(`})`)
 

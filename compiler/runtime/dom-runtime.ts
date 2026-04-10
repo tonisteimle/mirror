@@ -60,6 +60,7 @@ export interface MirrorElement extends HTMLElement {
   _savedDisplay?: string
   _clickOutsideHandler?: (e: MouseEvent) => void
   _clickOutsideTimeout?: ReturnType<typeof setTimeout>
+  _autoSelectHandler?: () => void
   _escapeHandler?: (e: KeyboardEvent) => void
   _focusTrap?: FocusTrap
   _previouslyFocused?: Element | null
@@ -143,6 +144,12 @@ export function cleanupElement(el: MirrorElement): void {
   if (el._escapeHandler) {
     document.removeEventListener('keydown', el._escapeHandler)
     delete el._escapeHandler
+  }
+
+  // Clean up auto-select handler
+  if (el._autoSelectHandler) {
+    el.removeEventListener('focus', el._autoSelectHandler)
+    delete el._autoSelectHandler
   }
 
   // Clean up focus trap
@@ -1046,12 +1053,25 @@ export function setupFormNavigation(form: HTMLElement): void {
  * When user tabs into an input, select all text
  */
 export function setupAutoSelect(input: HTMLInputElement | HTMLTextAreaElement): void {
-  input.addEventListener('focus', () => {
+  // Remove existing handler if present (prevents duplicates)
+  if ((input as MirrorElement)._autoSelectHandler) {
+    input.removeEventListener('focus', (input as MirrorElement)._autoSelectHandler)
+  }
+
+  // Create handler with isConnected guard
+  const handler = () => {
     // Small delay to ensure text is selected after focus
     requestAnimationFrame(() => {
-      input.select()
+      // Guard: only select if input is still in DOM
+      if (input.isConnected) {
+        input.select()
+      }
     })
-  })
+  }
+
+  // Store reference for cleanup
+  ;(input as MirrorElement)._autoSelectHandler = handler
+  input.addEventListener('focus', handler)
 }
 
 // ============================================
@@ -1082,7 +1102,10 @@ function setupClickOutsideHandler(
     delete element._clickOutsideTimeout
 
     element._clickOutsideHandler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
+      const target = e.target
+
+      // Guard: target must be a valid Element (not null, not text node)
+      if (!target || !(target instanceof Element)) return
 
       // Don't dismiss if click is inside the overlay
       if (element.contains(target)) return

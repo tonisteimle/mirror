@@ -2292,6 +2292,9 @@ class IRTransformer {
     const spring = this.extractSpring(properties)
     const stagger = this.extractStagger(properties)
 
+    // Check for keyboard-nav property (enables form keyboard navigation)
+    const hasKeyboardNav = properties.some(p => p.name === 'keyboard-nav' || p.name === 'keynav')
+
     return {
       id: nodeId,
       tag,
@@ -2313,6 +2316,7 @@ class IRTransformer {
       layoutType,
       isDefinition: instance.isDefinition ?? false,
       valueBinding,
+      keyboardNav: hasKeyboardNav || undefined,
       // Motion One animation properties
       inView,
       scrollLinked,
@@ -4933,6 +4937,7 @@ class IRTransformer {
       if (prop.name === 'focusable') {
         htmlProps.push({ name: 'tabindex', value: '0' })
       }
+      // keyboard-nav / keynav - handled in IR transformation, not as HTML prop
     }
 
     return htmlProps

@@ -181,6 +181,39 @@
 
 
     <!-- ============================================================ -->
+    <!-- KEYBOARD NAVIGATION -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Tastatursteuerung</h2>
+      <p>Mit <code>keyboard-nav</code> (oder <code>keynav</code>) auf einem Container aktivierst du Tastaturnavigation für Formulare:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame keyboard-nav, gap 12, w 280, bg #1a1a1a, pad 16, rad 8
+  Input placeholder "Name"
+  Input placeholder "E-Mail"
+  Input placeholder "Telefon"
+  Button "Absenden", bg #2563eb, col white, pad 10 20, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert:</strong></p>
+      <ul>
+        <li><strong>Enter</strong> springt zum nächsten Eingabefeld</li>
+        <li><strong>Enter</strong> im letzten Feld klickt den Button</li>
+        <li><strong>Escape</strong> verlässt das aktuelle Feld</li>
+        <li><strong>Tab</strong> funktioniert wie gewohnt</li>
+      </ul>
+
+      <div class="note">
+        <strong>Tipp:</strong> <code>keyboard-nav</code> ist besonders nützlich für Formulare ohne Maus – z.B. auf Touch-Geräten mit externer Tastatur oder für Accessibility.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
     <section>
       <h2>Custom Styling</h2>
       <p>Wenn du nur <code>Checkbox "Text"</code> schreibst, rendert Mirror im Hintergrund eine komplette Struktur mit Default-Styling. Diese Struktur besteht aus mehreren Elementen:</p>
@@ -247,6 +280,8 @@ Checkbox "Newsletter"
         <tr><td><code>Select</code> + <code>Option</code></td><td>Dropdown-Auswahl</td></tr>
         <tr><td><code>DatePicker</code></td><td>Kalender-Auswahl</td></tr>
       </table>
+
+      <p><strong>Tastatursteuerung:</strong> <code>Frame keyboard-nav</code> aktiviert Enter/Escape-Navigation für Formulare.</p>
 
       <p><strong>Custom Styling:</strong> Über Kind-Komponenten wie <code>Root:</code>, <code>Control:</code>, <code>Label:</code> – siehe <a href="../reference/eingabe.html">Referenz</a></p>
     </div>

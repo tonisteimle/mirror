@@ -23356,7 +23356,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
       "id": "node-1",
       "isDefinition": false,
       "name": "Btn",
-      "primitive": "Frame",
+      "primitive": "Button",
       "properties": [
         {
           "name": "textContent",
@@ -23392,20 +23392,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
       },
       "styles": [
         {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
+          "property": "height",
+          "value": "36px",
         },
         {
           "property": "padding",
@@ -23414,6 +23402,14 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
         {
           "property": "border-radius",
           "value": "6px",
+        },
+        {
+          "property": "border",
+          "value": "0px solid currentColor",
+        },
+        {
+          "property": "cursor",
+          "value": "pointer",
         },
         {
           "property": "background",
@@ -23429,7 +23425,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
           "value": "#2563eb",
         },
       ],
-      "tag": "div",
+      "tag": "button",
     },
   ],
   "tokens": [],
@@ -33190,6 +33186,245 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
   "animations": [],
   "nodes": [
     {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Input",
+          "primitive": "input",
+          "properties": [
+            {
+              "name": "placeholder",
+              "value": "Name",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "0px 12px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+          ],
+          "tag": "input",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Input",
+          "primitive": "input",
+          "properties": [
+            {
+              "name": "placeholder",
+              "value": "E-Mail",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "0px 12px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+          ],
+          "tag": "input",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Input",
+          "primitive": "input",
+          "properties": [
+            {
+              "name": "placeholder",
+              "value": "Telefon",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "0px 12px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+          ],
+          "tag": "input",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Absenden",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#2563eb",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "keyboardNav": true,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "280px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
       "children": [],
       "events": [],
       "id": "node-1",
@@ -33276,7 +33511,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -33444,7 +33679,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -38667,435 +38902,6 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 2 1`] = `
     {
       "children": [],
       "columns": [],
-      "events": [],
-      "headerSlot": [],
-      "headerSlotStyles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "background",
-          "value": "#1a1a1a",
-        },
-      ],
-      "headerStaticRow": {
-        "cells": [
-          {
-            "styles": [
-              {
-                "property": "display",
-                "value": "flex",
-              },
-              {
-                "property": "flex-direction",
-                "value": "column",
-              },
-              {
-                "property": "width",
-                "value": "fit-content",
-              },
-              {
-                "property": "align-items",
-                "value": "flex-start",
-              },
-            ],
-            "text": "Name",
-          },
-          {
-            "styles": [
-              {
-                "property": "display",
-                "value": "flex",
-              },
-              {
-                "property": "flex-direction",
-                "value": "column",
-              },
-              {
-                "property": "width",
-                "value": "fit-content",
-              },
-              {
-                "property": "align-items",
-                "value": "flex-start",
-              },
-            ],
-            "text": "Rolle",
-          },
-          {
-            "styles": [
-              {
-                "property": "display",
-                "value": "flex",
-              },
-              {
-                "property": "flex-direction",
-                "value": "column",
-              },
-              {
-                "property": "width",
-                "value": "fit-content",
-              },
-              {
-                "property": "align-items",
-                "value": "flex-start",
-              },
-            ],
-            "text": "Status",
-          },
-        ],
-        "styles": [
-          {
-            "property": "display",
-            "value": "flex",
-          },
-          {
-            "property": "flex-direction",
-            "value": "column",
-          },
-          {
-            "property": "width",
-            "value": "fit-content",
-          },
-          {
-            "property": "align-items",
-            "value": "flex-start",
-          },
-        ],
-      },
-      "id": "node-1",
-      "isTableComponent": true,
-      "name": "Table",
-      "primitive": "table",
-      "properties": [],
-      "sourcePosition": {
-        "column": 6,
-        "endColumn": 6,
-        "endLine": 1,
-        "line": 1,
-      },
-      "staticRows": [
-        {
-          "cells": [
-            {
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-              ],
-              "text": "Anna",
-            },
-            {
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-              ],
-              "text": "Designer",
-            },
-            {
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-              ],
-              "text": "Aktiv",
-            },
-          ],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-          ],
-        },
-        {
-          "cells": [
-            {
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-              ],
-              "text": "Max",
-            },
-            {
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-              ],
-              "text": "Developer",
-            },
-            {
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-              ],
-              "text": "Aktiv",
-            },
-          ],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-          ],
-        },
-        {
-          "cells": [
-            {
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-              ],
-              "text": "Tom",
-            },
-            {
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-              ],
-              "text": "Manager",
-            },
-            {
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-              ],
-              "text": "Urlaub",
-            },
-          ],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-          ],
-        },
-      ],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "background",
-          "value": "#111",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "border-radius",
-          "value": "12px",
-        },
-        {
-          "property": "width",
-          "value": "100%",
-        },
-        {
-          "property": "align-self",
-          "value": "stretch",
-        },
-        {
-          "property": "min-width",
-          "value": "0",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 14 - tabellen > Example 3 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [],
-      "columns": [],
       "dataSource": "tasks",
       "events": [],
       "id": "node-1",
@@ -39254,7 +39060,1371 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 3 1`] = `
 }
 `;
 
+exports[`Tutorial IR Snapshots > 14 - tabellen > Example 3 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "columns": [],
+      "dataSource": "tasks",
+      "events": [],
+      "id": "node-1",
+      "isTableComponent": true,
+      "name": "Table",
+      "primitive": "table",
+      "properties": [],
+      "rowSlot": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "__loopVar:row.name",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "__loopVar:row.status",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "rowSlotStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "justify-content",
+          "value": "space-between",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "padding",
+          "value": "12px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "border-radius",
+          "value": "6px",
+        },
+        {
+          "property": "width",
+          "value": "100%",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "min-width",
+          "value": "0",
+        },
+      ],
+      "sourcePosition": {
+        "column": 6,
+        "endColumn": 6,
+        "endLine": 9,
+        "line": 9,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "t1": {
+          "name": "Design",
+          "status": "done",
+        },
+        "t2": {
+          "name": "Dev",
+          "status": "wip",
+        },
+      },
+      "name": "tasks",
+    },
+  ],
+}
+`;
+
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "columns": [],
+      "dataSource": "tasks",
+      "events": [],
+      "footerSlot": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Row",
+          "primitive": "row",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "8h",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "footerSlotStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#222",
+        },
+        {
+          "property": "padding",
+          "value": "12px 16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "0px 0px 8px 8px",
+        },
+      ],
+      "headerSlot": [],
+      "headerSlotStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#222",
+        },
+        {
+          "property": "padding",
+          "value": "12px 16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px 8px 0px 0px",
+        },
+      ],
+      "headerStaticRow": {
+        "cells": [
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Aufgabe",
+          },
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Aufwand",
+          },
+        ],
+        "styles": [
+          {
+            "property": "display",
+            "value": "flex",
+          },
+          {
+            "property": "flex-direction",
+            "value": "column",
+          },
+          {
+            "property": "width",
+            "value": "fit-content",
+          },
+          {
+            "property": "align-items",
+            "value": "flex-start",
+          },
+        ],
+      },
+      "id": "node-1",
+      "isTableComponent": true,
+      "name": "Table",
+      "primitive": "table",
+      "properties": [],
+      "rowSlot": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "__loopVar:row.name",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "__loopVar:row.effort + "h"",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "rowSlotStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "justify-content",
+          "value": "space-between",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "padding",
+          "value": "12px 16px",
+        },
+        {
+          "property": "width",
+          "value": "100%",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "min-width",
+          "value": "0",
+        },
+      ],
+      "sourcePosition": {
+        "column": 6,
+        "endColumn": 6,
+        "endLine": 9,
+        "line": 9,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "4px",
+        },
+        {
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "t1": {
+          "effort": 5,
+          "name": "Task 1",
+        },
+        "t2": {
+          "effort": 3,
+          "name": "Task 2",
+        },
+      },
+      "name": "tasks",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "columns": [],
+      "dataSource": "users",
+      "events": [],
+      "headerSlot": [],
+      "headerSlotStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#222",
+        },
+        {
+          "property": "padding",
+          "value": "12px 16px",
+        },
+      ],
+      "headerStaticRow": {
+        "cells": [
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Name",
+          },
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Rolle",
+          },
+        ],
+        "styles": [
+          {
+            "property": "display",
+            "value": "flex",
+          },
+          {
+            "property": "flex-direction",
+            "value": "column",
+          },
+          {
+            "property": "width",
+            "value": "fit-content",
+          },
+          {
+            "property": "align-items",
+            "value": "flex-start",
+          },
+        ],
+      },
+      "id": "node-1",
+      "isTableComponent": true,
+      "name": "Table",
+      "primitive": "table",
+      "properties": [],
+      "rowEvenStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#151515",
+        },
+      ],
+      "rowOddStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+      ],
+      "rowSlot": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "__loopVar:row.name",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "__loopVar:row.role",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "rowSlotStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "justify-content",
+          "value": "space-between",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "padding",
+          "value": "12px 16px",
+        },
+        {
+          "property": "width",
+          "value": "100%",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "min-width",
+          "value": "0",
+        },
+      ],
+      "sourcePosition": {
+        "column": 6,
+        "endColumn": 6,
+        "endLine": 15,
+        "line": 15,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "100%",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "min-width",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "u1": {
+          "name": "Anna",
+          "role": "Designer",
+        },
+        "u2": {
+          "name": "Max",
+          "role": "Developer",
+        },
+        "u3": {
+          "name": "Tom",
+          "role": "Manager",
+        },
+        "u4": {
+          "name": "Lisa",
+          "role": "Designer",
+        },
+      },
+      "name": "users",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "columns": [
+        {
+          "cellStyles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "padding",
+              "value": "12px",
+            },
+          ],
+          "field": "title",
+          "inferredType": "string",
+          "label": "Title",
+        },
+        {
+          "cellStyles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "color",
+              "value": "#10b981",
+            },
+            {
+              "property": "padding",
+              "value": "12px",
+            },
+            {
+              "property": "font-weight",
+              "value": "600",
+            },
+          ],
+          "field": "status",
+          "inferredType": "string",
+          "label": "Status",
+        },
+      ],
+      "dataSource": "tasks",
+      "events": [],
+      "headerSlot": [],
+      "headerSlotStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#222",
+        },
+        {
+          "property": "padding",
+          "value": "12px",
+        },
+      ],
+      "headerStaticRow": {
+        "cells": [
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Aufgabe",
+          },
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Status",
+          },
+        ],
+        "styles": [
+          {
+            "property": "display",
+            "value": "flex",
+          },
+          {
+            "property": "flex-direction",
+            "value": "column",
+          },
+          {
+            "property": "width",
+            "value": "fit-content",
+          },
+          {
+            "property": "align-items",
+            "value": "flex-start",
+          },
+        ],
+      },
+      "id": "node-1",
+      "isTableComponent": true,
+      "name": "Table",
+      "primitive": "table",
+      "properties": [],
+      "sourcePosition": {
+        "column": 6,
+        "endColumn": 6,
+        "endLine": 12,
+        "line": 12,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "border-radius",
+          "value": "12px",
+        },
+        {
+          "property": "padding",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "t1": {
+          "status": "done",
+          "title": "Design Review",
+        },
+        "t2": {
+          "status": "wip",
+          "title": "API Integration",
+        },
+        "t3": {
+          "status": "todo",
+          "title": "Testing",
+        },
+      },
+      "name": "tasks",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "columns": [],
+      "dataSource": "products",
+      "events": [],
+      "headerSlot": [],
+      "headerSlotStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "headerStaticRow": {
+        "cells": [
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Plan",
+          },
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Preis",
+          },
+          {
+            "styles": [
+              {
+                "property": "display",
+                "value": "flex",
+              },
+              {
+                "property": "flex-direction",
+                "value": "column",
+              },
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
+                "property": "align-items",
+                "value": "flex-start",
+              },
+            ],
+            "text": "Users",
+          },
+        ],
+        "styles": [
+          {
+            "property": "display",
+            "value": "flex",
+          },
+          {
+            "property": "flex-direction",
+            "value": "column",
+          },
+          {
+            "property": "width",
+            "value": "fit-content",
+          },
+          {
+            "property": "align-items",
+            "value": "flex-start",
+          },
+        ],
+      },
+      "id": "node-1",
+      "isTableComponent": true,
+      "name": "Table",
+      "primitive": "table",
+      "properties": [],
+      "rowEvenStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#111",
+        },
+        {
+          "property": "border-radius",
+          "value": "6px",
+        },
+      ],
+      "rowOddStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "#151515",
+        },
+        {
+          "property": "border-radius",
+          "value": "6px",
+        },
+      ],
+      "rowSlot": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "__loopVar:row.name",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "font-weight",
+              "value": "500",
+            },
+            {
+              "property": "width",
+              "value": "120px",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": ""$" + __loopVar:row.price",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#10b981",
+            },
+            {
+              "property": "width",
+              "value": "80px",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "__loopVar:row.users + " Users"",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#666",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "rowSlotStyles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "width",
+          "value": "100%",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "min-width",
+          "value": "0",
+        },
+      ],
+      "sourcePosition": {
+        "column": 6,
+        "endColumn": 6,
+        "endLine": 15,
+        "line": 15,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "2px",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "border-radius",
+          "value": "16px",
+        },
+        {
+          "property": "padding",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "100%",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "min-width",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "p1": {
+          "name": "Basic",
+          "price": 9,
+          "users": 5,
+        },
+        "p2": {
+          "name": "Pro",
+          "price": 29,
+          "users": 50,
+        },
+        "p3": {
+          "name": "Enterprise",
+          "price": 99,
+          "users": 999,
+        },
+      },
+      "name": "products",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 14 - tabellen > Example 8 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -39452,7 +40622,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
+exports[`Tutorial IR Snapshots > 14 - tabellen > Example 9 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -39678,7 +40848,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
+exports[`Tutorial IR Snapshots > 14 - tabellen > Example 10 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -39856,7 +41026,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
+exports[`Tutorial IR Snapshots > 14 - tabellen > Example 11 1`] = `
 {
   "animations": [],
   "nodes": [

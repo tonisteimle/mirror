@@ -78,6 +78,7 @@ export interface IRNode {
   isDefinition?: boolean                       // True if this is a component definition (not instance)
   layoutType?: LayoutType                      // Explicit layout type (for drop strategy detection)
   valueBinding?: string                        // Token path for two-way binding (e.g., "user.name")
+  keyboardNav?: boolean                        // Enable keyboard navigation for form containers
   _sizing?: SizingFlags                        // Internal: tracks how width/height were sized (not CSS marker)
   // Motion One animations
   inView?: IRInView                            // In-view animation (scroll reveal)

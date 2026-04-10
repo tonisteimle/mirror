@@ -1,0 +1,32 @@
+// KPI Card - Mirror Version
+// Isolated component for 1:1 comparison
+
+// Tokens
+bg.primary: #0a0a0f
+bg.card: #1a1a24
+bg.hover: #252530
+text.primary: #ffffff
+text.secondary: #8888a0
+accent.blue: #3b82f6
+accent.yellow: #f59e0b
+
+// The KPI Card
+Frame w 220, bg $bg.card, rad 12, pad 24, gap 12
+
+  // Header: Label + Icon
+  Frame hor, spread, ver-center, w full
+    Text "Bettenbelegung", col $text.secondary, fs 13, weight 500
+    Frame w 40, h 40, rad 8, center, bg rgba(59,130,246,0.15)
+      Icon "bed-double", ic $accent.blue, is 20
+
+  // Value Row: 87 + %
+  Frame hor, gap 4, ver-center
+    Text "87", col $text.primary, fs 32, weight 700
+    Text "%", col $text.secondary, fs 14
+
+  // Progress Bar (87% von 172px Innenbreite = ~150px)
+  Frame w full, h 6, bg $bg.hover, rad 99, clip
+    Frame w 150, h 6, bg $accent.yellow, rad 99
+
+  // Trend Text
+  Text "26 von 30 Betten belegt", col $text.secondary, fs 12, weight 500

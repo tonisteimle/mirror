@@ -2270,9 +2270,7 @@ Mirror hat eingebaute Funktionen für die häufigsten UI-Patterns. Du musst sie 
 | `hide(Element)` | Element verstecken |  |
 | **Feedback** | `toast("Text")` | Toast-Benachrichtigung |
 | **Input** | `focus(Element)` | Fokus setzen |
-| `blur(Element)` | Fokus entfernen |  |
-| `clear(Element)` | Eingabewert löschen |  |
-| `selectText(Element)` | Text markieren |  |
+| `clear(Element)` | Eingabe löschen |  |
 | `setError(Element, "msg")` | Fehler-State setzen |  |
 | `clearError(Element)` | Fehler-State entfernen |  |
 | **Zähler** | `increment(token)` | Token +1 |
@@ -2334,7 +2332,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
 | `setError(Element, "msg")` | Fehler-State + Nachricht setzen |
 | `clearError(Element)` | Fehler-State entfernen |
 
-> **Hinweis:** `setError()` aktiviert den `invalid:` State und zeigt die Fehlermeldung an. Mit `clearError()` wird beides zurückgesetzt.
+> **Hinweis:** **Hinweis:** `setError()` aktiviert den `invalid:` State und zeigt die Fehlermeldung an. Mit `clearError()` wird beides zurückgesetzt.
 
 ### Zähler: increment() und decrement()
 
@@ -3479,6 +3477,27 @@ DatePicker
 
 Mit den Buttons oben wechselst du zwischen Monaten.
 
+### Tastatursteuerung
+
+Mit `keyboard-nav` (oder `keynav`) auf einem Container aktivierst du Tastaturnavigation für Formulare:
+
+```mirror
+Frame keyboard-nav, gap 12, w 280, bg #1a1a1a, pad 16, rad 8
+  Input placeholder "Name"
+  Input placeholder "E-Mail"
+  Input placeholder "Telefon"
+  Button "Absenden", bg #2563eb, col white, pad 10 20, rad 6
+```
+
+**Was passiert:**
+
+- **Enter** springt zum nächsten Eingabefeld
+- **Enter** im letzten Feld klickt den Button
+- **Escape** verlässt das aktuelle Feld
+- **Tab** funktioniert wie gewohnt
+
+> **Hinweis:** **Tipp:** `keyboard-nav` ist besonders nützlich für Formulare ohne Maus – z.B. auf Touch-Geräten mit externer Tastatur oder für Accessibility.
+
 ### Custom Styling
 
 Wenn du nur `Checkbox "Text"` schreibst, rendert Mirror im Hintergrund eine komplette Struktur mit Default-Styling. Diese Struktur besteht aus mehreren Elementen:
@@ -3525,6 +3544,8 @@ Switch "Dark Mode"
 | `Slider` | Numerischer Bereich |
 | `Select` + `Option` | Dropdown-Auswahl |
 | `DatePicker` | Kalender-Auswahl |
+
+**Tastatursteuerung:** `Frame keyboard-nav` aktiviert Enter/Escape-Navigation für Formulare.
 
 **Custom Styling:** Über Kind-Komponenten wie `Root:`, `Control:`, `Label:` – siehe Referenz
 
@@ -3706,6 +3727,12 @@ Dialog
     Text "Dialog with blue backdrop"
 ```
 
+> **Hinweis:** **Accessibility:** Dialoge sind vollständig tastatursteuerbar: **Tab** / **Shift+Tab** – zwischen Elementen im Dialog wechseln (Fokus bleibt im Dialog) **Escape** – Dialog schließen **Fokus-Wiederherstellung** – nach Schließen springt der Fokus zurück zum Trigger
+
+- **Tab** / **Shift+Tab** – zwischen Elementen im Dialog wechseln (Fokus bleibt im Dialog)
+- **Escape** – Dialog schließen
+- **Fokus-Wiederherstellung** – nach Schließen springt der Fokus zurück zum Trigger
+
 ### Praktisch: Confirm Dialog
 
 Ein typischer Bestätigungs-Dialog mit zwei Buttons:
@@ -3812,21 +3839,6 @@ Table
 
 Das ist alles – nur `Table`, `Header:` und `Row` mit den Werten.
 
-#### Styling
-
-Table, Header und Row können gestylt werden:
-
-```mirror
-Table bg #111, pad 16, rad 12, w full
-  Header: bg #1a1a1a
-    Row "Name", "Rolle", "Status"
-  Row "Anna", "Designer", "Aktiv"
-  Row "Max", "Developer", "Aktiv"
-  Row "Tom", "Manager", "Urlaub"
-```
-
-**Wann statisch?** Verwende statische Tabellen für: Preislisten, Feature-Vergleiche, Kontaktdaten, Referenztabellen – alles mit festen, bekannten Werten.
-
 > **Hinweis:** **Wann statisch?** Verwende statische Tabellen für: Preislisten, Feature-Vergleiche, Kontaktdaten, Referenztabellen – alles mit festen, bekannten Werten.
 
 ### Datengebundene Tabellen
@@ -3855,7 +3867,66 @@ Table $tasks, gap 4, w full
 - `Row:` – Template für jede Zeile (mit Doppelpunkt!)
 - `row.title` – Zugriff auf Felder des aktuellen Eintrags
 
-> **Hinweis:** **Hinweis:** Daten werden im Entry-Format definiert: `name:` gefolgt von eingerückten `key: value` Paaren. Bei der Verwendung mit `$name` iteriert die Runtime automatisch über alle Einträge.
+> **Hinweis:** Daten werden im Entry-Format definiert: `name:` gefolgt von eingerückten `key: value` Paaren. Bei der Verwendung mit `$name` iteriert die Runtime automatisch über alle Einträge.
+
+### Tabellen stylen
+
+Tabellen können auf allen Ebenen gestylt werden – von der Tabelle selbst bis zu einzelnen Zellen.
+
+#### Table-Level Styles
+
+Styles direkt auf `Table` wirken auf den Container:
+
+```mirror
+Table $tasks, bg #111, pad 16, rad 12, gap 8
+  Row: hor, spread, pad 12, bg #1a1a1a, rad 6, w full
+    Text row.name, col white
+    Text row.status, col #888
+```
+
+#### Header: und Footer: Styles
+
+Mit `Header:` und `Footer:` stylst du Kopf- und Fußbereich separat:
+
+```mirror
+Table $tasks, bg #111, rad 12, gap 4
+  Header: bg #222, pad 12 16, rad 8 8 0 0
+    Row "Aufgabe", "Aufwand"
+  Row: hor, spread, pad 12 16, w full
+    Text row.name, col white
+    Text row.effort + "h", col #888
+  Footer: bg #222, pad 12 16, rad 0 0 8 8
+    Row "Total", "8h"
+```
+
+#### Zebra-Muster mit RowOdd: und RowEven:
+
+Für alternierende Zeilenfarben nutze `RowOdd:` und `RowEven:`:
+
+```mirror
+Table $users, bg #111, rad 12, w full
+  Header: bg #222, pad 12 16
+    Row "Name", "Rolle"
+  RowOdd: bg #1a1a1a
+  RowEven: bg #151515
+  Row: hor, spread, pad 12 16, w full
+    Text row.name, col white
+    Text row.role, col #888
+```
+
+> **Hinweis:** `RowOdd:` und `RowEven:` werden automatisch basierend auf dem Zeilen-Index angewendet. Ungerade Zeilen (1, 3, 5...) bekommen `RowOdd:`, gerade Zeilen (0, 2, 4...) bekommen `RowEven:`.
+
+#### Column Styles
+
+Bei spaltenbasierten Tabellen kannst du Styles direkt auf `Column` setzen – sie wirken auf alle Zellen dieser Spalte:
+
+```mirror
+Table $tasks, bg #111, rad 12, pad 8
+  Header: bg #222, pad 12
+    Row "Aufgabe", "Status"
+  Column title, col white, pad 12
+  Column status, col #10b981, pad 12, weight 600
+```
 
 ### Filtern mit where
 
@@ -3960,11 +4031,25 @@ Table $products by price desc, gap 4, w full
 
 **Datengebundene Tabellen:** `Table $data` mit `Row:` Template. Zugriff auf Felder mit `row.field`.
 
-**Filtern:** `where row.done == false` – Vergleiche mit `==`, `!=`, `>`, `<`. Kombinieren mit `and`/`or`.
+#### Styling
 
-**Sortieren:** `by feld` (aufsteigend) oder `by feld desc` (absteigend).
+| Syntax | Beschreibung |
+|--------|--------------|
+| `Table $data, bg #111, pad 16, rad 12` | Table-Level Styles |
+| `Header: bg #222, pad 12` | Kopfzeilen-Styles |
+| `Footer: bg #222, pad 12` | Fußzeilen-Styles |
+| `Row: pad 12, bg #1a1a1a` | Zeilen-Styles (alle Zeilen) |
+| `RowOdd: bg #1a1a1a` | Ungerade Zeilen (Zebra) |
+| `RowEven: bg #151515` | Gerade Zeilen (Zebra) |
+| `Column title, col white, pad 12` | Spalten/Zellen-Styles |
 
-**Custom Styling:** Auch Tabellen haben Kind-Komponenten – siehe Referenz.
+#### Daten-Operationen
+
+| Syntax | Beschreibung |
+|--------|--------------|
+| `where row.done == false` | Filtern |
+| `by priority` | Aufsteigend sortieren |
+| `by price desc` | Absteigend sortieren |
 
 
 ---

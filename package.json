@@ -58,7 +58,9 @@
     "@zag-js/tooltip": "^1.37.0",
     "@zag-js/tree-view": "^1.39.1",
     "@zag-js/vanilla": "^1.37.0",
+    "focus-trap": "^8.0.1",
     "motion": "^12.38.0",
+    "tabbable": "^6.4.0",
     "tom-select": "^2.5.2"
   },
   "devDependencies": {

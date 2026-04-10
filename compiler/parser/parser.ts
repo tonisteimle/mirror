@@ -1484,10 +1484,17 @@ export class Parser {
   private parseComponentDefinitionWithDefaultPrimitive(name: Token): ComponentDefinition | null {
     this.advance() // : (colon)
 
+    // Check if the next token is a primitive name (e.g., "Row: Frame hor, gap 8")
+    // If so, use it as the actual primitive instead of defaulting to Frame
+    let primitive = 'Frame' // Default primitive
+    if (this.check('IDENTIFIER') && isPrimitive(this.current().value)) {
+      primitive = this.advance().value
+    }
+
     const component: ComponentDefinition = {
       type: 'Component',
       name: name.value,
-      primitive: 'Frame', // Default primitive
+      primitive,
       extends: null,
       properties: [],
       states: [],
@@ -1900,6 +1907,16 @@ export class Parser {
           this.advance() // Row
           this.advance() // :
           table.rowSlot = this.parseTableSlot('Row')
+        } else if (name === 'RowOdd' && this.checkNext('COLON')) {
+          // RowOdd: slot for zebra striping (odd rows)
+          this.advance() // RowOdd
+          this.advance() // :
+          table.rowOddSlot = this.parseTableSlot('RowOdd')
+        } else if (name === 'RowEven' && this.checkNext('COLON')) {
+          // RowEven: slot for zebra striping (even rows)
+          this.advance() // RowEven
+          this.advance() // :
+          table.rowEvenSlot = this.parseTableSlot('RowEven')
         } else if (name === 'Row' && !this.checkNext('COLON')) {
           // Row without colon = static row for manual tables
           this.advance() // Row
@@ -2134,6 +2151,12 @@ export class Parser {
       column: startToken?.column ?? 0,
     }
 
+    // Column-config properties (not style properties)
+    const columnConfigProps = new Set([
+      'w', 'width', 'prefix', 'suffix', 'align', 'sortable', 'desc',
+      'filterable', 'hidden', 'sum', 'avg', 'count'
+    ])
+
     // Field name or custom label
     if (this.check('STRING')) {
       column.label = this.advance().value
@@ -2149,53 +2172,90 @@ export class Parser {
       if (this.check('IDENTIFIER')) {
         const propName = this.advance().value
 
-        switch (propName) {
-          case 'w':
-          case 'width':
-            if (this.check('NUMBER')) {
-              column.width = parseInt(this.advance().value, 10)
-            }
-            break
-          case 'prefix':
-            if (this.check('STRING')) {
-              column.prefix = this.advance().value
-            }
-            break
-          case 'suffix':
-            if (this.check('STRING')) {
-              column.suffix = this.advance().value
-            }
-            break
-          case 'align':
-            if (this.check('IDENTIFIER')) {
-              const alignValue = this.advance().value
-              if (alignValue === 'left' || alignValue === 'right' || alignValue === 'center') {
-                column.align = alignValue
+        // Check if this is a column-config property
+        if (columnConfigProps.has(propName)) {
+          switch (propName) {
+            case 'w':
+            case 'width':
+              if (this.check('NUMBER')) {
+                column.width = parseInt(this.advance().value, 10)
               }
+              break
+            case 'prefix':
+              if (this.check('STRING')) {
+                column.prefix = this.advance().value
+              }
+              break
+            case 'suffix':
+              if (this.check('STRING')) {
+                column.suffix = this.advance().value
+              }
+              break
+            case 'align':
+              if (this.check('IDENTIFIER')) {
+                const alignValue = this.advance().value
+                if (alignValue === 'left' || alignValue === 'right' || alignValue === 'center') {
+                  column.align = alignValue
+                }
+              }
+              break
+            case 'sortable':
+              column.sortable = true
+              break
+            case 'desc':
+              column.sortDesc = true
+              break
+            case 'filterable':
+              column.filterable = true
+              break
+            case 'hidden':
+              column.hidden = true
+              break
+            case 'sum':
+              column.aggregation = 'sum'
+              break
+            case 'avg':
+              column.aggregation = 'avg'
+              break
+            case 'count':
+              column.aggregation = 'count'
+              break
+          }
+        } else {
+          // Style property - collect for cell styling
+          if (!column.cellProperties) column.cellProperties = []
+          const prevToken = this.previous()
+          const prop: Property = {
+            type: 'Property',
+            name: propName,
+            values: [],
+            line: prevToken?.line ?? 0,
+            column: prevToken?.column ?? 0,
+          }
+          // Collect value(s) for this property
+          while (!this.check('COMMA') && !this.check('NEWLINE') && !this.check('INDENT') && !this.isAtEnd()) {
+            const token = this.advance()
+            if (token.type === 'NUMBER') {
+              // Hex colors like #333 come as NUMBER tokens - keep as string
+              if (token.value.startsWith('#')) {
+                prop.values.push(token.value)
+              } else {
+                prop.values.push(parseFloat(token.value))
+              }
+            } else if (token.type === 'STRING') {
+              prop.values.push(token.value)
+            } else if (token.type === 'IDENTIFIER') {
+              // Check if it's a color (#hex)
+              if (token.value.startsWith('#')) {
+                prop.values.push(token.value)
+              } else {
+                prop.values.push(token.value)
+              }
+            } else {
+              break
             }
-            break
-          case 'sortable':
-            column.sortable = true
-            break
-          case 'desc':
-            // desc flag for initial descending sort
-            column.sortDesc = true
-            break
-          case 'filterable':
-            column.filterable = true
-            break
-          case 'hidden':
-            column.hidden = true
-            break
-          case 'sum':
-            column.aggregation = 'sum'
-            break
-          case 'avg':
-            column.aggregation = 'avg'
-            break
-          case 'count':
-            column.aggregation = 'count'
-            break
+          }
+          column.cellProperties.push(prop)
         }
       }
     }

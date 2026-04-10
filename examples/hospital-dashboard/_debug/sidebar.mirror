@@ -1,0 +1,35 @@
+// Sidebar - Mirror Version (Fixed)
+
+// Tokens
+bg.primary: #0a0a0f
+bg.secondary: #12121a
+bg.hover: #252530
+text.primary: #ffffff
+text.secondary: #8888a0
+text.muted: #55556a
+accent.blue: #3b82f6
+status.critical: #ef4444
+
+// The Sidebar
+Frame w 220, bg $bg.secondary, rad 12, pad 16, gap 4
+
+  // Label
+  Text "Stationen", fs 11, weight 600, col $text.muted, uppercase, pad 8 12
+
+  // Active Item: Notaufnahme (inline, no component)
+  Frame hor, ver-center, gap 12, pad 12, rad 8, bg rgba(59,130,246,0.15), cursor pointer, w full
+    Icon "siren", ic $accent.blue, is 18
+    Text "Notaufnahme", col $accent.blue, weight 500, fs 14
+    Spacer
+    Frame bg $status.critical, col white, fs 11, weight 600, pad 2 8, rad 99
+      Text "3"
+
+  // Normal Item: Innere Medizin
+  Frame hor, ver-center, gap 12, pad 12, rad 8, col $text.secondary, cursor pointer, w full
+    Icon "stethoscope", ic $text.secondary, is 18
+    Text "Innere Medizin", col $text.secondary, weight 500, fs 14
+
+  // Normal Item: Chirurgie
+  Frame hor, ver-center, gap 12, pad 12, rad 8, col $text.secondary, cursor pointer, w full
+    Icon "scissors", ic $text.secondary, is 18
+    Text "Chirurgie", col $text.secondary, weight 500, fs 14

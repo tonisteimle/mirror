@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Hospital Dashboard - Mirror</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #000;
+      min-height: 100vh;
+    }
+    #app {
+      width: 100%;
+      min-height: 100vh;
+    }
+    .error {
+      color: #ef4444;
+      padding: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="../../dist/browser/index.global.js"></script>
+<script>
+const mirrorCode = `
+// Hospital Dashboard - Complete Mirror Version
+
+// ============================================
+// TOKENS
+// ============================================
+bg.primary: #0a0a0f
+bg.card: #1a1a24
+bg.hover: #252530
+text.primary: #ffffff
+text.secondary: #8888a0
+text.muted: #55556a
+accent.blue: #3b82f6
+accent.purple: #8b5cf6
+status.critical: #ef4444
+status.warning: #f59e0b
+status.success: #10b981
+
+// ============================================
+// COMPONENTS
+// ============================================
+
+// Status Badge
+Badge: Frame hor, ver-center, gap 6, pad 4 12, rad 99
+  Dot: Frame w 6, h 6, rad 99
+  Label: fs 12, weight 500
+
+CriticalBadge as Badge: bg rgba(239,68,68,0.15)
+  Dot: bg #ef4444
+  Label: col #ef4444
+
+WarningBadge as Badge: bg rgba(245,158,11,0.15)
+  Dot: bg #f59e0b
+  Label: col #f59e0b
+
+SuccessBadge as Badge: bg rgba(16,185,129,0.15)
+  Dot: bg #10b981
+  Label: col #10b981
+
+// Staff Item
+StaffItem: Frame hor, ver-center, gap 12, pad 12, rad 8, bg #12121a, w full
+  Avatar: Frame w 40, h 40, rad 99, center, bg grad 135 #3b82f6 #8b5cf6
+    Initials: col white, fs 14, weight 600
+  Info: Frame gap 0, grow
+    Name: col white, fs 13, weight 500
+    Role: col #55556a, fs 12
+  Count: col #f59e0b, fs 12, weight 500
+
+// KPI Card
+KPICard: Frame w 220, bg #1a1a24, rad 12, pad 24, gap 12
+  Header: Frame hor, spread, ver-center, w full
+    Title: col #8888a0, fs 13, weight 500
+    IconBox: Frame w 40, h 40, rad 8, center
+  Value: Frame hor, gap 4, ver-center
+    Number: col white, fs 32, weight 700
+    Unit: col #8888a0, fs 14
+  Progress: Frame w full, h 6, bg #252530, rad 99, clip
+    Bar: h 6, rad 99
+  Trend: col #8888a0, fs 12, weight 500
+
+// Sidebar Nav Item
+NavItem: Frame hor, ver-center, gap 12, pad 12, rad 8, cursor pointer, w full
+  NavIcon: is 18
+  NavLabel: weight 500, fs 14
+
+ActiveNavItem as NavItem: bg rgba(59,130,246,0.15)
+  NavIcon: ic #3b82f6
+  NavLabel: col #3b82f6
+
+InactiveNavItem as NavItem:
+  NavIcon: ic #8888a0
+  NavLabel: col #8888a0
+
+// ============================================
+// DASHBOARD LAYOUT
+// ============================================
+
+Frame hor, w full, h 600, bg #0a0a0f, gap 16, pad 16
+
+  // Sidebar
+  Frame w 220, bg #12121a, rad 12, pad 16, gap 4
+    Text "Stationen", fs 11, weight 600, col #55556a, uppercase, pad 8 12
+
+    ActiveNavItem
+      Icon "siren", NavIcon
+      Text "Notaufnahme", NavLabel
+      Spacer
+      Frame bg #ef4444, col white, fs 11, weight 600, pad 2 8, rad 99
+        Text "3"
+
+    InactiveNavItem
+      Icon "stethoscope", NavIcon
+      Text "Innere Medizin", NavLabel
+
+    InactiveNavItem
+      Icon "scissors", NavIcon
+      Text "Chirurgie", NavLabel
+
+    InactiveNavItem
+      Icon "baby", NavIcon
+      Text "Pädiatrie", NavLabel
+
+    Spacer
+
+    Text "System", fs 11, weight 600, col #55556a, uppercase, pad 8 12
+
+    InactiveNavItem
+      Icon "settings", NavIcon
+      Text "Einstellungen", NavLabel
+
+  // Main Content
+  Frame grow, gap 16
+
+    // Header
+    Frame hor, spread, ver-center, w full
+      Frame gap 2
+        Text "Notaufnahme", col white, fs 24, weight 600
+        Text "Echtzeit-Übersicht", col #8888a0, fs 14
+      Frame hor, gap 12
+        CriticalBadge
+          Dot
+          Label "3 Kritisch"
+        WarningBadge
+          Dot
+          Label "5 Stabil"
+        SuccessBadge
+          Dot
+          Label "8 Gut"
+
+    // KPI Cards Row
+    Frame hor, gap 16, wrap
+
+      KPICard
+        Header
+          Title "Bettenbelegung"
+          IconBox bg rgba(59,130,246,0.15)
+            Icon "bed-double", ic #3b82f6, is 20
+        Value
+          Number "87"
+          Unit "%"
+        Progress
+          Bar w 150, bg #f59e0b
+        Trend "26 von 30 Betten belegt"
+
+      KPICard
+        Header
+          Title "Wartezeit"
+          IconBox bg rgba(239,68,68,0.15)
+            Icon "clock", ic #ef4444, is 20
+        Value
+          Number "42"
+          Unit "min"
+        Progress
+          Bar w 180, bg #ef4444
+        Trend "↑ 12 min höher als gestern"
+
+      KPICard
+        Header
+          Title "Behandlungen"
+          IconBox bg rgba(16,185,129,0.15)
+            Icon "activity", ic #10b981, is 20
+        Value
+          Number "156"
+          Unit "heute"
+        Progress
+          Bar w 120, bg #10b981
+        Trend "↑ 23% mehr als letzte Woche"
+
+    // Staff Section
+    Frame gap 12, w full
+      Text "Diensthabendes Personal", col white, fs 16, weight 500
+
+      Frame gap 8, w 480
+        StaffItem
+          Avatar
+            Initials "MW"
+          Info
+            Name "Dr. Maria Weber"
+            Role "Oberärztin"
+          Count "3 Patienten"
+
+        StaffItem
+          Avatar
+            Initials "TM"
+          Info
+            Name "Thomas Müller"
+            Role "Assistenzarzt"
+          Count "5 Patienten"
+
+        StaffItem
+          Avatar
+            Initials "SK"
+          Info
+            Name "Sandra Koch"
+            Role "Pflegekraft"
+          Count "8 Patienten"
+`;
+
+try {
+  const code = MirrorLang.compile(mirrorCode);
+  const execCode = code.replace('export function createUI', 'function createUI');
+  const fn = new Function(execCode + '\nreturn createUI();');
+  const ui = fn();
+  if (ui && ui.root) {
+    document.getElementById('app').appendChild(ui.root);
+  }
+  // Initialize Lucide icons after render
+  setTimeout(() => lucide.createIcons(), 100);
+} catch (e) {
+  console.error('Compile error:', e);
+  document.getElementById('app').innerHTML = '<div class="error">Error: ' + e.message + '</div>';
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KPI Card - HTML</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-card: #1a1a24;
+      --bg-hover: #252530;
+      --text-primary: #ffffff;
+      --text-secondary: #8888a0;
+      --accent-blue: #3b82f6;
+      --accent-yellow: #f59e0b;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --space-md: 12px;
+      --space-xl: 24px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      padding: 24px;
+    }
+
+    .kpi-card {
+      width: 220px;
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-label {
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .kpi-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .kpi-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .kpi-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .kpi-unit {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .kpi-progress {
+      height: 6px;
+      background: var(--bg-hover);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .kpi-progress-bar {
+      height: 100%;
+      width: 87%;
+      background: var(--accent-yellow);
+      border-radius: 99px;
+    }
+
+    .kpi-trend {
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="kpi-card">
+    <div class="kpi-header">
+      <span class="kpi-label">Bettenbelegung</span>
+      <div class="kpi-icon">
+        <i data-lucide="bed-double"></i>
+      </div>
+    </div>
+    <div class="kpi-value-row">
+      <span class="kpi-value">87</span>
+      <span class="kpi-unit">%</span>
+    </div>
+    <div class="kpi-progress">
+      <div class="kpi-progress-bar"></div>
+    </div>
+    <div class="kpi-trend">26 von 30 Betten belegt</div>
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

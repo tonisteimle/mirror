@@ -1,0 +1,618 @@
+// ========================================
+// TOKENS / DESIGN SYSTEM
+// ========================================
+
+// Colors
+bg.primary: #0a0a0f
+bg.secondary: #12121a
+bg.card: #1a1a24
+bg.hover: #252530
+
+text.primary: #ffffff
+text.secondary: #8888a0
+text.muted: #55556a
+
+accent.blue: #3b82f6
+accent.green: #10b981
+accent.yellow: #f59e0b
+accent.red: #ef4444
+accent.purple: #8b5cf6
+
+status.critical: #ef4444
+status.warning: #f59e0b
+status.stable: #10b981
+
+// Spacing
+space.xs: 4
+space.sm: 8
+space.md: 12
+space.lg: 16
+space.xl: 24
+
+// Radius
+radius.sm: 6
+radius.md: 8
+radius.lg: 12
+
+// ========================================
+// BASE COMPONENTS
+// ========================================
+
+// Buttons
+Btn: Button pad 12 16, rad $radius.md, weight 500, cursor pointer, fs 13, hor, ver-center, gap 8
+
+BtnSecondary as Btn: bg $bg.card, col $text.primary
+  hover 0.2s:
+    bg $bg.hover
+
+BtnPrimary as Btn: bg $accent.blue, col white
+  hover 0.2s:
+    bg #2563eb
+
+// Chips
+Chip: Frame pad 4 12, rad $radius.sm, fs 12, weight 500, cursor pointer, bg $bg.hover, col $text.secondary
+  hover 0.2s:
+    col $text.primary
+
+ChipActive as Chip: bg $accent.blue, col white
+
+// Status Badges
+StatusBadge: Frame hor, ver-center, gap 4, pad 4 12, rad 99, fs 12, weight 500
+
+StatusCritical as StatusBadge: bg rgba(239,68,68,0.15), col $status.critical
+
+StatusWarning as StatusBadge: bg rgba(245,158,11,0.15), col $status.warning
+
+StatusStable as StatusBadge: bg rgba(16,185,129,0.15), col $status.stable
+
+// Room Badge
+RoomBadge: Frame bg $bg.hover, pad 4 12, rad $radius.sm, fs 12, weight 500, col $text.secondary
+
+// ========================================
+// CARD COMPONENT
+// ========================================
+
+Card: Frame bg $bg.card, rad $radius.lg, pad $space.xl, gap $space.lg
+
+// ========================================
+// KPI CARD COMPONENT
+// ========================================
+
+KpiCard: Frame bg $bg.card, rad $radius.lg, pad $space.xl, gap $space.md, w 220
+  Header: Frame hor, spread, ver-center, w full
+  Value: Text fs 32, weight 700, col $text.primary
+  Label: Text col $text.secondary, fs 13, weight 500
+  Trend: Text fs 12, weight 500
+
+KpiIconBlue: Frame w 40, h 40, rad $radius.md, center, bg rgba(59,130,246,0.15)
+KpiIconYellow: Frame w 40, h 40, rad $radius.md, center, bg rgba(245,158,11,0.15)
+KpiIconGreen: Frame w 40, h 40, rad $radius.md, center, bg rgba(16,185,129,0.15)
+KpiIconRed: Frame w 40, h 40, rad $radius.md, center, bg rgba(239,68,68,0.15)
+
+// ========================================
+// SIDEBAR COMPONENTS
+// ========================================
+
+SidebarItem: Frame hor, ver-center, gap $space.md, pad $space.md, rad $radius.md, col $text.secondary, cursor pointer, weight 500
+  hover 0.2s:
+    bg $bg.hover
+    col $text.primary
+
+SidebarItemActive as SidebarItem: bg rgba(59,130,246,0.15), col $accent.blue
+
+SidebarBadge: Frame bg $status.critical, col white, fs 11, weight 600, pad 2 8, rad 99
+
+SidebarLabel: Text fs 11, weight 600, col $text.muted, uppercase, pad 8 12
+
+// ========================================
+// STAFF COMPONENTS
+// ========================================
+
+StaffItem: Frame hor, ver-center, gap $space.md, pad $space.md, rad $radius.md, bg $bg.secondary
+
+StaffStatusActive: Text fs 12, weight 500, col $status.stable
+StaffStatusBusy: Text fs 12, weight 500, col $status.warning
+StaffStatusBreak: Text fs 12, weight 500, col $text.muted
+
+// ========================================
+// OP ROOM COMPONENTS
+// ========================================
+
+OpRoom: Frame bg $bg.secondary, rad $radius.md, pad $space.lg, gap $space.sm
+
+OpRoomActive as OpRoom: bor 1, boc rgba(16,185,129,0.3)
+OpRoomAvailable as OpRoom: bor 1, boc rgba(255,255,255,0.1)
+
+// ========================================
+// TABLE COMPONENTS
+// ========================================
+
+TableRow: Frame hor, ver-center, pad $space.lg, bor 0 0 1 0, boc rgba(255,255,255,0.04), w full
+  hover 0.2s:
+    bg $bg.hover
+
+// ========================================
+// NAV TAB
+// ========================================
+
+NavTab: Frame pad 8 16, rad $radius.md, col $text.secondary, cursor pointer, weight 500
+  hover 0.2s:
+    col $text.primary
+    bg $bg.hover
+
+NavTabActive as NavTab: col $text.primary, bg $accent.blue
+
+// ========================================
+// THE DASHBOARD - Using CSS Grid Layout
+// ========================================
+
+// Main App Container - Grid with 2 columns
+Frame w full, h 900, bg $bg.primary, grid 2, gap 0
+
+  // LEFT COLUMN: Sidebar (240px wide)
+  Frame w 240, h full, bg $bg.secondary, bor 0 1 0 0, boc rgba(255,255,255,0.06), pad $space.lg, gap $space.xl
+
+    // Sidebar Sections
+    Frame gap $space.xs
+      SidebarLabel "Stationen"
+      SidebarItemActive
+        Icon "siren", ic $accent.blue, is 18
+        Text "Notaufnahme"
+        SidebarBadge "3"
+      SidebarItem
+        Icon "stethoscope", ic $text.secondary, is 18
+        Text "Innere Medizin"
+      SidebarItem
+        Icon "scissors", ic $text.secondary, is 18
+        Text "Chirurgie"
+      SidebarItem
+        Icon "baby", ic $text.secondary, is 18
+        Text "Pädiatrie"
+      SidebarItem
+        Icon "heart-pulse", ic $text.secondary, is 18
+        Text "Kardiologie"
+
+    Frame gap $space.xs
+      SidebarLabel "Verwaltung"
+      SidebarItem
+        Icon "users", ic $text.secondary, is 18
+        Text "Personal"
+      SidebarItem
+        Icon "bar-chart-3", ic $text.secondary, is 18
+        Text "Auslastung"
+      SidebarItem
+        Icon "settings", ic $text.secondary, is 18
+        Text "Einstellungen"
+
+    Spacer
+
+    Frame gap $space.xs
+      SidebarItem
+        Icon "help-circle", ic $text.secondary, is 18
+        Text "Hilfe"
+
+  // RIGHT COLUMN: Header + Main Content
+  Frame w full, h full, gap 0
+
+    // HEADER
+    Frame w full, h 64, bg $bg.secondary, bor 0 0 1 0, boc rgba(255,255,255,0.06), hor, spread, ver-center, pad 0 $space.xl
+
+      // Left: Logo + Nav
+      Frame hor, ver-center, gap $space.xl
+        // Logo
+        Frame hor, ver-center, gap $space.md
+          Frame w 36, h 36, rad $radius.md, center, bg grad 135 $accent.blue $accent.purple
+            Icon "activity", ic white, is 20
+          Text "StationView", fs 18, weight 600, col $text.primary
+
+        // Nav Tabs
+        Frame hor, gap $space.xs
+          NavTabActive "Dashboard"
+          NavTab "Patienten"
+          NavTab "Personal"
+          NavTab "Berichte"
+
+      // Right: Notifications + User
+      Frame hor, ver-center, gap $space.lg
+        // Notification Button
+        Frame w 40, h 40, rad $radius.md, bg $bg.card, center, cursor pointer, stacked
+          Icon "bell", ic $text.secondary, is 20
+          Frame x 22, y 6, w 18, h 18, bg $status.critical, rad 99, center, anim pulse
+            Text "3", col white, fs 11, weight 600
+
+        // User Profile
+        Frame hor, ver-center, gap $space.md, pad 8 12, rad $radius.md, cursor pointer
+          Frame w 36, h 36, rad 99, bg grad 135 $accent.green $accent.blue, center
+            Text "MW", col white, weight 600, fs 13
+          Frame gap 2
+            Text "Dr. Maria Weber", col $text.primary, weight 500, fs 13
+            Text "Stationsleitung", col $text.muted, fs 11
+
+    // MAIN CONTENT
+    Frame w full, h full, pad $space.xl, gap $space.xl, scroll
+
+      // Page Header
+      Frame hor, spread, ver-center, w full
+        Frame gap $space.xs
+          Text "Notaufnahme", fs 24, weight 600, col $text.primary
+          Text "Übersicht für Mittwoch, 9. April 2025 • Schicht: Früh (06:00 - 14:00)", col $text.secondary, fs 14
+        Frame hor, gap $space.md
+          BtnSecondary
+            Icon "download", ic $text.primary, is 16
+            Text "Export"
+          BtnPrimary
+            Icon "plus", ic white, is 16
+            Text "Patient aufnehmen"
+
+      // KPI Cards Row
+      Frame hor, gap $space.lg, w full
+
+        // Bettenbelegung
+        KpiCard
+          Header
+            Label "Bettenbelegung"
+            KpiIconBlue
+              Icon "bed-double", ic $accent.blue, is 20
+          Value "87%"
+          Frame h 6, bg $bg.hover, rad 99, w full
+            Frame h 6, rad 99, w 87%, bg $accent.yellow
+          Trend col $text.secondary
+            Text "26 von 30 Betten belegt"
+
+        // Wartezeit
+        KpiCard
+          Header
+            Label "Ø Wartezeit"
+            KpiIconYellow
+              Icon "clock", ic $accent.yellow, is 20
+          Frame hor, ver-center, gap 8
+            Value "23"
+            Text "min", col $text.secondary, fs 14
+          Trend col $status.critical
+            Frame hor, ver-center, gap 4
+              Icon "trending-up", ic $status.critical, is 14
+              Text "+5 min vs. gestern"
+
+        // Patienten aktuell
+        KpiCard
+          Header
+            Label "Patienten aktuell"
+            KpiIconGreen
+              Icon "users", ic $accent.green, is 20
+          Value "34"
+          // Sparkline
+          Frame hor, gap 3, h 40, ver-center
+            Frame w 8, h 30%, bg $accent.blue, rad 2, opacity 0.6
+            Frame w 8, h 45%, bg $accent.blue, rad 2, opacity 0.6
+            Frame w 8, h 35%, bg $accent.blue, rad 2, opacity 0.6
+            Frame w 8, h 55%, bg $accent.blue, rad 2, opacity 0.6
+            Frame w 8, h 70%, bg $accent.blue, rad 2, opacity 0.6
+            Frame w 8, h 85%, bg $accent.blue, rad 2, opacity 0.6
+            Frame w 8, h 75%, bg $accent.blue, rad 2, opacity 0.6
+            Frame w 8, h 90%, bg $accent.blue, rad 2, opacity 0.6
+            Frame w 8, h 80%, bg $accent.blue, rad 2, opacity 0.6
+            Frame w 8, h 95%, bg $accent.blue, rad 2
+            Frame w 8, h 100%, bg $accent.blue, rad 2
+
+        // Kritische Fälle
+        KpiCard bor 1, boc rgba(239,68,68,0.3)
+          Header
+            Label "Kritische Fälle"
+            KpiIconRed
+              Icon "alert-triangle", ic $status.critical, is 20
+          Value col $status.critical
+            Text "3"
+          Trend col $status.critical
+            Text "Sofortige Aufmerksamkeit erforderlich"
+
+      // Charts Row
+      Frame hor, gap $space.lg, w full
+
+        // Line Chart Card
+        Card grow 2
+          Frame hor, spread, ver-center
+            Frame gap 2
+              Text "Patientenaufkommen", fs 16, weight 600, col $text.primary
+              Text "Einweisungen pro Stunde (letzte 24h)", col $text.secondary, fs 12
+            Frame hor, gap $space.sm
+              ChipActive "24h"
+              Chip "7 Tage"
+              Chip "30 Tage"
+          Frame h 200, w full
+            Line $patientData, x "hour", y "count", w full, h 200
+              XAxis: col #55556a, fs 11
+              YAxis: col #55556a, fs 11, min 0, max 20
+              Grid: col rgba(255,255,255,0.06)
+              Line: col $accent.blue, width 2
+              Point: size 4, bg $accent.blue
+
+        // Donut Chart Card
+        Card grow 1
+          Frame gap 2
+            Text "Einweisungsgrund", fs 16, weight 600, col $text.primary
+            Text "Verteilung heute", col $text.secondary, fs 12
+          Frame hor, ver-center, gap $space.xl
+            Frame w 140, h 140
+              Pie $admissionReasons, x "reason", y "count", w 140, h 140, donut 0.6
+            Frame gap $space.md
+              Frame hor, ver-center, gap $space.md
+                Frame w 10, h 10, rad 99, bg $accent.blue
+                Text "Unfall/Trauma", fs 13, col $text.secondary
+                Text "14", fs 13, weight 600, col $text.primary, margin 0 0 0 auto
+              Frame hor, ver-center, gap $space.md
+                Frame w 10, h 10, rad 99, bg $accent.green
+                Text "Kardio", fs 13, col $text.secondary
+                Text "9", fs 13, weight 600, col $text.primary, margin 0 0 0 auto
+              Frame hor, ver-center, gap $space.md
+                Frame w 10, h 10, rad 99, bg $accent.yellow
+                Text "Intern", fs 13, col $text.secondary
+                Text "7", fs 13, weight 600, col $text.primary, margin 0 0 0 auto
+              Frame hor, ver-center, gap $space.md
+                Frame w 10, h 10, rad 99, bg $accent.purple
+                Text "Sonstige", fs 13, col $text.secondary
+                Text "4", fs 13, weight 600, col $text.primary, margin 0 0 0 auto
+
+      // Patients Table
+      Card w full
+        Frame hor, spread, ver-center
+          Frame gap 2
+            Text "Aktuelle Patienten", fs 16, weight 600, col $text.primary
+            Text "34 Patienten in Behandlung", col $text.secondary, fs 12
+          BtnSecondary "Alle anzeigen"
+
+        // Table Header
+        Frame hor, ver-center, pad $space.md $space.lg, bor 0 0 1 0, boc rgba(255,255,255,0.06), w full
+          Text "Patient", w 200, fs 11, weight 600, col $text.muted, uppercase
+          Text "Status", w 100, fs 11, weight 600, col $text.muted, uppercase
+          Text "Einweisungsgrund", w 180, fs 11, weight 600, col $text.muted, uppercase
+          Text "Behandelnder Arzt", w 140, fs 11, weight 600, col $text.muted, uppercase
+          Text "Wartezeit", w 80, fs 11, weight 600, col $text.muted, uppercase
+          Text "Raum", w 120, fs 11, weight 600, col $text.muted, uppercase
+
+        // Table Rows
+        Frame gap 0, w full
+
+          // Row 1 - Elisabeth Müller
+          TableRow
+            Frame hor, ver-center, gap $space.md, w 200
+              Frame w 36, h 36, rad 99, bg $bg.hover, center
+                Text "EM", col $text.secondary, weight 600, fs 13
+              Frame gap 2
+                Text "Elisabeth Müller", col $text.primary, weight 500
+                Text "#P-2024-0847", col $text.muted, fs 12
+            Frame w 100
+              StatusCritical
+                Frame w 6, h 6, rad 99, bg $status.critical, anim pulse
+                Text "Kritisch"
+            Text "Akutes Koronarsyndrom", w 180, col $text.primary
+            Frame hor, ver-center, gap $space.sm, w 140
+              Frame w 24, h 24, rad 99, bg grad 135 $accent.purple $accent.blue, center
+                Text "MW", col white, weight 600, fs 10
+              Text "Dr. Weber", col $text.primary
+            Text "5 min", w 80, col $text.primary
+            RoomBadge "Reanimation 1"
+
+          // Row 2 - Thomas Krüger
+          TableRow
+            Frame hor, ver-center, gap $space.md, w 200
+              Frame w 36, h 36, rad 99, bg $bg.hover, center
+                Text "TK", col $text.secondary, weight 600, fs 13
+              Frame gap 2
+                Text "Thomas Krüger", col $text.primary, weight 500
+                Text "#P-2024-0852", col $text.muted, fs 12
+            Frame w 100
+              StatusCritical
+                Frame w 6, h 6, rad 99, bg $status.critical, anim pulse
+                Text "Kritisch"
+            Text "Polytrauma (Verkehrsunfall)", w 180, col $text.primary
+            Frame hor, ver-center, gap $space.sm, w 140
+              Frame w 24, h 24, rad 99, bg grad 135 $accent.green $accent.blue, center
+                Text "SK", col white, weight 600, fs 10
+              Text "Dr. Koch", col $text.primary
+            Text "2 min", w 80, col $text.primary
+            RoomBadge "Schockraum"
+
+          // Row 3 - Anna Fischer
+          TableRow
+            Frame hor, ver-center, gap $space.md, w 200
+              Frame w 36, h 36, rad 99, bg $bg.hover, center
+                Text "AF", col $text.secondary, weight 600, fs 13
+              Frame gap 2
+                Text "Anna Fischer", col $text.primary, weight 500
+                Text "#P-2024-0845", col $text.muted, fs 12
+            Frame w 100
+              StatusCritical
+                Frame w 6, h 6, rad 99, bg $status.critical, anim pulse
+                Text "Kritisch"
+            Text "Apoplex (Schlaganfall)", w 180, col $text.primary
+            Frame hor, ver-center, gap $space.sm, w 140
+              Frame w 24, h 24, rad 99, bg grad 135 $accent.purple $accent.blue, center
+                Text "MW", col white, weight 600, fs 10
+              Text "Dr. Weber", col $text.primary
+            Text "8 min", w 80, col $text.primary
+            RoomBadge "CT"
+
+          // Row 4 - Hans Schmidt
+          TableRow
+            Frame hor, ver-center, gap $space.md, w 200
+              Frame w 36, h 36, rad 99, bg $bg.hover, center
+                Text "HS", col $text.secondary, weight 600, fs 13
+              Frame gap 2
+                Text "Hans Schmidt", col $text.primary, weight 500
+                Text "#P-2024-0839", col $text.muted, fs 12
+            Frame w 100
+              StatusWarning
+                Frame w 6, h 6, rad 99, bg $status.warning
+                Text "Stabil"
+            Text "Verdacht Appendizitis", w 180, col $text.primary
+            Frame hor, ver-center, gap $space.sm, w 140
+              Frame w 24, h 24, rad 99, bg grad 135 $accent.yellow $accent.red, center
+                Text "LB", col white, weight 600, fs 10
+              Text "Dr. Braun", col $text.primary
+            Text "18 min", w 80, col $status.warning
+            RoomBadge "Sono 2"
+
+          // Row 5 - Maria Wagner
+          TableRow
+            Frame hor, ver-center, gap $space.md, w 200
+              Frame w 36, h 36, rad 99, bg $bg.hover, center
+                Text "MW", col $text.secondary, weight 600, fs 13
+              Frame gap 2
+                Text "Maria Wagner", col $text.primary, weight 500
+                Text "#P-2024-0841", col $text.muted, fs 12
+            Frame w 100
+              StatusStable
+                Frame w 6, h 6, rad 99, bg $status.stable
+                Text "Gut"
+            Text "Fraktur Unterarm", w 180, col $text.primary
+            Frame hor, ver-center, gap $space.sm, w 140
+              Frame w 24, h 24, rad 99, bg grad 135 $accent.green $accent.blue, center
+                Text "SK", col white, weight 600, fs 10
+              Text "Dr. Koch", col $text.primary
+            Text "12 min", w 80, col $text.primary
+            RoomBadge "Gips 1"
+
+          // Row 6 - Peter Bauer
+          TableRow
+            Frame hor, ver-center, gap $space.md, w 200
+              Frame w 36, h 36, rad 99, bg $bg.hover, center
+                Text "PB", col $text.secondary, weight 600, fs 13
+              Frame gap 2
+                Text "Peter Bauer", col $text.primary, weight 500
+                Text "#P-2024-0853", col $text.muted, fs 12
+            Frame w 100
+              StatusStable
+                Frame w 6, h 6, rad 99, bg $status.stable
+                Text "Gut"
+            Text "Schnittwunde Hand", w 180, col $text.primary
+            Frame hor, ver-center, gap $space.sm, w 140
+              Frame w 24, h 24, rad 99, bg grad 135 $accent.yellow $accent.red, center
+                Text "LB", col white, weight 600, fs 10
+              Text "Dr. Braun", col $text.primary
+            Text "25 min", w 80, col $status.warning
+            RoomBadge "Wartebereich"
+
+      // Bottom Grid: Staff + OP Status
+      Frame hor, gap $space.lg, w full
+
+        // Staff List
+        Card grow 1
+          Frame gap 2
+            Text "Personal im Dienst", fs 16, weight 600, col $text.primary
+            Text "12 von 15 geplant", col $text.secondary, fs 12
+
+          Frame gap $space.sm
+
+            StaffItem
+              Frame w 40, h 40, rad 99, bg grad 135 $accent.blue $accent.purple, center
+                Text "MW", col white, weight 600, fs 14
+              Frame gap 2, grow
+                Text "Dr. Maria Weber", col $text.primary, weight 500, fs 13
+                Text "Oberärztin", col $text.muted, fs 12
+              StaffStatusBusy "3 Patienten"
+
+            StaffItem
+              Frame w 40, h 40, rad 99, bg grad 135 $accent.green $accent.blue, center
+                Text "SK", col white, weight 600, fs 14
+              Frame gap 2, grow
+                Text "Dr. Stefan Koch", col $text.primary, weight 500, fs 13
+                Text "Assistenzarzt", col $text.muted, fs 12
+              StaffStatusBusy "2 Patienten"
+
+            StaffItem
+              Frame w 40, h 40, rad 99, bg grad 135 $accent.yellow $accent.red, center
+                Text "LB", col white, weight 600, fs 14
+              Frame gap 2, grow
+                Text "Dr. Lisa Braun", col $text.primary, weight 500, fs 13
+                Text "Assistenzärztin", col $text.muted, fs 12
+              StaffStatusActive "Verfügbar"
+
+            StaffItem
+              Frame w 40, h 40, rad 99, bg grad 135 $accent.purple #ec4899, center
+                Text "JH", col white, weight 600, fs 14
+              Frame gap 2, grow
+                Text "Julia Hoffmann", col $text.primary, weight 500, fs 13
+                Text "Pflegefachkraft", col $text.muted, fs 12
+              StaffStatusBreak "Pause"
+
+        // OP Status
+        Card grow 1
+          Frame gap 2
+            Text "OP-Auslastung", fs 16, weight 600, col $text.primary
+            Text "2 von 4 Sälen aktiv", col $text.secondary, fs 12
+
+          Frame grid 2, gap $space.md
+
+            OpRoomActive
+              Frame hor, spread, ver-center
+                Text "OP Saal 1", weight 600, fs 13, col $text.primary
+                Frame w 8, h 8, rad 99, bg $status.stable, anim pulse
+              Text "Appendektomie", fs 12, col $text.secondary
+              Text "Noch ca. 45 min", fs 11, col $text.muted
+
+            OpRoomActive
+              Frame hor, spread, ver-center
+                Text "OP Saal 2", weight 600, fs 13, col $text.primary
+                Frame w 8, h 8, rad 99, bg $status.stable, anim pulse
+              Text "Osteosynthese Femur", fs 12, col $text.secondary
+              Text "Noch ca. 90 min", fs 11, col $text.muted
+
+            OpRoomAvailable
+              Frame hor, spread, ver-center
+                Text "OP Saal 3", weight 600, fs 13, col $text.primary
+                Frame w 8, h 8, rad 99, bg $text.muted
+              Text "Verfügbar", fs 12, col $text.secondary
+              Text "—", fs 11, col $text.muted
+
+            OpRoomAvailable
+              Frame hor, spread, ver-center
+                Text "OP Saal 4", weight 600, fs 13, col $text.primary
+                Frame w 8, h 8, rad 99, bg $text.muted
+              Text "Verfügbar", fs 12, col $text.secondary
+              Text "—", fs 11, col $text.muted
+
+
+// ========================================
+// CHART DATA
+// ========================================
+
+patientData:
+  h00:
+    hour: "00:00"
+    count: 3
+  h04:
+    hour: "04:00"
+    count: 5
+  h08:
+    hour: "08:00"
+    count: 12
+  h12:
+    hour: "12:00"
+    count: 15
+  h16:
+    hour: "16:00"
+    count: 11
+  h20:
+    hour: "20:00"
+    count: 8
+  h24:
+    hour: "Jetzt"
+    count: 10
+
+admissionReasons:
+  trauma:
+    reason: "Unfall/Trauma"
+    count: 14
+    color: #3b82f6
+  cardio:
+    reason: "Kardio"
+    count: 9
+    color: #10b981
+  intern:
+    reason: "Intern"
+    count: 7
+    color: #f59e0b
+  other:
+    reason: "Sonstige"
+    count: 4
+    color: #8b5cf6

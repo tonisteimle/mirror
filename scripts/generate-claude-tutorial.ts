@@ -31,6 +31,7 @@ const TUTORIAL_FILES = [
   '12-navigation.html',
   '13-overlays.html',
   '14-tabellen.html',
+  '15-charts.html',
 ]
 
 function extractContent(html: string): string {

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug Isolation: grow in Component Slots</title>
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui; background: #000; padding: 32px; }
+    h1 { color: #888; font-size: 14px; font-weight: 400; margin-bottom: 24px; }
+    .test { margin-bottom: 24px; padding: 16px; background: #111; border-radius: 8px; }
+    .title { color: #666; font-size: 11px; text-transform: uppercase; margin-bottom: 8px; }
+    .row { display: flex; gap: 32px; }
+    .col { flex: 1; }
+    .label { color: #444; font-size: 10px; margin-bottom: 8px; }
+    .result { margin-top: 8px; font-size: 11px; }
+    .pass { color: #10b981; }
+    .fail { color: #ef4444; }
+    .error { color: #ef4444; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<h1>Bug Isolation: Was genau bricht das Layout?</h1>
+
+<!-- Test A: Einfache Slots ohne grow -->
+<div class="test">
+  <div class="title">Test A: Komponente mit einfachen Slots (ohne grow)</div>
+  <div class="row">
+    <div class="col">
+      <div class="label">FLAT</div>
+      <div id="a-flat"></div>
+    </div>
+    <div class="col">
+      <div class="label">COMPONENT</div>
+      <div id="a-comp"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Test B: Slots mit grow -->
+<div class="test">
+  <div class="title">Test B: Komponente mit grow Slot</div>
+  <div class="row">
+    <div class="col">
+      <div class="label">FLAT</div>
+      <div id="b-flat"></div>
+    </div>
+    <div class="col">
+      <div class="label">COMPONENT</div>
+      <div id="b-comp"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Test C: Verschachtelte Slots -->
+<div class="test">
+  <div class="title">Test C: Verschachtelte Slots (Slot hat Kind-Slot)</div>
+  <div class="row">
+    <div class="col">
+      <div class="label">FLAT</div>
+      <div id="c-flat"></div>
+    </div>
+    <div class="col">
+      <div class="label">COMPONENT</div>
+      <div id="c-comp"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Test D: Drei Slots -->
+<div class="test">
+  <div class="title">Test D: Drei Slots nebeneinander</div>
+  <div class="row">
+    <div class="col">
+      <div class="label">FLAT</div>
+      <div id="d-flat"></div>
+    </div>
+    <div class="col">
+      <div class="label">COMPONENT</div>
+      <div id="d-comp"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Test E: Drei Slots mit grow in der Mitte -->
+<div class="test">
+  <div class="title">Test E: Drei Slots, mittlerer mit grow</div>
+  <div class="row">
+    <div class="col">
+      <div class="label">FLAT</div>
+      <div id="e-flat"></div>
+    </div>
+    <div class="col">
+      <div class="label">COMPONENT</div>
+      <div id="e-comp"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Test F: Slot ist Frame mit eigenem Kind -->
+<div class="test">
+  <div class="title">Test F: Slot ist Frame mit Kind-Definition</div>
+  <div class="row">
+    <div class="col">
+      <div class="label">FLAT</div>
+      <div id="f-flat"></div>
+    </div>
+    <div class="col">
+      <div class="label">COMPONENT</div>
+      <div id="f-comp"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../../dist/browser/index.global.js"></script>
+<script>
+function render(id, code) {
+  try {
+    const compiled = MirrorLang.compile(code);
+    const execCode = compiled.replace('export function createUI', 'function createUI');
+    const fn = new Function(execCode + '\nreturn createUI();');
+    const ui = fn();
+    if (ui && ui.root) {
+      document.getElementById(id).appendChild(ui.root);
+    }
+  } catch (e) {
+    document.getElementById(id).innerHTML = '<div class="error">' + e.message + '</div>';
+    console.error(id, e);
+  }
+}
+
+// Test A: Einfache Slots ohne grow
+render('a-flat', `
+Frame hor, gap 8, bg #1a1a24, pad 12, rad 8
+  Frame w 40, h 40, bg #3b82f6, rad 8
+  Text "Label", col white
+`);
+
+render('a-comp', `
+Row: Frame hor, gap 8, bg #1a1a24, pad 12, rad 8
+  Box: Frame w 40, h 40, bg #3b82f6, rad 8
+  Label: col white
+
+Row
+  Box
+  Label "Label"
+`);
+
+// Test B: Slots mit grow
+render('b-flat', `
+Frame hor, gap 8, bg #1a1a24, pad 12, rad 8, w 300
+  Frame w 40, h 40, bg #3b82f6, rad 8
+  Frame grow, bg #333, pad 8, rad 4
+    Text "Growing", col white
+`);
+
+render('b-comp', `
+Row: Frame hor, gap 8, bg #1a1a24, pad 12, rad 8, w 300
+  Box: Frame w 40, h 40, bg #3b82f6, rad 8
+  Content: Frame grow, bg #333, pad 8, rad 4
+
+Row
+  Box
+  Content
+    Text "Growing", col white
+`);
+
+// Test C: Verschachtelte Slots
+render('c-flat', `
+Frame hor, gap 8, bg #1a1a24, pad 12, rad 8
+  Frame w 40, h 40, bg #3b82f6, rad 8, center
+    Text "A", col white
+  Text "Label", col white
+`);
+
+render('c-comp', `
+Row: Frame hor, gap 8, bg #1a1a24, pad 12, rad 8
+  Box: Frame w 40, h 40, bg #3b82f6, rad 8, center
+    Inner: col white
+  Label: col white
+
+Row
+  Box
+    Inner "A"
+  Label "Label"
+`);
+
+// Test D: Drei Slots
+render('d-flat', `
+Frame hor, gap 8, bg #1a1a24, pad 12, rad 8
+  Frame w 40, h 40, bg #ef4444, rad 8
+  Frame w 40, h 40, bg #f59e0b, rad 8
+  Frame w 40, h 40, bg #10b981, rad 8
+`);
+
+render('d-comp', `
+Row: Frame hor, gap 8, bg #1a1a24, pad 12, rad 8
+  A: Frame w 40, h 40, rad 8
+  B: Frame w 40, h 40, rad 8
+  C: Frame w 40, h 40, rad 8
+
+Row
+  A bg #ef4444
+  B bg #f59e0b
+  C bg #10b981
+`);
+
+// Test E: Drei Slots mit grow
+render('e-flat', `
+Frame hor, gap 8, bg #1a1a24, pad 12, rad 8, w 300
+  Frame w 40, h 40, bg #3b82f6, rad 8
+  Frame grow, bg #333, pad 8, rad 4
+    Text "Middle grows", col white, fs 12
+  Text "End", col #888, fs 12
+`);
+
+render('e-comp', `
+Row: Frame hor, gap 8, bg #1a1a24, pad 12, rad 8, w 300
+  Left: Frame w 40, h 40, bg #3b82f6, rad 8
+  Middle: Frame grow, bg #333, pad 8, rad 4
+  Right: col #888, fs 12
+
+Row
+  Left
+  Middle
+    Text "Middle grows", col white, fs 12
+  Right "End"
+`);
+
+// Test F: Frame-Slot mit Kind-Definition
+render('f-flat', `
+Frame hor, gap 8, bg #1a1a24, pad 12, rad 8, w 300
+  Frame w 40, h 40, bg grad 135 #3b82f6 #8b5cf6, rad 99, center
+    Text "MW", col white, fs 12, weight 600
+  Frame gap 0, grow
+    Text "Name", col white, fs 13
+    Text "Role", col #666, fs 11
+  Text "Count", col #f59e0b, fs 12
+`);
+
+render('f-comp', `
+Card: Frame hor, gap 8, bg #1a1a24, pad 12, rad 8, w 300
+  Avatar: Frame w 40, h 40, bg grad 135 #3b82f6 #8b5cf6, rad 99, center
+    Initials: col white, fs 12, weight 600
+  Info: Frame gap 0, grow
+    Name: col white, fs 13
+    Role: col #666, fs 11
+  Count: col #f59e0b, fs 12
+
+Card
+  Avatar
+    Initials "MW"
+  Info
+    Name "Name"
+    Role "Role"
+  Count "Count"
+`);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Manager - Wealth Advisory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ========================================
+       DESIGN TOKENS
+       ======================================== */
+    :root {
+      --bg-app: #0a0a0f;
+      --bg-panel: #0f0f14;
+      --bg-card: #14141a;
+      --bg-row: #16161c;
+      --bg-row-hover: #1c1c24;
+      --bg-header: #12121a;
+
+      --border: #1e1e28;
+      --border-subtle: #252530;
+
+      --text-primary: #e8e8ed;
+      --text-secondary: #8888a0;
+      --text-muted: #55556a;
+      --text-label: #6a6a80;
+
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-purple: #8b5cf6;
+
+      --positive: #10b981;
+      --positive-bg: rgba(16, 185, 129, 0.08);
+      --negative: #ef4444;
+      --negative-bg: rgba(239, 68, 68, 0.08);
+      --warning: #f59e0b;
+
+      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    /* ========================================
+       BASE
+       ======================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-app);
+      color: var(--text-primary);
+      font-size: 12px;
+      line-height: 1.4;
+      min-height: 100vh;
+    }
+
+    /* ========================================
+       LAYOUT
+       ======================================== */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 48px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    .nav-item {
+      padding: 6px 12px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover {
+      color: var(--text-primary);
+      background: var(--bg-row);
+    }
+
+    .nav-item.active {
+      color: var(--text-primary);
+      background: var(--accent-blue);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .market-time {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .market-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--positive);
+    }
+
+    .market-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--positive);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* ========================================
+       MAIN CONTENT
+       ======================================== */
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sidebar-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0 8px;
+    }
+
+    .client-card {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .client-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .client-avatar {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .client-info {
+      flex: 1;
+    }
+
+    .client-name {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .client-id {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .client-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .stat-value.positive { color: var(--positive); }
+    .stat-value.negative { color: var(--negative); }
+
+    .portfolio-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .portfolio-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .portfolio-item:hover {
+      background: var(--bg-row);
+    }
+
+    .portfolio-item.active {
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    .portfolio-item-name {
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .portfolio-item.active .portfolio-item-name {
+      color: var(--accent-blue);
+    }
+
+    .portfolio-item-value {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* ========================================
+       CONTENT AREA
+       ======================================== */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .content-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .content-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .content-title h1 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .badge-info {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .content-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-row);
+      color: var(--text-primary);
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    /* ========================================
+       KPI BAR
+       ======================================== */
+    .kpi-bar {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .kpi {
+      flex: 1;
+      background: var(--bg-panel);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .kpi-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .kpi-value {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .kpi-change {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .kpi-change.positive {
+      color: var(--positive);
+      background: var(--positive-bg);
+    }
+
+    .kpi-change.negative {
+      color: var(--negative);
+      background: var(--negative-bg);
+    }
+
+    .kpi-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* ========================================
+       TABLE
+       ======================================== */
+    .table-container {
+      flex: 1;
+      overflow: auto;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .table th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-header);
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .table th.right,
+    .table td.right {
+      text-align: right;
+    }
+
+    .table th.center,
+    .table td.center {
+      text-align: center;
+    }
+
+    .table tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    .table tbody tr:hover {
+      background: var(--bg-row-hover);
+    }
+
+    .table td {
+      padding: 10px 12px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .instrument {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .instrument-name {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .instrument-isin {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .ticker {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--accent-blue);
+      font-size: 11px;
+    }
+
+    .asset-type {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .asset-type.equity { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+    .asset-type.etf { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+    .asset-type.bond { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+    .asset-type.fund { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    .positive { color: var(--positive); }
+    .negative { color: var(--negative); }
+
+    .change-cell {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .change-arrow {
+      font-size: 10px;
+    }
+
+    .weight-bar {
+      width: 60px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .weight-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 2px;
+    }
+
+    .pnl-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 1px;
+    }
+
+    .pnl-value {
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+
+    .pnl-percent {
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+
+    .sector {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .rating {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .rating-buy { background: var(--positive-bg); color: var(--positive); }
+    .rating-hold { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .rating-sell { background: var(--negative-bg); color: var(--negative); }
+
+    .alert-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .alert-icon.active {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+
+    .alert-icon.inactive {
+      background: var(--bg-row);
+      color: var(--text-muted);
+    }
+
+    /* ========================================
+       FOOTER
+       ======================================== */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 20px;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .footer-left {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-stat {
+      display: flex;
+      gap: 4px;
+    }
+
+    .footer-stat span {
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <div class="logo-icon">W</div>
+          <span>Wealth Advisory</span>
+        </div>
+        <nav class="nav">
+          <div class="nav-item active">Portfolio</div>
+          <div class="nav-item">Watchlist</div>
+          <div class="nav-item">Orders</div>
+          <div class="nav-item">Research</div>
+          <div class="nav-item">Reports</div>
+        </nav>
+      </div>
+      <div class="header-right">
+        <div class="market-status">
+          <div class="market-dot"></div>
+          Markets Open
+        </div>
+        <div class="market-time">10:34:22 CET</div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Client</div>
+          <div class="client-card">
+            <div class="client-header">
+              <div class="client-avatar">MK</div>
+              <div class="client-info">
+                <div class="client-name">Dr. Michael Krüger</div>
+                <div class="client-id">ID 847291 · Private Banking</div>
+              </div>
+            </div>
+            <div class="client-stats">
+              <div class="stat">
+                <div class="stat-label">Total AuM</div>
+                <div class="stat-value">€2.847.291</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">YTD Return</div>
+                <div class="stat-value positive">+12.4%</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Risk Profile</div>
+                <div class="stat-value">Balanced</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Since</div>
+                <div class="stat-value">2019</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-label">Portfolios</div>
+          <div class="portfolio-list">
+            <div class="portfolio-item active">
+              <span class="portfolio-item-name">Core Equity</span>
+              <span class="portfolio-item-value">€1.42M</span>
+            </div>
+            <div class="portfolio-item">
+              <span class="portfolio-item-name">Fixed Income</span>
+              <span class="portfolio-item-value">€847K</span>
+            </div>
+            <div class="portfolio-item">
+              <span class="portfolio-item-name">Alternatives</span>
+              <span class="portfolio-item-value">€328K</span>
+            </div>
+            <div class="portfolio-item">
+              <span class="portfolio-item-name">Cash & MM</span>
+              <span class="portfolio-item-value">€251K</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <div class="content">
+        <div class="content-header">
+          <div class="content-title">
+            <h1>Core Equity Portfolio</h1>
+            <span class="badge badge-info">18 Positions</span>
+          </div>
+          <div class="content-actions">
+            <button class="btn btn-secondary">⬇ Export</button>
+            <button class="btn btn-secondary">⚙ Columns</button>
+            <button class="btn btn-primary">+ Add Position</button>
+          </div>
+        </div>
+
+        <!-- KPI Bar -->
+        <div class="kpi-bar">
+          <div class="kpi">
+            <div class="kpi-label">Market Value</div>
+            <div class="kpi-row">
+              <span class="kpi-value">€1,423,847</span>
+              <span class="kpi-change positive">+1.24%</span>
+            </div>
+            <div class="kpi-sub">Updated 10:34 CET</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Day P&L</div>
+            <div class="kpi-row">
+              <span class="kpi-value positive">+€17,456</span>
+            </div>
+            <div class="kpi-sub">vs. prev close</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Total P&L</div>
+            <div class="kpi-row">
+              <span class="kpi-value positive">+€189,234</span>
+              <span class="kpi-change positive">+15.3%</span>
+            </div>
+            <div class="kpi-sub">Cost basis €1,234,613</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Unrealized</div>
+            <div class="kpi-row">
+              <span class="kpi-value positive">+€142,891</span>
+            </div>
+            <div class="kpi-sub">Realized: +€46,343</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Div. Yield</div>
+            <div class="kpi-row">
+              <span class="kpi-value">2.8%</span>
+            </div>
+            <div class="kpi-sub">Est. €39,868/yr</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 40px"></th>
+                <th>Instrument</th>
+                <th>Ticker</th>
+                <th>Type</th>
+                <th>Sector</th>
+                <th class="right">Qty</th>
+                <th class="right">Avg Cost</th>
+                <th class="right">Last Price</th>
+                <th class="right">Change</th>
+                <th class="right">Mkt Value</th>
+                <th class="center">Weight</th>
+                <th class="right">P&L</th>
+                <th class="center">Rating</th>
+                <th class="center">Alert</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">Apple Inc.</span>
+                    <span class="instrument-isin">US0378331005</span>
+                  </div>
+                </td>
+                <td><span class="ticker">AAPL</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Technology</td>
+                <td class="right mono">450</td>
+                <td class="right mono">€142.30</td>
+                <td class="right mono">€178.45</td>
+                <td class="right">
+                  <div class="change-cell positive">
+                    <span class="change-arrow">▲</span>
+                    <span>+2.34%</span>
+                  </div>
+                </td>
+                <td class="right mono">€80,302</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 56%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">5.6%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€16,268</span>
+                    <span class="pnl-percent">+25.4%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-buy">Buy</span></td>
+                <td class="center"><span class="alert-icon active">⚡</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">Microsoft Corp.</span>
+                    <span class="instrument-isin">US5949181045</span>
+                  </div>
+                </td>
+                <td><span class="ticker">MSFT</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Technology</td>
+                <td class="right mono">280</td>
+                <td class="right mono">€298.50</td>
+                <td class="right mono">€412.85</td>
+                <td class="right">
+                  <div class="change-cell positive">
+                    <span class="change-arrow">▲</span>
+                    <span>+1.82%</span>
+                  </div>
+                </td>
+                <td class="right mono">€115,598</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 81%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">8.1%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€32,018</span>
+                    <span class="pnl-percent">+38.3%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-buy">Buy</span></td>
+                <td class="center"><span class="alert-icon inactive">○</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">iShares Core MSCI World</span>
+                    <span class="instrument-isin">IE00B4L5Y983</span>
+                  </div>
+                </td>
+                <td><span class="ticker">IWDA</span></td>
+                <td><span class="asset-type etf">ETF</span></td>
+                <td class="sector">Diversified</td>
+                <td class="right mono">1,250</td>
+                <td class="right mono">€72.40</td>
+                <td class="right mono">€84.92</td>
+                <td class="right">
+                  <div class="change-cell positive">
+                    <span class="change-arrow">▲</span>
+                    <span>+0.94%</span>
+                  </div>
+                </td>
+                <td class="right mono">€106,150</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 75%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">7.5%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€15,650</span>
+                    <span class="pnl-percent">+17.3%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-hold">Hold</span></td>
+                <td class="center"><span class="alert-icon inactive">○</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">NVIDIA Corp.</span>
+                    <span class="instrument-isin">US67066G1040</span>
+                  </div>
+                </td>
+                <td><span class="ticker">NVDA</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Technology</td>
+                <td class="right mono">120</td>
+                <td class="right mono">€285.00</td>
+                <td class="right mono">€824.50</td>
+                <td class="right">
+                  <div class="change-cell positive">
+                    <span class="change-arrow">▲</span>
+                    <span>+4.21%</span>
+                  </div>
+                </td>
+                <td class="right mono">€98,940</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 69%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">6.9%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€64,740</span>
+                    <span class="pnl-percent">+189.3%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-buy">Buy</span></td>
+                <td class="center"><span class="alert-icon active">⚡</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">ASML Holding N.V.</span>
+                    <span class="instrument-isin">NL0010273215</span>
+                  </div>
+                </td>
+                <td><span class="ticker">ASML</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Technology</td>
+                <td class="right mono">85</td>
+                <td class="right mono">€542.00</td>
+                <td class="right mono">€892.40</td>
+                <td class="right">
+                  <div class="change-cell negative">
+                    <span class="change-arrow">▼</span>
+                    <span>-1.23%</span>
+                  </div>
+                </td>
+                <td class="right mono">€75,854</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 53%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">5.3%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€29,784</span>
+                    <span class="pnl-percent">+64.6%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-buy">Buy</span></td>
+                <td class="center"><span class="alert-icon inactive">○</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">Novo Nordisk A/S</span>
+                    <span class="instrument-isin">DK0062498333</span>
+                  </div>
+                </td>
+                <td><span class="ticker">NOVO.B</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Healthcare</td>
+                <td class="right mono">340</td>
+                <td class="right mono">€98.50</td>
+                <td class="right mono">€127.80</td>
+                <td class="right">
+                  <div class="change-cell positive">
+                    <span class="change-arrow">▲</span>
+                    <span>+0.67%</span>
+                  </div>
+                </td>
+                <td class="right mono">€43,452</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 31%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">3.1%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€9,962</span>
+                    <span class="pnl-percent">+29.7%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-buy">Buy</span></td>
+                <td class="center"><span class="alert-icon inactive">○</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">SAP SE</span>
+                    <span class="instrument-isin">DE0007164600</span>
+                  </div>
+                </td>
+                <td><span class="ticker">SAP</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Technology</td>
+                <td class="right mono">420</td>
+                <td class="right mono">€124.80</td>
+                <td class="right mono">€184.65</td>
+                <td class="right">
+                  <div class="change-cell positive">
+                    <span class="change-arrow">▲</span>
+                    <span>+1.12%</span>
+                  </div>
+                </td>
+                <td class="right mono">€77,553</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 54%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">5.4%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€25,137</span>
+                    <span class="pnl-percent">+47.9%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-hold">Hold</span></td>
+                <td class="center"><span class="alert-icon inactive">○</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">Allianz SE</span>
+                    <span class="instrument-isin">DE0008404005</span>
+                  </div>
+                </td>
+                <td><span class="ticker">ALV</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Financials</td>
+                <td class="right mono">180</td>
+                <td class="right mono">€198.40</td>
+                <td class="right mono">€278.50</td>
+                <td class="right">
+                  <div class="change-cell positive">
+                    <span class="change-arrow">▲</span>
+                    <span>+0.89%</span>
+                  </div>
+                </td>
+                <td class="right mono">€50,130</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 35%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">3.5%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€14,418</span>
+                    <span class="pnl-percent">+40.4%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-hold">Hold</span></td>
+                <td class="center"><span class="alert-icon inactive">○</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">LVMH Moët Hennessy</span>
+                    <span class="instrument-isin">FR0000121014</span>
+                  </div>
+                </td>
+                <td><span class="ticker">MC</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Consumer</td>
+                <td class="right mono">65</td>
+                <td class="right mono">€724.00</td>
+                <td class="right mono">€685.20</td>
+                <td class="right">
+                  <div class="change-cell negative">
+                    <span class="change-arrow">▼</span>
+                    <span>-2.14%</span>
+                  </div>
+                </td>
+                <td class="right mono">€44,538</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 31%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">3.1%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell negative">
+                    <span class="pnl-value">-€2,522</span>
+                    <span class="pnl-percent">-5.4%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-hold">Hold</span></td>
+                <td class="center"><span class="alert-icon active">⚡</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">Nestlé S.A.</span>
+                    <span class="instrument-isin">CH0038863350</span>
+                  </div>
+                </td>
+                <td><span class="ticker">NESN</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Consumer</td>
+                <td class="right mono">380</td>
+                <td class="right mono">€112.50</td>
+                <td class="right mono">€98.45</td>
+                <td class="right">
+                  <div class="change-cell negative">
+                    <span class="change-arrow">▼</span>
+                    <span>-0.45%</span>
+                  </div>
+                </td>
+                <td class="right mono">€37,411</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 26%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">2.6%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell negative">
+                    <span class="pnl-value">-€5,339</span>
+                    <span class="pnl-percent">-12.5%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-sell">Sell</span></td>
+                <td class="center"><span class="alert-icon active">⚡</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">Xtrackers Euro Stoxx 50</span>
+                    <span class="instrument-isin">LU0274211217</span>
+                  </div>
+                </td>
+                <td><span class="ticker">XESX</span></td>
+                <td><span class="asset-type etf">ETF</span></td>
+                <td class="sector">Diversified</td>
+                <td class="right mono">850</td>
+                <td class="right mono">€48.20</td>
+                <td class="right mono">€54.85</td>
+                <td class="right">
+                  <div class="change-cell positive">
+                    <span class="change-arrow">▲</span>
+                    <span>+0.52%</span>
+                  </div>
+                </td>
+                <td class="right mono">€46,623</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 33%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">3.3%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€5,653</span>
+                    <span class="pnl-percent">+13.8%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-hold">Hold</span></td>
+                <td class="center"><span class="alert-icon inactive">○</span></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>
+                  <div class="instrument">
+                    <span class="instrument-name">Siemens AG</span>
+                    <span class="instrument-isin">DE0007236101</span>
+                  </div>
+                </td>
+                <td><span class="ticker">SIE</span></td>
+                <td><span class="asset-type equity">Equity</span></td>
+                <td class="sector">Industrials</td>
+                <td class="right mono">240</td>
+                <td class="right mono">€142.80</td>
+                <td class="right mono">€178.90</td>
+                <td class="right">
+                  <div class="change-cell positive">
+                    <span class="change-arrow">▲</span>
+                    <span>+0.78%</span>
+                  </div>
+                </td>
+                <td class="right mono">€42,936</td>
+                <td class="center">
+                  <div class="weight-bar"><div class="weight-fill" style="width: 30%"></div></div>
+                  <span class="mono" style="font-size: 10px; color: var(--text-muted)">3.0%</span>
+                </td>
+                <td class="right">
+                  <div class="pnl-cell positive">
+                    <span class="pnl-value">+€8,664</span>
+                    <span class="pnl-percent">+25.3%</span>
+                  </div>
+                </td>
+                <td class="center"><span class="rating rating-buy">Buy</span></td>
+                <td class="center"><span class="alert-icon inactive">○</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+          <div class="footer-left">
+            <div class="footer-stat">Showing <span>12 of 18</span> positions</div>
+            <div class="footer-stat">Last sync: <span>10:34:22 CET</span></div>
+          </div>
+          <div class="footer-right">
+            Data provided by Refinitiv · Prices delayed 15 min
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

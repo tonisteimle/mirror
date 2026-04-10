@@ -578,6 +578,10 @@ export interface TableNode extends BaseNode {
   headerSlot?: TableSlotNode
   /** Row slot customization */
   rowSlot?: TableSlotNode
+  /** Odd row styling for zebra pattern */
+  rowOddSlot?: TableSlotNode
+  /** Even row styling for zebra pattern */
+  rowEvenSlot?: TableSlotNode
   /** Footer slot customization */
   footerSlot?: TableSlotNode
   /** Group header slot customization */
@@ -670,6 +674,10 @@ export interface TableColumnNode extends BaseNode {
   aggregation?: 'sum' | 'avg' | 'count'
   /** Custom cell template */
   customCell?: (Instance | Slot | Text)[]
+  /** Cell styling properties (bg, pad, col, etc.) */
+  cellProperties?: Property[]
+  /** Header cell styling properties */
+  headerCellProperties?: Property[]
   /** Source position for bidirectional editing */
   sourcePosition?: SourcePosition
 }

@@ -77,9 +77,10 @@ function checkChildOrder(el: Element, expectedOrder: string[]): { ok: boolean; a
 // These use custom functions, undefined data, or advanced syntax
 const SKIP_EXAMPLES: Record<string, number[]> = {
   '06 - states': [10, 11], // Uses IntersectionObserver (not available in JSDOM)
+  '07 - animationen': [8, 9, 10, 12, 13], // Uses setupInViewAnimation/setupScrollAnimation (not in test runtime)
   '09 - daten': [9], // Produktliste with each/in loop - $product scope issue
   '14 - tables': [20], // Uses $users, $selected, select(), custom methods
-  '15 - charts': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], // Charts not in inline runtime yet
+  '15 - charts': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], // Charts not in inline runtime yet
   '16 - forms': [11],  // Uses isValidEmail(), 'and not' syntax, register()
 }
 

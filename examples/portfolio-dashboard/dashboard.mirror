@@ -1,0 +1,728 @@
+// ============================================
+// PORTFOLIO DASHBOARD
+// Professional Wealth Advisory Interface
+// ============================================
+
+// ============================================
+// DESIGN TOKENS
+// ============================================
+
+// Backgrounds
+bg.app: #0a0a0f
+bg.panel: #0f0f14
+bg.card: #14141a
+bg.row: #16161c
+
+// Borders
+border.boc: #1e1e28
+
+// Text
+text.col: #e8e8ed
+text-secondary.col: #8888a0
+text-muted.col: #55556a
+
+// Accents
+accent.bg: #3b82f6
+
+// Semantic
+positive.col: #10b981
+negative.col: #ef4444
+
+// ============================================
+// COMPONENTS
+// ============================================
+
+NavItem: Frame pad 6 12, rad 4, col #8888a0, fs 12, weight 500, cursor pointer, exclusive()
+  hover 0.15s:
+    col #e8e8ed
+    bg #16161c
+  on:
+    col white
+    bg #3b82f6
+
+PortfolioItem: Frame hor, spread, ver-center, pad 8, rad 6, cursor pointer, w full, exclusive()
+  hover 0.15s:
+    bg #16161c
+  on:
+    bg rgba(59,130,246,0.15)
+
+// ============================================
+// APP STRUCTURE
+// ============================================
+
+Frame w full, h full, bg #0a0a0f
+
+  // -------- HEADER --------
+  Frame hor, spread, ver-center, h 48, pad 0 20, bg #0f0f14, bor b 1 #1e1e28, w full
+    // Left: Logo + Nav
+    Frame hor, ver-center, gap 24
+      // Logo
+      Frame hor, ver-center, gap 8
+        Frame w 24, h 24, bg grad 135 #3b82f6 #8b5cf6, rad 6, center
+          Text "W", col white, fs 12, weight 700
+        Text "Wealth Advisory", col #e8e8ed, fs 14, weight 600
+      // NavBar
+      Frame hor, gap 4
+        NavItem "Portfolio", on
+        NavItem "Watchlist"
+        NavItem "Orders"
+        NavItem "Research"
+        NavItem "Reports"
+    // Right: Market Status + Time
+    Frame hor, ver-center, gap 16
+      Frame hor, ver-center, gap 6
+        Frame w 8, h 8, bg #10b981, rad 99, anim pulse
+        Text "Markets Open", fs 11, col #10b981
+      Text "10:34:22 CET", font mono, fs 11, col #55556a
+
+  // -------- MAIN (Sidebar + Content) --------
+  Frame hor, w full, h full
+
+    // -------- SIDEBAR --------
+    Frame w 240, h full, bg #0f0f14, bor 0 1 0 0, boc #1e1e28, pad 16, gap 20
+
+      // Section: Client
+      Frame gap 8
+        Text "CLIENT", fs 10, weight 600, col #55556a, uppercase, pad 0 8
+
+        // Client Card
+        Frame bg #14141a, rad 8, pad 12, gap 8
+
+          // Client Header: Avatar + Info
+          Frame hor, ver-center, gap 10
+            Frame w 36, h 36, bg grad 135 #06b6d4 #3b82f6, rad 8, center
+              Text "MK", col white, fs 13, weight 600
+            Frame gap 2
+              Text "Dr. Michael Krüger", col #e8e8ed, fs 13, weight 600
+              Text "ID 847291 · Private Banking", col #55556a, fs 11
+
+          // Client Stats (2x2 Grid)
+          Frame grid 2, gap 8, pad 8 0 0 0, bor 1 0 0 0, boc #1e1e28
+            Frame gap 2
+              Text "Total AuM", fs 10, col #55556a
+              Text "€2.847.291", font mono, fs 12, weight 500, col #e8e8ed
+            Frame gap 2
+              Text "YTD Return", fs 10, col #55556a
+              Text "+12.4%", font mono, fs 12, weight 500, col #10b981
+            Frame gap 2
+              Text "Risk Profile", fs 10, col #55556a
+              Text "Balanced", font mono, fs 12, weight 500, col #e8e8ed
+            Frame gap 2
+              Text "Since", fs 10, col #55556a
+              Text "2019", font mono, fs 12, weight 500, col #e8e8ed
+
+      // Section: Portfolios
+      Frame gap 8, w full
+        Text "PORTFOLIOS", fs 10, weight 600, col #55556a, uppercase, pad 0 8
+
+        Frame gap 2, w full
+          PortfolioItem on
+            Text "Core Equity", col #3b82f6, fs 12
+            Text "€1.42M", font mono, fs 11, col #8888a0
+          PortfolioItem
+            Text "Fixed Income", col #e8e8ed, fs 12
+            Text "€847K", font mono, fs 11, col #8888a0
+          PortfolioItem
+            Text "Alternatives", col #e8e8ed, fs 12
+            Text "€328K", font mono, fs 11, col #8888a0
+          PortfolioItem
+            Text "Cash & MM", col #e8e8ed, fs 12
+            Text "€251K", font mono, fs 11, col #8888a0
+
+    // -------- CONTENT --------
+    Frame w full, h full, bg #0a0a0f
+
+      // Content Header
+      Frame hor, spread, ver-center, pad 12 20, bg #0f0f14, bor b 1 #1e1e28
+        Frame hor, ver-center, gap 12
+          Text "Core Equity Portfolio", col #e8e8ed, fs 15, weight 600
+          Frame pad 3 8, rad 4, bg rgba(59,130,246,0.15)
+            Text "18 Positions", col #3b82f6, fs 10, weight 600
+        Frame hor, gap 8
+          Frame hor, ver-center, gap 6, pad 6 12, rad 5, bg #14141a, bor 1, boc #1e1e28, cursor pointer
+            Icon "download", ic #8888a0, is 14
+            Text "Export", col #8888a0, fs 11, weight 500
+          Frame hor, ver-center, gap 6, pad 6 12, rad 5, bg #14141a, bor 1, boc #1e1e28, cursor pointer
+            Icon "settings-2", ic #8888a0, is 14
+            Text "Columns", col #8888a0, fs 11, weight 500
+          Frame hor, ver-center, gap 6, pad 6 12, rad 5, bg #3b82f6, cursor pointer
+            Icon "plus", ic white, is 14
+            Text "Add Position", col white, fs 11, weight 500
+
+      // KPI Bar
+      Frame hor, w full, bg #1e1e28, bor b 1 #1e1e28
+        // KPI 1: Market Value
+        Frame grow, bg #0f0f14, pad 12 16, gap 4
+          Text "MARKET VALUE", fs 10, col #55556a, uppercase
+          Frame hor, ver-center, gap 8
+            Text "€1,423,847", font mono, fs 16, weight 600, col #e8e8ed
+            Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+              Text "+1.24%", font mono, fs 11, weight 500, col #10b981
+          Text "Updated 10:34 CET", fs 10, col #55556a
+
+        // KPI 2: Day P&L
+        Frame grow, bg #0f0f14, pad 12 16, gap 4
+          Text "DAY P&L", fs 10, col #55556a, uppercase
+          Text "+€17,456", font mono, fs 16, weight 600, col #10b981
+          Text "vs. prev close", fs 10, col #55556a
+
+        // KPI 3: Total P&L
+        Frame grow, bg #0f0f14, pad 12 16, gap 4
+          Text "TOTAL P&L", fs 10, col #55556a, uppercase
+          Frame hor, ver-center, gap 8
+            Text "+€189,234", font mono, fs 16, weight 600, col #10b981
+            Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+              Text "+15.3%", font mono, fs 11, weight 500, col #10b981
+          Text "Cost basis €1,234,613", fs 10, col #55556a
+
+        // KPI 4: Unrealized
+        Frame grow, bg #0f0f14, pad 12 16, gap 4
+          Text "UNREALIZED", fs 10, col #55556a, uppercase
+          Text "+€142,891", font mono, fs 16, weight 600, col #10b981
+          Text "Realized: +€46,343", fs 10, col #55556a
+
+        // KPI 5: Div. Yield
+        Frame grow, bg #0f0f14, pad 12 16, gap 4
+          Text "DIV. YIELD", fs 10, col #55556a, uppercase
+          Text "2.8%", font mono, fs 16, weight 600, col #e8e8ed
+          Text "Est. €39,868/yr", fs 10, col #55556a
+
+      // -------- TABLE --------
+      Frame w full, h full, scroll
+
+        // Table Header
+        Frame hor, ver-center, pad 8 12, bg #12121a, bor b 1 #1e1e28
+          Frame w 40
+          Frame w 180
+            Text "INSTRUMENT", fs 10, col #55556a, weight 600, uppercase
+          Frame w 70
+            Text "TICKER", fs 10, col #55556a, weight 600, uppercase
+          Frame w 60
+            Text "TYPE", fs 10, col #55556a, weight 600, uppercase
+          Frame w 90
+            Text "SECTOR", fs 10, col #55556a, weight 600, uppercase
+          Frame w 60, right
+            Text "QTY", fs 10, col #55556a, weight 600, uppercase
+          Frame w 80, right
+            Text "AVG COST", fs 10, col #55556a, weight 600, uppercase
+          Frame w 80, right
+            Text "LAST PRICE", fs 10, col #55556a, weight 600, uppercase
+          Frame w 80, right
+            Text "CHANGE", fs 10, col #55556a, weight 600, uppercase
+          Frame w 90, right
+            Text "MKT VALUE", fs 10, col #55556a, weight 600, uppercase
+          Frame w 80, center
+            Text "WEIGHT", fs 10, col #55556a, weight 600, uppercase
+          Frame w 90, right
+            Text "P&L", fs 10, col #55556a, weight 600, uppercase
+          Frame w 60, center
+            Text "RATING", fs 10, col #55556a, weight 600, uppercase
+          Frame w 50, center
+            Text "ALERT", fs 10, col #55556a, weight 600, uppercase
+
+        // Table Body
+        Frame w full, gap 0
+
+          // Row 1: Apple
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "Apple Inc.", col #e8e8ed, fs 11, weight 500
+              Text "US0378331005", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "AAPL", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Technology", fs 10, col #8888a0
+            Frame w 60, right
+              Text "450", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€142.30", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€178.45", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▲", fs 10, col #10b981
+              Text "+2.34%", font mono, fs 11, col #10b981
+            Frame w 90, right
+              Text "€80,302", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 56%, h full, bg #3b82f6, rad 2
+              Text "5.6%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€16,268", font mono, fs 11, weight 500, col #10b981
+              Text "+25.4%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+                Text "Buy", fs 10, weight 600, col #10b981
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg rgba(245,158,11,0.15), center, cursor pointer
+                Text "⚡", fs 10
+
+          // Row 2: Microsoft
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "Microsoft Corp.", col #e8e8ed, fs 11, weight 500
+              Text "US5949181045", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "MSFT", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Technology", fs 10, col #8888a0
+            Frame w 60, right
+              Text "280", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€298.50", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€412.85", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▲", fs 10, col #10b981
+              Text "+1.82%", font mono, fs 11, col #10b981
+            Frame w 90, right
+              Text "€115,598", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 81%, h full, bg #3b82f6, rad 2
+              Text "8.1%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€32,018", font mono, fs 11, weight 500, col #10b981
+              Text "+38.3%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+                Text "Buy", fs 10, weight 600, col #10b981
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg #16161c, center, cursor pointer
+                Text "○", fs 10, col #55556a
+
+          // Row 3: iShares ETF
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "iShares Core MSCI World", col #e8e8ed, fs 11, weight 500
+              Text "IE00B4L5Y983", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "IWDA", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(139,92,246,0.15)
+                Text "ETF", fs 9, weight 600, col #8b5cf6
+            Frame w 90
+              Text "Diversified", fs 10, col #8888a0
+            Frame w 60, right
+              Text "1,250", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€72.40", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€84.92", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▲", fs 10, col #10b981
+              Text "+0.94%", font mono, fs 11, col #10b981
+            Frame w 90, right
+              Text "€106,150", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 75%, h full, bg #3b82f6, rad 2
+              Text "7.5%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€15,650", font mono, fs 11, weight 500, col #10b981
+              Text "+17.3%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(245,158,11,0.15)
+                Text "Hold", fs 10, weight 600, col #f59e0b
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg #16161c, center, cursor pointer
+                Text "○", fs 10, col #55556a
+
+          // Row 4: NVIDIA
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "NVIDIA Corp.", col #e8e8ed, fs 11, weight 500
+              Text "US67066G1040", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "NVDA", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Technology", fs 10, col #8888a0
+            Frame w 60, right
+              Text "120", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€285.00", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€824.50", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▲", fs 10, col #10b981
+              Text "+4.21%", font mono, fs 11, col #10b981
+            Frame w 90, right
+              Text "€98,940", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 69%, h full, bg #3b82f6, rad 2
+              Text "6.9%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€64,740", font mono, fs 11, weight 500, col #10b981
+              Text "+189.3%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+                Text "Buy", fs 10, weight 600, col #10b981
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg rgba(245,158,11,0.15), center, cursor pointer
+                Text "⚡", fs 10
+
+          // Row 5: ASML
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "ASML Holding N.V.", col #e8e8ed, fs 11, weight 500
+              Text "NL0010273215", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "ASML", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Technology", fs 10, col #8888a0
+            Frame w 60, right
+              Text "85", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€542.00", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€892.40", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▼", fs 10, col #ef4444
+              Text "-1.23%", font mono, fs 11, col #ef4444
+            Frame w 90, right
+              Text "€75,854", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 53%, h full, bg #3b82f6, rad 2
+              Text "5.3%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€29,784", font mono, fs 11, weight 500, col #10b981
+              Text "+64.6%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+                Text "Buy", fs 10, weight 600, col #10b981
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg #16161c, center, cursor pointer
+                Text "○", fs 10, col #55556a
+
+          // Row 6: Novo Nordisk
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "Novo Nordisk A/S", col #e8e8ed, fs 11, weight 500
+              Text "DK0062498333", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "NOVO.B", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Healthcare", fs 10, col #8888a0
+            Frame w 60, right
+              Text "340", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€98.50", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€127.80", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▲", fs 10, col #10b981
+              Text "+0.67%", font mono, fs 11, col #10b981
+            Frame w 90, right
+              Text "€43,452", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 31%, h full, bg #3b82f6, rad 2
+              Text "3.1%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€9,962", font mono, fs 11, weight 500, col #10b981
+              Text "+29.7%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+                Text "Buy", fs 10, weight 600, col #10b981
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg #16161c, center, cursor pointer
+                Text "○", fs 10, col #55556a
+
+          // Row 7: SAP
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "SAP SE", col #e8e8ed, fs 11, weight 500
+              Text "DE0007164600", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "SAP", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Technology", fs 10, col #8888a0
+            Frame w 60, right
+              Text "420", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€124.80", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€184.65", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▲", fs 10, col #10b981
+              Text "+1.12%", font mono, fs 11, col #10b981
+            Frame w 90, right
+              Text "€77,553", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 54%, h full, bg #3b82f6, rad 2
+              Text "5.4%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€25,137", font mono, fs 11, weight 500, col #10b981
+              Text "+47.9%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(245,158,11,0.15)
+                Text "Hold", fs 10, weight 600, col #f59e0b
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg #16161c, center, cursor pointer
+                Text "○", fs 10, col #55556a
+
+          // Row 8: Allianz
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "Allianz SE", col #e8e8ed, fs 11, weight 500
+              Text "DE0008404005", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "ALV", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Financials", fs 10, col #8888a0
+            Frame w 60, right
+              Text "180", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€198.40", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€278.50", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▲", fs 10, col #10b981
+              Text "+0.89%", font mono, fs 11, col #10b981
+            Frame w 90, right
+              Text "€50,130", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 35%, h full, bg #3b82f6, rad 2
+              Text "3.5%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€14,418", font mono, fs 11, weight 500, col #10b981
+              Text "+40.4%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(245,158,11,0.15)
+                Text "Hold", fs 10, weight 600, col #f59e0b
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg #16161c, center, cursor pointer
+                Text "○", fs 10, col #55556a
+
+          // Row 9: LVMH
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "LVMH Moët Hennessy", col #e8e8ed, fs 11, weight 500
+              Text "FR0000121014", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "MC", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Consumer", fs 10, col #8888a0
+            Frame w 60, right
+              Text "65", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€724.00", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€685.20", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▼", fs 10, col #ef4444
+              Text "-2.14%", font mono, fs 11, col #ef4444
+            Frame w 90, right
+              Text "€44,538", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 31%, h full, bg #3b82f6, rad 2
+              Text "3.1%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "-€2,522", font mono, fs 11, weight 500, col #ef4444
+              Text "-5.4%", font mono, fs 10, col #ef4444
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(245,158,11,0.15)
+                Text "Hold", fs 10, weight 600, col #f59e0b
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg rgba(245,158,11,0.15), center, cursor pointer
+                Text "⚡", fs 10
+
+          // Row 10: Nestlé
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "Nestlé S.A.", col #e8e8ed, fs 11, weight 500
+              Text "CH0038863350", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "NESN", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Consumer", fs 10, col #8888a0
+            Frame w 60, right
+              Text "380", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€112.50", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€98.45", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▼", fs 10, col #ef4444
+              Text "-0.45%", font mono, fs 11, col #ef4444
+            Frame w 90, right
+              Text "€37,411", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 26%, h full, bg #3b82f6, rad 2
+              Text "2.6%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "-€5,339", font mono, fs 11, weight 500, col #ef4444
+              Text "-12.5%", font mono, fs 10, col #ef4444
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(239,68,68,0.08)
+                Text "Sell", fs 10, weight 600, col #ef4444
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg rgba(245,158,11,0.15), center, cursor pointer
+                Text "⚡", fs 10
+
+          // Row 11: Xtrackers ETF
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "Xtrackers Euro Stoxx 50", col #e8e8ed, fs 11, weight 500
+              Text "LU0274211217", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "XESX", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(139,92,246,0.15)
+                Text "ETF", fs 9, weight 600, col #8b5cf6
+            Frame w 90
+              Text "Diversified", fs 10, col #8888a0
+            Frame w 60, right
+              Text "850", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€48.20", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€54.85", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▲", fs 10, col #10b981
+              Text "+0.52%", font mono, fs 11, col #10b981
+            Frame w 90, right
+              Text "€46,623", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 33%, h full, bg #3b82f6, rad 2
+              Text "3.3%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€5,653", font mono, fs 11, weight 500, col #10b981
+              Text "+13.8%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(245,158,11,0.15)
+                Text "Hold", fs 10, weight 600, col #f59e0b
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg #16161c, center, cursor pointer
+                Text "○", fs 10, col #55556a
+
+          // Row 12: Siemens
+          Frame hor, ver-center, pad 10 12, bor b 1 #1e1e28, cursor pointer
+            hover 0.1s:
+              bg #1c1c24
+            Frame w 40, center
+              Frame w 14, h 14, rad 2, bor 1, boc #55556a
+            Frame w 180, gap 2
+              Text "Siemens AG", col #e8e8ed, fs 11, weight 500
+              Text "DE0007236101", font mono, fs 10, col #55556a
+            Frame w 70
+              Text "SIE", font mono, fs 11, weight 600, col #3b82f6
+            Frame w 60
+              Frame pad 2 6, rad 3, bg rgba(59,130,246,0.15)
+                Text "EQUITY", fs 9, weight 600, col #3b82f6
+            Frame w 90
+              Text "Industrials", fs 10, col #8888a0
+            Frame w 60, right
+              Text "240", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€142.80", font mono, fs 11, col #e8e8ed
+            Frame w 80, right
+              Text "€178.90", font mono, fs 11, col #e8e8ed
+            Frame w 80, right, hor, ver-center, gap 4
+              Text "▲", fs 10, col #10b981
+              Text "+0.78%", font mono, fs 11, col #10b981
+            Frame w 90, right
+              Text "€42,936", font mono, fs 11, col #e8e8ed
+            Frame w 80, center, gap 2
+              Frame w 60, h 4, bg #1e1e28, rad 2
+                Frame w 30%, h full, bg #3b82f6, rad 2
+              Text "3.0%", font mono, fs 10, col #55556a
+            Frame w 90, right, gap 1
+              Text "+€8,664", font mono, fs 11, weight 500, col #10b981
+              Text "+25.3%", font mono, fs 10, col #10b981
+            Frame w 60, center
+              Frame pad 2 6, rad 3, bg rgba(16,185,129,0.08)
+                Text "Buy", fs 10, weight 600, col #10b981
+            Frame w 50, center
+              Frame w 18, h 18, rad 4, bg #16161c, center, cursor pointer
+                Text "○", fs 10, col #55556a
+
+      // -------- FOOTER --------
+      Frame hor, spread, ver-center, pad 8 20, bg #0f0f14, bor 1 0 0 0, boc #1e1e28
+        Frame hor, gap 16
+          Frame hor, gap 4
+            Text "Showing", fs 10, col #55556a
+            Text "12 of 18", fs 10, col #8888a0
+            Text "positions", fs 10, col #55556a
+          Frame hor, gap 4
+            Text "Last sync:", fs 10, col #55556a
+            Text "10:34:22 CET", fs 10, col #8888a0
+        Text "Data provided by Refinitiv · Prices delayed 15 min", fs 10, col #55556a

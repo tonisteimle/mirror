@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Status Badge - HTML</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --status-critical: #ef4444;
+      --status-warning: #f59e0b;
+      --status-stable: #10b981;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      padding: 24px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-badge.critical {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--status-critical);
+    }
+
+    .status-badge.warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--status-warning);
+    }
+
+    .status-badge.stable {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--status-stable);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+      background: currentColor;
+    }
+
+    .status-badge.critical .status-dot {
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+  <span class="status-badge critical">
+    <span class="status-dot"></span>
+    Kritisch
+  </span>
+  <span class="status-badge warning">
+    <span class="status-dot"></span>
+    Stabil
+  </span>
+  <span class="status-badge stable">
+    <span class="status-dot"></span>
+    Gut
+  </span>
+</body>
+</html>

@@ -514,6 +514,37 @@ Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 280, scroll
         <tr><td><code>spin</code></td><td>Drehen (Loading)</td></tr>
       </table>
 
+      <h3>Scroll Reveal (in-view)</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>in-view fade-in</code></td><td>Animation bei Scroll in Viewport</td></tr>
+        <tr><td><code>in-view slide-up</code></td><td>Von unten reingleiten</td></tr>
+        <tr><td><code>in-view fade-in, threshold 0.5</code></td><td>50% sichtbar bevor Animation</td></tr>
+      </table>
+
+      <h3>Parallax (scroll-y)</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>scroll-y 0 -100</code></td><td>Bewegt sich von 0 bis -100px beim Scrollen</td></tr>
+        <tr><td><code>scroll-y 0 50</code></td><td>Langsamere Bewegung nach unten</td></tr>
+      </table>
+
+      <h3>Spring Physics</h3>
+      <table class="ref-table">
+        <tr><th>Preset</th><th>Gefühl</th></tr>
+        <tr><td><code>spring</code></td><td>Ausgewogen (Default)</td></tr>
+        <tr><td><code>spring gentle</code></td><td>Weich, langsam</td></tr>
+        <tr><td><code>spring bouncy</code></td><td>Federnd, verspielt</td></tr>
+        <tr><td><code>spring stiff</code></td><td>Straff, schnell</td></tr>
+      </table>
+
+      <h3>Stagger</h3>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>stagger 0.1</code></td><td>100ms Verzögerung zwischen Kindern</td></tr>
+        <tr><td><code>in-view fade-in, stagger 0.1</code></td><td>Kombiniert mit Scroll-Reveal</td></tr>
+      </table>
+
       <h3>Enter/Exit</h3>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Wann</th></tr>

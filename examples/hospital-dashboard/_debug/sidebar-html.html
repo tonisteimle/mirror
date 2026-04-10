@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Sidebar - HTML</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-hover: #252530;
+      --text-primary: #ffffff;
+      --text-secondary: #8888a0;
+      --text-muted: #55556a;
+      --accent-blue: #3b82f6;
+      --status-critical: #ef4444;
+      --radius-md: 8px;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      padding: 24px;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: var(--space-sm) var(--space-md);
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .sidebar-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .sidebar-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .sidebar-item svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--status-critical);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-label">Stationen</div>
+    <div class="sidebar-item active">
+      <i data-lucide="siren"></i>
+      Notaufnahme
+      <span class="sidebar-badge">3</span>
+    </div>
+    <div class="sidebar-item">
+      <i data-lucide="stethoscope"></i>
+      Innere Medizin
+    </div>
+    <div class="sidebar-item">
+      <i data-lucide="scissors"></i>
+      Chirurgie
+    </div>
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>
