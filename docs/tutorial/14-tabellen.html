@@ -67,8 +67,8 @@
     title: "Testing"
     status: "todo"
 
-Table $tasks, gap 4, w full
-  Row: hor, gap 16, pad 12, bg #1a1a1a, rad 6, w full
+Table $tasks, bg #111, rad 12, w full
+  Row: hor, gap 16, pad 12 16, bor 0 0 1 0, boc #222, w full
     Text row.title, col white, w 140
     Text row.status, col #888</textarea>
         </div>
@@ -208,11 +208,11 @@ Table $tasks, bg #111, rad 12, pad 8
     price: 99
     users: 999
 
-Table $products, bg #0a0a0a, rad 16, pad 12, gap 2, w full
-  Header: bg #1a1a1a, pad 16, rad 8
+Table $products, bg #0a0a0a, rad 16, w full
+  Header: bg #1a1a1a, pad 16, rad 8 8 0 0
     Row "Plan", "Preis", "Users"
-  RowOdd: bg #151515, rad 6
-  RowEven: bg #111, rad 6
+  RowOdd: bg #151515
+  RowEven: bg #111
   Row: hor, pad 16, w full
     Text row.name, col white, weight 500, w 120
     Text "$" + row.price, col #10b981, w 80
@@ -244,8 +244,8 @@ Table $products, bg #0a0a0a, rad 16, pad 12, gap 2, w full
     done: true
 
 // Nur nicht erledigte Tasks
-Table $tasks where row.done == false, gap 4, w full
-  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+Table $tasks where row.done == false, bg #111, rad 12, w full
+  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
     Icon "circle", ic #f59e0b, is 16
     Text row.title, col white, grow</textarea>
         </div>
@@ -271,8 +271,8 @@ Table $tasks where row.done == false, gap 4, w full
     done: true
 
 // Nicht erledigt UND hohe Priorität
-Table $tasks where row.done == false and row.priority &lt; 3, gap 4, w full
-  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+Table $tasks where row.done == false and row.priority &lt; 3, bg #111, rad 12, w full
+  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
     Icon "alert-circle", ic #ef4444, is 16
     Text row.title, col white, grow
     Text "P" + row.priority, col #ef4444, fs 12, weight 600</textarea>
@@ -301,9 +301,9 @@ Table $tasks where row.done == false and row.priority &lt; 3, gap 4, w full
     priority: 2
 
 // Sortiert nach Priorität (aufsteigend)
-Table $tasks by priority, gap 4, w full
-  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
-    Text row.priority, col #2271C1, fs 14, weight 600, w 24
+Table $tasks by priority, bg #111, rad 12, w full
+  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
+    Text row.priority, col #2563eb, fs 14, weight 600, w 24
     Text row.title, col white, grow</textarea>
         </div>
         <div class="playground-preview"></div>
@@ -324,8 +324,8 @@ Table $tasks by priority, gap 4, w full
     price: 19
 
 // Teuerste zuerst
-Table $products by price desc, gap 4, w full
-  Row: hor, spread, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+Table $products by price desc, bg #111, rad 12, w full
+  Row: hor, spread, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
     Text row.name, col white, weight 500
     Text "€" + row.price, col #10b981, fs 14, weight 600</textarea>
         </div>
