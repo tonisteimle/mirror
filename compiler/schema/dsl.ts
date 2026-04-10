@@ -2169,13 +2169,13 @@ export const SCHEMA: Record<string, PropertyDef> = {
   'x-offset': {
     name: 'x-offset',
     aliases: [],
-    category: 'position',
-    description: 'X offset for positioned elements',
+    category: 'transform',
+    description: 'X offset using translateX (animatable)',
 
     numeric: {
       description: 'X offset in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'left', value: `${n}px` }],
+      css: (n) => [{ property: 'transform', value: `translateX(${n}px)` }],
       example: 'Box x-offset 10',
     },
   },
@@ -2183,13 +2183,13 @@ export const SCHEMA: Record<string, PropertyDef> = {
   'y-offset': {
     name: 'y-offset',
     aliases: [],
-    category: 'position',
-    description: 'Y offset for positioned elements',
+    category: 'transform',
+    description: 'Y offset using translateY (animatable)',
 
     numeric: {
       description: 'Y offset in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'top', value: `${n}px` }],
+      css: (n) => [{ property: 'transform', value: `translateY(${n}px)` }],
       example: 'Box y-offset 10',
     },
   },
