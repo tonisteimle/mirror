@@ -78,24 +78,21 @@ Box: w 30, h 30, rad 6, cursor pointer, toggle()
 Frame gap 8, bg #0a0a0a, pad 12, rad 8
   Frame hor, gap 12, ver-center
     Text "ease-out", col #888, fs 12, w 70
-    Frame stacked, w 180, h 30
-      Box bg #2271C1
-        on 1s ease-out:
-          x 150
+    Box bg #2271C1
+      on 1s ease-out:
+        x-offset 150
 
   Frame hor, gap 12, ver-center
     Text "ease-in", col #888, fs 12, w 70
-    Frame stacked, w 180, h 30
-      Box bg #10b981
-        on 1s ease-in:
-          x 150
+    Box bg #10b981
+      on 1s ease-in:
+        x-offset 150
 
   Frame hor, gap 12, ver-center
     Text "linear", col #888, fs 12, w 70
-    Frame stacked, w 180, h 30
-      Box bg #f59e0b
-        on 1s linear:
-          x 150</textarea>
+    Box bg #f59e0b
+      on 1s linear:
+        x-offset 150</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
