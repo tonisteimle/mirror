@@ -105,7 +105,7 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
   blue
 
 each color in $colors
-  Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
+  Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 6, mar 0 0 4 0
     Frame w 20, h 20, rad 4, bg $color
     Text "$color", col white</textarea>
         </div>
@@ -134,7 +134,7 @@ each color in $colors
     role: "User"
 
 each user in $users
-  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
+  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6, mar 0 0 4 0
     Text "$user.name", col white, weight 500
     Text "$user.role", col #888, fs 12</textarea>
         </div>
@@ -218,7 +218,7 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$method.name", col white, fs 18, weight 600
-  Frame gap 4, margin 8 0 0 0
+  Frame gap 4, mar 8 0 0 0
     each step in $method.steps
       Frame hor, gap 8
         Text "$step.title", col white
@@ -266,7 +266,7 @@ anna:
       <p>Mit <code>each</code> über alle Einträge einer <code>.data</code>-Datei:</p>
       <div class="code-block">
         <pre>each customer in $customers
-  <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">ver-center</span>, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">margin</span> 0 0 4 0
+  <span class="syn-component">Frame</span> <span class="syn-property">hor</span>, <span class="syn-property">spread</span>, <span class="syn-property">ver-center</span>, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 12, <span class="syn-property">rad</span> 6, <span class="syn-property">mar</span> 0 0 4 0
     <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 2
       <span class="syn-component">Text</span> <span class="syn-string">"$customer.name"</span>, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
       <span class="syn-component">Text</span> <span class="syn-string">"$customer.email"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 12
@@ -327,7 +327,7 @@ website:
         <pre><span class="syn-component">Frame</span> <span class="syn-property">gap</span> 8, <span class="syn-property">bg</span> #1a1a1a, <span class="syn-property">pad</span> 16, <span class="syn-property">rad</span> 8
   <span class="syn-component">Text</span> <span class="syn-string">"$projects.website.name"</span>, <span class="syn-property">col</span> white, <span class="syn-property">weight</span> 500
   <span class="syn-component">Text</span> <span class="syn-string">"Lead: $projects.website.lead.name"</span>, <span class="syn-property">col</span> #888
-  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4, <span class="syn-property">margin</span> 8 0 0 0
+  <span class="syn-component">Frame</span> <span class="syn-property">gap</span> 4, <span class="syn-property">mar</span> 8 0 0 0
     <span class="syn-component">Text</span> <span class="syn-string">"Team:"</span>, <span class="syn-property">col</span> #666, <span class="syn-property">fs</span> 12
     each member in $projects.website.members
       <span class="syn-component">Text</span> <span class="syn-string">"• $member.name"</span>, <span class="syn-property">col</span> #888, <span class="syn-property">fs</span> 13</pre>

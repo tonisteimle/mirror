@@ -180,9 +180,9 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
   // Farben: bg = Hintergrund, col = Textfarbe
   Text "Farbiger Text", bg #2271C1, col white, pad 8 16, rad 4
 
-  // Abstände: pad = innen, margin = außen
+  // Abstände: pad = innen, mar = außen
   Text "Mit Padding", pad 16, bg #333, col white, rad 4
-  Text "Mit Margin", margin 16, bg #333, col white, rad 4
+  Text "Mit Margin", mar 16, bg #333, col white, rad 4
 
   // Größen: w = Breite, h = Höhe (in Pixel)
   Frame w 200, h 50, bg #10b981, rad 4, center
@@ -200,7 +200,7 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
 | `bg` | Hintergrundfarbe | `bg #2271C1` |
 | `col` | Textfarbe | `col white` |
 | `pad` | Innenabstand (Padding) | `pad 12` oder `pad 12 24` |
-| `margin` | Außenabstand | `margin 16` |
+| `mar` | Außenabstand (Margin) | `mar 16` |
 | `w` / `h` | Breite / Höhe | `w 200, h 100` |
 | `rad` | Eckenradius | `rad 8` |
 | `fs` | Schriftgröße | `fs 18` |
@@ -1913,10 +1913,10 @@ Nicht nur `hover:` kann animiert werden – auch eigene States wie `on:` oder `o
 ```mirror
 Toggle: Frame w 48, h 28, rad 99, bg #333, cursor pointer, toggle()
   // Der Knopf
-  Frame w 24, h 24, rad 99, bg white, margin 2
+  Frame w 24, h 24, rad 99, bg white, mar 2
   on 0.2s:
     bg #2271C1
-    Frame margin 2 2 2 22
+    Frame mar 2 2 2 22
 
 Toggle
 ```
@@ -2229,7 +2229,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
     Button "← Zurück", pad 10 20, bg #333, col white, rad 6, back()
     Button "Vorwärts →", pad 10 20, bg #333, col white, rad 6, forward()
 
-  Divider bg #333, margin 8 0
+  Divider bg #333, mar 8 0
 
   Button "Mirror Website öffnen", pad 10 20, bg #2271C1, col white, rad 6, hor, gap 8
     Icon "external-link", ic white, is 16
@@ -2457,7 +2457,7 @@ colors:
   blue
 
 each color in $colors
-  Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
+  Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 6, mar 0 0 4 0
     Frame w 20, h 20, rad 4, bg $color
     Text "$color", col white
 ```
@@ -2481,7 +2481,7 @@ users:
     role: "User"
 
 each user in $users
-  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
+  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6, mar 0 0 4 0
     Text "$user.name", col white, weight 500
     Text "$user.role", col #888, fs 12
 ```
@@ -2550,7 +2550,7 @@ method:
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$method.name", col white, fs 18, weight 600
-  Frame gap 4, margin 8 0 0 0
+  Frame gap 4, mar 8 0 0 0
     each step in $method.steps
       Frame hor, gap 8
         Text "$step.title", col white
@@ -2592,7 +2592,7 @@ Mit `each` über alle Einträge einer `.data`-Datei:
 
 ```mirror
 each customer in $customers
-  Frame hor, spread, ver-center, bg #1a1a1a, pad 12, rad 6, margin 0 0 4 0
+  Frame hor, spread, ver-center, bg #1a1a1a, pad 12, rad 6, mar 0 0 4 0
     Frame gap 2
       Text "$customer.name", col white, weight 500
       Text "$customer.email", col #888, fs 12
@@ -2654,7 +2654,7 @@ website:
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$projects.website.name", col white, weight 500
   Text "Lead: $projects.website.lead.name", col #888
-  Frame gap 4, margin 8 0 0 0
+  Frame gap 4, mar 8 0 0 0
     Text "Team:", col #666, fs 12
     each member in $projects.website.members
       Text "• $member.name", col #888, fs 13
@@ -3460,7 +3460,7 @@ Auch SideNav hat Kind-Komponenten. Wieder gilt: **zuerst** die Kind-Komponenten 
 SideNav defaultValue "dashboard", w 220
   // Kind-Komponenten zuerst
   Root: bg #050510, pad 8
-  Item: pad 12 16, rad 8, margin 4 8, col #aaa, bg #151520
+  Item: pad 12 16, rad 8, mar 4 8, col #aaa, bg #151520
   ItemIcon: ic #818cf8
   ItemBadge: bg #ef4444, col white, pad 2 8, rad 99, fs 11, weight 600
   GroupLabel: pad 12 16, col #666, fs 11, uppercase

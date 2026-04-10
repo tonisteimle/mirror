@@ -905,7 +905,7 @@ export class Parser {
     const items: string[] = []
     this.advance() // [
 
-    while (!this.isAtEnd() && !this.check('RBRACKET')) {
+    for (let iter = 0; !this.isAtEnd() && !this.check('RBRACKET') && iter < Parser.MAX_ITERATIONS; iter++) {
       if (this.check('STRING')) {
         items.push(this.advance().value)
       } else if (this.check('IDENTIFIER')) {
