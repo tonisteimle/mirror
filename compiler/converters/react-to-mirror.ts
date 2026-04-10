@@ -9,8 +9,9 @@ import { parse as babelParse } from '@babel/parser'
 import _traverse, { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 
-// Handle ESM/CJS interop
-const traverse = (_traverse as any).default || _traverse
+// Handle ESM/CJS interop - Babel exports differ based on bundler
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const traverse = (_traverse as { default?: typeof _traverse }).default || _traverse
 
 // ============================================================================
 // Types
@@ -18,7 +19,7 @@ const traverse = (_traverse as any).default || _traverse
 
 interface MirrorNode {
   name: string
-  properties: Map<string, string | number>
+  properties: Map<string, string | number | boolean>
   children: MirrorNode[]
   textContent?: string
 }
@@ -254,8 +255,8 @@ function parseStyleObject(
         continue
       }
       if (key === 'textTransform') {
-        if (value === 'uppercase') properties.set('uppercase', true as any)
-        if (value === 'lowercase') properties.set('lowercase', true as any)
+        if (value === 'uppercase') properties.set('uppercase', true)
+        if (value === 'lowercase') properties.set('lowercase', true)
         continue
       }
       continue

@@ -364,7 +364,7 @@ class FrameworkGenerator {
   /**
    * Map CSS property/value back to Mirror property
    */
-  private cssPropToMirrorProp(prop: string, value: string): { name: string; value: any } | null {
+  private cssPropToMirrorProp(prop: string, value: string): { name: string; value: string | number | boolean } | null {
     // Layout
     if (prop === 'display' && value === 'flex') return null // Implicit
     if (prop === 'flex-direction' && value === 'row') return { name: 'hor', value: true }

@@ -621,7 +621,7 @@ export class Lexer {
    */
   private getKeywordTokenType(word: string): TokenType | undefined {
     // Check if word is in schema's reserved keywords
-    if (DSL.keywords.reserved.includes(word as any)) {
+    if ((DSL.keywords.reserved as readonly string[]).includes(word)) {
       // Convert to uppercase TokenType (e.g., 'as' → 'AS', 'each' → 'EACH')
       return word.toUpperCase() as TokenType
     }

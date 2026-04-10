@@ -1613,16 +1613,34 @@ class DOMGenerator {
     // Prefer headerStaticRow if it exists (Header: Row "A", "B" syntax)
     // This handles both standalone Row and Row inside Header: slot
     if (node.headerStaticRow) {
+      // Check if Row: template uses spread (justify-content: space-between)
+      // If so, header should match to align properly
+      const rowHasSpread = node.rowSlotStyles?.some(
+        s => s.property === 'justify-content' && s.value === 'space-between'
+      )
+
       // Header: Row "A", "B" syntax - render static row cells
       this.emit(`Object.assign(${headerVar}.style, {`)
       this.indent++
       this.emit(`display: 'flex',`)
       this.emit(`flexDirection: 'row',`)
-      this.emit(`gap: '24px',`)
+      // Match Row: spread layout if present
+      if (rowHasSpread) {
+        this.emit(`justifyContent: 'space-between',`)
+      } else {
+        this.emit(`gap: '24px',`)
+      }
+      // Match Row: width if present (important for spread to work)
+      const rowHasFullWidth = node.rowSlotStyles?.some(
+        s => s.property === 'width' && s.value === '100%'
+      )
+      if (rowHasFullWidth) {
+        this.emit(`width: '100%',`)
+      }
       // Apply header slot styles, but FILTER OUT layout properties that would override row direction
       // The slot styles may contain flex-direction: column from default Frame styles
       if (node.headerSlotStyles && node.headerSlotStyles.length > 0) {
-        const layoutPropsToFilter = new Set(['display', 'flex-direction', 'align-items', 'width'])
+        const layoutPropsToFilter = new Set(['display', 'flex-direction', 'align-items', 'width', 'justify-content'])
         for (const style of node.headerSlotStyles) {
           // Skip layout properties that would interfere with horizontal row layout
           if (layoutPropsToFilter.has(style.property)) continue
@@ -1646,8 +1664,12 @@ class DOMGenerator {
         this.emit(`${cellVar}.className = 'mirror-table-header-cell'`)
         this.emit(`Object.assign(${cellVar}.style, {`)
         this.indent++
-        this.emit(`flex: '1',`)
-        this.emit(`minWidth: '60px',`)
+        // When using spread, don't use flex: 1 - let justify-content handle spacing
+        // Otherwise use flex: 1 for equal distribution
+        if (!rowHasSpread) {
+          this.emit(`flex: '1',`)
+          this.emit(`minWidth: '60px',`)
+        }
         this.emit(`fontWeight: '500',`)
         this.emit(`color: 'var(--text-muted, #888)',`)
         this.emit(`fontSize: '11px',`)

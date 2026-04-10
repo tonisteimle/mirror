@@ -206,6 +206,7 @@ export interface MirrorProps {
   [key: `onkeyup ${string}`]: Action | Action[]
 
   // Slot fills (dynamic keys for component slots)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [slotName: string]: any
 }
 

@@ -2219,7 +2219,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
  * Check if a word is a reserved keyword
  */
 export function isReservedKeyword(word: string): boolean {
-  return DSL.keywords.reserved.includes(word as any)
+  return (DSL.keywords.reserved as readonly string[]).includes(word)
 }
 
 /**
@@ -2342,7 +2342,7 @@ export function getState(name: string): StateDef | undefined {
  * Check if a key is valid for onkeydown
  */
 export function isValidKey(key: string): boolean {
-  return DSL.keys.includes(key.toLowerCase() as any)
+  return (DSL.keys as readonly string[]).includes(key.toLowerCase())
 }
 
 /**

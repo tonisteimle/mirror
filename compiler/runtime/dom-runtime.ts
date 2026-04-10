@@ -4046,7 +4046,8 @@ function parseChartData(
  * @param path Dot-separated path (e.g., 'options.scales.x.ticks.color')
  * @param value The value to set
  */
-function setNestedValue(obj: any, path: string, value: unknown): void {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function setNestedValue(obj: Record<string, any>, path: string, value: unknown): void {
   const parts = path.split('.')
   let current = obj
 
@@ -4123,8 +4124,9 @@ export async function createChart(
   const colors = config.colors || DEFAULT_CHART_COLORS
   const isPieType = config.type === 'pie' || config.type === 'doughnut'
 
-  // Build Chart.js config
-  const chartConfig: any = {
+  // Build Chart.js config - Chart.js types are complex, using Record for flexibility
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartConfig: Record<string, any> = {
     type: config.type,
     data: {
       labels,

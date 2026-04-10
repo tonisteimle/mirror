@@ -5,8 +5,21 @@
  * Loaded dynamically when chart primitives are used.
  */
 
-// Chart.js types (simplified)
-declare const Chart: any
+// Chart.js minimal types (Chart.js is loaded globally)
+interface ChartInstance {
+  update(): void
+  destroy(): void
+  data: { labels: unknown[]; datasets: unknown[] }
+  options: Record<string, unknown>
+}
+
+interface ChartConstructor {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  new (ctx: CanvasRenderingContext2D | null, config: Record<string, any>): ChartInstance
+  getChart(canvas: HTMLCanvasElement): ChartInstance | undefined
+}
+
+declare const Chart: ChartConstructor
 
 /**
  * Chart slot configuration
@@ -137,7 +150,8 @@ function parseData(
  * @param path Dot-separated path (e.g., 'options.scales.x.ticks.color')
  * @param value The value to set
  */
-function setNestedValue(obj: any, path: string, value: unknown): void {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function setNestedValue(obj: Record<string, any>, path: string, value: unknown): void {
   const parts = path.split('.')
   let current = obj
 
@@ -214,8 +228,9 @@ export async function createChart(
   const colors = config.colors || DEFAULT_COLORS
   const isPieType = config.type === 'pie' || config.type === 'doughnut'
 
-  // Build Chart.js config
-  const chartConfig: any = {
+  // Build Chart.js config - Chart.js types are complex, using Record for flexibility
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartConfig: Record<string, any> = {
     type: config.type,
     data: {
       labels,
@@ -290,17 +305,28 @@ export function updateChart(
   const canvas = element.querySelector('canvas') as HTMLCanvasElement
   if (!canvas) return
 
-  const chartInstance = (Chart as any).getChart(canvas)
+  const chartInstance = Chart.getChart(canvas)
   if (!chartInstance) return
 
-  const { labels, values } = parseData(data, chartInstance.config.type, xField, yField)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { labels, values } = parseData(data, (chartInstance as any).config.type, xField, yField)
   chartInstance.data.labels = labels
   chartInstance.data.datasets[0].data = values
   chartInstance.update()
 }
 
+// Extend Window interface for runtime export
+declare global {
+  interface Window {
+    __mirrorChartRuntime?: {
+      createChart: typeof createChart
+      updateChart: typeof updateChart
+    }
+  }
+}
+
 // Export for runtime
-;(window as any).__mirrorChartRuntime = {
+window.__mirrorChartRuntime = {
   createChart,
   updateChart,
 }
