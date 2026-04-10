@@ -707,7 +707,7 @@ export class Parser {
     const blocks: DataBlock[] = []
 
     // Parse attributes and blocks until DEDENT
-    while (!this.isAtEnd() && !this.check('DEDENT')) {
+    for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
       this.skipNewlines()
       if (this.check('DEDENT') || this.isAtEnd()) break
 
@@ -788,7 +788,7 @@ export class Parser {
       // Parse nested attributes recursively
       const children: DataAttribute[] = []
 
-      while (!this.isAtEnd() && !this.check('DEDENT')) {
+      for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
         this.skipNewlines()
         if (this.check('DEDENT') || this.isAtEnd()) break
 

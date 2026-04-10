@@ -123,10 +123,6 @@ Bei Änderungen an `studio/app.js` oder `studio/styles.css`:
 
 Das folgende Tutorial ist die vollständige Referenz für die Mirror DSL. Es wird automatisch aus den HTML-Tutorials generiert.
 
-
-
----
-
 ## Elemente & Hierarchie
 
 *Die Grundbausteine jeder Mirror-Oberfläche*
@@ -186,6 +182,7 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Abstände: pad = innen, margin = außen
   Text "Mit Padding", pad 16, bg #333, col white, rad 4
+  Text "Mit Margin", margin 16, bg #333, col white, rad 4
 
   // Größen: w = Breite, h = Höhe (in Pixel)
   Frame w 200, h 50, bg #10b981, rad 4, center
@@ -4506,7 +4503,7 @@ Frame gap 16
 | hor-center | - | *(standalone)* |
 | ver-center | - | *(standalone)* |
 | padding | pad, p | <number>, $token |
-| margin | m | <number>, $token |
+| margin | mar, m | <number>, $token |
 | background | bg | <color>, $token |
 | color | col, c | <color>, $token |
 | border-color | boc | <color>, $token |

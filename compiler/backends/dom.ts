@@ -2214,70 +2214,96 @@ class DOMGenerator {
   }
 
   /**
-   * Generate table footer with aggregations
+   * Generate table footer with aggregations or custom content
    */
   private emitTableFooter(tableVar: string, dataVar: string, node: IRTable): void {
+    const footerVar = `${tableVar}_footer`
+
     this.emit(`// Table footer`)
-    this.emit(`const ${tableVar}_footer = document.createElement('div')`)
-    this.emit(`${tableVar}_footer.className = 'mirror-table-footer'`)
-    this.emit(`Object.assign(${tableVar}_footer.style, {`)
-    this.indent++
-    this.emit(`display: 'flex',`)
-    // Apply custom footer styles or use defaults
-    if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
-      for (const style of node.footerSlotStyles) {
-        this.emit(`'${style.property}': '${style.value}',`)
+    this.emit(`const ${footerVar} = document.createElement('div')`)
+    this.emit(`${footerVar}.className = 'mirror-table-footer'`)
+
+    // If footerSlot is defined, render custom footer content
+    if (node.footerSlot && node.footerSlot.length > 0) {
+      // Apply minimal wrapper styles, let slot content define the rest
+      this.emit(`${footerVar}.style.display = 'flex'`)
+
+      // Apply footer slot styles
+      if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
+        this.emit(`Object.assign(${footerVar}.style, {`)
+        this.indent++
+        for (const style of node.footerSlotStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit(`})`)
+      }
+
+      // Render footer slot children
+      for (const child of node.footerSlot) {
+        this.emitNode(child, footerVar)
       }
     } else {
-      this.emit(`padding: '12px',`)
-      this.emit(`background: 'var(--surface-elevated, #252525)',`)
-      this.emit(`borderTop: '1px solid var(--border, #333)',`)
-    }
-    this.indent--
-    this.emit(`})`)
-
-    // Generate footer cells for each visible column
-    for (const col of node.columns.filter(c => !c.hidden)) {
-      const cellVar = `${tableVar}_fc_${this.sanitizeVarName(col.field)}`
-      this.emit(`const ${cellVar} = document.createElement('div')`)
-      this.emit(`${cellVar}.className = 'mirror-table-footer-cell'`)
-
-      this.emit(`Object.assign(${cellVar}.style, {`)
+      // Auto-generated footer from columns - apply default styles
+      this.emit(`Object.assign(${footerVar}.style, {`)
       this.indent++
-      this.emit(`flex: '1',`)
-      this.emit(`fontWeight: '500',`)
-      this.emit(`color: 'var(--text, white)',`)
-      if (col.width) {
-        this.emit(`width: '${col.width}px',`)
-        this.emit(`flex: 'none',`)
-      }
-      if (col.align === 'right') {
-        this.emit(`textAlign: 'right',`)
-      } else if (col.align === 'center') {
-        this.emit(`textAlign: 'center',`)
+      this.emit(`display: 'flex',`)
+      // Apply footer slot styles or use defaults
+      if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
+        for (const style of node.footerSlotStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+      } else {
+        this.emit(`padding: '12px',`)
+        this.emit(`background: 'var(--surface-elevated, #252525)',`)
+        this.emit(`borderTop: '1px solid var(--border, #333)',`)
       }
       this.indent--
       this.emit(`})`)
 
-      if (col.aggregation) {
-        const safeSuffix = col.suffix ? this.escapeString(col.suffix) : ''
-        switch (col.aggregation) {
-          case 'sum':
-            this.emit(`${cellVar}.textContent = ${dataVar}.reduce((s, r) => s + (r.${col.field} || 0), 0)${col.suffix ? ` + "${safeSuffix}"` : ''}`)
-            break
-          case 'avg':
-            this.emit(`${cellVar}.textContent = (${dataVar}.reduce((s, r) => s + (r.${col.field} || 0), 0) / ${dataVar}.length).toFixed(1)${col.suffix ? ` + "${safeSuffix}"` : ''}`)
-            break
-          case 'count':
-            this.emit(`${cellVar}.textContent = ${dataVar}.length`)
-            break
-        }
-      }
+      // Generate footer cells for each visible column
+      for (const col of node.columns.filter(c => !c.hidden)) {
+        const cellVar = `${tableVar}_fc_${this.sanitizeVarName(col.field)}`
+        this.emit(`const ${cellVar} = document.createElement('div')`)
+        this.emit(`${cellVar}.className = 'mirror-table-footer-cell'`)
 
-      this.emit(`${tableVar}_footer.appendChild(${cellVar})`)
+        this.emit(`Object.assign(${cellVar}.style, {`)
+        this.indent++
+        this.emit(`flex: '1',`)
+        this.emit(`fontWeight: '500',`)
+        this.emit(`color: 'var(--text, white)',`)
+        if (col.width) {
+          this.emit(`width: '${col.width}px',`)
+          this.emit(`flex: 'none',`)
+        }
+        if (col.align === 'right') {
+          this.emit(`textAlign: 'right',`)
+        } else if (col.align === 'center') {
+          this.emit(`textAlign: 'center',`)
+        }
+        this.indent--
+        this.emit(`})`)
+
+        if (col.aggregation) {
+          const safeSuffix = col.suffix ? this.escapeString(col.suffix) : ''
+          switch (col.aggregation) {
+            case 'sum':
+              this.emit(`${cellVar}.textContent = ${dataVar}.reduce((s, r) => s + (r.${col.field} || 0), 0)${col.suffix ? ` + "${safeSuffix}"` : ''}`)
+              break
+            case 'avg':
+              this.emit(`${cellVar}.textContent = (${dataVar}.reduce((s, r) => s + (r.${col.field} || 0), 0) / ${dataVar}.length).toFixed(1)${col.suffix ? ` + "${safeSuffix}"` : ''}`)
+              break
+            case 'count':
+              this.emit(`${cellVar}.textContent = ${dataVar}.length`)
+              break
+          }
+        }
+
+        this.emit(`${footerVar}.appendChild(${cellVar})`)
+      }
     }
 
-    this.emit(`${tableVar}.appendChild(${tableVar}_footer)`)
+    this.emit(`${tableVar}.appendChild(${footerVar})`)
   }
 
   /**

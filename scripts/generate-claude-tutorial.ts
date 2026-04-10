@@ -16,7 +16,6 @@ const CLAUDE_MD = join(__dirname, '../CLAUDE.md')
 
 // Tutorial files in order
 const TUTORIAL_FILES = [
-  '00-intro.html',
   '01-elemente.html',
   '02-komponenten.html',
   '03-tokens.html',

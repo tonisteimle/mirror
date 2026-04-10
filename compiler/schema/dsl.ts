@@ -1223,7 +1223,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
   margin: {
     name: 'margin',
-    aliases: ['m'],
+    aliases: ['mar', 'm'],
     category: 'spacing',
     description: 'Outer spacing',
 

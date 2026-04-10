@@ -109,7 +109,7 @@
 | hor-center | - | *(standalone)* |
 | ver-center | - | *(standalone)* |
 | padding | pad, p | <number>, $token |
-| margin | m | <number>, $token |
+| margin | mar, m | <number>, $token |
 | background | bg | <color>, $token |
 | color | col, c | <color>, $token |
 | border-color | boc | <color>, $token |
