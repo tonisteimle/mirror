@@ -136,7 +136,6 @@ describe('Layout Matrix: Parent-Child Context', () => {
     // Skip tests that require IR-level checking (grid, stacked, directional positioning)
     const needsIR = parent.includes('grid') ||
                     parent.includes('stacked') ||
-                    parent.includes('pos') ||
                     child.includes('x ') ||
                     child.includes('y ') ||
                     child.includes('bottom') ||

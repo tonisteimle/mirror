@@ -157,9 +157,9 @@ describe('Target Detection', () => {
       expect(target!.isPositioned).toBe(true)
     })
 
-    it('detects data-layout="pos" as positioned layout', () => {
-      const element = createTestElement('pos-1', { position: 'relative' })
-      element.dataset.layout = 'pos'
+    it('detects data-layout="stacked" as positioned layout', () => {
+      const element = createTestElement('stacked-1', { position: 'relative' })
+      element.dataset.layout = 'stacked'
       container.appendChild(element)
 
       const target = detectTarget(element)
