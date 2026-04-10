@@ -452,34 +452,34 @@ describe('Last Value Wins', () => {
 })
 
 // ============================================================
-// 8. POSITION - Absolute/Fixed/Pin
+// 8. STACKED LAYOUT (formerly Position)
 // ============================================================
-describe('Positioning', () => {
+describe('Stacked Layout', () => {
 
-  it('pos = position: relative auf Parent', () => {
-    const el = render(`Frame pos`)
-    expect(getStyle(el, 'position')).toBe('relative')
+  it('stacked → display: grid with grid-area stacking', () => {
+    const el = render(`Frame stacked`)
+    expect(getStyle(el, 'display')).toBe('grid')
   })
 
-  it('x y → position: absolute + left/top', () => {
+  it('x y in stacked → margin positioning', () => {
     const el = render(`
-Frame pos
+Frame stacked
   Frame x 10 y 20
 `)
     const child = el.children[0] as HTMLElement
-    expect(getStyle(child, 'position')).toBe('absolute')
-    expect(getStyle(child, 'left')).toBe('10px')
-    expect(getStyle(child, 'top')).toBe('20px')
+    // In stacked layout, x/y are applied as margins
+    expect(getStyle(child, 'margin-left')).toBe('10px')
+    expect(getStyle(child, 'margin-top')).toBe('20px')
   })
 
-  it('negative x y', () => {
+  it('negative x y in stacked', () => {
     const el = render(`
-Frame pos
+Frame stacked
   Frame x -50 y -25
 `)
     const child = el.children[0] as HTMLElement
-    expect(getStyle(child, 'left')).toBe('-50px')
-    expect(getStyle(child, 'top')).toBe('-25px')
+    expect(getStyle(child, 'margin-left')).toBe('-50px')
+    expect(getStyle(child, 'margin-top')).toBe('-25px')
   })
 
   it('fixed Position', () => {
@@ -1094,9 +1094,9 @@ describe('More CSS Properties', () => {
     expect(getStyle(el, 'backdrop-filter')).toContain('blur(10px)')
   })
 
-  it('translate', () => {
-    const el = render(`Frame translate 10 20`)
-    expect(getStyle(el, 'transform')).toContain('translate')
+  it('x-offset and y-offset', () => {
+    const el = render(`Frame x-offset 10`)
+    expect(getStyle(el, 'transform')).toContain('translateX(10px)')
   })
 
 })

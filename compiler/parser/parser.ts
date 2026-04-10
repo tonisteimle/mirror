@@ -3978,7 +3978,7 @@ export class Parser {
 
         // Has children - parse them and set visibleWhen on each
         this.advance() // consume INDENT
-        while (!this.isAtEnd() && !this.check('DEDENT')) {
+        for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
           this.skipNewlines()
           if (this.check('DEDENT') || this.isAtEnd()) break
 
@@ -4092,7 +4092,7 @@ export class Parser {
 
         // Has children - parse them and set visibleWhen on each
         this.advance() // consume INDENT
-        while (!this.isAtEnd() && !this.check('DEDENT')) {
+        for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
           this.skipNewlines()
           if (this.check('DEDENT') || this.isAtEnd()) break
 
@@ -5991,7 +5991,7 @@ export class Parser {
     let expr = ''
     let parenDepth = 0
 
-    while (!this.isAtEnd()) {
+    for (let iter = 0; !this.isAtEnd() && iter < Parser.MAX_ITERATIONS; iter++) {
       // Track parentheses depth
       if (this.check('LPAREN')) {
         parenDepth++
@@ -6321,7 +6321,7 @@ export class Parser {
     // Skip tokens until we find a likely next definition start:
     // - After NEWLINE, check if next token could start a definition
     // - Or end of file
-    while (!this.isAtEnd()) {
+    for (let iter = 0; !this.isAtEnd() && iter < Parser.MAX_ITERATIONS; iter++) {
       if (this.check('NEWLINE')) {
         this.advance()
         // After newline, check if next token could start a new definition

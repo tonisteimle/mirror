@@ -25,15 +25,51 @@
       <p class="subtitle">Echte Daten statt Platzhalter</p>
     </header>
 
-    <p class="intro">Prototypen werden glaubwürdig, wenn sie mit echten Daten arbeiten – nicht mit "Lorem ipsum" und "Max Mustermann". Mirror trennt UI von Daten: Du designst das Layout einmal, und füllst es mit echten Kundenlisten, Produktdaten oder Nutzerprofilen. Die Daten lassen sich auslagern und jederzeit austauschen – für verschiedene Szenarien, Sprachen oder Test-Cases.</p>
+    <p class="intro">Bisher hast du Text direkt in Komponenten geschrieben: <code>Text "Max Mustermann"</code>. Das funktioniert – aber was, wenn derselbe Name an 10 Stellen steht und du ihn ändern willst? Oder wenn du den Prototyp mit verschiedenen Testdaten zeigen möchtest?</p>
 
-    <p class="intro">Dieses Kapitel behandelt dynamische Daten in Mirror: <strong>Variablen</strong> für Werte, <strong>Datenobjekte</strong> für strukturierte Daten, <strong>Relationen</strong> zwischen Daten, und <strong>Bedingungen</strong> für konditionale Anzeige.</p>
+    <p class="intro">Dieses Kapitel zeigt, wie du <strong>Daten vom UI trennst</strong>: Variablen definieren, in Komponenten verwenden, und bei Bedarf austauschen.</p>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Einfache Variablen</h2>
-      <p>Eine Variable wird mit Namen und Wert definiert. Bei der Verwendung steht <code>$</code> davor – in Anführungszeichen:</p>
+      <h2>Das Problem: Hardcoded Text</h2>
+      <p>Stell dir vor, du baust eine Begrüßung. Der Name steht direkt im Code:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Willkommen, Max!", col white, fs 18
+  Text "Du hast 3 neue Nachrichten.", col #888
+  Text "Max's Profil", col #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Das Problem:</strong> "Max" steht dreimal im Code. Willst du den Namen ändern, musst du jede Stelle finden. Bei einem echten Prototyp mit Dutzenden Screens wird das schnell unübersichtlich.</p>
+
+      <p><strong>Die Lösung:</strong> Den Namen einmal als <strong>Variable</strong> definieren und überall verwenden:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>name: "Max"
+messageCount: 3
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Willkommen, $name!", col white, fs 18
+  Text "Du hast $messageCount neue Nachrichten.", col #888
+  Text "$name's Profil", col #2563eb</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Jetzt änderst du <code>name: "Max"</code> zu <code>name: "Anna"</code> – und alle drei Stellen aktualisieren sich automatisch. <strong>Eine Quelle, überall verwendet.</strong></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Variablen definieren</h2>
+      <p>Eine Variable wird mit Namen und Wert definiert. Bei der Verwendung steht <code>$</code> davor:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>name: "Max"

@@ -2401,11 +2401,34 @@ function absenden() {
 
 *Echte Daten statt Platzhalter*
 
-Prototypen werden glaubwürdig, wenn sie mit echten Daten arbeiten – nicht mit "Lorem ipsum" und "Max Mustermann". Mirror trennt UI von Daten: Du designst das Layout einmal, und füllst es mit echten Kundenlisten, Produktdaten oder Nutzerprofilen. Die Daten lassen sich auslagern und jederzeit austauschen – für verschiedene Szenarien, Sprachen oder Test-Cases.
+Bisher hast du Text direkt in Komponenten geschrieben: `Text "Max Mustermann"`. Das funktioniert – aber was, wenn derselbe Name an 10 Stellen steht und du ihn ändern willst? Oder wenn du den Prototyp mit verschiedenen Testdaten zeigen möchtest?
 
-### Einfache Variablen
+### Das Problem: Hardcoded Text
 
-Eine Variable wird mit Namen und Wert definiert. Bei der Verwendung steht `$` davor – in Anführungszeichen:
+Stell dir vor, du baust eine Begrüßung. Der Name steht direkt im Code:
+
+```mirror
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Willkommen, Max!", col white, fs 18
+  Text "Du hast 3 neue Nachrichten.", col #888
+  Text "Max's Profil", col #2563eb
+```
+
+**Das Problem:** "Max" steht dreimal im Code. Willst du den Namen ändern, musst du jede Stelle finden. Bei einem echten Prototyp mit Dutzenden Screens wird das schnell unübersichtlich.
+
+```mirror
+name: "Max"
+messageCount: 3
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Willkommen, $name!", col white, fs 18
+  Text "Du hast $messageCount neue Nachrichten.", col #888
+  Text "$name's Profil", col #2563eb
+```
+
+### Variablen definieren
+
+Eine Variable wird mit Namen und Wert definiert. Bei der Verwendung steht `$` davor:
 
 ```mirror
 name: "Max"
