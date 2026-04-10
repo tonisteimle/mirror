@@ -484,13 +484,6 @@ export const properties: PropertyDefinition[] = [
     description: 'Rotation in degrees',
     unit: 'deg',
   },
-  {
-    name: 'translate',
-    aliases: [],
-    type: 'string',
-    category: 'visual',
-    description: 'X Y translation',
-  },
 
   // ============================================
   // SCROLL

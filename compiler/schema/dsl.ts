@@ -1644,20 +1644,6 @@ export const SCHEMA: Record<string, PropertyDef> = {
     },
   },
 
-  translate: {
-    name: 'translate',
-    aliases: [],
-    category: 'transform',
-    description: 'Translate element (x, y)',
-
-    numeric: {
-      description: 'Translation in pixels',
-      unit: 'px',
-      css: (n) => [{ property: 'transform', value: `translate(${n}px, 0)` }],
-      example: 'Box translate 10 20',
-    },
-  },
-
   // ---------------------------------------------------------------------------
   // EFFECT
   // ---------------------------------------------------------------------------

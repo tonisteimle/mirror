@@ -3269,14 +3269,6 @@ class IRTransformer {
         transformContext.transforms.push(`scale(${val})`)
         continue
       }
-      if (name === 'translate') {
-        const x = String(prop.values[0])
-        const y = prop.values.length >= 2 ? String(prop.values[1]) : '0'
-        const xPx = /^-?\d+$/.test(x) ? `${x}px` : x
-        const yPx = /^-?\d+$/.test(y) ? `${y}px` : y
-        transformContext.transforms.push(`translate(${xPx}, ${yPx})`)
-        continue
-      }
     }
 
     // Apply collected layout values with order-awareness (last wins)
@@ -3308,7 +3300,6 @@ class IRTransformer {
       // Skip transform properties (already handled in first pass)
       if (name === 'rotate' || name === 'rot') continue
       if (name === 'scale') continue
-      if (name === 'translate') continue
 
       const cssStyles = this.propertyToCSS(prop, primitive, transformContext, parentLayoutContext)
       styles.push(...cssStyles)
@@ -4355,15 +4346,6 @@ class IRTransformer {
     if (name === 'scale') {
       const val = String(values[0])
       return [{ property: 'transform', value: `scale(${val})` }]
-    }
-
-    // Handle translate: translate 10 20 (fallback for states)
-    if (name === 'translate') {
-      const x = String(values[0])
-      const y = values.length >= 2 ? String(values[1]) : '0'
-      const xPx = /^-?\d+$/.test(x) ? `${x}px` : x
-      const yPx = /^-?\d+$/.test(y) ? `${y}px` : y
-      return [{ property: 'transform', value: `translate(${xPx}, ${yPx})` }]
     }
 
     // Handle aspect ratio: aspect 16/9, aspect 1, aspect 4/3, aspect square, aspect video
