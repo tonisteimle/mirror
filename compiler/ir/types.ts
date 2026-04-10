@@ -331,6 +331,7 @@ export type IRWarningType =
   | 'unknown-state'
   | 'unknown-token'
   | 'invalid-instance'
+  | 'circular-inheritance'
 
 /**
  * Validation warning

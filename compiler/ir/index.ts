@@ -2889,11 +2889,11 @@ class IRTransformer {
   private resolveComponent(component: ComponentDefinition, visited: Set<string> = new Set()): ComponentDefinition {
     // Circular reference detection
     if (visited.has(component.name)) {
-      this.addError(
-        `Circular component inheritance detected: ${[...visited, component.name].join(' → ')}`,
-        component.sourcePosition?.line ?? 0,
-        component.sourcePosition?.column ?? 0
-      )
+      this.addWarning({
+        type: 'circular-inheritance',
+        message: `Circular component inheritance detected: ${[...visited, component.name].join(' → ')}`,
+        position: { line: component.line ?? 0, column: component.column ?? 0 }
+      })
       return component // Return unresolved to prevent infinite recursion
     }
     visited.add(component.name)
