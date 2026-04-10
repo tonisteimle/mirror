@@ -138,14 +138,14 @@ In diesem Kapitel lernst du die Basis-Syntax von Mirror: Wie du Elemente erstell
 Ein Mirror-Element besteht aus dem **Element-Namen**, optionalem **Text-Inhalt** in Anführungszeichen, und **Properties** getrennt durch Kommas:
 
 ```mirror
-Button "Speichern", bg #2563eb, col white, pad 12 24, rad 6
+Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6
 ```
 
 **Was passiert hier?**
 
 - `Button` – der Element-Typ
 - `"Speichern"` – der sichtbare Text
-- `bg #2563eb` – Hintergrundfarbe (Hex)
+- `bg #2271C1` – Hintergrundfarbe (Hex)
 - `col white` – Textfarbe
 - `pad 12 24` – Padding: 12px oben/unten, 24px links/rechts
 - `rad 6` – Eckenradius von 6px
@@ -158,7 +158,7 @@ Primitives sind die Grundelemente von Mirror. Es gibt über 50 davon – hier di
 Frame gap 12, pad 16, bg #1a1a1a, rad 8
   Text "Eine Überschrift", col white, fs 18
   Text "Normaler Text darunter", col #888
-  Button "Klick mich", bg #2563eb, col white, pad 10 20, rad 6
+  Button "Klick mich", bg #2271C1, col white, pad 10 20, rad 6
   Input placeholder "E-Mail eingeben...", bg #333, col white, pad 10, rad 4
 ```
 
@@ -182,7 +182,7 @@ Properties steuern das Aussehen. Zahlen sind Pixel, `#hex` sind Farben:
 Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Farben: bg = Hintergrund, col = Textfarbe
-  Text "Farbiger Text", bg #2563eb, col white, pad 8 16, rad 4
+  Text "Farbiger Text", bg #2271C1, col white, pad 8 16, rad 4
 
   // Abstände: pad = innen, margin = außen
   Text "Mit Padding", pad 16, bg #333, col white, rad 4
@@ -200,7 +200,7 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
 | Property | Beschreibung | Beispiel |
 | --- | --- | --- |
-| `bg` | Hintergrundfarbe | `bg #2563eb` |
+| `bg` | Hintergrundfarbe | `bg #2271C1` |
 | `col` | Textfarbe | `col white` |
 | `pad` | Innenabstand (Padding) | `pad 12` oder `pad 12 24` |
 | `margin` | Außenabstand | `margin 16` |
@@ -225,7 +225,7 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
   // Kind 3: Frame mit eigenen Kindern
   Frame hor, gap 8
     Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
-    Button "OK", pad 10 20, rad 6, bg #2563eb, col white
+    Button "OK", pad 10 20, rad 6, bg #2271C1, col white
 ```
 
 **Was passiert hier?**
@@ -274,7 +274,7 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // hor = horizontal anordnen
   Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
-    Frame w 40, h 40, bg #2563eb, rad 4
+    Frame w 40, h 40, bg #2271C1, rad 4
     Frame w 40, h 40, bg #10b981, rad 4
     Frame w 40, h 40, bg #f59e0b, rad 4
 
@@ -315,7 +315,7 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
     Icon "check", ic #10b981, is 24
     Icon "x", ic #ef4444, is 24
     Icon "settings", ic #888, is 24
-    Icon "user", ic #2563eb, is 24
+    Icon "user", ic #2271C1, is 24
 
   // fill = ausgefüllte Variante
   Frame hor, gap 16, bg #1a1a1a, pad 12, rad 6
@@ -323,7 +323,7 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
     Icon "heart", ic #ef4444, is 24, fill
 
   // Icons in Buttons
-  Button pad 10 16, rad 6, bg #2563eb, col white
+  Button pad 10 16, rad 6, bg #2271C1, col white
     Frame hor, gap 8, center
       Icon "save", ic white, is 16
       Text "Speichern"
@@ -332,7 +332,7 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
 | Property | Beschreibung | Beispiel |
 | --- | --- | --- |
 | `is` | Icon-Größe in Pixel | `is 24` |
-| `ic` | Icon-Farbe | `ic #2563eb` |
+| `ic` | Icon-Farbe | `ic #2271C1` |
 | `iw` | Strichstärke | `iw 1.5` |
 | `fill` | Ausgefüllte Variante | `Icon "heart", fill` |
 
@@ -345,7 +345,7 @@ Frame w 300, bg #1a1a1a, rad 12, pad 20, gap 16
 
   // Header mit Icon
   Frame hor, gap 12, center
-    Icon "user", ic #2563eb, is 32
+    Icon "user", ic #2271C1, is 32
     Frame gap 2
       Text "Max Mustermann", col white, fs 16, weight semibold
       Text "Software Engineer", col #888, fs 13
@@ -355,7 +355,7 @@ Frame w 300, bg #1a1a1a, rad 12, pad 20, gap 16
 
   // Action-Buttons
   Frame hor, gap 8
-    Button pad 10 16, rad 6, bg #2563eb, col white
+    Button pad 10 16, rad 6, bg #2271C1, col white
       Frame hor, gap 6, center
         Icon "mail", ic white, is 14
         Text "Nachricht"
@@ -399,9 +399,9 @@ Wenn du mehrere Buttons mit dem gleichen Styling brauchst, musst du alles wieder
 
 ```mirror
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
-  Button "Speichern", pad 10 20, rad 6, bg #2563eb, col white
-  Button "Abbrechen", pad 10 20, rad 6, bg #2563eb, col white
-  Button "Löschen", pad 10 20, rad 6, bg #2563eb, col white
+  Button "Speichern", pad 10 20, rad 6, bg #2271C1, col white
+  Button "Abbrechen", pad 10 20, rad 6, bg #2271C1, col white
+  Button "Löschen", pad 10 20, rad 6, bg #2271C1, col white
 ```
 
 Das ist mühsam und fehleranfällig. Änderst du das Styling, musst du es überall anpassen. Besser: Eine Komponente definieren.
@@ -412,7 +412,7 @@ Mit einem **Doppelpunkt nach dem Namen** definierst du eine wiederverwendbare Ko
 
 ```mirror
 // Definition: Name endet mit :
-Btn: pad 10 20, rad 6, bg #2563eb, col white
+Btn: pad 10 20, rad 6, bg #2271C1, col white
 
 // Verwendung: Name ohne :
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
@@ -433,7 +433,7 @@ Die Komponente `Btn:` speichert alle Properties. Bei `Btn "Text"` werden diese P
 Bei der Verwendung kannst du einzelne Properties überschreiben. Die übrigen bleiben erhalten:
 
 ```mirror
-Btn: pad 10 20, rad 6, bg #2563eb, col white
+Btn: pad 10 20, rad 6, bg #2271C1, col white
 
 Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Btn "Standard"
@@ -454,7 +454,7 @@ Card: bg #1a1a1a, pad 16, rad 8, gap 8
 Card
   Text "Titel", col white, fs 16, weight 500
   Text "Beschreibung", col #888, fs 14
-  Button "Aktion", pad 8 16, rad 6, bg #2563eb, col white
+  Button "Aktion", pad 8 16, rad 6, bg #2271C1, col white
 ```
 
 `Card:` definiert nur den Container (Hintergrund, Padding, Radius, Gap). Bei der Verwendung fügst du beliebige Kinder hinzu – Text, Buttons, weitere Frames, was immer du brauchst.
@@ -464,7 +464,7 @@ Card
 Du hast gesehen, wie du Properties bei der Verwendung überschreibst (`Btn "Rot", bg #333`). Das funktioniert gut für Einzelfälle. Aber was, wenn du dieselbe Variation mehrmals brauchst?
 
 ```mirror
-Btn: pad 10 20, rad 6, bg #2563eb, col white
+Btn: pad 10 20, rad 6, bg #2271C1, col white
 
 // Immer wieder dieselbe Überschreibung...
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
@@ -484,7 +484,7 @@ Mit `as` machst du eine Variation selbst zur Komponente. Sie erbt alles von der 
 Btn: pad 10 20, rad 6, cursor pointer
 
 // Variationen als eigene Komponenten
-PrimaryBtn as Btn: bg #2563eb, col white
+PrimaryBtn as Btn: bg #2271C1, col white
 DangerBtn as Btn: bg #ef4444, col white
 GhostBtn as Btn: bg transparent, col #888, bor 1, boc #333
 
@@ -496,7 +496,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 
 `DangerBtn as Btn:` bedeutet: "DangerBtn ist ein Btn, aber mit rotem Hintergrund." Alle drei Varianten erben `pad 10 20, rad 6, cursor pointer` von `Btn`.
 
-> **Hinweis:** **Tipp:** Du kannst auch direkt von Primitives erben. `PrimaryBtn as Button: bg #2563eb` erzeugt einen Button mit allen Standard-Button-Eigenschaften plus blauem Hintergrund.
+> **Hinweis:** **Tipp:** Du kannst auch direkt von Primitives erben. `PrimaryBtn as Button: bg #2271C1` erzeugt einen Button mit allen Standard-Button-Eigenschaften plus blauem Hintergrund.
 
 | Syntax | Bedeutung |
 | --- | --- |
@@ -506,7 +506,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 
 ### Komplexe Komponenten
 
-Bisher waren unsere Komponenten einfach: Ein Element mit Properties (`Btn: pad 10 20, bg #2563eb`). Aber eine Komponente kann beliebig komplex sein – eine ganze Struktur mit mehreren Kindern. Stell dir einen Footer vor:
+Bisher waren unsere Komponenten einfach: Ein Element mit Properties (`Btn: pad 10 20, bg #2271C1`). Aber eine Komponente kann beliebig komplex sein – eine ganze Struktur mit mehreren Kindern. Stell dir einen Footer vor:
 
 ```mirror
 Footer: w full, pad 20, bg #0a0a0a, hor, spread
@@ -619,7 +619,7 @@ Card: w 260, bg #1a1a1a, rad 12, clip
   Desc: w full, pad 16, col #888, fs 14
   Footer: w full, pad 12 16, bg #151515, hor, spread
     Status: col #666, fs 12
-    Action: pad 8 16, rad 6, bg #2563eb, col white
+    Action: pad 8 16, rad 6, bg #2271C1, col white
 
 // Verwendung: Nur noch die Texte einfügen
 Card
@@ -659,12 +659,12 @@ Im letzten Kapitel hast du gelernt, Struktur zu abstrahieren – mit Komponenten
 
 ### Das Problem: Magische Werte
 
-Schau dir diesen Code an – die Farbe `#2563eb` taucht dreimal auf:
+Schau dir diesen Code an – die Farbe `#2271C1` taucht dreimal auf:
 
 ```mirror
-Btn: pad 10 20, rad 6, bg #2563eb, col white
-Link: col #2563eb, underline
-Badge: bg #2563eb, col white, pad 4 8, rad 4, fs 12
+Btn: pad 10 20, rad 6, bg #2271C1, col white
+Link: col #2271C1, underline
+Badge: bg #2271C1, col white, pad 4 8, rad 4, fs 12
 
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Btn "Speichern"
@@ -683,7 +683,7 @@ Ein Token ist ein Name für einen Wert. Die Syntax:
 
 ```mirror
 // Token definieren (ohne $)
-primary.bg: #2563eb
+primary.bg: #2271C1
 
 // Token verwenden (mit $, ohne Suffix)
 Btn: bg $primary, col white, pad 10 20, rad 6
@@ -696,7 +696,7 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 
 **Was passiert hier?**
 
-- `primary.bg: #2563eb` – definiert einen Token namens "primary" für Hintergrundfarben
+- `primary.bg: #2271C1` – definiert einen Token namens "primary" für Hintergrundfarben
 - `bg $primary` – verwendet den Token (`$` bedeutet "hole den Wert")
 - Änderst du jetzt `primary.bg` auf `#10b981`, werden alle drei Buttons grün
 
@@ -708,7 +708,7 @@ Der Suffix sagt, wofür der Token gedacht ist:
 
 | Suffix | Bedeutung | Beispiel |
 | --- | --- | --- |
-| `.bg` | Hintergrundfarbe | `primary.bg: #2563eb` |
+| `.bg` | Hintergrundfarbe | `primary.bg: #2271C1` |
 | `.col` | Textfarbe | `muted.col: #888` |
 | `.boc` | Border-Farbe | `border.boc: #333` |
 | `.rad` | Radius | `card.rad: 8` |
@@ -720,7 +720,7 @@ Der Suffix sagt, wofür der Token gedacht ist:
 Hier ein Beispiel mit mehreren Token-Typen:
 
 ```mirror
-primary.bg: #2563eb
+primary.bg: #2271C1
 primary.col: white
 card.bg: #1a1a1a
 card.rad: 8
@@ -748,7 +748,7 @@ Warum? Deine Komponenten wissen dann nicht, dass "primary" gerade blau ist – s
 
 ```mirror
 // SEMANTISCHE TOKENS – benenne nach Bedeutung
-primary.bg: #2563eb
+primary.bg: #2271C1
 danger.bg: #ef4444
 card.bg: #1a1a1a
 
@@ -799,7 +799,7 @@ Frame $cardstyle, gap 12
 - `$cardstyle` – setzt Hintergrund, Padding und Radius in einem
 - `$centeredrow` – kombiniert Layout-Properties (horizontal, zentriert, Abstand)
 
-> **Hinweis:** **Syntax-Unterschied:** Einzelne Tokens haben einen Suffix (`primary.bg: #2563eb`), Property Sets haben keinen (`cardstyle: bg #1a1a1a, pad 16`). Das macht den Unterschied klar: Suffix = ein Wert, kein Suffix = mehrere Properties.
+> **Hinweis:** **Syntax-Unterschied:** Einzelne Tokens haben einen Suffix (`primary.bg: #2271C1`), Property Sets haben keinen (`cardstyle: bg #1a1a1a, pad 16`). Das macht den Unterschied klar: Suffix = ein Wert, kein Suffix = mehrere Properties.
 
 #### Property Sets mit Tokens kombinieren
 
@@ -807,7 +807,7 @@ Property Sets können auch andere Tokens referenzieren:
 
 ```mirror
 // Einzelne Tokens
-primary.bg: #2563eb
+primary.bg: #2271C1
 card.bg: #1a1a1a
 
 // Property Sets die Tokens verwenden
@@ -836,7 +836,7 @@ Am Ende sind die Instanzen komplett sauber – du siehst nur noch, *was* angezei
 
 ```mirror
 // 1. TOKENS – Werte zentral definieren
-btn.bg: #2563eb
+btn.bg: #2271C1
 btn.col: white
 card.bg: #1a1a1a
 card.rad: 8
@@ -874,7 +874,7 @@ Card
 
 | Syntax | Bedeutung |
 | --- | --- |
-| `primary.bg: #2563eb` | Token definieren (mit Suffix) |
+| `primary.bg: #2271C1` | Token definieren (mit Suffix) |
 | `bg $primary` | Token verwenden (mit `$`) |
 | `primary` statt `blue` | Semantisch benennen |
 
@@ -921,7 +921,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
 
   // Horizontal
   Frame hor, bg #1a1a1a, pad 16, rad 8, gap 12
-    Box "1", bg #2563eb
+    Box "1", bg #2271C1
     Box "2", bg #10b981
     Box "3", bg #f59e0b
 ```
@@ -947,7 +947,7 @@ Frame gap 8, w 300, bg #0a0a0a, pad 16, rad 8
     Text "w hug", col white, fs 12
 
   // full = verfügbaren Platz füllen
-  Frame w full, h 40, bg #2563eb, rad 4, center
+  Frame w full, h 40, bg #2271C1, rad 4, center
     Text "w full", col white, fs 12
 ```
 
@@ -1021,7 +1021,7 @@ Frame gap 8, bg #0a0a0a, pad 12, rad 8
 Bei Überlauf in die nächste Zeile umbrechen:
 
 ```mirror
-Box: w 60, h 40, bg #2563eb, rad 4, center
+Box: w 60, h 40, bg #2271C1, rad 4, center
 
 Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 240
   Box "1"
@@ -1042,7 +1042,7 @@ Mit `grid N` aktivierst du ein N-Spalten-Grid. Wichtig: Im Grid-Kontext bedeutet
 ```mirror
 Frame w 500, grid 12, gap 8, bg #111, pad 16, rad 8, row-height 40
   // w = Spalten-Span (nicht Pixel!)
-  Frame w 12, bg #2563eb, rad 4, center
+  Frame w 12, bg #2271C1, rad 4, center
     Text "w 12 (volle Breite)", col white, fs 12
   Frame w 6, bg #10b981, rad 4, center
     Text "w 6", col white, fs 12
@@ -1072,7 +1072,7 @@ Mit `x` und `y` platzierst du Elemente exakt (1-indexed):
 
 ```mirror
 Frame w 600, grid 12, gap 8, bg #111, pad 16, rad 8, row-height 35
-  Frame x 1, y 1, w 12, h 2, bg #2563eb, rad 4, center
+  Frame x 1, y 1, w 12, h 2, bg #2271C1, rad 4, center
     Text "Hero", col white, fs 12
 
   Frame x 1, y 3, w 3, h 3, bg #10b981, rad 4, center
@@ -1096,7 +1096,7 @@ Dashboard: grid 12, gap 12, row-height 25, h 200
 
 Widget: bg #252525, rad 6, pad 12, gap 4
   Title: col white, fs 13, weight 500
-  Value: col #2563eb, fs 24, weight 600
+  Value: col #2271C1, fs 24, weight 600
 
 // Verwendung
 Dashboard
@@ -1126,7 +1126,7 @@ Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
   Frame x 0, y 0, w 30, h 30, bg #ef4444, rad 4
   Frame x 170, y 0, w 30, h 30, bg #f59e0b, rad 4
   Frame x 0, y 120, w 30, h 30, bg #10b981, rad 4
-  Frame x 170, y 120, w 30, h 30, bg #2563eb, rad 4
+  Frame x 170, y 120, w 30, h 30, bg #2271C1, rad 4
 
   // Mitte
   Frame x 80, y 55, w 40, h 40, bg white, rad 99
@@ -1161,7 +1161,7 @@ Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
 
   // Avatar mit Status
   Frame w 44, h 44, stacked
-    Frame w 44, h 44, bg #2563eb, rad 99, center
+    Frame w 44, h 44, bg #2271C1, rad 99, center
       Text "TS", col white, fs 14, weight 500
     Status
 ```
@@ -1213,12 +1213,12 @@ In den vorherigen Kapiteln hast du Layout und Struktur kennengelernt. Dieses Kap
 
 ### Farben
 
-Mirror unterstützt verschiedene Farbformate. Am häufigsten verwendest du Hex-Farben (`#2563eb`), aber auch benannte Farben und rgba sind möglich:
+Mirror unterstützt verschiedene Farbformate. Am häufigsten verwendest du Hex-Farben (`#2271C1`), aber auch benannte Farben und rgba sind möglich:
 
 ```mirror
 Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   // Hex-Farben
-  Frame w 50, h 50, bg #2563eb, rad 6
+  Frame w 50, h 50, bg #2271C1, rad 6
   Frame w 50, h 50, bg #10b981, rad 6
   Frame w 50, h 50, bg #f59e0b, rad 6
   Frame w 50, h 50, bg #ef4444, rad 6
@@ -1228,16 +1228,16 @@ Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Frame w 50, h 50, bg black, rad 6
 
   // Mit Transparenz
-  Frame w 50, h 50, bg rgba(37,99,235,0.5), rad 6
-  Frame w 50, h 50, bg #2563eb88, rad 6
+  Frame w 50, h 50, bg rgba(34,113,193,0.5), rad 6
+  Frame w 50, h 50, bg #2271C188, rad 6
 ```
 
 **Was passiert hier?**
 
-- `#2563eb` – Hex-Farbe (6 Zeichen für RGB)
+- `#2271C1` – Hex-Farbe (6 Zeichen für RGB)
 - `white`, `black` – benannte CSS-Farben funktionieren direkt
-- `rgba(37,99,235,0.5)` – Farbe mit 50% Transparenz
-- `#2563eb88` – Hex mit Alpha-Kanal (8 Zeichen, die letzten zwei sind Transparenz)
+- `rgba(34,113,193,0.5)` – Farbe mit 50% Transparenz
+- `#2271C188` – Hex mit Alpha-Kanal (8 Zeichen, die letzten zwei sind Transparenz)
 
 > **Hinweis:** **Tipp:** Für transparente Farben ist `#rrggbbaa` kürzer als `rgba()`. Die letzten zwei Hex-Zeichen geben die Transparenz an: `ff` = 100% sichtbar, `00` = unsichtbar.
 
@@ -1248,16 +1248,16 @@ Farbverläufe machen UIs lebendiger. In Mirror verwendest du `grad` für horizon
 ```mirror
 Frame w 400, gap 8, bg #0a0a0a, pad 16, rad 8
   // Horizontal (Standard)
-  Frame w full, h 50, rad 8, bg grad #2563eb #7c3aed
+  Frame w full, h 50, rad 8, bg grad #2271C1 #7c3aed
 
   // Vertikal
   Frame w full, h 50, rad 8, bg grad-ver #f59e0b #ef4444
 
   // Mit Winkel (45°)
-  Frame w full, h 50, rad 8, bg grad 45 #10b981 #2563eb
+  Frame w full, h 50, rad 8, bg grad 45 #10b981 #2271C1
 
   // Drei Farben
-  Frame w full, h 50, rad 8, bg grad #10b981 #2563eb #7c3aed
+  Frame w full, h 50, rad 8, bg grad #10b981 #2271C1 #7c3aed
 ```
 
 **Was passiert hier?**
@@ -1269,7 +1269,7 @@ Frame w 400, gap 8, bg #0a0a0a, pad 16, rad 8
 
 ```mirror
 Frame bg #1a1a1a, pad 20, rad 8, gap 8
-  Text "Gradient Text", fs 24, weight bold, col grad #2563eb #7c3aed
+  Text "Gradient Text", fs 24, weight bold, col grad #2271C1 #7c3aed
   Text "Vertical Gradient", fs 24, weight bold, col grad-ver #f59e0b #ef4444
 ```
 
@@ -1280,7 +1280,7 @@ Borders bestehen aus zwei Properties: `bor` (Breite in Pixel) und `boc` (Farbe).
 ```mirror
 Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   // Border rundum
-  Frame w 70, h 70, bor 2, boc #2563eb, rad 8, center
+  Frame w 70, h 70, bor 2, boc #2271C1, rad 8, center
     Text "2px", col #888, fs 11
 
   // Dickerer Border
@@ -1300,13 +1300,13 @@ Von eckig bis rund:
 
 ```mirror
 Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
-  Frame w 60, h 60, bg #2563eb, rad 0, center
+  Frame w 60, h 60, bg #2271C1, rad 0, center
     Text "0", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 4, center
+  Frame w 60, h 60, bg #2271C1, rad 4, center
     Text "4", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 12, center
+  Frame w 60, h 60, bg #2271C1, rad 12, center
     Text "12", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 99, center
+  Frame w 60, h 60, bg #2271C1, rad 99, center
     Text "99", col white, fs 11
 ```
 
@@ -1377,13 +1377,13 @@ Transparenz des gesamten Elements:
 
 ```mirror
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
-  Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 1
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 1
     Text "1", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 0.7
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.7
     Text "0.7", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 0.4
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.4
     Text "0.4", col white, fs 11
-  Frame w 60, h 60, bg #2563eb, rad 8, center, opacity 0.2
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.2
     Text "0.2", col white, fs 11
 ```
 
@@ -1411,26 +1411,26 @@ Jetzt siehst du, wie die einzelnen Properties zusammenspielen. Hier sind sechs t
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // Filled Buttons
   Frame hor, gap 8
-    Button "Primary", bg #2563eb, col white, pad 10 20, rad 6
+    Button "Primary", bg #2271C1, col white, pad 10 20, rad 6
     Button "Success", bg #10b981, col white, pad 10 20, rad 6
     Button "Danger", bg #ef4444, col white, pad 10 20, rad 6
 
   // Outlined Buttons
   Frame hor, gap 8
-    Button "Outline", bor 1, boc #2563eb, col #2563eb, pad 10 20, rad 6
-    Button "Subtle", bg #2563eb22, col #2563eb, pad 10 20, rad 6
+    Button "Outline", bor 1, boc #2271C1, col #2271C1, pad 10 20, rad 6
+    Button "Subtle", bg #2271C122, col #2271C1, pad 10 20, rad 6
 
   // Ghost & Link
   Frame hor, gap 8
     Button "Ghost", col #888, pad 10 20, rad 6
-    Button "Link →", col #2563eb, pad 10 20, underline
+    Button "Link →", col #2271C1, pad 10 20, underline
 ```
 
 **Was passiert hier?**
 
 - **Filled:** Volle Hintergrundfarbe – für primäre Aktionen
 - **Outline:** Nur Border, kein Hintergrund – für sekundäre Aktionen
-- **Subtle:** Transparenter Hintergrund mit `bg #2563eb22` (22 = 13% Opacity)
+- **Subtle:** Transparenter Hintergrund mit `bg #2271C122` (22 = 13% Opacity)
 - **Ghost:** Nur Text, kein visueller Container – für tertiäre Aktionen
 - **Link:** Mit `underline` – für Inline-Navigation
 
@@ -1493,7 +1493,7 @@ Ein **State** beschreibt, wie ein Element in einem bestimmten Zustand aussieht. 
 ```mirror
 Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
   on:
-    bg #2563eb
+    bg #2271C1
 
 Btn "Klick mich"
 ```
@@ -1534,7 +1534,7 @@ Besonders wichtig für Formulare:
 ```mirror
 Field: bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 200
   focus:
-    boc #2563eb
+    boc #2271C1
   disabled:
     opacity 0.5
     cursor not-allowed
@@ -1555,7 +1555,7 @@ FavBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center,
   hover:
     bg #252525
   on:
-    bg #2563eb
+    bg #2271C1
     col white
     Icon "heart", ic white, is 16, fill
     "Gemerkt"
@@ -1632,7 +1632,7 @@ Bei Tabs oder Radio-Buttons soll immer nur *ein* Element aktiv sein. Wenn du ein
 ```mirror
 Tab: pad 12 20, rad 6, bg #333, col #888, cursor pointer, exclusive()
   selected:
-    bg #2563eb
+    bg #2271C1
     col white
 
 Frame hor, ver-center, gap 4, bg #1a1a1a, pad 4, rad 8
@@ -1652,7 +1652,7 @@ Option: pad 10, rad 6, bg #333, col #888, cursor pointer, exclusive()
   hover:
     bg #444
   on:
-    bg #2563eb
+    bg #2271C1
     col white
 
 Frame gap 8, bind city
@@ -1684,7 +1684,7 @@ Dafür brauchst du zwei Dinge:
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Button "Menü", name MenuBtn, pad 10 20, rad 6, bg #333, col white, toggle()
     open:
-      bg #2563eb
+      bg #2271C1
 
   Frame bg #1a1a1a, pad 12, rad 8, gap 4, hidden
     MenuBtn.open:
@@ -1723,7 +1723,7 @@ Klick ist der Default. Für andere Events gibt es Shorthands:
 ```mirror
 Field: bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 220
   focus:
-    boc #2563eb
+    boc #2271C1
 
 Frame gap 8
   Input placeholder "Enter drücken...", Field, onenter toggle()
@@ -1801,22 +1801,22 @@ Ohne Transition springen Änderungen sofort. Mit Transition gleiten sie smooth. 
 // Ohne Transition: springt
 BtnHart: pad 12 24, rad 6, bg #333, col white, cursor pointer
   hover:
-    bg #2563eb
+    bg #2271C1
 
 // Mit Transition: gleitet
 BtnSoft: pad 12 24, rad 6, bg #333, col white, cursor pointer
-  hover 0.2s:
-    bg #2563eb
+  hover 0.8s:
+    bg #2271C1
 
 Frame hor, gap 12
   BtnHart "Ohne"
-  BtnSoft "Mit 0.2s"
+  BtnSoft "Mit 0.8s"
 ```
 
 **Was passiert hier?**
 
 - `hover:` — Änderung springt sofort
-- `hover 0.2s:` — Änderung gleitet über 200 Millisekunden
+- `hover 0.8s:` — Änderung gleitet über 800 Millisekunden
 - Die Dauer macht den Unterschied. Alles andere bleibt gleich.
 
 > **Hinweis:** **Faustregel für Dauer:** 100-200ms für Hover-Effekte, 200-300ms für State-Wechsel, 300-500ms für größere Übergänge. Im Zweifel lieber zu schnell als zu langsam.
@@ -1826,26 +1826,35 @@ Frame hor, gap 12
 Easing bestimmt die Beschleunigungskurve. Du kannst es nach der Dauer angeben:
 
 ```mirror
-Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
+// Hover über die Zeilen um den Unterschied zu sehen
+Row: hor, gap 12, ver-center, pad 8, cursor pointer
+  Label: col #888, fs 12, w 80
 
-// Verschiedene Easings
-Frame gap 8
-  Btn "ease-out"
-    hover 0.3s ease-out:
-      bg #2563eb
-  Btn "ease-in"
-    hover 0.3s ease-in:
-      bg #2563eb
-  Btn "ease-in-out"
-    hover 0.3s ease-in-out:
-      bg #2563eb
+Frame gap 8, bg #0a0a0a, pad 12, rad 8
+  Row
+    Label "ease-out"
+    Frame w 30, h 30, bg #2271C1, rad 6
+      hover 1s ease-out:
+        translate 150 0
+
+  Row
+    Label "ease-in"
+    Frame w 30, h 30, bg #10b981, rad 6
+      hover 1s ease-in:
+        translate 150 0
+
+  Row
+    Label "linear"
+    Frame w 30, h 30, bg #f59e0b, rad 6
+      hover 1s linear:
+        translate 150 0
 ```
 
 **Was passiert hier?**
 
-- `ease-out` — startet schnell, endet langsam (gut für Erscheinen)
-- `ease-in` — startet langsam, endet schnell (gut für Verschwinden)
-- `ease-in-out` — beides kombiniert (gut für Hin-und-her)
+- `ease-out` — startet schnell, bremst am Ende ab
+- `ease-in` — startet langsam, beschleunigt zum Ende
+- `linear` — gleichmäßige Geschwindigkeit (zum Vergleich)
 
 | Easing | Gefühl | Typische Verwendung |
 | --- | --- | --- |
@@ -1861,7 +1870,7 @@ Für typische Bewegungen gibt es vordefinierte Animationen. Du schreibst einfach
 
 ```mirror
 Frame hor, gap 12, wrap, bg #0a0a0a, pad 16, rad 8
-  Frame w 60, h 60, bg #2563eb, rad 8, center, anim pulse
+  Frame w 60, h 60, bg #2271C1, rad 8, center, anim pulse
     Text "pulse", col white, fs 10
   Frame w 60, h 60, bg #10b981, rad 8, center, anim bounce
     Text "bounce", col white, fs 10
@@ -1901,7 +1910,7 @@ Animationen sind besonders nützlich bei State-Wechseln. Du kannst sie direkt im
 LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center, gap 8, toggle()
   Icon "heart", ic #666, is 18
   "Gefällt mir"
-  hover 0.15s:
+  hover 0.5s:
     bg #252525
   on:
     bg #dc2626
@@ -1913,7 +1922,7 @@ LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center
 LikeBtn
 ```
 
-Der Hover-Effekt (`hover 0.15s:`) gleitet sanft. Beim Aktivieren (`on:`) hüpft der Button mit `anim bounce` — sofortiges Feedback: "Dein Klick wurde registriert!"
+Der Hover-Effekt (`hover 0.5s:`) gleitet sanft. Beim Aktivieren (`on:`) hüpft der Button mit `anim bounce` — sofortiges Feedback: "Dein Klick wurde registriert!"
 
 ### Enter und Exit
 
@@ -1921,7 +1930,7 @@ Oft soll ein Element anders animieren wenn es **erscheint** vs wenn es **verschw
 
 ```mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
-  Button name Btn, "Hinweis zeigen", pad 10 20, bg #2563eb, col white, rad 6, toggle()
+  Button name Btn, "Hinweis zeigen", pad 10 20, bg #2271C1, col white, rad 6, toggle()
     open:
       "Hinweis verstecken"
 
@@ -1945,7 +1954,7 @@ Ein klassisches Pattern — Menü gleitet von der Seite rein:
 Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Button name Btn, "Menü", pad 10 20, bg #333, col white, rad 6, toggle()
     open:
-      bg #2563eb
+      bg #2271C1
 
   Frame bg #1a1a1a, pad 12, rad 8, gap 4, w 160, hidden
     Btn.open:
@@ -1965,7 +1974,7 @@ Ein einfacher Spinner mit `spin`:
 
 ```mirror
 Frame hor, ver-center, gap 12, bg #1a1a1a, pad 16, rad 8
-  Icon "loader-2", ic #2563eb, is 24, anim spin
+  Icon "loader-2", ic #2271C1, is 24, anim spin
   Text "Lädt...", col #888
 ```
 
@@ -1988,7 +1997,7 @@ Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 200, scroll
 
   Spacer h 100
 
-  Frame in-view scale-in, bg #2563eb, pad 20, rad 8
+  Frame in-view scale-in, bg #2271C1, pad 20, rad 8
     Text "Und ich auch!", col white
 ```
 
@@ -2066,7 +2075,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // Standard (keine Spring)
   Button "Normal", pad 12 24, rad 6, bg #333, col white, toggle()
     on:
-      bg #2563eb
+      bg #2271C1
       scale 1.05
 
   // Mit Spring: bouncy
@@ -2108,7 +2117,7 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
   Frame in-view fade-in, stagger 0.1, gap 8
 
     Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
-      Frame w 8, h 8, rad 99, bg #2563eb
+      Frame w 8, h 8, rad 99, bg #2271C1
       Text "Erster Eintrag", col white
 
     Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
@@ -2164,8 +2173,8 @@ Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 280, scroll
 
 | Syntax | Bedeutung |
 | --- | --- |
-| `hover 0.2s:` | State mit 200ms Übergang |
-| `hover 0.3s ease-out:` | Mit Easing-Funktion |
+| `hover 0.8s:` | State mit 800ms Übergang |
+| `hover 0.8s ease-out:` | Mit Easing-Funktion |
 
 #### Animation Presets
 
@@ -2243,7 +2252,7 @@ Funktionen werden direkt als Properties geschrieben – genau wie `bg` oder `pad
 // Kurzschreibweise – Klick ist Default
 Btn: Button pad 10 20, rad 6, bg #333, col white, toggle()
   on:
-    bg #2563eb
+    bg #2271C1
 
 Btn "An/Aus"
 ```
@@ -2344,7 +2353,7 @@ count: 0
 Frame hor, gap 12, ver-center, bg #1a1a1a, pad 16, rad 8
   Button "-", pad 8 16, bg #333, col white, rad 6, fs 18, decrement(count)
   Text "$count", col white, fs 24, weight 600, w 60, center
-  Button "+", pad 8 16, bg #2563eb, col white, rad 6, fs 18, increment(count)
+  Button "+", pad 8 16, bg #2271C1, col white, rad 6, fs 18, increment(count)
 ```
 
 | Funktion | Beschreibung |
@@ -2392,7 +2401,7 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 12
   Frame hor, gap 8, ver-center
     Frame pad 12 16, bg #0a0a0a, rad 6, bor 1, boc #333
       Text "$code", col #10b981, fs 16, weight 600, font mono
-    Button "Kopieren", pad 10 16, bg #2563eb, col white, rad 6, copy("$code"), toast("Code kopiert!", "success")
+    Button "Kopieren", pad 10 16, bg #2271C1, col white, rad 6, copy("$code"), toast("Code kopiert!", "success")
       copied:
         bg #10b981
         "Kopiert!"
@@ -2406,7 +2415,7 @@ Mit `show(Element)` und `hide(Element)` machst du Elemente sichtbar oder verstec
 
 ```mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
-  Button "Info anzeigen", pad 10 20, bg #2563eb, col white, rad 6, show(InfoBox)
+  Button "Info anzeigen", pad 10 20, bg #2271C1, col white, rad 6, show(InfoBox)
 
   Frame name InfoBox, hidden, bg #1a1a1a, pad 16, rad 8, gap 8
     Text "Hier sind weitere Informationen.", col #ccc, fs 14
@@ -2432,7 +2441,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
 
   Divider bg #333, margin 8 0
 
-  Button "Mirror Website öffnen", pad 10 20, bg #2563eb, col white, rad 6, hor, gap 8
+  Button "Mirror Website öffnen", pad 10 20, bg #2271C1, col white, rad 6, hor, gap 8
     Icon "external-link", ic white, is 16
     openUrl("https://mirror-lang.dev")
 ```
@@ -2450,7 +2459,7 @@ Smooth-Scroll zu Elementen oder Seitenposition:
 
 ```mirror
 Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
-  Button "Zum Ende scrollen", pad 10 20, bg #2563eb, col white, rad 6, scrollToBottom()
+  Button "Zum Ende scrollen", pad 10 20, bg #2271C1, col white, rad 6, scrollToBottom()
 
   Frame gap 8, pad 40 0
     Text "Abschnitt 1", col white, fs 16
@@ -2499,9 +2508,9 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 300
 
   Frame gap 12
     Input name EmailInput, placeholder "E-Mail Adresse", bg #0a0a0a, col white, pad 12, rad 6, w full
-    Button "Anmelden", pad 12 20, bg #2563eb, col white, rad 6, w full, toast("Erfolgreich angemeldet!", "success")
+    Button "Anmelden", pad 12 20, bg #2271C1, col white, rad 6, w full, toast("Erfolgreich angemeldet!", "success")
       hover:
-        bg #1d4ed8
+        bg #2271C1
 
   Text "Spam-frei. Jederzeit abmeldbar.", col #666, fs 11, center
 ```
@@ -2784,7 +2793,7 @@ anna:
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$customers.max.name", col white, weight 500
   Text "$customers.max.email", col #888
-  Text "$customers.max.plan", col #2563eb
+  Text "$customers.max.plan", col #2271C1
 ```
 
 ### Über Einträge iterieren
@@ -2797,7 +2806,7 @@ each customer in $customers
     Frame gap 2
       Text "$customer.name", col white, weight 500
       Text "$customer.email", col #888, fs 12
-    Text "$customer.plan", col #2563eb, fs 12
+    Text "$customer.plan", col #2271C1, fs 12
 ```
 
 ### Relationen
@@ -2882,7 +2891,7 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   each product in $products
     Frame bg #1a1a1a, pad 20, rad 12, gap 8, w 140, center
       Text "$product.name", col white, fs 16, weight 600
-      Text "$$product.price", col #2563eb, fs 24, weight 700
+      Text "$$product.price", col #2271C1, fs 24, weight 700
       Text "$product.features", col #888, fs 12
 ```
 
@@ -2907,7 +2916,7 @@ loggedIn: false
 if loggedIn
   Text "Willkommen zurück!", col white
 else
-  Button "Anmelden", bg #2563eb, col white, pad 10 20, rad 6
+  Button "Anmelden", bg #2271C1, col white, pad 10 20, rad 6
 ```
 
 #### Mehrere Elemente
@@ -2922,7 +2931,7 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
   if showDetails
     Text "Beschreibung des Produkts", col #888, fs 13
     Text "Preis: €29", col #10b981, fs 14
-    Button "Kaufen", bg #2563eb, col white, pad 8 16, rad 4
+    Button "Kaufen", bg #2271C1, col white, pad 8 16, rad 4
 ```
 
 ### Komplexe Bedingungen
@@ -2959,7 +2968,7 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
 disabled: false
 
 if !disabled
-  Button "Absenden", bg #2563eb, col white, pad 10 20, rad 6
+  Button "Absenden", bg #2271C1, col white, pad 10 20, rad 6
 ```
 
 #### Kombiniert
@@ -3026,10 +3035,10 @@ Für einzelne Property-Werte gibt es die Kurzschreibweise mit `?` und `:`:
 ```mirror
 active: true
 
-Button "Status", bg active ? #2563eb : #333, col white, pad 10 20, rad 6
+Button "Status", bg active ? #2271C1 : #333, col white, pad 10 20, rad 6
 ```
 
-Das entspricht: "Wenn `active` wahr ist, nimm `#2563eb`, sonst `#333`."
+Das entspricht: "Wenn `active` wahr ist, nimm `#2271C1`, sonst `#333`."
 
 #### Weitere Beispiele
 
@@ -3040,7 +3049,7 @@ count: 3
 
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // Opacity basierend auf Sichtbarkeit
-  Frame w 100, h 50, bg #2563eb, rad 6, opacity visible ? 1 : 0.3
+  Frame w 100, h 50, bg #2271C1, rad 6, opacity visible ? 1 : 0.3
 
   // Icon basierend auf Status
   Frame hor, gap 8, ver-center, bg #1a1a1a, pad 12, rad 6
@@ -3055,7 +3064,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
 
 ```mirror
 theme: "dark"
-primary.bg: #2563eb
+primary.bg: #2271C1
 muted.bg: #333
 
 Button "Themed", bg theme === "dark" ? $primary : $muted, col white, pad 10 20, rad 6
@@ -3117,13 +3126,13 @@ user:
 Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
   if $user.loggedIn
     Frame hor, gap 10, ver-center
-      Frame w 36, h 36, rad 99, bg #2563eb, center
+      Frame w 36, h 36, rad 99, bg #2271C1, center
         Text $user.avatar ? "$user.avatar" : "$user.name[0]", col white, fs 14
       Frame gap 2
         Text "$user.name", col white, fs 14, weight 500
         Text "Online", col #10b981, fs 11
   else
-    Button "Anmelden", bg #2563eb, col white, pad 8 16, rad 6
+    Button "Anmelden", bg #2271C1, col white, pad 8 16, rad 6
 ```
 
 ---
@@ -3152,7 +3161,7 @@ Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
 | `if ... else` | `if count > 0 ... else` |
 | `&&`, `||`, `!` | `if isAdmin && hasAccess` |
 | `===`, `>`, `<` | `if status === "active"` |
-| Ternary | `bg active ? #2563eb : #333` |
+| Ternary | `bg active ? #2271C1 : #333` |
 
 **Variablen:** Definition mit `name:`, Verwendung in Text mit `"$name"`.
 
@@ -3330,10 +3339,10 @@ Card: bg #1a1a1a, pad 16, rad 8, gap 8
   Title: col white, fs 16, weight 500
   Body: col #888, fs 14
 
-PrimaryBtn as Button: bg #2563eb, col white, pad 10 20, rad 6
+PrimaryBtn as Button: bg #2271C1, col white, pad 10 20, rad 6
 ```
 
-// components.mirror Card: bg #1a1a1a, pad 16, rad 8, gap 8 Title: col white, fs 16, weight 500 Body: col #888, fs 14 PrimaryBtn as Button: bg #2563eb, col white, pad 10 20, rad 6 // dashboard.mirror use components Frame gap 16 Card Title "Willkommen" Body "Schön dass du da bist." PrimaryBtn "Los geht's" `use` importiert Komponenten-Definitionen. `show` zeigt Content an. Beides ergänzt sich.
+// components.mirror Card: bg #1a1a1a, pad 16, rad 8, gap 8 Title: col white, fs 16, weight 500 Body: col #888, fs 14 PrimaryBtn as Button: bg #2271C1, col white, pad 10 20, rad 6 // dashboard.mirror use components Frame gap 16 Card Title "Willkommen" Body "Schön dass du da bist." PrimaryBtn "Los geht's" `use` importiert Komponenten-Definitionen. `show` zeigt Content an. Beides ergänzt sich.
 
 ```mirror
 // dashboard.mirror
@@ -3486,7 +3495,7 @@ Frame keyboard-nav, gap 12, w 280, bg #1a1a1a, pad 16, rad 8
   Input placeholder "Name"
   Input placeholder "E-Mail"
   Input placeholder "Telefon"
-  Button "Absenden", bg #2563eb, col white, pad 10 20, rad 6
+  Button "Absenden", bg #2271C1, col white, pad 10 20, rad 6
 ```
 
 **Was passiert:**
@@ -3584,7 +3593,7 @@ Tabs besteht intern aus mehreren Teilen: `List:` (Container um die Tab-Header), 
 Tabs defaultValue "Dashboard"
   // Kind-Komponenten (mit :) zuerst
   List: bor 0 0 1 0, boc #333, gap 24
-  Indicator: h 2, bg #2563eb
+  Indicator: h 2, bg #2271C1
   Content: pad 16 0
 
   // Dann die Tabs (ohne :)
@@ -3772,7 +3781,7 @@ Dialog
         Textarea placeholder "Enter description", h 80
     Frame hor, gap 8
       CloseTrigger: Button "Cancel", grow
-      Button "Create", bg #3b82f6, grow
+      Button "Create", bg #5BA8F5, grow
 ```
 
 ### Tooltip
@@ -3867,7 +3876,7 @@ Table $tasks, gap 4, w full
 - `Row:` – Template für jede Zeile (mit Doppelpunkt!)
 - `row.title` – Zugriff auf Felder des aktuellen Eintrags
 
-> **Hinweis:** Daten werden im Entry-Format definiert: `name:` gefolgt von eingerückten `key: value` Paaren. Bei der Verwendung mit `$name` iteriert die Runtime automatisch über alle Einträge.
+> **Hinweis:** **Hinweis:** Daten werden im Entry-Format definiert: `name:` gefolgt von eingerückten `key: value` Paaren. Bei der Verwendung mit `$name` iteriert die Runtime automatisch über alle Einträge.
 
 ### Tabellen stylen
 
@@ -3878,6 +3887,14 @@ Tabellen können auf allen Ebenen gestylt werden – von der Tabelle selbst bis 
 Styles direkt auf `Table` wirken auf den Container:
 
 ```mirror
+tasks:
+  t1:
+    name: "Design"
+    status: "done"
+  t2:
+    name: "Dev"
+    status: "wip"
+
 Table $tasks, bg #111, pad 16, rad 12, gap 8
   Row: hor, spread, pad 12, bg #1a1a1a, rad 6, w full
     Text row.name, col white
@@ -3889,6 +3906,14 @@ Table $tasks, bg #111, pad 16, rad 12, gap 8
 Mit `Header:` und `Footer:` stylst du Kopf- und Fußbereich separat:
 
 ```mirror
+tasks:
+  t1:
+    name: "Task 1"
+    effort: 5
+  t2:
+    name: "Task 2"
+    effort: 3
+
 Table $tasks, bg #111, rad 12, gap 4
   Header: bg #222, pad 12 16, rad 8 8 0 0
     Row "Aufgabe", "Aufwand"
@@ -3904,6 +3929,20 @@ Table $tasks, bg #111, rad 12, gap 4
 Für alternierende Zeilenfarben nutze `RowOdd:` und `RowEven:`:
 
 ```mirror
+users:
+  u1:
+    name: "Anna"
+    role: "Designer"
+  u2:
+    name: "Max"
+    role: "Developer"
+  u3:
+    name: "Tom"
+    role: "Manager"
+  u4:
+    name: "Lisa"
+    role: "Designer"
+
 Table $users, bg #111, rad 12, w full
   Header: bg #222, pad 12 16
     Row "Name", "Rolle"
@@ -3914,18 +3953,61 @@ Table $users, bg #111, rad 12, w full
     Text row.role, col #888
 ```
 
-> **Hinweis:** `RowOdd:` und `RowEven:` werden automatisch basierend auf dem Zeilen-Index angewendet. Ungerade Zeilen (1, 3, 5...) bekommen `RowOdd:`, gerade Zeilen (0, 2, 4...) bekommen `RowEven:`.
+**Tipp:** `RowOdd:` und `RowEven:` werden automatisch basierend auf dem Zeilen-Index angewendet. Ungerade Zeilen (1, 3, 5...) bekommen `RowOdd:`, gerade Zeilen (0, 2, 4...) bekommen `RowEven:`.
+
+> **Hinweis:** **Tipp:** `RowOdd:` und `RowEven:` werden automatisch basierend auf dem Zeilen-Index angewendet. Ungerade Zeilen (1, 3, 5...) bekommen `RowOdd:`, gerade Zeilen (0, 2, 4...) bekommen `RowEven:`.
 
 #### Column Styles
 
 Bei spaltenbasierten Tabellen kannst du Styles direkt auf `Column` setzen – sie wirken auf alle Zellen dieser Spalte:
 
 ```mirror
+tasks:
+  t1:
+    title: "Design Review"
+    status: "done"
+  t2:
+    title: "API Integration"
+    status: "wip"
+  t3:
+    title: "Testing"
+    status: "todo"
+
 Table $tasks, bg #111, rad 12, pad 8
   Header: bg #222, pad 12
     Row "Aufgabe", "Status"
   Column title, col white, pad 12
   Column status, col #10b981, pad 12, weight 600
+```
+
+#### Kombiniertes Styling
+
+Alle Styling-Ebenen können kombiniert werden:
+
+```mirror
+products:
+  p1:
+    name: "Basic"
+    price: 9
+    users: 5
+  p2:
+    name: "Pro"
+    price: 29
+    users: 50
+  p3:
+    name: "Enterprise"
+    price: 99
+    users: 999
+
+Table $products, bg #0a0a0a, rad 16, pad 12, gap 2, w full
+  Header: bg #1a1a1a, pad 16, rad 8
+    Row "Plan", "Preis", "Users"
+  RowOdd: bg #151515, rad 6
+  RowEven: bg #111, rad 6
+  Row: hor, pad 16, w full
+    Text row.name, col white, weight 500, w 120
+    Text "$" + row.price, col #10b981, w 80
+    Text row.users + " Users", col #666
 ```
 
 ### Filtern mit where
@@ -3998,7 +4080,7 @@ tasks:
 // Sortiert nach Priorität (aufsteigend)
 Table $tasks by priority, gap 4, w full
   Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
-    Text row.priority, col #2563eb, fs 14, weight 600, w 24
+    Text row.priority, col #2271C1, fs 14, weight 600, w 24
     Text row.title, col white, grow
 ```
 
@@ -4033,9 +4115,8 @@ Table $products by price desc, gap 4, w full
 
 #### Styling
 
-| Syntax | Beschreibung |
-|--------|--------------|
 | `Table $data, bg #111, pad 16, rad 12` | Table-Level Styles |
+| --- | --- |
 | `Header: bg #222, pad 12` | Kopfzeilen-Styles |
 | `Footer: bg #222, pad 12` | Fußzeilen-Styles |
 | `Row: pad 12, bg #1a1a1a` | Zeilen-Styles (alle Zeilen) |
@@ -4045,9 +4126,8 @@ Table $products by price desc, gap 4, w full
 
 #### Daten-Operationen
 
-| Syntax | Beschreibung |
-|--------|--------------|
 | `where row.done == false` | Filtern |
+| --- | --- |
 | `by priority` | Aufsteigend sortieren |
 | `by price desc` | Absteigend sortieren |
 
@@ -4201,7 +4281,7 @@ data:
   B: 50
   C: 20
 
-Pie $data, w 200, h 180, colors #2563eb #10b981 #f59e0b
+Pie $data, w 200, h 180, colors #2271C1 #10b981 #f59e0b
 ```
 
 #### Titel
@@ -4277,7 +4357,7 @@ data:
   Q4: 52
 
 Line $data, w 350, h 180
-  Point: size 8, bg #2563eb, hover-size 12
+  Point: size 8, bg #2271C1, hover-size 12
 ```
 
 #### Grid anpassen
@@ -4341,8 +4421,8 @@ teams:
   Dev: 12
   Marketing: 5
 
-Bar $teams, w 300, h 180, colors #2563eb
-  Bar: rad 6, bor 2, boc #1d4ed8
+Bar $teams, w 300, h 180, colors #2271C1
+  Bar: rad 6, bor 2, boc #2271C1
 ```
 
 #### Alle Subkomponenten kombinieren
@@ -4359,12 +4439,12 @@ revenue:
   Jun: 110
 
 Frame bg #0a0a0a, pad 20, rad 12
-  Line $revenue, w 420, h 240, colors #2563eb
+  Line $revenue, w 420, h 240, colors #2271C1
     Title: text "Umsatzentwicklung 2024", col white, fs 14
     XAxis: col #666, fs 10
     YAxis: col #666, label "Umsatz (k€)", fs 10, min 0
     Grid: col #222
-    Point: size 5, bg #2563eb, hover-size 8
+    Point: size 5, bg #2271C1, hover-size 8
     Line: width 2, tension 0.3
 ```
 
@@ -4566,69 +4646,30 @@ Frame gap 16
 |-----------|---------|-------|-------------|
 | **Selection & Dropdowns** | | | |
 | Select | select | Trigger, Content, Item +8 | Dropdown select with keyboard navigation |
-| Combobox | combobox | Root, Label, Control +9 | Autocomplete combobox with filtering |
-| Listbox | listbox | Root, Label, Content +5 | Listbox selection |
 | **Menus** | | | |
-| Menu | menu | Trigger, Positioner, Content +5 | Dropdown menu with keyboard navigation |
-| ContextMenu | menu | Trigger, Positioner, Content +4 | Right-click context menu |
-| NestedMenu | menu | Trigger, Positioner, Content +5 | Nested submenu structure |
-| NavigationMenu | navigation-menu | Root, List, Item +5 | Navigation menu with submenus |
 | **Form Controls** | | | |
 | Checkbox | checkbox | Root, Control, Label +2 | Checkbox with label |
 | Switch | switch | Track, Thumb, Label | Toggle switch |
 | RadioGroup | radio-group | Root, Item, ItemControl +4 | Radio button group |
 | Slider | slider | Root, Track, Range +6 | Range slider |
-| RangeSlider | slider | Root, Track, Range +6 | Range slider with two thumbs |
-| AngleSlider | angle-slider | Root, Control, Thumb +4 | Circular angle slider |
-| NumberInput | number-input | Root, Label, Control +4 | Number input with increment/decrement |
-| PinInput | pin-input | Root, Label, Control +2 | PIN/OTP input |
-| PasswordInput | password-input | Root, Label, Control +2 | Password input with visibility toggle |
-| TagsInput | tags-input | Root, Label, Control +6 | Tags/chips input |
-| Editable | editable | Root, Area, Preview +5 | Inline editable text |
-| RatingGroup | rating-group | Root, Label, Control +2 | Star rating input |
-| SegmentedControl | radio-group | Root, Item, ItemText +2 | Segmented control / button group |
-| ToggleGroup | toggle-group | Root, Item | Toggle button group |
 | **Date & Time** | | | |
 | DatePicker | date-picker | Root, Label, Control +20 | Date picker calendar |
-| DateInput | date-input | Root, Label, Control +2 | Segmented date input |
-| Timer | timer | Root, Area, Control +3 | Timer/stopwatch |
 | **Overlays & Modals** | | | |
 | Dialog | dialog | Trigger, Backdrop, Positioner +4 | Modal dialog |
 | Tooltip | tooltip | Trigger, Positioner, Content +1 | Hover tooltip |
-| Popover | popover | Trigger, Positioner, Content +5 | Click popover |
-| HoverCard | hover-card | Trigger, Positioner, Content +1 | Hover card preview |
-| FloatingPanel | floating-panel | Trigger, Positioner, Content +5 | Draggable floating panel |
-| Tour | tour | Backdrop, Spotlight, Positioner +9 | Guided tour/walkthrough |
-| Presence | presence | Root | Presence animation utility |
 | **Navigation** | | | |
 | Tabs | tabs | Root, List, Trigger +2 | Tabbed navigation |
-| Accordion | accordion | Root, Item, ItemTrigger +2 | Collapsible accordion |
-| Collapsible | collapsible | Root, Trigger, Content | Collapsible section |
-| Steps | steps | Root, List, Item +7 | Step wizard/stepper |
-| Pagination | pagination | Root, PrevTrigger, NextTrigger +2 | Pagination controls |
-| TreeView | tree-view | Root, Tree, Branch +5 | Tree view navigation |
-| SideNav | sidenav | Root, Header, Footer +10 | Sidebar navigation |
 | **Media & Files** | | | |
-| Avatar | avatar | Root, Image, Fallback | Avatar with fallback |
-| FileUpload | file-upload | Root, Dropzone, Trigger +8 | File upload with drag & drop |
-| ImageCropper | image-cropper | Root, Image, Overlay +9 | Image cropping tool |
-| Carousel | carousel | Root, ItemGroup, Item +6 | Carousel/slider |
-| SignaturePad | signature-pad | Root, Control, Segment +4 | Signature drawing pad |
 | **Feedback & Status** | | | |
-| Progress | progress | Root, Track, Range +5 | Linear progress bar |
-| CircularProgress | progress | Root, Circle, CircleTrack +3 | Circular progress indicator |
-| Toast | toast | Root, Title, Description +2 | Toast notification |
-| Marquee | marquee | Root, Content | Scrolling marquee |
 | **Utility** | | | |
-| Clipboard | clipboard | Root, Label, Control +3 | Clipboard copy utility |
-| QRCode | qr-code | Root, Frame, Pattern +1 | QR code generator |
-| ScrollArea | scroll-area | Root, Viewport, Content +3 | Custom scrollbar area |
-| Splitter | splitter | Root, Panel, ResizeTrigger | Resizable split panels |
 
 ### Compound Primitives (Layout Components)
 
-> Layout-Komponenten werden als eigene Komponenten mit Slots definiert (siehe "Komponenten mit Slots").
-> Beispiele: SidebarLayout, PageLayout, Card mit Header/Body/Footer.
+> Pre-built layout components for rapid prototyping. Fully customizable.
+
+| Component | Slots | Nested Slots | Description |
+|-----------|-------|--------------|-------------|
+| Table | Column, Header, Row, Footer, Group |  | Data-driven table with auto-generated columns from data schema |
 
 ### Properties
 
@@ -4656,13 +4697,13 @@ Frame gap 16
 | bottom-center | bc | *(standalone)* |
 | bottom-right | br | *(standalone)* |
 | wrap | - | *(standalone)* |
-| pos | positioned, position | *(standalone)* |
 | stacked | - | *(standalone)* |
 | grid | - | auto, <number> |
 | dense | - | *(standalone)* |
 | gap-x | gx | <number>, $token |
 | gap-y | gy | <number>, $token |
 | row-height | rh | <number>, $token |
+| grow | - | *(standalone)* |
 | shrink | - | *(standalone)* |
 | align | - | top, bottom, left, right, center |
 | left | - | *(standalone)* |
@@ -4673,8 +4714,8 @@ Frame gap 16
 | ver-center | - | *(standalone)* |
 | padding | pad, p | <number>, $token |
 | margin | m | <number>, $token |
-| background | bg | <color>, $token, grad #a #b, grad-ver #a #b, grad N #a #b |
-| color | col, c | <color>, $token, grad #a #b, grad-ver #a #b |
+| background | bg | <color>, $token |
+| color | col, c | <color>, $token |
 | border-color | boc | <color>, $token |
 | border | bor | <number>, $token |
 | radius | rad | <number>, $token |
@@ -4714,6 +4755,7 @@ Frame gap 16
 | src | - | - |
 | placeholder | - | - |
 | focusable | - | *(standalone)* |
+| keyboard-nav | keynav | *(standalone)* |
 | readonly | - | *(standalone)* |
 | type | - | - |
 | name | - | - |
@@ -4724,7 +4766,13 @@ Frame gap 16
 | icon-color | ic | <color>, $token |
 | icon-weight | iw | <number> |
 | fill | - | *(standalone)* |
-| animation | anim | fade-in, fade-out, slide-in, slide-out, scale-in, scale-out, bounce, pulse, shake, spin |
+| animation | anim | fade-in, fade-out, slide-in, slide-out, slide-up, slide-down, slide-left, slide-right, scale-in, scale-out, bounce, pulse, shake, spin, reveal-up, reveal-scale, reveal-fade |
+| in-view | inview | fade-in, fade-out, slide-up, slide-down, slide-left, slide-right, scale-in, reveal-up, reveal-scale, reveal-fade |
+| scroll-y | scroll-ver, parallax-y | - |
+| scroll-x | scroll-hor, parallax-x | - |
+| spring | - | gentle, bouncy, stiff, slow |
+| stagger | - | - |
+| threshold | - | - |
 | x-offset | - | <number> |
 | y-offset | - | <number> |
 | hover-bg | hover-background | <color>, $token |
@@ -4763,8 +4811,14 @@ Frame gap 16
 | onkeyup | keyup | ✓ |
 | onclick-outside | click-outside | - |
 | onload | load | - |
-| onenter | enter | - |
-| onexit | exit | - |
+| onviewenter | enter | - |
+| onviewexit | exit | - |
+| onenter | keydown | - |
+| onkeyenter | keydown | - |
+| onkeyescape | keydown | - |
+| onkeyspace | keydown | - |
+| onescape | keydown | - |
+| onspace | keydown | - |
 
 ### Actions
 
@@ -4782,6 +4836,8 @@ Frame gap 16
 | page | - |
 | call | - |
 | assign | - |
+| focus | - |
+| blur | - |
 | submit | - |
 | reset | - |
 | navigate | - |
@@ -4800,34 +4856,17 @@ Frame gap 16
 | set | - |
 | increment | - |
 | decrement | - |
-| reset | - |
 | copy | - |
-| toast | message, type?, position? |
-| focus | element? |
-| blur | element? |
-| clear | element? |
-| selectText | element? |
-| setError | element, message? |
-| clearError | element? |
-| back | - |
-| forward | - |
-| openUrl | url, newTab? |
+| create | - |
+| save | - |
+| revert | - |
+| delete | - |
 
 ### States
 
-**System-States** (impliziter Trigger): hover, focus, active, disabled
+**System:** hover, focus, active, disabled
 
-**Custom-States** (beliebige Namen möglich): on, open, closed, active, selected, expanded, collapsed, loading, error, valid, invalid, ...
-
-**Syntax:**
-- `on:` / `open:` / `loading:` – Custom States definieren
-- `hover:` / `focus:` / `active:` – System-States (kein Trigger)
-- `Btn "Text", on` – Instanz im State starten
-- `toggle()` – Eingebaute Funktion (Klick ist Default)
-- `save()` – Eigene JavaScript-Funktion aufrufen
-- `onenter search()` – Bei Enter-Taste
-- `name MenuBtn` – Element benennen
-- `MenuBtn.open:` – Auf State reagieren
+**Custom:** selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error
 
 ### Keyboard Keys
 

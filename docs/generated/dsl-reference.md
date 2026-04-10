@@ -1,6 +1,6 @@
 # DSL Reference
 
-> Auto-generated from `compiler/schema/dsl.ts`. Do not edit manually.
+> Auto-generated from `src/schema/dsl.ts`. Do not edit manually.
 > Run `npm run generate` to update.
 ## DSL Reference (auto-generated)
 
@@ -42,63 +42,22 @@
 |-----------|---------|-------|-------------|
 | **Selection & Dropdowns** | | | |
 | Select | select | Trigger, Content, Item +8 | Dropdown select with keyboard navigation |
-| Combobox | combobox | Root, Label, Control +9 | Autocomplete combobox with filtering |
-| Listbox | listbox | Root, Label, Content +5 | Listbox selection |
 | **Menus** | | | |
-| Menu | menu | Trigger, Positioner, Content +5 | Dropdown menu with keyboard navigation |
-| ContextMenu | menu | Trigger, Positioner, Content +4 | Right-click context menu |
-| NestedMenu | menu | Trigger, Positioner, Content +5 | Nested submenu structure |
-| NavigationMenu | navigation-menu | Root, List, Item +5 | Navigation menu with submenus |
 | **Form Controls** | | | |
 | Checkbox | checkbox | Root, Control, Label +2 | Checkbox with label |
 | Switch | switch | Track, Thumb, Label | Toggle switch |
 | RadioGroup | radio-group | Root, Item, ItemControl +4 | Radio button group |
 | Slider | slider | Root, Track, Range +6 | Range slider |
-| RangeSlider | slider | Root, Track, Range +6 | Range slider with two thumbs |
-| AngleSlider | angle-slider | Root, Control, Thumb +4 | Circular angle slider |
-| NumberInput | number-input | Root, Label, Control +4 | Number input with increment/decrement |
-| PinInput | pin-input | Root, Label, Control +2 | PIN/OTP input |
-| PasswordInput | password-input | Root, Label, Control +2 | Password input with visibility toggle |
-| TagsInput | tags-input | Root, Label, Control +6 | Tags/chips input |
-| Editable | editable | Root, Area, Preview +5 | Inline editable text |
-| RatingGroup | rating-group | Root, Label, Control +2 | Star rating input |
-| SegmentedControl | radio-group | Root, Item, ItemText +2 | Segmented control / button group |
-| ToggleGroup | toggle-group | Root, Item | Toggle button group |
 | **Date & Time** | | | |
 | DatePicker | date-picker | Root, Label, Control +20 | Date picker calendar |
-| DateInput | date-input | Root, Label, Control +2 | Segmented date input |
-| Timer | timer | Root, Area, Control +3 | Timer/stopwatch |
 | **Overlays & Modals** | | | |
 | Dialog | dialog | Trigger, Backdrop, Positioner +4 | Modal dialog |
 | Tooltip | tooltip | Trigger, Positioner, Content +1 | Hover tooltip |
-| Popover | popover | Trigger, Positioner, Content +5 | Click popover |
-| HoverCard | hover-card | Trigger, Positioner, Content +1 | Hover card preview |
-| FloatingPanel | floating-panel | Trigger, Positioner, Content +5 | Draggable floating panel |
-| Tour | tour | Backdrop, Spotlight, Positioner +9 | Guided tour/walkthrough |
-| Presence | presence | Root | Presence animation utility |
 | **Navigation** | | | |
 | Tabs | tabs | Root, List, Trigger +2 | Tabbed navigation |
-| Accordion | accordion | Root, Item, ItemTrigger +2 | Collapsible accordion |
-| Collapsible | collapsible | Root, Trigger, Content | Collapsible section |
-| Steps | steps | Root, List, Item +7 | Step wizard/stepper |
-| Pagination | pagination | Root, PrevTrigger, NextTrigger +2 | Pagination controls |
-| TreeView | tree-view | Root, Tree, Branch +5 | Tree view navigation |
 | **Media & Files** | | | |
-| Avatar | avatar | Root, Image, Fallback | Avatar with fallback |
-| FileUpload | file-upload | Root, Dropzone, Trigger +8 | File upload with drag & drop |
-| ImageCropper | image-cropper | Root, Image, Overlay +9 | Image cropping tool |
-| Carousel | carousel | Root, ItemGroup, Item +6 | Carousel/slider |
-| SignaturePad | signature-pad | Root, Control, Segment +4 | Signature drawing pad |
 | **Feedback & Status** | | | |
-| Progress | progress | Root, Track, Range +5 | Linear progress bar |
-| CircularProgress | progress | Root, Circle, CircleTrack +3 | Circular progress indicator |
-| Toast | toast | Root, Title, Description +2 | Toast notification |
-| Marquee | marquee | Root, Content | Scrolling marquee |
 | **Utility** | | | |
-| Clipboard | clipboard | Root, Label, Control +3 | Clipboard copy utility |
-| QRCode | qr-code | Root, Frame, Pattern +1 | QR code generator |
-| ScrollArea | scroll-area | Root, Viewport, Content +3 | Custom scrollbar area |
-| Splitter | splitter | Root, Panel, ResizeTrigger | Resizable split panels |
 
 ### Compound Primitives (Layout Components)
 
@@ -106,7 +65,7 @@
 
 | Component | Slots | Nested Slots | Description |
 |-----------|-------|--------------|-------------|
-| Shell | Header, Sidebar, Main, Footer | Logo, Nav, Actions, NavItem +4 | App shell with header, sidebar, and main content area |
+| Table | Column, Header, Row, Footer, Group |  | Data-driven table with auto-generated columns from data schema |
 
 ### Properties
 
@@ -134,7 +93,6 @@
 | bottom-center | bc | *(standalone)* |
 | bottom-right | br | *(standalone)* |
 | wrap | - | *(standalone)* |
-| pos | positioned, position | *(standalone)* |
 | stacked | - | *(standalone)* |
 | grid | - | auto, <number> |
 | dense | - | *(standalone)* |
@@ -152,8 +110,8 @@
 | ver-center | - | *(standalone)* |
 | padding | pad, p | <number>, $token |
 | margin | m | <number>, $token |
-| background | bg | <color>, $token, grad #a #b, grad-ver #a #b, grad N #a #b |
-| color | col, c | <color>, $token, grad #a #b, grad-ver #a #b |
+| background | bg | <color>, $token |
+| color | col, c | <color>, $token |
 | border-color | boc | <color>, $token |
 | border | bor | <number>, $token |
 | radius | rad | <number>, $token |
@@ -193,6 +151,7 @@
 | src | - | - |
 | placeholder | - | - |
 | focusable | - | *(standalone)* |
+| keyboard-nav | keynav | *(standalone)* |
 | readonly | - | *(standalone)* |
 | type | - | - |
 | name | - | - |
@@ -203,8 +162,13 @@
 | icon-color | ic | <color>, $token |
 | icon-weight | iw | <number> |
 | fill | - | *(standalone)* |
-| material | - | *(standalone)* |
-| animation | anim | fade-in, fade-out, slide-in, slide-out, scale-in, scale-out, bounce, pulse, shake, spin |
+| animation | anim | fade-in, fade-out, slide-in, slide-out, slide-up, slide-down, slide-left, slide-right, scale-in, scale-out, bounce, pulse, shake, spin, reveal-up, reveal-scale, reveal-fade |
+| in-view | inview | fade-in, fade-out, slide-up, slide-down, slide-left, slide-right, scale-in, reveal-up, reveal-scale, reveal-fade |
+| scroll-y | scroll-ver, parallax-y | - |
+| scroll-x | scroll-hor, parallax-x | - |
+| spring | - | gentle, bouncy, stiff, slow |
+| stagger | - | - |
+| threshold | - | - |
 | x-offset | - | <number> |
 | y-offset | - | <number> |
 | hover-bg | hover-background | <color>, $token |
@@ -243,8 +207,14 @@
 | onkeyup | keyup | ✓ |
 | onclick-outside | click-outside | - |
 | onload | load | - |
-| onenter | enter | - |
-| onexit | exit | - |
+| onviewenter | enter | - |
+| onviewexit | exit | - |
+| onenter | keydown | - |
+| onkeyenter | keydown | - |
+| onkeyescape | keydown | - |
+| onkeyspace | keydown | - |
+| onescape | keydown | - |
+| onspace | keydown | - |
 
 ### Actions
 
@@ -267,6 +237,26 @@
 | submit | - |
 | reset | - |
 | navigate | - |
+| showAt | - |
+| showBelow | - |
+| showAbove | - |
+| showLeft | - |
+| showRight | - |
+| showModal | - |
+| dismiss | - |
+| scrollTo | - |
+| scrollBy | - |
+| scrollToTop | - |
+| scrollToBottom | - |
+| get | - |
+| set | - |
+| increment | - |
+| decrement | - |
+| copy | - |
+| create | - |
+| save | - |
+| revert | - |
+| delete | - |
 
 ### States
 
