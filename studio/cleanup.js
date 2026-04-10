@@ -5,6 +5,8 @@
  * wendet sie sequentiell und animiert an.
  */
 
+import { alert } from './dialog.js'
+
 // Wait for app to initialize
 setTimeout(() => {
   initCleanup()
@@ -83,7 +85,7 @@ async function handleCleanup() {
 
     if (data.error) {
       console.error('Cleanup error:', data.error)
-      alert('Fehler: ' + data.error)
+      await alert(data.error, { title: 'Cleanup Fehler' })
       return
     }
 
@@ -115,7 +117,7 @@ async function handleCleanup() {
 
   } catch (error) {
     console.error('Cleanup error:', error)
-    alert('Fehler beim Aufräumen: ' + error.message + '\n\nStelle sicher, dass der Server läuft (node spec-studio/server.js)')
+    await alert(error.message + '\n\nStelle sicher, dass der Server läuft (node spec-studio/server.js)', { title: 'Fehler beim Aufräumen' })
   } finally {
     cleanupBtn.classList.remove('loading')
     cleanupBtn.disabled = false

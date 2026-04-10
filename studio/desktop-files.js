@@ -6,6 +6,7 @@
  */
 
 import { storage, projectActions } from './storage'
+import { alert, confirm, confirmDelete } from './dialog.js'
 
 // =============================================================================
 // Project Toolbar (Title Bar + Hamburger Menu)
@@ -168,11 +169,11 @@ async function handleMenuAction(action) {
 
   switch (action) {
     case 'new':
-      if (!confirm('Neues Projekt erstellen? Alle aktuellen Änderungen gehen verloren.')) return
+      if (!await confirm('Neues Projekt erstellen? Alle aktuellen Änderungen gehen verloren.', { title: 'Neues Projekt' })) return
       await projectActions.new()
       break
     case 'demo':
-      if (!confirm('Demo-Projekt laden? Alle aktuellen Änderungen gehen verloren.')) return
+      if (!await confirm('Demo-Projekt laden? Alle aktuellen Änderungen gehen verloren.', { title: 'Demo laden' })) return
       await projectActions.demo()
       break
     case 'load':
@@ -624,7 +625,7 @@ export async function createFile(fileName, parentFolder = null) {
   // Validate filename
   const validationError = validateFilename(fileName)
   if (validationError) {
-    alert(validationError)
+    await alert(validationError, { title: 'Ungültiger Dateiname' })
     return
   }
 
@@ -653,7 +654,7 @@ export async function createFolder(folderName, parentFolder = null) {
     await storage.createFolder(targetPath)
   } catch (e) {
     console.error('[DesktopFiles] Create folder failed:', e)
-    alert('Ordner erstellen fehlgeschlagen')
+    await alert('Ordner erstellen fehlgeschlagen', { title: 'Fehler' })
   }
 }
 
@@ -717,11 +718,11 @@ export async function duplicateFile(path) {
  */
 export async function deleteItem(path, isFolder = false) {
   const name = path.split('/').pop()
-  const confirmMsg = isFolder
-    ? `Delete folder "${name}" and all contents?`
-    : `Delete "${name}"?`
+  const message = isFolder
+    ? `Ordner "${name}" und alle Inhalte löschen?`
+    : `"${name}" löschen?`
 
-  if (!confirm(confirmMsg)) return
+  if (!await confirmDelete(name, { message })) return
 
   try {
     if (isFolder) {
@@ -893,7 +894,7 @@ function startInlineRename(path) {
     if (newName && newName !== oldName) {
       const validationError = validateFilename(newName)
       if (validationError) {
-        alert(validationError)
+        await alert(validationError, { title: 'Ungültiger Name' })
         const span = document.createElement('span')
         span.textContent = oldName
         input.replaceWith(span)
@@ -996,7 +997,7 @@ function startInlineCreate(type, parentPath) {
 
     const validationError = validateFilename(name)
     if (validationError) {
-      alert(validationError)
+      await alert(validationError, { title: 'Ungültiger Name' })
       tempElement.remove()
       return
     }

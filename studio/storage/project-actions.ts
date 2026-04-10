@@ -8,6 +8,11 @@
 import { storage } from './index'
 import { isTauri } from './providers'
 
+// Custom dialog module (loaded globally)
+declare const MirrorDialog: {
+  alert: (message: string, options?: { title?: string }) => Promise<void>
+}
+
 // =============================================================================
 // Default Project Template
 // =============================================================================
@@ -191,7 +196,7 @@ async function browserImportProject(): Promise<boolean> {
       }
 
       if (Object.keys(projectFiles).length === 0) {
-        alert('Keine Mirror-Dateien (.mir, .tok, .com) im Ordner gefunden.')
+        await MirrorDialog.alert('Keine Mirror-Dateien (.mir, .tok, .com) im Ordner gefunden.', { title: 'Import fehlgeschlagen' })
         resolve(false)
         return
       }
@@ -213,7 +218,7 @@ async function browserExportProject(): Promise<void> {
   // Files aus localStorage laden
   const stored = localStorage.getItem('mirror-files')
   if (!stored) {
-    alert('Keine Dateien zum Exportieren.')
+    await MirrorDialog.alert('Keine Dateien zum Exportieren.', { title: 'Export fehlgeschlagen' })
     return
   }
 

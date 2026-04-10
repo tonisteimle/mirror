@@ -10,6 +10,11 @@
 
 import { projectActions } from '../storage'
 
+// Custom dialog module (loaded globally)
+declare const MirrorDialog: {
+  confirm: (message: string, options?: { title?: string }) => Promise<boolean>
+}
+
 // =============================================================================
 // Icons (16x16 SVG)
 // =============================================================================
@@ -96,14 +101,14 @@ export class ProjectToolbar {
   // ===========================================================================
 
   private async handleNew(): Promise<void> {
-    if (!confirm('Neues Projekt erstellen? Alle aktuellen Änderungen gehen verloren.')) {
+    if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Neues Projekt erstellen?' })) {
       return
     }
     await projectActions.new()
   }
 
   private async handleDemo(): Promise<void> {
-    if (!confirm('Demo-Projekt laden? Alle aktuellen Änderungen gehen verloren.')) {
+    if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Demo-Projekt laden?' })) {
       return
     }
     await projectActions.demo()

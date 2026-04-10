@@ -9,6 +9,11 @@ import { storage, projectActions } from '../storage'
 import { FileTreeController } from './controller'
 import { FileTreeView } from './view'
 
+// Custom dialog module (loaded globally)
+declare const MirrorDialog: {
+  confirm: (message: string, options?: { title?: string; danger?: boolean }) => Promise<boolean>
+}
+
 // =============================================================================
 // Singleton Instances
 // =============================================================================
@@ -157,11 +162,11 @@ async function handleMenuAction(action: string): Promise<void> {
 
   switch (action) {
     case 'new':
-      if (!confirm('Neues Projekt erstellen? Alle aktuellen Änderungen gehen verloren.')) return
+      if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Neues Projekt erstellen?' })) return
       await projectActions.new()
       break
     case 'demo':
-      if (!confirm('Demo-Projekt laden? Alle aktuellen Änderungen gehen verloren.')) return
+      if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Demo-Projekt laden?' })) return
       await projectActions.demo()
       break
     case 'load':

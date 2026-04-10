@@ -5,6 +5,8 @@
  * Falls back gracefully when running in browser.
  */
 
+import { alert, confirm } from './dialog.js'
+
 // Check if running in Tauri
 const isTauri = () => {
   return typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined;
@@ -289,7 +291,7 @@ export const TauriDialog = {
 
   async message(message, options = {}) {
     if (!isTauri()) {
-      alert(message);
+      await alert(message, { title: options.title });
       return;
     }
     const core = await getTauriCore();
@@ -301,7 +303,7 @@ export const TauriDialog = {
 
   async confirm(message, options = {}) {
     if (!isTauri()) {
-      return confirm(message);
+      return confirm(message, { title: options.title });
     }
     const core = await getTauriCore();
     return core.invoke('plugin:dialog|confirm', {

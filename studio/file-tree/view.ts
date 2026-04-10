@@ -9,6 +9,11 @@ import type { StorageItem, StorageFolder } from '../storage/types'
 import { FileTreeController, type ContextMenuTarget } from './controller'
 import { getFileType, sortTreeItems } from './utils'
 
+// Custom dialog module (loaded globally)
+declare const MirrorDialog: {
+  confirmDelete: (itemName: string, options?: { message?: string }) => Promise<boolean>
+}
+
 // =============================================================================
 // Icons
 // =============================================================================
@@ -367,11 +372,11 @@ export class FileTreeView {
         break
       case 'delete':
         if (target.path) {
-          const name = target.path.split('/').pop()
+          const name = target.path.split('/').pop() || ''
           const msg = target.isFolder
-            ? `Delete folder "${name}" and all contents?`
-            : `Delete "${name}"?`
-          if (confirm(msg)) {
+            ? `Ordner "${name}" und alle Inhalte löschen?`
+            : `"${name}" löschen?`
+          if (await MirrorDialog.confirmDelete(name, { message: msg })) {
             await this.controller.deleteItem(target.path, target.isFolder)
           }
         }

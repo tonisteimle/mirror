@@ -3,6 +3,9 @@ import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightAc
 import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo, undoDepth, redoDepth } from '@codemirror/commands'
 import { autocompletion, completionKeymap, startCompletion, closeCompletion } from '@codemirror/autocomplete'
 
+// Custom dialogs
+import { alert, confirm, prompt } from './dialog.js'
+
 // New architecture imports
 import {
   initializeStudio as initNewStudio,
@@ -6570,7 +6573,7 @@ async function setupDesktopMenuHandler() {
             console.log('[Menu] new_file - creating:', fileName)
             await window.desktopFiles.createFile(fileName)
           } else {
-            alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)')
+            await alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)', { title: 'Kein Projekt' })
           }
           break
 
@@ -6584,7 +6587,7 @@ async function setupDesktopMenuHandler() {
             console.log('[Menu] new_folder - creating:', folderName)
             await window.desktopFiles.createFolder(folderName)
           } else {
-            alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)')
+            await alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)', { title: 'Kein Projekt' })
           }
           break
 
@@ -6948,11 +6951,10 @@ function getApiKey() {
   return getOpenrouterKey()
 }
 
-function promptForApiKey() {
-  const key = prompt(
-    'OpenRouter API Key eingeben:\n\n' +
-    'Hol dir einen Key bei https://openrouter.ai/keys\n\n' +
-    'Der Key wird in den Einstellungen gespeichert.'
+async function promptForApiKey() {
+  const key = await prompt(
+    'Hol dir einen Key bei https://openrouter.ai/keys\n\nDer Key wird in den Einstellungen gespeichert.',
+    { title: 'OpenRouter API Key eingeben', placeholder: 'sk-or-...' }
   )
   if (key && key.trim()) {
     const settings = loadSettings()
