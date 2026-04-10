@@ -2466,9 +2466,47 @@ each color in $colors
 
 **Keine Doppelpunkte nötig** – der Eintrag *ist* der Wert. Sauberer als JSON-Arrays und konsistent mit dem Rest von Mirror.
 
-### Datenobjekte mit Einträgen
+### Datenobjekte: Zusammengehörige Daten gruppieren
 
-Das **Entry-Format** ist die bevorzugte Art, Daten in Mirror zu definieren. Jeder Eintrag hat einen Namen und enthält `key: value` Paare:
+Manchmal gehören mehrere Werte zusammen – Name, E-Mail und Status eines Benutzers zum Beispiel. Statt drei einzelne Variablen zu definieren, gruppierst du sie in einem **Datenobjekt**:
+
+```mirror
+// OHNE Datenobjekt: drei einzelne Variablen
+userName: "Max Mustermann"
+userEmail: "max@example.com"
+userActive: true
+
+// MIT Datenobjekt: zusammengehörige Daten gruppiert
+user:
+  name: "Max Mustermann"
+  email: "max@example.com"
+  active: true
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "$user.name", col white, weight 500
+  Text "$user.email", col #888
+  Text $user.active ? "Aktiv" : "Inaktiv", col #10b981
+```
+
+**Warum Datenobjekte?**
+
+- **Struktur:** Zusammengehörige Daten sind klar erkennbar
+- **Dot-Notation:** Zugriff mit `$user.name` statt `$userName`
+- **Wiederverwendbar:** Das ganze Objekt kann übergeben oder iteriert werden
+
+#### Attribut-Typen
+
+Datenobjekte unterstützen Strings, Zahlen und Booleans:
+
+| Typ | Beispiel |
+| --- | --- |
+| String | `name: "Max"` |
+| Zahl | `age: 25` |
+| Boolean | `active: true` |
+
+### Sammlungen: Mehrere Einträge
+
+Ein einzelnes Datenobjekt ist gut für *einen* Benutzer. Aber was wenn du eine **Liste von Benutzern** hast? Dafür gibt es Sammlungen – mehrere benannte Einträge unter einem gemeinsamen Namen:
 
 ```mirror
 users:
@@ -2488,49 +2526,11 @@ each user in $users
     Text "$user.role", col #888, fs 12
 ```
 
-**Vorteile des Entry-Formats:**
+**Warum Sammlungen?**
 
-- Lesbar wie YAML/JSON
-- Einträge haben eindeutige IDs (`max`, `anna`, `tom`)
-- Direkt adressierbar: `$users.max.name`
-
-### Datenobjekte
-
-Für strukturierte Daten mit mehreren Attributen: Definiere ein Datenobjekt mit Einrückung:
-
-```mirror
-user:
-  name: "Max Mustermann"
-  email: "max@example.com"
-  active: true
-
-Frame gap 8, bg #1a1a1a, pad 16, rad 8
-  Text "$user.name", col white, weight 500
-  Text "$user.email", col #888
-  Text $user.active ? "Aktiv" : "Inaktiv", col #10b981
-```
-
-#### Attribut-Typen
-
-Datenobjekte unterstützen verschiedene Werttypen:
-
-```mirror
-profile:
-  name: "Max"
-  age: 25
-  premium: true
-
-Frame gap 8, bg #1a1a1a, pad 16, rad 8
-  Text "$profile.name", col white
-  Text "Alter: $profile.age", col #888
-  Text $profile.premium ? "Premium" : "Free", col #10b981
-```
-
-| Typ | Beispiel |
-| --- | --- |
-| String | `name: "Max"` |
-| Zahl | `age: 25` |
-| Boolean | `active: true` |
+- **Iteration:** Mit `each user in $users` über alle Einträge iterieren
+- **Direktzugriff:** Einzelne Einträge mit `$users.max.name` adressieren
+- **Eindeutige IDs:** Jeder Eintrag hat einen Namen (`max`, `anna`, `tom`)
 
 ### Verschachtelte Datenobjekte
 

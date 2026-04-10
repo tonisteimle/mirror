@@ -118,8 +118,55 @@ each color in $colors
 
     <!-- ============================================================ -->
     <section>
-      <h2>Datenobjekte mit Einträgen</h2>
-      <p>Das <strong>Entry-Format</strong> ist die bevorzugte Art, Daten in Mirror zu definieren. Jeder Eintrag hat einen Namen und enthält <code>key: value</code> Paare:</p>
+      <h2>Datenobjekte: Zusammengehörige Daten gruppieren</h2>
+      <p>Manchmal gehören mehrere Werte zusammen – Name, E-Mail und Status eines Benutzers zum Beispiel. Statt drei einzelne Variablen zu definieren, gruppierst du sie in einem <strong>Datenobjekt</strong>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// OHNE Datenobjekt: drei einzelne Variablen
+userName: "Max Mustermann"
+userEmail: "max@example.com"
+userActive: true
+
+// MIT Datenobjekt: zusammengehörige Daten gruppiert
+user:
+  name: "Max Mustermann"
+  email: "max@example.com"
+  active: true
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "$user.name", col white, weight 500
+  Text "$user.email", col #888
+  Text $user.active ? "Aktiv" : "Inaktiv", col #10b981</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Warum Datenobjekte?</strong></p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><strong>Struktur:</strong> Zusammengehörige Daten sind klar erkennbar</li>
+        <li><strong>Dot-Notation:</strong> Zugriff mit <code>$user.name</code> statt <code>$userName</code></li>
+        <li><strong>Wiederverwendbar:</strong> Das ganze Objekt kann übergeben oder iteriert werden</li>
+      </ul>
+
+      <h3>Attribut-Typen</h3>
+      <p>Datenobjekte unterstützen Strings, Zahlen und Booleans:</p>
+
+      <table class="ref-table">
+        <tr><th>Typ</th><th>Beispiel</th></tr>
+        <tr><td>String</td><td><code>name: "Max"</code></td></tr>
+        <tr><td>Zahl</td><td><code>age: 25</code></td></tr>
+        <tr><td>Boolean</td><td><code>active: true</code></td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Sammlungen: Mehrere Einträge</h2>
+      <p>Ein einzelnes Datenobjekt ist gut für <em>einen</em> Benutzer. Aber was wenn du eine <strong>Liste von Benutzern</strong> hast? Dafür gibt es Sammlungen – mehrere benannte Einträge unter einem gemeinsamen Namen:</p>
+
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>users:
@@ -141,58 +188,12 @@ each user in $users
         <div class="playground-preview"></div>
       </div>
 
-      <p><strong>Vorteile des Entry-Formats:</strong></p>
+      <p><strong>Warum Sammlungen?</strong></p>
       <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
-        <li>Lesbar wie YAML/JSON</li>
-        <li>Einträge haben eindeutige IDs (<code>max</code>, <code>anna</code>, <code>tom</code>)</li>
-        <li>Direkt adressierbar: <code>$users.max.name</code></li>
+        <li><strong>Iteration:</strong> Mit <code>each user in $users</code> über alle Einträge iterieren</li>
+        <li><strong>Direktzugriff:</strong> Einzelne Einträge mit <code>$users.max.name</code> adressieren</li>
+        <li><strong>Eindeutige IDs:</strong> Jeder Eintrag hat einen Namen (<code>max</code>, <code>anna</code>, <code>tom</code>)</li>
       </ul>
-
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Datenobjekte</h2>
-      <p>Für strukturierte Daten mit mehreren Attributen: Definiere ein Datenobjekt mit Einrückung:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>user:
-  name: "Max Mustermann"
-  email: "max@example.com"
-  active: true
-
-Frame gap 8, bg #1a1a1a, pad 16, rad 8
-  Text "$user.name", col white, weight 500
-  Text "$user.email", col #888
-  Text $user.active ? "Aktiv" : "Inaktiv", col #10b981</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <h3>Attribut-Typen</h3>
-      <p>Datenobjekte unterstützen verschiedene Werttypen:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>profile:
-  name: "Max"
-  age: 25
-  premium: true
-
-Frame gap 8, bg #1a1a1a, pad 16, rad 8
-  Text "$profile.name", col white
-  Text "Alter: $profile.age", col #888
-  Text $profile.premium ? "Premium" : "Free", col #10b981</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <table class="ref-table">
-        <tr><th>Typ</th><th>Beispiel</th></tr>
-        <tr><td>String</td><td><code>name: "Max"</code></td></tr>
-        <tr><td>Zahl</td><td><code>age: 25</code></td></tr>
-        <tr><td>Boolean</td><td><code>active: true</code></td></tr>
-      </table>
 
     </section>
 

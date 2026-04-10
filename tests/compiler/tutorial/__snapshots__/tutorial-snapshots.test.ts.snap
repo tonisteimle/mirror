@@ -296,44 +296,111 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
           "tag": "span",
         },
         {
-          "children": [],
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "pad 16",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "padding",
+                  "value": "16px",
+                },
+                {
+                  "property": "background",
+                  "value": "#2271C1",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "mar 16",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "margin",
+                  "value": "16px",
+                },
+                {
+                  "property": "background",
+                  "value": "#10b981",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
           "events": [],
           "id": "node-3",
           "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Mit Padding",
-            },
-          ],
+          "layoutType": "flex",
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
           "styles": [
             {
-              "property": "padding",
-              "value": "16px",
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "0px",
             },
             {
               "property": "background",
-              "value": "#333",
-            },
-            {
-              "property": "color",
-              "value": "white",
+              "value": "#444",
             },
             {
               "property": "border-radius",
               "value": "4px",
             },
           ],
-          "tag": "span",
+          "tag": "div",
         },
         {
           "children": [
             {
               "children": [],
               "events": [],
-              "id": "node-5",
+              "id": "node-7",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -353,7 +420,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
             },
           ],
           "events": [],
-          "id": "node-4",
+          "id": "node-6",
           "isDefinition": false,
           "name": "Frame",
           "primitive": "frame",
@@ -407,7 +474,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-7",
+              "id": "node-9",
               "isDefinition": false,
               "name": "Frame",
               "primitive": "frame",
@@ -455,7 +522,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-8",
+              "id": "node-10",
               "isDefinition": false,
               "name": "Frame",
               "primitive": "frame",
@@ -503,7 +570,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-9",
+              "id": "node-11",
               "isDefinition": false,
               "name": "Frame",
               "primitive": "frame",
@@ -550,7 +617,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
             },
           ],
           "events": [],
-          "id": "node-6",
+          "id": "node-8",
           "isDefinition": false,
           "layoutType": "flex",
           "name": "Frame",
@@ -20475,10 +20542,6 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
                     "property": "align-items",
                     "value": "flex-start",
                   },
-                  {
-                    "property": "margin",
-                    "value": "2px 2px 2px 22px",
-                  },
                 ],
                 "tag": "div",
               },
@@ -23995,10 +24058,6 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
               "property": "background",
               "value": "#333",
             },
-            {
-              "property": "margin",
-              "value": "8px 0px",
-            },
           ],
           "tag": "hr",
         },
@@ -25723,10 +25782,6 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 4 1`] = `
                 "property": "border-radius",
                 "value": "6px",
               },
-              {
-                "property": "margin",
-                "value": "0px 0px 4px 0px",
-              },
             ],
             "tag": "div",
           },
@@ -25856,10 +25911,6 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 5 1`] = `
               {
                 "property": "border-radius",
                 "value": "6px",
-              },
-              {
-                "property": "margin",
-                "value": "0px 0px 4px 0px",
               },
             ],
             "tag": "div",
@@ -26306,10 +26357,6 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 8 1`] = `
             {
               "property": "gap",
               "value": "4px",
-            },
-            {
-              "property": "margin",
-              "value": "8px 0px 0px 0px",
             },
           ],
           "tag": "div",
@@ -33705,10 +33752,6 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 7 1`] = `
             {
               "property": "border-radius",
               "value": "8px",
-            },
-            {
-              "property": "margin",
-              "value": "4px 8px",
             },
             {
               "property": "color",

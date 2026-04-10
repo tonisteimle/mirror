@@ -1094,7 +1094,7 @@ export class Parser {
     // Parse properties on the same line until NEWLINE or EOF
     const properties: Property[] = []
 
-    while (!this.isAtEnd() && !this.check('NEWLINE') && !this.check('EOF')) {
+    for (let iter = 0; !this.isAtEnd() && !this.check('NEWLINE') && !this.check('EOF') && iter < Parser.MAX_ITERATIONS; iter++) {
       // Skip comma separators
       if (this.check('COMMA')) {
         this.advance()
@@ -1823,7 +1823,7 @@ export class Parser {
    * Note: where, by, desc, grouped are reserved keywords with their own token types
    */
   private parseTableClauses(table: TableNode): void {
-    while (!this.isAtEnd()) {
+    for (let iter = 0; !this.isAtEnd() && iter < Parser.MAX_ITERATIONS; iter++) {
       // Check for 'where' clause (token type WHERE)
       if (this.check('WHERE')) {
         this.advance()
