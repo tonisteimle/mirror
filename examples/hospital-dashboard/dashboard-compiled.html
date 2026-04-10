@@ -6696,6 +6696,221 @@ const _runtime = {
   },
 
   // ============================================
+  // FEEDBACK: Toast Notifications
+  // ============================================
+
+  _toastCounter: 0,
+  _activeToasts: new Map(),
+
+  toast(message, type = 'info', position = 'bottom') {
+    const toastId = ++this._toastCounter
+    const duration = 3000
+
+    // Dismiss existing toasts at the same position
+    for (const [id, t] of this._activeToasts) {
+      if (t.element.dataset.position === position) {
+        this.dismissToast(id)
+      }
+    }
+
+    // Create toast element
+    const toastEl = document.createElement('div')
+    toastEl.className = 'mirror-toast'
+    toastEl.dataset.type = type
+    toastEl.dataset.position = position
+    toastEl.dataset.toastId = String(toastId)
+    toastEl.textContent = message
+
+    // Base styles
+    Object.assign(toastEl.style, {
+      position: 'fixed',
+      zIndex: '10000',
+      padding: '12px 20px',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      transition: 'opacity 0.2s, transform 0.2s',
+      opacity: '0',
+      transform: 'translateY(10px)',
+    })
+
+    // Position styles
+    const posStyles = {
+      'top': { top: '20px', left: '50%', transform: 'translateX(-50%) translateY(-10px)' },
+      'bottom': { bottom: '20px', left: '50%', transform: 'translateX(-50%) translateY(10px)' },
+      'top-left': { top: '20px', left: '20px', transform: 'translateY(-10px)' },
+      'top-right': { top: '20px', right: '20px', transform: 'translateY(-10px)' },
+      'bottom-left': { bottom: '20px', left: '20px', transform: 'translateY(10px)' },
+      'bottom-right': { bottom: '20px', right: '20px', transform: 'translateY(10px)' },
+    }
+    Object.assign(toastEl.style, posStyles[position] || posStyles.bottom)
+
+    // Type colors
+    const typeColors = {
+      'info': { bg: '#1a1a1a', color: '#fff', border: '#333' },
+      'success': { bg: '#052e16', color: '#4ade80', border: '#166534' },
+      'error': { bg: '#450a0a', color: '#f87171', border: '#991b1b' },
+      'warning': { bg: '#422006', color: '#fbbf24', border: '#92400e' },
+    }
+    const colors = typeColors[type] || typeColors.info
+    toastEl.style.background = colors.bg
+    toastEl.style.color = colors.color
+    toastEl.style.border = '1px solid ' + colors.border
+
+    document.body.appendChild(toastEl)
+
+    // Store toast info
+    this._activeToasts.set(toastId, {
+      element: toastEl,
+      timerId: null
+    })
+
+    // Animate in
+    requestAnimationFrame(() => {
+      toastEl.style.opacity = '1'
+      toastEl.style.transform = position.startsWith('top')
+        ? 'translateX(-50%) translateY(0)'
+        : 'translateX(-50%) translateY(0)'
+      if (!position.includes('-')) {
+        toastEl.style.transform = position.startsWith('top')
+          ? 'translateX(-50%) translateY(0)'
+          : 'translateX(-50%) translateY(0)'
+      } else {
+        toastEl.style.transform = 'translateY(0)'
+      }
+    })
+
+    // Auto dismiss
+    const timerId = setTimeout(() => this.dismissToast(toastId), duration)
+    this._activeToasts.get(toastId).timerId = timerId
+
+    return toastId
+  },
+
+  dismissToast(toastId) {
+    const toast = this._activeToasts.get(toastId)
+    if (!toast) return
+
+    if (toast.timerId) clearTimeout(toast.timerId)
+
+    toast.element.style.opacity = '0'
+    toast.element.style.transform = toast.element.dataset.position?.startsWith('top')
+      ? 'translateY(-10px)'
+      : 'translateY(10px)'
+
+    setTimeout(() => {
+      toast.element.remove()
+      this._activeToasts.delete(toastId)
+    }, 200)
+  },
+
+  // ============================================
+  // INPUT CONTROL: Focus, Clear, Error
+  // ============================================
+
+  focus(el) {
+    if (!el) return
+    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    if (target && typeof target.focus === 'function') {
+      target.focus()
+    }
+  },
+
+  blur(el) {
+    if (!el) return
+    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    if (target && typeof target.blur === 'function') {
+      target.blur()
+    }
+  },
+
+  clear(el) {
+    if (!el) return
+    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    if (target && 'value' in target) {
+      target.value = ''
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+  },
+
+  selectText(el) {
+    if (!el) return
+    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    if (target && typeof target.select === 'function') {
+      target.select()
+    }
+  },
+
+  setError(el, message) {
+    if (!el) return
+    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    if (!target) return
+
+    // Set invalid state
+    target.dataset.state = 'invalid'
+    target.setAttribute('aria-invalid', 'true')
+
+    // Store error message
+    if (message) {
+      target._errorMessage = message
+      // Try to find or create error display
+      let errorEl = target.parentElement?.querySelector('.mirror-error-message')
+      if (!errorEl) {
+        errorEl = document.createElement('span')
+        errorEl.className = 'mirror-error-message'
+        errorEl.style.cssText = 'color:#ef4444;font-size:12px;margin-top:4px;display:block;'
+        target.parentElement?.appendChild(errorEl)
+      }
+      errorEl.textContent = message
+    }
+
+    // Apply invalid styles via state machine if available
+    this.transitionTo && this.transitionTo(target, 'invalid')
+  },
+
+  clearError(el) {
+    if (!el) return
+    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    if (!target) return
+
+    // Clear invalid state
+    delete target.dataset.state
+    target.removeAttribute('aria-invalid')
+    delete target._errorMessage
+
+    // Remove error message element
+    const errorEl = target.parentElement?.querySelector('.mirror-error-message')
+    if (errorEl) errorEl.remove()
+
+    // Revert to default state
+    this.transitionTo && this.transitionTo(target, 'default')
+  },
+
+  // ============================================
+  // NAVIGATION: Back, Forward, OpenUrl
+  // ============================================
+
+  back() {
+    window.history.back()
+  },
+
+  forward() {
+    window.history.forward()
+  },
+
+  openUrl(url, options = {}) {
+    if (!url) return
+    const { newTab = true } = options
+    // Ensure URL has a protocol
+    const fullUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')
+      ? url
+      : 'https://' + url
+    const target = newTab ? '_blank' : '_self'
+    window.open(fullUrl, target, newTab ? 'noopener,noreferrer' : undefined)
+  },
+
+  // ============================================
   // KEYBOARD NAVIGATION (Accessibility)
   // ============================================
 
@@ -6924,43 +7139,79 @@ const _runtime = {
   },
 
   get(name) {
+    // Read from __mirrorData for consistency with $get()
+    if (window.__mirrorData && name in window.__mirrorData) {
+      return window.__mirrorData[name]
+    }
     return this._tokens[name]
   },
 
   set(name, value) {
     this._tokens[name] = value
+    // Also update __mirrorData so $get() returns new value
+    if (window.__mirrorData) {
+      window.__mirrorData[name] = value
+    }
     this._notifyTokenWatchers(name)
+    // Notify text bindings to re-render
+    this.notifyDataChange && this.notifyDataChange(name, value)
   },
 
   increment(name, options = {}) {
-    const current = this._tokens[name] || 0
+    // Read from __mirrorData for consistency
+    const current = (window.__mirrorData && name in window.__mirrorData)
+      ? (typeof window.__mirrorData[name] === 'number' ? window.__mirrorData[name] : 0)
+      : (this._tokens[name] || 0)
     const step = options.step || 1
     let newVal = current + step
     if (options.max !== undefined && newVal > options.max) {
       newVal = options.max
     }
     this._tokens[name] = newVal
+    // Also update __mirrorData so $get() returns new value
+    if (window.__mirrorData) {
+      window.__mirrorData[name] = newVal
+    }
     this._notifyTokenWatchers(name)
+    // Notify text bindings to re-render
+    this.notifyDataChange && this.notifyDataChange(name, newVal)
   },
 
   decrement(name, options = {}) {
-    const current = this._tokens[name] || 0
+    // Read from __mirrorData for consistency
+    const current = (window.__mirrorData && name in window.__mirrorData)
+      ? (typeof window.__mirrorData[name] === 'number' ? window.__mirrorData[name] : 0)
+      : (this._tokens[name] || 0)
     const step = options.step || 1
     let newVal = current - step
     if (options.min !== undefined && newVal < options.min) {
       newVal = options.min
     }
     this._tokens[name] = newVal
+    // Also update __mirrorData so $get() returns new value
+    if (window.__mirrorData) {
+      window.__mirrorData[name] = newVal
+    }
     this._notifyTokenWatchers(name)
+    // Notify text bindings to re-render
+    this.notifyDataChange && this.notifyDataChange(name, newVal)
   },
 
   reset(name, initialValue) {
+    let newVal
     if (initialValue !== undefined) {
-      this._tokens[name] = initialValue
+      newVal = initialValue
     } else {
-      this._tokens[name] = this._initialTokens[name]
+      newVal = this._initialTokens[name]
+    }
+    this._tokens[name] = newVal
+    // Also update __mirrorData so $get() returns new value
+    if (window.__mirrorData) {
+      window.__mirrorData[name] = newVal
     }
     this._notifyTokenWatchers(name)
+    // Notify text bindings to re-render
+    this.notifyDataChange && this.notifyDataChange(name, newVal)
   },
 
   // ============================================
@@ -17632,206 +17883,6 @@ const __MIRROR_TEST__ = {
   resetNavigationHistory() {
     this._navigationHistory = []
     this._historyIndex = -1
-  },
-
-  // ========================================
-  // MOTION ONE INTEGRATION
-  // Motion One for scroll-reveal, parallax, spring physics
-  // Falls back to CSS animations when Motion One not available
-  // ========================================
-
-  _motionOne: null, // Will be set if motion library is loaded
-
-  // Check if Motion One is available
-  _hasMotionOne() {
-    if (this._motionOne) return true
-    // Check for global motion library (loaded via script tag)
-    if (typeof window !== 'undefined' && window.motion) {
-      this._motionOne = window.motion
-      return true
-    }
-    return false
-  },
-
-  // Spring presets for natural motion
-  _springPresets: {
-    'default': { stiffness: 100, damping: 15 },
-    'gentle': { stiffness: 50, damping: 20 },
-    'bouncy': { stiffness: 200, damping: 10 },
-    'stiff': { stiffness: 400, damping: 30 },
-    'slow': { stiffness: 60, damping: 25 },
-  },
-
-  // Motion presets for in-view animations
-  _motionPresets: {
-    'fade-in': { opacity: [0, 1] },
-    'fade-out': { opacity: [1, 0] },
-    'slide-up': { transform: ['translateY(20px)', 'translateY(0)'], opacity: [0, 1] },
-    'slide-down': { transform: ['translateY(-20px)', 'translateY(0)'], opacity: [0, 1] },
-    'slide-left': { transform: ['translateX(20px)', 'translateX(0)'], opacity: [0, 1] },
-    'slide-right': { transform: ['translateX(-20px)', 'translateX(0)'], opacity: [0, 1] },
-    'scale-in': { transform: ['scale(0.9)', 'scale(1)'], opacity: [0, 1] },
-    'scale-out': { transform: ['scale(1)', 'scale(0.9)'], opacity: [1, 0] },
-    'reveal-up': { transform: ['translateY(40px)', 'translateY(0)'], opacity: [0, 1] },
-    'reveal-scale': { transform: ['scale(0.95)', 'scale(1)'], opacity: [0, 1] },
-    'reveal-fade': { opacity: [0, 1] },
-  },
-
-  // Setup in-view animation (scroll reveal)
-  setupInViewAnimation(el, presets, config = {}) {
-    if (!el) return () => {}
-
-    const animations = Array.isArray(presets) ? presets : [presets]
-    const threshold = config.threshold ?? 0.2
-    const once = config.once ?? true
-
-    // Build combined keyframes from presets
-    const keyframes = {}
-    for (const preset of animations) {
-      const presetKeyframes = this._motionPresets[preset]
-      if (presetKeyframes) {
-        Object.assign(keyframes, presetKeyframes)
-      }
-    }
-
-    // Set initial state (hidden)
-    if (keyframes.opacity) el.style.opacity = keyframes.opacity[0]
-    if (keyframes.transform) el.style.transform = keyframes.transform[0]
-
-    if (this._hasMotionOne()) {
-      // Use Motion One inView for better performance
-      return this._motionOne.inView(el, () => {
-        this._motionOne.animate(el, {
-          opacity: keyframes.opacity ? keyframes.opacity[1] : undefined,
-          transform: keyframes.transform ? keyframes.transform[1] : undefined,
-        }, {
-          duration: config.duration || 0.4,
-          easing: config.easing || [0.22, 1, 0.36, 1],
-        })
-      }, { amount: threshold })
-    }
-
-    // Fallback: Use IntersectionObserver with CSS transitions
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          el.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out'
-          if (keyframes.opacity) el.style.opacity = keyframes.opacity[1]
-          if (keyframes.transform) el.style.transform = keyframes.transform[1]
-          if (once) observer.unobserve(el)
-        }
-      })
-    }, { threshold })
-
-    observer.observe(el)
-    return () => observer.disconnect()
-  },
-
-  // Setup scroll-linked animation (parallax)
-  setupScrollAnimation(el, property, from, to, config = {}) {
-    if (!el) return () => {}
-
-    const axis = config.axis || 'y'
-
-    if (this._hasMotionOne()) {
-      // Use Motion One scroll for smooth parallax
-      return this._motionOne.scroll(
-        this._motionOne.animate(el, {
-          transform: axis === 'y'
-            ? [`translateY(${from}px)`, `translateY(${to}px)`]
-            : [`translateX(${from}px)`, `translateX(${to}px)`]
-        }),
-        { target: el }
-      )
-    }
-
-    // Fallback: Use scroll event listener
-    const handleScroll = () => {
-      const rect = el.getBoundingClientRect()
-      const viewHeight = window.innerHeight
-      const progress = Math.max(0, Math.min(1, 1 - (rect.top / viewHeight)))
-      const value = from + (to - from) * progress
-      el.style.transform = axis === 'y' ? `translateY(${value}px)` : `translateX(${value}px)`
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll() // Initial position
-    return () => window.removeEventListener('scroll', handleScroll)
-  },
-
-  // Setup stagger animation for container children
-  setupStaggerAnimation(container, selector, preset, config = {}) {
-    if (!container) return Promise.resolve()
-
-    const items = container.querySelectorAll(selector)
-    if (items.length === 0) return Promise.resolve()
-
-    const keyframes = this._motionPresets[preset] || this._motionPresets['fade-in']
-    const staggerDelay = config.staggerDelay || 0.1
-
-    // Set initial state for all items
-    items.forEach(item => {
-      if (keyframes.opacity) item.style.opacity = keyframes.opacity[0]
-      if (keyframes.transform) item.style.transform = keyframes.transform[0]
-    })
-
-    if (this._hasMotionOne()) {
-      // Use Motion One stagger
-      return this._motionOne.animate(items, {
-        opacity: keyframes.opacity ? keyframes.opacity[1] : undefined,
-        transform: keyframes.transform ? keyframes.transform[1] : undefined,
-      }, {
-        duration: config.duration || 0.4,
-        delay: this._motionOne.stagger(staggerDelay),
-        easing: [0.22, 1, 0.36, 1],
-      })
-    }
-
-    // Fallback: Use setTimeout for staggered animation
-    return new Promise(resolve => {
-      items.forEach((item, index) => {
-        setTimeout(() => {
-          item.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out'
-          if (keyframes.opacity) item.style.opacity = keyframes.opacity[1]
-          if (keyframes.transform) item.style.transform = keyframes.transform[1]
-          if (index === items.length - 1) resolve()
-        }, index * staggerDelay * 1000)
-      })
-    })
-  },
-
-  // Get spring config from preset name or element dataset
-  getSpringConfig(presetOrElement) {
-    let preset = 'default'
-    if (typeof presetOrElement === 'string') {
-      preset = presetOrElement
-    } else if (presetOrElement && presetOrElement.dataset) {
-      preset = presetOrElement.dataset.springPreset || 'default'
-    }
-    return this._springPresets[preset] || this._springPresets['default']
-  },
-
-  // Animate with spring physics (for state transitions)
-  springAnimate(el, properties, config = {}) {
-    if (!el) return Promise.resolve()
-
-    const springConfig = this.getSpringConfig(config.spring || el)
-
-    if (this._hasMotionOne()) {
-      return this._motionOne.animate(el, properties, {
-        type: 'spring',
-        stiffness: springConfig.stiffness,
-        damping: springConfig.damping,
-        mass: springConfig.mass || 1,
-      })
-    }
-
-    // Fallback: Use CSS transition with custom cubic-bezier approximating spring
-    return new Promise(resolve => {
-      el.style.transition = 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)'
-      Object.assign(el.style, properties)
-      setTimeout(resolve, 400)
-    })
   },
 }
 

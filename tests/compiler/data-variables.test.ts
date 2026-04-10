@@ -206,3 +206,39 @@ each item in ["a", "b", "c"] with index
     expect(code).toContain('index + 1')
   })
 })
+
+describe('$$ Escape in Loop Context', () => {
+  it('converts $$product.price to "$" + product.price (literal $ + loop var)', () => {
+    const ast = parse(`
+products:
+  basic:
+    name: Basic
+    price: 9
+  pro:
+    name: Pro
+    price: 29
+
+Frame
+  each product in $products
+    Text "$$product.price"`)
+    const code = generateDOM(ast)
+
+    // $$product.price should become "$" + product.price (currency prefix)
+    expect(code).toContain('"$" + product.price')
+  })
+
+  it('handles $$item.value embedded in text with template literal', () => {
+    const ast = parse(`
+items:
+  a:
+    value: 100
+
+Frame
+  each item in $items
+    Text "Price: $$item.value"`)
+    const code = generateDOM(ast)
+
+    // Should produce template literal: \`Price: \${item.value}\`
+    expect(code).toContain('`Price: ${item.value}`')
+  })
+})

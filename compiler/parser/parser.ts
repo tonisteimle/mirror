@@ -62,6 +62,12 @@ export class Parser {
    */
   private loopVariables: Set<string> = new Set()
 
+  /**
+   * Maximum iterations for while loops to prevent infinite loops.
+   * This is a safety measure - real code should never hit this limit.
+   */
+  private static readonly MAX_ITERATIONS = 100000
+
   constructor(tokens: Token[], source: string = '') {
     this.tokens = tokens
     this.source = source
