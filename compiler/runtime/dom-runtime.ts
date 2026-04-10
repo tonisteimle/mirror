@@ -11,8 +11,8 @@
  * 3. Tree-shakeable for production builds
  */
 
-// Motion One for advanced animations (springs, scroll, in-view)
-import { animate as motionAnimateFn, inView, scroll, stagger } from 'motion'
+// Motion One for CSS animations
+import { animate as motionAnimateFn } from 'motion'
 // Focus trap for modal dialogs - accessibility
 import { createFocusTrap, FocusTrap } from 'focus-trap'
 
@@ -3687,26 +3687,10 @@ export interface MotionConfig {
   duration?: number
   delay?: number
   easing?: string | number[]  // string easing or cubic-bezier array
-  spring?: {
-    stiffness?: number
-    damping?: number
-    mass?: number
-  }
 }
 
 /**
- * Spring presets for natural motion
- */
-const SPRING_PRESETS: Record<string, { stiffness: number; damping: number; mass?: number }> = {
-  'default': { stiffness: 100, damping: 15 },
-  'gentle': { stiffness: 50, damping: 20 },
-  'bouncy': { stiffness: 200, damping: 10 },
-  'stiff': { stiffness: 400, damping: 30 },
-  'slow': { stiffness: 60, damping: 25 },
-}
-
-/**
- * Animation presets with Motion One (enhanced with springs)
+ * Animation presets with Motion One
  * Maps preset names to Motion One animation options
  */
 const MOTION_PRESETS: Record<string, {
@@ -3761,30 +3745,7 @@ const MOTION_PRESETS: Record<string, {
     keyframes: { transform: ['rotate(0deg)', 'rotate(360deg)'] },
     options: { duration: 1, easing: 'linear' },
   },
-  // New scroll-reveal presets
-  'reveal-up': {
-    keyframes: { transform: ['translateY(40px)', 'translateY(0)'], opacity: [0, 1] },
-    options: { duration: 0.6, easing: [0.22, 1, 0.36, 1] },
-  },
-  'reveal-scale': {
-    keyframes: { transform: ['scale(0.8)', 'scale(1)'], opacity: [0, 1] },
-    options: { duration: 0.5, easing: [0.34, 1.56, 0.64, 1] },
-  },
-  'reveal-fade': {
-    keyframes: { opacity: [0, 1] },
-    options: { duration: 0.8, easing: 'ease-out' },
-  },
 }
-
-/**
- * Active scroll animation cleanup functions
- */
-const _scrollAnimationCleanups: Map<HTMLElement, () => void> = new Map()
-
-/**
- * Active in-view animation cleanup functions
- */
-const _inViewCleanups: Map<HTMLElement, () => void> = new Map()
 
 /**
  * Play animation using Motion One
@@ -3818,19 +3779,7 @@ export function motionAnimate(
     const options: Record<string, unknown> = {
       duration: config?.duration || baseOptions.duration || 0.3,
       delay: config?.delay || 0,
-    }
-
-    // Use spring if specified, otherwise use easing
-    if (config?.spring) {
-      const springPreset = typeof config.spring === 'object'
-        ? config.spring
-        : SPRING_PRESETS[config.spring as unknown as string] || SPRING_PRESETS.default
-      options.type = 'spring'
-      options.stiffness = springPreset.stiffness
-      options.damping = springPreset.damping
-      if (springPreset.mass) options.mass = springPreset.mass
-    } else {
-      options.easing = config?.easing || baseOptions.easing || 'ease-out'
+      easing: config?.easing || baseOptions.easing || 'ease-out',
     }
 
     // Run animation
@@ -3838,188 +3787,6 @@ export function motionAnimate(
     const animation = motionAnimateFn(el, keyframes as any, options as any)
     animation.finished.then(() => resolve())
   })
-}
-
-/**
- * Setup in-view animation (scroll reveal)
- * Animation plays when element enters viewport
- * @param el Element to animate
- * @param preset Animation preset or custom keyframes
- * @param config Configuration including threshold
- */
-export function setupInViewAnimation(
-  el: HTMLElement,
-  preset: string | Record<string, unknown[]>,
-  config?: MotionConfig & {
-    threshold?: number  // 0-1, how much of element must be visible
-    once?: boolean      // Only animate once (default: true)
-  }
-): () => void {
-  const threshold = config?.threshold ?? 0.2
-  const once = config?.once ?? true
-
-  // Set initial hidden state
-  el.style.opacity = '0'
-
-  // Setup in-view observer
-  const cleanup = inView(
-    el,
-    (info) => {
-      // Reset opacity before animating
-      el.style.opacity = ''
-
-      // Play animation
-      motionAnimate(el, preset, config)
-
-      // Return cleanup function if we want to repeat
-      if (!once) {
-        return () => {
-          // Reset for next entrance
-          el.style.opacity = '0'
-        }
-      }
-    },
-    { amount: threshold }
-  )
-
-  // Store cleanup
-  _inViewCleanups.set(el, cleanup)
-  return cleanup
-}
-
-/**
- * Setup scroll-linked animation (parallax, progress)
- * Animation progress is tied to scroll position
- * @param el Element to animate
- * @param property CSS property to animate
- * @param from Start value
- * @param to End value
- * @param config Configuration
- */
-export function setupScrollAnimation(
-  el: HTMLElement,
-  property: string,
-  from: number | string,
-  to: number | string,
-  config?: {
-    axis?: 'x' | 'y'
-    target?: HTMLElement  // Scroll container (default: viewport)
-    offset?: [string, string]  // When to start/end (default: ['start end', 'end start'])
-  }
-): () => void {
-  const axis = config?.axis ?? 'y'
-  const target = config?.target
-  const offset = config?.offset ?? ['start end', 'end start']
-
-  // Build keyframes based on property
-  const keyframes: Record<string, unknown[]> = {}
-
-  // Handle different property types
-  if (property === 'y' || property === 'translateY') {
-    keyframes.transform = [`translateY(${from}px)`, `translateY(${to}px)`]
-  } else if (property === 'x' || property === 'translateX') {
-    keyframes.transform = [`translateX(${from}px)`, `translateX(${to}px)`]
-  } else if (property === 'scale') {
-    keyframes.transform = [`scale(${from})`, `scale(${to})`]
-  } else if (property === 'rotate') {
-    keyframes.transform = [`rotate(${from}deg)`, `rotate(${to}deg)`]
-  } else if (property === 'opacity') {
-    keyframes.opacity = [from, to]
-  } else {
-    // Generic property
-    keyframes[property] = [from, to]
-  }
-
-  // Setup scroll-linked animation
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cleanup = scroll(
-    motionAnimateFn(el, keyframes as any, { duration: 0 }),  // duration 0 = scroll-controlled
-    {
-      target: el,
-      container: target,
-      axis,
-      offset: offset as any,  // Motion One scroll offset type
-    }
-  )
-
-  // Store cleanup
-  _scrollAnimationCleanups.set(el, cleanup)
-  return cleanup
-}
-
-/**
- * Setup staggered animation for list items
- * @param container Parent element containing items
- * @param itemSelector Selector for items to animate
- * @param preset Animation preset
- * @param config Configuration including stagger delay
- */
-export function setupStaggerAnimation(
-  container: HTMLElement,
-  itemSelector: string,
-  preset: string,
-  config?: MotionConfig & { staggerDelay?: number }
-): Promise<void> {
-  return new Promise((resolve) => {
-    const items = container.querySelectorAll(itemSelector)
-    if (items.length === 0) {
-      resolve()
-      return
-    }
-
-    // Get preset
-    const presetConfig = MOTION_PRESETS[preset]
-    if (!presetConfig) {
-      console.warn(`Motion preset "${preset}" not found for stagger`)
-      resolve()
-      return
-    }
-
-    const staggerDelay = config?.staggerDelay ?? 0.05
-
-    // Animate with stagger
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const animation = motionAnimateFn(
-      items as any,  // NodeList needs casting for Motion One
-      presetConfig.keyframes as any,
-      {
-        duration: config?.duration || presetConfig.options.duration || 0.3,
-        delay: stagger(staggerDelay),
-        easing: (config?.easing as string) || presetConfig.options.easing || 'ease-out',
-      }
-    )
-
-    animation.finished.then(() => resolve())
-  })
-}
-
-/**
- * Cleanup all scroll animations for an element
- */
-export function cleanupScrollAnimation(el: HTMLElement): void {
-  const cleanup = _scrollAnimationCleanups.get(el)
-  if (cleanup) {
-    cleanup()
-    _scrollAnimationCleanups.delete(el)
-  }
-}
-
-/**
- * Cleanup all in-view animations for an element
- */
-export function cleanupInViewAnimation(el: HTMLElement): void {
-  const cleanup = _inViewCleanups.get(el)
-  if (cleanup) {
-    cleanup()
-    _inViewCleanups.delete(el)
-  }
-}
-
-/**
- * Get spring preset by name
- */
-export function getSpringPreset(name: string): { stiffness: number; damping: number; mass?: number } | undefined {
-  return SPRING_PRESETS[name]
 }
 
 /**
@@ -4524,12 +4291,6 @@ export const runtime = {
   setupEnterExitObserver,
   // Motion One integration
   motionAnimate,
-  setupInViewAnimation,
-  setupScrollAnimation,
-  setupStaggerAnimation,
-  cleanupScrollAnimation,
-  cleanupInViewAnimation,
-  getSpringPreset,
   getMotionPreset,
   // State machine function (handles both binary toggle and multi-state cycle)
   stateMachineToggle,

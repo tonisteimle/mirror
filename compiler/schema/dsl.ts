@@ -426,7 +426,6 @@ export const DSL = {
   easingFunctions: [
     'linear',
     'ease', 'ease-in', 'ease-out', 'ease-in-out',
-    'spring', 'spring-gentle', 'spring-bouncy', 'spring-stiff', 'spring-slow',
     'bounce',
   ] as const,
 
@@ -2080,90 +2079,6 @@ export const SCHEMA: Record<string, PropertyDef> = {
       'reveal-scale': { description: 'Scroll reveal - scale in', css: [] },
       'reveal-fade': { description: 'Scroll reveal - fade in', css: [] },
     },
-  },
-
-  // Motion One: Scroll Reveal
-  'in-view': {
-    name: 'in-view',
-    aliases: ['inview'],
-    category: 'animation',
-    description: 'Trigger animation when element scrolls into view',
-
-    standalone: {
-      description: 'Default reveal animation (fade-in + slide-up)',
-      css: [],
-    },
-
-    keywords: {
-      'fade-in': { description: 'Fade in when visible', css: [] },
-      'fade-out': { description: 'Fade out when leaving', css: [] },
-      'slide-up': { description: 'Slide up when visible', css: [] },
-      'slide-down': { description: 'Slide down when visible', css: [] },
-      'slide-left': { description: 'Slide left when visible', css: [] },
-      'slide-right': { description: 'Slide right when visible', css: [] },
-      'scale-in': { description: 'Scale in when visible', css: [] },
-      'reveal-up': { description: 'Reveal with slide up', css: [] },
-      'reveal-scale': { description: 'Reveal with scale', css: [] },
-      'reveal-fade': { description: 'Reveal with fade', css: [] },
-    },
-  },
-
-  // Motion One: Scroll-linked vertical
-  'scroll-y': {
-    name: 'scroll-y',
-    aliases: ['scroll-ver', 'parallax-y'],
-    category: 'animation',
-    description: 'Link property to vertical scroll progress (parallax)',
-    custom: true,
-  },
-
-  // Motion One: Scroll-linked horizontal
-  'scroll-x': {
-    name: 'scroll-x',
-    aliases: ['scroll-hor', 'parallax-x'],
-    category: 'animation',
-    description: 'Link property to horizontal scroll progress',
-    custom: true,
-  },
-
-  // Motion One: Spring physics
-  spring: {
-    name: 'spring',
-    aliases: [],
-    category: 'animation',
-    description: 'Spring physics easing for natural motion',
-
-    standalone: {
-      description: 'Default spring animation',
-      css: [],
-    },
-
-    keywords: {
-      'gentle': { description: 'Gentle spring (soft, slow)', css: [] },
-      'bouncy': { description: 'Bouncy spring (playful)', css: [] },
-      'stiff': { description: 'Stiff spring (snappy)', css: [] },
-      'slow': { description: 'Slow spring (smooth)', css: [] },
-    },
-
-    custom: true,  // spring stiffness 300 damping 20
-  },
-
-  // Motion One: Stagger delay (no CSS - handled by runtime)
-  stagger: {
-    name: 'stagger',
-    aliases: [],
-    category: 'animation',
-    description: 'Delay between items in staggered animations',
-    custom: true,
-  },
-
-  // Motion One: In-view threshold (no CSS - handled by runtime)
-  threshold: {
-    name: 'threshold',
-    aliases: [],
-    category: 'animation',
-    description: 'Visibility threshold for in-view animations (0-1)',
-    custom: true,
   },
 
   'x-offset': {

@@ -25,7 +25,7 @@
       <p class="subtitle">Bewegung und Übergänge</p>
     </header>
 
-    <p class="intro">Im letzten Kapitel hast du States kennengelernt – wie Elemente ihr Aussehen ändern. Dieses Kapitel zeigt, wie diese Änderungen <strong>animiert</strong> werden: <strong>Transitions</strong> für sanfte Übergänge, <strong>Presets</strong> für typische Effekte (fade, bounce, shake), und <strong>Enter/Exit</strong> für Erscheinen und Verschwinden.</p>
+    <p class="intro">Im letzten Kapitel hast du States kennengelernt – wie Elemente ihr Aussehen ändern. Dieses Kapitel zeigt, wie diese Änderungen <strong>animiert</strong> werden: <strong>Transitions</strong> für sanfte Übergänge und <strong>Presets</strong> für typische Effekte (pulse, bounce, shake, spin).</p>
 
 
     <!-- ============================================================ -->
@@ -42,12 +42,12 @@ BtnHart: pad 12 24, rad 6, bg #333, col white, cursor pointer
 
 // Mit Transition: gleitet
 BtnSoft: pad 12 24, rad 6, bg #333, col white, cursor pointer
-  hover 0.8s:
+  hover 0.3s:
     bg #2271C1
 
 Frame hor, gap 12
   BtnHart "Ohne"
-  BtnSoft "Mit 0.8s"</textarea>
+  BtnSoft "Mit 0.3s"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -55,7 +55,7 @@ Frame hor, gap 12
       <p><strong>Was passiert hier?</strong></p>
       <ul>
         <li><code>hover:</code> — Änderung springt sofort</li>
-        <li><code>hover 0.8s:</code> — Änderung gleitet über 800 Millisekunden</li>
+        <li><code>hover 0.3s:</code> — Änderung gleitet über 300 Millisekunden</li>
         <li>Die Dauer macht den Unterschied. Alles andere bleibt gleich.</li>
       </ul>
 
@@ -72,36 +72,28 @@ Frame hor, gap 12
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Klicke auf die Boxen um den Unterschied zu sehen
-Box: w 30, h 30, rad 6, cursor pointer, toggle()
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
 
-Frame gap 8, bg #0a0a0a, pad 12, rad 8
-  Frame hor, gap 12, ver-center
-    Text "ease-out", col #888, fs 12, w 70
-    Box bg #2271C1
-      on 1s ease-out:
-        x-offset 150
-
-  Frame hor, gap 12, ver-center
-    Text "ease-in", col #888, fs 12, w 70
-    Box bg #10b981
-      on 1s ease-in:
-        x-offset 150
-
-  Frame hor, gap 12, ver-center
-    Text "linear", col #888, fs 12, w 70
-    Box bg #f59e0b
-      on 1s linear:
-        x-offset 150</textarea>
+// Verschiedene Easings
+Frame gap 8
+  Btn "ease-out (Standard)"
+    hover 0.3s ease-out:
+      bg #2271C1
+  Btn "ease-in"
+    hover 0.3s ease-in:
+      bg #2271C1
+  Btn "ease-in-out"
+    hover 0.3s ease-in-out:
+      bg #2271C1</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <p><strong>Was passiert hier?</strong></p>
       <ul>
-        <li><code>ease-out</code> — startet schnell, bremst am Ende ab</li>
-        <li><code>ease-in</code> — startet langsam, beschleunigt zum Ende</li>
-        <li><code>linear</code> — gleichmäßige Geschwindigkeit (zum Vergleich)</li>
+        <li><code>ease-out</code> — startet schnell, endet langsam (gut für Erscheinen)</li>
+        <li><code>ease-in</code> — startet langsam, endet schnell (gut für Verschwinden)</li>
+        <li><code>ease-in-out</code> — beides kombiniert (gut für Hin-und-her)</li>
       </ul>
 
       <table class="ref-table">
@@ -145,14 +137,8 @@ Frame gap 8, bg #0a0a0a, pad 12, rad 8
 
       <table class="ref-table">
         <tr><th>Preset</th><th>Effekt</th><th>Typische Verwendung</th></tr>
-        <tr><td><code>fade-in</code></td><td>Einblenden</td><td>Elemente erscheinen</td></tr>
-        <tr><td><code>fade-out</code></td><td>Ausblenden</td><td>Elemente verschwinden</td></tr>
-        <tr><td><code>slide-in</code></td><td>Reingleiten</td><td>Panels, Menüs</td></tr>
-        <tr><td><code>slide-out</code></td><td>Rausgleiten</td><td>Panels schließen</td></tr>
-        <tr><td><code>scale-in</code></td><td>Reinzoomen</td><td>Modals, Popups</td></tr>
-        <tr><td><code>scale-out</code></td><td>Rauszoomen</td><td>Modals schließen</td></tr>
-        <tr><td><code>bounce</code></td><td>Hüpfen</td><td>Bestätigung, Erfolg</td></tr>
         <tr><td><code>pulse</code></td><td>Pulsieren</td><td>Hinweis, "neu"</td></tr>
+        <tr><td><code>bounce</code></td><td>Hüpfen</td><td>Bestätigung, Erfolg</td></tr>
         <tr><td><code>shake</code></td><td>Schütteln</td><td>Fehler, ungültig</td></tr>
         <tr><td><code>spin</code></td><td>Drehen</td><td>Loading</td></tr>
       </table>
@@ -173,7 +159,7 @@ Frame gap 8, bg #0a0a0a, pad 12, rad 8
           <textarea>LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center, gap 8, toggle()
   Icon "heart", ic #666, is 18
   "Gefällt mir"
-  hover 0.5s:
+  hover 0.15s:
     bg #252525
   on:
     bg #dc2626
@@ -187,14 +173,37 @@ LikeBtn</textarea>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der Hover-Effekt (<code>hover 0.5s:</code>) gleitet sanft. Beim Aktivieren (<code>on:</code>) hüpft der Button mit <code>anim bounce</code> — sofortiges Feedback: "Dein Klick wurde registriert!"</p>
+      <p>Der Hover-Effekt (<code>hover 0.15s:</code>) gleitet sanft. Beim Aktivieren (<code>on:</code>) hüpft der Button mit <code>anim bounce</code> — sofortiges Feedback: "Dein Klick wurde registriert!"</p>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Enter und Exit</h2>
-      <p>Oft soll ein Element anders animieren wenn es <strong>erscheint</strong> vs wenn es <strong>verschwindet</strong>. Dafür gibt es <code>enter:</code> und <code>exit:</code>:</p>
+      <h2>Transition auf Custom States</h2>
+      <p>Nicht nur <code>hover:</code> kann animiert werden – auch eigene States wie <code>on:</code> oder <code>open:</code>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Toggle: Frame w 48, h 28, rad 99, bg #333, cursor pointer, toggle()
+  // Der Knopf
+  Frame w 24, h 24, rad 99, bg white, margin 2
+  on 0.2s:
+    bg #2271C1
+    Frame margin 2 2 2 22
+
+Toggle</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>on 0.2s:</code> bedeutet: Beim Wechsel in den <code>on</code>-State über 200ms animieren. Der Knopf gleitet von links nach rechts.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Sichtbarkeit animieren</h2>
+      <p>Elemente können beim Ein-/Ausblenden animiert werden:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -204,40 +213,33 @@ LikeBtn</textarea>
       "Hinweis verstecken"
 
   Frame bg #1a1a1a, pad 16, rad 8, hidden
-    Btn.open:
+    Btn.open 0.2s:
       visible
-      enter: fade-in
-      exit: fade-out
     Text "Dies ist ein Hinweis mit Animation.", col #ccc</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>enter: fade-in</code> animiert beim Erscheinen, <code>exit: fade-out</code> beim Verschwinden. Das fühlt sich natürlicher an als abruptes Ein-/Ausblenden.</p>
-
-      <div class="note">
-        <strong>Konsistenz:</strong> Gleiche Aktionen, gleiche Animationen. Wenn ein Element mit <code>fade-in</code> erscheint, sollten ähnliche Elemente das auch tun.
-      </div>
+      <p><code>Btn.open 0.2s:</code> reagiert auf den State eines anderen Elements und animiert die Änderung über 200ms.</p>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Praktisch: Slide-In Menü</h2>
-      <p>Ein klassisches Pattern — Menü gleitet von der Seite rein:</p>
+      <h2>Praktisch: Animiertes Menü</h2>
+      <p>Ein klassisches Pattern — Menü mit sanfter Animation:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Button name Btn, "Menü", pad 10 20, bg #333, col white, rad 6, toggle()
-    open:
+    open 0.15s:
       bg #2271C1
 
-  Frame bg #1a1a1a, pad 12, rad 8, gap 4, w 160, hidden
-    Btn.open:
+  Frame bg #1a1a1a, pad 12, rad 8, gap 4, w 160, hidden, opacity 0
+    Btn.open 0.2s:
       visible
-      enter: slide-in
-      exit: slide-out
+      opacity 1
     Text "Dashboard", col white, pad 8 12
     Text "Einstellungen", col white, pad 8 12
     Text "Logout", col #888, pad 8 12</textarea>
@@ -245,7 +247,7 @@ LikeBtn</textarea>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>slide-in</code> lässt das Menü reingleiten, <code>slide-out</code> lässt es wieder verschwinden. Das zeigt visuell: "Das Menü kommt von irgendwo und geht wieder dorthin."</p>
+      <p>Das Menü startet <code>hidden</code> und <code>opacity 0</code>. Bei <code>Btn.open</code> wird es sichtbar und blendet sanft ein.</p>
     </section>
 
 
@@ -269,234 +271,28 @@ LikeBtn</textarea>
 
     <!-- ============================================================ -->
     <section>
-      <h2>Scroll Reveal: in-view</h2>
-      <p>Elemente animieren wenn sie in den sichtbaren Bereich scrollen — der klassische "Scroll Reveal" Effekt:</p>
+      <h2>Praktisch: Erfolgs-Feedback</h2>
+      <p>Visuelles Feedback bei erfolgreicher Aktion:</p>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 200, scroll
+          <textarea>SaveBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, ver-center, gap 8, toggle()
+  Icon "save", ic white, is 16
+  "Speichern"
+  hover 0.15s:
+    bg #444
+  saved:
+    bg #10b981
+    anim bounce
+    Icon "check", ic white, is 16
+    "Gespeichert!"
 
-  Text "Scrolle nach unten...", col #666, fs 12
-
-  Spacer h 150
-
-  Frame in-view fade-in slide-up, bg #1a1a1a, pad 20, rad 8
-    Text "Ich erscheine!", col white, fs 16, weight 500
-    Text "Animiert beim Scrollen", col #888, fs 13
-
-  Spacer h 100
-
-  Frame in-view scale-in, bg #2271C1, pad 20, rad 8
-    Text "Und ich auch!", col white</textarea>
+SaveBtn</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><strong>Was passiert hier?</strong></p>
-      <ul>
-        <li><code>in-view</code> — aktiviert Scroll-Reveal</li>
-        <li><code>fade-in slide-up</code> — kombinierte Animationen (einblenden + hochgleiten)</li>
-        <li><code>scale-in</code> — alternative Animation (reinzoomen)</li>
-      </ul>
-
-      <div class="note">
-        <strong>Performance:</strong> In-view nutzt IntersectionObserver — extrem effizient, keine Scroll-Events.
-      </div>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>In-view mit Threshold</h2>
-      <p>Mit <code>threshold</code> bestimmst du, wie viel vom Element sichtbar sein muss:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 200, scroll
-
-  Text "Scrolle langsam...", col #666, fs 12
-
-  Spacer h 120
-
-  // Erscheint früh (20% sichtbar)
-  Frame in-view fade-in, threshold 0.2, bg #10b981, pad 16, rad 8
-    Text "Früh (20%)", col white
-
-  Spacer h 80
-
-  // Erscheint spät (80% sichtbar)
-  Frame in-view fade-in, threshold 0.8, bg #f59e0b, pad 16, rad 8
-    Text "Spät (80%)", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <ul>
-        <li><code>threshold 0.2</code> — Animation startet wenn 20% sichtbar</li>
-        <li><code>threshold 0.8</code> — Animation startet wenn 80% sichtbar</li>
-      </ul>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Parallax: scroll-y</h2>
-      <p>Elemente bewegen sich mit unterschiedlicher Geschwindigkeit beim Scrollen — der Parallax-Effekt:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame h 250, scroll, bg #0a0a0a, rad 8, clip
-
-  Frame stacked, h 400, w full
-
-    // Hintergrund bewegt sich langsam
-    Frame scroll-y 0 -50, w full, h 300, bg grad-ver #1a1a2e #0f0f1a
-
-    // Vordergrund bewegt sich normal
-    Frame y 100, pad 20, center
-      Text "Parallax", col white, fs 32, weight bold
-      Text "Scrolle für den Effekt", col #888, fs 14
-
-  Spacer h 200</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p><strong>Was passiert hier?</strong></p>
-      <ul>
-        <li><code>scroll-y 0 -50</code> — Element bewegt sich von 0 nach -50px beim Scrollen</li>
-        <li>Negative Werte = langsamer als der normale Scroll</li>
-        <li>Positive Werte = schneller als der normale Scroll</li>
-      </ul>
-
-      <table class="ref-table">
-        <tr><th>Property</th><th>Beschreibung</th></tr>
-        <tr><td><code>scroll-y 0 -100</code></td><td>Vertikaler Parallax</td></tr>
-        <tr><td><code>scroll-x 0 50</code></td><td>Horizontaler Parallax</td></tr>
-      </table>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Spring Physics</h2>
-      <p>Statt linearer Bewegung: natürliche, federnde Animation wie in der echten Welt:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
-
-  // Standard (keine Spring)
-  Button "Normal", pad 12 24, rad 6, bg #333, col white, toggle()
-    on:
-      bg #2271C1
-      scale 1.05
-
-  // Mit Spring: bouncy
-  Button "Spring Bouncy", pad 12 24, rad 6, bg #333, col white, spring bouncy, toggle()
-    on:
-      bg #10b981
-      scale 1.05
-
-  // Mit Spring: gentle
-  Button "Spring Gentle", pad 12 24, rad 6, bg #333, col white, spring gentle, toggle()
-    on:
-      bg #f59e0b
-      scale 1.05</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p><strong>Spring Presets:</strong></p>
-      <table class="ref-table">
-        <tr><th>Preset</th><th>Gefühl</th><th>Verwendung</th></tr>
-        <tr><td><code>spring</code></td><td>Ausgewogen</td><td>Allgemein</td></tr>
-        <tr><td><code>spring gentle</code></td><td>Weich, langsam</td><td>Subtile UI</td></tr>
-        <tr><td><code>spring bouncy</code></td><td>Federnd, verspielt</td><td>Interaktive Elemente</td></tr>
-        <tr><td><code>spring stiff</code></td><td>Straff, schnell</td><td>Schnelle Reaktion</td></tr>
-      </table>
-
-      <div class="note">
-        <strong>Wann Spring?</strong> Für UI-Elemente die "lebendig" wirken sollen — Buttons, Cards, Modals. Nicht für Loading-Animationen oder Scroll.
-      </div>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Stagger: Versetzte Animationen</h2>
-      <p>Listen-Elemente nacheinander animieren statt alle gleichzeitig:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
-
-  Text "Scrolle...", col #666, fs 12
-
-  Spacer h 100
-
-  // Container mit stagger: Kinder erscheinen versetzt
-  Frame in-view fade-in, stagger 0.1, gap 8
-
-    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
-      Frame w 8, h 8, rad 99, bg #2271C1
-      Text "Erster Eintrag", col white
-
-    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
-      Frame w 8, h 8, rad 99, bg #10b981
-      Text "Zweiter Eintrag", col white
-
-    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
-      Frame w 8, h 8, rad 99, bg #f59e0b
-      Text "Dritter Eintrag", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p><strong>Was passiert hier?</strong></p>
-      <ul>
-        <li><code>stagger 0.1</code> — 100ms Verzögerung zwischen jedem Kind</li>
-        <li>Kombiniert mit <code>in-view</code> für Scroll-Reveal</li>
-        <li>Erzeugt einen eleganten "Kaskaden"-Effekt</li>
-      </ul>
-
-      <div class="note">
-        <strong>Timing:</strong> 0.05-0.1s für schnelle Listen, 0.15-0.2s für dramatischere Effekte.
-      </div>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Praktisch: Feature Cards</h2>
-      <p>Alles kombiniert — Feature-Cards mit Scroll-Reveal und Stagger:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Card: bg #1a1a1a, pad 20, rad 12, gap 8
-  Title: col white, fs 16, weight 600
-  Desc: col #888, fs 13
-
-Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 280, scroll
-
-  Text "Scrolle für Animation...", col #666, fs 12, pad 0 0 20 0
-
-  Frame in-view slide-up, stagger 0.15, gap 12
-
-    Card
-      Title "Schnell"
-      Desc "Optimiert für Performance"
-
-    Card
-      Title "Einfach"
-      Desc "Intuitive Syntax"
-
-    Card
-      Title "Flexibel"
-      Desc "Für jedes Projekt"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
+      <p>Nach dem Klick wechselt der Button in den <code>saved</code>-State mit grünem Hintergrund und einem kurzen Bounce-Effekt.</p>
     </section>
 
 
@@ -506,67 +302,27 @@ Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 280, scroll
       <h3>Transitions</h3>
       <table class="ref-table">
         <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>hover 0.8s:</code></td><td>State mit 800ms Übergang</td></tr>
-        <tr><td><code>hover 0.8s ease-out:</code></td><td>Mit Easing-Funktion</td></tr>
+        <tr><td><code>hover 0.2s:</code></td><td>State mit 200ms Übergang</td></tr>
+        <tr><td><code>hover 0.3s ease-out:</code></td><td>Mit Easing-Funktion</td></tr>
+        <tr><td><code>on 0.2s:</code></td><td>Custom State mit Animation</td></tr>
       </table>
 
       <h3>Animation Presets</h3>
       <table class="ref-table">
         <tr><th>Preset</th><th>Effekt</th></tr>
-        <tr><td><code>fade-in</code> / <code>fade-out</code></td><td>Ein-/Ausblenden</td></tr>
-        <tr><td><code>slide-in</code> / <code>slide-out</code></td><td>Rein-/Rausgleiten</td></tr>
-        <tr><td><code>scale-in</code> / <code>scale-out</code></td><td>Rein-/Rauszoomen</td></tr>
-        <tr><td><code>bounce</code></td><td>Hüpfen (Erfolg)</td></tr>
-        <tr><td><code>pulse</code></td><td>Pulsieren (Aufmerksamkeit)</td></tr>
-        <tr><td><code>shake</code></td><td>Schütteln (Fehler)</td></tr>
-        <tr><td><code>spin</code></td><td>Drehen (Loading)</td></tr>
-      </table>
-
-      <h3>Scroll Reveal (in-view)</h3>
-      <table class="ref-table">
-        <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>in-view fade-in</code></td><td>Animation bei Scroll in Viewport</td></tr>
-        <tr><td><code>in-view slide-up</code></td><td>Von unten reingleiten</td></tr>
-        <tr><td><code>in-view fade-in, threshold 0.5</code></td><td>50% sichtbar bevor Animation</td></tr>
-      </table>
-
-      <h3>Parallax (scroll-y)</h3>
-      <table class="ref-table">
-        <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>scroll-y 0 -100</code></td><td>Bewegt sich von 0 bis -100px beim Scrollen</td></tr>
-        <tr><td><code>scroll-y 0 50</code></td><td>Langsamere Bewegung nach unten</td></tr>
-      </table>
-
-      <h3>Spring Physics</h3>
-      <table class="ref-table">
-        <tr><th>Preset</th><th>Gefühl</th></tr>
-        <tr><td><code>spring</code></td><td>Ausgewogen (Default)</td></tr>
-        <tr><td><code>spring gentle</code></td><td>Weich, langsam</td></tr>
-        <tr><td><code>spring bouncy</code></td><td>Federnd, verspielt</td></tr>
-        <tr><td><code>spring stiff</code></td><td>Straff, schnell</td></tr>
-      </table>
-
-      <h3>Stagger</h3>
-      <table class="ref-table">
-        <tr><th>Syntax</th><th>Bedeutung</th></tr>
-        <tr><td><code>stagger 0.1</code></td><td>100ms Verzögerung zwischen Kindern</td></tr>
-        <tr><td><code>in-view fade-in, stagger 0.1</code></td><td>Kombiniert mit Scroll-Reveal</td></tr>
-      </table>
-
-      <h3>Enter/Exit</h3>
-      <table class="ref-table">
-        <tr><th>Syntax</th><th>Wann</th></tr>
-        <tr><td><code>enter: fade-in</code></td><td>Beim Erscheinen</td></tr>
-        <tr><td><code>exit: fade-out</code></td><td>Beim Verschwinden</td></tr>
+        <tr><td><code>anim pulse</code></td><td>Pulsieren (Aufmerksamkeit)</td></tr>
+        <tr><td><code>anim bounce</code></td><td>Hüpfen (Erfolg)</td></tr>
+        <tr><td><code>anim shake</code></td><td>Schütteln (Fehler)</td></tr>
+        <tr><td><code>anim spin</code></td><td>Drehen (Loading)</td></tr>
       </table>
 
       <h3>Easing</h3>
       <table class="ref-table">
         <tr><th>Easing</th><th>Gefühl</th></tr>
         <tr><td><code>ease</code></td><td>Natürlich (Default)</td></tr>
-        <tr><td><code>ease-out</code></td><td>Erscheinen</td></tr>
-        <tr><td><code>ease-in</code></td><td>Verschwinden</td></tr>
-        <tr><td><code>ease-in-out</code></td><td>Hin-und-her</td></tr>
+        <tr><td><code>ease-out</code></td><td>Langsames Ende</td></tr>
+        <tr><td><code>ease-in</code></td><td>Langsamer Start</td></tr>
+        <tr><td><code>ease-in-out</code></td><td>Beides kombiniert</td></tr>
       </table>
 
     </div>

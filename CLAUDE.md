@@ -1791,7 +1791,7 @@ Frame gap 8
 
 *Bewegung und Übergänge*
 
-Im letzten Kapitel hast du States kennengelernt – wie Elemente ihr Aussehen ändern. Dieses Kapitel zeigt, wie diese Änderungen **animiert** werden: **Transitions** für sanfte Übergänge, **Presets** für typische Effekte (fade, bounce, shake), und **Enter/Exit** für Erscheinen und Verschwinden.
+Im letzten Kapitel hast du States kennengelernt – wie Elemente ihr Aussehen ändern. Dieses Kapitel zeigt, wie diese Änderungen **animiert** werden: **Transitions** für sanfte Übergänge und **Presets** für typische Effekte (pulse, bounce, shake, spin).
 
 ### Transitions: Sanfte Übergänge
 
@@ -1805,18 +1805,18 @@ BtnHart: pad 12 24, rad 6, bg #333, col white, cursor pointer
 
 // Mit Transition: gleitet
 BtnSoft: pad 12 24, rad 6, bg #333, col white, cursor pointer
-  hover 0.8s:
+  hover 0.3s:
     bg #2271C1
 
 Frame hor, gap 12
   BtnHart "Ohne"
-  BtnSoft "Mit 0.8s"
+  BtnSoft "Mit 0.3s"
 ```
 
 **Was passiert hier?**
 
 - `hover:` — Änderung springt sofort
-- `hover 0.8s:` — Änderung gleitet über 800 Millisekunden
+- `hover 0.3s:` — Änderung gleitet über 300 Millisekunden
 - Die Dauer macht den Unterschied. Alles andere bleibt gleich.
 
 > **Hinweis:** **Faustregel für Dauer:** 100-200ms für Hover-Effekte, 200-300ms für State-Wechsel, 300-500ms für größere Übergänge. Im Zweifel lieber zu schnell als zu langsam.
@@ -1826,35 +1826,26 @@ Frame hor, gap 12
 Easing bestimmt die Beschleunigungskurve. Du kannst es nach der Dauer angeben:
 
 ```mirror
-// Hover über die Zeilen um den Unterschied zu sehen
-Row: hor, gap 12, ver-center, pad 8, cursor pointer
-  Label: col #888, fs 12, w 80
+Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
 
-Frame gap 8, bg #0a0a0a, pad 12, rad 8
-  Row
-    Label "ease-out"
-    Frame w 30, h 30, bg #2271C1, rad 6
-      hover 1s ease-out:
-        translate 150 0
-
-  Row
-    Label "ease-in"
-    Frame w 30, h 30, bg #10b981, rad 6
-      hover 1s ease-in:
-        translate 150 0
-
-  Row
-    Label "linear"
-    Frame w 30, h 30, bg #f59e0b, rad 6
-      hover 1s linear:
-        translate 150 0
+// Verschiedene Easings
+Frame gap 8
+  Btn "ease-out (Standard)"
+    hover 0.3s ease-out:
+      bg #2271C1
+  Btn "ease-in"
+    hover 0.3s ease-in:
+      bg #2271C1
+  Btn "ease-in-out"
+    hover 0.3s ease-in-out:
+      bg #2271C1
 ```
 
 **Was passiert hier?**
 
-- `ease-out` — startet schnell, bremst am Ende ab
-- `ease-in` — startet langsam, beschleunigt zum Ende
-- `linear` — gleichmäßige Geschwindigkeit (zum Vergleich)
+- `ease-out` — startet schnell, endet langsam (gut für Erscheinen)
+- `ease-in` — startet langsam, endet schnell (gut für Verschwinden)
+- `ease-in-out` — beides kombiniert (gut für Hin-und-her)
 
 | Easing | Gefühl | Typische Verwendung |
 | --- | --- | --- |
@@ -1889,14 +1880,8 @@ Frame hor, gap 12, wrap, bg #0a0a0a, pad 16, rad 8
 
 | Preset | Effekt | Typische Verwendung |
 | --- | --- | --- |
-| `fade-in` | Einblenden | Elemente erscheinen |
-| `fade-out` | Ausblenden | Elemente verschwinden |
-| `slide-in` | Reingleiten | Panels, Menüs |
-| `slide-out` | Rausgleiten | Panels schließen |
-| `scale-in` | Reinzoomen | Modals, Popups |
-| `scale-out` | Rauszoomen | Modals schließen |
-| `bounce` | Hüpfen | Bestätigung, Erfolg |
 | `pulse` | Pulsieren | Hinweis, "neu" |
+| `bounce` | Hüpfen | Bestätigung, Erfolg |
 | `shake` | Schütteln | Fehler, ungültig |
 | `spin` | Drehen | Loading |
 
@@ -1910,7 +1895,7 @@ Animationen sind besonders nützlich bei State-Wechseln. Du kannst sie direkt im
 LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center, gap 8, toggle()
   Icon "heart", ic #666, is 18
   "Gefällt mir"
-  hover 0.5s:
+  hover 0.15s:
     bg #252525
   on:
     bg #dc2626
@@ -1922,11 +1907,28 @@ LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center
 LikeBtn
 ```
 
-Der Hover-Effekt (`hover 0.5s:`) gleitet sanft. Beim Aktivieren (`on:`) hüpft der Button mit `anim bounce` — sofortiges Feedback: "Dein Klick wurde registriert!"
+Der Hover-Effekt (`hover 0.15s:`) gleitet sanft. Beim Aktivieren (`on:`) hüpft der Button mit `anim bounce` — sofortiges Feedback: "Dein Klick wurde registriert!"
 
-### Enter und Exit
+### Transition auf Custom States
 
-Oft soll ein Element anders animieren wenn es **erscheint** vs wenn es **verschwindet**. Dafür gibt es `enter:` und `exit:`:
+Nicht nur `hover:` kann animiert werden – auch eigene States wie `on:` oder `open:`:
+
+```mirror
+Toggle: Frame w 48, h 28, rad 99, bg #333, cursor pointer, toggle()
+  // Der Knopf
+  Frame w 24, h 24, rad 99, bg white, margin 2
+  on 0.2s:
+    bg #2271C1
+    Frame margin 2 2 2 22
+
+Toggle
+```
+
+`on 0.2s:` bedeutet: Beim Wechsel in den `on`-State über 200ms animieren. Der Knopf gleitet von links nach rechts.
+
+### Sichtbarkeit animieren
+
+Elemente können beim Ein-/Ausblenden animiert werden:
 
 ```mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
@@ -1935,38 +1937,33 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
       "Hinweis verstecken"
 
   Frame bg #1a1a1a, pad 16, rad 8, hidden
-    Btn.open:
+    Btn.open 0.2s:
       visible
-      enter: fade-in
-      exit: fade-out
     Text "Dies ist ein Hinweis mit Animation.", col #ccc
 ```
 
-`enter: fade-in` animiert beim Erscheinen, `exit: fade-out` beim Verschwinden. Das fühlt sich natürlicher an als abruptes Ein-/Ausblenden.
+`Btn.open 0.2s:` reagiert auf den State eines anderen Elements und animiert die Änderung über 200ms.
 
-> **Hinweis:** **Konsistenz:** Gleiche Aktionen, gleiche Animationen. Wenn ein Element mit `fade-in` erscheint, sollten ähnliche Elemente das auch tun.
+### Praktisch: Animiertes Menü
 
-### Praktisch: Slide-In Menü
-
-Ein klassisches Pattern — Menü gleitet von der Seite rein:
+Ein klassisches Pattern — Menü mit sanfter Animation:
 
 ```mirror
 Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Button name Btn, "Menü", pad 10 20, bg #333, col white, rad 6, toggle()
-    open:
+    open 0.15s:
       bg #2271C1
 
-  Frame bg #1a1a1a, pad 12, rad 8, gap 4, w 160, hidden
-    Btn.open:
+  Frame bg #1a1a1a, pad 12, rad 8, gap 4, w 160, hidden, opacity 0
+    Btn.open 0.2s:
       visible
-      enter: slide-in
-      exit: slide-out
+      opacity 1
     Text "Dashboard", col white, pad 8 12
     Text "Einstellungen", col white, pad 8 12
     Text "Logout", col #888, pad 8 12
 ```
 
-`slide-in` lässt das Menü reingleiten, `slide-out` lässt es wieder verschwinden. Das zeigt visuell: "Das Menü kommt von irgendwo und geht wieder dorthin."
+Das Menü startet `hidden` und `opacity 0`. Bei `Btn.open` wird es sichtbar und blendet sanft ein.
 
 ### Praktisch: Loading Spinner
 
@@ -1980,190 +1977,26 @@ Frame hor, ver-center, gap 12, bg #1a1a1a, pad 16, rad 8
 
 `anim spin` auf dem Icon dreht es endlos. Das Lucide-Icon "loader-2" ist genau dafür designed.
 
-### Scroll Reveal: in-view
+### Praktisch: Erfolgs-Feedback
 
-Elemente animieren wenn sie in den sichtbaren Bereich scrollen — der klassische "Scroll Reveal" Effekt:
-
-```mirror
-Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 200, scroll
-
-  Text "Scrolle nach unten...", col #666, fs 12
-
-  Spacer h 150
-
-  Frame in-view fade-in slide-up, bg #1a1a1a, pad 20, rad 8
-    Text "Ich erscheine!", col white, fs 16, weight 500
-    Text "Animiert beim Scrollen", col #888, fs 13
-
-  Spacer h 100
-
-  Frame in-view scale-in, bg #2271C1, pad 20, rad 8
-    Text "Und ich auch!", col white
-```
-
-**Was passiert hier?**
-
-- `in-view` — aktiviert Scroll-Reveal
-- `fade-in slide-up` — kombinierte Animationen (einblenden + hochgleiten)
-- `scale-in` — alternative Animation (reinzoomen)
-
-> **Hinweis:** **Performance:** In-view nutzt IntersectionObserver — extrem effizient, keine Scroll-Events.
-
-### In-view mit Threshold
-
-Mit `threshold` bestimmst du, wie viel vom Element sichtbar sein muss:
+Visuelles Feedback bei erfolgreicher Aktion:
 
 ```mirror
-Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 200, scroll
+SaveBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, ver-center, gap 8, toggle()
+  Icon "save", ic white, is 16
+  "Speichern"
+  hover 0.15s:
+    bg #444
+  saved:
+    bg #10b981
+    anim bounce
+    Icon "check", ic white, is 16
+    "Gespeichert!"
 
-  Text "Scrolle langsam...", col #666, fs 12
-
-  Spacer h 120
-
-  // Erscheint früh (20% sichtbar)
-  Frame in-view fade-in, threshold 0.2, bg #10b981, pad 16, rad 8
-    Text "Früh (20%)", col white
-
-  Spacer h 80
-
-  // Erscheint spät (80% sichtbar)
-  Frame in-view fade-in, threshold 0.8, bg #f59e0b, pad 16, rad 8
-    Text "Spät (80%)", col white
+SaveBtn
 ```
 
-- `threshold 0.2` — Animation startet wenn 20% sichtbar
-- `threshold 0.8` — Animation startet wenn 80% sichtbar
-
-### Parallax: scroll-y
-
-Elemente bewegen sich mit unterschiedlicher Geschwindigkeit beim Scrollen — der Parallax-Effekt:
-
-```mirror
-Frame h 250, scroll, bg #0a0a0a, rad 8, clip
-
-  Frame stacked, h 400, w full
-
-    // Hintergrund bewegt sich langsam
-    Frame scroll-y 0 -50, w full, h 300, bg grad-ver #1a1a2e #0f0f1a
-
-    // Vordergrund bewegt sich normal
-    Frame y 100, pad 20, center
-      Text "Parallax", col white, fs 32, weight bold
-      Text "Scrolle für den Effekt", col #888, fs 14
-
-  Spacer h 200
-```
-
-**Was passiert hier?**
-
-- `scroll-y 0 -50` — Element bewegt sich von 0 nach -50px beim Scrollen
-- Negative Werte = langsamer als der normale Scroll
-- Positive Werte = schneller als der normale Scroll
-
-| Property | Beschreibung |
-| --- | --- |
-| `scroll-y 0 -100` | Vertikaler Parallax |
-| `scroll-x 0 50` | Horizontaler Parallax |
-
-### Spring Physics
-
-Statt linearer Bewegung: natürliche, federnde Animation wie in der echten Welt:
-
-```mirror
-Frame gap 12, bg #0a0a0a, pad 16, rad 8
-
-  // Standard (keine Spring)
-  Button "Normal", pad 12 24, rad 6, bg #333, col white, toggle()
-    on:
-      bg #2271C1
-      scale 1.05
-
-  // Mit Spring: bouncy
-  Button "Spring Bouncy", pad 12 24, rad 6, bg #333, col white, spring bouncy, toggle()
-    on:
-      bg #10b981
-      scale 1.05
-
-  // Mit Spring: gentle
-  Button "Spring Gentle", pad 12 24, rad 6, bg #333, col white, spring gentle, toggle()
-    on:
-      bg #f59e0b
-      scale 1.05
-```
-
-**Spring Presets:**
-
-| Preset | Gefühl | Verwendung |
-| --- | --- | --- |
-| `spring` | Ausgewogen | Allgemein |
-| `spring gentle` | Weich, langsam | Subtile UI |
-| `spring bouncy` | Federnd, verspielt | Interaktive Elemente |
-| `spring stiff` | Straff, schnell | Schnelle Reaktion |
-
-> **Hinweis:** **Wann Spring?** Für UI-Elemente die "lebendig" wirken sollen — Buttons, Cards, Modals. Nicht für Loading-Animationen oder Scroll.
-
-### Stagger: Versetzte Animationen
-
-Listen-Elemente nacheinander animieren statt alle gleichzeitig:
-
-```mirror
-Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
-
-  Text "Scrolle...", col #666, fs 12
-
-  Spacer h 100
-
-  // Container mit stagger: Kinder erscheinen versetzt
-  Frame in-view fade-in, stagger 0.1, gap 8
-
-    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
-      Frame w 8, h 8, rad 99, bg #2271C1
-      Text "Erster Eintrag", col white
-
-    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
-      Frame w 8, h 8, rad 99, bg #10b981
-      Text "Zweiter Eintrag", col white
-
-    Frame bg #1a1a1a, pad 12, rad 6, hor, gap 12, ver-center
-      Frame w 8, h 8, rad 99, bg #f59e0b
-      Text "Dritter Eintrag", col white
-```
-
-**Was passiert hier?**
-
-- `stagger 0.1` — 100ms Verzögerung zwischen jedem Kind
-- Kombiniert mit `in-view` für Scroll-Reveal
-- Erzeugt einen eleganten "Kaskaden"-Effekt
-
-> **Hinweis:** **Timing:** 0.05-0.1s für schnelle Listen, 0.15-0.2s für dramatischere Effekte.
-
-### Praktisch: Feature Cards
-
-Alles kombiniert — Feature-Cards mit Scroll-Reveal und Stagger:
-
-```mirror
-Card: bg #1a1a1a, pad 20, rad 12, gap 8
-  Title: col white, fs 16, weight 600
-  Desc: col #888, fs 13
-
-Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 280, scroll
-
-  Text "Scrolle für Animation...", col #666, fs 12, pad 0 0 20 0
-
-  Frame in-view slide-up, stagger 0.15, gap 12
-
-    Card
-      Title "Schnell"
-      Desc "Optimiert für Performance"
-
-    Card
-      Title "Einfach"
-      Desc "Intuitive Syntax"
-
-    Card
-      Title "Flexibel"
-      Desc "Für jedes Projekt"
-```
+Nach dem Klick wechselt der Button in den `saved`-State mit grünem Hintergrund und einem kurzen Bounce-Effekt.
 
 ---
 
@@ -2173,67 +2006,27 @@ Frame gap 16, pad 16, bg #0a0a0a, rad 8, h 280, scroll
 
 | Syntax | Bedeutung |
 | --- | --- |
-| `hover 0.8s:` | State mit 800ms Übergang |
-| `hover 0.8s ease-out:` | Mit Easing-Funktion |
+| `hover 0.2s:` | State mit 200ms Übergang |
+| `hover 0.3s ease-out:` | Mit Easing-Funktion |
+| `on 0.2s:` | Custom State mit Animation |
 
 #### Animation Presets
 
 | Preset | Effekt |
 | --- | --- |
-| `fade-in` / `fade-out` | Ein-/Ausblenden |
-| `slide-in` / `slide-out` | Rein-/Rausgleiten |
-| `scale-in` / `scale-out` | Rein-/Rauszoomen |
-| `bounce` | Hüpfen (Erfolg) |
-| `pulse` | Pulsieren (Aufmerksamkeit) |
-| `shake` | Schütteln (Fehler) |
-| `spin` | Drehen (Loading) |
-
-#### Scroll Reveal (in-view)
-
-| Syntax | Bedeutung |
-| --- | --- |
-| `in-view fade-in` | Animation bei Scroll in Viewport |
-| `in-view slide-up` | Von unten reingleiten |
-| `in-view fade-in, threshold 0.5` | 50% sichtbar bevor Animation |
-
-#### Parallax (scroll-y)
-
-| Syntax | Bedeutung |
-| --- | --- |
-| `scroll-y 0 -100` | Bewegt sich von 0 bis -100px beim Scrollen |
-| `scroll-y 0 50` | Langsamere Bewegung nach unten |
-
-#### Spring Physics
-
-| Preset | Gefühl |
-| --- | --- |
-| `spring` | Ausgewogen (Default) |
-| `spring gentle` | Weich, langsam |
-| `spring bouncy` | Federnd, verspielt |
-| `spring stiff` | Straff, schnell |
-
-#### Stagger
-
-| Syntax | Bedeutung |
-| --- | --- |
-| `stagger 0.1` | 100ms Verzögerung zwischen Kindern |
-| `in-view fade-in, stagger 0.1` | Kombiniert mit Scroll-Reveal |
-
-#### Enter/Exit
-
-| Syntax | Wann |
-| --- | --- |
-| `enter: fade-in` | Beim Erscheinen |
-| `exit: fade-out` | Beim Verschwinden |
+| `anim pulse` | Pulsieren (Aufmerksamkeit) |
+| `anim bounce` | Hüpfen (Erfolg) |
+| `anim shake` | Schütteln (Fehler) |
+| `anim spin` | Drehen (Loading) |
 
 #### Easing
 
 | Easing | Gefühl |
 | --- | --- |
 | `ease` | Natürlich (Default) |
-| `ease-out` | Erscheinen |
-| `ease-in` | Verschwinden |
-| `ease-in-out` | Hin-und-her |
+| `ease-out` | Langsames Ende |
+| `ease-in` | Langsamer Start |
+| `ease-in-out` | Beides kombiniert |
 
 
 ---
@@ -4737,7 +4530,6 @@ Frame gap 16
 | relative | - | *(standalone)* |
 | rotate | rot | <number> |
 | scale | - | <number> |
-| translate | - | <number> |
 | opacity | o, opa | <number> |
 | shadow | - | sm, md, lg |
 | cursor | - | pointer, grab, move, text, wait, not-allowed |
@@ -4767,12 +4559,6 @@ Frame gap 16
 | icon-weight | iw | <number> |
 | fill | - | *(standalone)* |
 | animation | anim | fade-in, fade-out, slide-in, slide-out, slide-up, slide-down, slide-left, slide-right, scale-in, scale-out, bounce, pulse, shake, spin, reveal-up, reveal-scale, reveal-fade |
-| in-view | inview | fade-in, fade-out, slide-up, slide-down, slide-left, slide-right, scale-in, reveal-up, reveal-scale, reveal-fade |
-| scroll-y | scroll-ver, parallax-y | - |
-| scroll-x | scroll-hor, parallax-x | - |
-| spring | - | gentle, bouncy, stiff, slow |
-| stagger | - | - |
-| threshold | - | - |
 | x-offset | - | <number> |
 | y-offset | - | <number> |
 | hover-bg | hover-background | <color>, $token |

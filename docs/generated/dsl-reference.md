@@ -133,7 +133,6 @@
 | relative | - | *(standalone)* |
 | rotate | rot | <number> |
 | scale | - | <number> |
-| translate | - | <number> |
 | opacity | o, opa | <number> |
 | shadow | - | sm, md, lg |
 | cursor | - | pointer, grab, move, text, wait, not-allowed |
@@ -163,12 +162,6 @@
 | icon-weight | iw | <number> |
 | fill | - | *(standalone)* |
 | animation | anim | fade-in, fade-out, slide-in, slide-out, slide-up, slide-down, slide-left, slide-right, scale-in, scale-out, bounce, pulse, shake, spin, reveal-up, reveal-scale, reveal-fade |
-| in-view | inview | fade-in, fade-out, slide-up, slide-down, slide-left, slide-right, scale-in, reveal-up, reveal-scale, reveal-fade |
-| scroll-y | scroll-ver, parallax-y | - |
-| scroll-x | scroll-hor, parallax-x | - |
-| spring | - | gentle, bouncy, stiff, slow |
-| stagger | - | - |
-| threshold | - | - |
 | x-offset | - | <number> |
 | y-offset | - | <number> |
 | hover-bg | hover-background | <color>, $token |

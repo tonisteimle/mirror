@@ -40,7 +40,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 1 1`] = `
         },
         {
           "property": "background",
-          "value": "#2563eb",
+          "value": "#2271C1",
         },
         {
           "property": "color",
@@ -146,7 +146,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 2 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -278,7 +278,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
           "styles": [
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -775,7 +775,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 4 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "color",
@@ -1284,7 +1284,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 7 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "border-radius",
@@ -1949,7 +1949,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
                 },
                 {
                   "name": "data-icon-color",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "name": "data-icon-size",
@@ -1975,7 +1975,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
                 },
                 {
                   "property": "color",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "font-size",
@@ -2343,7 +2343,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -2422,7 +2422,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
                 },
                 {
                   "name": "data-icon-color",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "name": "data-icon-size",
@@ -2448,7 +2448,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
                 },
                 {
                   "property": "color",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "font-size",
@@ -2758,7 +2758,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "color",
@@ -2942,7 +2942,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -2991,7 +2991,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -3040,7 +3040,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -3144,7 +3144,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 2 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -3193,7 +3193,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 2 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -3242,7 +3242,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 2 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -3346,7 +3346,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 3 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -3493,7 +3493,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 3 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -3659,7 +3659,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 4 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -3968,7 +3968,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 6 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -5787,7 +5787,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -5894,7 +5894,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 1 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -5935,7 +5935,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 1 1`] = `
             },
             {
               "property": "color",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "text-decoration",
@@ -5976,7 +5976,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 1 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -6247,7 +6247,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 2 1`] = `
     {
       "name": "primary.bg",
       "type": "color",
-      "value": "#2563eb",
+      "value": "#2271C1",
     },
   ],
 }
@@ -6352,7 +6352,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 3 1`] = `
     {
       "name": "primary.bg",
       "type": "color",
-      "value": "#2563eb",
+      "value": "#2271C1",
     },
     {
       "name": "primary.col",
@@ -6604,7 +6604,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 4 1`] = `
     {
       "name": "primary.bg",
       "type": "color",
-      "value": "#2563eb",
+      "value": "#2271C1",
     },
     {
       "name": "danger.bg",
@@ -6968,7 +6968,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 6 1`] = `
     {
       "name": "primary.bg",
       "type": "color",
-      "value": "#2563eb",
+      "value": "#2271C1",
     },
     {
       "name": "card.bg",
@@ -7259,7 +7259,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
     {
       "name": "btn.bg",
       "type": "color",
-      "value": "#2563eb",
+      "value": "#2271C1",
     },
     {
       "name": "btn.col",
@@ -7453,7 +7453,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 1 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
               ],
               "tag": "div",
@@ -7899,7 +7899,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 2 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -9162,7 +9162,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -9219,7 +9219,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -9276,7 +9276,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -9333,7 +9333,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -9390,7 +9390,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -9519,7 +9519,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -10014,7 +10014,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 7 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -10681,7 +10681,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
                     },
                     {
                       "property": "color",
-                      "value": "#2563eb",
+                      "value": "#2271C1",
                     },
                     {
                       "property": "font-size",
@@ -10816,7 +10816,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
                     },
                     {
                       "property": "color",
-                      "value": "#2563eb",
+                      "value": "#2271C1",
                     },
                     {
                       "property": "font-size",
@@ -11182,7 +11182,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 9 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -11639,7 +11639,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "border-radius",
@@ -11866,7 +11866,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 1 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -12154,7 +12154,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 1 1`] = `
             },
             {
               "property": "background",
-              "value": "rgba(37,99,235,0.5)",
+              "value": "rgba(34,113,193,0.5)",
             },
             {
               "property": "border-radius",
@@ -12202,7 +12202,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 1 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb88",
+              "value": "#2271C188",
             },
             {
               "property": "border-radius",
@@ -12317,7 +12317,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 2 1`] = `
             },
             {
               "property": "background",
-              "value": "linear-gradient(90deg, #2563eb, #7c3aed)",
+              "value": "linear-gradient(90deg, #2271C1, #7c3aed)",
             },
           ],
           "tag": "div",
@@ -12421,7 +12421,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 2 1`] = `
             },
             {
               "property": "background",
-              "value": "linear-gradient(45deg, #10b981, #2563eb)",
+              "value": "linear-gradient(45deg, #10b981, #2271C1)",
             },
           ],
           "tag": "div",
@@ -12473,7 +12473,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 2 1`] = `
             },
             {
               "property": "background",
-              "value": "linear-gradient(90deg, #10b981, #2563eb, #7c3aed)",
+              "value": "linear-gradient(90deg, #10b981, #2271C1, #7c3aed)",
             },
           ],
           "tag": "div",
@@ -12556,7 +12556,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 3 1`] = `
             },
             {
               "property": "background",
-              "value": "linear-gradient(90deg, #2563eb, #7c3aed)",
+              "value": "linear-gradient(90deg, #2271C1, #7c3aed)",
             },
             {
               "property": "-webkit-background-clip",
@@ -12741,7 +12741,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 4 1`] = `
             },
             {
               "property": "border-color",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -13042,7 +13042,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -13120,7 +13120,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -13198,7 +13198,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -13276,7 +13276,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -14221,7 +14221,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -14303,7 +14303,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -14385,7 +14385,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -14467,7 +14467,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -14964,7 +14964,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "color",
@@ -15145,11 +15145,11 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
                 },
                 {
                   "property": "border-color",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "color",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
               ],
               "tag": "button",
@@ -15194,11 +15194,11 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb22",
+                  "value": "#2271C122",
                 },
                 {
                   "property": "color",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
               ],
               "tag": "button",
@@ -15322,7 +15322,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
                 },
                 {
                   "property": "color",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "text-decoration",
@@ -15826,7 +15826,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 1 1`] = `
             "styles": [
               {
                 "property": "background",
-                "value": "#2563eb",
+                "value": "#2271C1",
               },
             ],
           },
@@ -15879,7 +15879,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 1 1`] = `
         {
           "property": "background",
           "state": "on",
-          "value": "#2563eb",
+          "value": "#2271C1",
         },
       ],
       "tag": "div",
@@ -16363,7 +16363,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                   {
                     "property": "color",
@@ -16429,7 +16429,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             {
               "property": "background",
               "state": "on",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -16687,7 +16687,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                   {
                     "property": "color",
@@ -16753,7 +16753,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             {
               "property": "background",
               "state": "on",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -17381,7 +17381,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                   {
                     "property": "color",
@@ -17438,7 +17438,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
             {
               "property": "background",
               "state": "selected",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -17488,7 +17488,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                   {
                     "property": "color",
@@ -17545,7 +17545,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
             {
               "property": "background",
               "state": "selected",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -17594,7 +17594,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                   {
                     "property": "color",
@@ -17651,7 +17651,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
             {
               "property": "background",
               "state": "selected",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -17791,7 +17791,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                   {
                     "property": "color",
@@ -17853,7 +17853,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
             {
               "property": "background",
               "state": "on",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -17912,7 +17912,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                   {
                     "property": "color",
@@ -17974,7 +17974,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
             {
               "property": "background",
               "state": "on",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -18033,7 +18033,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                   {
                     "property": "color",
@@ -18095,7 +18095,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
             {
               "property": "background",
               "state": "on",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -18191,7 +18191,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                 ],
               },
@@ -18240,7 +18240,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
             {
               "property": "background",
               "state": "open",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
           ],
           "tag": "button",
@@ -19246,7 +19246,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 1 1`] = `
             {
               "property": "background",
               "state": "hover",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
           ],
           "tag": "div",
@@ -19261,7 +19261,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 1 1`] = `
           "properties": [
             {
               "name": "textContent",
-              "value": "Mit 0.2s",
+              "value": "Mit 0.3s",
             },
           ],
           "styles": [
@@ -19304,11 +19304,11 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 1 1`] = `
             {
               "property": "background",
               "state": "hover",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "transition",
-              "value": "background 200ms ease",
+              "value": "background 300ms ease",
             },
           ],
           "tag": "div",
@@ -19366,7 +19366,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
           "properties": [
             {
               "name": "textContent",
-              "value": "ease-out",
+              "value": "ease-out (Standard)",
             },
           ],
           "styles": [
@@ -19409,7 +19409,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
             {
               "property": "background",
               "state": "hover",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "transition",
@@ -19471,7 +19471,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
             {
               "property": "background",
               "state": "hover",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "transition",
@@ -19533,7 +19533,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
             {
               "property": "background",
               "state": "hover",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "transition",
@@ -19653,7 +19653,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 3 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -20318,6 +20318,243 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
       "children": [
         {
           "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "width",
+              "value": "24px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "24px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "border-radius",
+              "value": "99px",
+            },
+            {
+              "property": "background",
+              "value": "white",
+            },
+            {
+              "property": "margin",
+              "value": "2px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "args": [],
+              "isBuiltinStateFunction": true,
+              "isFunctionCall": true,
+              "type": "toggle",
+            },
+          ],
+          "name": "click",
+        },
+      ],
+      "id": "node-2",
+      "isDefinition": false,
+      "name": "Toggle",
+      "primitive": "Frame",
+      "properties": [],
+      "stateMachine": {
+        "initial": "default",
+        "states": {
+          "default": {
+            "children": [
+              {
+                "children": [],
+                "events": [],
+                "id": "node-3",
+                "isDefinition": false,
+                "name": "Frame",
+                "primitive": "frame",
+                "properties": [],
+                "styles": [
+                  {
+                    "property": "display",
+                    "value": "flex",
+                  },
+                  {
+                    "property": "flex-direction",
+                    "value": "column",
+                  },
+                  {
+                    "property": "align-items",
+                    "value": "flex-start",
+                  },
+                  {
+                    "property": "width",
+                    "value": "24px",
+                  },
+                  {
+                    "property": "flex-shrink",
+                    "value": "0",
+                  },
+                  {
+                    "property": "height",
+                    "value": "24px",
+                  },
+                  {
+                    "property": "flex-shrink",
+                    "value": "0",
+                  },
+                  {
+                    "property": "border-radius",
+                    "value": "99px",
+                  },
+                  {
+                    "property": "background",
+                    "value": "white",
+                  },
+                  {
+                    "property": "margin",
+                    "value": "2px",
+                  },
+                ],
+                "tag": "div",
+              },
+            ],
+            "isInitial": true,
+            "name": "default",
+            "styles": [],
+          },
+          "on": {
+            "children": [
+              {
+                "children": [],
+                "events": [],
+                "id": "state-child-0",
+                "name": "Frame",
+                "primitive": "frame",
+                "properties": [],
+                "styles": [
+                  {
+                    "property": "display",
+                    "value": "flex",
+                  },
+                  {
+                    "property": "flex-direction",
+                    "value": "column",
+                  },
+                  {
+                    "property": "width",
+                    "value": "fit-content",
+                  },
+                  {
+                    "property": "align-items",
+                    "value": "flex-start",
+                  },
+                  {
+                    "property": "margin",
+                    "value": "2px 2px 2px 22px",
+                  },
+                ],
+                "tag": "div",
+              },
+            ],
+            "isInitial": false,
+            "name": "on",
+            "styles": [
+              {
+                "property": "background",
+                "value": "#2271C1",
+              },
+            ],
+          },
+        },
+        "transitions": [
+          {
+            "modifier": "toggle",
+            "to": "on",
+            "trigger": "onclick",
+          },
+        ],
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "width",
+          "value": "48px",
+        },
+        {
+          "property": "height",
+          "value": "28px",
+        },
+        {
+          "property": "border-radius",
+          "value": "99px",
+        },
+        {
+          "property": "background",
+          "value": "#333",
+        },
+        {
+          "property": "cursor",
+          "value": "pointer",
+        },
+        {
+          "property": "background",
+          "state": "on",
+          "value": "#2271C1",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
           "events": [
             {
               "actions": [
@@ -20408,7 +20645,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -20423,6 +20660,38 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
               "children": [],
               "events": [],
               "id": "node-5",
+              "isDefinition": true,
+              "name": "Btn",
+              "primitive": "btn",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "display",
+                  "value": "",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-6",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -20447,42 +20716,6 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
           "name": "Frame",
           "primitive": "frame",
           "properties": [],
-          "stateMachine": {
-            "initial": "default",
-            "states": {
-              "_Btn_open": {
-                "enter": {
-                  "preset": "fade-in",
-                },
-                "exit": {
-                  "preset": "fade-out",
-                },
-                "isInitial": false,
-                "name": "_Btn_open",
-                "styles": [
-                  {
-                    "property": "display",
-                    "value": "",
-                  },
-                ],
-              },
-              "default": {
-                "isInitial": true,
-                "name": "default",
-                "styles": [],
-              },
-            },
-            "transitions": [
-              {
-                "to": "_Btn_open",
-                "trigger": "",
-                "when": {
-                  "state": "open",
-                  "target": "Btn",
-                },
-              },
-            ],
-          },
           "styles": [
             {
               "property": "display",
@@ -20515,11 +20748,6 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
             {
               "property": "display",
               "value": "none",
-            },
-            {
-              "property": "display",
-              "state": "_Btn_open",
-              "value": "",
             },
           ],
           "tag": "div",
@@ -20572,7 +20800,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
+exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -20618,7 +20846,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
                 "styles": [
                   {
                     "property": "background",
-                    "value": "#2563eb",
+                    "value": "#2271C1",
                   },
                 ],
               },
@@ -20667,7 +20895,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
             {
               "property": "background",
               "state": "open",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
           ],
           "tag": "button",
@@ -20678,6 +20906,42 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
               "children": [],
               "events": [],
               "id": "node-4",
+              "isDefinition": true,
+              "name": "Btn",
+              "primitive": "btn",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "display",
+                  "value": "",
+                },
+                {
+                  "property": "opacity",
+                  "value": "1",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -20702,7 +20966,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-5",
+              "id": "node-6",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -20727,7 +20991,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-6",
+              "id": "node-7",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -20756,42 +21020,6 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
           "name": "Frame",
           "primitive": "frame",
           "properties": [],
-          "stateMachine": {
-            "initial": "default",
-            "states": {
-              "_Btn_open": {
-                "enter": {
-                  "preset": "slide-in",
-                },
-                "exit": {
-                  "preset": "slide-out",
-                },
-                "isInitial": false,
-                "name": "_Btn_open",
-                "styles": [
-                  {
-                    "property": "display",
-                    "value": "",
-                  },
-                ],
-              },
-              "default": {
-                "isInitial": true,
-                "name": "default",
-                "styles": [],
-              },
-            },
-            "transitions": [
-              {
-                "to": "_Btn_open",
-                "trigger": "",
-                "when": {
-                  "state": "open",
-                  "target": "Btn",
-                },
-              },
-            ],
-          },
           "styles": [
             {
               "property": "display",
@@ -20834,9 +21062,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
               "value": "none",
             },
             {
-              "property": "display",
-              "state": "_Btn_open",
-              "value": "",
+              "property": "opacity",
+              "value": "0",
             },
           ],
           "tag": "div",
@@ -20890,7 +21117,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
+exports[`Tutorial IR Snapshots > 07 - animationen > Example 8 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -20910,7 +21137,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
             },
             {
               "name": "data-icon-color",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "name": "data-icon-size",
@@ -20936,7 +21163,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
             },
             {
               "property": "color",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "font-size",
@@ -21027,327 +21254,6 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 8 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Scrolle nach unten...",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "#666",
-            },
-            {
-              "property": "font-size",
-              "value": "12px",
-            },
-          ],
-          "tag": "span",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "Spacer",
-          "primitive": "spacer",
-          "properties": [],
-          "styles": [
-            {
-              "property": "width",
-              "value": "100%",
-            },
-            {
-              "property": "align-self",
-              "value": "stretch",
-            },
-            {
-              "property": "min-width",
-              "value": "0",
-            },
-            {
-              "property": "height",
-              "value": "150px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-5",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Ich erscheine!",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "16px",
-                },
-                {
-                  "property": "font-weight",
-                  "value": "500",
-                },
-              ],
-              "tag": "span",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-6",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Animiert beim Scrollen",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "#888",
-                },
-                {
-                  "property": "font-size",
-                  "value": "13px",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-4",
-          "inView": {
-            "animations": [
-              "fade-in",
-              "slide-up",
-            ],
-            "once": true,
-          },
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "background",
-              "value": "#1a1a1a",
-            },
-            {
-              "property": "padding",
-              "value": "20px",
-            },
-            {
-              "property": "border-radius",
-              "value": "8px",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-7",
-          "isDefinition": false,
-          "name": "Spacer",
-          "primitive": "spacer",
-          "properties": [],
-          "styles": [
-            {
-              "property": "width",
-              "value": "100%",
-            },
-            {
-              "property": "align-self",
-              "value": "stretch",
-            },
-            {
-              "property": "min-width",
-              "value": "0",
-            },
-            {
-              "property": "height",
-              "value": "100px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-9",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Und ich auch!",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-8",
-          "inView": {
-            "animations": [
-              "scale-in",
-            ],
-            "once": true,
-          },
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "background",
-              "value": "#2563eb",
-            },
-            {
-              "property": "padding",
-              "value": "20px",
-            },
-            {
-              "property": "border-radius",
-              "value": "8px",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "16px",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "background",
-          "value": "#0a0a0a",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-        {
-          "property": "height",
-          "value": "200px",
-        },
-        {
-          "property": "overflow-y",
-          "value": "auto",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
 {
   "animations": [],
@@ -21357,980 +21263,52 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
         {
           "children": [],
           "events": [],
-          "id": "node-2",
+          "id": "node-4",
           "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
+          "name": "Icon",
+          "primitive": "icon",
           "properties": [
             {
               "name": "textContent",
-              "value": "Scrolle langsam...",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "#666",
+              "value": "save",
             },
             {
-              "property": "font-size",
-              "value": "12px",
+              "name": "data-icon-color",
+              "value": "white",
+            },
+            {
+              "name": "data-icon-size",
+              "value": "16",
             },
           ],
-          "tag": "span",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "Spacer",
-          "primitive": "spacer",
-          "properties": [],
           "styles": [
             {
               "property": "width",
-              "value": "100%",
-            },
-            {
-              "property": "align-self",
-              "value": "stretch",
-            },
-            {
-              "property": "min-width",
-              "value": "0",
-            },
-            {
-              "property": "height",
-              "value": "120px",
+              "value": "20px",
             },
             {
               "property": "flex-shrink",
               "value": "0",
             },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [
             {
-              "children": [],
-              "events": [],
-              "id": "node-5",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Früh (20%)",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-4",
-          "inView": {
-            "animations": [
-              "fade-in",
-            ],
-            "once": true,
-            "threshold": 0.2,
-          },
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
+              "property": "height",
+              "value": "20px",
             },
             {
-              "property": "flex-direction",
-              "value": "column",
+              "property": "flex-shrink",
+              "value": "0",
             },
             {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "background",
-              "value": "#10b981",
-            },
-            {
-              "property": "padding",
+              "property": "font-size",
               "value": "16px",
             },
             {
-              "property": "border-radius",
-              "value": "8px",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-6",
-          "isDefinition": false,
-          "name": "Spacer",
-          "primitive": "spacer",
-          "properties": [],
-          "styles": [
-            {
               "property": "width",
-              "value": "100%",
-            },
-            {
-              "property": "align-self",
-              "value": "stretch",
-            },
-            {
-              "property": "min-width",
-              "value": "0",
-            },
-            {
-              "property": "height",
-              "value": "80px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-8",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Spät (80%)",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-7",
-          "inView": {
-            "animations": [
-              "fade-in",
-            ],
-            "once": true,
-            "threshold": 0.8,
-          },
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "background",
-              "value": "#f59e0b",
-            },
-            {
-              "property": "padding",
               "value": "16px",
             },
             {
-              "property": "border-radius",
-              "value": "8px",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "16px",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "background",
-          "value": "#0a0a0a",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-        {
-          "property": "height",
-          "value": "200px",
-        },
-        {
-          "property": "overflow-y",
-          "value": "auto",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 10 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-3",
-              "isDefinition": false,
-              "name": "Frame",
-              "primitive": "frame",
-              "properties": [],
-              "scrollLinked": {
-                "axis": "y",
-                "from": 0,
-                "property": "transform",
-                "to": -50,
-              },
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-                {
-                  "property": "width",
-                  "value": "100%",
-                },
-                {
-                  "property": "height",
-                  "value": "300px",
-                },
-                {
-                  "property": "background",
-                  "value": "linear-gradient(180deg, #1a1a2e, #0f0f1a)",
-                },
-                {
-                  "property": "position",
-                  "value": "absolute",
-                },
-                {
-                  "property": "width",
-                  "value": "100%",
-                },
-                {
-                  "property": "left",
-                  "value": "0",
-                },
-              ],
-              "tag": "div",
-            },
-            {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-5",
-                  "isDefinition": false,
-                  "name": "Text",
-                  "primitive": "text",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Parallax",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "32px",
-                    },
-                    {
-                      "property": "font-weight",
-                      "value": "700",
-                    },
-                  ],
-                  "tag": "span",
-                },
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-6",
-                  "isDefinition": false,
-                  "name": "Text",
-                  "primitive": "text",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Scrolle für den Effekt",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "color",
-                      "value": "#888",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "14px",
-                    },
-                  ],
-                  "tag": "span",
-                },
-              ],
-              "events": [],
-              "id": "node-4",
-              "isDefinition": false,
-              "name": "Frame",
-              "primitive": "frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "justify-content",
-                  "value": "center",
-                },
-                {
-                  "property": "align-items",
-                  "value": "center",
-                },
-                {
-                  "property": "position",
-                  "value": "absolute",
-                },
-                {
-                  "property": "top",
-                  "value": "100px",
-                },
-                {
-                  "property": "padding",
-                  "value": "20px",
-                },
-                {
-                  "property": "left",
-                  "value": "50%",
-                },
-                {
-                  "property": "transform",
-                  "value": "translateX(-50%)",
-                },
-              ],
-              "tag": "div",
-            },
-          ],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "layoutType": "absolute",
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "position",
-              "value": "relative",
-            },
-            {
               "property": "height",
-              "value": "400px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "width",
-              "value": "100%",
-            },
-            {
-              "property": "align-self",
-              "value": "stretch",
-            },
-            {
-              "property": "min-width",
-              "value": "0",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-7",
-          "isDefinition": false,
-          "name": "Spacer",
-          "primitive": "spacer",
-          "properties": [],
-          "styles": [
-            {
-              "property": "width",
-              "value": "100%",
-            },
-            {
-              "property": "align-self",
-              "value": "stretch",
-            },
-            {
-              "property": "min-width",
-              "value": "0",
-            },
-            {
-              "property": "height",
-              "value": "200px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "height",
-          "value": "250px",
-        },
-        {
-          "property": "overflow-y",
-          "value": "auto",
-        },
-        {
-          "property": "background",
-          "value": "#0a0a0a",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-        {
-          "property": "overflow",
-          "value": "hidden",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 11 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [
-            {
-              "actions": [
-                {
-                  "args": [],
-                  "isBuiltinStateFunction": true,
-                  "isFunctionCall": true,
-                  "type": "toggle",
-                },
-              ],
-              "name": "click",
-            },
-          ],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Button",
-          "primitive": "button",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Normal",
-            },
-          ],
-          "stateMachine": {
-            "initial": "default",
-            "states": {
-              "default": {
-                "isInitial": true,
-                "name": "default",
-                "styles": [],
-              },
-              "on": {
-                "isInitial": false,
-                "name": "on",
-                "styles": [
-                  {
-                    "property": "background",
-                    "value": "#2563eb",
-                  },
-                  {
-                    "property": "transform",
-                    "value": "scale(1.05)",
-                  },
-                ],
-              },
-            },
-            "transitions": [
-              {
-                "modifier": "toggle",
-                "to": "on",
-                "trigger": "onclick",
-              },
-            ],
-          },
-          "styles": [
-            {
-              "property": "height",
-              "value": "36px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "12px 24px",
-            },
-            {
-              "property": "border-radius",
-              "value": "6px",
-            },
-            {
-              "property": "border",
-              "value": "0px solid currentColor",
-            },
-            {
-              "property": "cursor",
-              "value": "pointer",
-            },
-            {
-              "property": "background",
-              "value": "#333",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "background",
-              "state": "on",
-              "value": "#2563eb",
-            },
-            {
-              "property": "transform",
-              "state": "on",
-              "value": "scale(1.05)",
-            },
-          ],
-          "tag": "button",
-        },
-        {
-          "children": [],
-          "events": [
-            {
-              "actions": [
-                {
-                  "args": [],
-                  "isBuiltinStateFunction": true,
-                  "isFunctionCall": true,
-                  "type": "toggle",
-                },
-              ],
-              "name": "click",
-            },
-          ],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "Button",
-          "primitive": "button",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Spring Bouncy",
-            },
-          ],
-          "spring": {
-            "preset": "bouncy",
-          },
-          "stateMachine": {
-            "initial": "default",
-            "states": {
-              "default": {
-                "isInitial": true,
-                "name": "default",
-                "styles": [],
-              },
-              "on": {
-                "isInitial": false,
-                "name": "on",
-                "styles": [
-                  {
-                    "property": "background",
-                    "value": "#10b981",
-                  },
-                  {
-                    "property": "transform",
-                    "value": "scale(1.05)",
-                  },
-                ],
-              },
-            },
-            "transitions": [
-              {
-                "modifier": "toggle",
-                "to": "on",
-                "trigger": "onclick",
-              },
-            ],
-          },
-          "styles": [
-            {
-              "property": "height",
-              "value": "36px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "12px 24px",
-            },
-            {
-              "property": "border-radius",
-              "value": "6px",
-            },
-            {
-              "property": "border",
-              "value": "0px solid currentColor",
-            },
-            {
-              "property": "cursor",
-              "value": "pointer",
-            },
-            {
-              "property": "background",
-              "value": "#333",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "background",
-              "state": "on",
-              "value": "#10b981",
-            },
-            {
-              "property": "transform",
-              "state": "on",
-              "value": "scale(1.05)",
-            },
-          ],
-          "tag": "button",
-        },
-        {
-          "children": [],
-          "events": [
-            {
-              "actions": [
-                {
-                  "args": [],
-                  "isBuiltinStateFunction": true,
-                  "isFunctionCall": true,
-                  "type": "toggle",
-                },
-              ],
-              "name": "click",
-            },
-          ],
-          "id": "node-4",
-          "isDefinition": false,
-          "name": "Button",
-          "primitive": "button",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Spring Gentle",
-            },
-          ],
-          "spring": {
-            "preset": "gentle",
-          },
-          "stateMachine": {
-            "initial": "default",
-            "states": {
-              "default": {
-                "isInitial": true,
-                "name": "default",
-                "styles": [],
-              },
-              "on": {
-                "isInitial": false,
-                "name": "on",
-                "styles": [
-                  {
-                    "property": "background",
-                    "value": "#f59e0b",
-                  },
-                  {
-                    "property": "transform",
-                    "value": "scale(1.05)",
-                  },
-                ],
-              },
-            },
-            "transitions": [
-              {
-                "modifier": "toggle",
-                "to": "on",
-                "trigger": "onclick",
-              },
-            ],
-          },
-          "styles": [
-            {
-              "property": "height",
-              "value": "36px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "12px 24px",
-            },
-            {
-              "property": "border-radius",
-              "value": "6px",
-            },
-            {
-              "property": "border",
-              "value": "0px solid currentColor",
-            },
-            {
-              "property": "cursor",
-              "value": "pointer",
-            },
-            {
-              "property": "background",
-              "value": "#333",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "background",
-              "state": "on",
-              "value": "#f59e0b",
-            },
-            {
-              "property": "transform",
-              "state": "on",
-              "value": "scale(1.05)",
-            },
-          ],
-          "tag": "button",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "12px",
-        },
-        {
-          "property": "background",
-          "value": "#0a0a0a",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 12 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Scrolle...",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "#666",
-            },
-            {
-              "property": "font-size",
-              "value": "12px",
+              "value": "16px",
             },
           ],
           "tag": "span",
@@ -22338,953 +21316,204 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 12 1`] = `
         {
           "children": [],
           "events": [],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "Spacer",
-          "primitive": "spacer",
-          "properties": [],
-          "styles": [
-            {
-              "property": "width",
-              "value": "100%",
-            },
-            {
-              "property": "align-self",
-              "value": "stretch",
-            },
-            {
-              "property": "min-width",
-              "value": "0",
-            },
-            {
-              "property": "height",
-              "value": "100px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [
-            {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-6",
-                  "isDefinition": false,
-                  "name": "Frame",
-                  "primitive": "frame",
-                  "properties": [],
-                  "styles": [
-                    {
-                      "property": "display",
-                      "value": "flex",
-                    },
-                    {
-                      "property": "flex-direction",
-                      "value": "column",
-                    },
-                    {
-                      "property": "align-items",
-                      "value": "flex-start",
-                    },
-                    {
-                      "property": "width",
-                      "value": "8px",
-                    },
-                    {
-                      "property": "flex-shrink",
-                      "value": "0",
-                    },
-                    {
-                      "property": "height",
-                      "value": "8px",
-                    },
-                    {
-                      "property": "flex-shrink",
-                      "value": "0",
-                    },
-                    {
-                      "property": "border-radius",
-                      "value": "99px",
-                    },
-                    {
-                      "property": "background",
-                      "value": "#2563eb",
-                    },
-                  ],
-                  "tag": "div",
-                },
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-7",
-                  "isDefinition": false,
-                  "name": "Text",
-                  "primitive": "text",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Erster Eintrag",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                  ],
-                  "tag": "span",
-                },
-              ],
-              "events": [],
-              "id": "node-5",
-              "isDefinition": false,
-              "layoutType": "flex",
-              "name": "Frame",
-              "primitive": "frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "row",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "center",
-                },
-                {
-                  "property": "gap",
-                  "value": "12px",
-                },
-                {
-                  "property": "background",
-                  "value": "#1a1a1a",
-                },
-                {
-                  "property": "padding",
-                  "value": "12px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "6px",
-                },
-              ],
-              "tag": "div",
-            },
-            {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-9",
-                  "isDefinition": false,
-                  "name": "Frame",
-                  "primitive": "frame",
-                  "properties": [],
-                  "styles": [
-                    {
-                      "property": "display",
-                      "value": "flex",
-                    },
-                    {
-                      "property": "flex-direction",
-                      "value": "column",
-                    },
-                    {
-                      "property": "align-items",
-                      "value": "flex-start",
-                    },
-                    {
-                      "property": "width",
-                      "value": "8px",
-                    },
-                    {
-                      "property": "flex-shrink",
-                      "value": "0",
-                    },
-                    {
-                      "property": "height",
-                      "value": "8px",
-                    },
-                    {
-                      "property": "flex-shrink",
-                      "value": "0",
-                    },
-                    {
-                      "property": "border-radius",
-                      "value": "99px",
-                    },
-                    {
-                      "property": "background",
-                      "value": "#10b981",
-                    },
-                  ],
-                  "tag": "div",
-                },
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-10",
-                  "isDefinition": false,
-                  "name": "Text",
-                  "primitive": "text",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Zweiter Eintrag",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                  ],
-                  "tag": "span",
-                },
-              ],
-              "events": [],
-              "id": "node-8",
-              "isDefinition": false,
-              "layoutType": "flex",
-              "name": "Frame",
-              "primitive": "frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "row",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "center",
-                },
-                {
-                  "property": "gap",
-                  "value": "12px",
-                },
-                {
-                  "property": "background",
-                  "value": "#1a1a1a",
-                },
-                {
-                  "property": "padding",
-                  "value": "12px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "6px",
-                },
-              ],
-              "tag": "div",
-            },
-            {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-12",
-                  "isDefinition": false,
-                  "name": "Frame",
-                  "primitive": "frame",
-                  "properties": [],
-                  "styles": [
-                    {
-                      "property": "display",
-                      "value": "flex",
-                    },
-                    {
-                      "property": "flex-direction",
-                      "value": "column",
-                    },
-                    {
-                      "property": "align-items",
-                      "value": "flex-start",
-                    },
-                    {
-                      "property": "width",
-                      "value": "8px",
-                    },
-                    {
-                      "property": "flex-shrink",
-                      "value": "0",
-                    },
-                    {
-                      "property": "height",
-                      "value": "8px",
-                    },
-                    {
-                      "property": "flex-shrink",
-                      "value": "0",
-                    },
-                    {
-                      "property": "border-radius",
-                      "value": "99px",
-                    },
-                    {
-                      "property": "background",
-                      "value": "#f59e0b",
-                    },
-                  ],
-                  "tag": "div",
-                },
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-13",
-                  "isDefinition": false,
-                  "name": "Text",
-                  "primitive": "text",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Dritter Eintrag",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                  ],
-                  "tag": "span",
-                },
-              ],
-              "events": [],
-              "id": "node-11",
-              "isDefinition": false,
-              "layoutType": "flex",
-              "name": "Frame",
-              "primitive": "frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "row",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "center",
-                },
-                {
-                  "property": "gap",
-                  "value": "12px",
-                },
-                {
-                  "property": "background",
-                  "value": "#1a1a1a",
-                },
-                {
-                  "property": "padding",
-                  "value": "12px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "6px",
-                },
-              ],
-              "tag": "div",
-            },
-          ],
-          "events": [],
-          "id": "node-4",
-          "inView": {
-            "animations": [
-              "fade-in",
-            ],
-            "once": true,
-            "stagger": 0.1,
-          },
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "stagger": 0.1,
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "8px",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "8px",
-        },
-        {
-          "property": "background",
-          "value": "#0a0a0a",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-        {
-          "property": "height",
-          "value": "200px",
-        },
-        {
-          "property": "overflow-y",
-          "value": "auto",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 13 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-2",
+          "id": "node-5",
           "isDefinition": false,
           "name": "Text",
           "primitive": "text",
           "properties": [
             {
               "name": "textContent",
-              "value": "Scrolle für Animation...",
+              "value": "Speichern",
             },
           ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "#666",
-            },
-            {
-              "property": "font-size",
-              "value": "12px",
-            },
-            {
-              "property": "padding",
-              "value": "0px 0px 20px 0px",
-            },
-          ],
+          "styles": [],
           "tag": "span",
         },
+      ],
+      "events": [
         {
-          "children": [
+          "actions": [
             {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-5",
-                  "isDefinition": false,
-                  "name": "Title",
-                  "primitive": "title",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Schnell",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "display",
-                      "value": "flex",
-                    },
-                    {
-                      "property": "flex-direction",
-                      "value": "column",
-                    },
-                    {
-                      "property": "width",
-                      "value": "fit-content",
-                    },
-                    {
-                      "property": "align-items",
-                      "value": "flex-start",
-                    },
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "16px",
-                    },
-                    {
-                      "property": "font-weight",
-                      "value": "600",
-                    },
-                  ],
-                  "tag": "div",
-                },
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-6",
-                  "isDefinition": false,
-                  "name": "Desc",
-                  "primitive": "desc",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Optimiert für Performance",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "display",
-                      "value": "flex",
-                    },
-                    {
-                      "property": "flex-direction",
-                      "value": "column",
-                    },
-                    {
-                      "property": "width",
-                      "value": "fit-content",
-                    },
-                    {
-                      "property": "align-items",
-                      "value": "flex-start",
-                    },
-                    {
-                      "property": "color",
-                      "value": "#888",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "13px",
-                    },
-                  ],
-                  "tag": "div",
-                },
-              ],
-              "events": [],
-              "id": "node-4",
-              "isDefinition": false,
-              "name": "Card",
-              "primitive": "Frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-                {
-                  "property": "gap",
-                  "value": "8px",
-                },
-                {
-                  "property": "background",
-                  "value": "#1a1a1a",
-                },
-                {
-                  "property": "padding",
-                  "value": "20px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "12px",
-                },
-              ],
-              "tag": "div",
-            },
-            {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-8",
-                  "isDefinition": false,
-                  "name": "Title",
-                  "primitive": "title",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Einfach",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "display",
-                      "value": "flex",
-                    },
-                    {
-                      "property": "flex-direction",
-                      "value": "column",
-                    },
-                    {
-                      "property": "width",
-                      "value": "fit-content",
-                    },
-                    {
-                      "property": "align-items",
-                      "value": "flex-start",
-                    },
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "16px",
-                    },
-                    {
-                      "property": "font-weight",
-                      "value": "600",
-                    },
-                  ],
-                  "tag": "div",
-                },
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-9",
-                  "isDefinition": false,
-                  "name": "Desc",
-                  "primitive": "desc",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Intuitive Syntax",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "display",
-                      "value": "flex",
-                    },
-                    {
-                      "property": "flex-direction",
-                      "value": "column",
-                    },
-                    {
-                      "property": "width",
-                      "value": "fit-content",
-                    },
-                    {
-                      "property": "align-items",
-                      "value": "flex-start",
-                    },
-                    {
-                      "property": "color",
-                      "value": "#888",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "13px",
-                    },
-                  ],
-                  "tag": "div",
-                },
-              ],
-              "events": [],
-              "id": "node-7",
-              "isDefinition": false,
-              "name": "Card",
-              "primitive": "Frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-                {
-                  "property": "gap",
-                  "value": "8px",
-                },
-                {
-                  "property": "background",
-                  "value": "#1a1a1a",
-                },
-                {
-                  "property": "padding",
-                  "value": "20px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "12px",
-                },
-              ],
-              "tag": "div",
-            },
-            {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-11",
-                  "isDefinition": false,
-                  "name": "Title",
-                  "primitive": "title",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Flexibel",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "display",
-                      "value": "flex",
-                    },
-                    {
-                      "property": "flex-direction",
-                      "value": "column",
-                    },
-                    {
-                      "property": "width",
-                      "value": "fit-content",
-                    },
-                    {
-                      "property": "align-items",
-                      "value": "flex-start",
-                    },
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "16px",
-                    },
-                    {
-                      "property": "font-weight",
-                      "value": "600",
-                    },
-                  ],
-                  "tag": "div",
-                },
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-12",
-                  "isDefinition": false,
-                  "name": "Desc",
-                  "primitive": "desc",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Für jedes Projekt",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "display",
-                      "value": "flex",
-                    },
-                    {
-                      "property": "flex-direction",
-                      "value": "column",
-                    },
-                    {
-                      "property": "width",
-                      "value": "fit-content",
-                    },
-                    {
-                      "property": "align-items",
-                      "value": "flex-start",
-                    },
-                    {
-                      "property": "color",
-                      "value": "#888",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "13px",
-                    },
-                  ],
-                  "tag": "div",
-                },
-              ],
-              "events": [],
-              "id": "node-10",
-              "isDefinition": false,
-              "name": "Card",
-              "primitive": "Frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "width",
-                  "value": "fit-content",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-                {
-                  "property": "gap",
-                  "value": "8px",
-                },
-                {
-                  "property": "background",
-                  "value": "#1a1a1a",
-                },
-                {
-                  "property": "padding",
-                  "value": "20px",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "12px",
-                },
-              ],
-              "tag": "div",
+              "args": [],
+              "isBuiltinStateFunction": true,
+              "isFunctionCall": true,
+              "type": "toggle",
             },
           ],
-          "events": [],
-          "id": "node-3",
-          "inView": {
-            "animations": [
-              "slide-up",
-            ],
-            "once": true,
-            "stagger": 0.15,
-          },
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "stagger": 0.15,
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "12px",
-            },
-          ],
-          "tag": "div",
+          "name": "click",
         },
       ],
-      "events": [],
-      "id": "node-1",
+      "id": "node-3",
       "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
+      "layoutType": "flex",
+      "name": "SaveBtn",
+      "primitive": "Frame",
       "properties": [],
+      "stateMachine": {
+        "initial": "default",
+        "states": {
+          "default": {
+            "children": [
+              {
+                "children": [],
+                "events": [],
+                "id": "node-4",
+                "isDefinition": false,
+                "name": "Icon",
+                "primitive": "icon",
+                "properties": [
+                  {
+                    "name": "textContent",
+                    "value": "save",
+                  },
+                  {
+                    "name": "data-icon-color",
+                    "value": "white",
+                  },
+                  {
+                    "name": "data-icon-size",
+                    "value": "16",
+                  },
+                ],
+                "styles": [
+                  {
+                    "property": "width",
+                    "value": "20px",
+                  },
+                  {
+                    "property": "flex-shrink",
+                    "value": "0",
+                  },
+                  {
+                    "property": "height",
+                    "value": "20px",
+                  },
+                  {
+                    "property": "flex-shrink",
+                    "value": "0",
+                  },
+                  {
+                    "property": "font-size",
+                    "value": "16px",
+                  },
+                  {
+                    "property": "width",
+                    "value": "16px",
+                  },
+                  {
+                    "property": "height",
+                    "value": "16px",
+                  },
+                ],
+                "tag": "span",
+              },
+              {
+                "children": [],
+                "events": [],
+                "id": "node-5",
+                "isDefinition": false,
+                "name": "Text",
+                "primitive": "text",
+                "properties": [
+                  {
+                    "name": "textContent",
+                    "value": "Speichern",
+                  },
+                ],
+                "styles": [],
+                "tag": "span",
+              },
+            ],
+            "isInitial": true,
+            "name": "default",
+            "styles": [],
+          },
+          "hover": {
+            "isInitial": false,
+            "name": "hover",
+            "styles": [
+              {
+                "property": "background",
+                "value": "#444",
+              },
+            ],
+          },
+          "saved": {
+            "children": [
+              {
+                "children": [],
+                "events": [],
+                "id": "state-child-0",
+                "name": "Icon",
+                "primitive": "icon",
+                "properties": [
+                  {
+                    "name": "textContent",
+                    "value": "check",
+                  },
+                ],
+                "styles": [
+                  {
+                    "property": "width",
+                    "value": "20px",
+                  },
+                  {
+                    "property": "height",
+                    "value": "20px",
+                  },
+                  {
+                    "property": "font-size",
+                    "value": "16px",
+                  },
+                  {
+                    "property": "width",
+                    "value": "16px",
+                  },
+                  {
+                    "property": "height",
+                    "value": "16px",
+                  },
+                ],
+                "tag": "span",
+              },
+              {
+                "children": [],
+                "events": [],
+                "id": "state-child-1",
+                "name": "Text",
+                "primitive": "text",
+                "properties": [
+                  {
+                    "name": "textContent",
+                    "value": "Gespeichert!",
+                  },
+                ],
+                "styles": [],
+                "tag": "span",
+              },
+            ],
+            "isInitial": false,
+            "name": "saved",
+            "styles": [
+              {
+                "property": "background",
+                "value": "#10b981",
+              },
+              {
+                "property": "animation",
+                "value": "mirror-bounce 0.5s ease infinite",
+              },
+            ],
+          },
+        },
+        "transitions": [
+          {
+            "modifier": "toggle",
+            "to": "hover",
+            "trigger": "onclick",
+          },
+        ],
+      },
       "styles": [
         {
           "property": "display",
@@ -23292,7 +21521,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 13 1`] = `
         },
         {
           "property": "flex-direction",
-          "value": "column",
+          "value": "row",
         },
         {
           "property": "width",
@@ -23300,31 +21529,50 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 13 1`] = `
         },
         {
           "property": "align-items",
-          "value": "flex-start",
+          "value": "center",
         },
         {
           "property": "gap",
-          "value": "16px",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "background",
-          "value": "#0a0a0a",
-        },
-        {
-          "property": "border-radius",
           "value": "8px",
         },
         {
-          "property": "height",
-          "value": "280px",
+          "property": "padding",
+          "value": "12px 24px",
         },
         {
-          "property": "overflow-y",
-          "value": "auto",
+          "property": "border-radius",
+          "value": "6px",
+        },
+        {
+          "property": "background",
+          "value": "#333",
+        },
+        {
+          "property": "color",
+          "value": "white",
+        },
+        {
+          "property": "cursor",
+          "value": "pointer",
+        },
+        {
+          "property": "background",
+          "state": "hover",
+          "value": "#444",
+        },
+        {
+          "property": "background",
+          "state": "saved",
+          "value": "#10b981",
+        },
+        {
+          "property": "animation",
+          "state": "saved",
+          "value": "mirror-bounce 0.5s ease infinite",
+        },
+        {
+          "property": "transition",
+          "value": "background 150ms ease",
         },
       ],
       "tag": "div",
@@ -23377,7 +21625,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
             "styles": [
               {
                 "property": "background",
-                "value": "#2563eb",
+                "value": "#2271C1",
               },
             ],
           },
@@ -23422,7 +21670,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
         {
           "property": "background",
           "state": "on",
-          "value": "#2563eb",
+          "value": "#2271C1",
         },
       ],
       "tag": "button",
@@ -24363,7 +22611,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -25193,7 +23441,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "color",
@@ -25353,7 +23601,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -25870,7 +24118,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -25985,7 +24233,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -26831,7 +25079,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "color",
@@ -26852,7 +25100,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
                 {
                   "property": "background",
                   "state": "hover",
-                  "value": "#1d4ed8",
+                  "value": "#2271C1",
                 },
               ],
               "tag": "button",
@@ -28195,7 +26443,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
                     "styles": [
                       {
                         "property": "color",
-                        "value": "#2563eb",
+                        "value": "#2271C1",
                       },
                       {
                         "property": "font-size",
@@ -28449,7 +26697,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
               },
               {
                 "property": "background",
-                "value": "#2563eb",
+                "value": "#2271C1",
               },
               {
                 "property": "color",
@@ -28623,7 +26871,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -28949,7 +27197,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
               },
               {
                 "property": "background",
-                "value": "#2563eb",
+                "value": "#2271C1",
               },
               {
                 "property": "color",
@@ -29604,7 +27852,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "border-radius",
@@ -29862,7 +28110,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
     {
       "name": "primary.bg",
       "type": "color",
-      "value": "#2563eb",
+      "value": "#2271C1",
     },
     {
       "name": "muted.bg",
@@ -30320,7 +28568,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
                 },
                 {
                   "property": "background",
-                  "value": "#2563eb",
+                  "value": "#2271C1",
                 },
                 {
                   "property": "color",
@@ -30493,7 +28741,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -33362,7 +31610,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "color",
@@ -34106,7 +32354,7 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 2 1`] = `
             },
             {
               "property": "background",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
           ],
         },
@@ -37531,7 +35779,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                         },
                         {
                           "property": "background",
-                          "value": "#3b82f6",
+                          "value": "#5BA8F5",
                         },
                         {
                           "property": "flex-grow",
@@ -40880,7 +39128,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 10 1`] = `
           "styles": [
             {
               "property": "color",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "property": "font-size",
@@ -41797,7 +40045,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 9 1`] = `
         },
         {
           "name": "colors",
-          "value": "#2563eb,#10b981,#f59e0b",
+          "value": "#2271C1,#10b981,#f59e0b",
         },
       ],
       "sourcePosition": {
@@ -42184,7 +40432,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 14 1`] = `
         },
         {
           "name": "chartSlots",
-          "value": "[{"name":"Point","config":{"data.datasets[0].pointRadius":8,"data.datasets[0].pointBackgroundColor":"#2563eb","data.datasets[0].pointHoverRadius":12}}]",
+          "value": "[{"name":"Point","config":{"data.datasets[0].pointRadius":8,"data.datasets[0].pointBackgroundColor":"#2271C1","data.datasets[0].pointHoverRadius":12}}]",
         },
       ],
       "sourcePosition": {
@@ -42338,7 +40586,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 16 1`] = `
         },
         {
           "name": "chartSlots",
-          "value": "[{"name":"Title","config":{"options.plugins.title.text":"Projektstatus","options.plugins.title.color":"white","options.plugins.title.font.size":16}},{"name":"Legend","config":{"options.plugins.legend.position":"true","options.plugins.legend.labels.color":"#888","options.plugins.legend.labels.font.size":12}}]",
+          "value": "[{"name":"Title","config":{"options.plugins.title.text":"Projektstatus","options.plugins.title.color":"white","options.plugins.title.font.size":16}},{"name":"Legend","config":{"options.plugins.legend.position":"right","options.plugins.legend.labels.color":"#888","options.plugins.legend.labels.font.size":12}}]",
         },
       ],
       "sourcePosition": {
@@ -42484,11 +40732,11 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 18 1`] = `
         },
         {
           "name": "colors",
-          "value": "#2563eb",
+          "value": "#2271C1",
         },
         {
           "name": "chartSlots",
-          "value": "[{"name":"Bar","config":{"data.datasets[0].borderRadius":6,"data.datasets[0].borderWidth":2,"data.datasets[0].borderColor":"#1d4ed8"}}]",
+          "value": "[{"name":"Bar","config":{"data.datasets[0].borderRadius":6,"data.datasets[0].borderWidth":2,"data.datasets[0].borderColor":"#2271C1"}}]",
         },
       ],
       "sourcePosition": {
@@ -42558,7 +40806,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 19 1`] = `
             },
             {
               "name": "colors",
-              "value": "#2563eb",
+              "value": "#2271C1",
             },
             {
               "name": "fill",
@@ -42570,7 +40818,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 19 1`] = `
             },
             {
               "name": "chartSlots",
-              "value": "[{"name":"Title","config":{"options.plugins.title.text":"Umsatzentwicklung 2024","options.plugins.title.color":"white","options.plugins.title.font.size":14}},{"name":"XAxis","config":{"options.scales.x.ticks.color":"#666","options.scales.x.ticks.font.size":10}},{"name":"YAxis","config":{"options.scales.y.ticks.color":"#666","options.scales.y.title.text":"Umsatz (k€)","options.scales.y.ticks.font.size":10,"options.scales.y.min":0}},{"name":"Grid","config":{"options.scales.x.grid.color":"#222"}},{"name":"Point","config":{"data.datasets[0].pointRadius":5,"data.datasets[0].pointBackgroundColor":"#2563eb","data.datasets[0].pointHoverRadius":8}},{"name":"Line","config":{"data.datasets[0].borderWidth":2,"data.datasets[0].tension":0.3}}]",
+              "value": "[{"name":"Title","config":{"options.plugins.title.text":"Umsatzentwicklung 2024","options.plugins.title.color":"white","options.plugins.title.font.size":14}},{"name":"XAxis","config":{"options.scales.x.ticks.color":"#666","options.scales.x.ticks.font.size":10}},{"name":"YAxis","config":{"options.scales.y.ticks.color":"#666","options.scales.y.title.text":"Umsatz (k€)","options.scales.y.ticks.font.size":10,"options.scales.y.min":0}},{"name":"Grid","config":{"options.scales.x.grid.color":"#222"}},{"name":"Point","config":{"data.datasets[0].pointRadius":5,"data.datasets[0].pointBackgroundColor":"#2271C1","data.datasets[0].pointHoverRadius":8}},{"name":"Line","config":{"data.datasets[0].borderWidth":2,"data.datasets[0].tension":0.3}}]",
             },
           ],
           "sourcePosition": {

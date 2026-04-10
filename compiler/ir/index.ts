@@ -101,7 +101,7 @@ import {
   hasContent,
   isTable,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRZagNode, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray, IRInView, IRScrollLinked, IRSpring } from './types'
+import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRZagNode, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
@@ -2286,12 +2286,6 @@ class IRTransformer {
       ? this.extractValueBinding(properties)
       : undefined
 
-    // Extract Motion One animation properties
-    const inView = this.extractInView(properties)
-    const scrollLinked = this.extractScrollLinked(properties)
-    const spring = this.extractSpring(properties)
-    const stagger = this.extractStagger(properties)
-
     // Check for keyboard-nav property (enables form keyboard navigation)
     const hasKeyboardNav = properties.some(p => p.name === 'keyboard-nav' || p.name === 'keynav')
 
@@ -2317,11 +2311,6 @@ class IRTransformer {
       isDefinition: instance.isDefinition ?? false,
       valueBinding,
       keyboardNav: hasKeyboardNav || undefined,
-      // Motion One animation properties
-      inView,
-      scrollLinked,
-      spring,
-      stagger,
     }
   }
 
@@ -4976,117 +4965,6 @@ class IRTransformer {
     }
 
     return undefined
-  }
-
-  // ============================================================================
-  // MOTION ONE PROPERTY EXTRACTION
-  // ============================================================================
-
-  /**
-   * Extract in-view animation properties from properties.
-   * Syntax: `in-view fade-in slide-up` or `in-view` (defaults to fade-in + slide-up)
-   */
-  private extractInView(properties: Property[]): IRInView | undefined {
-    const inViewProp = properties.find(p => p.name === 'in-view' || p.name === 'inview')
-    if (!inViewProp) return undefined
-
-    // Extract animation presets from values
-    const animations: string[] = []
-    if (inViewProp.values && inViewProp.values.length > 0) {
-      for (const val of inViewProp.values) {
-        if (typeof val === 'string') {
-          animations.push(val)
-        }
-      }
-    }
-
-    // Default animation if none specified
-    if (animations.length === 0) {
-      animations.push('fade-in', 'slide-up')
-    }
-
-    // Check for threshold property
-    const thresholdProp = properties.find(p => p.name === 'threshold')
-    const threshold = thresholdProp?.values?.[0]
-      ? (typeof thresholdProp.values[0] === 'number' ? thresholdProp.values[0] : parseFloat(String(thresholdProp.values[0])))
-      : undefined
-
-    // Check for stagger property
-    const staggerProp = properties.find(p => p.name === 'stagger')
-    const stagger = staggerProp?.values?.[0]
-      ? (typeof staggerProp.values[0] === 'number' ? staggerProp.values[0] : parseFloat(String(staggerProp.values[0])))
-      : undefined
-
-    return {
-      animations,
-      threshold: !isNaN(threshold as number) ? threshold : undefined,
-      stagger: !isNaN(stagger as number) ? stagger : undefined,
-      once: true, // Default: only animate once on first view
-    }
-  }
-
-  /**
-   * Extract scroll-linked animation properties.
-   * Syntax: `scroll-y 0 -100` or `scroll-x 0 50`
-   */
-  private extractScrollLinked(properties: Property[]): IRScrollLinked | undefined {
-    const scrollYProp = properties.find(p =>
-      p.name === 'scroll-y' || p.name === 'scroll-ver' || p.name === 'parallax-y'
-    )
-    const scrollXProp = properties.find(p =>
-      p.name === 'scroll-x' || p.name === 'scroll-hor' || p.name === 'parallax-x'
-    )
-
-    const prop = scrollYProp || scrollXProp
-    if (!prop || !prop.values || prop.values.length < 2) return undefined
-
-    const axis = scrollYProp ? 'y' : 'x'
-    const from = prop.values[0]
-    const to = prop.values[1]
-
-    // Convert values to proper format (number or px string)
-    const formatValue = (val: unknown): string | number => {
-      if (typeof val === 'number') return val
-      const numVal = parseFloat(String(val))
-      if (!isNaN(numVal)) return numVal
-      return String(val)
-    }
-
-    return {
-      axis,
-      property: 'transform',
-      from: formatValue(from),
-      to: formatValue(to),
-    }
-  }
-
-  /**
-   * Extract spring animation properties.
-   * Syntax: `spring bouncy` or just `spring` (uses default preset)
-   */
-  private extractSpring(properties: Property[]): IRSpring | undefined {
-    const springProp = properties.find(p => p.name === 'spring')
-    if (!springProp) return undefined
-
-    // Check for preset name in values
-    const preset = springProp.values?.[0]
-      ? String(springProp.values[0])
-      : 'default'
-
-    return { preset }
-  }
-
-  /**
-   * Extract stagger delay for parent containers.
-   * Syntax: `stagger 0.1` (seconds)
-   */
-  private extractStagger(properties: Property[]): number | undefined {
-    const staggerProp = properties.find(p => p.name === 'stagger')
-    if (!staggerProp?.values?.[0]) return undefined
-
-    const val = staggerProp.values[0]
-    const numVal = typeof val === 'number' ? val : parseFloat(String(val))
-    return !isNaN(numVal) ? numVal : undefined
   }
 
   /**

@@ -1186,39 +1186,6 @@ class DOMGenerator {
       this.emit(`}`)
     }
 
-    // Motion One: In-view animations (scroll reveal)
-    if (node.inView) {
-      const animations = JSON.stringify(node.inView.animations)
-      const config: string[] = []
-      if (node.inView.threshold !== undefined) config.push(`threshold: ${node.inView.threshold}`)
-      if (node.inView.once !== undefined) config.push(`once: ${node.inView.once}`)
-      if (node.inView.stagger !== undefined) config.push(`stagger: ${node.inView.stagger}`)
-      const configStr = config.length > 0 ? `, { ${config.join(', ')} }` : ''
-      this.emit(`// In-view animation: ${node.inView.animations.join(', ')}`)
-      this.emit(`_runtime.setupInViewAnimation(${varName}, ${animations}${configStr})`)
-    }
-
-    // Motion One: Scroll-linked animations (parallax)
-    if (node.scrollLinked) {
-      const { axis, from, to } = node.scrollLinked
-      const fromStr = typeof from === 'string' ? `"${from}"` : from
-      const toStr = typeof to === 'string' ? `"${to}"` : to
-      this.emit(`// Scroll-linked animation: ${axis === 'y' ? 'vertical' : 'horizontal'} parallax`)
-      this.emit(`_runtime.setupScrollAnimation(${varName}, "transform", ${fromStr}, ${toStr}, { axis: "${axis}" })`)
-    }
-
-    // Motion One: Stagger animation for container children
-    if (node.stagger && node.children.length > 0) {
-      this.emit(`// Stagger animation for children (${node.stagger}s delay)`)
-      this.emit(`_runtime.setupStaggerAnimation(${varName}, "> *", "fade-in", { staggerDelay: ${node.stagger} })`)
-    }
-
-    // Motion One: Store spring config for state transitions
-    if (node.spring) {
-      this.emit(`// Spring physics config for state transitions`)
-      this.emit(`${varName}.dataset.springPreset = "${node.spring.preset || 'default'}"`)
-    }
-
     // Append to parent
     this.emit(`${parentVar}.appendChild(${varName})`)
     this.emit('')
@@ -6256,6 +6223,24 @@ class DOMGenerator {
         // Also handle $-variables in expressions
         resolved = resolved.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g, '$get("$1")')
         return resolved
+      }
+
+      // Check for $$ escape followed by item variable reference like $$product.price
+      // This should produce: "$" + product.price (literal $ + loop var value)
+      if (value.includes(`$$${itemVar}.`)) {
+        // Check if value is ONLY $$itemVar.property (no other text)
+        const exactMatch = value.match(new RegExp(`^\\$\\$${itemVar}\\.([a-zA-Z_][a-zA-Z0-9_.]*)$`))
+        if (exactMatch) {
+          // Simple case: "$$product.price" -> "$" + product.price
+          return `"$" + ${itemVar}.${exactMatch[1]}`
+        }
+        // Complex case: "Price: $$product.price" -> template literal with interpolation
+        // Convert $$product.price to ${product.price} within a template literal
+        const resolved = value.replace(
+          new RegExp(`\\$\\$${itemVar}\\.([a-zA-Z_][a-zA-Z0-9_.]*)`, 'g'),
+          `\$\${${itemVar}.$1}`
+        )
+        return `\`${this.escapeTemplateString(resolved)}\``
       }
 
       // Check if value contains item variable reference like $task.title
