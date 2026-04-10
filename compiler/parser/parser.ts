@@ -77,6 +77,18 @@ export class Parser {
     return `def-${++this.nodeIdCounter}`
   }
 
+  /**
+   * Report an iteration limit error - indicates a likely bug in the parser.
+   */
+  private reportIterationLimit(context: string): void {
+    const token = this.peek()
+    this.errors.push({
+      message: `Parser iteration limit exceeded in ${context}. This is likely a bug.`,
+      line: token?.line ?? 0,
+      column: token?.column ?? 0,
+    })
+  }
+
   parse(): AST {
     const program: Program = {
       type: 'Program',
@@ -93,7 +105,8 @@ export class Parser {
     // Track current section for tokens
     let currentSection: string | undefined = undefined
 
-    while (!this.isAtEnd()) {
+    let iterations = 0
+    while (!this.isAtEnd() && iterations++ < Parser.MAX_ITERATIONS) {
       this.skipNewlines()
 
       if (this.isAtEnd()) break
@@ -327,7 +340,7 @@ export class Parser {
     const code = this.source.slice(charPos).trim()
 
     // Advance to end
-    while (!this.isAtEnd()) {
+    for (let i = 0; !this.isAtEnd() && i < Parser.MAX_ITERATIONS; i++) {
       this.advance()
     }
 
@@ -540,7 +553,7 @@ export class Parser {
     const fields: SchemaField[] = []
 
     // Parse fields until DEDENT
-    while (!this.isAtEnd() && !this.check('DEDENT')) {
+    for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
       this.skipNewlines()
       if (this.check('DEDENT') || this.isAtEnd()) break
 

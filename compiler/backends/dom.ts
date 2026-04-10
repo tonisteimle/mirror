@@ -7014,20 +7014,27 @@ class DOMGenerator {
       }
 
       // String interpolation: "Hello $firstName" or "$discount%" → template literal
-      // Handle $$ as escape for literal $ sign
+      // Handle $$ as escape for literal $ sign followed by variable value
       if (/\$[a-zA-Z_][a-zA-Z0-9_.]*/.test(value)) {
-        // First, replace $$ with a placeholder to preserve literal $ signs
-        const DOLLAR_PLACEHOLDER = '\x00DOLLAR\x00'
-        let processed = value.replace(/\$\$/g, DOLLAR_PLACEHOLDER)
+        const GET_PLACEHOLDER = '\x00GET\x00'
+        let processed = value
 
-        // Convert $varName to ${$get("varName")}
+        // First, handle $$varName pattern: literal $ + variable value
+        // e.g., "$$price" → "$${__GET__("price")}" (placeholder to avoid re-matching)
         processed = processed.replace(
-          /\$([a-zA-Z_][a-zA-Z0-9_.]*)/g,
+          /\$\$([a-zA-Z_][a-zA-Z0-9_.]*)/g,
+          (match, varName) => `\$\${${GET_PLACEHOLDER}("${varName}")}`
+        )
+
+        // Then, convert remaining $varName to ${$get("varName")}
+        // Uses negative lookahead to skip $get( which shouldn't be re-processed
+        processed = processed.replace(
+          /\$(?!get\()([a-zA-Z_][a-zA-Z0-9_.]*)/g,
           (match, varName) => `\${$get("${varName}")}`
         )
 
-        // Restore literal $ signs
-        processed = processed.replace(new RegExp(DOLLAR_PLACEHOLDER, 'g'), '$')
+        // Restore placeholder
+        processed = processed.replace(new RegExp(GET_PLACEHOLDER, 'g'), '$get')
 
         return `\`${this.escapeTemplateString(processed)}\``
       }

@@ -207,8 +207,20 @@ each item in ["a", "b", "c"] with index
   })
 })
 
-describe('$$ Escape in Loop Context', () => {
-  it('converts $$product.price to "$" + product.price (literal $ + loop var)', () => {
+describe('$$ Escape for Currency Display', () => {
+  it('converts $$price to $${$get("price")} for global variables', () => {
+    const ast = parse(`
+price: 29
+
+Frame
+  Text "Preis: $$price"`)
+    const code = generateDOM(ast)
+
+    // $$price in a global context should become $${$get("price")}
+    expect(code).toContain('`Preis: $${$get("price")}`')
+  })
+
+  it('converts $$product.price to "$" + product.price in loop context', () => {
     const ast = parse(`
 products:
   basic:

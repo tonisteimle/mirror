@@ -73,8 +73,8 @@ push_to_github() {
         exit 1
     fi
 
-    # Push to origin
-    git push origin main
+    # Push to origin (current branch)
+    git push origin HEAD
     if [ $? -ne 0 ]; then
         echo "❌ Git push failed!"
         read -p "Continue with deploy anyway? [y/N] " -n 1 -r
@@ -160,7 +160,9 @@ lcd $ASSETS_DIR
 put mirror-defaults.css
 
 # Upload tutorial files (from temp with transformed paths)
+# First clean old tutorial files to remove stale content
 cd /mirror
+rm -rf tutorial
 mkdir -f tutorial
 cd tutorial
 lcd $TEMP_DIR/tutorial
