@@ -1619,6 +1619,19 @@ class DOMGenerator {
         s => s.property === 'justify-content' && s.value === 'space-between'
       )
 
+      // Extract column widths from Row: template children
+      // This ensures header cells match data cell widths
+      const columnWidths: (string | null)[] = []
+      if (node.rowSlot && node.rowSlot.length > 0) {
+        for (const child of node.rowSlot) {
+          const widthStyle = child.styles?.find(s => s.property === 'width')
+          columnWidths.push(widthStyle ? String(widthStyle.value) : null)
+        }
+      }
+
+      // Extract gap from Row: template if present
+      const rowGap = node.rowSlotStyles?.find(s => s.property === 'gap')?.value
+
       // Header: Row "A", "B" syntax - render static row cells
       this.emit(`Object.assign(${headerVar}.style, {`)
       this.indent++
@@ -1627,7 +1640,11 @@ class DOMGenerator {
       // Match Row: spread layout if present
       if (rowHasSpread) {
         this.emit(`justifyContent: 'space-between',`)
-      } else {
+      }
+      // Use Row: gap or default to 24px (but not when using spread without fixed widths)
+      if (rowGap) {
+        this.emit(`gap: '${rowGap}',`)
+      } else if (!rowHasSpread) {
         this.emit(`gap: '24px',`)
       }
       // Match Row: width if present (important for spread to work)
@@ -1664,12 +1681,20 @@ class DOMGenerator {
         this.emit(`${cellVar}.className = 'mirror-table-header-cell'`)
         this.emit(`Object.assign(${cellVar}.style, {`)
         this.indent++
-        // When using spread, don't use flex: 1 - let justify-content handle spacing
-        // Otherwise use flex: 1 for equal distribution
-        if (!rowHasSpread) {
+
+        // Apply column width from Row: template if available
+        const cellWidth = columnWidths[cellIndex]
+        if (cellWidth) {
+          // Use the same fixed width as the data column
+          this.emit(`width: '${cellWidth}',`)
+          this.emit(`flexShrink: '0',`)
+        } else if (!rowHasSpread) {
+          // No fixed width and not using spread - use flex: 1 for equal distribution
           this.emit(`flex: '1',`)
           this.emit(`minWidth: '60px',`)
         }
+        // When using spread without fixed widths, don't add flex: 1 - let justify-content handle spacing
+
         this.emit(`fontWeight: '500',`)
         this.emit(`color: 'var(--text-muted, #888)',`)
         this.emit(`fontSize: '11px',`)
