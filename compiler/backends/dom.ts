@@ -1943,11 +1943,19 @@ class DOMGenerator {
       this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
     }
 
+    const isIcon = node.primitive === 'icon'
+    let iconName: string | null = null
+
     // Set HTML properties (with row variable binding)
     for (const prop of node.properties) {
       if (prop.name === 'textContent') {
-        const value = this.resolveRowTemplateValue(prop.value, rowVar, indexVar)
-        this.emit(`${varName}.textContent = ${value}`)
+        // For icons, store the name for loading instead of setting textContent
+        if (isIcon && typeof prop.value === 'string') {
+          iconName = prop.value
+        } else {
+          const value = this.resolveRowTemplateValue(prop.value, rowVar, indexVar)
+          this.emit(`${varName}.textContent = ${value}`)
+        }
       } else if (prop.name === 'value' && (node.primitive === 'input' || node.primitive === 'textarea')) {
         // Handle two-way binding for row.field
         const value = this.resolveRowTemplateValue(prop.value, rowVar, indexVar)
@@ -1988,21 +1996,28 @@ class DOMGenerator {
     }
 
     // Handle icon loading
-    if (node.primitive === 'icon') {
-      const iconProp = node.properties.find(p => p.name === 'textContent')
-      if (iconProp && typeof iconProp.value === 'string') {
-        const iconName = iconProp.value
-        const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
-        const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
-        const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
-        const iconSize = iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
-        const iconColor = iconColorProp?.value || node.styles.find(s => s.property === 'color')?.value || 'currentColor'
-        const iconWeight = iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
-        this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
-        this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
-        this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
-        this.emit(`_runtime.loadIcon(${varName}, '${iconName}')`)
-      }
+    if (isIcon && iconName) {
+      this.emit(`// Icon default styles`)
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      this.emit(`'display': 'inline-flex',`)
+      this.emit(`'align-items': 'center',`)
+      this.emit(`'justify-content': 'center',`)
+      this.emit(`'flex-shrink': '0',`)
+      this.emit(`'line-height': '0',`)
+      this.indent--
+      this.emit(`})`)
+      const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
+      const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
+      const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
+      const iconSize = iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
+      const iconColor = iconColorProp?.value || node.styles.find(s => s.property === 'color')?.value || 'currentColor'
+      const iconWeight = iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
+      this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
+      this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
+      this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
+      this.emit(`// Load Lucide icon`)
+      this.emit(`_runtime.loadIcon(${varName}, '${iconName}')`)
     }
 
     // Setup state machine for template nodes
