@@ -28,6 +28,9 @@ function escapeJSString(s: string): string {
     .replace(/\n/g, '\\n')    // newlines
     .replace(/\r/g, '\\r')    // carriage returns
     .replace(/\t/g, '\\t')    // tabs
+    .replace(/\0/g, '\\0')    // null bytes
+    .replace(/\u2028/g, '\\u2028')  // line separator
+    .replace(/\u2029/g, '\\u2029')  // paragraph separator
 }
 
 /**
@@ -85,7 +88,7 @@ class DOMGenerator {
   // Deferred when watchers - emitted after DOM is built
   private deferredWhenWatchers: Array<{ varName: string; transition: IRStateTransition; sm: IRStateMachine }> = []
   // Token lookup map for resolving token-to-token references
-  private tokenMap: Map<string, string | number> = new Map()
+  private tokenMap: Map<string, string | number | boolean> = new Map()
 
   constructor(ir: IR, javascript?: JavaScriptBlock, astTokens: TokenDefinition[] = [], dataFiles?: DataFile[]) {
     this.ir = ir
@@ -140,10 +143,10 @@ class DOMGenerator {
    * @param visited Set of visited token names (for cycle detection)
    */
   private resolveTokenValueWithContext(
-    value: string | number,
+    value: string | number | boolean,
     targetName: string,
     visited: Set<string> = new Set()
-  ): string | number {
+  ): string | number | boolean {
     if (typeof value !== 'string') return value
     if (!value.startsWith('$')) return value
 
@@ -1452,9 +1455,9 @@ class DOMGenerator {
       }
       this.emit('')
 
-      // Generate footer if aggregations exist
+      // Generate footer if aggregations exist or footer slot/static row is defined
       const hasAggregations = node.columns.some(c => c.aggregation)
-      if (hasAggregations || node.footerSlot) {
+      if (hasAggregations || node.footerSlot || node.footerStaticRow) {
         this.emitTableFooter(tableVar, dataVar, node)
         this.emit('')
       }
@@ -1489,8 +1492,10 @@ class DOMGenerator {
     this.emit(`Object.assign(${headerVar}.style, {`)
     this.indent++
     this.emit(`display: 'flex',`)
+    this.emit(`flexDirection: 'row',`)
+    this.emit(`gap: '24px',`)
     this.emit(`background: 'var(--surface-elevated, #252525)',`)
-    this.emit(`padding: '12px',`)
+    this.emit(`padding: '12px 16px',`)
     this.emit(`borderBottom: '1px solid var(--border, #333)',`)
     this.indent--
     this.emit(`})`)
@@ -1506,6 +1511,7 @@ class DOMGenerator {
       this.emit(`Object.assign(${cellVar}.style, {`)
       this.indent++
       this.emit(`flex: '1',`)
+      this.emit(`minWidth: '60px',`)
       this.emit(`fontWeight: '500',`)
       this.emit(`color: 'var(--text-muted, #888)',`)
       this.emit(`fontSize: '11px',`)
@@ -1546,7 +1552,9 @@ class DOMGenerator {
       this.emit(`Object.assign(${rowVar}.style, {`)
       this.indent++
       this.emit(`display: 'flex',`)
-      this.emit(`padding: '12px',`)
+      this.emit(`flexDirection: 'row',`)
+      this.emit(`gap: '24px',`)
+      this.emit(`padding: '12px 16px',`)
       this.emit(`borderBottom: '1px solid var(--border-subtle, #222)',`)
       this.indent--
       this.emit(`})`)
@@ -1560,6 +1568,7 @@ class DOMGenerator {
         this.emit(`Object.assign(${cellVar}.style, {`)
         this.indent++
         this.emit(`flex: '1',`)
+        this.emit(`minWidth: '60px',`)
         this.emit(`color: 'var(--text, white)',`)
         this.emit(`fontSize: '14px',`)
         this.indent--
@@ -1620,6 +1629,8 @@ class DOMGenerator {
       this.emit(`Object.assign(${headerVar}.style, {`)
       this.indent++
       this.emit(`display: 'flex',`)
+      this.emit(`flexDirection: 'row',`)
+      this.emit(`gap: '24px',`)
       // Apply header slot styles or use defaults
       if (node.headerSlotStyles && node.headerSlotStyles.length > 0) {
         for (const style of node.headerSlotStyles) {
@@ -1627,7 +1638,7 @@ class DOMGenerator {
         }
       } else {
         this.emit(`background: 'var(--surface-elevated, #252525)',`)
-        this.emit(`padding: '12px',`)
+        this.emit(`padding: '12px 16px',`)
         this.emit(`borderBottom: '1px solid var(--border, #333)',`)
       }
       this.indent--
@@ -1644,6 +1655,7 @@ class DOMGenerator {
         this.emit(`Object.assign(${cellVar}.style, {`)
         this.indent++
         this.emit(`flex: '1',`)
+        this.emit(`minWidth: '60px',`)
         this.emit(`fontWeight: '500',`)
         this.emit(`color: 'var(--text-muted, #888)',`)
         this.emit(`fontSize: '11px',`)
@@ -1662,6 +1674,8 @@ class DOMGenerator {
       this.emit(`Object.assign(${headerVar}.style, {`)
       this.indent++
       this.emit(`display: 'flex',`)
+      this.emit(`flexDirection: 'row',`)
+      this.emit(`gap: '24px',`)
       // Apply header slot styles or use defaults
       if (node.headerSlotStyles && node.headerSlotStyles.length > 0) {
         for (const style of node.headerSlotStyles) {
@@ -1669,7 +1683,7 @@ class DOMGenerator {
         }
       } else {
         this.emit(`background: 'var(--surface-elevated, #252525)',`)
-        this.emit(`padding: '12px',`)
+        this.emit(`padding: '12px 16px',`)
         this.emit(`borderBottom: '1px solid var(--border, #333)',`)
       }
       // Sticky header support
@@ -1692,6 +1706,7 @@ class DOMGenerator {
         this.emit(`Object.assign(${cellVar}.style, {`)
         this.indent++
         this.emit(`flex: '1',`)
+        this.emit(`minWidth: '60px',`)
         this.emit(`display: 'flex',`)
         this.emit(`alignItems: 'center',`)
         this.emit(`gap: '4px',`)
@@ -1832,9 +1847,15 @@ class DOMGenerator {
       if (!hasDisplay) {
         this.emit(`display: 'flex',`)
       }
+      // Ensure gap is set for proper cell spacing if not already specified
+      const hasGap = node.rowSlotStyles.some(s => s.property === 'gap')
+      if (!hasGap) {
+        this.emit(`gap: '24px',`)
+      }
     } else {
       // Default styles
       this.emit(`display: 'flex',`)
+      this.emit(`gap: '24px',`)
       this.emit(`padding: '12px',`)
       this.emit(`borderBottom: '1px solid var(--border-subtle, #222)',`)
       this.emit(`cursor: 'pointer',`)
@@ -2057,6 +2078,7 @@ class DOMGenerator {
     this.emit(`Object.assign(${cellVar}.style, {`)
     this.indent++
     this.emit(`flex: '1',`)
+    this.emit(`minWidth: '60px',`)
     this.emit(`color: 'var(--text, white)',`)
     if (col.width) {
       this.emit(`width: '${col.width}px',`)
@@ -2267,36 +2289,82 @@ class DOMGenerator {
 
     // If footerSlot is defined, render custom footer content
     if (node.footerSlot && node.footerSlot.length > 0) {
-      // Apply minimal wrapper styles, let slot content define the rest
-      this.emit(`${footerVar}.style.display = 'flex'`)
-
+      // Apply wrapper styles with flex layout
+      this.emit(`Object.assign(${footerVar}.style, {`)
+      this.indent++
+      this.emit(`display: 'flex',`)
+      this.emit(`flexDirection: 'row',`)
+      this.emit(`gap: '16px',`)
       // Apply footer slot styles
       if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
-        this.emit(`Object.assign(${footerVar}.style, {`)
-        this.indent++
         for (const style of node.footerSlotStyles) {
           this.emit(`'${style.property}': '${style.value}',`)
         }
-        this.indent--
-        this.emit(`})`)
       }
+      this.indent--
+      this.emit(`})`)
 
       // Render footer slot children
       for (const child of node.footerSlot) {
         this.emitNode(child, footerVar)
       }
-    } else {
-      // Auto-generated footer from columns - apply default styles
+    } else if (node.footerStaticRow) {
+      // Footer: Row "A", "B" syntax - render static row cells
       this.emit(`Object.assign(${footerVar}.style, {`)
       this.indent++
       this.emit(`display: 'flex',`)
+      this.emit(`flexDirection: 'row',`)
+      this.emit(`gap: '24px',`)
       // Apply footer slot styles or use defaults
       if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
         for (const style of node.footerSlotStyles) {
           this.emit(`'${style.property}': '${style.value}',`)
         }
       } else {
-        this.emit(`padding: '12px',`)
+        this.emit(`padding: '12px 16px',`)
+        this.emit(`background: 'var(--surface-elevated, #252525)',`)
+        this.emit(`borderTop: '1px solid var(--border, #333)',`)
+      }
+      this.indent--
+      this.emit(`})`)
+
+      // Render footer cells from static row
+      const row = node.footerStaticRow
+      for (let cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
+        const cell = row.cells[cellIndex]
+        const cellVar = `${footerVar}_cell_${cellIndex}`
+
+        this.emit(`const ${cellVar} = document.createElement('div')`)
+        this.emit(`${cellVar}.className = 'mirror-table-footer-cell'`)
+        this.emit(`Object.assign(${cellVar}.style, {`)
+        this.indent++
+        this.emit(`flex: '1',`)
+        this.emit(`minWidth: '60px',`)
+        this.emit(`fontWeight: '500',`)
+        this.emit(`color: 'var(--text, white)',`)
+        this.indent--
+        this.emit(`})`)
+
+        if (cell.text !== undefined) {
+          this.emit(`${cellVar}.textContent = ${JSON.stringify(cell.text)}`)
+        }
+
+        this.emit(`${footerVar}.appendChild(${cellVar})`)
+      }
+    } else {
+      // Auto-generated footer from columns - apply default styles
+      this.emit(`Object.assign(${footerVar}.style, {`)
+      this.indent++
+      this.emit(`display: 'flex',`)
+      this.emit(`flexDirection: 'row',`)
+      this.emit(`gap: '24px',`)
+      // Apply footer slot styles or use defaults
+      if (node.footerSlotStyles && node.footerSlotStyles.length > 0) {
+        for (const style of node.footerSlotStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+      } else {
+        this.emit(`padding: '12px 16px',`)
         this.emit(`background: 'var(--surface-elevated, #252525)',`)
         this.emit(`borderTop: '1px solid var(--border, #333)',`)
       }
@@ -2312,6 +2380,7 @@ class DOMGenerator {
         this.emit(`Object.assign(${cellVar}.style, {`)
         this.indent++
         this.emit(`flex: '1',`)
+        this.emit(`minWidth: '60px',`)
         this.emit(`fontWeight: '500',`)
         this.emit(`color: 'var(--text, white)',`)
         if (col.width) {

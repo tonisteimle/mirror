@@ -102,7 +102,7 @@ export interface TokenDefinition extends BaseNode {
   type: 'Token'
   name: string
   tokenType?: 'color' | 'size' | 'font' | 'icon'  // Optional, inferred from value
-  value?: string | number  // Optional when attributes are present (data object)
+  value?: string | number | boolean  // Optional when attributes are present (data object)
   section?: string  // Section header this token belongs to (--- Title ---)
   // Data object fields (when value is not present)
   attributes?: DataAttribute[]  // key-value pairs

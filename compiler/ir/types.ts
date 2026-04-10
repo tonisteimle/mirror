@@ -198,8 +198,8 @@ export interface IRStateDependency {
 export interface IRToken {
   name: string
   type?: 'color' | 'size' | 'font' | 'icon'
-  /** Simple token value (e.g., $primary.bg: #2271C1) */
-  value?: string | number
+  /** Simple token value (e.g., $primary.bg: #2271C1 or loggedIn: true) */
+  value?: string | number | boolean
   /** Nested data object (e.g., tasks: task1: title: "...") */
   data?: IRDataObject
 }
@@ -516,6 +516,8 @@ export interface IRTable extends IRNode {
   footerSlot?: IRNode[]
   /** Footer slot styles (from Footer: properties) */
   footerSlotStyles?: IRStyle[]
+  /** Static footer row (from Footer: Row "A", "B", "C" syntax) */
+  footerStaticRow?: IRTableStaticRow
   /** Custom group header slot */
   groupSlot?: IRNode[]
   /** Group slot styles (from Group: properties) */

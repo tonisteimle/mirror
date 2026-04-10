@@ -189,7 +189,7 @@ function generateStyles(
   tokens: TokenDefinition[]
 ): Record<string, string | number> {
   const style: Record<string, string | number> = {}
-  const tokenMap = new Map<string, string | number>()
+  const tokenMap = new Map<string, string | number | boolean>()
 
   for (const token of tokens) {
     // Skip tokens without a value (data objects)
@@ -200,7 +200,7 @@ function generateStyles(
     const nameWithPrefix = '$' + nameWithoutPrefix
 
     // Resolve nested token references in the value
-    let resolvedValue: string | number = token.value
+    let resolvedValue: string | number | boolean = token.value
     if (typeof resolvedValue === 'string' && resolvedValue.startsWith('$')) {
       const refName = resolvedValue.slice(1)
       const found = tokens.find(t => {
@@ -215,17 +215,23 @@ function generateStyles(
   }
 
   // Helper to resolve token references
+  // Converts booleans to 0/1 for CSS compatibility
+  const resolveFromMap = (result: string | number | boolean | undefined, fallback: string): string | number => {
+    if (result === undefined) return fallback
+    if (typeof result === 'boolean') return result ? 1 : 0
+    return result
+  }
   const resolve = (value: string | number | boolean | object): string | number => {
     // Handle TokenReference objects
     if (typeof value === 'object' && value !== null && 'name' in value) {
       const tokenName = (value as { name: string }).name
       const cleanName = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
-      return tokenMap.get(cleanName) ?? tokenMap.get('$' + cleanName) ?? `$${cleanName}`
+      return resolveFromMap(tokenMap.get(cleanName) ?? tokenMap.get('$' + cleanName), `$${cleanName}`)
     }
     // Handle string token references
     if (typeof value === 'string' && value.startsWith('$')) {
       const cleanName = value.slice(1)
-      return tokenMap.get(cleanName) ?? tokenMap.get(value) ?? value
+      return resolveFromMap(tokenMap.get(cleanName) ?? tokenMap.get(value), value)
     }
     if (typeof value === 'boolean') return value ? 1 : 0
     return value as string | number

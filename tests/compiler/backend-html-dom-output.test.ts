@@ -456,20 +456,20 @@ describe('Last Value Wins', () => {
 // ============================================================
 describe('Stacked Layout', () => {
 
-  it('stacked → display: grid with grid-area stacking', () => {
+  it('stacked → position: relative auf Parent', () => {
     const el = render(`Frame stacked`)
-    expect(getStyle(el, 'display')).toBe('grid')
+    expect(getStyle(el, 'position')).toBe('relative')
   })
 
-  it('x y in stacked → margin positioning', () => {
+  it('x y in stacked → position: absolute + left/top', () => {
     const el = render(`
 Frame stacked
   Frame x 10 y 20
 `)
     const child = el.children[0] as HTMLElement
-    // In stacked layout, x/y are applied as margins
-    expect(getStyle(child, 'margin-left')).toBe('10px')
-    expect(getStyle(child, 'margin-top')).toBe('20px')
+    expect(getStyle(child, 'position')).toBe('absolute')
+    expect(getStyle(child, 'left')).toBe('10px')
+    expect(getStyle(child, 'top')).toBe('20px')
   })
 
   it('negative x y in stacked', () => {
@@ -478,8 +478,8 @@ Frame stacked
   Frame x -50 y -25
 `)
     const child = el.children[0] as HTMLElement
-    expect(getStyle(child, 'margin-left')).toBe('-50px')
-    expect(getStyle(child, 'margin-top')).toBe('-25px')
+    expect(getStyle(child, 'left')).toBe('-50px')
+    expect(getStyle(child, 'top')).toBe('-25px')
   })
 
   it('fixed Position', () => {

@@ -2935,7 +2935,8 @@ export function navigateToPage(pageName: string, clickedElement: MirrorElement |
       return
     }
 
-    container.innerHTML = ''
+    // Clear container - replaceChildren() is more explicit than innerHTML = ''
+    container.replaceChildren()
 
     // Use safe execution with validation
     const ui = executeCompiledCode(pageCode)
@@ -3040,6 +3041,9 @@ export function destroy(el: MirrorElement | null): void {
 
 /** SVG cache to avoid repeated CDN fetches */
 const iconCache = new Map<string, string>()
+
+/** Maximum number of icons to cache (LRU eviction when exceeded) */
+const MAX_ICON_CACHE = 200
 
 /** Pending icon requests to avoid duplicate fetches */
 const pendingIconRequests = new Map<string, Promise<string | null>>()
@@ -3362,7 +3366,12 @@ async function fetchIcon(iconName: string): Promise<string | null> {
       return null
     }
 
-    // Cache the sanitized result
+    // Cache the sanitized result with LRU eviction
+    if (iconCache.size >= MAX_ICON_CACHE) {
+      // Remove oldest entry (first key in Map iteration order)
+      const oldestKey = iconCache.keys().next().value
+      if (oldestKey) iconCache.delete(oldestKey)
+    }
     iconCache.set(safeName, sanitizedSVG)
 
     return sanitizedSVG

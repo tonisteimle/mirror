@@ -130,12 +130,13 @@ export class Parser {
       }
 
       // Token definition: name: value (simplified syntax)
-      // e.g., primary: #5BA8F5 or spacing: 16 or font: "Inter"
+      // e.g., primary: #5BA8F5 or spacing: 16 or font: "Inter" or loggedIn: true
       // Also handles legacy: $name: value (without .)
       // Note: Excludes names with . which are handled by other rules
+      // Boolean values (true/false) are IDENTIFIER tokens
       if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
           !this.peekAt(0)?.value.includes('.') &&
-          (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING'))) {
+          (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING') || this.isBooleanIdentifier(2))) {
         const token = this.parseTokenDefinition(currentSection)
         if (token) program.tokens.push(token)
         continue
@@ -319,6 +320,13 @@ export class Parser {
     return current && JS_KEYWORDS.has(current.value)
   }
 
+  // Check if token at offset is a boolean identifier (true/false)
+  private isBooleanIdentifier(offset: number): boolean {
+    const token = this.peekAt(offset)
+    if (!token || token.type !== 'IDENTIFIER') return false
+    return token.value === 'true' || token.value === 'false'
+  }
+
   // Parse JavaScript block (rest of file)
   private parseJavaScript(): JavaScriptBlock | null {
     const startToken = this.current()
@@ -356,7 +364,7 @@ export class Parser {
    * Convert a token value to the proper type (number or string)
    * NUMBER tokens should become actual numbers for arithmetic operations
    */
-  private parseTokenValue(token: Token): string | number {
+  private parseTokenValue(token: Token): string | number | boolean {
     if (token.type === 'NUMBER') {
       // Check if it's a hex color (starts with #)
       if (token.value.startsWith('#')) {
@@ -366,14 +374,18 @@ export class Parser {
       const num = parseFloat(token.value)
       return isNaN(num) ? token.value : num
     }
+    // Handle boolean identifiers
+    if (token.type === 'IDENTIFIER' && (token.value === 'true' || token.value === 'false')) {
+      return token.value === 'true'
+    }
     return token.value
   }
 
-  // New simplified syntax: name: value
+  // New simplified syntax: name: value (supports NUMBER, STRING, or boolean IDENTIFIER)
   private parseTokenDefinition(section?: string): TokenDefinition | null {
     const name = this.advance() // identifier
     this.advance() // :
-    const value = this.advance() // value (NUMBER or STRING)
+    const value = this.advance() // value (NUMBER, STRING, or true/false)
 
     // Infer type from value
     const tokenType = this.inferTokenType(value.value)
@@ -2370,8 +2382,8 @@ export class Parser {
           if (this.check('IDENTIFIER')) {
             const name = this.current().value
 
-            // Special case: Row without colon inside Header slot = static row
-            if (slotName === 'Header' && name === 'Row' && !this.checkNext('COLON')) {
+            // Special case: Row without colon inside Header or Footer slot = static row
+            if ((slotName === 'Header' || slotName === 'Footer') && name === 'Row' && !this.checkNext('COLON')) {
               this.advance() // Row
               slot.staticRow = this.parseTableStaticRow()
             } else {

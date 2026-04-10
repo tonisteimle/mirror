@@ -25304,6 +25304,259 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 1 1`] = `
           "properties": [
             {
               "name": "textContent",
+              "value": "Willkommen, Max!",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "font-size",
+              "value": "18px",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Du hast 3 neue Nachrichten.",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Max's Profil",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#2563eb",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 09 - daten > Example 2 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Willkommen, $name!",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "font-size",
+              "value": "18px",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Du hast $messageCount neue Nachrichten.",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "$name's Profil",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#2563eb",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "name",
+      "type": "font",
+      "value": "Max",
+    },
+    {
+      "name": "messageCount",
+      "type": "size",
+      "value": 3,
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 09 - daten > Example 3 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
               "value": "Name: $name",
             },
           ],
@@ -25395,7 +25648,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 1 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 2 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 4 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -25527,7 +25780,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 2 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 3 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 5 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -25659,7 +25912,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 3 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 4 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 6 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -25808,7 +26061,146 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 4 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 5 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 7 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "$user.name",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "font-weight",
+              "value": "500",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "$user.email",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Aktiv",
+            },
+          ],
+          "styles": [],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+        {
+          "property": "color",
+          "value": "#10b981",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "userName",
+      "type": "font",
+      "value": "Max Mustermann",
+    },
+    {
+      "name": "userEmail",
+      "type": "font",
+      "value": "max@example.com",
+    },
+    {
+      "data": {
+        "active": true,
+        "email": "max@example.com",
+        "name": "Max Mustermann",
+      },
+      "name": "user",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 09 - daten > Example 8 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -25947,261 +26339,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 5 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 6 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "$user.name",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "font-weight",
-              "value": "500",
-            },
-          ],
-          "tag": "span",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "$user.email",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "#888",
-            },
-          ],
-          "tag": "span",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-4",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Aktiv",
-            },
-          ],
-          "styles": [],
-          "tag": "span",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "8px",
-        },
-        {
-          "property": "background",
-          "value": "#1a1a1a",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-        {
-          "property": "color",
-          "value": "#10b981",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [
-    {
-      "data": {
-        "active": true,
-        "email": "max@example.com",
-        "name": "Max Mustermann",
-      },
-      "name": "user",
-    },
-  ],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 09 - daten > Example 7 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "$profile.name",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "white",
-            },
-          ],
-          "tag": "span",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-3",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Alter: $profile.age",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "#888",
-            },
-          ],
-          "tag": "span",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-4",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Premium",
-            },
-          ],
-          "styles": [],
-          "tag": "span",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "8px",
-        },
-        {
-          "property": "background",
-          "value": "#1a1a1a",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-        {
-          "property": "color",
-          "value": "#10b981",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [
-    {
-      "data": {
-        "age": 25,
-        "name": "Max",
-        "premium": true,
-      },
-      "name": "profile",
-    },
-  ],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 09 - daten > Example 8 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -26430,7 +26568,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 8 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 10 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -26654,7 +26792,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 10 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -26699,7 +26837,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 10 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -26791,7 +26929,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -26976,7 +27114,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -27095,7 +27233,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -27198,7 +27336,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -27267,7 +27405,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -27325,7 +27463,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -27526,7 +27664,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -27800,7 +27938,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -27854,7 +27992,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -28098,7 +28236,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -28168,7 +28306,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -28355,7 +28493,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -28543,7 +28681,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
 {
   "animations": [],
   "nodes": [

@@ -133,18 +133,18 @@ Frame center w 400 h 400
       // Erwartung wäre: expect(parentPos).toBe('relative')
     })
 
-    test('pos Property setzt position: relative', () => {
+    test('stacked Property setzt position: relative', () => {
       const ir = toIR(parse(`
-Frame pos w 400 h 400
+Frame stacked w 400 h 400
   Frame x 10 y 10 w 50 h 50
 `))
       const parent = ir.nodes[0]
 
-      // pos setzt position: relative
+      // stacked setzt position: relative
       expect(getStyle(parent, 'position')).toBe('relative')
     })
 
-    test('x y ohne pos: Kind ist absolut, Parent nicht positioniert', () => {
+    test('x y ohne stacked: Kind ist absolut, Parent nicht positioniert', () => {
       const ir = toIR(parse(`
 Frame w 400 h 400
   Frame x 10 y 10 w 50 h 50

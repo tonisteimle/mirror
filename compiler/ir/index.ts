@@ -367,11 +367,11 @@ class IRTransformer {
       .filter(t => t.value !== undefined || t.attributes !== undefined)
       .map(t => {
         if (t.value !== undefined) {
-          // Simple token with value
+          // Simple token with value (string, number, or boolean)
           return {
             name: t.name,
             type: t.tokenType,
-            value: t.value as string | number,
+            value: t.value as string | number | boolean,
           }
         } else if (t.attributes !== undefined) {
           // Data object with nested attributes
@@ -1209,6 +1209,10 @@ class IRTransformer {
     const footerSlotStyles = table.footerSlot
       ? this.transformTableSlotStyles(table.footerSlot)
       : undefined
+    // Transform static footer row from Footer: Row "A", "B" syntax
+    const footerStaticRow = table.footerSlot?.staticRow
+      ? this.transformTableStaticRow(table.footerSlot.staticRow)
+      : undefined
     const groupSlot = table.groupSlot
       ? this.transformTableSlotChildren(table.groupSlot)
       : undefined
@@ -1292,6 +1296,7 @@ class IRTransformer {
       rowEvenStyles,
       footerSlot,
       footerSlotStyles,
+      footerStaticRow,
       groupSlot,
       groupSlotStyles,
       staticRows,
