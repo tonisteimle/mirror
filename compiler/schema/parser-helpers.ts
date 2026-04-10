@@ -57,7 +57,6 @@ export const LAYOUT_BOOLEANS = new Set<string>([
   'horizontal', 'hor', 'vertical', 'ver',
   'center', 'cen',
   'spread', 'wrap', 'stacked', 'dense',
-  'pos', 'positioned',
 
   // Position
   'absolute', 'abs', 'fixed', 'relative',

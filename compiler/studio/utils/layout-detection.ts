@@ -95,7 +95,7 @@ export function detectLayout(element: HTMLElement | Element | null): LayoutInfo 
   const position = style.position
   if (position === 'relative') {
     // Legacy data-layout values
-    if (layout === 'abs' || layout === 'stacked' || layout === 'pos' || layout === 'positioned' || layout === 'relative') {
+    if (layout === 'abs' || layout === 'stacked' || layout === 'relative') {
       return { type: 'absolute', direction: 'vertical', isRTL, scale }
     }
     // Legacy data-mirror-abs attribute

@@ -185,9 +185,9 @@ export function getSiblingRects(
  */
 function detectLayoutType(element: HTMLElement, style: CSSStyleDeclaration): LayoutType {
   // Check for explicit data-layout attribute first (highest priority)
-  // This is set by Mirror's IR transformation for stacked/positioned containers
+  // This is set by Mirror's IR transformation for stacked containers
   const layout = element.dataset?.layout
-  if (layout === 'absolute' || layout === 'stacked' || layout === 'pos' || layout === 'positioned') {
+  if (layout === 'absolute' || layout === 'stacked') {
     return 'positioned'
   }
 
@@ -249,15 +249,15 @@ function hasValidChildren(
 }
 
 /**
- * Check if an element is marked as positioned container
+ * Check if an element is marked as stacked container
  */
 export function isPositionedContainer(
   element: HTMLElement,
-  posClass: string = 'pos'
+  stackedClass: string = 'stacked'
 ): boolean {
   return (
-    element.classList.contains(posClass) ||
-    element.getAttribute('data-positioned') === 'true'
+    element.classList.contains(stackedClass) ||
+    element.getAttribute('data-stacked') === 'true'
   )
 }
 

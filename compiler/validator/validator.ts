@@ -90,6 +90,28 @@ export class Validator {
   private errors: ValidationError[] = []
   private warnings: ValidationError[] = []
 
+  /**
+   * Known extra properties valid in state blocks (style overrides)
+   * Consolidated from multiple locations to ensure consistency
+   */
+  private static readonly KNOWN_STATE_STYLE_EXTRAS = new Set([
+    'bg', 'col', 'color', 'opacity', 'opa', 'o', 'scale',
+    'bor', 'border', 'boc', 'rad', 'radius',
+    'pad', 'padding', 'margin', 'w', 'h', 'fs', 'weight',
+  ])
+
+  /**
+   * Known non-schema properties (HTML attributes, icon props, hover states, animation)
+   */
+  private static readonly KNOWN_NON_SCHEMA_PROPERTIES = new Set([
+    'content', 'href', 'src', 'placeholder', 'value', 'type', 'name', 'id',
+    'icon-size', 'is', 'icon-color', 'ic', 'icon-weight', 'iw', 'fill',
+    'animation', 'anim',
+    'hover-bg', 'hover-col', 'hover-opacity', 'hover-opa',
+    'hover-scale', 'hover-bor', 'hover-border', 'hover-boc',
+    'hover-border-color', 'hover-rad', 'hover-radius',
+  ])
+
   constructor() {
     this.rules = generateValidationRules()
   }
@@ -374,8 +396,7 @@ export class Validator {
 
       const propDef = this.rules.validProperties.get(propName)
       if (!propDef) {
-        const knownExtras = new Set(['bg', 'col', 'opacity', 'opa', 'scale', 'bor', 'border', 'boc', 'rad', 'radius'])
-        if (!knownExtras.has(propName)) {
+        if (!Validator.KNOWN_STATE_STYLE_EXTRAS.has(propName)) {
           const suggestion = suggestSimilar(propName, this.rules.validProperties.keys())
           this.addError(
             ERROR_CODES.UNKNOWN_PROPERTY,
@@ -465,12 +486,8 @@ export class Validator {
       return
     }
 
-    // Check if it's a known extra property
-    const knownExtras = new Set([
-      'bg', 'col', 'color', 'opacity', 'opa', 'scale', 'bor', 'border',
-      'boc', 'rad', 'radius', 'pad', 'margin', 'w', 'h', 'fs', 'weight'
-    ])
-    if (knownExtras.has(propName)) {
+    // Check if it's a known style property (valid in state blocks)
+    if (Validator.KNOWN_STATE_STYLE_EXTRAS.has(propName)) {
       return // Valid property used in state block
     }
 
@@ -504,16 +521,7 @@ export class Validator {
     // Check for unknown property
     if (!propDef) {
       // Check if it's a known non-schema property
-      const knownExtras = new Set([
-        'content', 'href', 'src', 'placeholder', 'value', 'type', 'name', 'id',
-        'icon-size', 'is', 'icon-color', 'ic', 'icon-weight', 'iw', 'fill',
-        'animation', 'anim',
-        'hover-bg', 'hover-col', 'hover-opacity', 'hover-opa',
-        'hover-scale', 'hover-bor', 'hover-border', 'hover-boc',
-        'hover-border-color', 'hover-rad', 'hover-radius',
-      ])
-
-      if (!knownExtras.has(prop.name)) {
+      if (!Validator.KNOWN_NON_SCHEMA_PROPERTIES.has(prop.name)) {
         const suggestion = suggestSimilar(prop.name, this.rules.validProperties.keys())
         this.addError(
           ERROR_CODES.UNKNOWN_PROPERTY,
@@ -653,8 +661,7 @@ export class Validator {
       if (propName) {
         const propDef = this.rules.validProperties.get(propName)
         if (!propDef) {
-          const knownExtras = new Set(['bg', 'col', 'opacity', 'opa', 'scale', 'bor', 'border', 'boc', 'rad', 'radius'])
-          if (!knownExtras.has(propName)) {
+          if (!Validator.KNOWN_STATE_STYLE_EXTRAS.has(propName)) {
             const suggestion = suggestSimilar(propName, this.rules.validProperties.keys())
             this.addError(
               ERROR_CODES.UNKNOWN_PROPERTY,
@@ -1026,6 +1033,12 @@ export class Validator {
     'opa': { min: 0, max: 1, description: 'between 0 and 1' },
     'o': { min: 0, max: 1, description: 'between 0 and 1' },
     'scale': { min: 0, description: 'greater than 0' },
+    // Animation-related properties
+    'threshold': { min: 0, max: 1, description: 'between 0 and 1' },
+    'stagger': { min: 0, description: 'greater than or equal to 0' },
+    // Scroll properties (any number allowed - can be negative for parallax)
+    'scroll-y': { description: 'any number' },
+    'scroll-x': { description: 'any number' },
   }
 
   /**

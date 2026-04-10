@@ -103,13 +103,6 @@ export const properties: PropertyDefinition[] = [
     description: 'Stack children (z-layers)',
   },
   {
-    name: 'pos',
-    aliases: ['positioned'],
-    type: 'boolean',
-    category: 'layout',
-    description: 'Positioned container - children can use x/y',
-  },
-  {
     name: 'grid',
     aliases: [],
     type: 'boolean',

@@ -914,32 +914,17 @@ export const SCHEMA: Record<string, PropertyDef> = {
     },
   },
 
-  pos: {
-    name: 'pos',
-    aliases: ['positioned', 'position'],
-    category: 'layout',
-    description: 'Positioned container - children are automatically absolute and can use x/y',
-
-    keywords: {
-      _standalone: {
-        description: 'Children can be positioned with x/y coordinates',
-        css: [{ property: 'position', value: 'relative' }],
-        example: 'Box pos w 400 h 300',
-      },
-    },
-  },
-
   stacked: {
     name: 'stacked',
     aliases: [],
     category: 'layout',
-    description: 'Stack children on top of each other (z-layers for overlays, badges)',
+    description: 'Stack children on top of each other - children can use x/y for positioning',
 
     keywords: {
       _standalone: {
-        description: 'Children stacked on z-axis',
+        description: 'Children stacked on z-axis, positioned with x/y coordinates',
         css: [{ property: 'position', value: 'relative' }],
-        example: 'Box stacked size 48',
+        example: 'Frame stacked, w 200, h 150',
       },
     },
   },

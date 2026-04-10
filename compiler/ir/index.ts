@@ -3014,7 +3014,7 @@ class IRTransformer {
       const name = prop.name.toLowerCase()
 
       // Absolute layout properties
-      if (name === 'pos' || name === 'positioned' || name === 'stacked') {
+      if (name === 'stacked') {
         hasAbsolute = true
       }
 
@@ -4461,7 +4461,7 @@ class IRTransformer {
       return [{ property: 'flex-wrap', value: 'wrap' }]
     }
 
-    if (name === 'pos' || name === 'position' || name === 'positioned' || name === 'stacked') {
+    if (name === 'stacked') {
       return [{ property: 'position', value: 'relative' }]
     }
 
@@ -5194,10 +5194,7 @@ class IRTransformer {
           { property: 'flex-direction', value: 'column' },
           { property: 'justify-content', value: 'center' },
         ]
-      // Position container (absolute layout)
-      case 'pos':
-      case 'position':
-      case 'positioned':
+      // Stacked container (absolute layout)
       case 'stacked':
         return [{ property: 'position', value: 'relative' }]
       default:

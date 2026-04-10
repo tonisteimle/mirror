@@ -1818,7 +1818,7 @@ export class CodeModifier {
       'ver', 'hor', 'center', 'spread', 'grid',
       'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center',
       // Absolute layout properties - don't add flex layout to these containers
-      'pos', 'positioned', 'stacked'
+      'stacked'
     ]
     const parsedLine = parseLine(containerLine)
     return parsedLine.properties.some(p => layoutProps.includes(p.name))
