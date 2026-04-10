@@ -310,15 +310,18 @@ export function M(
     'onclick', 'onhover', 'onfocus', 'onblur', 'onchange', 'oninput', 'onclick-outside'
   ])
 
+  // Dynamic property assignment requires any cast due to index signature conflicts
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const propsRecord = cleanProps as Record<string, any>
   for (const [key, value] of Object.entries(props)) {
     if (knownProps.has(key) || key.startsWith('onkeydown') || key.startsWith('onkeyup')) {
-      (cleanProps as any)[key] = value
+      propsRecord[key] = value
     } else if (/^[A-Z]/.test(key)) {
       // Uppercase key = slot fill
       slots[key] = value
     } else {
       // Unknown prop - pass through
-      (cleanProps as any)[key] = value
+      propsRecord[key] = value
     }
   }
 
@@ -2044,11 +2047,15 @@ export interface CorrectionEntry {
 /**
  * Correct a MirrorNode tree - fix common LLM mistakes
  *
+ * This function uses dynamic property manipulation to fix LLM-generated code,
+ * hence the any casts for flexible property access.
+ *
  * @example
  * const llmOutput = M('Box', { color: '#fff', style: 'position: relative' }, [...])
  * const { node, corrections } = M.correct(llmOutput)
  * // node now has { col: '#fff' } and style is processed
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): CorrectionResult {
   const corrections: CorrectionEntry[] = []
   const warnings: string[] = []

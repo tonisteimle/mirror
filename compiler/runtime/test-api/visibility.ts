@@ -75,7 +75,10 @@ export function createVisibilityAPI(runtime: RuntimeFunctions): VisibilityTestAP
       }
 
       // If element has a saved display value, restore it
+      // Using any cast to access custom _savedDisplay property on DOM element
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((el as any)._savedDisplay) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         el.style.display = (el as any)._savedDisplay
       }
 
@@ -97,6 +100,7 @@ export function createVisibilityAPI(runtime: RuntimeFunctions): VisibilityTestAP
       // Fallback: save display and hide
       const currentDisplay = window.getComputedStyle(el).display
       if (currentDisplay !== 'none') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (el as any)._savedDisplay = currentDisplay
       }
 
