@@ -2892,7 +2892,12 @@ class IRTransformer {
       this.addWarning({
         type: 'circular-inheritance',
         message: `Circular component inheritance detected: ${[...visited, component.name].join(' → ')}`,
-        position: { line: component.line ?? 0, column: component.column ?? 0 }
+        position: {
+          line: component.line ?? 0,
+          column: component.column ?? 0,
+          endLine: component.line ?? 0,
+          endColumn: component.column ?? 0
+        }
       })
       return component // Return unresolved to prevent infinite recursion
     }

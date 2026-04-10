@@ -1097,9 +1097,18 @@ function setupClickOutsideHandler(
     delete element._clickOutsideTimeout
   }
 
+  // Register for cleanup BEFORE setting timeout to ensure cleanup if element is removed
+  // while timeout is pending (prevents memory leak)
+  registerForCleanup(element)
+
   // Create new handler with delay to avoid immediate trigger
   element._clickOutsideTimeout = setTimeout(() => {
     delete element._clickOutsideTimeout
+
+    // Safety: Verify element is still in DOM before adding listener
+    if (!element.isConnected) {
+      return
+    }
 
     element._clickOutsideHandler = (e: MouseEvent) => {
       const target = e.target
@@ -1117,7 +1126,6 @@ function setupClickOutsideHandler(
     }
 
     document.addEventListener('click', element._clickOutsideHandler)
-    registerForCleanup(element)
   }, 10)
 }
 
@@ -1656,14 +1664,39 @@ export async function copy(
 // ============================================
 
 /**
- * Active toast element (for dismissal)
+ * Toast management with ID-based tracking to prevent race conditions
  */
-let _activeToast: HTMLElement | null = null
+let _toastCounter = 0
+const _activeToasts = new Map<number, { element: HTMLElement; dismissTimeout: number; fadeTimeout: number }>()
+
+/**
+ * Dismiss a specific toast by ID, or the most recent toast if no ID provided
+ */
+export function dismissToast(toastId?: number): void {
+  if (toastId !== undefined) {
+    const toast = _activeToasts.get(toastId)
+    if (toast) {
+      clearTimeout(toast.dismissTimeout)
+      clearTimeout(toast.fadeTimeout)
+      toast.element.remove()
+      _activeToasts.delete(toastId)
+    }
+  } else {
+    // Dismiss all toasts
+    for (const [id, toast] of _activeToasts) {
+      clearTimeout(toast.dismissTimeout)
+      clearTimeout(toast.fadeTimeout)
+      toast.element.remove()
+      _activeToasts.delete(id)
+    }
+  }
+}
 
 /**
  * Show a toast notification
  * @param message - Message to display
  * @param options - Options: { duration?, type?, position? }
+ * @returns Toast ID for programmatic dismissal
  */
 export function toast(
   message: string,
@@ -1672,12 +1705,17 @@ export function toast(
     type?: 'info' | 'success' | 'error' | 'warning'
     position?: 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   }
-): void {
+): number {
   const { duration = 3000, type = 'info', position = 'bottom' } = options || {}
 
-  // Dismiss existing toast
-  if (_activeToast) {
-    _activeToast.remove()
+  // Generate unique ID for this toast
+  const toastId = ++_toastCounter
+
+  // Dismiss existing toasts at the same position to prevent overlap
+  for (const [id, existingToast] of _activeToasts) {
+    if (existingToast.element.dataset.position === position) {
+      dismissToast(id)
+    }
   }
 
   // Create toast element
@@ -1685,6 +1723,7 @@ export function toast(
   toastEl.className = 'mirror-toast'
   toastEl.dataset.type = type
   toastEl.dataset.position = position
+  toastEl.dataset.toastId = String(toastId)
   toastEl.textContent = message
 
   // Base styles
@@ -1724,7 +1763,6 @@ export function toast(
   toastEl.style.color = colors.color
 
   document.body.appendChild(toastEl)
-  _activeToast = toastEl
 
   // Animate in
   requestAnimationFrame(() => {
@@ -1734,18 +1772,34 @@ export function toast(
       : (position === 'bottom' ? 'translateX(-50%) translateY(0)' : 'translateY(0)')
   })
 
-  // Auto-dismiss
-  setTimeout(() => {
+  // Setup auto-dismiss with tracked timeouts
+  const dismissTimeout = window.setTimeout(() => {
+    const toastData = _activeToasts.get(toastId)
+    if (!toastData) return // Already dismissed
+
     toastEl.style.opacity = '0'
-    setTimeout(() => {
+
+    const fadeTimeout = window.setTimeout(() => {
       if (toastEl.parentNode) {
         toastEl.remove()
       }
-      if (_activeToast === toastEl) {
-        _activeToast = null
-      }
+      _activeToasts.delete(toastId)
     }, 200)
+
+    // Update the fade timeout reference
+    if (_activeToasts.has(toastId)) {
+      _activeToasts.get(toastId)!.fadeTimeout = fadeTimeout
+    }
   }, duration)
+
+  // Track this toast
+  _activeToasts.set(toastId, {
+    element: toastEl,
+    dismissTimeout,
+    fadeTimeout: 0, // Will be set when dismiss starts
+  })
+
+  return toastId
 }
 
 // ============================================
