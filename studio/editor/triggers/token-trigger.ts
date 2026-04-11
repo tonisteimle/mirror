@@ -108,7 +108,8 @@ export function createTokenTriggerConfig(
     trigger: {
       type: 'char',
       char: '$',
-      contextPattern: TOKEN_CONTEXT_PATTERN,
+      // contextPattern removed - shouldActivate handles activation logic
+      // contextPattern only used for property extraction, not activation
     },
     picker: () => {
       // Get all tokens from project files
@@ -162,13 +163,16 @@ export function createTokenTriggerConfig(
       const isLineStart = /^\s*$/.test(context.textBefore)
       if (isLineStart) return false
 
-      // Check if context matches and extract property
+      // Check if context matches and extract property for filtering
       const match = context.textBefore.match(TOKEN_CONTEXT_PATTERN)
       if (match) {
-        currentProperty = match[1] // Capture the property name
-        return true
+        currentProperty = match[1] // Capture the property name for filtering
+      } else {
+        currentProperty = undefined // No property context - show all tokens
       }
-      return false
+
+      // Always activate $ trigger (except at line start)
+      return true
     },
     shouldClose: (update: ViewUpdate, insertedText: string, context: TriggerContext) => {
       // Close on non-identifier characters (except . for suffixes)

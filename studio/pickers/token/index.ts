@@ -261,11 +261,9 @@ export class TokenPicker extends BasePicker {
     this.tokenElements = []
 
     if (this.filteredTokens.length === 0) {
-      const empty = document.createElement('div')
-      empty.className = 'token-picker-empty'
-      empty.textContent = this.searchQuery ? 'No matching tokens' : 'No tokens available'
-      fragment.appendChild(empty)
-      return fragment as unknown as HTMLElement
+      // Return empty container - no message needed
+      const container = document.createElement('div')
+      return container
     }
 
     if (this.groupByCategory) {
@@ -281,23 +279,9 @@ export class TokenPicker extends BasePicker {
       }
 
       for (const [category, tokens] of groups) {
-        const group = document.createElement('div')
-        group.className = 'token-picker-group'
-
-        const header = document.createElement('div')
-        header.className = 'token-picker-group-header'
-        header.textContent = category
-        group.appendChild(header)
-
-        const items = document.createElement('div')
-        items.className = 'token-picker-group-items'
-
         for (const token of tokens) {
-          items.appendChild(this.renderToken(token))
+          fragment.appendChild(this.renderToken(token))
         }
-
-        group.appendChild(items)
-        fragment.appendChild(group)
       }
     } else {
       // Flat list
