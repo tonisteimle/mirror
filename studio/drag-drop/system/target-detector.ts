@@ -7,6 +7,9 @@
 
 import type { DropTarget, Direction, LayoutType } from '../types'
 import type { ChildRect } from '../strategies/types'
+import type { LayoutRect } from '../../core/state'
+import type { DOMAdapter } from './dom-adapter'
+import { getDefaultDOMAdapter } from './dom-adapter'
 
 const DEFAULT_NODE_ID_ATTR = 'data-node-id'
 
@@ -14,7 +17,7 @@ const DEFAULT_NODE_ID_ATTR = 'data-node-id'
  * Component names that are "leaf" elements and should not accept children.
  * These are text elements, form inputs, media elements, etc.
  */
-const LEAF_COMPONENTS = new Set([
+export const LEAF_COMPONENTS = new Set([
   // Text elements
   'text', 'muted', 'title', 'label',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -31,7 +34,7 @@ const LEAF_COMPONENTS = new Set([
 /**
  * Check if an element is a leaf component that shouldn't accept children
  */
-function isLeafComponent(element: HTMLElement): boolean {
+export function isLeafComponent(element: HTMLElement): boolean {
   // Check data-mirror-name attribute (set by Mirror's DOM backend)
   const mirrorName = element.dataset.mirrorName?.toLowerCase()
   if (mirrorName && LEAF_COMPONENTS.has(mirrorName)) {
@@ -54,10 +57,14 @@ function isLeafComponent(element: HTMLElement): boolean {
 
 /**
  * Detect drop target from a DOM element
+ * @param element - The HTML element to analyze
+ * @param nodeIdAttr - Attribute name for node ID (default: 'data-node-id')
+ * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
  */
 export function detectTarget(
   element: HTMLElement,
-  nodeIdAttr: string = DEFAULT_NODE_ID_ATTR
+  nodeIdAttr: string = DEFAULT_NODE_ID_ATTR,
+  domAdapter: DOMAdapter = getDefaultDOMAdapter()
 ): DropTarget | null {
   const nodeId = element.getAttribute(nodeIdAttr)
   if (!nodeId) return null
@@ -74,7 +81,7 @@ export function detectTarget(
     }
   }
 
-  const style = window.getComputedStyle(element)
+  const style = domAdapter.getComputedStyle(element)
   const layoutType = detectLayoutType(element, style)
   const direction = detectDirection(style)
   const hasChildren = hasValidChildren(element, nodeIdAttr)
@@ -96,10 +103,15 @@ export function detectTarget(
  * For leaf elements (text, button, etc.), we return the parent container
  * so that drop positions are calculated between siblings, not before/after
  * the individual leaf element.
+ *
+ * @param element - The starting element
+ * @param nodeIdAttr - Attribute name for node ID (default: 'data-node-id')
+ * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
  */
 export function findClosestTarget(
   element: HTMLElement | null,
-  nodeIdAttr: string = DEFAULT_NODE_ID_ATTR
+  nodeIdAttr: string = DEFAULT_NODE_ID_ATTR,
+  domAdapter: DOMAdapter = getDefaultDOMAdapter()
 ): DropTarget | null {
   if (!element) return null
 
@@ -107,12 +119,12 @@ export function findClosestTarget(
   let current: HTMLElement | null = element
 
   while (current) {
-    const target = detectTarget(current, nodeIdAttr)
+    const target = detectTarget(current, nodeIdAttr, domAdapter)
     if (target) {
       // If this is a leaf element, find the parent container instead
       // This ensures drop positions are calculated between siblings
       if (target.layoutType === 'none' && current.parentElement) {
-        const parentTarget = findClosestTarget(current.parentElement, nodeIdAttr)
+        const parentTarget = findClosestTarget(current.parentElement, nodeIdAttr, domAdapter)
         if (parentTarget && parentTarget.layoutType !== 'none') {
           return parentTarget
         }
@@ -127,20 +139,48 @@ export function findClosestTarget(
 
 /**
  * Get child rects for a container
+ * @param container - The container element
+ * @param nodeIdAttr - Attribute name for node ID (default: 'data-node-id')
+ * @param layoutInfo - Optional cached layout info (Phase 5 optimization)
+ * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
  */
 export function getChildRects(
   container: HTMLElement,
-  nodeIdAttr: string = DEFAULT_NODE_ID_ATTR
+  nodeIdAttr: string = DEFAULT_NODE_ID_ATTR,
+  layoutInfo?: Map<string, LayoutRect> | null,
+  domAdapter: DOMAdapter = getDefaultDOMAdapter()
 ): ChildRect[] {
   const children: ChildRect[] = []
+  const containerNodeId = container.getAttribute(nodeIdAttr)
 
+  // Try to use layoutInfo if available (Phase 5 optimization)
+  if (layoutInfo && containerNodeId) {
+    for (const [nodeId, layout] of layoutInfo) {
+      if (layout.parentId === containerNodeId) {
+        children.push({
+          nodeId,
+          rect: {
+            x: layout.x,
+            y: layout.y,
+            width: layout.width,
+            height: layout.height,
+          },
+        })
+      }
+    }
+    if (children.length > 0) {
+      return children
+    }
+  }
+
+  // Fallback to DOM reads
   for (const child of container.children) {
     if (!(child instanceof HTMLElement)) continue
 
     const nodeId = child.getAttribute(nodeIdAttr)
     if (!nodeId) continue
 
-    const domRect = child.getBoundingClientRect()
+    const domRect = domAdapter.getBoundingClientRect(child)
     children.push({
       nodeId,
       rect: {
@@ -157,14 +197,43 @@ export function getChildRects(
 
 /**
  * Get sibling rects for positioned containers (for snap calculations)
+ * @param container - The container element
+ * @param excludeNodeId - Node ID to exclude from results
+ * @param nodeIdAttr - Attribute name for node ID (default: 'data-node-id')
+ * @param layoutInfo - Optional cached layout info (Phase 5 optimization)
+ * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
  */
 export function getSiblingRects(
   container: HTMLElement,
   excludeNodeId: string | null,
-  nodeIdAttr: string = DEFAULT_NODE_ID_ATTR
-): { nodeId: string; rect: DOMRect }[] {
-  const siblings: { nodeId: string; rect: DOMRect }[] = []
+  nodeIdAttr: string = DEFAULT_NODE_ID_ATTR,
+  layoutInfo?: Map<string, LayoutRect> | null,
+  domAdapter: DOMAdapter = getDefaultDOMAdapter()
+): { nodeId: string; rect: DOMRect | { x: number; y: number; width: number; height: number } }[] {
+  const siblings: { nodeId: string; rect: DOMRect | { x: number; y: number; width: number; height: number } }[] = []
+  const containerNodeId = container.getAttribute(nodeIdAttr)
 
+  // Try to use layoutInfo if available (Phase 5 optimization)
+  if (layoutInfo && containerNodeId) {
+    for (const [nodeId, layout] of layoutInfo) {
+      if (layout.parentId === containerNodeId && nodeId !== excludeNodeId) {
+        siblings.push({
+          nodeId,
+          rect: {
+            x: layout.x,
+            y: layout.y,
+            width: layout.width,
+            height: layout.height,
+          },
+        })
+      }
+    }
+    if (siblings.length > 0) {
+      return siblings
+    }
+  }
+
+  // Fallback to DOM reads
   for (const child of container.children) {
     if (!(child instanceof HTMLElement)) continue
 
@@ -173,7 +242,7 @@ export function getSiblingRects(
 
     siblings.push({
       nodeId,
-      rect: child.getBoundingClientRect(),
+      rect: domAdapter.getBoundingClientRect(child),
     })
   }
 
@@ -183,7 +252,7 @@ export function getSiblingRects(
 /**
  * Detect layout type from element (checks both CSS and data attributes)
  */
-function detectLayoutType(element: HTMLElement, style: CSSStyleDeclaration): LayoutType {
+export function detectLayoutType(element: HTMLElement, style: CSSStyleDeclaration): LayoutType {
   // Check for explicit data-layout attribute first (highest priority)
   // This is set by Mirror's IR transformation for stacked containers
   const layout = element.dataset?.layout
@@ -224,7 +293,7 @@ function detectLayoutType(element: HTMLElement, style: CSSStyleDeclaration): Lay
 /**
  * Detect flex direction from computed style
  */
-function detectDirection(style: CSSStyleDeclaration): Direction {
+export function detectDirection(style: CSSStyleDeclaration): Direction {
   const flexDirection = style.flexDirection
 
   if (flexDirection === 'column' || flexDirection === 'column-reverse') {
@@ -237,7 +306,7 @@ function detectDirection(style: CSSStyleDeclaration): Direction {
 /**
  * Check if element has valid children (with node IDs)
  */
-function hasValidChildren(
+export function hasValidChildren(
   element: HTMLElement,
   nodeIdAttr: string
 ): boolean {
@@ -263,7 +332,37 @@ export function isPositionedContainer(
 
 /**
  * Get container rect
+ * @param element - The element to get the rect for
+ * @param layoutInfo - Optional cached layout info (Phase 5 optimization)
+ * @param nodeIdAttr - Attribute name for node ID
+ * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
  */
-export function getContainerRect(element: HTMLElement): DOMRect {
-  return element.getBoundingClientRect()
+export function getContainerRect(
+  element: HTMLElement,
+  layoutInfo?: Map<string, LayoutRect> | null,
+  nodeIdAttr: string = DEFAULT_NODE_ID_ATTR,
+  domAdapter: DOMAdapter = getDefaultDOMAdapter()
+): DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number } {
+  // Try to use layoutInfo if available (Phase 5 optimization)
+  if (layoutInfo) {
+    const nodeId = element.getAttribute(nodeIdAttr)
+    if (nodeId) {
+      const layout = layoutInfo.get(nodeId)
+      if (layout) {
+        return {
+          x: layout.x,
+          y: layout.y,
+          width: layout.width,
+          height: layout.height,
+          top: layout.y,
+          left: layout.x,
+          right: layout.x + layout.width,
+          bottom: layout.y + layout.height,
+        }
+      }
+    }
+  }
+
+  // Fallback to DOM read
+  return domAdapter.getBoundingClientRect(element)
 }

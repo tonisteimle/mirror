@@ -12,6 +12,7 @@
 
 import type { Point, DropTarget, DragSource, DropResult, VisualHint, Rect, Size } from '../types'
 import type { DropStrategy } from './types'
+import type { LayoutRect } from '../../core/state'
 
 /** Default size for ghost when source doesn't specify one */
 const DEFAULT_GHOST_SIZE: Size = { width: 100, height: 40 }
@@ -27,10 +28,12 @@ export class AbsolutePositionStrategy implements DropStrategy {
   calculate(
     cursor: Point,
     target: DropTarget,
-    source: DragSource
+    source: DragSource,
+    _childRects?: unknown,
+    containerRect?: Rect
   ): DropResult {
-    // Get container rect
-    const containerRect = target.element.getBoundingClientRect()
+    // Use passed containerRect or fall back to DOM read
+    const rect = containerRect ?? target.element.getBoundingClientRect()
 
     // Get scroll offsets of the container
     const scrollLeft = target.element.scrollLeft
@@ -38,8 +41,9 @@ export class AbsolutePositionStrategy implements DropStrategy {
 
     // Calculate position relative to container (WITH scroll compensation)
     // This is the position that will be stored in the source code
-    const relativeX = cursor.x - containerRect.left + scrollLeft
-    const relativeY = cursor.y - containerRect.top + scrollTop
+    // Note: rect.x === rect.left for DOMRect, and our Rect uses x/y
+    const relativeX = cursor.x - rect.x + scrollLeft
+    const relativeY = cursor.y - rect.y + scrollTop
 
     // Get ghost size for centering
     const ghostSize = source.size ?? DEFAULT_GHOST_SIZE
@@ -64,7 +68,12 @@ export class AbsolutePositionStrategy implements DropStrategy {
     }
   }
 
-  getVisualHint(result: DropResult, _childRects?: unknown, containerRect?: Rect): VisualHint | null {
+  getVisualHint(
+    result: DropResult,
+    _childRects?: unknown,
+    containerRect?: Rect,
+    layoutInfo?: Map<string, LayoutRect> | null
+  ): VisualHint | null {
     // For absolute positioning, show a ghost indicator
     if (result.placement !== 'absolute' || !result.position) {
       return null
@@ -74,7 +83,20 @@ export class AbsolutePositionStrategy implements DropStrategy {
     // The result.position already includes scroll offset for code generation
     // But for visual display, we need viewport coordinates
 
-    const targetRect = result.target.element.getBoundingClientRect()
+    let targetRect: { left: number; top: number }
+
+    // Try to use layoutInfo if available (Phase 5 optimization)
+    if (layoutInfo) {
+      const layout = layoutInfo.get(result.target.nodeId)
+      if (layout) {
+        targetRect = { left: layout.x, top: layout.y }
+      } else {
+        targetRect = result.target.element.getBoundingClientRect()
+      }
+    } else {
+      targetRect = result.target.element.getBoundingClientRect()
+    }
+
     const scrollLeft = result.target.element.scrollLeft
     const scrollTop = result.target.element.scrollTop
 

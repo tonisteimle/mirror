@@ -79,6 +79,9 @@ export type ComponentIcon =
   | 'hoverCard'
   | 'progress'
   | 'toast'
+  // Data & Charts
+  | 'table'
+  | 'chart'
 
 /**
  * Child component definition for layout templates

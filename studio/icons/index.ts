@@ -233,6 +233,12 @@ export const COMPONENT_ICONS = {
 
   /** Toast - notification */
   toast: `<rect x="2" y="14" width="20" height="8" rx="2"></rect><line x1="6" y1="18" x2="14" y2="18"></line><circle cx="18" cy="18" r="1"></circle><path d="M6 12V8a6 6 0 1 1 12 0v4"></path>`,
+
+  /** Table - data grid */
+  table: `<rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line>`,
+
+  /** Chart - line/bar chart */
+  chart: `<line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line><line x1="3" y1="20" x2="21" y2="20"></line>`,
 } as const
 
 // =============================================================================

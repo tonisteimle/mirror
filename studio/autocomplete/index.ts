@@ -116,10 +116,13 @@ export const PROPERTY_COMPLETIONS: Completion[] = [
   ...MIRROR_KEYWORDS,
 ]
 
-// Element completions (primitives + Zag components) - for element context
+// Element completions (all component types) - for element context
 export const ELEMENT_COMPLETIONS: Completion[] = [
   ...SCHEMA_COMPLETIONS.primitives,
   ...SCHEMA_COMPLETIONS.zagComponents,
+  ...SCHEMA_COMPLETIONS.zagItemKeywords,
+  ...SCHEMA_COMPLETIONS.chartComponents,
+  ...SCHEMA_COMPLETIONS.compoundComponents,
 ]
 
 /**
@@ -129,8 +132,14 @@ export const ELEMENT_COMPLETIONS: Completion[] = [
 export function extractElementNames(source: string): string[] {
   const names: string[] = []
   const lines = source.split('\n')
-  const primitiveNames = new Set(SCHEMA_COMPLETIONS.primitives.map(c => c.label))
-  const zagNames = new Set(SCHEMA_COMPLETIONS.zagComponents.map(c => c.label))
+  // All built-in component names that should not be treated as user-defined
+  const builtInNames = new Set([
+    ...SCHEMA_COMPLETIONS.primitives.map(c => c.label),
+    ...SCHEMA_COMPLETIONS.zagComponents.map(c => c.label),
+    ...SCHEMA_COMPLETIONS.zagItemKeywords.map(c => c.label),
+    ...SCHEMA_COMPLETIONS.chartComponents.map(c => c.label),
+    ...SCHEMA_COMPLETIONS.compoundComponents.map(c => c.label),
+  ])
 
   for (const line of lines) {
     // Component definition: Name: properties (e.g., "MyButton: bg #2271C1, pad 10")
@@ -138,8 +147,8 @@ export function extractElementNames(source: string): string[] {
     const defMatch = line.match(/^([A-Z][a-zA-Z0-9_]*)\s*(?:as\s+\w+)?\s*:/)
     if (defMatch) {
       const name = defMatch[1]
-      // Don't add primitives or Zag components as user components
-      if (!primitiveNames.has(name) && !zagNames.has(name)) {
+      // Don't add built-in components as user components
+      if (!builtInNames.has(name)) {
         names.push(name)
       }
       continue
@@ -149,7 +158,7 @@ export function extractElementNames(source: string): string[] {
     const instMatch = line.match(/^([A-Z][a-zA-Z0-9_]*)\s*=\s*[A-Z]/)
     if (instMatch) {
       const name = instMatch[1]
-      if (!primitiveNames.has(name) && !zagNames.has(name)) {
+      if (!builtInNames.has(name)) {
         names.push(name)
       }
       continue
@@ -160,8 +169,8 @@ export function extractElementNames(source: string): string[] {
     const compMatch = line.match(/^([A-Z][a-zA-Z0-9_]*)(?:\s|$)/)
     if (compMatch && !line.includes('=') && !line.includes(':')) {
       const name = compMatch[1]
-      // Only add if it looks like a custom component (not primitive/Zag)
-      if (!primitiveNames.has(name) && !zagNames.has(name)) {
+      // Only add if it looks like a custom component (not built-in)
+      if (!builtInNames.has(name)) {
         names.push(name)
       }
     }

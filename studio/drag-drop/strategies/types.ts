@@ -3,6 +3,7 @@
  */
 
 import type { Point, DragSource, DropTarget, DropResult, VisualHint, Rect } from '../types'
+import type { LayoutRect } from '../../core/state'
 
 /**
  * Drop Strategy Interface
@@ -29,19 +30,27 @@ export interface DropStrategy {
    * @param target - The drop target
    * @param source - The drag source
    * @param childRects - Rects of child elements (for flex containers)
+   * @param containerRect - Pre-computed container rect (from layoutInfo or DOM)
    */
   calculate(
     cursor: Point,
     target: DropTarget,
     source: DragSource,
-    childRects?: ChildRect[]
+    childRects?: ChildRect[],
+    containerRect?: Rect
   ): DropResult
 
   /**
    * Generate visual hint for rendering feedback
    * Returns null if no indicator should be shown (e.g., no-op position)
+   * @param layoutInfo - Optional cached layout info (Phase 5 optimization)
    */
-  getVisualHint(result: DropResult, childRects?: ChildRect[], containerRect?: Rect): VisualHint | null
+  getVisualHint(
+    result: DropResult,
+    childRects?: ChildRect[],
+    containerRect?: Rect,
+    layoutInfo?: Map<string, LayoutRect> | null
+  ): VisualHint | null
 }
 
 /**

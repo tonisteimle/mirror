@@ -311,7 +311,8 @@ export function updateChart(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { labels, values } = parseData(data, (chartInstance as any).config.type, xField, yField)
   chartInstance.data.labels = labels
-  chartInstance.data.datasets[0].data = values
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(chartInstance.data.datasets[0] as any).data = values
   chartInstance.update()
 }
 

@@ -9,6 +9,8 @@ import type {
   CodeExecutor,
   PaletteItemData,
 } from '../types'
+import type { LayoutRect } from '../../core/state'
+import type { DOMAdapter } from './dom-adapter'
 
 /**
  * System configuration
@@ -34,6 +36,12 @@ export interface DragDropConfig {
 
   /** Custom attribute for node IDs */
   nodeIdAttribute?: string
+
+  /** Get cached layout info from state (Phase 5 optimization) */
+  getLayoutInfo?: () => Map<string, LayoutRect> | null
+
+  /** DOM adapter for testability (defaults to real DOM) */
+  domAdapter?: DOMAdapter
 }
 
 /**

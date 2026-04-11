@@ -8,6 +8,7 @@
 import type { ComponentItem } from '../panels/components/types'
 import type { CodeModifier, ModificationResult } from '../../compiler/studio/code-modifier'
 import type { SourceMap } from '../../compiler/ir/source-map'
+import type { LayoutRect } from '../core/state'
 import { detectLayout } from '../../compiler/studio/utils/layout-detection'
 import { DrawRectRenderer } from './draw-rect-renderer'
 import { SnapIntegration, createSnapIntegration } from './snap-integration'
@@ -67,6 +68,8 @@ export interface DrawManagerConfig {
   container: HTMLElement
   getCodeModifier: () => CodeModifier
   sourceMap: () => SourceMap | null
+  /** Get cached layout info from state (Phase 5 optimization) */
+  getLayoutInfo?: () => Map<string, LayoutRect> | null
   gridSize?: number
   enableSmartGuides?: boolean
   snapTolerance?: number
@@ -77,9 +80,10 @@ export class DrawManager {
   private mode: DrawMode = 'idle'
   private componentToDraw: ComponentItem | null = null
   private drawState: DrawState | null = null
-  private config: Required<Omit<DrawManagerConfig, 'sourceMap' | 'getCodeModifier'>> & {
+  private config: Required<Omit<DrawManagerConfig, 'sourceMap' | 'getCodeModifier' | 'getLayoutInfo'>> & {
     sourceMap: () => SourceMap | null
     getCodeModifier: () => CodeModifier
+    getLayoutInfo: () => Map<string, LayoutRect> | null
   }
 
   private renderer: DrawRectRenderer
@@ -105,6 +109,7 @@ export class DrawManager {
       container: config.container,
       getCodeModifier: config.getCodeModifier,
       sourceMap: config.sourceMap,
+      getLayoutInfo: config.getLayoutInfo ?? (() => null),
       gridSize: config.gridSize ?? 0,
       enableSmartGuides: config.enableSmartGuides ?? false,
       snapTolerance: config.snapTolerance ?? 4,
@@ -535,9 +540,33 @@ export class DrawManager {
   /**
    * Get siblings of container for snapping
    */
-  private getSiblings(containerElement: HTMLElement): Map<string, DOMRect> {
-    const siblings = new Map<string, DOMRect>()
+  private getSiblings(containerElement: HTMLElement): Map<string, DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }> {
+    const siblings = new Map<string, DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }>()
+    const containerNodeId = containerElement.dataset.mirrorId
 
+    // Try to use layoutInfo if available (Phase 5 optimization)
+    const layoutInfo = this.config.getLayoutInfo()
+    if (layoutInfo && containerNodeId) {
+      for (const [nodeId, layout] of layoutInfo) {
+        if (layout.parentId === containerNodeId) {
+          siblings.set(nodeId, {
+            x: layout.x,
+            y: layout.y,
+            width: layout.width,
+            height: layout.height,
+            top: layout.y,
+            left: layout.x,
+            right: layout.x + layout.width,
+            bottom: layout.y + layout.height,
+          })
+        }
+      }
+      if (siblings.size > 0) {
+        return siblings
+      }
+    }
+
+    // Fallback to DOM reads
     // Get only direct children with mirror-id (not nested descendants)
     const children = containerElement.querySelectorAll(':scope > [data-mirror-id]')
     for (const child of children) {

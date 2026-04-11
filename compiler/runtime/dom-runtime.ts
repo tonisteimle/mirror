@@ -1054,8 +1054,9 @@ export function setupFormNavigation(form: HTMLElement): void {
  */
 export function setupAutoSelect(input: HTMLInputElement | HTMLTextAreaElement): void {
   // Remove existing handler if present (prevents duplicates)
-  if ((input as MirrorElement)._autoSelectHandler) {
-    input.removeEventListener('focus', (input as MirrorElement)._autoSelectHandler)
+  const existingHandler = (input as MirrorElement)._autoSelectHandler
+  if (existingHandler) {
+    input.removeEventListener('focus', existingHandler)
   }
 
   // Create handler with isConnected guard
@@ -2571,7 +2572,7 @@ export function watchStates(
   // Update state based on condition
   function updateState(): void {
     // If element is no longer in document, cleanup and stop
-    if (!el.isConnected) {
+    if (!el || !el.isConnected) {
       cleanup()
       return
     }

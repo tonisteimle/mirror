@@ -35,7 +35,7 @@ export function generateTheme(userTokens: TokenDefinition[]): GeneratedTheme {
   // Build a map of user-defined values
   const userValues = new Map<string, string | number>()
   for (const token of userTokens) {
-    if (token.value === undefined) continue
+    if (token.value === undefined || typeof token.value === 'boolean') continue
     // Normalize token name (remove $ prefix)
     const name = token.name.startsWith('$') ? token.name.slice(1) : token.name
     userValues.set(name, token.value)
@@ -142,7 +142,7 @@ function generateCSS(tokens: Record<string, string | number>): string {
 export function generateUserOverrides(userTokens: TokenDefinition[]): GeneratedTheme {
   const userValues = new Map<string, string | number>()
   for (const token of userTokens) {
-    if (token.value === undefined) continue
+    if (token.value === undefined || typeof token.value === 'boolean') continue
     const name = token.name.startsWith('$') ? token.name.slice(1) : token.name
     userValues.set(name, token.value)
   }

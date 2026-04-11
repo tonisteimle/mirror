@@ -26,7 +26,6 @@ export const PROPERTY_STARTERS = new Set<string>([
     .filter(prop =>
       prop.numeric ||
       prop.color ||
-      prop.custom ||  // Custom properties like scroll-y, scroll-x
       (prop.keywords && Object.keys(prop.keywords).length > 0 && !prop.keywords._standalone)
     )
     .flatMap(prop => [prop.name, ...prop.aliases]),
@@ -259,7 +258,7 @@ export const ANIMATION_PRESETS = new Set<string>(DSL.animationPresets)
  * Easing functions for animations.
  * Source: DSL.easingFunctions in dsl.ts
  */
-export const EASING_FUNCTIONS = new Set<string>(DSL.easingFunctions)
+export const EASING_FUNCTIONS = new Set<string>(DSL.easingFunctions.map(e => e.value))
 
 /**
  * Parse duration string (e.g., "0.2s", "200ms") to seconds.

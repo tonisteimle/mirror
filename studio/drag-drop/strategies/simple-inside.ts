@@ -9,6 +9,7 @@
 
 import type { Point, DropTarget, DragSource, DropResult, VisualHint, Rect } from '../types'
 import type { DropStrategy } from './types'
+import type { LayoutRect } from '../../core/state'
 
 export class SimpleInsideStrategy implements DropStrategy {
   readonly name = 'SimpleInsideStrategy'
@@ -22,7 +23,9 @@ export class SimpleInsideStrategy implements DropStrategy {
   calculate(
     _cursor: Point,
     target: DropTarget,
-    _source: DragSource
+    _source: DragSource,
+    _childRects?: unknown,
+    _containerRect?: Rect
   ): DropResult {
     // Always insert inside as last child
     return {
@@ -33,12 +36,33 @@ export class SimpleInsideStrategy implements DropStrategy {
     }
   }
 
-  getVisualHint(result: DropResult, _childRects?: unknown, containerRect?: Rect): VisualHint {
+  getVisualHint(
+    result: DropResult,
+    _childRects?: unknown,
+    containerRect?: Rect,
+    layoutInfo?: Map<string, LayoutRect> | null
+  ): VisualHint {
     // Show outline around the target container
     if (containerRect) {
       return {
         type: 'outline',
         rect: containerRect,
+      }
+    }
+
+    // Try to use layoutInfo if available (Phase 5 optimization)
+    if (layoutInfo) {
+      const layout = layoutInfo.get(result.target.nodeId)
+      if (layout) {
+        return {
+          type: 'outline',
+          rect: {
+            x: layout.x,
+            y: layout.y,
+            width: layout.width,
+            height: layout.height,
+          },
+        }
       }
     }
 

@@ -159,7 +159,11 @@ export class PreviewController {
 
     // Initialize handle manager if enabled
     if (this.config.enableHandles) {
-      this.handleManager = createHandleManager({ container: this.container })
+      this.handleManager = createHandleManager({
+        container: this.container,
+        // Phase 4: Use cached layoutInfo instead of DOM reads
+        getLayoutInfo: () => state.get().layoutInfo,
+      })
     }
 
     // Initialize keyboard handler if enabled
@@ -205,6 +209,8 @@ export class PreviewController {
       container: this.container,
       overlayManager: this.overlayManager,
       getSourceMap: () => this.sourceMap as any,
+      // Phase 3: Use cached layoutInfo instead of DOM reads
+      getLayoutInfo: () => state.get().layoutInfo,
     })
     // Note: DragDropVisualizer is now handled by the new DragSystem
 
@@ -355,7 +361,11 @@ export class PreviewController {
   /** Enable handles after construction */
   enableHandles(): void {
     if (!this.handleManager) {
-      this.handleManager = createHandleManager({ container: this.container })
+      this.handleManager = createHandleManager({
+        container: this.container,
+        // Phase 4: Use cached layoutInfo instead of DOM reads
+        getLayoutInfo: () => state.get().layoutInfo,
+      })
       if (this.selectedNodeId) {
         this.handleManager.showHandles(this.selectedNodeId)
       }

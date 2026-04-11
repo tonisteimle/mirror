@@ -1,6 +1,6 @@
 # Preview-Architektur Refactoring
 
-## Status: Phase 2 abgeschlossen
+## Status: Phase 5 abgeschlossen
 
 ---
 
@@ -213,56 +213,110 @@ Kein zusätzlicher State nötig.
 
 ---
 
-### Phase 3: ResizeManager umbauen
+### Phase 3: ResizeManager umbauen ✅ ABGESCHLOSSEN
 
 **Ziel:** Liest aus layoutInfo statt DOM.
 
-**Datei:** `studio/visual/resize-manager.ts`
+**Dateien:**
+- `studio/visual/resize-manager.ts` - Refactored ✅
+- `studio/preview/index.ts` - getLayoutInfo Verdrahtung ✅
 
 **Änderungen:**
-- showHandles() → liest aus layoutInfo
-- onMouseDown() → liest aus layoutInfo
-- updateHandlePositions() → liest aus layoutInfo
-- getAvailableSpace() → liest aus layoutInfo
-- getChildrenMinSize() → liest aus layoutInfo
+- ✅ showHandles() → liest aus layoutInfo (Fallback auf DOM)
+- ✅ onMouseDown() → liest aus layoutInfo (Fallback auf DOM)
+- ⏸️ updateHandlePositions() → weiterhin DOM (Live-Feedback beim Drag)
+- ⏸️ onMouseMove() → weiterhin DOM (Live-Feedback beim Drag)
+- ✅ getAvailableSpace() → liest aus layoutInfo (Fallback auf DOM)
+- ✅ getChildrenMinSize() → liest aus layoutInfo (Fallback auf DOM)
 
-**Definition of Done:**
-- Kein getBoundingClientRect() mehr in ResizeManager
+**Implementiert:**
+- `getLayoutInfo` Callback im ResizeManagerConfig Interface
+- Alle initialen Positionierungen (showHandles, onMouseDown) nutzen layoutInfo
+- Alle Größenberechnungen (getAvailableSpace, getChildrenMinSize) nutzen layoutInfo
+- Fallback auf DOM wenn layoutInfo nicht verfügbar
+- Live-Feedback während Drag-Operationen weiterhin via DOM (Performance)
+
+**Definition of Done:** ✅
+- Initiale Positionierung liest aus layoutInfo
+- Größenberechnungen lesen aus layoutInfo
+- Live-Feedback während Drag nutzt DOM (by design)
 - Alle Tests bestehen
 - Resize funktioniert wie vorher
 
 ---
 
-### Phase 4: HandleManager umbauen
+### Phase 4: HandleManager umbauen ✅ ABGESCHLOSSEN
 
 **Ziel:** Gleiche Logik wie ResizeManager.
 
-**Datei:** `studio/preview/handle-manager.ts`
+**Dateien:**
+- `studio/preview/handle-manager.ts` - Refactored ✅
+- `studio/preview/index.ts` - getLayoutInfo Verdrahtung ✅
 
 **Änderungen:**
-- calculateHandles() → liest aus layoutInfo
-- Gap-Berechnung → liest aus layoutInfo
+- ✅ calculateHandles() → liest aus layoutInfo (Fallback auf DOM)
+- ✅ Gap-Berechnung → liest Children-Position aus layoutInfo
+- ✅ Padding/Radius/Gap-Werte aus LayoutRect statt getComputedStyle
 
-**Definition of Done:**
-- Kein getBoundingClientRect() mehr in HandleManager
-- Alle Tests bestehen
+**Implementiert:**
+- `getLayoutInfo` Callback im HandleManagerConfig Interface
+- calculateHandles() nutzt layoutInfo für Position, Größe und Style-Werte
+- Gap-Handle-Position wird aus Children-Positionen in layoutInfo berechnet
+- Fallback auf DOM-Reads wenn layoutInfo nicht verfügbar
+
+**Definition of Done:** ✅
+- Initiale Handle-Berechnung liest aus layoutInfo
+- Gap-Handle-Position aus layoutInfo Children
+- Fallback auf DOM wenn layoutInfo fehlt
+- Alle Tests bestehen (10/10)
 
 ---
 
-### Phase 5: Weitere DOM-Reads eliminieren
+### Phase 5: Weitere DOM-Reads eliminieren ✅ ABGESCHLOSSEN
 
-**Ziel:** Alle verbleibenden DOM-Reads auf layoutInfo umstellen.
+**Ziel:** Verbleibende DOM-Reads in Drag-Drop und Draw-System auf layoutInfo umstellen.
 
-**Betroffene Dateien (aus Grep-Ergebnis):**
-- `studio/visual/overlay-manager.ts`
-- `studio/visual/draw-manager.ts`
-- `studio/drag-drop/` (mehrere)
-- `studio/preview/context-menu.ts`
+**Dateien:**
+- `studio/drag-drop/system/target-detector.ts` - Refactored ✅
+- `studio/drag-drop/system/types.ts` - getLayoutInfo Config hinzugefügt ✅
+- `studio/drag-drop/system/drag-drop-system.ts` - layoutInfo durchgereicht ✅
+- `studio/drag-drop/strategies/types.ts` - getVisualHint Interface erweitert ✅
+- `studio/drag-drop/strategies/simple-inside.ts` - layoutInfo genutzt ✅
+- `studio/drag-drop/strategies/absolute-position.ts` - layoutInfo genutzt ✅
+- `studio/drag-drop/strategies/non-container.ts` - layoutInfo genutzt ✅
+- `studio/drag-drop/strategies/flex-with-children.ts` - Interface angepasst ✅
+- `studio/visual/draw-manager.ts` - layoutInfo genutzt ✅
+- `studio/visual/snap-integration.ts` - Typ-Signaturen erweitert ✅
+- `studio/visual/smart-guides/guide-calculator.ts` - Typ-Signaturen erweitert ✅
+- `studio/bootstrap.ts` - getLayoutInfo an DragDropSystem & DrawManager ✅
 
-**Vorgehen:**
-- Datei für Datei durchgehen
-- DOM-Reads durch layoutInfo-Reads ersetzen
-- Testen
+**Änderungen:**
+- ✅ getChildRects() → liest aus layoutInfo (Fallback auf DOM)
+- ✅ getSiblingRects() → liest aus layoutInfo (Fallback auf DOM)
+- ✅ getContainerRect() → liest aus layoutInfo (Fallback auf DOM)
+- ✅ calculate() Interface erweitert → containerRect Parameter
+- ✅ getVisualHint() → layoutInfo Parameter hinzugefügt
+- ✅ DrawManager.getSiblings() → liest aus layoutInfo (Fallback auf DOM)
+- ✅ SnapIntegration und GuideCalculator → flexible DOMRect-Like Typen
+
+**Nicht ersetzbar (legitime DOM-Reads):**
+- `studio/preview/context-menu.ts` - Misst Menü-Element selbst (UI Chrome)
+- `studio/preview/index.ts` - Container-Rect für Viewport-Koordinaten
+- `studio/preview/layout-extractor.ts` - Quelle der layoutInfo (by design)
+
+**Implementiert:**
+- `getLayoutInfo` Callback in DragDropConfig und DrawManagerConfig
+- Alle target-detector Funktionen nutzen layoutInfo wenn verfügbar
+- Alle Strategien erhalten layoutInfo im getVisualHint() Aufruf
+- Typ-Signaturen erweitert für DOMRect-kompatible Objekte
+- Alle Tests bestehen (178/178 Drag-Drop Tests)
+
+**Definition of Done:** ✅
+- Drag-Drop-System nutzt layoutInfo für Rect-Berechnungen
+- Draw-System nutzt layoutInfo für Sibling-Rects
+- Fallback auf DOM wenn layoutInfo nicht verfügbar
+- Alle Typ-Signaturen kompatibel mit layoutInfo Rects
+- Alle Tests bestehen
 
 ---
 

@@ -636,6 +636,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     gridSize: 8,  // 8px grid snapping
     enableSmartGuides: true,  // Enable alignment guides
     snapTolerance: 4,  // 4px snap threshold
+    // Phase 5: Use cached layoutInfo instead of DOM reads
+    getLayoutInfo: () => state.get().layoutInfo,
   })
 
   drawManager.onDrawComplete = (result) => {
@@ -745,6 +747,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     onDragEnd: (source, success) => {
       console.log('[DragDrop] End:', success ? 'success' : 'cancelled')
     },
+    // Phase 5: Use cached layoutInfo instead of DOM reads
+    getLayoutInfo: () => state.get().layoutInfo,
   })
 
   dragDropSystem.init()

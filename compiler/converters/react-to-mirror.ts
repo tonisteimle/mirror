@@ -206,8 +206,8 @@ function mapHtmlToMirror(tagName: string): string {
 function parseStyleObject(
   node: t.ObjectExpression,
   tokens: Map<string, string>
-): Map<string, string | number> {
-  const properties = new Map<string, string | number>()
+): Map<string, string | number | boolean> {
+  const properties = new Map<string, string | number | boolean>()
 
   for (const prop of node.properties) {
     if (!t.isObjectProperty(prop)) continue
@@ -285,7 +285,7 @@ function parseJSXElement(
 
   // Convert tag to Mirror component name
   const name = mapHtmlToMirror(tagName)
-  const properties = new Map<string, string | number>()
+  const properties = new Map<string, string | number | boolean>()
   const children: MirrorNode[] = []
   let textContent: string | undefined
 
@@ -336,7 +336,7 @@ function parseJSXElement(
 // Mirror Code Generation
 // ============================================================================
 
-function generateMirrorProperties(props: Map<string, string | number>): string {
+function generateMirrorProperties(props: Map<string, string | number | boolean>): string {
   const parts: string[] = []
 
   // Handle layout first
@@ -359,7 +359,12 @@ function generateMirrorProperties(props: Map<string, string | number>): string {
   // Handle remaining properties
   for (const [key, value] of props) {
     if (key.startsWith('_')) continue
-    parts.push(`${key} ${value}`)
+    // Standalone properties (boolean true means just the property name)
+    if (value === true) {
+      parts.push(key)
+    } else if (value !== false) {
+      parts.push(`${key} ${value}`)
+    }
   }
 
   return parts.join(', ')

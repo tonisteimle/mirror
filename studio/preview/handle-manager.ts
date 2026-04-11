@@ -13,7 +13,7 @@
  * - Live value indicator during drag
  */
 
-import { state, events } from '../core'
+import { state, events, type LayoutRect } from '../core'
 import { HANDLE_SIZE, HANDLE_SIZE_SMALL, SMALL_ELEMENT_THRESHOLD } from '../visual/constants/sizing'
 
 export type HandleType = 'padding' | 'gap' | 'radius'
@@ -29,6 +29,8 @@ export interface Handle {
 
 export interface HandleManagerConfig {
   container: HTMLElement
+  /** Get cached layout info from state (Phase 4 optimization) */
+  getLayoutInfo?: () => Map<string, LayoutRect> | null
 }
 
 const LAYOUT = {
@@ -52,6 +54,7 @@ export class HandleManager {
   private activeHandle: Handle | null = null
   private overlay: HTMLElement
   private valueIndicator: HTMLElement | null = null
+  private getLayoutInfo: HandleManagerConfig['getLayoutInfo']
 
   private startDragPosition: { x: number; y: number } | null = null
   private startValue: number = 0
@@ -63,6 +66,7 @@ export class HandleManager {
 
   constructor(config: HandleManagerConfig) {
     this.container = config.container
+    this.getLayoutInfo = config.getLayoutInfo
     this.overlay = this.createOverlay()
 
     // Bind handlers
@@ -105,73 +109,112 @@ export class HandleManager {
 
   private calculateHandles(element: HTMLElement, nodeId: string): Handle[] {
     const handles: Handle[] = []
-    const rect = element.getBoundingClientRect()
-    const containerRect = this.container.getBoundingClientRect()
-    const style = window.getComputedStyle(element)
 
-    // Relative position within container
-    const relLeft = rect.left - containerRect.left
-    const relTop = rect.top - containerRect.top
+    // Try to get layout from cached layoutInfo first (Phase 4 optimization)
+    const layoutInfo = this.getLayoutInfo?.()
+    const layoutRect = layoutInfo?.get(nodeId)
+
+    let relLeft: number
+    let relTop: number
+    let width: number
+    let height: number
+    let padding: { top: number; right: number; bottom: number; left: number }
+    let radius: number
+    let gap: number
+    let flexDirection: string
+    let isContainer: boolean
+
+    if (layoutRect) {
+      // Use cached layout info - no DOM read needed
+      relLeft = layoutRect.x
+      relTop = layoutRect.y
+      width = layoutRect.width
+      height = layoutRect.height
+      padding = layoutRect.padding
+      radius = layoutRect.radius
+      gap = layoutRect.gap
+      flexDirection = layoutRect.flexDirection || 'column'
+      isContainer = layoutRect.isContainer
+    } else {
+      // Fallback to DOM read if layoutInfo not available
+      const rect = element.getBoundingClientRect()
+      const containerRect = this.container.getBoundingClientRect()
+      const style = window.getComputedStyle(element)
+
+      relLeft = rect.left - containerRect.left
+      relTop = rect.top - containerRect.top
+      width = rect.width
+      height = rect.height
+      padding = {
+        top: parseInt(style.paddingTop || '0', 10),
+        right: parseInt(style.paddingRight || '0', 10),
+        bottom: parseInt(style.paddingBottom || '0', 10),
+        left: parseInt(style.paddingLeft || '0', 10),
+      }
+      radius = parseInt(style.borderRadius || '0', 10)
+      gap = parseInt(style.gap || '0', 10)
+      flexDirection = style.flexDirection || 'column'
+      isContainer = (style.display === 'flex' || style.display === 'grid') && element.children.length > 0
+    }
 
     // Padding handles (4 sides)
     const paddingSides: Array<{
       dir: HandleDirection
       prop: string
-      getValue: () => number
+      value: number
       x: number
       y: number
     }> = [
       {
         dir: 'n',
         prop: 'pad top',
-        getValue: () => parseInt(style.paddingTop || '0', 10),
-        x: relLeft + rect.width / 2,
+        value: padding.top,
+        x: relLeft + width / 2,
         y: relTop + 12,
       },
       {
         dir: 's',
         prop: 'pad bottom',
-        getValue: () => parseInt(style.paddingBottom || '0', 10),
-        x: relLeft + rect.width / 2,
-        y: relTop + rect.height - 12,
+        value: padding.bottom,
+        x: relLeft + width / 2,
+        y: relTop + height - 12,
       },
       {
         dir: 'e',
         prop: 'pad right',
-        getValue: () => parseInt(style.paddingRight || '0', 10),
-        x: relLeft + rect.width - 12,
-        y: relTop + rect.height / 2,
+        value: padding.right,
+        x: relLeft + width - 12,
+        y: relTop + height / 2,
       },
       {
         dir: 'w',
         prop: 'pad left',
-        getValue: () => parseInt(style.paddingLeft || '0', 10),
+        value: padding.left,
         x: relLeft + 12,
-        y: relTop + rect.height / 2,
+        y: relTop + height / 2,
       },
     ]
 
-    const elementSize = { width: rect.width, height: rect.height }
+    const elementSize = { width, height }
 
     for (const side of paddingSides) {
       handles.push({
         type: 'padding',
         direction: side.dir,
         property: side.prop,
-        currentValue: side.getValue(),
+        currentValue: side.value,
         element: this.createHandleElement(side.x, side.y, side.dir, 'padding', elementSize),
       })
     }
 
     // Radius handle (top-right corner)
-    const radiusValue = parseInt(style.borderRadius || '0', 10)
     handles.push({
       type: 'radius',
       direction: 'ne',
       property: 'rad',
-      currentValue: radiusValue,
+      currentValue: radius,
       element: this.createHandleElement(
-        relLeft + rect.width - 8,
+        relLeft + width - 8,
         relTop + 8,
         'ne',
         'radius',
@@ -180,34 +223,61 @@ export class HandleManager {
     })
 
     // Gap handle (only for flex/grid containers with children)
-    const hasChildren = element.children.length > 0
-    const isFlexOrGrid = style.display === 'flex' || style.display === 'grid'
+    const isHorizontal = flexDirection === 'row' || flexDirection === 'row-reverse'
 
-    if (hasChildren && isFlexOrGrid && element.children.length >= 2) {
-      const gap = parseInt(style.gap || '0', 10)
-      const isHorizontal = style.flexDirection === 'row' || style.flexDirection === 'row-reverse'
-
-      const firstChild = element.children[0].getBoundingClientRect()
-      const secondChild = element.children[1].getBoundingClientRect()
-
+    if (isContainer) {
+      // Try to find gap position from children in layoutInfo
       let gapX: number
       let gapY: number
+      let hasGapPosition = false
 
-      if (isHorizontal) {
-        gapX = (firstChild.right + secondChild.left) / 2 - containerRect.left
-        gapY = relTop + rect.height / 2
-      } else {
-        gapX = relLeft + rect.width / 2
-        gapY = (firstChild.bottom + secondChild.top) / 2 - containerRect.top
+      if (layoutInfo) {
+        // Find first two children in layoutInfo
+        const children: LayoutRect[] = []
+        for (const [childId, childLayout] of layoutInfo) {
+          if (childLayout.parentId === nodeId) {
+            children.push(childLayout)
+            if (children.length >= 2) break
+          }
+        }
+
+        if (children.length >= 2) {
+          if (isHorizontal) {
+            gapX = (children[0].x + children[0].width + children[1].x) / 2
+            gapY = relTop + height / 2
+          } else {
+            gapX = relLeft + width / 2
+            gapY = (children[0].y + children[0].height + children[1].y) / 2
+          }
+          hasGapPosition = true
+        }
       }
 
-      handles.push({
-        type: 'gap',
-        direction: isHorizontal ? 'e' : 's',
-        property: 'gap',
-        currentValue: gap,
-        element: this.createHandleElement(gapX, gapY, isHorizontal ? 'e' : 's', 'gap', elementSize),
-      })
+      if (!hasGapPosition && element.children.length >= 2) {
+        // Fallback: Read children from DOM
+        const containerRect = this.container.getBoundingClientRect()
+        const firstChild = element.children[0].getBoundingClientRect()
+        const secondChild = element.children[1].getBoundingClientRect()
+
+        if (isHorizontal) {
+          gapX = (firstChild.right + secondChild.left) / 2 - containerRect.left
+          gapY = relTop + height / 2
+        } else {
+          gapX = relLeft + width / 2
+          gapY = (firstChild.bottom + secondChild.top) / 2 - containerRect.top
+        }
+        hasGapPosition = true
+      }
+
+      if (hasGapPosition) {
+        handles.push({
+          type: 'gap',
+          direction: isHorizontal ? 'e' : 's',
+          property: 'gap',
+          currentValue: gap,
+          element: this.createHandleElement(gapX!, gapY!, isHorizontal ? 'e' : 's', 'gap', elementSize),
+        })
+      }
     }
 
     return handles

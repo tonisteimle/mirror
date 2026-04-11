@@ -365,19 +365,22 @@ export class DragDropSystem implements IDragDropSystem {
       return
     }
 
+    // Get layoutInfo for optimized rect lookups (Phase 5)
+    const layoutInfo = this.config.getLayoutInfo?.()
+
     // Get child rects for calculation
-    let childRects = getChildRects(target.element, this.nodeIdAttr)
+    let childRects = getChildRects(target.element, this.nodeIdAttr, layoutInfo)
 
     // For non-container targets, use parent's rect for the indicator width
-    let containerRect: DOMRect
+    let containerRect: ReturnType<typeof getContainerRect>
     if (target.layoutType === 'none' && target.element.parentElement) {
-      containerRect = getContainerRect(target.element.parentElement)
+      containerRect = getContainerRect(target.element.parentElement, layoutInfo, this.nodeIdAttr)
     } else {
-      containerRect = getContainerRect(target.element)
+      containerRect = getContainerRect(target.element, layoutInfo, this.nodeIdAttr)
     }
 
-    // Calculate drop result
-    let calcResult = strategy.calculate(cursor, target, this.state.source, childRects)
+    // Calculate drop result (pass containerRect to avoid redundant DOM reads)
+    let calcResult = strategy.calculate(cursor, target, this.state.source, childRects, domRectToRect(containerRect))
 
     // Check if we should redirect to a sibling container
     // This handles the case where user drags just below a container (like Card)
@@ -386,9 +389,9 @@ export class DragDropSystem implements IDragDropSystem {
     if (redirectResult) {
       target = redirectResult.target
       strategy = this.registry.findStrategy(target)!
-      childRects = getChildRects(target.element, this.nodeIdAttr)
-      containerRect = getContainerRect(target.element)
-      calcResult = strategy.calculate(cursor, target, this.state.source, childRects)
+      childRects = getChildRects(target.element, this.nodeIdAttr, layoutInfo)
+      containerRect = getContainerRect(target.element, layoutInfo, this.nodeIdAttr)
+      calcResult = strategy.calculate(cursor, target, this.state.source, childRects, domRectToRect(containerRect))
       // Force placement to 'after' the last child for container redirect
       calcResult = {
         ...calcResult,
@@ -426,8 +429,8 @@ export class DragDropSystem implements IDragDropSystem {
       this.lastStableModel = { result: dropResult, mode: newMode }
     }
 
-    // Get visual hint and show indicator
-    const visualHint = strategy.getVisualHint(effectiveResult, childRects, domRectToRect(containerRect))
+    // Get visual hint and show indicator (pass layoutInfo for Phase 5 optimization)
+    const visualHint = strategy.getVisualHint(effectiveResult, childRects, domRectToRect(containerRect), layoutInfo)
 
     // If no visual hint (no-op position), hide indicator but keep result for drop
     if (visualHint) {
@@ -972,9 +975,9 @@ export class DragDropSystem implements IDragDropSystem {
 }
 
 /**
- * Helper to convert DOMRect to our Rect type
+ * Helper to convert DOMRect-like object to our Rect type
  */
-function domRectToRect(domRect: DOMRect): Rect {
+function domRectToRect(domRect: { x: number; y: number; width: number; height: number }): Rect {
   return {
     x: domRect.x,
     y: domRect.y,

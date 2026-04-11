@@ -59,3 +59,13 @@ export {
   type MockCodeModifier,
   type MockSelectionProvider,
 } from './property-panel-mocks'
+
+// DOM Adapter mocks
+export {
+  createMockDOMAdapter,
+  createMockStyle,
+  createMockRect,
+  createFlexDOMAdapter,
+  createPositionedDOMAdapter,
+  type MockDOMAdapter,
+} from './dom-adapter-mock'

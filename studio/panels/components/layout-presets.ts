@@ -1,30 +1,17 @@
 /**
- * Component Panel - Organized by category
+ * Component Panel - Simplified structure
  *
- * Categories (in display order):
- * 1. Layout - Shell and layout structures
- * 2. Basic - Frame, Text, Icon, Image
- * 3. Form - Input controls
- * 4. Overlay - Dialogs
- * 5. Navigation - Tabs, SideNav
+ * Two sections:
+ * 1. Layout - Container layouts (Row, Column, Grid, Stack)
+ * 2. Components - All UI components (alphabetically sorted)
  */
 
 import type { ComponentItem } from './types'
 
 /**
- * 1. LAYOUT - Simple layout containers
+ * LAYOUT - Container layouts
  */
-export const LAYOUT_COMPONENTS: ComponentItem[] = [
-  {
-    id: 'layout-row',
-    name: 'Row',
-    category: 'Layout',
-    template: 'Frame',
-    properties: 'hor, gap 8',
-    icon: 'row',
-    description: 'Horizontal container',
-    defaultSize: { width: 200, height: 50 },
-  },
+export const LAYOUT_SECTION: ComponentItem[] = [
   {
     id: 'layout-column',
     name: 'Column',
@@ -36,16 +23,6 @@ export const LAYOUT_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 100, height: 150 },
   },
   {
-    id: 'layout-stack',
-    name: 'Stack',
-    category: 'Layout',
-    template: 'Frame',
-    properties: 'stacked',
-    icon: 'stack',
-    description: 'Stacked layers',
-    defaultSize: { width: 100, height: 100 },
-  },
-  {
     id: 'layout-grid',
     name: 'Grid',
     category: 'Layout',
@@ -55,61 +32,56 @@ export const LAYOUT_COMPONENTS: ComponentItem[] = [
     description: 'Grid layout',
     defaultSize: { width: 200, height: 150 },
   },
-]
-
-/**
- * 2. BASIC - Frame, Text, Icon, Image
- */
-export const BASIC_PRIMITIVES: ComponentItem[] = [
   {
-    id: 'basic-frame',
-    name: 'Frame',
-    category: 'Basic',
+    id: 'layout-row',
+    name: 'Row',
+    category: 'Layout',
     template: 'Frame',
-    icon: 'box',
-    description: 'Container element',
-    defaultSize: { width: 100, height: 100 },
+    properties: 'hor, gap 8',
+    icon: 'row',
+    description: 'Horizontal container',
+    defaultSize: { width: 200, height: 50 },
   },
   {
-    id: 'basic-text',
-    name: 'Text',
-    category: 'Basic',
-    template: 'Text',
-    textContent: 'Text',
-    icon: 'text',
-    description: 'Text element',
-    defaultSize: { width: 80, height: 24 },
-  },
-  {
-    id: 'basic-icon',
-    name: 'Icon',
-    category: 'Basic',
-    template: 'Icon',
-    properties: 'star',
-    icon: 'icon',
-    description: 'Icon element',
-    defaultSize: { width: 24, height: 24 },
-  },
-  {
-    id: 'basic-image',
-    name: 'Image',
-    category: 'Basic',
-    template: 'Image',
-    properties: 'w 100, h 100, bg #e5e7eb',
-    icon: 'image',
-    description: 'Image placeholder',
+    id: 'layout-stack',
+    name: 'Stack',
+    category: 'Layout',
+    template: 'Frame',
+    properties: 'stacked',
+    icon: 'stack',
+    description: 'Stacked layers (absolute positioning)',
     defaultSize: { width: 100, height: 100 },
   },
 ]
 
 /**
- * 3. FORM - Input controls and form elements
+ * COMPONENTS - All UI components (alphabetically sorted)
  */
-export const FORM_COMPONENTS: ComponentItem[] = [
+export const COMPONENTS_SECTION: ComponentItem[] = [
   {
-    id: 'form-button',
+    id: 'comp-area-chart',
+    name: 'Area Chart',
+    category: 'Components',
+    template: 'Area',
+    properties: '$data, w 300, h 200',
+    icon: 'chart',
+    description: 'Filled area chart',
+    defaultSize: { width: 300, height: 200 },
+  },
+  {
+    id: 'comp-bar-chart',
+    name: 'Bar Chart',
+    category: 'Components',
+    template: 'Bar',
+    properties: '$data, w 300, h 200',
+    icon: 'chart',
+    description: 'Bar chart for comparisons',
+    defaultSize: { width: 300, height: 200 },
+  },
+  {
+    id: 'comp-button',
     name: 'Button',
-    category: 'Form',
+    category: 'Components',
     template: 'Button',
     textContent: 'Button',
     icon: 'button',
@@ -117,9 +89,92 @@ export const FORM_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 100, height: 40 },
   },
   {
-    id: 'form-input',
+    id: 'comp-checkbox',
+    name: 'Checkbox',
+    category: 'Components',
+    template: 'Checkbox',
+    icon: 'checkbox',
+    description: 'Checkbox',
+    defaultSize: { width: 150, height: 24 },
+    children: [
+      { template: 'Control', isSlot: true, properties: 'w 20, h 20, bor 1 #555, rad 4' },
+      { template: 'Label', isSlot: true, textContent: 'Check me' },
+    ],
+  },
+  {
+    id: 'comp-date-picker',
+    name: 'Date Picker',
+    category: 'Components',
+    template: 'DatePicker',
+    icon: 'datePicker',
+    description: 'Calendar date picker',
+    defaultSize: { width: 280, height: 300 },
+    children: [
+      { template: 'Control', isSlot: true },
+      { template: 'Input', isSlot: true },
+      { template: 'Trigger', isSlot: true },
+      { template: 'Content', isSlot: true },
+    ],
+  },
+  {
+    id: 'comp-dialog',
+    name: 'Dialog',
+    category: 'Components',
+    template: 'Dialog',
+    icon: 'dialog',
+    description: 'Modal dialog',
+    defaultSize: { width: 400, height: 300 },
+    children: [
+      { template: 'Trigger', isSlot: true, children: [
+        { template: 'Button', properties: 'pad 12 24, bg #5BA8F5, col #fff, rad 6', textContent: 'Open' },
+      ]},
+      { template: 'Backdrop', isSlot: true, properties: 'bg #00000080' },
+      { template: 'Content', isSlot: true, properties: 'w 400, bg #1e1e2e, rad 12, pad 24, shadow lg' },
+    ],
+  },
+  {
+    id: 'comp-donut-chart',
+    name: 'Donut Chart',
+    category: 'Components',
+    template: 'Donut',
+    properties: '$data, w 200, h 200',
+    icon: 'chart',
+    description: 'Donut chart with center hole',
+    defaultSize: { width: 200, height: 200 },
+  },
+  {
+    id: 'comp-frame',
+    name: 'Frame',
+    category: 'Components',
+    template: 'Frame',
+    icon: 'box',
+    description: 'Container element',
+    defaultSize: { width: 100, height: 100 },
+  },
+  {
+    id: 'comp-icon',
+    name: 'Icon',
+    category: 'Components',
+    template: 'Icon',
+    properties: 'star',
+    icon: 'icon',
+    description: 'Icon element',
+    defaultSize: { width: 24, height: 24 },
+  },
+  {
+    id: 'comp-image',
+    name: 'Image',
+    category: 'Components',
+    template: 'Image',
+    properties: 'w 100, h 100, bg #e5e7eb',
+    icon: 'image',
+    description: 'Image placeholder',
+    defaultSize: { width: 100, height: 100 },
+  },
+  {
+    id: 'comp-input',
     name: 'Input',
-    category: 'Form',
+    category: 'Components',
     template: 'Input',
     properties: 'placeholder "Enter text..."',
     icon: 'input',
@@ -127,9 +182,43 @@ export const FORM_COMPONENTS: ComponentItem[] = [
     defaultSize: { width: 200, height: 40 },
   },
   {
-    id: 'form-select',
+    id: 'comp-line-chart',
+    name: 'Line Chart',
+    category: 'Components',
+    template: 'Line',
+    properties: '$data, w 300, h 200',
+    icon: 'chart',
+    description: 'Line chart for trends',
+    defaultSize: { width: 300, height: 200 },
+  },
+  {
+    id: 'comp-pie-chart',
+    name: 'Pie Chart',
+    category: 'Components',
+    template: 'Pie',
+    properties: '$data, w 200, h 200',
+    icon: 'chart',
+    description: 'Pie chart for proportions',
+    defaultSize: { width: 200, height: 200 },
+  },
+  {
+    id: 'comp-radio-group',
+    name: 'Radio Group',
+    category: 'Components',
+    template: 'RadioGroup',
+    icon: 'radio',
+    description: 'Radio buttons',
+    defaultSize: { width: 150, height: 80 },
+    children: [
+      { template: 'RadioItem', isItem: true, textContent: 'Option A' },
+      { template: 'RadioItem', isItem: true, textContent: 'Option B' },
+      { template: 'RadioItem', isItem: true, textContent: 'Option C' },
+    ],
+  },
+  {
+    id: 'comp-select',
     name: 'Select',
-    category: 'Form',
+    category: 'Components',
     template: 'Select',
     properties: 'placeholder "Choose..."',
     icon: 'select',
@@ -150,35 +239,23 @@ export const FORM_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'form-checkbox',
-    name: 'Checkbox',
-    category: 'Form',
-    template: 'Checkbox',
-    icon: 'checkbox',
-    description: 'Checkbox',
-    defaultSize: { width: 150, height: 24 },
+    id: 'comp-sidenav',
+    name: 'SideNav',
+    category: 'Components',
+    template: 'SideNav',
+    icon: 'sidebar',
+    description: 'Sidebar navigation',
+    defaultSize: { width: 220, height: 300 },
     children: [
-      { template: 'Control', isSlot: true, properties: 'w 20, h 20, bor 1 #555, rad 4' },
-      { template: 'Label', isSlot: true, textContent: 'Check me' },
+      { template: 'NavItem', isItem: true, textContent: 'Dashboard', properties: 'icon "home"' },
+      { template: 'NavItem', isItem: true, textContent: 'Projects', properties: 'icon "folder"' },
+      { template: 'NavItem', isItem: true, textContent: 'Settings', properties: 'icon "settings"' },
     ],
   },
   {
-    id: 'form-switch',
-    name: 'Switch',
-    category: 'Form',
-    template: 'Switch',
-    icon: 'toggle',
-    description: 'Toggle switch',
-    defaultSize: { width: 50, height: 28 },
-    children: [
-      { template: 'Track', isSlot: true, properties: 'w 44, h 24, rad 12, bg #555' },
-      { template: 'Thumb', isSlot: true, properties: 'w 20, h 20, rad 10, bg #fff' },
-    ],
-  },
-  {
-    id: 'form-slider',
+    id: 'comp-slider',
     name: 'Slider',
-    category: 'Form',
+    category: 'Components',
     template: 'Slider',
     icon: 'slider',
     description: 'Range slider',
@@ -190,96 +267,38 @@ export const FORM_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'form-radio-group',
-    name: 'Radio Group',
-    category: 'Form',
-    template: 'RadioGroup',
-    icon: 'radio',
-    description: 'Radio buttons',
-    defaultSize: { width: 150, height: 80 },
+    id: 'comp-switch',
+    name: 'Switch',
+    category: 'Components',
+    template: 'Switch',
+    icon: 'toggle',
+    description: 'Toggle switch',
+    defaultSize: { width: 50, height: 28 },
     children: [
-      { template: 'RadioItem', isItem: true, textContent: 'Option A' },
-      { template: 'RadioItem', isItem: true, textContent: 'Option B' },
-      { template: 'RadioItem', isItem: true, textContent: 'Option C' },
+      { template: 'Track', isSlot: true, properties: 'w 44, h 24, rad 12, bg #555' },
+      { template: 'Thumb', isSlot: true, properties: 'w 20, h 20, rad 10, bg #fff' },
     ],
   },
   {
-    id: 'form-date-picker',
-    name: 'Date Picker',
-    category: 'Form',
-    template: 'DatePicker',
-    icon: 'datePicker',
-    description: 'Calendar date picker',
-    defaultSize: { width: 280, height: 300 },
+    id: 'comp-table',
+    name: 'Table',
+    category: 'Components',
+    template: 'Table',
+    icon: 'table',
+    description: 'Data table',
+    defaultSize: { width: 400, height: 200 },
     children: [
-      { template: 'Control', isSlot: true },
-      { template: 'Input', isSlot: true },
-      { template: 'Trigger', isSlot: true },
-      { template: 'Content', isSlot: true },
-    ],
-  },
-  {
-    id: 'form-date-input',
-    name: 'Date Input',
-    category: 'Form',
-    template: 'DateInput',
-    icon: 'datePicker',
-    description: 'Segmented date input',
-    defaultSize: { width: 200, height: 40 },
-    children: [
-      { template: 'Control', isSlot: true },
-      { template: 'Input', isSlot: true },
-    ],
-  },
-]
-
-/**
- * 4. OVERLAY - Dialog, Tooltip
- */
-export const OVERLAY_COMPONENTS: ComponentItem[] = [
-  {
-    id: 'overlay-dialog',
-    name: 'Dialog',
-    category: 'Overlay',
-    template: 'Dialog',
-    icon: 'dialog',
-    description: 'Modal dialog',
-    defaultSize: { width: 400, height: 300 },
-    children: [
-      { template: 'Trigger', isSlot: true, children: [
-        { template: 'Button', properties: 'pad 12 24, bg #5BA8F5, col #fff, rad 6', textContent: 'Open' },
+      { template: 'Header', isSlot: true, children: [
+        { template: 'Row', textContent: 'Name", "Status", "Actions' },
       ]},
-      { template: 'Backdrop', isSlot: true, properties: 'bg #00000080' },
-      { template: 'Content', isSlot: true, properties: 'w 400, bg #1e1e2e, rad 12, pad 24, shadow lg' },
+      { template: 'Row', textContent: 'Item 1", "Active", "Edit' },
+      { template: 'Row', textContent: 'Item 2", "Pending", "Edit' },
     ],
   },
   {
-    id: 'overlay-tooltip',
-    name: 'Tooltip',
-    category: 'Overlay',
-    template: 'Tooltip',
-    icon: 'tooltip',
-    description: 'Hover tooltip',
-    defaultSize: { width: 150, height: 40 },
-    children: [
-      { template: 'Trigger', isSlot: true, children: [
-        { template: 'Button', textContent: 'Hover me' },
-      ]},
-      { template: 'Content', isSlot: true, properties: 'pad 8 12, bg #333, col #fff, rad 4, fs 12', children: [
-        { template: 'Text', textContent: 'Tooltip text' },
-      ]},
-    ],
-  },
-]
-
-/**
- * 5. NAVIGATION - Tabs, SideNav
- */
-export const NAVIGATION_COMPONENTS: ComponentItem[] = [
-  {
-    id: 'nav-tabs',
+    id: 'comp-tabs',
     name: 'Tabs',
-    category: 'Navigation',
+    category: 'Components',
     template: 'Tabs',
     icon: 'tabs',
     description: 'Tabbed navigation',
@@ -299,36 +318,54 @@ export const NAVIGATION_COMPONENTS: ComponentItem[] = [
     ],
   },
   {
-    id: 'nav-sidenav',
-    name: 'SideNav',
-    category: 'Navigation',
-    template: 'SideNav',
-    icon: 'sidebar',
-    description: 'Sidebar navigation',
-    defaultSize: { width: 220, height: 300 },
+    id: 'comp-text',
+    name: 'Text',
+    category: 'Components',
+    template: 'Text',
+    textContent: 'Text',
+    icon: 'text',
+    description: 'Text element',
+    defaultSize: { width: 80, height: 24 },
+  },
+  {
+    id: 'comp-textarea',
+    name: 'Textarea',
+    category: 'Components',
+    template: 'Textarea',
+    properties: 'placeholder "Enter text..."',
+    icon: 'input',
+    description: 'Multi-line text input',
+    defaultSize: { width: 200, height: 80 },
+  },
+  {
+    id: 'comp-tooltip',
+    name: 'Tooltip',
+    category: 'Components',
+    template: 'Tooltip',
+    icon: 'tooltip',
+    description: 'Hover tooltip',
+    defaultSize: { width: 150, height: 40 },
     children: [
-      { template: 'NavItem', isItem: true, textContent: 'Dashboard', properties: 'icon "home"' },
-      { template: 'NavItem', isItem: true, textContent: 'Projects', properties: 'icon "folder"' },
-      { template: 'NavItem', isItem: true, textContent: 'Settings', properties: 'icon "settings"' },
+      { template: 'Trigger', isSlot: true, children: [
+        { template: 'Button', textContent: 'Hover me' },
+      ]},
+      { template: 'Content', isSlot: true, properties: 'pad 8 12, bg #333, col #fff, rad 4, fs 12', children: [
+        { template: 'Text', textContent: 'Tooltip text' },
+      ]},
     ],
   },
 ]
 
 /**
- * 6. MEDIA - Empty (removed)
+ * Legacy exports for backwards compatibility
  */
+export const LAYOUT_COMPONENTS = LAYOUT_SECTION
+export const BASIC_PRIMITIVES: ComponentItem[] = []
+export const FORM_COMPONENTS: ComponentItem[] = []
+export const OVERLAY_COMPONENTS: ComponentItem[] = []
+export const NAVIGATION_COMPONENTS: ComponentItem[] = []
+export const DATA_COMPONENTS: ComponentItem[] = []
+export const CHART_COMPONENTS: ComponentItem[] = []
 export const MEDIA_COMPONENTS: ComponentItem[] = []
-
-/**
- * 7. FEEDBACK - Empty (removed)
- */
 export const FEEDBACK_COMPONENTS: ComponentItem[] = []
-
-/**
- * Legacy export for backwards compatibility
- */
-export const BASIC_COMPONENTS: ComponentItem[] = [
-  ...FORM_COMPONENTS,
-  ...OVERLAY_COMPONENTS,
-  ...NAVIGATION_COMPONENTS,
-]
+export const BASIC_COMPONENTS: ComponentItem[] = []

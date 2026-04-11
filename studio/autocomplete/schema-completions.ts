@@ -10,7 +10,7 @@
  * - ZAG_PRIMITIVES from src/schema/zag-primitives.ts
  */
 
-import { DSL, SCHEMA, ZAG_PRIMITIVES, type PropertyDef } from '../../compiler/schema/dsl'
+import { DSL, SCHEMA, ZAG_PRIMITIVES, COMPOUND_PRIMITIVES, CHART_PRIMITIVES, type PropertyDef } from '../../compiler/schema/dsl'
 import type { Completion } from './index'
 
 // ============================================================================
@@ -137,6 +137,108 @@ export function getZagPropCompletions(componentName: string): Completion[] {
     type: 'property',
     boost: 5,
   }))
+}
+
+// ============================================================================
+// Chart Primitive Completions
+// ============================================================================
+
+/**
+ * Generate completions for Chart primitives (Line, Bar, Pie, etc.)
+ */
+export function generateChartCompletions(): Completion[] {
+  const completions: Completion[] = []
+
+  for (const [name, def] of Object.entries(CHART_PRIMITIVES)) {
+    completions.push({
+      label: name,
+      detail: def.description,
+      type: 'component',
+      boost: 8,
+    })
+  }
+
+  return completions
+}
+
+// ============================================================================
+// Compound Primitive Completions
+// ============================================================================
+
+/**
+ * Generate completions for Compound primitives (Table, etc.)
+ */
+export function generateCompoundCompletions(): Completion[] {
+  const completions: Completion[] = []
+
+  for (const [name, def] of Object.entries(COMPOUND_PRIMITIVES)) {
+    completions.push({
+      label: name,
+      detail: def.description || `${name} component`,
+      type: 'component',
+      boost: 8,
+    })
+
+    // Add slot completions (Row, Column, Header, etc.)
+    if (def.slots) {
+      for (const slot of def.slots) {
+        completions.push({
+          label: slot,
+          detail: `${name} slot`,
+          type: 'component',
+          boost: 7,
+        })
+      }
+    }
+  }
+
+  return completions
+}
+
+// ============================================================================
+// Zag Item Keywords Completions
+// ============================================================================
+
+/**
+ * Generate completions for Zag item keywords (Tab, NavItem, RadioItem, Option, etc.)
+ */
+export function generateZagItemKeywordCompletions(): Completion[] {
+  const completions: Completion[] = []
+  const seen = new Set<string>()
+
+  for (const [name, def] of Object.entries(ZAG_PRIMITIVES)) {
+    // Add item keywords (Tab, NavItem, RadioItem, Option, etc.)
+    if (def.itemKeywords) {
+      for (const keyword of def.itemKeywords) {
+        if (!seen.has(keyword)) {
+          seen.add(keyword)
+          completions.push({
+            label: keyword,
+            detail: `Item of ${name}`,
+            type: 'component',
+            boost: 8,
+          })
+        }
+      }
+    }
+
+    // Add group keywords (NavGroup, etc.)
+    if (def.groupKeywords) {
+      for (const keyword of def.groupKeywords) {
+        if (!seen.has(keyword)) {
+          seen.add(keyword)
+          completions.push({
+            label: keyword,
+            detail: `Group in ${name}`,
+            type: 'component',
+            boost: 8,
+          })
+        }
+      }
+    }
+  }
+
+  return completions
 }
 
 // ============================================================================
@@ -512,6 +614,9 @@ export const SCHEMA_COMPLETIONS = {
   primitives: generatePrimitiveCompletions(),
   zagComponents: generateZagCompletions(),
   zagSlots: generateZagSlotsByComponent(),
+  zagItemKeywords: generateZagItemKeywordCompletions(),
+  chartComponents: generateChartCompletions(),
+  compoundComponents: generateCompoundCompletions(),
   properties: generatePropertyCompletions(),
   propertyValues: generateAllPropertyValueCompletions(),
   events: generateEventCompletions(),
@@ -532,10 +637,16 @@ export const SCHEMA_COMPLETIONS = {
 }
 
 /**
- * Get all component completions (primitives + Zag)
+ * Get all component completions (primitives + Zag + Charts + Compound + Item Keywords)
  */
 export function getAllComponentCompletions(): Completion[] {
-  return [...SCHEMA_COMPLETIONS.primitives, ...SCHEMA_COMPLETIONS.zagComponents]
+  return [
+    ...SCHEMA_COMPLETIONS.primitives,
+    ...SCHEMA_COMPLETIONS.zagComponents,
+    ...SCHEMA_COMPLETIONS.zagItemKeywords,
+    ...SCHEMA_COMPLETIONS.chartComponents,
+    ...SCHEMA_COMPLETIONS.compoundComponents,
+  ]
 }
 
 /**

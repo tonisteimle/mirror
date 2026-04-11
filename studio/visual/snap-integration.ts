@@ -32,8 +32,8 @@ export class SnapIntegration {
    */
   snap(
     rect: Rect,
-    siblings: Map<string, DOMRect>,
-    containerRect: DOMRect,
+    siblings: Map<string, DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }>,
+    containerRect: DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number },
     disableSnapping: boolean = false
   ): SnapResult {
     // If snapping disabled (e.g., Cmd/Ctrl held), return as-is
@@ -75,8 +75,8 @@ export class SnapIntegration {
    */
   private applySmartGuideSnap(
     rect: Rect,
-    siblings: Map<string, DOMRect>,
-    containerRect: DOMRect
+    siblings: Map<string, DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }>,
+    containerRect: DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }
   ): SnapResult {
     // Convert our Rect to DOMRect for GuideCalculator
     const movingRect = new DOMRect(

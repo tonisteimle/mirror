@@ -7,6 +7,7 @@
 
 import type { Point, DropTarget, DragSource, DropResult, VisualHint, Rect } from '../types'
 import type { DropStrategy, ChildRect } from './types'
+import type { LayoutRect } from '../../core/state'
 
 export class FlexWithChildrenStrategy implements DropStrategy {
   readonly name = 'FlexWithChildrenStrategy'
@@ -19,7 +20,8 @@ export class FlexWithChildrenStrategy implements DropStrategy {
     cursor: Point,
     target: DropTarget,
     source: DragSource,
-    childRects: ChildRect[] = []
+    childRects: ChildRect[] = [],
+    _containerRect?: Rect
   ): DropResult {
     if (childRects.length === 0) {
       // Fallback: inside at end
@@ -48,7 +50,12 @@ export class FlexWithChildrenStrategy implements DropStrategy {
     }
   }
 
-  getVisualHint(result: DropResult, childRects?: ChildRect[], containerRect?: Rect): VisualHint | null {
+  getVisualHint(
+    result: DropResult,
+    childRects?: ChildRect[],
+    containerRect?: Rect,
+    _layoutInfo?: Map<string, LayoutRect> | null
+  ): VisualHint | null {
     // Don't show indicator for no-op positions
     if (result.isNoOp) {
       return null

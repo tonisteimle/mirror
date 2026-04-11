@@ -9,6 +9,7 @@ import { OverlayManager } from './overlay-manager'
 import { events } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 import { MIN_RESIZE_SIZE, DEFAULT_CONTAINER_SIZE } from './constants/sizing'
+import type { LayoutRect } from '../core/state'
 
 /** @deprecated Use MIN_RESIZE_SIZE from constants/sizing.ts */
 const MIN_ELEMENT_SIZE = MIN_RESIZE_SIZE
@@ -38,12 +39,15 @@ export interface ResizeManagerConfig {
   container: HTMLElement
   overlayManager: OverlayManager
   getSourceMap: () => { getNodeById: (id: string) => { parentId?: string } | null } | null
+  /** Get cached layout info from state (Phase 3 optimization) */
+  getLayoutInfo?: () => Map<string, LayoutRect> | null
 }
 
 export class ResizeManager {
   private container: HTMLElement
   private overlayManager: OverlayManager
   private getSourceMap: ResizeManagerConfig['getSourceMap']
+  private getLayoutInfo: ResizeManagerConfig['getLayoutInfo']
 
   private handles: HTMLElement[] = []
   private activeResize: ResizeState | null = null
@@ -61,6 +65,7 @@ export class ResizeManager {
     this.container = config.container
     this.overlayManager = config.overlayManager
     this.getSourceMap = config.getSourceMap
+    this.getLayoutInfo = config.getLayoutInfo
 
     this.boundMouseDown = this.onMouseDown.bind(this)
     this.boundMouseMove = this.onMouseMove.bind(this)
@@ -77,18 +82,34 @@ export class ResizeManager {
     this.hideHandles()
     this.currentNodeId = nodeId
 
-    const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
-    if (!element) return
+    // Try to get layout from cached layoutInfo first (Phase 3 optimization)
+    const layoutInfo = this.getLayoutInfo?.()
+    const layoutRect = layoutInfo?.get(nodeId)
 
-    const rect = element.getBoundingClientRect()
-    const containerRect = this.container.getBoundingClientRect()
+    let relRect: { left: number; top: number; width: number; height: number }
 
-    // Relative Position zum Container
-    const relRect = {
-      left: rect.left - containerRect.left,
-      top: rect.top - containerRect.top,
-      width: rect.width,
-      height: rect.height,
+    if (layoutRect) {
+      // Use cached layout info - no DOM read needed
+      relRect = {
+        left: layoutRect.x,
+        top: layoutRect.y,
+        width: layoutRect.width,
+        height: layoutRect.height,
+      }
+    } else {
+      // Fallback to DOM read if layoutInfo not available
+      const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+      if (!element) return
+
+      const rect = element.getBoundingClientRect()
+      const containerRect = this.container.getBoundingClientRect()
+
+      relRect = {
+        left: rect.left - containerRect.left,
+        top: rect.top - containerRect.top,
+        width: rect.width,
+        height: rect.height,
+      }
     }
 
     const handlesContainer = this.overlayManager.getResizeHandlesContainer()
@@ -181,26 +202,47 @@ export class ResizeManager {
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return
 
-    const rect = element.getBoundingClientRect()
-    const containerRect = this.container.getBoundingClientRect()
-    const computedStyle = window.getComputedStyle(element)
+    // Try to get layout from cached layoutInfo first (Phase 3 optimization)
+    const layoutInfo = this.getLayoutInfo?.()
+    const layoutRect = layoutInfo?.get(nodeId)
 
-    // Get initial position (for absolute positioned elements)
-    const isAbsolute = computedStyle.position === 'absolute'
-    const startLeft = parseFloat(computedStyle.left) || (rect.left - containerRect.left)
-    const startTop = parseFloat(computedStyle.top) || (rect.top - containerRect.top)
+    let startWidth: number
+    let startHeight: number
+    let startLeft: number
+    let startTop: number
+    let isAbsolute: boolean
+
+    if (layoutRect) {
+      // Use cached layout info - no DOM read needed
+      startWidth = layoutRect.width
+      startHeight = layoutRect.height
+      startLeft = layoutRect.x
+      startTop = layoutRect.y
+      isAbsolute = layoutRect.isAbsolute
+    } else {
+      // Fallback to DOM read if layoutInfo not available
+      const rect = element.getBoundingClientRect()
+      const containerRect = this.container.getBoundingClientRect()
+      const computedStyle = window.getComputedStyle(element)
+
+      startWidth = rect.width
+      startHeight = rect.height
+      isAbsolute = computedStyle.position === 'absolute'
+      startLeft = parseFloat(computedStyle.left) || (rect.left - containerRect.left)
+      startTop = parseFloat(computedStyle.top) || (rect.top - containerRect.top)
+    }
 
     this.activeResize = {
       nodeId,
       handle: position,
       startX: e.clientX,
       startY: e.clientY,
-      startWidth: rect.width,
-      startHeight: rect.height,
+      startWidth,
+      startHeight,
       startLeft,
       startTop,
-      currentWidth: rect.width,
-      currentHeight: rect.height,
+      currentWidth: startWidth,
+      currentHeight: startHeight,
       currentLeft: startLeft,
       currentTop: startTop,
       isAbsolute,
@@ -213,8 +255,8 @@ export class ResizeManager {
     events.emit('resize:start', {
       nodeId,
       handle: position,
-      startWidth: rect.width,
-      startHeight: rect.height,
+      startWidth,
+      startHeight,
     })
   }
 
@@ -411,6 +453,37 @@ export class ResizeManager {
   }
 
   private getAvailableSpace(parentId: string, excludeId: string): { width: number; height: number } {
+    // Try to get layout from cached layoutInfo first (Phase 3 optimization)
+    const layoutInfo = this.getLayoutInfo?.()
+    const parentLayout = layoutInfo?.get(parentId)
+
+    if (parentLayout) {
+      // Use cached layout info - no DOM read needed
+      const { width: parentWidth, height: parentHeight, padding, gap, flexDirection } = parentLayout
+
+      let availableWidth = parentWidth - padding.left - padding.right
+      let availableHeight = parentHeight - padding.top - padding.bottom
+
+      const isHorizontal = flexDirection === 'row'
+
+      // Find siblings from layoutInfo
+      for (const [nodeId, layout] of layoutInfo!) {
+        if (nodeId === excludeId || layout.parentId !== parentId) continue
+
+        if (isHorizontal) {
+          availableWidth -= layout.width + gap
+        } else {
+          availableHeight -= layout.height + gap
+        }
+      }
+
+      return {
+        width: Math.max(MIN_ELEMENT_SIZE, availableWidth),
+        height: Math.max(MIN_ELEMENT_SIZE, availableHeight),
+      }
+    }
+
+    // Fallback to DOM read if layoutInfo not available
     const parent = this.container.querySelector(`[data-mirror-id="${parentId}"]`) as HTMLElement
     if (!parent) return { width: DEFAULT_CONTAINER_SIZE, height: DEFAULT_CONTAINER_SIZE }
 
@@ -450,6 +523,25 @@ export class ResizeManager {
   }
 
   private getChildrenMinSize(nodeId: string): { width: number; height: number } {
+    // Try to get layout from cached layoutInfo first (Phase 3 optimization)
+    const layoutInfo = this.getLayoutInfo?.()
+
+    if (layoutInfo) {
+      let minWidth = MIN_ELEMENT_SIZE
+      let minHeight = MIN_ELEMENT_SIZE
+
+      // Find children from layoutInfo by checking parentId
+      for (const [childNodeId, layout] of layoutInfo) {
+        if (layout.parentId !== nodeId) continue
+
+        minWidth = Math.max(minWidth, layout.width)
+        minHeight = Math.max(minHeight, layout.height)
+      }
+
+      return { width: minWidth, height: minHeight }
+    }
+
+    // Fallback to DOM read if layoutInfo not available
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return { width: MIN_ELEMENT_SIZE, height: MIN_ELEMENT_SIZE }
 
