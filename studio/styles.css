@@ -2523,6 +2523,16 @@
       color: var(--text-inverse);
     }
 
+    .token-picker-value {
+      font-family: var(--font-mono);
+      font-size: var(--font-xs);
+      color: var(--text-muted);
+    }
+
+    .token-picker-item.picker-selected .token-picker-value {
+      color: var(--white-70);
+    }
+
     /* Icon Picker - unified with Token Picker */
     .icon-picker {
       position: fixed;
