@@ -1754,27 +1754,41 @@
     .mir-binding { color: var(--syntax-number) !important; }
     .mir-punctuation { color: var(--syntax-punctuation) !important; }
 
-    /* Autocomplete */
+    /* Autocomplete - unified with Token Picker */
     .cm-tooltip-autocomplete {
-      background: var(--bg-input) !important;
+      background: var(--bg-panel) !important;
       border: 1px solid var(--border-default) !important;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-md);
-      font-size: var(--font-base);
+      border-radius: var(--radius-lg) !important;
+      box-shadow: var(--shadow-lg) !important;
+      min-width: 180px;
+      max-width: 320px;
+      overflow: hidden;
     }
 
     .cm-tooltip-autocomplete ul {
-      max-height: 300px;
+      max-height: 260px;
+      padding: var(--space-2) 0;
     }
 
     .cm-tooltip-autocomplete ul li {
-      padding: var(--space-2) 8px;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-3);
       color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: var(--font-sm);
+      cursor: pointer;
+      transition: background 0.1s;
     }
 
     .cm-tooltip-autocomplete ul li[aria-selected] {
       background: var(--color-primary);
       color: var(--text-inverse);
+    }
+
+    .cm-tooltip-autocomplete ul li:hover:not([aria-selected]) {
+      background: var(--bg-hover);
     }
 
     /* Hide completion icons */
@@ -1786,13 +1800,25 @@
     }
 
     .cm-completionLabel {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: var(--font-sm);
       color: var(--text-primary);
     }
 
+    .cm-tooltip-autocomplete ul li[aria-selected] .cm-completionLabel {
+      color: var(--text-inverse);
+    }
+
     .cm-completionDetail {
+      font-family: var(--font-mono);
+      font-size: var(--font-xs);
       color: var(--text-muted);
-      margin-left: 8px;
-      font-style: var(--font-italic);
+      font-style: normal;
+    }
+
+    .cm-tooltip-autocomplete ul li[aria-selected] .cm-completionDetail {
+      color: var(--white-70);
     }
 
     /* Editor Drop Indicator - shows where component will be inserted */
