@@ -847,7 +847,7 @@ function initializePanelVisibility(): void {
   panelElements.prompt = document.getElementById('chat-panel')
   panelElements.files = document.getElementById('explorer-panel') || document.querySelector('.sidebar')
   panelElements.code = document.querySelector('.editor-panel')
-  panelElements.components = document.getElementById('components-panel')
+  // Components panel is now integrated in explorer (explorer-components-container)
   panelElements.preview = document.querySelector('.preview-panel')
   panelElements.property = document.getElementById('property-panel')
 
@@ -946,9 +946,9 @@ function initializeActivityBar(): void {
   }
 
   // Activity Bar items for all panels
+  // Note: Components panel is now integrated in explorer (files), so no separate toggle
   const items = [
-    { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files' },
-    { id: 'components', icon: ACTIVITY_BAR_ICONS.components, tooltip: 'Components' },
+    { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files & Components' },
     { id: 'code', icon: ACTIVITY_BAR_ICONS.code, tooltip: 'Code Editor' },
     { id: 'preview', icon: ACTIVITY_BAR_ICONS.preview, tooltip: 'Preview' },
     { id: 'property', icon: ACTIVITY_BAR_ICONS.properties, tooltip: 'Properties' },
