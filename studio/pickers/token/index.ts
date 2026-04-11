@@ -301,7 +301,13 @@ export class TokenPicker extends BasePicker {
     item.setAttribute('data-token', token.name)
     item.setAttribute('role', 'option')
 
-    // Preview (for colors)
+    // Name (first)
+    const name = document.createElement('span')
+    name.className = 'token-picker-name'
+    name.textContent = token.name
+    item.appendChild(name)
+
+    // Preview (for colors) - next to value
     if (this.showPreview && token.type === 'color') {
       const preview = document.createElement('span')
       preview.className = 'token-picker-preview'
@@ -309,13 +315,7 @@ export class TokenPicker extends BasePicker {
       item.appendChild(preview)
     }
 
-    // Name
-    const name = document.createElement('span')
-    name.className = 'token-picker-name'
-    name.textContent = token.name
-    item.appendChild(name)
-
-    // Value
+    // Value (last)
     const value = document.createElement('span')
     value.className = 'token-picker-value'
     value.textContent = token.value
