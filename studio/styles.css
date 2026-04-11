@@ -1180,29 +1180,13 @@
       height: 16px;
     }
 
-    /* Cleanup Button */
-    .cleanup-btn {
-      width: auto !important;
-      padding: var(--space-2) 10px !important;
-      gap: var(--space-3);
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      border-radius: var(--radius-sm);
-      transition: all 0.15s ease;
-    }
-
-    .cleanup-btn:hover:not(:disabled) {
-      background: var(--accent);
-      color: white;
-    }
-
-    .cleanup-btn.loading {
+    /* Cleanup Button Loading State */
+    #cleanup-btn.loading {
       opacity: 0.7;
       cursor: wait;
     }
 
-    .cleanup-btn.loading svg {
+    #cleanup-btn.loading svg {
       animation: spin 1s linear infinite;
     }
 
