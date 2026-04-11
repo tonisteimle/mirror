@@ -3,7 +3,12 @@
  */
 
 import { state, actions, events, executor, setCommandContext, getStateSelectionAdapter, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, SetTextContentCommand, createStudioContext, setStudioContext, type Command, type CommandContext, type StudioContext } from './core'
-import { createSyncCoordinator, createLineOffsetService, type SyncCoordinator } from './sync'
+import {
+  createSyncCoordinatorWithPorts,
+  createProductionSyncPorts,
+  createLineOffsetService,
+  type SyncCoordinatorV2 as SyncCoordinator,
+} from './sync'
 import { AutocompleteEngine, getAutocompleteEngine, type AutocompleteRequest, type AutocompleteResult } from './autocomplete'
 import { EditorController, createEditorController, setEditorController, EditorDropHandler, createEditorDropHandler } from './editor'
 import { PreviewController, createPreviewController, setPreviewController, PreviewBreadcrumb, createPreviewBreadcrumb } from './preview'
@@ -484,8 +489,10 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   )
 
   // Sync - LineOffsetService handles editor ↔ SourceMap line translation
+  // Uses v2 hexagonal architecture with ports for testability
   const lineOffset = createLineOffsetService()
-  const syncCoordinator = createSyncCoordinator({ cursorDebounce: 150, debug: false, lineOffset })
+  const syncPorts = createProductionSyncPorts()
+  const syncCoordinator = createSyncCoordinatorWithPorts(syncPorts, { cursorDebounce: 150, debug: false, lineOffset })
   syncCoordinator.setTargets({
     scrollEditorToLine: (editorLine) => {
       // editorLine is already converted from SourceMap line by SyncCoordinator
@@ -498,9 +505,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     // which subscribes to selection:changed events. No callback needed here.
   })
 
-  // Subscribe to selection:changed events for automatic sync
-  // This is the key: all selection changes trigger sync automatically
-  syncCoordinator.subscribe()
+  // Note: createSyncCoordinatorWithPorts() already subscribes to selection:changed events
 
   studioContext.sync = syncCoordinator
   studio.sync = syncCoordinator

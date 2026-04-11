@@ -205,8 +205,10 @@ export class TriggerController {
     }
 
     // Build context
+    // startPos is the position of the trigger char, not cursor position after typing
+    const triggerStartPos = cursorOffset - trigger.char.length
     const context = this.ports.detection.buildContext(cursorOffset, line, {
-      startPos: cursorOffset,
+      startPos: triggerStartPos,
       property: detection.property,
     })
 

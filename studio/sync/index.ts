@@ -3,9 +3,12 @@
  */
 
 // ============================================
-// Legacy Exports (v1)
+// Legacy Exports (v1) - DEPRECATED
+// Production code now uses v2 (hexagonal architecture)
+// These exports are kept for backward compatibility only
 // ============================================
 
+/** @deprecated Use createSyncCoordinatorWithPorts instead */
 export { SyncCoordinator, createSyncCoordinator, type SyncTargets, type SyncCoordinatorOptions } from './sync-coordinator'
 
 // ============================================

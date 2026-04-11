@@ -296,7 +296,8 @@ describe('UC-TR-02: Picker Activation', () => {
 
     const context = controller.getActiveContext()
     expect(context).not.toBeNull()
-    expect(context?.startPos).toBe(11)
+    // startPos is the position of the trigger char '#', not cursor position after typing
+    expect(context?.startPos).toBe(10)
     expect(context?.line.number).toBe(1)
   })
 
@@ -357,7 +358,8 @@ describe('UC-TR-03: Value Selection and Insertion', () => {
     const result = controller.selectCurrent()
 
     const insertions = ports.editor.getInsertions()
-    expect(insertions[0].from).toBe(11) // Start position
+    // from is startPos (position of trigger char '#'), to is cursor position
+    expect(insertions[0].from).toBe(10) // Start position (where '#' is)
     expect(insertions[0].to).toBe(11) // Cursor position
   })
 
@@ -620,9 +622,10 @@ describe('UC-TR-05: Navigation in Picker', () => {
 
   describe('Backspace Handling', () => {
     it('should cancel trigger when backspace goes before start position', () => {
-      // Cursor at start position - backspace would go before
-      ports.editor.setCursor({ line: 1, column: 11, offset: 11 })
-      ports.state.updateContext({ cursorPos: 11 })
+      // Cursor at start position (10, where '#' is) - backspace would go before
+      // With startPos = 10, cursor at 10 triggers: 10 <= 10 = true
+      ports.editor.setCursor({ line: 1, column: 10, offset: 10 })
+      ports.state.updateContext({ cursorPos: 10 })
 
       const handled = controller.handleKeyboard('Backspace')
 
