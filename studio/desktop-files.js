@@ -5,7 +5,7 @@
  * Uses the abstracted storage service for all file operations.
  */
 
-import { storage, projectActions } from './storage'
+import { storage, projectActions } from './dist/index.js'
 import { alert, confirm, confirmDelete } from './dialog.js'
 
 // =============================================================================
