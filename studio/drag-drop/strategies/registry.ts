@@ -6,6 +6,10 @@
 
 import type { DropTarget } from '../types'
 import type { DropStrategy, StrategyRegistry as IStrategyRegistry } from './types'
+import { FlexWithChildrenStrategy } from './flex-with-children'
+import { SimpleInsideStrategy } from './simple-inside'
+import { NonContainerStrategy } from './non-container'
+import { AbsolutePositionStrategy } from './absolute-position'
 
 export class StrategyRegistry implements IStrategyRegistry {
   private strategies: DropStrategy[] = []
@@ -54,11 +58,6 @@ export class StrategyRegistry implements IStrategyRegistry {
  * - Empty containers: insert as child
  */
 export function createWebflowRegistry(): StrategyRegistry {
-  const { FlexWithChildrenStrategy } = require('./flex-with-children')
-  const { SimpleInsideStrategy } = require('./simple-inside')
-  const { NonContainerStrategy } = require('./non-container')
-  const { AbsolutePositionStrategy } = require('./absolute-position')
-
   const registry = new StrategyRegistry()
 
   // Order matters:

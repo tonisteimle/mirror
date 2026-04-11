@@ -531,6 +531,169 @@ describe('DragDropSystem', () => {
 
 ---
 
+## Fortschritt
+
+| Phase | Status | Tests | Details |
+|-------|--------|-------|---------|
+| 1 | ✅ Abgeschlossen | 43 | `state-machine.ts` - Pure State Machine mit Effects |
+| 2 | ✅ Abgeschlossen | 42 | `ports.ts` + `adapters/mock-adapters.ts` |
+| 3 | ✅ Abgeschlossen | 41 | `drag-drop-controller.ts` - Neuer testbarer Controller |
+| 4 | ✅ Abgeschlossen | 31 | `dom-adapters.ts` - Production DOM Implementations |
+| 5 | ✅ Abgeschlossen | 20 | `integration.test.ts` - Full Flow & Adapter Coordination |
+| 6 | ✅ Abgeschlossen | 24 | `native-drag-adapter.ts` - ComponentPanel Integration |
+
+### Phase 1: State Machine (abgeschlossen)
+
+**Datei:** `studio/drag-drop/system/state-machine.ts`
+
+Implementiert:
+- 4 States: `idle`, `dragging`, `over-target`, `dropped`
+- 12 Events: DRAG_START, DRAG_MOVE, DRAG_END, DRAG_CANCEL, TARGET_FOUND, TARGET_LOST, TARGET_UPDATED, ALT_KEY_DOWN/UP, DISABLE, ENABLE, RESET
+- 4 Effects: HIDE_VISUALS, EXECUTE_DROP, NOTIFY_DRAG_START, NOTIFY_DRAG_END
+- 8 Query-Funktionen: isIdle, isDragging, isOverTarget, isDropped, getSource, getTarget, getResult, canDrop
+
+### Phase 2: Port Interfaces (abgeschlossen)
+
+**Datei:** `studio/drag-drop/system/ports.ts`
+
+Definierte Ports:
+- `LayoutPort` - Rect-Daten (layoutInfo/getBoundingClientRect)
+- `StylePort` - CSS Styles (getComputedStyle, elementFromPoint)
+- `EventPort` - Event-Binding (Drag, Keys)
+- `VisualPort` - Visuelles Feedback
+- `ExecutionPort` - Code-Modifikation
+- `TargetDetectionPort` - Target-Erkennung
+- `DragDropPorts` - Combined interface
+
+**Datei:** `studio/drag-drop/system/adapters/mock-adapters.ts`
+
+Mock-Implementierungen für alle Ports mit Test-Helfern.
+
+### Phase 3: DragDropController (abgeschlossen)
+
+**Datei:** `studio/drag-drop/system/drag-drop-controller.ts`
+
+Neuer, vollständig testbarer Controller, der State Machine und Ports kombiniert:
+- Koordiniert Events → State Machine → Effects → Ports
+- Mode-Debouncing für flex ↔ absolute Übergänge
+- Alt-Key Duplicate-Logik (nur für Canvas-Elemente)
+- Lifecycle: init(), dispose(), disable(), enable()
+- Query-Methoden: getState(), getContext(), isOverValidTarget(), getCurrentResult()
+
+**Test-Datei:** `tests/studio/drag-drop/drag-drop-controller.test.ts`
+
+Test-Kategorien:
+- Initialization (3 tests)
+- Drag Start (4 tests)
+- Target Detection (5 tests)
+- Drop Execution (5 tests)
+- Drop without Target (3 tests)
+- Drag Cancel (4 tests)
+- Alt Key / Duplicate (4 tests)
+- Disable/Enable (4 tests)
+- Dispose (3 tests)
+- Query Methods (4 tests)
+- Full Drag Sequence (3 tests)
+
+### Phase 4: DOM Adapters (abgeschlossen)
+
+**Datei:** `studio/drag-drop/system/adapters/dom-adapters.ts`
+
+Production-Implementierungen der Port-Interfaces für DOM-Umgebung:
+
+- `createDOMLayoutPort` - Rect-Abfragen via layoutInfo oder DOM-Query
+- `createDOMStylePort` - Layout-Type und Direction via getComputedStyle
+- `createDOMEventPort` - Event-Handler-Registry mit Keyboard-Unterstützung
+- `createDOMVisualPort` - Wraps VisualSystem für Indicator/Outline/Ghost
+- `createDOMExecutionPort` - Wraps CodeExecutor für Drop-Ausführung
+- `createDOMTargetDetectionPort` - Wraps TargetDetector und StrategyRegistry
+- `createDOMPorts` - Factory-Funktion für alle Ports
+
+**Test-Datei:** `tests/studio/drag-drop/dom-adapters.test.ts`
+
+Test-Kategorien:
+- DOMLayoutPort (6 tests)
+- DOMStylePort (6 tests)
+- DOMEventPort (7 tests)
+- DOMVisualPort (5 tests)
+- DOMTargetDetectionPort (5 tests)
+- createDOMPorts (2 tests)
+
+### Phase 5: Integration Tests (abgeschlossen)
+
+**Datei:** `tests/studio/drag-drop/integration.test.ts`
+
+End-to-End Tests für das gesamte Drag-Drop-System:
+
+- Full Drag-Drop Flow (Palette → Canvas)
+- Canvas Element Reordering
+- Alt Key Duplicate Mode
+- Disable/Enable Lifecycle
+- DOM Adapter Coordination
+- Strategy Selection (Flex, Positioned)
+
+**Test-Kategorien:**
+- Full Drag-Drop Flow (6 tests)
+- Canvas Element Reordering (2 tests)
+- Alt Key Duplicate Mode (2 tests)
+- Disable/Enable (3 tests)
+- DOM Adapter Coordination (4 tests)
+- Strategy Selection (3 tests)
+
+### Phase 6: Native Drag Adapter (abgeschlossen)
+
+**Datei:** `studio/drag-drop/system/adapters/native-drag-adapter.ts`
+
+Brücke zwischen ComponentPanel (HTML5 Drag) und DragDropController:
+
+```
+ComponentPanel (dragstart)
+      │
+      ▼ dataTransfer.setData('application/mirror-component', ...)
+      │
+NativeDragAdapter (dragover/drop auf Container)
+      │
+      ▼ triggerDragStart/Move/End/Cancel
+      │
+EventPort → DragDropController
+```
+
+Features:
+- Erkennt `application/mirror-component` MIME-Type
+- Extrahiert DragSource aus DataTransfer
+- Konvertiert HTML5 Events → EventPort Aufrufe
+- Unterstützt Disable-State
+- Testet mit Mock-DragEvents
+
+**Test-Datei:** `tests/studio/drag-drop/native-drag-adapter.test.ts`
+
+Test-Kategorien:
+- Initialization (4 tests)
+- Drag Start (4 tests)
+- Drag Move (3 tests)
+- Drag End/Drop (3 tests)
+- Drag Cancel (3 tests)
+- Disabled State (1 test)
+- Non-Mirror Drags (2 tests)
+- Custom Size Provider (1 test)
+- Integration with DragDropController (3 tests)
+
+---
+
+## Refactoring Abgeschlossen
+
+Alle 6 Phasen sind abgeschlossen. Das System hat jetzt:
+
+- **201 neue Tests** (43 + 42 + 41 + 31 + 20 + 24)
+- **439 Tests insgesamt** für Drag & Drop
+- **Best-in-Class Testbarkeit** durch Hexagonal Architecture
+- **Pure State Machine** ohne DOM-Abhängigkeiten
+- **Mock Adapters** für schnelle Unit-Tests
+- **DOM Adapters** für Production
+- **Native Drag Adapter** für ComponentPanel Integration
+
+---
+
 ## Risiken
 
 1. **Breaking Changes:** Event-Timing könnte sich ändern
