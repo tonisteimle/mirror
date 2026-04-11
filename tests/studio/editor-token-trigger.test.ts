@@ -49,7 +49,7 @@ describe('Token Trigger', () => {
       expect(trigger.type).toBe('char')
       if (trigger.type === 'char') {
         expect(trigger.char).toBe('$')
-        expect(trigger.contextPattern).toBeDefined()
+        // contextPattern removed - shouldActivate handles activation logic
       }
     })
   })

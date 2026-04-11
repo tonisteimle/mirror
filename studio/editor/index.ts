@@ -2,9 +2,64 @@
  * Editor Module - CodeMirror Wrapper
  *
  * Handles CodeMirror integration with focus tracking and cursor sync.
+ *
+ * This module provides two architectures:
+ * 1. Legacy: Direct CodeMirror integration (EditorController class below)
+ * 2. Hexagonal: Port-based architecture for testability (editor-controller.ts)
  */
 
 import { state, actions, events } from '../core'
+
+// ============================================
+// New Hexagonal Architecture (v2)
+// ============================================
+
+// Ports (interfaces)
+export type {
+  EditorPort,
+  ExtendedEditorPort,
+  StatePort,
+  TimerPort,
+  EditorPorts,
+  CursorPosition as EditorCursorPosition,
+  StateCursor,
+  SelectionOrigin,
+  Selection as EditorSelection,
+  LineInfo,
+  CleanupFn as EditorCleanupFn,
+} from './ports'
+
+// New EditorController with ports
+export {
+  EditorController as EditorControllerV2,
+  createEditorControllerWithPorts,
+  type EditorControllerConfig as EditorControllerV2Config,
+} from './editor-controller'
+
+// Adapters
+export {
+  // Mock adapters for testing
+  createMockEditorPort,
+  createMockStatePort,
+  createMockTimerPort,
+  createMockEditorPorts,
+  type MockEditorPort,
+  type MockStatePort,
+  type MockTimerPort,
+  type MockEditorPorts,
+  // Production adapters
+  createCodeMirrorAdapter,
+  createEditorUpdateExtension,
+  createStatePort,
+  createTimerPort,
+  createProductionEditorPorts,
+  type CodeMirrorAdapterConfig,
+  type ProductionEditorPortsConfig,
+} from './adapters'
+
+// ============================================
+// Legacy Exports (v1)
+// ============================================
 
 // Re-export legacy icon trigger (for backward compatibility)
 export {

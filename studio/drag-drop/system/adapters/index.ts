@@ -38,5 +38,5 @@ export {
   MIRROR_COMPONENT_MIME,
   type NativeDragAdapter,
   type NativeDragAdapterConfig,
-  type ComponentDragData,
+  type NativeComponentDragData,
 } from './native-drag-adapter'

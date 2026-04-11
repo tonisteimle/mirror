@@ -318,4 +318,299 @@ describe('AbsolutePositionStrategy', () => {
       expect(hint).not.toBeNull()
     })
   })
+
+  // ============================================
+  // UC-ABS-09: Corner positioning
+  // ============================================
+
+  describe('UC-ABS-09: Corner positioning', () => {
+    it('calculates top-left corner position (0, 0)', () => {
+      // Container at (100, 100), 200x150
+      const element = createMockElement(
+        createRect(100, 100, 200, 150),
+        { left: 0, top: 0 }
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      // Ghost size 20x20, cursor at top-left corner
+      const ghostSize: Size = { width: 20, height: 20 }
+      const source = createMockPaletteSource({ size: ghostSize })
+
+      // Cursor at container top-left + half ghost size
+      // To get x=0, y=0: cursor needs to be at (100 + 10, 100 + 10)
+      const cursor: Point = { x: 110, y: 110 }
+      const result = strategy.calculate(cursor, target, source)
+
+      expect(result.position!.x).toBe(0)
+      expect(result.position!.y).toBe(0)
+    })
+
+    it('calculates bottom-right corner position', () => {
+      // Container at (100, 100), 200x150
+      const element = createMockElement(
+        createRect(100, 100, 200, 150),
+        { left: 0, top: 0 }
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      // Ghost size 20x20
+      // Bottom-right position: x = containerW - elementW = 200 - 20 = 180
+      //                        y = containerH - elementH = 150 - 20 = 130
+      const ghostSize: Size = { width: 20, height: 20 }
+      const source = createMockPaletteSource({ size: ghostSize })
+
+      // To get x=180, y=130: cursor needs to be at (100 + 180 + 10, 100 + 130 + 10) = (290, 240)
+      const cursor: Point = { x: 290, y: 240 }
+      const result = strategy.calculate(cursor, target, source)
+
+      expect(result.position!.x).toBe(180)
+      expect(result.position!.y).toBe(130)
+    })
+
+    it('calculates top-right corner position', () => {
+      const element = createMockElement(
+        createRect(100, 100, 200, 150),
+        { left: 0, top: 0 }
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      const ghostSize: Size = { width: 20, height: 20 }
+      const source = createMockPaletteSource({ size: ghostSize })
+
+      // Top-right: x = 180, y = 0
+      // Cursor at (100 + 180 + 10, 100 + 10) = (290, 110)
+      const cursor: Point = { x: 290, y: 110 }
+      const result = strategy.calculate(cursor, target, source)
+
+      expect(result.position!.x).toBe(180)
+      expect(result.position!.y).toBe(0)
+    })
+
+    it('calculates bottom-left corner position', () => {
+      const element = createMockElement(
+        createRect(100, 100, 200, 150),
+        { left: 0, top: 0 }
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      const ghostSize: Size = { width: 20, height: 20 }
+      const source = createMockPaletteSource({ size: ghostSize })
+
+      // Bottom-left: x = 0, y = 130
+      // Cursor at (100 + 10, 100 + 130 + 10) = (110, 240)
+      const cursor: Point = { x: 110, y: 240 }
+      const result = strategy.calculate(cursor, target, source)
+
+      expect(result.position!.x).toBe(0)
+      expect(result.position!.y).toBe(130)
+    })
+  })
+
+  // ============================================
+  // UC-ABS-13: Large scroll offset
+  // ============================================
+
+  describe('UC-ABS-13: Large scroll offset handling', () => {
+    it('handles scroll offset greater than 100', () => {
+      const element = createMockElement(
+        createRect(100, 100, 400, 300),
+        { left: 150, top: 120 } // Large scroll
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      const cursor: Point = { x: 200, y: 180 }
+      const source = createMockPaletteSource({ size: { width: 100, height: 40 } })
+
+      const result = strategy.calculate(cursor, target, source)
+
+      // x = (200 - 100 + 150) - 50 = 200
+      // y = (180 - 100 + 120) - 20 = 180
+      expect(result.position!.x).toBe(200)
+      expect(result.position!.y).toBe(180)
+    })
+
+    it('handles very large scroll offset', () => {
+      const element = createMockElement(
+        createRect(100, 100, 400, 300),
+        { left: 500, top: 400 } // Very large scroll
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      const cursor: Point = { x: 200, y: 200 }
+      const source = createMockPaletteSource({ size: { width: 100, height: 40 } })
+
+      const result = strategy.calculate(cursor, target, source)
+
+      // x = (200 - 100 + 500) - 50 = 550
+      // y = (200 - 100 + 400) - 20 = 480
+      expect(result.position!.x).toBe(550)
+      expect(result.position!.y).toBe(480)
+    })
+
+    it('handles horizontal-only scroll', () => {
+      const element = createMockElement(
+        createRect(100, 100, 400, 300),
+        { left: 200, top: 0 } // Only horizontal scroll
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      const cursor: Point = { x: 200, y: 150 }
+      const source = createMockPaletteSource({ size: { width: 100, height: 40 } })
+
+      const result = strategy.calculate(cursor, target, source)
+
+      // x = (200 - 100 + 200) - 50 = 250
+      // y = (150 - 100 + 0) - 20 = 30
+      expect(result.position!.x).toBe(250)
+      expect(result.position!.y).toBe(30)
+    })
+
+    it('handles vertical-only scroll', () => {
+      const element = createMockElement(
+        createRect(100, 100, 400, 300),
+        { left: 0, top: 300 } // Only vertical scroll
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      const cursor: Point = { x: 200, y: 200 }
+      const source = createMockPaletteSource({ size: { width: 100, height: 40 } })
+
+      const result = strategy.calculate(cursor, target, source)
+
+      // x = (200 - 100 + 0) - 50 = 50
+      // y = (200 - 100 + 300) - 20 = 380
+      expect(result.position!.x).toBe(50)
+      expect(result.position!.y).toBe(380)
+    })
+  })
+
+  // ============================================
+  // UC-ABS-14: Zoom correction (documentation)
+  // Note: Zoom correction is handled by the controller/adapter layer,
+  // not by the strategy itself. These tests document the expected
+  // behavior when zoom-corrected coordinates are passed in.
+  // ============================================
+
+  describe('UC-ABS-14: Zoom correction (pre-corrected input)', () => {
+    it('calculates correct position when cursor is zoom-corrected', () => {
+      // In a zoomed preview (50% zoom), the controller/adapter layer
+      // should pre-correct the cursor position before calling the strategy.
+      // This test verifies the strategy handles the corrected input correctly.
+
+      const element = createMockElement(
+        createRect(100, 100, 400, 300),
+        { left: 0, top: 0 }
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      // Simulating: Screen cursor at (200, 150), container at (100, 100), zoom = 0.5
+      // Pre-corrected cursor: ((200 - 100) / 0.5, (150 - 100) / 0.5) = (200, 100)
+      // But we pass it as if container is at (0, 0) after correction
+      // Actually the strategy expects screen coordinates...
+      // The zoom correction formula: position = (screenCursor - containerOffset) / zoom
+
+      // Let's test what the strategy receives after zoom correction:
+      // If zoom = 0.5, screen cursor = (200, 150), container screen pos = (100, 100)
+      // The effective cursor relative to container = (200 - 100) / 0.5 = 200
+      // Then the strategy gets cursor (200, 100) relative to unzoomed container
+
+      // For now, test that strategy correctly handles large relative positions
+      const zoomCorrectedCursor: Point = { x: 300, y: 200 }
+      const source = createMockPaletteSource({ size: { width: 100, height: 40 } })
+
+      const result = strategy.calculate(zoomCorrectedCursor, target, source)
+
+      // x = 300 - 100 - 50 = 150
+      // y = 200 - 100 - 20 = 80
+      expect(result.position!.x).toBe(150)
+      expect(result.position!.y).toBe(80)
+    })
+
+    it('handles zoom=1 (no zoom) correctly', () => {
+      // With zoom=1, coordinates should be used directly
+      const element = createMockElement(
+        createRect(100, 100, 400, 300),
+        { left: 0, top: 0 }
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      const cursor: Point = { x: 200, y: 150 }
+      const source = createMockPaletteSource({ size: { width: 100, height: 40 } })
+
+      const result = strategy.calculate(cursor, target, source)
+
+      // No zoom correction needed
+      expect(result.position!.x).toBe(50)  // 200 - 100 - 50
+      expect(result.position!.y).toBe(30)  // 150 - 100 - 20
+    })
+  })
+
+  // ============================================
+  // Canvas element repositioning
+  // ============================================
+
+  describe('Canvas element repositioning', () => {
+    it('calculates new position for canvas element being moved', () => {
+      const element = createMockElement(
+        createRect(100, 100, 400, 300),
+        { left: 0, top: 0 }
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      // Canvas source (existing element)
+      const source = createMockCanvasSource({
+        size: { width: 80, height: 40 },
+      })
+
+      const cursor: Point = { x: 300, y: 250 }
+      const result = strategy.calculate(cursor, target, source)
+
+      expect(result.placement).toBe('absolute')
+      expect(result.position!.x).toBe(160) // 300 - 100 - 40
+      expect(result.position!.y).toBe(130) // 250 - 100 - 20
+    })
+
+    it('uses canvas element size for centering', () => {
+      const element = createMockElement(
+        createRect(0, 0, 400, 300),
+        { left: 0, top: 0 }
+      )
+      const target = createMockDropTarget({
+        element: element as unknown as HTMLElement,
+      })
+
+      const source = createMockCanvasSource({
+        size: { width: 200, height: 100 }, // Large element
+      })
+
+      const cursor: Point = { x: 200, y: 150 }
+      const result = strategy.calculate(cursor, target, source)
+
+      // Centered: x = 200 - 100 = 100, y = 150 - 50 = 100
+      expect(result.position!.x).toBe(100)
+      expect(result.position!.y).toBe(100)
+    })
+  })
 })

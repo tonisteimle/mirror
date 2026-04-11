@@ -405,10 +405,10 @@ describe('ComponentPanel', () => {
 
       const sections = panel.getSections()
 
-      // Default panel has 'Basic' and 'Form' sections (among others)
+      // Default panel has 'Layout' and 'Components' sections
       expect(sections.length).toBeGreaterThanOrEqual(1)
-      expect(sections.find(s => s.name === 'Basic')).toBeDefined()
-      expect(sections.find(s => s.name === 'Form')).toBeDefined()
+      expect(sections.find(s => s.name === 'Layout')).toBeDefined()
+      expect(sections.find(s => s.name === 'Components')).toBeDefined()
     })
   })
 

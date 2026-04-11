@@ -105,7 +105,8 @@ Card
     })
 
     it('should parse different easing functions', () => {
-      const easings = ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out', 'spring', 'bounce']
+      // These are the easing functions supported by the DSL (see compiler/schema/dsl.ts)
+      const easings = ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out', 'bounce']
 
       for (const easing of easings) {
         const source = `

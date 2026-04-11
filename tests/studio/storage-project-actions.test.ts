@@ -322,13 +322,13 @@ describe('exportProject', () => {
     // Clear storage
     mockStorage.clear()
 
-    // Mock alert
-    const alertMock = vi.fn()
-    global.alert = alertMock
+    // Mock MirrorDialog.alert (custom dialog module)
+    const alertMock = vi.fn().mockResolvedValue(undefined)
+    ;(global as any).MirrorDialog = { alert: alertMock }
 
     await exportProject()
 
-    expect(alertMock).toHaveBeenCalledWith('Keine Dateien zum Exportieren.')
+    expect(alertMock).toHaveBeenCalledWith('Keine Dateien zum Exportieren.', { title: 'Export fehlgeschlagen' })
   })
 })
 

@@ -29,7 +29,11 @@ import type { EventPort } from '../ports'
 
 export const MIRROR_COMPONENT_MIME = 'application/mirror-component'
 
-export interface ComponentDragData {
+/**
+ * Data transferred during native HTML5 drag operations.
+ * Similar to ComponentDragData from panels/components/types but simplified.
+ */
+export interface NativeComponentDragData {
   componentId: string
   componentName: string
   properties?: string
@@ -194,7 +198,7 @@ export function createNativeDragAdapter(config: NativeDragAdapterConfig): Native
       const jsonData = e.dataTransfer.getData(MIRROR_COMPONENT_MIME)
       if (!jsonData) return null
 
-      const data: ComponentDragData = JSON.parse(jsonData)
+      const data: NativeComponentDragData = JSON.parse(jsonData)
       const size = getDefaultSize(data.componentName)
 
       return {
@@ -290,9 +294,9 @@ export function createMockDragEvent(
  */
 export function createMockComponentData(
   componentName: string,
-  options: Partial<ComponentDragData> = {}
+  options: Partial<NativeComponentDragData> = {}
 ): string {
-  const data: ComponentDragData = {
+  const data: NativeComponentDragData = {
     componentId: options.componentId ?? componentName.toLowerCase(),
     componentName,
     properties: options.properties,
