@@ -79,6 +79,38 @@ export interface PanelVisibility {
   property: boolean
 }
 
+/**
+ * Layout information for a single element
+ * Extracted once after render, used by all visual systems (handles, resize, overlays)
+ */
+export interface LayoutRect {
+  /** Position relative to preview container */
+  x: number
+  y: number
+  /** Element dimensions */
+  width: number
+  height: number
+  /** Padding values */
+  padding: {
+    top: number
+    right: number
+    bottom: number
+    left: number
+  }
+  /** Gap between children (for flex/grid containers) */
+  gap: number
+  /** Border radius */
+  radius: number
+  /** Whether element has position: absolute */
+  isAbsolute: boolean
+  /** Parent node ID (for hierarchy) */
+  parentId: string | null
+  /** Flex direction if container */
+  flexDirection: 'row' | 'column' | null
+  /** Whether element is a flex/grid container */
+  isContainer: boolean
+}
+
 export interface StudioState {
   source: string
   /** Resolved source = prelude + current file (used by CodeModifier to match SourceMap positions) */
@@ -122,6 +154,10 @@ export interface StudioState {
   previewZoom: number
   /** Play mode - disables editor interactions, allows component testing */
   playMode: boolean
+  /** Layout information for all elements, extracted after render */
+  layoutInfo: Map<string, LayoutRect>
+  /** Layout version - incremented after each layout extraction */
+  layoutVersion: number
 }
 
 export type Subscriber<T> = (state: T, prevState: T) => void
@@ -174,7 +210,7 @@ const defaultPanelVisibility: PanelVisibility = {
   prompt: true,
   files: true,
   code: true,
-  components: true,
+  components: false,  // Standalone panel, starts hidden
   preview: true,
   property: true,
 }
@@ -215,6 +251,8 @@ const initialState: StudioState = {
   inlineEditNodeId: null,
   previewZoom: 100,
   playMode: false,
+  layoutInfo: new Map(),
+  layoutVersion: 0,
 }
 
 export const state = new Store<StudioState>(initialState)
@@ -797,6 +835,43 @@ export const actions = {
     const current = state.get().playMode
     actions.setPlayMode(!current)
   },
+
+  // ==========================================================================
+  // Layout Info (Phase 1 of Preview Architecture Refactoring)
+  // ==========================================================================
+
+  /**
+   * Set layout information for all elements
+   * Called by LayoutExtractor after render completes
+   * @param layoutInfo - Map from nodeId to LayoutRect
+   */
+  setLayoutInfo(layoutInfo: Map<string, LayoutRect>): void {
+    const currentVersion = state.get().layoutVersion
+    state.set({
+      layoutInfo,
+      layoutVersion: currentVersion + 1,
+    })
+    events.emit('layout:updated', { version: currentVersion + 1, count: layoutInfo.size })
+  },
+
+  /**
+   * Get layout rect for a specific node
+   * @param nodeId - The node ID to get layout for
+   * @returns LayoutRect or null if not found
+   */
+  getLayoutRect(nodeId: string): LayoutRect | null {
+    return state.get().layoutInfo.get(nodeId) ?? null
+  },
+
+  /**
+   * Clear layout info (e.g., when switching files)
+   */
+  clearLayoutInfo(): void {
+    state.set({
+      layoutInfo: new Map(),
+      layoutVersion: 0,
+    })
+  },
 }
 
 /**
@@ -811,6 +886,8 @@ export const selectors = {
   getSourceMap: () => state.get().sourceMap,
   getAST: () => state.get().ast,
   getPreviewZoom: () => state.get().previewZoom,
+  getLayoutInfo: () => state.get().layoutInfo,
+  getLayoutVersion: () => state.get().layoutVersion,
 }
 
 /**
