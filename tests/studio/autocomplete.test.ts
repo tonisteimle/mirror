@@ -61,9 +61,9 @@ describe('AutocompleteEngine', () => {
         expect(context).toBe('property')
       })
 
-      it('should detect property context on indented line', () => {
+      it('should detect element context on indented line (where new element is expected)', () => {
         const context = engine.detectContext('  ', 2)
-        expect(context).toBe('property')
+        expect(context).toBe('element')
       })
 
       it('should detect property context after colon', () => {
@@ -110,9 +110,9 @@ describe('AutocompleteEngine', () => {
         expect(context).toBe('none')
       })
 
-      it('should return none for empty line', () => {
+      it('should return element context for empty line (where new element is expected)', () => {
         const context = engine.detectContext('', 0)
-        expect(context).toBe('none')
+        expect(context).toBe('element')
       })
     })
   })
@@ -238,13 +238,54 @@ describe('AutocompleteEngine', () => {
       expect(result.completions.length).toBeGreaterThan(0)
     })
 
-    it('should return completions on indented line', () => {
+    it('should return element completions on indented line', () => {
       const result = engine.getCompletions({
         lineText: '  ',
         cursorColumn: 2
       })
-      expect(result.context).toBe('property')
+      expect(result.context).toBe('element')
       expect(result.completions.length).toBeGreaterThan(0)
+      // Should include primitives/components, not properties
+      const labels = result.completions.map(c => c.label)
+      expect(labels).toContain('Frame')
+      expect(labels).toContain('Text')
+    })
+
+    it('should NOT include primitives/components in property context', () => {
+      const result = engine.getCompletions({
+        lineText: 'Frame ',
+        cursorColumn: 6
+      })
+      expect(result.context).toBe('property')
+      const labels = result.completions.map(c => c.label)
+      // Should NOT include Frame, Text (those are primitives)
+      expect(labels).not.toContain('Frame')
+      expect(labels).not.toContain('Button')
+      // Should include properties
+      expect(labels).toContain('bg')
+      expect(labels).toContain('pad')
+    })
+
+    it('should include user-defined components in element context', () => {
+      const sourceCode = `
+MyButton: bg #2271C1, pad 10 20
+Card: bg #1a1a1a, rad 8
+
+Frame
+  `
+      const result = engine.getCompletions({
+        lineText: '  ',
+        cursorColumn: 2,
+        fullSource: sourceCode
+      })
+      expect(result.context).toBe('element')
+      const labels = result.completions.map(c => c.label)
+      // Should include user-defined components
+      expect(labels).toContain('MyButton')
+      expect(labels).toContain('Card')
+      // And also primitives
+      expect(labels).toContain('Frame')
+      expect(labels).toContain('Text')
     })
   })
 
@@ -527,12 +568,12 @@ describe('Edge Cases', () => {
     expect(result).toBeDefined()
   })
 
-  it('should handle whitespace-only line', () => {
+  it('should handle whitespace-only line (element context)', () => {
     const result = engine.getCompletions({
       lineText: '    ',
       cursorColumn: 4
     })
-    expect(result.context).toBe('property')
+    expect(result.context).toBe('element')
   })
 
   it('should handle tab indentation', () => {
@@ -928,14 +969,14 @@ Sidebar: = Box
     expect(names).toContain('Sidebar')
   })
 
-  it('should extract instance names', () => {
+  it('should extract instance names (aliases)', () => {
     const source = `
-Header = Navbar
-Footer = Box
+AppHeader = Navbar
+AppFooter = Box
 `
     const names = extractElementNames(source)
-    expect(names).toContain('Header')
-    expect(names).toContain('Footer')
+    expect(names).toContain('AppHeader')
+    expect(names).toContain('AppFooter')
   })
 
   it('should not include primitive components', () => {

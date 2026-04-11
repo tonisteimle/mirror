@@ -133,6 +133,8 @@ export interface StudioEvents {
   'userSettings:loaded': { settings: Record<string, unknown> }
   /** Preview rendered */
   'preview:rendered': { success: boolean }
+  /** Layout info extracted (Phase 1 of Preview Architecture) */
+  'layout:updated': { version: number; count: number }
   /** Layout inference events */
   'layout-inference:detected': { groups: unknown[] }
   'layout-inference:converted': { group: unknown; newSource?: string }

@@ -41,7 +41,8 @@ export interface AutocompleteResult {
 }
 
 export type AutocompleteContext =
-  | 'property'     // After comma, component name, or colon
+  | 'element'      // At line start or indented - expects element/component
+  | 'property'     // After element name, comma - expects properties only
   | 'value'        // After property name
   | 'state'        // After "state "
   | 'slot'         // Indented with capital letter (Zag slot)
@@ -108,35 +109,59 @@ export const ALL_COMPLETIONS: Completion[] = [
   ...SCHEMA_COMPLETIONS.actions,
 ]
 
+// Property-only completions (no primitives/components) - for property context
+export const PROPERTY_COMPLETIONS: Completion[] = [
+  ...SCHEMA_COMPLETIONS.properties,
+  ...SCHEMA_COMPLETIONS.events,
+  ...MIRROR_KEYWORDS,
+]
+
+// Element completions (primitives + Zag components) - for element context
+export const ELEMENT_COMPLETIONS: Completion[] = [
+  ...SCHEMA_COMPLETIONS.primitives,
+  ...SCHEMA_COMPLETIONS.zagComponents,
+]
+
 /**
- * Extract named elements from source code for target completion
+ * Extract user-defined component names from source code
+ * Used for element context completions and target completions
  */
 export function extractElementNames(source: string): string[] {
   const names: string[] = []
   const lines = source.split('\n')
+  const primitiveNames = new Set(SCHEMA_COMPLETIONS.primitives.map(c => c.label))
+  const zagNames = new Set(SCHEMA_COMPLETIONS.zagComponents.map(c => c.label))
 
   for (const line of lines) {
-    // Definition: Name: = Component or Name: = properties
-    const defMatch = line.match(/^([A-Z][a-zA-Z0-9_]*)\s*:\s*=/)
+    // Component definition: Name: properties (e.g., "MyButton: bg #2271C1, pad 10")
+    // Also matches: Name: = Component or Name as Base: properties
+    const defMatch = line.match(/^([A-Z][a-zA-Z0-9_]*)\s*(?:as\s+\w+)?\s*:/)
     if (defMatch) {
-      names.push(defMatch[1])
+      const name = defMatch[1]
+      // Don't add primitives or Zag components as user components
+      if (!primitiveNames.has(name) && !zagNames.has(name)) {
+        names.push(name)
+      }
       continue
     }
 
-    // Instance: Name = Component
+    // Instance: Name = Component (alias assignment)
     const instMatch = line.match(/^([A-Z][a-zA-Z0-9_]*)\s*=\s*[A-Z]/)
     if (instMatch) {
-      names.push(instMatch[1])
+      const name = instMatch[1]
+      if (!primitiveNames.has(name) && !zagNames.has(name)) {
+        names.push(name)
+      }
       continue
     }
 
     // Named component at line start (uppercase, not a definition)
+    // This catches components that are used but not defined in the same file
     const compMatch = line.match(/^([A-Z][a-zA-Z0-9_]*)(?:\s|$)/)
     if (compMatch && !line.includes('=') && !line.includes(':')) {
       const name = compMatch[1]
-      // Only add if it looks like a custom component (not primitive)
-      const primitiveNames = SCHEMA_COMPLETIONS.primitives.map(c => c.label)
-      if (!primitiveNames.includes(name)) {
+      // Only add if it looks like a custom component (not primitive/Zag)
+      if (!primitiveNames.has(name) && !zagNames.has(name)) {
         names.push(name)
       }
     }
@@ -251,9 +276,14 @@ export class AutocompleteEngine {
       }
     }
 
-    // After comma, colon, or component name → properties
+    // Element context: at line start or just indentation (expects component/primitive)
+    // This is where you type a new element name
+    if (textBefore.match(/^\s*$/)) {
+      return 'element'
+    }
+
+    // Property context: after element name or comma (expects properties only)
     if (textBefore.match(/,\s*$/) ||
-        textBefore.match(/^\s+$/) ||
         textBefore.match(/^[A-Z]\w*\s+$/) ||
         textBefore.match(/^\s+[A-Z]\w*\s+$/)) {
       return 'property'
@@ -262,6 +292,11 @@ export class AutocompleteEngine {
     // Definition colon (Name: =) → property context
     if (textBefore.match(/:\s*$/) && !eventPattern.test(textBefore)) {
       return 'property'
+    }
+
+    // Typing a capitalized word at line start → element context
+    if (textBefore.match(/^\s*[A-Z]\w*$/) && !textBefore.includes(' ')) {
+      return 'element'
     }
 
     return 'none'
@@ -397,22 +432,88 @@ export class AutocompleteEngine {
       }
     }
 
-    // Property context (includes keywords for explicit trigger)
-    if (context === 'property' || explicit) {
-      let completions = [...ALL_COMPLETIONS]
+    // Element context: primitives, Zag components, and user-defined components
+    if (context === 'element') {
+      let completions = [...ELEMENT_COMPLETIONS]
 
-      // Add Zag slot completions if in a Zag component
+      // Add user-defined components from source
       if (fullSource) {
+        const userComponents = extractElementNames(fullSource)
+        const userCompletions: Completion[] = userComponents.map(name => ({
+          label: name,
+          detail: 'user component',
+          type: 'component' as const,
+          boost: 11, // Higher than primitives so user components show first
+        }))
+        completions = [...userCompletions, ...completions]
+
+        // Add Zag slot completions if in a Zag component
         const parentZag = findParentZagComponent(fullSource, lineNumber)
         if (parentZag) {
           const slots = getZagSlotsForComponent(parentZag)
           const slotCompletions: Completion[] = slots.map(slot => ({
-            label: `${parentZag}${slot}`,
+            label: `${slot}:`,
             detail: `Slot of ${parentZag}`,
             type: 'component' as const,
+            boost: 12,
+          }))
+          // Also add item keywords
+          const itemKeywords = getZagItemKeywords(parentZag)
+          const itemCompletions: Completion[] = itemKeywords.map(keyword => ({
+            label: keyword,
+            detail: `Item in ${parentZag}`,
+            type: 'component' as const,
+            boost: 11,
+          }))
+          completions = [...slotCompletions, ...itemCompletions, ...completions]
+        }
+      }
+
+      if (typed) {
+        completions = completions.filter(c =>
+          c.label.toLowerCase().startsWith(typed) ||
+          c.label.toLowerCase().includes(typed)
+        )
+        // Sort: prefix matches first, then by boost
+        completions.sort((a, b) => {
+          const aStarts = a.label.toLowerCase().startsWith(typed)
+          const bStarts = b.label.toLowerCase().startsWith(typed)
+          if (aStarts && !bStarts) return -1
+          if (!aStarts && bStarts) return 1
+          const aBoost = a.boost ?? 0
+          const bBoost = b.boost ?? 0
+          if (aBoost !== bBoost) return bBoost - aBoost
+          return a.label.localeCompare(b.label)
+        })
+      } else {
+        // Sort by boost (user components first)
+        completions.sort((a, b) => {
+          const aBoost = a.boost ?? 0
+          const bBoost = b.boost ?? 0
+          if (aBoost !== bBoost) return bBoost - aBoost
+          return a.label.localeCompare(b.label)
+        })
+      }
+
+      return { completions: completions.slice(0, 50), from, to: cursorColumn, context }
+    }
+
+    // Property context: only properties, events, keywords (NO primitives/components)
+    if (context === 'property') {
+      let completions = [...PROPERTY_COMPLETIONS]
+
+      // Add Zag-specific props if in a Zag component
+      if (fullSource) {
+        const parentZag = findParentZagComponent(fullSource, lineNumber)
+        if (parentZag) {
+          const zagProps = getZagPropsForComponent(parentZag)
+          const zagPropCompletions: Completion[] = zagProps.map(prop => ({
+            label: prop,
+            detail: `${parentZag} prop`,
+            type: 'property' as const,
             boost: 10,
           }))
-          completions = [...slotCompletions, ...completions]
+          completions = [...zagPropCompletions, ...completions]
         }
       }
 
@@ -436,7 +537,6 @@ export class AutocompleteEngine {
           const bPriority = PRIORITY_PROPERTIES.has(b.label)
           if (aPriority && !bPriority) return -1
           if (!aPriority && bPriority) return 1
-          // Boost higher-boosted completions
           const aBoost = a.boost ?? 0
           const bBoost = b.boost ?? 0
           if (aBoost !== bBoost) return bBoost - aBoost
@@ -445,6 +545,31 @@ export class AutocompleteEngine {
       }
 
       return { completions: completions.slice(0, 50), from, to: cursorColumn, context }
+    }
+
+    // Explicit trigger (Ctrl+Space) - show all completions
+    if (explicit) {
+      let completions = [...ALL_COMPLETIONS]
+
+      if (fullSource) {
+        const userComponents = extractElementNames(fullSource)
+        const userCompletions: Completion[] = userComponents.map(name => ({
+          label: name,
+          detail: 'user component',
+          type: 'component' as const,
+          boost: 11,
+        }))
+        completions = [...userCompletions, ...completions]
+      }
+
+      if (typed) {
+        completions = completions.filter(c =>
+          c.label.toLowerCase().startsWith(typed) ||
+          c.label.toLowerCase().includes(typed)
+        )
+      }
+
+      return { completions: completions.slice(0, 50), from, to: cursorColumn, context: 'property' }
     }
 
     return { completions: [], from, to: cursorColumn, context: 'none' }
