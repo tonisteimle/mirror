@@ -2109,9 +2109,11 @@
 
     .color-picker-token-grid {
       display: flex;
-      gap: 1px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: var(--space-2);
       padding: 0 var(--space-3);
+      max-height: 140px;
+      overflow-y: auto;
     }
 
     .color-picker-token-grid:empty {
@@ -2122,19 +2124,52 @@
       margin-top: var(--space-2);
     }
 
+    /* Token Groups */
+    .token-group {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .token-group-label {
+      font-size: var(--font-xs);
+      color: var(--syntax-comment);
+      min-width: 60px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .token-group-label:hover {
+      color: var(--text-primary);
+    }
+
+    .token-group-swatches {
+      display: flex;
+      gap: 2px;
+      flex-wrap: wrap;
+    }
+
     .token-swatch {
       width: var(--size-icon-md);
       height: var(--size-icon-md);
       border-radius: var(--radius-xs);
       cursor: pointer;
-      border: none;
-      transition: transform 0.1s;
+      border: 1px solid transparent;
+      transition: transform 0.1s, border-color 0.1s;
     }
 
     .token-swatch:hover {
       transform: scale(1.2);
       z-index: 1;
       position: relative;
+    }
+
+    /* Highlight matching suffix tokens */
+    .token-swatch-match {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
     }
 
     /* Color Picker - Tabs */

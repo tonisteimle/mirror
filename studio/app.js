@@ -1488,57 +1488,97 @@ function buildTokenColors(property) {
   // Extract all color tokens
   const allTokens = extractColorTokens()
 
-  // Filter tokens based on suffix
-  let filteredTokens = allTokens
+  // Sort tokens: matching suffix first, then by name
+  let sortedTokens = [...allTokens]
   if (suffix) {
-    filteredTokens = allTokens.filter(t => t.name.endsWith(suffix))
+    sortedTokens.sort((a, b) => {
+      const aMatches = a.name.endsWith(suffix) ? 0 : 1
+      const bMatches = b.name.endsWith(suffix) ? 0 : 1
+      if (aMatches !== bMatches) return aMatches - bMatches
+      return a.name.localeCompare(b.name)
+    })
   }
 
-  // If no matching tokens, show all color tokens
-  if (filteredTokens.length === 0) {
-    filteredTokens = allTokens.filter(t => /^#[0-9A-Fa-f]{6}$/i.test(t.value))
-  }
-
-  // Limit to first 14 tokens (2 rows of 7)
-  filteredTokens = filteredTokens.slice(0, 14)
-
-  // Update label
+  // Update label with count
   const label = colorPicker.querySelector('.color-picker-label')
   if (label) {
-    if (suffix) {
-      label.textContent = `Tokens (${suffix})`
+    const matchCount = suffix ? allTokens.filter(t => t.name.endsWith(suffix)).length : 0
+    if (suffix && matchCount > 0) {
+      label.textContent = `Tokens (${matchCount} ${suffix})`
     } else {
-      label.textContent = 'Tokens'
+      label.textContent = `Tokens (${allTokens.length})`
     }
   }
 
-  // Create swatches
-  filteredTokens.forEach(token => {
-    const btn = document.createElement('button')
-    btn.className = 'token-swatch'
-    btn.style.backgroundColor = token.value
-    btn.dataset.token = token.name
-    btn.dataset.color = token.value
-    btn.title = token.name
+  // Group tokens by prefix (part before the dot)
+  const groups = new Map()
+  sortedTokens.forEach(token => {
+    // Remove $ prefix and get base name
+    const name = token.name.startsWith('$') ? token.name.slice(1) : token.name
+    const dotIndex = name.lastIndexOf('.')
+    const prefix = dotIndex > 0 ? name.slice(0, dotIndex) : '_ungrouped'
+    if (!groups.has(prefix)) {
+      groups.set(prefix, [])
+    }
+    groups.get(prefix).push(token)
+  })
 
-    btn.addEventListener('mouseenter', () => {
-      colorPreview.style.backgroundColor = token.value
-      colorHex.textContent = token.name
+  // Create swatches grouped by prefix
+  groups.forEach((tokens, prefix) => {
+    // Create group container
+    const groupEl = document.createElement('div')
+    groupEl.className = 'token-group'
+
+    // Group label (clickable to insert base token)
+    if (prefix !== '_ungrouped' && tokens.length > 1) {
+      const groupLabel = document.createElement('span')
+      groupLabel.className = 'token-group-label'
+      groupLabel.textContent = prefix
+      groupLabel.title = `$${prefix}`
+      groupLabel.addEventListener('click', () => {
+        selectColor('$' + prefix)
+      })
+      groupEl.appendChild(groupLabel)
+    }
+
+    // Token swatches in this group
+    const swatchContainer = document.createElement('div')
+    swatchContainer.className = 'token-group-swatches'
+
+    tokens.forEach(token => {
+      const btn = document.createElement('button')
+      btn.className = 'token-swatch'
+      // Highlight matching suffix tokens
+      if (suffix && token.name.endsWith(suffix)) {
+        btn.classList.add('token-swatch-match')
+      }
+      btn.style.backgroundColor = token.value
+      btn.dataset.token = token.name
+      btn.dataset.color = token.value
+      btn.title = token.name
+
+      btn.addEventListener('mouseenter', () => {
+        colorPreview.style.backgroundColor = token.value
+        colorHex.textContent = token.name
+      })
+
+      btn.addEventListener('click', (e) => {
+        e.preventDefault()
+        // Insert token name instead of hex value
+        selectColor(token.name)
+      })
+
+      swatchContainer.appendChild(btn)
     })
 
-    btn.addEventListener('click', (e) => {
-      e.preventDefault()
-      // Insert token name instead of hex value
-      selectColor(token.name)
-    })
-
-    colorPickerTokenGrid.appendChild(btn)
+    groupEl.appendChild(swatchContainer)
+    colorPickerTokenGrid.appendChild(groupEl)
   })
 
   // Hide section if no tokens
   const section = document.getElementById('color-picker-tokens')
   if (section) {
-    section.style.display = filteredTokens.length > 0 ? 'block' : 'none'
+    section.style.display = allTokens.length > 0 ? 'block' : 'none'
   }
 }
 
