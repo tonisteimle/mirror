@@ -376,6 +376,10 @@ async function preloadAllFiles() {
     for (const result of results) {
       if (result.status === 'fulfilled') {
         filesCache[result.value.path] = result.value.content
+        // Sync to window.desktopFiles cache (for unbundled/bundled compatibility)
+        if (window.desktopFiles?.updateFileCache && window.desktopFiles.getFiles !== getFiles) {
+          window.desktopFiles.updateFileCache(result.value.path, result.value.content)
+        }
         loaded++
       } else {
         console.warn('[DesktopFiles] Failed to preload:', result.reason)
@@ -416,7 +420,12 @@ export async function initDesktopFiles(options = {}) {
   storage.events.on('file:created', async ({ path }) => {
     // Load content into cache
     try {
-      filesCache[path] = await storage.readFile(path)
+      const content = await storage.readFile(path)
+      filesCache[path] = content
+      // Sync to window.desktopFiles cache
+      if (window.desktopFiles?.updateFileCache && window.desktopFiles.getFiles !== getFiles) {
+        window.desktopFiles.updateFileCache(path, content)
+      }
     } catch (e) {
       console.warn('[DesktopFiles] Failed to cache new file:', path)
     }
@@ -427,11 +436,19 @@ export async function initDesktopFiles(options = {}) {
   storage.events.on('file:changed', ({ path, content }) => {
     // Update cache
     filesCache[path] = content
+    // Sync to window.desktopFiles cache
+    if (window.desktopFiles?.updateFileCache && window.desktopFiles.getFiles !== getFiles) {
+      window.desktopFiles.updateFileCache(path, content)
+    }
   })
 
   storage.events.on('file:deleted', ({ path }) => {
     // Remove from cache
     delete filesCache[path]
+    // Sync deletion to window.desktopFiles cache (set to undefined/delete)
+    if (window.desktopFiles?.updateFileCache && window.desktopFiles.getFiles !== getFiles) {
+      window.desktopFiles.updateFileCache(path, undefined)
+    }
 
     if (currentFile === path) {
       currentFile = null
@@ -449,6 +466,11 @@ export async function initDesktopFiles(options = {}) {
     if (filesCache[oldPath] !== undefined) {
       filesCache[newPath] = filesCache[oldPath]
       delete filesCache[oldPath]
+      // Sync to window.desktopFiles cache
+      if (window.desktopFiles?.updateFileCache && window.desktopFiles.getFiles !== getFiles) {
+        window.desktopFiles.updateFileCache(newPath, filesCache[newPath])
+        window.desktopFiles.updateFileCache(oldPath, undefined)
+      }
     }
 
     if (currentFile === oldPath) {
@@ -1278,9 +1300,14 @@ export function getFileContent(path) {
 
 /**
  * Update file in cache (called by app.js when editor content changes)
+ * Pass undefined as content to delete the entry.
  */
 export function updateFileCache(path, content) {
-  filesCache[path] = content
+  if (content === undefined) {
+    delete filesCache[path]
+  } else {
+    filesCache[path] = content
+  }
 }
 
 // Expose globally for menu handlers
