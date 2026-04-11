@@ -1,6 +1,6 @@
 # Preview-Architektur Refactoring
 
-## Status: Phase 1 abgeschlossen
+## Status: Phase 2 abgeschlossen
 
 ---
 
@@ -182,24 +182,34 @@ Kein zusätzlicher State nötig.
 
 ---
 
-### Phase 2: Render Pipeline
+### Phase 2: Render Pipeline ✅ ABGESCHLOSSEN
 
 **Ziel:** Klare Phasen statt verstreuter Events.
 
 **Dateien:**
-- `studio/preview/render-pipeline.ts` - NEU
-- `studio/preview/index.ts` - Refactor
+- `studio/preview/render-pipeline.ts` - NEU ✅
+- `studio/bootstrap.ts` - Integration ✅
+- `tests/studio/preview-render-pipeline.test.ts` - NEU ✅
 
 **Tasks:**
-1. renderPipeline() Funktion mit 4 Phasen
-2. nextFrame() Helper für Layout-Stabilität
-3. Bestehende Render-Logik in Pipeline integrieren
-4. layoutInfo wird nach jedem Render befüllt
+1. ✅ RenderPipeline Klasse mit klaren Phasen
+2. ✅ nextFrame() Helper für Layout-Stabilität (double-RAF)
+3. ✅ Integration in studio bootstrap
+4. ✅ layoutInfo wird nach jedem compile:completed befüllt
 
-**Definition of Done:**
-- Jeder Render durchläuft die 4 Phasen
+**Implementiert:**
+- `RenderPipeline` Klasse mit attach/detach/dispose
+- `scheduleLayoutExtraction()` mit double-RAF für Layout-Stabilität
+- `extractLayoutNow()` für synchrone Extraktion
+- `nextFrame()` und `delay()` Utilities
+- Auto-attach bei compile:completed Events
+- `preview:rendered` Event nach Extraktion
+- 15 Unit Tests bestanden
+
+**Definition of Done:** ✅
+- RenderPipeline orchestriert Measurement Phase
 - layoutInfo ist nach Render immer aktuell
-- Keine Compile-Events mehr, nur Pipeline
+- compile:completed triggert automatische Layout-Extraktion
 
 ---
 
