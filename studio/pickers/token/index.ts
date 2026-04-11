@@ -315,12 +315,6 @@ export class TokenPicker extends BasePicker {
     name.textContent = token.name
     item.appendChild(name)
 
-    // Value
-    const value = document.createElement('span')
-    value.className = 'token-picker-value'
-    value.textContent = token.value
-    item.appendChild(value)
-
     item.onclick = () => {
       this.selectValue(token.name)
     }
