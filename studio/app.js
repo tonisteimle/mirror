@@ -5847,15 +5847,12 @@ const LAYOUT_ICONS = {
   headerfooter: '<rect x="3" y="3" width="18" height="18" rx="1"></rect><rect x="4" y="4" width="16" height="3"></rect>',
 }
 
-// Layout presets
+// Layout presets - simplified to 4 layouts
 const LAYOUT_PRESETS = [
-  { name: 'Absolute', category: 'layout', properties: 'w full, h full, absolute', icon: LAYOUT_ICONS.absolute },
-  { name: 'V-Box', category: 'layout', properties: 'ver, gap 8', icon: LAYOUT_ICONS.vbox },
-  { name: 'H-Box', category: 'layout', properties: 'hor, gap 8', icon: LAYOUT_ICONS.hbox },
-  { name: 'ZStack', category: 'layout', properties: 'stacked', icon: LAYOUT_ICONS.zstack },
-  { name: 'Grid', category: 'layout', properties: 'grid 2, gap 8', icon: LAYOUT_ICONS.grid },
-  { name: 'Sidebar', category: 'layout', properties: 'hor, w full, h full', icon: LAYOUT_ICONS.sidebar },
-  { name: 'Header/Footer', category: 'layout', properties: 'ver, w full, h full', icon: LAYOUT_ICONS.headerfooter },
+  { name: 'Column', category: 'Layout', properties: 'ver, gap 8', icon: LAYOUT_ICONS.vbox },
+  { name: 'Grid', category: 'Layout', properties: 'grid 3, gap 8', icon: LAYOUT_ICONS.grid },
+  { name: 'Row', category: 'Layout', properties: 'hor, gap 8', icon: LAYOUT_ICONS.hbox },
+  { name: 'Stack', category: 'Layout', properties: 'stacked', icon: LAYOUT_ICONS.zstack },
 ]
 
 // Built-in primitive components
@@ -5997,33 +5994,21 @@ const ZAG_CATEGORIES = {
   Splitter: 'Utility',
 }
 
-// Category display order
+// Category display order - simplified to just Layout and Components
 const CATEGORY_ORDER = [
-  'Layouts',
-  'Basic',
-  'Input',
-  'Toggle',
-  'Select',
-  'Slider',
-  'Menu',
-  'Popup',
-  'Notification',
-  'Disclosure',
-  'Navigation',
-  'Date',
-  'Media',
-  'Feedback',
-  'Utility',
-  'User',
+  'Layout',
+  'Components',
 ]
 
-// Basic tab: ordered categories with specific components
+// Simplified structure: Layout + Components (alphabetically sorted)
 const BASIC_TAB_STRUCTURE = [
-  { category: 'Layouts', components: ['Box', 'Frame', 'HStack', 'VStack', 'Grid', 'Spacer', 'Divider'] },
-  { category: 'Content', components: ['Text', 'Image', 'Icon', 'Link'] },
-  { category: 'Controls', components: ['Button', 'Input', 'Checkbox', 'Switch', 'Select', 'Slider'] },
-  { category: 'Containers', components: ['Dialog', 'Tabs', 'Accordion'] },
-  { category: 'Feedback', components: ['Tooltip', 'Popover', 'Progress'] },
+  { category: 'Layout', components: ['Column', 'Grid', 'Row', 'Stack'] },
+  { category: 'Components', components: [
+    'Area', 'Bar', 'Button', 'Checkbox', 'DatePicker', 'Dialog',
+    'Donut', 'Frame', 'Icon', 'Image', 'Input', 'Line', 'Pie',
+    'RadioGroup', 'Select', 'SideNav', 'Slider', 'Switch', 'Table',
+    'Tabs', 'Text', 'Textarea', 'Tooltip'
+  ] },
 ]
 
 // Set for quick lookup
@@ -6411,76 +6396,33 @@ function renderFilteredComponents(components) {
   // Create lookup map for components
   const compMap = new Map(components.map(c => [c.name, c]))
 
-  // Tabs
-  let html = '<div class="component-palette-tabs">'
-  html += `<button class="palette-tab${activePaletteTab === 'basic' ? ' active' : ''}" data-tab="basic">Basic</button>`
-  html += `<button class="palette-tab${activePaletteTab === 'all' ? ' active' : ''}" data-tab="all">All</button>`
-  html += '</div>'
+  // No tabs - just two sections: Layout and Components
+  let html = ''
 
-  if (activePaletteTab === 'basic') {
-    // Basic tab: use predefined structure and order
-    for (const group of BASIC_TAB_STRUCTURE) {
-      const items = group.components
-        .map(name => compMap.get(name))
-        .filter(Boolean)
-      if (items.length === 0) continue
+  // Render using simplified structure (Layout + Components)
+  for (const group of BASIC_TAB_STRUCTURE) {
+    const items = group.components
+      .map(name => compMap.get(name))
+      .filter(Boolean)
+    if (items.length === 0) continue
 
-      const isCollapsed = collapsedSections.has(group.category)
-      html += `<div class="component-palette-section${isCollapsed ? ' collapsed' : ''}" data-category="${group.category}">`
-      html += `<div class="component-palette-section-title" data-toggle="${group.category}">`
-      html += `<span class="section-name">${group.category}</span>`
-      html += `<span class="section-toggle">`
-      html += `<svg class="icon icon-collapsed" viewBox="0 0 14 14"><polyline points="5 3 10 7 5 11" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
-      html += `<svg class="icon icon-expanded" viewBox="0 0 14 14"><polyline points="3 5 7 10 11 5" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
-      html += `</span>`
-      html += '</div>'
-      html += `<div class="component-palette-items"${isCollapsed ? ' style="display:none"' : ''}>`
-      html += items.map(comp => renderPaletteItem(comp)).join('')
-      html += '</div></div>'
-    }
-  } else {
-    // All tab: group by category
-    const byCategory = {}
-    for (const comp of components) {
-      const cat = comp.category || 'Other'
-      if (!byCategory[cat]) byCategory[cat] = []
-      byCategory[cat].push(comp)
-    }
-
-    // Sort categories by CATEGORY_ORDER
-    const sortedCategories = Object.keys(byCategory).sort((a, b) => {
-      const indexA = CATEGORY_ORDER.indexOf(a)
-      const indexB = CATEGORY_ORDER.indexOf(b)
-      const orderA = indexA === -1 ? 999 : indexA
-      const orderB = indexB === -1 ? 999 : indexB
-      return orderA - orderB
-    })
-
-    for (const category of sortedCategories) {
-      const items = byCategory[category]
-      if (items.length === 0) continue
-
-      const displayName = category === 'layout' ? 'Layouts' : category
-      const isCollapsed = collapsedSections.has(category)
-
-      html += `<div class="component-palette-section${isCollapsed ? ' collapsed' : ''}" data-category="${category}">`
-      html += `<div class="component-palette-section-title" data-toggle="${category}">`
-      html += `<span class="section-name">${displayName}</span>`
-      html += `<span class="section-toggle">`
-      html += `<svg class="icon icon-collapsed" viewBox="0 0 14 14"><polyline points="5 3 10 7 5 11" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
-      html += `<svg class="icon icon-expanded" viewBox="0 0 14 14"><polyline points="3 5 7 10 11 5" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
-      html += `</span>`
-      html += '</div>'
-      html += `<div class="component-palette-items"${isCollapsed ? ' style="display:none"' : ''}>`
-      html += items.map(comp => renderPaletteItem(comp)).join('')
-      html += '</div></div>'
-    }
+    const isCollapsed = collapsedSections.has(group.category)
+    html += `<div class="component-palette-section${isCollapsed ? ' collapsed' : ''}" data-category="${group.category}">`
+    html += `<div class="component-palette-section-title" data-toggle="${group.category}">`
+    html += `<span class="section-name">${group.category}</span>`
+    html += `<span class="section-toggle">`
+    html += `<svg class="icon icon-collapsed" viewBox="0 0 14 14"><polyline points="5 3 10 7 5 11" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
+    html += `<svg class="icon icon-expanded" viewBox="0 0 14 14"><polyline points="3 5 7 10 11 5" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`
+    html += `</span>`
+    html += '</div>'
+    html += `<div class="component-palette-items"${isCollapsed ? ' style="display:none"' : ''}>`
+    html += items.map(comp => renderPaletteItem(comp)).join('')
+    html += '</div></div>'
   }
 
   container.innerHTML = html
   attachPaletteDragHandlers(container)
   attachSectionToggleHandlers(container)
-  attachPaletteTabHandlers(container)
 }
 
 // Attach click handlers for palette tabs
