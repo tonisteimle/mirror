@@ -1760,35 +1760,36 @@
       border: 1px solid var(--border-default) !important;
       border-radius: var(--radius-lg) !important;
       box-shadow: var(--shadow-lg) !important;
-      min-width: 180px;
+      min-width: 220px;
       max-width: 320px;
+      max-height: 320px;
       overflow: hidden;
     }
 
     .cm-tooltip-autocomplete ul {
       max-height: 260px;
+      overflow-y: auto;
       padding: var(--space-2) 0;
     }
 
     .cm-tooltip-autocomplete ul li {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      padding: var(--space-2) var(--space-3);
-      color: var(--text-primary);
-      font-family: var(--font-mono);
-      font-size: var(--font-sm);
-      cursor: pointer;
-      transition: background 0.1s;
+      display: flex !important;
+      align-items: center !important;
+      gap: var(--space-3) !important;
+      padding: var(--space-2) var(--space-3) !important;
+      cursor: pointer !important;
+      transition: background 0.1s !important;
+      border: none !important;
+      background: transparent !important;
+      line-height: 1.4 !important;
     }
 
     .cm-tooltip-autocomplete ul li[aria-selected] {
-      background: var(--color-primary);
-      color: var(--text-inverse);
+      background: var(--color-primary) !important;
     }
 
     .cm-tooltip-autocomplete ul li:hover:not([aria-selected]) {
-      background: var(--bg-hover);
+      background: var(--bg-hover) !important;
     }
 
     /* Hide completion icons */
@@ -1800,25 +1801,29 @@
     }
 
     .cm-completionLabel {
-      flex: 1;
-      font-family: var(--font-mono);
-      font-size: var(--font-sm);
-      color: var(--text-primary);
+      flex: 1 !important;
+      min-width: 100px !important;
+      font-family: var(--font-mono) !important;
+      font-size: var(--font-sm) !important;
+      color: var(--text-primary) !important;
     }
 
     .cm-tooltip-autocomplete ul li[aria-selected] .cm-completionLabel {
-      color: var(--text-inverse);
+      color: var(--text-inverse) !important;
     }
 
     .cm-completionDetail {
-      font-family: var(--font-mono);
-      font-size: var(--font-xs);
-      color: var(--text-muted);
-      font-style: normal;
+      width: 80px !important;
+      flex-shrink: 0 !important;
+      font-family: var(--font-mono) !important;
+      font-size: var(--font-xs) !important;
+      color: var(--text-muted) !important;
+      font-style: normal !important;
+      text-align: left !important;
     }
 
     .cm-tooltip-autocomplete ul li[aria-selected] .cm-completionDetail {
-      color: var(--white-70);
+      color: var(--white-70) !important;
     }
 
     /* Editor Drop Indicator - shows where component will be inserted */
