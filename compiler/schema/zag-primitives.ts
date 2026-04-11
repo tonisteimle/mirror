@@ -159,6 +159,7 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
     description: 'Tabbed navigation',
     pattern: 'content-items',
     itemKeywords: ['Tab', 'Item'],
+    itemProps: ['value', 'disabled', 'shows', 'showsFrom'],
   },
 
   SideNav: {

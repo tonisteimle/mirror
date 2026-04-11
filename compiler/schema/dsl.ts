@@ -421,12 +421,26 @@ export const DSL = {
   ] as const,
 
   // ---------------------------------------------------------------------------
+  // Duration Presets (for transitions)
+  // ---------------------------------------------------------------------------
+  durations: [
+    { value: '100', label: '100ms', description: 'fast' },
+    { value: '150', label: '150ms', description: 'quick' },
+    { value: '200', label: '200ms', description: 'normal' },
+    { value: '300', label: '300ms', description: 'smooth' },
+    { value: '500', label: '500ms', description: 'slow' },
+  ] as const,
+
+  // ---------------------------------------------------------------------------
   // Easing Functions
   // ---------------------------------------------------------------------------
   easingFunctions: [
-    'linear',
-    'ease', 'ease-in', 'ease-out', 'ease-in-out',
-    'bounce',
+    { value: 'ease', description: 'default easing' },
+    { value: 'ease-in', description: 'slow start' },
+    { value: 'ease-out', description: 'slow end' },
+    { value: 'ease-in-out', description: 'slow start and end' },
+    { value: 'linear', description: 'constant speed' },
+    { value: 'bounce', description: 'bounce effect' },
   ] as const,
 
   // ---------------------------------------------------------------------------

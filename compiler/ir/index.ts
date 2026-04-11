@@ -1480,7 +1480,9 @@ class IRTransformer {
           }
         }
         itemData.label = label
-        itemData.value = label
+        // Note: Do NOT set itemData.value = label here!
+        // transformItem checks item.value to decide if loadFromFile should be set.
+        // If we set value = label, it would incorrectly trigger file loading for "Tab 1" etc.
 
         // Extract all item-specific properties (name, placeholder, multiline, etc.)
         for (const propName of itemProps) {
