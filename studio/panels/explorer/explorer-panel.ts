@@ -91,16 +91,19 @@ export class ExplorerPanel {
       })
     }
 
-    // Initialize Activity Bar
+    // Initialize Activity Bar (internal explorer view switching)
     this.activityBar = createActivityBar(
       {
         container: activityBarContainer,
         items: activityBarItems,
-        defaultActive: this.activeView,
+        activeItems: [this.activeView],  // Only one active at a time
       },
       {
-        onItemClick: (id) => {
-          this.showView(id as ExplorerView)
+        onToggle: (id, active) => {
+          // Explorer uses radio-button behavior - only one view active
+          if (active) {
+            this.showView(id as ExplorerView)
+          }
         },
       }
     )
@@ -112,9 +115,12 @@ export class ExplorerPanel {
 
   showView(view: ExplorerView): void {
     if (this.activeView === view) return
+    const previousView = this.activeView
     this.activeView = view
 
-    this.activityBar?.setActive(view)
+    // Update Activity Bar - deactivate previous, activate new
+    this.activityBar?.setActive(previousView, false)
+    this.activityBar?.setActive(view, true)
     this.updateViewVisibility()
 
     // Emit event

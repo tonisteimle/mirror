@@ -21,7 +21,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=165">
+  <link rel="stylesheet" href="styles.css?v=166">
   <!-- Mirror Default Styles (for preview) -->
   <link rel="stylesheet" href="dist/mirror-defaults.css?v=1">
 </head>
@@ -38,6 +38,9 @@
 
     <!-- Main Content Area -->
     <div class="main-content">
+
+    <!-- Activity Bar - Panel Toggles -->
+    <div id="activity-bar-container" class="activity-bar-container"></div>
 
     <div class="sidebar" id="explorer-panel">
       <!-- Explorer Panel Structure - Activity Bar + Content Views -->
@@ -102,15 +105,15 @@
 
     <div class="divider" id="editor-divider"></div>
 
-    <!-- Components Panel - now integrated in Explorer, keeping for potential standalone mode -->
-    <div class="components-panel" id="components-panel" style="display: none;">
+    <!-- Components Panel - standalone panel controlled by Activity Bar -->
+    <div class="components-panel panel-hidden" id="components-panel">
       <div class="components-panel-header">Components</div>
       <div class="component-palette" id="component-palette">
         <div class="component-palette-items" id="components-palette"></div>
       </div>
     </div>
 
-    <div class="divider" id="components-divider" style="display: none;"></div>
+    <div class="divider panel-hidden" id="components-divider"></div>
 
     <div class="panel preview-panel">
       <div class="preview-toolbar">

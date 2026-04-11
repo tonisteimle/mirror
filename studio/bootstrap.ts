@@ -13,7 +13,7 @@ import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../com
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel } from './panels'
 import { ComponentPanel, createComponentPanel, UserComponentsPanel, createUserComponentsPanel, getComponentTemplate, getFileType } from './panels/components'
-import { ExplorerPanel, createExplorerPanel } from './panels/explorer'
+import { ExplorerPanel, createExplorerPanel, ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
 import { createDragDropSystem, createCodeExecutor, type DragDropSystem } from './drag-drop'
@@ -802,8 +802,11 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     })
   )
 
-  // Initialize Panel Toolbar
+  // Initialize Panel Toolbar (legacy View Menu)
   initializePanelToolbar()
+
+  // Initialize global Activity Bar for panel toggles
+  initializeActivityBar()
 
   console.log('[Studio] New architecture initialized')
   return studio
@@ -886,6 +889,69 @@ function initializePanelToolbar(): void {
   )
 
   console.log('[Studio] View menu initialized')
+}
+
+// Store global Activity Bar instance
+let globalActivityBar: ActivityBar | null = null
+
+/**
+ * Initialize the global Activity Bar for panel toggles
+ */
+function initializeActivityBar(): void {
+  const container = document.getElementById('activity-bar-container')
+  if (!container) {
+    console.warn('[Studio] Activity bar container not found')
+    return
+  }
+
+  // Panel ID to DOM element mapping
+  const panelElements: Record<string, HTMLElement | null> = {
+    files: document.getElementById('explorer-panel') || document.querySelector('.sidebar'),
+    components: document.getElementById('components-panel'),
+    code: document.querySelector('.editor-panel'),
+    preview: document.querySelector('.preview-panel'),
+    property: document.getElementById('property-panel'),
+  }
+
+  // Activity Bar items for all panels
+  const items = [
+    { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files' },
+    { id: 'components', icon: ACTIVITY_BAR_ICONS.components, tooltip: 'Components' },
+    { id: 'code', icon: ACTIVITY_BAR_ICONS.code, tooltip: 'Code Editor' },
+    { id: 'preview', icon: ACTIVITY_BAR_ICONS.preview, tooltip: 'Preview' },
+    { id: 'property', icon: ACTIVITY_BAR_ICONS.properties, tooltip: 'Properties' },
+  ]
+
+  // Get initial visibility from state
+  const visibility = state.get().panelVisibility
+  const activeItems = Object.entries(visibility)
+    .filter(([_, visible]) => visible)
+    .map(([key]) => key)
+
+  // Create Activity Bar
+  globalActivityBar = createActivityBar(
+    {
+      container,
+      items,
+      activeItems,
+    },
+    {
+      onToggle: (id, active) => {
+        // Update panel visibility via state action
+        actions.setPanelVisibility(id as keyof typeof visibility, active)
+      },
+    }
+  )
+  globalActivityBar.render()
+
+  // Listen for visibility changes to sync Activity Bar state
+  eventUnsubscribes.push(
+    events.on('panel:visibility-changed', ({ panel, visible }) => {
+      globalActivityBar?.setActive(panel, visible)
+    })
+  )
+
+  console.log('[Studio] Activity Bar initialized')
 }
 
 /**

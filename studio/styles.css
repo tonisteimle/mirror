@@ -274,6 +274,29 @@
       overflow: hidden;
     }
 
+    /* Activity Bar Container - Panel Toggle Bar */
+    .activity-bar-container {
+      display: flex;
+      flex-direction: column;
+      width: 40px;
+      background: var(--bg-base);
+      border-right: 1px solid var(--border-default);
+      flex-shrink: 0;
+    }
+
+    .activity-bar-container .activity-bar {
+      padding-top: 8px;
+    }
+
+    /* Inactive state for toggle bar - dimmed icon */
+    .activity-bar-container .activity-bar-item:not(.active) {
+      opacity: 0.4;
+    }
+
+    .activity-bar-container .activity-bar-item:not(.active):hover {
+      opacity: 0.7;
+    }
+
     /* Panel flex sizes */
     .chat-panel-left {
       display: none; /* Removed in desktop app */
