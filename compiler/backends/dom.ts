@@ -16,46 +16,12 @@ import { mergeDataFiles, serializeDataForJS } from '../parser/data-parser'
 import { dispatchZagEmitter } from './dom/zag-emitters'
 import type { ZagEmitterContext } from './dom/zag-emitter-context'
 
-/**
- * Escape a string for safe inclusion in JavaScript code
- * Handles quotes, backslashes, newlines, and other special characters
- */
-function escapeJSString(s: string): string {
-  return s
-    .replace(/\\/g, '\\\\')   // backslash first!
-    .replace(/'/g, "\\'")     // single quotes
-    .replace(/"/g, '\\"')     // double quotes
-    .replace(/\n/g, '\\n')    // newlines
-    .replace(/\r/g, '\\r')    // carriage returns
-    .replace(/\t/g, '\\t')    // tabs
-    .replace(/\0/g, '\\0')    // null bytes
-    .replace(/\u2028/g, '\\u2028')  // line separator
-    .replace(/\u2029/g, '\\u2029')  // paragraph separator
-}
+// Extracted utilities
+import { escapeJSString, sanitizeVarName, cssPropertyToJS, generateVarName } from './dom/utils'
+import { ZAG_SLOT_NAMES, type GenerateDOMOptions } from './dom/types'
 
-/**
- * Known Zag component slot names that should get data-slot attribute
- * when used as inline component definitions (e.g., CloseTrigger: Icon "x")
- */
-const ZAG_SLOT_NAMES = new Set([
-  'CloseTrigger', 'Trigger', 'Content', 'Backdrop', 'Title', 'Description',
-  'Root', 'Label', 'Control', 'Track', 'Thumb', 'Range',
-  'Item', 'ItemControl', 'ItemText', 'ItemIndicator', 'ItemContent', 'ItemTrigger',
-  'List', 'Indicator', 'Input', 'ValueText', 'HiddenInput',
-  'Dropzone', 'ItemGroup', 'Positioner', 'Arrow',
-  'PrevTrigger', 'NextTrigger', 'Circle', 'CircleTrack', 'CircleRange',
-  'Image', 'Fallback', 'Area', 'Preview', 'VisibilityTrigger',
-  'DecrementTrigger', 'IncrementTrigger', 'ActionTrigger',
-  'Header', 'Footer', 'Group', 'GroupLabel', 'GroupContent',
-])
-
-/**
- * Options for DOM code generation
- */
-export interface GenerateDOMOptions {
-  /** Parsed .data files to include in output */
-  dataFiles?: DataFile[]
-}
+// Re-export types for external consumers
+export type { GenerateDOMOptions } from './dom/types'
 
 /**
  * Generate DOM manipulation JavaScript code from Mirror AST
@@ -7169,33 +7135,10 @@ class DOMGenerator {
 
   /**
    * Sanitize an ID to create a valid JavaScript variable name.
-   * - Replaces invalid characters with underscores
-   * - Ensures the name starts with a letter or underscore
-   * - Prefixes reserved words
+   * Delegates to the extracted utility function.
    */
   private sanitizeVarName(id: string): string {
-    // Replace all non-alphanumeric characters (except underscore) with underscore
-    let sanitized = id.replace(/[^a-zA-Z0-9_]/g, '_')
-
-    // Ensure it starts with a letter or underscore (not a digit)
-    if (/^[0-9]/.test(sanitized)) {
-      sanitized = '_' + sanitized
-    }
-
-    // Prefix JavaScript reserved words to avoid syntax errors
-    const reserved = new Set([
-      'break', 'case', 'catch', 'continue', 'debugger', 'default', 'delete',
-      'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof',
-      'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var',
-      'void', 'while', 'with', 'class', 'const', 'enum', 'export', 'extends',
-      'import', 'super', 'implements', 'interface', 'let', 'package', 'private',
-      'protected', 'public', 'static', 'yield', 'null', 'true', 'false'
-    ])
-    if (reserved.has(sanitized.toLowerCase())) {
-      sanitized = '_' + sanitized
-    }
-
-    return sanitized
+    return sanitizeVarName(id)
   }
 
   /**
