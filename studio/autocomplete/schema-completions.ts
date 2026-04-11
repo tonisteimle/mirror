@@ -106,6 +106,25 @@ export function generateAllZagSlotCompletions(): Completion[] {
 }
 
 /**
+ * Get Zag slot completions grouped by component
+ * Used for context-sensitive completion within a component
+ */
+export function generateZagSlotsByComponent(): Record<string, Completion[]> {
+  const slotsMap: Record<string, Completion[]> = {}
+
+  for (const [name, def] of Object.entries(ZAG_PRIMITIVES)) {
+    slotsMap[name] = def.slots.map(slot => ({
+      label: slot,
+      detail: `Slot of ${name}`,
+      type: 'component' as const,
+      boost: 7,
+    }))
+  }
+
+  return slotsMap
+}
+
+/**
  * Get Zag component props as completions
  */
 export function getZagPropCompletions(componentName: string): Completion[] {
@@ -446,6 +465,43 @@ export function getTransitionProperties(): string[] {
 }
 
 // ============================================================================
+// Duration & Easing Completions
+// ============================================================================
+
+/**
+ * Generate completions for transition durations from schema
+ */
+export function generateDurationCompletions(): Completion[] {
+  return DSL.durations.map(d => ({
+    label: d.value,
+    detail: `${d.label} - ${d.description}`,
+    type: 'constant' as const,
+  }))
+}
+
+/**
+ * Generate completions for easing functions from schema
+ */
+export function generateEasingCompletions(): Completion[] {
+  return DSL.easingFunctions.map(e => ({
+    label: e.value,
+    detail: e.description,
+    type: 'constant' as const,
+  }))
+}
+
+/**
+ * Generate completions for animation presets from schema
+ */
+export function generateAnimationPresetCompletions(): Completion[] {
+  return DSL.animationPresets.map(preset => ({
+    label: preset,
+    detail: `${preset} animation`,
+    type: 'keyword' as const,
+  }))
+}
+
+// ============================================================================
 // Combined Completions
 // ============================================================================
 
@@ -455,7 +511,7 @@ export function getTransitionProperties(): string[] {
 export const SCHEMA_COMPLETIONS = {
   primitives: generatePrimitiveCompletions(),
   zagComponents: generateZagCompletions(),
-  zagSlots: generateAllZagSlotCompletions(),
+  zagSlots: generateZagSlotsByComponent(),
   properties: generatePropertyCompletions(),
   propertyValues: generateAllPropertyValueCompletions(),
   events: generateEventCompletions(),
@@ -466,6 +522,10 @@ export const SCHEMA_COMPLETIONS = {
   customStates: generateCustomStateCompletions(),
   keys: generateKeyCompletions(),
   keywords: generateKeywordCompletions(),
+  // Transition/animation completions from schema
+  durations: generateDurationCompletions(),
+  easings: generateEasingCompletions(),
+  animationPresets: generateAnimationPresetCompletions(),
   // Derived lists for autocomplete context detection
   actionsWithTarget: getActionsWithTarget(),
   transitionProperties: getTransitionProperties(),

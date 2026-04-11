@@ -69,23 +69,11 @@ export const TARGET_KEYWORDS = SCHEMA_COMPLETIONS.actionTargets
 export const MIRROR_PROPERTIES = SCHEMA_COMPLETIONS.properties
 export const PROPERTY_VALUES = SCHEMA_COMPLETIONS.propertyValues
 
-// Duration values for transitions
-export const DURATION_COMPLETIONS: Completion[] = [
-  { label: '100', detail: '100ms - fast', type: 'constant' },
-  { label: '150', detail: '150ms - quick', type: 'constant' },
-  { label: '200', detail: '200ms - normal', type: 'constant' },
-  { label: '300', detail: '300ms - smooth', type: 'constant' },
-  { label: '500', detail: '500ms - slow', type: 'constant' },
-]
+// Duration values for transitions (from schema)
+export const DURATION_COMPLETIONS = SCHEMA_COMPLETIONS.durations
 
-// Easing functions for transitions
-export const EASING_COMPLETIONS: Completion[] = [
-  { label: 'ease', detail: 'default easing', type: 'constant' },
-  { label: 'ease-in', detail: 'slow start', type: 'constant' },
-  { label: 'ease-out', detail: 'slow end', type: 'constant' },
-  { label: 'ease-in-out', detail: 'slow start and end', type: 'constant' },
-  { label: 'linear', detail: 'constant speed', type: 'constant' },
-]
+// Easing functions for transitions (from schema)
+export const EASING_COMPLETIONS = SCHEMA_COMPLETIONS.easings
 
 // Event names that trigger action context
 export const EVENT_NAMES = SCHEMA_COMPLETIONS.events.map(e => e.label)
@@ -101,26 +89,14 @@ export const MIRROR_KEYWORDS: Completion[] = [
   // Reserved keywords from schema (as, extends, if, else, each, etc.)
   ...SCHEMA_COMPLETIONS.keywords,
 
-  // Additional keywords not in schema (import is external)
+  // Animation presets from schema
+  ...SCHEMA_COMPLETIONS.animationPresets,
+
+  // Additional keywords not in schema
   { label: 'import', detail: 'import file', type: 'keyword' },
   { label: 'state', detail: 'custom state', type: 'keyword' },
-
-  // Timing modifiers
   { label: 'debounce', detail: 'delay until idle', type: 'keyword' },
   { label: 'delay', detail: 'delay action', type: 'keyword' },
-
-  // Animation presets
-  { label: 'fade', detail: 'fade animation', type: 'keyword' },
-  { label: 'scale', detail: 'scale animation', type: 'keyword' },
-  { label: 'slide-up', detail: 'slide up', type: 'keyword' },
-  { label: 'slide-down', detail: 'slide down', type: 'keyword' },
-  { label: 'slide-left', detail: 'slide left', type: 'keyword' },
-  { label: 'slide-right', detail: 'slide right', type: 'keyword' },
-  { label: 'spin', detail: 'spin animation', type: 'keyword' },
-  { label: 'pulse', detail: 'pulse animation', type: 'keyword' },
-  { label: 'bounce', detail: 'bounce animation', type: 'keyword' },
-
-  // Overlay positions
   { label: 'below', detail: 'position below', type: 'keyword' },
   { label: 'above', detail: 'position above', type: 'keyword' },
 ]
