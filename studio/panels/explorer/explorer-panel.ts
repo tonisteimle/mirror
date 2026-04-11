@@ -1,11 +1,10 @@
 /**
- * Explorer Panel - Container for Activity Bar + switchable views
+ * Explorer Panel - Container for switchable views
  *
- * Manages Files view, Components view, and User Components view,
- * with Activity Bar for switching.
+ * Manages Files view, Components view, and User Components view.
+ * View switching is controlled externally via showView().
  */
 
-import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './activity-bar'
 import { events } from '../../core'
 
 export type ExplorerView = 'files' | 'components' | 'userComponents'
@@ -27,12 +26,11 @@ export interface ExplorerPanelCallbacks {
 }
 
 /**
- * Explorer Panel - wraps Activity Bar + content views
+ * Explorer Panel - wraps content views (files, components, user components)
  */
 export class ExplorerPanel {
   private config: ExplorerPanelConfig
   private callbacks: ExplorerPanelCallbacks
-  private activityBar: ActivityBar | null = null
   private activeView: ExplorerView = 'files'
   private element: HTMLElement | null = null
 
@@ -46,10 +44,6 @@ export class ExplorerPanel {
     // Create wrapper structure
     this.element = document.createElement('div')
     this.element.className = 'explorer-panel'
-
-    // Activity Bar container
-    const activityBarContainer = document.createElement('div')
-    activityBarContainer.className = 'explorer-activity-bar'
 
     // Content container (holds all views)
     const contentContainer = document.createElement('div')
@@ -69,45 +63,11 @@ export class ExplorerPanel {
       contentContainer.appendChild(this.config.userComponentsPanelContainer)
     }
 
-    this.element.appendChild(activityBarContainer)
     this.element.appendChild(contentContainer)
 
     // Replace original container content
     this.config.container.innerHTML = ''
     this.config.container.appendChild(this.element)
-
-    // Build activity bar items
-    const activityBarItems = [
-      { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files' },
-      { id: 'components', icon: ACTIVITY_BAR_ICONS.components, tooltip: 'Components' },
-    ]
-
-    // Add user components item if container is provided
-    if (this.config.userComponentsPanelContainer) {
-      activityBarItems.push({
-        id: 'userComponents',
-        icon: ACTIVITY_BAR_ICONS.userComponents,
-        tooltip: 'My Components',
-      })
-    }
-
-    // Initialize Activity Bar (internal explorer view switching)
-    this.activityBar = createActivityBar(
-      {
-        container: activityBarContainer,
-        items: activityBarItems,
-        activeItems: [this.activeView],  // Only one active at a time
-      },
-      {
-        onToggle: (id, active) => {
-          // Explorer uses radio-button behavior - only one view active
-          if (active) {
-            this.showView(id as ExplorerView)
-          }
-        },
-      }
-    )
-    this.activityBar.render()
 
     // Apply initial view
     this.updateViewVisibility()
@@ -115,12 +75,7 @@ export class ExplorerPanel {
 
   showView(view: ExplorerView): void {
     if (this.activeView === view) return
-    const previousView = this.activeView
     this.activeView = view
-
-    // Update Activity Bar - deactivate previous, activate new
-    this.activityBar?.setActive(previousView, false)
-    this.activityBar?.setActive(view, true)
     this.updateViewVisibility()
 
     // Emit event
@@ -167,8 +122,6 @@ export class ExplorerPanel {
   }
 
   dispose(): void {
-    this.activityBar?.dispose()
-    this.activityBar = null
     this.element?.remove()
     this.element = null
   }
