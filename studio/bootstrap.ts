@@ -7,6 +7,7 @@ import { createSyncCoordinator, createLineOffsetService, type SyncCoordinator } 
 import { AutocompleteEngine, getAutocompleteEngine, type AutocompleteRequest, type AutocompleteResult } from './autocomplete'
 import { EditorController, createEditorController, setEditorController, EditorDropHandler, createEditorDropHandler } from './editor'
 import { PreviewController, createPreviewController, setPreviewController, PreviewBreadcrumb, createPreviewBreadcrumb } from './preview'
+import { RenderPipeline, createRenderPipeline } from './preview/render-pipeline'
 import { LLMBridge, getLLMBridge, getContextBuilder, getEditPrompt, type LLMResponse } from './llm'
 import { initializeAgent, getAgentIntegration, type AgentIntegration } from './agent'
 import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../compiler/studio'
@@ -58,6 +59,7 @@ export interface StudioInstance {
   executor: typeof executor
   editor: EditorController | null
   preview: PreviewController | null
+  renderPipeline: RenderPipeline | null
   sync: SyncCoordinator | null
   propertyPanel: PropertyPanel | null
   componentPanel: ComponentPanel | null
@@ -85,6 +87,7 @@ export const studio: StudioInstance = {
   executor,
   editor: null,
   preview: null,
+  renderPipeline: null,
   sync: null,
   propertyPanel: null,
   componentPanel: null,
@@ -107,6 +110,7 @@ export const studio: StudioInstance = {
 
     // Dispose components
     studio.sync?.dispose()
+    studio.renderPipeline?.dispose()
     studio.propertyPanel?.detach()
     studio.componentPanel?.dispose()
     studio.userComponentsPanel?.dispose()
@@ -120,6 +124,7 @@ export const studio: StudioInstance = {
     // Clear references
     studio.editor = null
     studio.preview = null
+    studio.renderPipeline = null
     studio.sync = null
     studio.propertyPanel = null
     studio.componentPanel = null
@@ -442,6 +447,17 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   setPreviewController(previewController)
   studioContext.preview = previewController
   studio.preview = previewController
+
+  // Render Pipeline - orchestrates layout extraction after render
+  // Subscribes to compile:completed and extracts layoutInfo using double-RAF
+  const renderPipeline = createRenderPipeline({
+    container: config.previewContainer,
+    autoExtract: true,
+    onLayoutExtracted: () => {
+      console.log('[RenderPipeline] Layout extracted, version:', state.get().layoutVersion)
+    },
+  })
+  studio.renderPipeline = renderPipeline
 
   // Breadcrumb (hierarchy display above preview)
   const breadcrumbContainer = config.previewContainer.parentElement?.querySelector('#preview-breadcrumb') as HTMLElement | null
@@ -802,6 +818,9 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     })
   )
 
+  // Initialize panel visibility (MUST run first - sets up event listener)
+  initializePanelVisibility()
+
   // Initialize Panel Toolbar (legacy View Menu)
   initializePanelToolbar()
 
@@ -812,33 +831,58 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   return studio
 }
 
+// Shared panel element mapping
+const panelElements: Record<string, HTMLElement | null> = {}
+
 /**
- * Initialize the View Menu for panel visibility
+ * Initialize panel visibility - ALWAYS runs
+ * Sets up event listener and applies initial state to DOM
+ */
+function initializePanelVisibility(): void {
+  // Build panel element mapping
+  panelElements.prompt = document.getElementById('chat-panel')
+  panelElements.files = document.getElementById('explorer-panel') || document.querySelector('.sidebar')
+  panelElements.code = document.querySelector('.editor-panel')
+  panelElements.components = document.getElementById('components-panel')
+  panelElements.preview = document.querySelector('.preview-panel')
+  panelElements.property = document.getElementById('property-panel')
+
+  // Apply initial state from store
+  const visibility = state.get().panelVisibility
+  for (const [panelKey, panel] of Object.entries(panelElements)) {
+    const isVisible = visibility[panelKey as keyof typeof visibility]
+    if (panel) {
+      panel.classList.toggle('panel-hidden', !isVisible)
+    }
+  }
+
+  // Listen for visibility changes - this ALWAYS runs
+  eventUnsubscribes.push(
+    events.on('panel:visibility-changed', ({ panel, visible }) => {
+      const panelEl = panelElements[panel]
+      if (panelEl) {
+        panelEl.classList.toggle('panel-hidden', !visible)
+      }
+      console.log(`[PanelVisibility] ${panel}: ${visible}`)
+    })
+  )
+
+  console.log('[Studio] Panel visibility initialized')
+}
+
+/**
+ * Initialize the View Menu for panel visibility (legacy, optional)
  */
 function initializePanelToolbar(): void {
   const menuButton = document.getElementById('view-menu-button')
   const menu = document.getElementById('view-menu')
   if (!menuButton || !menu) return
 
-  // Panel ID to DOM element mapping
-  const panelElements: Record<string, HTMLElement | null> = {
-    prompt: document.getElementById('chat-panel'),
-    files: document.getElementById('explorer-panel') || document.querySelector('.sidebar'),
-    code: document.querySelector('.editor-panel'),
-    components: document.getElementById('components-panel'),
-    preview: document.querySelector('.preview-panel'),
-    property: document.getElementById('property-panel'),
-  }
-
-  // Apply initial state (defaults, then loaded from server after login)
+  // Apply initial state to checkboxes
   const visibility = state.get().panelVisibility
-  for (const [panelKey, panel] of Object.entries(panelElements)) {
+  for (const panelKey of Object.keys(panelElements)) {
     const isVisible = visibility[panelKey as keyof typeof visibility]
     const checkbox = menu.querySelector(`[data-panel="${panelKey}"] input`) as HTMLInputElement | null
-
-    if (panel) {
-      panel.classList.toggle('panel-hidden', !isVisible)
-    }
     if (checkbox) {
       checkbox.checked = isVisible
     }
@@ -871,20 +915,13 @@ function initializePanelToolbar(): void {
     actions.setPanelVisibility(panelKey, target.checked)
   })
 
-  // Listen for visibility changes (from state)
+  // Sync checkboxes with visibility changes
   eventUnsubscribes.push(
     events.on('panel:visibility-changed', ({ panel, visible }) => {
-      const panelEl = panelElements[panel]
       const checkbox = menu.querySelector(`[data-panel="${panel}"] input`) as HTMLInputElement | null
-
-      if (panelEl) {
-        panelEl.classList.toggle('panel-hidden', !visible)
-      }
       if (checkbox) {
         checkbox.checked = visible
       }
-
-      console.log(`[ViewMenu] ${panel} visibility: ${visible}`)
     })
   )
 
@@ -902,15 +939,6 @@ function initializeActivityBar(): void {
   if (!container) {
     console.warn('[Studio] Activity bar container not found')
     return
-  }
-
-  // Panel ID to DOM element mapping
-  const panelElements: Record<string, HTMLElement | null> = {
-    files: document.getElementById('explorer-panel') || document.querySelector('.sidebar'),
-    components: document.getElementById('components-panel'),
-    code: document.querySelector('.editor-panel'),
-    preview: document.querySelector('.preview-panel'),
-    property: document.getElementById('property-panel'),
   }
 
   // Activity Bar items for all panels
