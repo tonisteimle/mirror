@@ -293,10 +293,14 @@ export class EditorTriggerManager {
    * Select the current picker item
    */
   selectCurrent(view: EditorView): void {
-    if (!this.state.isOpen || !this.state.picker || !this.state.context) return
+    if (!this.state.isOpen || !this.state.picker || !this.state.context) {
+      return
+    }
 
     const config = this.triggers.get(this.state.triggerId!)
-    if (!config) return
+    if (!config) {
+      return
+    }
 
     const picker = this.state.picker
     let selectedValue: string | undefined
@@ -689,8 +693,10 @@ export class EditorTriggerManager {
       }
 
       // Recalculate filter text
+      // For char triggers, skip the trigger character (e.g., $ for tokens)
+      const triggerOffset = config.trigger.type === 'char' ? 1 : 0
       const line = update.view.state.doc.lineAt(toB)
-      const filterText = line.text.slice(this.state.startPos - line.from, toB - line.from)
+      const filterText = line.text.slice(this.state.startPos - line.from + triggerOffset, toB - line.from)
       this.filterPicker(filterText)
       return
     }
@@ -709,7 +715,9 @@ export class EditorTriggerManager {
 
     // Update filter
     const line = update.view.state.doc.lineAt(toB)
-    const filterText = line.text.slice(this.state.startPos - line.from, toB - line.from)
+    // For char triggers, skip the trigger character (e.g., $ for tokens)
+    const triggerOffset = config.trigger.type === 'char' ? 1 : 0
+    const filterText = line.text.slice(this.state.startPos - line.from + triggerOffset, toB - line.from)
     this.filterPicker(filterText)
   }
 

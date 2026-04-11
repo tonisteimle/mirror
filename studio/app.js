@@ -16,6 +16,7 @@ import {
   executor,
   RecordedChangeCommand,
   actions as studioActions,
+  state as studioState,
   mirrorCompletions,
   getStateSelectionAdapter,
   // New Unified Trigger System
@@ -41,7 +42,7 @@ import {
   insertComponentCode,
   insertComponentWithDefinition,
   generateComponentCodeFromDragData,
-} from './dist/index.js?v=122'
+} from './dist/index.js?v=125'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -3046,7 +3047,27 @@ const editorContainer = document.getElementById('editor-container')
 
 // Register all triggers with the new unified TriggerManager
 registerAllTriggers({
-  getFiles: () => files,
+  getFiles: () => {
+    // Try desktopFiles cache first
+    const desktopFilesCache = window.desktopFiles?.getFiles?.()
+    if (desktopFilesCache && Object.keys(desktopFilesCache).length > 0) {
+      return desktopFilesCache
+    }
+    // Try global files variable
+    if (files && Object.keys(files).length > 1) {
+      return files
+    }
+    // Fall back to localStorage (browser mode)
+    try {
+      const stored = localStorage.getItem('mirror-files')
+      if (stored) {
+        return JSON.parse(stored)
+      }
+    } catch (e) {
+      console.warn('Failed to read files from localStorage:', e)
+    }
+    return files
+  },
   componentPrimitives: getIconTriggerPrimitives(),
 })
 

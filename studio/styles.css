@@ -1973,16 +1973,19 @@
       font-family: var(--font-mono);
     }
 
-    /* Color Picker */
+    /* Color Picker - unified with Token Picker */
     .color-picker {
       position: fixed;
       background: var(--bg-panel);
       border: 1px solid var(--border-default);
       border-radius: var(--radius-lg);
-      padding: var(--space-6);
       box-shadow: var(--shadow-lg);
       z-index: 1000;
       display: none;
+      min-width: 220px;
+      max-width: 320px;
+      max-height: 400px;
+      overflow: hidden;
     }
 
     .color-picker.visible,
@@ -1993,6 +1996,7 @@
     .color-picker-grid {
       display: flex;
       gap: 1px;
+      padding: 0 var(--space-3);
     }
 
     .color-picker-column {
@@ -2014,14 +2018,16 @@
 
     .color-swatch:hover,
     .color-picker-swatch:hover {
-      transform: scale(1.3);
+      transform: scale(1.2);
       z-index: 1;
       position: relative;
     }
 
     .color-swatch.selected,
-    .color-picker-swatch.selected {
-      transform: scale(1.4);
+    .color-swatch.picker-selected,
+    .color-picker-swatch.selected,
+    .color-picker-swatch.picker-selected {
+      transform: scale(1.3);
       z-index: 2;
       position: relative;
       box-shadow: 0 0 0 2px var(--color-white), 0 0 0 3px var(--color-primary);
@@ -2032,15 +2038,16 @@
     }
 
     .color-picker-footer {
-      margin-top: 8px;
+      padding: var(--space-2) var(--space-3);
       display: flex;
       align-items: center;
-      gap: var(--space-4);
+      gap: var(--space-3);
+      border-top: 1px solid var(--border-subtle);
     }
 
     .color-preview {
-      width: var(--size-icon-xl);
-      height: var(--size-icon-xl);
+      width: var(--size-icon-lg);
+      height: var(--size-icon-lg);
       border-radius: var(--radius-sm);
       border: 1px solid var(--border-subtle);
     }
@@ -2053,7 +2060,7 @@
 
     /* Color Picker - Token Section */
     .color-picker-section {
-      margin-bottom: 8px;
+      padding: var(--space-2) 0;
     }
 
     .color-picker-section:empty {
@@ -2064,15 +2071,16 @@
     .color-picker-section-label {
       font-size: var(--font-xs);
       color: var(--syntax-comment);
-      text-transform: var(--text-uppercase);
+      text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
-      margin-bottom: 6px;
+      padding: var(--space-2) var(--space-3);
     }
 
     .color-picker-token-grid {
       display: flex;
       gap: 1px;
       flex-wrap: wrap;
+      padding: 0 var(--space-3);
     }
 
     .color-picker-token-grid:empty {
@@ -2080,7 +2088,7 @@
     }
 
     .color-picker-token-grid + .color-picker-label {
-      margin-top: 8px;
+      margin-top: var(--space-2);
     }
 
     .token-swatch {
@@ -2093,7 +2101,7 @@
     }
 
     .token-swatch:hover {
-      transform: scale(1.3);
+      transform: scale(1.2);
       z-index: 1;
       position: relative;
     }
@@ -2102,7 +2110,7 @@
     .color-picker-tabs {
       display: flex;
       gap: var(--space-1);
-      margin-bottom: 10px;
+      padding: var(--space-2) var(--space-3) 0;
       border-bottom: 1px solid var(--border-subtle);
       padding-bottom: 8px;
     }
@@ -2347,18 +2355,130 @@
       font-size: var(--font-base);
     }
 
-    /* Icon Picker */
+    /* Token Picker (Autocomplete Dropdown) */
+    .token-picker {
+      position: fixed;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      min-width: 220px;
+      max-width: 320px;
+      max-height: 320px;
+      overflow: hidden;
+    }
+
+    .token-picker-search {
+      padding: var(--space-3);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .token-picker-search-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-3);
+      color: var(--text-primary);
+      font-size: var(--font-sm);
+    }
+
+    .token-picker-search-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .token-picker-list {
+      max-height: 260px;
+      overflow-y: auto;
+      padding: var(--space-2) 0;
+    }
+
+    .token-picker-group {
+      margin-bottom: var(--space-2);
+    }
+
+    .token-picker-group-header {
+      font-size: var(--font-xs);
+      color: var(--syntax-comment);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wide);
+      padding: var(--space-2) var(--space-3);
+      position: sticky;
+      top: 0;
+      background: var(--bg-panel);
+    }
+
+    .token-picker-group-items {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .token-picker-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-3);
+      cursor: pointer;
+      transition: background 0.1s;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+    }
+
+    .token-picker-item:hover,
+    .token-picker-item:focus {
+      background: var(--bg-hover);
+      outline: none;
+    }
+
+    .token-picker-item.picker-selected {
+      background: var(--color-primary);
+    }
+
+    .token-picker-preview {
+      width: 16px;
+      height: 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--white-10);
+      flex-shrink: 0;
+    }
+
+    .token-picker-name {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: var(--font-sm);
+      color: var(--text-primary);
+    }
+
+    .token-picker-item.picker-selected .token-picker-name {
+      color: var(--text-inverse);
+    }
+
+    .token-picker-value {
+      font-family: var(--font-mono);
+      font-size: var(--font-xs);
+      color: var(--text-muted);
+    }
+
+    .token-picker-item.picker-selected .token-picker-value {
+      color: var(--white-70);
+    }
+
+    /* Icon Picker - unified with Token Picker */
     .icon-picker {
       position: fixed;
       background: var(--bg-panel);
       border: 1px solid var(--border-default);
       border-radius: var(--radius-lg);
-      padding: var(--space-6);
       box-shadow: var(--shadow-lg);
       z-index: 1000;
       display: none;
-      max-width: 340px;
-      max-height: 400px;
+      min-width: 220px;
+      max-width: 320px;
+      max-height: 320px;
       overflow: hidden;
     }
 
@@ -2368,36 +2488,37 @@
     }
 
     .icon-picker-section {
-      margin-bottom: 8px;
+      padding: var(--space-2) 0;
     }
 
     .icon-picker-section-label {
       font-size: var(--font-xs);
       color: var(--syntax-comment);
-      text-transform: var(--text-uppercase);
+      text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
-      margin-bottom: 6px;
+      padding: var(--space-2) var(--space-3);
     }
 
     .icon-picker-grid {
       display: grid;
-      grid-template-columns: repeat(12, 24px);
+      grid-template-columns: repeat(10, 1fr);
       gap: var(--space-1);
       overflow-y: auto;
-      max-height: 320px;
+      max-height: 260px;
+      padding: 0 var(--space-2);
     }
 
     .icon-picker-grid.recent {
       max-height: none;
       overflow: visible;
-      margin-bottom: 8px;
-      padding-bottom: 8px;
+      padding-bottom: var(--space-2);
       border-bottom: 1px solid var(--border-subtle);
     }
 
+    .icon-picker-item,
     .icon-item {
-      width: var(--size-icon-2xl);
-      height: var(--size-icon-2xl);
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2410,16 +2531,21 @@
       transition: background 0.1s, color 0.1s;
     }
 
+    .icon-picker-item:hover,
     .icon-item:hover {
       background: var(--bg-hover);
       color: var(--text-primary);
     }
 
+    .icon-picker-item.picker-selected,
+    .icon-item.picker-selected,
+    .icon-picker-item.selected,
     .icon-item.selected {
       background: var(--color-primary);
       color: var(--text-inverse);
     }
 
+    .icon-picker-item svg,
     .icon-item svg {
       width: var(--size-icon-md);
       height: var(--size-icon-md);
@@ -2427,15 +2553,15 @@
 
     .icon-picker-empty {
       color: var(--syntax-comment);
-      font-size: var(--font-base);
-      padding: var(--space-10);
+      font-size: var(--font-sm);
+      padding: var(--space-6) var(--space-3);
       text-align: center;
     }
 
     .icon-picker-loading {
       color: var(--syntax-comment);
-      font-size: var(--font-base);
-      padding: var(--space-10);
+      font-size: var(--font-sm);
+      padding: var(--space-6) var(--space-3);
       text-align: center;
     }
 
