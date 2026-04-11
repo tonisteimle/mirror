@@ -2,6 +2,7 @@ import { EditorState, RangeSetBuilder, Prec, Annotation, Transaction } from '@co
 import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection, Decoration, ViewPlugin } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo, undoDepth, redoDepth } from '@codemirror/commands'
 import { autocompletion, completionKeymap, startCompletion, closeCompletion } from '@codemirror/autocomplete'
+import { indentUnit } from '@codemirror/language'
 
 // Custom dialogs
 import { alert, confirm, prompt } from './dialog.js'
@@ -3225,6 +3226,7 @@ const editor = new EditorView({
   state: EditorState.create({
     doc: initialCode,
     extensions: [
+      indentUnit.of("  "), // 2 spaces for Mirror DSL
       lineNumbers(),
       highlightActiveLineGutter(),
       highlightActiveLine(),
