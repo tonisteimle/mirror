@@ -1749,9 +1749,9 @@ function selectColor(hex) {
       const safeTo = validatePosition(cursorPos, docLength, 'Hash trigger to')
 
       // Verify # still exists at expected position (catches edge cases)
-      const charBeforeFrom = safeFrom > 0 ? window.editor.state.doc.sliceString(safeFrom - 1, safeFrom) : ''
-      if (charBeforeFrom !== '#' && safeFrom > 0) {
-        console.warn(`[ColorPicker] Hash trigger: Expected # at position ${safeFrom - 1}, found '${charBeforeFrom}'. Inserting at cursor instead.`)
+      const charAtFrom = window.editor.state.doc.sliceString(safeFrom, safeFrom + 1)
+      if (charAtFrom !== '#') {
+        console.warn(`[ColorPicker] Hash trigger: Expected # at position ${safeFrom}, found '${charAtFrom}'. Inserting at cursor instead.`)
         insertColorAtPosition(window.editor, cursorPos, cursorPos, hex)
       } else {
         insertColorAtPosition(window.editor, safeFrom, safeTo, hex)
