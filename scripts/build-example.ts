@@ -72,7 +72,7 @@ function buildExample(mirrorPath: string): void {
 ${jsCode}
 
 // Execute
-(function() {
+;(function() {
   try {
     const ui = createUI();
     const root = ui instanceof HTMLElement ? ui : ui?.root;
