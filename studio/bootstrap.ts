@@ -811,6 +811,29 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         nodeIdAttr: 'data-mirror-id',
       })
     },
+
+    simulateDragTo: (params: {
+      componentName: string
+      cursor: { x: number; y: number }
+      properties?: string
+      textContent?: string
+    }) => {
+      const source = {
+        type: 'palette' as const,
+        componentName: params.componentName,
+        properties: params.properties,
+        textContent: params.textContent,
+      }
+      return dragDropV2.controller.simulateDragTo(source, params.cursor)
+    },
+
+    getState: () => {
+      return dragDropV2.controller.getState()
+    },
+
+    getVisualState: () => {
+      return dragDropV2.controller.getVisualState()
+    },
   } as unknown as DragDropSystem
 
   studio.dragDrop = dragDropSystem
