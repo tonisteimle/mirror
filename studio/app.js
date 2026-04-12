@@ -4453,7 +4453,9 @@ function initStudio() {
       // Project context for AI Agent
       getCurrentFile: () => currentFile,
       getFiles: () => {
-        return Object.entries(files).map(([name, code]) => ({
+        // Use desktop files cache if available (includes all preloaded files)
+        const allFiles = window.desktopFiles?.getFiles?.() || files
+        return Object.entries(allFiles).map(([name, code]) => ({
           name,
           type: detectFileType(name, code),
           code
