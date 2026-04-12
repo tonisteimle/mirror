@@ -310,56 +310,6 @@ class DOMGenerator {
     })
   }
 
-  /**
-   * Serialize a single data value to JavaScript code
-   * @deprecated Use serializeDataValue from token-emitter.ts
-   */
-  private serializeDataValue(value: unknown): string {
-    if (value === null || value === undefined) {
-      return 'null'
-    }
-
-    if (typeof value === 'string') {
-      return `"${escapeJSString(value)}"`
-    }
-
-    if (typeof value === 'number' || typeof value === 'boolean') {
-      return String(value)
-    }
-
-    if (Array.isArray(value)) {
-      // String array or reference array
-      if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null && '__ref' in value[0]) {
-        // Reference array
-        const refs = value.map(ref => this.serializeDataValue(ref))
-        return `[${refs.join(', ')}]`
-      }
-      // Regular string array
-      const items = value.map(item => typeof item === 'string' ? `"${escapeJSString(item)}"` : String(item))
-      return `[${items.join(', ')}]`
-    }
-
-    if (typeof value === 'object') {
-      // Check for reference
-      if (isIRDataReference(value)) {
-        return `{ __ref: true, collection: "${value.collection}", entry: "${value.entry}" }`
-      }
-
-      // Check for reference array
-      if (isIRDataReferenceArray(value)) {
-        const refs = value.references.map(ref =>
-          `{ __ref: true, collection: "${ref.collection}", entry: "${ref.entry}" }`
-        )
-        return `[${refs.join(', ')}]`
-      }
-
-      // Nested object - recurse
-      return serializeDataObject(value as Record<string, unknown>)
-    }
-
-    return 'null'
-  }
-
   private emitStyles(): void {
     this.emit('// Inject CSS styles')
     this.emit("const _style = document.createElement('style')")
