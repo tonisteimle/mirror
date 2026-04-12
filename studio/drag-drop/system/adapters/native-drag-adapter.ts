@@ -210,7 +210,8 @@ export function createNativeDragAdapter(config: NativeDragAdapterConfig): Native
         children: data.children,
         size,
       }
-    } catch {
+    } catch (error) {
+      console.warn('[DragDrop] Failed to parse component drag data:', error)
       return null
     }
   }

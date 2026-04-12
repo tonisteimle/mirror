@@ -183,6 +183,32 @@ export function createDOMStylePort(config: DOMAdaptersConfig): StylePort {
 // DOM Event Port
 // ============================================
 
+// Type guards for validating drag source data
+function isValidCanvasSourceData(data: unknown): data is { type: 'canvas'; nodeId: string } {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    (data as Record<string, unknown>).type === 'canvas' &&
+    typeof (data as Record<string, unknown>).nodeId === 'string'
+  )
+}
+
+function isValidPaletteSourceData(data: unknown): data is {
+  type: 'palette'
+  componentName: string
+  componentId?: string
+  properties?: string
+  textContent?: string
+  children?: unknown
+} {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    (data as Record<string, unknown>).type === 'palette' &&
+    typeof (data as Record<string, unknown>).componentName === 'string'
+  )
+}
+
 /**
  * Extended type for DOM Event Port with trigger methods and drag registration.
  */
@@ -246,22 +272,23 @@ export function createDOMEventPort(): DOMEventPort {
 
     monitorCleanup = monitorForElements({
       onDragStart: ({ source, location }) => {
-        const data = source.data as Record<string, unknown>
+        const data = source.data
         let dragSource: DragSource | null = null
 
-        if (data.type === 'canvas' && data.nodeId) {
+        // Use type guards for safe data extraction
+        if (isValidCanvasSourceData(data)) {
           dragSource = {
             type: 'canvas',
-            nodeId: data.nodeId as string,
+            nodeId: data.nodeId,
             element: source.element as HTMLElement,
           }
-        } else if (data.type === 'palette' && data.componentName) {
+        } else if (isValidPaletteSourceData(data)) {
           dragSource = {
             type: 'palette',
-            componentId: data.componentId as string | undefined,
-            componentName: data.componentName as string,
-            properties: data.properties as string | undefined,
-            textContent: data.textContent as string | undefined,
+            componentId: data.componentId,
+            componentName: data.componentName,
+            properties: data.properties,
+            textContent: data.textContent,
             children: data.children as DragSource['children'],
           }
         }
@@ -440,11 +467,6 @@ export function createDOMVisualPort(container: HTMLElement): VisualPort {
 
     hideAll(): void {
       visualSystem.clear()
-    },
-
-    updatePreview(cursor: Point, source: DragSource): void {
-      // The current VisualSystem doesn't have a preview update method
-      // This is a placeholder for potential future implementation
     },
   }
 }

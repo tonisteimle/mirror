@@ -22,7 +22,12 @@ import { ComponentPanel, createComponentPanel, UserComponentsPanel, createUserCo
 import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
-import { createDragDropSystem, createCodeExecutor, type DragDropSystem } from './drag-drop'
+import {
+  createCodeExecutor,
+  bootstrapDragDrop,
+  type DragDropSystem,
+  type DragDropBootstrapResult,
+} from './drag-drop'
 import { initUserSettings } from './storage/user-settings'
 import { initStudioTestAPI } from './test-api'
 import { triggerRename, isRenameActive, closeRename } from './rename'
@@ -95,7 +100,6 @@ export const studio: StudioInstance = {
   propertyPanel: null,
   componentPanel: null,
   userComponentsPanel: null,
-  explorerPanel: null,
   editorDropHandler: null,
   breadcrumb: null,
   autocomplete: getAutocompleteEngine(),
@@ -117,7 +121,6 @@ export const studio: StudioInstance = {
     studio.propertyPanel?.detach()
     studio.componentPanel?.dispose()
     studio.userComponentsPanel?.dispose()
-    studio.explorerPanel?.dispose()
     studio.editorDropHandler?.detach()
     studio.drawManager?.dispose()
     studio.inlineEdit?.dispose()
@@ -132,7 +135,6 @@ export const studio: StudioInstance = {
     studio.propertyPanel = null
     studio.componentPanel = null
     studio.userComponentsPanel = null
-    studio.explorerPanel = null
     studio.editorDropHandler = null
     studio.breadcrumb = null
     studio.drawManager = null
@@ -701,19 +703,35 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     },
   })
 
-  // Initialize drag-drop system (Webflow-style)
-  const dragDropSystem = createDragDropSystem({
+  // ============================================
+  // Drag & Drop System (Hexagonal Architecture)
+  // ============================================
+  const dragDropV2 = bootstrapDragDrop({
     container: config.previewContainer,
-    codeExecutor,
+    getSource: () => editorController.getContent(),
+    getResolvedSource: () => state.get().resolvedSource,
+    getPreludeOffset: () => state.get().preludeOffset,
+    getSourceMap: () => state.get().sourceMap,
+    getCurrentFile: () => getCurrentFileCallback?.() || 'index.mir',
+    applyChange: (newSource: string) => {
+      editorController.setContent(newSource)
+    },
+    recompile: () => {
+      events.emit('compile:requested', {})
+    },
+    createModifier: (source: string, sourceMap: SourceMap) => {
+      return new CodeModifier(source, sourceMap)
+    },
+    getLayoutInfo: () => state.get().layoutInfo,
     enableAltDuplicate: true,
-    onDragStart: (source) => {
+    onDragStart: (source: any) => {
       if (source.type === 'canvas') {
         console.log('[DragDrop] Move started:', source.nodeId)
       } else {
         console.log('[DragDrop] Insert started:', source.componentName)
       }
     },
-    onDrop: (source, result) => {
+    onDrop: (source: any, result: any) => {
       console.log('[DragDrop] Drop:', source.type, result.placement, result.targetId)
       if (result.target?.nodeId) {
         actions.setDeferredSelection({
@@ -723,19 +741,43 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         })
       }
     },
-    onDragEnd: (source, success) => {
+    onDragEnd: (source: any, success: boolean) => {
       console.log('[DragDrop] End:', success ? 'success' : 'cancelled')
     },
-    // Phase 5: Use cached layoutInfo instead of DOM reads
-    getLayoutInfo: () => state.get().layoutInfo,
   })
 
-  dragDropSystem.init()
-  studio.dragDrop = dragDropSystem
+  // Legacy adapter for compatibility with app.js (uses makeElementDraggable)
+  const dragDropSystem: DragDropSystem = {
+    init: () => {},
+    registerPaletteItem: () => () => {},
+    enableCanvasDrag: (nodeId: string) => {
+      const element = config.previewContainer.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+      if (!element) return () => {}
+      return dragDropV2.registerCanvasElement(nodeId, element)
+    },
+    makeElementDraggable: (element: HTMLElement) => {
+      const nodeId = element.getAttribute('data-mirror-id')
+      if (!nodeId) {
+        console.warn('[DragDrop] makeElementDraggable: element has no data-mirror-id')
+        return () => {}
+      }
+      return dragDropV2.registerCanvasElement(nodeId, element)
+    },
+    disable: () => dragDropV2.disable(),
+    enable: () => dragDropV2.enable(),
+    isDisabled: () => dragDropV2.isDisabled(),
+    dispose: () => dragDropV2.dispose(),
+  } as unknown as DragDropSystem
 
-  // Expose DragDropSystem globally for E2E testing
-  // This allows Playwright tests to use the programmatic Test API
+  studio.dragDrop = dragDropSystem
   initStudioTestAPI(studio, dragDropSystem)
+
+  // Expose for E2E testing
+  if (typeof window !== 'undefined') {
+    ;(window as any).__mirrorDragDropV2__ = dragDropV2
+  }
+
+  console.log('[Studio] Drag-drop initialized')
 
   // Disable drag during compile to prevent stale SourceMap issues
   eventUnsubscribes.push(
@@ -749,8 +791,6 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       dragDropSystem.enable()
     })
   )
-
-  console.log('[Studio] Drag-drop initialized (Webflow-style)')
 
   // ============================================
   // Component Event Handlers
@@ -783,14 +823,6 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         })
         studio.editor.insertAtCursor('\n' + code)
       }
-    })
-  )
-
-  // Handle explorer view changes
-  eventUnsubscribes.push(
-    events.on('explorer:view-changed', ({ view }) => {
-      // Could persist preference or update UI state
-      console.log('[Studio] Explorer view changed to:', view)
     })
   )
 

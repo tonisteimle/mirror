@@ -57,6 +57,12 @@ export interface DragDropSystem {
   /** Enable canvas elements as drag sources */
   enableCanvasDrag(nodeId: string): () => void
 
+  /**
+   * Legacy: Make an element draggable (preview canvas element)
+   * @deprecated Use enableCanvasDrag instead
+   */
+  makeElementDraggable?(element: HTMLElement): () => void
+
   /** Temporarily disable drag operations (e.g., during compile) */
   disable(): void
 

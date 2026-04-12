@@ -44,8 +44,6 @@ export type { VisualSystem as IVisualSystem } from './visual'
 
 // System
 export {
-  DragDropSystem,
-  createDragDropSystem,
   detectTarget,
   findClosestTarget,
   getChildRects,
@@ -53,7 +51,7 @@ export {
   getContainerRect,
 } from './system'
 
-export type { DragDropConfig, DragState } from './system'
+export type { DragDropConfig, DragState, DragDropSystem } from './system'
 
 // Executor
 export { CodeExecutor as CodeExecutorImpl, createCodeExecutor } from './executor'

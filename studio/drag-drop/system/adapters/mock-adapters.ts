@@ -273,8 +273,6 @@ export interface MockVisualPortState {
   indicatorHint: VisualHint | null
   outlineRect: Rect | null
   isHidden: boolean
-  previewCursor: Point | null
-  previewSource: DragSource | null
 }
 
 export function createMockVisualPort(): VisualPort & {
@@ -285,8 +283,6 @@ export function createMockVisualPort(): VisualPort & {
     indicatorHint: null,
     outlineRect: null,
     isHidden: true,
-    previewCursor: null,
-    previewSource: null,
   }
 
   return {
@@ -303,13 +299,6 @@ export function createMockVisualPort(): VisualPort & {
       state.indicatorHint = null
       state.outlineRect = null
       state.isHidden = true
-      state.previewCursor = null
-      state.previewSource = null
-    },
-
-    updatePreview(cursor: Point, source: DragSource): void {
-      state.previewCursor = cursor
-      state.previewSource = source
     },
 
     // Test helpers
@@ -321,8 +310,6 @@ export function createMockVisualPort(): VisualPort & {
       state.indicatorHint = null
       state.outlineRect = null
       state.isHidden = true
-      state.previewCursor = null
-      state.previewSource = null
     },
   }
 }

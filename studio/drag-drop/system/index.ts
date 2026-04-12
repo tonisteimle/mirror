@@ -1,17 +1,16 @@
 /**
  * System Module
  *
- * Exports both the legacy DragDropSystem and the new hexagonal architecture.
+ * Hexagonal architecture for Drag & Drop operations.
  */
 
 // ============================================
-// Legacy System (to be deprecated)
+// Types
 // ============================================
 
-export { DragDropSystem, createDragDropSystem } from './drag-drop-system'
 export type {
   DragDropConfig,
-  DragDropSystem as IDragDropSystem,
+  DragDropSystem,
   DragState,
 } from './types'
 export {
@@ -23,7 +22,7 @@ export {
 } from './target-detector'
 
 // ============================================
-// New Hexagonal Architecture
+// Hexagonal Architecture
 // ============================================
 
 // Controller (orchestrates everything)

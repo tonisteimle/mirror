@@ -68,6 +68,18 @@ interface ModeDebounceState {
   timer: ReturnType<typeof setTimeout> | null
 }
 
+/**
+ * Debounce delay for mode transitions (flex ↔ absolute).
+ *
+ * When dragging near container edges, the cursor can rapidly cross the boundary
+ * between flex and absolute drop zones, causing visual flickering. This delay
+ * prevents mode switches until the cursor has "settled" in the new zone.
+ *
+ * Value derived empirically:
+ * - 50ms: Still allows some flickering during fast diagonal drags
+ * - 80ms: Good balance between responsiveness and stability
+ * - 100ms+: Feels sluggish, noticeable delay when intentionally switching modes
+ */
 const MODE_TRANSITION_DEBOUNCE_MS = 80
 
 // ============================================
@@ -98,8 +110,15 @@ export class DragDropController {
 
   /**
    * Initialize the controller - bind all event handlers.
+   * Safe to call multiple times - existing handlers are cleaned up first.
    */
   init(): void {
+    // Clean up any existing handlers to prevent accumulation
+    for (const cleanup of this.cleanupFns) {
+      cleanup()
+    }
+    this.cleanupFns = []
+
     // Drag events
     this.cleanupFns.push(
       this.ports.events.onDragStart((source, cursor) => {
@@ -166,7 +185,7 @@ export class DragDropController {
    */
   dispose(): void {
     this.dispatch({ type: 'RESET' })
-    this.clearModeTimer()
+    this.resetModeState()
 
     for (const cleanup of this.cleanupFns) {
       cleanup()
@@ -229,45 +248,59 @@ export class DragDropController {
     const source = getSource(this.state)
     if (!source) return
 
-    // Find target under cursor
-    const target = this.ports.targetDetection.findTarget(cursor, source)
+    try {
+      // Find target under cursor
+      const target = this.ports.targetDetection.findTarget(cursor, source)
 
-    if (!target) {
-      // Lost target
-      if (isOverTarget(this.state)) {
-        this.dispatch({ type: 'TARGET_LOST' })
+      if (!target) {
+        // Lost target
+        if (isOverTarget(this.state)) {
+          this.dispatch({ type: 'TARGET_LOST' })
+        }
+        return
       }
-      return
-    }
 
-    // Get rects for calculation
-    const childRects = this.ports.layout.getChildRects(target.element)
-    const containerRect = this.ports.layout.getContainerRect(target.element)
+      // Get rects for calculation
+      const childRects = this.ports.layout.getChildRects(target.element)
+      const containerRect = this.ports.layout.getContainerRect(target.element)
 
-    if (!containerRect) {
-      if (isOverTarget(this.state)) {
-        this.dispatch({ type: 'TARGET_LOST' })
+      if (!containerRect) {
+        if (isOverTarget(this.state)) {
+          this.dispatch({ type: 'TARGET_LOST' })
+        }
+        return
       }
-      return
-    }
 
-    // Calculate drop result
-    const result = this.ports.targetDetection.calculateResult(
-      cursor,
-      target,
-      source,
-      childRects,
-      containerRect
-    )
+      // Calculate drop result
+      const result = this.ports.targetDetection.calculateResult(
+        cursor,
+        target,
+        source,
+        childRects,
+        containerRect
+      )
 
-    // Handle mode debouncing
-    const newMode = this.getDropMode(target)
-    const effectiveResult = this.handleModeTransition(newMode, result)
+      // Handle mode debouncing
+      const newMode = this.getDropMode(target)
+      const effectiveResult = this.handleModeTransition(newMode, result)
 
-    // Dispatch appropriate event
-    if (isOverTarget(this.state)) {
-      // Already over a target - check if it changed
-      if (this.state.target.nodeId !== target.nodeId) {
+      // Dispatch appropriate event
+      if (isOverTarget(this.state)) {
+        // Already over a target - check if it changed
+        if (this.state.target.nodeId !== target.nodeId) {
+          this.dispatch({
+            type: 'TARGET_FOUND',
+            target,
+            result: effectiveResult,
+            childRects,
+            containerRect,
+          })
+        } else {
+          // Same target, just update result
+          this.dispatch({ type: 'TARGET_UPDATED', result: effectiveResult })
+        }
+      } else {
+        // New target found
         this.dispatch({
           type: 'TARGET_FOUND',
           target,
@@ -275,23 +308,17 @@ export class DragDropController {
           childRects,
           containerRect,
         })
-      } else {
-        // Same target, just update result
-        this.dispatch({ type: 'TARGET_UPDATED', result: effectiveResult })
       }
-    } else {
-      // New target found
-      this.dispatch({
-        type: 'TARGET_FOUND',
-        target,
-        result: effectiveResult,
-        childRects,
-        containerRect,
-      })
-    }
 
-    // Update visuals
-    this.updateVisuals(effectiveResult, childRects, containerRect)
+      // Update visuals
+      this.updateVisuals(effectiveResult, childRects, containerRect)
+    } catch (error) {
+      console.error('[DragDrop] Target detection failed:', error)
+      // Cancel the drag operation gracefully
+      if (isOverTarget(this.state)) {
+        this.dispatch({ type: 'TARGET_LOST' })
+      }
+    }
   }
 
   /**

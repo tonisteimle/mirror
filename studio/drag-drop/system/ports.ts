@@ -192,11 +192,6 @@ export interface VisualPort {
    * Versteckt alle visuellen Elemente.
    */
   hideAll(): void
-
-  /**
-   * Aktualisiert das Drag-Preview (Ghost des gezogenen Elements).
-   */
-  updatePreview?(cursor: Point, source: DragSource): void
 }
 
 // ============================================

@@ -274,16 +274,6 @@ describe('MockVisualPort', () => {
     expect(state.outlineRect).toBeNull()
   })
 
-  it('updatePreview stores cursor and source', () => {
-    const port = createMockVisualPort()
-    const cursor = { x: 150, y: 150 }
-    port.updatePreview?.(cursor, mockSource)
-
-    const state = port.getState()
-    expect(state.previewCursor).toEqual(cursor)
-    expect(state.previewSource).toEqual(mockSource)
-  })
-
   it('reset clears state', () => {
     const port = createMockVisualPort()
     port.showIndicator(mockHint)
