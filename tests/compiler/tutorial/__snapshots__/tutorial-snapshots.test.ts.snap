@@ -2358,8 +2358,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
                   "value": "row",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "justify-content",
@@ -2637,8 +2637,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "justify-content",
@@ -2773,8 +2773,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
                       "value": "row",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "justify-content",
@@ -6833,8 +6833,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 5 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "justify-content",
@@ -25218,8 +25218,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "justify-content",
@@ -27663,8 +27663,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
                       "value": "row",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "justify-content",

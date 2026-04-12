@@ -12,6 +12,7 @@
 
 import type { FixerContext, ProjectContext, FileInfo } from './types'
 import { state } from '../core'
+import { logAgent } from '../../compiler/utils/logger'
 
 // ============================================
 // CONSTANTS
@@ -176,7 +177,7 @@ export class ContextCollector {
 
       // Validate sourceMap has required methods
       if (typeof sourceMap.getNodeById !== 'function') {
-        console.warn('[ContextCollector] SourceMap missing getNodeById method')
+        logAgent.warn('ContextCollector: SourceMap missing getNodeById method')
         return emptyContext
       }
 
@@ -193,7 +194,7 @@ export class ContextCollector {
 
       // Validate node has position
       if (!node.position || typeof node.position.line !== 'number') {
-        console.warn('[ContextCollector] Node missing valid position:', nodeId)
+        logAgent.warn('ContextCollector: Node missing valid position:', nodeId)
         return emptyContext
       }
 
@@ -221,7 +222,7 @@ export class ContextCollector {
 
       // Validate line index
       if (lineIndex < 0 || lineIndex >= lines.length) {
-        console.warn('[ContextCollector] Invalid line index:', lineIndex)
+        logAgent.warn('ContextCollector: Invalid line index:', lineIndex)
         return emptyContext
       }
 
@@ -247,7 +248,7 @@ export class ContextCollector {
         depth
       }
     } catch (error) {
-      console.error('[ContextCollector] Error getting AST context:', error)
+      logAgent.error('ContextCollector: Error getting AST context:', error)
       return emptyContext
     }
   }
@@ -298,7 +299,7 @@ export class ContextCollector {
       const entry = this.history[0]
       const maxContentSize = MAX_HISTORY_TOTAL_SIZE - 50 // Leave room for truncation marker
       entry.content = entry.content.slice(0, maxContentSize) + '... [truncated due to size]'
-      console.warn('[ContextCollector] Single history entry truncated due to size limit')
+      logAgent.warn('ContextCollector: Single history entry truncated due to size limit')
     }
   }
 

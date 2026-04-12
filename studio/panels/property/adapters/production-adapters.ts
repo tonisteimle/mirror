@@ -23,6 +23,9 @@ import type {
   PropertyChange,
   Rect
 } from '../ports'
+import { createLogger } from '../../../../compiler/utils/logger'
+
+const log = createLogger('SelectionAdapter')
 
 // ============================================
 // Selection Provider Interface
@@ -60,12 +63,12 @@ export function createSelectionAdapter(selectionProvider: SelectionProvider): Se
     select(nodeId) {
       // Selection is typically managed externally
       // This is a read-mostly port
-      console.warn('[SelectionAdapter] Direct selection not supported - use SelectionManager')
+      log.warn('Direct selection not supported - use SelectionManager')
     },
 
     clearSelection() {
       // Selection is typically managed externally
-      console.warn('[SelectionAdapter] Direct clear not supported - use SelectionManager')
+      log.warn('Direct clear not supported - use SelectionManager')
     }
   }
 }

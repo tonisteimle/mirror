@@ -14,6 +14,7 @@ import { validateAndFix, formatErrors } from './validator'
 import { getLLMBridge } from '../llm'
 import { state } from '../core'
 import type { LLMCommand } from './types'
+import { logAgent } from '../../compiler/utils/logger'
 
 // ============================================
 // CONFIGURATION
@@ -203,7 +204,7 @@ export class AgentIntegration {
       if (command.type === 'REPLACE_ALL' && command.code) {
         const validationResult = validateAndFix(command.code)
         if (validationResult.fixedCode) {
-          console.log('[Agent] Auto-fixed structural issues in generated code')
+          logAgent.info('Auto-fixed structural issues in generated code')
           command = { ...command, code: validationResult.fixedCode }
         }
         if (!validationResult.valid && validationResult.errors.length > 0) {
@@ -211,7 +212,7 @@ export class AgentIntegration {
             e.type === 'self-closing-with-children'
           )
           if (criticalErrors.length > 0) {
-            console.warn('[Agent] Generated code has structural issues:\n', formatErrors(criticalErrors))
+            logAgent.warn('Generated code has structural issues:\n', formatErrors(criticalErrors))
             if (this.config.onError) {
               this.config.onError(`Code has structural issues that need manual fixing:\n${formatErrors(criticalErrors)}`)
             }
@@ -222,7 +223,7 @@ export class AgentIntegration {
       const result = await this.commandHandler.processCommand(command)
 
       if (result.success) {
-        console.log('[Agent] Project command processed:', result.message)
+        logAgent.info('Project command processed:', result.message)
 
         // If there's a code change, apply it through LLMBridge
         if (result.change) {
@@ -234,7 +235,7 @@ export class AgentIntegration {
           })
         }
       } else {
-        console.error('[Agent] Project command failed:', result.error)
+        logAgent.error('Project command failed:', result.error)
         if (this.config.onError) {
           this.config.onError(result.error || 'Project command failed')
         }
@@ -244,7 +245,7 @@ export class AgentIntegration {
       const validationResult = validateAndFix(command.insert)
 
       if (validationResult.fixedCode) {
-        console.log('[Agent] Auto-fixed structural issues in generated code')
+        logAgent.info('Auto-fixed structural issues in generated code')
         command = { ...command, insert: validationResult.fixedCode }
       }
 
@@ -255,7 +256,7 @@ export class AgentIntegration {
         )
 
         if (criticalErrors.length > 0) {
-          console.warn('[Agent] Generated code has structural issues:\n', formatErrors(criticalErrors))
+          logAgent.warn('Generated code has structural issues:\n', formatErrors(criticalErrors))
           // Still apply the code but warn the user
           if (this.config.onError) {
             this.config.onError(`Code has structural issues that need manual fixing:\n${formatErrors(criticalErrors)}`)

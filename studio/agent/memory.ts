@@ -5,6 +5,7 @@
  */
 
 import { getUserSettings } from '../storage/user-settings'
+import { logAgent } from '../../compiler/utils/logger'
 
 // ============================================
 // TYPES
@@ -412,9 +413,9 @@ export class MemoryStore {
           }))
         }
         if (data.snippets) this.snippets = new Map(data.snippets)
-        console.log('[MemoryStore] Loaded from server')
+        logAgent.info('MemoryStore loaded from server')
       } catch (e) {
-        console.error('[MemoryStore] Failed to load:', e)
+        logAgent.error('MemoryStore failed to load:', e)
       }
     }
   }
@@ -455,7 +456,7 @@ export class MemoryStore {
       if (data.snippets) this.snippets = new Map(data.snippets)
       this.save()
     } catch (e) {
-      console.error('Failed to import memory:', e)
+      logAgent.error('Failed to import memory:', e)
     }
   }
 

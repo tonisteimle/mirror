@@ -22,6 +22,9 @@ import {
 } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('ComponentPanel')
 
 // =============================================================================
 // User Component Parser
@@ -212,7 +215,7 @@ export class ComponentPanel {
 
     scheduleIdle(() => {
       this.ghostRenderer.warmCache(allItems).catch((err) => {
-        console.warn('[ComponentPanel] Ghost cache warming failed:', err)
+        log.warn('Ghost cache warming failed:', err)
       })
     })
   }

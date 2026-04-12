@@ -4,6 +4,9 @@
  * Stores the last N used component IDs in localStorage for quick access.
  */
 
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('UsageTracker')
 const STORAGE_KEY = 'mirror-recent-components'
 const MAX_RECENT = 5
 
@@ -81,9 +84,7 @@ export class UsageTracker {
       }
     } catch (err) {
       // Ignore parse errors but log in development
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[UsageTracker] Failed to load recent items:', err)
-      }
+      log.warn('Failed to load recent items:', err)
       this.recentIds = []
     }
   }
@@ -96,9 +97,7 @@ export class UsageTracker {
       localStorage.setItem(this.storageKey, JSON.stringify(this.recentIds))
     } catch (err) {
       // Ignore storage errors (e.g., quota exceeded) but log in development
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[UsageTracker] Failed to save recent items:', err)
-      }
+      log.warn('Failed to save recent items:', err)
     }
   }
 }

@@ -10,6 +10,7 @@
  */
 
 import type { FixerResponse, FixerChange, FixerContext } from './types'
+import { logAgent } from '../../compiler/utils/logger'
 
 // ============================================
 // CONSTANTS
@@ -157,7 +158,7 @@ export class CodeApplicator {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error applying changes'
 
       // Phase 3: Rollback all changes on failure
-      console.warn('[CodeApplicator] Error applying changes, rolling back:', errorMessage)
+      logAgent.warn('CodeApplicator: Error applying changes, rolling back:', errorMessage)
       await this.rollback(snapshots)
 
       return {
@@ -191,7 +192,7 @@ export class CodeApplicator {
         if (snapshot.wasCreated) {
           // File was created, we can't delete it (no deleteFile in config)
           // Just log it - the file will remain but with empty content
-          console.warn(`[CodeApplicator] Cannot delete created file during rollback: ${snapshot.path}`)
+          logAgent.warn(`CodeApplicator: Cannot delete created file during rollback: ${snapshot.path}`)
         } else if (snapshot.content !== null) {
           // Restore original content
           await this.config.saveFile(snapshot.path, snapshot.content)
@@ -203,7 +204,7 @@ export class CodeApplicator {
         }
       } catch (e) {
         // Log but continue with other rollbacks
-        console.error(`[CodeApplicator] Failed to rollback ${snapshot.path}:`, e)
+        logAgent.error(`CodeApplicator: Failed to rollback ${snapshot.path}:`, e)
       }
     }
 

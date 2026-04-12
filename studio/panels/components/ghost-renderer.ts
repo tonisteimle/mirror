@@ -7,6 +7,9 @@
  */
 
 import type { ComponentItem, ComponentChild } from './types'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('GhostRenderer')
 
 // Default sizes for drag ghost previews
 const COMPONENT_DEFAULT_SIZES: Record<string, { width: number; height: number }> = {
@@ -301,7 +304,7 @@ export class GhostRenderer {
 
       // Log with context
       const errorMsg = error instanceof Error ? error.message : String(error)
-      console.warn(`[GhostRenderer] Failed to render "${item.name}":`, errorMsg)
+      log.warn(`Failed to render "${item.name}":`, errorMsg)
 
       return this.createFallback(item)
     }
@@ -361,7 +364,7 @@ export class GhostRenderer {
 
     // Log summary if there were failures
     if (failures.length > 0) {
-      console.warn(`[GhostRenderer] Cache warm-up: ${failures.length}/${items.length} items failed`)
+      log.warn(`Cache warm-up: ${failures.length}/${items.length} items failed`)
     }
   }
 

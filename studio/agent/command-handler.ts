@@ -6,6 +6,7 @@
  */
 
 import type { LLMCommand, FileType } from './types'
+import { logAgent } from '../../compiler/utils/logger'
 
 // ============================================
 // TYPES
@@ -69,7 +70,7 @@ export class AgentCommandHandler {
         return this.handleReplaceAll(command)
 
       default:
-        console.log(`[CommandHandler] Unhandled command type: ${command.type}`)
+        logAgent.info(`Unhandled command type: ${command.type}`)
         return { success: true, message: `Command ${command.type} logged` }
     }
   }

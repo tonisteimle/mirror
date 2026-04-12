@@ -22,6 +22,7 @@ import type {
 import { ContextCollector, extractProjectContext, createContextCollector } from './context-collector'
 import { CodeApplicator, createCodeApplicator } from './code-applicator'
 import { buildFixerSystemPrompt, buildFixerPrompt } from './prompts/fixer-system'
+import { logAgent } from '../../compiler/utils/logger'
 
 // ============================================
 // CONSTANTS
@@ -203,7 +204,7 @@ export class FixerService {
           if (outputBuffer.length < MAX_OUTPUT_BUFFER_SIZE) {
             outputBuffer.push(output)
           } else {
-            console.warn('[Fixer] Output buffer full, dropping event')
+            logAgent.warn('Fixer output buffer full, dropping event')
           }
         }
       })
@@ -315,7 +316,7 @@ export class FixerService {
           } else if (fullContent.length < MAX_CONTENT_SIZE) {
             // Add as much as we can
             fullContent += output.content.slice(0, MAX_CONTENT_SIZE - fullContent.length)
-            console.warn('[Fixer] Response content truncated at', MAX_CONTENT_SIZE, 'bytes')
+            logAgent.warn('Fixer response content truncated at', MAX_CONTENT_SIZE, 'bytes')
           }
           yield { type: 'text', content: output.content }
         }
@@ -327,7 +328,7 @@ export class FixerService {
       this.sessionId = result.session_id
 
       if (resultError) {
-        console.error('[Fixer] Error from agent:', resultError)
+        logAgent.error('Fixer error from agent:', resultError)
       }
 
       if (!result.success && result.error) {
@@ -362,7 +363,7 @@ export class FixerService {
   async quickFix(prompt: string): Promise<FixerResponse | null> {
     // FIX #3: Prevent concurrent processing
     if (this.isProcessing) {
-      console.warn('[Fixer] Already processing, ignoring quickFix')
+      logAgent.warn('Fixer already processing, ignoring quickFix')
       return null
     }
 
@@ -403,7 +404,7 @@ export class FixerService {
         }
       }
     } catch (e) {
-      console.error('[Fixer] Quick fix error:', e)
+      logAgent.error('Fixer quick fix error:', e)
     } finally {
       this.isProcessing = false
     }
@@ -497,7 +498,7 @@ export class FixerService {
 
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : String(e)
-      console.error('[Fixer] Parse error:', {
+      logAgent.error('Fixer parse error:', {
         error: errorMsg,
         textLength: text.length,
         textPreview: text.substring(0, 200)
@@ -618,7 +619,7 @@ export class FixerService {
   private cloneResponse(response: FixerResponse): FixerResponse {
     const limitedChanges = response.changes.slice(0, MAX_CHANGES_PER_RESPONSE)
     if (response.changes.length > MAX_CHANGES_PER_RESPONSE) {
-      console.warn(`[Fixer] Response has ${response.changes.length} changes, limiting to ${MAX_CHANGES_PER_RESPONSE}`)
+      logAgent.warn(`Fixer response has ${response.changes.length} changes, limiting to ${MAX_CHANGES_PER_RESPONSE}`)
     }
     return {
       ...response,

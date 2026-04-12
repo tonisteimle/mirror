@@ -4,6 +4,8 @@
  * Shows visual feedback during agent tool execution.
  */
 
+import { logAgent } from '../../compiler/utils/logger'
+
 // ============================================
 // TYPES
 // ============================================
@@ -336,7 +338,7 @@ export class VisualFeedbackManager {
 
   onError(message: string): void {
     // Could show error indicator
-    console.error('Agent error:', message)
+    logAgent.error('Agent error:', message)
   }
 
   // ============================================

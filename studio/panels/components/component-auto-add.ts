@@ -8,6 +8,9 @@
 import { storage } from '../../storage'
 import { COMPONENT_TEMPLATES } from './component-templates'
 import type { StorageItem } from '../../storage'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('ComponentAutoAdd')
 
 /**
  * Check if a component is already defined in any .com file
@@ -26,7 +29,7 @@ export async function isComponentDefined(componentName: string): Promise<boolean
         return true
       }
     } catch (err) {
-      console.warn(`[ComponentAutoAdd] Failed to read ${filePath}:`, err)
+      log.warn(`Failed to read ${filePath}:`, err)
     }
   }
 
@@ -65,20 +68,20 @@ export async function addComponentToComFile(componentId: string): Promise<boolea
   // Get the com template
   const templates = COMPONENT_TEMPLATES[componentId]
   if (!templates?.com) {
-    console.warn(`[ComponentAutoAdd] No com template for ${componentId}`)
+    log.warn(`No com template for ${componentId}`)
     return false
   }
 
   // Extract component name from template (first word of first line)
   const componentName = templates.com.split(/[\s\n]/)[0]
   if (!componentName) {
-    console.warn(`[ComponentAutoAdd] Could not extract component name from template`)
+    log.warn(`Could not extract component name from template`)
     return false
   }
 
   // Check if already defined
   if (await isComponentDefined(componentName)) {
-    console.log(`[ComponentAutoAdd] ${componentName} already defined, skipping`)
+    log.info(`${componentName} already defined, skipping`)
     return false
   }
 
@@ -100,7 +103,7 @@ export async function addComponentToComFile(componentId: string): Promise<boolea
   // Write back
   await storage.writeFile(comFilePath, newContent)
 
-  console.log(`[ComponentAutoAdd] Added ${componentName} to ${comFilePath}`)
+  log.info(`Added ${componentName} to ${comFilePath}`)
   return true
 }
 

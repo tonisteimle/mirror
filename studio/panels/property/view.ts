@@ -21,6 +21,9 @@ import {
   createVisualSection
 } from './sections'
 import type { BaseSection, SectionData, EventHandlerMap, SectionDependencies } from './base/section'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('PropertyPanelView')
 
 // ============================================
 // View Options
@@ -408,9 +411,9 @@ export class PropertyPanelView {
       const { property, currentValue } = data
       // TODO: Integrate with ColorPicker
       // For now, emit an event that the color picker can listen to
-      console.log('[PropertyPanelView] Color picker requested for:', property, currentValue)
+      log.info('Color picker requested for:', property, currentValue)
     } catch (e) {
-      console.error('[PropertyPanelView] Failed to parse color picker request:', e)
+      log.error('Failed to parse color picker request:', e)
     }
   }
 
@@ -446,7 +449,7 @@ export class PropertyPanelView {
         this.controller.changeProperty('pad', value)
       }
     } catch (e) {
-      console.error('[PropertyPanelView] Failed to parse padding change:', e)
+      log.error('Failed to parse padding change:', e)
     }
   }
 
