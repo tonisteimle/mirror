@@ -8,7 +8,7 @@
  */
 
 import type { Property } from '../../parser/ast'
-import type { IRStyle } from '../types'
+import type { IRStyle, IRNode } from '../types'
 import {
   isContainer as isContainerPrimitive,
   FLEX_DEFAULTS,
@@ -380,4 +380,142 @@ export function generateLayoutStyles(ctx: LayoutContext, primitive: string): IRS
   }
 
   return styles
+}
+
+// =============================================================================
+// Child Layout Context Adjustments
+// =============================================================================
+
+/**
+ * Apply absolute positioning adjustments to children of a stacked (position: relative) container.
+ *
+ * This handles:
+ * 1. Adding position: absolute to children
+ * 2. Converting flex-based "full" sizing to percentage-based sizing
+ * 3. Converting flex alignment to CSS position properties (top/left/right/bottom)
+ *
+ * @param children - The IRNode children to adjust (modified in place)
+ * @param parentStyles - The parent's styles to check for position: relative
+ */
+export function applyAbsolutePositioningToChildren(children: IRNode[], parentStyles: IRStyle[]): void {
+  const isRelativeContainer = parentStyles.some(s => s.property === 'position' && s.value === 'relative')
+  if (!isRelativeContainer) return
+
+  for (const child of children) {
+    // Only add if child doesn't already have position set
+    const hasPosition = child.styles.some(s => s.property === 'position')
+    if (!hasPosition) {
+      child.styles.push({ property: 'position', value: 'absolute' })
+    }
+
+    // Convert flex-based "full" to percentage-based sizing for absolute elements
+    // flex: 1 1 0% and align-self: stretch don't work for absolute positioned elements
+    const hasFlex = child.styles.some(s => s.property === 'flex' && s.value === '1 1 0%')
+    const hasStretch = child.styles.some(s => s.property === 'align-self' && s.value === 'stretch')
+    if (hasFlex || hasStretch) {
+      // Detect which dimension had "full" by checking min-width/min-height: 0
+      const hasMinWidth0 = child.styles.some(s => s.property === 'min-width' && s.value === '0')
+      const hasMinHeight0 = child.styles.some(s => s.property === 'min-height' && s.value === '0')
+
+      // Remove flex-related styles, but keep explicit min-width/min-height values
+      const filteredStyles = child.styles.filter(s => {
+        if (s.property === 'flex') return false
+        if (s.property === 'align-self') return false
+        // Only remove min-width: 0 / min-height: 0, keep explicit values
+        if (s.property === 'min-width' && s.value === '0') return false
+        if (s.property === 'min-height' && s.value === '0') return false
+        return true
+      })
+      child.styles.length = 0
+      child.styles.push(...filteredStyles)
+
+      // Add percentage-based sizing
+      if (hasMinWidth0) child.styles.push({ property: 'width', value: '100%' })
+      if (hasMinHeight0) child.styles.push({ property: 'height', value: '100%' })
+    }
+
+    // Convert flex-based alignment to CSS position properties for stacked containers
+    // This enables: `bottom, left` → position at bottom-left corner
+    const justifyContent = child.styles.find(s => s.property === 'justify-content')?.value
+    const alignItems = child.styles.find(s => s.property === 'align-items')?.value
+    const flexDirection = child.styles.find(s => s.property === 'flex-direction')?.value
+
+    // Only apply position-based offsets when using column direction (default)
+    // In column layout: justify-content controls vertical, align-items controls horizontal
+    if (flexDirection === 'column' || !flexDirection) {
+      // Vertical positioning (justify-content)
+      const hasTop = child.styles.some(s => s.property === 'top')
+      const hasBottom = child.styles.some(s => s.property === 'bottom')
+      if (!hasTop && !hasBottom) {
+        if (justifyContent === 'flex-end') {
+          child.styles.push({ property: 'bottom', value: '0' })
+        } else if (justifyContent === 'flex-start') {
+          child.styles.push({ property: 'top', value: '0' })
+        } else if (justifyContent === 'center') {
+          // Center vertically using top: 50% and transform
+          child.styles.push({ property: 'top', value: '50%' })
+          const hasTransform = child.styles.some(s => s.property === 'transform')
+          if (!hasTransform) {
+            child.styles.push({ property: 'transform', value: 'translateY(-50%)' })
+          }
+        }
+      }
+
+      // Horizontal positioning (align-items)
+      const hasLeft = child.styles.some(s => s.property === 'left')
+      const hasRight = child.styles.some(s => s.property === 'right')
+      if (!hasLeft && !hasRight) {
+        if (alignItems === 'flex-start') {
+          child.styles.push({ property: 'left', value: '0' })
+        } else if (alignItems === 'flex-end') {
+          child.styles.push({ property: 'right', value: '0' })
+        } else if (alignItems === 'center') {
+          // Center horizontally using left: 50% and transform
+          child.styles.push({ property: 'left', value: '50%' })
+          const existingTransform = child.styles.find(s => s.property === 'transform')
+          if (existingTransform) {
+            // Combine with existing translateY if present
+            if (existingTransform.value === 'translateY(-50%)') {
+              existingTransform.value = 'translate(-50%, -50%)'
+            }
+          } else {
+            child.styles.push({ property: 'transform', value: 'translateX(-50%)' })
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Apply grid context adjustments to children.
+ *
+ * In grid containers, flex: 1 1 0% has no effect - grid cells fill automatically.
+ * This removes unnecessary flex-related styles from grid children.
+ *
+ * @param children - The IRNode children to adjust (modified in place)
+ * @param parentStyles - The parent's styles to check for display: grid
+ */
+export function applyGridContextToChildren(children: IRNode[], parentStyles: IRStyle[]): void {
+  const isGridContainer = parentStyles.some(s => s.property === 'display' && s.value === 'grid')
+  if (!isGridContainer) return
+
+  for (const child of children) {
+    const hasFlex = child.styles.some(s => s.property === 'flex' && s.value === '1 1 0%')
+    if (hasFlex) {
+      // Remove flex-related styles (they don't work in grid context)
+      // But keep explicit min-width/min-height values
+      const filteredStyles = child.styles.filter(s => {
+        if (s.property === 'flex') return false
+        if (s.property === 'align-self') return false
+        // Only remove min-width: 0 / min-height: 0, keep explicit values
+        if (s.property === 'min-width' && s.value === '0') return false
+        if (s.property === 'min-height' && s.value === '0') return false
+        return true
+      })
+      child.styles.length = 0
+      child.styles.push(...filteredStyles)
+      // No need to add width/height - grid cells fill their area automatically
+    }
+  }
 }

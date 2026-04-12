@@ -41,8 +41,7 @@ import { logIR as log } from '../utils/logger'
 /** Property value type from AST - can be literal, token ref, loop var, conditional, or expression */
 type PropertyValue = string | number | boolean | TokenReference | LoopVarReference | ASTConditional | ComputedExpression
 
-/** Expression part type - operands in computed expressions */
-type ExpressionPart = string | number | TokenReference | LoopVarReference
+// ExpressionPart has been moved to transformers/expression-transformer.ts
 
 /** Child node type that can be transformed - matches transformChild parameter */
 type TransformableChild = Instance | Text | Slot
@@ -57,25 +56,8 @@ interface ConditionalBlock {
   column: number
 }
 
-/** Simplified slot definition for synthetic ZagNode construction */
-interface SyntheticSlotDef {
-  name?: string
-  properties: Property[]
-  states?: State[]
-  children?: (Instance | Slot | Text | ZagNode)[]
-  sourcePosition?: { line: number; column: number }
-}
+// SyntheticSlotDef and SyntheticZagItem moved to transformers/zag-transformer.ts
 
-/** Synthetic ZagItem with minimal required fields */
-interface SyntheticZagItem {
-  value?: string
-  label?: string
-  disabled?: boolean
-  icon?: string
-  children?: (Instance | Slot | Text | ZagNode)[]
-  properties?: Property[]
-  sourcePosition?: { line: number; column: number }
-}
 import {
   isComponent,
   isInstance,
@@ -99,12 +81,13 @@ import {
   DIRECTION_MAP,
   CORNER_MAP,
   BORDER_DIRECTION_MAP,
+  PROPERTY_TO_TOKEN_SUFFIX,
   hoverPropertyToCSS,
   mapEventToDom,
   getHtmlTag,
 } from '../schema/ir-helpers'
 import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
-import { isZagPrimitive, ZAG_PRIMITIVES, getItemKeywords, getZagPrimitive } from '../schema/zag-primitives'
+import { isZagPrimitive, ZAG_PRIMITIVES } from '../schema/zag-primitives'
 import { isCompoundPrimitive, getCompoundPrimitive, getCompoundSlotDef, isCompoundSlot } from '../schema/compound-primitives'
 import { isChartPrimitive, getChartPrimitive, getChartSlotProperty } from '../schema/chart-primitives'
 import { isContainer as isContainerPrimitive, FLEX_DEFAULTS } from '../schema/layout-defaults'
@@ -113,7 +96,10 @@ import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helper
 // Extracted transformers
 import { transformTable as transformTableExtracted, humanizeFieldName } from './transformers/table-transformer'
 import { transformChart as transformChartExtracted } from './transformers/chart-transformer'
-import { transformZagComponent as transformZagComponentExtracted } from './transformers/zag-transformer'
+import {
+  transformZagComponent as transformZagComponentExtracted,
+  buildZagNodeFromInstance as buildZagNodeFromInstanceExtracted,
+} from './transformers/zag-transformer'
 import type { TransformerContext, ParentLayoutContext } from './transformers/transformer-context'
 import {
   type LayoutContext,
@@ -121,7 +107,57 @@ import {
   resolveGridColumns,
   applyAlignmentsToContext,
   generateLayoutStyles,
+  applyAbsolutePositioningToChildren,
+  applyGridContextToChildren,
 } from './transformers/layout-transformer'
+import {
+  transformDataAttributes,
+  transformDataValue,
+  transformAnimation,
+  convertStateDependency,
+  convertStateAnimation,
+} from './transformers/data-transformer'
+import {
+  BUILTIN_STATE_FUNCTIONS,
+  transformEvents,
+  transformAction,
+} from './transformers/event-transformer'
+import {
+  formatCSSValue,
+  parseDirectionalSpacing,
+  formatBorderValue,
+  booleanPropertyToCSS,
+} from './transformers/style-utils-transformer'
+import {
+  convertDefaultsToProperties,
+  determineLayoutType,
+  mergeProperties,
+  extractValueBinding,
+} from './transformers/property-utils-transformer'
+import {
+  type ExpressionPart,
+  buildExpressionString,
+} from './transformers/expression-transformer'
+import {
+  propertyToCSS as propertyToCSSExtracted,
+  type PropertyTransformContext,
+  type TransformAccumulator,
+} from './transformers/property-transformer'
+import {
+  buildStateMachine as buildStateMachineExtracted,
+  type StateMachineTransformContext,
+} from './transformers/state-machine-transformer'
+import {
+  resolveValue as resolveValueExtracted,
+  resolveContentValue as resolveContentValueExtracted,
+  resolveTokenWithContext as resolveTokenWithContextExtracted,
+  extractHTMLProperties as extractHTMLPropertiesExtracted,
+} from './transformers/value-resolver'
+import {
+  mergeStates as mergeStatesExtracted,
+  resolveComponent as resolveComponentExtracted,
+  type ComponentResolverContext,
+} from './transformers/component-resolver'
 
 export type { IR, IRWarning } from './types'
 export {
@@ -163,12 +199,7 @@ export function toIR(ast: AST, includeSourceMap?: boolean): IR | IRResult {
   return ir
 }
 
-/**
- * Built-in state functions that are handled by the runtime
- * These functions operate on the element's state machine
- */
-const BUILTIN_STATE_FUNCTIONS = new Set(['toggle', 'cycle', 'exclusive'])  // cycle is alias for toggle
-
+// BUILTIN_STATE_FUNCTIONS is imported from transformers/event-transformer.ts
 // LayoutContext and ParentLayoutContext are imported from transformers/layout-transformer.ts and transformer-context.ts
 
 class IRTransformer {
@@ -292,7 +323,7 @@ class IRTransformer {
       const merged: ComponentDefinition = {
         ...existing,
         // Merge properties: new properties override, but keep existing ones not in new
-        properties: this.mergeProperties(existing.properties, comp.properties),
+        properties: mergeProperties(existing.properties, comp.properties),
         // Merge states
         states: [...existing.states, ...comp.states],
         // Merge events
@@ -332,7 +363,7 @@ class IRTransformer {
           // Data object with nested attributes
           return {
             name: t.name,
-            data: this.transformDataAttributes(t.attributes),
+            data: transformDataAttributes(t.attributes),
           }
         }
         // Fallback (shouldn't happen due to filter)
@@ -371,141 +402,14 @@ class IRTransformer {
     })
 
     // Transform animations
-    const animations = this.ast.animations.map(anim => this.transformAnimation(anim))
+    const animations = this.ast.animations.map(anim => transformAnimation(anim))
 
     return { nodes, tokens, animations }
   }
 
-  /**
-   * Transform AST DataAttribute[] to IRDataObject
-   * Handles nested structures like:
-   *   tasks:
-   *     task1:
-   *       title: "Design Review"
-   *       status: "todo"
-   */
-  private transformDataAttributes(attrs: DataAttribute[]): IRDataObject {
-    const result: IRDataObject = {}
-
-    for (const attr of attrs) {
-      if (attr.children && attr.children.length > 0) {
-        // Nested object - recurse
-        result[attr.key] = this.transformDataAttributes(attr.children)
-      } else if (attr.value !== undefined) {
-        // Simple value
-        result[attr.key] = this.transformDataValue(attr.value)
-      }
-    }
-
-    return result
-  }
-
-  /**
-   * Transform a single data value to IR format
-   */
-  private transformDataValue(
-    value: string | number | boolean | string[] | DataReference | DataReferenceArray
-  ): IRDataValue {
-    // Handle references
-    if (typeof value === 'object' && value !== null) {
-      if ('kind' in value) {
-        if (value.kind === 'reference') {
-          return {
-            __ref: true,
-            collection: value.collection,
-            entry: value.entry,
-          } as IRDataReference
-        }
-        if (value.kind === 'referenceArray') {
-          return {
-            __refArray: true,
-            references: value.references.map(ref => ({
-              __ref: true,
-              collection: ref.collection,
-              entry: ref.entry,
-            })),
-          } as IRDataReferenceArray
-        }
-      }
-      // String array
-      if (Array.isArray(value)) {
-        return value
-      }
-    }
-
-    // Primitive value (string, number, boolean)
-    return value as string | number | boolean
-  }
-
-  /**
-   * Transform an animation definition from AST to IR
-   */
-  private transformAnimation(anim: AnimationDefinition): IRAnimation {
-    return {
-      name: anim.name,
-      easing: anim.easing || 'ease',
-      duration: anim.duration,
-      roles: anim.roles,
-      keyframes: anim.keyframes.map(kf => this.transformAnimationKeyframe(kf)),
-    }
-  }
-
-  /**
-   * Transform an animation keyframe from AST to IR
-   */
-  private transformAnimationKeyframe(kf: AnimationKeyframe): IRAnimationKeyframe {
-    return {
-      time: kf.time,
-      properties: kf.properties.map(prop => this.transformAnimationProperty(prop)),
-    }
-  }
-
-  /**
-   * Transform an animation property from AST to IR
-   *
-   * Maps Mirror property names to CSS properties and formats values.
-   */
-  private transformAnimationProperty(prop: AnimationKeyframeProperty): IRAnimationProperty {
-    // Map Mirror property names to CSS properties
-    const propertyMap: Record<string, string> = {
-      'opacity': 'opacity',
-      'y-offset': 'transform',
-      'x-offset': 'transform',
-      'scale': 'transform',
-      'rotate': 'transform',
-      'background': 'background',
-      'bg': 'background',
-      'color': 'color',
-      'col': 'color',
-      'width': 'width',
-      'height': 'height',
-      'border-radius': 'border-radius',
-      'rad': 'border-radius',
-    }
-
-    const cssProperty = propertyMap[prop.name] || prop.name
-    let cssValue = String(prop.value)
-
-    // Format transform values
-    if (prop.name === 'y-offset') {
-      cssValue = `translateY(${prop.value}px)`
-    } else if (prop.name === 'x-offset') {
-      cssValue = `translateX(${prop.value}px)`
-    } else if (prop.name === 'scale') {
-      cssValue = `scale(${prop.value})`
-    } else if (prop.name === 'rotate') {
-      cssValue = `rotate(${prop.value}deg)`
-    } else if (['width', 'height', 'border-radius', 'rad'].includes(prop.name) && typeof prop.value === 'number') {
-      cssValue = `${prop.value}px`
-    }
-
-    return {
-      target: prop.target,
-      property: cssProperty,
-      value: cssValue,
-      easing: prop.easing,
-    }
-  }
+  // Data and animation transformation functions (transformDataAttributes, transformDataValue,
+  // transformAnimation, transformAnimationKeyframe, transformAnimationProperty)
+  // have been extracted to transformers/data-transformer.ts
 
   private generateId(): string {
     return `node-${++this.nodeIdCounter}`
@@ -620,140 +524,14 @@ class IRTransformer {
 
   /**
    * Build a synthetic ZagNode from an Instance that inherits from a Zag primitive
-   * This allows component definitions like "MySelect as Select:" to work correctly
+   * Delegates to extracted function in zag-transformer.ts
    */
   private buildZagNodeFromInstance(
     instance: Instance,
     resolvedComponent: ComponentDefinition | null,
     primitive: string
   ): ZagNode {
-    // Merge properties from instance and component definition
-    const properties = this.mergeProperties(
-      resolvedComponent?.properties || [],
-      instance.properties
-    )
-
-    // Extract slots from component children
-    const slots: Record<string, SyntheticSlotDef> = {}
-    const items: SyntheticZagItem[] = []
-
-    // Process children from both component definition and instance
-    const allChildren = [
-      ...(resolvedComponent?.children || []),
-      ...(instance.children || [])
-    ]
-
-    // Get valid item keywords for this primitive (e.g., ['Field'] for Form, ['Tab'] for Tabs)
-    const itemKeywords = getItemKeywords(primitive.charAt(0).toUpperCase() + primitive.slice(1))
-    const zagDef = getZagPrimitive(primitive.charAt(0).toUpperCase() + primitive.slice(1))
-    const itemProps = zagDef?.itemProps || []
-
-    for (const child of allChildren) {
-      if (!child) continue
-
-      // Check if child is a Slot definition (e.g., "Trigger:", "Content:")
-      if (child.type === 'Slot' || (child.type === 'Instance' && child.component?.endsWith(':'))) {
-        const slotName = child.type === 'Slot'
-          ? child.name
-          : child.component.replace(':', '')
-        slots[slotName] = {
-          properties: child.properties || [],
-          sourcePosition: child.line !== undefined
-            ? { line: child.line, column: child.column ?? 0 }
-            : undefined
-        }
-      }
-      // Check if child is an Item (using itemKeywords for the primitive)
-      else if (child.type === 'Instance' && itemKeywords.includes(child.component)) {
-        // Extract all item properties based on itemProps from primitive definition
-        const itemData: Record<string, unknown> = {}
-
-        // Extract label from text property or child Text element
-        const labelProp = child.properties?.find((p: Property) => p.name === 'text' || p.name === 'label')
-        let label = ''
-        if (labelProp?.values?.[0]) {
-          label = String(labelProp.values[0])
-        } else {
-          // Look for a Text child to get content
-          const textChild = child.children?.find(c => c.type === 'Text')
-          if (textChild && textChild.type === 'Text') {
-            label = textChild.content
-          }
-        }
-        itemData.label = label
-        // Note: Do NOT set itemData.value = label here!
-        // transformItem checks item.value to decide if loadFromFile should be set.
-        // If we set value = label, it would incorrectly trigger file loading for "Tab 1" etc.
-
-        // Extract all item-specific properties (name, placeholder, multiline, etc.)
-        for (const propName of itemProps) {
-          const prop = child.properties?.find((p: Property) => p.name === propName)
-          if (prop) {
-            // Handle boolean properties
-            if (prop.values === undefined || prop.values.length === 0) {
-              itemData[propName] = true
-            } else {
-              itemData[propName] = prop.values[0]
-            }
-          }
-        }
-
-        // Check for disabled property
-        const disabledProp = child.properties?.find((p: Property) => p.name === 'disabled')
-        itemData.disabled = disabledProp ? true : false
-
-        itemData.sourcePosition = child.line !== undefined
-          ? { line: child.line, column: child.column ?? 0 }
-          : undefined
-
-        items.push(itemData)
-      }
-      // Check for slot-like Instance children (named slots like "Trigger:", "Content:")
-      else if (child.type === 'Instance' && (child.component === 'Trigger' || child.component === 'Content')) {
-        slots[child.component] = {
-          properties: child.properties || [],
-          children: child.children || [],
-          sourcePosition: child.line !== undefined
-            ? { line: child.line, column: child.column ?? 0 }
-            : undefined
-        }
-      }
-    }
-
-    // If no slots defined, add default slots based on the primitive type
-    // This allows simple definitions like "MySelect as Select: Item "A""
-    if (Object.keys(slots).length === 0) {
-      // Find the matching ZAG_PRIMITIVES key (case-insensitive)
-      const primitiveKey = Object.keys(ZAG_PRIMITIVES).find(
-        key => key.toLowerCase() === primitive.toLowerCase()
-      )
-      const primitiveDef = primitiveKey ? ZAG_PRIMITIVES[primitiveKey] : null
-      if (primitiveDef?.slots) {
-        // Add first two slots as defaults (typically Root + main content)
-        const defaultSlots = primitiveDef.slots.slice(0, 2)
-        for (const slotName of defaultSlots) {
-          slots[slotName] = { properties: [] }
-        }
-      } else {
-        // Fallback for Select-like components
-        slots['Trigger'] = { properties: [] }
-        slots['Content'] = { properties: [] }
-      }
-    }
-
-    // Build the synthetic ZagNode
-    // Type assertion needed: synthetic slots/items have partial structure but work at runtime
-    return {
-      type: 'ZagComponent' as const,
-      name: primitive.charAt(0).toUpperCase() + primitive.slice(1), // Capitalize
-      machine: primitive.toLowerCase(),
-      properties,
-      slots: slots as unknown as Record<string, ZagSlotDef>,
-      items: items as unknown as ZagItem[],
-      events: [],
-      line: instance.line,
-      column: instance.column,
-    }
+    return buildZagNodeFromInstanceExtracted(instance, resolvedComponent, primitive)
   }
 
   /**
@@ -774,7 +552,7 @@ class IRTransformer {
       instance,
       resolvedComponent,
       primitive,
-      (base, override) => this.mergeProperties(base, override),
+      (base, override) => mergeProperties(base, override),
       parentLayoutContext
     )
   }
@@ -848,7 +626,7 @@ class IRTransformer {
 
     // Extract instanceName from 'name' property if not set via 'named' keyword
     const nameProp = instance.properties?.find(p => p.name === 'name')
-    const instanceNameFromProp = nameProp ? this.resolveValue(nameProp.values) : undefined
+    const instanceNameFromProp = nameProp ? resolveValueExtracted(nameProp.values, this.tokenSet) : undefined
     const resolvedInstanceName = instance.name || instanceNameFromProp || undefined
 
     return {
@@ -949,7 +727,7 @@ class IRTransformer {
         instanceName: child.name || undefined,
         properties: [],
         styles,
-        events: this.transformEvents(child.events || []),
+        events: transformEvents(child.events || []),
         children: slotChildren,
         sourcePosition,
       }
@@ -1004,7 +782,11 @@ class IRTransformer {
 
     // Resolve component definition first
     const component = this.componentMap.get(instance.component)
-    const resolvedComponent = component ? this.resolveComponent(component) : null
+    const resolverCtx: ComponentResolverContext = {
+      componentMap: this.componentMap,
+      addWarning: (warning) => this.addWarning(warning as IRWarning),
+    }
+    const resolvedComponent = component ? resolveComponentExtracted(component, resolverCtx) : null
 
     // Determine primitive for defaults and layout context
     const primitive = resolvedComponent?.primitive || instance.component.toLowerCase()
@@ -1028,15 +810,15 @@ class IRTransformer {
     }
 
     // Get primitive defaults and convert to Property format
-    const primitiveDefaults = this.convertDefaultsToProperties(getPrimitiveDefaults(primitive))
+    const primitiveDefaults = convertDefaultsToProperties(getPrimitiveDefaults(primitive))
 
     // Determine HTML tag
     const tag = this.getTag(instance.component, resolvedComponent)
 
     // Merge properties: Primitive Defaults < Component Defaults < Instance Properties
-    const properties = this.mergeProperties(
+    const properties = mergeProperties(
       primitiveDefaults,
-      this.mergeProperties(
+      mergeProperties(
         resolvedComponent?.properties || [],
         instance.properties
       )
@@ -1087,12 +869,12 @@ class IRTransformer {
 
     // Transform events from component definition FIRST (needed for state machine check)
     const events = resolvedComponent?.events
-      ? this.transformEvents(resolvedComponent.events)
+      ? transformEvents(resolvedComponent.events)
       : []
 
     // Transform events from instance inline events (e.g., "Input onkeydown enter: submit")
     const instanceEvents = instance.events?.length
-      ? this.transformEvents(instance.events)
+      ? transformEvents(instance.events)
       : []
 
     // Combine all events to check for state machine functions
@@ -1226,130 +1008,25 @@ class IRTransformer {
     }
 
     // Auto-absolute: If parent has position: relative, all children get position: absolute
-    const isRelativeContainer = styles.some(s => s.property === 'position' && s.value === 'relative')
-    if (isRelativeContainer) {
-      for (const child of children) {
-        // Only add if child doesn't already have position set
-        const hasPosition = child.styles.some(s => s.property === 'position')
-        if (!hasPosition) {
-          child.styles.push({ property: 'position', value: 'absolute' })
-        }
-
-        // Convert flex-based "full" to percentage-based sizing for absolute elements
-        // flex: 1 1 0% and align-self: stretch don't work for absolute positioned elements
-        const hasFlex = child.styles.some(s => s.property === 'flex' && s.value === '1 1 0%')
-        const hasStretch = child.styles.some(s => s.property === 'align-self' && s.value === 'stretch')
-        if (hasFlex || hasStretch) {
-          // Detect which dimension had "full" by checking min-width/min-height: 0
-          const hasMinWidth0 = child.styles.some(s => s.property === 'min-width' && s.value === '0')
-          const hasMinHeight0 = child.styles.some(s => s.property === 'min-height' && s.value === '0')
-
-          // Remove flex-related styles, but keep explicit min-width/min-height values
-          const filteredStyles = child.styles.filter(s => {
-            if (s.property === 'flex') return false
-            if (s.property === 'align-self') return false
-            // Only remove min-width: 0 / min-height: 0, keep explicit values
-            if (s.property === 'min-width' && s.value === '0') return false
-            if (s.property === 'min-height' && s.value === '0') return false
-            return true
-          })
-          child.styles.length = 0
-          child.styles.push(...filteredStyles)
-
-          // Add percentage-based sizing
-          if (hasMinWidth0) child.styles.push({ property: 'width', value: '100%' })
-          if (hasMinHeight0) child.styles.push({ property: 'height', value: '100%' })
-        }
-
-        // Convert flex-based alignment to CSS position properties for stacked containers
-        // This enables: `bottom, left` → position at bottom-left corner
-        const justifyContent = child.styles.find(s => s.property === 'justify-content')?.value
-        const alignItems = child.styles.find(s => s.property === 'align-items')?.value
-        const flexDirection = child.styles.find(s => s.property === 'flex-direction')?.value
-
-        // Only apply position-based offsets when using column direction (default)
-        // In column layout: justify-content controls vertical, align-items controls horizontal
-        if (flexDirection === 'column' || !flexDirection) {
-          // Vertical positioning (justify-content)
-          const hasTop = child.styles.some(s => s.property === 'top')
-          const hasBottom = child.styles.some(s => s.property === 'bottom')
-          if (!hasTop && !hasBottom) {
-            if (justifyContent === 'flex-end') {
-              child.styles.push({ property: 'bottom', value: '0' })
-            } else if (justifyContent === 'flex-start') {
-              child.styles.push({ property: 'top', value: '0' })
-            } else if (justifyContent === 'center') {
-              // Center vertically using top: 50% and transform
-              child.styles.push({ property: 'top', value: '50%' })
-              const hasTransform = child.styles.some(s => s.property === 'transform')
-              if (!hasTransform) {
-                child.styles.push({ property: 'transform', value: 'translateY(-50%)' })
-              }
-            }
-          }
-
-          // Horizontal positioning (align-items)
-          const hasLeft = child.styles.some(s => s.property === 'left')
-          const hasRight = child.styles.some(s => s.property === 'right')
-          if (!hasLeft && !hasRight) {
-            if (alignItems === 'flex-start') {
-              child.styles.push({ property: 'left', value: '0' })
-            } else if (alignItems === 'flex-end') {
-              child.styles.push({ property: 'right', value: '0' })
-            } else if (alignItems === 'center') {
-              // Center horizontally using left: 50% and transform
-              child.styles.push({ property: 'left', value: '50%' })
-              const existingTransform = child.styles.find(s => s.property === 'transform')
-              if (existingTransform) {
-                // Combine with existing translateY if present
-                if (existingTransform.value === 'translateY(-50%)') {
-                  existingTransform.value = 'translate(-50%, -50%)'
-                }
-              } else {
-                child.styles.push({ property: 'transform', value: 'translateX(-50%)' })
-              }
-            }
-          }
-        }
-      }
-    }
+    // This also converts flex-based sizing/alignment to CSS position properties
+    applyAbsolutePositioningToChildren(children, styles)
 
     // Grid container: Remove flex-based styles from children
     // In grid, flex: 1 1 0% has no effect - grid cells fill automatically
-    // (reusing isGridContainer from earlier layout context detection)
-    if (isGridContainer) {
-      for (const child of children) {
-        const hasFlex = child.styles.some(s => s.property === 'flex' && s.value === '1 1 0%')
-        if (hasFlex) {
-          // Remove flex-related styles (they don't work in grid context)
-          // But keep explicit min-width/min-height values
-          const filteredStyles = child.styles.filter(s => {
-            if (s.property === 'flex') return false
-            if (s.property === 'align-self') return false
-            // Only remove min-width: 0 / min-height: 0, keep explicit values
-            if (s.property === 'min-width' && s.value === '0') return false
-            if (s.property === 'min-height' && s.value === '0') return false
-            return true
-          })
-          child.styles.length = 0
-          child.styles.push(...filteredStyles)
-          // No need to add width/height - grid cells fill their area automatically
-        }
-      }
-    }
+    applyGridContextToChildren(children, styles)
 
     // Determine layout type for drop strategy detection
-    const layoutType = this.determineLayoutType(properties)
+    const layoutType = determineLayoutType(properties)
 
     // Extract instanceName from 'name' property if not set via 'named' keyword
     // This allows `name MenuBtn` syntax to work for state references like `MenuBtn.open:`
     const nameProp = properties.find(p => p.name === 'name')
-    const instanceNameFromProp = nameProp ? this.resolveValue(nameProp.values) : undefined
+    const instanceNameFromProp = nameProp ? resolveValueExtracted(nameProp.values, this.tokenSet) : undefined
     const resolvedInstanceName = instance.name || instanceNameFromProp || undefined
 
     // Extract valueBinding for two-way data binding (only for input elements)
     const valueBinding = (primitive === 'input' || primitive === 'textarea')
-      ? this.extractValueBinding(properties)
+      ? extractValueBinding(properties)
       : undefined
 
     // Check for keyboard-nav property (enables form keyboard navigation)
@@ -1361,7 +1038,7 @@ class IRTransformer {
       primitive,
       name: instance.component,
       instanceName: resolvedInstanceName,
-      properties: this.extractHTMLProperties(properties, primitive),
+      properties: extractHTMLPropertiesExtracted(properties, this.tokenSet, primitive),
       styles: [...styles, ...stateStyles, ...instanceStateStyles, ...inlineStateStyles],
       events: [...events, ...instanceEvents, ...inlineEvents],
       children,
@@ -1903,7 +1580,7 @@ class IRTransformer {
 
       // Check for inline event: "onclick toggle" or "onhover highlight"
       if (component.startsWith('on')) {
-        const eventName = this.mapEventName(component)
+        const eventName = mapEventToDom(component)
         const actions: IRAction[] = []
 
         // Parse actions from properties
@@ -1932,217 +1609,14 @@ class IRTransformer {
     return { inlineStateStyles, inlineEvents, remainingChildren }
   }
 
-  /**
-   * Resolve component inheritance chain
-   *
-   * Supports two syntaxes:
-   * - `Extended extends Base:` → component.extends = 'Base'
-   * - `Extended as Base:` → component.primitive = 'Base' (if Base is a component)
-   *
-   * @param visited - Set of component names already visited (for cycle detection)
-   */
-  private resolveComponent(component: ComponentDefinition, visited: Set<string> = new Set()): ComponentDefinition {
-    // Circular reference detection
-    if (visited.has(component.name)) {
-      this.addWarning({
-        type: 'circular-inheritance',
-        message: `Circular component inheritance detected: ${[...visited, component.name].join(' → ')}`,
-        position: {
-          line: component.line ?? 0,
-          column: component.column ?? 0,
-          endLine: component.line ?? 0,
-          endColumn: component.column ?? 0
-        }
-      })
-      return component // Return unresolved to prevent infinite recursion
-    }
-    visited.add(component.name)
-
-    // Determine the parent - either from explicit extends or from primitive if it's a component name
-    let parentName = component.extends
-    let inheritFromPrimitive = false
-
-    // If no explicit extends, check if primitive is actually a component name
-    if (!parentName && component.primitive) {
-      const primitiveAsComponent = this.componentMap.get(component.primitive)
-      if (primitiveAsComponent) {
-        parentName = component.primitive
-        inheritFromPrimitive = true
-      }
-    }
-
-    if (!parentName) {
-      return component
-    }
-
-    const parent = this.componentMap.get(parentName)
-    if (!parent) {
-      return component
-    }
-
-    // Pass the visited set to detect cycles in the inheritance chain
-    const resolvedParent = this.resolveComponent(parent, visited)
-
-    // Merge parent + child (child overrides)
-    return {
-      ...component,
-      // If we inherited via primitive name, use the parent's actual primitive
-      primitive: inheritFromPrimitive ? resolvedParent.primitive : (component.primitive || resolvedParent.primitive),
-      properties: this.mergeProperties(resolvedParent.properties, component.properties),
-      states: this.mergeStates(resolvedParent.states, component.states),
-      events: [...resolvedParent.events, ...component.events],
-      children: [...resolvedParent.children, ...component.children],
-    }
-  }
-
-  /**
-   * Merge states (child state properties override parent state properties for same state name)
-   *
-   * Example:
-   * - Parent: hover: bg #f00
-   * - Child: hover: bg #00f
-   * - Result: hover: bg #00f (child wins)
-   *
-   * But if parent has focus: and child has hover:, both are kept.
-   */
-  private mergeStates(parentStates: State[], childStates: State[]): State[] {
-    // Create a map of state name -> merged state
-    const stateMap = new Map<string, State>()
-
-    // Add parent states first (with null-check for state name)
-    for (const state of parentStates) {
-      if (!state.name) {
-        log.warn('State without name detected in parent, skipping')
-        continue
-      }
-      stateMap.set(state.name, { ...state })
-    }
-
-    // Merge child states (child properties override parent)
-    for (const state of childStates) {
-      if (!state.name) {
-        log.warn('State without name detected in child, skipping')
-        continue
-      }
-      const existing = stateMap.get(state.name)
-      if (existing) {
-        // Merge properties: child overrides parent
-        stateMap.set(state.name, {
-          ...state,
-          properties: this.mergeProperties(existing.properties, state.properties),
-          childOverrides: [...(existing.childOverrides || []), ...(state.childOverrides || [])],
-        })
-      } else {
-        stateMap.set(state.name, { ...state })
-      }
-    }
-
-    return Array.from(stateMap.values())
-  }
+  // resolveComponent and mergeStates have been extracted to transformers/component-resolver.ts
 
   /**
    * Convert DefaultProperty[] from primitives.ts to Property[] for merging.
    * Defaults have no source position since they're not from user code.
    */
-  private convertDefaultsToProperties(defaults: DefaultProperty[]): Property[] {
-    return defaults.map(def => ({
-      type: 'Property' as const,
-      name: def.name,
-      values: def.values,
-      line: 0,
-      column: 0,
-    }))
-  }
-
-  /**
-   * Determine layoutType from properties.
-   * Used by drop strategies to determine whether to use absolute positioning.
-   *
-   * Priority: absolute > grid > flex (if multiple layout properties are present)
-   */
-  private determineLayoutType(properties: Property[]): LayoutType | undefined {
-    let hasAbsolute = false
-    let hasGrid = false
-    let hasFlex = false
-
-    for (const prop of properties) {
-      const name = prop.name.toLowerCase()
-
-      // Absolute layout properties
-      if (name === 'stacked') {
-        hasAbsolute = true
-      }
-
-      // Grid layout
-      if (name === 'grid') {
-        hasGrid = true
-      }
-
-      // Flex layout properties
-      if (name === 'hor' || name === 'horizontal' || name === 'ver' || name === 'vertical') {
-        hasFlex = true
-      }
-    }
-
-    // Priority: absolute > grid > flex
-    if (hasAbsolute) return 'absolute'
-    if (hasGrid) return 'grid'
-    if (hasFlex) return 'flex'
-
-    return undefined
-  }
-
-  /**
-   * Merge properties (later values override earlier)
-   *
-   * For directional properties (pad, margin, rad, bor), the key includes direction.
-   * This allows multiple directional values to coexist:
-   * - pad left 10 → key: "pad:left"
-   * - pad right 20 → key: "pad:right"
-   * - pad 10 → key: "pad" (overwrites all directional pads)
-   */
-  private mergeProperties(base: Property[], overrides: Property[]): Property[] {
-    const map = new Map<string, Property>()
-
-    const getPropertyKey = (prop: Property): string => {
-      // Normalize alias to canonical name (e.g., 'bg' -> 'background')
-      // This ensures that 'bg #f00 background #00f' treats them as the same property
-      const name = getCanonicalPropertyName(prop.name)
-      const values = prop.values
-
-      // Check if this is a directional property (use canonical names)
-      const directionalProps = ['padding', 'margin', 'radius', 'border']
-      const directions = ['left', 'right', 'top', 'bottom', 'down', 'l', 'r', 't', 'b', 'x', 'y',
-        'horizontal', 'vertical', 'hor', 'ver', 'tl', 'tr', 'bl', 'br']
-
-      if (directionalProps.includes(name) && values.length >= 2) {
-        const firstVal = String(values[0]).toLowerCase()
-        if (directions.includes(firstVal)) {
-          // Include all direction tokens in the key
-          const dirs: string[] = []
-          for (const v of values) {
-            const val = String(v).toLowerCase()
-            if (directions.includes(val)) {
-              dirs.push(val)
-            } else {
-              break
-            }
-          }
-          return `${name}:${dirs.join(':')}`
-        }
-      }
-
-      return name
-    }
-
-    for (const prop of base) {
-      map.set(getPropertyKey(prop), prop)
-    }
-    for (const prop of overrides) {
-      map.set(getPropertyKey(prop), prop)
-    }
-    return Array.from(map.values())
-  }
+  // convertDefaultsToProperties, determineLayoutType, mergeProperties
+  // have been extracted to transformers/property-utils-transformer.ts
 
   /**
    * Get HTML tag for component
@@ -2260,7 +1734,7 @@ class IRTransformer {
 
       // Gap
       if ((name === 'gap' || name === 'g') && !isBoolean) {
-        layoutContext.gap = this.formatCSSValue(name, this.resolveValue(prop.values, name))
+        layoutContext.gap = formatCSSValue(name, resolveValueExtracted(prop.values, this.tokenSet, name))
         continue
       }
 
@@ -2284,20 +1758,20 @@ class IRTransformer {
 
       // Gap-x (column-gap)
       if ((name === 'gap-x' || name === 'gx') && !isBoolean) {
-        layoutContext.columnGap = this.formatCSSValue(name, this.resolveValue(prop.values, name))
+        layoutContext.columnGap = formatCSSValue(name, resolveValueExtracted(prop.values, this.tokenSet, name))
         continue
       }
 
       // Gap-y (row-gap)
       if ((name === 'gap-y' || name === 'gy') && !isBoolean) {
-        layoutContext.rowGap = this.formatCSSValue(name, this.resolveValue(prop.values, name))
+        layoutContext.rowGap = formatCSSValue(name, resolveValueExtracted(prop.values, this.tokenSet, name))
         continue
       }
 
       // Row-height (grid-auto-rows) - only handle in grid context
       // Otherwise let it fall through to schema-based handling
       if ((name === 'row-height' || name === 'rh') && !isBoolean && layoutContext.isGrid) {
-        layoutContext.rowHeight = this.formatCSSValue(name, this.resolveValue(prop.values, name))
+        layoutContext.rowHeight = formatCSSValue(name, resolveValueExtracted(prop.values, this.tokenSet, name))
         continue
       }
 
@@ -2433,319 +1907,19 @@ class IRTransformer {
    * @returns State machine configuration or undefined if no state machine needed
    */
   private buildStateMachine(states: State[], events?: IREvent[]): IRStateMachine | undefined {
-    // Filter states that have triggers or when dependencies (these form the state machine)
-    const interactiveStates = states.filter(s => s.trigger || s.when)
-
-    // Filter custom states for state machine:
-    // 1. States NOT in SYSTEM_STATES (like "on", "open", "loading"), OR
-    // 2. States in SYSTEM_STATES but used as custom states (have properties defined)
-    //    e.g., "active: bg #2271C1" is a custom state, not CSS :active pseudo-class
-    const customStates = states.filter(s =>
-      !SYSTEM_STATES.has(s.name) ||
-      (s.properties && s.properties.length > 0)
-    )
-
-    // Check if any event has a state machine function (toggle, exclusive)
-    const hasStateMachineEvents = events?.some(e =>
-      e.actions?.some(a => a.isBuiltinStateFunction)
-    ) ?? false
-
-    // Build state machine if:
-    // 1. There are interactive states (with triggers), OR
-    // 2. There are custom states AND state machine events
-    if (interactiveStates.length === 0 && !(customStates.length > 0 && hasStateMachineEvents)) {
-      return undefined
+    // Create context for the extracted function
+    const ctx: StateMachineTransformContext = {
+      propertyToCSS: (prop) => this.propertyToCSS(prop),
+      transformStateChild: (instance) => this.transformStateChild(instance),
     }
-
-    // Build state definitions
-    const stateDefinitions: Record<string, IRStateDefinition> = {}
-    const transitions: IRStateTransition[] = []
-
-    // First pass: collect all unique state names and their styles
-    for (const state of states) {
-      // For synthetic 'when' states that have a targetState, transfer their
-      // enter/exit animations to the target state (e.g., Btn.open: visible enter: fade-in)
-      if (state.when && state.targetState && state.name.startsWith('_')) {
-        // Ensure target state exists
-        if (!stateDefinitions[state.targetState]) {
-          stateDefinitions[state.targetState] = {
-            name: state.targetState,
-            styles: [],
-            isInitial: false,
-          }
-        }
-        // Transfer enter/exit animations to the target state
-        if (state.enter) {
-          stateDefinitions[state.targetState].enter = this.convertStateAnimation(state.enter)
-        }
-        if (state.exit) {
-          stateDefinitions[state.targetState].exit = this.convertStateAnimation(state.exit)
-        }
-        // Transfer styles from the synthetic state to the target state
-        for (const prop of state.properties) {
-          const cssStyles = this.propertyToCSS(prop)
-          for (const style of cssStyles) {
-            stateDefinitions[state.targetState].styles.push(style)
-          }
-        }
-        continue
-      }
-
-      if (!stateDefinitions[state.name]) {
-        stateDefinitions[state.name] = {
-          name: state.name,
-          styles: [],
-          isInitial: state.modifier === 'initial',
-        }
-      }
-
-      // Add styles to the state definition
-      for (const prop of state.properties) {
-        const cssStyles = this.propertyToCSS(prop)
-        for (const style of cssStyles) {
-          stateDefinitions[state.name].styles.push(style)
-        }
-      }
-
-      // Add children to state definition (like Figma Variants)
-      if (state.children && state.children.length > 0) {
-        const stateChildren: IRNode[] = []
-        for (const child of state.children) {
-          // Only transform Instance children (skip Slots for now)
-          if (child.type === 'Instance') {
-            const irChild = this.transformStateChild(child as Instance)
-            if (irChild) {
-              stateChildren.push(irChild)
-            }
-          }
-        }
-        if (stateChildren.length > 0) {
-          stateDefinitions[state.name].children = stateChildren
-        }
-      }
-
-      // Add enter/exit animations to state definition
-      if (state.enter) {
-        stateDefinitions[state.name].enter = this.convertStateAnimation(state.enter)
-      }
-      if (state.exit) {
-        stateDefinitions[state.name].exit = this.convertStateAnimation(state.exit)
-      }
-    }
-
-    // Second pass: create transitions from interactive states
-    for (const state of interactiveStates) {
-      // Handle trigger-based transitions
-      if (state.trigger) {
-        // Parse trigger (e.g., "onclick", "onkeydown escape")
-        const triggerParts = state.trigger.split(' ')
-        const trigger = triggerParts[0]
-        const key = triggerParts[1] // for keyboard events
-
-        const transition: IRStateTransition = {
-          to: state.name,
-          trigger,
-          modifier: state.modifier,
-          key,
-        }
-
-        // Add animation to transition if present
-        if (state.animation) {
-          transition.animation = this.convertStateAnimation(state.animation)
-        }
-
-        transitions.push(transition)
-      }
-
-      // Handle 'when' dependency transitions
-      if (state.when) {
-        // Use targetState if specified (e.g., SearchInput.searching: searching)
-        // Otherwise fall back to the synthetic state name
-        const targetState = state.targetState || state.name
-        const transition: IRStateTransition = {
-          to: targetState,
-          trigger: '', // No trigger, it's dependency-based
-          modifier: state.modifier,
-          when: this.convertStateDependency(state.when),
-        }
-
-        // Add animation to transition if present
-        if (state.animation) {
-          transition.animation = this.convertStateAnimation(state.animation)
-        }
-
-        transitions.push(transition)
-      }
-    }
-
-    // Third pass: create transitions from events with builtin state functions
-    // This handles the case where toggle() or exclusive() is used as a property
-    // without an explicit trigger on a state (e.g., "Button toggle()" instead of "on onclick:")
-    if (events) {
-      for (const event of events) {
-        for (const action of event.actions) {
-          if (action.isBuiltinStateFunction) {
-            // Determine the target state
-            // Priority: 'on' if exists, otherwise first custom state
-            const customStateNames = Object.keys(stateDefinitions).filter(s => s !== 'default')
-            const targetState = customStateNames.includes('on') ? 'on' : (customStateNames[0] || 'on')
-
-            // Determine the modifier based on the action type
-            let modifier: 'exclusive' | 'toggle' | undefined
-            if (action.type === 'exclusive') {
-              modifier = 'exclusive'
-            } else if (action.type === 'toggle' || action.type === 'cycle') {
-              modifier = 'toggle'
-            }
-
-            // Create the transition
-            const transition: IRStateTransition = {
-              to: targetState,
-              trigger: `on${event.name}`,  // e.g., 'onclick' for click event
-              modifier,
-            }
-
-            // Ensure the target state exists in stateDefinitions
-            // This handles the case where toggle() is used without defining states
-            if (!stateDefinitions[targetState]) {
-              stateDefinitions[targetState] = {
-                name: targetState,
-                styles: [],
-                isInitial: false,
-              }
-            }
-
-            // Check if this transition already exists (avoid duplicates)
-            const exists = transitions.some(t =>
-              t.trigger === transition.trigger &&
-              t.to === transition.to &&
-              t.modifier === transition.modifier
-            )
-
-            if (!exists) {
-              transitions.push(transition)
-            }
-          }
-        }
-      }
-    }
-
-    // Determine initial state
-    // Priority:
-    // 1. explicit 'initial' modifier
-    // 2. OLD syntax: state without trigger when other states have triggers
-    // 3. NEW syntax (function calls): 'default'
-    let initial: string | undefined
-
-    // Check for explicit 'initial' modifier
-    for (const [name, def] of Object.entries(stateDefinitions)) {
-      if (def.isInitial) {
-        initial = name
-        break
-      }
-    }
-
-    // If no explicit initial, check for OLD syntax pattern:
-    // Some states have explicit triggers, some don't → one without trigger is initial
-    // This does NOT apply when interactive states only have 'when' dependencies
-    const statesWithExplicitTriggers = states.filter(s => s.trigger && !SYSTEM_STATES.has(s.name))
-    if (!initial && statesWithExplicitTriggers.length > 0) {
-      const statesWithoutTriggers = states.filter(s => !s.trigger && !s.when && !SYSTEM_STATES.has(s.name))
-      if (statesWithoutTriggers.length > 0) {
-        initial = statesWithoutTriggers[0].name
-      }
-    }
-
-    // If still no initial, determine based on number of custom states:
-    // - If states have no triggers: use 'default' (transitions controlled by events like cycle())
-    // - If some states have triggers: use OLD syntax logic
-    if (!initial) {
-      // Get custom states (non-system states, excluding synthetic 'when' states)
-      // Synthetic 'when' states start with '_' and have a 'when' dependency
-      const syntheticStateNames = new Set(
-        states.filter(s => s.when && s.name.startsWith('_')).map(s => s.name)
-      )
-      const customStateNames = Object.keys(stateDefinitions).filter(
-        s => s !== 'default' && !syntheticStateNames.has(s)
-      )
-
-      // Check if any custom state has a trigger attached
-      // If none do, transitions are controlled by events (cycle(), toggle(), etc.)
-      // and initial state should be 'default'
-      const anyStateHasTrigger = states.some(s =>
-        !SYSTEM_STATES.has(s.name) && !syntheticStateNames.has(s.name) && s.trigger
-      )
-
-      if (customStateNames.length >= 2 && anyStateHasTrigger) {
-        // Multi-state with triggers: start in first defined state (cycle behavior)
-        // Use states array to preserve definition order
-        const firstCustomState = states.find(s =>
-          !SYSTEM_STATES.has(s.name) && !syntheticStateNames.has(s.name)
-        )
-        initial = firstCustomState?.name || customStateNames[0]
-      } else {
-        // Single state, no states, or states controlled by events: use 'default'
-        initial = 'default'
-      }
-
-      // Create default state if it doesn't exist (needed for binary toggle)
-      if (!stateDefinitions['default']) {
-        stateDefinitions['default'] = {
-          name: 'default',
-          styles: [], // No styles - uses base element styles
-          isInitial: initial === 'default',
-        }
-      }
-    }
-
-    return {
-      initial,
-      states: stateDefinitions,
-      transitions,
-    }
+    return buildStateMachineExtracted(states, ctx, events)
   }
 
-  /**
-   * Convert AST StateDependency to IR IRStateDependency
-   */
-  private convertStateDependency(dep: import('../parser/ast').StateDependency): import('./types').IRStateDependency {
-    const result: import('./types').IRStateDependency = {
-      target: dep.target,
-      state: dep.state,
-    }
+  // buildStateMachine implementation extracted to transformers/state-machine-transformer.ts
 
-    if (dep.condition) {
-      result.condition = dep.condition
-    }
 
-    if (dep.next) {
-      result.next = this.convertStateDependency(dep.next)
-    }
-
-    return result
-  }
-
-  /**
-   * Convert AST StateAnimation to IR IRStateAnimation
-   */
-  private convertStateAnimation(anim: import('../parser/ast').StateAnimation): import('./types').IRStateAnimation {
-    const result: import('./types').IRStateAnimation = {}
-
-    if (anim.preset) {
-      result.preset = anim.preset
-    }
-    if (anim.duration !== undefined) {
-      result.duration = anim.duration
-    }
-    if (anim.easing) {
-      result.easing = anim.easing
-    }
-    if (anim.delay !== undefined) {
-      result.delay = anim.delay
-    }
-
-    return result
-  }
+  // State conversion functions (convertStateDependency, convertStateAnimation)
+  // have been extracted to transformers/data-transformer.ts
 
   /**
    * Apply state childOverrides to children
@@ -2785,1035 +1959,40 @@ class IRTransformer {
    * @param parentLayoutContext - If parent is grid, x/y/w/h generate grid positioning instead of absolute
    */
   private propertyToCSS(prop: Property, primitive: string = 'frame', transformContext?: { transforms: string[] }, parentLayoutContext?: ParentLayoutContext): IRStyle[] {
-    const name = prop.name
-    const value = this.resolveValue(prop.values, name)
-    const values = prop.values
-
-    // Validate property against schema
-    this.validateProperty(name, {
-      line: prop.line,
-      column: prop.column,
-      endLine: prop.line,
-      endColumn: prop.column,
-    })
-
-    // Handle boolean properties (value is true OR empty values array)
-    if ((prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0) {
-      const styles = this.booleanPropertyToCSS(name)
-
-      // If transformContext exists, extract transform values and add to context
-      // This allows multiple transforms (rotate + scale etc.) to combine
-      if (transformContext) {
-        const nonTransformStyles: IRStyle[] = []
-        for (const style of styles) {
-          if (style.property === 'transform') {
-            // Add to transform context for combining with other transforms
-            transformContext.transforms.push(style.value)
-          } else {
-            nonTransformStyles.push(style)
-          }
-        }
-        return nonTransformStyles
-      }
-
-      return styles
+    // Create context for the extracted function
+    const ctx: PropertyTransformContext = {
+      resolveValue: (values, propertyName) => resolveValueExtracted(values, this.tokenSet, propertyName),
+      validateProperty: (propName, position) => this.validateProperty(propName, position),
     }
-
-    // Handle gradient syntax: bg grad #color1 #color2, col grad #color1 #color2
-    // Supports: grad, grad-ver, grad N (angle), and multiple colors
-    if ((name === 'background' || name === 'bg' || name === 'color' || name === 'col' || name === 'c') &&
-        values.length >= 2 &&
-        (String(values[0]) === 'grad' || String(values[0]).startsWith('grad-'))) {
-
-      const gradType = String(values[0])
-      const isTextGradient = name === 'color' || name === 'col' || name === 'c'
-
-      // Determine angle based on gradient type
-      let angle = '90deg' // default: horizontal (left to right)
-      let colorStartIndex = 1
-
-      if (gradType === 'grad-ver') {
-        angle = '180deg' // vertical (top to bottom)
-      } else if (gradType === 'grad') {
-        // Check if second value is an angle (number)
-        const possibleAngle = String(values[1])
-        if (/^\d+$/.test(possibleAngle)) {
-          angle = `${possibleAngle}deg`
-          colorStartIndex = 2
-        }
-      }
-
-      // Collect colors (remaining values)
-      const colors = values.slice(colorStartIndex).map(v => String(v))
-
-      if (colors.length < 2) {
-        // Not enough colors, skip gradient processing
-        return []
-      }
-
-      const gradientValue = `linear-gradient(${angle}, ${colors.join(', ')})`
-
-      if (isTextGradient) {
-        // Text gradient requires background-clip workaround
-        return [
-          { property: 'background', value: gradientValue },
-          { property: '-webkit-background-clip', value: 'text' },
-          { property: 'background-clip', value: 'text' },
-          { property: 'color', value: 'transparent' },
-        ]
-      } else {
-        // Background gradient
-        return [{ property: 'background', value: gradientValue }]
-      }
-    }
-
-    // Handle size property - context-dependent
-    // For text: size = font-size
-    // For icon: size = width/height (icons are sized via dimensions)
-    // For frame/box: size = width/height
-    if (name === 'size') {
-      // Text primitives: size means font-size
-      if (primitive === 'text') {
-        const val = String(values[0])
-        const px = /^\d+$/.test(val) ? `${val}px` : val
-        return [{ property: 'font-size', value: px }]
-      }
-
-      // Icon primitives: size means width/height (square)
-      if (primitive === 'icon') {
-        const val = String(values[0])
-        const px = /^\d+$/.test(val) ? `${val}px` : val
-        return [
-          { property: 'width', value: px },
-          { property: 'height', value: px },
-        ]
-      }
-
-      // Box/Frame primitives: size means width/height
-      if (values.length === 1) {
-        const val = String(values[0])
-        if (val === 'hug') {
-          return [
-            { property: 'width', value: 'fit-content' },
-            { property: 'height', value: 'fit-content' },
-          ]
-        }
-        if (val === 'full') {
-          // Use flex: 1 1 0% for proper flex fill - no explicit width/height
-          // as those would override flexbox behavior and ignore parent padding
-          // align-self: stretch ensures cross-axis fill even when parent has center alignment
-          return [
-            { property: 'flex', value: '1 1 0%' },
-            { property: 'min-width', value: '0' },
-            { property: 'min-height', value: '0' },
-            { property: 'align-self', value: 'stretch' },
-          ]
-        }
-        // Single value = square
-        const px = /^\d+$/.test(val) ? `${val}px` : val
-        return [
-          { property: 'width', value: px },
-          { property: 'height', value: px },
-        ]
-      }
-      if (values.length >= 2) {
-        const w = String(values[0])
-        const h = String(values[1])
-        return [
-          { property: 'width', value: /^\d+$/.test(w) ? `${w}px` : w },
-          { property: 'height', value: /^\d+$/.test(h) ? `${h}px` : h },
-        ]
-      }
-    }
-
-    // Handle directional padding: pad left 20, pad top 8 bottom 24, pad x 16, pad left right 8
-    if ((name === 'pad' || name === 'padding' || name === 'p') && values.length >= 2) {
-      const directions = ['left', 'right', 'top', 'bottom', 'down', 'l', 'r', 't', 'b', 'x', 'y', 'horizontal', 'vertical', 'hor', 'ver']
-      if (directions.includes(String(values[0]))) {
-        return this.parseDirectionalSpacing('padding', values)
-      }
-      // Multi-value shorthand: pad 16 24 → padding: 16px 24px
-      // Check if all values are numeric (not directions)
-      const allNumeric = values.every(v => /^-?\d+(\.\d+)?(%|px)?$/.test(String(v)))
-      if (allNumeric && values.length <= 4) {
-        const paddingValue = values.map(v => {
-          const str = String(v)
-          if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
-          return str
-        }).join(' ')
-        return [{ property: 'padding', value: paddingValue }]
-      }
-    }
-
-    // Handle directional margin: margin left 8, margin top 16 bottom 24, margin x 16
-    if ((name === 'margin' || name === 'm') && values.length >= 2) {
-      const directions = ['left', 'right', 'top', 'bottom', 'down', 'l', 'r', 't', 'b', 'x', 'y', 'horizontal', 'vertical', 'hor', 'ver']
-      if (directions.includes(String(values[0]))) {
-        return this.parseDirectionalSpacing('margin', values)
-      }
-      // Multi-value shorthand: margin 16 24 → margin: 16px 24px
-      const allNumeric = values.every(v => /^-?\d+(\.\d+)?(%|px|auto)?$/.test(String(v)))
-      if (allNumeric && values.length <= 4) {
-        const marginValue = values.map(v => {
-          const str = String(v)
-          if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
-          return str
-        }).join(' ')
-        return [{ property: 'margin', value: marginValue }]
-      }
-    }
-
-    // Handle directional border: bor t 1 #333, bor left right 1 #333, bor x 2 #666
-    // Uses BORDER_DIRECTION_MAP from schema/ir-helpers.ts
-    if ((name === 'bor' || name === 'border') && values.length >= 2) {
-      const firstVal = String(values[0])
-      if (BORDER_DIRECTION_MAP[firstVal]) {
-        // Collect all direction tokens
-        const borderDirs: string[] = []
-        let i = 0
-        while (i < values.length && BORDER_DIRECTION_MAP[String(values[i])]) {
-          borderDirs.push(...BORDER_DIRECTION_MAP[String(values[i])])
-          i++
-        }
-        // Rest are the border values (width, style, color)
-        const restValues = values.slice(i)
-        const borderValue = this.formatBorderValue(restValues)
-        // Apply to all directions (deduplicated), with 'border-' prefix
-        const uniqueDirs = [...new Set(borderDirs)]
-        return uniqueDirs.map(dir => ({ property: `border-${dir}`, value: borderValue }))
-      }
-      // Non-directional multi-value border: bor 1 #333 → border: 1px solid #333
-      const borderValue = this.formatBorderValue(values)
-      return [{ property: 'border', value: borderValue }]
-    }
-
-    // Handle corner-specific radius: rad tl 8, rad t 8, rad 8 8 0 0
-    // Uses CORNER_MAP from schema/ir-helpers.ts
-    if ((name === 'rad' || name === 'radius') && values.length >= 1) {
-      const cornerMap: Record<string, string[]> = {
-        'tl': ['border-top-left-radius'],
-        'tr': ['border-top-right-radius'],
-        'bl': ['border-bottom-left-radius'],
-        'br': ['border-bottom-right-radius'],
-        't': ['border-top-left-radius', 'border-top-right-radius'],
-        'b': ['border-bottom-left-radius', 'border-bottom-right-radius'],
-        'l': ['border-top-left-radius', 'border-bottom-left-radius'],
-        'r': ['border-top-right-radius', 'border-bottom-right-radius'],
-      }
-      const firstVal = String(values[0])
-      if (cornerMap[firstVal] && values.length >= 2) {
-        const props = cornerMap[firstVal]
-        const val = String(values[1])
-        const px = /^\d+$/.test(val) ? `${val}px` : val
-        return props.map(p => ({ property: p, value: px }))
-      }
-      // Multi-value radius shorthand: rad 8 16 → border-radius: 8px 16px
-      if (values.length >= 2 && values.every(v => /^-?\d+(\.\d+)?(%|px)?$/.test(String(v)))) {
-        const radiusValue = values.map(v => {
-          const str = String(v)
-          if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
-          return str
-        }).join(' ')
-        return [{ property: 'border-radius', value: radiusValue }]
-      }
-    }
-
-    // Grid positioning: x → grid-column-start (when parent is grid)
-    // Absolute positioning: x → left + position: absolute (default)
-    if (name === 'x') {
-      const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
-      if (parentLayoutContext?.type === 'grid' && !isNaN(numVal)) {
-        return [{ property: 'grid-column-start', value: String(numVal) }]
-      }
-      // Default: position absolute + left
-      const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
-      const px = /^-?\d+$/.test(val) ? `${val}px` : val
-      return [
-        { property: 'position', value: 'absolute' },
-        { property: 'left', value: px },
-      ]
-    }
-
-    // Grid positioning: y → grid-row-start (when parent is grid)
-    // Absolute positioning: y → top + position: absolute (default)
-    if (name === 'y') {
-      const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
-      if (parentLayoutContext?.type === 'grid' && !isNaN(numVal)) {
-        return [{ property: 'grid-row-start', value: String(numVal) }]
-      }
-      // Default: position absolute + top
-      const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
-      const px = /^-?\d+$/.test(val) ? `${val}px` : val
-      return [
-        { property: 'position', value: 'absolute' },
-        { property: 'top', value: px },
-      ]
-    }
-
-    // Grid span: w (numeric) → grid-column: span N (when parent is grid)
-    if ((name === 'w' || name === 'width') && parentLayoutContext?.type === 'grid') {
-      const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
-      if (!isNaN(numVal) && numVal > 0) {
-        // In grid context, numeric w means column span
-        // Also add width: 100% so the element fills the cell horizontally
-        return [
-          { property: 'grid-column', value: `span ${numVal}` },
-          { property: 'width', value: '100%' }
-        ]
-      }
-      // If not numeric, fall through to default handling (hug, full, etc.)
-    }
-
-    // Grid span: h (numeric) → grid-row: span N (when parent is grid)
-    if ((name === 'h' || name === 'height') && parentLayoutContext?.type === 'grid') {
-      const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
-      if (!isNaN(numVal) && numVal > 0) {
-        // In grid context, numeric h means row span
-        // Also add height: 100% so the element fills the cell vertically
-        return [
-          { property: 'grid-row', value: `span ${numVal}` },
-          { property: 'height', value: '100%' }
-        ]
-      }
-      // If not numeric, fall through to default handling (hug, full, etc.)
-    }
-
-    // Handle rotate: rotate 45 (fallback for states)
-    if (name === 'rotate' || name === 'rot') {
-      const deg = String(values[0])
-      return [{ property: 'transform', value: `rotate(${deg}deg)` }]
-    }
-
-    // Handle scale: scale 1.2 (fallback for states)
-    if (name === 'scale') {
-      const val = String(values[0])
-      return [{ property: 'transform', value: `scale(${val})` }]
-    }
-
-    // Handle aspect ratio: aspect 16/9, aspect 1, aspect 4/3, aspect square, aspect video
-    if (name === 'aspect') {
-      const val = String(values[0])
-      // Map keywords to their values
-      const aspectKeywords: Record<string, string> = {
-        square: '1',
-        video: '16/9',
-      }
-      const resolvedVal = aspectKeywords[val] ?? val
-      return [{ property: 'aspect-ratio', value: resolvedVal }]
-    }
-
-    // Handle backdrop-blur: backdrop-blur 10
-    if (name === 'backdrop-blur' || name === 'blur-bg') {
-      const val = String(values[0])
-      const px = /^\d+$/.test(val) ? `${val}px` : val
-      return [{ property: 'backdrop-filter', value: `blur(${px})` }]
-    }
-
-    // Handle filter blur: blur 5
-    if (name === 'blur') {
-      const val = String(values[0])
-      const px = /^\d+$/.test(val) ? `${val}px` : val
-      return [{ property: 'filter', value: `blur(${px})` }]
-    }
-
-    // Handle animation property: animation fade-in, anim bounce
-    if (name === 'animation' || name === 'anim') {
-      const animName = String(values[0])
-      // Map animation keywords to CSS animation values
-      const animationMap: Record<string, string> = {
-        'fade-in': 'mirror-fade-in 0.3s ease forwards',
-        'fade-out': 'mirror-fade-out 0.3s ease forwards',
-        'slide-in': 'mirror-slide-in 0.3s ease forwards',
-        'slide-out': 'mirror-slide-out 0.3s ease forwards',
-        'scale-in': 'mirror-scale-in 0.3s ease forwards',
-        'scale-out': 'mirror-scale-out 0.3s ease forwards',
-        'bounce': 'mirror-bounce 0.5s ease infinite',
-        'pulse': 'mirror-pulse 1s ease infinite',
-        'shake': 'mirror-shake 0.5s ease',
-        'spin': 'mirror-spin 1s linear infinite',
-      }
-      const animValue = animationMap[animName] || animName
-      return [{ property: 'animation', value: animValue }]
-    }
-
-    // Handle inline hover properties: hover-bg, hover-col, etc.
-    // Uses hoverPropertyToCSS from schema/ir-helpers.ts
-    if (name.startsWith('hover-')) {
-      const hoverResult = hoverPropertyToCSS(name, value)
-      if (hoverResult.handled) {
-        return hoverResult.styles
-      }
-      // Fallback for unknown hover properties
-      const baseProp = name.replace('hover-', '')
-      const cssValue = this.formatCSSValue(baseProp, value)
-      return [{ property: baseProp, value: cssValue, state: 'hover' }]
-    }
-
-    // Handle special cases FIRST (before the early return check)
-    // These are layout/positioning properties that need special CSS mapping
-    if (name === 'horizontal' || name === 'hor') {
-      return [
-        { property: 'display', value: 'flex' },
-        { property: 'flex-direction', value: 'row' },
-      ]
-    }
-
-    if (name === 'vertical' || name === 'ver') {
-      return [
-        { property: 'display', value: 'flex' },
-        { property: 'flex-direction', value: 'column' },
-        { property: 'align-items', value: 'flex-start' },
-      ]
-    }
-
-    if (name === 'center' || name === 'cen') {
-      return [
-        { property: 'display', value: 'flex' },
-        { property: 'justify-content', value: 'center' },
-        { property: 'align-items', value: 'center' },
-      ]
-    }
-
-    if (name === 'spread') {
-      return [
-        { property: 'display', value: 'flex' },
-        { property: 'justify-content', value: 'space-between' },
-      ]
-    }
-
-    if (name === 'wrap') {
-      return [{ property: 'flex-wrap', value: 'wrap' }]
-    }
-
-    if (name === 'stacked') {
-      return [{ property: 'position', value: 'relative' }]
-    }
-
-    if (name === 'scroll' || name === 'scroll-ver') {
-      return [{ property: 'overflow-y', value: 'auto' }]
-    }
-
-    if (name === 'scroll-hor') {
-      return [{ property: 'overflow-x', value: 'auto' }]
-    }
-
-    if (name === 'scroll-both') {
-      return [{ property: 'overflow', value: 'auto' }]
-    }
-
-    // Handle width/height 'full' - use flex: 1 1 0% only when dimension matches flex direction
-    // This ensures w full works in hor containers, h full works in ver containers
-    // For cross-axis (h full in hor, w full in ver), use align-self: stretch instead
-    if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'full') {
-      const isWidth = name === 'width' || name === 'w'
-      const isHorizontalFlex = parentLayoutContext?.type === 'flex' && parentLayoutContext?.flexDirection === 'row'
-      const isVerticalFlex = parentLayoutContext?.type === 'flex' && parentLayoutContext?.flexDirection === 'column'
-
-      // Check if this 'full' is on the main axis of the flex container
-      const isMainAxis = (isWidth && isHorizontalFlex) || (!isWidth && isVerticalFlex)
-
-      if (isMainAxis) {
-        // Main axis: use flex: 1 1 0% to fill available space
-        return [
-          { property: 'flex', value: '1 1 0%' },
-          { property: isWidth ? 'min-width' : 'min-height', value: '0' },
-        ]
-      } else {
-        // Cross axis: use both explicit 100% and align-self: stretch
-        // align-self: stretch alone doesn't work if parent has no explicit size
-        return [
-          { property: isWidth ? 'width' : 'height', value: '100%' },
-          { property: 'align-self', value: 'stretch' },
-          { property: isWidth ? 'min-width' : 'min-height', value: '0' },
-        ]
-      }
-    }
-
-    // Handle width/height 'hug' before schema
-    if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'hug') {
-      return [{ property: name === 'width' || name === 'w' ? 'width' : 'height', value: 'fit-content' }]
-    }
-
-    // Handle numeric width/height in flex containers - prevent shrinking
-    // Value can be number or numeric string from parser
-    const isNumericValue = typeof value === 'number' ||
-                           (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value))
-    if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') &&
-        isNumericValue && parentLayoutContext?.type === 'flex') {
-      const isWidth = name === 'width' || name === 'w'
-      const cssValue = this.formatCSSValue(name, String(value))
-      return [
-        { property: isWidth ? 'width' : 'height', value: cssValue },
-        { property: 'flex-shrink', value: '0' },
-      ]
-    }
-
-    // Try schema-based conversion FIRST - handles schema-defined properties
-    // This must come before the PROPERTY_TO_CSS check to support schema-defined properties
-    const schemaResult = simplePropertyToCSS(name, value)
-    if (schemaResult.handled) {
-      return schemaResult.styles
-    }
-
-    // Use centralized property mapping from schema
-    const cssProperty = PROPERTY_TO_CSS[name]
-
-    if (!cssProperty) {
-      // Skip non-CSS properties (content, data, etc.)
-      return []
-    }
-
-    if (name === 'clip') {
-      return [{ property: 'overflow', value: 'hidden' }]
-    }
-
-    // Handle grid
-    if (name === 'grid') {
-      const values = prop.values
-
-      // grid 3 → repeat(3, 1fr)
-      if (values.length === 1 && /^\d+$/.test(String(values[0]))) {
-        return [
-          { property: 'display', value: 'grid' },
-          { property: 'grid-template-columns', value: `repeat(${values[0]}, 1fr)` },
-        ]
-      }
-
-      // grid auto 250 → auto-fill, minmax(250px, 1fr)
-      if (values.length === 2 && values[0] === 'auto') {
-        const minWidth = /^\d+$/.test(String(values[1])) ? `${values[1]}px` : values[1]
-        return [
-          { property: 'display', value: 'grid' },
-          { property: 'grid-template-columns', value: `repeat(auto-fill, minmax(${minWidth}, 1fr))` },
-        ]
-      }
-
-      // grid 30% 70% → explicit columns
-      if (values.length >= 2) {
-        const columns = values.map(v => {
-          const str = String(v)
-          if (/^\d+$/.test(str)) return `${str}px`
-          if (str.endsWith('%')) return str
-          return str
-        }).join(' ')
-        return [
-          { property: 'display', value: 'grid' },
-          { property: 'grid-template-columns', value: columns },
-        ]
-      }
-
-      return [{ property: 'display', value: 'grid' }]
-    }
-
-    // Handle shadow presets - fallback for custom values
-    if (name === 'shadow') {
-      // Schema was already tried above, this is just the fallback
-      return [{ property: 'box-shadow', value: value }]
-    }
-
-    // Fallback: direct mapping with formatting
-    if (cssProperty) {
-      const cssValue = this.formatCSSValue(name, value)
-      return [{ property: cssProperty as string, value: cssValue }]
-    }
-
-    return []
+    return propertyToCSSExtracted(prop, ctx, primitive, transformContext, parentLayoutContext)
   }
+
+  // propertyToCSS implementation extracted to transformers/property-transformer.ts
+
 
   /**
    * Format value for CSS
    */
-  private formatCSSValue(property: string, value: string): string {
-    // Properties that need px units for numeric values
-    const needsPx = [
-      'padding', 'pad', 'p',
-      'margin', 'm',
-      'gap', 'g',
-      'gap-x', 'gx', 'gap-y', 'gy',
-      'row-height', 'rh',
-      'width', 'w', 'height', 'h',
-      'min-width', 'minw', 'max-width', 'maxw',
-      'min-height', 'minh', 'max-height', 'maxh',
-      'font-size', 'fs',
-      'radius', 'rad',
-      'border-radius',
-      'border', 'bor',
-    ]
+  // formatCSSValue has been extracted to transformers/style-utils-transformer.ts
 
-    if (needsPx.includes(property)) {
-      // Handle multi-value properties (e.g., "8 16" → "8px 16px")
-      return value.split(' ').map(v => {
-        if (/^\d+$/.test(v)) {
-          return `${v}px`
-        }
-        return v
-      }).join(' ')
-    }
+  // parseDirectionalSpacing has been extracted to transformers/style-utils-transformer.ts
 
-    return value
-  }
+  // formatBorderValue has been extracted to transformers/style-utils-transformer.ts
 
-  /**
-   * Parse directional spacing (padding/margin)
-   * Uses DIRECTION_MAP from schema/ir-helpers.ts
-   * Supports:
-   * - pad left 20                    → padding-left: 20px
-   * - pad top 8 bottom 24            → padding-top: 8px, padding-bottom: 24px
-   * - pad left right 8               → padding-left: 8px, padding-right: 8px
-   * - margin top bottom left 4       → margin-top/bottom/left: 4px
-   * - pad x 16                       → padding-left: 16px, padding-right: 16px
-   * - pad y 8                        → padding-top: 8px, padding-bottom: 8px
-   */
-  private parseDirectionalSpacing(property: string, values: PropertyValue[]): IRStyle[] {
-    const styles: IRStyle[] = []
+  // PROPERTY_TO_TOKEN_SUFFIX has been moved to schema/ir-helpers.ts
+  // resolveValue, resolveContentValue, resolveTokenWithContext, extractHTMLProperties
+  // have been extracted to transformers/value-resolver.ts
 
-    let i = 0
-    while (i < values.length) {
-      const val = String(values[i])
+  // extractValueBinding has been extracted to transformers/property-utils-transformer.ts
 
-      // Check if this is a direction (using centralized DIRECTION_MAP)
-      if (DIRECTION_MAP[val]) {
-        // Collect all consecutive directions
-        const directions: string[] = []
-        while (i < values.length && DIRECTION_MAP[String(values[i])]) {
-          directions.push(...DIRECTION_MAP[String(values[i])])
-          i++
-        }
-
-        // Next value should be the actual value
-        if (i < values.length) {
-          const numVal = String(values[i])
-          const px = /^-?\d+$/.test(numVal) ? `${numVal}px` : numVal
-
-          // Apply value to all collected directions (deduplicated)
-          const uniqueDirs = [...new Set(directions)]
-          for (const dir of uniqueDirs) {
-            styles.push({ property: `${property}-${dir}`, value: px })
-          }
-          i++
-        }
-      } else {
-        i++
-      }
-    }
-    return styles
-  }
-
-  /**
-   * Format border value: 1 #333 → 1px solid #333, 2 dashed #666 → 2px dashed #666
-   */
-  private formatBorderValue(values: PropertyValue[]): string {
-    const parts: string[] = []
-    let hasStyle = false
-    const styles = ['solid', 'dashed', 'dotted', 'double', 'groove', 'ridge', 'inset', 'outset', 'none']
-
-    for (const v of values) {
-      const str = String(v)
-      if (/^\d+$/.test(str)) {
-        parts.push(`${str}px`)
-      } else if (styles.includes(str)) {
-        hasStyle = true
-        parts.push(str)
-      } else {
-        parts.push(str)
-      }
-    }
-
-    // If no explicit style, add 'solid' after width
-    if (!hasStyle && parts.length > 0 && parts[0].endsWith('px')) {
-      parts.splice(1, 0, 'solid')
-    }
-
-    return parts.join(' ')
-  }
-
-  /**
-   * Map from property name to token suffix for auto-completion
-   * e.g., pad $md -> $m.pad if $m.pad exists
-   */
-  private static PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
-    // Spacing
-    'pad': '.pad', 'padding': '.pad', 'p': '.pad',
-    'margin': '.margin', 'm': '.margin',
-    'gap': '.gap', 'g': '.gap',
-    // Sizing
-    'rad': '.rad', 'radius': '.rad',
-    // Colors
-    'bg': '.bg', 'background': '.bg',
-    'col': '.col', 'color': '.col', 'c': '.col',
-    'boc': '.boc', 'border-color': '.boc',
-    // Typography
-    'fs': '.fs', 'font-size': '.fs',
-    // Effects
-    'shadow': '.shadow',
-  }
-
-  /**
-   * Resolve property values to string
-   * @param values The property values to resolve
-   * @param propertyName Optional property name for context-aware token resolution
-   */
-  private resolveValue(values: PropertyValue[], propertyName?: string): string {
-    return values
-      .map(v => {
-        // Explicit token reference object
-        if (typeof v === 'object' && v.kind === 'token') {
-          const tokenName = v.name
-          // Check if this is a known design token
-          // Try direct match first (e.g., 'primary'), then with $ prefix (e.g., '$size')
-          if (this.tokenSet.has(tokenName)) {
-            const resolvedName = this.resolveTokenWithContext(tokenName, propertyName)
-            // Convert dots to hyphens for valid CSS variable name
-            const cssVarName = resolvedName.replace(/\./g, '-')
-            return `var(--${cssVarName})`
-          }
-          // Check with $ prefix (e.g., token defined as '$size: 100', used as 'w $size')
-          if (this.tokenSet.has('$' + tokenName)) {
-            // Convert dots to hyphens for valid CSS variable name
-            const cssVarName = tokenName.replace(/\./g, '-')
-            return `var(--${cssVarName})`
-          }
-          // Try context-based resolution (e.g., 'primary' + '.bg' -> '$primary.bg')
-          if (propertyName) {
-            const suffix = IRTransformer.PROPERTY_TO_TOKEN_SUFFIX[propertyName]
-            if (suffix) {
-              const extendedName = tokenName + suffix
-              const withDollar = '$' + extendedName
-              if (this.tokenSet.has(extendedName) || this.tokenSet.has(withDollar)) {
-                // Convert dots to hyphens for valid CSS variable name
-                const cssVarName = extendedName.replace(/\./g, '-')
-                return `var(--${cssVarName})`
-              }
-            }
-          }
-          // Not a known token - likely a loop variable reference (e.g., user.name from each loop)
-          // Preserve as $name format for runtime interpolation
-          return `$${tokenName}`
-        }
-        // String that matches a token name
-        if (typeof v === 'string' && this.tokenSet.has(v)) {
-          // Convert dots to hyphens for valid CSS variable name
-          const cssVarName = v.replace(/\./g, '-')
-          return `var(--${cssVarName})`
-        }
-        return String(v)
-      })
-      .join(' ')
-  }
-
-  /**
-   * Resolve content values (textContent) - preserves $-variable references
-   * Unlike resolveValue which converts to CSS variables, this keeps $name format
-   * for runtime resolution via $get()
-   */
-  private resolveContentValue(values: PropertyValue[]): string {
-    return values
-      .map(v => {
-        // Computed expression - build JavaScript expression string
-        if (typeof v === 'object' && v.kind === 'expression') {
-          return this.buildExpressionString(v.parts, v.operators)
-        }
-        // Explicit token reference object - preserve as $name for runtime
-        if (typeof v === 'object' && v.kind === 'token') {
-          return `$${v.name}`
-        }
-        // Loop variable reference - preserve with special marker for backend
-        if (typeof v === 'object' && v.kind === 'loopVar') {
-          return `__loopVar:${v.name}`
-        }
-        // String that starts with $ - preserve as-is
-        if (typeof v === 'string' && v.startsWith('$')) {
-          return v
-        }
-        return String(v)
-      })
-      .join(' ')
-  }
-
-  /**
-   * Build a JavaScript expression string from parts and operators
-   * e.g., ["Hello ", {kind:'token', name:'name'}] + ["+"] → "Hello " + $name
-   *
-   * Parts may include parentheses for grouping. Operators are placed between
-   * actual operands (not between a paren and an operand).
-   *
-   * For: parts = ["Summe: €", "(", {count}, {price}, ")"], operators = ["+", "*"]
-   * Output: "Summe: €" + ($count * $price)
-   */
-  private buildExpressionString(parts: ExpressionPart[], operators: string[]): string {
-    const result: string[] = []
-    let opIndex = 0
-
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i]
-      const prev = i > 0 ? parts[i - 1] : null
-      const isOpenParen = typeof part === 'string' && part === '('
-      const isCloseParen = typeof part === 'string' && part === ')'
-      const prevIsOpenParen = typeof prev === 'string' && prev === '('
-
-      // Add operator before this part (if needed)
-      // We add an operator when:
-      // - There's a previous part
-      // - The previous part is NOT an opening paren
-      // - This part is NOT a closing paren
-      if (i > 0 && !prevIsOpenParen && !isCloseParen && opIndex < operators.length) {
-        result.push(` ${operators[opIndex++]} `)
-      }
-
-      // Add the part
-      if (typeof part === 'object' && part.kind === 'token') {
-        result.push(`$${part.name}`)
-      } else if (typeof part === 'object' && part.kind === 'loopVar') {
-        // Loop variable reference - use special marker for backend
-        result.push(`__loopVar:${part.name}`)
-      } else if (typeof part === 'string') {
-        if (part === '(' || part === ')') {
-          result.push(part)
-        } else {
-          result.push(`"${part}"`)
-        }
-      } else if (typeof part === 'number') {
-        result.push(String(part))
-      } else {
-        result.push(String(part))
-      }
-    }
-
-    return result.join('')
-  }
-
-  /**
-   * Try to resolve a short token name using property context
-   * e.g., 'primary' with property 'bg' -> 'primary.bg' if '$primary.bg' exists in tokens
-   */
-  private resolveTokenWithContext(tokenName: string, propertyName?: string): string {
-    // If token already exists as-is (e.g., 'primary'), use it
-    if (this.tokenSet.has(tokenName)) {
-      return tokenName
-    }
-
-    // Try to add property-specific suffix
-    // e.g., 'primary' + '.bg' = 'primary.bg' if '$primary.bg' exists
-    if (propertyName) {
-      const suffix = IRTransformer.PROPERTY_TO_TOKEN_SUFFIX[propertyName]
-      if (suffix) {
-        const extendedName = tokenName + suffix
-        // Check both with and without $ prefix
-        if (this.tokenSet.has(extendedName)) {
-          return extendedName
-        }
-        // Check with $ prefix (e.g., '$primary.bg')
-        if (this.tokenSet.has('$' + extendedName)) {
-          return extendedName
-        }
-      }
-    }
-
-    // Fall back to original name
-    return tokenName
-  }
-
-  /**
-   * Extract HTML properties (non-CSS)
-   */
-  private extractHTMLProperties(properties: Property[], primitive?: string): IRProperty[] {
-    const htmlProps: IRProperty[] = []
-
-    // Auto-set type for checkbox/radio primitives
-    if (primitive === 'checkbox') {
-      htmlProps.push({ name: 'type', value: 'checkbox' })
-    } else if (primitive === 'radio') {
-      htmlProps.push({ name: 'type', value: 'radio' })
-    }
-
-    // Default icon size (can be overridden via icon-size or is property)
-    if (primitive === 'icon') {
-      const hasIconSize = properties.some(p => p.name === 'icon-size' || p.name === 'is')
-      if (!hasIconSize) {
-        htmlProps.push({ name: 'data-icon-size', value: '16' })
-      }
-    }
-
-    for (const prop of properties) {
-      // content = text content (from strings like "Hello" or "$name")
-      // propset = property set reference (handled in transformProperties, skip here)
-      if (prop.name === 'content') {
-        htmlProps.push({ name: 'textContent', value: this.resolveContentValue(prop.values) })
-      }
-      if (prop.name === 'href') {
-        htmlProps.push({ name: 'href', value: this.resolveValue(prop.values) })
-      }
-      if (prop.name === 'src') {
-        htmlProps.push({ name: 'src', value: this.resolveValue(prop.values) })
-      }
-      if (prop.name === 'placeholder') {
-        htmlProps.push({ name: 'placeholder', value: this.resolveValue(prop.values) })
-      }
-      if (prop.name === 'disabled') {
-        htmlProps.push({ name: 'disabled', value: true })
-      }
-      if (prop.name === 'readonly') {
-        htmlProps.push({ name: 'readonly', value: true })
-      }
-      if (prop.name === 'type') {
-        htmlProps.push({ name: 'type', value: this.resolveValue(prop.values) })
-      }
-      if (prop.name === 'name') {
-        htmlProps.push({ name: 'name', value: this.resolveValue(prop.values) })
-      }
-      if (prop.name === 'value') {
-        // For value properties, use resolveContentValue to preserve $-references for two-way binding
-        // This allows Input value $user.name to become a bidirectional binding
-        htmlProps.push({ name: 'value', value: this.resolveContentValue(prop.values) })
-      }
-      if (prop.name === 'checked') {
-        htmlProps.push({ name: 'checked', value: true })
-      }
-      // Note: 'hidden' is handled as CSS (display: none) not HTML attribute
-      // This allows state transitions with 'visible' to properly show the element
-      // Icon properties - pass through as data attributes for runtime handling
-      if (prop.name === 'icon-size' || prop.name === 'is') {
-        htmlProps.push({ name: 'data-icon-size', value: this.resolveValue(prop.values) })
-      }
-      if (prop.name === 'icon-color' || prop.name === 'ic') {
-        htmlProps.push({ name: 'data-icon-color', value: this.resolveValue(prop.values) })
-      }
-      if (prop.name === 'icon-weight' || prop.name === 'iw') {
-        htmlProps.push({ name: 'data-icon-weight', value: this.resolveValue(prop.values) })
-      }
-      if (prop.name === 'fill') {
-        htmlProps.push({ name: 'data-icon-fill', value: true })
-      }
-      // Focusable - makes element keyboard-focusable
-      if (prop.name === 'focusable') {
-        htmlProps.push({ name: 'tabindex', value: '0' })
-      }
-      // keyboard-nav / keynav - handled in IR transformation, not as HTML prop
-    }
-
-    return htmlProps
-  }
-
-  /**
-   * Extract valueBinding path from properties for two-way data binding.
-   * Returns the token path if value property contains a token reference.
-   * E.g., Input value $user.name → "user.name"
-   */
-  private extractValueBinding(properties: Property[]): string | undefined {
-    const valueProp = properties.find(p => p.name === 'value')
-    if (!valueProp || !valueProp.values || valueProp.values.length === 0) {
-      return undefined
-    }
-
-    const firstValue = valueProp.values[0]
-
-    // Check for explicit token reference object
-    if (typeof firstValue === 'object' && firstValue.kind === 'token') {
-      return firstValue.name as string
-    }
-
-    // Check for string starting with $ (e.g., "$user.name")
-    if (typeof firstValue === 'string' && firstValue.startsWith('$') && /^\$[a-zA-Z_]/.test(firstValue)) {
-      return firstValue.slice(1) // Remove $ prefix
-    }
-
-    return undefined
-  }
-
-  /**
-   * Transform events to IR
-   */
-  private transformEvents(events: Event[]): IREvent[] {
-    return events.map(event => ({
-      name: this.mapEventName(event.name),
-      key: event.key,
-      actions: event.actions.map(action => this.transformAction(action)),
-      modifiers: event.modifiers,
-    }))
-  }
-
-  /**
-   * Map Mirror event names to DOM event names
-   * Uses schema-based mapping from ir-helpers
-   */
-  private mapEventName(name: string): string {
-    return mapEventToDom(name)
-  }
-
-  /**
-   * Transform action to IR
-   */
-  private transformAction(action: Action): IRAction {
-    const isBuiltin = BUILTIN_STATE_FUNCTIONS.has(action.name)
-
-    return {
-      type: action.name,
-      target: action.target,
-      args: action.args,
-      isFunctionCall: action.isFunctionCall,
-      isBuiltinStateFunction: action.isFunctionCall && isBuiltin,
-    }
-  }
+  // Event transformation functions (transformEvents, transformAction)
+  // have been extracted to transformers/event-transformer.ts
 
   /**
    * Convert boolean property to CSS
    * Uses schema as primary source, with fallback for special cases
    */
-  private booleanPropertyToCSS(name: string): IRStyle[] {
-    // Try schema first
-    const schemaResult = schemaPropertyToCSS(name, [true])
-    if (schemaResult.handled && schemaResult.styles.length > 0) {
-      return schemaResult.styles
-    }
-
-    // Fallback for properties not fully in schema or with special handling
-    switch (name) {
-      // Alignment: Using column layout defaults (frame default)
-      // In column: left/right → align-items, top/bottom → justify-content
-      // IMPORTANT: Must also set display: flex and flex-direction: column for alignment to work
-      case 'left':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'flex-direction', value: 'column' },
-          { property: 'align-items', value: 'flex-start' },
-        ]
-      case 'right':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'flex-direction', value: 'column' },
-          { property: 'align-items', value: 'flex-end' },
-        ]
-      case 'top':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'flex-direction', value: 'column' },
-          { property: 'justify-content', value: 'flex-start' },
-        ]
-      case 'bottom':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'flex-direction', value: 'column' },
-          { property: 'justify-content', value: 'flex-end' },
-        ]
-      case 'hor-center':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'flex-direction', value: 'column' },
-          { property: 'align-items', value: 'center' },
-        ]
-      case 'ver-center':
-        return [
-          { property: 'display', value: 'flex' },
-          { property: 'flex-direction', value: 'column' },
-          { property: 'justify-content', value: 'center' },
-        ]
-      // Stacked container (absolute layout)
-      case 'stacked':
-        return [{ property: 'position', value: 'relative' }]
-      default:
-        return []
-    }
-  }
+  // booleanPropertyToCSS has been extracted to transformers/style-utils-transformer.ts
 
   /**
    * Transform a state child (Instance) to IRNode
@@ -3831,10 +2010,10 @@ class IRTransformer {
     const primitive = instance.component.toLowerCase()
 
     // Get primitive defaults and convert to Property format
-    const primitiveDefaults = this.convertDefaultsToProperties(getPrimitiveDefaults(primitive))
+    const primitiveDefaults = convertDefaultsToProperties(getPrimitiveDefaults(primitive))
 
     // Merge properties: Primitive Defaults < Instance Properties
-    const properties = this.mergeProperties(primitiveDefaults, instance.properties)
+    const properties = mergeProperties(primitiveDefaults, instance.properties)
 
     // Transform to styles
     const styles = this.transformProperties(properties, primitive)

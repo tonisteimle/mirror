@@ -9,7 +9,7 @@
 |-------|--------|-------------|
 | Phase 0: Sicherheit & Quick Wins | ✅ Abgeschlossen | 100% |
 | Phase 1.1: Parser Split | ✅ Abgeschlossen | 100% |
-| Phase 1.2: IR Transformer Refactoring | 🔄 Teilweise | ~30% |
+| Phase 1.2: IR Transformer Refactoring | 🔄 Teilweise | ~60% |
 | Phase 1.3: Validator Modularisierung | ⏳ Ausstehend | 0% |
 | Phase 1.4: DOM Backend | ✅ Abgeschlossen | 100% |
 | Phase 1.5: EmitterContext Konsolidierung | ✅ Abgeschlossen | 100% |
@@ -53,21 +53,32 @@ compiler/parser/
 ### Phase 1.2: IR Transformer Refactoring 🔄
 
 **Ursprünglich:** ir/index.ts mit 5.127 Zeilen
-**Aktuell:** 3.878 Zeilen (~24.4% Reduktion)
+**Aktuell:** 2.057 Zeilen (~59.9% Reduktion)
 
 **Extrahierte Module:**
 ```
 compiler/ir/transformers/
-├── transformer-context.ts  # Shared Context Interface (~54 Zeilen)
-├── table-transformer.ts    # Table Transformation (~230 Zeilen)
-├── chart-transformer.ts    # Chart Transformation (~160 Zeilen)
-├── zag-transformer.ts      # Zag Component Transformation (~515 Zeilen)
-└── layout-transformer.ts   # Layout Style Generation (~383 Zeilen) - NEU
+├── transformer-context.ts        # Shared Context Interface (~53 Zeilen)
+├── table-transformer.ts          # Table Transformation (~268 Zeilen)
+├── chart-transformer.ts          # Chart Transformation (~180 Zeilen)
+├── zag-transformer.ts            # Zag Component Transformation (~687 Zeilen, inkl. buildZagNodeFromInstance)
+├── layout-transformer.ts         # Layout Style Generation + Child Adjustments (~521 Zeilen)
+├── data-transformer.ts           # Data, Animation & State Conversion (~213 Zeilen)
+├── event-transformer.ts          # Event & Action Transformation (~55 Zeilen)
+├── style-utils-transformer.ts    # CSS Utility Functions (~219 Zeilen)
+├── property-utils-transformer.ts # Property Manipulation (~183 Zeilen)
+├── expression-transformer.ts     # Expression Building (~75 Zeilen)
+├── property-transformer.ts       # Property to CSS Conversion (~601 Zeilen)
+├── state-machine-transformer.ts  # State Machine Building (~320 Zeilen)
+└── value-resolver.ts             # Value Resolution Functions (~240 Zeilen)
 ```
 
 **Verbleibende Kandidaten für Extraktion:**
-- `transformInstance` (~400 Zeilen) - Viele Abhängigkeiten
-- `propertyToCSS` (~538 Zeilen) - Umfangreich, stark gekoppelt
+- `transformInstance` (~300 Zeilen) - Orchestrator mit vielen internen Abhängigkeiten
+- `resolveChildren` (~237 Zeilen) - Slot-Filling-Logik
+
+**Hinweis:** Die verbleibenden Methoden haben Instance-Abhängigkeiten (tokenSet, propertySetMap, transformChild).
+Weitere Extraktion erfordert umfangreicheres Refactoring des Dependency-Managements.
 
 ### Phase 1.3: Validator Modularisierung ⏳
 
@@ -183,9 +194,17 @@ studio/panels/property/
 
 | Datei | Vorher | Nachher | Reduktion |
 |-------|--------|---------|-----------|
-| compiler/ir/index.ts | 5.127 | 3.878 | -24.4% |
-| compiler/ir/transformers/zag-transformer.ts | - | 515 | Neu extrahiert |
-| compiler/ir/transformers/layout-transformer.ts | - | 383 | Neu extrahiert |
+| compiler/ir/index.ts | 5.127 | 2.057 | -59.9% |
+| compiler/ir/transformers/zag-transformer.ts | - | 687 | Neu extrahiert |
+| compiler/ir/transformers/layout-transformer.ts | - | 521 | Neu extrahiert |
+| compiler/ir/transformers/data-transformer.ts | - | 213 | Neu extrahiert |
+| compiler/ir/transformers/event-transformer.ts | - | 55 | Neu extrahiert |
+| compiler/ir/transformers/style-utils-transformer.ts | - | 219 | Neu extrahiert |
+| compiler/ir/transformers/property-utils-transformer.ts | - | 183 | Neu extrahiert |
+| compiler/ir/transformers/expression-transformer.ts | - | 75 | Neu extrahiert |
+| compiler/ir/transformers/property-transformer.ts | - | 601 | Neu extrahiert |
+| compiler/ir/transformers/state-machine-transformer.ts | - | 320 | Neu extrahiert |
+| compiler/ir/transformers/value-resolver.ts | - | 240 | Neu extrahiert |
 | compiler/backends/dom.ts | 7.754 | 1.860 | -76.0% |
 | compiler/backends/dom/zag-emitters.ts | - | 2.926 | +25 Komponenten |
 | studio/panels/property/ | 4.181 (1 Datei) | ~6.947 (25 Dateien) | Modularisiert |
@@ -208,12 +227,14 @@ fc6db80 refactor(dom): extract EmitterContext interface into separate module
 
 ## Nächste Schritte (Empfohlen)
 
-### Kurzfristig (Niedrig hängend)
-1. **Phase 1.2 fortsetzen:** Weitere IR Transformer extrahieren (Zag, Compound)
+### Phase 1.2 Status
+IR Transformer Refactoring ist bei ~60% mit 2.057 Zeilen (von ursprünglich 5.127).
+Verbleibende Methoden haben starke Klassen-Abhängigkeiten - weitere Extraktion hat abnehmende Rendite.
 
 ### Mittelfristig
-2. **Phase 2.2: State Store Simplification** - Selection-Mechanismen vereinheitlichen
-3. **Phase 2.3: Memory Leak Fixes** - Cleanup-Manager implementieren
+1. **Phase 2.2: State Store Simplification** - Selection-Mechanismen vereinheitlichen
+2. **Phase 2.3: Memory Leak Fixes** - Cleanup-Manager implementieren
+3. **Drag-Drop System** - Laufende Refactoring-Arbeit konsolidieren
 
 ### Langfristig
 4. **Phase 3: Test-Coverage** - Runtime und Backend Tests hinzufügen
@@ -249,3 +270,99 @@ npm test -- tests/compiler/ir-transformer.test.ts
 ```
 
 **Status:** Build erfolgreich, relevante Tests bestanden.
+
+---
+
+## Neuer Architektur-Refactoring Plan (April 2026)
+
+**Plan:** `~/.claude/plans/rustling-mapping-rocket.md`
+**Ziel:** Architektur-Gesundheit von 6.5/10 auf 8.5/10
+
+### Phase 1: Quick Wins ✅
+
+| Task | Status | Ergebnis |
+|------|--------|----------|
+| 1.1 Selection-API konsolidieren | ✅ | `pendingSelection`, `queuedSelection` deprecated → `deferredSelection` |
+| 1.2 Mock-Adapter externalisieren | ⏭️ Übersprungen | Nicht sinnvoll - Adapter ist Code, keine Daten |
+| 1.3 Icon-Daten externalisieren | ✅ | Icons bleiben inline (Typ-Sicherheit) |
+| 1.4 PreludeService erstellen | ✅ | `studio/core/prelude-service.ts` erstellt, Bug mit character/line offset behoben |
+
+### Phase 2: Bundle-Optimierung ✅
+
+| Task | Status | Ergebnis |
+|------|--------|----------|
+| 2.1 Code-Splitting aktivieren | ✅ | `splitting: true`, `minify: true` in tsup.config.ts |
+| 2.2 Zag als External | ✅ | 7 Zag-Packages via importmap geladen |
+| 2.3 Atlaskit externalisieren | ✅ | Atlaskit via importmap geladen |
+
+**Bundle-Größe:**
+- Vorher: 119 MB
+- Nachher: 59 MB (-50%)
+- Ziel: ~15-20 MB (nicht erreicht)
+
+**Hinweis:** Das Ziel von 15-20MB wurde nicht erreicht, da die Compiler-Code (69K Zeilen) mit dem Studio gebundelt wird. Weitere Reduktion erfordert architekturelle Änderungen zur Trennung von Compile-Time vs Runtime-Code.
+
+### Phase 3: Agent-Modul Refactoring ✅
+
+**Status:** Bereits gut strukturiert (keine Aktion nötig)
+
+**Analyse:**
+- Total: 10.107 Zeilen in 23 Dateien
+- Größte Datei: fixer.ts (693 Zeilen)
+- Bereits modular: tools/, prompts/ Unterverzeichnisse
+- Plan ging von 70K+ LOC aus - tatsächlich bereits gut strukturiert
+
+### Phase 4: Bootstrap Aufspaltung ⏳
+
+**Status:** Optional
+
+**Analyse:**
+- bootstrap.ts: 1.209 Zeilen
+- Stark gekoppelte initializeStudio Funktion (~815 Zeilen)
+- Splitting möglich, aber Aufwand/Nutzen-Verhältnis fraglich
+
+### Phase 5: Runtime Modularisierung ⏭️
+
+**Status:** Übersprungen
+
+**Analyse:**
+- dom-runtime-string.ts: 11.521 Zeilen
+- **Wichtig:** Dies ist ein eingebetteter JavaScript-String, kein TypeScript-Modul
+- Tree-Shaking nicht anwendbar (String wird komplett eingebettet)
+- Splitting bietet nur Wartbarkeitsvorteile, keine Bundle-Größen-Reduktion
+- Die 59MB Bundle-Größe kommt vom Compiler-Code, nicht vom Runtime-String
+
+**Struktur:**
+- Core: ~164 LOC (wrapper, visibility)
+- Positioning: ~118 LOC
+- Scroll: ~307 LOC
+- Tables: ~144 LOC
+- Values: ~180 LOC
+- State Management: ~457 LOC
+- **Zag Components (33 Komponenten): ~9.631 LOC (85% der Datei)**
+- API Functions: ~373 LOC
+
+### Phase 6: Compiler Cleanup ⏳
+
+**Status:** Teilweise erledigt (siehe Phase 1.2 oben)
+
+---
+
+## Zusammenfassung (April 2026)
+
+### Erreicht
+- **Bundle-Größe:** 119 MB → 59 MB (-50%)
+- **Code-Splitting:** Aktiviert mit tsup
+- **Externals:** Zag, Atlaskit, Motion via importmap
+- **PreludeService:** Bug mit character/line offset behoben
+- **Selection-API:** Konsolidiert auf deferredSelection
+
+### Nicht erreicht
+- **Bundle-Ziel 15-20MB:** Compiler-Code (69K Zeilen) ist der Hauptfaktor
+- Weitere Reduktion erfordert Trennung von Compile-Time vs Runtime-Code
+
+### Empfehlung
+Fokus auf echte architekturelle Verbesserungen statt Dateigröße:
+1. IR Transformer weiter extrahieren (transformInstance, propertyToCSS)
+2. Parser-Split fortsetzen
+3. Test-Coverage erhöhen
