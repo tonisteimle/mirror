@@ -8,7 +8,7 @@
 import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode, IRStateMachine, IRStateTransition, IRTable, IRTableColumn, IRItem, IRProperty, IRSlot, IRItemProperty } from '../ir/types'
-import { isIRZagNode, isIRTable, isIRDataReference, isIRDataReferenceArray } from '../ir/types'
+import { isIRZagNode, isIRTable } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import { generateTheme, isThemeToken } from '../schema/theme-generator'
 import type { DataFile } from '../parser/data-types'
@@ -26,7 +26,7 @@ import { emitEachLoop as emitEachLoopExtracted, emitConditional as emitCondition
 import type { LoopEmitterContext } from './dom/loop-emitter'
 import { emitEventListener as emitEventListenerExtracted, emitTemplateEventListener as emitTemplateEventListenerExtracted, emitAction as emitActionExtracted, mapKeyName } from './dom/event-emitter'
 import type { EventEmitterContext } from './dom/event-emitter'
-import { emitTokens as emitTokensExtracted, serializeDataObject, serializeDataValue } from './dom/token-emitter'
+import { emitTokens as emitTokensExtracted } from './dom/token-emitter'
 import type { TokenEmitterContext } from './dom/token-emitter'
 
 // Re-export types for external consumers
@@ -444,88 +444,6 @@ class DOMGenerator {
     for (const child of node.children) {
       this.emitNodeStateCSS(child, systemStates)
     }
-  }
-
-  /**
-   * Generate JavaScript methods from .data file method definitions
-   *
-   * Methods are compiled to functions attached to __methods namespace:
-   *   __methods.projects.Total = function(project) { ... }
-   */
-  private emitMethods(): void {
-    if (!this.dataFiles || this.dataFiles.length === 0) return
-
-    // Collect all methods from all data files (methods array may be undefined for legacy DataFile objects)
-    const allMethods = this.dataFiles.flatMap(df => df.methods || [])
-    if (allMethods.length === 0) return
-
-    this.emit('// Collection methods from .data files')
-    this.emit('const __methods = {}')
-
-    // Group methods by namespace
-    const byNamespace = new Map<string, typeof allMethods>()
-    for (const method of allMethods) {
-      const existing = byNamespace.get(method.namespace) || []
-      existing.push(method)
-      byNamespace.set(method.namespace, existing)
-    }
-
-    // Emit each namespace
-    for (const [namespace, methods] of byNamespace) {
-      this.emit(`__methods.${namespace} = {}`)
-
-      for (const method of methods) {
-        const params = method.params.join(', ')
-        this.emit(`__methods.${namespace}.${method.name} = function(${params}) {`)
-        this.indent++
-
-        // Compile the raw body to JavaScript
-        // For now, emit it as-is (simple statements)
-        const bodyLines = method.rawBody.split('\n')
-        for (const line of bodyLines) {
-          const trimmed = line.trim()
-          if (!trimmed) continue
-
-          // Simple transformations for common patterns
-          const jsLine = this.compileMethodBodyLine(trimmed)
-          this.emit(jsLine)
-        }
-
-        this.indent--
-        this.emit('}')
-      }
-    }
-    this.emit('')
-  }
-
-  /**
-   * Compile a single line of method body to JavaScript
-   *
-   * Simple transformations:
-   * - return X → return X
-   * - $collection → $get('collection')
-   * - collection.method(field) → $agg.method(collection, field)
-   */
-  private compileMethodBodyLine(line: string): string {
-    let result = line
-
-    // Replace $collection with $get('collection')
-    result = result.replace(/\$([a-zA-Z][\w-]*)/g, (_, name) => {
-      return `$get('${name}')`
-    })
-
-    // Replace .count, .sum(field), etc. with $agg calls
-    // This is a simplified version - the $get function handles this at runtime
-    // So we just need to ensure the syntax is valid JavaScript
-
-    return result
-  }
-
-  /**
-   * Generate computed queries (feature removed)
-   */
-  private emitQueries(): void {
-    // Query files feature has been removed - this is now a no-op
   }
 
   private emitCreateUI(): void {

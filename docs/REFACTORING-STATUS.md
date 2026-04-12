@@ -86,21 +86,23 @@ compiler/validator/
 ### Phase 1.4: DOM Backend 🔄
 
 **Ursprünglich:** dom.ts mit 7.754 Zeilen
-**Aktuell:** 4.568 Zeilen (~41% Reduktion)
+**Aktuell:** 4.192 Zeilen (~46% Reduktion)
 
 **Extrahierte Module:**
 ```
 compiler/backends/dom/
-├── index.ts              # Entry Point
+├── index.ts              # Entry Point (71 Zeilen)
 ├── types.ts              # Type Definitions
 ├── utils.ts              # Utilities
-├── emitter-context.ts    # Base EmitterContext
-├── zag-emitter-context.ts # Zag EmitterContext
+├── base-emitter-context.ts # Konsolidierte Context-Typen
+├── emitter-context.ts    # Re-Export (backwards compatibility)
+├── zag-emitter-context.ts # Re-Export (backwards compatibility)
 ├── zag-emitters.ts       # 10 Zag-Komponenten
 ├── table-emitter.ts      # Table Emission
 ├── state-machine-emitter.ts # State Machine
 ├── loop-emitter.ts       # Loop Handling
-└── event-emitter.ts      # Event Listener Generation - NEU
+├── event-emitter.ts      # Event Listener Generation
+└── token-emitter.ts      # Token/Data Emission (~484 Zeilen) - NEU
 ```
 
 ### Phase 1.5: EmitterContext Konsolidierung ✅
@@ -171,7 +173,7 @@ studio/panels/property/
 | Datei | Vorher | Nachher | Reduktion |
 |-------|--------|---------|-----------|
 | compiler/ir/index.ts | 5.127 | 4.744 | -7.5% |
-| compiler/backends/dom.ts | 7.754 | 4.568 | -41% |
+| compiler/backends/dom.ts | 7.754 | 4.192 | -46% |
 | studio/panels/property/ | 4.181 (1 Datei) | ~6.947 (25 Dateien) | Modularisiert |
 
 ---
