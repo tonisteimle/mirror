@@ -38,13 +38,17 @@ interface ChartJSInstance {
 }
 
 /**
- * Extend Window interface for Chart.js
+ * Extend Window interface for Chart.js and Mirror debug flag
  */
 declare global {
   interface Window {
     Chart?: ChartJSConstructor
+    __MIRROR_DEBUG__?: boolean
   }
 }
+
+/** Check if debug mode is enabled */
+const isDebug = (): boolean => typeof window !== 'undefined' && window.__MIRROR_DEBUG__ === true
 
 /**
  * Element with Mirror runtime metadata
@@ -1436,7 +1440,7 @@ export async function loadYAMLFile(filename: string, basePath = '/data/'): Promi
     const mirrorData = getMirrorData()
     mirrorData[name] = data
 
-    console.log(`Loaded YAML: ${name}`, data)
+    if (isDebug()) console.log(`[Mirror] Loaded YAML: ${name}`, data)
   } catch (err) {
     console.warn(`Failed to load YAML file ${safeFilename}:`, err)
   }
@@ -1764,9 +1768,9 @@ export function create(
 export function save(target?: string): void {
   const data = getMirrorData()
 
-  // For now, just log that save was called
+  // For now, just log that save was called (in debug mode)
   // In a real implementation, this would persist to localStorage, API, etc.
-  console.log('[Mirror] save() called', target ? `for ${target}` : '', data)
+  if (isDebug()) console.log('[Mirror] save() called', target ? `for ${target}` : '', data)
 
   // Dispatch a custom event that apps can listen to for persistence
   window.dispatchEvent(new CustomEvent('mirror:save', {
@@ -1791,7 +1795,7 @@ export function deleteItem(
  * @param target Optional target identifier
  */
 export function revert(target?: string): void {
-  console.log('[Mirror] revert() called', target ? `for ${target}` : '')
+  if (isDebug()) console.log('[Mirror] revert() called', target ? `for ${target}` : '')
 
   // Dispatch a custom event
   window.dispatchEvent(new CustomEvent('mirror:revert', {
@@ -4246,43 +4250,67 @@ function _evaluateVisibilityCondition(condition: string): boolean {
 export function notifyDataChange(path: string, value: unknown): void {
   const stringValue = value != null ? String(value) : ''
 
-  // Update bound input elements (skip the currently focused one to avoid cursor jumping)
-  const inputElements = _valueBindings.get(path)
-  if (inputElements) {
-    for (const el of inputElements) {
-      // Skip the element that's currently being typed in
-      if (el !== document.activeElement) {
-        (el as HTMLInputElement).value = stringValue
-      }
+  // Collect all paths to update: the exact path AND all sub-paths (e.g., selectedAddress.firstName)
+  const pathsToUpdate: string[] = [path]
+  const pathPrefix = path + '.'
+
+  // Find all registered paths that are sub-paths of the changed path
+  for (const registeredPath of _textBindings.keys()) {
+    if (registeredPath.startsWith(pathPrefix)) {
+      pathsToUpdate.push(registeredPath)
+    }
+  }
+  for (const registeredPath of _valueBindings.keys()) {
+    if (registeredPath.startsWith(pathPrefix) && !pathsToUpdate.includes(registeredPath)) {
+      pathsToUpdate.push(registeredPath)
+    }
+  }
+  for (const registeredPath of _visibilityBindings.keys()) {
+    if (registeredPath.startsWith(pathPrefix) && !pathsToUpdate.includes(registeredPath)) {
+      pathsToUpdate.push(registeredPath)
     }
   }
 
-  // Update bound text elements
-  // Use _textTemplate if available for expression re-evaluation
-  const textElements = _textBindings.get(path)
-  if (textElements) {
-    for (const el of textElements) {
-      if (el._textTemplate) {
-        // Re-evaluate the template expression
-        try {
-          el.textContent = el._textTemplate()
-        } catch (e) {
-          console.warn('Failed to re-evaluate text template:', e)
+  // Update all affected paths
+  for (const updatePath of pathsToUpdate) {
+    // Update bound input elements (skip the currently focused one to avoid cursor jumping)
+    const inputElements = _valueBindings.get(updatePath)
+    if (inputElements) {
+      for (const el of inputElements) {
+        // Skip the element that's currently being typed in
+        if (el !== document.activeElement) {
+          (el as HTMLInputElement).value = stringValue
+        }
+      }
+    }
+
+    // Update bound text elements
+    // Use _textTemplate if available for expression re-evaluation
+    const textElements = _textBindings.get(updatePath)
+    if (textElements) {
+      for (const el of textElements) {
+        if (el._textTemplate) {
+          // Re-evaluate the template expression
+          try {
+            el.textContent = el._textTemplate()
+          } catch (e) {
+            console.warn('Failed to re-evaluate text template:', e)
+            el.textContent = stringValue
+          }
+        } else {
           el.textContent = stringValue
         }
-      } else {
-        el.textContent = stringValue
       }
     }
-  }
 
-  // Update visibility of elements with _visibleWhen that depend on this path
-  const visElements = _visibilityBindings.get(path)
-  if (visElements) {
-    for (const el of visElements) {
-      if (el._visibleWhen) {
-        const visible = _evaluateVisibilityCondition(el._visibleWhen)
-        el.style.display = visible ? '' : 'none'
+    // Update visibility of elements with _visibleWhen that depend on this path
+    const visElements = _visibilityBindings.get(updatePath)
+    if (visElements) {
+      for (const el of visElements) {
+        if (el._visibleWhen) {
+          const visible = _evaluateVisibilityCondition(el._visibleWhen)
+          el.style.display = visible ? '' : 'none'
+        }
       }
     }
   }

@@ -8,6 +8,9 @@
 export const DOM_RUNTIME_CODE = `
 // Mirror DOM Runtime
 const _runtime = {
+  // Debug mode check
+  _isDebug() { return typeof window !== 'undefined' && window.__MIRROR_DEBUG__ === true },
+
   // Property mapping
   _propMap: {
     'bg': 'background',
@@ -956,7 +959,7 @@ const _runtime = {
   // Save (dispatch event for persistence)
   save(target) {
     const data = window.__mirrorData || {}
-    console.log('[Mirror] save()', target || '', data)
+    if (this._isDebug()) console.log('[Mirror] save()', target || '', data)
     window.dispatchEvent(new CustomEvent('mirror:save', { detail: { target, data } }))
   },
 
@@ -967,7 +970,7 @@ const _runtime = {
 
   // Revert changes (dispatch event)
   revert(target) {
-    console.log('[Mirror] revert()', target || '')
+    if (this._isDebug()) console.log('[Mirror] revert()', target || '')
     window.dispatchEvent(new CustomEvent('mirror:revert', { detail: { target } }))
   },
 
@@ -1105,41 +1108,65 @@ const _runtime = {
 
   // Set data value and notify all bound elements
   notifyDataChange(path, value) {
-    // Update other inputs (skip active element to avoid cursor jumping)
-    const inputElements = this._inputBindings.get(path)
-    if (inputElements) {
-      for (const el of inputElements) {
-        if (el !== document.activeElement) {
-          el.value = value ?? ''
-        }
+    // Collect all paths to update: the exact path AND all sub-paths (e.g., selectedAddress.firstName)
+    const pathsToUpdate = [path]
+    const pathPrefix = path + '.'
+
+    // Find all registered paths that are sub-paths of the changed path
+    for (const registeredPath of this._textBindings.keys()) {
+      if (registeredPath.startsWith(pathPrefix)) {
+        pathsToUpdate.push(registeredPath)
+      }
+    }
+    for (const registeredPath of this._inputBindings.keys()) {
+      if (registeredPath.startsWith(pathPrefix) && !pathsToUpdate.includes(registeredPath)) {
+        pathsToUpdate.push(registeredPath)
+      }
+    }
+    for (const registeredPath of this._visibilityBindings.keys()) {
+      if (registeredPath.startsWith(pathPrefix) && !pathsToUpdate.includes(registeredPath)) {
+        pathsToUpdate.push(registeredPath)
       }
     }
 
-    // Update text elements
-    const textElements = this._textBindings.get(path)
-    if (textElements) {
-      for (const el of textElements) {
-        if (el._textTemplate) {
-          // Re-evaluate expression template with new data
-          try {
-            const result = el._textTemplate()
-            el.textContent = result ?? ''
-          } catch (e) {
+    // Update all affected paths
+    for (const updatePath of pathsToUpdate) {
+      // Update other inputs (skip active element to avoid cursor jumping)
+      const inputElements = this._inputBindings.get(updatePath)
+      if (inputElements) {
+        for (const el of inputElements) {
+          if (el !== document.activeElement) {
+            el.value = value ?? ''
+          }
+        }
+      }
+
+      // Update text elements
+      const textElements = this._textBindings.get(updatePath)
+      if (textElements) {
+        for (const el of textElements) {
+          if (el._textTemplate) {
+            // Re-evaluate expression template with new data
+            try {
+              const result = el._textTemplate()
+              el.textContent = result ?? ''
+            } catch (e) {
+              el.textContent = value ?? ''
+            }
+          } else {
             el.textContent = value ?? ''
           }
-        } else {
-          el.textContent = value ?? ''
         }
       }
-    }
 
-    // Update visibility of elements with _visibleWhen that depend on this path
-    const visElements = this._visibilityBindings.get(path)
-    if (visElements) {
-      for (const el of visElements) {
-        if (el._visibleWhen) {
-          const visible = this._evaluateVisibilityCondition(el._visibleWhen)
-          el.style.display = visible ? '' : 'none'
+      // Update visibility of elements with _visibleWhen that depend on this path
+      const visElements = this._visibilityBindings.get(updatePath)
+      if (visElements) {
+        for (const el of visElements) {
+          if (el._visibleWhen) {
+            const visible = this._evaluateVisibilityCondition(el._visibleWhen)
+            el.style.display = visible ? '' : 'none'
+          }
         }
       }
     }
