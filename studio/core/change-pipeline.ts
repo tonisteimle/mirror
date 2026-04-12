@@ -452,7 +452,7 @@ function executeIntent(
       // Get layout info for all nodes from the DOM
       const layoutInfo = new Map<string, Rect>()
       for (const nodeId of intent.nodeIds) {
-        const element = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement
+        const element = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
         if (element) {
           const rect = element.getBoundingClientRect()
           const parent = element.parentElement

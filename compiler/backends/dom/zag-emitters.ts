@@ -2685,6 +2685,154 @@ function emitListboxComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitte
 }
 
 // =============================================================================
+// Form Component
+// =============================================================================
+
+/**
+ * Format field name to readable label.
+ * Converts camelCase or snake_case to Title Case.
+ */
+function formatFieldLabel(name: string): string {
+  return name
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .replace(/^\w/, c => c.toUpperCase())
+}
+
+function emitFormComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+  const collectionName = (node.machineConfig?.collection as string) || ''
+  const normalizedCollection = collectionName.startsWith('$') ? collectionName.slice(1) : collectionName
+
+  ctx.emit(`// Form Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('form')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'form'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+  if (normalizedCollection) {
+    ctx.emit(`${varName}.dataset.collection = '${normalizedCollection}'`)
+  }
+  ctx.emit('')
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'form',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`collection: '${normalizedCollection}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Apply form styles
+  emitSlotStyles(ctx, varName, node.slots['Root'])
+
+  // Process Field items
+  const items = node.items || []
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+    const fieldName = (item.name as string) || `field_${i}`
+    const fieldLabel = (item.label as string) || formatFieldLabel(fieldName)
+    const fieldPlaceholder = (item.placeholder as string) || ''
+    const fieldType = (item.display as string) || 'text'
+    const isMultiline = item.multiline === true
+    const isRequired = item.required === true
+
+    const fieldVar = `${varName}_field_${i}`
+    const labelVar = `${fieldVar}_label`
+    const inputVar = `${fieldVar}_input`
+
+    ctx.emit(`// Field: ${fieldName}`)
+    ctx.emit(`const ${fieldVar} = document.createElement('div')`)
+    ctx.emit(`${fieldVar}.dataset.slot = 'Field'`)
+    ctx.emit(`${fieldVar}.dataset.fieldName = '${ctx.escapeString(fieldName)}'`)
+
+    // Apply field slot styles if defined
+    emitSlotStyles(ctx, fieldVar, node.slots['Field'])
+
+    // Label
+    ctx.emit(`const ${labelVar} = document.createElement('label')`)
+    ctx.emit(`${labelVar}.dataset.slot = 'FieldLabel'`)
+    ctx.emit(`${labelVar}.textContent = '${ctx.escapeString(fieldLabel)}'`)
+    ctx.emit(`${labelVar}.htmlFor = '${node.id}_${fieldName}'`)
+    ctx.emit(`${fieldVar}.appendChild(${labelVar})`)
+
+    // Input element
+    if (isMultiline) {
+      ctx.emit(`const ${inputVar} = document.createElement('textarea')`)
+    } else if (fieldType === 'checkbox' || fieldType === 'switch') {
+      ctx.emit(`const ${inputVar} = document.createElement('input')`)
+      ctx.emit(`${inputVar}.type = 'checkbox'`)
+    } else if (fieldType === 'number' || fieldType === 'slider') {
+      ctx.emit(`const ${inputVar} = document.createElement('input')`)
+      ctx.emit(`${inputVar}.type = 'number'`)
+    } else {
+      ctx.emit(`const ${inputVar} = document.createElement('input')`)
+      ctx.emit(`${inputVar}.type = 'text'`)
+    }
+
+    ctx.emit(`${inputVar}.id = '${node.id}_${fieldName}'`)
+    ctx.emit(`${inputVar}.name = '${ctx.escapeString(fieldName)}'`)
+    ctx.emit(`${inputVar}.dataset.slot = 'FieldInput'`)
+    if (fieldPlaceholder) {
+      ctx.emit(`${inputVar}.placeholder = '${ctx.escapeString(fieldPlaceholder)}'`)
+    }
+    if (isRequired) {
+      ctx.emit(`${inputVar}.required = true`)
+    }
+
+    // Apply FieldInput slot styles
+    emitSlotStyles(ctx, inputVar, node.slots['FieldInput'])
+
+    ctx.emit(`${fieldVar}.appendChild(${inputVar})`)
+
+    // Error span
+    const errorVar = `${fieldVar}_error`
+    ctx.emit(`const ${errorVar} = document.createElement('span')`)
+    ctx.emit(`${errorVar}.dataset.slot = 'FieldError'`)
+    ctx.emit(`${errorVar}.style.display = 'none'`)
+    ctx.emit(`${fieldVar}.appendChild(${errorVar})`)
+
+    ctx.emit(`${varName}.appendChild(${fieldVar})`)
+    ctx.emit('')
+  }
+
+  // Actions slot
+  const actionsSlot = node.slots['Actions']
+  if (actionsSlot) {
+    const actionsVar = `${varName}_actions`
+    ctx.emit(`// Actions`)
+    ctx.emit(`const ${actionsVar} = document.createElement('div')`)
+    ctx.emit(`${actionsVar}.dataset.slot = 'Actions'`)
+    emitSlotStyles(ctx, actionsVar, actionsSlot)
+
+    // Emit Actions slot children
+    const actionsChildren = actionsSlot.children || []
+    for (const child of actionsChildren) {
+      ctx.emitNode(child as IRNode, actionsVar)
+    }
+
+    ctx.emit(`${varName}.appendChild(${actionsVar})`)
+    ctx.emit('')
+  }
+
+  // Prevent default form submission
+  ctx.emit(`${varName}.addEventListener('submit', function(e) { e.preventDefault() })`)
+  ctx.emit('')
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize Form via runtime
+  emitRuntimeInit(ctx, varName, 'initFormComponent')
+}
+
+// =============================================================================
 // Dispatcher
 // =============================================================================
 
@@ -2730,6 +2878,7 @@ const emitterRegistry = new Map<string, ZagEmitterFn>([
   ['dateinput', emitDateInputComponent],
   ['accordion', emitAccordionComponent],
   ['listbox', emitListboxComponent],
+  ['form', emitFormComponent],
 ])
 
 /**

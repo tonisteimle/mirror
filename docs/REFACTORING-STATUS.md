@@ -11,7 +11,7 @@
 | Phase 1.1: Parser Split | ✅ Abgeschlossen | 100% |
 | Phase 1.2: IR Transformer Refactoring | 🔄 Teilweise | ~15% |
 | Phase 1.3: Validator Modularisierung | ⏳ Ausstehend | 0% |
-| Phase 1.4: DOM Backend | 🔄 Teilweise | ~90% |
+| Phase 1.4: DOM Backend | ✅ Abgeschlossen | 100% |
 | Phase 1.5: EmitterContext Konsolidierung | ✅ Abgeschlossen | 100% |
 | Phase 2.1: PropertyPanel Split | ✅ Abgeschlossen | 100% |
 | Phase 2.2: State Store Simplification | ⏳ Ausstehend | 0% |
@@ -83,10 +83,10 @@ compiler/validator/
 
 **Status:** Weniger dringend als ursprünglich angenommen (36.552 war Gesamtzahl).
 
-### Phase 1.4: DOM Backend 🔄
+### Phase 1.4: DOM Backend ✅
 
 **Ursprünglich:** dom.ts mit 7.754 Zeilen
-**Aktuell:** 2.834 Zeilen (~63.4% Reduktion)
+**Aktuell:** 2.327 Zeilen (~70.0% Reduktion)
 
 **Extrahierte Module:**
 ```
@@ -97,7 +97,7 @@ compiler/backends/dom/
 ├── base-emitter-context.ts # Konsolidierte Context-Typen
 ├── emitter-context.ts    # Re-Export (backwards compatibility)
 ├── zag-emitter-context.ts # Re-Export (backwards compatibility)
-├── zag-emitters.ts       # 22 Zag-Komponenten (2.555 Zeilen)
+├── zag-emitters.ts       # 25 Zag-Komponenten (2.926 Zeilen)
 ├── table-emitter.ts      # Table Emission
 ├── state-machine-emitter.ts # State Machine
 ├── loop-emitter.ts       # Loop Handling
@@ -105,15 +105,15 @@ compiler/backends/dom/
 └── token-emitter.ts      # Token/Data Emission (~484 Zeilen)
 ```
 
-**Migrierte Zag-Komponenten (22):**
+**Migrierte Zag-Komponenten (25):**
 Switch, Checkbox, RadioGroup, Slider, Tabs, Select, Tooltip, Dialog, SideNav,
 Popover, HoverCard, Collapsible, DatePicker, ToggleGroup, SegmentedControl,
-TreeView, PasswordInput, PinInput, Editable, TagsInput, NumberInput, DateInput
+TreeView, PasswordInput, PinInput, Editable, TagsInput, NumberInput, DateInput,
+Accordion, Listbox, Form
 
-**Verbleibend in dom.ts (mit emitNode-Dependency):**
-- emitAccordionComponent (benötigt Kinder-Rendering)
-- emitListboxComponent (benötigt Kinder-Rendering)
-- emitFormComponent (benötigt Kinder-Rendering)
+**Hinweis:** Alle Zag-Komponenten erfolgreich migriert. Die Komponenten mit
+`emitNode`-Dependency (Accordion, Listbox, Form) nutzen `ctx.emitNode()` aus
+dem ZagEmitterContext für Kinder-Rendering.
 
 ### Phase 1.5: EmitterContext Konsolidierung ✅
 
@@ -183,8 +183,8 @@ studio/panels/property/
 | Datei | Vorher | Nachher | Reduktion |
 |-------|--------|---------|-----------|
 | compiler/ir/index.ts | 5.127 | 4.744 | -7.5% |
-| compiler/backends/dom.ts | 7.754 | 2.834 | -63.4% |
-| compiler/backends/dom/zag-emitters.ts | - | 2.555 | +22 Komponenten |
+| compiler/backends/dom.ts | 7.754 | 2.327 | -70.0% |
+| compiler/backends/dom/zag-emitters.ts | - | 2.926 | +25 Komponenten |
 | studio/panels/property/ | 4.181 (1 Datei) | ~6.947 (25 Dateien) | Modularisiert |
 
 ---
@@ -207,15 +207,14 @@ fc6db80 refactor(dom): extract EmitterContext interface into separate module
 
 ### Kurzfristig (Niedrig hängend)
 1. **Phase 1.2 fortsetzen:** Weitere IR Transformer extrahieren (Zag, Compound)
-2. **Phase 1.4 fortsetzen:** DOM Backend weiter modularisieren
 
 ### Mittelfristig
-3. **Phase 2.2: State Store Simplification** - Selection-Mechanismen vereinheitlichen
-4. **Phase 2.3: Memory Leak Fixes** - Cleanup-Manager implementieren
+2. **Phase 2.2: State Store Simplification** - Selection-Mechanismen vereinheitlichen
+3. **Phase 2.3: Memory Leak Fixes** - Cleanup-Manager implementieren
 
 ### Langfristig
-5. **Phase 3: Test-Coverage** - Runtime und Backend Tests hinzufügen
-6. **Phase 4: Build & TypeScript** - Barrel Exports, ESLint, Prettier
+4. **Phase 3: Test-Coverage** - Runtime und Backend Tests hinzufügen
+5. **Phase 4: Build & TypeScript** - Barrel Exports, ESLint, Prettier
 
 ---
 

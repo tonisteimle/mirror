@@ -356,7 +356,7 @@ export function getLayoutRectsFromDOM(
   const rects = new Map<string, LayoutRect>()
 
   for (const nodeId of nodeIds) {
-    const element = container.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement
+    const element = container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) continue
 
     const rect = element.getBoundingClientRect()

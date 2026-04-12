@@ -1400,16 +1400,12 @@
       color: var(--text-muted);
     }
 
-    /* Standalone Components Panel (between Editor and Preview) */
+    /* Standalone Components Panel (between Editor and Preview)
+       NOTE: Main styles are defined at line ~8095. This is a fallback. */
     .components-panel {
-      background: var(--bg-panel);
-      border-left: 1px solid var(--border-default);
-      border-right: 1px solid var(--border-default);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      min-width: 120px;
-      max-width: 400px;
     }
 
     .components-panel-header {

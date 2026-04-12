@@ -124,17 +124,17 @@ export class AgentIntegration {
       getElementByNodeId: (nodeId: string) => {
         const preview = document.querySelector('.preview-frame')
         if (!preview) return null
-        return preview.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement
+        return preview.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
       },
       highlightElement: (nodeId: string, color?: string) => {
-        const el = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement
+        const el = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
         if (el) {
           el.style.outline = `2px solid ${color || '#007bff'}`
           el.style.outlineOffset = '2px'
         }
       },
       clearHighlights: () => {
-        document.querySelectorAll('[data-node-id]').forEach(el => {
+        document.querySelectorAll('[data-mirror-id]').forEach(el => {
           (el as HTMLElement).style.outline = ''
           ;(el as HTMLElement).style.outlineOffset = ''
         })

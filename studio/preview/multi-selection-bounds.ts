@@ -72,7 +72,7 @@ export function calculateBoundingBoxFromDOM(
   const containerRect = container.getBoundingClientRect()
 
   return calculateBoundingBox(nodeIds, (nodeId) => {
-    const element = container.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement
+    const element = container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return null
 
     const rect = element.getBoundingClientRect()
