@@ -301,6 +301,7 @@ import type {
   DistributeIntent,
   MultiMoveIntent,
   MultiResizeIntent,
+  ApplyLayoutIntent,
 } from './change-types'
 import {
   calculateBoundingBoxFromDOM,
@@ -575,6 +576,96 @@ function executeIntent(
         const hResult = modifier.updateProperty(nodeId, 'h', String(pos.height))
         if (hResult.success) {
           source = hResult.newSource
+        }
+      }
+
+      return { success: true, newSource: source }
+    }
+
+    case 'setConstraint': {
+      // Map constraints to DSL properties
+      // Feature 5: Constraints Integration
+      const { nodeId, constraint, value } = intent
+
+      // Constraint to property mapping
+      // Note: Mirror DSL uses x/y for absolute positioning, and hor-center/ver-center for alignment
+      const constraintMappings: Record<string, { property: string; isBoolean: boolean }> = {
+        top: { property: 'y', isBoolean: false },
+        left: { property: 'x', isBoolean: false },
+        bottom: { property: 'bottom', isBoolean: false }, // bottom edge distance (may need CSS calc)
+        right: { property: 'right', isBoolean: false },   // right edge distance (may need CSS calc)
+        centerX: { property: 'hor-center', isBoolean: true },
+        centerY: { property: 'ver-center', isBoolean: true },
+      }
+
+      const mapping = constraintMappings[constraint]
+      if (!mapping) {
+        return {
+          success: false,
+          newSource: modifier.getSource(),
+          error: `Unknown constraint: ${constraint}`,
+        }
+      }
+
+      let result
+
+      if (value === null) {
+        // Remove the constraint
+        result = modifier.removeProperty(nodeId, mapping.property)
+      } else if (mapping.isBoolean) {
+        // Boolean properties (centerX, centerY) - just add or remove
+        // When value is not null, add the property (it's a boolean flag)
+        result = modifier.updateProperty(nodeId, mapping.property, '')
+      } else {
+        // Value-based properties (top, left, bottom, right)
+        result = modifier.updateProperty(nodeId, mapping.property, String(value))
+      }
+
+      return {
+        success: result.success,
+        newSource: result.newSource,
+        error: result.success ? undefined : `Failed to set constraint ${constraint}`,
+      }
+    }
+
+    case 'applyLayout': {
+      // Apply auto-layout to a parent node
+      // Feature 8: Auto-Layout Suggestions
+      const { nodeId, layout, gap, gridColumns } = intent
+
+      let source = modifier.getSource()
+
+      // Remove any existing layout properties first
+      const layoutProps = ['hor', 'ver', 'wrap', 'grid']
+      for (const prop of layoutProps) {
+        const removeResult = modifier.removeProperty(nodeId, prop)
+        if (removeResult.success) {
+          source = removeResult.newSource
+        }
+      }
+
+      // Add the new layout property
+      let layoutValue = ''
+      if (layout === 'grid' && gridColumns) {
+        layoutValue = String(gridColumns)
+      }
+
+      const layoutResult = modifier.updateProperty(nodeId, layout, layoutValue)
+      if (layoutResult.success) {
+        source = layoutResult.newSource
+      } else {
+        return {
+          success: false,
+          newSource: source,
+          error: `Failed to set layout property: ${layout}`,
+        }
+      }
+
+      // Set gap if provided
+      if (gap !== undefined && gap > 0) {
+        const gapResult = modifier.updateProperty(nodeId, 'gap', String(gap))
+        if (gapResult.success) {
+          source = gapResult.newSource
         }
       }
 

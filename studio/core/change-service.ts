@@ -39,6 +39,8 @@ export type {
   DistributeIntent,
   MultiMoveIntent,
   MultiResizeIntent,
+  SetConstraintIntent,
+  ApplyLayoutIntent,
 } from './change-types'
 
 // ============================================================================

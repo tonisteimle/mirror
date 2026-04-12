@@ -173,6 +173,32 @@ export interface MultiResizeIntent {
 }
 
 /**
+ * Set a constraint (pin-to-edge or center alignment)
+ * Feature 5: Constraints Integration
+ */
+export interface SetConstraintIntent extends BaseIntent {
+  type: 'setConstraint'
+  /** The constraint edge or center alignment */
+  constraint: 'top' | 'right' | 'bottom' | 'left' | 'centerX' | 'centerY'
+  /** The constraint value in pixels, or null to remove the constraint */
+  value: number | null
+}
+
+/**
+ * Apply auto-layout to a parent node
+ * Feature 8: Auto-Layout Suggestions
+ */
+export interface ApplyLayoutIntent extends BaseIntent {
+  type: 'applyLayout'
+  /** Layout direction */
+  layout: 'hor' | 'ver' | 'wrap' | 'grid'
+  /** Gap between children in pixels */
+  gap?: number
+  /** Number of columns for grid layout */
+  gridColumns?: number
+}
+
+/**
  * All possible intents
  */
 export type ChangeIntent =
@@ -193,6 +219,8 @@ export type ChangeIntent =
   | DistributeIntent
   | MultiMoveIntent
   | MultiResizeIntent
+  | SetConstraintIntent
+  | ApplyLayoutIntent
 
 // ============================================================================
 // RESULT TYPE

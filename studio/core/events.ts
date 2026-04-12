@@ -88,6 +88,10 @@ export interface StudioEvents {
   'resize:start': { nodeId: string; handle: string; startWidth: number; startHeight: number }
   'resize:move': { nodeId: string; width: 'fill' | 'hug' | number; height: 'fill' | 'hug' | number }
   'resize:end': { nodeId: string; width: 'fill' | 'hug' | number; height: 'fill' | 'hug' | number; x?: number; y?: number }
+  /** Multi-selection resize events (Feature 4) */
+  'multiResize:start': { nodeIds: string[]; handle: string; boundingBox: { x: number; y: number; width: number; height: number } }
+  'multiResize:move': { nodeIds: string[]; width: number; height: number; scaleX: number; scaleY: number }
+  'multiResize:end': { nodeIds: string[]; scaleX: number; scaleY: number; anchor: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' }
   /** Drag from palette events (Visual Code System) */
   'drag:start': { type: 'component' | 'container' | 'layout'; component: string; defaultProps?: string }
   'drop:component': { dragData: ComponentDragData; dropZone: DropZone }

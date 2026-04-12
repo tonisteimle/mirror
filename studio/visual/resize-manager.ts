@@ -574,6 +574,208 @@ export class ResizeManager {
   }
 
   // ============================================================================
+  // Multi-Selection Resize
+  // ============================================================================
+
+  private startMultiResize(e: MouseEvent, handle: HTMLElement, position: ResizeHandle): void {
+    const nodeIdsJson = handle.dataset.nodeIds
+    if (!nodeIdsJson) return
+
+    const nodeIds: string[] = JSON.parse(nodeIdsJson)
+    const boundingBox = this.calculateMultiSelectionBounds(nodeIds)
+    if (!boundingBox) return
+
+    this.activeMultiResize = {
+      nodeIds,
+      handle: position,
+      startX: e.clientX,
+      startY: e.clientY,
+      boundingBox,
+      currentWidth: boundingBox.width,
+      currentHeight: boundingBox.height,
+    }
+
+    // Visual feedback: change cursor
+    document.body.style.cursor = this.getCursor(position)
+
+    events.emit('multiResize:start', {
+      nodeIds,
+      handle: position,
+      boundingBox: {
+        x: boundingBox.x,
+        y: boundingBox.y,
+        width: boundingBox.width,
+        height: boundingBox.height,
+      },
+    })
+  }
+
+  private handleMultiResizeMove(e: MouseEvent): void {
+    if (!this.activeMultiResize) return
+
+    const { handle, startX, startY, boundingBox, nodeIds } = this.activeMultiResize
+    const dx = e.clientX - startX
+    const dy = e.clientY - startY
+
+    let newWidth = boundingBox.width
+    let newHeight = boundingBox.height
+
+    // Calculate new size based on handle position
+    if (handle.includes('e')) newWidth = boundingBox.width + dx
+    if (handle.includes('w')) newWidth = boundingBox.width - dx
+    if (handle.includes('s')) newHeight = boundingBox.height + dy
+    if (handle.includes('n')) newHeight = boundingBox.height - dy
+
+    // Clamp to minimum size
+    newWidth = Math.max(MIN_ELEMENT_SIZE, newWidth)
+    newHeight = Math.max(MIN_ELEMENT_SIZE, newHeight)
+
+    this.activeMultiResize.currentWidth = newWidth
+    this.activeMultiResize.currentHeight = newHeight
+
+    // Determine anchor based on handle
+    const anchor = this.getAnchorFromHandle(handle)
+
+    // Calculate new positions for all elements
+    const newPositions = calculateResizedPositions(boundingBox, newWidth, newHeight, anchor)
+
+    // Apply visual feedback to all elements
+    for (const [nodeId, pos] of newPositions) {
+      const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+      if (element) {
+        element.style.width = `${pos.width}px`
+        element.style.height = `${pos.height}px`
+        element.style.left = `${pos.x}px`
+        element.style.top = `${pos.y}px`
+      }
+    }
+
+    // Update handle positions around new bounding box
+    this.updateMultiHandlePositions(boundingBox, newWidth, newHeight, anchor)
+
+    // Show size indicator
+    const scaleX = newWidth / boundingBox.width
+    const scaleY = newHeight / boundingBox.height
+    const centerX = boundingBox.x + newWidth / 2
+    const centerY = boundingBox.y + newHeight / 2
+
+    this.overlayManager.showSizeIndicator(
+      centerX,
+      centerY,
+      `${Math.round(newWidth)}px (${Math.round(scaleX * 100)}%)`,
+      `${Math.round(newHeight)}px (${Math.round(scaleY * 100)}%)`
+    )
+
+    events.emit('multiResize:move', {
+      nodeIds,
+      width: newWidth,
+      height: newHeight,
+      scaleX,
+      scaleY,
+    })
+  }
+
+  private handleMultiResizeEnd(): void {
+    if (!this.activeMultiResize) return
+
+    const { nodeIds, boundingBox, currentWidth, currentHeight, handle } = this.activeMultiResize
+
+    // Reset cursor
+    document.body.style.cursor = ''
+
+    // Hide indicator
+    this.overlayManager.hideSizeIndicator()
+
+    // Calculate final scale factors
+    const scaleX = currentWidth / boundingBox.width
+    const scaleY = currentHeight / boundingBox.height
+    const anchor = this.getAnchorFromHandle(handle)
+
+    events.emit('multiResize:end', {
+      nodeIds,
+      scaleX,
+      scaleY,
+      anchor,
+    })
+
+    this.activeMultiResize = null
+
+    // Refresh handles to show new bounding box
+    this.showMultiHandles(nodeIds)
+  }
+
+  private getAnchorFromHandle(handle: ResizeHandle): 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' {
+    switch (handle) {
+      case 'se': return 'top-left'
+      case 'sw': return 'top-right'
+      case 'ne': return 'bottom-left'
+      case 'nw': return 'bottom-right'
+      case 'e': return 'top-left'
+      case 'w': return 'top-right'
+      case 's': return 'top-left'
+      case 'n': return 'bottom-left'
+      default: return 'top-left'
+    }
+  }
+
+  private updateMultiHandlePositions(
+    originalBounds: BoundingBox,
+    newWidth: number,
+    newHeight: number,
+    anchor: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center'
+  ): void {
+    // Calculate new bounding box position based on anchor
+    let newX = originalBounds.x
+    let newY = originalBounds.y
+
+    switch (anchor) {
+      case 'top-right':
+        newX = originalBounds.x + originalBounds.width - newWidth
+        break
+      case 'bottom-left':
+        newY = originalBounds.y + originalBounds.height - newHeight
+        break
+      case 'bottom-right':
+        newX = originalBounds.x + originalBounds.width - newWidth
+        newY = originalBounds.y + originalBounds.height - newHeight
+        break
+      case 'center':
+        newX = originalBounds.x + (originalBounds.width - newWidth) / 2
+        newY = originalBounds.y + (originalBounds.height - newHeight) / 2
+        break
+    }
+
+    const positionMap: Record<ResizeHandle, { x: number; y: number }> = {
+      nw: { x: 0, y: 0 },
+      n: { x: 0.5, y: 0 },
+      ne: { x: 1, y: 0 },
+      e: { x: 1, y: 0.5 },
+      se: { x: 1, y: 1 },
+      s: { x: 0.5, y: 1 },
+      sw: { x: 0, y: 1 },
+      w: { x: 0, y: 0.5 },
+    }
+
+    this.handles.forEach(handle => {
+      const pos = handle.dataset.position as ResizeHandle
+      if (!pos || handle.className.includes('outline')) return
+
+      const { x, y } = positionMap[pos]
+      handle.style.left = `${newX + newWidth * x - 4}px`
+      handle.style.top = `${newY + newHeight * y - 4}px`
+    })
+
+    // Update outline
+    const outline = this.handles.find(h => h.className.includes('outline'))
+    if (outline) {
+      outline.style.left = `${newX}px`
+      outline.style.top = `${newY}px`
+      outline.style.width = `${newWidth}px`
+      outline.style.height = `${newHeight}px`
+    }
+  }
+
+  // ============================================================================
   // Sizing Logic
   // ============================================================================
 
