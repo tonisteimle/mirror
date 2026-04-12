@@ -61,6 +61,25 @@ import type { SourceMap } from '../../../../compiler/ir/source-map'
 import type { CodeModifier } from '../../../../compiler/studio/code-modifier'
 
 // ============================================
+// Default Size Provider
+// ============================================
+
+const DEFAULT_COMPONENT_SIZES: Record<string, { width: number; height: number }> = {
+  Frame: { width: 100, height: 100 },
+  Text: { width: 100, height: 24 },
+  Button: { width: 100, height: 40 },
+  Input: { width: 200, height: 40 },
+  Textarea: { width: 200, height: 80 },
+  Icon: { width: 24, height: 24 },
+  Image: { width: 100, height: 100 },
+  default: { width: 100, height: 40 },
+}
+
+function getDefaultComponentSize(componentName: string): { width: number; height: number } {
+  return DEFAULT_COMPONENT_SIZES[componentName] || DEFAULT_COMPONENT_SIZES.default
+}
+
+// ============================================
 // Configuration
 // ============================================
 
@@ -96,7 +115,16 @@ export interface ExecutorDependencies {
 // DOM Layout Port
 // ============================================
 
-export function createDOMLayoutPort(config: DOMAdaptersConfig): LayoutPort {
+/**
+ * Extended LayoutPort with cache invalidation for drag operations.
+ * Cache is cleared at drag end to ensure fresh data for next drag.
+ */
+export interface CacheableLayoutPort extends LayoutPort {
+  /** Clear all cached data (call on drag end) */
+  clearCache(): void
+}
+
+export function createDOMLayoutPort(config: DOMAdaptersConfig): CacheableLayoutPort {
   const {
     container,
     nodeIdAttr = 'data-mirror-id',
@@ -104,7 +132,17 @@ export function createDOMLayoutPort(config: DOMAdaptersConfig): LayoutPort {
     domAdapter = getDefaultDOMAdapter(),
   } = config
 
+  // Drag-scoped cache: cleared on drag end
+  // Key: nodeId of parent element
+  let childRectsCache = new Map<string, ChildRect[]>()
+  let containerRectCache = new Map<string, Rect>()
+
   return {
+    clearCache(): void {
+      childRectsCache.clear()
+      containerRectCache.clear()
+    },
+
     getRect(nodeId: string): Rect | null {
       // Try cached layoutInfo first
       const layoutInfo = getLayoutInfo?.()
@@ -134,19 +172,51 @@ export function createDOMLayoutPort(config: DOMAdaptersConfig): LayoutPort {
     },
 
     getChildRects(parentElement: HTMLElement): ChildRect[] {
+      // Check drag-scoped cache first
+      const parentNodeId = parentElement.getAttribute(nodeIdAttr)
+      if (parentNodeId) {
+        const cached = childRectsCache.get(parentNodeId)
+        if (cached) {
+          return cached
+        }
+      }
+
+      // Compute and cache
       const layoutInfo = getLayoutInfo?.()
-      return getChildRectsFromDOM(parentElement, nodeIdAttr, layoutInfo, domAdapter)
+      const result = getChildRectsFromDOM(parentElement, nodeIdAttr, layoutInfo, domAdapter)
+
+      if (parentNodeId) {
+        childRectsCache.set(parentNodeId, result)
+      }
+
+      return result
     },
 
     getContainerRect(element: HTMLElement): Rect | null {
+      // Check drag-scoped cache first
+      const nodeId = element.getAttribute(nodeIdAttr)
+      if (nodeId) {
+        const cached = containerRectCache.get(nodeId)
+        if (cached) {
+          return cached
+        }
+      }
+
+      // Compute and cache
       const layoutInfo = getLayoutInfo?.()
       const rect = getContainerRectFromDOM(element, layoutInfo, nodeIdAttr, domAdapter)
-      return {
+      const result: Rect = {
         x: rect.x,
         y: rect.y,
         width: rect.width,
         height: rect.height,
       }
+
+      if (nodeId) {
+        containerRectCache.set(nodeId, result)
+      }
+
+      return result
     },
   }
 }
@@ -277,10 +347,17 @@ export function createDOMEventPort(): DOMEventPort {
 
         // Use type guards for safe data extraction
         if (isValidCanvasSourceData(data)) {
+          const element = source.element as HTMLElement
+          const rect = element.getBoundingClientRect()
           dragSource = {
             type: 'canvas',
             nodeId: data.nodeId,
-            element: source.element as HTMLElement,
+            element,
+            // Include actual element size for ghost indicator
+            size: {
+              width: rect.width,
+              height: rect.height,
+            },
           }
         } else if (isValidPaletteSourceData(data)) {
           dragSource = {
@@ -290,6 +367,8 @@ export function createDOMEventPort(): DOMEventPort {
             properties: data.properties,
             textContent: data.textContent,
             children: data.children as DragSource['children'],
+            // Use default size based on component type for ghost indicator
+            size: getDefaultComponentSize(data.componentName),
           }
         }
 

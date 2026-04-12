@@ -113,11 +113,14 @@ import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helper
 import { transformTable as transformTableExtracted, humanizeFieldName } from './transformers/table-transformer'
 import { transformChart as transformChartExtracted } from './transformers/chart-transformer'
 import { transformZagComponent as transformZagComponentExtracted } from './transformers/zag-transformer'
-import type { TransformerContext } from './transformers/transformer-context'
+import type { TransformerContext, ParentLayoutContext } from './transformers/transformer-context'
 import {
-  isContainer as isContainerPrimitive,
-  FLEX_DEFAULTS,
-} from '../schema/layout-defaults'
+  type LayoutContext,
+  createLayoutContext,
+  resolveGridColumns,
+  applyAlignmentsToContext,
+  generateLayoutStyles,
+} from './transformers/layout-transformer'
 
 export type { IR, IRWarning } from './types'
 export {
@@ -165,39 +168,7 @@ export function toIR(ast: AST, includeSourceMap?: boolean): IR | IRResult {
  */
 const BUILTIN_STATE_FUNCTIONS = new Set(['toggle', 'cycle', 'exclusive'])  // cycle is alias for toggle
 
-/**
- * Layout properties that affect flex container behavior
- */
-interface LayoutContext {
-  direction: 'row' | 'column' | null
-  justifyContent: string | null
-  alignItems: string | null
-  flexWrap: string | null
-  gap: string | null
-  isGrid: boolean
-  gridColumns: string | null
-  gridAutoFlow: string | null      // 'row' | 'column' | 'dense' | 'row dense' | 'column dense'
-  columnGap: string | null         // For gap-x/gx
-  rowGap: string | null            // For gap-y/gy
-  rowHeight: string | null         // For row-height/rh (grid-auto-rows)
-  // Internal alignment tracking (before direction-based mapping)
-  _hAlign?: 'start' | 'end' | 'center'
-  _vAlign?: 'start' | 'end' | 'center'
-  // Track if width/height were explicitly set (for hug-by-default behavior)
-  hasExplicitWidth?: boolean
-  hasExplicitHeight?: boolean
-}
-
-/**
- * Parent layout context passed to children for context-aware property handling
- * In grid context, x/y/w/h become grid positioning instead of absolute positioning
- * In flex context, direction determines how w full / h full behave
- */
-interface ParentLayoutContext {
-  type: 'flex' | 'grid' | 'absolute' | null
-  gridColumns?: number
-  flexDirection?: 'row' | 'column'  // For w full / h full: determines main vs cross axis
-}
+// LayoutContext and ParentLayoutContext are imported from transformers/layout-transformer.ts and transformer-context.ts
 
 class IRTransformer {
   private ast: AST
@@ -2224,19 +2195,7 @@ class IRTransformer {
     const expandedProperties = this.expandPropertySets(properties)
 
     const styles: IRStyle[] = []
-    const layoutContext: LayoutContext = {
-      direction: null,
-      justifyContent: null,
-      alignItems: null,
-      flexWrap: null,
-      gap: null,
-      isGrid: false,
-      gridColumns: null,
-      gridAutoFlow: null,
-      columnGap: null,
-      rowGap: null,
-      rowHeight: null,
-    }
+    const layoutContext = createLayoutContext()
 
     // Transform context to combine multiple transforms
     const transformContext: { transforms: string[] } = { transforms: [] }
@@ -2307,7 +2266,7 @@ class IRTransformer {
       // Grid (takes precedence over flex)
       if (name === 'grid') {
         layoutContext.isGrid = true
-        layoutContext.gridColumns = this.resolveGridColumns(prop)
+        layoutContext.gridColumns = resolveGridColumns(prop)
         continue
       }
 
@@ -2355,10 +2314,10 @@ class IRTransformer {
     }
 
     // Apply collected layout values with order-awareness (last wins)
-    this.applyAlignmentsToContext(layoutValues, layoutContext)
+    applyAlignmentsToContext(layoutValues, layoutContext)
 
-    // Generate layout styles from context
-    const layoutStyles = this.generateLayoutStyles(layoutContext, primitive)
+    // Generate layout styles from context (using extracted function)
+    const layoutStyles = generateLayoutStyles(layoutContext, primitive)
     styles.push(...layoutStyles)
 
     // Second pass: process non-layout properties

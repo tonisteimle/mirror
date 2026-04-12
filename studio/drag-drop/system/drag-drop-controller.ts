@@ -185,8 +185,17 @@ export class DragDropController {
 
   /**
    * Clean up all resources.
+   * If a drag is active, fires onDragEnd with success=false.
    */
   dispose(): void {
+    // If we're in a dragging state, notify that the drag ended unsuccessfully
+    if (this.state.type === 'dragging' || this.state.type === 'over-target') {
+      const source = getSource(this.state)
+      if (source) {
+        this.config.onDragEnd?.(source, false)
+      }
+    }
+
     this.dispatch({ type: 'RESET' })
     this.resetModeState()
 
