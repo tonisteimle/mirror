@@ -25,6 +25,8 @@ import { emitStateMachine as emitStateMachineExtracted, emitDeferredWhenWatchers
 import type { StateMachineEmitterContext } from './dom/state-machine-emitter'
 import { emitEachLoop as emitEachLoopExtracted, emitConditional as emitConditionalExtracted } from './dom/loop-emitter'
 import type { LoopEmitterContext } from './dom/loop-emitter'
+import { emitEventListener as emitEventListenerExtracted, emitTemplateEventListener as emitTemplateEventListenerExtracted, emitAction as emitActionExtracted, mapKeyName } from './dom/event-emitter'
+import type { EventEmitterContext } from './dom/event-emitter'
 
 // Re-export types for external consumers
 export type { GenerateDOMOptions } from './dom/types'
@@ -3689,16 +3691,19 @@ class DOMGenerator {
     return `'${value}'`
   }
 
+  /**
+   * Emit template event listener for loop items
+   * Delegates to extracted event-emitter.ts
+   */
   private emitTemplateEventListener(varName: string, event: IREvent, itemVar: string): void {
-    const eventName = event.name
-
-    this.emit(`${varName}.addEventListener('${eventName}', (e) => {`)
-    this.indent++
-    for (const action of event.actions) {
-      this.emitTemplateAction(action, varName, itemVar)
-    }
-    this.indent--
-    this.emit('})')
+    const ctx = this.createEventEmitterContext()
+    emitTemplateEventListenerExtracted(
+      ctx,
+      varName,
+      event,
+      itemVar,
+      (action, currentVar, item) => this.emitTemplateAction(action, currentVar, item)
+    )
   }
 
   private emitTemplateAction(action: IRAction, currentVar: string, itemVar: string): void {
@@ -3730,108 +3735,24 @@ class DOMGenerator {
     }
   }
 
+  /**
+   * Emit standard event listener
+   * Delegates to extracted event-emitter.ts
+   */
   private emitEventListener(varName: string, event: IREvent): void {
-    const eventName = event.name
-
-    // Handle enter/exit events with IntersectionObserver
-    if (eventName === 'enter' || eventName === 'exit') {
-      this.emitEnterExitObserver(varName, event, eventName === 'enter')
-      return
-    }
-
-    // Handle hover event specially - needs both mouseenter and mouseleave
-    if (eventName === 'mouseenter') {
-      const hasHighlight = event.actions.some(a => a.type === 'highlight')
-      if (hasHighlight) {
-        this.emit(`${varName}.addEventListener('mouseenter', (e) => {`)
-        this.indent++
-        for (const action of event.actions) {
-          this.emitAction(action, varName)
-        }
-        this.indent--
-        this.emit('})')
-        // Add mouseleave to clear highlight
-        this.emit(`${varName}.addEventListener('mouseleave', (e) => {`)
-        this.indent++
-        this.emit(`_runtime.unhighlight(${varName})`)
-        this.indent--
-        this.emit('})')
-        return
-      }
-    }
-
-    // Handle click-outside event specially
-    if (eventName === 'click-outside') {
-      this.emit(`// Click outside handler`)
-      this.emit(`const ${varName}_clickOutsideHandler = (e) => {`)
-      this.indent++
-      this.emit(`if (!${varName}.contains(e.target)) {`)
-      this.indent++
-      for (const action of event.actions) {
-        this.emitAction(action, varName)
-      }
-      this.indent--
-      this.emit('}')
-      this.indent--
-      this.emit('}')
-      this.emit(`document.addEventListener('click', ${varName}_clickOutsideHandler)`)
-      this.emit(`${varName}._clickOutsideHandler = ${varName}_clickOutsideHandler`)
-      return
-    }
-
-    // Handle keyboard events with specific keys
-    if (event.key) {
-      this.emit(`${varName}.addEventListener('${eventName}', (e) => {`)
-      this.indent++
-      this.emit(`if (e.key === '${this.mapKeyName(event.key)}') {`)
-      this.indent++
-      for (const action of event.actions) {
-        this.emitAction(action, varName)
-      }
-      this.indent--
-      this.emit('}')
-      this.indent--
-      this.emit('})')
-    } else {
-      this.emit(`${varName}.addEventListener('${eventName}', (e) => {`)
-      this.indent++
-      for (const action of event.actions) {
-        this.emitAction(action, varName)
-      }
-      this.indent--
-      this.emit('})')
-    }
+    const ctx = this.createEventEmitterContext()
+    emitEventListenerExtracted(
+      ctx,
+      varName,
+      event,
+      (action, currentVar) => this.emitAction(action, currentVar)
+    )
   }
 
-  private emitEnterExitObserver(varName: string, event: IREvent, isEnter: boolean): void {
-    // Generate a unique callback function for this observer
-    const callbackName = `${varName}_${isEnter ? 'enter' : 'exit'}`
-
-    this.emit(`// ${isEnter ? 'Enter' : 'Exit'} viewport observer`)
-    this.emit(`const ${callbackName}Callback = () => {`)
-    this.indent++
-    for (const action of event.actions) {
-      this.emitAction(action, varName)
-    }
-    this.indent--
-    this.emit(`}`)
-
-    if (isEnter) {
-      // Store enter callback for observer setup
-      this.emit(`${varName}._enterCallback = ${callbackName}Callback`)
-    } else {
-      // Store exit callback for observer setup
-      this.emit(`${varName}._exitCallback = ${callbackName}Callback`)
-    }
-
-    // Set up observer (only once when we have at least one callback)
-    this.emit(`if (!${varName}._enterExitObserver) {`)
-    this.indent++
-    this.emit(`_runtime.setupEnterExitObserver(${varName}, ${varName}._enterCallback, ${varName}._exitCallback)`)
-    this.indent--
-    this.emit(`}`)
-  }
-
+  /**
+   * Emit action call
+   * Delegates to extracted event-emitter.ts
+   */
   private emitAction(action: IRAction, currentVar: string): void {
     // Function call syntax: toggle(), exclusive(), show(Menu), animate(FadeIn), customFn()
     if (action.isFunctionCall) {
@@ -4492,6 +4413,18 @@ class DOMGenerator {
   }
 
   /**
+   * Create an EventEmitterContext for delegation to extracted event-emitter functions
+   */
+  private createEventEmitterContext(): EventEmitterContext {
+    return {
+      emit: (line: string) => this.emit(line),
+      indentIn: () => { this.indent++ },
+      indentOut: () => { this.indent-- },
+      escapeString: (str) => this.escapeString(str),
+    }
+  }
+
+  /**
    * Transform condition expression to use $get() for variable lookups
    * e.g., "loggedIn" → "$get("loggedIn")"
    * e.g., "isAdmin && hasPermission" → "$get("isAdmin") && $get("hasPermission")"
@@ -4529,20 +4462,12 @@ class DOMGenerator {
     return result
   }
 
-  private mapKeyName(key: string): string {
-    const mapping: Record<string, string> = {
-      'escape': 'Escape',
-      'enter': 'Enter',
-      'tab': 'Tab',
-      'space': ' ',
-      'arrow-up': 'ArrowUp',
-      'arrow-down': 'ArrowDown',
-      'arrow-left': 'ArrowLeft',
-      'arrow-right': 'ArrowRight',
-      'backspace': 'Backspace',
-      'delete': 'Delete',
-    }
-    return mapping[key] || key
+  /**
+   * Map DSL key names to JavaScript key event values
+   * Delegates to extracted event-emitter.ts
+   */
+  private mapKeyNameMethod(key: string): string {
+    return mapKeyName(key)
   }
 
   /**
