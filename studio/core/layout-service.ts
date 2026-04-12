@@ -56,6 +56,10 @@ export class LayoutService {
   private container: HTMLElement
   private nodeIdAttribute: string
 
+  // Parent-child index for O(1) child lookups (built on-demand, cached)
+  private childrenIndex: Map<string, string[]> | null = null
+  private childrenIndexVersion: number = -1
+
   constructor(config: { container: HTMLElement; nodeIdAttribute?: string }) {
     this.container = config.container
     this.nodeIdAttribute = config.nodeIdAttribute || 'data-mirror-id'
@@ -212,6 +216,51 @@ export class LayoutService {
   }
 
   /**
+   * Build parent-child index for O(1) lookups
+   * Only rebuilds when layout version changes
+   */
+  private ensureChildrenIndex(): Map<string, string[]> {
+    const currentVersion = state.get().layoutVersion
+
+    // Return cached index if version matches
+    if (this.childrenIndex && this.childrenIndexVersion === currentVersion) {
+      return this.childrenIndex
+    }
+
+    // Build new index
+    const layoutInfo = state.get().layoutInfo
+    const index = new Map<string, string[]>()
+
+    for (const [nodeId, layout] of layoutInfo) {
+      if (layout.parentId) {
+        const siblings = index.get(layout.parentId)
+        if (siblings) {
+          siblings.push(nodeId)
+        } else {
+          index.set(layout.parentId, [nodeId])
+        }
+      }
+    }
+
+    // Cache the index
+    this.childrenIndex = index
+    this.childrenIndexVersion = currentVersion
+
+    return index
+  }
+
+  /**
+   * Get child node IDs for a parent (O(1) lookup after index is built)
+   *
+   * @param parentId - Parent node ID
+   * @returns Array of child node IDs
+   */
+  getChildIds(parentId: string): string[] {
+    const index = this.ensureChildrenIndex()
+    return index.get(parentId) || []
+  }
+
+  /**
    * Get children layouts for a container
    *
    * @param parentId - Parent node ID
@@ -219,11 +268,13 @@ export class LayoutService {
    */
   getChildrenLayouts(parentId: string): ElementLayout[] {
     const layoutInfo = state.get().layoutInfo
+    const childIds = this.getChildIds(parentId)
     const children: ElementLayout[] = []
 
-    // Find all children in cache
-    for (const [nodeId, layout] of layoutInfo) {
-      if (layout.parentId === parentId) {
+    // Use index for O(1) lookup instead of O(n) iteration
+    for (const nodeId of childIds) {
+      const layout = layoutInfo.get(nodeId)
+      if (layout) {
         children.push({
           x: layout.x,
           y: layout.y,

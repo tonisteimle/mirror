@@ -9,7 +9,7 @@
 |-------|--------|-------------|
 | Phase 0: Sicherheit & Quick Wins | ✅ Abgeschlossen | 100% |
 | Phase 1.1: Parser Split | ✅ Abgeschlossen | 100% |
-| Phase 1.2: IR Transformer Refactoring | 🔄 Teilweise | ~15% |
+| Phase 1.2: IR Transformer Refactoring | 🔄 Teilweise | ~30% |
 | Phase 1.3: Validator Modularisierung | ⏳ Ausstehend | 0% |
 | Phase 1.4: DOM Backend | ✅ Abgeschlossen | 100% |
 | Phase 1.5: EmitterContext Konsolidierung | ✅ Abgeschlossen | 100% |
@@ -53,20 +53,21 @@ compiler/parser/
 ### Phase 1.2: IR Transformer Refactoring 🔄
 
 **Ursprünglich:** ir/index.ts mit 5.127 Zeilen
-**Aktuell:** 4.744 Zeilen (~7.5% Reduktion)
+**Aktuell:** 4.219 Zeilen (~17.7% Reduktion)
 
 **Extrahierte Module:**
 ```
 compiler/ir/transformers/
-├── transformer-context.ts  # Shared Context Interface
+├── transformer-context.ts  # Shared Context Interface (~54 Zeilen)
 ├── table-transformer.ts    # Table Transformation (~230 Zeilen)
-└── chart-transformer.ts    # Chart Transformation (~160 Zeilen)
+├── chart-transformer.ts    # Chart Transformation (~160 Zeilen)
+└── zag-transformer.ts      # Zag Component Transformation (~515 Zeilen) - NEU
 ```
 
 **Verbleibende Kandidaten für Extraktion:**
-- `transformZagComponent` (~520 Zeilen) - Komplex, stark gekoppelt
 - `transformInstance` (~400 Zeilen) - Viele Abhängigkeiten
 - `transformProperties` (~200 Zeilen) - Komplex
+- `propertyToCSS` (~538 Zeilen) - Umfangreich
 
 ### Phase 1.3: Validator Modularisierung ⏳
 
@@ -182,7 +183,8 @@ studio/panels/property/
 
 | Datei | Vorher | Nachher | Reduktion |
 |-------|--------|---------|-----------|
-| compiler/ir/index.ts | 5.127 | 4.744 | -7.5% |
+| compiler/ir/index.ts | 5.127 | 4.219 | -17.7% |
+| compiler/ir/transformers/zag-transformer.ts | - | 515 | Neu extrahiert |
 | compiler/backends/dom.ts | 7.754 | 1.860 | -76.0% |
 | compiler/backends/dom/zag-emitters.ts | - | 2.926 | +25 Komponenten |
 | studio/panels/property/ | 4.181 (1 Datei) | ~6.947 (25 Dateien) | Modularisiert |

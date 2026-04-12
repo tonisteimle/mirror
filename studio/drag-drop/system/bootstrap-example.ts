@@ -16,6 +16,7 @@
 import type { SourceMap } from '../../../compiler/ir/source-map'
 import type { CodeModifier } from '../../../compiler/studio'
 import type { LayoutRect } from '../../core/state'
+import type { DragSource, DropResult } from '../types'
 import {
   DragDropController,
   createDragDropController,
@@ -70,9 +71,10 @@ export interface DragDropBootstrapConfig {
   nodeIdAttr?: string
 
   /** Optional: Callbacks for drag lifecycle */
-  onDragStart?: (source: any) => void
-  onDrop?: (source: any, result: any) => void
-  onDragEnd?: (source: any, success: boolean) => void
+  onDragStart?: (source: DragSource) => void
+  onDrop?: (source: DragSource, result: DropResult) => void
+  onDragEnd?: (source: DragSource, success: boolean) => void
+  onNoOpDrop?: (source: DragSource, result: DropResult) => void
 }
 
 export interface DragDropBootstrapResult {
@@ -196,6 +198,7 @@ export function bootstrapDragDrop(config: DragDropBootstrapConfig): DragDropBoot
     onDragStart: config.onDragStart,
     onDrop: config.onDrop,
     onDragEnd: config.onDragEnd,
+    onNoOpDrop: config.onNoOpDrop,
   })
 
   // Initialize the controller (binds event handlers)

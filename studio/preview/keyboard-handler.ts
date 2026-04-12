@@ -11,7 +11,7 @@
  * - Arrow keys: Move selected element (1px normal, 10px with Shift)
  */
 
-import { state, actions, events } from '../core'
+import { state, actions, events, getLayoutService } from '../core'
 import {
   executeGroup,
   executeUngroup,
@@ -173,9 +173,29 @@ export class KeyboardHandler {
 
   /**
    * Check if an element is in an absolute container (pos/stacked layout)
-   * Uses centralized layout detection for consistency.
+   * Uses LayoutService for cached lookups, with DOM fallback.
    */
   private isInAbsoluteContainer(nodeId: string): boolean {
+    // Try LayoutService first (cached, O(1))
+    const layoutService = getLayoutService()
+    if (layoutService) {
+      const layout = layoutService.getLayout(nodeId)
+      if (layout) {
+        // Element itself is absolutely positioned
+        if (layout.isAbsolute) {
+          return true
+        }
+        // Check parent's layout
+        if (layout.parentId) {
+          const parentLayout = layoutService.getLayout(layout.parentId)
+          if (parentLayout && parentLayout.isAbsolute) {
+            return true
+          }
+        }
+      }
+    }
+
+    // Fallback to DOM reads
     const element = this.container.querySelector(`[${this.nodeIdAttribute}="${nodeId}"]`) as HTMLElement | null
     if (!element) return false
 
@@ -200,17 +220,28 @@ export class KeyboardHandler {
    * Get current position of an element
    *
    * Priority:
-   * 1. data-x/data-y attributes (from DSL, most accurate)
-   * 2. computed left/top (for CSS-positioned elements)
-   * 3. getBoundingClientRect relative to parent (fallback for any layout)
+   * 1. LayoutService cache (fast, already computed)
+   * 2. data-x/data-y attributes (from DSL, most accurate)
+   * 3. computed left/top (for CSS-positioned elements)
+   * 4. getBoundingClientRect relative to parent (fallback for any layout)
    *
    * IMPORTANT: Never default to (0,0) as this can cause unexpected jumps
    */
   private getCurrentPosition(nodeId: string): { x: number; y: number } | null {
+    // Priority 1: Try LayoutService cache first (fastest, O(1))
+    const layoutService = getLayoutService()
+    if (layoutService) {
+      const layout = layoutService.getLayout(nodeId)
+      if (layout) {
+        return { x: Math.round(layout.x), y: Math.round(layout.y) }
+      }
+    }
+
+    // Fallback to DOM reads
     const element = this.container.querySelector(`[${this.nodeIdAttribute}="${nodeId}"]`) as HTMLElement | null
     if (!element) return null
 
-    // Priority 1: Try to read from data attributes (set by DSL)
+    // Priority 2: Try to read from data attributes (set by DSL)
     const dataX = element.dataset.x
     const dataY = element.dataset.y
     if (dataX !== undefined && dataY !== undefined) {
@@ -222,7 +253,7 @@ export class KeyboardHandler {
       }
     }
 
-    // Priority 2: Try computed style left/top
+    // Priority 3: Try computed style left/top
     const style = window.getComputedStyle(element)
     const computedLeft = style.left
     const computedTop = style.top
@@ -236,7 +267,7 @@ export class KeyboardHandler {
       }
     }
 
-    // Priority 3: Fall back to getBoundingClientRect relative to parent
+    // Priority 4: Fall back to getBoundingClientRect relative to parent
     // This works for any layout, including elements without explicit positioning
     const parent = element.parentElement
     if (parent) {

@@ -21,6 +21,7 @@ import type {
   Direction,
   VisualHint,
   ExecutionResult,
+  ComponentChild,
 } from '../types'
 import type { ChildRect } from '../strategies/types'
 
@@ -164,7 +165,7 @@ export interface ExtendedEventPort extends EventPort {
     componentName: string
     properties?: string
     textContent?: string
-    children?: any[]
+    children?: ComponentChild[]
   }): CleanupFn
 }
 

@@ -146,6 +146,10 @@ export class PreviewController {
   private boundHandleScroll: () => void
   private boundHandleWindowResize: () => void
 
+  // Debounce timer for window resize (avoids excessive invalidation)
+  private resizeDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  private static readonly RESIZE_DEBOUNCE_MS = 100
+
   // Multi-selection tracking for consistent highlighting
   private highlightedNodeIds: Set<string> = new Set()
 
@@ -241,10 +245,22 @@ export class PreviewController {
   }
 
   /**
-   * Handle window resize - invalidates layout cache
+   * Handle window resize - invalidates layout cache (debounced)
+   *
+   * Debouncing prevents excessive invalidation during continuous resize events
+   * (e.g., when user drags window edge). Invalidates once after resize settles.
    */
   private handleWindowResize(): void {
-    actions.invalidateLayoutInfo('resize')
+    // Clear pending debounce
+    if (this.resizeDebounceTimer !== null) {
+      clearTimeout(this.resizeDebounceTimer)
+    }
+
+    // Debounce: invalidate after resize settles
+    this.resizeDebounceTimer = setTimeout(() => {
+      this.resizeDebounceTimer = null
+      actions.invalidateLayoutInfo('resize')
+    }, PreviewController.RESIZE_DEBOUNCE_MS)
   }
 
   /** Initialize the Visual Code System (overlay + resize) */
@@ -341,6 +357,12 @@ export class PreviewController {
     this.unsubscribeResize = null
     this.unsubscribeZoom?.()
     this.unsubscribeZoom = null
+
+    // Cancel pending resize debounce
+    if (this.resizeDebounceTimer !== null) {
+      clearTimeout(this.resizeDebounceTimer)
+      this.resizeDebounceTimer = null
+    }
 
     // Remove layout invalidation listeners
     this.container.removeEventListener('scroll', this.boundHandleScroll)

@@ -20,7 +20,7 @@
  * ```
  */
 
-import type { DragSource, Point } from '../../types'
+import type { DragSource, Point, ComponentChild } from '../../types'
 import type { EventPort } from '../ports'
 
 // ============================================
@@ -38,7 +38,7 @@ export interface NativeComponentDragData {
   componentName: string
   properties?: string
   textContent?: string
-  children?: any[]
+  children?: ComponentChild[]
   fromComponentPanel?: boolean
 }
 

@@ -54,6 +54,9 @@ export interface DragDropControllerConfig {
 
   /** Callback when drag ends (success or cancel) */
   onDragEnd?: (source: DragSource, success: boolean) => void
+
+  /** Callback when drop is a no-op (element dropped on itself or same position) */
+  onNoOpDrop?: (source: DragSource, result: DropResult) => void
 }
 
 // ============================================
@@ -405,6 +408,12 @@ export class DragDropController {
     if (this.dropExecuted) return
     this.dropExecuted = true
 
+    // Detect no-op drops (element dropped on itself or same position)
+    if (this.isNoOpDrop(source, result)) {
+      this.config.onNoOpDrop?.(source, result)
+      return
+    }
+
     const isAltKey = this.context.isAltKeyPressed
     const shouldDuplicate = Boolean(
       this.config.enableAltDuplicate &&
@@ -418,6 +427,32 @@ export class DragDropController {
     if (execResult.success) {
       this.config.onDrop?.(source, result)
     }
+  }
+
+  /**
+   * Check if a drop operation would be a no-op.
+   *
+   * A no-op occurs when:
+   * - Canvas element is dropped inside itself
+   * - Canvas element is dropped before/after itself
+   */
+  private isNoOpDrop(source: DragSource, result: DropResult): boolean {
+    // Only canvas moves can be no-ops (palette drops always add new elements)
+    if (source.type !== 'canvas' || !source.nodeId) {
+      return false
+    }
+
+    // Dropping an element on itself
+    if (source.nodeId === result.targetId) {
+      return true
+    }
+
+    // Dropping an element before or after itself
+    if (source.nodeId === result.target.nodeId) {
+      return true
+    }
+
+    return false
   }
 
   // ============================================

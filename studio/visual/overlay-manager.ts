@@ -7,12 +7,23 @@
  * - Semantic Zone Dots (9 Punkte)
  * - Sibling Insert Line
  * - Zone Indicator
+ *
+ * Performance optimizations:
+ * - Cached element references (avoid repeated querySelector)
+ * - DOM pooling for semantic dots (avoid innerHTML recreation)
  */
 
 export type SemanticZone =
   | 'top-left' | 'top-center' | 'top-right'
   | 'center-left' | 'center' | 'center-right'
   | 'bottom-left' | 'bottom-center' | 'bottom-right'
+
+/** All 9 semantic zones in order */
+const SEMANTIC_ZONES: readonly SemanticZone[] = [
+  'top-left', 'top-center', 'top-right',
+  'center-left', 'center', 'center-right',
+  'bottom-left', 'bottom-center', 'bottom-right',
+] as const
 
 export interface OverlayManagerConfig {
   container: HTMLElement
@@ -21,6 +32,18 @@ export interface OverlayManagerConfig {
 export class OverlayManager {
   private container: HTMLElement
   private overlay: HTMLElement
+
+  // Cached element references (avoid repeated querySelector)
+  private resizeHandlesEl: HTMLElement | null = null
+  private sizeIndicatorEl: HTMLElement | null = null
+  private semanticDotsEl: HTMLElement | null = null
+  private siblingLineEl: HTMLElement | null = null
+  private zoneIndicatorEl: HTMLElement | null = null
+  private zoneNameEl: HTMLElement | null = null
+
+  // Pooled dot elements (avoid innerHTML recreation)
+  private dotElements: HTMLElement[] = []
+  private dotsInitialized = false
 
   constructor(config: OverlayManagerConfig) {
     this.container = config.container
@@ -33,6 +56,9 @@ export class OverlayManager {
     }
 
     this.container.appendChild(this.overlay)
+
+    // Cache element references after appending
+    this.cacheElements()
   }
 
   private createOverlay(): HTMLElement {
@@ -49,6 +75,35 @@ export class OverlayManager {
     return overlay
   }
 
+  /**
+   * Cache element references to avoid repeated querySelector calls
+   */
+  private cacheElements(): void {
+    this.resizeHandlesEl = this.overlay.querySelector('.resize-handles')
+    this.sizeIndicatorEl = this.overlay.querySelector('.size-indicator')
+    this.semanticDotsEl = this.overlay.querySelector('.semantic-dots')
+    this.siblingLineEl = this.overlay.querySelector('.sibling-line')
+    this.zoneIndicatorEl = this.overlay.querySelector('.zone-indicator')
+    this.zoneNameEl = this.overlay.querySelector('.zone-name')
+  }
+
+  /**
+   * Initialize pooled dot elements (created once, reused)
+   */
+  private initializeDots(): void {
+    if (this.dotsInitialized || !this.semanticDotsEl) return
+
+    for (const zone of SEMANTIC_ZONES) {
+      const dot = document.createElement('div')
+      dot.className = `zone-dot ${zone}`
+      dot.dataset.zone = zone
+      this.semanticDotsEl.appendChild(dot)
+      this.dotElements.push(dot)
+    }
+
+    this.dotsInitialized = true
+  }
+
   // ============================================================================
   // Overlay Management
   // ============================================================================
@@ -60,6 +115,14 @@ export class OverlayManager {
   ensureOverlay(): void {
     if (!this.container.contains(this.overlay)) {
       this.container.appendChild(this.overlay)
+      // Re-cache elements after re-appending
+      this.cacheElements()
+      // Re-initialize dots if they were previously created
+      if (this.dotsInitialized) {
+        this.dotsInitialized = false
+        this.dotElements = []
+        this.initializeDots()
+      }
     }
   }
 
@@ -69,12 +132,13 @@ export class OverlayManager {
 
   getResizeHandlesContainer(): HTMLElement {
     this.ensureOverlay()
-    return this.overlay.querySelector('.resize-handles')!
+    return this.resizeHandlesEl!
   }
 
   clearResizeHandles(): void {
-    const container = this.getResizeHandlesContainer()
-    container.innerHTML = ''
+    if (this.resizeHandlesEl) {
+      this.resizeHandlesEl.innerHTML = ''
+    }
   }
 
   // ============================================================================
@@ -82,7 +146,8 @@ export class OverlayManager {
   // ============================================================================
 
   showSizeIndicator(x: number, y: number, width: string, height: string): void {
-    const el = this.overlay.querySelector('.size-indicator') as HTMLElement
+    const el = this.sizeIndicatorEl
+    if (!el) return
     el.textContent = `${width} × ${height}`
     el.style.display = 'block'
     el.style.left = `${x}px`
@@ -90,8 +155,9 @@ export class OverlayManager {
   }
 
   hideSizeIndicator(): void {
-    const el = this.overlay.querySelector('.size-indicator') as HTMLElement
-    el.style.display = 'none'
+    if (this.sizeIndicatorEl) {
+      this.sizeIndicatorEl.style.display = 'none'
+    }
   }
 
   // ============================================================================
@@ -113,9 +179,13 @@ export class OverlayManager {
   // ============================================================================
 
   showSemanticDots(rect: { left: number; top: number; width: number; height: number }, activeZone: SemanticZone | null): void {
-    const container = this.overlay.querySelector('.semantic-dots') as HTMLElement
-    container.style.display = 'block'
+    const container = this.semanticDotsEl
+    if (!container) return
 
+    // Initialize dots on first use (DOM pooling - create once, reuse)
+    this.initializeDots()
+
+    container.style.display = 'block'
     Object.assign(container.style, {
       left: `${rect.left}px`,
       top: `${rect.top}px`,
@@ -123,21 +193,22 @@ export class OverlayManager {
       height: `${rect.height}px`,
     })
 
-    const zones: SemanticZone[] = [
-      'top-left', 'top-center', 'top-right',
-      'center-left', 'center', 'center-right',
-      'bottom-left', 'bottom-center', 'bottom-right'
-    ]
-
-    container.innerHTML = zones.map(zone =>
-      `<div class="zone-dot ${zone} ${zone === activeZone ? 'active' : ''}"></div>`
-    ).join('')
+    // Update active state on pooled dots (no innerHTML recreation)
+    for (const dot of this.dotElements) {
+      const zone = dot.dataset.zone as SemanticZone
+      if (zone === activeZone) {
+        dot.classList.add('active')
+      } else {
+        dot.classList.remove('active')
+      }
+    }
   }
 
   hideSemanticDots(): void {
-    const el = this.overlay.querySelector('.semantic-dots') as HTMLElement
-    el.style.display = 'none'
-    el.innerHTML = ''
+    if (this.semanticDotsEl) {
+      this.semanticDotsEl.style.display = 'none'
+    }
+    // Don't clear innerHTML - keep pooled dots for reuse
   }
 
   // ============================================================================
@@ -149,7 +220,9 @@ export class OverlayManager {
     position: 'before' | 'after',
     direction: 'horizontal' | 'vertical'
   ): void {
-    const el = this.overlay.querySelector('.sibling-line') as HTMLElement
+    const el = this.siblingLineEl
+    if (!el) return
+
     el.style.display = 'block'
 
     if (direction === 'horizontal') {
@@ -172,8 +245,9 @@ export class OverlayManager {
   }
 
   hideSiblingLine(): void {
-    const el = this.overlay.querySelector('.sibling-line') as HTMLElement
-    el.style.display = 'none'
+    if (this.siblingLineEl) {
+      this.siblingLineEl.style.display = 'none'
+    }
   }
 
   // ============================================================================
@@ -181,15 +255,16 @@ export class OverlayManager {
   // ============================================================================
 
   showZoneIndicator(containerName: string, zoneName: string): void {
-    const el = this.overlay.querySelector('.zone-indicator') as HTMLElement
-    const nameEl = el.querySelector('.zone-name') as HTMLElement
-    nameEl.textContent = `${containerName} | ${zoneName}`
-    el.classList.add('visible')
+    if (this.zoneIndicatorEl && this.zoneNameEl) {
+      this.zoneNameEl.textContent = `${containerName} | ${zoneName}`
+      this.zoneIndicatorEl.classList.add('visible')
+    }
   }
 
   hideZoneIndicator(): void {
-    const el = this.overlay.querySelector('.zone-indicator') as HTMLElement
-    el.classList.remove('visible')
+    if (this.zoneIndicatorEl) {
+      this.zoneIndicatorEl.classList.remove('visible')
+    }
   }
 
   // ============================================================================
@@ -207,6 +282,15 @@ export class OverlayManager {
 
   dispose(): void {
     this.overlay.remove()
+    // Clear cached references
+    this.resizeHandlesEl = null
+    this.sizeIndicatorEl = null
+    this.semanticDotsEl = null
+    this.siblingLineEl = null
+    this.zoneIndicatorEl = null
+    this.zoneNameEl = null
+    this.dotElements = []
+    this.dotsInitialized = false
   }
 }
 

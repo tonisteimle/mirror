@@ -203,7 +203,7 @@ export class CodeExecutor implements ICodeExecutor {
 
       // Trigger recompile
       this.deps.recompile().catch(err => {
-        console.error('Recompile failed:', err)
+        console.error('[CodeExecutor] Recompile failed:', err)
       })
 
       return {

@@ -149,7 +149,9 @@ describe('OverlayManager', () => {
 
       const dotsContainer = container.querySelector('.semantic-dots') as HTMLElement
       expect(dotsContainer.style.display).toBe('none')
-      expect(dotsContainer.innerHTML).toBe('')
+      // Note: With pooling optimization, dots remain in DOM but are hidden
+      // This is intentional to avoid GC churn from repeated innerHTML changes
+      expect(dotsContainer.querySelectorAll('.zone-dot').length).toBe(9)
     })
   })
 

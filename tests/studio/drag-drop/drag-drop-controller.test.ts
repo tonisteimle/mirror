@@ -769,4 +769,106 @@ describe('DragDropController', () => {
       expect(callbacks.onDragEnd).toHaveBeenCalledTimes(2)
     })
   })
+
+  // ============================================
+  // No-Op Drop Detection
+  // ============================================
+
+  describe('no-op drop detection', () => {
+    let onNoOpDrop: ReturnType<typeof vi.fn>
+
+    beforeEach(() => {
+      onNoOpDrop = vi.fn()
+      controller = createDragDropController(ports, {
+        enableAltDuplicate: true,
+        ...callbacks,
+        onNoOpDrop,
+      })
+      controller.init()
+    })
+
+    it('detects dropping element on itself (inside)', () => {
+      const selfTarget: DropTarget = {
+        ...mockTarget,
+        nodeId: 'element-1', // Same as source
+      }
+      const selfResult: DropResult = {
+        target: selfTarget,
+        placement: 'inside',
+        targetId: 'element-1', // Same as source
+      }
+
+      controller.simulateDrop({
+        source: mockCanvasSource, // nodeId: 'element-1'
+        target: selfTarget,
+        result: selfResult,
+      })
+
+      expect(onNoOpDrop).toHaveBeenCalledWith(mockCanvasSource, selfResult)
+      expect(ports.execution.getCalls()).toHaveLength(0)
+    })
+
+    it('detects dropping element before/after itself', () => {
+      const selfTarget: DropTarget = {
+        ...mockTarget,
+        nodeId: 'element-1', // Same as source
+      }
+      const selfResult: DropResult = {
+        target: selfTarget,
+        placement: 'after',
+        targetId: 'sibling-2',
+      }
+
+      controller.simulateDrop({
+        source: mockCanvasSource, // nodeId: 'element-1'
+        target: selfTarget,
+        result: selfResult,
+      })
+
+      expect(onNoOpDrop).toHaveBeenCalled()
+      expect(ports.execution.getCalls()).toHaveLength(0)
+    })
+
+    it('does not treat palette drops as no-op', () => {
+      const selfTarget: DropTarget = {
+        ...mockTarget,
+        nodeId: 'container-1',
+      }
+      const result: DropResult = {
+        target: selfTarget,
+        placement: 'inside',
+        targetId: 'container-1',
+      }
+
+      controller.simulateDrop({
+        source: mockSource, // palette source, no nodeId
+        target: selfTarget,
+        result,
+      })
+
+      expect(onNoOpDrop).not.toHaveBeenCalled()
+      expect(ports.execution.getCalls()).toHaveLength(1)
+    })
+
+    it('allows moving to different target', () => {
+      const differentTarget: DropTarget = {
+        ...mockTarget,
+        nodeId: 'container-2', // Different from source
+      }
+      const result: DropResult = {
+        target: differentTarget,
+        placement: 'inside',
+        targetId: 'container-2',
+      }
+
+      controller.simulateDrop({
+        source: mockCanvasSource, // nodeId: 'element-1'
+        target: differentTarget,
+        result,
+      })
+
+      expect(onNoOpDrop).not.toHaveBeenCalled()
+      expect(ports.execution.getCalls()).toHaveLength(1)
+    })
+  })
 })
