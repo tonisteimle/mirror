@@ -5,7 +5,7 @@
  * Ermöglichen vollständige Testbarkeit ohne DOM, ohne globalen State.
  */
 
-import type { ExtractedElement, ExtractedProperty, PropertyCategory, ModificationResult } from '../../../../compiler'
+import type { ExtractedElement, ExtractedProperty, PropertyCategory, ModificationResult } from '../../../shared/compiler-types'
 import type {
   SelectionPort,
   PropertyExtractionPort,

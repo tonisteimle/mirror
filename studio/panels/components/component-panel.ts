@@ -14,6 +14,7 @@ import type {
   ComponentPanelConfig,
   ComponentPanelCallbacks,
   ComponentDragData,
+  ComponentChild,
 } from './types'
 import { getComponentIcon } from '../../icons'
 import {
@@ -494,7 +495,7 @@ export class ComponentPanel {
   /**
    * Build Mirror code for a child component
    */
-  private buildChildCode(child: { template: string; properties?: string; textContent?: string; children?: any[]; isSlot?: boolean; isItem?: boolean }, indent: string): string {
+  private buildChildCode(child: ComponentChild, indent: string): string {
     // Handle slot syntax (e.g., "Trigger:")
     if (child.isSlot) {
       let code = indent + child.template + ':'

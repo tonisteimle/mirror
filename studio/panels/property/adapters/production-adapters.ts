@@ -5,8 +5,8 @@
  * Verbinden das Property Panel mit dem echten System.
  */
 
-import type { PropertyExtractor, ExtractedElement, CodeModifier, ModificationResult } from '../../../../compiler'
-import { isAbsoluteLayoutContainer } from '../../../../compiler'
+import type { PropertyExtractor, ExtractedElement, CodeModifier, ModificationResult } from '../../../shared/compiler-types'
+import { isAbsoluteLayoutContainer, createLogger } from '../../../shared/compiler-types'
 import { events, state } from '../../../core'
 import { TokenCache } from '../utils/tokens'
 import type {
@@ -23,7 +23,6 @@ import type {
   PropertyChange,
   Rect
 } from '../ports'
-import { createLogger } from '../../../../compiler/utils/logger'
 
 const log = createLogger('SelectionAdapter')
 
