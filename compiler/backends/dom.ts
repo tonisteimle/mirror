@@ -8,7 +8,7 @@
 import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode, IRStateMachine, IRStateTransition, IRTable, IRTableColumn, IRItem, IRProperty, IRSlot, IRItemProperty } from '../ir/types'
-import { isIRZagNode, isIRTable } from '../ir/types'
+import { isIRZagNode, isIRTable, isIRDataReference, isIRDataReferenceArray } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import { generateTheme, isThemeToken } from '../schema/theme-generator'
 import type { DataFile } from '../parser/data-types'
@@ -354,7 +354,7 @@ class DOMGenerator {
       }
 
       // Nested object - recurse
-      return this.serializeDataObject(value as Record<string, unknown>)
+      return serializeDataObject(value as Record<string, unknown>)
     }
 
     return 'null'
