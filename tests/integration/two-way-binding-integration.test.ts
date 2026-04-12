@@ -46,13 +46,14 @@ function compileAndExecute(mirrorCode: string): {
   }
 
   // The generated code includes the runtime, so we just need to execute it
+  // Note: createUI() returns the root element directly with API methods attached
   const executableCode = jsCode.replace(/^export /gm, '')
   const wrappedCode = `
     (function() {
       try {
         ${executableCode}
-        window.__mirrorAPI = createUI();
-        window.__mirrorRoot = window.__mirrorAPI.root;
+        window.__mirrorRoot = createUI();
+        window.__mirrorAPI = window.__mirrorRoot;
         window._runtime = _runtime;
       } catch (e) {
         window.__scriptError = e.message + '\\n' + e.stack;
