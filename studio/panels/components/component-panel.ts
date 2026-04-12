@@ -24,7 +24,45 @@ import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 
 // =============================================================================
-// Icons
+// User Component Parser
+// =============================================================================
+
+interface ParsedComponent {
+  name: string
+  basePrimitive?: string
+  line: number
+}
+
+/**
+ * Parse component definitions from .com file content
+ */
+function parseComFile(content: string): ParsedComponent[] {
+  const components: ParsedComponent[] = []
+  const lines = content.split('\n')
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    // Skip empty lines and comments
+    if (!trimmed || trimmed.startsWith('//')) continue
+
+    // Component definition: Name: or Name as Base:
+    const match = trimmed.match(/^([A-Z][a-zA-Z0-9_-]*)(?:\s+as\s+([a-zA-Z][a-zA-Z0-9_-]*))?:/)
+    if (match) {
+      components.push({
+        name: match[1],
+        basePrimitive: match[2],
+        line: i + 1,
+      })
+    }
+  }
+
+  return components
+}
+
+// =============================================================================
+// Component Panel
 // =============================================================================
 
 /**
@@ -32,7 +70,7 @@ import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-
  */
 export class ComponentPanel {
   private container: HTMLElement
-  private config: Required<Omit<ComponentPanelConfig, 'container'>>
+  private config: Required<Omit<ComponentPanelConfig, 'container' | 'getComFiles'>> & { getComFiles?: () => Array<{ name: string; content: string }> }
   private callbacks: ComponentPanelCallbacks
   private sections: ComponentSection[] = []
   private searchQuery: string = ''
@@ -47,6 +85,7 @@ export class ComponentPanel {
       showBasicComponents: config.showBasicComponents ?? true,
       showTabBar: false,
       defaultTab: 'basic',
+      getComFiles: config.getComFiles,
     }
     this.callbacks = callbacks
     this.ghostRenderer = getGhostRenderer()
@@ -56,7 +95,7 @@ export class ComponentPanel {
   }
 
   /**
-   * Build sections: Layout and Components
+   * Build sections: Layout, Components, and My Components
    */
   private buildSections(): void {
     this.sections = []
@@ -77,6 +116,37 @@ export class ComponentPanel {
         items: [...COMPONENTS_SECTION],
         isExpanded: true,
       })
+    }
+
+    // 3. My Components section (user-defined from .com files)
+    if (this.config.getComFiles) {
+      const comFiles = this.config.getComFiles()
+      const userItems: ComponentItem[] = []
+
+      for (const file of comFiles) {
+        const components = parseComFile(file.content)
+        for (const comp of components) {
+          userItems.push({
+            id: `user-${comp.name.toLowerCase()}`,
+            name: comp.name,
+            category: 'User',
+            template: comp.name,
+            icon: 'custom',
+            isUserDefined: true,
+            description: comp.basePrimitive
+              ? `${comp.name} (extends ${comp.basePrimitive})`
+              : `User component from ${file.name}`,
+          })
+        }
+      }
+
+      if (userItems.length > 0) {
+        this.sections.push({
+          name: 'My Components',
+          items: userItems,
+          isExpanded: true,
+        })
+      }
     }
   }
 

@@ -1728,6 +1728,963 @@ function emitDatePickerComponent(node: IRZagNode, parentVar: string, ctx: ZagEmi
 }
 
 // =============================================================================
+// TOGGLEGROUP COMPONENT
+// =============================================================================
+
+/**
+ * Emit ToggleGroup Component
+ * Group of toggle buttons where one or more can be selected
+ */
+function emitToggleGroupComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// ToggleGroup Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'toggle-group'`)
+  ctx.emit(`${varName}.setAttribute('role', 'group')`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'toggle-group',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
+    value: item.value,
+    label: item.label,
+    disabled: item.disabled
+  })))},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Apply root styles
+  emitSlotStyles(ctx, varName, node.slots['Root'])
+
+  // Create Items
+  const itemSlot = node.slots['Item']
+
+  for (let i = 0; i < node.items.length; i++) {
+    const item = node.items[i]
+    const itemVar = `${varName}_item${i}`
+    const itemValue = item.value || item.label || `item-${i}`
+    const itemLabel = item.label || itemValue
+
+    ctx.emit(`// Toggle Item: ${itemLabel}`)
+    ctx.emit(`const ${itemVar} = document.createElement('button')`)
+    ctx.emit(`${itemVar}.dataset.slot = 'Item'`)
+    ctx.emit(`${itemVar}.dataset.value = '${ctx.escapeString(String(itemValue))}'`)
+    ctx.emit(`${itemVar}.setAttribute('type', 'button')`)
+    ctx.emit(`${itemVar}.textContent = '${ctx.escapeString(String(itemLabel))}'`)
+    if (item.disabled) {
+      ctx.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+      ctx.emit(`${itemVar}.disabled = true`)
+    }
+    emitSlotStyles(ctx, itemVar, itemSlot)
+
+    ctx.emit(`${varName}.appendChild(${itemVar})`)
+    ctx.emit('')
+  }
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize ToggleGroup via runtime
+  emitRuntimeInit(ctx, varName, 'initToggleGroupComponent')
+}
+
+// =============================================================================
+// SEGMENTEDCONTROL COMPONENT
+// =============================================================================
+
+/**
+ * Emit SegmentedControl Component
+ * Group of mutually exclusive options with sliding indicator
+ */
+function emitSegmentedControlComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// SegmentedControl Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'segmented-control'`)
+  ctx.emit(`${varName}.setAttribute('role', 'radiogroup')`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'segmented-control',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
+    value: item.value,
+    label: item.label,
+    disabled: item.disabled
+  })))},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Apply root styles
+  emitSlotStyles(ctx, varName, node.slots['Root'])
+
+  // Create Indicator (slides behind active item)
+  const indicatorSlot = node.slots['Indicator']
+  const indicatorVar = `${varName}_indicator`
+  ctx.emit(`// Indicator`)
+  ctx.emit(`const ${indicatorVar} = document.createElement('div')`)
+  ctx.emit(`${indicatorVar}.dataset.slot = 'Indicator'`)
+  emitSlotStyles(ctx, indicatorVar, indicatorSlot)
+  ctx.emit(`${varName}.appendChild(${indicatorVar})`)
+  ctx.emit('')
+
+  // Create Items
+  const itemSlot = node.slots['Item']
+  const textSlot = node.slots['ItemText']
+
+  for (let i = 0; i < node.items.length; i++) {
+    const item = node.items[i]
+    const itemVar = `${varName}_item${i}`
+    const itemValue = item.value || item.label || `item-${i}`
+    const itemLabel = item.label || itemValue
+
+    ctx.emit(`// Segment Item: ${itemLabel}`)
+    ctx.emit(`const ${itemVar} = document.createElement('label')`)
+    ctx.emit(`${itemVar}.dataset.slot = 'Item'`)
+    ctx.emit(`${itemVar}.dataset.value = '${ctx.escapeString(String(itemValue))}'`)
+    if (item.disabled) {
+      ctx.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+    }
+    emitSlotStyles(ctx, itemVar, itemSlot)
+
+    // ItemText
+    const textVar = `${itemVar}_text`
+    ctx.emit(`const ${textVar} = document.createElement('span')`)
+    ctx.emit(`${textVar}.dataset.slot = 'ItemText'`)
+    ctx.emit(`${textVar}.textContent = '${ctx.escapeString(String(itemLabel))}'`)
+    emitSlotStyles(ctx, textVar, textSlot)
+    ctx.emit(`${itemVar}.appendChild(${textVar})`)
+
+    ctx.emit(`${varName}.appendChild(${itemVar})`)
+    ctx.emit('')
+  }
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize SegmentedControl via runtime
+  emitRuntimeInit(ctx, varName, 'initSegmentedControlComponent')
+}
+
+// =============================================================================
+// EDITABLE COMPONENT
+// =============================================================================
+
+/**
+ * Emit Editable Component
+ * Inline editable text field with preview and edit modes
+ */
+function emitEditableComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// Editable Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'editable'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'editable',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Create Area (contains Preview and Input)
+  const areaSlot = node.slots['Area']
+  const areaVar = `${varName}_area`
+  ctx.emit(`// Area (Preview + Input container)`)
+  ctx.emit(`const ${areaVar} = document.createElement('div')`)
+  ctx.emit(`${areaVar}.dataset.slot = 'Area'`)
+  emitSlotStyles(ctx, areaVar, areaSlot)
+  ctx.emit(`${varName}.appendChild(${areaVar})`)
+  ctx.emit('')
+
+  // Create Preview
+  const previewSlot = node.slots['Preview']
+  const previewVar = `${varName}_preview`
+  ctx.emit(`// Preview (display text)`)
+  ctx.emit(`const ${previewVar} = document.createElement('span')`)
+  ctx.emit(`${previewVar}.dataset.slot = 'Preview'`)
+  const defaultValue = (node.machineConfig?.defaultValue as string) || (node.machineConfig?.value as string) || ''
+  const placeholder = (node.machineConfig?.placeholder as string) || 'Click to edit...'
+  ctx.emit(`${previewVar}.textContent = '${ctx.escapeString(defaultValue || placeholder)}'`)
+  emitSlotStyles(ctx, previewVar, previewSlot)
+  ctx.emit(`${areaVar}.appendChild(${previewVar})`)
+  ctx.emit('')
+
+  // Create Input (hidden initially)
+  const inputSlot = node.slots['Input']
+  const inputVar = `${varName}_input`
+  ctx.emit(`// Input (edit mode)`)
+  ctx.emit(`const ${inputVar} = document.createElement('input')`)
+  ctx.emit(`${inputVar}.type = 'text'`)
+  ctx.emit(`${inputVar}.dataset.slot = 'Input'`)
+  ctx.emit(`${inputVar}.value = '${ctx.escapeString(defaultValue)}'`)
+  ctx.emit(`${inputVar}.placeholder = '${ctx.escapeString(placeholder)}'`)
+  emitSlotStyles(ctx, inputVar, inputSlot)
+  ctx.emit(`${areaVar}.appendChild(${inputVar})`)
+  ctx.emit('')
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize Editable via runtime
+  emitRuntimeInit(ctx, varName, 'initEditableComponent')
+}
+
+// =============================================================================
+// PININPUT COMPONENT
+// =============================================================================
+
+/**
+ * Emit PinInput Component
+ * Multi-digit input field (e.g., for verification codes)
+ */
+function emitPinInputComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// PinInput Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'pin-input'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'pin-input',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Apply root styles
+  emitSlotStyles(ctx, varName, node.slots['Root'])
+
+  // Create Label if exists
+  const labelText = node.machineConfig.label as string
+  if (labelText) {
+    const labelSlot = node.slots['Label']
+    const labelVar = `${varName}_label`
+    ctx.emit(`// Label`)
+    ctx.emit(`const ${labelVar} = document.createElement('label')`)
+    ctx.emit(`${labelVar}.dataset.slot = 'Label'`)
+    ctx.emit(`${labelVar}.textContent = '${ctx.escapeString(labelText)}'`)
+    emitSlotStyles(ctx, labelVar, labelSlot)
+    ctx.emit(`${varName}.appendChild(${labelVar})`)
+    ctx.emit('')
+  }
+
+  // Create Control container
+  const controlSlot = node.slots['Control']
+  const controlVar = `${varName}_control`
+  ctx.emit(`// Control (input container)`)
+  ctx.emit(`const ${controlVar} = document.createElement('div')`)
+  ctx.emit(`${controlVar}.dataset.slot = 'Control'`)
+  emitSlotStyles(ctx, controlVar, controlSlot)
+
+  // Create input fields based on length
+  const length = (node.machineConfig.length as number) || 4
+  const inputSlot = node.slots['Input']
+  ctx.emit(`// Input fields`)
+  ctx.emit(`for (let i = 0; i < ${length}; i++) {`)
+  ctx.indentIn()
+  ctx.emit(`const input = document.createElement('input')`)
+  ctx.emit(`input.dataset.slot = 'Input'`)
+  ctx.emit(`input.dataset.index = String(i)`)
+  ctx.emit(`input.type = 'text'`)
+  ctx.emit(`input.maxLength = 1`)
+  ctx.emit(`input.inputMode = 'numeric'`)
+  ctx.emit(`input.autocomplete = 'one-time-code'`)
+  emitSlotStyles(ctx, 'input', inputSlot)
+  ctx.emit(`${controlVar}.appendChild(input)`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+
+  ctx.emit(`${varName}.appendChild(${controlVar})`)
+  ctx.emit('')
+
+  // Create hidden input for form submission
+  const hiddenInputVar = `${varName}_hiddenInput`
+  ctx.emit(`// Hidden input for form submission`)
+  ctx.emit(`const ${hiddenInputVar} = document.createElement('input')`)
+  ctx.emit(`${hiddenInputVar}.type = 'hidden'`)
+  ctx.emit(`${hiddenInputVar}.dataset.slot = 'HiddenInput'`)
+  const name = node.machineConfig.name as string
+  if (name) {
+    ctx.emit(`${hiddenInputVar}.name = '${ctx.escapeString(name)}'`)
+  }
+  ctx.emit(`${varName}.appendChild(${hiddenInputVar})`)
+  ctx.emit('')
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize PinInput via runtime
+  emitRuntimeInit(ctx, varName, 'initPinInputComponent')
+}
+
+// =============================================================================
+// PASSWORDINPUT COMPONENT
+// =============================================================================
+
+/**
+ * Emit PasswordInput Component
+ * Password input field with visibility toggle
+ */
+function emitPasswordInputComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// PasswordInput Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'password-input'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'password-input',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Apply root styles
+  emitSlotStyles(ctx, varName, node.slots['Root'])
+
+  // Create Label if exists
+  const labelText = node.machineConfig.label as string
+  if (labelText) {
+    const labelSlot = node.slots['Label']
+    const labelVar = `${varName}_label`
+    ctx.emit(`// Label`)
+    ctx.emit(`const ${labelVar} = document.createElement('label')`)
+    ctx.emit(`${labelVar}.dataset.slot = 'Label'`)
+    ctx.emit(`${labelVar}.textContent = '${ctx.escapeString(labelText)}'`)
+    emitSlotStyles(ctx, labelVar, labelSlot)
+    ctx.emit(`${varName}.appendChild(${labelVar})`)
+    ctx.emit('')
+  }
+
+  // Create Control container
+  const controlSlot = node.slots['Control']
+  const controlVar = `${varName}_control`
+  ctx.emit(`// Control (input container)`)
+  ctx.emit(`const ${controlVar} = document.createElement('div')`)
+  ctx.emit(`${controlVar}.dataset.slot = 'Control'`)
+  emitSlotStyles(ctx, controlVar, controlSlot)
+
+  // Create Input
+  const inputSlot = node.slots['Input']
+  const inputVar = `${varName}_input`
+  ctx.emit(`// Input`)
+  ctx.emit(`const ${inputVar} = document.createElement('input')`)
+  ctx.emit(`${inputVar}.type = 'password'`)
+  ctx.emit(`${inputVar}.dataset.slot = 'Input'`)
+  const placeholder = node.machineConfig.placeholder as string
+  if (placeholder) {
+    ctx.emit(`${inputVar}.placeholder = '${ctx.escapeString(placeholder)}'`)
+  }
+  emitSlotStyles(ctx, inputVar, inputSlot)
+  ctx.emit(`${controlVar}.appendChild(${inputVar})`)
+
+  // Create VisibilityTrigger
+  const visibilitySlot = node.slots['VisibilityTrigger']
+  const visibilityVar = `${varName}_visibility`
+  ctx.emit(`// VisibilityTrigger`)
+  ctx.emit(`const ${visibilityVar} = document.createElement('button')`)
+  ctx.emit(`${visibilityVar}.type = 'button'`)
+  ctx.emit(`${visibilityVar}.dataset.slot = 'VisibilityTrigger'`)
+  ctx.emit(`${visibilityVar}.setAttribute('aria-label', 'Toggle password visibility')`)
+  emitSlotStyles(ctx, visibilityVar, visibilitySlot)
+  ctx.emit(`${controlVar}.appendChild(${visibilityVar})`)
+
+  ctx.emit(`${varName}.appendChild(${controlVar})`)
+  ctx.emit('')
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize PasswordInput via runtime
+  emitRuntimeInit(ctx, varName, 'initPasswordInputComponent')
+}
+
+// =============================================================================
+// TREEVIEW COMPONENT
+// =============================================================================
+
+/**
+ * Emit TreeView Component
+ * Hierarchical tree structure with expandable branches
+ */
+function emitTreeViewComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// TreeView Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'tree-view'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'tree-view',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Apply root styles
+  emitSlotStyles(ctx, varName, node.slots['Root'])
+
+  // Create Tree element (ul)
+  const treeSlot = node.slots['Tree']
+  const treeVar = `${varName}_tree`
+  ctx.emit(`// Tree`)
+  ctx.emit(`const ${treeVar} = document.createElement('ul')`)
+  ctx.emit(`${treeVar}.dataset.slot = 'Tree'`)
+  ctx.emit(`${treeVar}.setAttribute('role', 'tree')`)
+  emitSlotStyles(ctx, treeVar, treeSlot)
+  ctx.emit(`${varName}.appendChild(${treeVar})`)
+  ctx.emit('')
+
+  // Store slot styles for runtime use
+  ctx.emit(`${varName}._slotStyles = {`)
+  ctx.indentIn()
+  for (const slotName of ['Branch', 'BranchTrigger', 'BranchContent', 'BranchIndicator', 'Item', 'ItemText']) {
+    const slot = node.slots[slotName]
+    if (slot?.styles && slot.styles.length > 0) {
+      ctx.emit(`'${slotName}': {`)
+      ctx.indentIn()
+      for (const style of slot.styles) {
+        ctx.emit(`'${style.property}': '${style.value}',`)
+      }
+      ctx.indentOut()
+      ctx.emit(`},`)
+    }
+  }
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize TreeView via runtime
+  emitRuntimeInit(ctx, varName, 'initTreeViewComponent')
+}
+
+// =============================================================================
+// TAGSINPUT COMPONENT
+// =============================================================================
+
+/**
+ * Emit TagsInput Component
+ * Structure: Root > Control (Tags + Input) + HiddenInput
+ */
+function emitTagsInputComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// TagsInput Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'tagsinput'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'tagsinput',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Create Label if present
+  const labelText = (node.machineConfig?.label as string) || ''
+  if (labelText) {
+    const labelSlot = node.slots['Label']
+    const labelVar = `${varName}_label`
+    ctx.emit(`// Label`)
+    ctx.emit(`const ${labelVar} = document.createElement('label')`)
+    ctx.emit(`${labelVar}.dataset.slot = 'Label'`)
+    ctx.emit(`${labelVar}.textContent = '${ctx.escapeString(labelText)}'`)
+    emitSlotStyles(ctx, labelVar, labelSlot)
+    ctx.emit(`${varName}.appendChild(${labelVar})`)
+    ctx.emit('')
+  }
+
+  // Create Control (wrapper for tags + input)
+  const controlSlot = node.slots['Control']
+  const controlVar = `${varName}_control`
+  ctx.emit(`// Control (tags container)`)
+  ctx.emit(`const ${controlVar} = document.createElement('div')`)
+  ctx.emit(`${controlVar}.dataset.slot = 'Control'`)
+  emitSlotStyles(ctx, controlVar, controlSlot)
+  ctx.emit(`${varName}.appendChild(${controlVar})`)
+  ctx.emit('')
+
+  // Create Input
+  const inputSlot = node.slots['Input']
+  const inputVar = `${varName}_input`
+  ctx.emit(`// Input`)
+  ctx.emit(`const ${inputVar} = document.createElement('input')`)
+  ctx.emit(`${inputVar}.type = 'text'`)
+  ctx.emit(`${inputVar}.dataset.slot = 'Input'`)
+  const placeholder = (node.machineConfig?.placeholder as string) || 'Add tag...'
+  ctx.emit(`${inputVar}.placeholder = '${ctx.escapeString(placeholder)}'`)
+  emitSlotStyles(ctx, inputVar, inputSlot)
+  ctx.emit(`${controlVar}.appendChild(${inputVar})`)
+  ctx.emit('')
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize TagsInput via runtime
+  emitRuntimeInit(ctx, varName, 'initTagsInputComponent')
+}
+
+// =============================================================================
+// NUMBERINPUT COMPONENT
+// =============================================================================
+
+/**
+ * Emit NumberInput Component
+ * Structure: Root > Control (DecrementTrigger + Input + IncrementTrigger)
+ */
+function emitNumberInputComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// NumberInput Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'numberinput'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'numberinput',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Create Label if present
+  const labelText = (node.machineConfig?.label as string) || ''
+  if (labelText) {
+    const labelSlot = node.slots['Label']
+    const labelVar = `${varName}_label`
+    ctx.emit(`// Label`)
+    ctx.emit(`const ${labelVar} = document.createElement('label')`)
+    ctx.emit(`${labelVar}.dataset.slot = 'Label'`)
+    ctx.emit(`${labelVar}.textContent = '${ctx.escapeString(labelText)}'`)
+    emitSlotStyles(ctx, labelVar, labelSlot)
+    ctx.emit(`${varName}.appendChild(${labelVar})`)
+    ctx.emit('')
+  }
+
+  // Create Control (wrapper)
+  const controlSlot = node.slots['Control']
+  const controlVar = `${varName}_control`
+  ctx.emit(`// Control (wrapper)`)
+  ctx.emit(`const ${controlVar} = document.createElement('div')`)
+  ctx.emit(`${controlVar}.dataset.slot = 'Control'`)
+  emitSlotStyles(ctx, controlVar, controlSlot)
+  ctx.emit(`${varName}.appendChild(${controlVar})`)
+  ctx.emit('')
+
+  // Create Decrement Trigger
+  const decrementSlot = node.slots['DecrementTrigger']
+  const decrementVar = `${varName}_decrement`
+  ctx.emit(`// Decrement Trigger`)
+  ctx.emit(`const ${decrementVar} = document.createElement('button')`)
+  ctx.emit(`${decrementVar}.type = 'button'`)
+  ctx.emit(`${decrementVar}.dataset.slot = 'DecrementTrigger'`)
+  ctx.emit(`${decrementVar}.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>'`)
+  ctx.emit(`${decrementVar}.setAttribute('aria-label', 'Decrease value')`)
+  emitSlotStyles(ctx, decrementVar, decrementSlot)
+  ctx.emit(`${controlVar}.appendChild(${decrementVar})`)
+  ctx.emit('')
+
+  // Create Input
+  const inputSlot = node.slots['Input']
+  const inputVar = `${varName}_input`
+  ctx.emit(`// Input`)
+  ctx.emit(`const ${inputVar} = document.createElement('input')`)
+  ctx.emit(`${inputVar}.type = 'text'`)
+  ctx.emit(`${inputVar}.inputMode = 'decimal'`)
+  ctx.emit(`${inputVar}.dataset.slot = 'Input'`)
+  const placeholder = (node.machineConfig?.placeholder as string) || ''
+  if (placeholder) {
+    ctx.emit(`${inputVar}.placeholder = '${ctx.escapeString(placeholder)}'`)
+  }
+  emitSlotStyles(ctx, inputVar, inputSlot)
+  ctx.emit(`${controlVar}.appendChild(${inputVar})`)
+  ctx.emit('')
+
+  // Create Increment Trigger
+  const incrementSlot = node.slots['IncrementTrigger']
+  const incrementVar = `${varName}_increment`
+  ctx.emit(`// Increment Trigger`)
+  ctx.emit(`const ${incrementVar} = document.createElement('button')`)
+  ctx.emit(`${incrementVar}.type = 'button'`)
+  ctx.emit(`${incrementVar}.dataset.slot = 'IncrementTrigger'`)
+  ctx.emit(`${incrementVar}.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'`)
+  ctx.emit(`${incrementVar}.setAttribute('aria-label', 'Increase value')`)
+  emitSlotStyles(ctx, incrementVar, incrementSlot)
+  ctx.emit(`${controlVar}.appendChild(${incrementVar})`)
+  ctx.emit('')
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize NumberInput via runtime
+  emitRuntimeInit(ctx, varName, 'initNumberInputComponent')
+}
+
+// =============================================================================
+// DATEINPUT COMPONENT
+// =============================================================================
+
+/**
+ * Emit DateInput Component
+ * Structure: Root > Label + Control (Segments + Separators)
+ */
+function emitDateInputComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// DateInput Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'dateinput'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'dateinput',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Apply root styles
+  emitSlotStyles(ctx, varName, node.slots['Root'])
+
+  // Create Label if present
+  const labelText = (node.machineConfig?.label as string) || ''
+  if (labelText) {
+    const labelSlot = node.slots['Label']
+    const labelVar = `${varName}_label`
+    ctx.emit(`// Label`)
+    ctx.emit(`const ${labelVar} = document.createElement('label')`)
+    ctx.emit(`${labelVar}.dataset.slot = 'Label'`)
+    ctx.emit(`${labelVar}.textContent = '${ctx.escapeString(labelText)}'`)
+    emitSlotStyles(ctx, labelVar, labelSlot)
+    ctx.emit(`${varName}.appendChild(${labelVar})`)
+    ctx.emit('')
+  }
+
+  // Create Control container
+  const controlSlot = node.slots['Control']
+  const controlVar = `${varName}_control`
+  ctx.emit(`// Control (segment container)`)
+  ctx.emit(`const ${controlVar} = document.createElement('div')`)
+  ctx.emit(`${controlVar}.dataset.slot = 'Control'`)
+  emitSlotStyles(ctx, controlVar, controlSlot)
+  ctx.emit(`${varName}.appendChild(${controlVar})`)
+  ctx.emit('')
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize DateInput via runtime
+  emitRuntimeInit(ctx, varName, 'initDateInputComponent')
+}
+
+// =============================================================================
+// ACCORDION COMPONENT
+// =============================================================================
+
+/**
+ * Emit Accordion Component
+ * Structure: Root > Item (ItemTrigger + ItemContent) for each item
+ * Uses emitNode for rendering children inside ItemContent
+ */
+function emitAccordionComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// Accordion Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'accordion'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: 'accordion',`)
+  ctx.emit(`id: '${node.id}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
+  ctx.emit(`items: ${JSON.stringify(node.items.map((item: IRItem) => ({
+    value: item.value,
+    label: item.label,
+    disabled: item.disabled
+  })))},`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+
+  // Apply root styles
+  emitSlotStyles(ctx, varName, node.slots['Root'])
+
+  // Create Item containers for each accordion item
+  const itemSlot = node.slots['Item']
+  const triggerSlot = node.slots['ItemTrigger']
+  const contentSlot = node.slots['ItemContent']
+  const indicatorSlot = node.slots['ItemIndicator']
+
+  for (let i = 0; i < node.items.length; i++) {
+    const item = node.items[i]
+    const itemVar = `${varName}_item${i}`
+    const itemValue = item.value || `item-${i}`
+
+    // Item container
+    ctx.emit(`// Accordion Item: ${item.label || itemValue}`)
+    ctx.emit(`const ${itemVar} = document.createElement('div')`)
+    ctx.emit(`${itemVar}.dataset.slot = 'Item'`)
+    ctx.emit(`${itemVar}.dataset.value = '${ctx.escapeString(itemValue)}'`)
+    if (item.disabled) {
+      ctx.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+    }
+    emitSlotStyles(ctx, itemVar, itemSlot)
+
+    // ItemTrigger (header/button)
+    const triggerVar = `${itemVar}_trigger`
+    ctx.emit(`const ${triggerVar} = document.createElement('button')`)
+    ctx.emit(`${triggerVar}.type = 'button'`)
+    ctx.emit(`${triggerVar}.dataset.slot = 'ItemTrigger'`)
+    ctx.emit(`${triggerVar}.dataset.value = '${ctx.escapeString(itemValue)}'`)
+    ctx.emit(`${triggerVar}.setAttribute('aria-expanded', 'false')`)
+    if (item.disabled) {
+      ctx.emit(`${triggerVar}.disabled = true`)
+    }
+    emitSlotStyles(ctx, triggerVar, triggerSlot)
+
+    // Trigger text
+    const triggerTextVar = `${triggerVar}_text`
+    ctx.emit(`const ${triggerTextVar} = document.createElement('span')`)
+    ctx.emit(`${triggerTextVar}.textContent = '${ctx.escapeString(item.label || itemValue)}'`)
+    ctx.emit(`${triggerVar}.appendChild(${triggerTextVar})`)
+
+    // ItemIndicator (icon loaded via runtime)
+    const indicatorVar = `${itemVar}_indicator`
+    const accordionIcon = node.machineConfig.icon || 'chevron-down'
+    ctx.emit(`const ${indicatorVar} = document.createElement('span')`)
+    ctx.emit(`${indicatorVar}.dataset.slot = 'ItemIndicator'`)
+    ctx.emit(`${indicatorVar}.dataset.icon = '${ctx.escapeString(String(accordionIcon))}'`)
+    emitSlotStyles(ctx, indicatorVar, indicatorSlot)
+    ctx.emit(`${triggerVar}.appendChild(${indicatorVar})`)
+
+    ctx.emit(`${itemVar}.appendChild(${triggerVar})`)
+
+    // ItemContent (collapsible body)
+    const contentVar = `${itemVar}_content`
+    ctx.emit(`const ${contentVar} = document.createElement('div')`)
+    ctx.emit(`${contentVar}.dataset.slot = 'ItemContent'`)
+    ctx.emit(`${contentVar}.dataset.value = '${ctx.escapeString(itemValue)}'`)
+    ctx.emit(`${contentVar}.setAttribute('role', 'region')`)
+    emitSlotStyles(ctx, contentVar, contentSlot)
+
+    // Render item children inside content
+    if (item.children && item.children.length > 0) {
+      for (const child of item.children) {
+        ctx.emitNode(child, contentVar)
+      }
+    }
+
+    ctx.emit(`${itemVar}.appendChild(${contentVar})`)
+    ctx.emit(`${varName}.appendChild(${itemVar})`)
+    ctx.emit('')
+  }
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize Accordion via runtime
+  emitRuntimeInit(ctx, varName, 'initAccordionComponent')
+}
+
+// =============================================================================
+// Listbox Component
+// =============================================================================
+
+function emitListboxComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitterContext): void {
+  const varName = ctx.sanitizeVarName(node.id)
+
+  ctx.emit(`// Listbox Component: ${node.name}`)
+  ctx.emit(`const ${varName} = document.createElement('div')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = 'listbox'`)
+  ctx.emit(`${varName}.setAttribute('role', 'listbox')`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+
+  // Emit machine configuration
+  emitMachineConfig(ctx, varName, 'listbox', node)
+
+  // Apply root styles
+  emitSlotStyles(ctx, varName, node.slots['Root'])
+
+  // Create Label if provided
+  const labelSlot = node.slots['Label']
+  if (labelSlot && node.machineConfig.label) {
+    const labelVar = `${varName}_label`
+    ctx.emit(`const ${labelVar} = document.createElement('label')`)
+    ctx.emit(`${labelVar}.dataset.slot = 'Label'`)
+    ctx.emit(`${labelVar}.textContent = '${ctx.escapeString(String(node.machineConfig.label))}'`)
+    emitSlotStyles(ctx, labelVar, labelSlot)
+    ctx.emit(`${varName}.appendChild(${labelVar})`)
+  }
+
+  // Create Content container
+  const contentVar = `${varName}_content`
+  const contentSlot = node.slots['Content']
+  ctx.emit(`const ${contentVar} = document.createElement('div')`)
+  ctx.emit(`${contentVar}.dataset.slot = 'Content'`)
+  emitSlotStyles(ctx, contentVar, contentSlot)
+
+  // Create items
+  const itemSlot = node.slots['Item']
+  const textSlot = node.slots['ItemText']
+  const indicatorSlot = node.slots['ItemIndicator']
+
+  for (let i = 0; i < node.items.length; i++) {
+    const item = node.items[i]
+    const itemVar = `${varName}_item${i}`
+    const itemValue = item.value || `item-${i}`
+
+    // Item container
+    ctx.emit(`// Listbox Item: ${item.label || itemValue}`)
+    ctx.emit(`const ${itemVar} = document.createElement('div')`)
+    ctx.emit(`${itemVar}.dataset.slot = 'Item'`)
+    ctx.emit(`${itemVar}.dataset.value = '${ctx.escapeString(itemValue)}'`)
+    ctx.emit(`${itemVar}.setAttribute('role', 'option')`)
+    ctx.emit(`${itemVar}.setAttribute('tabindex', '${i === 0 ? "0" : "-1"}')`)
+    if (item.disabled) {
+      ctx.emit(`${itemVar}.setAttribute('data-disabled', 'true')`)
+      ctx.emit(`${itemVar}.setAttribute('aria-disabled', 'true')`)
+    }
+    emitSlotStyles(ctx, itemVar, itemSlot)
+
+    // Item indicator (checkmark for selected)
+    const indicatorVar = `${itemVar}_indicator`
+    ctx.emit(`const ${indicatorVar} = document.createElement('span')`)
+    ctx.emit(`${indicatorVar}.dataset.slot = 'ItemIndicator'`)
+    // Icon can be customized per-item or globally via machineConfig
+    const itemIcon = item.icon || node.machineConfig.icon || 'check'
+    ctx.emit(`${indicatorVar}.dataset.icon = '${ctx.escapeString(String(itemIcon))}'`)
+    emitSlotStyles(ctx, indicatorVar, indicatorSlot)
+    ctx.emit(`${itemVar}.appendChild(${indicatorVar})`)
+
+    // Item text
+    const textVar = `${itemVar}_text`
+    ctx.emit(`const ${textVar} = document.createElement('span')`)
+    ctx.emit(`${textVar}.dataset.slot = 'ItemText'`)
+    ctx.emit(`${textVar}.textContent = '${ctx.escapeString(item.label || itemValue)}'`)
+    emitSlotStyles(ctx, textVar, textSlot)
+    ctx.emit(`${itemVar}.appendChild(${textVar})`)
+
+    // Render item children if any
+    if (item.children && item.children.length > 0) {
+      for (const child of item.children) {
+        ctx.emitNode(child, itemVar)
+      }
+    }
+
+    ctx.emit(`${contentVar}.appendChild(${itemVar})`)
+    ctx.emit('')
+  }
+
+  ctx.emit(`${varName}.appendChild(${contentVar})`)
+
+  // Append to parent
+  ctx.emit(`${parentVar}.appendChild(${varName})`)
+  ctx.emit('')
+
+  // Initialize Listbox via runtime
+  emitRuntimeInit(ctx, varName, 'initListboxComponent')
+}
+
+// =============================================================================
 // Dispatcher
 // =============================================================================
 
@@ -1754,6 +2711,24 @@ const emitterRegistry = new Map<string, ZagEmitterFn>([
   ['collapsible', emitCollapsibleComponent],
   ['datepicker', emitDatePickerComponent],
   ['date-picker', emitDatePickerComponent],
+  ['toggle-group', emitToggleGroupComponent],
+  ['togglegroup', emitToggleGroupComponent],
+  ['segmented-control', emitSegmentedControlComponent],
+  ['segmentedcontrol', emitSegmentedControlComponent],
+  ['tree-view', emitTreeViewComponent],
+  ['treeview', emitTreeViewComponent],
+  ['password-input', emitPasswordInputComponent],
+  ['passwordinput', emitPasswordInputComponent],
+  ['pin-input', emitPinInputComponent],
+  ['pininput', emitPinInputComponent],
+  ['editable', emitEditableComponent],
+  ['tags-input', emitTagsInputComponent],
+  ['tagsinput', emitTagsInputComponent],
+  ['number-input', emitNumberInputComponent],
+  ['numberinput', emitNumberInputComponent],
+  ['date-input', emitDateInputComponent],
+  ['dateinput', emitDateInputComponent],
+  ['accordion', emitAccordionComponent],
 ])
 
 /**

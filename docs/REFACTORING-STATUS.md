@@ -11,7 +11,7 @@
 | Phase 1.1: Parser Split | ✅ Abgeschlossen | 100% |
 | Phase 1.2: IR Transformer Refactoring | 🔄 Teilweise | ~15% |
 | Phase 1.3: Validator Modularisierung | ⏳ Ausstehend | 0% |
-| Phase 1.4: DOM Backend | 🔄 Teilweise | ~50% |
+| Phase 1.4: DOM Backend | 🔄 Teilweise | ~90% |
 | Phase 1.5: EmitterContext Konsolidierung | ✅ Abgeschlossen | 100% |
 | Phase 2.1: PropertyPanel Split | ✅ Abgeschlossen | 100% |
 | Phase 2.2: State Store Simplification | ⏳ Ausstehend | 0% |
@@ -86,7 +86,7 @@ compiler/validator/
 ### Phase 1.4: DOM Backend 🔄
 
 **Ursprünglich:** dom.ts mit 7.754 Zeilen
-**Aktuell:** 3.836 Zeilen (~50.5% Reduktion)
+**Aktuell:** 2.834 Zeilen (~63.4% Reduktion)
 
 **Extrahierte Module:**
 ```
@@ -97,13 +97,23 @@ compiler/backends/dom/
 ├── base-emitter-context.ts # Konsolidierte Context-Typen
 ├── emitter-context.ts    # Re-Export (backwards compatibility)
 ├── zag-emitter-context.ts # Re-Export (backwards compatibility)
-├── zag-emitters.ts       # 10 Zag-Komponenten
+├── zag-emitters.ts       # 22 Zag-Komponenten (2.555 Zeilen)
 ├── table-emitter.ts      # Table Emission
 ├── state-machine-emitter.ts # State Machine
 ├── loop-emitter.ts       # Loop Handling
 ├── event-emitter.ts      # Event Listener Generation
-└── token-emitter.ts      # Token/Data Emission (~484 Zeilen) - NEU
+└── token-emitter.ts      # Token/Data Emission (~484 Zeilen)
 ```
+
+**Migrierte Zag-Komponenten (22):**
+Switch, Checkbox, RadioGroup, Slider, Tabs, Select, Tooltip, Dialog, SideNav,
+Popover, HoverCard, Collapsible, DatePicker, ToggleGroup, SegmentedControl,
+TreeView, PasswordInput, PinInput, Editable, TagsInput, NumberInput, DateInput
+
+**Verbleibend in dom.ts (mit emitNode-Dependency):**
+- emitAccordionComponent (benötigt Kinder-Rendering)
+- emitListboxComponent (benötigt Kinder-Rendering)
+- emitFormComponent (benötigt Kinder-Rendering)
 
 ### Phase 1.5: EmitterContext Konsolidierung ✅
 
@@ -173,7 +183,8 @@ studio/panels/property/
 | Datei | Vorher | Nachher | Reduktion |
 |-------|--------|---------|-----------|
 | compiler/ir/index.ts | 5.127 | 4.744 | -7.5% |
-| compiler/backends/dom.ts | 7.754 | 3.836 | -50.5% |
+| compiler/backends/dom.ts | 7.754 | 2.834 | -63.4% |
+| compiler/backends/dom/zag-emitters.ts | - | 2.555 | +22 Komponenten |
 | studio/panels/property/ | 4.181 (1 Datei) | ~6.947 (25 Dateien) | Modularisiert |
 
 ---

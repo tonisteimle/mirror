@@ -63,6 +63,10 @@ export class HandleManager {
   private startDragPosition: { x: number; y: number } | null = null
   private startValue: number = 0
 
+  // RAF throttling for smooth 60fps dragging
+  private rafId: number | null = null
+  private pendingMouseEvent: MouseEvent | null = null
+
   // Bound handlers for cleanup
   private boundMouseDown: (e: MouseEvent) => void
   private boundMouseMove: (e: MouseEvent) => void
@@ -380,6 +384,26 @@ export class HandleManager {
   private onMouseMove(e: MouseEvent): void {
     if (!this.activeHandle || !this.startDragPosition) return
 
+    // RAF throttling: batch mouse events to animation frames for smooth 60fps
+    this.pendingMouseEvent = e
+
+    if (this.rafId === null) {
+      this.rafId = requestAnimationFrame(() => {
+        this.rafId = null
+        if (this.pendingMouseEvent && this.activeHandle && this.startDragPosition) {
+          this.processMouseMove(this.pendingMouseEvent)
+          this.pendingMouseEvent = null
+        }
+      })
+    }
+  }
+
+  /**
+   * Process mouse move event (called via RAF throttling)
+   */
+  private processMouseMove(e: MouseEvent): void {
+    if (!this.activeHandle || !this.startDragPosition) return
+
     const delta = this.getDelta(e, this.activeHandle.direction)
     const sensitivity = e.shiftKey ? 0.5 : 1
     let newValue = Math.round(this.startValue + delta * sensitivity)
@@ -411,6 +435,13 @@ export class HandleManager {
   }
 
   private onMouseUp(): void {
+    // Cancel any pending RAF
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
+    this.pendingMouseEvent = null
+
     if (this.activeHandle) {
       // Reset scale and remove active class (Feature 2)
       this.activeHandle.element.style.transform = 'scale(1)'
@@ -560,6 +591,13 @@ export class HandleManager {
    * Clean up event listeners and DOM elements
    */
   dispose(): void {
+    // Cancel any pending RAF
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
+    this.pendingMouseEvent = null
+
     // Remove event listeners
     this.overlay.removeEventListener('mousedown', this.boundMouseDown)
     document.removeEventListener('mousemove', this.boundMouseMove)

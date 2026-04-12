@@ -16,6 +16,23 @@ const MIN_ELEMENT_SIZE = MIN_RESIZE_SIZE
 
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
+/** 8 handle positions around a rectangle (shared constant to avoid duplication) */
+const HANDLE_POSITIONS: ReadonlyArray<{ pos: ResizeHandle; x: number; y: number }> = [
+  { pos: 'nw', x: 0, y: 0 },
+  { pos: 'n', x: 0.5, y: 0 },
+  { pos: 'ne', x: 1, y: 0 },
+  { pos: 'e', x: 1, y: 0.5 },
+  { pos: 'se', x: 1, y: 1 },
+  { pos: 's', x: 0.5, y: 1 },
+  { pos: 'sw', x: 0, y: 1 },
+  { pos: 'w', x: 0, y: 0.5 },
+] as const
+
+/** Position lookup map for O(1) access (derived from HANDLE_POSITIONS) */
+const HANDLE_POSITION_MAP: Record<ResizeHandle, { x: number; y: number }> = Object.fromEntries(
+  HANDLE_POSITIONS.map(({ pos, x, y }) => [pos, { x, y }])
+) as Record<ResizeHandle, { x: number; y: number }>
+
 export type SizingMode = 'fill' | 'hug' | number
 
 export interface ResizeState {
@@ -64,6 +81,10 @@ export class ResizeManager {
 
   // Cached reference to prevent memory leaks on dispose
   private handlesContainerRef: HTMLElement | null = null
+
+  // RAF throttling for smooth 60fps resize
+  private rafId: number | null = null
+  private pendingMouseEvent: MouseEvent | null = null
 
   // Bound handlers
   private boundMouseDown: (e: MouseEvent) => void
@@ -122,40 +143,61 @@ export class ResizeManager {
 
     const handlesContainer = this.overlayManager.getResizeHandlesContainer()
 
-    // 8 Handle-Positionen
-    const positions: Array<{ pos: ResizeHandle; x: number; y: number }> = [
-      { pos: 'nw', x: 0, y: 0 },
-      { pos: 'n', x: 0.5, y: 0 },
-      { pos: 'ne', x: 1, y: 0 },
-      { pos: 'e', x: 1, y: 0.5 },
-      { pos: 'se', x: 1, y: 1 },
-      { pos: 's', x: 0.5, y: 1 },
-      { pos: 'sw', x: 0, y: 1 },
-      { pos: 'w', x: 0, y: 0.5 },
-    ]
+    // Create handles using shared helper
+    this.createHandlesForRect(
+      handlesContainer,
+      relRect,
+      { nodeId, borderColor: '#5BA8F5' }
+    )
+  }
 
-    positions.forEach(({ pos, x, y }) => {
+  /**
+   * Create resize handles around a rectangle
+   * Extracted to avoid duplication between showHandles() and showMultiHandles()
+   */
+  private createHandlesForRect(
+    container: HTMLElement,
+    rect: { left: number; top: number; width: number; height: number },
+    options: {
+      nodeId?: string
+      nodeIds?: string[]
+      borderColor?: string
+      isMulti?: boolean
+    }
+  ): void {
+    const borderColor = options.borderColor || '#5BA8F5'
+
+    for (const { pos, x, y } of HANDLE_POSITIONS) {
       const handle = document.createElement('div')
-      handle.className = `resize-handle resize-handle-${pos}`
+      handle.className = `resize-handle resize-handle-${pos}${options.isMulti ? ' resize-handle-multi' : ''}`
       handle.dataset.position = pos
-      handle.dataset.nodeId = nodeId
+
+      if (options.nodeId) {
+        handle.dataset.nodeId = options.nodeId
+      }
+      if (options.nodeIds) {
+        handle.dataset.nodeIds = JSON.stringify(options.nodeIds)
+        handle.dataset.isMulti = 'true'
+      }
+
       Object.assign(handle.style, {
         position: 'absolute',
-        left: `${relRect.left + relRect.width * x - 4}px`,
-        top: `${relRect.top + relRect.height * y - 4}px`,
+        left: `${rect.left + rect.width * x - 4}px`,
+        top: `${rect.top + rect.height * y - 4}px`,
         width: '8px',
         height: '8px',
         background: 'white',
-        border: '2px solid #5BA8F5',
+        border: `2px solid ${borderColor}`,
         borderRadius: '50%',
         cursor: this.getCursor(pos),
         pointerEvents: 'auto',
         zIndex: String(Z_INDEX_RESIZE_HANDLES),
         boxSizing: 'border-box',
       })
-      handlesContainer.appendChild(handle)
+
+      container.appendChild(handle)
       this.handles.push(handle)
-    })
+    }
   }
 
   /**
@@ -181,41 +223,12 @@ export class ResizeManager {
 
     const handlesContainer = this.overlayManager.getResizeHandlesContainer()
 
-    // 8 Handle positions around the bounding box
-    const positions: Array<{ pos: ResizeHandle; x: number; y: number }> = [
-      { pos: 'nw', x: 0, y: 0 },
-      { pos: 'n', x: 0.5, y: 0 },
-      { pos: 'ne', x: 1, y: 0 },
-      { pos: 'e', x: 1, y: 0.5 },
-      { pos: 'se', x: 1, y: 1 },
-      { pos: 's', x: 0.5, y: 1 },
-      { pos: 'sw', x: 0, y: 1 },
-      { pos: 'w', x: 0, y: 0.5 },
-    ]
-
-    positions.forEach(({ pos, x, y }) => {
-      const handle = document.createElement('div')
-      handle.className = `resize-handle resize-handle-${pos} resize-handle-multi`
-      handle.dataset.position = pos
-      handle.dataset.nodeIds = JSON.stringify(nodeIds)
-      handle.dataset.isMulti = 'true'
-      Object.assign(handle.style, {
-        position: 'absolute',
-        left: `${boundingBox.x + boundingBox.width * x - 4}px`,
-        top: `${boundingBox.y + boundingBox.height * y - 4}px`,
-        width: '8px',
-        height: '8px',
-        background: 'white',
-        border: '2px solid #10B981',  // Green for multi-selection
-        borderRadius: '50%',
-        cursor: this.getCursor(pos),
-        pointerEvents: 'auto',
-        zIndex: String(Z_INDEX_RESIZE_HANDLES),
-        boxSizing: 'border-box',
-      })
-      handlesContainer.appendChild(handle)
-      this.handles.push(handle)
-    })
+    // Create handles using shared helper
+    this.createHandlesForRect(
+      handlesContainer,
+      { left: boundingBox.x, top: boundingBox.y, width: boundingBox.width, height: boundingBox.height },
+      { nodeIds, borderColor: '#10B981', isMulti: true }
+    )
 
     // Draw bounding box outline
     this.drawMultiSelectionOutline(boundingBox)
@@ -290,6 +303,13 @@ export class ResizeManager {
   }
 
   dispose(): void {
+    // Cancel any pending RAF
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
+    this.pendingMouseEvent = null
+
     this.hideHandles()
     this.removeEventListeners()
   }
@@ -394,6 +414,27 @@ export class ResizeManager {
   }
 
   private onMouseMove(e: MouseEvent): void {
+    // Skip if no active resize
+    if (!this.activeResize && !this.activeMultiResize) return
+
+    // RAF throttling: batch mouse events to animation frames for smooth 60fps
+    this.pendingMouseEvent = e
+
+    if (this.rafId === null) {
+      this.rafId = requestAnimationFrame(() => {
+        this.rafId = null
+        if (this.pendingMouseEvent) {
+          this.processMouseMove(this.pendingMouseEvent)
+          this.pendingMouseEvent = null
+        }
+      })
+    }
+  }
+
+  /**
+   * Process mouse move event (called via RAF throttling)
+   */
+  private processMouseMove(e: MouseEvent): void {
     // Handle multi-selection resize
     if (this.activeMultiResize) {
       this.handleMultiResizeMove(e)
@@ -503,27 +544,24 @@ export class ResizeManager {
       height: rect.height,
     }
 
-    // Position map for each handle
-    const positionMap: Record<ResizeHandle, { x: number; y: number }> = {
-      nw: { x: 0, y: 0 },
-      n: { x: 0.5, y: 0 },
-      ne: { x: 1, y: 0 },
-      e: { x: 1, y: 0.5 },
-      se: { x: 1, y: 1 },
-      s: { x: 0.5, y: 1 },
-      sw: { x: 0, y: 1 },
-      w: { x: 0, y: 0.5 },
-    }
-
+    // Update handle positions using shared constant
     this.handles.forEach(handle => {
       const pos = handle.dataset.position as ResizeHandle
-      const { x, y } = positionMap[pos]
-      handle.style.left = `${relRect.left + relRect.width * x - 4}px`
-      handle.style.top = `${relRect.top + relRect.height * y - 4}px`
+      const position = HANDLE_POSITION_MAP[pos]
+      if (!position) return
+      handle.style.left = `${relRect.left + relRect.width * position.x - 4}px`
+      handle.style.top = `${relRect.top + relRect.height * position.y - 4}px`
     })
   }
 
   private onMouseUp(): void {
+    // Cancel any pending RAF
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
+    this.pendingMouseEvent = null
+
     // Handle multi-selection resize
     if (this.activeMultiResize) {
       this.handleMultiResizeEnd()
@@ -740,24 +778,15 @@ export class ResizeManager {
         break
     }
 
-    const positionMap: Record<ResizeHandle, { x: number; y: number }> = {
-      nw: { x: 0, y: 0 },
-      n: { x: 0.5, y: 0 },
-      ne: { x: 1, y: 0 },
-      e: { x: 1, y: 0.5 },
-      se: { x: 1, y: 1 },
-      s: { x: 0.5, y: 1 },
-      sw: { x: 0, y: 1 },
-      w: { x: 0, y: 0.5 },
-    }
-
+    // Update handle positions using shared constant
     this.handles.forEach(handle => {
       const pos = handle.dataset.position as ResizeHandle
       if (!pos || handle.className.includes('outline')) return
 
-      const { x, y } = positionMap[pos]
-      handle.style.left = `${newX + newWidth * x - 4}px`
-      handle.style.top = `${newY + newHeight * y - 4}px`
+      const position = HANDLE_POSITION_MAP[pos]
+      if (!position) return
+      handle.style.left = `${newX + newWidth * position.x - 4}px`
+      handle.style.top = `${newY + newHeight * position.y - 4}px`
     })
 
     // Update outline

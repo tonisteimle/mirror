@@ -300,11 +300,19 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Initialize Component Panel if container provided
   if (config.componentPanelContainer) {
     componentPanelContainer = config.componentPanelContainer
+    const getFilesCallback = config.getFiles
     studio.componentPanel = createComponentPanel(
       {
         container: componentPanelContainer,
         showTabBar: true,
         defaultTab: 'basic',
+        // Include user components from .com files
+        getComFiles: getFilesCallback ? () => {
+          const files = getFilesCallback()
+          return files
+            .filter(f => f.type === 'components' || f.type === 'component')
+            .map(f => ({ name: f.name, content: f.code }))
+        } : undefined,
       },
       {
         onDragStart: (item, event) => {

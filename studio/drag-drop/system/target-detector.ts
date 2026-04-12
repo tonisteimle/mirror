@@ -11,7 +11,7 @@ import type { LayoutRect } from '../../core/state'
 import type { DOMAdapter } from './dom-adapter'
 import { getDefaultDOMAdapter } from './dom-adapter'
 
-const DEFAULT_NODE_ID_ATTR = 'data-node-id'
+const DEFAULT_NODE_ID_ATTR = 'data-mirror-id'
 
 /**
  * Component names that are "leaf" elements and should not accept children.
@@ -58,7 +58,7 @@ export function isLeafComponent(element: HTMLElement): boolean {
 /**
  * Detect drop target from a DOM element
  * @param element - The HTML element to analyze
- * @param nodeIdAttr - Attribute name for node ID (default: 'data-node-id')
+ * @param nodeIdAttr - Attribute name for node ID (default: 'data-mirror-id')
  * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
  */
 export function detectTarget(
@@ -105,7 +105,7 @@ export function detectTarget(
  * the individual leaf element.
  *
  * @param element - The starting element
- * @param nodeIdAttr - Attribute name for node ID (default: 'data-node-id')
+ * @param nodeIdAttr - Attribute name for node ID (default: 'data-mirror-id')
  * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
  */
 export function findClosestTarget(
@@ -140,7 +140,7 @@ export function findClosestTarget(
 /**
  * Get child rects for a container
  * @param container - The container element
- * @param nodeIdAttr - Attribute name for node ID (default: 'data-node-id')
+ * @param nodeIdAttr - Attribute name for node ID (default: 'data-mirror-id')
  * @param layoutInfo - Optional cached layout info (Phase 5 optimization)
  * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
  */
@@ -199,7 +199,7 @@ export function getChildRects(
  * Get sibling rects for positioned containers (for snap calculations)
  * @param container - The container element
  * @param excludeNodeId - Node ID to exclude from results
- * @param nodeIdAttr - Attribute name for node ID (default: 'data-node-id')
+ * @param nodeIdAttr - Attribute name for node ID (default: 'data-mirror-id')
  * @param layoutInfo - Optional cached layout info (Phase 5 optimization)
  * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
  */

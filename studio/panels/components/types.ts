@@ -159,6 +159,8 @@ export interface ComponentPanelConfig {
   showTabBar?: boolean
   /** Default active tab */
   defaultTab?: 'basic' | 'all'
+  /** Callback to get .com files for user components */
+  getComFiles?: () => Array<{ name: string; content: string }>
 }
 
 /**

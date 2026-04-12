@@ -99,7 +99,7 @@ export interface ExecutorDependencies {
 export function createDOMLayoutPort(config: DOMAdaptersConfig): LayoutPort {
   const {
     container,
-    nodeIdAttr = 'data-node-id',
+    nodeIdAttr = 'data-mirror-id',
     getLayoutInfo,
     domAdapter = getDefaultDOMAdapter(),
   } = config
@@ -503,7 +503,7 @@ const CONTAINER_REDIRECT_THRESHOLD = 30
 export function createDOMTargetDetectionPort(config: DOMAdaptersConfig): TargetDetectionPort {
   const {
     container,
-    nodeIdAttr = 'data-node-id',
+    nodeIdAttr = 'data-mirror-id',
     getLayoutInfo,
     domAdapter = getDefaultDOMAdapter(),
   } = config

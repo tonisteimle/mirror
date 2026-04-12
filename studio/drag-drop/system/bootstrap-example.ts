@@ -66,6 +66,9 @@ export interface DragDropBootstrapConfig {
   /** Optional: Enable Alt+Drop duplicate */
   enableAltDuplicate?: boolean
 
+  /** Optional: Attribute name for node IDs (default: 'data-mirror-id') */
+  nodeIdAttr?: string
+
   /** Optional: Callbacks for drag lifecycle */
   onDragStart?: (source: any) => void
   onDrop?: (source: any, result: any) => void
@@ -127,8 +130,8 @@ export interface DragDropBootstrapResult {
  * })
  *
  * // Register existing canvas elements
- * document.querySelectorAll('[data-node-id]').forEach(el => {
- *   const nodeId = el.getAttribute('data-node-id')
+ * document.querySelectorAll('[data-mirror-id]').forEach(el => {
+ *   const nodeId = el.getAttribute('data-mirror-id')
  *   if (nodeId) {
  *     dragDrop.registerCanvasElement(nodeId, el as HTMLElement)
  *   }
@@ -154,9 +157,12 @@ export function bootstrapDragDrop(config: DragDropBootstrapConfig): DragDropBoot
   // ----------------------------------------
   // 2. Create DOM Ports Configuration
   // ----------------------------------------
+  // Use data-mirror-id by default (matches compiler output)
+  const nodeIdAttr = config.nodeIdAttr ?? 'data-mirror-id'
+
   const portsConfig: DOMPortsConfig = {
     container: config.container,
-    nodeIdAttr: 'data-node-id',
+    nodeIdAttr,
     getLayoutInfo: config.getLayoutInfo,
     executorDeps: {
       getSource: config.getSource,
@@ -260,7 +266,7 @@ export function bootstrapDragDrop(config: DragDropBootstrapConfig): DragDropBoot
  * // Auto-register elements after each render
  * const unsubscribe = createRenderIntegration(
  *   dragDrop,
- *   () => previewContainer.querySelectorAll('[data-node-id]')
+ *   () => previewContainer.querySelectorAll('[data-mirror-id]')
  * )
  * ```
  */
@@ -277,7 +283,7 @@ export function createRenderIntegration(
 
     // Register new elements
     elements.forEach((el) => {
-      const nodeId = el.getAttribute('data-node-id')
+      const nodeId = el.getAttribute('data-mirror-id')
       if (!nodeId) return
 
       currentNodeIds.add(nodeId)

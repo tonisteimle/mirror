@@ -22,7 +22,7 @@ import {
   createRect,
 } from '../../utils/mocks/drag-drop-mocks'
 
-const NODE_ID_ATTR = 'data-node-id'
+const NODE_ID_ATTR = 'data-mirror-id'
 
 // ============================================
 // Test helpers

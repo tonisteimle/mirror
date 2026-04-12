@@ -39,7 +39,7 @@ import {
 import { CodeExecutor, createCodeExecutor } from '../../../studio/drag-drop/executor/code-executor'
 import type { DropTarget, DragSource, DropResult } from '../../../studio/drag-drop/types'
 
-const NODE_ID_ATTR = 'data-node-id'
+const NODE_ID_ATTR = 'data-mirror-id'
 
 // ============================================
 // Helper to create real DOM elements for tests

@@ -32,7 +32,7 @@ import type { LayoutRect } from '../../../studio/core/state'
 function createTestContainer(): HTMLElement {
   const container = document.createElement('div')
   container.id = 'test-container'
-  container.setAttribute('data-node-id', 'root')
+  container.setAttribute('data-mirror-id', 'root')
   container.style.display = 'flex'
   container.style.flexDirection = 'column'
   container.style.width = '400px'
@@ -52,7 +52,7 @@ function cleanupTestContainer(): void {
 
 function createTestChild(id: string, container: HTMLElement): HTMLElement {
   const child = document.createElement('div')
-  child.setAttribute('data-node-id', id)
+  child.setAttribute('data-mirror-id', id)
   child.style.width = '100px'
   child.style.height = '50px'
   container.appendChild(child)

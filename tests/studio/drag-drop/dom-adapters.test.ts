@@ -76,7 +76,7 @@ describe('DOMLayoutPort', () => {
 
     it('falls back to DOM when layoutInfo not available', () => {
       const child = document.createElement('div')
-      child.setAttribute('data-node-id', 'child-1')
+      child.setAttribute('data-mirror-id', 'child-1')
       child.style.position = 'absolute'
       child.style.left = '10px'
       child.style.top = '20px'
@@ -100,11 +100,11 @@ describe('DOMLayoutPort', () => {
 
     it('returns child rects with nodeIds', () => {
       const child1 = document.createElement('div')
-      child1.setAttribute('data-node-id', 'child-1')
+      child1.setAttribute('data-mirror-id', 'child-1')
       container.appendChild(child1)
 
       const child2 = document.createElement('div')
-      child2.setAttribute('data-node-id', 'child-2')
+      child2.setAttribute('data-mirror-id', 'child-2')
       container.appendChild(child2)
 
       const port = createDOMLayoutPort({ container })
@@ -117,7 +117,7 @@ describe('DOMLayoutPort', () => {
 
     it('skips children without nodeId', () => {
       const child1 = document.createElement('div')
-      child1.setAttribute('data-node-id', 'child-1')
+      child1.setAttribute('data-mirror-id', 'child-1')
       container.appendChild(child1)
 
       const child2 = document.createElement('div')
@@ -408,7 +408,7 @@ describe('DOMTargetDetectionPort', () => {
 
   beforeEach(() => {
     container = createTestContainer()
-    container.setAttribute('data-node-id', 'container-1')
+    container.setAttribute('data-mirror-id', 'container-1')
     container.style.display = 'flex'
     container.style.flexDirection = 'column'
   })

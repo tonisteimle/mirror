@@ -205,7 +205,7 @@ describe('detectDirection', () => {
 // ============================================
 
 describe('hasValidChildren', () => {
-  const NODE_ID_ATTR = 'data-node-id'
+  const NODE_ID_ATTR = 'data-mirror-id'
 
   it('returns true when child has node ID', () => {
     const child = createElement('div', { [NODE_ID_ATTR]: 'child-1' })
@@ -395,7 +395,7 @@ describe('isLeafComponent', () => {
 // ============================================
 
 describe('detectTarget', () => {
-  const NODE_ID_ATTR = 'data-node-id'
+  const NODE_ID_ATTR = 'data-mirror-id'
 
   it('returns null for element without node ID', () => {
     const element = createElement('div')

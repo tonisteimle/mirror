@@ -7,6 +7,12 @@
  * Supports: before, after, inside, absolute placements.
  */
 
+// Debug logging - disabled in production
+const DEBUG = false
+const debug = DEBUG
+  ? (...args: unknown[]) => console.log('[CodeExecutor]', ...args)
+  : () => {}
+
 import type {
   DragSource,
   DropResult,
@@ -57,7 +63,7 @@ export class CodeExecutor implements ICodeExecutor {
    * Execute a drop operation
    */
   execute(source: DragSource, result: DropResult): ExecutionResult {
-    console.log('[CodeExecutor] execute called', { source, result })
+    debug('execute called', { source, result })
 
     try {
       // Use resolved source (prelude + current file) to match SourceMap positions
@@ -65,11 +71,11 @@ export class CodeExecutor implements ICodeExecutor {
       const preludeOffset = this.deps.getPreludeOffset()
       const sourceMap = this.deps.getSourceMap()
 
-      console.log('[CodeExecutor] sourceMap size:', sourceMap?.size ?? 'null')
-      console.log('[CodeExecutor] targetId:', result.targetId)
-      console.log('[CodeExecutor] placement:', result.placement)
-      console.log('[CodeExecutor] resolvedSource length:', resolvedSource.length)
-      console.log('[CodeExecutor] preludeOffset:', preludeOffset)
+      debug('sourceMap size:', sourceMap?.size ?? 'null')
+      debug('targetId:', result.targetId)
+      debug('placement:', result.placement)
+      debug('resolvedSource length:', resolvedSource.length)
+      debug('preludeOffset:', preludeOffset)
 
       if (!sourceMap) {
         return {
@@ -83,14 +89,14 @@ export class CodeExecutor implements ICodeExecutor {
       let modResult
 
       if (source.type === 'palette') {
-        console.log('[CodeExecutor] Executing palette drop')
+        debug('Executing palette drop')
         modResult = this.executePaletteDrop(modifier, source, result)
       } else {
-        console.log('[CodeExecutor] Executing canvas drop')
+        debug('Executing canvas drop')
         modResult = this.executeCanvasDrop(modifier, source, result)
       }
 
-      console.log('[CodeExecutor] Modifier result:', modResult)
+      debug('Modifier result:', modResult)
 
       if (!modResult.success) {
         return {
@@ -106,7 +112,7 @@ export class CodeExecutor implements ICodeExecutor {
         : newSource
 
       // Apply the change (editor content only)
-      console.log('[CodeExecutor] Applying change, new editor content length:', newEditorContent.length)
+      debug('Applying change, new editor content length:', newEditorContent.length)
       this.deps.applyChange(newEditorContent)
 
       // Trigger recompile (async, don't await)

@@ -417,8 +417,6 @@ export class PreviewController {
     if (!this.handleManager) {
       this.handleManager = createHandleManager({
         container: this.container,
-        // Phase 4: Use cached layoutInfo instead of DOM reads
-        getLayoutInfo: () => state.get().layoutInfo,
       })
       if (this.selectedNodeId) {
         this.handleManager.showHandles(this.selectedNodeId)

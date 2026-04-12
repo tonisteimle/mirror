@@ -541,7 +541,7 @@ export class DragDropController {
     container: HTMLElement
     nodeIdAttr?: string
   }): { success: boolean; error?: string } {
-    const { sourceNodeId, targetNodeId, placement, container, nodeIdAttr = 'data-node-id' } = params
+    const { sourceNodeId, targetNodeId, placement, container, nodeIdAttr = 'data-mirror-id' } = params
 
     // Prevent self-drop
     if (sourceNodeId === targetNodeId && placement === 'inside') {
@@ -615,7 +615,7 @@ export class DragDropController {
       properties,
       textContent,
       container,
-      nodeIdAttr = 'data-node-id',
+      nodeIdAttr = 'data-mirror-id',
     } = params
 
     // Find target element
@@ -678,7 +678,7 @@ export class DragDropController {
       properties,
       textContent,
       container,
-      nodeIdAttr = 'data-node-id',
+      nodeIdAttr = 'data-mirror-id',
     } = params
 
     // Find target element
