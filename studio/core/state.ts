@@ -954,6 +954,40 @@ export const actions = {
       layoutVersion: 0,
     })
   },
+
+  /**
+   * Invalidate layout info (e.g., after scroll, zoom, or resize)
+   * This clears the cache so the next access will trigger fresh DOM reads.
+   *
+   * Call this when:
+   * - Preview container scrolls
+   * - Preview zoom level changes
+   * - Window resizes
+   * - Transform changes
+   *
+   * @param reason - Why the layout was invalidated (for debugging)
+   */
+  invalidateLayoutInfo(reason: 'scroll' | 'zoom' | 'resize' | 'transform' | 'manual' = 'manual'): void {
+    const currentState = state.get()
+    // Only invalidate if there's actually cached data
+    if (currentState.layoutInfo.size === 0) {
+      return
+    }
+
+    DEBUG_STATE && console.log('[State] Invalidating layoutInfo:', reason)
+    state.set({
+      layoutInfo: new Map(),
+      // Don't reset version - just clear the cache
+    })
+    events.emit('layout:invalidated', { reason })
+  },
+
+  /**
+   * Check if layout info is currently valid (has cached data)
+   */
+  hasLayoutInfo(): boolean {
+    return state.get().layoutInfo.size > 0
+  },
 }
 
 /**

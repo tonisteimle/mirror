@@ -1,4 +1,6 @@
 /**
+ * @vitest-environment jsdom
+ *
  * DOM Adapters Tests
  *
  * Tests for the production DOM adapters.

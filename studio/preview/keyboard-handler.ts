@@ -198,23 +198,62 @@ export class KeyboardHandler {
 
   /**
    * Get current position of an element
+   *
+   * Priority:
+   * 1. data-x/data-y attributes (from DSL, most accurate)
+   * 2. computed left/top (for CSS-positioned elements)
+   * 3. getBoundingClientRect relative to parent (fallback for any layout)
+   *
+   * IMPORTANT: Never default to (0,0) as this can cause unexpected jumps
    */
-  private getCurrentPosition(nodeId: string): { x: number; y: number } {
+  private getCurrentPosition(nodeId: string): { x: number; y: number } | null {
     const element = this.container.querySelector(`[${this.nodeIdAttribute}="${nodeId}"]`) as HTMLElement | null
-    if (!element) return { x: 0, y: 0 }
+    if (!element) return null
 
-    // Try to read from data attributes first (set by DSL)
+    // Priority 1: Try to read from data attributes (set by DSL)
     const dataX = element.dataset.x
     const dataY = element.dataset.y
     if (dataX !== undefined && dataY !== undefined) {
-      return { x: parseInt(dataX, 10) || 0, y: parseInt(dataY, 10) || 0 }
+      const x = parseInt(dataX, 10)
+      const y = parseInt(dataY, 10)
+      // Only use data attributes if they're valid numbers
+      if (!isNaN(x) && !isNaN(y)) {
+        return { x, y }
+      }
     }
 
-    // Fall back to computed style
+    // Priority 2: Try computed style left/top
     const style = window.getComputedStyle(element)
+    const computedLeft = style.left
+    const computedTop = style.top
+
+    // Check if left/top are set (not 'auto' or empty)
+    if (computedLeft && computedLeft !== 'auto' && computedTop && computedTop !== 'auto') {
+      const x = parseFloat(computedLeft)
+      const y = parseFloat(computedTop)
+      if (!isNaN(x) && !isNaN(y)) {
+        return { x: Math.round(x), y: Math.round(y) }
+      }
+    }
+
+    // Priority 3: Fall back to getBoundingClientRect relative to parent
+    // This works for any layout, including elements without explicit positioning
+    const parent = element.parentElement
+    if (parent) {
+      const elementRect = element.getBoundingClientRect()
+      const parentRect = parent.getBoundingClientRect()
+      return {
+        x: Math.round(elementRect.left - parentRect.left),
+        y: Math.round(elementRect.top - parentRect.top),
+      }
+    }
+
+    // Final fallback: relative to container
+    const elementRect = element.getBoundingClientRect()
+    const containerRect = this.container.getBoundingClientRect()
     return {
-      x: parseInt(style.left, 10) || 0,
-      y: parseInt(style.top, 10) || 0,
+      x: Math.round(elementRect.left - containerRect.left),
+      y: Math.round(elementRect.top - containerRect.top),
     }
   }
 
@@ -241,9 +280,18 @@ export class KeyboardHandler {
         break
     }
 
-    const { x, y } = this.getCurrentPosition(nodeId)
-    const newX = x + dx
-    const newY = y + dy
+    const currentPos = this.getCurrentPosition(nodeId)
+    if (!currentPos) {
+      console.warn('[KeyboardHandler] Cannot determine position for element:', nodeId)
+      events.emit('notification:warning', {
+        message: 'Element-Position konnte nicht ermittelt werden',
+        duration: 2000,
+      })
+      return
+    }
+
+    const newX = currentPos.x + dx
+    const newY = currentPos.y + dy
 
     // Execute position command
     const ctx = this.getCommandContext()

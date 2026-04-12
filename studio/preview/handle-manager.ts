@@ -465,15 +465,55 @@ export class HandleManager {
 
   /**
    * Snap value to nearest grid point (Feature 3: Custom Snap Grids)
+   *
+   * Uses binary search for O(log n) performance instead of O(n) linear search.
+   * This is important for smooth 60fps interaction during handle dragging.
    */
   private snapValue(value: number, threshold: number): number {
     const snapPoints = handleSnapSettings.getSnapPoints()
 
-    for (const snap of snapPoints) {
-      if (Math.abs(value - snap) < threshold) {
-        return snap
+    // Empty or single point - quick exit
+    if (snapPoints.length === 0) return value
+    if (snapPoints.length === 1) {
+      return Math.abs(value - snapPoints[0]) < threshold ? snapPoints[0] : value
+    }
+
+    // Binary search for the closest snap point
+    // Note: snapPoints is assumed to be sorted (ascending)
+    let left = 0
+    let right = snapPoints.length - 1
+
+    // Handle edge cases: value is outside the range
+    if (value <= snapPoints[left]) {
+      return Math.abs(value - snapPoints[left]) < threshold ? snapPoints[left] : value
+    }
+    if (value >= snapPoints[right]) {
+      return Math.abs(value - snapPoints[right]) < threshold ? snapPoints[right] : value
+    }
+
+    // Binary search to find the two closest snap points
+    while (right - left > 1) {
+      const mid = Math.floor((left + right) / 2)
+      if (snapPoints[mid] <= value) {
+        left = mid
+      } else {
+        right = mid
       }
     }
+
+    // Now left and right are the two closest snap points
+    const leftDiff = Math.abs(value - snapPoints[left])
+    const rightDiff = Math.abs(value - snapPoints[right])
+
+    // Check if either is within threshold
+    if (leftDiff < threshold && leftDiff <= rightDiff) {
+      return snapPoints[left]
+    }
+    if (rightDiff < threshold) {
+      return snapPoints[right]
+    }
+
+    // No snap point within threshold
     return value
   }
 

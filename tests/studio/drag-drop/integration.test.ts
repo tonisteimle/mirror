@@ -1,4 +1,6 @@
 /**
+ * @vitest-environment jsdom
+ *
  * Drag & Drop Integration Tests
  *
  * Tests the full drag-drop flow using DOM adapters where possible

@@ -137,6 +137,14 @@ export class PreviewController {
   private unsubscribeCompile: (() => void) | null = null
   private unsubscribeMultiSelection: (() => void) | null = null
   private unsubscribeResize: (() => void) | null = null
+  private unsubscribeZoom: (() => void) | null = null
+
+  // Layout invalidation handlers
+  private boundHandleScroll: () => void
+  private boundHandleWindowResize: () => void
+
+  // Multi-selection tracking for consistent highlighting
+  private highlightedNodeIds: Set<string> = new Set()
 
   constructor(config: PreviewConfig) {
     this.container = config.container
@@ -156,6 +164,10 @@ export class PreviewController {
     this.boundHandleDoubleClick = this.handleDoubleClick.bind(this)
     this.boundHandleMouseOver = this.handleMouseOver.bind(this)
     this.boundHandleMouseOut = this.handleMouseOut.bind(this)
+
+    // Layout invalidation handlers
+    this.boundHandleScroll = this.handleContainerScroll.bind(this)
+    this.boundHandleWindowResize = this.handleWindowResize.bind(this)
 
     // Initialize handle manager if enabled
     if (this.config.enableHandles) {
@@ -200,6 +212,31 @@ export class PreviewController {
     this.unsubscribeMultiSelection = events.on('multiselection:changed', () => {
       this.updateMultiSelectionHighlight()
     })
+
+    // Subscribe to preview:zoom for layout cache invalidation
+    this.unsubscribeZoom = events.on('preview:zoom', () => {
+      actions.invalidateLayoutInfo('zoom')
+    })
+
+    // Add scroll listener on container for layout cache invalidation
+    this.container.addEventListener('scroll', this.boundHandleScroll, { passive: true })
+
+    // Add window resize listener for layout cache invalidation
+    window.addEventListener('resize', this.boundHandleWindowResize, { passive: true })
+  }
+
+  /**
+   * Handle container scroll - invalidates layout cache
+   */
+  private handleContainerScroll(): void {
+    actions.invalidateLayoutInfo('scroll')
+  }
+
+  /**
+   * Handle window resize - invalidates layout cache
+   */
+  private handleWindowResize(): void {
+    actions.invalidateLayoutInfo('resize')
   }
 
   /** Initialize the Visual Code System (overlay + resize) */
@@ -295,12 +332,19 @@ export class PreviewController {
     this.unsubscribeMultiSelection = null
     this.unsubscribeResize?.()
     this.unsubscribeResize = null
+    this.unsubscribeZoom?.()
+    this.unsubscribeZoom = null
+
+    // Remove layout invalidation listeners
+    this.container.removeEventListener('scroll', this.boundHandleScroll)
+    window.removeEventListener('resize', this.boundHandleWindowResize)
 
     this.detach()
     this.clearSelection()
     this.clearMultiSelectionHighlight()
     this.selectionCallbacks.clear()
     this.hoverCallbacks.clear()
+    this.highlightedNodeIds.clear()
     this.handleManager?.dispose()
     this.keyboardHandler?.dispose()
     this.contextMenu?.dispose()
@@ -559,25 +603,43 @@ export class PreviewController {
 
   /**
    * Update visual highlight for multi-selected elements
+   *
+   * Uses explicit nodeId tracking (highlightedNodeIds Set) instead of DOM queries
+   * to ensure consistency after DOM re-renders.
    */
   private updateMultiSelectionHighlight(): void {
-    // Clear existing multi-selection highlights
+    // Clear existing multi-selection highlights using tracked nodeIds
     this.clearMultiSelectionHighlight()
 
     // Add highlight to all multi-selected elements
     const multiSelection = state.get().multiSelection
     for (const nodeId of multiSelection) {
       const element = this.getElementByNodeId(nodeId)
-      element?.classList.add('studio-multi-selected')
+      if (element) {
+        element.classList.add('studio-multi-selected')
+        this.highlightedNodeIds.add(nodeId)
+      }
     }
   }
 
   /**
    * Clear all multi-selection highlights
+   *
+   * Uses the tracked highlightedNodeIds Set for reliable cleanup,
+   * avoiding stale DOM queries after re-renders.
    */
   private clearMultiSelectionHighlight(): void {
-    const elements = this.container.querySelectorAll('.studio-multi-selected')
-    elements.forEach(el => el.classList.remove('studio-multi-selected'))
+    // Remove highlights using tracked nodeIds (not DOM query)
+    for (const nodeId of this.highlightedNodeIds) {
+      const element = this.getElementByNodeId(nodeId)
+      element?.classList.remove('studio-multi-selected')
+    }
+    this.highlightedNodeIds.clear()
+
+    // Fallback: Also clear any orphaned highlights from previous DOM
+    // This handles edge cases where DOM was replaced entirely
+    const orphanedElements = this.container.querySelectorAll('.studio-multi-selected')
+    orphanedElements.forEach(el => el.classList.remove('studio-multi-selected'))
   }
 
   private handleMouseOver(e: MouseEvent): void {

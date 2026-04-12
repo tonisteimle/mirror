@@ -8,11 +8,10 @@
 import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode, IRStateMachine, IRStateTransition, IRTable, IRTableColumn, IRItem, IRProperty, IRSlot, IRItemProperty } from '../ir/types'
-import { isIRZagNode, isIRTable, isIRDataReference, isIRDataReferenceArray } from '../ir/types'
+import { isIRZagNode, isIRTable } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import { generateTheme, isThemeToken } from '../schema/theme-generator'
 import type { DataFile } from '../parser/data-types'
-import { mergeDataFiles, serializeDataForJS } from '../parser/data-parser'
 import { dispatchZagEmitter } from './dom/zag-emitters'
 import type { ZagEmitterContext } from './dom/zag-emitter-context'
 
@@ -27,6 +26,8 @@ import { emitEachLoop as emitEachLoopExtracted, emitConditional as emitCondition
 import type { LoopEmitterContext } from './dom/loop-emitter'
 import { emitEventListener as emitEventListenerExtracted, emitTemplateEventListener as emitTemplateEventListenerExtracted, emitAction as emitActionExtracted, mapKeyName } from './dom/event-emitter'
 import type { EventEmitterContext } from './dom/event-emitter'
+import { emitTokens as emitTokensExtracted, serializeDataObject, serializeDataValue } from './dom/token-emitter'
+import type { TokenEmitterContext } from './dom/token-emitter'
 
 // Re-export types for external consumers
 export type { GenerateDOMOptions } from './dom/types'
@@ -289,274 +290,29 @@ class DOMGenerator {
     this.emit('')
   }
 
-  private emitTokens(): void {
-    // Always emit __mirrorData and $get helper for $-variable support
-    this.emit('// Mirror Data Context (Tokens + Data Files)')
-    this.emit('// Exposed to window for debugging and two-way binding')
-    this.emit('const __mirrorData = window.__mirrorData = {')
-    this.indent++
-
-    // Emit design tokens and inline data objects
-    for (const token of this.ir.tokens) {
-      // Strip $ prefix, keep dots for object access
-      const tokenKey = token.name.startsWith('$') ? token.name.slice(1) : token.name
-
-      if (token.value !== undefined) {
-        // Simple token with value
-        const value = typeof token.value === 'string' ? `"${escapeJSString(token.value)}"` : token.value
-        this.emit(`"${tokenKey}": ${value},`)
-      } else if (token.data !== undefined) {
-        // Inline data object - serialize nested structure
-        const dataJS = this.serializeDataObject(token.data)
-        this.emit(`"${tokenKey}": ${dataJS},`)
-      }
-    }
-
-    // Emit data files (from .data parser)
-    if (this.dataFiles && this.dataFiles.length > 0) {
-      const mergedData = mergeDataFiles(this.dataFiles)
-      const dataJS = serializeDataForJS(mergedData)
-      // Each line of dataJS needs to be emitted
-      for (const line of dataJS.split('\n')) {
-        this.emit(line)
-      }
-    }
-
-    this.indent--
-    this.emit('}')
-    this.emit('')
-
-    // Collection store for CRUD operations ($tasks.current, etc.)
-    this.emit('// Collection Store for reactive CRUD')
-    this.emit('const __collections = window.__collections = {}')
-    this.emit('function $collection(name) {')
-    this.indent++
-    this.emit('const n = name.startsWith("$") ? name.slice(1) : name')
-    this.emit('if (!__collections[n]) {')
-    this.indent++
-    this.emit('const items = __mirrorData[n] || []')
-    this.emit('const itemsArray = Array.isArray(items) ? items : Object.values(items)')
-    this.emit('__collections[n] = {')
-    this.indent++
-    this.emit('items: itemsArray,')
-    this.emit('_current: null,')
-    this.emit('_subscribers: new Set(),')
-    this.emit('get current() { return this._current },')
-    this.emit('set current(item) {')
-    this.indent++
-    this.emit('if (this._current === item) return')
-    this.emit('this._current = item')
-    this.emit('this._subscribers.forEach(fn => fn())')
-    this.indent--
-    this.emit('},')
-    this.emit('subscribe(fn) { this._subscribers.add(fn); return () => this._subscribers.delete(fn) },')
-    this.emit('add(item) {')
-    this.indent++
-    this.emit('const newItem = { id: item.id || Date.now().toString(36), ...item }')
-    this.emit('this.items.push(newItem)')
-    this.emit('this._subscribers.forEach(fn => fn())')
-    this.emit('return newItem')
-    this.indent--
-    this.emit('},')
-    this.emit('remove(item) {')
-    this.indent++
-    this.emit('const idx = this.items.indexOf(item)')
-    this.emit('if (idx > -1) this.items.splice(idx, 1)')
-    this.emit('if (this._current === item) this._current = null')
-    this.emit('this._subscribers.forEach(fn => fn())')
-    this.indent--
-    this.emit('},')
-    this.emit('update(item, changes) {')
-    this.indent++
-    this.emit('Object.assign(item, changes)')
-    this.emit('this._subscribers.forEach(fn => fn())')
-    this.indent--
-    this.emit('}')
-    this.indent--
-    this.emit('}')
-    this.indent--
-    this.emit('}')
-    this.emit('return __collections[n]')
-    this.indent--
-    this.emit('}')
-    this.emit('')
-
-    // Reference resolver: resolves { __ref: true, collection, entry } objects
-    this.emit('// Reference resolver for data relations')
-    this.emit('function $resolveRef(value) {')
-    this.indent++
-    this.emit('if (value && typeof value === "object" && value.__ref) {')
-    this.indent++
-    this.emit('const resolved = __mirrorData[value.collection]?.[value.entry]')
-    this.emit('return resolved !== undefined ? resolved : value')
-    this.indent--
-    this.emit('}')
-    this.emit('if (Array.isArray(value)) {')
-    this.indent++
-    this.emit('return value.map(v => $resolveRef(v))')
-    this.indent--
-    this.emit('}')
-    this.emit('return value')
-    this.indent--
-    this.emit('}')
-    this.emit('')
-
-    // Aggregation helpers for collection methods
-    this.emit('// Aggregation methods for collections')
-    this.emit('// Helper to get nested property value: "data.stats.value" -> obj.data.stats.value')
-    this.emit('const $getField = (obj, path) => path.split(".").reduce((o, k) => o?.[k], obj)')
-    this.emit('const $agg = {')
-    this.indent++
-    this.emit('count: (arr) => Array.isArray(arr) ? arr.length : 0,')
-    this.emit('sum: (arr, field) => Array.isArray(arr) ? arr.reduce((s, i) => s + (Number($getField(i, field)) || 0), 0) : 0,')
-    this.emit('avg: (arr, field) => { const a = Array.isArray(arr) ? arr : []; return a.length ? $agg.sum(a, field) / a.length : 0 },')
-    this.emit('min: (arr, field) => Array.isArray(arr) && arr.length ? Math.min(...arr.map(i => Number($getField(i, field)) || 0)) : 0,')
-    this.emit('max: (arr, field) => Array.isArray(arr) && arr.length ? Math.max(...arr.map(i => Number($getField(i, field)) || 0)) : 0,')
-    this.emit('first: (arr) => Array.isArray(arr) ? arr[0] : undefined,')
-    this.emit('last: (arr) => Array.isArray(arr) ? arr[arr.length - 1] : undefined,')
-    this.indent--
-    this.emit('}')
-    this.emit('')
-
-    // Collection methods (from .data files)
-    this.emitMethods()
-
-    // Computed queries (from .query files)
-    this.emitQueries()
-
-    // $get helper: lookup in __mirrorData, then globalThis
-    this.emit('// $-variable accessor with aggregation support')
-    this.emit('function $get(name) {')
-    this.indent++
-
-    // Check for aggregation method pattern: collection.method or collection.method(field)
-    // Also handles post-accessors: items.first.name, items.last.email
-    this.emit('// Check for aggregation pattern: collection.count, collection.sum(field), items.first.name')
-    this.emit('const aggMatch = name.match(/^(.+)\\.(count|sum|avg|min|max|first|last)(?:\\(([^)]+)\\))?(\\..+)?$/)')
-    this.emit('if (aggMatch) {')
-    this.indent++
-    this.emit('const [, collectionPath, method, field, postAccessor] = aggMatch')
-    this.emit('const collection = $get(collectionPath)')
-    this.emit('if (Array.isArray(collection)) {')
-    this.indent++
-    this.emit('let result = field ? $agg[method](collection, field) : $agg[method](collection)')
-    this.emit('// Handle post-accessor like .name after .first')
-    this.emit('if (postAccessor && result != null) {')
-    this.indent++
-    this.emit('const accessParts = postAccessor.slice(1).split(".")')
-    this.emit('for (const part of accessParts) {')
-    this.indent++
-    this.emit('if (result == null) break')
-    this.emit('result = result[part]')
-    this.indent--
-    this.emit('}')
-    this.indent--
-    this.emit('}')
-    this.emit('return result')
-    this.indent--
-    this.emit('}')
-    this.emit('return 0')
-    this.indent--
-    this.emit('}')
-    this.emit('')
-
-    // Check for .current pattern: $tasks.current → $collection('tasks').current
-    this.emit('// Check for .current pattern (CRUD selection)')
-    this.emit('const currentMatch = name.match(/^([^.]+)\\.current(\\..*)?$/)')
-    this.emit('if (currentMatch) {')
-    this.indent++
-    this.emit('const [, collectionName, postAccessor] = currentMatch')
-    this.emit('const coll = $collection(collectionName)')
-    this.emit('let result = coll.current')
-    this.emit('if (postAccessor && result != null) {')
-    this.indent++
-    this.emit('const accessParts = postAccessor.slice(1).split(".")')
-    this.emit('for (const part of accessParts) {')
-    this.indent++
-    this.emit('if (result == null) break')
-    this.emit('result = result[part]')
-    this.indent--
-    this.emit('}')
-    this.indent--
-    this.emit('}')
-    this.emit('return result')
-    this.indent--
-    this.emit('}')
-    this.emit('')
-
-    // Check _mirrorState first (for bind variables set by exclusiveTransition)
-    this.emit('if (window._mirrorState && name in window._mirrorState) return window._mirrorState[name]')
-    this.emit('')
-
-    // First try full key (for tokens like "user.profile.name")
-    this.emit('if (name in __mirrorData) return $resolveRef(__mirrorData[name])')
-    // Then try nested access
-    this.emit('const parts = name.split(".")')
-    this.emit('let val = __mirrorData[parts[0]] ?? globalThis[parts[0]]')
-    this.emit('for (let i = 1; i < parts.length && val != null; i++) {')
-    this.indent++
-    this.emit('val = $resolveRef(val[parts[i]])')
-    this.indent--
-    this.emit('}')
-    this.emit('return val')
-    this.indent--
-    this.emit('}')
-    this.emit('')
-
-    // $set helper: update __mirrorData and notify bindings (two-way binding)
-    this.emit('// $-variable mutator (two-way binding)')
-    this.emit('function $set(path, value) {')
-    this.indent++
-    // First check if full path exists as key (for tokens like "user.profile.name")
-    this.emit('if (path in __mirrorData) {')
-    this.indent++
-    this.emit('__mirrorData[path] = value')
-    this.indent--
-    this.emit('} else {')
-    this.indent++
-    // Nested access for actual nested objects
-    this.emit('const parts = path.split(".")')
-    this.emit('let obj = __mirrorData')
-    this.emit('for (let i = 0; i < parts.length - 1; i++) {')
-    this.indent++
-    this.emit('if (obj[parts[i]] === undefined) obj[parts[i]] = {}')
-    this.emit('obj = obj[parts[i]]')
-    this.indent--
-    this.emit('}')
-    this.emit('obj[parts[parts.length - 1]] = value')
-    this.indent--
-    this.emit('}')
-    this.emit('// Notify runtime of data change for reactive updates')
-    this.emit('if (_runtime && _runtime.notifyDataChange) _runtime.notifyDataChange(path, value)')
-    this.indent--
-    this.emit('}')
-    this.emit('')
-
-    // Legacy tokens object for CSS variable generation
-    if (this.ir.tokens.length > 0) {
-      this.emit('// Design Tokens (for CSS variables)')
-      this.emit('const tokens = __mirrorData')
-      this.emit('')
+  /**
+   * Create a TokenEmitterContext that delegates to this generator's methods.
+   */
+  private createTokenEmitterContext(): TokenEmitterContext {
+    return {
+      emit: (line: string) => this.emit(line),
+      indentIn: () => { this.indent++ },
+      indentOut: () => { this.indent-- },
     }
   }
 
-  /**
-   * Serialize an inline data object to JavaScript code
-   * Handles nested structures and references
-   */
-  private serializeDataObject(data: Record<string, unknown>): string {
-    const entries: string[] = []
-
-    for (const [key, value] of Object.entries(data)) {
-      const serializedValue = this.serializeDataValue(value)
-      entries.push(`"${key}": ${serializedValue}`)
-    }
-
-    return `{ ${entries.join(', ')} }`
+  private emitTokens(): void {
+    // Delegate to extracted token emitter
+    const ctx = this.createTokenEmitterContext()
+    emitTokensExtracted(ctx, {
+      tokens: this.ir.tokens,
+      dataFiles: this.dataFiles,
+    })
   }
 
   /**
    * Serialize a single data value to JavaScript code
+   * @deprecated Use serializeDataValue from token-emitter.ts
    */
   private serializeDataValue(value: unknown): string {
     if (value === null || value === undefined) {
