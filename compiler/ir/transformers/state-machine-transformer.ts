@@ -200,12 +200,18 @@ export function buildStateMachine(
       for (const action of event.actions) {
         if (action.isBuiltinStateFunction) {
           // Determine the target state
-          // Priority: 'on' if exists, otherwise first custom state (excluding CSS pseudo-states)
-          // System states (hover, focus, active, disabled) are CSS-driven and should not be toggle targets
-          const customStateNames = Object.keys(stateDefinitions).filter(s =>
-            s !== 'default' && !SYSTEM_STATES.has(s)
-          )
-          const targetState = customStateNames.includes('on') ? 'on' : (customStateNames[0] || 'on')
+          // Use the first custom state, fallback to 'on'
+          // A "custom" state is either:
+          // 1. Not a system state (like "on", "open", "loading"), OR
+          // 2. A system state that has styles defined (making it a custom toggle target)
+          //    e.g., "active: bg #2271C1" is used as a custom state, not CSS :active
+          const customStateNames = Object.keys(stateDefinitions).filter(s => {
+            if (s === 'default') return false
+            const def = stateDefinitions[s]
+            // Include if not a system state, or if it has styles defined
+            return !SYSTEM_STATES.has(s) || (def.styles && def.styles.length > 0)
+          })
+          const targetState = customStateNames[0] || 'on'
 
           // Determine the modifier based on the action type
           let modifier: 'exclusive' | 'toggle' | undefined

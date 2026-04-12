@@ -16442,7 +16442,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             "transitions": [
               {
                 "modifier": "toggle",
-                "to": "on",
+                "to": "hover",
                 "trigger": "onclick",
               },
             ],
@@ -16766,7 +16766,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             "transitions": [
               {
                 "modifier": "toggle",
-                "to": "on",
+                "to": "hover",
                 "trigger": "onclick",
               },
             ],
@@ -17870,7 +17870,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
             "transitions": [
               {
                 "modifier": "exclusive",
-                "to": "on",
+                "to": "hover",
                 "trigger": "onclick",
               },
             ],
@@ -17991,7 +17991,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
             "transitions": [
               {
                 "modifier": "exclusive",
-                "to": "on",
+                "to": "hover",
                 "trigger": "onclick",
               },
             ],
@@ -18112,7 +18112,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
             "transitions": [
               {
                 "modifier": "exclusive",
-                "to": "on",
+                "to": "hover",
                 "trigger": "onclick",
               },
             ],
@@ -20299,7 +20299,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
         "transitions": [
           {
             "modifier": "toggle",
-            "to": "on",
+            "to": "hover",
             "trigger": "onclick",
           },
         ],
@@ -28029,7 +28029,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
         },
         {
           "property": "background",
-          "value": "[object Object]",
+          "value": "__conditional:active?#2271C1:#333",
         },
         {
           "property": "color",
@@ -28102,7 +28102,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
             },
             {
               "property": "opacity",
-              "value": "[object Object]",
+              "value": "__conditional:visible?1:0.3",
             },
           ],
           "tag": "div",
@@ -28119,7 +28119,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
               "properties": [
                 {
                   "name": "data-icon-color",
-                  "value": "[object Object]",
+                  "value": "__conditional:done?#10b981:#666",
                 },
                 {
                   "name": "data-icon-size",
@@ -28343,7 +28343,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
         },
         {
           "property": "background",
-          "value": "[object Object]",
+          "value": "__conditional:theme === dark?__loopVar:primary:__loopVar:muted",
         },
         {
           "property": "color",

@@ -4258,7 +4258,8 @@ export class Parser {
 
             const token = this.current()
             if (token.type === 'STRING') {
-              elseTokens.push(`"${this.advance().value}"`)
+              // Keep raw string value - quotes are added during IR/codegen if needed
+              elseTokens.push(this.advance().value)
             } else if (token.type === 'DOT') {
               elseTokens.push(this.advance().value)
             } else if (token.type === 'QUESTION') {
@@ -4321,7 +4322,8 @@ export class Parser {
       } else if (this.check('NUMBER')) {
         collectedTokens.push({ type: 'NUMBER', value: this.advance().value })
       } else if (this.check('STRING')) {
-        collectedTokens.push({ type: 'STRING', value: `"${this.advance().value}"` })
+        // Keep raw string value - quotes are added during IR/codegen if needed
+        collectedTokens.push({ type: 'STRING', value: this.advance().value })
       } else if (this.check('IDENTIFIER')) {
         const identValue = this.current().value
 

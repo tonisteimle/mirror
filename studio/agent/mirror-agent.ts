@@ -218,10 +218,10 @@ export class MirrorAgent {
 
       yield { type: 'done' }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       yield {
         type: 'error',
-        error: error.message || 'Unknown error occurred'
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       }
     }
   }
@@ -396,8 +396,8 @@ ${userPrompt}`
 
     try {
       return await tool.execute(input, ctx)
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
 

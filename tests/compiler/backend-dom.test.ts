@@ -48,7 +48,8 @@ Button named saveBtn "Save"
     const js = generateDOM(ast)
     
     expect(js).toContain("_elements['saveBtn']")
-    expect(js).toContain('get saveBtn()')
+    // Object.defineProperty uses 'get()' syntax, not 'get propertyName()'
+    expect(js).toContain("Object.defineProperty(_root, 'saveBtn'")
   })
 
   it('generates event listeners', () => {
@@ -316,8 +317,9 @@ describe('DOM Backend: Runtime', () => {
     const ast = parse(`Card as frame:`)
     const js = generateDOM(ast)
 
-    expect(js).toContain('setState(key, value)')
-    expect(js).toContain('getState(key)')
+    // State management functions are assigned as properties
+    expect(js).toContain('setState = function(key, value)')
+    expect(js).toContain('getState = function(key)')
   })
 })
 

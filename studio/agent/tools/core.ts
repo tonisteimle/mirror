@@ -354,11 +354,12 @@ export const validateTool: Tool = {
         success: true,
         data: { valid: true, elementCount, message: `Code is valid with ${elementCount} elements.` }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Unknown error'
       return {
         success: false,
-        error: e.message,
-        data: { valid: false, error: e.message }
+        error: message,
+        data: { valid: false, error: message }
       }
     }
   }

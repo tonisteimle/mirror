@@ -195,8 +195,8 @@ Wenn du Änderungen am bestehenden Code machst, gib den VOLLSTÄNDIGEN aktualisi
 
       yield { type: 'done' }
 
-    } catch (error: any) {
-      yield { type: 'error', error: error.message || 'Unbekannter Fehler' }
+    } catch (error: unknown) {
+      yield { type: 'error', error: error instanceof Error ? error.message : 'Unbekannter Fehler' }
     } finally {
       // Clean up listener
       if (this.unlistenFn) {

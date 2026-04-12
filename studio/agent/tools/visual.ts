@@ -89,8 +89,8 @@ Returns base64 image data that can be analyzed.`,
           instruction: 'Use these bounds and styles to analyze the layout'
         }
       }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
 }

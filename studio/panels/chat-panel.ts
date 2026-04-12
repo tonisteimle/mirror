@@ -289,10 +289,11 @@ export class ChatPanel {
       }
 
       assistantMessage.status = 'done'
-    } catch (error: any) {
-      assistantMessage.content += `\n\nError: ${error.message}`
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      assistantMessage.content += `\n\nError: ${message}`
       assistantMessage.status = 'error'
-      this.onError?.(error.message)
+      this.onError?.(message)
     } finally {
       this.isStreaming = false
       this.updateStreamingState(false)
