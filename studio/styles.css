@@ -6412,16 +6412,19 @@
     }
 
     .component-panel-section-header {
-      display: flex;
-      align-items: center;
-      padding: 12px 8px 8px 8px;
-      margin: 0 4px 6px 4px;
-      color: var(--text-muted);
+      padding: 12px 8px 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .component-panel-section-name {
+      display: inline-block;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-default);
+      color: var(--text-primary);
       font-size: var(--font-xs);
       text-transform: var(--text-uppercase);
       letter-spacing: var(--tracking-wide);
       font-weight: var(--weight-semibold);
-      border-bottom: 1px solid var(--border-default);
     }
 
     .component-panel-section-toggle {
