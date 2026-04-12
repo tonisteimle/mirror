@@ -23,3 +23,21 @@ export {
   emitRuntimeInit,
 } from './zag-emitters'
 export type { ZagEmitterContext, ZagEmitterFn } from './zag-emitter-context'
+
+// Table Emitter
+export { emitTable } from './table-emitter'
+
+// State Machine Emitter
+export {
+  emitStateMachine,
+  emitWhenWatcher,
+  emitDeferredWhenWatchers,
+  type StateMachineEmitterContext,
+} from './state-machine-emitter'
+
+// Loop Emitter
+export {
+  emitEachLoop,
+  emitConditional,
+  type LoopEmitterContext,
+} from './loop-emitter'

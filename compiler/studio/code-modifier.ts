@@ -105,6 +105,10 @@ interface StateSnapshot {
 
 /**
  * CodeModifier class
+ *
+ * @deprecated Since v2.0. Use CodeModifierV2 from './code-modifier-v2' instead.
+ * CodeModifierV2 uses hexagonal architecture with ports for better testability.
+ * This class will be removed in v3.0.
  */
 export class CodeModifier {
   private source: string

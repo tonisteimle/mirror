@@ -1,6 +1,5 @@
 /**
- * Explorer Panel Module - Activity Bar + File/Component views
+ * Explorer Panel Module - Activity Bar for panel toggles
  */
 
 export * from './activity-bar'
-export * from './explorer-panel'

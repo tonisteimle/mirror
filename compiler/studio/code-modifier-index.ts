@@ -8,6 +8,9 @@
 // Legacy CodeModifier (for backward compatibility)
 // ============================================
 
+/**
+ * @deprecated Use CodeModifierV2 instead. Will be removed in v3.0.
+ */
 export {
   CodeModifier,
   type CodeChange,

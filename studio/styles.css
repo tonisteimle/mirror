@@ -8076,3 +8076,35 @@ select.tomselected,
   font-size: var(--font-xs);
   color: var(--text-muted);
 }
+
+/* ==========================================
+   Components Panel (separate from File Explorer)
+   ========================================== */
+.components-panel {
+  flex: 0 0 auto;
+  width: 200px;
+  min-width: 150px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-default);
+  border-right: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.components-panel.panel-hidden {
+  display: none !important;
+}
+
+/* Components Panel Divider */
+#components-divider {
+  flex: 0 0 4px;
+  background: var(--surface-default);
+  cursor: col-resize;
+  position: relative;
+}
+
+#components-divider:hover,
+#components-divider.dragging {
+  background: var(--primary-50);
+}

@@ -5,6 +5,4 @@
  */
 
 export * from './mock-adapters'
-
-// Production adapters will be added here:
-// export * from './production-adapters'
+export * from './production-adapters'

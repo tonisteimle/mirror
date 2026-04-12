@@ -72,6 +72,18 @@ export class Parser {
    */
   private static readonly MAX_ITERATIONS = 100000
 
+  /**
+   * Maximum lookahead distance for line-based scans.
+   * Prevents DoS from malformed input with very long lines.
+   */
+  private static readonly MAX_LOOKAHEAD = 1000
+
+  /**
+   * Maximum depth for condition chains (and/or).
+   * Prevents infinite loops in cross-element state conditions.
+   */
+  private static readonly MAX_CONDITION_DEPTH = 100
+
   constructor(tokens: Token[], source: string = '') {
     this.tokens = tokens
     this.source = source
@@ -237,8 +249,9 @@ export class Parser {
 
         if (isLowercase) {
           // Look ahead past COLON to determine type
+          // Use MAX_LOOKAHEAD to prevent DoS on malformed input
           let lookAhead = 2
-          while (this.checkAt(lookAhead, 'NEWLINE') || this.checkAt(lookAhead, 'COMMENT')) {
+          while ((this.checkAt(lookAhead, 'NEWLINE') || this.checkAt(lookAhead, 'COMMENT')) && lookAhead < Parser.MAX_LOOKAHEAD) {
             lookAhead++
           }
 
@@ -3328,7 +3341,8 @@ export class Parser {
    */
   private hasInlineChildSyntax(): boolean {
     let ahead = 0
-    while (this.pos + ahead < this.tokens.length) {
+    // Use MAX_LOOKAHEAD to prevent DoS on malformed input with very long lines
+    while (this.pos + ahead < this.tokens.length && ahead < Parser.MAX_LOOKAHEAD) {
       const token = this.tokens[this.pos + ahead]
       if (token.type === 'NEWLINE' || token.type === 'INDENT' || token.type === 'EOF') {
         return false
@@ -3355,7 +3369,8 @@ export class Parser {
    */
   private hasColonOnLine(): boolean {
     let ahead = 0
-    while (this.pos + ahead < this.tokens.length) {
+    // Use MAX_LOOKAHEAD to prevent DoS on malformed input with very long lines
+    while (this.pos + ahead < this.tokens.length && ahead < Parser.MAX_LOOKAHEAD) {
       const token = this.tokens[this.pos + ahead]
       if (token.type === 'NEWLINE' || token.type === 'INDENT' || token.type === 'EOF') {
         return false
@@ -5123,8 +5138,10 @@ export class Parser {
         if (this.check('LPAREN')) {
           let funcValue = funcIdent.value + this.advance().value // identifier + (
           let parenDepth = 1
+          let parenIterations = 0
           // Consume everything until matching RPAREN
-          while (parenDepth > 0 && !this.isAtEnd()) {
+          // Use MAX_LOOKAHEAD to prevent DoS on malformed input with unmatched parens
+          while (parenDepth > 0 && !this.isAtEnd() && parenIterations++ < Parser.MAX_LOOKAHEAD) {
             if (this.check('LPAREN')) {
               parenDepth++
             } else if (this.check('RPAREN')) {
@@ -5625,34 +5642,36 @@ export class Parser {
     this.loopVariables.add(item)
     if (index) this.loopVariables.add(index)
 
-    this.skipNewlines()
-    if (this.check('INDENT')) {
-      this.advance()
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
-        this.skipNewlines()
-        if (this.check('DEDENT')) break
+    try {
+      this.skipNewlines()
+      if (this.check('INDENT')) {
+        this.advance()
+        while (!this.check('DEDENT') && !this.isAtEnd()) {
+          this.skipNewlines()
+          if (this.check('DEDENT')) break
 
-        if (this.check('IDENTIFIER')) {
-          const child = this.parseInstance(this.advance())
-          if (child.type !== 'ZagComponent') {
-            each.children.push(child as Instance | Slot)
+          if (this.check('IDENTIFIER')) {
+            const child = this.parseInstance(this.advance())
+            if (child.type !== 'ZagComponent') {
+              each.children.push(child as Instance | Slot)
+            }
+          } else if (this.check('EACH')) {
+            const nestedEach = this.parseEach()
+            if (nestedEach) each.children.push(nestedEach)
+          } else if (this.check('IF')) {
+            const conditional = this.parseConditionalBlock()
+            if (conditional) each.children.push(conditional)
+          } else {
+            this.advance()
           }
-        } else if (this.check('EACH')) {
-          const nestedEach = this.parseEach()
-          if (nestedEach) each.children.push(nestedEach)
-        } else if (this.check('IF')) {
-          const conditional = this.parseConditionalBlock()
-          if (conditional) each.children.push(conditional)
-        } else {
-          this.advance()
         }
+        if (this.check('DEDENT')) this.advance()
       }
-      if (this.check('DEDENT')) this.advance()
+    } finally {
+      // Always remove loop variables from context, even on exception
+      this.loopVariables.delete(item)
+      if (index) this.loopVariables.delete(index)
     }
-
-    // Remove loop variables from context
-    this.loopVariables.delete(item)
-    if (index) this.loopVariables.delete(index)
 
     return each
   }
@@ -6233,7 +6252,9 @@ export class Parser {
       offset++ // skip state name
 
       // Check for additional conditions (and/or)
-      while (true) {
+      // Use MAX_CONDITION_DEPTH to prevent infinite loops on malformed input
+      let conditionDepth = 0
+      while (conditionDepth++ < Parser.MAX_CONDITION_DEPTH) {
         const condToken = this.peekAt(offset)
         if (condToken?.type === 'COLON') return true
         // Note: 'and'/'or' are tokenized as AND/OR types, not IDENTIFIER

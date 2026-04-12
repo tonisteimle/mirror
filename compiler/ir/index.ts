@@ -270,22 +270,20 @@ class IRTransformer {
 
   /**
    * Validate a property name against the schema.
-   * Returns true if valid, false if unknown.
+   * Returns true if valid, false if unknown. Emits warnings for unknown properties.
    */
   private validateProperty(propName: string, position?: SourcePosition): boolean {
-    // Check non-CSS properties (HTML attributes, animation props)
+    // Non-CSS properties are always valid
     if (NON_CSS_PROPERTIES.has(propName)) {
       return true
     }
 
-    // Check hover- prefix properties
+    // For hover- prefix, validate the base property
     if (propName.startsWith('hover-')) {
       const baseProp = propName.replace('hover-', '')
-      // Check if base property is valid (without emitting warning for base)
       if (this.isKnownProperty(baseProp)) {
         return true
       }
-      // Emit warning with the full hover-* property name
       this.addWarning({
         type: 'unknown-property',
         message: `Unknown property: '${propName}'`,
@@ -295,13 +293,8 @@ class IRTransformer {
       return false
     }
 
-    // Check schema
-    if (findProperty(propName)) {
-      return true
-    }
-
-    // Check PROPERTY_TO_CSS mapping (includes some aliases not in schema)
-    if (PROPERTY_TO_CSS[propName]) {
+    // Use isKnownProperty for the actual check (avoids duplication)
+    if (this.isKnownProperty(propName)) {
       return true
     }
 

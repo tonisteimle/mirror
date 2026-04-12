@@ -47,8 +47,7 @@ const ICON_SAVE = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" s
 function initProjectToolbar() {
   if (toolbarInitialized) return
 
-  // Render toolbar inside file-tree-container (not separate container)
-  // because ExplorerPanel clears the parent container
+  // Render toolbar inside file-tree-container
   const container = document.getElementById('file-tree-container')
   if (!container) return
 

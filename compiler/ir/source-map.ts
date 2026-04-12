@@ -178,6 +178,29 @@ export class SourceMap {
   }
 
   /**
+   * Check if targetId is a descendant of ancestorId
+   * Traverses the parent chain from target upwards
+   */
+  isDescendantOf(targetId: string, ancestorId: string): boolean {
+    if (targetId === ancestorId) return false
+
+    let currentId: string | undefined = targetId
+    const visited = new Set<string>() // Prevent infinite loops
+
+    while (currentId) {
+      if (visited.has(currentId)) return false
+      visited.add(currentId)
+
+      const node = this.getNodeById(currentId)
+      if (!node?.parentId) return false
+      if (node.parentId === ancestorId) return true
+      currentId = node.parentId
+    }
+
+    return false
+  }
+
+  /**
    * Get all nodes (for debugging)
    */
   getAllNodes(): NodeMapping[] {

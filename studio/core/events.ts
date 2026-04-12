@@ -122,8 +122,6 @@ export interface StudioEvents {
   'inline-edit:input': { nodeId: string; element: HTMLElement }
   /** Inline text editing ended */
   'inline-edit:ended': { nodeId: string; originalText: string; newText: string; saved: boolean }
-  /** Explorer view changed */
-  'explorer:view-changed': { view: 'files' | 'components' | 'userComponents' }
   /** Component panel tab changed */
   'components:tab-changed': { tab: 'basic' | 'all' }
   /** Component added to project from All tab */

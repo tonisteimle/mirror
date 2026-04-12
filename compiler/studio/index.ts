@@ -41,6 +41,10 @@ export {
   type PropertyType,
 } from './property-extractor'
 
+/**
+ * @deprecated Since v2.0. Use CodeModifierV2 from './code-modifier-v2' instead.
+ * Will be removed in v3.0.
+ */
 export {
   CodeModifier,
   createCodeModifier,
@@ -53,13 +57,24 @@ export {
   type ExtractToComponentResult,
 } from './code-modifier'
 
-// PropertyPanel re-exported from new location (studio/panels/)
+// CodeModifierV2 - Hexagonal Architecture (recommended)
 export {
-  PropertyPanel,
-  createPropertyPanel,
-  type OnCodeChangeCallback,
-  type PropertyPanelOptions,
-} from '../../studio/panels'
+  CodeModifierV2,
+  createCodeModifierV2,
+  // Ports
+  type SourceMapPort,
+  type LineParserPort,
+  type TemplatePort,
+  type DocumentPort,
+  type CodeModifierPorts,
+  // Adapters
+  createCodeModifierPorts,
+  type CreateCodeModifierPortsConfig,
+} from './code-modifier-index'
+
+// PropertyPanel moved to studio/panels/ - import directly from there
+// This re-export was removed to break circular dependency (compiler/ should not import from studio/)
+// If you need PropertyPanel, import from 'studio/panels' instead
 
 export { PROPERTY_ICON_PATHS } from './icons'
 

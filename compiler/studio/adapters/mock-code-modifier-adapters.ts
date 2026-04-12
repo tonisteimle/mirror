@@ -141,6 +141,8 @@ export interface MockLineParserPort extends LineParserPort {
   // Test helpers
   setAlias(name: string, canonical: string): void
   reset(): void
+  // Internal helper for rebuilding lines
+  buildLine(indent: string, elementName: string, textContent: string | null, properties: ParsedProperty[]): string
 }
 
 export function createMockLineParserPort(config: MockLineParserPortConfig = {}): MockLineParserPort {
