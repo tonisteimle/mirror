@@ -399,6 +399,12 @@ export class ResizeManager {
   }
 
   private onMouseMove(e: MouseEvent): void {
+    // Handle multi-selection resize
+    if (this.activeMultiResize) {
+      this.handleMultiResizeMove(e)
+      return
+    }
+
     if (!this.activeResize) return
 
     const { handle, startX, startY, startWidth, startHeight, startLeft, startTop, nodeId, element } = this.activeResize
@@ -523,6 +529,12 @@ export class ResizeManager {
   }
 
   private onMouseUp(): void {
+    // Handle multi-selection resize
+    if (this.activeMultiResize) {
+      this.handleMultiResizeEnd()
+      return
+    }
+
     if (!this.activeResize) return
 
     const { nodeId, handle, currentWidth, currentHeight, currentLeft, currentTop, startLeft, startTop, isAbsolute } = this.activeResize

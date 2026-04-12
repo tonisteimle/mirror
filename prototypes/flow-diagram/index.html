@@ -467,6 +467,13 @@
         document.querySelectorAll('.view-node').forEach(n => n.classList.remove('selected'));
         node.classList.add('selected');
         selectedNode = view.id;
+        selectedEdge = null;
+      });
+
+      // Doppelklick = umbenennen
+      node.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        editNodeName(view.id);
       });
 
       // Drag node
@@ -780,6 +787,11 @@
         e.preventDefault();
         zoomOut();
       }
+      // Delete/Backspace löscht selektierte Edge
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEdge) {
+        e.preventDefault();
+        deleteSelectedEdge();
+      }
     });
 
     // ============================================
@@ -927,7 +939,9 @@
     // Deselect on canvas click
     canvas.addEventListener('click', () => {
       document.querySelectorAll('.view-node').forEach(n => n.classList.remove('selected'));
+      document.querySelectorAll('.edge').forEach(e => e.classList.remove('selected'));
       selectedNode = null;
+      selectedEdge = null;
     });
   </script>
 </body>
