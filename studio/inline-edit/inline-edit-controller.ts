@@ -10,6 +10,12 @@ import { InlineEditSession, createInlineEditSession } from './inline-edit-sessio
 import { isEditableType, type InlineEditConfig, type InlineEditResult } from './types'
 import type { SourceMap } from '../../compiler/ir/source-map'
 
+/** Minimum delay (ms) before starting edit mode to prevent accidental activation */
+const EDIT_START_DELAY = 150
+
+/** Maximum mouse movement (px) during delay before edit is cancelled */
+const MAX_MOUSE_DRIFT = 10
+
 export class InlineEditController {
   private container: HTMLElement
   private nodeIdAttribute: string
@@ -21,6 +27,12 @@ export class InlineEditController {
   // Bound handler for cleanup
   private boundHandleDoubleClick: (e: MouseEvent) => void
 
+  // Pending edit state (for delay-based activation)
+  private pendingEditTimeout: ReturnType<typeof setTimeout> | null = null
+  private pendingEditStart: { x: number; y: number } | null = null
+  private boundCancelPendingEdit: () => void
+  private boundCheckMouseDrift: (e: MouseEvent) => void
+
   constructor(config: InlineEditConfig) {
     this.container = config.container
     this.nodeIdAttribute = config.nodeIdAttribute ?? 'data-mirror-id'
@@ -28,6 +40,8 @@ export class InlineEditController {
     this.onEditEnd = config.onEditEnd
 
     this.boundHandleDoubleClick = this.handleDoubleClick.bind(this)
+    this.boundCancelPendingEdit = this.cancelPendingEdit.bind(this)
+    this.boundCheckMouseDrift = this.checkMouseDrift.bind(this)
   }
 
   /**
@@ -42,6 +56,7 @@ export class InlineEditController {
    */
   detach(): void {
     this.container.removeEventListener('dblclick', this.boundHandleDoubleClick)
+    this.cancelPendingEdit()
     this.endEdit(false)
   }
 
@@ -140,6 +155,10 @@ export class InlineEditController {
 
   /**
    * Handle double-click on preview elements
+   *
+   * Uses a short delay before activating edit mode to prevent accidental
+   * activation from quick double-clicks. If the user moves the mouse
+   * significantly during the delay, the edit is cancelled.
    */
   private handleDoubleClick(e: MouseEvent): void {
     const target = e.target as HTMLElement
@@ -155,8 +174,62 @@ export class InlineEditController {
     e.preventDefault()
     e.stopPropagation()
 
-    // Start edit session
-    this.startEdit(nodeId)
+    // Cancel any pending edit
+    this.cancelPendingEdit()
+
+    // Check if element is editable before starting delay
+    if (!this.isElementEditable(nodeId)) {
+      return
+    }
+
+    // Start delay-based activation
+    this.pendingEditStart = { x: e.clientX, y: e.clientY }
+
+    // Listen for mouse movement to detect drift
+    document.addEventListener('mousemove', this.boundCheckMouseDrift)
+
+    // Listen for click to cancel (user clicked elsewhere)
+    document.addEventListener('mousedown', this.boundCancelPendingEdit)
+
+    // Start the delayed edit
+    this.pendingEditTimeout = setTimeout(() => {
+      this.cleanupPendingListeners()
+      this.startEdit(nodeId)
+    }, EDIT_START_DELAY)
+  }
+
+  /**
+   * Cancel a pending edit activation
+   */
+  private cancelPendingEdit(): void {
+    if (this.pendingEditTimeout) {
+      clearTimeout(this.pendingEditTimeout)
+      this.pendingEditTimeout = null
+    }
+    this.pendingEditStart = null
+    this.cleanupPendingListeners()
+  }
+
+  /**
+   * Check if mouse has drifted too far during pending edit delay
+   */
+  private checkMouseDrift(e: MouseEvent): void {
+    if (!this.pendingEditStart) return
+
+    const dx = Math.abs(e.clientX - this.pendingEditStart.x)
+    const dy = Math.abs(e.clientY - this.pendingEditStart.y)
+
+    if (dx > MAX_MOUSE_DRIFT || dy > MAX_MOUSE_DRIFT) {
+      this.cancelPendingEdit()
+    }
+  }
+
+  /**
+   * Remove temporary listeners for pending edit
+   */
+  private cleanupPendingListeners(): void {
+    document.removeEventListener('mousemove', this.boundCheckMouseDrift)
+    document.removeEventListener('mousedown', this.boundCancelPendingEdit)
   }
 
   /**

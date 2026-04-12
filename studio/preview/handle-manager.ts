@@ -501,11 +501,20 @@ export class HandleManager {
     return value
   }
 
+  /**
+   * Show value indicator near cursor during drag
+   *
+   * Uses DOM element pooling - the element is created once and reused,
+   * hidden/shown via display property instead of create/remove.
+   */
   private showValueIndicator(x: number, y: number, value: number): void {
     if (!this.valueIndicator) {
+      // Create element once and reuse
       this.valueIndicator = document.createElement('div')
+      this.valueIndicator.className = 'handle-value-indicator'
       Object.assign(this.valueIndicator.style, {
         position: 'fixed',
+        display: 'none',  // Start hidden
         background: '#1F2937',
         color: 'white',
         padding: '4px 8px',
@@ -525,10 +534,14 @@ export class HandleManager {
     this.valueIndicator.style.display = 'block'
   }
 
+  /**
+   * Hide value indicator
+   *
+   * Uses display:none instead of removing element for better performance.
+   */
   private hideValueIndicator(): void {
     if (this.valueIndicator) {
-      this.valueIndicator.remove()
-      this.valueIndicator = null
+      this.valueIndicator.style.display = 'none'
     }
   }
 

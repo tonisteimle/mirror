@@ -16,11 +16,12 @@ global.HTMLElement = dom.window.HTMLElement
 global.window = dom.window as unknown as Window & typeof globalThis
 global.MouseEvent = dom.window.MouseEvent
 
-// Mock events module
+// Mock core module
 vi.mock('../../studio/core', () => ({
   events: {
     emit: vi.fn(),
   },
+  getLayoutService: vi.fn().mockReturnValue(null),
 }))
 
 describe('ResizeManager', () => {

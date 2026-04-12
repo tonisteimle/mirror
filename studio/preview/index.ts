@@ -2,7 +2,7 @@
  * Preview Module - Preview Controller
  */
 
-import { state, actions, events, executor, ResizeCommand, SetPropertyCommand, MoveNodeWithLayoutCommand } from '../core'
+import { state, actions, events, executor, ResizeCommand, SetPropertyCommand, MoveNodeWithLayoutCommand, createLayoutService, setLayoutService, type LayoutService } from '../core'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import { HandleManager, createHandleManager } from './handle-manager'
 import { KeyboardHandler, createKeyboardHandler } from './keyboard-handler'
@@ -133,6 +133,9 @@ export class PreviewController {
   // Slot Visibility System
   private slotVisibilityService: SlotVisibilityService | null = null
 
+  // Layout Service for unified layout cache access
+  private layoutService: LayoutService | null = null
+
   // Event subscriptions
   private unsubscribeCompile: (() => void) | null = null
   private unsubscribeMultiSelection: (() => void) | null = null
@@ -169,12 +172,17 @@ export class PreviewController {
     this.boundHandleScroll = this.handleContainerScroll.bind(this)
     this.boundHandleWindowResize = this.handleWindowResize.bind(this)
 
+    // Initialize LayoutService for unified layout cache access
+    this.layoutService = createLayoutService({
+      container: this.container,
+      nodeIdAttribute: this.config.nodeIdAttribute,
+    })
+    setLayoutService(this.layoutService)
+
     // Initialize handle manager if enabled
     if (this.config.enableHandles) {
       this.handleManager = createHandleManager({
         container: this.container,
-        // Phase 4: Use cached layoutInfo instead of DOM reads
-        getLayoutInfo: () => state.get().layoutInfo,
       })
     }
 
@@ -246,8 +254,7 @@ export class PreviewController {
       container: this.container,
       overlayManager: this.overlayManager,
       getSourceMap: () => this.sourceMap as any,
-      // Phase 3: Use cached layoutInfo instead of DOM reads
-      getLayoutInfo: () => state.get().layoutInfo,
+      // LayoutService is now used via global singleton (getLayoutService())
     })
     // Note: DragDropVisualizer is now handled by the new DragSystem
 
@@ -352,6 +359,9 @@ export class PreviewController {
     this.overlayManager?.dispose()
     // Slot Visibility cleanup
     this.slotVisibilityService?.dispose()
+    // Clear global LayoutService reference
+    setLayoutService(null)
+    this.layoutService = null
   }
 
   setSourceMap(sourceMap: SourceMap | null): void {

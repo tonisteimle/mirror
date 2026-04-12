@@ -222,21 +222,21 @@ export class ResizeManager {
   }
 
   private calculateMultiSelectionBounds(nodeIds: string[]): BoundingBox | null {
-    const layoutInfo = this.getLayoutInfo?.()
+    const layoutService = getLayoutService()
 
     const getRect = (nodeId: string): Rect | null => {
-      // Try cached layout info first
-      const layoutRect = layoutInfo?.get(nodeId)
-      if (layoutRect) {
+      // Try LayoutService first (cache-first, DOM-fallback)
+      const layout = layoutService?.getLayout(nodeId)
+      if (layout) {
         return {
-          x: layoutRect.x,
-          y: layoutRect.y,
-          width: layoutRect.width,
-          height: layoutRect.height,
+          x: layout.x,
+          y: layout.y,
+          width: layout.width,
+          height: layout.height,
         }
       }
 
-      // Fallback to DOM
+      // Ultimate fallback if LayoutService not available
       const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
       if (!element) return null
 
@@ -335,9 +335,9 @@ export class ResizeManager {
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return
 
-    // Try to get layout from cached layoutInfo first (Phase 3 optimization)
-    const layoutInfo = this.getLayoutInfo?.()
-    const layoutRect = layoutInfo?.get(nodeId)
+    // Use LayoutService for unified layout access (cache-first, DOM-fallback)
+    const layoutService = getLayoutService()
+    const layout = layoutService?.getLayout(nodeId)
 
     let startWidth: number
     let startHeight: number
@@ -345,15 +345,15 @@ export class ResizeManager {
     let startTop: number
     let isAbsolute: boolean
 
-    if (layoutRect) {
-      // Use cached layout info - no DOM read needed
-      startWidth = layoutRect.width
-      startHeight = layoutRect.height
-      startLeft = layoutRect.x
-      startTop = layoutRect.y
-      isAbsolute = layoutRect.isAbsolute
+    if (layout) {
+      // Use layout from service (either cached or freshly read from DOM)
+      startWidth = layout.width
+      startHeight = layout.height
+      startLeft = layout.x
+      startTop = layout.y
+      isAbsolute = layout.isAbsolute
     } else {
-      // Fallback to DOM read if layoutInfo not available
+      // Ultimate fallback if LayoutService not available
       const rect = element.getBoundingClientRect()
       const containerRect = this.container.getBoundingClientRect()
       const computedStyle = window.getComputedStyle(element)
@@ -800,66 +800,64 @@ export class ResizeManager {
   }
 
   private getAvailableSpace(parentId: string, excludeId: string): { width: number; height: number } {
-    // Try to get layout from cached layoutInfo first (Phase 3 optimization)
-    const layoutInfo = this.getLayoutInfo?.()
-    const parentLayout = layoutInfo?.get(parentId)
+    // Use LayoutService to get parent layout
+    const layoutService = getLayoutService()
+    const parentLayout = layoutService?.getLayout(parentId)
 
-    if (parentLayout) {
-      // Use cached layout info - no DOM read needed
-      const { width: parentWidth, height: parentHeight, padding, gap, flexDirection } = parentLayout
-
-      let availableWidth = parentWidth - padding.left - padding.right
-      let availableHeight = parentHeight - padding.top - padding.bottom
-
-      const isHorizontal = flexDirection === 'row'
-
-      // Find siblings from layoutInfo
-      for (const [nodeId, layout] of layoutInfo!) {
-        if (nodeId === excludeId || layout.parentId !== parentId) continue
-
-        if (isHorizontal) {
-          availableWidth -= layout.width + gap
-        } else {
-          availableHeight -= layout.height + gap
-        }
-      }
-
-      return {
-        width: Math.max(MIN_ELEMENT_SIZE, availableWidth),
-        height: Math.max(MIN_ELEMENT_SIZE, availableHeight),
-      }
-    }
-
-    // Fallback to DOM read if layoutInfo not available
+    // For available space calculation, we need to iterate siblings and exclude one by ID
+    // The LayoutService's getChildrenLayouts doesn't return nodeIds, so we use DOM for siblings
+    // but still benefit from LayoutService for parent layout
     const parent = this.container.querySelector(`[data-mirror-id="${parentId}"]`) as HTMLElement
     if (!parent) return { width: DEFAULT_CONTAINER_SIZE, height: DEFAULT_CONTAINER_SIZE }
 
-    const parentRect = parent.getBoundingClientRect()
-    const style = window.getComputedStyle(parent)
+    let parentWidth: number
+    let parentHeight: number
+    let padding: { left: number; right: number; top: number; bottom: number }
+    let gap: number
+    let isHorizontal: boolean
 
-    // Padding abziehen
-    const paddingLeft = parseInt(style.paddingLeft || '0', 10)
-    const paddingRight = parseInt(style.paddingRight || '0', 10)
-    const paddingTop = parseInt(style.paddingTop || '0', 10)
-    const paddingBottom = parseInt(style.paddingBottom || '0', 10)
+    if (parentLayout) {
+      // Use cached parent layout
+      parentWidth = parentLayout.width
+      parentHeight = parentLayout.height
+      padding = parentLayout.padding
+      gap = parentLayout.gap
+      isHorizontal = parentLayout.flexDirection === 'row'
+    } else {
+      // Fallback to DOM for parent
+      const parentRect = parent.getBoundingClientRect()
+      const style = window.getComputedStyle(parent)
 
-    let availableWidth = parentRect.width - paddingLeft - paddingRight
-    let availableHeight = parentRect.height - paddingTop - paddingBottom
+      parentWidth = parentRect.width
+      parentHeight = parentRect.height
+      padding = {
+        left: parseInt(style.paddingLeft || '0', 10),
+        right: parseInt(style.paddingRight || '0', 10),
+        top: parseInt(style.paddingTop || '0', 10),
+        bottom: parseInt(style.paddingBottom || '0', 10),
+      }
+      gap = parseInt(style.gap || '0', 10)
+      isHorizontal = style.flexDirection === 'row'
+    }
 
-    // Gap und andere Kinder berücksichtigen
-    const gap = parseInt(style.gap || '0', 10)
-    const isHorizontal = style.flexDirection === 'row'
+    let availableWidth = parentWidth - padding.left - padding.right
+    let availableHeight = parentHeight - padding.top - padding.bottom
 
-    // Andere Kinder finden
+    // Subtract sibling space (need DOM for ID-based exclusion)
     const siblings = parent.querySelectorAll(':scope > [data-mirror-id]')
     siblings.forEach(sibling => {
-      if (sibling.getAttribute('data-mirror-id') === excludeId) return
+      const siblingId = sibling.getAttribute('data-mirror-id')
+      if (siblingId === excludeId) return
 
-      const siblingRect = sibling.getBoundingClientRect()
+      // Try to get sibling layout from service
+      const siblingLayout = layoutService?.getLayout(siblingId!)
+      const siblingWidth = siblingLayout?.width ?? (sibling as HTMLElement).getBoundingClientRect().width
+      const siblingHeight = siblingLayout?.height ?? (sibling as HTMLElement).getBoundingClientRect().height
+
       if (isHorizontal) {
-        availableWidth -= siblingRect.width + gap
+        availableWidth -= siblingWidth + gap
       } else {
-        availableHeight -= siblingRect.height + gap
+        availableHeight -= siblingHeight + gap
       }
     })
 
@@ -870,25 +868,27 @@ export class ResizeManager {
   }
 
   private getChildrenMinSize(nodeId: string): { width: number; height: number } {
-    // Try to get layout from cached layoutInfo first (Phase 3 optimization)
-    const layoutInfo = this.getLayoutInfo?.()
+    // Use LayoutService for unified layout access (cache-first, DOM-fallback)
+    const layoutService = getLayoutService()
 
-    if (layoutInfo) {
+    if (layoutService) {
+      const childLayouts = layoutService.getChildrenLayouts(nodeId)
+
       let minWidth = MIN_ELEMENT_SIZE
       let minHeight = MIN_ELEMENT_SIZE
 
-      // Find children from layoutInfo by checking parentId
-      for (const [childNodeId, layout] of layoutInfo) {
-        if (layout.parentId !== nodeId) continue
-
+      for (const layout of childLayouts) {
         minWidth = Math.max(minWidth, layout.width)
         minHeight = Math.max(minHeight, layout.height)
       }
 
-      return { width: minWidth, height: minHeight }
+      // If we found children, return the calculated sizes
+      if (childLayouts.length > 0) {
+        return { width: minWidth, height: minHeight }
+      }
     }
 
-    // Fallback to DOM read if layoutInfo not available
+    // Ultimate fallback if LayoutService not available or no children found
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return { width: MIN_ELEMENT_SIZE, height: MIN_ELEMENT_SIZE }
 
