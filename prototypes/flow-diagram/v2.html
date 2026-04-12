@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Flow Diagram v2</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: white;
+      height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 260px;
+      background: #111;
+      border-right: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid #222;
+    }
+
+    #sidebar-header h1 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #tree {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .tree-item {
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .tree-item:hover { background: #1a1a1a; }
+    .tree-item.selected { background: #2271C1; color: white; }
+
+    .tree-item .icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.6;
+    }
+
+    .tree-group {
+      margin-top: 16px;
+    }
+
+    .tree-group-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #555;
+      padding: 4px 12px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Canvas */
+    #canvas-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #canvas {
+      position: absolute;
+      transform-origin: 0 0;
+      cursor: grab;
+    }
+
+    #canvas.dragging { cursor: grabbing; }
+
+    /* Component Node */
+    .component-node {
+      position: absolute;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      min-width: 180px;
+    }
+
+    .component-node.selected {
+      border-color: #2271C1;
+      box-shadow: 0 0 0 2px rgba(34, 113, 193, 0.3);
+    }
+
+    .component-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid #282828;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .component-icon {
+      width: 18px;
+      height: 18px;
+      background: #333;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .component-icon svg {
+      width: 12px;
+      height: 12px;
+      stroke: #888;
+    }
+
+    .component-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .component-type {
+      font-size: 10px;
+      color: #666;
+      margin-left: auto;
+    }
+
+    /* States */
+    .states-list {
+      padding: 8px;
+    }
+
+    .state-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .state-item:hover { background: #252525; }
+
+    .state-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #444;
+    }
+
+    .state-dot.default { background: #666; }
+    .state-dot.hover { background: #f59e0b; }
+    .state-dot.active { background: #2271C1; }
+    .state-dot.open { background: #10b981; }
+    .state-dot.selected { background: #8b5cf6; }
+    .state-dot.disabled { background: #ef4444; }
+
+    .state-name {
+      color: #aaa;
+    }
+
+    .state-trigger {
+      margin-left: auto;
+      color: #555;
+      font-size: 10px;
+    }
+
+    /* Edges */
+    #edges {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .edge-navigation {
+      fill: none;
+      stroke: #2271C1;
+      stroke-width: 1.5;
+    }
+
+    .edge-dependency {
+      fill: none;
+      stroke: #10b981;
+      stroke-width: 1.5;
+      stroke-dasharray: 4;
+    }
+
+    .edge-trigger {
+      fill: none;
+      stroke: #f59e0b;
+      stroke-width: 1;
+      opacity: 0.5;
+    }
+
+    .edge-label {
+      font-size: 9px;
+      fill: #666;
+    }
+
+    /* Legend */
+    #legend {
+      position: fixed;
+      bottom: 16px;
+      left: 276px;
+      background: #151515;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      gap: 20px;
+      font-size: 11px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #888;
+    }
+
+    .legend-line {
+      width: 24px;
+      height: 2px;
+    }
+
+    .legend-line.nav { background: #2271C1; }
+    .legend-line.dep { background: #10b981; background: repeating-linear-gradient(90deg, #10b981 0, #10b981 4px, transparent 4px, transparent 8px); }
+    .legend-line.trigger { background: #f59e0b; opacity: 0.5; }
+
+    /* Toolbar */
+    #toolbar {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    #toolbar button {
+      padding: 8px 12px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #aaa;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    #toolbar button:hover {
+      background: #252525;
+      color: white;
+    }
+
+    /* View Groups */
+    .view-group {
+      position: absolute;
+      border: 1px dashed #333;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .view-group-label {
+      position: absolute;
+      top: -10px;
+      left: 16px;
+      background: #0a0a0a;
+      padding: 2px 8px;
+      font-size: 10px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Zoom */
+    #zoom-indicator {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-size: 11px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <h1>Komponenten</h1>
+    </div>
+    <div id="tree"></div>
+  </div>
+
+  <div id="canvas-area">
+    <div id="canvas">
+      <svg id="edges"></svg>
+    </div>
+  </div>
+
+  <div id="toolbar">
+    <button onclick="zoomIn()">+</button>
+    <button onclick="zoomOut()">−</button>
+    <button onclick="resetView()">Reset</button>
+    <button onclick="autoLayout()">Layout</button>
+  </div>
+
+  <div id="legend">
+    <div class="legend-item">
+      <div class="legend-line nav"></div>
+      Navigation
+    </div>
+    <div class="legend-item">
+      <div class="legend-line dep"></div>
+      Dependency
+    </div>
+    <div class="legend-item">
+      <div class="legend-line trigger"></div>
+      State Trigger
+    </div>
+  </div>
+
+  <div id="zoom-indicator">100%</div>
+
+  <script>
+    // ============================================
+    // Daten (würden aus AST extrahiert)
+    // ============================================
+
+    const appData = {
+      // Views/Screens
+      views: [
+        { id: 'login', name: 'Login', type: 'view' },
+        { id: 'dashboard', name: 'Dashboard', type: 'view' },
+        { id: 'settings', name: 'Settings', type: 'view' },
+      ],
+
+      // Komponenten mit States
+      components: [
+        {
+          id: 'login-form',
+          name: 'LoginForm',
+          view: 'login',
+          type: 'Form',
+          states: [
+            { name: 'default', trigger: null },
+            { name: 'loading', trigger: 'onsubmit' },
+            { name: 'error', trigger: 'onError' },
+          ]
+        },
+        {
+          id: 'login-btn',
+          name: 'LoginButton',
+          view: 'login',
+          type: 'Button',
+          states: [
+            { name: 'default', trigger: null },
+            { name: 'hover', trigger: 'hover' },
+            { name: 'disabled', trigger: 'form.loading' },
+          ]
+        },
+        {
+          id: 'sidenav',
+          name: 'SideNav',
+          view: 'dashboard',
+          type: 'SideNav',
+          states: [
+            { name: 'default', trigger: null },
+            { name: 'collapsed', trigger: 'toggle()' },
+          ]
+        },
+        {
+          id: 'nav-dashboard',
+          name: 'NavItem "Dashboard"',
+          view: 'dashboard',
+          type: 'NavItem',
+          states: [
+            { name: 'default', trigger: null },
+            { name: 'selected', trigger: 'exclusive()' },
+          ]
+        },
+        {
+          id: 'nav-settings',
+          name: 'NavItem "Settings"',
+          view: 'dashboard',
+          type: 'NavItem',
+          states: [
+            { name: 'default', trigger: null },
+            { name: 'selected', trigger: 'exclusive()' },
+          ]
+        },
+        {
+          id: 'user-menu',
+          name: 'UserMenu',
+          view: 'dashboard',
+          type: 'Menu',
+          states: [
+            { name: 'default', trigger: null },
+            { name: 'open', trigger: 'toggle()' },
+          ]
+        },
+        {
+          id: 'user-menu-btn',
+          name: 'MenuButton',
+          view: 'dashboard',
+          type: 'Button',
+          states: [
+            { name: 'default', trigger: null },
+            { name: 'active', trigger: 'UserMenu.open' },
+          ]
+        },
+        {
+          id: 'theme-switch',
+          name: 'ThemeSwitch',
+          view: 'settings',
+          type: 'Switch',
+          states: [
+            { name: 'off', trigger: null },
+            { name: 'on', trigger: 'toggle()' },
+          ]
+        },
+        {
+          id: 'save-btn',
+          name: 'SaveButton',
+          view: 'settings',
+          type: 'Button',
+          states: [
+            { name: 'default', trigger: null },
+            { name: 'hover', trigger: 'hover' },
+          ]
+        },
+      ],
+
+      // Navigation zwischen Views
+      navigation: [
+        { from: 'login-btn', to: 'dashboard', trigger: 'onclick', label: 'Login Success' },
+        { from: 'nav-dashboard', to: 'dashboard', trigger: 'onclick', label: 'navigate()' },
+        { from: 'nav-settings', to: 'settings', trigger: 'onclick', label: 'navigate()' },
+        { from: 'save-btn', to: 'dashboard', trigger: 'onclick', label: 'Back' },
+      ],
+
+      // Cross-Element Dependencies
+      dependencies: [
+        { from: 'user-menu', state: 'open', affects: 'user-menu-btn', targetState: 'active' },
+        { from: 'login-form', state: 'loading', affects: 'login-btn', targetState: 'disabled' },
+      ]
+    };
+
+    // ============================================
+    // State
+    // ============================================
+
+    let zoom = 1;
+    let panX = 50;
+    let panY = 50;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let selectedComponent = null;
+
+    const positions = new Map();
+
+    const canvas = document.getElementById('canvas');
+    const edgesSvg = document.getElementById('edges');
+    const container = document.getElementById('canvas-area');
+    const tree = document.getElementById('tree');
+
+    // ============================================
+    // Auto Layout
+    // ============================================
+
+    function autoLayout() {
+      const viewGroups = new Map();
+
+      // Gruppiere Komponenten nach View
+      appData.components.forEach(comp => {
+        if (!viewGroups.has(comp.view)) {
+          viewGroups.set(comp.view, []);
+        }
+        viewGroups.get(comp.view).push(comp);
+      });
+
+      // Layout pro View
+      let viewX = 0;
+      const viewGap = 100;
+      const nodeWidth = 200;
+      const nodeHeight = 120;
+      const nodeGap = 30;
+
+      viewGroups.forEach((components, viewId) => {
+        const cols = Math.ceil(Math.sqrt(components.length));
+
+        components.forEach((comp, idx) => {
+          const col = idx % cols;
+          const row = Math.floor(idx / cols);
+
+          positions.set(comp.id, {
+            x: viewX + col * (nodeWidth + nodeGap) + 40,
+            y: row * (nodeHeight + nodeGap) + 60
+          });
+        });
+
+        viewX += cols * (nodeWidth + nodeGap) + viewGap;
+      });
+
+      render();
+    }
+
+    // ============================================
+    // Render
+    // ============================================
+
+    function render() {
+      // Clear
+      canvas.querySelectorAll('.component-node, .view-group').forEach(n => n.remove());
+      edgesSvg.innerHTML = '';
+
+      // Render view groups
+      renderViewGroups();
+
+      // Render components
+      appData.components.forEach(comp => {
+        const pos = positions.get(comp.id);
+        if (pos) {
+          const node = createComponentNode(comp, pos);
+          canvas.appendChild(node);
+        }
+      });
+
+      // Render edges
+      renderEdges();
+
+      // Update tree
+      renderTree();
+
+      updateTransform();
+    }
+
+    function renderViewGroups() {
+      const viewBounds = new Map();
+
+      // Berechne Bounds pro View
+      appData.components.forEach(comp => {
+        const pos = positions.get(comp.id);
+        if (!pos) return;
+
+        if (!viewBounds.has(comp.view)) {
+          viewBounds.set(comp.view, { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
+        }
+
+        const bounds = viewBounds.get(comp.view);
+        bounds.minX = Math.min(bounds.minX, pos.x);
+        bounds.minY = Math.min(bounds.minY, pos.y);
+        bounds.maxX = Math.max(bounds.maxX, pos.x + 200);
+        bounds.maxY = Math.max(bounds.maxY, pos.y + 100);
+      });
+
+      // Render Groups
+      viewBounds.forEach((bounds, viewId) => {
+        const view = appData.views.find(v => v.id === viewId);
+        const padding = 30;
+
+        const group = document.createElement('div');
+        group.className = 'view-group';
+        group.style.left = `${bounds.minX - padding}px`;
+        group.style.top = `${bounds.minY - padding}px`;
+        group.style.width = `${bounds.maxX - bounds.minX + padding * 2}px`;
+        group.style.height = `${bounds.maxY - bounds.minY + padding * 2}px`;
+
+        const label = document.createElement('div');
+        label.className = 'view-group-label';
+        label.textContent = view?.name || viewId;
+        group.appendChild(label);
+
+        canvas.appendChild(group);
+      });
+    }
+
+    function createComponentNode(comp, pos) {
+      const node = document.createElement('div');
+      node.className = 'component-node';
+      node.dataset.id = comp.id;
+      node.style.left = `${pos.x}px`;
+      node.style.top = `${pos.y}px`;
+
+      if (selectedComponent === comp.id) {
+        node.classList.add('selected');
+      }
+
+      // Header
+      const header = document.createElement('div');
+      header.className = 'component-header';
+      header.innerHTML = `
+        <div class="component-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+          </svg>
+        </div>
+        <span class="component-name">${comp.name}</span>
+        <span class="component-type">${comp.type}</span>
+      `;
+      node.appendChild(header);
+
+      // States
+      if (comp.states && comp.states.length > 0) {
+        const statesList = document.createElement('div');
+        statesList.className = 'states-list';
+
+        comp.states.forEach(state => {
+          const stateItem = document.createElement('div');
+          stateItem.className = 'state-item';
+          stateItem.innerHTML = `
+            <div class="state-dot ${state.name}"></div>
+            <span class="state-name">${state.name}</span>
+            ${state.trigger ? `<span class="state-trigger">${state.trigger}</span>` : ''}
+          `;
+          statesList.appendChild(stateItem);
+        });
+
+        node.appendChild(statesList);
+      }
+
+      // Events
+      node.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectComponent(comp.id);
+      });
+
+      // Drag
+      node.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.state-item')) return;
+        startDragNode(comp.id, e);
+      });
+
+      return node;
+    }
+
+    function renderEdges() {
+      // Navigation edges
+      appData.navigation.forEach(nav => {
+        const fromPos = positions.get(nav.from);
+
+        // Finde View-Position für "to"
+        const toComponents = appData.components.filter(c => c.view === nav.to);
+        if (toComponents.length === 0 || !fromPos) return;
+
+        // Finde erste Komponente in Ziel-View
+        const toPos = positions.get(toComponents[0].id);
+        if (!toPos) return;
+
+        renderCurvedEdge(fromPos, toPos, 'edge-navigation', nav.label);
+      });
+
+      // Dependency edges
+      appData.dependencies.forEach(dep => {
+        const fromPos = positions.get(dep.from);
+        const toPos = positions.get(dep.affects);
+        if (!fromPos || !toPos) return;
+
+        renderCurvedEdge(fromPos, toPos, 'edge-dependency', `${dep.state} → ${dep.targetState}`);
+      });
+    }
+
+    function renderCurvedEdge(from, to, className, label) {
+      const fromX = from.x + 200;
+      const fromY = from.y + 50;
+      const toX = to.x;
+      const toY = to.y + 50;
+
+      const midX = (fromX + toX) / 2;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`);
+      path.setAttribute('class', className);
+      edgesSvg.appendChild(path);
+
+      if (label) {
+        const labelEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        labelEl.setAttribute('x', midX);
+        labelEl.setAttribute('y', (fromY + toY) / 2 - 6);
+        labelEl.setAttribute('text-anchor', 'middle');
+        labelEl.setAttribute('class', 'edge-label');
+        labelEl.textContent = label;
+        edgesSvg.appendChild(labelEl);
+      }
+    }
+
+    function renderTree() {
+      tree.innerHTML = '';
+
+      appData.views.forEach(view => {
+        const group = document.createElement('div');
+        group.className = 'tree-group';
+
+        const label = document.createElement('div');
+        label.className = 'tree-group-label';
+        label.textContent = view.name;
+        group.appendChild(label);
+
+        const components = appData.components.filter(c => c.view === view.id);
+        components.forEach(comp => {
+          const item = document.createElement('div');
+          item.className = 'tree-item' + (selectedComponent === comp.id ? ' selected' : '');
+          item.innerHTML = `
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+            </svg>
+            ${comp.name}
+          `;
+          item.addEventListener('click', () => {
+            selectComponent(comp.id);
+            panToComponent(comp.id);
+          });
+          group.appendChild(item);
+        });
+
+        tree.appendChild(group);
+      });
+    }
+
+    // ============================================
+    // Selection & Interaction
+    // ============================================
+
+    function selectComponent(id) {
+      selectedComponent = id;
+      render();
+    }
+
+    function panToComponent(id) {
+      const pos = positions.get(id);
+      if (!pos) return;
+
+      const rect = container.getBoundingClientRect();
+      panX = rect.width / 2 - pos.x * zoom - 100;
+      panY = rect.height / 2 - pos.y * zoom - 50;
+      updateTransform();
+    }
+
+    function startDragNode(id, e) {
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startPos = { ...positions.get(id) };
+
+      function onMove(e) {
+        const dx = (e.clientX - startX) / zoom;
+        const dy = (e.clientY - startY) / zoom;
+        positions.set(id, {
+          x: startPos.x + dx,
+          y: startPos.y + dy
+        });
+        render();
+      }
+
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+
+    // ============================================
+    // Pan & Zoom
+    // ============================================
+
+    function updateTransform() {
+      canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+      document.getElementById('zoom-indicator').textContent = `${Math.round(zoom * 100)}%`;
+    }
+
+    container.addEventListener('mousedown', (e) => {
+      if (e.target !== container && e.target !== canvas && !e.target.closest('svg')) return;
+      isDragging = true;
+      dragStartX = e.clientX - panX;
+      dragStartY = e.clientY - panY;
+      canvas.classList.add('dragging');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      panX = e.clientX - dragStartX;
+      panY = e.clientY - dragStartY;
+      updateTransform();
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      canvas.classList.remove('dragging');
+    });
+
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = Math.max(0.2, Math.min(3, zoom * delta));
+
+      const rect = container.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      panX = mouseX - (mouseX - panX) * (newZoom / zoom);
+      panY = mouseY - (mouseY - panY) * (newZoom / zoom);
+
+      zoom = newZoom;
+      updateTransform();
+    });
+
+    function zoomIn() { zoom = Math.min(3, zoom * 1.2); updateTransform(); }
+    function zoomOut() { zoom = Math.max(0.2, zoom / 1.2); updateTransform(); }
+    function resetView() { zoom = 1; panX = 50; panY = 50; updateTransform(); }
+
+    // Deselect
+    canvas.addEventListener('click', (e) => {
+      if (e.target === canvas || e.target.closest('svg')) {
+        selectedComponent = null;
+        render();
+      }
+    });
+
+    // ============================================
+    // Init
+    // ============================================
+
+    autoLayout();
+  </script>
+</body>
+</html>

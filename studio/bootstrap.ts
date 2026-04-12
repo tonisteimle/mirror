@@ -812,27 +812,34 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       })
     },
 
-    simulateDragTo: (params: {
-      componentName: string
-      cursor: { x: number; y: number }
-      properties?: string
-      textContent?: string
-    }) => {
+    simulateDragTo: (cursor: { x: number; y: number }) => {
+      // Create a generic source for position calculation
       const source = {
         type: 'palette' as const,
-        componentName: params.componentName,
-        properties: params.properties,
-        textContent: params.textContent,
+        componentName: 'Frame',
       }
-      return dragDropV2.controller.simulateDragTo(source, params.cursor)
+      return dragDropV2.controller.simulateDragTo(source, cursor)
     },
 
     getState: () => {
-      return dragDropV2.controller.getState()
+      const state = dragDropV2.controller.getState()
+      const context = dragDropV2.controller.getContext()
+      return {
+        isActive: state.type === 'dragging' || state.type === 'over-target',
+        source: context.source || null,
+        currentTarget: state.type === 'over-target' ? state.target : null,
+        currentResult: state.type === 'over-target' ? state.result : null,
+      }
     },
 
     getVisualState: () => {
-      return dragDropV2.controller.getVisualState()
+      const visualState = dragDropV2.controller.getVisualState()
+      return {
+        indicatorVisible: visualState.hasIndicator,
+        indicatorRect: null, // Would need to query DOM for actual rect
+        parentOutlineVisible: visualState.hasOutline,
+        parentOutlineRect: null, // Would need to query DOM for actual rect
+      }
     },
   } as unknown as DragDropSystem
 

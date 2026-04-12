@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireflow & User Journey</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    #header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: #111;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+      z-index: 100;
+    }
+
+    #header h1 {
+      font-size: 14px;
+      font-weight: 500;
+      color: #888;
+    }
+
+    .mode-switch {
+      display: flex;
+      background: #1a1a1a;
+      border-radius: 6px;
+      padding: 3px;
+      margin-left: 24px;
+    }
+
+    .mode-btn {
+      padding: 6px 14px;
+      border: none;
+      background: transparent;
+      color: #888;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: #2271C1;
+      color: white;
+    }
+
+    .journey-select {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .journey-select label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .journey-select select {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* Canvas */
+    #canvas-area {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+    }
+
+    #canvas {
+      position: absolute;
+      transform-origin: 0 0;
+      cursor: grab;
+    }
+
+    #canvas.dragging { cursor: grabbing; }
+
+    /* Screen Thumbnail */
+    .screen-thumb {
+      position: absolute;
+      width: 140px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .screen-thumb:hover {
+      border-color: #444;
+      transform: scale(1.02);
+    }
+
+    .screen-thumb.highlighted {
+      border-color: #2271C1;
+      box-shadow: 0 0 0 2px rgba(34, 113, 193, 0.3);
+    }
+
+    .screen-thumb.dialog {
+      border-style: dashed;
+    }
+
+    .screen-thumb.dialog .thumb-label {
+      background: #1a1a2a;
+    }
+
+    .thumb-preview {
+      height: 90px;
+      background: #111;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .thumb-label {
+      padding: 8px 10px;
+      background: #222;
+      font-size: 11px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .thumb-label .type-badge {
+      font-size: 9px;
+      color: #666;
+      background: #1a1a1a;
+      padding: 2px 5px;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+
+    /* Mini wireframe elements */
+    .mini-bar { height: 8px; background: #2a2a2a; border-radius: 2px; }
+    .mini-text { height: 4px; background: #333; border-radius: 1px; margin: 2px 0; }
+    .mini-text.w50 { width: 50%; }
+    .mini-text.w70 { width: 70%; }
+    .mini-text.w30 { width: 30%; }
+    .mini-btn { height: 10px; width: 40px; background: #2271C1; border-radius: 2px; margin-top: auto; }
+    .mini-input { height: 8px; background: #0a0a0a; border: 1px solid #333; border-radius: 2px; }
+    .mini-row { display: flex; gap: 4px; }
+    .mini-card { flex: 1; height: 30px; background: #252525; border-radius: 3px; }
+
+    /* Edges */
+    #edges {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .edge {
+      fill: none;
+      stroke: #444;
+      stroke-width: 1.5;
+    }
+
+    .edge.journey {
+      stroke: #2271C1;
+      stroke-width: 2;
+    }
+
+    .edge.inactive {
+      stroke: #282828;
+      stroke-width: 1;
+    }
+
+    .edge-label {
+      font-size: 9px;
+      fill: #555;
+      font-family: inherit;
+    }
+
+    .edge-label.journey {
+      fill: #2271C1;
+    }
+
+    /* Journey step numbers */
+    .journey-step {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #2271C1;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Zoom */
+    #zoom-controls {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      display: flex;
+      gap: 4px;
+    }
+
+    #zoom-controls button {
+      width: 32px;
+      height: 32px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #888;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #zoom-controls button:hover {
+      background: #252525;
+      color: white;
+    }
+
+    #zoom-indicator {
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      font-size: 11px;
+      color: #666;
+    }
+
+    /* Add button */
+    #add-menu {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    #add-menu button {
+      padding: 8px 14px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #add-menu button:hover {
+      background: #252525;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <h1>Wireflow</h1>
+
+    <div class="mode-switch">
+      <button class="mode-btn active" onclick="setMode('wireflow')">Alle Pfade</button>
+      <button class="mode-btn" onclick="setMode('journey')">User Journey</button>
+    </div>
+
+    <div class="journey-select" id="journey-selector" style="display: none;">
+      <label>Journey:</label>
+      <select onchange="selectJourney(this.value)">
+        <option value="purchase">Produkt kaufen</option>
+        <option value="signup">Registrierung</option>
+        <option value="settings">Einstellungen ändern</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="canvas-area">
+    <div id="canvas">
+      <svg id="edges"></svg>
+    </div>
+  </div>
+
+  <div id="add-menu">
+    <button onclick="addScreen()">+ Screen</button>
+    <button onclick="addDialog()">+ Dialog</button>
+  </div>
+
+  <div id="zoom-controls">
+    <button onclick="zoomOut()">−</button>
+    <div id="zoom-indicator">100%</div>
+    <button onclick="zoomIn()">+</button>
+  </div>
+
+  <script>
+    // ============================================
+    // Data
+    // ============================================
+
+    const screens = [
+      { id: 'home', name: 'Home', type: 'screen', template: 'dashboard' },
+      { id: 'products', name: 'Products', type: 'screen', template: 'list' },
+      { id: 'product-detail', name: 'Product Detail', type: 'screen', template: 'detail' },
+      { id: 'cart', name: 'Cart', type: 'screen', template: 'list' },
+      { id: 'checkout', name: 'Checkout', type: 'screen', template: 'form' },
+      { id: 'confirm-dialog', name: 'Confirm Order', type: 'dialog', template: 'dialog' },
+      { id: 'success', name: 'Order Success', type: 'screen', template: 'success' },
+      { id: 'login', name: 'Login', type: 'screen', template: 'form' },
+      { id: 'signup', name: 'Sign Up', type: 'screen', template: 'form' },
+      { id: 'settings', name: 'Settings', type: 'screen', template: 'form' },
+    ];
+
+    const connections = [
+      { from: 'home', to: 'products', label: 'Browse' },
+      { from: 'home', to: 'cart', label: 'View Cart' },
+      { from: 'home', to: 'login', label: 'Login' },
+      { from: 'home', to: 'settings', label: 'Settings' },
+      { from: 'products', to: 'product-detail', label: 'Select' },
+      { from: 'product-detail', to: 'cart', label: 'Add to Cart' },
+      { from: 'cart', to: 'checkout', label: 'Checkout' },
+      { from: 'checkout', to: 'confirm-dialog', label: 'Submit' },
+      { from: 'confirm-dialog', to: 'success', label: 'Confirm' },
+      { from: 'confirm-dialog', to: 'checkout', label: 'Cancel' },
+      { from: 'login', to: 'home', label: 'Success' },
+      { from: 'login', to: 'signup', label: 'Sign Up' },
+      { from: 'signup', to: 'home', label: 'Success' },
+      { from: 'settings', to: 'home', label: 'Save' },
+    ];
+
+    const journeys = {
+      purchase: {
+        name: 'Produkt kaufen',
+        steps: ['home', 'products', 'product-detail', 'cart', 'checkout', 'confirm-dialog', 'success']
+      },
+      signup: {
+        name: 'Registrierung',
+        steps: ['home', 'login', 'signup', 'home']
+      },
+      settings: {
+        name: 'Einstellungen ändern',
+        steps: ['home', 'settings', 'home']
+      }
+    };
+
+    // ============================================
+    // State
+    // ============================================
+
+    let mode = 'wireflow'; // 'wireflow' | 'journey'
+    let currentJourney = 'purchase';
+    let zoom = 1;
+    let panX = 50;
+    let panY = 50;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+
+    const positions = new Map();
+
+    const canvas = document.getElementById('canvas');
+    const edgesSvg = document.getElementById('edges');
+    const container = document.getElementById('canvas-area');
+
+    // ============================================
+    // Templates
+    // ============================================
+
+    const templates = {
+      dashboard: `
+        <div class="mini-bar"></div>
+        <div class="mini-row" style="margin-top: 6px;">
+          <div class="mini-card"></div>
+          <div class="mini-card"></div>
+        </div>
+        <div class="mini-text w70"></div>
+      `,
+      list: `
+        <div class="mini-bar"></div>
+        <div class="mini-text w70"></div>
+        <div class="mini-text w70"></div>
+        <div class="mini-text w50"></div>
+      `,
+      detail: `
+        <div class="mini-card" style="height: 40px;"></div>
+        <div class="mini-text w50"></div>
+        <div class="mini-text w70"></div>
+        <div class="mini-btn"></div>
+      `,
+      form: `
+        <div class="mini-text w30"></div>
+        <div class="mini-input"></div>
+        <div class="mini-text w30"></div>
+        <div class="mini-input"></div>
+        <div class="mini-btn"></div>
+      `,
+      dialog: `
+        <div class="mini-text w50" style="margin: 8px auto 4px;"></div>
+        <div class="mini-text w70" style="margin: 0 auto;"></div>
+        <div class="mini-row" style="justify-content: center; margin-top: 8px;">
+          <div class="mini-btn" style="background: #333;"></div>
+          <div class="mini-btn"></div>
+        </div>
+      `,
+      success: `
+        <div style="width: 24px; height: 24px; background: #10b981; border-radius: 50%; margin: 10px auto;"></div>
+        <div class="mini-text w50" style="margin: 0 auto;"></div>
+        <div class="mini-btn" style="margin: 8px auto 0;"></div>
+      `
+    };
+
+    // ============================================
+    // Layout
+    // ============================================
+
+    function autoLayout() {
+      // Simple force-directed-ish layout
+      const cols = 4;
+      const width = 160;
+      const height = 140;
+      const gap = 40;
+
+      screens.forEach((screen, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        positions.set(screen.id, {
+          x: col * (width + gap),
+          y: row * (height + gap)
+        });
+      });
+
+      render();
+    }
+
+    // ============================================
+    // Render
+    // ============================================
+
+    function render() {
+      canvas.querySelectorAll('.screen-thumb, .journey-step').forEach(n => n.remove());
+      edgesSvg.innerHTML = '';
+
+      const journeySteps = mode === 'journey' ? journeys[currentJourney].steps : [];
+
+      // Render edges first (behind nodes)
+      connections.forEach(conn => {
+        const fromPos = positions.get(conn.from);
+        const toPos = positions.get(conn.to);
+        if (!fromPos || !toPos) return;
+
+        let edgeClass = 'edge';
+        let labelClass = 'edge-label';
+
+        if (mode === 'journey') {
+          const fromIdx = journeySteps.indexOf(conn.from);
+          const toIdx = journeySteps.indexOf(conn.to);
+
+          if (fromIdx !== -1 && toIdx === fromIdx + 1) {
+            edgeClass = 'edge journey';
+            labelClass = 'edge-label journey';
+          } else {
+            edgeClass = 'edge inactive';
+          }
+        }
+
+        renderEdge(fromPos, toPos, conn.label, edgeClass, labelClass);
+      });
+
+      // Render screens
+      screens.forEach(screen => {
+        const pos = positions.get(screen.id);
+        if (!pos) return;
+
+        const isInJourney = journeySteps.includes(screen.id);
+        const node = createScreenNode(screen, pos, mode === 'journey' && isInJourney);
+        canvas.appendChild(node);
+
+        // Journey step number
+        if (mode === 'journey' && isInJourney) {
+          const stepNum = journeySteps.indexOf(screen.id) + 1;
+          const step = document.createElement('div');
+          step.className = 'journey-step';
+          step.textContent = stepNum;
+          step.style.left = `${pos.x}px`;
+          step.style.top = `${pos.y}px`;
+          canvas.appendChild(step);
+        }
+      });
+
+      updateTransform();
+    }
+
+    function createScreenNode(screen, pos, highlighted) {
+      const node = document.createElement('div');
+      node.className = 'screen-thumb' + (screen.type === 'dialog' ? ' dialog' : '') + (highlighted ? ' highlighted' : '');
+      node.dataset.id = screen.id;
+      node.style.left = `${pos.x}px`;
+      node.style.top = `${pos.y}px`;
+
+      node.innerHTML = `
+        <div class="thumb-preview">
+          ${templates[screen.template] || templates.dashboard}
+        </div>
+        <div class="thumb-label">
+          ${screen.name}
+          <span class="type-badge">${screen.type}</span>
+        </div>
+      `;
+
+      // Drag
+      node.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        startDragNode(screen.id, e);
+      });
+
+      return node;
+    }
+
+    function renderEdge(from, to, label, edgeClass, labelClass) {
+      const fromX = from.x + 140;
+      const fromY = from.y + 55;
+      const toX = to.x;
+      const toY = to.y + 55;
+
+      const dx = toX - fromX;
+      const dy = toY - fromY;
+
+      // Curved path
+      const midX = fromX + dx * 0.5;
+      const ctrl1 = { x: midX, y: fromY };
+      const ctrl2 = { x: midX, y: toY };
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M ${fromX} ${fromY} C ${ctrl1.x} ${ctrl1.y}, ${ctrl2.x} ${ctrl2.y}, ${toX} ${toY}`);
+      path.setAttribute('class', edgeClass);
+      edgesSvg.appendChild(path);
+
+      // Label
+      if (label && !edgeClass.includes('inactive')) {
+        const t = 0.5;
+        const labelX = Math.pow(1-t,3)*fromX + 3*Math.pow(1-t,2)*t*ctrl1.x + 3*(1-t)*t*t*ctrl2.x + t*t*t*toX;
+        const labelY = Math.pow(1-t,3)*fromY + 3*Math.pow(1-t,2)*t*ctrl1.y + 3*(1-t)*t*t*ctrl2.y + t*t*t*toY;
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', labelX);
+        text.setAttribute('y', labelY - 6);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('class', labelClass);
+        text.textContent = label;
+        edgesSvg.appendChild(text);
+      }
+    }
+
+    // ============================================
+    // Interaction
+    // ============================================
+
+    function setMode(newMode) {
+      mode = newMode;
+      document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.mode-btn:${newMode === 'wireflow' ? 'first' : 'last'}-child`).classList.add('active');
+      document.getElementById('journey-selector').style.display = newMode === 'journey' ? 'flex' : 'none';
+      render();
+    }
+
+    function selectJourney(journeyId) {
+      currentJourney = journeyId;
+      render();
+    }
+
+    function startDragNode(id, e) {
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startPos = { ...positions.get(id) };
+
+      function onMove(e) {
+        const dx = (e.clientX - startX) / zoom;
+        const dy = (e.clientY - startY) / zoom;
+        positions.set(id, { x: startPos.x + dx, y: startPos.y + dy });
+        render();
+      }
+
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+
+    function addScreen() {
+      const name = prompt('Screen Name:', 'New Screen');
+      if (!name) return;
+
+      const id = name.toLowerCase().replace(/\s+/g, '-');
+      screens.push({ id, name, type: 'screen', template: 'dashboard' });
+      positions.set(id, { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 });
+      render();
+    }
+
+    function addDialog() {
+      const name = prompt('Dialog Name:', 'New Dialog');
+      if (!name) return;
+
+      const id = name.toLowerCase().replace(/\s+/g, '-');
+      screens.push({ id, name, type: 'dialog', template: 'dialog' });
+      positions.set(id, { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 });
+      render();
+    }
+
+    // ============================================
+    // Pan & Zoom
+    // ============================================
+
+    function updateTransform() {
+      canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+      document.getElementById('zoom-indicator').textContent = `${Math.round(zoom * 100)}%`;
+    }
+
+    container.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.screen-thumb')) return;
+      isDragging = true;
+      dragStartX = e.clientX - panX;
+      dragStartY = e.clientY - panY;
+      canvas.classList.add('dragging');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      panX = e.clientX - dragStartX;
+      panY = e.clientY - dragStartY;
+      updateTransform();
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      canvas.classList.remove('dragging');
+    });
+
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = Math.max(0.3, Math.min(2, zoom * delta));
+
+      const rect = container.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      panX = mouseX - (mouseX - panX) * (newZoom / zoom);
+      panY = mouseY - (mouseY - panY) * (newZoom / zoom);
+
+      zoom = newZoom;
+      updateTransform();
+    });
+
+    function zoomIn() { zoom = Math.min(2, zoom * 1.2); updateTransform(); }
+    function zoomOut() { zoom = Math.max(0.3, zoom / 1.2); updateTransform(); }
+
+    // ============================================
+    // Init
+    // ============================================
+
+    autoLayout();
+  </script>
+</body>
+</html>

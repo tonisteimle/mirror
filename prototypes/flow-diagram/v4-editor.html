@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireflow Editor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* Left: Canvas */
+    #canvas-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #222;
+    }
+
+    #toolbar {
+      height: 48px;
+      background: #111;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+    }
+
+    .toolbar-btn {
+      padding: 6px 12px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #ccc;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toolbar-btn:hover {
+      background: #252525;
+      color: white;
+    }
+
+    .toolbar-btn.active {
+      background: #2271C1;
+      border-color: #2271C1;
+      color: white;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 24px;
+      background: #333;
+      margin: 0 8px;
+    }
+
+    .toolbar-hint {
+      font-size: 11px;
+      color: #666;
+      margin-left: auto;
+    }
+
+    #canvas-area {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #canvas {
+      position: absolute;
+      width: 3000px;
+      height: 3000px;
+      transform-origin: 0 0;
+      cursor: grab;
+    }
+
+    #canvas.dragging { cursor: grabbing; }
+    #canvas.connecting { cursor: crosshair; }
+
+    #edges {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    #edges path {
+      pointer-events: stroke;
+      cursor: pointer;
+    }
+
+    #edges path:hover {
+      stroke: #ef4444 !important;
+    }
+
+    /* Screen nodes */
+    .screen-node {
+      position: absolute;
+      width: 160px;
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 8px;
+      cursor: move;
+      user-select: none;
+    }
+
+    .screen-node:hover {
+      border-color: #444;
+    }
+
+    .screen-node.selected {
+      border-color: #2271C1;
+      box-shadow: 0 0 0 2px rgba(34, 113, 193, 0.3);
+    }
+
+    .screen-node.dialog {
+      border-style: dashed;
+    }
+
+    .screen-node.connect-target {
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+    }
+
+    .screen-header {
+      padding: 8px 10px;
+      background: #252525;
+      border-radius: 6px 6px 0 0;
+    }
+
+    .screen-name {
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+
+    .screen-preview {
+      height: 70px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .preview-line {
+      height: 5px;
+      background: #333;
+      border-radius: 2px;
+    }
+
+    .preview-line.short { width: 60%; }
+    .preview-line.medium { width: 80%; }
+    .preview-line.btn { width: 40%; background: #2271C1; }
+
+    /* Tooltip for description */
+    .screen-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #ccc;
+      max-width: 200px;
+      white-space: normal;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 100;
+    }
+
+    .screen-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #444;
+    }
+
+    .screen-node:hover .screen-tooltip {
+      opacity: 1;
+    }
+
+    .screen-connect-handle {
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      background: #2271C1;
+      border: 2px solid #1a1a1a;
+      border-radius: 50%;
+      cursor: crosshair;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .screen-node:hover .screen-connect-handle {
+      opacity: 1;
+    }
+
+    /* Edge labels */
+    .edge-label {
+      font-size: 10px;
+      fill: #888;
+    }
+
+    /* Right: Code Panel */
+    #code-panel {
+      width: 380px;
+      display: flex;
+      flex-direction: column;
+      background: #111;
+    }
+
+    #code-header {
+      height: 48px;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+    }
+
+    #code-header h2 {
+      font-size: 12px;
+      font-weight: 500;
+      color: #888;
+    }
+
+    #copy-btn {
+      margin-left: auto;
+      padding: 5px 10px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #888;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    #copy-btn:hover {
+      background: #252525;
+      color: white;
+    }
+
+    #code-output {
+      flex: 1;
+      padding: 12px;
+      overflow: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      color: #ccc;
+    }
+
+    .code-comment { color: #666; }
+    .code-component { color: #7c3aed; }
+    .code-property { color: #2271C1; }
+    .code-string { color: #10b981; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      width: 320px;
+    }
+
+    .modal h3 {
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .modal-field {
+      margin-bottom: 12px;
+    }
+
+    .modal-field label {
+      display: block;
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .modal-field input,
+    .modal-field textarea,
+    .modal-field select {
+      width: 100%;
+      padding: 8px 10px;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .modal-field textarea {
+      height: 60px;
+      resize: none;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .modal-btn.cancel {
+      background: #333;
+      color: #ccc;
+    }
+
+    .modal-btn.primary {
+      background: #2271C1;
+      color: white;
+    }
+
+    /* Zoom controls */
+    #zoom-controls {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      display: flex;
+      gap: 4px;
+    }
+
+    #zoom-controls button {
+      width: 28px;
+      height: 28px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #888;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #zoom-controls button:hover {
+      background: #252525;
+      color: white;
+    }
+
+    #zoom-indicator {
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      font-size: 10px;
+      color: #666;
+    }
+
+    /* Instructions */
+    #instructions {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 11px;
+      color: #888;
+      display: flex;
+      gap: 16px;
+    }
+
+    #instructions kbd {
+      background: #333;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-panel">
+    <div id="toolbar">
+      <button class="toolbar-btn" onclick="openAddModal('screen')">+ Screen</button>
+      <button class="toolbar-btn" onclick="openAddModal('dialog')">+ Dialog</button>
+      <div class="toolbar-divider"></div>
+      <button class="toolbar-btn" id="connect-mode-btn" onclick="toggleConnectMode()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        Verbinden
+      </button>
+      <span class="toolbar-hint" id="toolbar-hint"></span>
+    </div>
+
+    <div id="canvas-area">
+      <div id="canvas">
+        <svg id="edges"></svg>
+      </div>
+    </div>
+
+    <div id="zoom-controls">
+      <button onclick="zoomOut()">−</button>
+      <div id="zoom-indicator">100%</div>
+      <button onclick="zoomIn()">+</button>
+    </div>
+
+    <div id="instructions">
+      <span><kbd>Doppelklick</kbd> Bearbeiten</span>
+      <span><kbd>Delete</kbd> Löschen</span>
+      <span><kbd>Drag</kbd> vom Punkt → Verbinden</span>
+    </div>
+  </div>
+
+  <div id="code-panel">
+    <div id="code-header">
+      <h2>Generated Mirror Code</h2>
+      <button id="copy-btn" onclick="copyCode()">Copy</button>
+    </div>
+    <div id="code-output"></div>
+  </div>
+
+  <!-- Modal for adding/editing -->
+  <div class="modal-overlay" id="modal" style="display: none;">
+    <div class="modal">
+      <h3 id="modal-title">Screen hinzufügen</h3>
+      <div class="modal-field">
+        <label>Name</label>
+        <input type="text" id="modal-name" placeholder="z.B. ProductList">
+      </div>
+      <div class="modal-field">
+        <label>Beschreibung (optional, wird als AI-Prompt verwendet)</label>
+        <textarea id="modal-desc" placeholder="z.B. Zeigt alle Produkte als Grid mit Bild, Name und Preis. Filter-Leiste oben."></textarea>
+      </div>
+      <div class="modal-field" id="modal-type-field">
+        <label>Typ</label>
+        <select id="modal-type">
+          <option value="screen">Screen</option>
+          <option value="dialog">Dialog</option>
+        </select>
+      </div>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeModal()">Abbrechen</button>
+        <button class="modal-btn primary" onclick="saveModal()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for connection label -->
+  <div class="modal-overlay" id="connection-modal" style="display: none;">
+    <div class="modal">
+      <h3>Verbindung beschriften</h3>
+      <div class="modal-field">
+        <label>Trigger / Action</label>
+        <input type="text" id="connection-label" placeholder="z.B. Kaufen, Abbrechen, Submit">
+      </div>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeConnectionModal()">Abbrechen</button>
+        <button class="modal-btn primary" onclick="saveConnectionLabel()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // State
+    // ============================================
+
+    let screens = [];
+    let connections = [];
+    let selectedId = null;
+    let connectMode = false;
+    let connectFrom = null;
+    let editingId = null;
+    let pendingConnection = null;
+
+    let nextId = 1;
+
+    // Pan & zoom
+    let scale = 1;
+    let panX = 100;
+    let panY = 100;
+    let isPanning = false;
+    let startPan = { x: 0, y: 0 };
+
+    // Drag
+    let isDragging = false;
+    let dragNode = null;
+    let dragOffset = { x: 0, y: 0 };
+
+    // ============================================
+    // Canvas & Pan/Zoom
+    // ============================================
+
+    const canvas = document.getElementById('canvas');
+    const canvasArea = document.getElementById('canvas-area');
+    const edgesSvg = document.getElementById('edges');
+
+    function updateCanvasTransform() {
+      canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+      document.getElementById('zoom-indicator').textContent = Math.round(scale * 100) + '%';
+    }
+
+    function zoomIn() {
+      scale = Math.min(2, scale + 0.1);
+      updateCanvasTransform();
+    }
+
+    function zoomOut() {
+      scale = Math.max(0.25, scale - 0.1);
+      updateCanvasTransform();
+    }
+
+    canvasArea.addEventListener('wheel', e => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.05 : 0.05;
+      scale = Math.max(0.25, Math.min(2, scale + delta));
+      updateCanvasTransform();
+    });
+
+    canvasArea.addEventListener('mousedown', e => {
+      if (e.target === canvas || e.target === canvasArea || e.target === edgesSvg) {
+        if (e.button === 0 && !connectMode) {
+          isPanning = true;
+          startPan = { x: e.clientX - panX, y: e.clientY - panY };
+          canvas.classList.add('dragging');
+
+          // Deselect
+          if (selectedId) {
+            selectedId = null;
+            render();
+          }
+        }
+      }
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (isPanning) {
+        panX = e.clientX - startPan.x;
+        panY = e.clientY - startPan.y;
+        updateCanvasTransform();
+      }
+
+      if (isDragging && dragNode) {
+        const rect = canvasArea.getBoundingClientRect();
+        const x = (e.clientX - rect.left - panX) / scale - dragOffset.x;
+        const y = (e.clientY - rect.top - panY) / scale - dragOffset.y;
+
+        const screen = screens.find(s => s.id === dragNode);
+        if (screen) {
+          screen.x = Math.max(0, x);
+          screen.y = Math.max(0, y);
+          render();
+        }
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      isPanning = false;
+      isDragging = false;
+      dragNode = null;
+      canvas.classList.remove('dragging');
+    });
+
+    // ============================================
+    // Connect Mode
+    // ============================================
+
+    function toggleConnectMode() {
+      connectMode = !connectMode;
+      connectFrom = null;
+      document.getElementById('connect-mode-btn').classList.toggle('active', connectMode);
+      canvas.classList.toggle('connecting', connectMode);
+      updateHint();
+    }
+
+    function updateHint() {
+      const hint = document.getElementById('toolbar-hint');
+      if (connectMode) {
+        if (connectFrom) {
+          hint.textContent = 'Klicke auf Ziel-Screen';
+        } else {
+          hint.textContent = 'Klicke auf Start-Screen';
+        }
+      } else {
+        hint.textContent = '';
+      }
+    }
+
+    // ============================================
+    // Render
+    // ============================================
+
+    function render() {
+      // Clear nodes (keep SVG)
+      canvas.querySelectorAll('.screen-node').forEach(n => n.remove());
+
+      // Render screens
+      screens.forEach(screen => {
+        const node = document.createElement('div');
+        node.className = `screen-node ${screen.type}${screen.id === selectedId ? ' selected' : ''}`;
+        node.style.left = screen.x + 'px';
+        node.style.top = screen.y + 'px';
+        node.dataset.id = screen.id;
+
+        node.innerHTML = `
+          ${screen.description ? `<div class="screen-tooltip">${screen.description}</div>` : ''}
+          <div class="screen-header">
+            <span class="screen-name">${screen.name}</span>
+          </div>
+          <div class="screen-preview">
+            <div class="preview-line short"></div>
+            <div class="preview-line medium"></div>
+            <div class="preview-line"></div>
+            <div class="preview-line btn"></div>
+          </div>
+          <div class="screen-connect-handle"></div>
+        `;
+
+        // Events
+        node.addEventListener('mousedown', e => {
+          if (e.target.classList.contains('screen-connect-handle')) {
+            // Start connection
+            connectFrom = screen.id;
+            connectMode = true;
+            document.getElementById('connect-mode-btn').classList.add('active');
+            canvas.classList.add('connecting');
+            updateHint();
+            e.stopPropagation();
+            return;
+          }
+
+          if (connectMode) {
+            if (connectFrom && connectFrom !== screen.id) {
+              // Create connection
+              pendingConnection = { from: connectFrom, to: screen.id };
+              openConnectionModal();
+              connectFrom = null;
+              connectMode = false;
+              document.getElementById('connect-mode-btn').classList.remove('active');
+              canvas.classList.remove('connecting');
+              updateHint();
+            } else {
+              connectFrom = screen.id;
+              updateHint();
+            }
+            e.stopPropagation();
+            return;
+          }
+
+          // Start drag
+          e.stopPropagation();
+          selectedId = screen.id;
+          isDragging = true;
+          dragNode = screen.id;
+
+          const rect = canvasArea.getBoundingClientRect();
+          dragOffset.x = (e.clientX - rect.left - panX) / scale - screen.x;
+          dragOffset.y = (e.clientY - rect.top - panY) / scale - screen.y;
+
+          render();
+        });
+
+        node.addEventListener('dblclick', () => {
+          editingId = screen.id;
+          openEditModal(screen);
+        });
+
+        canvas.appendChild(node);
+      });
+
+      // Render edges
+      renderEdges();
+
+      // Update code
+      generateCode();
+    }
+
+    function renderEdges() {
+      edgesSvg.innerHTML = '';
+
+      connections.forEach((conn, idx) => {
+        const fromScreen = screens.find(s => s.id === conn.from);
+        const toScreen = screens.find(s => s.id === conn.to);
+        if (!fromScreen || !toScreen) return;
+
+        const fromX = fromScreen.x + 160; // Right edge
+        const fromY = fromScreen.y + 60;  // Center
+        const toX = toScreen.x;            // Left edge
+        const toY = toScreen.y + 60;
+
+        // Bezier curve
+        const midX = (fromX + toX) / 2;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', '#444');
+        path.setAttribute('stroke-width', '2');
+        path.dataset.index = idx;
+
+        path.addEventListener('click', () => {
+          if (confirm(`Verbindung "${conn.label || 'unlabeled'}" löschen?`)) {
+            connections.splice(idx, 1);
+            render();
+          }
+        });
+
+        edgesSvg.appendChild(path);
+
+        // Label
+        if (conn.label) {
+          const labelX = midX;
+          const labelY = (fromY + toY) / 2 - 8;
+
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', labelX);
+          text.setAttribute('y', labelY);
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('class', 'edge-label');
+          text.textContent = conn.label;
+          edgesSvg.appendChild(text);
+        }
+      });
+    }
+
+    // ============================================
+    // Modals
+    // ============================================
+
+    function openAddModal(type) {
+      editingId = null;
+      document.getElementById('modal-title').textContent = type === 'dialog' ? 'Dialog hinzufügen' : 'Screen hinzufügen';
+      document.getElementById('modal-name').value = '';
+      document.getElementById('modal-desc').value = '';
+      document.getElementById('modal-type').value = type;
+      document.getElementById('modal-type-field').style.display = 'none';
+      document.getElementById('modal').style.display = 'flex';
+      document.getElementById('modal-name').focus();
+    }
+
+    function openEditModal(screen) {
+      document.getElementById('modal-title').textContent = 'Bearbeiten';
+      document.getElementById('modal-name').value = screen.name;
+      document.getElementById('modal-desc').value = screen.description || '';
+      document.getElementById('modal-type').value = screen.type;
+      document.getElementById('modal-type-field').style.display = 'block';
+      document.getElementById('modal').style.display = 'flex';
+      document.getElementById('modal-name').focus();
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+      editingId = null;
+    }
+
+    function saveModal() {
+      const name = document.getElementById('modal-name').value.trim();
+      const desc = document.getElementById('modal-desc').value.trim();
+      const type = document.getElementById('modal-type').value;
+
+      if (!name) {
+        alert('Name ist erforderlich');
+        return;
+      }
+
+      if (editingId) {
+        // Edit existing
+        const screen = screens.find(s => s.id === editingId);
+        if (screen) {
+          screen.name = name;
+          screen.description = desc;
+          screen.type = type;
+        }
+      } else {
+        // Add new
+        const newScreen = {
+          id: 'screen-' + (nextId++),
+          name,
+          description: desc,
+          type,
+          x: 200 + (screens.length % 3) * 220,
+          y: 100 + Math.floor(screens.length / 3) * 180
+        };
+        screens.push(newScreen);
+      }
+
+      closeModal();
+      render();
+    }
+
+    function openConnectionModal() {
+      document.getElementById('connection-label').value = '';
+      document.getElementById('connection-modal').style.display = 'flex';
+      document.getElementById('connection-label').focus();
+    }
+
+    function closeConnectionModal() {
+      document.getElementById('connection-modal').style.display = 'none';
+      pendingConnection = null;
+    }
+
+    function saveConnectionLabel() {
+      const label = document.getElementById('connection-label').value.trim();
+      if (pendingConnection) {
+        connections.push({
+          from: pendingConnection.from,
+          to: pendingConnection.to,
+          label: label || null
+        });
+      }
+      closeConnectionModal();
+      render();
+    }
+
+    // ============================================
+    // Keyboard
+    // ============================================
+
+    document.addEventListener('keydown', e => {
+      // Close modals on Escape
+      if (e.key === 'Escape') {
+        if (document.getElementById('modal').style.display !== 'none') {
+          closeModal();
+        } else if (document.getElementById('connection-modal').style.display !== 'none') {
+          closeConnectionModal();
+        } else if (connectMode) {
+          connectMode = false;
+          connectFrom = null;
+          document.getElementById('connect-mode-btn').classList.remove('active');
+          canvas.classList.remove('connecting');
+          updateHint();
+        }
+      }
+
+      // Delete selected
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+
+        const screen = screens.find(s => s.id === selectedId);
+        if (screen && confirm(`"${screen.name}" löschen?`)) {
+          screens = screens.filter(s => s.id !== selectedId);
+          connections = connections.filter(c => c.from !== selectedId && c.to !== selectedId);
+          selectedId = null;
+          render();
+        }
+      }
+
+      // Enter to save modal
+      if (e.key === 'Enter') {
+        if (document.getElementById('modal').style.display !== 'none') {
+          saveModal();
+        } else if (document.getElementById('connection-modal').style.display !== 'none') {
+          saveConnectionLabel();
+        }
+      }
+    });
+
+    // ============================================
+    // Code Generation
+    // ============================================
+
+    function generateCode() {
+      const output = document.getElementById('code-output');
+
+      if (screens.length === 0) {
+        output.innerHTML = '<span class="code-comment">// Füge Screens hinzu um Code zu generieren</span>';
+        return;
+      }
+
+      let code = '';
+
+      // Group screens and dialogs
+      const screenList = screens.filter(s => s.type === 'screen');
+      const dialogList = screens.filter(s => s.type === 'dialog');
+
+      // Screens
+      if (screenList.length > 0) {
+        code += '<span class="code-comment">// ========================================\n';
+        code += '// Screens\n';
+        code += '// ========================================</span>\n\n';
+
+        screenList.forEach((screen, i) => {
+          const varName = toVarName(screen.name);
+
+          if (screen.description) {
+            code += `<span class="code-comment">// ${screen.description}</span>\n`;
+          }
+
+          code += `<span class="code-component">${varName}</span>: <span class="code-component">Frame</span> `;
+          code += `<span class="code-property">name</span> ${varName}`;
+          code += `, <span class="code-property">w</span> full, <span class="code-property">h</span> full`;
+          if (i > 0) {
+            code += `, <span class="code-property">hidden</span>`;
+          }
+          code += '\n';
+          code += `  <span class="code-comment">// TODO: Content</span>\n\n`;
+        });
+      }
+
+      // Dialogs
+      if (dialogList.length > 0) {
+        code += '<span class="code-comment">// ========================================\n';
+        code += '// Dialogs\n';
+        code += '// ========================================</span>\n\n';
+
+        dialogList.forEach(dialog => {
+          const varName = toVarName(dialog.name);
+
+          if (dialog.description) {
+            code += `<span class="code-comment">// ${dialog.description}</span>\n`;
+          }
+
+          code += `<span class="code-component">${varName}</span>: <span class="code-component">Dialog</span>\n`;
+          code += `  <span class="code-component">Trigger</span>: <span class="code-comment">// wird programmatisch geöffnet</span>\n`;
+          code += `  <span class="code-component">Content</span>: <span class="code-component">Frame</span> <span class="code-property">pad</span> 24, <span class="code-property">bg</span> #1a1a1a, <span class="code-property">rad</span> 12\n`;
+          code += `    <span class="code-comment">// TODO: Content</span>\n\n`;
+        });
+      }
+
+      // Navigation
+      if (connections.length > 0) {
+        code += '<span class="code-comment">// ========================================\n';
+        code += '// Navigation\n';
+        code += '// ========================================</span>\n\n';
+
+        // Group connections by source
+        const bySource = {};
+        connections.forEach(conn => {
+          if (!bySource[conn.from]) bySource[conn.from] = [];
+          bySource[conn.from].push(conn);
+        });
+
+        Object.entries(bySource).forEach(([fromId, conns]) => {
+          const fromScreen = screens.find(s => s.id === fromId);
+          if (!fromScreen) return;
+
+          code += `<span class="code-comment">// Von ${fromScreen.name}:</span>\n`;
+
+          conns.forEach(conn => {
+            const toScreen = screens.find(s => s.id === conn.to);
+            if (!toScreen) return;
+
+            const toVarNameStr = toVarName(toScreen.name);
+            const label = conn.label || 'Aktion';
+
+            if (toScreen.type === 'dialog') {
+              code += `<span class="code-component">Button</span> <span class="code-string">"${label}"</span>, <span class="code-property">show</span>(${toVarNameStr})\n`;
+            } else {
+              code += `<span class="code-component">Button</span> <span class="code-string">"${label}"</span>, <span class="code-property">navigate</span>(${toVarNameStr})\n`;
+            }
+          });
+          code += '\n';
+        });
+      }
+
+      output.innerHTML = code || '<span class="code-comment">// Füge Screens und Verbindungen hinzu</span>';
+    }
+
+    function toVarName(name) {
+      return name
+        .replace(/[^a-zA-Z0-9äöüÄÖÜß\s]/g, '')
+        .split(/\s+/)
+        .map((word, i) => {
+          if (i === 0) return word.charAt(0).toUpperCase() + word.slice(1);
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        })
+        .join('');
+    }
+
+    function copyCode() {
+      const code = document.getElementById('code-output').textContent;
+      navigator.clipboard.writeText(code);
+
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    }
+
+    // ============================================
+    // Init
+    // ============================================
+
+    // Add some example screens
+    screens = [
+      { id: 'screen-1', name: 'Home', description: 'Startseite mit Hero-Banner, Featured Products und Navigation', type: 'screen', x: 100, y: 100 },
+      { id: 'screen-2', name: 'Products', description: 'Produktliste als Grid mit Filter und Suche', type: 'screen', x: 350, y: 100 },
+      { id: 'screen-3', name: 'Product Detail', description: 'Einzelnes Produkt mit Bildern, Beschreibung und Add-to-Cart', type: 'screen', x: 600, y: 100 },
+    ];
+
+    connections = [
+      { from: 'screen-1', to: 'screen-2', label: 'Browse' },
+      { from: 'screen-2', to: 'screen-3', label: 'Select' },
+    ];
+
+    nextId = 4;
+
+    updateCanvasTransform();
+    render();
+  </script>
+</body>
+</html>

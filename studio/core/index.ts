@@ -25,3 +25,11 @@ export {
   type PipelineContext,
   type PipelineResult,
 } from './change-pipeline'
+export {
+  LayoutService,
+  createLayoutService,
+  getLayoutService,
+  setLayoutService,
+  type ElementLayout,
+  type LayoutReadOptions,
+} from './layout-service'

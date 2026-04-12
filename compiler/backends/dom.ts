@@ -946,17 +946,7 @@ class DOMGenerator {
       return
     }
     // Group 5: Overlays
-    // collapsible: migrated to zag-emitters.ts
-    // tooltip: migrated to zag-emitters.ts
-    if (node.zagType === 'popover') {
-      this.emitPopoverComponent(node, parentVar)
-      return
-    }
-    if (node.zagType === 'hover-card' || node.zagType === 'hovercard') {
-      this.emitHoverCardComponent(node, parentVar)
-      return
-    }
-    // dialog: migrated to zag-emitters.ts
+    // collapsible, tooltip, popover, hover-card, dialog: migrated to zag-emitters.ts
     if (node.zagType === 'form') {
       this.emitFormComponent(node, parentVar)
       return
@@ -2479,139 +2469,42 @@ class DOMGenerator {
   }
 
   // =========================================================================
-  // GROUP 5: OVERLAYS
+  // GROUP 5: OVERLAYS - All migrated to zag-emitters.ts
+  // =========================================================================
+  // emitCollapsibleComponent: migrated to zag-emitters.ts
+  // emitTooltipComponent: migrated to zag-emitters.ts
+  // emitPopoverComponent: migrated to zag-emitters.ts
+  // emitHoverCardComponent: migrated to zag-emitters.ts
+  // emitDialogComponent: migrated to zag-emitters.ts
+
+  // =========================================================================
+  // GROUP 6: FORM
   // =========================================================================
 
-  private emitCollapsibleComponent(node: IRZagNode, parentVar: string): void {
+  private emitFormComponent(node: IRZagNode, parentVar: string): void {
     const varName = this.sanitizeVarName(node.id)
+    const collectionName = (node.machineConfig?.collection as string) || ''
+    const normalizedCollection = collectionName.startsWith('$') ? collectionName.slice(1) : collectionName
 
-    this.emit(`// Collapsible Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('div')`)
+    this.emit(`// Form Component: ${node.name}`)
+    this.emit(`const ${varName} = document.createElement('form')`)
     this.emit(`_elements['${node.id}'] = ${varName}`)
     this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'collapsible'`)
+    this.emit(`${varName}.dataset.zagComponent = 'form'`)
     if (node.name) {
       this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
     }
+    if (normalizedCollection) {
+      this.emit(`${varName}.dataset.collection = '${normalizedCollection}'`)
+    }
+    this.emit('')
 
     // Emit machine configuration
     this.emit(`${varName}._zagConfig = {`)
     this.indent++
-    this.emit(`type: 'collapsible',`)
+    this.emit(`type: 'form',`)
     this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Apply root styles
-    const rootSlot = node.slots['Root']
-    if (rootSlot?.styles && rootSlot.styles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of rootSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Trigger container
-    const triggerSlot = node.slots['Trigger']
-    const triggerVar = `${varName}_trigger`
-    this.emit(`// Trigger`)
-    this.emit(`const ${triggerVar} = document.createElement('div')`)
-    this.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
-    this.emit(`${triggerVar}.setAttribute('role', 'button')`)
-    this.emit(`${triggerVar}.setAttribute('tabindex', '0')`)
-    this.emit(`${triggerVar}.setAttribute('aria-expanded', 'false')`)
-    this.emit(`${triggerVar}.style.cursor = 'pointer'`)
-    if (triggerSlot?.styles && triggerSlot.styles.length > 0) {
-      this.emit(`Object.assign(${triggerVar}.style, {`)
-      this.indent++
-      for (const style of triggerSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    // Emit trigger children
-    if (triggerSlot?.children && triggerSlot.children.length > 0) {
-      for (const child of triggerSlot.children) {
-        this.emitNode(child as IRNode, triggerVar)
-      }
-    } else {
-      // Fallback text if no children
-      const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Toggle'
-      this.emit(`${triggerVar}.textContent = '${this.escapeString(String(triggerLabel))}'`)
-    }
-    this.emit(`${varName}.appendChild(${triggerVar})`)
-    this.emit('')
-
-    // Content container
-    const contentSlot = node.slots['Content']
-    const contentVar = `${varName}_content`
-    this.emit(`// Content`)
-    this.emit(`const ${contentVar} = document.createElement('div')`)
-    this.emit(`${contentVar}.dataset.slot = 'Content'`)
-    this.emit(`${contentVar}.setAttribute('role', 'region')`)
-    if (contentSlot?.styles && contentSlot.styles.length > 0) {
-      this.emit(`Object.assign(${contentVar}.style, {`)
-      this.indent++
-      for (const style of contentSlot.styles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-    this.emit(`${varName}.appendChild(${contentVar})`)
-    this.emit('')
-
-    // Emit content children
-    if (contentSlot?.children && contentSlot.children.length > 0) {
-      for (const child of contentSlot.children) {
-        this.emitNode(child as IRNode, contentVar)
-      }
-    } else if (node.children && node.children.length > 0) {
-      // Fallback to node.children if no slot children
-      for (const child of node.children) {
-        this.emitNode(child as IRNode, contentVar)
-      }
-    }
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Collapsible via runtime
-    this.emit(`// Initialize Collapsible`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initCollapsibleComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initCollapsibleComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
-
-  // emitTooltipComponent: migrated to compiler/backends/dom/zag-emitters.ts
-
-  private emitPopoverComponent(node: IRZagNode, parentVar: string): void {
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// Popover Component: ${node.name}`)
-    this.emit(`const ${varName} = document.createElement('div')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = 'popover'`)
-    this.emit(`${varName}.style.display = 'inline-block'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: 'popover',`)
+    this.emit(`collection: '${normalizedCollection}',`)
     this.emit(`id: '${node.id}',`)
     this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
     this.indent--

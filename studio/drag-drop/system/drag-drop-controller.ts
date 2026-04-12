@@ -543,6 +543,11 @@ export class DragDropController {
   }): { success: boolean; error?: string } {
     const { sourceNodeId, targetNodeId, placement, container, nodeIdAttr = 'data-node-id' } = params
 
+    // Prevent self-drop
+    if (sourceNodeId === targetNodeId && placement === 'inside') {
+      return { success: false, error: 'Cannot drop element onto itself' }
+    }
+
     // Find source element
     const sourceElement = container.querySelector(
       `[${nodeIdAttr}="${sourceNodeId}"]`
