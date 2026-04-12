@@ -180,11 +180,13 @@ function handleSelect(state: PanelState, nodeId: string | null): TransitionResul
   // (wird vom Controller geprüft, hier nur State-Wechsel)
   const newState: LoadingState = { type: 'loading', nodeId }
 
+  // Don't render 'loading' state - LOAD_ELEMENT is synchronous
+  // and will immediately trigger ELEMENT_LOADED or ELEMENT_NOT_FOUND
+  // which will produce the final RENDER effect
   return {
     state: newState,
     effects: [
-      { type: 'LOAD_ELEMENT', nodeId },
-      { type: 'RENDER', state: newState }
+      { type: 'LOAD_ELEMENT', nodeId }
     ]
   }
 }
@@ -366,11 +368,11 @@ function handleDefinitionSelected(state: PanelState, componentName: string): Tra
     nodeId: `def:${componentName}` // Marker für Definition
   }
 
+  // Don't render 'loading' state - LOAD_DEFINITION is synchronous
   return {
     state: newState,
     effects: [
-      { type: 'LOAD_DEFINITION', componentName },
-      { type: 'RENDER', state: newState }
+      { type: 'LOAD_DEFINITION', componentName }
     ]
   }
 }

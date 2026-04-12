@@ -24,7 +24,7 @@ export interface SectionData {
   // All properties for the element (used by color section)
   allProperties?: ExtractedProperty[]
   // Callbacks
-  getSpacingTokens?: (propType: string) => SpacingToken[]
+  getSpacingTokens?: (propType: 'pad' | 'mar' | 'gap' | 'rad') => SpacingToken[]
   getColorTokens?: () => ColorToken[]
   resolveTokenValue?: (tokenRef: string) => string | null
 }

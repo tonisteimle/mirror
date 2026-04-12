@@ -35,7 +35,7 @@ export interface SpacingToken {
 
 export interface ColorToken {
   name: string      // e.g., "primary", "danger"
-  fullName: string  // e.g., "primary.bg", "danger.col"
+  fullName?: string // e.g., "primary.bg", "danger.col" (optional for simple tokens)
   value: string     // e.g., "#2271C1", "#ef4444"
 }
 

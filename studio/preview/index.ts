@@ -147,7 +147,7 @@ export class PreviewController {
       nodeIdAttribute: config.nodeIdAttribute ?? 'data-mirror-id',
       enableSelection: config.enableSelection ?? true,
       enableHover: config.enableHover ?? true,
-      enableHandles: config.enableHandles ?? false,
+      enableHandles: config.enableHandles ?? true,
       enableKeyboardShortcuts: config.enableKeyboardShortcuts ?? false,
       enableContextMenu: config.enableContextMenu ?? false,
       enableVisualCode: config.enableVisualCode ?? false,

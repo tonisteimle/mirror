@@ -1,30 +1,105 @@
 /**
  * Property Panel Module
  *
- * Re-exports the main PropertyPanel class, utilities, sections, and base classes.
+ * Hexagonal Architecture implementation of the Property Panel.
+ *
+ * Main exports:
+ * - PropertyPanel, createPropertyPanel - Main entry points (backwards compatible)
+ * - PropertyPanelController - Core logic without DOM
+ * - PropertyPanelView - DOM rendering layer
+ * - Ports - Interface definitions for dependency injection
+ * - Adapters - Production and mock implementations
+ * - Sections - Individual section renderers
  */
 
-// Re-export main PropertyPanel
+// ============================================
+// Main Entry Points (Backwards Compatible)
+// ============================================
+
 export {
   PropertyPanel,
-  createPropertyPanel
-} from '../property-panel'
+  createPropertyPanel,
+  type OnCodeChangeCallback,
+  type GetAllSourceCallback,
+  type PropertyPanelOptions
+} from './property-panel'
 
-// Re-export types
+// ============================================
+// Core Architecture
+// ============================================
+
+// Controller
+export {
+  PropertyPanelController,
+  createPropertyPanelController,
+  type PropertyPanelControllerOptions
+} from './controller'
+
+// State Machine
+export {
+  type PanelState,
+  type PanelEvent,
+  type PanelEffect,
+  type TransitionResult,
+  createInitialState,
+  transition,
+  isShowing,
+  isPendingUpdate,
+  getCurrentElement,
+  getCurrentNodeId
+} from './state-machine'
+
+// View
+export {
+  PropertyPanelView,
+  createPropertyPanelView,
+  type PropertyPanelViewOptions
+} from './view'
+
+// Ports
 export type {
-  SelectionProvider,
-  OnCodeChangeCallback,
-  GetAllSourceCallback,
-  PropertyPanelOptions,
+  PropertyPanelPorts,
+  SelectionPort,
+  PropertyExtractionPort,
+  PropertyModificationPort,
+  TokenPort,
+  LayoutDetectionPort,
+  PanelEventPort,
+  CleanupFn,
   SpacingToken,
-  ColorToken
+  ColorToken,
+  PropertyChange,
+  Rect
+} from './ports'
+
+// ============================================
+// Types
+// ============================================
+
+export type {
+  SelectionProvider
 } from './types'
 
-// Re-export utilities
+// ============================================
+// Adapters
+// ============================================
+
+export * from './adapters'
+
+// ============================================
+// Utilities
+// ============================================
+
 export * from './utils'
 
-// Re-export base classes
+// ============================================
+// Base Classes
+// ============================================
+
 export * from './base'
 
-// Re-export sections
+// ============================================
+// Sections
+// ============================================
+
 export * from './sections'

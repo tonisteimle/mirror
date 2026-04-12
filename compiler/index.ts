@@ -31,7 +31,7 @@ export * from './compiler/zag'
 import { parse } from './parser'
 import { generateDOM } from './backends/dom'
 import { combineProjectFiles, combineProjectFilesWithData, ReadFileFn, ListFilesFn } from './preprocessor'
-import { parseDataFiles, mergeDataFiles } from './parser/data-parser'
+import { parseDataFiles } from './parser/data-parser'
 import type { DataFile } from './parser/data-types'
 
 export interface CompileOptions {

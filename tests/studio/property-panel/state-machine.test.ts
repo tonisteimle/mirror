@@ -79,7 +79,8 @@ describe('State Machine: empty', () => {
       expect(state.nodeId).toBe('node-1')
     }
     expect(effects).toContainEqual({ type: 'LOAD_ELEMENT', nodeId: 'node-1' })
-    expect(effects).toContainEqual({ type: 'RENDER', state })
+    // LOAD_ELEMENT is synchronous, so no RENDER until element is loaded/not found
+    expect(effects).not.toContainEqual(expect.objectContaining({ type: 'RENDER' }))
   })
 
   it('stays empty on SELECT with null', () => {

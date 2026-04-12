@@ -161,6 +161,7 @@ export function createMockModificationPort(): MockModificationPort {
   const createResult = (success: boolean): ModificationResult => ({
     success,
     newSource: success ? 'modified source' : '',
+    change: { from: 0, to: 0, insert: '' },
     error: success ? undefined : 'Mock error'
   })
 
@@ -462,6 +463,8 @@ export function createMockElement(
     isTemplateInstance: options.isTemplateInstance ?? false,
     allProperties: properties,
     categories: groupPropertiesByCategory(properties),
+    interactions: options.interactions ?? [],
+    events: options.events ?? [],
     ...options
   }
 }
@@ -477,11 +480,27 @@ export function createMockProperty(
   return {
     name,
     value,
+    type: options.type ?? 'text',
     hasValue: true,
     source: options.source ?? 'instance',
     category: options.category ?? 'visual',
+    line: options.line ?? 0,
+    column: options.column ?? 0,
+    isToken: options.isToken ?? false,
     ...options
   }
+}
+
+/**
+ * Category labels for display.
+ */
+const CATEGORY_LABELS: Record<string, string> = {
+  visual: 'Visual',
+  layout: 'Layout',
+  spacing: 'Spacing',
+  typography: 'Typography',
+  behavior: 'Behavior',
+  other: 'Other'
 }
 
 /**
@@ -500,6 +519,7 @@ function groupPropertiesByCategory(properties: ExtractedProperty[]): PropertyCat
 
   return Array.from(categoryMap.entries()).map(([name, props]) => ({
     name,
+    label: CATEGORY_LABELS[name] ?? name,
     properties: props
   }))
 }

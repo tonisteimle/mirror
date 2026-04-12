@@ -433,3 +433,37 @@ describe('createPreviewController', () => {
     controller.dispose()
   })
 })
+
+describe('PreviewController defaults', () => {
+  let container: HTMLElement
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    container.style.position = 'relative'
+    document.body.appendChild(container)
+  })
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('should enable handles by default (Feature 1: Handles Default Active)', () => {
+    const controller = createPreviewController({ container })
+
+    // HandleManager should be created by default
+    const handleManager = controller.getHandleManager()
+    expect(handleManager).not.toBeNull()
+
+    controller.dispose()
+  })
+
+  it('should allow explicit disabling of handles', () => {
+    const controller = createPreviewController({ container, enableHandles: false })
+
+    // HandleManager should NOT be created when explicitly disabled
+    const handleManager = controller.getHandleManager()
+    expect(handleManager).toBeNull()
+
+    controller.dispose()
+  })
+})

@@ -14,6 +14,7 @@ import { events } from './events'
 import { CodeModifier, createCodeModifier } from '../../compiler/studio/code-modifier'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import type { ChangeIntent } from './change-types'
+import { calculateDistribution, detectDistributionDirection, type Rect } from '../../studio/preview/distribution'
 
 // ============================================================================
 // CONTEXT - Fließt durch die Pipeline
@@ -110,7 +111,10 @@ export const validateNodeStep: PipelineStep = {
     if (ctx.intent.type === 'addChild' ||
         ctx.intent.type === 'moveNode' ||
         ctx.intent.type === 'groupNodes' ||
-        ctx.intent.type === 'duplicateNode') {
+        ctx.intent.type === 'duplicateNode' ||
+        ctx.intent.type === 'distribute' ||
+        ctx.intent.type === 'multiMove' ||
+        ctx.intent.type === 'multiResize') {
       return ctx
     }
 
@@ -294,7 +298,15 @@ import type {
   UngroupIntent,
   DuplicateNodeIntent,
   UpdateTextIntent,
+  DistributeIntent,
+  MultiMoveIntent,
+  MultiResizeIntent,
 } from './change-types'
+import {
+  calculateBoundingBoxFromDOM,
+  calculateMovedPositions,
+  calculateResizedPositions,
+} from '../preview/multi-selection-bounds'
 
 const SPACING_STEPS = [0, 4, 8, 12, 16, 24, 32, 48, 64]
 
@@ -428,6 +440,145 @@ function executeIntent(
     case 'updateText': {
       const result = modifier.updateTextContent(intent.nodeId, intent.text)
       return { success: result.success, newSource: result.newSource, error: result.error }
+    }
+
+    case 'distribute': {
+      // Need at least 2 nodes to distribute
+      if (intent.nodeIds.length < 2) {
+        return { success: false, newSource: modifier.getSource(), error: 'Need at least 2 nodes to distribute' }
+      }
+
+      // Get layout info for all nodes from the DOM
+      const layoutInfo = new Map<string, Rect>()
+      for (const nodeId of intent.nodeIds) {
+        const element = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement
+        if (element) {
+          const rect = element.getBoundingClientRect()
+          const parent = element.parentElement
+          const parentRect = parent?.getBoundingClientRect() || { left: 0, top: 0 }
+          layoutInfo.set(nodeId, {
+            x: rect.left - parentRect.left,
+            y: rect.top - parentRect.top,
+            width: rect.width,
+            height: rect.height,
+          })
+        }
+      }
+
+      if (layoutInfo.size < 2) {
+        return { success: false, newSource: modifier.getSource(), error: 'Could not find enough elements in DOM' }
+      }
+
+      // Determine distribution direction
+      let distributionType: 'horizontal' | 'vertical'
+      if (intent.direction === 'auto') {
+        distributionType = detectDistributionDirection(intent.nodeIds, layoutInfo) || 'horizontal'
+      } else {
+        distributionType = intent.direction
+      }
+
+      // Calculate new positions
+      const newPositions = calculateDistribution(intent.nodeIds, distributionType, layoutInfo)
+
+      if (newPositions.length === 0) {
+        return { success: false, newSource: modifier.getSource(), error: 'Failed to calculate distribution' }
+      }
+
+      // Apply new positions to each node
+      let source = modifier.getSource()
+      for (const pos of newPositions) {
+        const xResult = modifier.updateProperty(pos.nodeId, 'x', String(pos.x))
+        if (xResult.success) {
+          source = xResult.newSource
+          const yResult = modifier.updateProperty(pos.nodeId, 'y', String(pos.y))
+          if (yResult.success) {
+            source = yResult.newSource
+          }
+        }
+      }
+
+      return { success: true, newSource: source }
+    }
+
+    case 'multiMove': {
+      // Need at least 1 node to move
+      if (intent.nodeIds.length === 0) {
+        return { success: false, newSource: modifier.getSource(), error: 'No nodes to move' }
+      }
+
+      // Get bounding box from DOM
+      const boundingBox = calculateBoundingBoxFromDOM(intent.nodeIds)
+      if (!boundingBox) {
+        return { success: false, newSource: modifier.getSource(), error: 'Could not calculate bounding box' }
+      }
+
+      // Calculate new positions
+      const newPositions = calculateMovedPositions(boundingBox, intent.deltaX, intent.deltaY)
+
+      // Apply new positions to each node
+      let source = modifier.getSource()
+      for (const [nodeId, pos] of newPositions) {
+        const xResult = modifier.updateProperty(nodeId, 'x', String(pos.x))
+        if (xResult.success) {
+          source = xResult.newSource
+          const yResult = modifier.updateProperty(nodeId, 'y', String(pos.y))
+          if (yResult.success) {
+            source = yResult.newSource
+          }
+        }
+      }
+
+      return { success: true, newSource: source }
+    }
+
+    case 'multiResize': {
+      // Need at least 1 node to resize
+      if (intent.nodeIds.length === 0) {
+        return { success: false, newSource: modifier.getSource(), error: 'No nodes to resize' }
+      }
+
+      // Get bounding box from DOM
+      const boundingBox = calculateBoundingBoxFromDOM(intent.nodeIds)
+      if (!boundingBox) {
+        return { success: false, newSource: modifier.getSource(), error: 'Could not calculate bounding box' }
+      }
+
+      // Calculate new dimensions
+      const newWidth = boundingBox.width * intent.scaleX
+      const newHeight = boundingBox.height * intent.scaleY
+
+      // Calculate new positions and sizes
+      const newPositions = calculateResizedPositions(
+        boundingBox,
+        newWidth,
+        newHeight,
+        intent.anchor || 'top-left'
+      )
+
+      // Apply new positions and sizes to each node
+      let source = modifier.getSource()
+      for (const [nodeId, pos] of newPositions) {
+        // Update position
+        const xResult = modifier.updateProperty(nodeId, 'x', String(pos.x))
+        if (xResult.success) {
+          source = xResult.newSource
+        }
+        const yResult = modifier.updateProperty(nodeId, 'y', String(pos.y))
+        if (yResult.success) {
+          source = yResult.newSource
+        }
+        // Update size
+        const wResult = modifier.updateProperty(nodeId, 'w', String(pos.width))
+        if (wResult.success) {
+          source = wResult.newSource
+        }
+        const hResult = modifier.updateProperty(nodeId, 'h', String(pos.height))
+        if (hResult.success) {
+          source = hResult.newSource
+        }
+      }
+
+      return { success: true, newSource: source }
     }
 
     default:

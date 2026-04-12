@@ -279,3 +279,107 @@ describe('HandleManager snapping', () => {
     expect(handles.length).toBeGreaterThan(0)
   })
 })
+
+describe('HandleManager visual feedback (Feature 2)', () => {
+  let container: HTMLElement
+  let manager: HandleManager
+
+  beforeEach(() => {
+    container = createContainer()
+    manager = createHandleManager({ container })
+  })
+
+  afterEach(() => {
+    manager.dispose()
+    if (container.parentNode) {
+      container.parentNode.removeChild(container)
+    }
+  })
+
+  it('padding handles have blue border color', () => {
+    const element = createTestElement('node-1')
+    container.appendChild(element)
+
+    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(50, 50, 200, 200)
+    )
+    vi.spyOn(container, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 500, 500)
+    )
+
+    manager.showHandles('node-1')
+
+    const paddingHandle = container.querySelector('.handle-padding') as HTMLElement
+    // Browser converts hex to rgb
+    expect(paddingHandle?.style.border).toContain('rgb(91, 168, 245)')
+  })
+
+  it('radius handles have orange border color', () => {
+    const element = createTestElement('node-1')
+    container.appendChild(element)
+
+    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(50, 50, 200, 200)
+    )
+    vi.spyOn(container, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 500, 500)
+    )
+
+    manager.showHandles('node-1')
+
+    const radiusHandle = container.querySelector('.handle-radius') as HTMLElement
+    // Browser converts hex to rgb
+    expect(radiusHandle?.style.border).toContain('rgb(245, 158, 11)')
+  })
+
+  it('gap handles have green border color', () => {
+    const element = createTestElement('node-1', {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px'
+    })
+    const child1 = document.createElement('div')
+    child1.style.height = '50px'
+    const child2 = document.createElement('div')
+    child2.style.height = '50px'
+    element.appendChild(child1)
+    element.appendChild(child2)
+    container.appendChild(element)
+
+    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(50, 50, 200, 200)
+    )
+    vi.spyOn(container, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 500, 500)
+    )
+    vi.spyOn(child1, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(50, 66, 168, 50)
+    )
+    vi.spyOn(child2, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(50, 132, 168, 50)
+    )
+
+    manager.showHandles('node-1')
+
+    const gapHandle = container.querySelector('.handle-gap') as HTMLElement
+    // Browser converts hex to rgb
+    expect(gapHandle?.style.border).toContain('rgb(16, 185, 129)')
+  })
+
+  it('handles have box-shadow transition for visual feedback', () => {
+    const element = createTestElement('node-1')
+    container.appendChild(element)
+
+    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(50, 50, 200, 200)
+    )
+    vi.spyOn(container, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(0, 0, 500, 500)
+    )
+
+    manager.showHandles('node-1')
+
+    const handle = container.querySelector('.handle') as HTMLElement
+    expect(handle?.style.transition).toContain('box-shadow')
+  })
+})

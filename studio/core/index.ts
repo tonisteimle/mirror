@@ -8,7 +8,7 @@ export { type Command, type CommandResult, type CommandContext, type CommandType
 export { executor, CommandExecutor, type CommandExecutorOptions, execute, undo, redo, canUndo, canRedo } from './command-executor'
 export { StateSelectionAdapter, getStateSelectionAdapter, disposeStateSelectionAdapter, type SelectionSyncHandler } from './selection-adapter'
 export { createStudioContext, createTestContext, getStudioContext, setStudioContext, resetStudioContext, type StudioContext } from './context'
-export { gridSettings, smartGuidesSettings, generalSettings, type GridSettings, type SmartGuidesSettings, type GeneralSettings } from './settings'
+export { gridSettings, smartGuidesSettings, generalSettings, handleSnapSettings, type GridSettings, type SmartGuidesSettings, type GeneralSettings, type HandleSnapSettings } from './settings'
 export { changeService, change, ChangeService, type ChangeIntent, type ChangeResult } from './change-service'
 export {
   runPipeline,

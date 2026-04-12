@@ -13,7 +13,7 @@
  * - Live value indicator during drag
  */
 
-import { state, events, type LayoutRect } from '../core'
+import { state, events, handleSnapSettings, type LayoutRect } from '../core'
 import { HANDLE_SIZE, HANDLE_SIZE_SMALL, SMALL_ELEMENT_THRESHOLD } from '../visual/constants/sizing'
 
 export type HandleType = 'padding' | 'gap' | 'radius'
@@ -41,12 +41,19 @@ const LAYOUT = {
   Z_INDEX_INDICATOR: 10001,
 }
 
-const SNAP_POINTS = [0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64]
-const SNAP_THRESHOLD = 4
+// Type-based colors for better visual feedback (Feature 2)
+const HANDLE_COLORS: Record<HandleType, string> = {
+  padding: '#5BA8F5',   // Blue - padding
+  gap: '#10B981',       // Green - gap
+  radius: '#F59E0B',    // Orange - radius
+}
+
+// Legacy snap points - now configurable via handleSnapSettings (Feature 3)
+// const SNAP_POINTS = [0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64]
+// const SNAP_THRESHOLD = 4
 
 // Max/min value constraints
 const MIN_VALUE = 0
-const MAX_VALUE = 200
 
 export class HandleManager {
   private container: HTMLElement
@@ -302,6 +309,9 @@ export class HandleManager {
       (elementSize.width < LAYOUT.MIN_ELEMENT_SIZE || elementSize.height < LAYOUT.MIN_ELEMENT_SIZE)
     const size = useSmallHandle ? LAYOUT.HANDLE_SIZE_SMALL : LAYOUT.HANDLE_SIZE
 
+    // Type-based border color (Feature 2: Better Visual Feedback)
+    const borderColor = HANDLE_COLORS[type as HandleType] || '#5BA8F5'
+
     Object.assign(el.style, {
       position: 'absolute',
       left: `${x - size / 2}px`,
@@ -309,13 +319,13 @@ export class HandleManager {
       width: `${size}px`,
       height: `${size}px`,
       background: 'white',
-      border: '2px solid #5BA8F5',
+      border: `2px solid ${borderColor}`,
       borderRadius: isGap ? '2px' : '50%',
       cursor: this.getCursor(direction),
       zIndex: String(LAYOUT.Z_INDEX),
       pointerEvents: 'auto',
       boxSizing: 'border-box',
-      transition: 'transform 100ms ease-out',
+      transition: 'transform 100ms ease-out, box-shadow 100ms ease-out',
     })
 
     // Hover effect is handled by CSS (.handle-element:hover)
@@ -368,8 +378,9 @@ export class HandleManager {
       this.startDragPosition = { x: e.clientX, y: e.clientY }
       this.startValue = this.activeHandle.currentValue
 
-      // Keep handle scaled while dragging
+      // Keep handle scaled while dragging and add active class (Feature 2)
       this.activeHandle.element.style.transform = 'scale(1.2)'
+      this.activeHandle.element.classList.add('handle-active')
 
       const nodeId = state.get().selection.nodeId
       if (nodeId) {
@@ -389,12 +400,16 @@ export class HandleManager {
     const sensitivity = e.shiftKey ? 0.5 : 1
     let newValue = Math.round(this.startValue + delta * sensitivity)
 
+    // Get max value from settings (Feature 3)
+    const settings = handleSnapSettings.get()
+    const maxValue = settings.maxValue
+
     // Clamp to min/max
-    newValue = Math.max(MIN_VALUE, Math.min(MAX_VALUE, newValue))
+    newValue = Math.max(MIN_VALUE, Math.min(maxValue, newValue))
 
     // Snapping (unless Alt is held)
-    if (!e.altKey) {
-      newValue = this.snapValue(newValue)
+    if (!e.altKey && settings.enabled) {
+      newValue = this.snapValue(newValue, settings.threshold)
     }
 
     // Update current value for live feedback
@@ -413,8 +428,9 @@ export class HandleManager {
 
   private onMouseUp(): void {
     if (this.activeHandle) {
-      // Reset scale
+      // Reset scale and remove active class (Feature 2)
       this.activeHandle.element.style.transform = 'scale(1)'
+      this.activeHandle.element.classList.remove('handle-active')
       this.hideValueIndicator()
 
       const nodeId = state.get().selection.nodeId
@@ -447,9 +463,14 @@ export class HandleManager {
     }
   }
 
-  private snapValue(value: number): number {
-    for (const snap of SNAP_POINTS) {
-      if (Math.abs(value - snap) < SNAP_THRESHOLD) {
+  /**
+   * Snap value to nearest grid point (Feature 3: Custom Snap Grids)
+   */
+  private snapValue(value: number, threshold: number): number {
+    const snapPoints = handleSnapSettings.getSnapPoints()
+
+    for (const snap of snapPoints) {
+      if (Math.abs(value - snap) < threshold) {
         return snap
       }
     }

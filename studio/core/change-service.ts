@@ -36,6 +36,9 @@ export type {
   UngroupIntent,
   DuplicateNodeIntent,
   UpdateTextIntent,
+  DistributeIntent,
+  MultiMoveIntent,
+  MultiResizeIntent,
 } from './change-types'
 
 // ============================================================================

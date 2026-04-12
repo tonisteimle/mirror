@@ -127,6 +127,17 @@ export class KeyboardHandler {
       return false
     }
 
+    // Distribution (Ctrl+Shift+H for horizontal, Ctrl+Shift+V for vertical)
+    if (ctrl && shift && (key === 'h' || key === 'v')) {
+      const nodeIds = multiSelection.length > 0 ? multiSelection : (nodeId ? [nodeId] : [])
+      if (nodeIds.length >= 2) {
+        const direction = key === 'h' ? 'horizontal' : 'vertical'
+        await change({ type: 'distribute', nodeIds, direction })
+        return true
+      }
+      return false
+    }
+
     // Single-node shortcuts
     if (!nodeId) return false
 

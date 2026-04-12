@@ -9,6 +9,7 @@ import { OverlayManager } from './overlay-manager'
 import { events } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 import { MIN_RESIZE_SIZE, DEFAULT_CONTAINER_SIZE } from './constants/sizing'
+import { calculateBoundingBox, calculateResizedPositions, type BoundingBox, type Rect } from '../preview/multi-selection-bounds'
 import type { LayoutRect } from '../core/state'
 
 /** @deprecated Use MIN_RESIZE_SIZE from constants/sizing.ts */
@@ -35,6 +36,16 @@ export interface ResizeState {
   element: HTMLElement
 }
 
+export interface MultiResizeState {
+  nodeIds: string[]
+  handle: ResizeHandle
+  startX: number
+  startY: number
+  boundingBox: BoundingBox
+  currentWidth: number
+  currentHeight: number
+}
+
 export interface ResizeManagerConfig {
   container: HTMLElement
   overlayManager: OverlayManager
@@ -51,7 +62,9 @@ export class ResizeManager {
 
   private handles: HTMLElement[] = []
   private activeResize: ResizeState | null = null
+  private activeMultiResize: MultiResizeState | null = null
   private currentNodeId: string | null = null
+  private currentNodeIds: string[] = []
 
   // Cached reference to prevent memory leaks on dispose
   private handlesContainerRef: HTMLElement | null = null
@@ -150,14 +163,133 @@ export class ResizeManager {
     })
   }
 
+  /**
+   * Show resize handles around the combined bounding box of multiple selected elements.
+   * Feature 4: Multi-Element Manipulation
+   */
+  showMultiHandles(nodeIds: string[]): void {
+    if (nodeIds.length === 0) return
+
+    // For single element, delegate to showHandles
+    if (nodeIds.length === 1) {
+      this.showHandles(nodeIds[0])
+      return
+    }
+
+    this.hideHandles()
+    this.currentNodeIds = nodeIds
+    this.currentNodeId = null
+
+    // Calculate combined bounding box
+    const boundingBox = this.calculateMultiSelectionBounds(nodeIds)
+    if (!boundingBox) return
+
+    const handlesContainer = this.overlayManager.getResizeHandlesContainer()
+
+    // 8 Handle positions around the bounding box
+    const positions: Array<{ pos: ResizeHandle; x: number; y: number }> = [
+      { pos: 'nw', x: 0, y: 0 },
+      { pos: 'n', x: 0.5, y: 0 },
+      { pos: 'ne', x: 1, y: 0 },
+      { pos: 'e', x: 1, y: 0.5 },
+      { pos: 'se', x: 1, y: 1 },
+      { pos: 's', x: 0.5, y: 1 },
+      { pos: 'sw', x: 0, y: 1 },
+      { pos: 'w', x: 0, y: 0.5 },
+    ]
+
+    positions.forEach(({ pos, x, y }) => {
+      const handle = document.createElement('div')
+      handle.className = `resize-handle resize-handle-${pos} resize-handle-multi`
+      handle.dataset.position = pos
+      handle.dataset.nodeIds = JSON.stringify(nodeIds)
+      handle.dataset.isMulti = 'true'
+      Object.assign(handle.style, {
+        position: 'absolute',
+        left: `${boundingBox.x + boundingBox.width * x - 4}px`,
+        top: `${boundingBox.y + boundingBox.height * y - 4}px`,
+        width: '8px',
+        height: '8px',
+        background: 'white',
+        border: '2px solid #10B981',  // Green for multi-selection
+        borderRadius: '50%',
+        cursor: this.getCursor(pos),
+        pointerEvents: 'auto',
+        zIndex: String(Z_INDEX_RESIZE_HANDLES),
+        boxSizing: 'border-box',
+      })
+      handlesContainer.appendChild(handle)
+      this.handles.push(handle)
+    })
+
+    // Draw bounding box outline
+    this.drawMultiSelectionOutline(boundingBox)
+  }
+
+  private calculateMultiSelectionBounds(nodeIds: string[]): BoundingBox | null {
+    const layoutInfo = this.getLayoutInfo?.()
+
+    const getRect = (nodeId: string): Rect | null => {
+      // Try cached layout info first
+      const layoutRect = layoutInfo?.get(nodeId)
+      if (layoutRect) {
+        return {
+          x: layoutRect.x,
+          y: layoutRect.y,
+          width: layoutRect.width,
+          height: layoutRect.height,
+        }
+      }
+
+      // Fallback to DOM
+      const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+      if (!element) return null
+
+      const rect = element.getBoundingClientRect()
+      const containerRect = this.container.getBoundingClientRect()
+
+      return {
+        x: rect.left - containerRect.left,
+        y: rect.top - containerRect.top,
+        width: rect.width,
+        height: rect.height,
+      }
+    }
+
+    return calculateBoundingBox(nodeIds, getRect)
+  }
+
+  private drawMultiSelectionOutline(boundingBox: BoundingBox): void {
+    const handlesContainer = this.overlayManager.getResizeHandlesContainer()
+
+    const outline = document.createElement('div')
+    outline.className = 'multi-selection-outline'
+    Object.assign(outline.style, {
+      position: 'absolute',
+      left: `${boundingBox.x}px`,
+      top: `${boundingBox.y}px`,
+      width: `${boundingBox.width}px`,
+      height: `${boundingBox.height}px`,
+      border: '1px dashed #10B981',
+      pointerEvents: 'none',
+      zIndex: String(Z_INDEX_RESIZE_HANDLES - 1),
+      boxSizing: 'border-box',
+    })
+    handlesContainer.appendChild(outline)
+    this.handles.push(outline)  // Track so it gets removed with hideHandles
+  }
+
   hideHandles(): void {
     this.handles.forEach(h => h.remove())
     this.handles = []
     this.currentNodeId = null
+    this.currentNodeIds = []
   }
 
   refresh(): void {
-    if (this.currentNodeId) {
+    if (this.currentNodeIds.length > 1) {
+      this.showMultiHandles(this.currentNodeIds)
+    } else if (this.currentNodeId) {
       this.showHandles(this.currentNodeId)
     }
   }
@@ -196,9 +328,15 @@ export class ResizeManager {
     e.preventDefault()
     e.stopPropagation()
 
-    const nodeId = handle.dataset.nodeId!
     const position = handle.dataset.position as ResizeHandle
 
+    // Check if this is a multi-selection resize
+    if (handle.dataset.isMulti === 'true') {
+      this.startMultiResize(e, handle, position)
+      return
+    }
+
+    const nodeId = handle.dataset.nodeId!
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return
 

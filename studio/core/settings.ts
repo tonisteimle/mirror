@@ -190,3 +190,111 @@ export const generalSettings = {
     events.emit('settings:changed', currentGeneralSettings)
   },
 }
+
+// ============================================================================
+// Handle Snap Settings (Feature 3: Custom Snap Grids)
+// ============================================================================
+
+export interface HandleSnapSettings {
+  /** Snapping enabled */
+  enabled: boolean
+  /** Grid size in pixels (4, 8, 16, etc.) */
+  gridSize: number
+  /** Additional custom snap points */
+  customPoints: number[]
+  /** Snap threshold in pixels */
+  threshold: number
+  /** Maximum value for handles */
+  maxValue: number
+}
+
+const DEFAULT_HANDLE_SNAP: HandleSnapSettings = {
+  enabled: true,
+  gridSize: 8,
+  customPoints: [],
+  threshold: 4,
+  maxValue: 200,
+}
+
+// In-memory state
+let currentHandleSnapSettings: HandleSnapSettings = { ...DEFAULT_HANDLE_SNAP }
+
+export const handleSnapSettings = {
+  /**
+   * Get current handle snap settings
+   */
+  get(): HandleSnapSettings {
+    return { ...currentHandleSnapSettings }
+  },
+
+  /**
+   * Update handle snap settings
+   */
+  set(settings: Partial<HandleSnapSettings>): void {
+    currentHandleSnapSettings = { ...currentHandleSnapSettings, ...settings }
+    events.emit('handleSnap:changed', currentHandleSnapSettings)
+  },
+
+  /**
+   * Toggle snapping on/off
+   */
+  toggle(): boolean {
+    const newValue = !currentHandleSnapSettings.enabled
+    this.set({ enabled: newValue })
+    return newValue
+  },
+
+  /**
+   * Set grid size
+   */
+  setGridSize(size: number): void {
+    if (size > 0 && size <= 64) {
+      this.set({ gridSize: size })
+    }
+  },
+
+  /**
+   * Add custom snap point
+   */
+  addCustomPoint(value: number): void {
+    if (!currentHandleSnapSettings.customPoints.includes(value)) {
+      this.set({
+        customPoints: [...currentHandleSnapSettings.customPoints, value].sort((a, b) => a - b)
+      })
+    }
+  },
+
+  /**
+   * Remove custom snap point
+   */
+  removeCustomPoint(value: number): void {
+    this.set({
+      customPoints: currentHandleSnapSettings.customPoints.filter(p => p !== value)
+    })
+  },
+
+  /**
+   * Generate snap points based on current settings
+   */
+  getSnapPoints(): number[] {
+    const settings = this.get()
+    if (!settings.enabled) return []
+
+    // Generate grid-based points
+    const gridPoints: number[] = []
+    for (let i = 0; i <= settings.maxValue; i += settings.gridSize) {
+      gridPoints.push(i)
+    }
+
+    // Merge with custom points and deduplicate
+    return [...new Set([...gridPoints, ...settings.customPoints])].sort((a, b) => a - b)
+  },
+
+  /**
+   * Reset to defaults
+   */
+  reset(): void {
+    currentHandleSnapSettings = { ...DEFAULT_HANDLE_SNAP }
+    events.emit('handleSnap:changed', currentHandleSnapSettings)
+  },
+}

@@ -4,15 +4,17 @@
  * Re-exports all panel modules.
  */
 
-// Property Panel
+// Property Panel (New Hexagonal Architecture)
 export {
   PropertyPanel,
   createPropertyPanel,
   type PropertyPanelOptions,
-  type SelectionProvider,
   type OnCodeChangeCallback,
   type GetAllSourceCallback,
-} from './property-panel'
+} from './property'
+
+// Re-export SelectionProvider for backwards compatibility
+export type { SelectionProvider } from './property/types'
 
 // Re-export ExtractedElement from compiler
 export type { ExtractedElement } from '../../compiler/studio/property-extractor'

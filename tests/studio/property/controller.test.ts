@@ -109,16 +109,21 @@ describe('PropertyPanelController', () => {
       expect(controller.getCurrentElement()).toBe(element)
     })
 
-    it('should transition through loading state', () => {
+    it('should skip rendering loading state (synchronous load)', () => {
       const element = createMockElement('node-1', 'Frame')
       ports.extraction._addElement('node-1', element)
 
       controller.init()
       ports.selection._simulateSelect('node-1')
 
-      // Check state changes include loading transition
+      // Loading state is not rendered because LOAD_ELEMENT is synchronous
+      // Only 'showing' state should be rendered
       const loadingState = stateChanges.find(s => s.type === 'loading')
-      expect(loadingState).toBeDefined()
+      expect(loadingState).toBeUndefined()
+
+      // Final state should be 'showing'
+      const showingState = stateChanges.find(s => s.type === 'showing')
+      expect(showingState).toBeDefined()
     })
 
     it('should call extraction port', () => {

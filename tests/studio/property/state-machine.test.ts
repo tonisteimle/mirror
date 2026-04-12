@@ -82,14 +82,15 @@ describe('SELECT Event', () => {
     expect((result.state as LoadingState).nodeId).toBe('node-1')
   })
 
-  it('should emit LOAD_ELEMENT and RENDER effects on select', () => {
+  it('should emit LOAD_ELEMENT effect on select (no RENDER - loading is synchronous)', () => {
     const state = createInitialState()
     const event: PanelEvent = { type: 'SELECT', nodeId: 'node-1' }
 
     const result = transition(state, event)
 
     expect(result.effects).toContainEqual({ type: 'LOAD_ELEMENT', nodeId: 'node-1' })
-    expect(result.effects).toContainEqual(expect.objectContaining({ type: 'RENDER' }))
+    // LOAD_ELEMENT is synchronous, so RENDER comes from ELEMENT_LOADED/NOT_FOUND
+    expect(result.effects).not.toContainEqual(expect.objectContaining({ type: 'RENDER' }))
   })
 
   it('should transition to empty when selecting null', () => {
@@ -547,13 +548,14 @@ describe('DEFINITION_SELECTED Event', () => {
     expect(result.effects).toContainEqual({ type: 'LOAD_DEFINITION', componentName: 'MyButton' })
   })
 
-  it('should emit RENDER effect', () => {
+  it('should NOT emit RENDER effect (loading is synchronous)', () => {
     const state = createInitialState()
     const event: PanelEvent = { type: 'DEFINITION_SELECTED', componentName: 'MyButton' }
 
     const result = transition(state, event)
 
-    expect(result.effects).toContainEqual(expect.objectContaining({ type: 'RENDER' }))
+    // LOAD_DEFINITION is synchronous, so RENDER comes from ELEMENT_LOADED/NOT_FOUND
+    expect(result.effects).not.toContainEqual(expect.objectContaining({ type: 'RENDER' }))
   })
 })
 

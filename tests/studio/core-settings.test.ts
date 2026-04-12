@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { gridSettings, smartGuidesSettings, generalSettings } from '../../studio/core/settings'
+import { gridSettings, smartGuidesSettings, generalSettings, handleSnapSettings } from '../../studio/core/settings'
 import { events } from '../../studio/core/events'
 
 describe('Settings Store', () => {
@@ -18,6 +18,7 @@ describe('Settings Store', () => {
     gridSettings.reset()
     smartGuidesSettings.reset()
     generalSettings.reset()
+    handleSnapSettings.reset()
   })
 
   afterEach(() => {
@@ -280,6 +281,216 @@ describe('Settings Store', () => {
         generalSettings.reset()
 
         expect(generalSettings.get().moveStep).toBe(1)
+      })
+    })
+  })
+
+  describe('handleSnapSettings (Feature 3: Custom Snap Grids)', () => {
+    describe('get()', () => {
+      it('returns default values', () => {
+        const settings = handleSnapSettings.get()
+
+        expect(settings.enabled).toBe(true)
+        expect(settings.gridSize).toBe(8)
+        expect(settings.customPoints).toEqual([])
+        expect(settings.threshold).toBe(4)
+        expect(settings.maxValue).toBe(200)
+      })
+
+      it('returns a copy (not mutable)', () => {
+        const settings = handleSnapSettings.get()
+        settings.gridSize = 999
+
+        expect(handleSnapSettings.get().gridSize).toBe(8) // Unchanged
+      })
+    })
+
+    describe('set()', () => {
+      it('updates settings', () => {
+        handleSnapSettings.set({ gridSize: 16 })
+
+        expect(handleSnapSettings.get().gridSize).toBe(16)
+      })
+
+      it('merges with existing settings', () => {
+        handleSnapSettings.set({ gridSize: 16 })
+        handleSnapSettings.set({ enabled: false })
+
+        const settings = handleSnapSettings.get()
+        expect(settings.gridSize).toBe(16)
+        expect(settings.enabled).toBe(false)
+      })
+
+      it('emits handleSnap:changed event', () => {
+        const handler = vi.fn()
+        const unsub = events.on('handleSnap:changed', handler)
+
+        handleSnapSettings.set({ gridSize: 16 })
+
+        expect(handler).toHaveBeenCalledWith(expect.objectContaining({
+          gridSize: 16,
+        }))
+
+        unsub()
+      })
+    })
+
+    describe('toggle()', () => {
+      it('toggles enabled state', () => {
+        expect(handleSnapSettings.get().enabled).toBe(true)
+
+        const result = handleSnapSettings.toggle()
+
+        expect(result).toBe(false)
+        expect(handleSnapSettings.get().enabled).toBe(false)
+      })
+
+      it('toggles back to enabled', () => {
+        handleSnapSettings.set({ enabled: false })
+
+        const result = handleSnapSettings.toggle()
+
+        expect(result).toBe(true)
+        expect(handleSnapSettings.get().enabled).toBe(true)
+      })
+    })
+
+    describe('setGridSize()', () => {
+      it('sets grid size', () => {
+        handleSnapSettings.setGridSize(16)
+
+        expect(handleSnapSettings.get().gridSize).toBe(16)
+      })
+
+      it('rejects size <= 0', () => {
+        handleSnapSettings.setGridSize(8)
+        handleSnapSettings.setGridSize(0)
+
+        expect(handleSnapSettings.get().gridSize).toBe(8) // Unchanged
+      })
+
+      it('rejects size > 64', () => {
+        handleSnapSettings.setGridSize(8)
+        handleSnapSettings.setGridSize(65)
+
+        expect(handleSnapSettings.get().gridSize).toBe(8) // Unchanged
+      })
+
+      it('accepts boundary values', () => {
+        handleSnapSettings.setGridSize(1)
+        expect(handleSnapSettings.get().gridSize).toBe(1)
+
+        handleSnapSettings.setGridSize(64)
+        expect(handleSnapSettings.get().gridSize).toBe(64)
+      })
+    })
+
+    describe('addCustomPoint()', () => {
+      it('adds a custom snap point', () => {
+        handleSnapSettings.addCustomPoint(20)
+
+        expect(handleSnapSettings.get().customPoints).toContain(20)
+      })
+
+      it('does not add duplicate points', () => {
+        handleSnapSettings.addCustomPoint(20)
+        handleSnapSettings.addCustomPoint(20)
+
+        expect(handleSnapSettings.get().customPoints).toEqual([20])
+      })
+
+      it('keeps points sorted', () => {
+        handleSnapSettings.addCustomPoint(30)
+        handleSnapSettings.addCustomPoint(10)
+        handleSnapSettings.addCustomPoint(20)
+
+        expect(handleSnapSettings.get().customPoints).toEqual([10, 20, 30])
+      })
+    })
+
+    describe('removeCustomPoint()', () => {
+      it('removes a custom snap point', () => {
+        handleSnapSettings.addCustomPoint(20)
+        handleSnapSettings.removeCustomPoint(20)
+
+        expect(handleSnapSettings.get().customPoints).not.toContain(20)
+      })
+
+      it('does nothing for non-existent points', () => {
+        handleSnapSettings.addCustomPoint(10)
+        handleSnapSettings.removeCustomPoint(20)
+
+        expect(handleSnapSettings.get().customPoints).toEqual([10])
+      })
+    })
+
+    describe('getSnapPoints()', () => {
+      it('generates grid-based snap points', () => {
+        handleSnapSettings.setGridSize(8)
+
+        const points = handleSnapSettings.getSnapPoints()
+
+        expect(points).toContain(0)
+        expect(points).toContain(8)
+        expect(points).toContain(16)
+        expect(points).toContain(24)
+      })
+
+      it('includes custom points', () => {
+        handleSnapSettings.setGridSize(8)
+        handleSnapSettings.addCustomPoint(20) // Not on 8-grid
+
+        const points = handleSnapSettings.getSnapPoints()
+
+        expect(points).toContain(20)
+        expect(points).toContain(16)
+        expect(points).toContain(24)
+      })
+
+      it('returns empty array when disabled', () => {
+        handleSnapSettings.set({ enabled: false })
+
+        const points = handleSnapSettings.getSnapPoints()
+
+        expect(points).toEqual([])
+      })
+
+      it('deduplicates points', () => {
+        handleSnapSettings.setGridSize(4)
+        handleSnapSettings.addCustomPoint(8) // Already on 4-grid
+
+        const points = handleSnapSettings.getSnapPoints()
+        const count = points.filter(p => p === 8).length
+
+        expect(count).toBe(1)
+      })
+    })
+
+    describe('reset()', () => {
+      it('resets to defaults', () => {
+        handleSnapSettings.set({ gridSize: 16, enabled: false })
+        handleSnapSettings.addCustomPoint(20)
+
+        handleSnapSettings.reset()
+
+        const settings = handleSnapSettings.get()
+        expect(settings.gridSize).toBe(8)
+        expect(settings.enabled).toBe(true)
+        expect(settings.customPoints).toEqual([])
+      })
+
+      it('emits event with defaults', () => {
+        const handler = vi.fn()
+        const unsub = events.on('handleSnap:changed', handler)
+
+        handleSnapSettings.reset()
+
+        expect(handler).toHaveBeenCalledWith(expect.objectContaining({
+          enabled: true,
+          gridSize: 8,
+          customPoints: [],
+        }))
+        unsub()
       })
     })
   })

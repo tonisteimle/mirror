@@ -104,7 +104,7 @@ export function createModificationAdapter(
 
   return {
     setProperty(nodeId, name, value) {
-      const result = codeModifier.setProperty(nodeId, name, value)
+      const result = codeModifier.updateProperty(nodeId, name, value)
       onCodeChange(result)
       return result
     },
@@ -116,26 +116,41 @@ export function createModificationAdapter(
     },
 
     toggleProperty(nodeId, name, enabled) {
-      const result = codeModifier.toggleProperty(nodeId, name, enabled)
-      onCodeChange(result)
-      return result
+      // Toggle is implemented as updateProperty with empty value (enabled) or removeProperty (disabled)
+      if (enabled) {
+        const result = codeModifier.addProperty(nodeId, name, '')
+        onCodeChange(result)
+        return result
+      } else {
+        const result = codeModifier.removeProperty(nodeId, name)
+        onCodeChange(result)
+        return result
+      }
     },
 
     batchUpdate(nodeId, changes) {
       // Apply changes sequentially for now
       // TODO: Implement true batch update in CodeModifier
-      let lastResult: ModificationResult = { success: false, newSource: '' }
+      let lastResult: ModificationResult = {
+        success: false,
+        newSource: '',
+        change: { from: 0, to: 0, insert: '' }
+      }
 
       for (const change of changes) {
         switch (change.action) {
           case 'set':
-            lastResult = codeModifier.setProperty(nodeId, change.name, change.value)
+            lastResult = codeModifier.updateProperty(nodeId, change.name, change.value)
             break
           case 'remove':
             lastResult = codeModifier.removeProperty(nodeId, change.name)
             break
           case 'toggle':
-            lastResult = codeModifier.toggleProperty(nodeId, change.name, change.value === 'true')
+            if (change.value === 'true') {
+              lastResult = codeModifier.addProperty(nodeId, change.name, '')
+            } else {
+              lastResult = codeModifier.removeProperty(nodeId, change.name)
+            }
             break
         }
 

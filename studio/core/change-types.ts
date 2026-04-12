@@ -140,6 +140,39 @@ export interface UpdateTextIntent extends BaseIntent {
 }
 
 /**
+ * Distribute multiple nodes evenly
+ */
+export interface DistributeIntent {
+  type: 'distribute'
+  nodeIds: string[]
+  direction: 'horizontal' | 'vertical' | 'auto'
+}
+
+/**
+ * Move multiple nodes by delta
+ */
+export interface MultiMoveIntent {
+  type: 'multiMove'
+  nodeIds: string[]
+  deltaX: number
+  deltaY: number
+}
+
+/**
+ * Resize multiple nodes proportionally
+ */
+export interface MultiResizeIntent {
+  type: 'multiResize'
+  nodeIds: string[]
+  /** Scale factor for width (1.0 = no change) */
+  scaleX: number
+  /** Scale factor for height (1.0 = no change) */
+  scaleY: number
+  /** Anchor point for resize */
+  anchor?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center'
+}
+
+/**
  * All possible intents
  */
 export type ChangeIntent =
@@ -157,6 +190,9 @@ export type ChangeIntent =
   | UngroupIntent
   | DuplicateNodeIntent
   | UpdateTextIntent
+  | DistributeIntent
+  | MultiMoveIntent
+  | MultiResizeIntent
 
 // ============================================================================
 // RESULT TYPE

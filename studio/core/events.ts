@@ -116,6 +116,8 @@ export interface StudioEvents {
   'smartGuides:changed': { enabled: boolean; threshold: number; color: string; showDistances: boolean }
   /** General settings changed */
   'settings:changed': { moveStep: number; moveStepShift: number; showPositionLabels: boolean }
+  /** Handle snap settings changed */
+  'handleSnap:changed': { enabled: boolean; gridSize: number; customPoints: number[]; threshold: number }
   /** Inline text editing started */
   'inline-edit:started': { nodeId: string; element: HTMLElement }
   /** Inline text editing input changed */
