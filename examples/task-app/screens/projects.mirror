@@ -1,0 +1,125 @@
+// ============================================
+// PROJECTS SCREEN
+// ============================================
+
+use tokens
+use components
+use data
+
+// Project Card Component
+ProjectCard: Card w 360
+  Header: hor, spread, ver-center
+  Stats: hor, gap 16, mar 8 0
+  Progress: gap 8, mar 8 0
+
+Frame name ProjectsScreen, gap 24, w full
+
+  // Page Header
+  PageHeader
+    Frame gap 4
+      Title "Projekte"
+      Subtitle "Verwalte deine Projekte und verfolge den Fortschritt"
+    Frame hor, gap 12
+      GhostBtn
+        Icon "layout-grid", ic $muted, is 18
+      GhostBtn
+        Icon "list", ic $muted, is 18
+      PrimaryBtn
+        Icon "folder-plus", ic white, is 18
+        Text "Neues Projekt"
+
+  // Project Stats Overview
+  Frame hor, gap 16, pad 16, bg $card, rad $radius-lg
+    Frame gap 4, grow, center
+      Text "5", col white, fs 32, weight 700
+      Text "Projekte Gesamt", col $muted, fs 12
+    Frame w 1, h 50, bg $border
+    Frame gap 4, grow, center
+      Text "2", col #10b981, fs 32, weight 700
+      Text "Aktiv", col $muted, fs 12
+    Frame w 1, h 50, bg $border
+    Frame gap 4, grow, center
+      Text "1", col #6366f1, fs 32, weight 700
+      Text "Abgeschlossen", col $muted, fs 12
+    Frame w 1, h 50, bg $border
+    Frame gap 4, grow, center
+      Text "2", col #f59e0b, fs 32, weight 700
+      Text "Geplant", col $muted, fs 12
+
+  // Status Filters
+  Frame hor, gap 8
+    StatusFilter: pad 8 16, rad $radius-full, cursor pointer, hor, gap 6, ver-center, bor 1, boc $border, exclusive()
+      hover 0.15s:
+        bg #ffffff11
+      on:
+        bg $primary
+        boc $primary
+        col white
+    StatusFilter on
+      Frame w 8, h 8, rad 99, bg white
+      Text "Alle"
+    StatusFilter
+      Frame w 8, h 8, rad 99, bg #10b981
+      Text "Aktiv"
+    StatusFilter
+      Frame w 8, h 8, rad 99, bg #6366f1
+      Text "Abgeschlossen"
+    StatusFilter
+      Frame w 8, h 8, rad 99, bg #f59e0b
+      Text "Geplant"
+
+  // Projects Grid
+  Frame hor, gap 20, wrap
+    each project in $projects
+      ProjectCard
+        Header
+          Frame hor, gap 12, ver-center
+            Frame w 48, h 48, rad $radius, bg $project.color, center
+              Icon "folder", ic white, is 24
+            Frame gap 2
+              Text "$project.name", col white, fs 16, weight 600
+              Frame hor, gap 6, ver-center
+                Frame w 6, h 6, rad 99, bg $project.status == "active" ? #10b981 : $project.status == "completed" ? #6366f1 : #f59e0b
+                Text $project.status == "active" ? "Aktiv" : $project.status == "completed" ? "Abgeschlossen" : "Geplant", col $muted, fs 12
+          IconBtn
+            Icon "more-horizontal", ic $muted, is 20
+
+        Text "$project.description", col $muted, fs 13, line 1.5
+
+        Stats
+          Frame hor, gap 6, ver-center
+            Icon "check-square", ic $muted, is 16
+            Text $project.tasksDone + "/" + $project.tasksTotal + " Tasks", col $muted, fs 12
+          Frame hor, gap 6, ver-center
+            Icon "users", ic $muted, is 16
+            Text $project.members + " Mitglieder", col $muted, fs 12
+
+        Progress
+          Frame hor, spread
+            Text "Fortschritt", col $muted, fs 12
+            Text "$project.progress%", col white, fs 12, weight 600
+          ProgressBar
+            Fill w $project.progress + "%", bg $project.color
+
+        Frame hor, spread, ver-center, mar 8 0 0 0
+          // Team Avatars
+          AvatarStack
+            AvatarSm bg $project.color
+              Text "A"
+            AvatarSm bg #10b981, bor 2, boc $card
+              Text "M"
+            if $project.members > 2
+              AvatarSm bg #333, bor 2, boc $card
+                Text "+" + ($project.members - 2)
+
+          Frame hor, gap 8
+            GhostBtn pad 6 12, fs 12
+              Icon "eye", ic $muted, is 14
+              Text "Details"
+            GhostBtn pad 6 12, fs 12
+              Icon "settings", ic $muted, is 14
+
+        // Due Date Footer
+        Frame hor, gap 6, ver-center, mar 8 0 0 0, pad 12 0 0 0, bor 1 0 0 0, boc $border
+          Icon "calendar", ic $muted, is 14
+          Text "Fällig: " + $project.dueDate, col $muted, fs 12

@@ -1,0 +1,132 @@
+// ============================================
+// TASKFLOW - MODULARE HAUPTDATEI
+// ============================================
+// Diese Datei zeigt die modulare Struktur mit
+// use (Imports) und show (Screen Loading)
+// ============================================
+
+use tokens
+use components
+
+// ============================================
+// APP SHELL LAYOUT
+// ============================================
+
+AppShell: w full, h full, hor, bg $surface
+  Sidebar: w 260, h full, bg $secondary
+  MainContent: w full, h full, pad 24, gap 24, scroll
+
+// ============================================
+// NAVIGATION
+// ============================================
+
+NavLink: Frame w full, pad 14 20, hor, gap 12, ver-center, cursor pointer, col $muted, rad $radius
+  hover 0.15s:
+    bg #ffffff11
+    col white
+  active:
+    bg $primary
+    col white
+
+// Badge für Notifications
+NavBadge: Frame pad 2 8, bg $danger, rad 99, mar 0 0 0 auto
+  Count: col white, fs 11, weight 600
+
+// ============================================
+// MAIN APP
+// ============================================
+
+AppShell
+  Sidebar
+    // Logo Area
+    Frame pad 24, gap 0
+      Frame hor, gap 12, ver-center
+        Frame w 44, h 44, rad $radius-lg, bg $primary, center
+          Icon "check-square", ic white, is 22
+        Frame gap 2
+          Text "TaskFlow", col white, fs 20, weight 700
+          Text "Workspace", col $muted, fs 11
+
+    // Main Navigation
+    Frame pad 12, gap 4
+      Text "HAUPTMENÜ", col $muted, fs 10, weight 600, pad 8 8, uppercase
+
+      NavLink name NavDashboard, active, navigate(DashboardView)
+        Icon "layout-dashboard", ic currentColor, is 20
+        Text "Dashboard"
+
+      NavLink name NavTasks, navigate(TasksView)
+        Icon "check-square", ic currentColor, is 20
+        Text "Tasks"
+        NavBadge
+          Count "12"
+
+      NavLink name NavProjects, navigate(ProjectsView)
+        Icon "folder", ic currentColor, is 20
+        Text "Projekte"
+
+      NavLink name NavTeam, navigate(TeamView)
+        Icon "users", ic currentColor, is 20
+        Text "Team"
+        NavBadge bg #10b981
+          Count "4"
+
+    // Secondary Navigation
+    Frame pad 12, gap 4
+      Text "WEITERE", col $muted, fs 10, weight 600, pad 8 8, uppercase
+
+      NavLink
+        Icon "bar-chart-2", ic currentColor, is 20
+        Text "Analytics"
+
+      NavLink
+        Icon "calendar", ic currentColor, is 20
+        Text "Kalender"
+
+      NavLink
+        Icon "file-text", ic currentColor, is 20
+        Text "Dokumente"
+
+    // Spacer
+    Spacer
+
+    // Bottom Navigation
+    Frame pad 12, gap 4
+      NavLink name NavSettings, navigate(SettingsView)
+        Icon "settings", ic currentColor, is 20
+        Text "Einstellungen"
+
+      NavLink
+        Icon "help-circle", ic currentColor, is 20
+        Text "Hilfe & Support"
+
+    // User Profile Area
+    Frame pad 16, bor 1 0 0 0, boc $border
+      Frame hor, gap 12, ver-center
+        Frame w 40, h 40, rad 99, bg $primary, center
+          Text "MM", col white, fs 13, weight 600
+        Frame gap 2, grow
+          Text "Max Mustermann", col white, fs 14, weight 500
+          Frame hor, gap 6, ver-center
+            Frame w 8, h 8, rad 99, bg #10b981
+            Text "Online", col $muted, fs 11
+        IconBtn
+          Icon "chevron-up", ic $muted, is 18
+
+  MainContent
+    // Screens werden hier geladen
+    // Mit show können externe Dateien referenziert werden
+    Frame name DashboardView
+      show DashboardScreen from screens/dashboard
+
+    Frame name TasksView, hidden
+      show TasksScreen from screens/tasks
+
+    Frame name ProjectsView, hidden
+      show ProjectsScreen from screens/projects
+
+    Frame name TeamView, hidden
+      show TeamScreen from screens/team
+
+    Frame name SettingsView, hidden
+      show SettingsScreen from screens/settings

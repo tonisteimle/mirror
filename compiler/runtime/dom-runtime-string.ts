@@ -836,6 +836,156 @@ const _runtime = {
   },
 
   // ============================================
+  // CRUD OPERATIONS
+  // ============================================
+
+  // Generate unique ID for new entries
+  _generateId(prefix = 'item') {
+    return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+  },
+
+  // Add new entry to collection
+  add(collectionName, values) {
+    const name = collectionName.startsWith('$') ? collectionName.slice(1) : collectionName
+    const data = window.__mirrorData || {}
+
+    if (!data[name] || typeof data[name] !== 'object') {
+      data[name] = {}
+    }
+
+    const collection = data[name]
+    const key = this._generateId(name.slice(0, 3))
+
+    // Use provided values or create empty entry with _key
+    collection[key] = values || { _key: key }
+    if (!collection[key]._key) {
+      collection[key]._key = key
+    }
+
+    this._refreshEachLoops(name)
+    return key
+  },
+
+  // Remove entry from collection
+  remove(itemOrCollection, key) {
+    let collectionName, entryKey
+
+    if (typeof itemOrCollection === 'string') {
+      // Called as remove('collectionName', 'key')
+      collectionName = itemOrCollection.startsWith('$') ? itemOrCollection.slice(1) : itemOrCollection
+      entryKey = key
+    } else if (itemOrCollection && typeof itemOrCollection === 'object') {
+      // Called as remove(item) - find collection by _key
+      if (typeof itemOrCollection._key !== 'string') {
+        console.warn('[Mirror] remove() requires item with _key property')
+        return
+      }
+      entryKey = itemOrCollection._key
+
+      // Find which collection contains this key
+      const data = window.__mirrorData || {}
+      const found = Object.entries(data).find(([, val]) => {
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          return val[entryKey] !== undefined
+        }
+        return false
+      })
+
+      if (!found) {
+        console.warn('[Mirror] remove() could not find collection for item')
+        return
+      }
+      collectionName = found[0]
+    } else {
+      return
+    }
+
+    const data = window.__mirrorData || {}
+    const collection = data[collectionName]
+
+    if (!collection || typeof collection !== 'object') {
+      return
+    }
+
+    delete collection[entryKey]
+    this._refreshEachLoops(collectionName)
+  },
+
+  // Update field in item
+  updateField(item, field, value) {
+    if (!item || typeof item._key !== 'string') {
+      return
+    }
+
+    item[field] = value
+
+    // Also update in __mirrorData
+    const data = window.__mirrorData || {}
+    const entryKey = item._key
+
+    for (const [collName, colData] of Object.entries(data)) {
+      if (colData && typeof colData === 'object' && !Array.isArray(colData)) {
+        if (colData[entryKey]) {
+          colData[entryKey][field] = value
+          return
+        }
+      }
+    }
+  },
+
+  // Re-render each loops for a collection after data changes
+  _refreshEachLoops(collectionName) {
+    const containers = document.querySelectorAll('[data-each-container]')
+
+    containers.forEach(container => {
+      const config = container._eachConfig
+      if (!config) return
+      if (config.collection !== collectionName) return
+
+      // Clear and re-render
+      container.innerHTML = ''
+
+      const data = window.__mirrorData || {}
+      let items = data[collectionName]
+
+      if (!items) return
+
+      // Convert object to array with _key
+      if (!Array.isArray(items)) {
+        items = Object.entries(items).map(([k, v]) => {
+          if (typeof v === 'object' && v !== null) {
+            return { _key: k, ...v }
+          }
+          return v
+        })
+      }
+
+      // Apply filter if configured
+      if (config.filterFn) {
+        items = items.filter(config.filterFn)
+      }
+
+      // Apply sort if configured
+      if (config.orderBy) {
+        const dir = config.orderDesc ? -1 : 1
+        items = [...items].sort((a, b) => {
+          const aVal = a[config.orderBy]
+          const bVal = b[config.orderBy]
+          if (aVal < bVal) return -dir
+          if (aVal > bVal) return dir
+          return 0
+        })
+      }
+
+      // Render each item
+      items.forEach((item, index) => {
+        const itemEl = config.renderItem(item, index)
+        container.appendChild(itemEl)
+      })
+    })
+  },
+
+  // ============================================
   // TWO-WAY DATA BINDING
   // ============================================
 

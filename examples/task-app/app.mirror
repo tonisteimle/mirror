@@ -1,0 +1,482 @@
+// ============================================
+// TASK MANAGEMENT APP
+// Eine vollständige Mirror-Anwendung mit
+// Navigation, Tokens, Komponenten und Screens
+// ============================================
+
+// ============================================
+// 1. DESIGN TOKENS
+// ============================================
+
+// Farben - Semantisch benannt
+primary.bg: #6366f1
+primary.col: white
+secondary.bg: #1e1b4b
+surface.bg: #0f0d1a
+card.bg: #1a1625
+border.boc: #2d2640
+muted.col: #6b7280
+success.bg: #10b981
+success.col: #10b981
+warning.bg: #f59e0b
+warning.col: #f59e0b
+danger.bg: #ef4444
+danger.col: #ef4444
+
+// Abstände
+space.pad: 16
+space.gap: 12
+
+// Radien
+radius.rad: 8
+radius-lg.rad: 12
+radius-full.rad: 99
+
+// ============================================
+// 2. BASIS-KOMPONENTEN
+// ============================================
+
+// Buttons
+Btn: pad 10 20, rad $radius, cursor pointer, weight 500
+  hover 0.15s:
+    opacity 0.9
+
+PrimaryBtn as Btn: bg $primary, col $primary
+DangerBtn as Btn: bg $danger, col white
+GhostBtn as Btn: bg transparent, col $muted, bor 1, boc $border
+  hover 0.15s:
+    bg #ffffff11
+
+// Cards
+Card: bg $card, rad $radius-lg, pad 20, gap 12
+  Title: col white, fs 16, weight 600
+  Subtitle: col $muted, fs 13
+  Content: gap 8
+
+// Inputs
+Field: bg #0f0d1a, bor 1, boc $border, col white, pad 12, rad $radius, w full
+  focus:
+    boc $primary
+
+// Status Badges
+Badge: pad 4 10, rad $radius-full, fs 11, weight 600
+SuccessBadge as Badge: bg #10b98122, col $success
+WarningBadge as Badge: bg #f59e0b22, col $warning
+DangerBadge as Badge: bg #ef444422, col $danger
+
+// Stat Card
+StatCard: bg $card, rad $radius-lg, pad 20, gap 8
+  Label: col $muted, fs 12, uppercase
+  Value: col white, fs 28, weight 700
+  Change: fs 12
+
+// ============================================
+// 3. DATEN
+// ============================================
+
+// Statistiken
+stats:
+  tasks:
+    label: "Offene Tasks"
+    value: 12
+    change: "+3 diese Woche"
+    trend: "up"
+  completed:
+    label: "Erledigt"
+    value: 48
+    change: "89% Rate"
+    trend: "up"
+  projects:
+    label: "Projekte"
+    value: 5
+    change: "2 aktiv"
+    trend: "neutral"
+  team:
+    label: "Team"
+    value: 8
+    change: "Online"
+    trend: "up"
+
+// Tasks
+tasks:
+  task1:
+    title: "Landing Page Design"
+    project: "Website Relaunch"
+    priority: "high"
+    done: false
+  task2:
+    title: "API Integration"
+    project: "Mobile App"
+    priority: "medium"
+    done: false
+  task3:
+    title: "User Testing"
+    project: "Website Relaunch"
+    priority: "low"
+    done: true
+  task4:
+    title: "Database Schema"
+    project: "Backend"
+    priority: "high"
+    done: false
+  task5:
+    title: "Documentation"
+    project: "Mobile App"
+    priority: "low"
+    done: true
+
+// Projekte
+projects:
+  website:
+    name: "Website Relaunch"
+    description: "Kompletter Redesign der Unternehmenswebsite"
+    progress: 65
+    tasks: 8
+    members: 3
+    color: #6366f1
+  mobile:
+    name: "Mobile App"
+    description: "iOS und Android App Entwicklung"
+    progress: 40
+    tasks: 12
+    members: 4
+    color: #10b981
+  backend:
+    name: "Backend Services"
+    description: "API und Microservices Architektur"
+    progress: 80
+    tasks: 5
+    members: 2
+    color: #f59e0b
+
+// Team
+team:
+  anna:
+    name: "Anna Schmidt"
+    role: "Designer"
+    status: "online"
+    avatar: "AS"
+  max:
+    name: "Max Weber"
+    role: "Developer"
+    status: "online"
+    avatar: "MW"
+  lisa:
+    name: "Lisa Müller"
+    role: "Project Lead"
+    status: "away"
+    avatar: "LM"
+  tom:
+    name: "Tom Klein"
+    role: "Developer"
+    status: "offline"
+    avatar: "TK"
+
+// ============================================
+// 4. LAYOUT KOMPONENTEN
+// ============================================
+
+// App Shell
+AppShell: w full, h full, hor, bg $surface
+  Sidebar: w 240, h full, bg $secondary, pad 0, gap 0
+  MainArea: w full, h full, pad 24, gap 24, scroll
+
+// Navigation Item
+NavBtn: w full, pad 14 20, hor, gap 12, ver-center, cursor pointer, col $muted
+  hover 0.15s:
+    bg #ffffff11
+    col white
+  active:
+    bg $primary
+    col white
+
+// ============================================
+// 5. SCREEN KOMPONENTEN
+// ============================================
+
+// --- DASHBOARD ---
+DashboardView: Frame name DashboardView, gap 24, w full
+  // Header
+  Frame hor, spread, ver-center
+    Frame gap 4
+      Text "Dashboard", col white, fs 24, weight 700
+      Text "Willkommen zurück! Hier ist dein Überblick.", col $muted, fs 14
+    Frame hor, gap 8
+      Input placeholder "Suchen...", Field, w 240
+      PrimaryBtn "Neuer Task"
+        Frame hor, gap 8, ver-center
+          Icon "plus", ic white, is 16
+
+  // Stats Grid
+  Frame hor, gap 16, wrap
+    each stat in $stats
+      StatCard w 200
+        Label "$stat.label"
+        Value "$stat.value"
+        Change "$stat.change", col $stat.trend == "up" ? #10b981 : #6b7280
+
+  // Recent Tasks
+  Card w full
+    Frame hor, spread, ver-center
+      Title "Aktuelle Tasks"
+      GhostBtn "Alle anzeigen"
+    Content
+      each task in $tasks
+        Frame hor, spread, ver-center, pad 12, bg #0f0d1a, rad $radius, mar 4 0
+          Frame hor, gap 12, ver-center
+            Checkbox "$task.title", checked $task.done
+          Frame hor, gap 8, ver-center
+            Text "$task.project", col $muted, fs 12
+            if $task.priority == "high"
+              DangerBadge "Hoch"
+            if $task.priority == "medium"
+              WarningBadge "Mittel"
+            if $task.priority == "low"
+              SuccessBadge "Niedrig"
+
+// --- TASKS VIEW ---
+TasksView: Frame name TasksView, gap 24, w full, hidden
+  Frame hor, spread, ver-center
+    Frame gap 4
+      Text "Tasks", col white, fs 24, weight 700
+      Text "Verwalte deine Aufgaben", col $muted, fs 14
+    Frame hor, gap 8
+      GhostBtn "Filter"
+        Icon "filter", ic $muted, is 16
+      PrimaryBtn "Task erstellen"
+        Icon "plus", ic white, is 16
+
+  // Task Filters
+  Frame hor, gap 8
+    FilterBtn: pad 10 16, rad $radius-full, cursor pointer, col $muted, bg transparent, exclusive()
+      hover 0.15s:
+        bg #ffffff11
+      on:
+        bg $primary
+        col white
+    FilterBtn "Alle", on
+    FilterBtn "Offen"
+    FilterBtn "Erledigt"
+    FilterBtn "Hohe Priorität"
+
+  // Task List
+  Frame gap 8, w full
+    each t in $tasks
+      TaskItem: Frame hor, spread, ver-center, pad 16, bg $card, rad $radius, w full, toggle()
+        Frame hor, gap 16, ver-center
+          Frame w 24, h 24, rad 6, bor 2, boc $t.done ? #10b981 : #2d2640, bg $t.done ? #10b981 : transparent, center, cursor pointer
+            if $t.done
+              Icon "check", ic white, is 14
+          Frame gap 4
+            Text "$t.title", col $t.done ? #6b7280 : white, weight 500
+            Text "$t.project", col $muted, fs 12
+        Frame hor, gap 12, ver-center
+          if $t.priority == "high"
+            DangerBadge "Hoch"
+          if $t.priority == "medium"
+            WarningBadge "Mittel"
+          if $t.priority == "low"
+            SuccessBadge "Niedrig"
+          Icon "more-vertical", ic $muted, is 18, cursor pointer
+        on:
+          bg #1e1b4b
+      TaskItem
+
+// --- PROJECTS VIEW ---
+ProjectsView: Frame name ProjectsView, gap 24, w full, hidden
+  Frame hor, spread, ver-center
+    Frame gap 4
+      Text "Projekte", col white, fs 24, weight 700
+      Text "Deine aktiven Projekte", col $muted, fs 14
+    PrimaryBtn "Neues Projekt"
+      Icon "folder-plus", ic white, is 16
+
+  // Project Cards Grid
+  Frame hor, gap 16, wrap
+    each project in $projects
+      Card w 320
+        Frame hor, spread, ver-center
+          Frame hor, gap 12, ver-center
+            Frame w 40, h 40, rad $radius, bg $project.color, center
+              Icon "folder", ic white, is 20
+            Frame gap 2
+              Title "$project.name"
+              Subtitle $project.tasks + " Tasks"
+          Icon "more-horizontal", ic $muted, is 18, cursor pointer
+
+        Text "$project.description", col $muted, fs 13
+
+        // Progress Bar
+        Frame gap 8
+          Frame hor, spread
+            Text "Fortschritt", col $muted, fs 12
+            Text "$project.progress%", col white, fs 12, weight 600
+          Frame w full, h 6, bg #0f0d1a, rad 99
+            Frame w $project.progress + "%", h 6, bg $project.color, rad 99
+
+        // Team
+        Frame hor, spread, ver-center, mar 8 0 0 0
+          Frame hor, gap -8
+            Frame w 28, h 28, rad 99, bg $primary, center, bor 2, boc $card
+              Text "A", col white, fs 11
+            Frame w 28, h 28, rad 99, bg #10b981, center, bor 2, boc $card
+              Text "M", col white, fs 11
+            Frame w 28, h 28, rad 99, bg #f59e0b, center, bor 2, boc $card
+              Text "+" + ($project.members - 2), col white, fs 10
+          GhostBtn "Details", pad 6 12, fs 12
+
+// --- TEAM VIEW ---
+TeamView: Frame name TeamView, gap 24, w full, hidden
+  Frame hor, spread, ver-center
+    Frame gap 4
+      Text "Team", col white, fs 24, weight 700
+      Text "Deine Teammitglieder", col $muted, fs 14
+    PrimaryBtn "Einladen"
+      Icon "user-plus", ic white, is 16
+
+  // Team Grid
+  Frame hor, gap 16, wrap
+    each member in $team
+      Card w 280, center
+        Frame w 64, h 64, rad 99, bg $primary, center
+          Text "$member.avatar", col white, fs 18, weight 600
+        Frame gap 4, center
+          Text "$member.name", col white, fs 16, weight 600
+          Text "$member.role", col $muted, fs 13
+        Frame hor, gap 8, ver-center
+          Frame w 8, h 8, rad 99, bg $member.status == "online" ? #10b981 : $member.status == "away" ? #f59e0b : #6b7280
+          Text $member.status == "online" ? "Online" : $member.status == "away" ? "Abwesend" : "Offline", col $muted, fs 12
+        Frame hor, gap 8, mar 8 0 0 0
+          GhostBtn "Nachricht", grow
+          GhostBtn "Profil", grow
+
+// --- SETTINGS VIEW ---
+SettingsView: Frame name SettingsView, gap 24, w full, hidden
+  Frame gap 4
+    Text "Einstellungen", col white, fs 24, weight 700
+    Text "Passe die App an deine Bedürfnisse an", col $muted, fs 14
+
+  // Settings Sections
+  Card w full
+    Title "Benachrichtigungen"
+    Content
+      Frame hor, spread, ver-center, pad 12 0
+        Frame gap 2
+          Text "E-Mail Benachrichtigungen", col white, fs 14
+          Text "Erhalte Updates per E-Mail", col $muted, fs 12
+        Switch checked
+
+      Frame hor, spread, ver-center, pad 12 0
+        Frame gap 2
+          Text "Push Benachrichtigungen", col white, fs 14
+          Text "Desktop Benachrichtigungen", col $muted, fs 12
+        Switch
+
+      Frame hor, spread, ver-center, pad 12 0
+        Frame gap 2
+          Text "Wöchentlicher Report", col white, fs 14
+          Text "Zusammenfassung jeden Montag", col $muted, fs 12
+        Switch checked
+
+  Card w full
+    Title "Erscheinungsbild"
+    Content
+      Frame gap 12
+        Text "Theme", col $muted, fs 12
+        Frame hor, gap 8
+          ThemeBtn: Frame pad 12 20, rad $radius, cursor pointer, bor 2, exclusive()
+            hover 0.15s:
+              opacity 0.8
+            on:
+              boc $primary
+          ThemeBtn "Dunkel", bg #1a1625, col white, boc $primary, on
+          ThemeBtn "Hell", bg #f3f4f6, col #1f2937, boc transparent
+          ThemeBtn "System", bg grad #1a1625 #f3f4f6, col white, boc transparent
+
+      Frame gap 12, mar 16 0 0 0
+        Text "Akzentfarbe", col $muted, fs 12
+        Frame hor, gap 8
+          ColorBtn: Frame w 36, h 36, rad 99, cursor pointer, bor 2, boc transparent, exclusive()
+            hover 0.15s:
+              scale 1.1
+            on:
+              bor 3
+              boc white
+          ColorBtn bg #6366f1, on
+          ColorBtn bg #10b981
+          ColorBtn bg #f59e0b
+          ColorBtn bg #ef4444
+          ColorBtn bg #ec4899
+
+  Card w full
+    Title "Konto"
+    Content
+      Frame gap 16
+        Frame gap 8
+          Text "Name", col $muted, fs 12
+          Input value "Max Mustermann", Field
+        Frame gap 8
+          Text "E-Mail", col $muted, fs 12
+          Input value "max@example.com", type "email", Field
+        Frame hor, gap 12, mar 8 0 0 0
+          PrimaryBtn "Speichern"
+          DangerBtn "Konto löschen"
+
+// ============================================
+// 6. HAUPT-APP
+// ============================================
+
+AppShell
+  Sidebar
+    // Logo
+    Frame pad 20, gap 0
+      Frame hor, gap 12, ver-center
+        Frame w 40, h 40, rad $radius, bg $primary, center
+          Icon "check-square", ic white, is 20
+        Text "TaskFlow", col white, fs 18, weight 700
+
+    // Navigation
+    Frame pad 8, gap 4
+      NavBtn name NavDashboard, active, navigate(DashboardView)
+        Icon "layout-dashboard", ic currentColor, is 20
+        Text "Dashboard"
+
+      NavBtn name NavTasks, navigate(TasksView)
+        Icon "check-square", ic currentColor, is 20
+        Text "Tasks"
+        Frame mar 0 0 0 auto, pad 2 8, bg $danger, rad 99
+          Text "12", col white, fs 11, weight 600
+
+      NavBtn name NavProjects, navigate(ProjectsView)
+        Icon "folder", ic currentColor, is 20
+        Text "Projekte"
+
+      NavBtn name NavTeam, navigate(TeamView)
+        Icon "users", ic currentColor, is 20
+        Text "Team"
+
+    // Spacer
+    Spacer
+
+    // Bottom Navigation
+    Frame pad 8, gap 4
+      NavBtn name NavSettings, navigate(SettingsView)
+        Icon "settings", ic currentColor, is 20
+        Text "Einstellungen"
+
+    // User
+    Frame pad 16, bor 1 0 0 0, boc $border
+      Frame hor, gap 12, ver-center
+        Frame w 36, h 36, rad 99, bg $primary, center
+          Text "MM", col white, fs 12, weight 600
+        Frame gap 2, grow
+          Text "Max Mustermann", col white, fs 13, weight 500
+          Text "Admin", col $muted, fs 11
+        Icon "log-out", ic $muted, is 18, cursor pointer
+
+  MainArea
+    DashboardView
+    TasksView
+    ProjectsView
+    TeamView
+    SettingsView

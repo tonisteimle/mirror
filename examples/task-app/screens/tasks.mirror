@@ -1,0 +1,150 @@
+// ============================================
+// TASKS SCREEN
+// ============================================
+
+use tokens
+use components
+use data
+
+// Task Item Component
+TaskRow: Frame hor, spread, ver-center, pad 16, bg $card, rad $radius, w full, cursor pointer
+  hover 0.15s:
+    bg #1e1b4b
+
+Frame name TasksScreen, gap 24, w full
+
+  // Page Header
+  PageHeader
+    Frame gap 4
+      Title "Tasks"
+      Subtitle "Verwalte alle deine Aufgaben"
+    Frame hor, gap 12
+      GhostBtn
+        Icon "filter", ic $muted, is 18
+        Text "Filter"
+      GhostBtn
+        Icon "arrow-up-down", ic $muted, is 18
+        Text "Sortieren"
+      PrimaryBtn
+        Icon "plus", ic white, is 18
+        Text "Task erstellen"
+
+  // Filter Tabs
+  Frame hor, gap 8, pad 4, bg $card, rad $radius-lg, w hug
+    FilterTab: pad 10 20, rad $radius, cursor pointer, col $muted, weight 500, exclusive()
+      hover 0.15s:
+        col white
+      on:
+        bg $primary
+        col white
+    FilterTab "Alle (8)", on
+    FilterTab "Offen (5)"
+    FilterTab "Erledigt (3)"
+    FilterTab "Hohe Priorität (3)"
+
+  // Task Stats
+  Frame hor, gap 16
+    Frame hor, gap 8, ver-center
+      Frame w 12, h 12, rad 99, bg $danger
+      Text "3 Hoch", col $muted, fs 13
+    Frame hor, gap 8, ver-center
+      Frame w 12, h 12, rad 99, bg $warning
+      Text "2 Mittel", col $muted, fs 13
+    Frame hor, gap 8, ver-center
+      Frame w 12, h 12, rad 99, bg $success
+      Text "3 Niedrig", col $muted, fs 13
+
+  // Task List
+  Frame gap 8, w full
+    each task in $tasks
+      TaskRow toggle()
+        Frame hor, gap 16, ver-center, grow
+          // Checkbox
+          Frame w 24, h 24, rad 6, bor 2, boc $task.done ? #10b981 : #2d2640, bg $task.done ? #10b981 : transparent, center, cursor pointer
+            if $task.done
+              Icon "check", ic white, is 14
+
+          // Task Info
+          Frame gap 4, grow
+            Text "$task.title", col $task.done ? #6b7280 : white, weight 500, fs 15
+            Frame hor, gap 12, ver-center
+              Frame hor, gap 6, ver-center
+                Icon "folder", ic $muted, is 14
+                Text "$task.project", col $muted, fs 12
+              Frame hor, gap 6, ver-center
+                Icon "calendar", ic $muted, is 14
+                Text "$task.dueDate", col $muted, fs 12
+              Frame hor, gap 6, ver-center
+                Icon "user", ic $muted, is 14
+                Text "$task.assignee", col $muted, fs 12
+
+        // Right Side
+        Frame hor, gap 12, ver-center
+          // Priority Badge
+          if $task.priority == "high"
+            DangerBadge "Hoch"
+          if $task.priority == "medium"
+            WarningBadge "Mittel"
+          if $task.priority == "low"
+            SuccessBadge "Niedrig"
+
+          // Actions
+          IconBtn
+            Icon "edit", ic $muted, is 18
+          IconBtn
+            Icon "trash", ic $muted, is 18
+          IconBtn
+            Icon "more-vertical", ic $muted, is 18
+
+        // Expanded State
+        on:
+          bg #1e1b4b
+          bor 1
+          boc $primary
+
+  // Create Task Dialog (versteckt)
+  Dialog
+    Trigger: Frame hidden
+    Content: Card w 480
+      Frame hor, spread, ver-center
+        Title "Neuen Task erstellen"
+        CloseTrigger: IconBtn
+          Icon "x", ic $muted, is 20
+
+      Content
+        Frame gap 16
+          Frame gap 8
+            Text "Titel", col $muted, fs 12
+            Input placeholder "Was muss erledigt werden?", Field
+
+          Frame gap 8
+            Text "Beschreibung", col $muted, fs 12
+            Textarea placeholder "Details zum Task...", Field, h 80
+
+          Frame hor, gap 16
+            Frame gap 8, grow
+              Text "Projekt", col $muted, fs 12
+              Select placeholder "Projekt wählen..."
+                Option "Website Relaunch", value "website"
+                Option "Mobile App", value "mobile"
+                Option "Backend", value "backend"
+
+            Frame gap 8, grow
+              Text "Priorität", col $muted, fs 12
+              Select placeholder "Priorität..."
+                Option "Hoch", value "high"
+                Option "Mittel", value "medium"
+                Option "Niedrig", value "low"
+
+          Frame gap 8
+            Text "Zuweisen an", col $muted, fs 12
+            Select placeholder "Teammitglied..."
+              Option "Anna Schmidt", value "anna"
+              Option "Max Weber", value "max"
+              Option "Tom Klein", value "tom"
+
+      Actions
+        CloseTrigger: GhostBtn grow
+          Text "Abbrechen"
+        PrimaryBtn grow
+          Text "Task erstellen"

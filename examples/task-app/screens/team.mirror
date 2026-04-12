@@ -1,0 +1,126 @@
+// ============================================
+// TEAM SCREEN
+// ============================================
+
+use tokens
+use components
+use data
+
+// Team Member Card
+MemberCard: Card w 300, center
+  Avatar: AvatarXl
+  Info: gap 4, center, mar 8 0
+  Status: hor, gap 8, ver-center
+  Actions: hor, gap 8, mar 12 0 0 0
+
+Frame name TeamScreen, gap 24, w full
+
+  // Page Header
+  PageHeader
+    Frame gap 4
+      Title "Team"
+      Subtitle "Deine Teammitglieder und ihre Aktivität"
+    Frame hor, gap 12
+      Input placeholder "Mitglied suchen...", Field, w 240
+      PrimaryBtn
+        Icon "user-plus", ic white, is 18
+        Text "Einladen"
+
+  // Team Stats
+  Frame hor, gap 16
+    Frame hor, gap 12, ver-center, pad 12 20, bg $card, rad $radius-lg
+      Frame w 40, h 40, rad 99, bg #10b98122, center
+        Icon "users", ic #10b981, is 20
+      Frame gap 2
+        Text "6", col white, fs 20, weight 700
+        Text "Mitglieder", col $muted, fs 12
+
+    Frame hor, gap 12, ver-center, pad 12 20, bg $card, rad $radius-lg
+      Frame w 40, h 40, rad 99, bg #6366f122, center
+        Frame w 10, h 10, rad 99, bg #10b981
+      Frame gap 2
+        Text "4", col white, fs 20, weight 700
+        Text "Online", col $muted, fs 12
+
+    Frame hor, gap 12, ver-center, pad 12 20, bg $card, rad $radius-lg
+      Frame w 40, h 40, rad 99, bg #f59e0b22, center
+        Icon "briefcase", ic #f59e0b, is 20
+      Frame gap 2
+        Text "3", col white, fs 20, weight 700
+        Text "Abteilungen", col $muted, fs 12
+
+  // Department Filter
+  Frame hor, gap 8
+    DeptFilter: pad 8 16, rad $radius-full, cursor pointer, col $muted, bor 1, boc $border, exclusive()
+      hover 0.15s:
+        bg #ffffff11
+      on:
+        bg $primary
+        col white
+        boc $primary
+    DeptFilter "Alle", on
+    DeptFilter "Engineering"
+    DeptFilter "Design"
+    DeptFilter "Management"
+
+  // Team Grid
+  Frame hor, gap 20, wrap
+    each member in $team
+      MemberCard
+        Avatar bg $member.color
+          Text "$member.avatar", col white
+
+        Info
+          Text "$member.name", col white, fs 18, weight 600
+          Text "$member.role", col $muted, fs 13
+          Text "$member.department", col $primary, fs 12
+
+        Status
+          if $member.status == "online"
+            OnlineDot
+            Text "Online", col #10b981, fs 12
+          if $member.status == "away"
+            AwayDot
+            Text "Abwesend", col #f59e0b, fs 12
+          if $member.status == "offline"
+            OfflineDot
+            Text "Offline", col $muted, fs 12
+
+        // Stats
+        Frame hor, gap 16, mar 8 0
+          Frame gap 2, center
+            Text "$member.tasksAssigned", col white, fs 16, weight 600
+            Text "Tasks", col $muted, fs 11
+          Frame w 1, h 30, bg $border
+          Frame gap 2, center
+            Text "12", col white, fs 16, weight 600
+            Text "Erledigt", col $muted, fs 11
+
+        Actions
+          GhostBtn grow
+            Icon "mail", ic $muted, is 16
+            Text "Nachricht"
+          GhostBtn grow
+            Icon "user", ic $muted, is 16
+            Text "Profil"
+
+  // Team Activity Feed
+  Card w full, mar 24 0 0 0
+    Frame hor, spread, ver-center
+      Title "Team Aktivität"
+      GhostBtn
+        Text "Alle anzeigen"
+        Icon "arrow-right", ic $muted, is 16
+
+    Content
+      Frame hor, gap 24
+        each activity in $activities
+          Frame hor, gap 12, pad 12, bg #0f0d1a, rad $radius, grow
+            Frame w 40, h 40, rad 99, bg $activity.color + "22", center
+              Icon "$activity.icon", ic $activity.color, is 18
+            Frame gap 4
+              Frame hor, gap 4, wrap
+                Text "$activity.user", col white, fs 13, weight 500
+                Text "$activity.action", col $muted, fs 13
+              Text "$activity.target", col $primary, fs 12
+              Text "$activity.time", col $muted, fs 11

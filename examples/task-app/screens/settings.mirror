@@ -1,0 +1,227 @@
+// ============================================
+// SETTINGS SCREEN
+// ============================================
+
+use tokens
+use components
+use data
+
+// Settings Section
+SettingsSection: Card w full
+  Header: hor, spread, ver-center
+  Items: gap 0
+
+// Settings Item
+SettingsItem: Frame hor, spread, ver-center, pad 16 0, bor 0 0 1 0, boc $border
+  Label: gap 2
+  Control:
+
+Frame name SettingsScreen, gap 24, w full
+
+  // Page Header
+  PageHeader
+    Frame gap 4
+      Title "Einstellungen"
+      Subtitle "Passe die App an deine Bedürfnisse an"
+
+  // Settings Content - Two Column Layout
+  Frame hor, gap 24, w full
+
+    // Left Column - Main Settings
+    Frame gap 24, grow
+
+      // Notifications
+      SettingsSection
+        Header
+          Frame hor, gap 12, ver-center
+            Frame w 40, h 40, rad $radius, bg #6366f122, center
+              Icon "bell", ic $primary, is 20
+            Title "Benachrichtigungen"
+
+        Items
+          SettingsItem
+            Label
+              Text "E-Mail Benachrichtigungen", col white, fs 14
+              Text "Erhalte wichtige Updates per E-Mail", col $muted, fs 12
+            Switch checked
+
+          SettingsItem
+            Label
+              Text "Push Benachrichtigungen", col white, fs 14
+              Text "Desktop-Benachrichtigungen aktivieren", col $muted, fs 12
+            Switch
+
+          SettingsItem
+            Label
+              Text "Wöchentlicher Report", col white, fs 14
+              Text "Zusammenfassung jeden Montag", col $muted, fs 12
+            Switch checked
+
+          SettingsItem bor 0
+            Label
+              Text "Task Erinnerungen", col white, fs 14
+              Text "Erinnerung vor Deadline", col $muted, fs 12
+            Select w 160
+              Option "1 Tag vorher", value "1d"
+              Option "3 Tage vorher", value "3d"
+              Option "1 Woche vorher", value "1w"
+
+      // Appearance
+      SettingsSection
+        Header
+          Frame hor, gap 12, ver-center
+            Frame w 40, h 40, rad $radius, bg #10b98122, center
+              Icon "palette", ic #10b981, is 20
+            Title "Erscheinungsbild"
+
+        Items
+          SettingsItem
+            Label
+              Text "Theme", col white, fs 14
+              Text "Wähle dein bevorzugtes Farbschema", col $muted, fs 12
+            Frame hor, gap 8
+              ThemeBtn: Frame pad 10 16, rad $radius, cursor pointer, bor 2, hor, gap 8, ver-center, exclusive()
+                hover 0.15s:
+                  opacity 0.8
+                on:
+                  boc $primary
+              ThemeBtn bg #1a1625, boc $primary, on
+                Icon "moon", ic white, is 16
+                Text "Dunkel", col white, fs 13
+              ThemeBtn bg #f3f4f6, boc transparent
+                Icon "sun", ic #1f2937, is 16
+                Text "Hell", col #1f2937, fs 13
+              ThemeBtn bg grad #1a1625 #f3f4f6, boc transparent
+                Icon "monitor", ic white, is 16
+                Text "System", col white, fs 13
+
+          SettingsItem
+            Label
+              Text "Akzentfarbe", col white, fs 14
+              Text "Hauptfarbe der Anwendung", col $muted, fs 12
+            Frame hor, gap 8
+              ColorBtn: Frame w 32, h 32, rad 99, cursor pointer, bor 2, boc transparent, exclusive()
+                hover 0.15s:
+                  scale 1.1
+                on:
+                  bor 3
+                  boc white
+              ColorBtn bg #6366f1, on
+              ColorBtn bg #10b981
+              ColorBtn bg #f59e0b
+              ColorBtn bg #ef4444
+              ColorBtn bg #ec4899
+              ColorBtn bg #8b5cf6
+
+          SettingsItem bor 0
+            Label
+              Text "Kompaktansicht", col white, fs 14
+              Text "Reduzierte Abstände für mehr Inhalt", col $muted, fs 12
+            Switch
+
+      // Privacy
+      SettingsSection
+        Header
+          Frame hor, gap 12, ver-center
+            Frame w 40, h 40, rad $radius, bg #f59e0b22, center
+              Icon "shield", ic #f59e0b, is 20
+            Title "Privatsphäre"
+
+        Items
+          SettingsItem
+            Label
+              Text "Profil öffentlich", col white, fs 14
+              Text "Andere Nutzer können dein Profil sehen", col $muted, fs 12
+            Switch checked
+
+          SettingsItem bor 0
+            Label
+              Text "Aktivität anzeigen", col white, fs 14
+              Text "Deine Aktivität im Team-Feed anzeigen", col $muted, fs 12
+            Switch checked
+
+    // Right Column - Account & Danger Zone
+    Frame gap 24, w 400
+
+      // Account
+      SettingsSection
+        Header
+          Frame hor, gap 12, ver-center
+            Frame w 40, h 40, rad $radius, bg #ec489922, center
+              Icon "user", ic #ec4899, is 20
+            Title "Konto"
+
+        Content
+          Frame gap 16
+
+            // Avatar
+            Frame hor, gap 16, ver-center
+              Frame w 64, h 64, rad 99, bg $primary, center
+                Text "MM", col white, fs 20, weight 600
+              Frame gap 8
+                GhostBtn pad 8 12, fs 12
+                  Icon "upload", ic $muted, is 14
+                  Text "Bild ändern"
+                GhostBtn pad 8 12, fs 12
+                  Icon "trash", ic $danger, is 14
+                  Text "Entfernen"
+
+            Frame gap 8
+              Text "Name", col $muted, fs 12
+              Input value "Max Mustermann", Field
+
+            Frame gap 8
+              Text "E-Mail", col $muted, fs 12
+              Input value "max@example.com", type "email", Field
+
+            Frame gap 8
+              Text "Rolle", col $muted, fs 12
+              Input value "Senior Developer", Field, readonly
+
+            PrimaryBtn w full, mar 8 0 0 0
+              Icon "save", ic white, is 16
+              Text "Änderungen speichern"
+
+      // Password
+      SettingsSection
+        Header
+          Frame hor, gap 12, ver-center
+            Frame w 40, h 40, rad $radius, bg #8b5cf622, center
+              Icon "lock", ic #8b5cf6, is 20
+            Title "Passwort"
+
+        Content
+          Frame gap 16
+            Frame gap 8
+              Text "Aktuelles Passwort", col $muted, fs 12
+              Input type "password", placeholder "••••••••", Field
+
+            Frame gap 8
+              Text "Neues Passwort", col $muted, fs 12
+              Input type "password", placeholder "Mindestens 8 Zeichen", Field
+
+            Frame gap 8
+              Text "Passwort bestätigen", col $muted, fs 12
+              Input type "password", placeholder "Passwort wiederholen", Field
+
+            GhostBtn w full
+              Icon "key", ic $muted, is 16
+              Text "Passwort ändern"
+
+      // Danger Zone
+      SettingsSection
+        Header
+          Frame hor, gap 12, ver-center
+            Frame w 40, h 40, rad $radius, bg #ef444422, center
+              Icon "alert-triangle", ic $danger, is 20
+            Title "Gefahrenzone", col $danger
+
+        Content
+          Frame gap 12
+            Frame pad 16, bg #ef444411, rad $radius, gap 8
+              Text "Konto löschen", col $danger, fs 14, weight 600
+              Text "Diese Aktion kann nicht rückgängig gemacht werden. Alle deine Daten werden permanent gelöscht.", col $muted, fs 12
+
+            DangerBtn w full
+              Icon "trash", ic white, is 16
+              Text "Konto permanent löschen"

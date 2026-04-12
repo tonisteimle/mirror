@@ -1,0 +1,424 @@
+// ============================================
+// TASKFLOW - VOLLSTÄNDIGE INTERAKTIVE APP
+// ============================================
+
+// Design Tokens
+primary.bg: #6366f1
+primary.col: white
+secondary.bg: #1e1b4b
+surface.bg: #0f0d1a
+card.bg: #1a1625
+border.boc: #2d2640
+muted.col: #6b7280
+success.bg: #10b981
+success.col: #10b981
+danger.bg: #ef4444
+danger.col: #ef4444
+warning.bg: #f59e0b
+warning.col: #f59e0b
+radius.rad: 8
+
+// Buttons
+Btn: pad 10 20, rad $radius, cursor pointer, weight 500
+  hover 0.15s:
+    opacity 0.9
+PrimaryBtn as Btn: bg $primary, col $primary
+GhostBtn as Btn: bg transparent, col $muted, bor 1, boc $border
+  hover 0.15s:
+    bg #ffffff11
+    col white
+DangerBtn as Btn: bg $danger, col white
+
+// Cards
+Card: bg $card, rad 12, pad 20, gap 12
+
+// Badges
+Badge: pad 4 10, rad 99, fs 11, weight 600
+SuccessBadge as Badge: bg #10b98122, col $success
+WarningBadge as Badge: bg #f59e0b22, col $warning
+DangerBadge as Badge: bg #ef444422, col $danger
+
+// Task Checkbox - jetzt mit echter Datenbindung (checked task.done)
+// Die Checkbox-Komponente wird direkt in den Task-Items verwendet
+
+// Data
+stats:
+  tasks:
+    label: "Offene Tasks"
+    value: 12
+  completed:
+    label: "Erledigt"
+    value: 48
+  projects:
+    label: "Projekte"
+    value: 5
+  team:
+    label: "Team"
+    value: 8
+
+tasks:
+  task1:
+    title: "Landing Page Design"
+    project: "Website"
+    priority: "high"
+    done: false
+    dueDate: "Heute"
+  task2:
+    title: "API Integration"
+    project: "Mobile App"
+    priority: "medium"
+    done: false
+    dueDate: "Morgen"
+  task3:
+    title: "User Testing"
+    project: "Website"
+    priority: "low"
+    done: true
+    dueDate: "Abgeschlossen"
+  task4:
+    title: "Database Schema"
+    project: "Backend"
+    priority: "high"
+    done: false
+    dueDate: "Diese Woche"
+  task5:
+    title: "Code Review"
+    project: "Mobile App"
+    priority: "medium"
+    done: false
+    dueDate: "Heute"
+
+projects:
+  website:
+    name: "Website Relaunch"
+    progress: 65
+    color: #6366f1
+    tasksCount: 8
+    completedCount: 5
+  mobile:
+    name: "Mobile App"
+    progress: 40
+    color: #10b981
+    tasksCount: 12
+    completedCount: 5
+  backend:
+    name: "Backend Services"
+    progress: 80
+    color: #f59e0b
+    tasksCount: 6
+    completedCount: 5
+
+team:
+  anna:
+    name: "Anna Schmidt"
+    role: "Design Lead"
+    avatar: "AS"
+    status: "online"
+  max:
+    name: "Max Müller"
+    role: "Frontend Dev"
+    avatar: "MM"
+    status: "online"
+  tom:
+    name: "Tom Weber"
+    role: "Backend Dev"
+    avatar: "TW"
+    status: "away"
+  lisa:
+    name: "Lisa Klein"
+    role: "Product Manager"
+    avatar: "LK"
+    status: "offline"
+
+// Navigation
+NavBtn: w full, pad 14 20, hor, gap 12, ver-center, cursor pointer, col $muted, rad $radius, exclusive()
+  hover 0.15s:
+    bg #ffffff11
+    col white
+  on:
+    bg $primary
+    col white
+
+// Stat Card
+StatCard: bg $card, rad 12, pad 20, gap 8, w 180, cursor pointer
+  hover 0.15s:
+    bg #252035
+
+// Task Item
+TaskItem: hor, spread, ver-center, pad 12 16, bg #0f0d1a, rad $radius, cursor pointer
+  hover 0.15s:
+    bg #151520
+
+// Team Member
+MemberCard: hor, gap 16, ver-center, pad 16, bg $card, rad $radius, cursor pointer
+  hover 0.15s:
+    bg #252035
+
+// Status Dot
+StatusDot: w 10, h 10, rad 99
+
+// App Shell
+Frame w full, h full, hor, bg $surface
+
+  // Sidebar
+  Frame w 260, h full, bg $secondary, gap 0
+
+    // Logo
+    Frame pad 24
+      Frame hor, gap 12, ver-center
+        Frame w 44, h 44, rad $radius, bg $primary, center
+          Icon "check-square", ic white, is 22
+        Frame gap 2
+          Text "TaskFlow", col white, fs 20, weight 700
+          Text "v2.0", col $muted, fs 11
+
+    // Nav
+    Frame pad 12, gap 4
+      NavBtn on, name NavDashboard, navigate(DashboardView)
+        Icon "layout-dashboard", ic currentColor, is 20
+        Text "Dashboard"
+      NavBtn name NavTasks, navigate(TasksView)
+        Icon "check-square", ic currentColor, is 20
+        Text "Tasks"
+      NavBtn name NavProjects, navigate(ProjectsView)
+        Icon "folder", ic currentColor, is 20
+        Text "Projekte"
+      NavBtn name NavTeam, navigate(TeamView)
+        Icon "users", ic currentColor, is 20
+        Text "Team"
+
+    Spacer
+
+    // Quick Actions
+    Frame pad 16, gap 8
+      Text "SCHNELLAKTIONEN", col $muted, fs 10, weight 600, uppercase
+      GhostBtn add(tasks)
+        Frame hor, gap 8, ver-center
+          Icon "plus", ic currentColor, is 16
+          Text "Neuer Task"
+      GhostBtn add(projects)
+        Frame hor, gap 8, ver-center
+          Icon "folder-plus", ic currentColor, is 16
+          Text "Neues Projekt"
+
+    // User
+    Frame pad 16, bor 1 0 0 0, boc $border
+      Frame hor, gap 12, ver-center
+        Frame w 40, h 40, rad 99, bg $primary, center
+          Text "MM", col white, fs 14, weight 600
+        Frame gap 2, grow
+          Text "Max Mustermann", col white, fs 14, weight 500
+          Text "Admin", col $muted, fs 12
+        Icon "settings", ic $muted, is 18, cursor pointer
+
+  // Main Content Area
+  Frame w full, h full, pad 0, gap 0
+
+    // ========== DASHBOARD VIEW ==========
+    Frame name DashboardView, w full, h full, pad 32, gap 24, scroll
+
+      // Header
+      Frame hor, spread, ver-center
+        Frame gap 4
+          Text "Dashboard", col white, fs 28, weight 700
+          Text "Willkommen zurück, Max!", col $muted, fs 15
+        PrimaryBtn add(tasks)
+          Frame hor, gap 8, ver-center
+            Icon "plus", ic white, is 18
+            Text "Neuer Task"
+
+      // Stats
+      Frame hor, gap 16
+        each stat in $stats
+          StatCard
+            Text "$stat.label", col $muted, fs 12, uppercase
+            Text "$stat.value", col white, fs 32, weight 700
+
+      // Content Grid
+      Frame hor, gap 24, w full
+
+        // Tasks Section
+        Frame grow, gap 16
+          Frame hor, spread, ver-center
+            Text "Aktuelle Tasks", col white, fs 18, weight 600
+            GhostBtn
+              Frame hor, gap 6, ver-center
+                Text "Alle anzeigen"
+                Icon "arrow-right", ic currentColor, is 14
+
+          Frame gap 8
+            each task in $tasks
+              TaskItem
+                Frame hor, gap 14, ver-center
+                  Checkbox checked task.done
+                  Frame gap 3
+                    Text task.title, col white, fs 14, weight 500
+                    Frame hor, gap 8, ver-center
+                      Text "$task.project", col $muted, fs 12
+                      Text "•", col #444
+                      Text "$task.dueDate", col $muted, fs 12
+                Frame hor, gap 8, ver-center
+                  if $task.priority == "high"
+                    DangerBadge "Hoch"
+                  if $task.priority == "medium"
+                    WarningBadge "Mittel"
+                  if $task.priority == "low"
+                    SuccessBadge "Niedrig"
+                  Icon "trash-2", ic #ef4444, is 16, cursor pointer, opacity 0.5, remove(task)
+                    hover 0.15s:
+                      opacity 1
+
+        // Projects Section
+        Frame w 340, gap 16
+          Frame hor, spread, ver-center
+            Text "Projekte", col white, fs 18, weight 600
+            GhostBtn
+              Frame hor, gap 6, ver-center
+                Text "Alle"
+                Icon "arrow-right", ic currentColor, is 14
+
+          Frame gap 12
+            each project in $projects
+              Card cursor pointer
+                hover 0.15s:
+                  bg #252035
+                Frame hor, gap 14, ver-center
+                  Frame w 40, h 40, rad 8, bg $project.color, center
+                    Icon "folder", ic white, is 20
+                  Frame gap 2, grow
+                    Text "$project.name", col white, fs 15, weight 500
+                    Text "$project.completedCount" + "/" + "$project.tasksCount" + " Tasks", col $muted, fs 12
+                Frame w full, h 6, bg #0f0d1a, rad 99
+                  Frame h 6, rad 99, bg $project.color, w $project.progress + "%"
+
+    // ========== TASKS VIEW ==========
+    Frame name TasksView, w full, h full, pad 32, gap 24, scroll, hidden
+
+      // Header
+      Frame hor, spread, ver-center
+        Frame gap 4
+          Text "Tasks", col white, fs 28, weight 700
+          Text "Verwalte alle deine Aufgaben", col $muted, fs 15
+        Frame hor, gap 12
+          GhostBtn
+            Frame hor, gap 8, ver-center
+              Icon "filter", ic currentColor, is 16
+              Text "Filter"
+          PrimaryBtn add(tasks)
+            Frame hor, gap 8, ver-center
+              Icon "plus", ic white, is 18
+              Text "Neuer Task"
+
+      // Task Filters
+      Frame hor, gap 8
+        GhostBtn on
+          Text "Alle"
+        GhostBtn
+          Text "Offen"
+        GhostBtn
+          Text "Erledigt"
+        GhostBtn
+          Text "Hohe Priorität"
+
+      // Tasks List
+      Card
+        Frame gap 8
+          each task in $tasks
+            TaskItem
+              Frame hor, gap 14, ver-center
+                Checkbox checked task.done
+                Frame gap 3, grow
+                  Text task.title, col white, fs 14, weight 500
+                  Frame hor, gap 8, ver-center
+                    Text "$task.project", col $muted, fs 12
+                    Text "•", col #444
+                    Text "$task.dueDate", col $muted, fs 12
+              Frame hor, gap 12, ver-center
+                if $task.priority == "high"
+                  DangerBadge "Hoch"
+                if $task.priority == "medium"
+                  WarningBadge "Mittel"
+                if $task.priority == "low"
+                  SuccessBadge "Niedrig"
+                Icon "trash-2", ic #ef4444, is 16, cursor pointer, opacity 0.5, remove(task)
+                  hover 0.15s:
+                    opacity 1
+
+    // ========== PROJECTS VIEW ==========
+    Frame name ProjectsView, w full, h full, pad 32, gap 24, scroll, hidden
+
+      // Header
+      Frame hor, spread, ver-center
+        Frame gap 4
+          Text "Projekte", col white, fs 28, weight 700
+          Text "Übersicht aller Projekte", col $muted, fs 15
+        PrimaryBtn add(projects)
+          Frame hor, gap 8, ver-center
+            Icon "folder-plus", ic white, is 18
+            Text "Neues Projekt"
+
+      // Projects Grid
+      Frame hor, gap 20, wrap
+        each project in $projects
+          Card w 320, cursor pointer
+            hover 0.15s:
+              bg #252035
+            Frame gap 16
+              Frame hor, gap 14, ver-center
+                Frame w 52, h 52, rad 12, bg $project.color, center
+                  Icon "folder", ic white, is 26
+                Frame gap 4, grow
+                  Text "$project.name", col white, fs 18, weight 600
+                  Text "$project.completedCount" + " von " + "$project.tasksCount" + " Tasks erledigt", col $muted, fs 13
+
+              // Progress
+              Frame gap 8
+                Frame hor, spread
+                  Text "Fortschritt", col $muted, fs 12
+                  Text "$project.progress" + "%", col white, fs 12, weight 600
+                Frame w full, h 8, bg #0f0d1a, rad 99
+                  Frame h 8, rad 99, bg $project.color, w $project.progress + "%"
+
+              // Actions
+              Frame hor, gap 8
+                GhostBtn grow
+                  Frame hor, gap 6, ver-center, center
+                    Icon "eye", ic currentColor, is 14
+                    Text "Details"
+                GhostBtn grow
+                  Frame hor, gap 6, ver-center, center
+                    Icon "settings", ic currentColor, is 14
+                    Text "Settings"
+
+    // ========== TEAM VIEW ==========
+    Frame name TeamView, w full, h full, pad 32, gap 24, scroll, hidden
+
+      // Header
+      Frame hor, spread, ver-center
+        Frame gap 4
+          Text "Team", col white, fs 28, weight 700
+          Text "Deine Teammitglieder", col $muted, fs 15
+        PrimaryBtn add(team)
+          Frame hor, gap 8, ver-center
+            Icon "user-plus", ic white, is 18
+            Text "Einladen"
+
+      // Team Grid
+      Frame hor, gap 20, wrap
+        each member in $team
+          MemberCard w 300
+            Frame w 56, h 56, rad 99, bg $primary, center
+              Text "$member.avatar", col white, fs 18, weight 600
+            Frame gap 4, grow
+              Frame hor, gap 8, ver-center
+                Text "$member.name", col white, fs 16, weight 500
+                if $member.status == "online"
+                  StatusDot bg $success
+                if $member.status == "away"
+                  StatusDot bg $warning
+                if $member.status == "offline"
+                  StatusDot bg $muted
+              Text "$member.role", col $muted, fs 13
+            Frame hor, gap 8
+              Icon "mail", ic $muted, is 18, cursor pointer
+              Icon "more-vertical", ic $muted, is 18, cursor pointer

@@ -1,0 +1,282 @@
+// ============================================
+// APP DATEN
+// ============================================
+
+// ============================================
+// STATISTIKEN
+// ============================================
+
+stats:
+  tasks:
+    label: "Offene Tasks"
+    value: 12
+    change: "+3"
+    trend: "up"
+    icon: "check-square"
+    color: #6366f1
+  completed:
+    label: "Erledigt"
+    value: 48
+    change: "89%"
+    trend: "up"
+    icon: "check-circle"
+    color: #10b981
+  projects:
+    label: "Projekte"
+    value: 5
+    change: "2 aktiv"
+    trend: "neutral"
+    icon: "folder"
+    color: #f59e0b
+  team:
+    label: "Team"
+    value: 8
+    change: "Online"
+    trend: "up"
+    icon: "users"
+    color: #ec4899
+
+// ============================================
+// TASKS
+// ============================================
+
+tasks:
+  task1:
+    title: "Landing Page Design fertigstellen"
+    description: "Hero Section und Feature Blocks"
+    project: "Website Relaunch"
+    projectId: "website"
+    priority: "high"
+    done: false
+    dueDate: "Heute"
+    assignee: "anna"
+  task2:
+    title: "REST API Endpoints implementieren"
+    description: "User, Auth und Project Endpoints"
+    project: "Mobile App"
+    projectId: "mobile"
+    priority: "high"
+    done: false
+    dueDate: "Morgen"
+    assignee: "max"
+  task3:
+    title: "User Testing durchführen"
+    description: "5 Testpersonen, Protokoll erstellen"
+    project: "Website Relaunch"
+    projectId: "website"
+    priority: "medium"
+    done: true
+    dueDate: "Erledigt"
+    assignee: "lisa"
+  task4:
+    title: "Database Schema optimieren"
+    description: "Indizes prüfen, Queries optimieren"
+    project: "Backend"
+    projectId: "backend"
+    priority: "medium"
+    done: false
+    dueDate: "Diese Woche"
+    assignee: "tom"
+  task5:
+    title: "API Dokumentation schreiben"
+    description: "OpenAPI Spec und README"
+    project: "Mobile App"
+    projectId: "mobile"
+    priority: "low"
+    done: true
+    dueDate: "Erledigt"
+    assignee: "max"
+  task6:
+    title: "CI/CD Pipeline einrichten"
+    description: "GitHub Actions Workflows"
+    project: "Backend"
+    projectId: "backend"
+    priority: "high"
+    done: false
+    dueDate: "Nächste Woche"
+    assignee: "tom"
+  task7:
+    title: "Responsive Design testen"
+    description: "Mobile und Tablet Breakpoints"
+    project: "Website Relaunch"
+    projectId: "website"
+    priority: "medium"
+    done: false
+    dueDate: "Diese Woche"
+    assignee: "anna"
+  task8:
+    title: "Performance Audit"
+    description: "Lighthouse Score verbessern"
+    project: "Website Relaunch"
+    projectId: "website"
+    priority: "low"
+    done: false
+    dueDate: "Nächste Woche"
+    assignee: "max"
+
+// ============================================
+// PROJEKTE
+// ============================================
+
+projects:
+  website:
+    name: "Website Relaunch"
+    description: "Kompletter Redesign der Unternehmenswebsite mit modernem Stack"
+    progress: 65
+    tasksTotal: 8
+    tasksDone: 5
+    members: 3
+    color: #6366f1
+    status: "active"
+    dueDate: "15. Feb 2024"
+  mobile:
+    name: "Mobile App"
+    description: "Native iOS und Android App mit React Native"
+    progress: 40
+    tasksTotal: 12
+    tasksDone: 5
+    members: 4
+    color: #10b981
+    status: "active"
+    dueDate: "30. März 2024"
+  backend:
+    name: "Backend Services"
+    description: "Microservices Architektur mit Node.js und PostgreSQL"
+    progress: 80
+    tasksTotal: 5
+    tasksDone: 4
+    members: 2
+    color: #f59e0b
+    status: "active"
+    dueDate: "1. Feb 2024"
+  design:
+    name: "Design System"
+    description: "Komponenten-Bibliothek und Style Guide"
+    progress: 100
+    tasksTotal: 6
+    tasksDone: 6
+    members: 2
+    color: #ec4899
+    status: "completed"
+    dueDate: "Abgeschlossen"
+  analytics:
+    name: "Analytics Dashboard"
+    description: "Echtzeit-Dashboards mit Grafana und InfluxDB"
+    progress: 20
+    tasksTotal: 10
+    tasksDone: 2
+    members: 3
+    color: #8b5cf6
+    status: "planned"
+    dueDate: "Q2 2024"
+
+// ============================================
+// TEAM
+// ============================================
+
+team:
+  anna:
+    name: "Anna Schmidt"
+    email: "anna@company.com"
+    role: "Lead Designer"
+    department: "Design"
+    status: "online"
+    avatar: "AS"
+    color: #ec4899
+    tasksAssigned: 3
+  max:
+    name: "Max Weber"
+    email: "max@company.com"
+    role: "Senior Developer"
+    department: "Engineering"
+    status: "online"
+    avatar: "MW"
+    color: #6366f1
+    tasksAssigned: 4
+  lisa:
+    name: "Lisa Müller"
+    email: "lisa@company.com"
+    role: "Project Manager"
+    department: "Management"
+    status: "away"
+    avatar: "LM"
+    color: #10b981
+    tasksAssigned: 1
+  tom:
+    name: "Tom Klein"
+    email: "tom@company.com"
+    role: "Backend Developer"
+    department: "Engineering"
+    status: "online"
+    avatar: "TK"
+    color: #f59e0b
+    tasksAssigned: 2
+  julia:
+    name: "Julia Braun"
+    email: "julia@company.com"
+    role: "QA Engineer"
+    department: "Engineering"
+    status: "offline"
+    avatar: "JB"
+    color: #8b5cf6
+    tasksAssigned: 0
+  peter:
+    name: "Peter Hoffmann"
+    email: "peter@company.com"
+    role: "DevOps Engineer"
+    department: "Engineering"
+    status: "online"
+    avatar: "PH"
+    color: #06b6d4
+    tasksAssigned: 1
+
+// ============================================
+// AKTIVITÄTEN (für Activity Feed)
+// ============================================
+
+activities:
+  act1:
+    user: "Anna Schmidt"
+    action: "hat Task erledigt"
+    target: "Landing Page Design"
+    time: "vor 5 Min"
+    icon: "check-circle"
+    color: #10b981
+  act2:
+    user: "Max Weber"
+    action: "hat Kommentar hinzugefügt"
+    target: "API Integration"
+    time: "vor 15 Min"
+    icon: "message-circle"
+    color: #6366f1
+  act3:
+    user: "Lisa Müller"
+    action: "hat Task erstellt"
+    target: "Performance Audit"
+    time: "vor 1 Std"
+    icon: "plus-circle"
+    color: #f59e0b
+  act4:
+    user: "Tom Klein"
+    action: "hat Projekt aktualisiert"
+    target: "Backend Services"
+    time: "vor 2 Std"
+    icon: "edit"
+    color: #8b5cf6
+
+// ============================================
+// SETTINGS
+// ============================================
+
+settings:
+  notifications:
+    email: true
+    push: false
+    weekly: true
+  appearance:
+    theme: "dark"
+    accentColor: #6366f1
+    compactMode: false
+  privacy:
+    profileVisible: true
+    activityVisible: true

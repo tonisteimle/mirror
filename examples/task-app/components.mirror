@@ -1,0 +1,142 @@
+// ============================================
+// WIEDERVERWENDBARE KOMPONENTEN
+// ============================================
+
+use tokens
+
+// ============================================
+// BUTTONS
+// ============================================
+
+Btn: pad 10 20, rad $radius, cursor pointer, weight 500, hor, gap 8, ver-center
+  hover 0.15s:
+    opacity 0.9
+  active:
+    scale 0.98
+
+PrimaryBtn as Btn: bg $primary, col $primary
+SecondaryBtn as Btn: bg $secondary, col white
+DangerBtn as Btn: bg $danger, col white
+SuccessBtn as Btn: bg $success, col white
+
+GhostBtn as Btn: bg transparent, col $muted, bor 1, boc $border
+  hover 0.15s:
+    bg #ffffff11
+    col white
+
+IconBtn: w 36, h 36, rad $radius, center, cursor pointer, bg transparent
+  hover 0.15s:
+    bg #ffffff11
+
+// ============================================
+// CARDS
+// ============================================
+
+Card: bg $card, rad $radius-lg, pad 20, gap 12
+  Title: col white, fs 16, weight 600
+  Subtitle: col $muted, fs 13
+  Content: gap 8
+  Actions: hor, gap 8, mar 8 0 0 0
+
+// Stat Card für Dashboard
+StatCard: bg $card, rad $radius-lg, pad 20, gap 8
+  Icon: w 40, h 40, rad $radius, center
+  Label: col $muted, fs 12, uppercase, weight 500
+  Value: col white, fs 28, weight 700
+  Change: fs 12, hor, gap 4, ver-center
+
+// ============================================
+// BADGES
+// ============================================
+
+Badge: pad 4 10, rad $radius-full, fs 11, weight 600
+
+SuccessBadge as Badge: bg #10b98122, col $success
+WarningBadge as Badge: bg #f59e0b22, col $warning
+DangerBadge as Badge: bg #ef444422, col $danger
+InfoBadge as Badge: bg #6366f122, col $primary
+
+// Status Dot
+StatusDot: w 8, h 8, rad 99
+OnlineDot as StatusDot: bg #10b981
+AwayDot as StatusDot: bg #f59e0b
+OfflineDot as StatusDot: bg #6b7280
+
+// ============================================
+// INPUTS
+// ============================================
+
+Field: bg #0f0d1a, bor 1, boc $border, col white, pad 12, rad $radius, w full
+  placeholder:
+    col #6b7280
+  focus:
+    boc $primary
+  disabled:
+    opacity 0.5
+    cursor not-allowed
+
+SearchField: Field, hor, gap 8, ver-center
+  Icon "search", ic $muted, is 18
+
+// ============================================
+// NAVIGATION
+// ============================================
+
+NavItem: w full, pad 14 20, hor, gap 12, ver-center, cursor pointer, col $muted, rad $radius
+  hover 0.15s:
+    bg #ffffff11
+    col white
+  active:
+    bg $primary
+    col white
+
+// ============================================
+// LISTS
+// ============================================
+
+ListItem: hor, spread, ver-center, pad 12 16, bg #0f0d1a, rad $radius, w full
+  hover 0.15s:
+    bg #1e1b4b
+
+// ============================================
+// AVATARS
+// ============================================
+
+Avatar: rad 99, center, weight 600
+AvatarSm as Avatar: w 28, h 28, fs 10
+AvatarMd as Avatar: w 36, h 36, fs 12
+AvatarLg as Avatar: w 48, h 48, fs 16
+AvatarXl as Avatar: w 64, h 64, fs 20
+
+// Avatar Stack (überlappend)
+AvatarStack: hor, gap -8
+
+// ============================================
+// PROGRESS
+// ============================================
+
+ProgressBar: w full, h 6, bg #0f0d1a, rad 99
+  Fill: h 6, rad 99
+
+// ============================================
+// LAYOUT
+// ============================================
+
+PageHeader: hor, spread, ver-center, mar 0 0 24 0
+  Title: col white, fs 24, weight 700
+  Subtitle: col $muted, fs 14
+
+Section: gap 16, w full
+
+Grid2: hor, gap 16, wrap
+Grid3: hor, gap 16, wrap
+Grid4: hor, gap 16, wrap
+
+// ============================================
+// EMPTY STATES
+// ============================================
+
+EmptyState: center, pad 40, gap 16
+  Icon: w 64, h 64, rad 99, bg #1a1625, center
+  Title: col white, fs 18, weight 600
+  Description: col $muted, fs 14, center

@@ -1,0 +1,40 @@
+// ============================================
+// DESIGN TOKENS
+// Zentrale Definition aller Design-Werte
+// ============================================
+
+// Farben - Primary
+primary.bg: #6366f1
+primary.col: white
+
+// Farben - Secondary
+secondary.bg: #1e1b4b
+surface.bg: #0f0d1a
+card.bg: #1a1625
+
+// Farben - Border
+border.boc: #2d2640
+
+// Farben - Text
+muted.col: #6b7280
+
+// Farben - Semantic
+success.bg: #10b981
+success.col: #10b981
+warning.bg: #f59e0b
+warning.col: #f59e0b
+danger.bg: #ef4444
+danger.col: #ef4444
+
+// Abstände
+space.pad: 16
+space.gap: 12
+
+// Radien
+radius.rad: 8
+radius-lg.rad: 12
+radius-full.rad: 99
+
+// Schatten
+shadow-sm: shadow sm
+shadow-md: shadow md
