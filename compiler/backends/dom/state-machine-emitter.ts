@@ -12,25 +12,10 @@
  */
 
 import type { IRNode, IRStateMachine, IRStateTransition, IRStateAnimation } from '../../ir/types'
-import type { DeferredWhenWatcher } from './emitter-context'
+import type { StateMachineEmitterContext, DeferredWhenWatcher } from './base-emitter-context'
 
-// Re-export the type for convenience
-export type { DeferredWhenWatcher }
-
-// =============================================================================
-// Types
-// =============================================================================
-
-/**
- * Context provided by DOMGenerator to state machine emitter functions
- */
-export interface StateMachineEmitterContext {
-  emit(line: string): void
-  indentIn(): void
-  indentOut(): void
-  escapeString(str: string): string
-  addDeferredWhenWatcher(watcher: DeferredWhenWatcher): void
-}
+// Re-export for backwards compatibility
+export type { StateMachineEmitterContext, DeferredWhenWatcher } from './base-emitter-context'
 
 // =============================================================================
 // Helper Functions

@@ -12,7 +12,7 @@
 | Phase 1.2: IR Transformer Refactoring | 🔄 Teilweise | ~15% |
 | Phase 1.3: Validator Modularisierung | ⏳ Ausstehend | 0% |
 | Phase 1.4: DOM Backend | 🔄 Teilweise | ~40% |
-| Phase 1.5: EmitterContext Konsolidierung | ⏳ Ausstehend | 0% |
+| Phase 1.5: EmitterContext Konsolidierung | ✅ Abgeschlossen | 100% |
 | Phase 2.1: PropertyPanel Split | ✅ Abgeschlossen | 100% |
 | Phase 2.2: State Store Simplification | ⏳ Ausstehend | 0% |
 | Phase 2.3: Memory Leak Fixes | ⏳ Ausstehend | 0% |
@@ -103,14 +103,30 @@ compiler/backends/dom/
 └── event-emitter.ts      # Event Listener Generation - NEU
 ```
 
-### Phase 1.5: EmitterContext Konsolidierung ⏳
+### Phase 1.5: EmitterContext Konsolidierung ✅
 
-**Problem:** 3 verschiedene EmitterContext-Typen
+**Problem:** 5 verschiedene EmitterContext-Typen mit überlappenden Methoden
 - `EmitterContext` (emitter-context.ts)
 - `ZagEmitterContext` (zag-emitter-context.ts)
 - `EventEmitterContext` (event-emitter.ts)
+- `StateMachineEmitterContext` (state-machine-emitter.ts)
+- `LoopEmitterContext` (loop-emitter.ts)
 
-**Lösung:** BaseEmitterContext mit Spezialisierungen erstellen.
+**Lösung:** Konsolidiert in `base-emitter-context.ts`
+```
+compiler/backends/dom/base-emitter-context.ts
+├── BaseEmitterContext      # Minimale Methoden (emit, indent, escape)
+├── EmitterContext          # Vollständig (~20 Methoden)
+├── ZagEmitterContext       # Pick<EmitterContext, ...>
+├── EventEmitterContext     # Pick<EmitterContext, ...>
+├── StateMachineEmitterContext # Pick<EmitterContext, ...>
+└── LoopEmitterContext      # Pick<EmitterContext, ...>
+```
+
+**Vorteile:**
+- Single Source of Truth für alle Context-Typen
+- TypeScript Pick statt redundanter Interface-Definitionen
+- Alte Imports bleiben kompatibel (Re-Exports)
 
 ### Phase 2.1: PropertyPanel Split ✅
 
@@ -177,8 +193,8 @@ fc6db80 refactor(dom): extract EmitterContext interface into separate module
 ## Nächste Schritte (Empfohlen)
 
 ### Kurzfristig (Niedrig hängend)
-1. **Phase 1.5: EmitterContext Konsolidierung** - 3 Contexts → 1 BaseContext + Spezialisierungen
-2. **Phase 1.2 fortsetzen:** Weitere IR Transformer extrahieren (Zag, Compound)
+1. **Phase 1.2 fortsetzen:** Weitere IR Transformer extrahieren (Zag, Compound)
+2. **Phase 1.4 fortsetzen:** DOM Backend weiter modularisieren
 
 ### Mittelfristig
 3. **Phase 2.2: State Store Simplification** - Selection-Mechanismen vereinheitlichen

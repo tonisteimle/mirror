@@ -9,23 +9,10 @@
  */
 
 import type { IRNode, IREach, IRConditional } from '../../ir/types'
+import type { LoopEmitterContext } from './base-emitter-context'
 
-// =============================================================================
-// Types
-// =============================================================================
-
-/**
- * Context provided by DOMGenerator to loop emitter functions
- */
-export interface LoopEmitterContext {
-  emit(line: string): void
-  indentIn(): void
-  indentOut(): void
-  sanitizeVarName(id: string): string
-  resolveConditionVariables(condition: string): string
-  emitEachTemplateNode(node: IRNode, parentVar: string, itemVar: string, indexVar: string): void
-  emitConditionalTemplateNode(node: IRNode, parentVar: string): void
-}
+// Re-export for backwards compatibility
+export type { LoopEmitterContext } from './base-emitter-context'
 
 // =============================================================================
 // Each Loop Emitter

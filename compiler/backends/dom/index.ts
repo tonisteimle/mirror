@@ -7,8 +7,20 @@
 // Types
 export { ZAG_SLOT_NAMES, type GenerateDOMOptions } from './types'
 
-// Emitter Context
-export type { EmitterContext, EmitterFn, DeferredWhenWatcher } from './emitter-context'
+// Consolidated Emitter Contexts (primary source)
+export type {
+  // Base types
+  BaseEmitterContext,
+  EmitterContext,
+  EmitterFn,
+  DeferredWhenWatcher,
+  // Specialized contexts
+  ZagEmitterContext,
+  ZagEmitterFn,
+  EventEmitterContext,
+  StateMachineEmitterContext,
+  LoopEmitterContext,
+} from './base-emitter-context'
 
 // Utilities
 export { escapeJSString, sanitizeVarName, cssPropertyToJS, generateVarName } from './utils'
@@ -22,7 +34,6 @@ export {
   emitMachineConfig,
   emitRuntimeInit,
 } from './zag-emitters'
-export type { ZagEmitterContext, ZagEmitterFn } from './zag-emitter-context'
 
 // Table Emitter
 export { emitTable } from './table-emitter'
@@ -32,12 +43,18 @@ export {
   emitStateMachine,
   emitWhenWatcher,
   emitDeferredWhenWatchers,
-  type StateMachineEmitterContext,
 } from './state-machine-emitter'
 
 // Loop Emitter
 export {
   emitEachLoop,
   emitConditional,
-  type LoopEmitterContext,
 } from './loop-emitter'
+
+// Event Emitter
+export {
+  emitEventListener,
+  emitTemplateEventListener,
+  emitAction,
+  mapKeyName,
+} from './event-emitter'

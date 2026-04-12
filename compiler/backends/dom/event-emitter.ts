@@ -6,23 +6,10 @@
  */
 
 import type { IREvent, IRAction } from '../../ir/types'
+import type { EventEmitterContext } from './base-emitter-context'
 
-/**
- * Context needed for event emission.
- */
-export interface EventEmitterContext {
-  /** Emit a line of code with current indentation */
-  emit(line: string): void
-
-  /** Increment indentation */
-  indentIn(): void
-
-  /** Decrement indentation */
-  indentOut(): void
-
-  /** Escape a string for safe inclusion in JavaScript */
-  escapeString(str: string | number | boolean | undefined | null): string
-}
+// Re-export for backwards compatibility
+export type { EventEmitterContext } from './base-emitter-context'
 
 /**
  * Map DSL key names to JavaScript key event values.
