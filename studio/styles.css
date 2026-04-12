@@ -6408,48 +6408,24 @@
     }
 
     .component-panel-section {
-      margin-bottom: 4px;
-    }
-
-    .component-panel-section.collapsed .component-panel-items {
-      display: none;
+      margin-bottom: 8px;
     }
 
     .component-panel-section-header {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
-      padding: var(--space-3) 10px;
-      cursor: pointer;
-      user-select: none;
-      color: var(--text-primary);
+      padding: 12px 8px 8px 8px;
+      margin: 0 4px 6px 4px;
+      color: var(--text-muted);
       font-size: var(--font-xs);
       text-transform: var(--text-uppercase);
       letter-spacing: var(--tracking-wide);
       font-weight: var(--weight-semibold);
-    }
-
-    .component-panel-section-header:hover {
-      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-default);
     }
 
     .component-panel-section-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: var(--size-icon-xs);
-      height: var(--size-icon-xs);
-      color: var(--text-muted);
-      transition: color 0.15s;
-    }
-
-    .component-panel-section-toggle svg {
-      width: var(--size-icon-xs);
-      height: var(--size-icon-xs);
-    }
-
-    .component-panel-section-header:hover .component-panel-section-toggle {
-      color: var(--text-secondary);
+      display: none;
     }
 
     .component-panel-items {
