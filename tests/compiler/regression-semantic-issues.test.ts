@@ -171,23 +171,27 @@ Frame w 400 h 400
   // ============================================================
   describe('ISSUE 3: Leere Frames', () => {
 
-    test('Frame ohne Inhalt hat fit-content (hug default)', () => {
+    test('Frame ohne Inhalt stretcht (container default)', () => {
       const ir = toIR(parse(`Frame`))
 
-      // Default: hug content (fit-content)
-      // This prevents the "everything is full-width" problem
-      expect(getStyle(ir.nodes[0], 'width')).toBe('fit-content')
+      // Default for containers: stretch to fill parent (align-self: stretch)
+      // This ensures sibling containers (like Cards) have equal width
+      // Note: fit-content is only used for non-containers (Text, Button, etc.)
+      expect(getStyle(ir.nodes[0], 'width')).toBeUndefined()
+      expect(getStyle(ir.nodes[0], 'align-self')).toBe('stretch')
       expect(getStyle(ir.nodes[0], 'height')).toBeUndefined()
     })
 
-    test('Frame mit bg aber ohne Größe', () => {
+    test('Frame mit bg aber ohne Größe stretcht', () => {
       const ir = toIR(parse(`Frame bg #f00`))
 
-      // Hat Hintergrund, width = fit-content (hug default)
+      // Has background, but no explicit size
+      // Containers stretch to fill parent by default
       expect(getStyle(ir.nodes[0], 'background')).toBe('#f00')
-      expect(getStyle(ir.nodes[0], 'width')).toBe('fit-content')
+      expect(getStyle(ir.nodes[0], 'width')).toBeUndefined()
+      expect(getStyle(ir.nodes[0], 'align-self')).toBe('stretch')
 
-      // In CSS: will only be as big as content (collapses if empty)
+      // In CSS: will stretch to fill parent cross-axis
     })
 
   })

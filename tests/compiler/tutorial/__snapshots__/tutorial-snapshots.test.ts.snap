@@ -225,8 +225,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 2 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -373,8 +373,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -633,8 +633,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -664,8 +664,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -869,8 +869,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 4 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -900,8 +900,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -1033,8 +1033,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 5 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -1157,8 +1157,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 5 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -1289,8 +1289,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 6 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -1474,8 +1474,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 7 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -1749,8 +1749,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 7 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -1792,8 +1792,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 7 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -2077,8 +2077,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -2241,8 +2241,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -2436,8 +2436,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -2605,8 +2605,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -2901,8 +2901,8 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3134,8 +3134,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -3194,8 +3194,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 2 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3243,8 +3243,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 2 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3292,8 +3292,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 2 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3336,8 +3336,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 2 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -3396,8 +3396,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 3 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3445,8 +3445,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 3 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3494,8 +3494,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 3 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3543,8 +3543,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 3 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3591,8 +3591,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 3 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -3752,8 +3752,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -3812,8 +3812,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 5 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3861,8 +3861,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 5 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3910,8 +3910,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 5 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -3954,8 +3954,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 5 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -4014,8 +4014,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 6 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -4067,8 +4067,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 6 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -4120,8 +4120,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 6 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -4176,8 +4176,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 6 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -4360,8 +4360,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 7 1`] = `
                   "value": "row",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -4541,8 +4541,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -4640,8 +4640,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -4739,8 +4739,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -4783,8 +4783,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -4845,8 +4845,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -4890,8 +4890,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -4980,8 +4980,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -5025,8 +5025,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -5108,8 +5108,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -5168,8 +5168,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 10 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -5308,8 +5308,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 10 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -5339,8 +5339,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 10 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -5768,8 +5768,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -5801,8 +5801,8 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -5944,8 +5944,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 1 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -5993,8 +5993,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 1 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -6034,8 +6034,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 1 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -6081,8 +6081,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 1 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -6141,8 +6141,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 2 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -6190,8 +6190,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 2 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -6239,8 +6239,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 2 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -6283,8 +6283,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 2 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -6349,8 +6349,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 3 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -6392,8 +6392,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -6469,8 +6469,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 4 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -6516,8 +6516,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 4 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -6565,8 +6565,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 4 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -6609,8 +6609,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 4 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -6640,8 +6640,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -6820,6 +6820,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 5 1`] = `
           "events": [],
           "id": "node-4",
           "isDefinition": false,
+          "layoutType": "flex",
           "name": "Frame",
           "primitive": "frame",
           "properties": [],
@@ -6868,8 +6869,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 5 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -6961,8 +6962,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 6 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -7004,8 +7005,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 6 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -7075,8 +7076,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -7120,8 +7121,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -7163,8 +7164,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -7216,8 +7217,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -7264,8 +7265,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -7295,8 +7296,8 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -7440,8 +7441,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 1 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -7657,8 +7658,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 1 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -7700,8 +7701,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 1 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -8286,8 +8287,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -8577,8 +8578,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -8845,8 +8846,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -9113,8 +9114,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -9144,8 +9145,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -10694,8 +10695,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -10739,8 +10740,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -10778,8 +10779,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -10829,8 +10830,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -10874,8 +10875,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -10913,8 +10914,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -11514,8 +11515,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -11857,8 +11858,8 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -12296,8 +12297,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 1 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -12698,8 +12699,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -13003,8 +13004,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 4 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -13370,8 +13371,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 5 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -13561,8 +13562,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 6 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -13756,8 +13757,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 7 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -13885,8 +13886,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 8 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -14186,8 +14187,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 9 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -14565,8 +14566,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -14948,8 +14949,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 11 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -15156,8 +15157,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -15288,8 +15289,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -15416,8 +15417,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -15447,8 +15448,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -15819,8 +15820,8 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 13 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -15916,8 +15917,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 1 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -15983,8 +15984,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 2 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -16063,7 +16064,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 3 1`] = `
             },
             {
               "property": "padding",
-              "value": "0px 12px",
+              "value": "12px",
             },
             {
               "property": "border-radius",
@@ -16071,7 +16072,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 3 1`] = `
             },
             {
               "property": "border",
-              "value": "0px solid currentColor",
+              "value": "1px solid currentColor",
             },
             {
               "property": "width",
@@ -16080,6 +16081,18 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 3 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-color",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
             },
           ],
           "tag": "input",
@@ -16112,7 +16125,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 3 1`] = `
             },
             {
               "property": "padding",
-              "value": "0px 12px",
+              "value": "12px",
             },
             {
               "property": "border-radius",
@@ -16120,7 +16133,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 3 1`] = `
             },
             {
               "property": "border",
-              "value": "0px solid currentColor",
+              "value": "1px solid currentColor",
             },
             {
               "property": "width",
@@ -16129,6 +16142,18 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 3 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-color",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
             },
             {
               "property": "pointer-events",
@@ -16158,8 +16183,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -16457,8 +16482,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -16781,8 +16806,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -16848,8 +16873,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -17118,8 +17143,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -17353,8 +17378,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -17475,8 +17500,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -17582,8 +17607,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -17688,8 +17713,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -17746,8 +17771,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -17885,8 +17910,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -18006,8 +18031,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -18127,8 +18152,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -18189,8 +18214,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -18419,8 +18444,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -18471,8 +18496,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -18610,8 +18635,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "justify-content",
@@ -18762,8 +18787,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
                     "value": "row",
                   },
                   {
-                    "property": "width",
-                    "value": "fit-content",
+                    "property": "align-self",
+                    "value": "stretch",
                   },
                   {
                     "property": "justify-content",
@@ -18877,8 +18902,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
                     "value": "row",
                   },
                   {
-                    "property": "width",
-                    "value": "fit-content",
+                    "property": "align-self",
+                    "value": "stretch",
                   },
                   {
                     "property": "justify-content",
@@ -18945,8 +18970,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
                     "value": "column",
                   },
                   {
-                    "property": "width",
-                    "value": "fit-content",
+                    "property": "align-self",
+                    "value": "stretch",
                   },
                   {
                     "property": "align-items",
@@ -18987,8 +19012,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -19088,7 +19113,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 11 1`] = `
             },
             {
               "property": "padding",
-              "value": "0px 12px",
+              "value": "12px",
             },
             {
               "property": "border-radius",
@@ -19096,15 +19121,27 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 11 1`] = `
             },
             {
               "property": "border",
-              "value": "0px solid currentColor",
+              "value": "1px solid currentColor",
             },
             {
               "property": "width",
-              "value": "200px",
+              "value": "220px",
             },
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-color",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
             },
             {
               "property": "border-color",
@@ -19187,7 +19224,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 11 1`] = `
             },
             {
               "property": "padding",
-              "value": "0px 12px",
+              "value": "12px",
             },
             {
               "property": "border-radius",
@@ -19195,15 +19232,27 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 11 1`] = `
             },
             {
               "property": "border",
-              "value": "0px solid currentColor",
+              "value": "1px solid currentColor",
             },
             {
               "property": "width",
-              "value": "200px",
+              "value": "220px",
             },
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-color",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
             },
             {
               "property": "border-color",
@@ -19235,8 +19284,8 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 11 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -19283,8 +19332,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 1 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -19341,8 +19390,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 1 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -19398,8 +19447,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 1 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -19446,8 +19495,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -19508,8 +19557,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -19570,8 +19619,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -19626,8 +19675,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -19997,8 +20046,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 3 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -20314,8 +20363,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -20535,8 +20584,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
                     "value": "column",
                   },
                   {
-                    "property": "width",
-                    "value": "fit-content",
+                    "property": "align-self",
+                    "value": "stretch",
                   },
                   {
                     "property": "align-items",
@@ -20737,8 +20786,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -20789,8 +20838,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -20832,8 +20881,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -20983,8 +21032,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -21149,8 +21198,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -21286,8 +21335,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 8 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -21587,8 +21636,8 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -22022,8 +22071,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -22401,8 +22450,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
                   "value": "row",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -22432,8 +22481,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -22463,8 +22512,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -22705,8 +22754,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -22933,8 +22982,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -22965,8 +23014,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -23180,8 +23229,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
                   "value": "row",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -23241,8 +23290,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "justify-content",
@@ -23411,8 +23460,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -23536,8 +23585,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -23567,8 +23616,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -23781,8 +23830,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -23828,8 +23877,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -24007,8 +24056,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -24203,8 +24252,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -24470,8 +24519,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -24564,10 +24613,6 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
         {
           "property": "flex-direction",
           "value": "column",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
         },
         {
           "property": "align-items",
@@ -24951,8 +24996,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -25181,8 +25226,8 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -25378,8 +25423,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 1 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -25499,8 +25544,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 2 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -25606,8 +25651,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -25738,8 +25783,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -25870,8 +25915,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 5 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -26012,8 +26057,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 6 1`] = `
                 "value": "row",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -26146,8 +26191,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 7 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -26286,8 +26331,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 8 1`] = `
                 "value": "row",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -26450,8 +26495,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
                         "value": "row",
                       },
                       {
-                        "property": "width",
-                        "value": "fit-content",
+                        "property": "align-self",
+                        "value": "stretch",
                       },
                       {
                         "property": "align-items",
@@ -26490,8 +26535,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -26521,8 +26566,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -26745,8 +26790,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 10 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -27100,8 +27145,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -27220,8 +27265,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -27333,8 +27378,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -27863,8 +27908,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
                     "value": "row",
                   },
                   {
-                    "property": "width",
-                    "value": "fit-content",
+                    "property": "align-self",
+                    "value": "stretch",
                   },
                   {
                     "property": "align-items",
@@ -27940,8 +27985,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -28197,8 +28242,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -28256,8 +28301,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -28670,8 +28715,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -28918,8 +28963,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -28950,8 +28995,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -29032,8 +29077,8 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -29205,8 +29250,8 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 1 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -29320,8 +29365,8 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 2 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -29464,8 +29509,8 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -29702,8 +29747,8 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -29745,8 +29790,8 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -29781,8 +29826,8 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -29828,8 +29873,8 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -29864,8 +29909,8 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -29911,8 +29956,8 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -29972,10 +30017,6 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
         {
           "property": "flex-direction",
           "value": "row",
-        },
-        {
-          "property": "width",
-          "value": "fit-content",
         },
         {
           "property": "align-items",
@@ -30399,8 +30440,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 3 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -30482,8 +30523,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 3 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -30565,8 +30606,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 3 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -30593,8 +30634,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -30673,8 +30714,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -30740,8 +30781,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -30807,8 +30848,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -30835,8 +30876,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -30980,8 +31021,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 5 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -31108,8 +31149,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 6 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -31226,8 +31267,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 6 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -31442,8 +31483,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -31677,8 +31718,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -32007,8 +32048,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -32175,8 +32216,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -32311,8 +32352,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -32488,8 +32529,8 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 1 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -32682,8 +32723,8 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 2 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -33023,8 +33064,8 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 4 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -33128,8 +33169,8 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 4 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -33662,8 +33703,8 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 6 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -33713,8 +33754,8 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 6 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -33780,8 +33821,8 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 6 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -34216,8 +34257,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -34347,8 +34388,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -34497,8 +34538,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 2 1`] = `
                           "value": "column",
                         },
                         {
-                          "property": "width",
-                          "value": "fit-content",
+                          "property": "align-self",
+                          "value": "stretch",
                         },
                         {
                           "property": "align-items",
@@ -34525,8 +34566,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 2 1`] = `
                       "value": "row",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "justify-content",
@@ -34704,8 +34745,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 2 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -34803,8 +34844,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 3 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -34930,8 +34971,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -35155,8 +35196,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                           "value": "column",
                         },
                         {
-                          "property": "width",
-                          "value": "fit-content",
+                          "property": "align-self",
+                          "value": "stretch",
                         },
                         {
                           "property": "align-items",
@@ -35183,8 +35224,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                       "value": "row",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -35263,8 +35304,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                           "value": "column",
                         },
                         {
-                          "property": "width",
-                          "value": "fit-content",
+                          "property": "align-self",
+                          "value": "stretch",
                         },
                         {
                           "property": "align-items",
@@ -35340,8 +35381,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                       "value": "row",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -35507,8 +35548,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -35657,8 +35698,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                           "value": "column",
                         },
                         {
-                          "property": "width",
-                          "value": "fit-content",
+                          "property": "align-self",
+                          "value": "stretch",
                         },
                         {
                           "property": "align-items",
@@ -35685,8 +35726,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                       "value": "row",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "justify-content",
@@ -35782,8 +35823,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                           "value": "column",
                         },
                         {
-                          "property": "width",
-                          "value": "fit-content",
+                          "property": "align-self",
+                          "value": "stretch",
                         },
                         {
                           "property": "align-items",
@@ -35877,8 +35918,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                           "value": "column",
                         },
                         {
-                          "property": "width",
-                          "value": "fit-content",
+                          "property": "align-self",
+                          "value": "stretch",
                         },
                         {
                           "property": "align-items",
@@ -35909,8 +35950,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -35989,8 +36030,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                           "value": "column",
                         },
                         {
-                          "property": "width",
-                          "value": "fit-content",
+                          "property": "align-self",
+                          "value": "stretch",
                         },
                         {
                           "property": "align-items",
@@ -36066,8 +36107,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                       "value": "row",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -36229,8 +36270,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -36379,8 +36420,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -36526,8 +36567,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -36581,8 +36622,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -36717,8 +36758,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -36772,8 +36813,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -36908,8 +36949,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -36963,8 +37004,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -36992,8 +37033,8 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
           "value": "row",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -37038,8 +37079,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -37059,8 +37100,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -37080,8 +37121,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -37101,8 +37142,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
             "value": "column",
           },
           {
-            "property": "width",
-            "value": "fit-content",
+            "property": "align-self",
+            "value": "stretch",
           },
           {
             "property": "align-items",
@@ -37135,8 +37176,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -37156,8 +37197,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -37177,8 +37218,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -37198,8 +37239,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -37220,8 +37261,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -37241,8 +37282,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -37262,8 +37303,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -37283,8 +37324,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -37305,8 +37346,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -37326,8 +37367,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -37347,8 +37388,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -37368,8 +37409,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -37388,8 +37429,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -37688,8 +37729,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 3 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -37749,8 +37790,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -37782,8 +37823,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -37803,8 +37844,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -37824,8 +37865,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
             "value": "column",
           },
           {
-            "property": "width",
-            "value": "fit-content",
+            "property": "align-self",
+            "value": "stretch",
           },
           {
             "property": "align-items",
@@ -37844,8 +37885,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -37877,8 +37918,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -37898,8 +37939,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -37919,8 +37960,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
             "value": "column",
           },
           {
-            "property": "width",
-            "value": "fit-content",
+            "property": "align-self",
+            "value": "stretch",
           },
           {
             "property": "align-items",
@@ -38027,8 +38068,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -38088,8 +38129,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -38117,8 +38158,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -38138,8 +38179,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -38159,8 +38200,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
             "value": "column",
           },
           {
-            "property": "width",
-            "value": "fit-content",
+            "property": "align-self",
+            "value": "stretch",
           },
           {
             "property": "align-items",
@@ -38183,8 +38224,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -38205,8 +38246,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -38382,8 +38423,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -38413,8 +38454,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -38451,8 +38492,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -38480,8 +38521,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -38501,8 +38542,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -38522,8 +38563,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
             "value": "column",
           },
           {
-            "property": "width",
-            "value": "fit-content",
+            "property": "align-self",
+            "value": "stretch",
           },
           {
             "property": "align-items",
@@ -38552,8 +38593,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -38617,8 +38658,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -38650,8 +38691,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -38671,8 +38712,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -38692,8 +38733,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
                 "value": "column",
               },
               {
-                "property": "width",
-                "value": "fit-content",
+                "property": "align-self",
+                "value": "stretch",
               },
               {
                 "property": "align-items",
@@ -38713,8 +38754,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
             "value": "column",
           },
           {
-            "property": "width",
-            "value": "fit-content",
+            "property": "align-self",
+            "value": "stretch",
           },
           {
             "property": "align-items",
@@ -38737,8 +38778,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -38759,8 +38800,8 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -41166,8 +41207,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 19 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -41234,8 +41275,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 20 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -41279,8 +41320,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 20 1`] = `
               "value": "column",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -41380,8 +41421,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 20 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",
@@ -41474,8 +41515,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -41575,8 +41616,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -41646,8 +41687,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                       "value": "column",
                     },
                     {
-                      "property": "width",
-                      "value": "fit-content",
+                      "property": "align-self",
+                      "value": "stretch",
                     },
                     {
                       "property": "align-items",
@@ -41739,8 +41780,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                   "value": "column",
                 },
                 {
-                  "property": "width",
-                  "value": "fit-content",
+                  "property": "align-self",
+                  "value": "stretch",
                 },
                 {
                   "property": "align-items",
@@ -41783,8 +41824,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
+              "property": "align-self",
+              "value": "stretch",
             },
             {
               "property": "align-items",
@@ -41814,8 +41855,8 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
           "value": "column",
         },
         {
-          "property": "width",
-          "value": "fit-content",
+          "property": "align-self",
+          "value": "stretch",
         },
         {
           "property": "align-items",

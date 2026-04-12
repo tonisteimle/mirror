@@ -1,0 +1,128 @@
+// Hotel Check-in Screen
+// Professional, minimal design
+
+// =============================================================================
+// TOKENS
+// =============================================================================
+
+primary.bg: #1a1a1a
+secondary.bg: #252525
+accent.bg: #c9a961
+accent.col: #c9a961
+accent-hover.bg: #d4b76e
+success.col: #4ade80
+muted.col: #666
+text.col: #fff
+border.boc: #333
+border-hover.boc: #444
+
+// =============================================================================
+// COMPONENTS
+// =============================================================================
+
+Card: bg $secondary, rad 12, pad 24, gap 16
+
+SectionTitle: col $muted, fs 11, uppercase, weight 600, letter 1
+
+FieldLabel: col $muted, fs 12, mar 0 0 6 0
+
+FieldValue: col $text, fs 15, weight 500
+
+InputField: bg $primary, bor 1, boc $border, col $text, pad 14 16, rad 8, w full
+  focus:
+    boc $accent
+
+PrimaryBtn as Button: bg $accent, col $primary, pad 16 32, rad 8, fs 14, weight 600, cursor pointer, w full
+  hover:
+    bg $accent-hover
+
+GuestBtn as Button: bg transparent, bor 1, boc $border, col $text, pad 14 24, rad 8, fs 13, cursor pointer, exclusive()
+  hover:
+    boc $border-hover
+  selected:
+    boc $accent
+    col $accent
+
+StatusBadge: Frame pad 8 16, bg $primary, rad 6
+  Label: col $success, fs 12, weight 500
+
+// =============================================================================
+// LAYOUT
+// =============================================================================
+
+Frame w 480, bg $primary, pad 40, rad 16, gap 32
+
+  // Header
+  Frame gap 8, center
+    Text "GRAND HOTEL", col $accent, fs 13, weight 600, letter 2
+    Text "Guest Check-in", col $text, fs 28, weight 300
+
+  // Booking Details
+  Card
+    SectionTitle "Booking Details"
+    Frame hor, gap 24
+      Frame gap 4, grow
+        FieldLabel "Confirmation"
+        FieldValue "BK-2024-78432"
+      Frame gap 4
+        FieldLabel "Room Type"
+        FieldValue "Deluxe Suite"
+
+  // Guest Information
+  Card
+    SectionTitle "Guest Information"
+    Frame gap 16
+      Frame gap 4
+        FieldLabel "Full Name"
+        Input placeholder "Enter guest name", InputField
+      Frame hor, gap 16
+        Frame gap 4, grow
+          FieldLabel "Check-in"
+          Input type "date", value "2024-04-12", InputField
+        Frame gap 4, grow
+          FieldLabel "Check-out"
+          Input type "date", value "2024-04-15", InputField
+      Frame gap 4
+        FieldLabel "Number of Guests"
+        Frame hor, gap 8
+          GuestBtn "1"
+          GuestBtn "2", selected
+          GuestBtn "3"
+          GuestBtn "4"
+
+  // Room Assignment
+  Card
+    SectionTitle "Room Assignment"
+    Frame hor, spread, ver-center
+      Frame hor, gap 16, ver-center
+        Frame w 56, h 56, bg $primary, rad 8, center
+          Icon "door-open", ic $accent, is 24
+        Frame gap 2
+          Text "Room 412", col $text, fs 18, weight 500
+          Text "4th Floor, Lake View", col $muted, fs 13
+      StatusBadge
+        Label "Ready"
+
+  // Additional Services
+  Card
+    SectionTitle "Additional Services"
+    Frame gap 12
+      Frame hor, gap 12, ver-center
+        Checkbox
+        Text "Early check-in (11:00)", col $text, fs 14
+      Frame hor, gap 12, ver-center
+        Checkbox
+        Text "Late check-out (14:00)", col $text, fs 14
+      Frame hor, gap 12, ver-center
+        Checkbox
+        Text "Airport transfer", col $text, fs 14
+      Frame hor, gap 12, ver-center
+        Checkbox checked
+        Text "Breakfast included", col $text, fs 14
+
+  // Actions
+  Frame gap 12
+    PrimaryBtn "Complete Check-in", toast("Check-in complete!", "success")
+    Frame hor, center, gap 4
+      Text "Need help?", col $muted, fs 12
+      Link "Call reception", col $accent, fs 12, cursor pointer, href "tel:+49123456789"

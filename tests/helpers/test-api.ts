@@ -59,13 +59,14 @@ export async function renderMirror(
   const compiled = compile(code, { backend: options.backend || 'dom' })
 
   // Execute the compiled code
+  // Note: createUI() returns the root element directly, not an object with { root }
   const execCode = compiled.replace('export function createUI', 'function createUI')
   const fn = new Function(execCode + '\nreturn createUI();')
-  const ui = fn() as { root?: HTMLElement }
+  const root = fn() as HTMLElement
 
-  if (ui?.root) {
-    while (ui.root.firstChild) {
-      container.appendChild(ui.root.firstChild)
+  if (root) {
+    while (root.firstChild) {
+      container.appendChild(root.firstChild)
     }
   }
 

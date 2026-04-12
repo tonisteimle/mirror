@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Adressen - Mirror</title>
+  <title>GRAND HOTEL - Mirror</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -29,22 +29,16 @@
 // Mirror Data Context (Tokens + Data Files)
 // Exposed to window for debugging and two-way binding
 const __mirrorData = window.__mirrorData = {
-  "primary.bg": "#3b82f6",
-  "primary-light.bg": "#60a5fa",
-  "accent.bg": "#10b981",
-  "danger.bg": "#ef4444",
-  "warning.bg": "#f59e0b",
-  "surface.bg": "#ffffff",
-  "surface-secondary.bg": "#f8fafc",
-  "surface-tertiary.bg": "#f1f5f9",
-  "border.boc": "#e2e8f0",
-  "border-dark.boc": "#cbd5e1",
-  "text-primary.col": "#0f172a",
-  "text-secondary.col": "#475569",
-  "text-muted.col": "#94a3b8",
-  "addresses": { "addr1": { "id": "addr1", "firstName": "Max", "lastName": "Mustermann", "company": "Muster GmbH", "street": "Hauptstraße 42", "zip": "10115", "city": "Berlin", "country": "Deutschland", "phone": "+49 30 12345678", "email": "max@muster.de", "category": "Geschäftlich" }, "addr2": { "id": "addr2", "firstName": "Anna", "lastName": "Schmidt", "company": "", "street": "Seestraße 15", "zip": "80331", "city": "München", "country": "Deutschland", "phone": "+49 89 87654321", "email": "anna.schmidt@email.de", "category": "Privat" }, "addr3": { "id": "addr3", "firstName": "Thomas", "lastName": "Weber", "company": "Weber & Partner", "street": "Kirchweg 8", "zip": "20095", "city": "Hamburg", "country": "Deutschland", "phone": "+49 40 11223344", "email": "t.weber@partner.de", "category": "Geschäftlich" }, "addr4": { "id": "addr4", "firstName": "Lisa", "lastName": "Braun", "company": "", "street": "Parkallee 23", "zip": "50667", "city": "Köln", "country": "Deutschland", "phone": "+49 221 55667788", "email": "lisa.braun@mail.de", "category": "Familie" } },
-  "editMode": false,
-  "searchQuery": "",
+  "primary.bg": "#1a1a1a",
+  "secondary.bg": "#252525",
+  "accent.bg": "#c9a961",
+  "accent.col": "#c9a961",
+  "accent-hover.bg": "#d4b76e",
+  "success.col": "#4ade80",
+  "muted.col": "#666",
+  "text.col": "#fff",
+  "border.boc": "#333",
+  "border-hover.boc": "#444",
 }
 
 // Collection Store for reactive CRUD
@@ -196,30 +190,30 @@ export function createUI(data = {}) {
 /* Mirror Theme Tokens (auto-generated) */
 :root {
   /* color */
-  --accent-bg: #10b981;
-  --accent-hover-bg: #0c8a60;
-  --accent-active-bg: #0a7350;
-  --accent-col: #ffffff;
-  --surface-bg: #ffffff;
-  --surface-hover-bg: #ffffff;
-  --surface-active-bg: #ffffff;
-  --surface-selected-bg: #ffffff;
+  --accent-bg: #c9a961;
+  --accent-hover-bg: #d4b76e;
+  --accent-active-bg: #a58438;
+  --accent-col: #c9a961;
+  --surface-bg: #27272a;
+  --surface-hover-bg: #333337;
+  --surface-active-bg: #3b3b3f;
+  --surface-selected-bg: #44444a;
   --canvas-bg: #18181b;
   --elevated-bg: #2a2a2e;
   --elevated-hover-bg: #36363b;
   --input-bg: #1f1f23;
   --input-hover-bg: #2b2b31;
   --overlay-bg: rgba(0, 0, 0, 0.5);
-  --text-col: #ffffff;
-  --muted-col: #a1a1aa;
+  --text-col: #fff;
+  --muted-col: #666;
   --subtle-col: #71717a;
-  --border-boc: #e2e8f0;
-  --border-hover-boc: #ffffff;
+  --border-boc: #333;
+  --border-hover-boc: #444;
   --focus-boc: #5BA8F5;
   --error-bg: #ef4444;
   --error-col: #fca5a5;
   --success-bg: #22c55e;
-  --success-col: #86efac;
+  --success-col: #4ade80;
   --warning-bg: #f59e0b;
   --warning-col: #fcd34d;
 
@@ -248,17 +242,8 @@ export function createUI(data = {}) {
   
   /* User Tokens */
   :host, :root {
-    --primary-bg: #3b82f6;
-    --primary-light-bg: #60a5fa;
-    --danger-bg: #ef4444;
-    --surface-secondary-bg: #f8fafc;
-    --surface-tertiary-bg: #f1f5f9;
-    --border-dark-boc: #cbd5e1;
-    --text-primary-col: #0f172a;
-    --text-secondary-col: #475569;
-    --text-muted-col: #94a3b8;
-    --editMode: false;
-    --searchQuery: ;
+    --primary-bg: #1a1a1a;
+    --secondary-bg: #252525;
   }
   
   .mirror-root * {
@@ -277,16 +262,24 @@ export function createUI(data = {}) {
   @keyframes mirror-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
   @keyframes mirror-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   
-  [data-mirror-id="node-11"]:hover {
-    opacity: 0.9 !important;
+  [data-mirror-id="node-30"]:hover {
+    border-color: var(--border-hover-boc) !important;
   }
   
-  [data-mirror-id="node-49"]:hover {
-    background: var(--surface-tertiary-bg) !important;
+  [data-mirror-id="node-31"]:hover {
+    border-color: var(--border-hover-boc) !important;
   }
   
-  [data-mirror-id="node-51"]:hover {
-    background: var(--surface-tertiary-bg) !important;
+  [data-mirror-id="node-32"]:hover {
+    border-color: var(--border-hover-boc) !important;
+  }
+  
+  [data-mirror-id="node-33"]:hover {
+    border-color: var(--border-hover-boc) !important;
+  }
+  
+  [data-mirror-id="node-61"]:hover {
+    background: var(--accent-hover-bg) !important;
   }
   `
   _root.appendChild(_style)
@@ -299,13 +292,14 @@ export function createUI(data = {}) {
   node_1.dataset.mirrorName = 'Frame'
   Object.assign(node_1.style, {
     'display': 'flex',
-    'flex-direction': 'row',
+    'flex-direction': 'column',
     'align-items': 'flex-start',
-    'width': '100%',
-    'height': '100%',
-    'background': 'var(--surface-secondary-bg)',
+    'gap': '32px',
+    'width': '480px',
+    'background': 'var(--primary-bg)',
+    'padding': '40px',
+    'border-radius': '16px',
   })
-  node_1.dataset.layout = 'flex'
   node_1.dataset.component = 'Frame'
   // Frame
   const node_2 = document.createElement('div')
@@ -315,111 +309,91 @@ export function createUI(data = {}) {
   Object.assign(node_2.style, {
     'display': 'flex',
     'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '0px',
-    'width': '380px',
-    'flex-shrink': '0',
-    'height': '100%',
     'align-self': 'stretch',
-    'min-height': '0',
-    'background': 'var(--surface-bg)',
-    'border': '0px solid 1px 0px 0px',
-    'border-color': 'var(--border-boc)',
+    'justify-content': 'center',
+    'align-items': 'center',
+    'gap': '8px',
   })
   node_2.dataset.component = 'Frame'
-  // Frame
-  const node_3 = document.createElement('div')
+  // Text
+  const node_3 = document.createElement('span')
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
-  node_3.dataset.mirrorName = 'Frame'
+  node_3.dataset.mirrorName = 'Text'
+  node_3.textContent = "GRAND HOTEL"
   Object.assign(node_3.style, {
+    'color': 'var(--accent-col)',
+    'font-size': '13px',
+    'font-weight': '600',
+  })
+  node_3.dataset.component = 'Text'
+  node_2.appendChild(node_3)
+  
+  // Text
+  const node_4 = document.createElement('span')
+  _elements['node-4'] = node_4
+  node_4.dataset.mirrorId = 'node-4'
+  node_4.dataset.mirrorName = 'Text'
+  node_4.textContent = "Guest Check-in"
+  Object.assign(node_4.style, {
+    'color': 'var(--text-col)',
+    'font-size': '28px',
+    'font-weight': '300',
+  })
+  node_4.dataset.component = 'Text'
+  node_2.appendChild(node_4)
+  
+  node_1.appendChild(node_2)
+  
+  // Card
+  const node_5 = document.createElement('div')
+  _elements['node-5'] = node_5
+  node_5.dataset.mirrorId = 'node-5'
+  node_5.dataset.mirrorName = 'Card'
+  Object.assign(node_5.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'width': 'fit-content',
     'align-items': 'flex-start',
     'gap': '16px',
-    'padding': '20px',
-    'border': '0px solid 0px 1px 0px',
-    'border-color': 'var(--border-boc)',
+    'background': 'var(--secondary-bg)',
+    'border-radius': '12px',
+    'padding': '24px',
   })
-  node_3.dataset.component = 'Frame'
-  // Frame
-  const node_4 = document.createElement('div')
-  _elements['node-4'] = node_4
-  node_4.dataset.mirrorId = 'node-4'
-  node_4.dataset.mirrorName = 'Frame'
-  Object.assign(node_4.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'justify-content': 'space-between',
-    'align-items': 'center',
-  })
-  node_4.dataset.layout = 'flex'
-  node_4.dataset.component = 'Frame'
-  // Frame
-  const node_5 = document.createElement('div')
-  _elements['node-5'] = node_5
-  node_5.dataset.mirrorId = 'node-5'
-  node_5.dataset.mirrorName = 'Frame'
-  Object.assign(node_5.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'center',
-    'gap': '12px',
-  })
-  node_5.dataset.layout = 'flex'
-  node_5.dataset.component = 'Frame'
-  // Frame
+  node_5.dataset.component = 'Card'
+  // SectionTitle
   const node_6 = document.createElement('div')
   _elements['node-6'] = node_6
   node_6.dataset.mirrorId = 'node-6'
-  node_6.dataset.mirrorName = 'Frame'
+  node_6.dataset.mirrorName = 'SectionTitle'
+  node_6.textContent = "Booking Details"
   Object.assign(node_6.style, {
     'display': 'flex',
     'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'center',
-    'width': '40px',
-    'flex-shrink': '0',
-    'height': '40px',
-    'flex-shrink': '0',
-    'background': 'var(--primary-bg)',
-    'border-radius': '8px',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
+    'font-size': '11px',
+    'text-transform': 'uppercase',
+    'font-weight': '600',
   })
-  node_6.dataset.component = 'Frame'
-  // Icon
-  const node_7 = document.createElement('span')
-  _elements['node-7'] = node_7
-  node_7.dataset.mirrorId = 'node-7'
-  node_7.dataset.mirrorName = 'Icon'
-  node_7.setAttribute('data-icon-color', "white")
-  node_7.setAttribute('data-icon-size', "20")
-  // Icon default styles
-  Object.assign(node_7.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_7, "book-user")
-  Object.assign(node_7.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '20px',
-    'width': '20px',
-    'height': '20px',
-  })
-  node_7.dataset.component = 'Icon'
-  node_6.appendChild(node_7)
-  
+  node_6.dataset.component = 'SectionTitle'
   node_5.appendChild(node_6)
   
+  // Frame
+  const node_7 = document.createElement('div')
+  _elements['node-7'] = node_7
+  node_7.dataset.mirrorId = 'node-7'
+  node_7.dataset.mirrorName = 'Frame'
+  Object.assign(node_7.style, {
+    'display': 'flex',
+    'flex-direction': 'row',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '24px',
+  })
+  node_7.dataset.layout = 'flex'
+  node_7.dataset.component = 'Frame'
   // Frame
   const node_8 = document.createElement('div')
   _elements['node-8'] = node_8
@@ -430,136 +404,136 @@ export function createUI(data = {}) {
     'flex-direction': 'column',
     'width': 'fit-content',
     'align-items': 'flex-start',
-    'gap': '0px',
+    'gap': '4px',
+    'flex-grow': '1',
   })
   node_8.dataset.component = 'Frame'
-  // Text
-  const node_9 = document.createElement('span')
+  // FieldLabel
+  const node_9 = document.createElement('div')
   _elements['node-9'] = node_9
   node_9.dataset.mirrorId = 'node-9'
-  node_9.dataset.mirrorName = 'Text'
-  node_9.textContent = "Adressen"
+  node_9.dataset.mirrorName = 'FieldLabel'
+  node_9.textContent = "Confirmation"
   Object.assign(node_9.style, {
-    'color': 'var(--text-primary-col)',
-    'font-size': '18px',
-    'font-weight': '700',
-  })
-  node_9.dataset.component = 'Text'
-  node_8.appendChild(node_9)
-  
-  // Text
-  const node_10 = document.createElement('span')
-  _elements['node-10'] = node_10
-  node_10.dataset.mirrorId = 'node-10'
-  node_10.dataset.mirrorName = 'Text'
-  node_10.textContent = "Verwaltung"
-  Object.assign(node_10.style, {
-    'color': 'var(--text-muted-col)',
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
     'font-size': '12px',
   })
-  node_10.dataset.component = 'Text'
+  node_9.dataset.component = 'FieldLabel'
+  node_8.appendChild(node_9)
+  
+  // FieldValue
+  const node_10 = document.createElement('div')
+  _elements['node-10'] = node_10
+  node_10.dataset.mirrorId = 'node-10'
+  node_10.dataset.mirrorName = 'FieldValue'
+  node_10.textContent = "BK-2024-78432"
+  Object.assign(node_10.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--text-col)',
+    'font-size': '15px',
+    'font-weight': '500',
+  })
+  node_10.dataset.component = 'FieldValue'
   node_8.appendChild(node_10)
   
-  node_5.appendChild(node_8)
+  node_7.appendChild(node_8)
   
-  node_4.appendChild(node_5)
-  
-  // Btn
-  const node_11 = document.createElement('button')
+  // Frame
+  const node_11 = document.createElement('div')
   _elements['node-11'] = node_11
   node_11.dataset.mirrorId = 'node-11'
-  node_11.dataset.mirrorName = 'Btn'
+  node_11.dataset.mirrorName = 'Frame'
   Object.assign(node_11.style, {
-    'height': '36px',
-    'flex-shrink': '0',
-    'padding': '10px 16px',
-    'border-radius': '6px',
-    'border': '0px solid currentColor',
-    'cursor': 'pointer',
-    'font-size': '13px',
-    'font-weight': '500',
-    'background': 'var(--primary-bg)',
-    'color': 'white',
-    'transition': 'opacity 150ms ease',
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '4px',
   })
-  node_11.dataset.component = 'Btn'
-  node_11.addEventListener('click', (e) => {
-    _runtime.create('addresses')
-  })
-  // Frame
+  node_11.dataset.component = 'Frame'
+  // FieldLabel
   const node_12 = document.createElement('div')
   _elements['node-12'] = node_12
   node_12.dataset.mirrorId = 'node-12'
-  node_12.dataset.mirrorName = 'Frame'
+  node_12.dataset.mirrorName = 'FieldLabel'
+  node_12.textContent = "Room Type"
   Object.assign(node_12.style, {
     'display': 'flex',
-    'flex-direction': 'row',
+    'flex-direction': 'column',
     'width': 'fit-content',
-    'align-items': 'center',
-    'gap': '6px',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
+    'font-size': '12px',
   })
-  node_12.dataset.layout = 'flex'
-  node_12.dataset.component = 'Frame'
-  // Icon
-  const node_13 = document.createElement('span')
-  _elements['node-13'] = node_13
-  node_13.dataset.mirrorId = 'node-13'
-  node_13.dataset.mirrorName = 'Icon'
-  node_13.setAttribute('data-icon-color', "white")
-  node_13.setAttribute('data-icon-size', "16")
-  // Icon default styles
-  Object.assign(node_13.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_13, "plus")
-  Object.assign(node_13.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
-  })
-  node_13.dataset.component = 'Icon'
-  node_12.appendChild(node_13)
-  
-  // Text
-  const node_14 = document.createElement('span')
-  _elements['node-14'] = node_14
-  node_14.dataset.mirrorId = 'node-14'
-  node_14.dataset.mirrorName = 'Text'
-  node_14.textContent = "Neu"
-  node_14.dataset.component = 'Text'
-  node_12.appendChild(node_14)
-  
+  node_12.dataset.component = 'FieldLabel'
   node_11.appendChild(node_12)
   
-  node_4.appendChild(node_11)
+  // FieldValue
+  const node_13 = document.createElement('div')
+  _elements['node-13'] = node_13
+  node_13.dataset.mirrorId = 'node-13'
+  node_13.dataset.mirrorName = 'FieldValue'
+  node_13.textContent = "Deluxe Suite"
+  Object.assign(node_13.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--text-col)',
+    'font-size': '15px',
+    'font-weight': '500',
+  })
+  node_13.dataset.component = 'FieldValue'
+  node_11.appendChild(node_13)
   
-  node_3.appendChild(node_4)
+  node_7.appendChild(node_11)
   
-  // Frame
+  node_5.appendChild(node_7)
+  
+  node_1.appendChild(node_5)
+  
+  // Card
+  const node_14 = document.createElement('div')
+  _elements['node-14'] = node_14
+  node_14.dataset.mirrorId = 'node-14'
+  node_14.dataset.mirrorName = 'Card'
+  Object.assign(node_14.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '16px',
+    'background': 'var(--secondary-bg)',
+    'border-radius': '12px',
+    'padding': '24px',
+  })
+  node_14.dataset.component = 'Card'
+  // SectionTitle
   const node_15 = document.createElement('div')
   _elements['node-15'] = node_15
   node_15.dataset.mirrorId = 'node-15'
-  node_15.dataset.mirrorName = 'Frame'
+  node_15.dataset.mirrorName = 'SectionTitle'
+  node_15.textContent = "Guest Information"
   Object.assign(node_15.style, {
     'display': 'flex',
-    'flex-direction': 'row',
-    'align-items': 'center',
-    'gap': '8px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
+    'font-size': '11px',
+    'text-transform': 'uppercase',
+    'font-weight': '600',
   })
-  node_15.dataset.layout = 'flex'
-  node_15.dataset.component = 'Frame'
+  node_15.dataset.component = 'SectionTitle'
+  node_14.appendChild(node_15)
+  
   // Frame
   const node_16 = document.createElement('div')
   _elements['node-16'] = node_16
@@ -567,388 +541,532 @@ export function createUI(data = {}) {
   node_16.dataset.mirrorName = 'Frame'
   Object.assign(node_16.style, {
     'display': 'flex',
-    'flex-direction': 'row',
+    'flex-direction': 'column',
     'width': 'fit-content',
-    'align-items': 'center',
-    'flex-grow': '1',
-    'background': 'var(--surface-secondary-bg)',
-    'border-radius': '6px',
-    'padding': '0px 12px',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
+    'align-items': 'flex-start',
+    'gap': '16px',
   })
-  node_16.dataset.layout = 'flex'
   node_16.dataset.component = 'Frame'
-  // Icon
-  const node_17 = document.createElement('span')
+  // Frame
+  const node_17 = document.createElement('div')
   _elements['node-17'] = node_17
   node_17.dataset.mirrorId = 'node-17'
-  node_17.dataset.mirrorName = 'Icon'
-  node_17.setAttribute('data-icon-color', "$text-muted")
-  node_17.setAttribute('data-icon-size', "16")
-  // Icon default styles
+  node_17.dataset.mirrorName = 'Frame'
   Object.assign(node_17.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '4px',
   })
-  // Load Lucide icon
-  _runtime.loadIcon(node_17, "search")
-  Object.assign(node_17.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
-  })
-  node_17.dataset.component = 'Icon'
-  node_16.appendChild(node_17)
-  
-  // Input
-  const node_18 = document.createElement('input')
+  node_17.dataset.component = 'Frame'
+  // FieldLabel
+  const node_18 = document.createElement('div')
   _elements['node-18'] = node_18
   node_18.dataset.mirrorId = 'node-18'
-  node_18.dataset.mirrorName = 'Input'
-  node_18.setAttribute('placeholder', "Suchen...")
+  node_18.dataset.mirrorName = 'FieldLabel'
+  node_18.textContent = "Full Name"
   Object.assign(node_18.style, {
-    'height': '36px',
-    'flex-shrink': '0',
-    'padding': '10px',
-    'border-radius': '6px',
-    'border': '0px solid currentColor',
-    'flex': '1 1 0%',
-    'min-width': '0',
-    'background': 'transparent',
-    'color': 'var(--text-primary-col)',
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
+    'font-size': '12px',
   })
-  node_18.dataset.bind = 'searchQuery'
-  node_18.dataset.component = 'Input'
-  node_18.dataset.slot = 'Input'
-  node_16.appendChild(node_18)
+  node_18.dataset.component = 'FieldLabel'
+  node_17.appendChild(node_18)
   
-  node_15.appendChild(node_16)
-  
-  node_3.appendChild(node_15)
-  
-  node_2.appendChild(node_3)
-  
-  // Frame
-  const node_19 = document.createElement('div')
+  // Input
+  const node_19 = document.createElement('input')
   _elements['node-19'] = node_19
   node_19.dataset.mirrorId = 'node-19'
-  node_19.dataset.mirrorName = 'Frame'
+  node_19.dataset.mirrorName = 'Input'
+  node_19.setAttribute('placeholder', "Enter guest name")
   Object.assign(node_19.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '8px',
-    'padding': '12px',
-    'flex-grow': '1',
-    'overflow-y': 'auto',
-  })
-  node_19.dataset.component = 'Frame'
-  // Each loop: address in addresses
-  const node_20_container = document.createElement('div')
-  node_20_container.dataset.eachContainer = 'node-20'
-  node_20_container.style.display = 'contents';
-  node_20_container.dataset.bind = 'selectedAddress'
-  
-  _elements['node-20'] = node_20_container
-  node_20_container._eachConfig = {
-    itemVar: 'address',
-    collection: 'addresses',
-    renderItem: (address, index) => {
-      const itemContainer = document.createElement('div')
-      itemContainer.dataset.eachItem = index
-      itemContainer.style.display = 'contents';
-      const node_21_tpl = document.createElement('div')
-      node_21_tpl.dataset.mirrorId = 'node-21[' + index + ']'
-      node_21_tpl._loopItem = address
-      node_21_tpl.dataset.mirrorName = 'AddressCard'
-      Object.assign(node_21_tpl.style, {
-        'display': 'flex',
-        'flex-direction': 'column',
-        'width': 'fit-content',
-        'align-items': 'flex-start',
-        'gap': '8px',
-        'padding': '16px',
-        'background': 'var(--surface-bg)',
-        'border-radius': '8px',
-        'border': '1px solid currentColor',
-        'border-color': 'var(--border-boc)',
-        'cursor': 'pointer',
-        'transition': 'border-color 200ms ease, box-shadow 200ms ease',
-      })
-      node_21_tpl._stateMachine = {
-        initial: 'default',
-        current: 'default',
-        states: {
-          'hover': {
-            styles: {
-              'border-color': '$primary-light',
-              'box-shadow': '0 1px 2px rgba(0,0,0,0.05)',
-            },
-          },
-          'selected': {
-            styles: {
-              'border-color': '$primary',
-              'background': '#eff6ff',
-            },
-          },
-          'default': {
-            styles: {
-            },
-          },
-        },
-        transitions: [
-          { to: 'selected', trigger: 'onclick', modifier: 'exclusive' },
-        ],
-      }
-      node_21_tpl._baseStyles = {
-        'border-color': node_21_tpl.style['border-color'] || '',
-        'box-shadow': node_21_tpl.style['box-shadow'] || '',
-        'background': node_21_tpl.style['background'] || '',
-      }
-      node_21_tpl.dataset.state = 'default'
-      Object.assign(node_21_tpl.style, node_21_tpl._stateMachine.states['default'].styles)
-      node_21_tpl.addEventListener('click', (e) => {
-        const sm = node_21_tpl._stateMachine
-        const current = sm.current
-        _runtime.exclusiveTransition(node_21_tpl, 'selected')
-      })
-      node_21_tpl.addEventListener('click', (e) => {
-        _runtime.exclusive(node_21_tpl)
-      })
-      const node_22_tpl = document.createElement('div')
-      node_22_tpl.dataset.mirrorId = 'node-22[' + index + ']'
-      node_22_tpl._loopItem = address
-      node_22_tpl.dataset.mirrorName = 'Frame'
-      Object.assign(node_22_tpl.style, {
-        'display': 'flex',
-        'flex-direction': 'row',
-        'width': 'fit-content',
-        'justify-content': 'space-between',
-        'align-items': 'center',
-      })
-      const node_23_tpl = document.createElement('div')
-      node_23_tpl.dataset.mirrorId = 'node-23[' + index + ']'
-      node_23_tpl._loopItem = address
-      node_23_tpl.dataset.mirrorName = 'Frame'
-      Object.assign(node_23_tpl.style, {
-        'display': 'flex',
-        'flex-direction': 'row',
-        'width': 'fit-content',
-        'align-items': 'center',
-        'gap': '12px',
-      })
-      const node_24_tpl = document.createElement('div')
-      node_24_tpl.dataset.mirrorId = 'node-24[' + index + ']'
-      node_24_tpl._loopItem = address
-      node_24_tpl.dataset.mirrorName = 'Frame'
-      Object.assign(node_24_tpl.style, {
-        'display': 'flex',
-        'flex-direction': 'column',
-        'justify-content': 'center',
-        'align-items': 'center',
-        'width': '44px',
-        'flex-shrink': '0',
-        'height': '44px',
-        'flex-shrink': '0',
-        'border-radius': '99px',
-        'background': 'var(--surface-tertiary-bg)',
-      })
-      const node_25_tpl = document.createElement('span')
-      node_25_tpl.dataset.mirrorId = 'node-25[' + index + ']'
-      node_25_tpl._loopItem = address
-      node_25_tpl.dataset.mirrorName = 'Text'
-      Object.assign(node_25_tpl.style, {
-        'color': 'var(--text-secondary-col)',
-        'font-size': '14px',
-        'font-weight': '600',
-      })
-      node_24_tpl.appendChild(node_25_tpl)
-      node_23_tpl.appendChild(node_24_tpl)
-      const node_26_tpl = document.createElement('div')
-      node_26_tpl.dataset.mirrorId = 'node-26[' + index + ']'
-      node_26_tpl._loopItem = address
-      node_26_tpl.dataset.mirrorName = 'Frame'
-      Object.assign(node_26_tpl.style, {
-        'display': 'flex',
-        'flex-direction': 'column',
-        'width': 'fit-content',
-        'align-items': 'flex-start',
-        'gap': '2px',
-      })
-      const node_27_tpl = document.createElement('span')
-      node_27_tpl.dataset.mirrorId = 'node-27[' + index + ']'
-      node_27_tpl._loopItem = address
-      node_27_tpl.dataset.mirrorName = 'Text'
-      node_27_tpl.textContent = address.firstName + " " + address.lastName
-      Object.assign(node_27_tpl.style, {
-        'color': 'var(--text-primary-col)',
-        'font-size': '14px',
-        'font-weight': '600',
-      })
-      node_26_tpl.appendChild(node_27_tpl)
-      const node_28_tpl = document.createElement('span')
-      node_28_tpl.dataset.mirrorId = 'node-28[' + index + ']'
-      node_28_tpl._loopItem = address
-      node_28_tpl.dataset.mirrorName = 'Text'
-      Object.assign(node_28_tpl.style, {
-        'color': 'var(--text-muted-col)',
-        'font-size': '12px',
-      })
-      node_26_tpl.appendChild(node_28_tpl)
-      node_23_tpl.appendChild(node_26_tpl)
-      node_22_tpl.appendChild(node_23_tpl)
-      const node_29_tpl = document.createElement('div')
-      node_29_tpl.dataset.mirrorId = 'node-29[' + index + ']'
-      node_29_tpl._loopItem = address
-      node_29_tpl.dataset.mirrorName = 'Badge'
-      Object.assign(node_29_tpl.style, {
-        'display': 'flex',
-        'flex-direction': 'column',
-        'width': 'fit-content',
-        'align-items': 'flex-start',
-        'padding': '4px 8px',
-        'border-radius': '4px',
-        'font-size': '11px',
-        'font-weight': '500',
-        'background': (address.category === "Geschäftlich" ? "#dbeafe" : (address.category === "Privat" ? "#dcfce7" : "#fef3c7")),
-        'color': (address.category === "Geschäftlich" ? "#1d4ed8" : (address.category === "Privat" ? "#15803d" : "#a16207")),
-      })
-      const node_30_tpl = document.createElement('span')
-      node_30_tpl.dataset.mirrorId = 'node-30[' + index + ']'
-      node_30_tpl._loopItem = address
-      node_30_tpl.dataset.mirrorName = 'Text'
-      node_30_tpl.textContent = address.category
-      node_29_tpl.appendChild(node_30_tpl)
-      node_22_tpl.appendChild(node_29_tpl)
-      node_21_tpl.appendChild(node_22_tpl)
-      itemContainer.appendChild(node_21_tpl)
-      return itemContainer
-    },
-  }
-  
-  // Initial render
-  const addressesData = (function(d) { if (Array.isArray(d)) return d; if (d && typeof d === 'object') { return Object.entries(d).map(([k, v]) => typeof v === 'object' && v !== null ? { _key: k, ...v } : v); } return []; })($get('addresses'))
-  addressesData.forEach((address, index) => {
-    node_20_container.appendChild(node_20_container._eachConfig.renderItem(address, index))
-  })
-  
-  node_19.appendChild(node_20_container)
-  
-  node_2.appendChild(node_19)
-  
-  // Frame
-  const node_31 = document.createElement('div')
-  _elements['node-31'] = node_31
-  node_31.dataset.mirrorId = 'node-31'
-  node_31.dataset.mirrorName = 'Frame'
-  Object.assign(node_31.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'center',
-    'gap': '8px',
-    'padding': '16px',
-    'border': '1px solid 0px 0px 0px',
-    'border-color': 'var(--border-boc)',
-  })
-  node_31.dataset.layout = 'flex'
-  node_31.dataset.component = 'Frame'
-  // Icon
-  const node_32 = document.createElement('span')
-  _elements['node-32'] = node_32
-  node_32.dataset.mirrorId = 'node-32'
-  node_32.dataset.mirrorName = 'Icon'
-  node_32.setAttribute('data-icon-color', "$text-muted")
-  node_32.setAttribute('data-icon-size', "16")
-  // Icon default styles
-  Object.assign(node_32.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
+    'height': '36px',
     'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_32, "users")
-  Object.assign(node_32.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
-  })
-  node_32.dataset.component = 'Icon'
-  node_31.appendChild(node_32)
-  
-  // Text
-  const node_33 = document.createElement('span')
-  _elements['node-33'] = node_33
-  node_33.dataset.mirrorId = 'node-33'
-  node_33.dataset.mirrorName = 'Text'
-  node_33.textContent = "4 Adressen"
-  Object.assign(node_33.style, {
-    'color': 'var(--text-muted-col)',
-    'font-size': '13px',
-  })
-  node_33.dataset.component = 'Text'
-  node_31.appendChild(node_33)
-  
-  node_2.appendChild(node_31)
-  
-  node_1.appendChild(node_2)
-  
-  // Frame
-  const node_34 = document.createElement('div')
-  _elements['node-34'] = node_34
-  node_34.dataset.mirrorId = 'node-34'
-  node_34.dataset.mirrorName = 'Frame'
-  Object.assign(node_34.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '20px',
-    'flex': '1 1 0%',
-    'min-width': '0',
-    'height': '100%',
-    'align-self': 'stretch',
-    'min-height': '0',
-    'padding': '24px',
-    'overflow-y': 'auto',
-  })
-  node_34.dataset.component = 'Frame'
-  // Frame
-  const node_35 = document.createElement('div')
-  _elements['node-35'] = node_35
-  node_35.dataset.mirrorId = 'node-35'
-  node_35.dataset.mirrorName = 'Frame'
-  Object.assign(node_35.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'center',
-    'gap': '16px',
+    'padding': '14px 16px',
+    'border-radius': '8px',
+    'border': '1px solid currentColor',
     'width': '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'flex': '1 1 0%',
-    'min-height': '0',
+    'background': 'var(--primary-bg)',
+    'border-color': 'var(--border-boc)',
+    'color': 'var(--text-col)',
   })
-  node_35._visibleWhen = '!$selectedAddress'
-  // Initially hidden until condition is met
-  node_35.style.display = 'none'
-  _runtime.bindVisibility(node_35, 'selectedAddress')
-  node_35.dataset.component = 'Frame'
+  node_19.dataset.component = 'Input'
+  node_19.dataset.slot = 'Input'
+  node_17.appendChild(node_19)
+  
+  node_16.appendChild(node_17)
+  
+  // Frame
+  const node_20 = document.createElement('div')
+  _elements['node-20'] = node_20
+  node_20.dataset.mirrorId = 'node-20'
+  node_20.dataset.mirrorName = 'Frame'
+  Object.assign(node_20.style, {
+    'display': 'flex',
+    'flex-direction': 'row',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '16px',
+  })
+  node_20.dataset.layout = 'flex'
+  node_20.dataset.component = 'Frame'
+  // Frame
+  const node_21 = document.createElement('div')
+  _elements['node-21'] = node_21
+  node_21.dataset.mirrorId = 'node-21'
+  node_21.dataset.mirrorName = 'Frame'
+  Object.assign(node_21.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '4px',
+    'flex-grow': '1',
+  })
+  node_21.dataset.component = 'Frame'
+  // FieldLabel
+  const node_22 = document.createElement('div')
+  _elements['node-22'] = node_22
+  node_22.dataset.mirrorId = 'node-22'
+  node_22.dataset.mirrorName = 'FieldLabel'
+  node_22.textContent = "Check-in"
+  Object.assign(node_22.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
+    'font-size': '12px',
+  })
+  node_22.dataset.component = 'FieldLabel'
+  node_21.appendChild(node_22)
+  
+  // Input
+  const node_23 = document.createElement('input')
+  _elements['node-23'] = node_23
+  node_23.dataset.mirrorId = 'node-23'
+  node_23.dataset.mirrorName = 'Input'
+  node_23.setAttribute('type', "date")
+  node_23.setAttribute('value', "2024-04-12")
+  Object.assign(node_23.style, {
+    'height': '36px',
+    'flex-shrink': '0',
+    'padding': '14px 16px',
+    'border-radius': '8px',
+    'border': '1px solid currentColor',
+    'width': '100%',
+    'align-self': 'stretch',
+    'min-width': '0',
+    'background': 'var(--primary-bg)',
+    'border-color': 'var(--border-boc)',
+    'color': 'var(--text-col)',
+  })
+  node_23.dataset.component = 'Input'
+  node_23.dataset.slot = 'Input'
+  node_21.appendChild(node_23)
+  
+  node_20.appendChild(node_21)
+  
+  // Frame
+  const node_24 = document.createElement('div')
+  _elements['node-24'] = node_24
+  node_24.dataset.mirrorId = 'node-24'
+  node_24.dataset.mirrorName = 'Frame'
+  Object.assign(node_24.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '4px',
+    'flex-grow': '1',
+  })
+  node_24.dataset.component = 'Frame'
+  // FieldLabel
+  const node_25 = document.createElement('div')
+  _elements['node-25'] = node_25
+  node_25.dataset.mirrorId = 'node-25'
+  node_25.dataset.mirrorName = 'FieldLabel'
+  node_25.textContent = "Check-out"
+  Object.assign(node_25.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
+    'font-size': '12px',
+  })
+  node_25.dataset.component = 'FieldLabel'
+  node_24.appendChild(node_25)
+  
+  // Input
+  const node_26 = document.createElement('input')
+  _elements['node-26'] = node_26
+  node_26.dataset.mirrorId = 'node-26'
+  node_26.dataset.mirrorName = 'Input'
+  node_26.setAttribute('type', "date")
+  node_26.setAttribute('value', "2024-04-15")
+  Object.assign(node_26.style, {
+    'height': '36px',
+    'flex-shrink': '0',
+    'padding': '14px 16px',
+    'border-radius': '8px',
+    'border': '1px solid currentColor',
+    'width': '100%',
+    'align-self': 'stretch',
+    'min-width': '0',
+    'background': 'var(--primary-bg)',
+    'border-color': 'var(--border-boc)',
+    'color': 'var(--text-col)',
+  })
+  node_26.dataset.component = 'Input'
+  node_26.dataset.slot = 'Input'
+  node_24.appendChild(node_26)
+  
+  node_20.appendChild(node_24)
+  
+  node_16.appendChild(node_20)
+  
+  // Frame
+  const node_27 = document.createElement('div')
+  _elements['node-27'] = node_27
+  node_27.dataset.mirrorId = 'node-27'
+  node_27.dataset.mirrorName = 'Frame'
+  Object.assign(node_27.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '4px',
+  })
+  node_27.dataset.component = 'Frame'
+  // FieldLabel
+  const node_28 = document.createElement('div')
+  _elements['node-28'] = node_28
+  node_28.dataset.mirrorId = 'node-28'
+  node_28.dataset.mirrorName = 'FieldLabel'
+  node_28.textContent = "Number of Guests"
+  Object.assign(node_28.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
+    'font-size': '12px',
+  })
+  node_28.dataset.component = 'FieldLabel'
+  node_27.appendChild(node_28)
+  
+  // Frame
+  const node_29 = document.createElement('div')
+  _elements['node-29'] = node_29
+  node_29.dataset.mirrorId = 'node-29'
+  node_29.dataset.mirrorName = 'Frame'
+  Object.assign(node_29.style, {
+    'display': 'flex',
+    'flex-direction': 'row',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '8px',
+  })
+  node_29.dataset.layout = 'flex'
+  node_29.dataset.component = 'Frame'
+  // GuestBtn
+  const node_30 = document.createElement('button')
+  _elements['node-30'] = node_30
+  node_30.dataset.mirrorId = 'node-30'
+  node_30.dataset.mirrorName = 'GuestBtn'
+  node_30.textContent = "1"
+  Object.assign(node_30.style, {
+    'height': '36px',
+    'flex-shrink': '0',
+    'padding': '14px 24px',
+    'border-radius': '8px',
+    'border': '1px solid currentColor',
+    'cursor': 'pointer',
+    'background': 'transparent',
+    'border-color': 'var(--border-boc)',
+    'color': 'var(--text-col)',
+    'font-size': '13px',
+  })
+  node_30._stateStyles = {
+    'selected': {
+      'border-color': '$accent',
+      'color': 'var(--accent-col)',
+    },
+  }
+  node_30._stateMachine = {
+    initial: 'default',
+    current: 'default',
+    states: {
+      'hover': {
+        styles: {
+          'border-color': 'var(--border-hover-boc)',
+        },
+      },
+      'selected': {
+        styles: {
+          'border-color': '$accent',
+          'color': 'var(--accent-col)',
+        },
+      },
+      'default': {
+        styles: {
+        },
+      },
+    },
+    transitions: [
+      { to: 'hover', trigger: 'onclick', modifier: 'exclusive' },
+    ],
+  }
+  node_30._baseStyles = {
+    'border-color': node_30.style['border-color'] || '',
+    'color': node_30.style['color'] || '',
+  }
+  node_30.dataset.state = 'default'
+  Object.assign(node_30.style, node_30._stateMachine.states['default'].styles)
+  node_30.addEventListener('click', (e) => {
+    const sm = node_30._stateMachine
+    const current = sm.current
+    _runtime.exclusiveTransition(node_30, 'hover')
+  })
+  node_30.dataset.component = 'GuestBtn'
+  node_29.appendChild(node_30)
+  
+  // GuestBtn
+  const node_31 = document.createElement('button')
+  _elements['node-31'] = node_31
+  node_31.dataset.mirrorId = 'node-31'
+  node_31.dataset.mirrorName = 'GuestBtn'
+  node_31.textContent = "2"
+  Object.assign(node_31.style, {
+    'height': '36px',
+    'flex-shrink': '0',
+    'padding': '14px 24px',
+    'border-radius': '8px',
+    'border': '1px solid currentColor',
+    'cursor': 'pointer',
+    'background': 'transparent',
+    'border-color': 'var(--border-boc)',
+    'color': 'var(--text-col)',
+    'font-size': '13px',
+  })
+  node_31._stateStyles = {
+    'selected': {
+      'border-color': '$accent',
+      'color': 'var(--accent-col)',
+    },
+  }
+  node_31._stateMachine = {
+    initial: 'selected',
+    current: 'selected',
+    states: {
+      'hover': {
+        styles: {
+          'border-color': 'var(--border-hover-boc)',
+        },
+      },
+      'selected': {
+        styles: {
+          'border-color': '$accent',
+          'color': 'var(--accent-col)',
+        },
+      },
+      'default': {
+        styles: {
+        },
+      },
+    },
+    transitions: [
+      { to: 'hover', trigger: 'onclick', modifier: 'exclusive' },
+    ],
+  }
+  node_31._baseStyles = {
+    'border-color': node_31.style['border-color'] || '',
+    'color': node_31.style['color'] || '',
+  }
+  node_31.dataset.state = 'selected'
+  Object.assign(node_31.style, node_31._stateMachine.states['selected'].styles)
+  node_31.addEventListener('click', (e) => {
+    const sm = node_31._stateMachine
+    const current = sm.current
+    _runtime.exclusiveTransition(node_31, 'hover')
+  })
+  node_31.dataset.component = 'GuestBtn'
+  node_29.appendChild(node_31)
+  
+  // GuestBtn
+  const node_32 = document.createElement('button')
+  _elements['node-32'] = node_32
+  node_32.dataset.mirrorId = 'node-32'
+  node_32.dataset.mirrorName = 'GuestBtn'
+  node_32.textContent = "3"
+  Object.assign(node_32.style, {
+    'height': '36px',
+    'flex-shrink': '0',
+    'padding': '14px 24px',
+    'border-radius': '8px',
+    'border': '1px solid currentColor',
+    'cursor': 'pointer',
+    'background': 'transparent',
+    'border-color': 'var(--border-boc)',
+    'color': 'var(--text-col)',
+    'font-size': '13px',
+  })
+  node_32._stateStyles = {
+    'selected': {
+      'border-color': '$accent',
+      'color': 'var(--accent-col)',
+    },
+  }
+  node_32._stateMachine = {
+    initial: 'default',
+    current: 'default',
+    states: {
+      'hover': {
+        styles: {
+          'border-color': 'var(--border-hover-boc)',
+        },
+      },
+      'selected': {
+        styles: {
+          'border-color': '$accent',
+          'color': 'var(--accent-col)',
+        },
+      },
+      'default': {
+        styles: {
+        },
+      },
+    },
+    transitions: [
+      { to: 'hover', trigger: 'onclick', modifier: 'exclusive' },
+    ],
+  }
+  node_32._baseStyles = {
+    'border-color': node_32.style['border-color'] || '',
+    'color': node_32.style['color'] || '',
+  }
+  node_32.dataset.state = 'default'
+  Object.assign(node_32.style, node_32._stateMachine.states['default'].styles)
+  node_32.addEventListener('click', (e) => {
+    const sm = node_32._stateMachine
+    const current = sm.current
+    _runtime.exclusiveTransition(node_32, 'hover')
+  })
+  node_32.dataset.component = 'GuestBtn'
+  node_29.appendChild(node_32)
+  
+  // GuestBtn
+  const node_33 = document.createElement('button')
+  _elements['node-33'] = node_33
+  node_33.dataset.mirrorId = 'node-33'
+  node_33.dataset.mirrorName = 'GuestBtn'
+  node_33.textContent = "4"
+  Object.assign(node_33.style, {
+    'height': '36px',
+    'flex-shrink': '0',
+    'padding': '14px 24px',
+    'border-radius': '8px',
+    'border': '1px solid currentColor',
+    'cursor': 'pointer',
+    'background': 'transparent',
+    'border-color': 'var(--border-boc)',
+    'color': 'var(--text-col)',
+    'font-size': '13px',
+  })
+  node_33._stateStyles = {
+    'selected': {
+      'border-color': '$accent',
+      'color': 'var(--accent-col)',
+    },
+  }
+  node_33._stateMachine = {
+    initial: 'default',
+    current: 'default',
+    states: {
+      'hover': {
+        styles: {
+          'border-color': 'var(--border-hover-boc)',
+        },
+      },
+      'selected': {
+        styles: {
+          'border-color': '$accent',
+          'color': 'var(--accent-col)',
+        },
+      },
+      'default': {
+        styles: {
+        },
+      },
+    },
+    transitions: [
+      { to: 'hover', trigger: 'onclick', modifier: 'exclusive' },
+    ],
+  }
+  node_33._baseStyles = {
+    'border-color': node_33.style['border-color'] || '',
+    'color': node_33.style['color'] || '',
+  }
+  node_33.dataset.state = 'default'
+  Object.assign(node_33.style, node_33._stateMachine.states['default'].styles)
+  node_33.addEventListener('click', (e) => {
+    const sm = node_33._stateMachine
+    const current = sm.current
+    _runtime.exclusiveTransition(node_33, 'hover')
+  })
+  node_33.dataset.component = 'GuestBtn'
+  node_29.appendChild(node_33)
+  
+  node_27.appendChild(node_29)
+  
+  node_16.appendChild(node_27)
+  
+  node_14.appendChild(node_16)
+  
+  node_1.appendChild(node_14)
+  
+  // Card
+  const node_34 = document.createElement('div')
+  _elements['node-34'] = node_34
+  node_34.dataset.mirrorId = 'node-34'
+  node_34.dataset.mirrorName = 'Card'
+  Object.assign(node_34.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '16px',
+    'background': 'var(--secondary-bg)',
+    'border-radius': '12px',
+    'padding': '24px',
+  })
+  node_34.dataset.component = 'Card'
+  // SectionTitle
+  const node_35 = document.createElement('div')
+  _elements['node-35'] = node_35
+  node_35.dataset.mirrorId = 'node-35'
+  node_35.dataset.mirrorName = 'SectionTitle'
+  node_35.textContent = "Room Assignment"
+  Object.assign(node_35.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
+    'font-size': '11px',
+    'text-transform': 'uppercase',
+    'font-weight': '600',
+  })
+  node_35.dataset.component = 'SectionTitle'
+  node_34.appendChild(node_35)
+  
   // Frame
   const node_36 = document.createElement('div')
   _elements['node-36'] = node_36
@@ -956,26 +1074,54 @@ export function createUI(data = {}) {
   node_36.dataset.mirrorName = 'Frame'
   Object.assign(node_36.style, {
     'display': 'flex',
+    'flex-direction': 'row',
+    'width': 'fit-content',
+    'justify-content': 'space-between',
+    'align-items': 'center',
+  })
+  node_36.dataset.layout = 'flex'
+  node_36.dataset.component = 'Frame'
+  // Frame
+  const node_37 = document.createElement('div')
+  _elements['node-37'] = node_37
+  node_37.dataset.mirrorId = 'node-37'
+  node_37.dataset.mirrorName = 'Frame'
+  Object.assign(node_37.style, {
+    'display': 'flex',
+    'flex-direction': 'row',
+    'width': 'fit-content',
+    'align-items': 'center',
+    'gap': '16px',
+  })
+  node_37.dataset.layout = 'flex'
+  node_37.dataset.component = 'Frame'
+  // Frame
+  const node_38 = document.createElement('div')
+  _elements['node-38'] = node_38
+  node_38.dataset.mirrorId = 'node-38'
+  node_38.dataset.mirrorName = 'Frame'
+  Object.assign(node_38.style, {
+    'display': 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'width': '80px',
+    'width': '56px',
     'flex-shrink': '0',
-    'height': '80px',
+    'height': '56px',
     'flex-shrink': '0',
-    'border-radius': '99px',
-    'background': 'var(--surface-tertiary-bg)',
+    'background': 'var(--primary-bg)',
+    'border-radius': '8px',
   })
-  node_36.dataset.component = 'Frame'
+  node_38.dataset.component = 'Frame'
   // Icon
-  const node_37 = document.createElement('span')
-  _elements['node-37'] = node_37
-  node_37.dataset.mirrorId = 'node-37'
-  node_37.dataset.mirrorName = 'Icon'
-  node_37.setAttribute('data-icon-color', "$text-muted")
-  node_37.setAttribute('data-icon-size', "32")
+  const node_39 = document.createElement('span')
+  _elements['node-39'] = node_39
+  node_39.dataset.mirrorId = 'node-39'
+  node_39.dataset.mirrorName = 'Icon'
+  node_39.setAttribute('data-icon-color', "$accent")
+  node_39.setAttribute('data-icon-size', "24")
   // Icon default styles
-  Object.assign(node_37.style, {
+  Object.assign(node_39.style, {
     'display': 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
@@ -983,55 +1129,20 @@ export function createUI(data = {}) {
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_37, "mouse-pointer-click")
-  Object.assign(node_37.style, {
+  _runtime.loadIcon(node_39, "door-open")
+  Object.assign(node_39.style, {
     'width': '20px',
     'flex-shrink': '0',
     'height': '20px',
     'flex-shrink': '0',
-    'font-size': '32px',
-    'width': '32px',
-    'height': '32px',
+    'font-size': '24px',
+    'width': '24px',
+    'height': '24px',
   })
-  node_37.dataset.component = 'Icon'
-  node_36.appendChild(node_37)
+  node_39.dataset.component = 'Icon'
+  node_38.appendChild(node_39)
   
-  node_35.appendChild(node_36)
-  
-  // Text
-  const node_38 = document.createElement('span')
-  _elements['node-38'] = node_38
-  node_38.dataset.mirrorId = 'node-38'
-  node_38.dataset.mirrorName = 'Text'
-  node_38.textContent = "Adresse auswählen"
-  Object.assign(node_38.style, {
-    'color': 'var(--text-secondary-col)',
-    'font-size': '16px',
-    'font-weight': '500',
-  })
-  node_38.dataset.component = 'Text'
-  node_35.appendChild(node_38)
-  
-  // Text
-  const node_39 = document.createElement('span')
-  _elements['node-39'] = node_39
-  node_39.dataset.mirrorId = 'node-39'
-  node_39.dataset.mirrorName = 'Text'
-  node_39.textContent = "Wähle eine Adresse aus der Liste oder erstelle eine neue."
-  Object.assign(node_39.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'center',
-    'color': 'var(--text-muted-col)',
-    'font-size': '14px',
-    'width': '280px',
-    'flex-shrink': '0',
-  })
-  node_39.dataset.component = 'Text'
-  node_35.appendChild(node_39)
-  
-  node_34.appendChild(node_35)
+  node_37.appendChild(node_38)
   
   // Frame
   const node_40 = document.createElement('div')
@@ -1041,124 +1152,126 @@ export function createUI(data = {}) {
   Object.assign(node_40.style, {
     'display': 'flex',
     'flex-direction': 'column',
+    'width': 'fit-content',
     'align-items': 'flex-start',
-    'gap': '24px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
+    'gap': '2px',
   })
-  node_40._visibleWhen = '$selectedAddress'
-  // Initially hidden until condition is met
-  node_40.style.display = 'none'
-  _runtime.bindVisibility(node_40, 'selectedAddress')
   node_40.dataset.component = 'Frame'
-  // Frame
-  const node_41 = document.createElement('div')
+  // Text
+  const node_41 = document.createElement('span')
   _elements['node-41'] = node_41
   node_41.dataset.mirrorId = 'node-41'
-  node_41.dataset.mirrorName = 'Frame'
+  node_41.dataset.mirrorName = 'Text'
+  node_41.textContent = "Room 412"
   Object.assign(node_41.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'justify-content': 'space-between',
-    'align-items': 'center',
+    'color': 'var(--text-col)',
+    'font-size': '18px',
+    'font-weight': '500',
   })
-  node_41.dataset.layout = 'flex'
-  node_41.dataset.component = 'Frame'
-  // Frame
-  const node_42 = document.createElement('div')
+  node_41.dataset.component = 'Text'
+  node_40.appendChild(node_41)
+  
+  // Text
+  const node_42 = document.createElement('span')
   _elements['node-42'] = node_42
   node_42.dataset.mirrorId = 'node-42'
-  node_42.dataset.mirrorName = 'Frame'
+  node_42.dataset.mirrorName = 'Text'
+  node_42.textContent = "4th Floor, Lake View"
   Object.assign(node_42.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'center',
-    'gap': '16px',
+    'color': 'var(--muted-col)',
+    'font-size': '13px',
   })
-  node_42.dataset.layout = 'flex'
-  node_42.dataset.component = 'Frame'
-  // Frame
+  node_42.dataset.component = 'Text'
+  node_40.appendChild(node_42)
+  
+  node_37.appendChild(node_40)
+  
+  node_36.appendChild(node_37)
+  
+  // StatusBadge
   const node_43 = document.createElement('div')
   _elements['node-43'] = node_43
   node_43.dataset.mirrorId = 'node-43'
-  node_43.dataset.mirrorName = 'Frame'
+  node_43.dataset.mirrorName = 'StatusBadge'
   Object.assign(node_43.style, {
     'display': 'flex',
     'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'center',
-    'width': '64px',
-    'flex-shrink': '0',
-    'height': '64px',
-    'flex-shrink': '0',
-    'border-radius': '99px',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'padding': '8px 16px',
     'background': 'var(--primary-bg)',
+    'border-radius': '6px',
   })
-  node_43.dataset.component = 'Frame'
-  // Text
-  const node_44 = document.createElement('span')
+  node_43.dataset.component = 'StatusBadge'
+  // Label
+  const node_44 = document.createElement('label')
   _elements['node-44'] = node_44
   node_44.dataset.mirrorId = 'node-44'
-  node_44.dataset.mirrorName = 'Text'
+  node_44.dataset.mirrorName = 'Label'
+  node_44.textContent = "Ready"
   Object.assign(node_44.style, {
-    'color': 'white',
-    'font-size': '20px',
-    'font-weight': '600',
+    'color': 'var(--success-col)',
+    'font-size': '12px',
+    'font-weight': '500',
   })
-  node_44.dataset.component = 'Text'
+  node_44.dataset.component = 'Label'
+  node_44.dataset.slot = 'Label'
   node_43.appendChild(node_44)
   
-  node_42.appendChild(node_43)
+  node_36.appendChild(node_43)
   
-  // Frame
+  node_34.appendChild(node_36)
+  
+  node_1.appendChild(node_34)
+  
+  // Card
   const node_45 = document.createElement('div')
   _elements['node-45'] = node_45
   node_45.dataset.mirrorId = 'node-45'
-  node_45.dataset.mirrorName = 'Frame'
+  node_45.dataset.mirrorName = 'Card'
   Object.assign(node_45.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'width': 'fit-content',
     'align-items': 'flex-start',
-    'gap': '4px',
+    'gap': '16px',
+    'background': 'var(--secondary-bg)',
+    'border-radius': '12px',
+    'padding': '24px',
   })
-  node_45.dataset.component = 'Frame'
-  // Text
-  const node_46 = document.createElement('span')
+  node_45.dataset.component = 'Card'
+  // SectionTitle
+  const node_46 = document.createElement('div')
   _elements['node-46'] = node_46
   node_46.dataset.mirrorId = 'node-46'
-  node_46.dataset.mirrorName = 'Text'
-  node_46.textContent = $get("selectedAddress.firstName") + " " + $get("selectedAddress.lastName")
-  node_46._textTemplate = () => $get("selectedAddress.firstName") + " " + $get("selectedAddress.lastName")
-  _runtime.bindText(node_46, "selectedAddress.firstName")
-  _runtime.bindText(node_46, "selectedAddress.lastName")
+  node_46.dataset.mirrorName = 'SectionTitle'
+  node_46.textContent = "Additional Services"
   Object.assign(node_46.style, {
-    'color': 'var(--text-primary-col)',
-    'font-size': '24px',
-    'font-weight': '700',
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'color': 'var(--muted-col)',
+    'font-size': '11px',
+    'text-transform': 'uppercase',
+    'font-weight': '600',
   })
-  node_46.dataset.component = 'Text'
+  node_46.dataset.component = 'SectionTitle'
   node_45.appendChild(node_46)
   
-  // Text
-  const node_47 = document.createElement('span')
+  // Frame
+  const node_47 = document.createElement('div')
   _elements['node-47'] = node_47
   node_47.dataset.mirrorId = 'node-47'
-  node_47.dataset.mirrorName = 'Text'
+  node_47.dataset.mirrorName = 'Frame'
   Object.assign(node_47.style, {
-    'color': 'var(--text-secondary-col)',
-    'font-size': '14px',
+    'display': 'flex',
+    'flex-direction': 'column',
+    'width': 'fit-content',
+    'align-items': 'flex-start',
+    'gap': '12px',
   })
-  node_47.dataset.component = 'Text'
-  node_45.appendChild(node_47)
-  
-  node_42.appendChild(node_45)
-  
-  node_41.appendChild(node_42)
-  
+  node_47.dataset.component = 'Frame'
   // Frame
   const node_48 = document.createElement('div')
   _elements['node-48'] = node_48
@@ -1168,135 +1281,145 @@ export function createUI(data = {}) {
     'display': 'flex',
     'flex-direction': 'row',
     'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '8px',
+    'align-items': 'center',
+    'gap': '12px',
   })
   node_48.dataset.layout = 'flex'
   node_48.dataset.component = 'Frame'
-  // IconBtn
-  const node_49 = document.createElement('div')
+  // Checkbox Component
+  const node_49 = document.createElement('label')
   _elements['node-49'] = node_49
   node_49.dataset.mirrorId = 'node-49'
-  node_49.dataset.mirrorName = 'IconBtn'
-  Object.assign(node_49.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'center',
-    'width': '36px',
-    'flex-shrink': '0',
-    'height': '36px',
-    'flex-shrink': '0',
-    'border-radius': '6px',
-    'cursor': 'pointer',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-    'transition': 'background 150ms ease',
-  })
-  node_49.dataset.component = 'IconBtn'
-  // Icon
-  const node_50 = document.createElement('span')
-  _elements['node-50'] = node_50
-  node_50.dataset.mirrorId = 'node-50'
-  node_50.dataset.mirrorName = 'Icon'
-  node_50.setAttribute('data-icon-color', "$text-secondary")
-  node_50.setAttribute('data-icon-size', "18")
-  // Icon default styles
-  Object.assign(node_50.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_50, "edit-2")
-  Object.assign(node_50.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '18px',
-    'width': '18px',
-    'height': '18px',
-  })
-  node_50.dataset.component = 'Icon'
-  node_49.appendChild(node_50)
+  node_49.dataset.zagComponent = 'checkbox'
+  node_49.dataset.mirrorName = 'Checkbox'
+  node_49._zagConfig = {
+    type: 'checkbox',
+    id: 'node-49',
+    machineConfig: {"id":"node-49"},
+  }
+  
+  // HiddenInput (form submission)
+  const node_49_hiddenInput = document.createElement('input')
+  node_49_hiddenInput.type = 'checkbox'
+  node_49_hiddenInput.dataset.slot = 'HiddenInput'
+  node_49_hiddenInput.style.position = 'absolute'
+  node_49_hiddenInput.style.width = '1px'
+  node_49_hiddenInput.style.height = '1px'
+  node_49_hiddenInput.style.padding = '0'
+  node_49_hiddenInput.style.margin = '-1px'
+  node_49_hiddenInput.style.overflow = 'hidden'
+  node_49_hiddenInput.style.clip = 'rect(0, 0, 0, 0)'
+  node_49_hiddenInput.style.whiteSpace = 'nowrap'
+  node_49_hiddenInput.style.border = '0'
+  node_49.appendChild(node_49_hiddenInput)
+  
+  // Control (visual checkbox)
+  const node_49_control = document.createElement('div')
+  node_49_control.dataset.slot = 'Control'
+  node_49.appendChild(node_49_control)
+  
+  // Indicator (checkmark)
+  const node_49_indicator = document.createElement('span')
+  node_49_indicator.dataset.slot = 'Indicator'
+  node_49_indicator.dataset.icon = 'check'
+  node_49_control.appendChild(node_49_indicator)
   
   node_48.appendChild(node_49)
   
-  // IconBtn
+  // Initialize Checkbox
+  if (typeof _runtime !== 'undefined' && _runtime.initCheckboxComponent) {
+    _runtime.initCheckboxComponent(node_49)
+  }
+  
+  // Text
+  const node_50 = document.createElement('span')
+  _elements['node-50'] = node_50
+  node_50.dataset.mirrorId = 'node-50'
+  node_50.dataset.mirrorName = 'Text'
+  node_50.textContent = "Early check-in (11:00)"
+  Object.assign(node_50.style, {
+    'color': 'var(--text-col)',
+    'font-size': '14px',
+  })
+  node_50.dataset.component = 'Text'
+  node_48.appendChild(node_50)
+  
+  node_47.appendChild(node_48)
+  
+  // Frame
   const node_51 = document.createElement('div')
   _elements['node-51'] = node_51
   node_51.dataset.mirrorId = 'node-51'
-  node_51.dataset.mirrorName = 'IconBtn'
+  node_51.dataset.mirrorName = 'Frame'
   Object.assign(node_51.style, {
     'display': 'flex',
-    'flex-direction': 'column',
-    'justify-content': 'center',
+    'flex-direction': 'row',
+    'width': 'fit-content',
     'align-items': 'center',
-    'width': '36px',
-    'flex-shrink': '0',
-    'height': '36px',
-    'flex-shrink': '0',
-    'border-radius': '6px',
-    'cursor': 'pointer',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-    'transition': 'background 150ms ease',
+    'gap': '12px',
   })
-  node_51.dataset.component = 'IconBtn'
-  // Icon
-  const node_52 = document.createElement('span')
+  node_51.dataset.layout = 'flex'
+  node_51.dataset.component = 'Frame'
+  // Checkbox Component
+  const node_52 = document.createElement('label')
   _elements['node-52'] = node_52
   node_52.dataset.mirrorId = 'node-52'
-  node_52.dataset.mirrorName = 'Icon'
-  node_52.setAttribute('data-icon-color', "$danger")
-  node_52.setAttribute('data-icon-size', "18")
-  // Icon default styles
-  Object.assign(node_52.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_52, "trash-2")
-  Object.assign(node_52.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '18px',
-    'width': '18px',
-    'height': '18px',
-  })
-  node_52.dataset.component = 'Icon'
+  node_52.dataset.zagComponent = 'checkbox'
+  node_52.dataset.mirrorName = 'Checkbox'
+  node_52._zagConfig = {
+    type: 'checkbox',
+    id: 'node-52',
+    machineConfig: {"id":"node-52"},
+  }
+  
+  // HiddenInput (form submission)
+  const node_52_hiddenInput = document.createElement('input')
+  node_52_hiddenInput.type = 'checkbox'
+  node_52_hiddenInput.dataset.slot = 'HiddenInput'
+  node_52_hiddenInput.style.position = 'absolute'
+  node_52_hiddenInput.style.width = '1px'
+  node_52_hiddenInput.style.height = '1px'
+  node_52_hiddenInput.style.padding = '0'
+  node_52_hiddenInput.style.margin = '-1px'
+  node_52_hiddenInput.style.overflow = 'hidden'
+  node_52_hiddenInput.style.clip = 'rect(0, 0, 0, 0)'
+  node_52_hiddenInput.style.whiteSpace = 'nowrap'
+  node_52_hiddenInput.style.border = '0'
+  node_52.appendChild(node_52_hiddenInput)
+  
+  // Control (visual checkbox)
+  const node_52_control = document.createElement('div')
+  node_52_control.dataset.slot = 'Control'
+  node_52.appendChild(node_52_control)
+  
+  // Indicator (checkmark)
+  const node_52_indicator = document.createElement('span')
+  node_52_indicator.dataset.slot = 'Indicator'
+  node_52_indicator.dataset.icon = 'check'
+  node_52_control.appendChild(node_52_indicator)
+  
   node_51.appendChild(node_52)
   
-  node_48.appendChild(node_51)
+  // Initialize Checkbox
+  if (typeof _runtime !== 'undefined' && _runtime.initCheckboxComponent) {
+    _runtime.initCheckboxComponent(node_52)
+  }
   
-  node_41.appendChild(node_48)
-  
-  node_40.appendChild(node_41)
-  
-  // Frame
-  const node_53 = document.createElement('div')
+  // Text
+  const node_53 = document.createElement('span')
   _elements['node-53'] = node_53
   node_53.dataset.mirrorId = 'node-53'
-  node_53.dataset.mirrorName = 'Frame'
+  node_53.dataset.mirrorName = 'Text'
+  node_53.textContent = "Late check-out (14:00)"
   Object.assign(node_53.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '16px',
-    'background': 'var(--surface-secondary-bg)',
-    'padding': '20px',
-    'border-radius': '8px',
+    'color': 'var(--text-col)',
+    'font-size': '14px',
   })
-  node_53.dataset.component = 'Frame'
+  node_53.dataset.component = 'Text'
+  node_51.appendChild(node_53)
+  
+  node_47.appendChild(node_51)
+  
   // Frame
   const node_54 = document.createElement('div')
   _elements['node-54'] = node_54
@@ -1307,54 +1430,69 @@ export function createUI(data = {}) {
     'flex-direction': 'row',
     'width': 'fit-content',
     'align-items': 'center',
-    'gap': '8px',
+    'gap': '12px',
   })
   node_54.dataset.layout = 'flex'
   node_54.dataset.component = 'Frame'
-  // Icon
-  const node_55 = document.createElement('span')
+  // Checkbox Component
+  const node_55 = document.createElement('label')
   _elements['node-55'] = node_55
   node_55.dataset.mirrorId = 'node-55'
-  node_55.dataset.mirrorName = 'Icon'
-  node_55.setAttribute('data-icon-color', "$primary")
-  node_55.setAttribute('data-icon-size', "18")
-  // Icon default styles
-  Object.assign(node_55.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_55, "map-pin")
-  Object.assign(node_55.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '18px',
-    'width': '18px',
-    'height': '18px',
-  })
-  node_55.dataset.component = 'Icon'
+  node_55.dataset.zagComponent = 'checkbox'
+  node_55.dataset.mirrorName = 'Checkbox'
+  node_55._zagConfig = {
+    type: 'checkbox',
+    id: 'node-55',
+    machineConfig: {"id":"node-55"},
+  }
+  
+  // HiddenInput (form submission)
+  const node_55_hiddenInput = document.createElement('input')
+  node_55_hiddenInput.type = 'checkbox'
+  node_55_hiddenInput.dataset.slot = 'HiddenInput'
+  node_55_hiddenInput.style.position = 'absolute'
+  node_55_hiddenInput.style.width = '1px'
+  node_55_hiddenInput.style.height = '1px'
+  node_55_hiddenInput.style.padding = '0'
+  node_55_hiddenInput.style.margin = '-1px'
+  node_55_hiddenInput.style.overflow = 'hidden'
+  node_55_hiddenInput.style.clip = 'rect(0, 0, 0, 0)'
+  node_55_hiddenInput.style.whiteSpace = 'nowrap'
+  node_55_hiddenInput.style.border = '0'
+  node_55.appendChild(node_55_hiddenInput)
+  
+  // Control (visual checkbox)
+  const node_55_control = document.createElement('div')
+  node_55_control.dataset.slot = 'Control'
+  node_55.appendChild(node_55_control)
+  
+  // Indicator (checkmark)
+  const node_55_indicator = document.createElement('span')
+  node_55_indicator.dataset.slot = 'Indicator'
+  node_55_indicator.dataset.icon = 'check'
+  node_55_control.appendChild(node_55_indicator)
+  
   node_54.appendChild(node_55)
+  
+  // Initialize Checkbox
+  if (typeof _runtime !== 'undefined' && _runtime.initCheckboxComponent) {
+    _runtime.initCheckboxComponent(node_55)
+  }
   
   // Text
   const node_56 = document.createElement('span')
   _elements['node-56'] = node_56
   node_56.dataset.mirrorId = 'node-56'
   node_56.dataset.mirrorName = 'Text'
-  node_56.textContent = "Adresse"
+  node_56.textContent = "Airport transfer"
   Object.assign(node_56.style, {
-    'color': 'var(--text-primary-col)',
+    'color': 'var(--text-col)',
     'font-size': '14px',
-    'font-weight': '600',
   })
   node_56.dataset.component = 'Text'
   node_54.appendChild(node_56)
   
-  node_53.appendChild(node_54)
+  node_47.appendChild(node_54)
   
   // Frame
   const node_57 = document.createElement('div')
@@ -1363,73 +1501,117 @@ export function createUI(data = {}) {
   node_57.dataset.mirrorName = 'Frame'
   Object.assign(node_57.style, {
     'display': 'flex',
-    'flex-direction': 'column',
+    'flex-direction': 'row',
     'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'padding': '0px 0px 0px 26px',
+    'align-items': 'center',
+    'gap': '12px',
   })
+  node_57.dataset.layout = 'flex'
   node_57.dataset.component = 'Frame'
-  // Text
-  const node_58 = document.createElement('span')
+  // Checkbox Component
+  const node_58 = document.createElement('label')
   _elements['node-58'] = node_58
   node_58.dataset.mirrorId = 'node-58'
-  node_58.dataset.mirrorName = 'Text'
-  Object.assign(node_58.style, {
-    'color': 'var(--text-primary-col)',
-    'font-size': '14px',
-  })
-  node_58.dataset.component = 'Text'
+  node_58.dataset.zagComponent = 'checkbox'
+  node_58.dataset.mirrorName = 'Checkbox'
+  node_58._zagConfig = {
+    type: 'checkbox',
+    id: 'node-58',
+    machineConfig: {"id":"node-58","checked":true},
+  }
+  
+  // HiddenInput (form submission)
+  const node_58_hiddenInput = document.createElement('input')
+  node_58_hiddenInput.type = 'checkbox'
+  node_58_hiddenInput.dataset.slot = 'HiddenInput'
+  node_58_hiddenInput.style.position = 'absolute'
+  node_58_hiddenInput.style.width = '1px'
+  node_58_hiddenInput.style.height = '1px'
+  node_58_hiddenInput.style.padding = '0'
+  node_58_hiddenInput.style.margin = '-1px'
+  node_58_hiddenInput.style.overflow = 'hidden'
+  node_58_hiddenInput.style.clip = 'rect(0, 0, 0, 0)'
+  node_58_hiddenInput.style.whiteSpace = 'nowrap'
+  node_58_hiddenInput.style.border = '0'
+  node_58.appendChild(node_58_hiddenInput)
+  
+  // Control (visual checkbox)
+  const node_58_control = document.createElement('div')
+  node_58_control.dataset.slot = 'Control'
+  node_58.appendChild(node_58_control)
+  
+  // Indicator (checkmark)
+  const node_58_indicator = document.createElement('span')
+  node_58_indicator.dataset.slot = 'Indicator'
+  node_58_indicator.dataset.icon = 'check'
+  node_58_control.appendChild(node_58_indicator)
+  
   node_57.appendChild(node_58)
+  
+  // Initialize Checkbox
+  if (typeof _runtime !== 'undefined' && _runtime.initCheckboxComponent) {
+    _runtime.initCheckboxComponent(node_58)
+  }
   
   // Text
   const node_59 = document.createElement('span')
   _elements['node-59'] = node_59
   node_59.dataset.mirrorId = 'node-59'
   node_59.dataset.mirrorName = 'Text'
-  node_59.textContent = $get("selectedAddress.zip") + " " + $get("selectedAddress.city")
-  node_59._textTemplate = () => $get("selectedAddress.zip") + " " + $get("selectedAddress.city")
-  _runtime.bindText(node_59, "selectedAddress.zip")
-  _runtime.bindText(node_59, "selectedAddress.city")
+  node_59.textContent = "Breakfast included"
   Object.assign(node_59.style, {
-    'color': 'var(--text-primary-col)',
+    'color': 'var(--text-col)',
     'font-size': '14px',
   })
   node_59.dataset.component = 'Text'
   node_57.appendChild(node_59)
   
-  // Text
-  const node_60 = document.createElement('span')
-  _elements['node-60'] = node_60
-  node_60.dataset.mirrorId = 'node-60'
-  node_60.dataset.mirrorName = 'Text'
-  Object.assign(node_60.style, {
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-  })
-  node_60.dataset.component = 'Text'
-  node_57.appendChild(node_60)
+  node_47.appendChild(node_57)
   
-  node_53.appendChild(node_57)
+  node_45.appendChild(node_47)
   
-  node_40.appendChild(node_53)
+  node_1.appendChild(node_45)
   
   // Frame
-  const node_61 = document.createElement('div')
-  _elements['node-61'] = node_61
-  node_61.dataset.mirrorId = 'node-61'
-  node_61.dataset.mirrorName = 'Frame'
-  Object.assign(node_61.style, {
+  const node_60 = document.createElement('div')
+  _elements['node-60'] = node_60
+  node_60.dataset.mirrorId = 'node-60'
+  node_60.dataset.mirrorName = 'Frame'
+  Object.assign(node_60.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'width': 'fit-content',
     'align-items': 'flex-start',
-    'gap': '16px',
-    'background': 'var(--surface-secondary-bg)',
-    'padding': '20px',
-    'border-radius': '8px',
+    'gap': '12px',
   })
-  node_61.dataset.component = 'Frame'
+  node_60.dataset.component = 'Frame'
+  // PrimaryBtn
+  const node_61 = document.createElement('button')
+  _elements['node-61'] = node_61
+  node_61.dataset.mirrorId = 'node-61'
+  node_61.dataset.mirrorName = 'PrimaryBtn'
+  node_61.textContent = "Complete Check-in"
+  Object.assign(node_61.style, {
+    'height': '36px',
+    'flex-shrink': '0',
+    'padding': '16px 32px',
+    'border-radius': '8px',
+    'border': '0px solid currentColor',
+    'cursor': 'pointer',
+    'background': 'var(--accent-bg)',
+    'color': '$primary',
+    'font-size': '14px',
+    'font-weight': '600',
+    'width': '100%',
+    'align-self': 'stretch',
+    'min-width': '0',
+  })
+  node_61.dataset.component = 'PrimaryBtn'
+  node_61.addEventListener('click', (e) => {
+    _runtime.toast('Check-in complete!', { type: 'success', position: 'bottom' })
+  })
+  node_60.appendChild(node_61)
+  
   // Frame
   const node_62 = document.createElement('div')
   _elements['node-62'] = node_62
@@ -1438,1541 +1620,46 @@ export function createUI(data = {}) {
   Object.assign(node_62.style, {
     'display': 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    'align-self': 'stretch',
+    'justify-content': 'center',
     'align-items': 'center',
-    'gap': '8px',
+    'gap': '4px',
   })
   node_62.dataset.layout = 'flex'
   node_62.dataset.component = 'Frame'
-  // Icon
+  // Text
   const node_63 = document.createElement('span')
   _elements['node-63'] = node_63
   node_63.dataset.mirrorId = 'node-63'
-  node_63.dataset.mirrorName = 'Icon'
-  node_63.setAttribute('data-icon-color', "$primary")
-  node_63.setAttribute('data-icon-size', "18")
-  // Icon default styles
+  node_63.dataset.mirrorName = 'Text'
+  node_63.textContent = "Need help?"
   Object.assign(node_63.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
+    'color': 'var(--muted-col)',
+    'font-size': '12px',
   })
-  // Load Lucide icon
-  _runtime.loadIcon(node_63, "phone")
-  Object.assign(node_63.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '18px',
-    'width': '18px',
-    'height': '18px',
-  })
-  node_63.dataset.component = 'Icon'
+  node_63.dataset.component = 'Text'
   node_62.appendChild(node_63)
   
-  // Text
-  const node_64 = document.createElement('span')
+  // Link
+  const node_64 = document.createElement('a')
   _elements['node-64'] = node_64
   node_64.dataset.mirrorId = 'node-64'
-  node_64.dataset.mirrorName = 'Text'
-  node_64.textContent = "Kontakt"
+  node_64.dataset.mirrorName = 'Link'
+  node_64.textContent = "Call reception"
+  node_64.setAttribute('href', "tel:+49123456789")
   Object.assign(node_64.style, {
-    'color': 'var(--text-primary-col)',
-    'font-size': '14px',
-    'font-weight': '600',
+    'color': 'var(--accent-col)',
+    'font-size': '12px',
+    'cursor': 'pointer',
   })
-  node_64.dataset.component = 'Text'
+  node_64.dataset.component = 'Link'
   node_62.appendChild(node_64)
   
-  node_61.appendChild(node_62)
+  node_60.appendChild(node_62)
   
-  // Frame
-  const node_65 = document.createElement('div')
-  _elements['node-65'] = node_65
-  node_65.dataset.mirrorId = 'node-65'
-  node_65.dataset.mirrorName = 'Frame'
-  Object.assign(node_65.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '8px',
-    'padding': '0px 0px 0px 26px',
-  })
-  node_65.dataset.component = 'Frame'
-  // Frame
-  const node_66 = document.createElement('div')
-  _elements['node-66'] = node_66
-  node_66.dataset.mirrorId = 'node-66'
-  node_66.dataset.mirrorName = 'Frame'
-  Object.assign(node_66.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'center',
-    'gap': '8px',
-  })
-  node_66.dataset.layout = 'flex'
-  node_66.dataset.component = 'Frame'
-  // Icon
-  const node_67 = document.createElement('span')
-  _elements['node-67'] = node_67
-  node_67.dataset.mirrorId = 'node-67'
-  node_67.dataset.mirrorName = 'Icon'
-  node_67.setAttribute('data-icon-color', "$text-muted")
-  node_67.setAttribute('data-icon-size', "14")
-  // Icon default styles
-  Object.assign(node_67.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_67, "phone")
-  Object.assign(node_67.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '14px',
-    'width': '14px',
-    'height': '14px',
-  })
-  node_67.dataset.component = 'Icon'
-  node_66.appendChild(node_67)
-  
-  // Text
-  const node_68 = document.createElement('span')
-  _elements['node-68'] = node_68
-  node_68.dataset.mirrorId = 'node-68'
-  node_68.dataset.mirrorName = 'Text'
-  Object.assign(node_68.style, {
-    'color': 'var(--text-primary-col)',
-    'font-size': '14px',
-  })
-  node_68.dataset.component = 'Text'
-  node_66.appendChild(node_68)
-  
-  node_65.appendChild(node_66)
-  
-  // Frame
-  const node_69 = document.createElement('div')
-  _elements['node-69'] = node_69
-  node_69.dataset.mirrorId = 'node-69'
-  node_69.dataset.mirrorName = 'Frame'
-  Object.assign(node_69.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'center',
-    'gap': '8px',
-  })
-  node_69.dataset.layout = 'flex'
-  node_69.dataset.component = 'Frame'
-  // Icon
-  const node_70 = document.createElement('span')
-  _elements['node-70'] = node_70
-  node_70.dataset.mirrorId = 'node-70'
-  node_70.dataset.mirrorName = 'Icon'
-  node_70.setAttribute('data-icon-color', "$text-muted")
-  node_70.setAttribute('data-icon-size', "14")
-  // Icon default styles
-  Object.assign(node_70.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_70, "mail")
-  Object.assign(node_70.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '14px',
-    'width': '14px',
-    'height': '14px',
-  })
-  node_70.dataset.component = 'Icon'
-  node_69.appendChild(node_70)
-  
-  // Text
-  const node_71 = document.createElement('span')
-  _elements['node-71'] = node_71
-  node_71.dataset.mirrorId = 'node-71'
-  node_71.dataset.mirrorName = 'Text'
-  Object.assign(node_71.style, {
-    'color': 'var(--text-primary-col)',
-    'font-size': '14px',
-  })
-  node_71.dataset.component = 'Text'
-  node_69.appendChild(node_71)
-  
-  node_65.appendChild(node_69)
-  
-  node_61.appendChild(node_65)
-  
-  node_40.appendChild(node_61)
-  
-  // Frame
-  const node_72 = document.createElement('div')
-  _elements['node-72'] = node_72
-  node_72.dataset.mirrorId = 'node-72'
-  node_72.dataset.mirrorName = 'Frame'
-  Object.assign(node_72.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'center',
-    'gap': '8px',
-  })
-  node_72.dataset.layout = 'flex'
-  node_72.dataset.component = 'Frame'
-  // Text
-  const node_73 = document.createElement('span')
-  _elements['node-73'] = node_73
-  node_73.dataset.mirrorId = 'node-73'
-  node_73.dataset.mirrorName = 'Text'
-  node_73.textContent = "Kategorie:"
-  Object.assign(node_73.style, {
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-  })
-  node_73.dataset.component = 'Text'
-  node_72.appendChild(node_73)
-  
-  // Badge
-  const node_74 = document.createElement('div')
-  _elements['node-74'] = node_74
-  node_74.dataset.mirrorId = 'node-74'
-  node_74.dataset.mirrorName = 'Badge'
-  Object.assign(node_74.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'padding': '4px 8px',
-    'border-radius': '4px',
-    'font-size': '11px',
-    'font-weight': '500',
-    'background': '__conditional:__loopVar:selectedAddress.category === "Geschäftlich"?#dbeafe:__conditional:__loopVar:selectedAddress.category === "Privat"?#dcfce7:#fef3c7',
-    'color': '__conditional:__loopVar:selectedAddress.category === "Geschäftlich"?#1d4ed8:__conditional:__loopVar:selectedAddress.category === "Privat"?#15803d:#a16207',
-  })
-  node_74.dataset.component = 'Badge'
-  // Text
-  const node_75 = document.createElement('span')
-  _elements['node-75'] = node_75
-  node_75.dataset.mirrorId = 'node-75'
-  node_75.dataset.mirrorName = 'Text'
-  node_75.textContent = $get("selectedAddress.category")
-  node_75._textTemplate = () => $get("selectedAddress.category")
-  _runtime.bindText(node_75, "selectedAddress.category")
-  node_75.dataset.component = 'Text'
-  node_74.appendChild(node_75)
-  
-  node_72.appendChild(node_74)
-  
-  node_40.appendChild(node_72)
-  
-  node_34.appendChild(node_40)
-  
-  node_1.appendChild(node_34)
+  node_1.appendChild(node_60)
   
   _root.appendChild(node_1)
-  
-  // Dialog Component: Dialog
-  const node_76 = document.createElement('div')
-  _elements['node-76'] = node_76
-  node_76.dataset.mirrorId = 'node-76'
-  node_76.dataset.zagComponent = 'dialog'
-  node_76.style.display = 'inline-block'
-  node_76.dataset.mirrorName = 'Dialog'
-  node_76._zagConfig = {
-    type: 'dialog',
-    id: 'node-76',
-    machineConfig: {"id":"node-76","name":"EditDialog"},
-  }
-  
-  // Trigger
-  const node_76_trigger = document.createElement('button')
-  node_76_trigger.type = 'button'
-  node_76_trigger.dataset.slot = 'Trigger'
-  node_76_trigger.setAttribute('aria-haspopup', 'dialog')
-  node_76_trigger.textContent = 'Open Dialog'
-  node_76.appendChild(node_76_trigger)
-  
-  // Backdrop
-  const node_76_backdrop = document.createElement('div')
-  node_76_backdrop.dataset.slot = 'Backdrop'
-  node_76_backdrop.setAttribute('data-styled', 'true')
-  Object.assign(node_76_backdrop.style, {
-    'background': 'rgba(0,0,0,0.5)',
-  })
-  node_76.appendChild(node_76_backdrop)
-  
-  // Content (modal)
-  const node_76_content = document.createElement('div')
-  node_76_content.dataset.slot = 'Content'
-  node_76_content.setAttribute('role', 'dialog')
-  node_76_content.setAttribute('aria-modal', 'true')
-  node_76.appendChild(node_76_content)
-  
-  // Frame
-  const node_78 = document.createElement('div')
-  _elements['node-78'] = node_78
-  node_78.dataset.mirrorId = 'node-78'
-  node_78.dataset.mirrorName = 'Frame'
-  Object.assign(node_78.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'width': '560px',
-    'background': 'var(--surface-bg)',
-    'border-radius': '12px',
-    'box-shadow': '0 10px 15px rgba(0,0,0,0.1)',
-    'padding': '0px',
-    'overflow': 'hidden',
-  })
-  node_78.dataset.component = 'Frame'
-  // Frame
-  const node_79 = document.createElement('div')
-  _elements['node-79'] = node_79
-  node_79.dataset.mirrorId = 'node-79'
-  node_79.dataset.mirrorName = 'Frame'
-  Object.assign(node_79.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'justify-content': 'space-between',
-    'align-items': 'center',
-    'padding': '20px',
-    'border': '0px solid 0px 1px 0px',
-    'border-color': 'var(--border-boc)',
-  })
-  node_79.dataset.layout = 'flex'
-  node_79.dataset.component = 'Frame'
-  // Text
-  const node_80 = document.createElement('span')
-  _elements['node-80'] = node_80
-  node_80.dataset.mirrorId = 'node-80'
-  node_80.dataset.mirrorName = 'Text'
-  node_80.textContent = "Adresse bearbeiten"
-  Object.assign(node_80.style, {
-    'color': 'var(--text-primary-col)',
-    'font-size': '18px',
-    'font-weight': '600',
-  })
-  node_80.dataset.component = 'Text'
-  node_79.appendChild(node_80)
-  
-  // CloseTrigger
-  const node_81 = document.createElement('div')
-  _elements['node-81'] = node_81
-  node_81.dataset.mirrorId = 'node-81'
-  node_81.dataset.mirrorName = 'CloseTrigger'
-  Object.assign(node_81.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-  })
-  node_81.dataset.component = 'CloseTrigger'
-  node_81.dataset.slot = 'CloseTrigger'
-  // IconBtn
-  const node_82 = document.createElement('div')
-  _elements['node-82'] = node_82
-  node_82.dataset.mirrorId = 'node-82'
-  node_82.dataset.mirrorName = 'IconBtn'
-  Object.assign(node_82.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'center',
-    'width': '36px',
-    'flex-shrink': '0',
-    'height': '36px',
-    'flex-shrink': '0',
-    'border-radius': '6px',
-    'cursor': 'pointer',
-    'transition': 'background 150ms ease',
-  })
-  node_82.dataset.component = 'IconBtn'
-  node_81.appendChild(node_82)
-  
-  // Icon
-  const node_83 = document.createElement('span')
-  _elements['node-83'] = node_83
-  node_83.dataset.mirrorId = 'node-83'
-  node_83.dataset.mirrorName = 'Icon'
-  node_83.setAttribute('data-icon-color', "$text-secondary")
-  node_83.setAttribute('data-icon-size', "20")
-  // Icon default styles
-  Object.assign(node_83.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_83, "x")
-  Object.assign(node_83.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '20px',
-    'width': '20px',
-    'height': '20px',
-  })
-  node_83.dataset.component = 'Icon'
-  node_81.appendChild(node_83)
-  
-  node_79.appendChild(node_81)
-  
-  node_78.appendChild(node_79)
-  
-  // Frame
-  const node_84 = document.createElement('div')
-  _elements['node-84'] = node_84
-  node_84.dataset.mirrorId = 'node-84'
-  node_84.dataset.mirrorName = 'Frame'
-  Object.assign(node_84.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '20px',
-    'padding': '24px',
-  })
-  node_84.dataset.component = 'Frame'
-  // Frame
-  const node_85 = document.createElement('div')
-  _elements['node-85'] = node_85
-  node_85.dataset.mirrorId = 'node-85'
-  node_85.dataset.mirrorName = 'Frame'
-  Object.assign(node_85.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '16px',
-  })
-  node_85.dataset.layout = 'flex'
-  node_85.dataset.component = 'Frame'
-  // FormField
-  const node_86 = document.createElement('div')
-  _elements['node-86'] = node_86
-  node_86.dataset.mirrorId = 'node-86'
-  node_86.dataset.mirrorName = 'FormField'
-  Object.assign(node_86.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
-    'min-width': '0',
-    'flex-grow': '1',
-  })
-  node_86.dataset.component = 'FormField'
-  // FieldLabel
-  const node_87 = document.createElement('div')
-  _elements['node-87'] = node_87
-  node_87.dataset.mirrorId = 'node-87'
-  node_87.dataset.mirrorName = 'FieldLabel'
-  node_87.textContent = "Vorname"
-  Object.assign(node_87.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_87.dataset.component = 'FieldLabel'
-  node_86.appendChild(node_87)
-  
-  // FieldInput
-  const node_88 = document.createElement('div')
-  _elements['node-88'] = node_88
-  node_88.dataset.mirrorId = 'node-88'
-  node_88.dataset.mirrorName = 'FieldInput'
-  node_88.setAttribute('placeholder', "Max")
-  Object.assign(node_88.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_88.dataset.component = 'FieldInput'
-  node_86.appendChild(node_88)
-  
-  node_85.appendChild(node_86)
-  
-  // FormField
-  const node_89 = document.createElement('div')
-  _elements['node-89'] = node_89
-  node_89.dataset.mirrorId = 'node-89'
-  node_89.dataset.mirrorName = 'FormField'
-  Object.assign(node_89.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
-    'min-width': '0',
-    'flex-grow': '1',
-  })
-  node_89.dataset.component = 'FormField'
-  // FieldLabel
-  const node_90 = document.createElement('div')
-  _elements['node-90'] = node_90
-  node_90.dataset.mirrorId = 'node-90'
-  node_90.dataset.mirrorName = 'FieldLabel'
-  node_90.textContent = "Nachname"
-  Object.assign(node_90.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_90.dataset.component = 'FieldLabel'
-  node_89.appendChild(node_90)
-  
-  // FieldInput
-  const node_91 = document.createElement('div')
-  _elements['node-91'] = node_91
-  node_91.dataset.mirrorId = 'node-91'
-  node_91.dataset.mirrorName = 'FieldInput'
-  node_91.setAttribute('placeholder', "Mustermann")
-  Object.assign(node_91.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_91.dataset.component = 'FieldInput'
-  node_89.appendChild(node_91)
-  
-  node_85.appendChild(node_89)
-  
-  node_84.appendChild(node_85)
-  
-  // FormField
-  const node_92 = document.createElement('div')
-  _elements['node-92'] = node_92
-  node_92.dataset.mirrorId = 'node-92'
-  node_92.dataset.mirrorName = 'FormField'
-  Object.assign(node_92.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-  })
-  node_92.dataset.component = 'FormField'
-  // FieldLabel
-  const node_93 = document.createElement('div')
-  _elements['node-93'] = node_93
-  node_93.dataset.mirrorId = 'node-93'
-  node_93.dataset.mirrorName = 'FieldLabel'
-  node_93.textContent = "Firma (optional)"
-  Object.assign(node_93.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_93.dataset.component = 'FieldLabel'
-  node_92.appendChild(node_93)
-  
-  // FieldInput
-  const node_94 = document.createElement('div')
-  _elements['node-94'] = node_94
-  node_94.dataset.mirrorId = 'node-94'
-  node_94.dataset.mirrorName = 'FieldInput'
-  node_94.setAttribute('placeholder', "Firmenname")
-  Object.assign(node_94.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_94.dataset.component = 'FieldInput'
-  node_92.appendChild(node_94)
-  
-  node_84.appendChild(node_92)
-  
-  // FormField
-  const node_95 = document.createElement('div')
-  _elements['node-95'] = node_95
-  node_95.dataset.mirrorId = 'node-95'
-  node_95.dataset.mirrorName = 'FormField'
-  Object.assign(node_95.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-  })
-  node_95.dataset.component = 'FormField'
-  // FieldLabel
-  const node_96 = document.createElement('div')
-  _elements['node-96'] = node_96
-  node_96.dataset.mirrorId = 'node-96'
-  node_96.dataset.mirrorName = 'FieldLabel'
-  node_96.textContent = "Straße & Hausnummer"
-  Object.assign(node_96.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_96.dataset.component = 'FieldLabel'
-  node_95.appendChild(node_96)
-  
-  // FieldInput
-  const node_97 = document.createElement('div')
-  _elements['node-97'] = node_97
-  node_97.dataset.mirrorId = 'node-97'
-  node_97.dataset.mirrorName = 'FieldInput'
-  node_97.setAttribute('placeholder', "Hauptstraße 42")
-  Object.assign(node_97.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_97.dataset.component = 'FieldInput'
-  node_95.appendChild(node_97)
-  
-  node_84.appendChild(node_95)
-  
-  // Frame
-  const node_98 = document.createElement('div')
-  _elements['node-98'] = node_98
-  node_98.dataset.mirrorId = 'node-98'
-  node_98.dataset.mirrorName = 'Frame'
-  Object.assign(node_98.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '16px',
-  })
-  node_98.dataset.layout = 'flex'
-  node_98.dataset.component = 'Frame'
-  // FormField
-  const node_99 = document.createElement('div')
-  _elements['node-99'] = node_99
-  node_99.dataset.mirrorId = 'node-99'
-  node_99.dataset.mirrorName = 'FormField'
-  Object.assign(node_99.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '120px',
-    'flex-shrink': '0',
-  })
-  node_99.dataset.component = 'FormField'
-  // FieldLabel
-  const node_100 = document.createElement('div')
-  _elements['node-100'] = node_100
-  node_100.dataset.mirrorId = 'node-100'
-  node_100.dataset.mirrorName = 'FieldLabel'
-  node_100.textContent = "PLZ"
-  Object.assign(node_100.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_100.dataset.component = 'FieldLabel'
-  node_99.appendChild(node_100)
-  
-  // FieldInput
-  const node_101 = document.createElement('div')
-  _elements['node-101'] = node_101
-  node_101.dataset.mirrorId = 'node-101'
-  node_101.dataset.mirrorName = 'FieldInput'
-  node_101.setAttribute('placeholder', "10115")
-  Object.assign(node_101.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_101.dataset.component = 'FieldInput'
-  node_99.appendChild(node_101)
-  
-  node_98.appendChild(node_99)
-  
-  // FormField
-  const node_102 = document.createElement('div')
-  _elements['node-102'] = node_102
-  node_102.dataset.mirrorId = 'node-102'
-  node_102.dataset.mirrorName = 'FormField'
-  Object.assign(node_102.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
-    'min-width': '0',
-    'flex-grow': '1',
-  })
-  node_102.dataset.component = 'FormField'
-  // FieldLabel
-  const node_103 = document.createElement('div')
-  _elements['node-103'] = node_103
-  node_103.dataset.mirrorId = 'node-103'
-  node_103.dataset.mirrorName = 'FieldLabel'
-  node_103.textContent = "Stadt"
-  Object.assign(node_103.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_103.dataset.component = 'FieldLabel'
-  node_102.appendChild(node_103)
-  
-  // FieldInput
-  const node_104 = document.createElement('div')
-  _elements['node-104'] = node_104
-  node_104.dataset.mirrorId = 'node-104'
-  node_104.dataset.mirrorName = 'FieldInput'
-  node_104.setAttribute('placeholder', "Berlin")
-  Object.assign(node_104.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_104.dataset.component = 'FieldInput'
-  node_102.appendChild(node_104)
-  
-  node_98.appendChild(node_102)
-  
-  node_84.appendChild(node_98)
-  
-  // FormField
-  const node_105 = document.createElement('div')
-  _elements['node-105'] = node_105
-  node_105.dataset.mirrorId = 'node-105'
-  node_105.dataset.mirrorName = 'FormField'
-  Object.assign(node_105.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-  })
-  node_105.dataset.component = 'FormField'
-  // FieldLabel
-  const node_106 = document.createElement('div')
-  _elements['node-106'] = node_106
-  node_106.dataset.mirrorId = 'node-106'
-  node_106.dataset.mirrorName = 'FieldLabel'
-  node_106.textContent = "Land"
-  Object.assign(node_106.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_106.dataset.component = 'FieldLabel'
-  node_105.appendChild(node_106)
-  
-  // FieldInput
-  const node_107 = document.createElement('div')
-  _elements['node-107'] = node_107
-  node_107.dataset.mirrorId = 'node-107'
-  node_107.dataset.mirrorName = 'FieldInput'
-  node_107.setAttribute('placeholder', "Deutschland")
-  Object.assign(node_107.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_107.dataset.component = 'FieldInput'
-  node_105.appendChild(node_107)
-  
-  node_84.appendChild(node_105)
-  
-  // Frame
-  const node_108 = document.createElement('div')
-  _elements['node-108'] = node_108
-  node_108.dataset.mirrorId = 'node-108'
-  node_108.dataset.mirrorName = 'Frame'
-  Object.assign(node_108.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '16px',
-  })
-  node_108.dataset.layout = 'flex'
-  node_108.dataset.component = 'Frame'
-  // FormField
-  const node_109 = document.createElement('div')
-  _elements['node-109'] = node_109
-  node_109.dataset.mirrorId = 'node-109'
-  node_109.dataset.mirrorName = 'FormField'
-  Object.assign(node_109.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
-    'min-width': '0',
-    'flex-grow': '1',
-  })
-  node_109.dataset.component = 'FormField'
-  // FieldLabel
-  const node_110 = document.createElement('div')
-  _elements['node-110'] = node_110
-  node_110.dataset.mirrorId = 'node-110'
-  node_110.dataset.mirrorName = 'FieldLabel'
-  node_110.textContent = "Telefon"
-  Object.assign(node_110.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_110.dataset.component = 'FieldLabel'
-  node_109.appendChild(node_110)
-  
-  // FieldInput
-  const node_111 = document.createElement('div')
-  _elements['node-111'] = node_111
-  node_111.dataset.mirrorId = 'node-111'
-  node_111.dataset.mirrorName = 'FieldInput'
-  node_111.setAttribute('placeholder', "+49 30 12345678")
-  Object.assign(node_111.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_111.dataset.component = 'FieldInput'
-  node_109.appendChild(node_111)
-  
-  node_108.appendChild(node_109)
-  
-  // FormField
-  const node_112 = document.createElement('div')
-  _elements['node-112'] = node_112
-  node_112.dataset.mirrorId = 'node-112'
-  node_112.dataset.mirrorName = 'FormField'
-  Object.assign(node_112.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
-    'min-width': '0',
-    'flex-grow': '1',
-  })
-  node_112.dataset.component = 'FormField'
-  // FieldLabel
-  const node_113 = document.createElement('div')
-  _elements['node-113'] = node_113
-  node_113.dataset.mirrorId = 'node-113'
-  node_113.dataset.mirrorName = 'FieldLabel'
-  node_113.textContent = "E-Mail"
-  Object.assign(node_113.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_113.dataset.component = 'FieldLabel'
-  node_112.appendChild(node_113)
-  
-  // FieldInput
-  const node_114 = document.createElement('div')
-  _elements['node-114'] = node_114
-  node_114.dataset.mirrorId = 'node-114'
-  node_114.dataset.mirrorName = 'FieldInput'
-  node_114.setAttribute('placeholder', "max@example.de")
-  Object.assign(node_114.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_114.dataset.component = 'FieldInput'
-  node_112.appendChild(node_114)
-  
-  node_108.appendChild(node_112)
-  
-  node_84.appendChild(node_108)
-  
-  // FormField
-  const node_115 = document.createElement('div')
-  _elements['node-115'] = node_115
-  node_115.dataset.mirrorId = 'node-115'
-  node_115.dataset.mirrorName = 'FormField'
-  Object.assign(node_115.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-  })
-  node_115.dataset.component = 'FormField'
-  // FieldLabel
-  const node_116 = document.createElement('div')
-  _elements['node-116'] = node_116
-  node_116.dataset.mirrorId = 'node-116'
-  node_116.dataset.mirrorName = 'FieldLabel'
-  node_116.textContent = "Kategorie"
-  Object.assign(node_116.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_116.dataset.component = 'FieldLabel'
-  node_115.appendChild(node_116)
-  
-  // FieldInput
-  const node_117 = document.createElement('div')
-  _elements['node-117'] = node_117
-  node_117.dataset.mirrorId = 'node-117'
-  node_117.dataset.mirrorName = 'FieldInput'
-  Object.assign(node_117.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
-    'border-radius': '6px',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-  })
-  node_117.dataset.component = 'FieldInput'
-  node_115.appendChild(node_117)
-  
-  // Frame
-  const node_118 = document.createElement('div')
-  _elements['node-118'] = node_118
-  node_118.dataset.mirrorId = 'node-118'
-  node_118.dataset.mirrorName = 'Frame'
-  Object.assign(node_118.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '8px',
-  })
-  node_118.dataset.layout = 'flex'
-  node_118.dataset.component = 'Frame'
-  // Btn
-  const node_119 = document.createElement('button')
-  _elements['node-119'] = node_119
-  node_119.dataset.mirrorId = 'node-119'
-  node_119.dataset.mirrorName = 'Btn'
-  Object.assign(node_119.style, {
-    'height': '36px',
-    'flex-shrink': '0',
-    'padding': '10px 16px',
-    'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
-    'font-size': '13px',
-    'font-weight': '500',
-    'background': 'var(--surface-tertiary-bg)',
-    'color': 'var(--text-primary-col)',
-    'border-color': 'var(--border-boc)',
-    'transition': 'opacity 150ms ease',
-  })
-  node_119._stateStyles = {
-    'on': {
-      'background': 'var(--primary-bg)',
-      'color': 'white',
-      'border-color': '$primary',
-    },
-  }
-  node_119._stateMachine = {
-    initial: 'default',
-    current: 'default',
-    states: {
-      'hover': {
-        styles: {
-          'opacity': '0.9',
-        },
-      },
-      'on': {
-        styles: {
-          'background': 'var(--primary-bg)',
-          'color': 'white',
-          'border-color': '$primary',
-        },
-      },
-      'default': {
-        styles: {
-        },
-      },
-    },
-    transitions: [
-      { to: 'on', trigger: 'onclick', modifier: 'exclusive' },
-    ],
-  }
-  node_119._baseStyles = {
-    'opacity': node_119.style['opacity'] || '',
-    'background': node_119.style['background'] || '',
-    'color': node_119.style['color'] || '',
-    'border-color': node_119.style['border-color'] || '',
-  }
-  node_119.dataset.state = 'default'
-  Object.assign(node_119.style, node_119._stateMachine.states['default'].styles)
-  node_119.addEventListener('click', (e) => {
-    const sm = node_119._stateMachine
-    const current = sm.current
-    _runtime.exclusiveTransition(node_119, 'on')
-  })
-  node_119.dataset.component = 'Btn'
-  // Text
-  const node_120 = document.createElement('span')
-  _elements['node-120'] = node_120
-  node_120.dataset.mirrorId = 'node-120'
-  node_120.dataset.mirrorName = 'Text'
-  node_120.textContent = "Privat"
-  node_120.dataset.component = 'Text'
-  node_119.appendChild(node_120)
-  
-  node_118.appendChild(node_119)
-  
-  // Btn
-  const node_121 = document.createElement('button')
-  _elements['node-121'] = node_121
-  node_121.dataset.mirrorId = 'node-121'
-  node_121.dataset.mirrorName = 'Btn'
-  Object.assign(node_121.style, {
-    'height': '36px',
-    'flex-shrink': '0',
-    'padding': '10px 16px',
-    'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
-    'font-size': '13px',
-    'font-weight': '500',
-    'background': 'var(--surface-tertiary-bg)',
-    'color': 'var(--text-primary-col)',
-    'border-color': 'var(--border-boc)',
-    'transition': 'opacity 150ms ease',
-  })
-  node_121._stateStyles = {
-    'on': {
-      'background': 'var(--primary-bg)',
-      'color': 'white',
-      'border-color': '$primary',
-    },
-  }
-  node_121._stateMachine = {
-    initial: 'default',
-    current: 'default',
-    states: {
-      'hover': {
-        styles: {
-          'opacity': '0.9',
-        },
-      },
-      'on': {
-        styles: {
-          'background': 'var(--primary-bg)',
-          'color': 'white',
-          'border-color': '$primary',
-        },
-      },
-      'default': {
-        styles: {
-        },
-      },
-    },
-    transitions: [
-      { to: 'on', trigger: 'onclick', modifier: 'exclusive' },
-    ],
-  }
-  node_121._baseStyles = {
-    'opacity': node_121.style['opacity'] || '',
-    'background': node_121.style['background'] || '',
-    'color': node_121.style['color'] || '',
-    'border-color': node_121.style['border-color'] || '',
-  }
-  node_121.dataset.state = 'default'
-  Object.assign(node_121.style, node_121._stateMachine.states['default'].styles)
-  node_121.addEventListener('click', (e) => {
-    const sm = node_121._stateMachine
-    const current = sm.current
-    _runtime.exclusiveTransition(node_121, 'on')
-  })
-  node_121.dataset.component = 'Btn'
-  // Text
-  const node_122 = document.createElement('span')
-  _elements['node-122'] = node_122
-  node_122.dataset.mirrorId = 'node-122'
-  node_122.dataset.mirrorName = 'Text'
-  node_122.textContent = "Geschäftlich"
-  node_122.dataset.component = 'Text'
-  node_121.appendChild(node_122)
-  
-  node_118.appendChild(node_121)
-  
-  // Btn
-  const node_123 = document.createElement('button')
-  _elements['node-123'] = node_123
-  node_123.dataset.mirrorId = 'node-123'
-  node_123.dataset.mirrorName = 'Btn'
-  Object.assign(node_123.style, {
-    'height': '36px',
-    'flex-shrink': '0',
-    'padding': '10px 16px',
-    'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
-    'font-size': '13px',
-    'font-weight': '500',
-    'background': 'var(--surface-tertiary-bg)',
-    'color': 'var(--text-primary-col)',
-    'border-color': 'var(--border-boc)',
-    'transition': 'opacity 150ms ease',
-  })
-  node_123._stateStyles = {
-    'on': {
-      'background': 'var(--primary-bg)',
-      'color': 'white',
-      'border-color': '$primary',
-    },
-  }
-  node_123._stateMachine = {
-    initial: 'default',
-    current: 'default',
-    states: {
-      'hover': {
-        styles: {
-          'opacity': '0.9',
-        },
-      },
-      'on': {
-        styles: {
-          'background': 'var(--primary-bg)',
-          'color': 'white',
-          'border-color': '$primary',
-        },
-      },
-      'default': {
-        styles: {
-        },
-      },
-    },
-    transitions: [
-      { to: 'on', trigger: 'onclick', modifier: 'exclusive' },
-    ],
-  }
-  node_123._baseStyles = {
-    'opacity': node_123.style['opacity'] || '',
-    'background': node_123.style['background'] || '',
-    'color': node_123.style['color'] || '',
-    'border-color': node_123.style['border-color'] || '',
-  }
-  node_123.dataset.state = 'default'
-  Object.assign(node_123.style, node_123._stateMachine.states['default'].styles)
-  node_123.addEventListener('click', (e) => {
-    const sm = node_123._stateMachine
-    const current = sm.current
-    _runtime.exclusiveTransition(node_123, 'on')
-  })
-  node_123.dataset.component = 'Btn'
-  // Text
-  const node_124 = document.createElement('span')
-  _elements['node-124'] = node_124
-  node_124.dataset.mirrorId = 'node-124'
-  node_124.dataset.mirrorName = 'Text'
-  node_124.textContent = "Familie"
-  node_124.dataset.component = 'Text'
-  node_123.appendChild(node_124)
-  
-  node_118.appendChild(node_123)
-  
-  node_115.appendChild(node_118)
-  
-  node_84.appendChild(node_115)
-  
-  node_78.appendChild(node_84)
-  
-  // Frame
-  const node_125 = document.createElement('div')
-  _elements['node-125'] = node_125
-  node_125.dataset.mirrorId = 'node-125'
-  node_125.dataset.mirrorName = 'Frame'
-  Object.assign(node_125.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'justify-content': 'space-between',
-    'align-items': 'flex-start',
-    'padding': '20px',
-    'border': '1px solid 0px 0px 0px',
-    'border-color': 'var(--border-boc)',
-    'background': 'var(--surface-secondary-bg)',
-  })
-  node_125.dataset.layout = 'flex'
-  node_125.dataset.component = 'Frame'
-  // Btn
-  const node_126 = document.createElement('button')
-  _elements['node-126'] = node_126
-  node_126.dataset.mirrorId = 'node-126'
-  node_126.dataset.mirrorName = 'Btn'
-  Object.assign(node_126.style, {
-    'height': '36px',
-    'flex-shrink': '0',
-    'padding': '10px 16px',
-    'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
-    'font-size': '13px',
-    'font-weight': '500',
-    'background': 'var(--surface-bg)',
-    'color': '$danger',
-    'border-color': '$danger',
-    'transition': 'opacity 150ms ease',
-  })
-  node_126.dataset.component = 'Btn'
-  node_126.addEventListener('click', (e) => {
-    _runtime.deleteItem('selectedAddress')
-  })
-  // Frame
-  const node_127 = document.createElement('div')
-  _elements['node-127'] = node_127
-  node_127.dataset.mirrorId = 'node-127'
-  node_127.dataset.mirrorName = 'Frame'
-  Object.assign(node_127.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'center',
-    'gap': '6px',
-  })
-  node_127.dataset.layout = 'flex'
-  node_127.dataset.component = 'Frame'
-  // Icon
-  const node_128 = document.createElement('span')
-  _elements['node-128'] = node_128
-  node_128.dataset.mirrorId = 'node-128'
-  node_128.dataset.mirrorName = 'Icon'
-  node_128.setAttribute('data-icon-color', "$danger")
-  node_128.setAttribute('data-icon-size', "16")
-  // Icon default styles
-  Object.assign(node_128.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_128, "trash-2")
-  Object.assign(node_128.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
-  })
-  node_128.dataset.component = 'Icon'
-  node_127.appendChild(node_128)
-  
-  // Text
-  const node_129 = document.createElement('span')
-  _elements['node-129'] = node_129
-  node_129.dataset.mirrorId = 'node-129'
-  node_129.dataset.mirrorName = 'Text'
-  node_129.textContent = "Löschen"
-  node_129.dataset.component = 'Text'
-  node_127.appendChild(node_129)
-  
-  node_126.appendChild(node_127)
-  
-  node_125.appendChild(node_126)
-  
-  // Frame
-  const node_130 = document.createElement('div')
-  _elements['node-130'] = node_130
-  node_130.dataset.mirrorId = 'node-130'
-  node_130.dataset.mirrorName = 'Frame'
-  Object.assign(node_130.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-    'gap': '12px',
-  })
-  node_130.dataset.layout = 'flex'
-  node_130.dataset.component = 'Frame'
-  // CloseTrigger
-  const node_131 = document.createElement('div')
-  _elements['node-131'] = node_131
-  node_131.dataset.mirrorId = 'node-131'
-  node_131.dataset.mirrorName = 'CloseTrigger'
-  Object.assign(node_131.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'width': 'fit-content',
-    'align-items': 'flex-start',
-  })
-  node_131.dataset.component = 'CloseTrigger'
-  node_131.dataset.slot = 'CloseTrigger'
-  // Btn
-  const node_132 = document.createElement('button')
-  _elements['node-132'] = node_132
-  node_132.dataset.mirrorId = 'node-132'
-  node_132.dataset.mirrorName = 'Btn'
-  Object.assign(node_132.style, {
-    'height': '36px',
-    'flex-shrink': '0',
-    'padding': '10px 16px',
-    'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
-    'font-size': '13px',
-    'font-weight': '500',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-secondary-col)',
-    'border-color': 'var(--border-boc)',
-    'transition': 'opacity 150ms ease',
-  })
-  node_132.dataset.component = 'Btn'
-  node_131.appendChild(node_132)
-  
-  // Text
-  const node_133 = document.createElement('span')
-  _elements['node-133'] = node_133
-  node_133.dataset.mirrorId = 'node-133'
-  node_133.dataset.mirrorName = 'Text'
-  node_133.textContent = "Abbrechen"
-  node_133.dataset.component = 'Text'
-  node_131.appendChild(node_133)
-  
-  node_130.appendChild(node_131)
-  
-  // Btn
-  const node_134 = document.createElement('button')
-  _elements['node-134'] = node_134
-  node_134.dataset.mirrorId = 'node-134'
-  node_134.dataset.mirrorName = 'Btn'
-  Object.assign(node_134.style, {
-    'height': '36px',
-    'flex-shrink': '0',
-    'padding': '10px 16px',
-    'border-radius': '6px',
-    'border': '0px solid currentColor',
-    'cursor': 'pointer',
-    'font-size': '13px',
-    'font-weight': '500',
-    'background': 'var(--primary-bg)',
-    'color': 'white',
-    'transition': 'opacity 150ms ease',
-  })
-  node_134.dataset.component = 'Btn'
-  node_134.addEventListener('click', (e) => {
-    _runtime.save('selectedAddress')
-    _runtime.toast('Adresse gespeichert!', { type: 'success', position: 'bottom' })
-  })
-  // Frame
-  const node_135 = document.createElement('div')
-  _elements['node-135'] = node_135
-  node_135.dataset.mirrorId = 'node-135'
-  node_135.dataset.mirrorName = 'Frame'
-  Object.assign(node_135.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'width': 'fit-content',
-    'align-items': 'center',
-    'gap': '6px',
-  })
-  node_135.dataset.layout = 'flex'
-  node_135.dataset.component = 'Frame'
-  // Icon
-  const node_136 = document.createElement('span')
-  _elements['node-136'] = node_136
-  node_136.dataset.mirrorId = 'node-136'
-  node_136.dataset.mirrorName = 'Icon'
-  node_136.setAttribute('data-icon-color', "white")
-  node_136.setAttribute('data-icon-size', "16")
-  // Icon default styles
-  Object.assign(node_136.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_136, "save")
-  Object.assign(node_136.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
-  })
-  node_136.dataset.component = 'Icon'
-  node_135.appendChild(node_136)
-  
-  // Text
-  const node_137 = document.createElement('span')
-  _elements['node-137'] = node_137
-  node_137.dataset.mirrorId = 'node-137'
-  node_137.dataset.mirrorName = 'Text'
-  node_137.textContent = "Speichern"
-  node_137.dataset.component = 'Text'
-  node_135.appendChild(node_137)
-  
-  node_134.appendChild(node_135)
-  
-  node_130.appendChild(node_134)
-  
-  node_125.appendChild(node_130)
-  
-  node_78.appendChild(node_125)
-  
-  node_76_content.appendChild(node_78)
-  
-  _root.appendChild(node_76)
-  
-  // Initialize Dialog
-  if (typeof _runtime !== 'undefined' && _runtime.initDialogComponent) {
-    _runtime.initDialogComponent(node_76)
-  }
   
   
   // Attach API methods directly to _root for intuitive usage
@@ -14816,22 +13503,16 @@ if (typeof window !== 'undefined') {
 
 
 // Register tokens in runtime
-_runtime.registerToken('$primary-bg', '#3b82f6')
-_runtime.registerToken('$primary-light-bg', '#60a5fa')
-_runtime.registerToken('$accent-bg', '#10b981')
-_runtime.registerToken('$danger-bg', '#ef4444')
-_runtime.registerToken('$warning-bg', '#f59e0b')
-_runtime.registerToken('$surface-bg', '#ffffff')
-_runtime.registerToken('$surface-secondary-bg', '#f8fafc')
-_runtime.registerToken('$surface-tertiary-bg', '#f1f5f9')
-_runtime.registerToken('$border-boc', '#e2e8f0')
-_runtime.registerToken('$border-dark-boc', '#cbd5e1')
-_runtime.registerToken('$text-primary-col', '#0f172a')
-_runtime.registerToken('$text-secondary-col', '#475569')
-_runtime.registerToken('$text-muted-col', '#94a3b8')
-_runtime.registerToken('$addresses', undefined)
-_runtime.registerToken('$editMode', false)
-_runtime.registerToken('$searchQuery', '')
+_runtime.registerToken('$primary-bg', '#1a1a1a')
+_runtime.registerToken('$secondary-bg', '#252525')
+_runtime.registerToken('$accent-bg', '#c9a961')
+_runtime.registerToken('$accent-col', '#c9a961')
+_runtime.registerToken('$accent-hover-bg', '#d4b76e')
+_runtime.registerToken('$success-col', '#4ade80')
+_runtime.registerToken('$muted-col', '#666')
+_runtime.registerToken('$text-col', '#fff')
+_runtime.registerToken('$border-boc', '#333')
+_runtime.registerToken('$border-hover-boc', '#444')
 
 
 // Execute
