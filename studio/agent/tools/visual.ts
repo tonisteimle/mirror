@@ -4,7 +4,7 @@
  * Tools for visual analysis of the preview.
  */
 
-import type { Tool, ToolResult } from '../types'
+import type { Tool, ToolResult, ToolContext } from '../types'
 
 // ============================================
 // TYPES
@@ -28,6 +28,30 @@ export interface ElementBounds {
   overflow?: 'hidden' | 'visible' | 'scroll'
 }
 
+interface VisualIssueBase {
+  type: string
+  message: string
+}
+
+interface OutsideViewportIssue extends VisualIssueBase {
+  type: 'outside_viewport'
+  element: string
+}
+
+interface TextOverflowIssue extends VisualIssueBase {
+  type: 'text_overflow'
+  element: string
+  scrollWidth: number
+  clientWidth: number
+}
+
+interface OverlapIssue extends VisualIssueBase {
+  type: 'overlap'
+  elements: string[]
+}
+
+type VisualIssue = OutsideViewportIssue | TextOverflowIssue | OverlapIssue
+
 // ============================================
 // SCREENSHOT TOOL
 // ============================================
@@ -45,7 +69,7 @@ Returns base64 image data that can be analyzed.`,
       required: false
     }
   },
-  execute: async ({ selector }, ctx: any): Promise<ToolResult> => {
+  execute: async ({ selector }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
     const preview = visualCtx.getPreviewElement?.()
 
@@ -111,7 +135,7 @@ Returns width, height, position, and visibility information.`,
       required: true
     }
   },
-  execute: async ({ selector }, ctx: any): Promise<ToolResult> => {
+  execute: async ({ selector }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
     const preview = visualCtx.getPreviewElement?.()
 
@@ -175,7 +199,7 @@ Analyzes gaps between children and reports inconsistencies.`,
       required: false
     }
   },
-  execute: async ({ selector }, ctx: any): Promise<ToolResult> => {
+  execute: async ({ selector }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
     const preview = visualCtx.getPreviewElement?.()
 
@@ -266,7 +290,7 @@ Detects whether elements are aligned (left, center, right, top, bottom).`,
       required: false
     }
   },
-  execute: async ({ selector }, ctx: any): Promise<ToolResult> => {
+  execute: async ({ selector }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
     const preview = visualCtx.getPreviewElement?.()
 
@@ -371,7 +395,7 @@ Useful for debugging visual issues.`,
       required: false
     }
   },
-  execute: async ({ selector, properties }, ctx: any): Promise<ToolResult> => {
+  execute: async ({ selector, properties }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
     const preview = visualCtx.getPreviewElement?.()
 
@@ -426,7 +450,7 @@ Checks for:
 - Elements outside viewport
 - Inconsistent sizing`,
   parameters: {},
-  execute: async (_, ctx: any): Promise<ToolResult> => {
+  execute: async (_, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
     const preview = visualCtx.getPreviewElement?.()
 
@@ -434,7 +458,7 @@ Checks for:
       return { success: false, error: 'Preview not available' }
     }
 
-    const issues: any[] = []
+    const issues: VisualIssue[] = []
     const previewBounds = preview.getBoundingClientRect()
 
     // Get all elements
@@ -546,7 +570,7 @@ Useful when discussing specific elements.`,
       required: false
     }
   },
-  execute: async ({ selector, color = '#5BA8F5', duration = 2000 }, ctx: any): Promise<ToolResult> => {
+  execute: async ({ selector, color = '#5BA8F5', duration = 2000 }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
 
     if (visualCtx.highlightElement) {

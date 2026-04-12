@@ -210,9 +210,9 @@ export interface ComponentInstance {
   /** Get the root DOM element */
   getElement(): HTMLElement
   /** Update the component value */
-  setValue?(value: any): void
+  setValue?(value: unknown): void
   /** Get the current value */
-  getValue?(): any
+  getValue?(): unknown
   /** Enable the component */
   enable?(): void
   /** Disable the component */

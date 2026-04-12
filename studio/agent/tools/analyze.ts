@@ -7,6 +7,59 @@
 import type { Tool, ToolContext, ToolResult } from '../types'
 
 // ============================================
+// INTERNAL TYPES
+// ============================================
+
+interface ParsedElement {
+  type: string
+  line: number
+  depth: number
+  hasText: boolean
+  hasEvents: number
+}
+
+interface CodeAnalysis {
+  totalLines: number
+  elementCount: number
+  maxNestingDepth: number
+  componentTypes: Record<string, number>
+  tokenCount: number
+  eventCount: number
+  uniqueEvents: string[]
+}
+
+interface PropertyDifference {
+  property: string
+  element1: string
+  element2: string
+}
+
+interface PropertySimilarity {
+  property: string
+  value: string
+}
+
+interface ElementComparison {
+  element1: { type: string; line: number }
+  element2: { type: string; line: number }
+  sameType: boolean
+  differenceCount: number
+  differences: PropertyDifference[]
+  similarities: PropertySimilarity[]
+}
+
+interface CodeStats {
+  totalLines: number
+  elementCount: number
+  tokenCount: number
+  commentCount: number
+  emptyLines: number
+  codeLines: number
+  componentTypes: Record<string, number>
+  mostUsedComponent: string
+}
+
+// ============================================
 // EXPLAIN TOOL
 // ============================================
 
@@ -241,8 +294,8 @@ interface ElementInfo {
 // ANALYSIS HELPERS
 // ============================================
 
-function analyzeCode(lines: string[], selector?: string): any {
-  const elements: any[] = []
+function analyzeCode(lines: string[], selector?: string): CodeAnalysis {
+  const elements: ParsedElement[] = []
   const tokens: string[] = []
   const events: string[] = []
   let depth = 0
@@ -267,7 +320,7 @@ function analyzeCode(lines: string[], selector?: string): any {
       depth = Math.floor(indent / 2)
       maxDepth = Math.max(maxDepth, depth)
 
-      const type = trimmed.match(/^([A-Z][a-zA-Z0-9]*)/)?.[1]
+      const type = trimmed.match(/^([A-Z][a-zA-Z0-9]*)/)?.[1] || 'Unknown'
 
       // Find events
       const eventMatches = trimmed.match(/on\w+/g)
@@ -555,14 +608,14 @@ function findElementBySelector(selector: string, lines: string[]): ElementInfo |
   return null
 }
 
-function compareElements(el1: ElementInfo, el2: ElementInfo): any {
+function compareElements(el1: ElementInfo, el2: ElementInfo): ElementComparison {
   const props1 = parsePropsFromCode(el1.code)
   const props2 = parsePropsFromCode(el2.code)
 
   const allKeys = [...new Set([...Object.keys(props1), ...Object.keys(props2)])]
 
-  const differences: any[] = []
-  const similarities: any[] = []
+  const differences: PropertyDifference[] = []
+  const similarities: PropertySimilarity[] = []
 
   for (const key of allKeys) {
     if (props1[key] === props2[key]) {
@@ -606,7 +659,7 @@ function parsePropsFromCode(code: string): Record<string, string> {
   return props
 }
 
-function calculateStats(lines: string[]): any {
+function calculateStats(lines: string[]): CodeStats {
   let elementCount = 0
   let tokenCount = 0
   let commentCount = 0

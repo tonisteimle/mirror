@@ -9,6 +9,9 @@
  */
 
 import { state, actions, events, type BreadcrumbItem } from './index'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('SelectionAdapter')
 
 export type SelectionListener = (nodeId: string | null, previousNodeId: string | null) => void
 export type BreadcrumbListener = (chain: BreadcrumbItem[]) => void
@@ -146,7 +149,7 @@ export class StateSelectionAdapter {
       try {
         listener(nodeId, previousNodeId)
       } catch (error) {
-        console.error('Error in selection listener:', error)
+        log.error('Error in selection listener:', error)
       }
     }
   }
@@ -159,7 +162,7 @@ export class StateSelectionAdapter {
       try {
         listener(chain)
       } catch (error) {
-        console.error('Error in breadcrumb listener:', error)
+        log.error('Error in breadcrumb listener:', error)
       }
     }
   }

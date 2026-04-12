@@ -9,6 +9,9 @@
  */
 
 import { projectActions } from '../storage'
+import { createLogger } from '../../compiler'
+
+const log = createLogger('ProjectToolbar')
 
 // Custom dialog module (loaded globally)
 declare const MirrorDialog: {
@@ -101,25 +104,41 @@ export class ProjectToolbar {
   // ===========================================================================
 
   private async handleNew(): Promise<void> {
-    if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Neues Projekt erstellen?' })) {
-      return
+    try {
+      if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Neues Projekt erstellen?' })) {
+        return
+      }
+      await projectActions.new()
+    } catch (error) {
+      log.error('Failed to create new project:', error)
     }
-    await projectActions.new()
   }
 
   private async handleDemo(): Promise<void> {
-    if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Demo-Projekt laden?' })) {
-      return
+    try {
+      if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Demo-Projekt laden?' })) {
+        return
+      }
+      await projectActions.demo()
+    } catch (error) {
+      log.error('Failed to load demo project:', error)
     }
-    await projectActions.demo()
   }
 
   private async handleLoad(): Promise<void> {
-    await projectActions.import()
+    try {
+      await projectActions.import()
+    } catch (error) {
+      log.error('Failed to load project:', error)
+    }
   }
 
   private async handleSave(): Promise<void> {
-    await projectActions.export()
+    try {
+      await projectActions.export()
+    } catch (error) {
+      log.error('Failed to save project:', error)
+    }
   }
 }
 

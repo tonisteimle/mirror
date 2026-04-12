@@ -328,8 +328,8 @@ export interface LearningStats {
 interface SuggestionAction {
   type: string
   prompt?: string
-  command?: any
-  params?: Record<string, any>
+  command?: unknown
+  params?: Record<string, unknown>
 }
 
 // ============================================

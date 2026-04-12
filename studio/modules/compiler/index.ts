@@ -14,6 +14,9 @@ import type {
 } from './types'
 import { buildPrelude, countPreludeLines, adjustLineNumber } from './prelude-builder'
 import type { AST, ParseError, IR, SourceMap } from '../../../compiler'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('Compiler')
 
 export type { CompileOptions, CompilationResult, PreludeResult, CompilerEvents, Warning }
 export { buildPrelude, countPreludeLines, adjustLineNumber }
@@ -44,10 +47,23 @@ export interface Compiler {
   getOptions(): CompileOptions
 }
 
+/**
+ * Interface for the global Mirror compiler object (loaded via script tag)
+ */
+interface MirrorGlobal {
+  parse(source: string): AST
+  toIR(ast: AST, withSourceMap: true): { ir: IR; sourceMap: SourceMap }
+  toIR(ast: AST, withSourceMap: false): IR
+  toIR(ast: AST, withSourceMap: boolean): IR | { ir: IR; sourceMap: SourceMap }
+  generateDOM(ast: AST): string
+  generateReact(ast: AST): string
+  generateFramework?(ast: AST, target: string): string
+}
+
 // Get Mirror from global scope (loaded via script tag)
-function getMirror(): any {
-  if (typeof window !== 'undefined' && (window as any).Mirror) {
-    return (window as any).Mirror
+function getMirror(): MirrorGlobal {
+  if (typeof window !== 'undefined' && (window as unknown as { Mirror?: MirrorGlobal }).Mirror) {
+    return (window as unknown as { Mirror: MirrorGlobal }).Mirror
   }
   throw new Error('Mirror compiler not loaded')
 }
@@ -80,7 +96,7 @@ export function createCompiler(initialOptions: Partial<CompileOptions> = {}): Co
         try {
           handler(payload)
         } catch (error) {
-          console.error(`[Compiler] Error in ${event} handler:`, error)
+          log.error(`Error in ${event} handler:`, error)
         }
       })
     }
@@ -106,7 +122,7 @@ export function createCompiler(initialOptions: Partial<CompileOptions> = {}): Co
 
       // Check for parse errors
       if (ast && ast.errors && ast.errors.length > 0) {
-        errors.push(...ast.errors.map((e: any) => ({
+        errors.push(...ast.errors.map((e: ParseError) => ({
           ...e,
           line: preludeOffset > 0 ? adjustLineNumber(e.line, countPreludeLines(source.slice(0, preludeOffset))) : e.line,
         })))

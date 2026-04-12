@@ -20,6 +20,7 @@ import type {
   Direction,
   VisualHint,
   ExecutionResult,
+  ComponentChild,
 } from '../../types'
 import type { ChildRect, DropStrategy } from '../../strategies/types'
 import type { LayoutRect } from '../../../core/state'
@@ -58,7 +59,7 @@ import {
 import { VisualSystem } from '../../visual/system'
 import { StrategyRegistry, createWebflowRegistry } from '../../strategies/registry'
 import { CodeExecutor } from '../../executor/code-executor'
-import type { SourceMap, CodeModifier } from '../../../../compiler'
+import type { SourceMap, CodeModifier } from '../../../shared/compiler-types'
 
 // ============================================
 // Default Size Provider
@@ -494,7 +495,7 @@ export function createDOMEventPort(): DOMEventPort {
       componentName: string
       properties?: string
       textContent?: string
-      children?: any[]
+      children?: ComponentChild[]
     }): CleanupFn {
       ensureMonitor()
 

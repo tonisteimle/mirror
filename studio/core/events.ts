@@ -3,10 +3,14 @@
  */
 
 import type { Command } from './commands'
+import type { ChangeIntent } from './change-types'
 import type { AST } from '../../compiler/parser/ast'
 import type { IR } from '../../compiler/ir/types'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import type { ComponentDragData, ComponentChild } from '../panels/components/types'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('EventBus')
 
 // DropZone type - inline definition (module not yet implemented)
 export interface DropZone {
@@ -37,7 +41,7 @@ export interface StudioEvents {
   /** Emitted when selection falls back to a different node (e.g., after queued selection fails) */
   'selection:fallback': { requestedId: string; resolvedId: string; reason: string }
   /** Emitted when a change is applied via ChangeService */
-  'change:applied': { intent: any; oldSource: string; newSource: string }
+  'change:applied': { intent: ChangeIntent; oldSource: string; newSource: string }
   /** Emitted when a component definition is selected (e.g., cursor on definition line in .com file) */
   'definition:selected': { componentName: string; origin: 'editor' }
   /** Emitted when an error occurs in state management */
@@ -259,7 +263,7 @@ export class EventBus {
       try {
         handler(currentPayload)
       } catch (e) {
-        console.error(`Error in event handler for ${event}:`, e)
+        log.error(`Error in event handler for ${event}:`, e)
       }
     })
   }

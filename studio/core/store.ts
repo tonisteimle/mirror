@@ -7,6 +7,9 @@
 
 import type { Subscriber } from './state-types'
 import { events } from './events'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('Store')
 
 /**
  * Generic reactive store with subscription support.
@@ -54,7 +57,7 @@ export class Store<T extends object> {
         subscriber(this.state, prevState)
       } catch (e) {
         const error = e instanceof Error ? e : new Error(String(e))
-        console.error('[Store] Subscriber error:', error.message, error.stack)
+        log.error('Subscriber error:', error.message, error.stack)
         // Emit error event for centralized error handling
         events.emit('state:error', {
           error,

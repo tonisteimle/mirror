@@ -23,8 +23,8 @@ export interface ChatMessage {
 export interface ToolCall {
   id: string
   tool: string
-  input: any
-  result?: any
+  input: unknown
+  result?: unknown
   status: 'pending' | 'running' | 'done' | 'error'
 }
 
@@ -72,21 +72,26 @@ export class ChatPanel {
    * Detect which agent to use
    */
   private async detectAgent(): Promise<void> {
-    // Prefer Claude CLI if available
-    if (this.claudeAgent) {
-      const available = await isClaudeCliAvailable()
-      if (available) {
-        this.useClaudeCli = true
-        this.updateAgentIndicator('Claude CLI', true)
-        return
+    try {
+      // Prefer Claude CLI if available
+      if (this.claudeAgent) {
+        const available = await isClaudeCliAvailable()
+        if (available) {
+          this.useClaudeCli = true
+          this.updateAgentIndicator('Claude CLI', true)
+          return
+        }
       }
-    }
 
-    // Fall back to OpenRouter
-    if (this.agent) {
-      this.useClaudeCli = false
-      this.updateAgentIndicator('OpenRouter', true)
-    } else {
+      // Fall back to OpenRouter
+      if (this.agent) {
+        this.useClaudeCli = false
+        this.updateAgentIndicator('OpenRouter', true)
+      } else {
+        this.updateAgentIndicator('Kein Agent', false)
+      }
+    } catch (error) {
+      // Fall back silently if detection fails
       this.updateAgentIndicator('Kein Agent', false)
     }
   }
@@ -385,7 +390,10 @@ export class ChatPanel {
   private formatContent(content: string): string {
     if (!content) return ''
 
-    return content
+    // Escape HTML first to prevent XSS
+    const escaped = this.escapeHtml(content)
+
+    return escaped
       // Code blocks
       .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="$1">$2</code></pre>')
       // Inline code
@@ -396,6 +404,17 @@ export class ChatPanel {
       .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       // Line breaks
       .replace(/\n/g, '<br>')
+  }
+
+  private escapeHtml(text: string): string {
+    const map: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }
+    return text.replace(/[&<>"']/g, char => map[char])
   }
 
   private formatTime(date: Date): string {

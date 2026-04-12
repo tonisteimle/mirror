@@ -15,7 +15,7 @@ export interface MemoryEntry {
   id: string
   type: 'preference' | 'pattern' | 'correction' | 'snippet'
   key: string
-  value: any
+  value: unknown
   confidence: number
   usageCount: number
   lastUsed: Date
@@ -36,15 +36,17 @@ export interface Pattern {
   failureCount: number
 }
 
+export type PatternActionType = 'set_property' | 'add_component' | 'apply_pattern' | 'batch_edit'
+
 export interface PatternAction {
-  type: 'set_property' | 'add_component' | 'apply_pattern' | 'batch_edit'
-  params: Record<string, any>
+  type: PatternActionType | string  // Allow dynamic types from LLM
+  params: Record<string, unknown>
 }
 
 export interface Correction {
   originalRequest: string
-  originalAction: any
-  correctedAction: any
+  originalAction: unknown
+  correctedAction: unknown
   timestamp: Date
 }
 
@@ -56,9 +58,19 @@ export interface Snippet {
   usageCount: number
 }
 
+/** Agent action from LLM interactions (loosely typed due to dynamic nature) */
+interface AgentAction {
+  type?: string
+  params?: Record<string, unknown>
+}
+
+function isAgentAction(value: unknown): value is AgentAction {
+  return typeof value === 'object' && value !== null
+}
+
 export interface Interaction {
   userMessage: string
-  agentActions: any[]
+  agentActions: unknown[]
   accepted: boolean
   correction?: string
   timestamp: Date
@@ -223,7 +235,7 @@ export class MemoryStore {
   /**
    * Learn from a user correction
    */
-  learnCorrection(originalRequest: string, originalAction: any, correctedAction: any): void {
+  learnCorrection(originalRequest: string, originalAction: unknown, correctedAction: unknown): void {
     this.corrections.push({
       originalRequest,
       originalAction,
@@ -311,7 +323,7 @@ export class MemoryStore {
     // Learn from the interaction
     if (interaction.accepted) {
       for (const action of interaction.agentActions) {
-        if (action.type && action.params) {
+        if (isAgentAction(action) && action.type && action.params) {
           this.learnPattern(interaction.userMessage, {
             type: action.type,
             params: action.params

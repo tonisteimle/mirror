@@ -685,18 +685,27 @@ function executeIntent(
 // HELPERS
 // ============================================================================
 
-function getPropertyValue(node: any, property: string): number | null {
-  if (node.properties && property in node.properties) {
-    const val = node.properties[property]
-    if (typeof val === 'number') return val
-    if (typeof val === 'string') {
-      const num = parseInt(val, 10)
-      if (!isNaN(num)) return num
-    }
+interface NodeWithProperties {
+  properties?: Map<string, unknown> | Record<string, unknown>
+}
+
+function getPropertyValue(node: NodeWithProperties | null, property: string): number | null {
+  if (!node?.properties) return null
+
+  // Handle both Map and plain object
+  const props = node.properties
+  const val = props instanceof Map ? props.get(property) : props[property]
+
+  if (typeof val === 'number') return val
+  if (typeof val === 'string') {
+    const num = parseInt(val, 10)
+    if (!isNaN(num)) return num
   }
   return null
 }
 
-function hasProperty(node: any, property: string): boolean {
-  return node.properties && property in node.properties
+function hasProperty(node: NodeWithProperties | null, property: string): boolean {
+  if (!node?.properties) return false
+  const props = node.properties
+  return props instanceof Map ? props.has(property) : property in props
 }

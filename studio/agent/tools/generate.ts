@@ -7,6 +7,20 @@
 import type { Tool, ToolContext, ToolResult, LLMCommand } from '../types'
 
 // ============================================
+// INTERNAL TYPES
+// ============================================
+
+interface PatternOptions {
+  hasImage?: boolean
+  hasDescription?: boolean
+  hasButton?: boolean
+  hasForm?: boolean
+  itemCount?: number
+  columns?: number
+  fields?: string[]
+}
+
+// ============================================
 // GENERATE COMPONENT TOOL
 // ============================================
 
@@ -360,7 +374,7 @@ function extractFieldNames(description: string): string[] {
   return fields.length > 0 ? fields : ['email', 'password']
 }
 
-function generatePattern(pattern: string, options: any, tokens: Record<string, string>): string {
+function generatePattern(pattern: string, options: PatternOptions, tokens: Record<string, string>): string {
   const bg = tokens['$bg'] || tokens['$surface.bg'] || tokens['$card.bg'] || '#fff'
   const primary = tokens['$primary'] || tokens['$accent.bg'] || tokens['$primary.bg'] || '#007bff'
   const text = tokens['$text'] || tokens['$text.col'] || tokens['$col'] || '#333'

@@ -5,6 +5,9 @@
 import { state, actions } from './state'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import { CodeModifier, type CodeChange, type AddChildOptions } from '../../compiler/studio/code-modifier'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('Commands')
 
 export interface Command {
   readonly type: string
@@ -387,11 +390,11 @@ export class MoveNodeWithLayoutCommand implements Command {
    */
   private validateCoordinate(value: number | undefined): number | null {
     if (value === undefined || value === null) {
-      console.warn('[MoveNodeWithLayoutCommand] Coordinate is undefined')
+      log.warn('MoveNodeWithLayoutCommand: Coordinate is undefined')
       return null
     }
     if (!Number.isFinite(value)) {
-      console.warn('[MoveNodeWithLayoutCommand] Coordinate is not finite:', value)
+      log.warn('MoveNodeWithLayoutCommand: Coordinate is not finite:', value)
       return null
     }
     // Round to integer and clamp to minimum of 0

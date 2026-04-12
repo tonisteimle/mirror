@@ -6,6 +6,9 @@
  */
 
 import { events } from '../core/events'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('UserSettings')
 
 // =============================================================================
 // Types
@@ -38,7 +41,7 @@ interface Pattern {
 }
 
 interface PatternAction {
-  type: 'set_property' | 'add_component' | 'apply_pattern' | 'batch_edit'
+  type: 'set_property' | 'add_component' | 'apply_pattern' | 'batch_edit' | string
   params: Record<string, unknown>
 }
 
@@ -89,15 +92,15 @@ class UserSettingsService {
           ...DEFAULT_SETTINGS,
           ...data,
         }
-        console.log('[UserSettings] Loaded from localStorage')
+        log.info('Loaded from localStorage')
       } else {
         this.settings = { ...DEFAULT_SETTINGS }
-        console.log('[UserSettings] No settings found, using defaults')
+        log.info('No settings found, using defaults')
       }
       this.loaded = true
       events.emit('userSettings:loaded', { settings: this.settings as unknown as Record<string, unknown> })
     } catch (error) {
-      console.warn('[UserSettings] Failed to load:', error)
+      log.warn('Failed to load:', error)
       this.settings = { ...DEFAULT_SETTINGS }
       this.loaded = true
     }
@@ -122,9 +125,9 @@ class UserSettingsService {
   private saveNow(): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings))
-      console.log('[UserSettings] Saved to localStorage')
+      log.info('Saved to localStorage')
     } catch (error) {
-      console.warn('[UserSettings] Failed to save:', error)
+      log.warn('Failed to save:', error)
     }
   }
 

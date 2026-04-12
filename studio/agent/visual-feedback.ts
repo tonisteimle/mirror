@@ -21,7 +21,7 @@ export interface FeedbackEvent {
   type: 'highlight' | 'measure' | 'change' | 'error'
   selector?: string
   element?: HTMLElement
-  data?: any
+  data?: unknown
 }
 
 // ============================================
@@ -308,9 +308,9 @@ export class VisualFeedbackManager {
   // TOOL FEEDBACK
   // ============================================
 
-  onToolStart(toolName: string, input: any): void {
+  onToolStart(toolName: string, input: Record<string, unknown>): void {
     // Highlight relevant elements based on tool and input
-    const selector = input.selector || input.element1 || input.parent
+    const selector = (input.selector || input.element1 || input.parent) as string | undefined
 
     if (selector) {
       this.highlight(selector, {
@@ -321,12 +321,13 @@ export class VisualFeedbackManager {
     }
   }
 
-  onToolEnd(toolName: string, result: any): void {
+  onToolEnd(toolName: string, result: Record<string, unknown>): void {
     this.clearAllHighlights()
 
     // Show result-specific feedback
-    if (result?.commands) {
-      for (const cmd of result.commands) {
+    const commands = result?.commands
+    if (Array.isArray(commands)) {
+      for (const cmd of commands as Array<{ type?: string; nodeId?: string }>) {
         if (cmd.nodeId) {
           const type = cmd.type === 'DELETE_NODE' ? 'delete' :
             cmd.type === 'INSERT_COMPONENT' ? 'add' : 'modify'

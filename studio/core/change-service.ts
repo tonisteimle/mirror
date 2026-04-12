@@ -17,6 +17,9 @@
 
 import { runPipeline, defaultPipeline, type PipelineStep } from './change-pipeline'
 import type { ChangeIntent, ChangeResult } from './change-types'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('ChangeService')
 
 // Re-export types for backwards compatibility
 export type {
@@ -64,7 +67,7 @@ export class ChangeService {
     const result = runPipeline(intent, this.pipeline)
 
     if (!result.success) {
-      console.error(`[ChangeService] Pipeline failed at step "${result.failedStep}": ${result.error}`)
+      log.error(`Pipeline failed at step "${result.failedStep}": ${result.error}`)
       return {
         success: false,
         error: result.error,
