@@ -86,7 +86,7 @@ compiler/validator/
 ### Phase 1.4: DOM Backend ✅
 
 **Ursprünglich:** dom.ts mit 7.754 Zeilen
-**Aktuell:** 2.327 Zeilen (~70.0% Reduktion)
+**Aktuell:** 1.860 Zeilen (~76.0% Reduktion)
 
 **Extrahierte Module:**
 ```
@@ -101,7 +101,7 @@ compiler/backends/dom/
 ├── table-emitter.ts      # Table Emission
 ├── state-machine-emitter.ts # State Machine
 ├── loop-emitter.ts       # Loop Handling
-├── event-emitter.ts      # Event Listener Generation
+├── event-emitter.ts      # Event Listener & Action Generation (~568 Zeilen)
 └── token-emitter.ts      # Token/Data Emission (~484 Zeilen)
 ```
 
@@ -183,7 +183,7 @@ studio/panels/property/
 | Datei | Vorher | Nachher | Reduktion |
 |-------|--------|---------|-----------|
 | compiler/ir/index.ts | 5.127 | 4.744 | -7.5% |
-| compiler/backends/dom.ts | 7.754 | 2.327 | -70.0% |
+| compiler/backends/dom.ts | 7.754 | 1.860 | -76.0% |
 | compiler/backends/dom/zag-emitters.ts | - | 2.926 | +25 Komponenten |
 | studio/panels/property/ | 4.181 (1 Datei) | ~6.947 (25 Dateien) | Modularisiert |
 

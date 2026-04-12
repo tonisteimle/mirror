@@ -128,6 +128,7 @@ import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helper
 // Extracted transformers
 import { transformTable as transformTableExtracted, humanizeFieldName } from './transformers/table-transformer'
 import { transformChart as transformChartExtracted } from './transformers/chart-transformer'
+import { transformZagComponent as transformZagComponentExtracted } from './transformers/zag-transformer'
 import type { TransformerContext } from './transformers/transformer-context'
 import {
   isContainer as isContainerPrimitive,
@@ -566,6 +567,11 @@ class IRTransformer {
       addToSourceMap: this.includeSourceMap
         ? (nodeId, name, sourcePosition, options) => {
             this.sourceMapBuilder.addNode(nodeId, name, sourcePosition, options)
+          }
+        : undefined,
+      addPropertyPosition: this.includeSourceMap
+        ? (nodeId, propertyName, position) => {
+            this.sourceMapBuilder.addPropertyPosition(nodeId, propertyName, position)
           }
         : undefined,
     }

@@ -35,6 +35,9 @@ export interface TransformerContext {
 
   /** Add node to source map */
   addToSourceMap?(nodeId: string, name: string, sourcePosition: SourcePosition, options?: { isDefinition?: boolean }): void
+
+  /** Add property position to source map (for inline editing) */
+  addPropertyPosition?(nodeId: string, propertyName: string, position: SourcePosition): void
 }
 
 /**

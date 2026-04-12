@@ -780,9 +780,9 @@ function createPaletteSource(componentName: string, size: Size): DragSource {
 describe('readLayoutFromDOM', () => {
   it('extrahiert Container-Hierarchie', () => {
     document.body.innerHTML = `
-      <div data-node-id="root" style="position: relative;">
-        <div data-node-id="child-1" style="width: 100px; height: 50px;"></div>
-        <div data-node-id="child-2" style="width: 100px; height: 50px;"></div>
+      <div data-mirror-id="root" style="position: relative;">
+        <div data-mirror-id="child-1" style="width: 100px; height: 50px;"></div>
+        <div data-mirror-id="child-2" style="width: 100px; height: 50px;"></div>
       </div>
     `
     const layout = readLayoutFromDOM(document.body.firstChild as HTMLElement)
@@ -793,8 +793,8 @@ describe('readLayoutFromDOM', () => {
 
   it('erkennt stacked Container', () => {
     document.body.innerHTML = `
-      <div data-node-id="stacked" data-stacked="true" style="position: relative;">
-        <div data-node-id="child" style="position: absolute;"></div>
+      <div data-mirror-id="stacked" data-stacked="true" style="position: relative;">
+        <div data-mirror-id="child" style="position: absolute;"></div>
       </div>
     `
     const layout = readLayoutFromDOM(document.body.firstChild as HTMLElement)
@@ -818,7 +818,7 @@ Frame stacked, w 400, h 300, bg #1a1a1a
 
   // Button aus Palette ziehen
   const palette = page.locator('[data-component="Button"]')
-  const preview = page.locator('[data-node-id]').first()
+  const preview = page.locator('[data-mirror-id]').first()
 
   await palette.dragTo(preview, { targetPosition: { x: 150, y: 100 } })
 
@@ -1373,7 +1373,7 @@ export function readLayoutFromDOM(previewContainer: HTMLElement): LayoutInfo {
   const zoom = getZoomLevel(previewContainer)
 
   function readContainer(element: HTMLElement): ContainerInfo | null {
-    const nodeId = element.getAttribute('data-node-id')
+    const nodeId = element.getAttribute('data-mirror-id')
     if (!nodeId) return null
 
     const rect = element.getBoundingClientRect()

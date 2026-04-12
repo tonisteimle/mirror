@@ -1004,14 +1004,14 @@ Frame grid 3, gap 8
 
 ```typescript
 interface DropTarget {
-  hasChildren: boolean  // true wenn [data-node-id] Kinder existieren
+  hasChildren: boolean  // true wenn [data-mirror-id] Kinder existieren
   layoutType: LayoutType
   direction: Direction
 }
 ```
 
 **Detection Logic:**
-1. Finde alle direkten Kinder mit `[data-node-id]`
+1. Finde alle direkten Kinder mit `[data-mirror-id]`
 2. Filtere Text-Nodes und Whitespace
 3. `hasChildren = children.length > 0`
 

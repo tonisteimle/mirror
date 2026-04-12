@@ -90,7 +90,7 @@ export function createMockRect(
  * mockAdapter.setBoundingClientRect(createMockRect(0, 0, 400, 300))
  *
  * // Use in target detector
- * const target = detectTarget(element, 'data-node-id', mockAdapter)
+ * const target = detectTarget(element, 'data-mirror-id', mockAdapter)
  *
  * // Verify calls
  * expect(mockAdapter.spies.getComputedStyle).toHaveBeenCalledWith(element)
