@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Styling</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Styling</h1>
+      <p class="subtitle">Farben, Typografie, Borders und Effekte</p>
+    </header>
+
+    <p class="intro">In den vorherigen Kapiteln hast du Layout und Struktur kennengelernt. Dieses Kapitel zeigt alle <strong>visuellen Properties</strong> – von Farben über Typografie bis zu Effekten. Es ist als Referenz gedacht: Schau hier nach, wenn du wissen willst, wie ein bestimmter Effekt funktioniert.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Farben</h2>
+      <p>Mirror unterstützt verschiedene Farbformate. Am häufigsten verwendest du Hex-Farben (<code>#2271C1</code>), aber auch benannte Farben und rgba sind möglich:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
+  // Hex-Farben
+  Frame w 50, h 50, bg #2271C1, rad 6
+  Frame w 50, h 50, bg #10b981, rad 6
+  Frame w 50, h 50, bg #f59e0b, rad 6
+  Frame w 50, h 50, bg #ef4444, rad 6
+
+  // Benannte Farben
+  Frame w 50, h 50, bg white, rad 6
+  Frame w 50, h 50, bg black, rad 6
+
+  // Mit Transparenz
+  Frame w 50, h 50, bg rgba(34,113,193,0.5), rad 6
+  Frame w 50, h 50, bg #2271C188, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>#2271C1</code> – Hex-Farbe (6 Zeichen für RGB)</li>
+        <li><code>white</code>, <code>black</code> – benannte CSS-Farben funktionieren direkt</li>
+        <li><code>rgba(34,113,193,0.5)</code> – Farbe mit 50% Transparenz</li>
+        <li><code>#2271C188</code> – Hex mit Alpha-Kanal (8 Zeichen, die letzten zwei sind Transparenz)</li>
+      </ul>
+
+      <div class="note">
+        <strong>Tipp:</strong> Für transparente Farben ist <code>#rrggbbaa</code> kürzer als <code>rgba()</code>. Die letzten zwei Hex-Zeichen geben die Transparenz an: <code>ff</code> = 100% sichtbar, <code>00</code> = unsichtbar.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Gradients</h2>
+      <p>Farbverläufe machen UIs lebendiger. In Mirror verwendest du <code>grad</code> für horizontale Verläufe, <code>grad-ver</code> für vertikale, oder <code>grad N</code> für einen bestimmten Winkel:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 400, gap 8, bg #0a0a0a, pad 16, rad 8
+  // Horizontal (Standard)
+  Frame w full, h 50, rad 8, bg grad #2271C1 #7c3aed
+
+  // Vertikal
+  Frame w full, h 50, rad 8, bg grad-ver #f59e0b #ef4444
+
+  // Mit Winkel (45°)
+  Frame w full, h 50, rad 8, bg grad 45 #10b981 #2271C1
+
+  // Drei Farben
+  Frame w full, h 50, rad 8, bg grad #10b981 #2271C1 #7c3aed</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>grad #a #b</code> – horizontaler Verlauf von links nach rechts</li>
+        <li><code>grad-ver #a #b</code> – vertikaler Verlauf von oben nach unten</li>
+        <li><code>grad 45 #a #b</code> – Verlauf im 45°-Winkel</li>
+        <li><code>grad #a #b #c</code> – Verlauf mit drei Farben (funktioniert auch mit mehr)</li>
+      </ul>
+
+      <p>Das funktioniert auch für Text – ersetze einfach <code>bg</code> durch <code>col</code>:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 20, rad 8, gap 8
+  Text "Gradient Text", fs 24, weight bold, col grad #2271C1 #7c3aed
+  Text "Vertical Gradient", fs 24, weight bold, col grad-ver #f59e0b #ef4444</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Borders</h2>
+      <p>Borders bestehen aus zwei Properties: <code>bor</code> (Breite in Pixel) und <code>boc</code> (Farbe). Beide zusammen ergeben den sichtbaren Rahmen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
+  // Border rundum
+  Frame w 70, h 70, bor 2, boc #2271C1, rad 8, center
+    Text "2px", col #888, fs 11
+
+  // Dickerer Border
+  Frame w 70, h 70, bor 4, boc #10b981, rad 8, center
+    Text "4px", col #888, fs 11
+
+  // Mit Hintergrund
+  Frame w 70, h 70, bg #1a1a1a, bor 1, boc #333, rad 8, center
+    Text "subtle", col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="note">
+        <strong>Praxis-Tipp:</strong> Ein subtiler 1px-Border (<code>bor 1, boc #333</code>) auf dunklem Hintergrund gibt Elementen Tiefe, ohne aufdringlich zu wirken. Das ist ein häufig genutztes Pattern für Cards und Inputs.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Border Radius</h2>
+      <p>Von eckig bis rund:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
+  Frame w 60, h 60, bg #2271C1, rad 0, center
+    Text "0", col white, fs 11
+  Frame w 60, h 60, bg #2271C1, rad 4, center
+    Text "4", col white, fs 11
+  Frame w 60, h 60, bg #2271C1, rad 12, center
+    Text "12", col white, fs 11
+  Frame w 60, h 60, bg #2271C1, rad 99, center
+    Text "99", col white, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>rad 99</code> erzeugt einen Kreis bei quadratischen Elementen.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Typografie: Größe & Gewicht</h2>
+      <p>Die zwei wichtigsten Typografie-Properties sind <code>fs</code> (font-size, in Pixel) und <code>weight</code> (Schriftdicke). Eine klare Hierarchie entsteht durch die Kombination beider:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 4, bg #1a1a1a, pad 16, rad 8
+  Text "Headline", col white, fs 24, weight bold
+  Text "Subheadline", col white, fs 18, weight 500
+  Text "Body Text", col #ccc, fs 14
+  Text "Small Text", col #888, fs 12
+  Text "Caption", col #666, fs 10, uppercase</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>Größe und Farbe schaffen Hierarchie: Größer + heller = wichtiger</li>
+        <li><code>weight</code> akzeptiert Zahlen (100-900) oder Namen (<code>bold</code>, <code>semibold</code>, etc.)</li>
+        <li><code>uppercase</code> bei Captions ist ein gängiges Pattern für Labels und Kategorien</li>
+      </ul>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Typografie: Stil</h2>
+      <p>Text-Transformationen und Stile:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "UPPERCASE TEXT", col white, uppercase
+  Text "lowercase text", col white, lowercase
+  Text "Italic Text", col white, italic
+  Text "Underlined Text", col white, underline
+  Text "Truncated text that is too long to fit...", col white, truncate, w 200</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Typografie: Fonts</h2>
+      <p>Verschiedene Schriftarten:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Sans Serif (default)", col white, font sans
+  Text "Serif Font", col white, font serif
+  Text "Monospace Font", col white, font mono</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Shadows</h2>
+      <p>Schatten erzeugen Tiefe und Hierarchie. Mirror bietet drei vordefinierte Stufen – von subtil bis auffällig:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16, pad 20, bg #0a0a0a
+  Frame w 80, h 80, bg #1a1a1a, rad 8, shadow sm, center
+    Text "sm", col #888, fs 11
+  Frame w 80, h 80, bg #1a1a1a, rad 8, shadow md, center
+    Text "md", col #888, fs 11
+  Frame w 80, h 80, bg #1a1a1a, rad 8, shadow lg, center
+    Text "lg", col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="note">
+        <strong>Wann welche Stufe?</strong> <code>sm</code> für subtile Erhöhung (Cards), <code>md</code> für schwebende Elemente (Dropdowns), <code>lg</code> für modale Dialoge die Aufmerksamkeit brauchen.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Opacity</h2>
+      <p>Transparenz des gesamten Elements:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 1
+    Text "1", col white, fs 11
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.7
+    Text "0.7", col white, fs 11
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.4
+    Text "0.4", col white, fs 11
+  Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.2
+    Text "0.2", col white, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Cursor</h2>
+      <p>Mauszeiger-Stil ändern:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
+  Frame w 70, h 50, bg #1a1a1a, rad 6, center, cursor pointer
+    Text "pointer", col #888, fs 10
+  Frame w 70, h 50, bg #1a1a1a, rad 6, center, cursor grab
+    Text "grab", col #888, fs 10
+  Frame w 70, h 50, bg #1a1a1a, rad 6, center, cursor move
+    Text "move", col #888, fs 10
+  Frame w 70, h 50, bg #1a1a1a, rad 6, center, cursor not-allowed
+    Text "not-allowed", col #888, fs 9</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Button Varianten</h2>
+      <p>Jetzt siehst du, wie die einzelnen Properties zusammenspielen. Hier sind sechs typische Button-Varianten, die du in fast jedem Design System findest:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
+  // Filled Buttons
+  Frame hor, gap 8
+    Button "Primary", bg #2271C1, col white, pad 10 20, rad 6
+    Button "Success", bg #10b981, col white, pad 10 20, rad 6
+    Button "Danger", bg #ef4444, col white, pad 10 20, rad 6
+
+  // Outlined Buttons
+  Frame hor, gap 8
+    Button "Outline", bor 1, boc #2271C1, col #2271C1, pad 10 20, rad 6
+    Button "Subtle", bg #2271C122, col #2271C1, pad 10 20, rad 6
+
+  // Ghost &amp; Link
+  Frame hor, gap 8
+    Button "Ghost", col #888, pad 10 20, rad 6
+    Button "Link →", col #2271C1, pad 10 20, underline</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><strong>Filled:</strong> Volle Hintergrundfarbe – für primäre Aktionen</li>
+        <li><strong>Outline:</strong> Nur Border, kein Hintergrund – für sekundäre Aktionen</li>
+        <li><strong>Subtle:</strong> Transparenter Hintergrund mit <code>bg #2271C122</code> (22 = 13% Opacity)</li>
+        <li><strong>Ghost:</strong> Nur Text, kein visueller Container – für tertiäre Aktionen</li>
+        <li><strong>Link:</strong> Mit <code>underline</code> – für Inline-Navigation</li>
+      </ul>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Card Styles</h2>
+      <p>Cards sind Container für zusammengehörige Inhalte. Hier drei typische Varianten, die sich durch ihre visuelle "Erhöhung" unterscheiden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
+  // Elevated
+  Frame w 120, bg #1a1a1a, pad 16, rad 12, shadow md, gap 8
+    Text "Elevated", col white, fs 13, weight 500
+    Text "Mit Schatten", col #888, fs 11
+
+  // Bordered
+  Frame w 120, bor 1, boc #333, pad 16, rad 12, gap 8
+    Text "Bordered", col white, fs 13, weight 500
+    Text "Mit Border", col #888, fs 11
+
+  // Gradient
+  Frame w 120, pad 16, rad 12, gap 8, bg grad 135 #1a1a2e #16213e
+    Text "Gradient", col white, fs 13, weight 500
+    Text "Mit Verlauf", col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><strong>Elevated:</strong> Hintergrund + Schatten – die Card "schwebt" über der Oberfläche</li>
+        <li><strong>Bordered:</strong> Kein Hintergrund, nur Border – flacher, weniger dominant</li>
+        <li><strong>Gradient:</strong> Farbverlauf im 135°-Winkel – für besondere Hervorhebung</li>
+      </ul>
+
+      <div class="note">
+        <strong>Design-Tipp:</strong> Mische nicht zu viele Card-Styles in einem Design. Wähle einen Hauptstil und verwende die anderen sparsam für besondere Hervorhebung.
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>bg, col</code> – Hintergrund & Textfarbe</li>
+        <li><code>bg grad #a #b</code>, <code>col grad #a #b</code> – Gradients (auch <code>grad-ver</code>, <code>grad 45</code>)</li>
+        <li><code>bor, boc, rad</code> – Border & Radius</li>
+        <li><code>fs, weight, font</code> – Schriftgröße, -dicke, -art</li>
+        <li><code>italic, underline, uppercase, truncate</code> – Text-Stile</li>
+        <li><code>shadow sm/md/lg</code> – Schatten</li>
+        <li><code>opacity</code> – Transparenz</li>
+        <li><code>cursor pointer/grab/move</code> – Mauszeiger</li>
+      </ul>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="04-layout.html">&larr; Layout</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="06-states.html">States &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

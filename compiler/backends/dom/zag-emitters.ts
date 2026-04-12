@@ -2729,6 +2729,7 @@ const emitterRegistry = new Map<string, ZagEmitterFn>([
   ['date-input', emitDateInputComponent],
   ['dateinput', emitDateInputComponent],
   ['accordion', emitAccordionComponent],
+  ['listbox', emitListboxComponent],
 ])
 
 /**

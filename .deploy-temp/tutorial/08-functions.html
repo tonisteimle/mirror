@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Functions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Functions</h1>
+      <p class="subtitle">Eingebaute und eigene Funktionen</p>
+    </header>
+
+    <p class="intro">In <a href="06-states.html">Kapitel 6</a> hast du <code>toggle()</code> und <code>exclusive()</code> kennengelernt – zwei eingebaute Funktionen für State-Wechsel. Mirror bietet viele weitere <strong>eingebaute Funktionen</strong> für typische UI-Patterns: Feedback, Navigation, Zähler, Scroll und mehr.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Syntax: Funktionen als Properties</h2>
+      <p>Funktionen werden direkt als Properties geschrieben – genau wie <code>bg</code> oder <code>pad</code>. Der Unterschied: Sie lösen Aktionen aus statt Styles zu setzen.</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Kurzschreibweise – Klick ist Default
+Btn: Button pad 10 20, rad 6, bg #333, col white, toggle()
+  on:
+    bg #2271C1
+
+Btn "An/Aus"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Wenn du eine Funktion als Property schreibst, wird sie automatisch bei <strong>Klick</strong> ausgeführt. Das ist der häufigste Fall – deshalb ist Klick der Default.</p>
+
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>Button "X", toggle()</code></td><td>Funktion bei Klick (Kurzform)</td></tr>
+        <tr><td><code>Button "X", show(Menu)</code></td><td>Element zeigen bei Klick</td></tr>
+        <tr><td><code>Button "X", toggle(), toast("OK")</code></td><td>Mehrere Funktionen</td></tr>
+      </table>
+
+      <p class="note"><strong>Faustregel:</strong> Kurzschreibweise für Klick-Events (99% der Fälle). Für andere Events wie Enter oder Escape gibt es Shorthands (<code>onenter</code>, <code>onescape</code>) – siehe <a href="06-states.html">States</a>.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Alle eingebauten Funktionen</h2>
+      <p>Mirror hat eingebaute Funktionen für die häufigsten UI-Patterns. Du musst sie nicht importieren – sie sind einfach da:</p>
+
+      <table class="ref-table">
+        <tr><th>Kategorie</th><th>Funktion</th><th>Was sie tut</th></tr>
+        <tr><td rowspan="2"><strong>State</strong></td><td><code>toggle()</code></td><td>State wechseln (an/aus oder cyclen)</td></tr>
+        <tr><td><code>exclusive()</code></td><td>Nur diesen aktivieren</td></tr>
+        <tr><td rowspan="2"><strong>Sichtbarkeit</strong></td><td><code>show(Element)</code></td><td>Element sichtbar machen</td></tr>
+        <tr><td><code>hide(Element)</code></td><td>Element verstecken</td></tr>
+        <tr><td><strong>Feedback</strong></td><td><code>toast("Text")</code></td><td>Toast-Benachrichtigung</td></tr>
+        <tr><td rowspan="4"><strong>Input</strong></td><td><code>focus(Element)</code></td><td>Fokus setzen</td></tr>
+        <tr><td><code>clear(Element)</code></td><td>Eingabe löschen</td></tr>
+        <tr><td><code>setError(Element, "msg")</code></td><td>Fehler-State setzen</td></tr>
+        <tr><td><code>clearError(Element)</code></td><td>Fehler-State entfernen</td></tr>
+        <tr><td rowspan="4"><strong>Zähler</strong></td><td><code>increment(token)</code></td><td>Token +1</td></tr>
+        <tr><td><code>decrement(token)</code></td><td>Token -1</td></tr>
+        <tr><td><code>set(token, value)</code></td><td>Token auf Wert setzen</td></tr>
+        <tr><td><code>reset(token)</code></td><td>Auf Initialwert zurücksetzen</td></tr>
+        <tr><td rowspan="3"><strong>Scroll</strong></td><td><code>scrollTo(Element)</code></td><td>Zu Element scrollen</td></tr>
+        <tr><td><code>scrollToTop()</code></td><td>Zum Seitenanfang</td></tr>
+        <tr><td><code>scrollToBottom()</code></td><td>Zum Seitenende</td></tr>
+        <tr><td><strong>Clipboard</strong></td><td><code>copy("Text")</code></td><td>In Zwischenablage kopieren</td></tr>
+        <tr><td rowspan="4"><strong>Navigation</strong></td><td><code>navigate(View)</code></td><td>Zu View wechseln</td></tr>
+        <tr><td><code>back()</code></td><td>Browser zurück</td></tr>
+        <tr><td><code>forward()</code></td><td>Browser vorwärts</td></tr>
+        <tr><td><code>openUrl("...")</code></td><td>URL öffnen (neuer Tab)</td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Feedback: toast()</h2>
+      <p>Toast-Benachrichtigungen erscheinen kurz und verschwinden automatisch – perfekt für Bestätigungen ohne Modal:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
+  Button "Info", pad 10 20, bg #333, col white, rad 6, toast("Das ist eine Info")
+  Button "Erfolg", pad 10 20, bg #10b981, col white, rad 6, toast("Gespeichert!", "success")
+  Button "Fehler", pad 10 20, bg #ef4444, col white, rad 6, toast("Fehler aufgetreten", "error")
+  Button "Warnung", pad 10 20, bg #f59e0b, col black, rad 6, toast("Achtung!", "warning")</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Beschreibung</th></tr>
+        <tr><td><code>toast("Text")</code></td><td>Standard-Toast (info)</td></tr>
+        <tr><td><code>toast("Text", "success")</code></td><td>Grüner Erfolgs-Toast</td></tr>
+        <tr><td><code>toast("Text", "error")</code></td><td>Roter Fehler-Toast</td></tr>
+        <tr><td><code>toast("Text", "warning")</code></td><td>Gelber Warn-Toast</td></tr>
+        <tr><td><code>toast("Text", "info", "top")</code></td><td>Position: top, bottom, top-left, etc.</td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Input: focus(), clear(), setError()</h2>
+      <p>Funktionen zur Steuerung von Eingabefeldern – Fokus setzen, Werte löschen, Validierung anzeigen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
+  Frame gap 8
+    Input name EmailInput, placeholder "E-Mail eingeben...", bg #1a1a1a, col white, pad 12, rad 6, w 260, bor 1, boc #333
+      invalid:
+        boc #ef4444
+    Frame hor, gap 8
+      Button "Fokus", pad 8 16, bg #333, col white, rad 6, focus(EmailInput)
+      Button "Löschen", pad 8 16, bg #333, col white, rad 6, clear(EmailInput)
+      Button "Fehler", pad 8 16, bg #ef4444, col white, rad 6, setError(EmailInput, "Ungültige E-Mail")
+      Button "OK", pad 8 16, bg #10b981, col white, rad 6, clearError(EmailInput)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Funktion</th><th>Beschreibung</th></tr>
+        <tr><td><code>focus(Element)</code></td><td>Fokus auf Element setzen</td></tr>
+        <tr><td><code>blur(Element)</code></td><td>Fokus entfernen</td></tr>
+        <tr><td><code>clear(Element)</code></td><td>Eingabewert löschen</td></tr>
+        <tr><td><code>selectText(Element)</code></td><td>Text im Feld markieren</td></tr>
+        <tr><td><code>setError(Element, "msg")</code></td><td>Fehler-State + Nachricht setzen</td></tr>
+        <tr><td><code>clearError(Element)</code></td><td>Fehler-State entfernen</td></tr>
+      </table>
+
+      <p class="note"><strong>Hinweis:</strong> <code>setError()</code> aktiviert den <code>invalid:</code> State und zeigt die Fehlermeldung an. Mit <code>clearError()</code> wird beides zurückgesetzt.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Zähler: increment() und decrement()</h2>
+      <p>Perfekt für Warenkorb, Likes, oder jede Art von Zähler:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>count: 0
+
+Frame hor, gap 12, ver-center, bg #1a1a1a, pad 16, rad 8
+  Button "-", pad 8 16, bg #333, col white, rad 6, fs 18, decrement(count)
+  Text "$count", col white, fs 24, weight 600, w 60, center
+  Button "+", pad 8 16, bg #2271C1, col white, rad 6, fs 18, increment(count)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Funktion</th><th>Beschreibung</th></tr>
+        <tr><td><code>increment(token)</code></td><td>Token-Wert um 1 erhöhen</td></tr>
+        <tr><td><code>decrement(token)</code></td><td>Token-Wert um 1 verringern</td></tr>
+        <tr><td><code>set(token, 5)</code></td><td>Token auf bestimmten Wert setzen</td></tr>
+        <tr><td><code>reset(token)</code></td><td>Auf Initialwert zurücksetzen</td></tr>
+      </table>
+
+      <p class="note"><strong>Hinweis:</strong> Die Funktionen arbeiten mit Tokens (Variablen). Definiere den Token mit Startwert (<code>count: 0</code>) und verwende ihn mit <code>$count</code>.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Warenkorb-Zähler</h2>
+      <p>Ein typisches E-Commerce Pattern – Artikelmenge mit Plus/Minus Buttons:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>qty: 1
+price: 29
+
+Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 280
+  Frame hor, gap 16, ver-center
+    Frame w 60, h 60, bg #252525, rad 8, center
+      Icon "shopping-bag", ic #888, is 24
+    Frame gap 4
+      Text "Premium T-Shirt", col white, fs 16, weight 500
+      Text "€$price pro Stück", col #888, fs 13
+
+  Frame hor, spread, ver-center, bg #0a0a0a, pad 12, rad 8
+    Frame hor, gap 8, ver-center
+      Button "-", pad 6 12, bg #333, col white, rad 4, decrement(qty)
+      Text "$qty", col white, fs 16, weight 600, w 32, center
+      Button "+", pad 6 12, bg #333, col white, rad 4, increment(qty)
+    Text "€" + ($price * $qty), col #10b981, fs 18, weight 600</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Clipboard: copy()</h2>
+      <p>Text in die Zwischenablage kopieren – nützlich für Code-Snippets, Links, oder Referenz-Codes:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>code: "SUMMER2024"
+
+Frame bg #1a1a1a, pad 16, rad 8, gap 12
+  Text "Dein Rabattcode:", col #888, fs 13
+  Frame hor, gap 8, ver-center
+    Frame pad 12 16, bg #0a0a0a, rad 6, bor 1, boc #333
+      Text "$code", col #10b981, fs 16, weight 600, font mono
+    Button "Kopieren", pad 10 16, bg #2271C1, col white, rad 6, copy("$code"), toast("Code kopiert!", "success")
+      copied:
+        bg #10b981
+        "Kopiert!"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>copy()</code> kann mit einem <code>copied:</code> State kombiniert werden – der Button zeigt dann kurz "Kopiert!" an.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>show() und hide(): Sichtbarkeit</h2>
+      <p>Mit <code>show(Element)</code> und <code>hide(Element)</code> machst du Elemente sichtbar oder versteckst sie:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
+  Button "Info anzeigen", pad 10 20, bg #2271C1, col white, rad 6, show(InfoBox)
+
+  Frame name InfoBox, hidden, bg #1a1a1a, pad 16, rad 8, gap 8
+    Text "Hier sind weitere Informationen.", col #ccc, fs 14
+    Button "Schließen", pad 8 16, bg #333, col white, rad 4, hide(InfoBox)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>name InfoBox</code> gibt dem Element einen Namen</li>
+        <li><code>hidden</code> macht das Element initial unsichtbar</li>
+        <li><code>show(InfoBox)</code> macht es sichtbar</li>
+        <li><code>hide(InfoBox)</code> versteckt es wieder</li>
+      </ul>
+
+      <p class="note"><strong>Wichtig:</strong> Das Ziel-Element braucht einen <code>name</code>. Ohne Namen kann die Funktion das Element nicht finden.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Navigation: navigate(), back(), openUrl()</h2>
+      <p>Funktionen für Navigation zwischen Views und Browser-History:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, bg #0a0a0a, pad 16, rad 8
+  Frame hor, gap 8
+    Button "← Zurück", pad 10 20, bg #333, col white, rad 6, back()
+    Button "Vorwärts →", pad 10 20, bg #333, col white, rad 6, forward()
+
+  Divider bg #333, mar 8 0
+
+  Button "Mirror Website öffnen", pad 10 20, bg #2271C1, col white, rad 6, hor, gap 8
+    Icon "external-link", ic white, is 16
+    openUrl("https://mirror-lang.dev")</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Funktion</th><th>Beschreibung</th></tr>
+        <tr><td><code>navigate(ViewName)</code></td><td>Zu einer View wechseln (siehe <a href="10-seiten.html">Seiten</a>)</td></tr>
+        <tr><td><code>back()</code></td><td>Browser-History zurück</td></tr>
+        <tr><td><code>forward()</code></td><td>Browser-History vorwärts</td></tr>
+        <tr><td><code>openUrl("...")</code></td><td>URL in neuem Tab öffnen</td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Scroll: scrollTo(), scrollToTop()</h2>
+      <p>Smooth-Scroll zu Elementen oder Seitenposition:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
+  Button "Zum Ende scrollen", pad 10 20, bg #2271C1, col white, rad 6, scrollToBottom()
+
+  Frame gap 8, pad 40 0
+    Text "Abschnitt 1", col white, fs 16
+    Text "Lorem ipsum dolor sit amet...", col #888, fs 13
+    Text "Abschnitt 2", col white, fs 16
+    Text "Consectetur adipiscing elit...", col #888, fs 13
+    Text "Abschnitt 3", col white, fs 16
+    Text "Sed do eiusmod tempor...", col #888, fs 13
+
+  Button "Nach oben", pad 10 20, bg #333, col white, rad 6, scrollToTop()</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Funktion</th><th>Beschreibung</th></tr>
+        <tr><td><code>scrollTo(Element)</code></td><td>Zu benanntem Element scrollen</td></tr>
+        <tr><td><code>scrollToTop()</code></td><td>Zum Anfang scrollen</td></tr>
+        <tr><td><code>scrollToBottom()</code></td><td>Zum Ende scrollen</td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Funktionen kombinieren</h2>
+      <p>Du kannst mehrere Funktionen bei einem Klick ausführen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>count: 0
+
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
+  Button "Like", name LikeBtn, pad 12 20, bg #333, col white, rad 6, hor, gap 8, toggle(), increment(count), toast("Gefällt dir!", "success")
+    Icon "heart", ic #888, is 18
+    Text "$count"
+    on:
+      bg #ef4444
+      Icon "heart", ic white, is 18, fill</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Button hat <strong>drei</strong> Funktionen: <code>toggle()</code> wechselt den State, <code>increment(count)</code> erhöht den Zähler, und <code>toast()</code> zeigt eine Bestätigung.</p>
+
+      <p class="note"><strong>Reihenfolge:</strong> Die Funktionen werden in der Reihenfolge ausgeführt, wie du sie schreibst.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praktisch: Formular mit Feedback</h2>
+      <p>Ein komplettes Beispiel das mehrere Funktionen kombiniert:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 300
+  Text "Newsletter", col white, fs 18, weight 600
+
+  Frame gap 12
+    Input name EmailInput, placeholder "E-Mail Adresse", bg #0a0a0a, col white, pad 12, rad 6, w full
+    Button "Anmelden", pad 12 20, bg #2271C1, col white, rad 6, w full, toast("Erfolgreich angemeldet!", "success")
+      hover:
+        bg #2271C1
+
+  Text "Spam-frei. Jederzeit abmeldbar.", col #666, fs 11, center</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Eigene Funktionen</h2>
+      <p>Die eingebauten Funktionen decken die häufigsten Fälle ab. Für komplexere Logik (API-Calls, Validierung) schreibst du eigene Funktionen in JavaScript.</p>
+      <p>Das Prinzip: <strong>Du greifst auf Elemente zu und änderst ihre Eigenschaften.</strong></p>
+
+      <h3>Elemente ansprechen</h3>
+      <p>Jedes Element mit einem <code>name</code> kannst du in einer Funktion ansprechen:</p>
+
+      <div class="code-block">
+        <pre><span class="syn-comment">// Im Mirror-UI</span>
+<span class="syn-component">Input</span> <span class="syn-keyword">name</span> EmailInput, <span class="syn-property">placeholder</span> <span class="syn-string">"E-Mail"</span>
+<span class="syn-component">Button</span> <span class="syn-string">"Absenden"</span>, absenden()
+
+<span class="syn-comment">// In der Funktion (JavaScript)</span>
+<span class="syn-keyword">function</span> absenden() {
+  <span class="syn-keyword">const</span> wert = api.EmailInput.value
+  console.log(wert)
+}</pre>
+      </div>
+
+      <h3>Element-Eigenschaften</h3>
+      <table class="ref-table">
+        <tr><th>Eigenschaft</th><th>Lesen</th><th>Schreiben</th></tr>
+        <tr><td><code>.state</code></td><td>Aktueller State</td><td>State wechseln</td></tr>
+        <tr><td><code>.visible</code></td><td>Ist sichtbar?</td><td>Sichtbarkeit ändern</td></tr>
+        <tr><td><code>.value</code></td><td>Eingabewert (Input)</td><td>Wert setzen</td></tr>
+        <tr><td><code>.content</code></td><td>Textinhalt</td><td>Text ändern</td></tr>
+      </table>
+
+      <p class="note"><strong>Zusammenspiel:</strong> Du als Designer bestimmst <em>wie</em> jeder State aussieht. Die Funktion bestimmt <em>wann</em> welcher State aktiv wird. So könnt ihr unabhängig arbeiten.</p>
+    </section>
+
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+
+      <h3>State & Sichtbarkeit</h3>
+      <table class="ref-table">
+        <tr><td><code>toggle()</code></td><td>State wechseln</td></tr>
+        <tr><td><code>exclusive()</code></td><td>Nur diesen aktivieren</td></tr>
+        <tr><td><code>show(Name)</code></td><td>Element zeigen</td></tr>
+        <tr><td><code>hide(Name)</code></td><td>Element verstecken</td></tr>
+      </table>
+
+      <h3>Feedback</h3>
+      <table class="ref-table">
+        <tr><td><code>toast("Text")</code></td><td>Toast-Benachrichtigung</td></tr>
+        <tr><td><code>toast("Text", "success")</code></td><td>Mit Type: info, success, error, warning</td></tr>
+      </table>
+
+      <h3>Input Control</h3>
+      <table class="ref-table">
+        <tr><td><code>focus(Element)</code></td><td>Fokus setzen</td></tr>
+        <tr><td><code>blur(Element)</code></td><td>Fokus entfernen</td></tr>
+        <tr><td><code>clear(Element)</code></td><td>Eingabe löschen</td></tr>
+        <tr><td><code>selectText(Element)</code></td><td>Text markieren</td></tr>
+        <tr><td><code>setError(Element, "msg")</code></td><td>Fehler setzen</td></tr>
+        <tr><td><code>clearError(Element)</code></td><td>Fehler entfernen</td></tr>
+      </table>
+
+      <h3>Zähler & Werte</h3>
+      <table class="ref-table">
+        <tr><td><code>increment(token)</code></td><td>Token +1</td></tr>
+        <tr><td><code>decrement(token)</code></td><td>Token -1</td></tr>
+        <tr><td><code>set(token, value)</code></td><td>Wert setzen</td></tr>
+        <tr><td><code>reset(token)</code></td><td>Zurücksetzen</td></tr>
+      </table>
+
+      <h3>Clipboard & Scroll</h3>
+      <table class="ref-table">
+        <tr><td><code>copy("Text")</code></td><td>In Zwischenablage</td></tr>
+        <tr><td><code>scrollTo(Element)</code></td><td>Zu Element scrollen</td></tr>
+        <tr><td><code>scrollToTop()</code></td><td>Zum Anfang</td></tr>
+        <tr><td><code>scrollToBottom()</code></td><td>Zum Ende</td></tr>
+      </table>
+
+      <h3>Navigation</h3>
+      <table class="ref-table">
+        <tr><td><code>navigate(View)</code></td><td>Zu View wechseln</td></tr>
+        <tr><td><code>back()</code></td><td>Browser zurück</td></tr>
+        <tr><td><code>forward()</code></td><td>Browser vorwärts</td></tr>
+        <tr><td><code>openUrl("...")</code></td><td>URL öffnen</td></tr>
+      </table>
+
+    </div>
+
+
+    <nav>
+      <a class="prev" href="07-animationen.html">&larr; Animationen</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="09-daten.html">Daten &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Tutorial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="../index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Was ist Mirror?</h1>
+      <p class="subtitle">Die Entwicklungsumgebung für Designer</p>
+    </header>
+
+    <p class="intro">Mirror ist eine einfache Programmiersprache, um UIs zu beschreiben und zu steuern. Du kannst direkt Code schreiben, visuell im Editor arbeiten, oder AI generieren lassen – alle drei Wege führen zum selben lesbaren Code.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Code, den du verstehst</h2>
+      <p>AI kann UI generieren. Das Ergebnis sieht oft gut aus – aber der Code dahinter bleibt eine <strong>Black Box</strong>. Du kannst nicht beurteilen, ob er sauber ist. Du hast kein Gefühl der Kontrolle.</p>
+      <p>Und wenn du etwas ändern willst? Für "mach den Button etwas größer" musst du wieder die AI fragen. Dabei wäre es oft viel schneller, selbst drei Zeichen im Code zu ändern – wenn du ihn nur verstehen würdest.</p>
+      <p><strong>Mirror löst dieses Problem.</strong></p>
+      <p>Mirror ist eine Sprache, die AI versteht <em>und</em> Menschen lesen können:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern. <code>bg #2271C1</code> → <code>bg #10b981</code> und der Button ist grün. <code>pad 12 24</code> → <code>pad 16 32</code> und er ist größer. Keine Magie, keine versteckten Dateien.</p>
+      <p>Aber es wird noch besser. Wenn du Komponenten definierst, wird die Verwendung komplett clean:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Einmal definieren (mit Styling)
+Card: bg #1a1a1a, pad 16, rad 8, gap 8
+  Title: col white, fs 16, weight 500
+  Desc: col #888, fs 14
+
+// Dann verwenden (clean wie ein Dokument)
+Card
+  Title "Projekt Alpha"
+  Desc "Das erste Projekt"
+
+Card
+  Title "Projekt Beta"
+  Desc "Ein anderes Projekt"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Keine Attribute mehr bei der Verwendung. Nur noch Struktur und Inhalt – wie ein Dokument, das das UI beschreibt.</p>
+      <p>Die Styling-Eigenschaften verwenden kurze Abkürzungen: <code>bg</code> (background), <code>pad</code> (padding), <code>rad</code> (radius), <code>col</code> (color), <code>fs</code> (font-size). Du lernst sie nebenbei.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Hierarchie durch Einrückung</h2>
+      <p>Kinder werden eingerückt. Keine schließenden Tags, keine Klammern. Die Struktur ist sichtbar:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame bg #1a1a1a, pad 20, rad 12, gap 16
+  Text "Titel", col white, fs 18, weight bold
+  Text "Beschreibung hier", col #888, fs 14
+  Frame hor, gap 8
+    Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
+    Button "OK", pad 10 20, rad 6, bg #2271C1, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Code sieht aus wie ein Baum, weil er ein Baum ist.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Von Element zu Komponente: Ein Zeichen</h2>
+      <p>Du hast einen Button gebaut und willst ihn wiederverwenden? Füge einen Namen mit Doppelpunkt hinzu:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Komponente definieren: Name mit :
+PrimaryBtn as Button: bg #2271C1, col white, pad 12 24, rad 6
+
+// Verwenden: Name ohne :
+Frame hor, gap 8
+  PrimaryBtn "Speichern"
+  PrimaryBtn "Senden"
+  PrimaryBtn "Weiter"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Keine separate Datei. Kein Import. Kein Export. Die Definition ist dort, wo du sie brauchst.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tokens für Design-Systeme</h2>
+      <p>Farben, Abstände, Radien – definiere sie einmal, verwende sie überall:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>primary.bg: #2271C1
+card.bg: #1a1a1a
+card.rad: 8
+
+Card: bg $card, rad $card, pad 16, gap 8
+  Title: col white, fs 16, weight 500
+
+Card
+  Title "Mit Tokens"
+  Text "Änderst du den Token, ändert sich alles.", col #888, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Tokens + Komponenten = konsistentes Design ohne Wiederholung.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>States ohne Komplexität</h2>
+      <p>Interaktionen sind States. Ein State beschreibt, wie ein Element in einem Zustand aussieht:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
+  hover:
+    bg #444
+  on:
+    bg #2271C1
+
+Btn "Anklicken"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>hover:</code> – wenn die Maus darüber ist. <code>on:</code> – wenn aktiviert. <code>toggle()</code> – bei Klick den State wechseln (Klick ist Default).</p>
+      <p>Ein State kann sogar komplett andere Inhalte haben:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ExpandBtn: pad 12 20, bg #1a1a1a, col white, rad 6, hor, gap 8, cursor pointer, toggle()
+  "Mehr zeigen"
+  Icon "chevron-down", ic #888, is 16
+  open:
+    "Weniger zeigen"
+    Icon "chevron-up", ic #888, is 16
+
+ExpandBtn</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Animation und Logik</h2>
+      <p>States können animiert werden – füge einfach eine Dauer hinzu:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
+  hover 0.2s:
+    bg #2271C1
+    scale 1.02
+
+Btn "Hover mich"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>hover:</code> springt, <code>hover 0.2s:</code> gleitet. Für Logik schreibst du eigene Funktionen – in einer einfachen Syntax ohne Klammern:</p>
+      <div class="code-block">
+        <pre><span class="syn-component">Input</span> <span class="syn-keyword">name</span> EmailInput
+<span class="syn-component">Button</span> <span class="syn-string">"Absenden"</span>, absenden()
+
+<span class="syn-keyword">function</span> absenden()
+  wert = EmailInput.value
+  Hinweis.content = <span class="syn-string">"Gesendet: "</span> + wert</pre>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Arbeite wie du willst</h2>
+      <p>Mirror ist Text. Du kannst es schreiben in:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><strong>Jedem Texteditor</strong> – VS Code, Sublime, vim</li>
+        <li><strong>Mirror Studio</strong> – einer IDE mit Live-Preview, visuellem Editing und Property-Panel</li>
+      </ul>
+      <p>In Mirror Studio siehst du Code und Ergebnis nebeneinander. Ändere den Code, das Preview aktualisiert sich. Klicke ins Preview, der Code wird selektiert. Beides bleibt synchron.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Mensch + AI = besseres Design</h2>
+      <p>Mirror wurde für die Zusammenarbeit mit AI entwickelt:</p>
+      <div class="code-block">
+        <pre>Du: "Erstelle eine Card mit Avatar, Name und Rolle"
+AI: generiert Mirror-Code
+Du: "Der Avatar soll größer sein"
+AI: ändert `is 24` → `is 32`
+Du: siehst die Änderung, verstehst sie, kannst selbst weiter tweaken</pre>
+      </div>
+
+      <p><strong>Das ist der entscheidende Unterschied:</strong> Du bist nicht ausgeliefert. Du verstehst was die AI generiert hat. Du kannst selbst eingreifen – eine Farbe ändern, einen Abstand anpassen, ein Element verschieben. Der Code gehört dir.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Dieses Tutorial</h2>
+      <p>Die folgenden Kapitel führen durch alle Konzepte:</p>
+      <table class="ref-table">
+        <tr><th colspan="2">Die Sprache</th></tr>
+        <tr><td>01-03</td><td><strong>Grundlagen</strong> – Elemente, Komponenten, Tokens</td></tr>
+        <tr><td>04-05</td><td><strong>Layout & Styling</strong> – Flex, Grid, Farben, Effekte</td></tr>
+        <tr><td>06-08</td><td><strong>Interaktion</strong> – States, Animationen, Functions</td></tr>
+        <tr><td>09-10</td><td><strong>Daten & Struktur</strong> – Variablen, Binding, Seiten</td></tr>
+        <tr><th colspan="2">Komponenten-Bibliothek</th></tr>
+        <tr><td>11</td><td><strong>Eingabe</strong> – Forms, Selection, DateTime</td></tr>
+        <tr><td>12</td><td><strong>Navigation</strong> – Tabs, SideNav</td></tr>
+        <tr><td>13</td><td><strong>Overlays</strong> – Dialog, Popover, Tooltip</td></tr>
+        <tr><td>14</td><td><strong>Tabellen</strong> – Statische und datengebundene Tabellen</td></tr>
+      </table>
+
+      <p>Jedes Kapitel enthält interaktive Beispiele – der Code kann direkt bearbeitet werden, das Ergebnis erscheint live.</p>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+
+      <table class="ref-table">
+        <tr><th>Konzept</th><th>Syntax</th></tr>
+        <tr><td>Element mit Properties</td><td><code>Button "Text", bg #2271C1, pad 12</code></td></tr>
+        <tr><td>Hierarchie</td><td>2 Leerzeichen Einrückung</td></tr>
+        <tr><td>Komponente definieren</td><td><code>Btn:</code> (mit Doppelpunkt)</td></tr>
+        <tr><td>Komponente verwenden</td><td><code>Btn "Text"</code> (ohne Doppelpunkt)</td></tr>
+        <tr><td>Token definieren</td><td><code>primary.bg: #2271C1</code></td></tr>
+        <tr><td>Token verwenden</td><td><code>bg $primary</code></td></tr>
+        <tr><td>State definieren</td><td><code>on:</code> oder <code>hover:</code></td></tr>
+        <tr><td>State wechseln</td><td><code>toggle()</code></td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Mirror ist lesbar wie ein Dokument. AI generiert Code, du verfeinerst ihn – ohne Framework-Wissen.</p>
+    </div>
+
+
+    <nav>
+      <span class="prev"></span>
+      <a class="index" href="../index.html">Studio</a>
+      <a class="next" href="01-elemente.html">Elemente &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Elemente & Hierarchie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Elemente & Hierarchie</h1>
+      <p class="subtitle">Die Grundbausteine jeder Mirror-Oberfläche</p>
+    </header>
+
+    <p class="intro">In diesem Kapitel lernst du die Basis-Syntax von Mirror: Wie du Elemente erstellst, sie mit Properties gestaltest und durch Einrückung verschachtelst.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Die Grundsyntax</h2>
+      <p>Ein Mirror-Element besteht aus dem <strong>Element-Namen</strong>, optionalem <strong>Text-Inhalt</strong> in Anführungszeichen, und <strong>Properties</strong> getrennt durch Kommas:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>Button</code> – der Element-Typ</li>
+        <li><code>"Speichern"</code> – der sichtbare Text</li>
+        <li><code>bg #2271C1</code> – Hintergrundfarbe (Hex)</li>
+        <li><code>col white</code> – Textfarbe</li>
+        <li><code>pad 12 24</code> – Padding: 12px oben/unten, 24px links/rechts</li>
+        <li><code>rad 6</code> – Eckenradius von 6px</li>
+      </ul>
+
+      <p>Lies das so: <em>Ein Button mit Text "Speichern", blauem Hintergrund, weißer Schrift, Padding 12/24 und Radius 6.</em></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Primitives</h2>
+      <p>Primitives sind die Grundelemente von Mirror. Es gibt über 50 davon – hier die Basis-Elemente für den Einstieg:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, pad 16, bg #1a1a1a, rad 8
+  Text "Eine Überschrift", col white, fs 18
+  Text "Normaler Text darunter", col #888
+  Button "Klick mich", bg #2271C1, col white, pad 10 20, rad 6
+  Input placeholder "E-Mail eingeben...", bg #333, col white, pad 10, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Primitive</th><th>Beschreibung</th></tr>
+        <tr><td><code>Frame</code></td><td>Container – das zentrale Layout-Element</td></tr>
+        <tr><td><code>Text</code></td><td>Textinhalt</td></tr>
+        <tr><td><code>Image</code></td><td>Bild</td></tr>
+        <tr><td><code>Icon</code></td><td>Icon (Lucide oder Material)</td></tr>
+        <tr><td><code>Button</code></td><td>Klickbarer Button</td></tr>
+        <tr><td><code>Input</code></td><td>Einzeiliges Eingabefeld</td></tr>
+        <tr><td><code>Link</code></td><td>Anklickbarer Link</td></tr>
+      </table>
+
+      <p class="note">Weitere Primitives: <code>Textarea</code>, <code>Label</code>, <code>Divider</code>, <code>Spacer</code>, semantische Elemente (<code>Header</code>, <code>Nav</code>, <code>Main</code>, <code>Section</code>, <code>Footer</code>, <code>H1</code>–<code>H6</code>) und über 50 Zag-Komponenten (<code>Dialog</code>, <code>Tabs</code>, <code>Menu</code>, <code>Select</code>, etc.).</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Styling-Properties</h2>
+      <p>Properties steuern das Aussehen. Zahlen sind Pixel, <code>#hex</code> sind Farben:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16, bg #0a0a0a, pad 16, rad 8
+
+  // Farben: bg = Hintergrund, col = Textfarbe
+  Text "Farbiger Text", bg #2271C1, col white, pad 8 16, rad 4
+
+  // pad = Innenabstand (zwischen Rand und Inhalt)
+  // mar = Außenabstand (zwischen Elementen)
+  Frame hor, gap 0, bg #444, rad 4
+    Text "pad 16", pad 16, bg #2271C1, col white
+    Text "mar 16", mar 16, bg #10b981, col white
+
+  // Größen: w = Breite, h = Höhe (in Pixel)
+  Frame w 200, h 50, bg #10b981, rad 4, center
+    Text "200 x 50", col white
+
+  // Ecken: rad = Radius
+  Frame hor, gap 8
+    Frame w 50, h 50, bg #f59e0b, rad 0
+    Frame w 50, h 50, bg #f59e0b, rad 8
+    Frame w 50, h 50, bg #f59e0b, rad 25</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>bg</code></td><td>Hintergrundfarbe</td><td><code>bg #2271C1</code></td></tr>
+        <tr><td><code>col</code></td><td>Textfarbe</td><td><code>col white</code></td></tr>
+        <tr><td><code>pad</code></td><td>Innenabstand (zwischen Rand und Inhalt)</td><td><code>pad 12</code> oder <code>pad 12 24</code></td></tr>
+        <tr><td><code>mar</code></td><td>Außenabstand (zwischen Elementen)</td><td><code>mar 16</code></td></tr>
+        <tr><td><code>w</code> / <code>h</code></td><td>Breite / Höhe</td><td><code>w 200, h 100</code></td></tr>
+        <tr><td><code>rad</code></td><td>Eckenradius</td><td><code>rad 8</code></td></tr>
+        <tr><td><code>fs</code></td><td>Schriftgröße</td><td><code>fs 18</code></td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Hierarchie durch Einrückung</h2>
+      <p>Kinder-Elemente werden mit <strong>2 Leerzeichen</strong> eingerückt. So entsteht die Struktur:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Eltern-Element
+Frame bg #1a1a1a, pad 20, rad 8, gap 12
+
+  // Kind 1: Text
+  Text "Titel", col white, fs 18, weight bold
+
+  // Kind 2: Text
+  Text "Untertitel", col #888
+
+  // Kind 3: Frame mit eigenen Kindern
+  Frame hor, gap 8
+    Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
+    Button "OK", pad 10 20, rad 6, bg #2271C1, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>Der äußere <code>Frame</code> ist das Eltern-Element mit dunklem Hintergrund</li>
+        <li>Zwei <code>Text</code>-Elemente sind direkte Kinder (eingerückt mit 2 Leerzeichen)</li>
+        <li>Ein innerer <code>Frame hor</code> enthält selbst zwei Buttons als Kinder</li>
+        <li>Die Hierarchie ist beliebig tief verschachtelbar</li>
+      </ul>
+
+      <div class="note">
+        <strong>Wichtig:</strong> <code>Frame</code> ist der wichtigste Container. Er ordnet seine Kinder standardmäßig <strong>vertikal</strong> an. Mit <code>hor</code> wird horizontal angeordnet.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Kurzschreibweise mit Semicolon</h2>
+      <p>Für einfache Strukturen kannst du Kinder auch in <strong>einer Zeile</strong> schreiben. Trenne sie mit Semikolon:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Mit Einrückung (3 Zeilen)
+Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
+  Icon "check", ic #10b981, is 20
+  Text "Erfolgreich gespeichert", col white
+
+// Gleiche Struktur in einer Zeile
+Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6; Icon "check", ic #10b981, is 20; Text "Erfolgreich gespeichert", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>Frame hor, gap 12, ...</code> – das Eltern-Element mit seinen Properties</li>
+        <li><code>;</code> – Semicolon trennt Eltern von Kindern</li>
+        <li><code>Icon "check", ...</code> – erstes Kind-Element</li>
+        <li><code>; Text "Erfolgreich", ...</code> – zweites Kind-Element</li>
+      </ul>
+
+      <p><strong>Die Regel:</strong> Alles vor dem ersten Semicolon sind Properties des Eltern-Elements. Alles nach Semicolons (mit Großbuchstaben beginnend) sind Kinder.</p>
+
+      <p>Wenn das Eltern-Element keine Properties braucht, startest du direkt mit Semicolon:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Frame ohne Properties, nur Kinder
+Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="note">
+        <strong>Wann verwenden?</strong> Die Semicolon-Syntax eignet sich für einfache, flache Strukturen wie Status-Meldungen oder Icon-Text-Kombinationen. Für komplexere Verschachtelungen ist Einrückung besser lesbar.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Layout-Properties (Vorschau)</h2>
+      <p>Mit Layout-Properties steuerst du, wie Kinder innerhalb eines Frames angeordnet werden. Hier die wichtigsten – Details im <a href="04-layout.html">Layout-Kapitel</a>:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16, bg #0a0a0a, pad 16, rad 8
+
+  // hor = horizontal anordnen
+  Frame hor, gap 8, bg #1a1a1a, pad 12, rad 6
+    Frame w 40, h 40, bg #2271C1, rad 4
+    Frame w 40, h 40, bg #10b981, rad 4
+    Frame w 40, h 40, bg #f59e0b, rad 4
+
+  // center = horizontal und vertikal zentrieren
+  Frame w 200, h 60, bg #1a1a1a, rad 6, center
+    Text "Zentriert", col white
+
+  // spread = Kinder an den Rändern verteilen
+  Frame hor, spread, ver-center, w 300, bg #1a1a1a, pad 12, rad 6
+    Text "Links", col white
+    Text "Rechts", col white
+
+  // gap = Abstand zwischen Kindern
+  Frame hor, gap 24, bg #1a1a1a, pad 12, rad 6
+    Text "A", col white
+    Text "B", col white
+    Text "C", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Property</th><th>Beschreibung</th></tr>
+        <tr><td><code>hor</code></td><td>Kinder horizontal anordnen</td></tr>
+        <tr><td><code>ver</code></td><td>Kinder vertikal anordnen (Standard)</td></tr>
+        <tr><td><code>gap</code></td><td>Abstand zwischen Kindern</td></tr>
+        <tr><td><code>center</code></td><td>Kinder zentrieren (beide Achsen)</td></tr>
+        <tr><td><code>spread</code></td><td>Kinder an Rändern verteilen</td></tr>
+        <tr><td><code>wrap</code></td><td>Kinder umbrechen wenn kein Platz</td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Icons</h2>
+      <p>Icons kommen von <a href="https://lucide.dev/icons/" target="_blank">Lucide</a>. Der Name kommt in Anführungszeichen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 16, bg #0a0a0a, pad 16, rad 8
+
+  // Lucide Icons (Standard)
+  Frame hor, gap 16, bg #1a1a1a, pad 12, rad 6
+    Icon "check", ic #10b981, is 24
+    Icon "x", ic #ef4444, is 24
+    Icon "settings", ic #888, is 24
+    Icon "user", ic #2271C1, is 24
+
+  // fill = ausgefüllte Variante
+  Frame hor, gap 16, bg #1a1a1a, pad 12, rad 6
+    Icon "heart", ic #ef4444, is 24
+    Icon "heart", ic #ef4444, is 24, fill
+
+  // Icons in Buttons
+  Button pad 10 16, rad 6, bg #2271C1, col white
+    Frame hor, gap 8, center
+      Icon "save", ic white, is 16
+      Text "Speichern"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Property</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>is</code></td><td>Icon-Größe in Pixel</td><td><code>is 24</code></td></tr>
+        <tr><td><code>ic</code></td><td>Icon-Farbe</td><td><code>ic #2271C1</code></td></tr>
+        <tr><td><code>iw</code></td><td>Strichstärke</td><td><code>iw 1.5</code></td></tr>
+        <tr><td><code>fill</code></td><td>Ausgefüllte Variante</td><td><code>Icon "heart", fill</code></td></tr>
+      </table>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Praxisbeispiel: Card</h2>
+      <p>Kombiniere alles zu einer typischen UI-Komponente:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame w 300, bg #1a1a1a, rad 12, pad 20, gap 16
+
+  // Header mit Icon
+  Frame hor, gap 12, center
+    Icon "user", ic #2271C1, is 32
+    Frame gap 2
+      Text "Max Mustermann", col white, fs 16, weight semibold
+      Text "Software Engineer", col #888, fs 13
+
+  // Beschreibung
+  Text "Arbeitet an spannenden Projekten.", col #aaa, fs 14
+
+  // Action-Buttons
+  Frame hor, gap 8
+    Button pad 10 16, rad 6, bg #2271C1, col white
+      Frame hor, gap 6, center
+        Icon "mail", ic white, is 14
+        Text "Nachricht"
+    Button "Folgen", pad 10 16, rad 6, bg #333, col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>Die äußere <code>Frame</code> ist die Card mit fester Breite, Hintergrund und Padding</li>
+        <li>Der Header kombiniert ein Icon mit zwei Text-Zeilen horizontal (<code>hor</code>)</li>
+        <li>Die Buttons im Footer sind ebenfalls horizontal angeordnet</li>
+        <li>Alles was du gelernt hast – Primitives, Properties, Hierarchie – kommt zusammen</li>
+      </ul>
+
+      <div class="note">
+        <strong>Nächster Schritt:</strong> Im nächsten Kapitel lernst du, wie du solche Cards als wiederverwendbare <strong>Komponenten</strong> definierst – damit du sie nicht jedes Mal neu schreiben musst.
+      </div>
+    </section>
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Syntax</th><th>Bedeutung</th></tr>
+        <tr><td><code>Element "Text", prop value</code></td><td>Grundsyntax</td></tr>
+        <tr><td><code>Frame, Text, Button, Input</code></td><td>Primitives</td></tr>
+        <tr><td><code>bg, col, pad, rad, w, h, fs</code></td><td>Styling</td></tr>
+        <tr><td><code>hor, ver, gap, center, spread</code></td><td>Layout</td></tr>
+        <tr><td><code>2 Leerzeichen Einrückung</code></td><td>Kind-Element</td></tr>
+        <tr><td><code>Frame props; Kind1; Kind2</code></td><td>Kurzschreibweise</td></tr>
+      </table>
+
+    </div>
+
+
+    <nav>
+      <a class="prev" href="index.html">&larr; Intro</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="02-komponenten.html">Komponenten &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

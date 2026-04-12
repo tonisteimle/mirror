@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0b;
+      --bg-elevated: #141416;
+      --bg-panel: #1a1a1d;
+      --border: #2a2a2e;
+      --text: #fafafa;
+      --text-muted: #71717a;
+      --accent: #5BA8F5;
+      --accent-hover: #2271C1;
+      --success: #22c55e;
+      --error: #ef4444;
+      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .examples-dropdown {
+      position: relative;
+    }
+
+    .examples-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .examples-btn:hover {
+      background: var(--border);
+    }
+
+    .examples-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      min-width: 200px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+      display: none;
+      z-index: 100;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    .examples-menu.open {
+      display: block;
+    }
+
+    .example-item {
+      padding: 10px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.1s;
+    }
+
+    .example-item:hover {
+      background: var(--border);
+    }
+
+    .example-item .label {
+      font-weight: 500;
+    }
+
+    .example-item .desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Main Layout */
+    .main {
+      display: flex;
+      height: calc(100% - 56px);
+    }
+
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .divider {
+      width: 1px;
+      background: var(--border);
+    }
+
+    /* Editor */
+    .editor-panel {
+      background: var(--bg);
+    }
+
+    #editor {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      resize: none;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+      padding: 16px;
+      outline: none;
+      tab-size: 2;
+    }
+
+    #editor::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Preview */
+    .preview-panel {
+      background: var(--bg-panel);
+    }
+
+    #preview {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    /* Status */
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .status-dot.error {
+      background: var(--error);
+    }
+
+    .status-text {
+      color: var(--text-muted);
+    }
+
+    /* Error Display */
+    .error-display {
+      padding: 16px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      margin: 16px;
+    }
+
+    .error-display .title {
+      font-weight: 600;
+      color: var(--error);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .error-display .message {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    /* Material Icons */
+    .material-symbols-rounded {
+      font-family: 'Material Symbols Rounded';
+      font-size: 18px;
+    }
+
+    /* Preview Content Styles - Mirror Runtime */
+    #preview [data-mirror-id] {
+      box-sizing: border-box;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main {
+        flex-direction: column;
+      }
+      .divider {
+        width: 100%;
+        height: 1px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">M</div>
+      <span>Mirror Playground</span>
+    </div>
+    <div class="examples-dropdown">
+      <button class="examples-btn" id="examples-btn">
+        <span class="material-symbols-rounded">code_blocks</span>
+        Examples
+        <span class="material-symbols-rounded">expand_more</span>
+      </button>
+      <div class="examples-menu" id="examples-menu">
+        <div class="example-item" data-example="hello">
+          <div class="label">Hello World</div>
+          <div class="desc">Basic text and styling</div>
+        </div>
+        <div class="example-item" data-example="card">
+          <div class="label">Card Component</div>
+          <div class="desc">Reusable component pattern</div>
+        </div>
+        <div class="example-item" data-example="layout">
+          <div class="label">Layout</div>
+          <div class="desc">Flexbox layouts</div>
+        </div>
+        <div class="example-item" data-example="button">
+          <div class="label">Interactive Button</div>
+          <div class="desc">Hover states</div>
+        </div>
+        <div class="example-item" data-example="form">
+          <div class="label">Form</div>
+          <div class="desc">Input fields and labels</div>
+        </div>
+        <div class="example-item" data-example="nav">
+          <div class="label">Navigation</div>
+          <div class="desc">Nav bar with items</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="panel editor-panel">
+      <div class="panel-header">
+        <span>Mirror Code</span>
+        <div class="status">
+          <div class="status-dot" id="status-dot"></div>
+          <span class="status-text" id="status-text">Ready</span>
+        </div>
+      </div>
+      <div class="panel-content">
+        <textarea id="editor" spellcheck="false" placeholder="Start typing Mirror code..."></textarea>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="panel preview-panel">
+      <div class="panel-header">
+        <span>Preview</span>
+      </div>
+      <div class="panel-content">
+        <div id="preview"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Mirror Compiler -->
+  <script src="../dist/browser/index.global.js"></script>
+
+  <script>
+    // Examples
+    const examples = {
+      hello: `// My first Mirror UI
+Frame bg #18181b, pad 24, gap 16, center
+  Text "Hello, Mirror!", fs 32, weight bold, col white
+  Text "Edit this code to see live changes", col #888`,
+
+      card: `// Reusable Card Component
+Card as Frame:
+  bg #27272a, pad 20, rad 12, gap 12
+
+Card
+  Text "Welcome", fs 20, weight semibold, col white
+  Text "This is a reusable card component with slots.", col #888, line 1.5
+  Frame hor, gap 8
+    Button "Learn More", pad 10 16, bg #5BA8F5, col white, rad 6
+    Button "Dismiss", pad 10 16, bg transparent, col #888, rad 6`,
+
+      layout: `// Flexbox Layouts
+Frame bg #18181b, pad 24, gap 24
+
+  // Horizontal layout
+  Frame hor, gap 12
+    Frame bg #5BA8F5, pad 16, rad 8
+      Text "One", col white
+    Frame bg #8b5cf6, pad 16, rad 8
+      Text "Two", col white
+    Frame bg #ec4899, pad 16, rad 8
+      Text "Three", col white
+
+  // Spread items
+  Frame hor, spread, bg #27272a, pad 16, rad 8
+    Text "Left", col white
+    Text "Center", col #888
+    Text "Right", col white
+
+  // Center content
+  Frame center, h 100, bg #27272a, rad 8
+    Text "Centered", col white, fs 18`,
+
+      button: `// Interactive Button with Hover State
+Frame bg #18181b, pad 40, center, gap 16
+
+  Button "Hover me!", pad 14 28, bg #5BA8F5, col white, rad 8, fs 16, cursor pointer
+    hover:
+      bg #2271C1
+      scale 1.05
+
+  Button "Ghost Button", pad 14 28, bg transparent, bor 1 #5BA8F5, col #5BA8F5, rad 8, cursor pointer
+    hover:
+      bg #5BA8F520
+      col white`,
+
+      form: `// Form Layout
+Frame bg #18181b, pad 32, center
+
+  Frame bg #27272a, pad 24, rad 12, gap 16, w 320
+
+    Text "Sign In", fs 24, weight semibold, col white
+
+    Frame gap 6
+      Label "Email", col #888, fs 13
+      Input placeholder "you@example.com", pad 12, bg #1f1f1f, rad 6, bor 1 #333, col white, w full
+
+    Frame gap 6
+      Label "Password", col #888, fs 13
+      Input type password, placeholder "••••••••", pad 12, bg #1f1f1f, rad 6, bor 1 #333, col white, w full
+
+    Button "Sign In", pad 14, bg #5BA8F5, col white, rad 8, w full, cursor pointer
+      hover bg #2271C1
+
+    Text "Don't have an account? Sign up", col #888, fs 13, center`,
+
+      nav: `// Navigation Bar
+Frame bg #18181b, gap 0
+
+  // Nav bar
+  Nav hor, spread, bg #27272a, pad 16 24
+
+    // Logo
+    Frame hor, gap 10
+      Frame bg #5BA8F5, w 32, h 32, rad 6, center
+        Text "M", col white, weight bold
+      Text "Mirror", col white, weight semibold, fs 18
+
+    // Nav items
+    Frame hor, gap 24
+      Text "Home", col white, cursor pointer
+      Text "Features", col #888, cursor pointer
+      Text "Docs", col #888, cursor pointer
+      Text "Pricing", col #888, cursor pointer
+
+    // CTA
+    Button "Get Started", pad 10 16, bg #5BA8F5, col white, rad 6, cursor pointer
+
+  // Content
+  Frame pad 40, center, h 200
+    Text "Page content here", col #888`
+    };
+
+    // DOM Elements
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const examplesBtn = document.getElementById('examples-btn');
+    const examplesMenu = document.getElementById('examples-menu');
+
+    // Compile and render
+    let debounceTimer;
+    function compile() {
+      const source = editor.value;
+
+      if (!source.trim()) {
+        preview.innerHTML = '<div style="color: #71717a; padding: 20px;">Start typing to see the preview...</div>';
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Ready';
+        return;
+      }
+
+      try {
+        // Parse and generate
+        const ast = MirrorLang.parse(source);
+
+        if (ast.errors && ast.errors.length > 0) {
+          throw new Error(ast.errors[0].message);
+        }
+
+        const html = MirrorLang.generateDOM(ast);
+
+        // Render
+        preview.innerHTML = html;
+
+        // Execute any scripts
+        const scripts = preview.querySelectorAll('script');
+        scripts.forEach(script => {
+          const newScript = document.createElement('script');
+          newScript.textContent = script.textContent;
+          script.parentNode.replaceChild(newScript, script);
+        });
+
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Compiled';
+      } catch (error) {
+        preview.innerHTML = `
+          <div class="error-display">
+            <div class="title">
+              <span class="material-symbols-rounded">error</span>
+              Compilation Error
+            </div>
+            <div class="message">${escapeHtml(error.message)}</div>
+          </div>
+        `;
+        statusDot.className = 'status-dot error';
+        statusText.textContent = 'Error';
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Debounced compile on input
+    editor.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(compile, 150);
+    });
+
+    // Tab key support
+    editor.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+        compile();
+      }
+    });
+
+    // Examples dropdown
+    examplesBtn.addEventListener('click', () => {
+      examplesMenu.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!examplesBtn.contains(e.target)) {
+        examplesMenu.classList.remove('open');
+      }
+    });
+
+    // Load example
+    document.querySelectorAll('.example-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const example = item.dataset.example;
+        if (examples[example]) {
+          editor.value = examples[example];
+          compile();
+          examplesMenu.classList.remove('open');
+        }
+      });
+    });
+
+    // Load initial example
+    editor.value = examples.hello;
+    compile();
+  </script>
+</body>
+</html>

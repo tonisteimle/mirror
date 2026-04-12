@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Tabellen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Tabellen</h1>
+      <p class="subtitle">Statische und datengebundene Tabellen</p>
+    </header>
+
+    <p class="intro">Tabellen zeigen strukturierte Daten. <strong>Statische Tabellen</strong> für feste Inhalte. <strong>Datengebundene Tabellen</strong> für dynamische Daten mit Filtern und Sortieren.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Statische Tabellen</h2>
+      <p>Die einfachste Art, eine Tabelle zu erstellen – ohne Datenbindung. Mit <code>Header:</code> markierst du die Kopfzeile, jede <code>Row</code> enthält die Zell-Werte:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Table
+  Header:
+    Row "Name", "Alter", "Stadt"
+  Row "Max", "25", "Berlin"
+  Row "Anna", "30", "München"
+  Row "Tom", "28", "Hamburg"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Das ist alles – nur <code>Table</code>, <code>Header:</code> und <code>Row</code> mit den Werten.</p>
+
+      <p class="note"><strong>Wann statisch?</strong> Verwende statische Tabellen für: Preislisten, Feature-Vergleiche, Kontaktdaten, Referenztabellen – alles mit festen, bekannten Werten.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Datengebundene Tabellen</h2>
+      <p>Für dynamische Daten bindest du eine Datenquelle mit <code>Table $name</code> und definierst ein <code>Row:</code> Template:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Design Review"
+    status: "done"
+  task2:
+    title: "API Integration"
+    status: "progress"
+  task3:
+    title: "Testing"
+    status: "todo"
+
+Table $tasks, bg #111, rad 12, w full
+  Row: hor, gap 16, pad 12 16, bor 0 0 1 0, boc #222, w full
+    Text row.title, col white, w 140
+    Text row.status, col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <ul>
+        <li><code>Table $tasks</code> – Die Datenquelle (Datenobjekt mit Einträgen)</li>
+        <li><code>Row:</code> – Template für jede Zeile (mit Doppelpunkt!)</li>
+        <li><code>row.title</code> – Zugriff auf Felder des aktuellen Eintrags</li>
+      </ul>
+      <p class="note"><strong>Hinweis:</strong> Daten werden im Entry-Format definiert: <code>name:</code> gefolgt von eingerückten <code>key: value</code> Paaren. Bei der Verwendung mit <code>$name</code> iteriert die Runtime automatisch über alle Einträge.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tabellen stylen</h2>
+      <p>Tabellen können auf allen Ebenen gestylt werden – von der Tabelle selbst bis zu einzelnen Zellen.</p>
+
+      <h3>Table-Level Styles</h3>
+      <p>Styles direkt auf <code>Table</code> wirken auf den Container:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  t1:
+    name: "Design"
+    status: "done"
+  t2:
+    name: "Dev"
+    status: "wip"
+
+Table $tasks, bg #111, pad 16, rad 12
+  Row: hor, spread, pad 12 16, bor 0 0 1 0, boc #222, w full
+    Text row.name, col white
+    Text row.status, col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Header: und Footer: Styles</h3>
+      <p>Mit <code>Header:</code> und <code>Footer:</code> stylst du Kopf- und Fußbereich separat:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  t1:
+    name: "Task 1"
+    effort: 5
+  t2:
+    name: "Task 2"
+    effort: 3
+
+Table $tasks, bg #111, rad 12, gap 4
+  Header: bg #222, pad 12 16, rad 8 8 0 0
+    Row "Aufgabe", "Aufwand"
+  Row: hor, spread, pad 12 16, w full
+    Text row.name, col white
+    Text row.effort + "h", col #888
+  Footer: bg #222, pad 12 16, rad 0 0 8 8
+    Row "Total", "8h"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Zebra-Muster mit RowOdd: und RowEven:</h3>
+      <p>Für alternierende Zeilenfarben nutze <code>RowOdd:</code> und <code>RowEven:</code>:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>users:
+  u1:
+    name: "Anna"
+    role: "Designer"
+  u2:
+    name: "Max"
+    role: "Developer"
+  u3:
+    name: "Tom"
+    role: "Manager"
+  u4:
+    name: "Lisa"
+    role: "Designer"
+
+Table $users, bg #111, rad 12, w full
+  Header: bg #222, pad 12 16
+    Row "Name", "Rolle"
+  RowOdd: bg #1a1a1a
+  RowEven: bg #151515
+  Row: hor, spread, pad 12 16, w full
+    Text row.name, col white
+    Text row.role, col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p class="note"><strong>Tipp:</strong> <code>RowOdd:</code> und <code>RowEven:</code> werden automatisch basierend auf dem Zeilen-Index angewendet. Ungerade Zeilen (1, 3, 5...) bekommen <code>RowOdd:</code>, gerade Zeilen (0, 2, 4...) bekommen <code>RowEven:</code>.</p>
+
+      <h3>Column Styles</h3>
+      <p>Bei spaltenbasierten Tabellen kannst du Styles direkt auf <code>Column</code> setzen – sie wirken auf alle Zellen dieser Spalte:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  t1:
+    title: "Design Review"
+    status: "done"
+  t2:
+    title: "API Integration"
+    status: "wip"
+  t3:
+    title: "Testing"
+    status: "todo"
+
+Table $tasks, bg #111, rad 12, pad 8
+  Header: bg #222, pad 12
+    Row "Aufgabe", "Status"
+  Column title, col white, pad 12
+  Column status, col #10b981, pad 12, weight 600</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Kombiniertes Styling</h3>
+      <p>Alle Styling-Ebenen können kombiniert werden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  p1:
+    name: "Basic"
+    price: 9
+    users: 5
+  p2:
+    name: "Pro"
+    price: 29
+    users: 50
+  p3:
+    name: "Enterprise"
+    price: 99
+    users: 999
+
+Table $products, bg #0a0a0a, rad 16, w full
+  Header: bg #1a1a1a, pad 16, rad 8 8 0 0
+    Row "Plan", "Preis", "Users"
+  RowOdd: bg #151515
+  RowEven: bg #111
+  Row: hor, pad 16, w full
+    Text row.name, col white, weight 500, w 120
+    Text "$" + row.price, col #10b981, w 80
+    Text row.users + " Users", col #666</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Filtern mit where</h2>
+      <p>Mit <code>where</code> filterst du Einträge nach einer Bedingung:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Design Review"
+    done: true
+  task2:
+    title: "API Integration"
+    done: false
+  task3:
+    title: "Testing"
+    done: false
+  task4:
+    title: "Documentation"
+    done: true
+
+// Nur nicht erledigte Tasks
+Table $tasks where row.done == false, bg #111, rad 12, w full
+  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
+    Icon "circle", ic #f59e0b, is 16
+    Text row.title, col white, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Vergleichsoperatoren:</strong> <code>==</code>, <code>!=</code>, <code>></code>, <code><</code>, <code>>=</code>, <code><=</code></p>
+      <p><strong>Kombinieren mit and/or:</strong></p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Critical Bug"
+    priority: 1
+    done: false
+  task2:
+    title: "Minor Fix"
+    priority: 3
+    done: false
+  task3:
+    title: "Feature"
+    priority: 2
+    done: true
+
+// Nicht erledigt UND hohe Priorität
+Table $tasks where row.done == false and row.priority &lt; 3, bg #111, rad 12, w full
+  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
+    Icon "alert-circle", ic #ef4444, is 16
+    Text row.title, col white, grow
+    Text "P" + row.priority, col #ef4444, fs 12, weight 600</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Sortieren mit by</h2>
+      <p>Mit <code>by</code> sortierst du nach einem Feld. Mit <code>desc</code> wird absteigend sortiert:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  task1:
+    title: "Low Priority"
+    priority: 3
+  task2:
+    title: "High Priority"
+    priority: 1
+  task3:
+    title: "Medium Priority"
+    priority: 2
+
+// Sortiert nach Priorität (aufsteigend)
+Table $tasks by priority, bg #111, rad 12, w full
+  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
+    Text row.priority, col #2563eb, fs 14, weight 600, w 24
+    Text row.title, col white, grow</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Absteigend sortieren:</strong></p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>products:
+  tshirt:
+    name: "T-Shirt"
+    price: 29
+  hoodie:
+    name: "Hoodie"
+    price: 59
+  cap:
+    name: "Cap"
+    price: 19
+
+// Teuerste zuerst
+Table $products by price desc, bg #111, rad 12, w full
+  Row: hor, spread, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
+    Text row.name, col white, weight 500
+    Text "€" + row.price, col #10b981, fs 14, weight 600</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- ZUSAMMENFASSUNG -->
+    <!-- ============================================================ -->
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+
+      <p><strong>Statische Tabellen:</strong> <code>Table</code> + <code>Row "A", "B", "C"</code> für feste Werte. Optional <code>Header:</code> für Kopfzeile.</p>
+
+      <p><strong>Datengebundene Tabellen:</strong> <code>Table $data</code> mit <code>Row:</code> Template. Zugriff auf Felder mit <code>row.field</code>.</p>
+
+      <h3>Styling</h3>
+      <table class="ref-table">
+        <tr>
+          <td><code>Table $data, bg #111, pad 16, rad 12</code></td>
+          <td>Table-Level Styles</td>
+        </tr>
+        <tr>
+          <td><code>Header: bg #222, pad 12</code></td>
+          <td>Kopfzeilen-Styles</td>
+        </tr>
+        <tr>
+          <td><code>Footer: bg #222, pad 12</code></td>
+          <td>Fußzeilen-Styles</td>
+        </tr>
+        <tr>
+          <td><code>Row: pad 12, bg #1a1a1a</code></td>
+          <td>Zeilen-Styles (alle Zeilen)</td>
+        </tr>
+        <tr>
+          <td><code>RowOdd: bg #1a1a1a</code></td>
+          <td>Ungerade Zeilen (Zebra)</td>
+        </tr>
+        <tr>
+          <td><code>RowEven: bg #151515</code></td>
+          <td>Gerade Zeilen (Zebra)</td>
+        </tr>
+        <tr>
+          <td><code>Column title, col white, pad 12</code></td>
+          <td>Spalten/Zellen-Styles</td>
+        </tr>
+      </table>
+
+      <h3>Daten-Operationen</h3>
+      <table class="ref-table">
+        <tr>
+          <td><code>where row.done == false</code></td>
+          <td>Filtern</td>
+        </tr>
+        <tr>
+          <td><code>by priority</code></td>
+          <td>Aufsteigend sortieren</td>
+        </tr>
+        <tr>
+          <td><code>by price desc</code></td>
+          <td>Absteigend sortieren</td>
+        </tr>
+      </table>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="13-overlays.html">&larr; Overlays</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="15-charts.html">Charts &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

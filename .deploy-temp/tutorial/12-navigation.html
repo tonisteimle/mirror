@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror – Navigation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Navigation</h1>
+      <p class="subtitle">Tabs und SideNav</p>
+    </header>
+
+    <p class="intro">Zwei Komponenten für Navigation: <strong>Tabs</strong> wechseln zwischen Ansichten. <strong>SideNav</strong> ist eine Sidebar-Navigation.</p>
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tabs</h2>
+      <p>Tabs wechseln zwischen Inhalten. Jeder <code>Tab</code> hat ein Label – mit <code>defaultValue</code> sagst du, welcher Tab beim Start aktiv sein soll:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "Home"
+  Tab "Home"
+    Text "Welcome to the home page"
+  Tab "Profile"
+    Text "Your profile settings"
+  Tab "Settings"
+    Text "Application settings"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Kinder jedes Tabs werden zum Panel-Content. Klickst du auf einen Tab, zeigt Mirror automatisch den passenden Inhalt.</p>
+
+      <h3>Custom Styling</h3>
+      <p>Tabs besteht intern aus mehreren Teilen: <code>List:</code> (Container um die Tab-Header), <code>Indicator:</code> (animierte Markierung), <code>Content:</code> (Panel-Container). Diese kannst du mit Kind-Komponenten überschreiben.</p>
+
+      <p><strong>Wichtig:</strong> Kind-Komponenten stehen direkt unter <code>Tabs</code> – <strong>vor</strong> den eigentlichen Tabs:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "Dashboard"
+  // Kind-Komponenten (mit :) zuerst
+  List: bor 0 0 1 0, boc #333, gap 24
+  Indicator: h 2, bg #2271C1
+  Content: pad 16 0
+
+  // Dann die Tabs (ohne :)
+  Tab "Dashboard"
+    Text "Dashboard content"
+  Tab "Analytics"
+    Text "Analytics content"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Kind-Komponenten gelten für alle Tabs gleichzeitig. Du kannst nicht einzelne Tabs unterschiedlich stylen – dafür sind die Styles ja da: einmal definieren, überall anwenden.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>SideNav</h2>
+      <p>SideNav ist eine Sidebar-Navigation. Jedes <code>NavItem</code> hat einen <code>value</code> – mit <code>defaultValue</code> bestimmst du, welches Item aktiv startet:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "dashboard", w 200
+  NavItem "Dashboard", icon "home", value "dashboard"
+  NavItem "Projects", icon "folder", value "projects"
+  NavItem "Settings", icon "settings", value "settings"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>SideNav unterstützt <code>Header:</code> und <code>Footer:</code> für feste Bereiche, <code>badge</code> für Zähler, und <code>NavGroup</code> für Gruppierung. Mit <code>collapsible</code> werden Gruppen auf-/zuklappbar:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "dashboard", w 200
+  Header:
+    Frame pad 12
+      Text "My App", fs 14, weight bold
+
+  NavItem "Dashboard", icon "home", value "dashboard"
+  NavItem "Messages", icon "mail", value "messages", badge "3"
+
+  NavGroup "Settings", collapsible, defaultOpen
+    NavItem "Account", icon "user", value "account"
+    NavItem "Security", icon "shield", value "security"
+
+  Footer:
+    Frame pad 12
+      Text "v1.0.0", col #666, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mit <code>collapsed</code> wird die SideNav schmal – Labels werden ausgeblendet, nur Icons bleiben sichtbar:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "dashboard", collapsed, w 56
+  NavItem "Dashboard", icon "home", value "dashboard"
+  NavItem "Projects", icon "folder", value "projects"
+  NavItem "Settings", icon "settings", value "settings"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Views wechseln mit navigate()</h3>
+      <p>Mit <code>navigate(ViewName)</code> zeigst du bei Klick eine View an. Die anderen Views werden automatisch ausgeblendet:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor
+  SideNav defaultValue "dashboard", w 160
+    NavItem "Dashboard", icon "home", value "dashboard", navigate(DashboardView)
+    NavItem "Settings", icon "settings", value "settings", navigate(SettingsView)
+
+  Frame w full, pad 16
+    Frame name DashboardView
+      Text "Dashboard Content", col white
+    Frame name SettingsView, hidden
+      Text "Settings Content", col white</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Views sind Frames mit <code>name</code>. Die erste ist sichtbar, die anderen starten mit <code>hidden</code>.</p>
+
+      <h3>Custom Styling</h3>
+      <p>Auch SideNav hat Kind-Komponenten. Wieder gilt: <strong>zuerst</strong> die Kind-Komponenten (mit <code>:</code>), <strong>dann</strong> die Inhalte:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "dashboard", w 220
+  // Kind-Komponenten zuerst
+  Root: bg #050510, pad 8
+  Item: pad 12 16, rad 8, mar 4 8, col #aaa, bg #151520
+  ItemIcon: ic #818cf8
+  ItemBadge: bg #ef4444, col white, pad 2 8, rad 99, fs 11, weight 600
+  GroupLabel: pad 12 16, col #666, fs 11, uppercase
+
+  // Dann die NavItems
+  NavItem "Dashboard", icon "home", value "dashboard"
+  NavItem "Messages", icon "mail", value "messages", badge "5"
+  NavGroup "Admin"
+    NavItem "Users", icon "users", value "users"
+    NavItem "Logs", icon "file-text", value "logs"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>Item:</code> stylt alle NavItems, <code>ItemIcon:</code> die Icons, <code>ItemBadge:</code> die Badges, <code>GroupLabel:</code> die Gruppenüberschriften. Welche Kind-Komponenten es gibt, findest du in der <a href="../reference/navigation.html">Referenz</a>.</p>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- ZUSAMMENFASSUNG -->
+    <!-- ============================================================ -->
+
+    <div class="summary">
+      <h2>Zusammenfassung</h2>
+
+      <p><strong>Tabs</strong> für horizontale Tab-Navigation. Jeder <code>Tab</code> enthält seinen Content als Kinder.</p>
+      <p><strong>SideNav</strong> für Sidebar-Navigation. <code>NavItem</code> mit <code>icon</code>, <code>badge</code>, optional <code>navigate(View)</code>.</p>
+      <p><strong>NavGroup</strong> gruppiert Items, optional <code>collapsible</code>.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="11-eingabe.html">&larr; Eingabe</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="13-overlays.html">Overlays &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

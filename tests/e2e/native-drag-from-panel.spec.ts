@@ -59,7 +59,7 @@ test.describe('Native Drag: Component Panel to Preview', () => {
 
   test('component panel items are draggable', async ({ page }) => {
     // Find a draggable component in the panel
-    const componentItem = page.locator('#components-panel .component-item').first()
+    const componentItem = page.locator('#components-panel .component-panel-item').first()
 
     // Verify it exists and has draggable attribute
     await expect(componentItem).toBeVisible({ timeout: 5000 })
@@ -71,7 +71,7 @@ test.describe('Native Drag: Component Panel to Preview', () => {
     await setEditorContent(page, 'Frame ver, gap 8, w 200, h 200')
 
     // Find a component item
-    const componentItem = page.locator('#components-panel .component-item').first()
+    const componentItem = page.locator('#components-panel .component-panel-item').first()
     await expect(componentItem).toBeVisible()
 
     // Get bounding boxes
@@ -111,12 +111,12 @@ test.describe('Native Drag: Component Panel to Preview', () => {
     const initialCount = await getPreviewElementCount(page)
 
     // Find Button component item
-    const buttonItem = page.locator('#components-panel .component-item:has-text("Button")')
+    const buttonItem = page.locator('#components-panel .component-panel-item:has-text("Button")')
 
     // If not found, try Frame
     const componentItem = await buttonItem.count() > 0
       ? buttonItem
-      : page.locator('#components-panel .component-item').first()
+      : page.locator('#components-panel .component-panel-item').first()
 
     await expect(componentItem).toBeVisible({ timeout: 5000 })
 
