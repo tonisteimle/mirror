@@ -3760,8 +3760,10 @@ function compile(code) {
       // IMPORTANT: Update studio BEFORE DOM update so SourceMap is ready for clicks
       updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
 
-      if (ui && ui.root) {
-        preview.appendChild(ui.root)
+      // DOM backend returns element directly, not { root: element }
+      const rootEl = ui?.root || (ui instanceof Element ? ui : null)
+      if (rootEl) {
+        preview.appendChild(rootEl)
         // Make preview elements draggable AFTER DOM update
         makePreviewElementsDraggable()
         // Refresh preview selection after DOM update
@@ -4264,9 +4266,11 @@ function renderComponentState(comp, stateName, ast) {
     const fn = new Function(jsCode + '\nreturn createUI ? createUI() : null;')
     const ui = fn()
 
-    if (ui && ui.root) {
+    // DOM backend returns element directly, not { root: element }
+    const rootEl = ui?.root || (ui instanceof Element ? ui : null)
+    if (rootEl) {
       // Find and extract just the component we want (last child should be our instance)
-      const allChildren = ui.root.children
+      const allChildren = rootEl.children
       if (allChildren.length > 0) {
         const targetElement = allChildren[allChildren.length - 1]
 
@@ -5836,7 +5840,7 @@ compile(initialCode)
 // Works in both Tauri (real files) and Browser (demo files)
 // ==========================================
 if (!isPlaygroundMode) {
-  import('./dist/index.js').then(module => {
+  import('./desktop-files.js').then(module => {
     // Initialize with callback to load files into editor
     module.initDesktopFiles({
       onFileSelect: (filePath, content) => {
