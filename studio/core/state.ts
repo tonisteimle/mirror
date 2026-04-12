@@ -80,10 +80,11 @@ export interface PanelVisibility {
 }
 
 /**
- * Panel sizes (percentages)
+ * Panel sizes (pixels)
  */
 export interface PanelSizes {
   sidebar: number
+  components: number
   editor: number
   preview: number
 }
@@ -237,12 +238,13 @@ const defaultPanelVisibility: PanelVisibility = {
 }
 
 /**
- * Default panel sizes (percentages)
+ * Default panel sizes (pixels)
  */
 const defaultPanelSizes: PanelSizes = {
-  sidebar: 20,
-  editor: 40,
-  preview: 40,
+  sidebar: 200,
+  components: 220,
+  editor: 400,
+  preview: 400,
 }
 
 /**

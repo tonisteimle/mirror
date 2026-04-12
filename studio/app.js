@@ -6004,6 +6004,8 @@ window.resetCode = async () => {
 ;(function initPanelResizers() {
   const sidebar = document.getElementById('explorer-panel')
   const sidebarDivider = document.getElementById('sidebar-divider')
+  const componentsPanel = document.getElementById('components-panel')
+  const componentsDivider = document.getElementById('components-divider')
   const editorPanel = document.querySelector('.editor-panel')
   const editorDivider = document.getElementById('editor-divider')
   const previewPanel = document.querySelector('.preview-panel')
@@ -6015,6 +6017,7 @@ window.resetCode = async () => {
 
   const MIN_PANEL = 200
   const MIN_SIDEBAR = 150
+  const MIN_COMPONENTS = 180
 
   // Load saved sizes from state (which loads from localStorage)
   function loadSavedSizes() {
@@ -6025,6 +6028,9 @@ window.resetCode = async () => {
           // Apply saved widths (stored as pixels)
           if (sidebar && sizes.sidebar) {
             sidebar.style.width = `${sizes.sidebar}px`
+          }
+          if (componentsPanel && sizes.components) {
+            componentsPanel.style.width = `${sizes.components}px`
           }
           if (sizes.editor) {
             editorPanel.style.width = `${sizes.editor}px`
@@ -6046,6 +6052,7 @@ window.resetCode = async () => {
       if (window.MirrorStudio?.actions) {
         const sizes = {
           sidebar: sidebar ? sidebar.offsetWidth : 200,
+          components: componentsPanel ? componentsPanel.offsetWidth : 220,
           editor: editorPanel.offsetWidth,
           preview: previewPanel.offsetWidth
         }
@@ -6090,6 +6097,41 @@ window.resetCode = async () => {
     })
 
     console.log('[PanelResizer] Sidebar divider ready')
+  }
+
+  // Components Panel Resizer
+  if (componentsPanel && componentsDivider) {
+    let isComponentsDragging = false
+    let componentsStartX = 0
+    let componentsStartWidth = 0
+
+    componentsDivider.addEventListener('mousedown', (e) => {
+      isComponentsDragging = true
+      componentsStartX = e.clientX
+      componentsStartWidth = componentsPanel.offsetWidth
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      componentsDivider.classList.add('dragging')
+      e.preventDefault()
+    })
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isComponentsDragging) return
+      const deltaX = e.clientX - componentsStartX
+      const newWidth = Math.max(MIN_COMPONENTS, componentsStartWidth + deltaX)
+      componentsPanel.style.width = `${newWidth}px`
+    })
+
+    document.addEventListener('mouseup', () => {
+      if (!isComponentsDragging) return
+      isComponentsDragging = false
+      componentsDivider.classList.remove('dragging')
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      saveSizes()
+    })
+
+    console.log('[PanelResizer] Components divider ready')
   }
 
   // Editor/Preview Resizer
