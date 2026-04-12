@@ -19,7 +19,7 @@ import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../com
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel } from './panels'
 import { ComponentPanel, createComponentPanel, UserComponentsPanel, createUserComponentsPanel, getComponentTemplate, getFileType } from './panels/components'
-import { ExplorerPanel, createExplorerPanel, ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
+import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
 import { DrawManager, createDrawManager } from './visual/draw-manager'
 import { InlineEditController, createInlineEditController } from './inline-edit'
 import { createDragDropSystem, createCodeExecutor, type DragDropSystem } from './drag-drop'
@@ -36,10 +36,9 @@ export interface BootstrapConfig {
   previewContainer: HTMLElement
   propertyPanelContainer?: HTMLElement
   componentPanelContainer?: HTMLElement
+  userComponentsPanelContainer?: HTMLElement
   explorerPanelContainer?: HTMLElement
   fileTreeContainer?: HTMLElement
-  explorerComponentsContainer?: HTMLElement
-  explorerUserComponentsContainer?: HTMLElement
   chatPanelContainer?: HTMLElement
   initialSource?: string
   currentFile?: string
@@ -69,7 +68,6 @@ export interface StudioInstance {
   propertyPanel: PropertyPanel | null
   componentPanel: ComponentPanel | null
   userComponentsPanel: UserComponentsPanel | null
-  explorerPanel: ExplorerPanel | null
   editorDropHandler: EditorDropHandler | null
   breadcrumb: PreviewBreadcrumb | null
   autocomplete: AutocompleteEngine
@@ -297,40 +295,13 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   if (config.getAllSource) getAllSourceCallback = config.getAllSource
   if (config.getCurrentFile) getCurrentFileCallback = config.getCurrentFile
 
-  // Initialize Explorer Panel if containers provided
-  if (config.explorerPanelContainer && config.fileTreeContainer && config.explorerComponentsContainer) {
-    studio.explorerPanel = createExplorerPanel(
-      {
-        container: config.explorerPanelContainer,
-        fileTreeContainer: config.fileTreeContainer,
-        componentPanelContainer: config.explorerComponentsContainer,
-        userComponentsPanelContainer: config.explorerUserComponentsContainer,
-        defaultView: 'files',
-      },
-      {
-        onViewChange: (view) => {
-          console.log('[Explorer] View changed:', view)
-        },
-      }
-    )
-    studio.explorerPanel.initialize()
-    console.log('[Studio] ExplorerPanel initialized')
-
-    // Use explorer's component container for ComponentPanel
-    componentPanelContainer = config.explorerComponentsContainer
-
-    // Use explorer's user components container for UserComponentsPanel
-    userComponentsPanelContainer = config.explorerUserComponentsContainer ?? null
-  }
-
   // Initialize Component Panel if container provided
-  if (componentPanelContainer) {
-    // Enable tab bar when inside explorer panel
-    const isInsideExplorer = !!config.explorerPanelContainer
+  if (config.componentPanelContainer) {
+    componentPanelContainer = config.componentPanelContainer
     studio.componentPanel = createComponentPanel(
       {
         container: componentPanelContainer,
-        showTabBar: isInsideExplorer,
+        showTabBar: true,
         defaultTab: 'basic',
       },
       {
@@ -355,6 +326,9 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   }
 
   // Initialize User Components Panel if container and getFiles provided
+  if (config.userComponentsPanelContainer) {
+    userComponentsPanelContainer = config.userComponentsPanelContainer
+  }
   if (userComponentsPanelContainer && config.getFiles) {
     const getFilesCallback = config.getFiles
     studio.userComponentsPanel = createUserComponentsPanel(
@@ -852,7 +826,7 @@ function initializePanelVisibility(): void {
   panelElements.prompt = document.getElementById('chat-panel')
   panelElements.files = document.getElementById('explorer-panel') || document.querySelector('.sidebar')
   panelElements.code = document.querySelector('.editor-panel')
-  // Components panel is now integrated in explorer (explorer-components-container)
+  panelElements.components = document.getElementById('components-panel')
   panelElements.preview = document.querySelector('.preview-panel')
   panelElements.property = document.getElementById('property-panel')
 
@@ -951,9 +925,9 @@ function initializeActivityBar(): void {
   }
 
   // Activity Bar items for all panels
-  // Note: Components panel is now integrated in explorer (files), so no separate toggle
   const items = [
-    { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files & Components' },
+    { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files' },
+    { id: 'components', icon: ACTIVITY_BAR_ICONS.components, tooltip: 'Components' },
     { id: 'code', icon: ACTIVITY_BAR_ICONS.code, tooltip: 'Code Editor' },
     { id: 'preview', icon: ACTIVITY_BAR_ICONS.preview, tooltip: 'Preview' },
     { id: 'property', icon: ACTIVITY_BAR_ICONS.properties, tooltip: 'Properties' },

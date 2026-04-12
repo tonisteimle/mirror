@@ -80,6 +80,25 @@ export interface PanelVisibility {
 }
 
 /**
+ * Panel sizes (percentages)
+ */
+export interface PanelSizes {
+  sidebar: number
+  editor: number
+  preview: number
+}
+
+/**
+ * Combined panel settings for localStorage persistence
+ */
+export interface PanelSettings {
+  visibility: PanelVisibility
+  sizes: PanelSizes
+}
+
+const PANEL_SETTINGS_KEY = 'mirror-panel-settings'
+
+/**
  * Layout information for a single element
  * Extracted once after render, used by all visual systems (handles, resize, overlays)
  */
@@ -137,6 +156,8 @@ export interface StudioState {
   panels: { left: boolean; right: boolean }
   /** Individual panel visibility */
   panelVisibility: PanelVisibility
+  /** Panel sizes (percentages) */
+  panelSizes: PanelSizes
   mode: 'mirror' | 'react'
   /** Character offset where current file starts in resolvedSource */
   preludeOffset: number
@@ -210,17 +231,56 @@ const defaultPanelVisibility: PanelVisibility = {
   prompt: true,
   files: true,
   code: true,
-  components: false,  // Standalone panel, starts hidden
+  components: true,  // Standalone components panel
   preview: true,
   property: true,
 }
 
 /**
- * Load panel visibility defaults
+ * Default panel sizes (percentages)
  */
-function loadPanelVisibility(): PanelVisibility {
-  return { ...defaultPanelVisibility }
+const defaultPanelSizes: PanelSizes = {
+  sidebar: 20,
+  editor: 40,
+  preview: 40,
 }
+
+/**
+ * Load panel settings from localStorage
+ */
+function loadPanelSettings(): { visibility: PanelVisibility; sizes: PanelSizes } {
+  try {
+    const stored = localStorage.getItem(PANEL_SETTINGS_KEY)
+    if (stored) {
+      const settings = JSON.parse(stored) as Partial<PanelSettings>
+      return {
+        visibility: { ...defaultPanelVisibility, ...settings.visibility },
+        sizes: { ...defaultPanelSizes, ...settings.sizes },
+      }
+    }
+  } catch (e) {
+    console.warn('[State] Failed to load panel settings from localStorage:', e)
+  }
+  return {
+    visibility: { ...defaultPanelVisibility },
+    sizes: { ...defaultPanelSizes },
+  }
+}
+
+/**
+ * Save panel settings to localStorage
+ */
+function savePanelSettings(visibility: PanelVisibility, sizes: PanelSizes): void {
+  try {
+    const settings: PanelSettings = { visibility, sizes }
+    localStorage.setItem(PANEL_SETTINGS_KEY, JSON.stringify(settings))
+  } catch (e) {
+    console.warn('[State] Failed to save panel settings to localStorage:', e)
+  }
+}
+
+// Load panel settings once at startup
+const loadedPanelSettings = loadPanelSettings()
 
 const initialState: StudioState = {
   source: '',
@@ -241,7 +301,8 @@ const initialState: StudioState = {
   files: {},
   fileTypes: {},
   panels: { left: true, right: true },
-  panelVisibility: loadPanelVisibility(),
+  panelVisibility: loadedPanelSettings.visibility,
+  panelSizes: loadedPanelSettings.sizes,
   mode: 'mirror',
   preludeOffset: 0,
   pendingSelection: null,
@@ -498,31 +559,50 @@ export const actions = {
   },
 
   /**
-   * Toggle panel visibility and persist to server
+   * Toggle panel visibility and persist to localStorage
    */
   togglePanelVisibility(panel: keyof PanelVisibility): void {
-    const current = state.get().panelVisibility
+    const currentState = state.get()
     const newVisibility: PanelVisibility = {
-      ...current,
-      [panel]: !current[panel],
+      ...currentState.panelVisibility,
+      [panel]: !currentState.panelVisibility[panel],
     }
     state.set({ panelVisibility: newVisibility })
+    savePanelSettings(newVisibility, currentState.panelSizes)
     events.emit('panel:visibility-changed', { panel, visible: newVisibility[panel] })
   },
 
   /**
-   * Set panel visibility directly
+   * Set panel visibility directly and persist to localStorage
    */
   setPanelVisibility(panel: keyof PanelVisibility, visible: boolean): void {
-    const current = state.get().panelVisibility
-    if (current[panel] === visible) return
+    const currentState = state.get()
+    if (currentState.panelVisibility[panel] === visible) return
 
     const newVisibility: PanelVisibility = {
-      ...current,
+      ...currentState.panelVisibility,
       [panel]: visible,
     }
     state.set({ panelVisibility: newVisibility })
+    savePanelSettings(newVisibility, currentState.panelSizes)
     events.emit('panel:visibility-changed', { panel, visible })
+  },
+
+  /**
+   * Set panel sizes and persist to localStorage
+   */
+  setPanelSizes(sizes: PanelSizes): void {
+    const currentState = state.get()
+    state.set({ panelSizes: sizes })
+    savePanelSettings(currentState.panelVisibility, sizes)
+    events.emit('panel:sizes-changed', { sizes })
+  },
+
+  /**
+   * Get current panel sizes
+   */
+  getPanelSizes(): PanelSizes {
+    return state.get().panelSizes
   },
 
   /**

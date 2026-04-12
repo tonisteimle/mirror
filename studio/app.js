@@ -4416,8 +4416,10 @@ function initStudio() {
   // Explorer Panel containers
   const explorerPanelContainer = document.getElementById('explorer-panel')
   const fileTreeContainer = document.getElementById('file-tree-container')
-  const explorerComponentsContainer = document.getElementById('explorer-components-container')
-  const explorerUserComponentsContainer = document.getElementById('explorer-user-components-container')
+
+  // Components Panel containers (separate from explorer)
+  const componentsPanelContainer = document.getElementById('components-panel-container')
+  const userComponentsPanelContainer = document.getElementById('user-components-panel-container')
 
   // Hide explorer panel in playground mode
   if (isPlaygroundMode && explorerPanelContainer) {
@@ -4440,8 +4442,9 @@ function initStudio() {
       // Don't pass explorer containers in playground mode
       explorerPanelContainer: isPlaygroundMode ? undefined : explorerPanelContainer,
       fileTreeContainer: isPlaygroundMode ? undefined : fileTreeContainer,
-      explorerComponentsContainer: isPlaygroundMode ? undefined : explorerComponentsContainer,
-      explorerUserComponentsContainer: isPlaygroundMode ? undefined : explorerUserComponentsContainer,
+      // Components Panel containers (separate from explorer)
+      componentPanelContainer: isPlaygroundMode ? undefined : componentsPanelContainer,
+      userComponentsPanelContainer: isPlaygroundMode ? undefined : userComponentsPanelContainer,
       chatPanelContainer: chatPanelContainer,
       agentApiKey: agentApiKey,
       initialSource: files[currentFile] || '',
@@ -6005,19 +6008,100 @@ window.resetCode = async () => {
 }
 
 // ==========================================
-// Resizable Editor/Preview Divider
+// Resizable Panel Dividers with localStorage persistence
 // ==========================================
-;(function initPanelResizer() {
+;(function initPanelResizers() {
+  const sidebar = document.getElementById('explorer-panel')
+  const sidebarDivider = document.getElementById('sidebar-divider')
   const editorPanel = document.querySelector('.editor-panel')
   const editorDivider = document.getElementById('editor-divider')
   const previewPanel = document.querySelector('.preview-panel')
 
   if (!editorPanel || !editorDivider || !previewPanel) {
-    console.warn('[PanelResizer] Missing elements')
+    console.warn('[PanelResizer] Missing editor/preview elements')
     return
   }
 
   const MIN_PANEL = 200
+  const MIN_SIDEBAR = 150
+
+  // Load saved sizes from state (which loads from localStorage)
+  function loadSavedSizes() {
+    try {
+      if (window.MirrorStudio?.state) {
+        const sizes = window.MirrorStudio.state.get().panelSizes
+        if (sizes) {
+          // Apply saved widths (stored as pixels)
+          if (sidebar && sizes.sidebar) {
+            sidebar.style.width = `${sizes.sidebar}px`
+          }
+          if (sizes.editor) {
+            editorPanel.style.width = `${sizes.editor}px`
+          }
+          if (sizes.preview) {
+            previewPanel.style.width = `${sizes.preview}px`
+          }
+          console.log('[PanelResizer] Restored saved sizes:', sizes)
+        }
+      }
+    } catch (e) {
+      console.warn('[PanelResizer] Failed to load saved sizes:', e)
+    }
+  }
+
+  // Save current sizes to state (which persists to localStorage)
+  function saveSizes() {
+    try {
+      if (window.MirrorStudio?.actions) {
+        const sizes = {
+          sidebar: sidebar ? sidebar.offsetWidth : 200,
+          editor: editorPanel.offsetWidth,
+          preview: previewPanel.offsetWidth
+        }
+        window.MirrorStudio.actions.setPanelSizes(sizes)
+        console.log('[PanelResizer] Saved sizes:', sizes)
+      }
+    } catch (e) {
+      console.warn('[PanelResizer] Failed to save sizes:', e)
+    }
+  }
+
+  // Sidebar Resizer
+  if (sidebar && sidebarDivider) {
+    let isSidebarDragging = false
+    let sidebarStartX = 0
+    let sidebarStartWidth = 0
+
+    sidebarDivider.addEventListener('mousedown', (e) => {
+      isSidebarDragging = true
+      sidebarStartX = e.clientX
+      sidebarStartWidth = sidebar.offsetWidth
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      sidebarDivider.classList.add('dragging')
+      e.preventDefault()
+    })
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isSidebarDragging) return
+      const deltaX = e.clientX - sidebarStartX
+      const newWidth = Math.max(MIN_SIDEBAR, sidebarStartWidth + deltaX)
+      sidebar.style.width = `${newWidth}px`
+    })
+
+    document.addEventListener('mouseup', () => {
+      if (!isSidebarDragging) return
+      isSidebarDragging = false
+      sidebarDivider.classList.remove('dragging')
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      saveSizes()
+    })
+
+    console.log('[PanelResizer] Sidebar divider ready')
+  }
+
+  // Editor/Preview Resizer
   let isDragging = false
   let startX = 0
   let startEditorWidth = 0
@@ -6051,7 +6135,11 @@ window.resetCode = async () => {
     editorDivider.classList.remove('dragging')
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
+    saveSizes()
   })
+
+  // Load saved sizes after a short delay to ensure state is initialized
+  setTimeout(loadSavedSizes, 100)
 
   console.log('[PanelResizer] Editor/Preview divider ready')
 })()

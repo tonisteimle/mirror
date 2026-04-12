@@ -57,6 +57,7 @@ export interface StudioEvents {
   'panel:property-removed': { nodeId: string; property: string }
   'panel:update-requested': { nodeId: string }
   'panel:visibility-changed': { panel: 'prompt' | 'files' | 'code' | 'components' | 'preview' | 'property'; visible: boolean }
+  'panel:sizes-changed': { sizes: { sidebar: number; editor: number; preview: number } }
   'breadcrumb:changed': { breadcrumb: Array<{ nodeId: string; name: string }> }
   'breadcrumb:update-requested': { chain: Array<{ nodeId: string; name: string }> }
   'ui:panel-toggled': { panel: 'left' | 'right'; visible: boolean }
