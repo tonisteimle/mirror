@@ -234,6 +234,21 @@ export class VisualSystem implements IVisualSystem {
 
   dispose(): void {
     this.clear()
+
+    // Remove pooled elements from DOM
+    if (this.indicatorElement) {
+      this.indicatorElement.remove()
+      this.indicatorElement = null
+    }
+    if (this.parentOutlineElement) {
+      this.parentOutlineElement.remove()
+      this.parentOutlineElement = null
+    }
+    if (this.ghostElement) {
+      this.ghostElement.remove()
+      this.ghostElement = null
+    }
+    this.elementsInitialized = false
   }
 
   // ==========================================================================
