@@ -52,6 +52,13 @@ export interface LayoutPort {
    * Container-Rechteck für ein Element.
    */
   getContainerRect(element: HTMLElement): Rect | null
+
+  /**
+   * Clear drag-scoped cache.
+   * Called on drag end to ensure fresh data for next drag.
+   * Optional - implementations may not support caching.
+   */
+  clearCache?(): void
 }
 
 // ============================================

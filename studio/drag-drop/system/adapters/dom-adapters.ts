@@ -53,6 +53,7 @@ import {
   getContainerRect as getContainerRectFromDOM,
   detectLayoutType,
   detectDirection,
+  clearTargetCache,
 } from '../target-detector'
 import { VisualSystem } from '../../visual/system'
 import { StrategyRegistry, createWebflowRegistry } from '../../strategies/registry'
@@ -141,6 +142,7 @@ export function createDOMLayoutPort(config: DOMAdaptersConfig): CacheableLayoutP
     clearCache(): void {
       childRectsCache.clear()
       containerRectCache.clear()
+      clearTargetCache()
     },
 
     getRect(nodeId: string): Rect | null {

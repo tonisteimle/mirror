@@ -230,6 +230,8 @@ export class DragDropController {
         case 'HIDE_VISUALS':
           this.ports.visual.hideAll()
           this.resetModeState()
+          // Clear drag-scoped caches
+          this.ports.layout.clearCache?.()
           break
 
         case 'EXECUTE_DROP':

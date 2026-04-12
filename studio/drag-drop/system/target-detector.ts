@@ -3,6 +3,10 @@
  *
  * Analyzes DOM elements to determine drop target properties.
  * Extracts layout type, direction, and child information.
+ *
+ * Performance optimizations:
+ * - Element → DropTarget cache (cleared per drag operation)
+ * - Avoids repeated DOM tree walks for the same element
  */
 
 import type { DropTarget, Direction, LayoutType } from '../types'
@@ -12,6 +16,25 @@ import type { DOMAdapter } from './dom-adapter'
 import { getDefaultDOMAdapter } from './dom-adapter'
 
 const DEFAULT_NODE_ID_ATTR = 'data-mirror-id'
+
+// ============================================
+// Drag-scoped target cache
+// ============================================
+
+/**
+ * Cache for element → DropTarget mapping.
+ * Uses WeakMap so elements can be GC'd when removed from DOM.
+ * Call clearTargetCache() on drag end to ensure fresh state.
+ */
+let targetCache = new WeakMap<HTMLElement, DropTarget | null>()
+
+/**
+ * Clear the target cache.
+ * Should be called when drag ends to ensure fresh data for next drag.
+ */
+export function clearTargetCache(): void {
+  targetCache = new WeakMap()
+}
 
 /**
  * Component names that are "leaf" elements and should not accept children.
@@ -66,12 +89,20 @@ export function detectTarget(
   nodeIdAttr: string = DEFAULT_NODE_ID_ATTR,
   domAdapter: DOMAdapter = getDefaultDOMAdapter()
 ): DropTarget | null {
+  // Check cache first
+  if (targetCache.has(element)) {
+    return targetCache.get(element) ?? null
+  }
+
   const nodeId = element.getAttribute(nodeIdAttr)
-  if (!nodeId) return null
+  if (!nodeId) {
+    targetCache.set(element, null)
+    return null
+  }
 
   // Check if this is a leaf component - force non-container layout
   if (isLeafComponent(element)) {
-    return {
+    const target: DropTarget = {
       nodeId,
       element,
       layoutType: 'none',
@@ -79,6 +110,8 @@ export function detectTarget(
       hasChildren: false,
       isPositioned: false,
     }
+    targetCache.set(element, target)
+    return target
   }
 
   const style = domAdapter.getComputedStyle(element)
@@ -87,7 +120,7 @@ export function detectTarget(
   const hasChildren = hasValidChildren(element, nodeIdAttr)
   const isPositioned = layoutType === 'positioned'
 
-  return {
+  const target: DropTarget = {
     nodeId,
     element,
     layoutType,
@@ -95,6 +128,8 @@ export function detectTarget(
     hasChildren,
     isPositioned,
   }
+  targetCache.set(element, target)
+  return target
 }
 
 /**

@@ -13,9 +13,12 @@ import { VISUAL_IDS } from './types'
 
 export class VisualSystem implements IVisualSystem {
   private container: HTMLElement
+
+  // Pooled elements (created once, reused)
   private indicatorElement: HTMLElement | null = null
   private parentOutlineElement: HTMLElement | null = null
   private ghostElement: HTMLElement | null = null
+  private elementsInitialized = false
 
   // Test API state tracking
   private _indicatorVisible = false
@@ -29,11 +32,65 @@ export class VisualSystem implements IVisualSystem {
     this.container = container
   }
 
+  /**
+   * Initialize pooled elements (created once, reused across drags)
+   */
+  private ensureElements(): void {
+    if (this.elementsInitialized) return
+
+    // Create indicator element
+    this.indicatorElement = document.createElement('div')
+    this.indicatorElement.id = VISUAL_IDS.indicator
+    this.indicatorElement.className = 'drop-indicator'
+    Object.assign(this.indicatorElement.style, {
+      position: 'fixed',
+      pointerEvents: 'none',
+      zIndex: '9999',
+      display: 'none',
+    })
+    document.body.appendChild(this.indicatorElement)
+
+    // Create parent outline element
+    this.parentOutlineElement = document.createElement('div')
+    this.parentOutlineElement.id = VISUAL_IDS.parentOutline
+    this.parentOutlineElement.className = 'drop-parent-outline'
+    Object.assign(this.parentOutlineElement.style, {
+      position: 'fixed',
+      backgroundColor: 'transparent',
+      border: '2px dashed rgba(59, 130, 246, 0.5)',
+      borderRadius: '4px',
+      pointerEvents: 'none',
+      zIndex: '9998',
+      display: 'none',
+    })
+    document.body.appendChild(this.parentOutlineElement)
+
+    // Create ghost element
+    this.ghostElement = document.createElement('div')
+    this.ghostElement.id = VISUAL_IDS.ghost
+    this.ghostElement.className = 'drop-ghost'
+    Object.assign(this.ghostElement.style, {
+      position: 'fixed',
+      backgroundColor: 'rgba(139, 92, 246, 0.3)',
+      border: '2px dashed #8b5cf6',
+      borderRadius: '4px',
+      pointerEvents: 'none',
+      zIndex: '9999',
+      boxShadow: '0 0 8px rgba(139, 92, 246, 0.4)',
+      display: 'none',
+    })
+    document.body.appendChild(this.ghostElement)
+
+    this.elementsInitialized = true
+  }
+
   // ==========================================================================
   // Indicator (insertion line)
   // ==========================================================================
 
   showIndicator(hint: VisualHint): void {
+    this.ensureElements()
+
     // Ghost type is handled separately
     if (hint.type === 'ghost') {
       this.hideIndicator()
@@ -41,18 +98,16 @@ export class VisualSystem implements IVisualSystem {
       return
     }
 
-    this.hideIndicator()
     this.hideGhostIndicator()
 
-    const indicator = document.createElement('div')
-    indicator.id = VISUAL_IDS.indicator
-    indicator.className = 'drop-indicator'
+    if (!this.indicatorElement) return
 
     const isLine = hint.type === 'line'
     const isOutline = hint.type === 'outline'
 
-    Object.assign(indicator.style, {
-      position: 'fixed',
+    // Update position and style (no DOM create/remove)
+    Object.assign(this.indicatorElement.style, {
+      display: 'block',
       left: `${hint.rect.x}px`,
       top: `${hint.rect.y}px`,
       width: `${hint.rect.width}px`,
@@ -60,13 +115,8 @@ export class VisualSystem implements IVisualSystem {
       backgroundColor: isLine ? '#5BA8F5' : 'transparent',
       border: isOutline ? '2px dashed #5BA8F5' : 'none',
       borderRadius: isOutline ? '4px' : '0',
-      pointerEvents: 'none',
-      zIndex: '9999',
       boxShadow: isLine ? '0 0 4px rgba(59, 130, 246, 0.5)' : 'none',
     })
-
-    document.body.appendChild(indicator)
-    this.indicatorElement = indicator
 
     // Track state for Test API
     this._indicatorVisible = true
@@ -77,32 +127,22 @@ export class VisualSystem implements IVisualSystem {
    * Show ghost indicator for absolute positioning
    */
   private showGhostIndicator(hint: VisualHint): void {
-    this.hideGhostIndicator()
+    this.ensureElements()
 
-    const ghost = document.createElement('div')
-    ghost.id = VISUAL_IDS.ghost
-    ghost.className = 'drop-ghost'
+    if (!this.ghostElement) return
 
     // Use ghostSize if available, otherwise use rect dimensions
     const width = hint.ghostSize?.width ?? hint.rect.width
     const height = hint.ghostSize?.height ?? hint.rect.height
 
-    Object.assign(ghost.style, {
-      position: 'fixed',
+    // Update position and style (no DOM create/remove)
+    Object.assign(this.ghostElement.style, {
+      display: 'block',
       left: `${hint.rect.x}px`,
       top: `${hint.rect.y}px`,
       width: `${width}px`,
       height: `${height}px`,
-      backgroundColor: 'rgba(139, 92, 246, 0.3)', // Purple for absolute mode
-      border: '2px dashed #8b5cf6',
-      borderRadius: '4px',
-      pointerEvents: 'none',
-      zIndex: '9999',
-      boxShadow: '0 0 8px rgba(139, 92, 246, 0.4)',
     })
-
-    document.body.appendChild(ghost)
-    this.ghostElement = ghost
 
     // Track state for Test API
     this._ghostVisible = true
@@ -119,8 +159,7 @@ export class VisualSystem implements IVisualSystem {
    */
   private hideGhostIndicator(): void {
     if (this.ghostElement) {
-      this.ghostElement.remove()
-      this.ghostElement = null
+      this.ghostElement.style.display = 'none'
     }
 
     // Track state for Test API
@@ -130,8 +169,7 @@ export class VisualSystem implements IVisualSystem {
 
   hideIndicator(): void {
     if (this.indicatorElement) {
-      this.indicatorElement.remove()
-      this.indicatorElement = null
+      this.indicatorElement.style.display = 'none'
     }
 
     // Track state for Test API
@@ -144,27 +182,18 @@ export class VisualSystem implements IVisualSystem {
   // ==========================================================================
 
   showParentOutline(rect: { x: number; y: number; width: number; height: number }): void {
-    this.hideParentOutline()
+    this.ensureElements()
 
-    const outline = document.createElement('div')
-    outline.id = VISUAL_IDS.parentOutline
-    outline.className = 'drop-parent-outline'
+    if (!this.parentOutlineElement) return
 
-    Object.assign(outline.style, {
-      position: 'fixed',
+    // Update position (no DOM create/remove)
+    Object.assign(this.parentOutlineElement.style, {
+      display: 'block',
       left: `${rect.x}px`,
       top: `${rect.y}px`,
       width: `${rect.width}px`,
       height: `${rect.height}px`,
-      backgroundColor: 'transparent',
-      border: '2px dashed rgba(59, 130, 246, 0.5)',
-      borderRadius: '4px',
-      pointerEvents: 'none',
-      zIndex: '9998', // Below the indicator line
     })
-
-    document.body.appendChild(outline)
-    this.parentOutlineElement = outline
 
     // Track state for Test API
     this._parentOutlineVisible = true
@@ -173,8 +202,7 @@ export class VisualSystem implements IVisualSystem {
 
   hideParentOutline(): void {
     if (this.parentOutlineElement) {
-      this.parentOutlineElement.remove()
-      this.parentOutlineElement = null
+      this.parentOutlineElement.style.display = 'none'
     }
 
     // Track state for Test API
