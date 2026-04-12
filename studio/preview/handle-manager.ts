@@ -13,7 +13,7 @@
  * - Live value indicator during drag
  */
 
-import { state, events, handleSnapSettings, type LayoutRect } from '../core'
+import { state, events, handleSnapSettings, getLayoutService, type LayoutService } from '../core'
 import { HANDLE_SIZE, HANDLE_SIZE_SMALL, SMALL_ELEMENT_THRESHOLD } from '../visual/constants/sizing'
 
 export type HandleType = 'padding' | 'gap' | 'radius'
@@ -29,8 +29,6 @@ export interface Handle {
 
 export interface HandleManagerConfig {
   container: HTMLElement
-  /** Get cached layout info from state (Phase 4 optimization) */
-  getLayoutInfo?: () => Map<string, LayoutRect> | null
 }
 
 const LAYOUT = {
@@ -61,7 +59,6 @@ export class HandleManager {
   private activeHandle: Handle | null = null
   private overlay: HTMLElement
   private valueIndicator: HTMLElement | null = null
-  private getLayoutInfo: HandleManagerConfig['getLayoutInfo']
 
   private startDragPosition: { x: number; y: number } | null = null
   private startValue: number = 0
@@ -73,7 +70,6 @@ export class HandleManager {
 
   constructor(config: HandleManagerConfig) {
     this.container = config.container
-    this.getLayoutInfo = config.getLayoutInfo
     this.overlay = this.createOverlay()
 
     // Bind handlers
