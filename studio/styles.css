@@ -8115,7 +8115,7 @@ select.tomselected,
    ========================================== */
 .components-panel {
   flex: 0 0 auto;
-  width: 200px;
+  width: 230px;
   min-width: 150px;
   max-width: 400px;
   display: flex;
