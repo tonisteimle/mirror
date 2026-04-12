@@ -11,8 +11,7 @@
  * Tests verwenden Mock-Adapters, Produktion verwendet DOM-Adapters.
  */
 
-import type { ExtractedElement, ExtractedProperty, PropertyCategory } from '../../../compiler/studio/property-extractor'
-import type { ModificationResult } from '../../../compiler/studio/code-modifier'
+import type { ExtractedElement, ExtractedProperty, PropertyCategory, ModificationResult } from '../../../compiler'
 
 // ============================================
 // Common Types
@@ -141,7 +140,7 @@ export interface TokenPort {
    * Gets spacing tokens for a specific property type.
    * @param propType - 'pad', 'mar', 'gap', or 'rad'
    */
-  getSpacingTokens(propType: 'pad' | 'mar' | 'gap' | 'rad'): SpacingToken[]
+  getSpacingTokens(propType: 'pad' | 'mar' | 'gap' | 'rad' | 'fs'): SpacingToken[]
 
   /**
    * Gets all color tokens.

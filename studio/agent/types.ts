@@ -9,7 +9,7 @@
 // ============================================
 
 /** File type classification for Mirror projects */
-export type FileType = 'tokens' | 'components' | 'component' | 'layout' | 'unknown'
+export type FileType = 'tokens' | 'components' | 'component' | 'layout' | 'data' | 'unknown'
 
 /** Information about a project file */
 export interface FileInfo {

@@ -2,13 +2,8 @@
  * Studio Bootstrap - Integration with app.js
  */
 
-import { state, actions, events, executor, setCommandContext, getStateSelectionAdapter, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, SetTextContentCommand, createStudioContext, setStudioContext, type Command, type CommandContext, type StudioContext } from './core'
-import {
-  createSyncCoordinatorWithPorts,
-  createProductionSyncPorts,
-  createLineOffsetService,
-  type SyncCoordinatorV2 as SyncCoordinator,
-} from './sync'
+import { state, actions, events, executor, setCommandContext, getStateSelectionAdapter, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, createStudioContext, setStudioContext, type Command, type CommandContext, type StudioContext } from './core'
+import { type SyncCoordinatorV2 as SyncCoordinator } from './sync'
 import { AutocompleteEngine, getAutocompleteEngine, type AutocompleteRequest, type AutocompleteResult } from './autocomplete'
 import { EditorController, createEditorController, setEditorController, EditorDropHandler, createEditorDropHandler } from './editor'
 import { PreviewController, createPreviewController, setPreviewController, PreviewBreadcrumb, createPreviewBreadcrumb } from './preview'
@@ -18,26 +13,26 @@ import { initializeAgent, getAgentIntegration, type AgentIntegration } from './a
 import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../compiler/studio'
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel } from './panels'
-import { ComponentPanel, createComponentPanel, UserComponentsPanel, createUserComponentsPanel, getComponentTemplate, getFileType } from './panels/components'
+import { ComponentPanel, createComponentPanel, UserComponentsPanel, createUserComponentsPanel, getComponentTemplate, getFileType, type ComponentDragData, type ComponentChild } from './panels/components'
 import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
-import { DrawManager, createDrawManager } from './visual/draw-manager'
-import { InlineEditController, createInlineEditController } from './inline-edit'
+import type { DrawManager } from './visual/draw-manager'
+import type { InlineEditController } from './inline-edit'
+import { type DragDropSystem } from './drag-drop'
 import {
-  createCodeExecutor,
-  bootstrapDragDrop,
-  type DragDropSystem,
-  type DragDropBootstrapResult,
-} from './drag-drop'
+  initDragDrop,
+  initDrawManager,
+  initInlineEdit,
+  initSync,
+} from './bootstrap/index'
 import { initUserSettings } from './storage/user-settings'
 import { initStudioTestAPI } from './test-api'
 import { triggerRename, isRenameActive, closeRename } from './rename'
-import type { AST } from '../compiler/parser/ast'
-import type { IR } from '../compiler/ir/types'
-import type { SourceMap } from '../compiler/ir/source-map'
-import type { CodeChange } from '../compiler/studio/code-modifier'
+import type { AST, IR, SourceMap, CodeChange } from '../compiler'
+import type { EditorView } from '@codemirror/view'
 
 export interface BootstrapConfig {
-  editor: any
+  /** CodeMirror EditorView instance */
+  editor: EditorView
   previewContainer: HTMLElement
   propertyPanelContainer?: HTMLElement
   componentPanelContainer?: HTMLElement
@@ -52,7 +47,7 @@ export interface BootstrapConfig {
   /** Callback to get current file name */
   getCurrentFile?: () => string
   /** Callback to get all project files with types */
-  getFiles?: () => { name: string; type: 'tokens' | 'components' | 'component' | 'layout' | 'unknown'; code: string }[]
+  getFiles?: () => { name: string; type: 'tokens' | 'components' | 'component' | 'layout' | 'data' | 'unknown'; code: string }[]
   /** Callback to update file content */
   updateFile?: (filename: string, content: string) => void
   /** Callback to switch to file */
@@ -83,6 +78,14 @@ export interface StudioInstance {
   dragDrop: DragDropSystem | null
   /** Cleanup all event subscriptions and resources */
   dispose: () => void
+}
+
+// Extend Window interface for global properties
+declare global {
+  interface Window {
+    __mirrorDragDropV2__?: unknown
+    MirrorStudio?: StudioInstance
+  }
 }
 
 // Track event subscriptions for cleanup
@@ -180,7 +183,7 @@ let studioContext: StudioContext | null = null
  * @param options.filename - Current filename to determine file type (.mir or .com)
  */
 export function generateComponentCodeFromDragData(
-  dragData: any,
+  dragData: ComponentDragData,
   options?: { componentId?: string; filename?: string }
 ): string {
   const { componentName, properties, textContent, children } = dragData
@@ -222,7 +225,7 @@ export function generateComponentCodeFromDragData(
  * - isItem: simple item with text content (e.g., 'Item "Option"')
  * - Regular components with properties and nested children
  */
-function generateChildCode(child: any, indent: number): string {
+function generateChildCode(child: ComponentChild, indent: number): string {
   const spaces = '  '.repeat(indent)
 
   // Handle slot syntax (e.g., "Trigger:", "ItemGroup:")
@@ -398,7 +401,11 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   }
 
   // Editor
-  const editorController = createEditorController({ container: config.editor.dom.parentElement })
+  const editorContainer = config.editor.dom.parentElement
+  if (!editorContainer) {
+    throw new Error('[Studio] Editor parent element not found')
+  }
+  const editorController = createEditorController({ container: editorContainer })
   editorController.initialize(config.editor)
   setEditorController(editorController)
   studioContext.editor = editorController
@@ -474,34 +481,16 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     })
   )
 
-  // Sync - LineOffsetService handles editor ↔ SourceMap line translation
-  // Uses v2 hexagonal architecture with ports for testability
-  const lineOffset = createLineOffsetService()
-  const syncPorts = createProductionSyncPorts()
-  const syncCoordinator = createSyncCoordinatorWithPorts(syncPorts, { cursorDebounce: 150, debug: false, lineOffset })
-  syncCoordinator.setTargets({
-    scrollEditorToLine: (editorLine) => {
-      // editorLine is already converted from SourceMap line by SyncCoordinator
-      // Set cursor AND scroll to make the selection visible
-      // The debouncing in handleCursorMove prevents sync loops
-      editorController.scrollToLineAndSelect(editorLine)
-    },
-    highlightPreviewElement: (nodeId) => nodeId ? previewController.select(nodeId) : previewController.clearSelection(),
-    // Note: PropertyPanel receives updates directly via StateSelectionAdapter
-    // which subscribes to selection:changed events. No callback needed here.
+  // Sync Coordinator - uses hexagonal architecture with ports
+  const { syncCoordinator } = initSync({
+    editorController,
+    previewController,
+    cursorDebounce: 150,
+    debug: false,
   })
-
-  // Note: createSyncCoordinatorWithPorts() already subscribes to selection:changed events
 
   studioContext.sync = syncCoordinator
   studio.sync = syncCoordinator
-
-  // Inject SyncCoordinator into SelectionAdapter for consistent selection handling
-  const selectionAdapter = getStateSelectionAdapter()
-  selectionAdapter.setSyncHandler({
-    handleSelectionChange: (nodeId, origin) => syncCoordinator.handleSelectionChange(nodeId, origin),
-    clearSelection: (origin) => syncCoordinator.clearSelection(origin),
-  })
 
   // Command context
   // getSource returns editor content (current file only)
@@ -536,50 +525,12 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   })
 
   // Initialize InlineEditController for Figma-style text editing
-  const inlineEditController = createInlineEditController({
+  const inlineEditResult = initInlineEdit({
     container: config.previewContainer,
-    onEditEnd: (nodeId, newText, saved) => {
-      if (saved && newText) {
-        // Execute SetTextContentCommand for undo/redo support
-        executor.execute(new SetTextContentCommand({ nodeId, text: newText }))
-      }
-    },
+    previewController,
   })
-  inlineEditController.attach()
-  studio.inlineEdit = inlineEditController
-
-  // Listen for double-click events from PreviewController
-  eventUnsubscribes.push(
-    events.on('preview:element-dblclicked', ({ nodeId }) => {
-      inlineEditController.startEdit(nodeId)
-    })
-  )
-
-  // Hide resize handles during inline editing
-  eventUnsubscribes.push(
-    events.on('inline-edit:started', () => {
-      previewController.getResizeManager()?.hideHandles()
-      previewController.getHandleManager()?.hideHandles()
-    })
-  )
-
-  // Restore resize handles after inline editing ends
-  eventUnsubscribes.push(
-    events.on('inline-edit:ended', () => {
-      const selectedNodeId = state.get().selection.nodeId
-      if (selectedNodeId) {
-        previewController.getResizeManager()?.showHandles(selectedNodeId)
-        previewController.getHandleManager()?.showHandles(selectedNodeId)
-      }
-    })
-  )
-
-  // Update InlineEditController's sourceMap after compile
-  eventUnsubscribes.push(
-    events.on('compile:completed', () => {
-      inlineEditController.setSourceMap(state.get().sourceMap)
-    })
-  )
+  studio.inlineEdit = inlineEditResult.controller
+  eventUnsubscribes.push(inlineEditResult.dispose)
 
   // ============================================
   // F2 Rename Symbol Handler
@@ -612,269 +563,32 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
 
   console.log('[Studio] F2 Rename Symbol handler initialized')
 
-  // Initialize DrawManager
-  const drawManager = createDrawManager({
+  // Initialize DrawManager for component drawing
+  const drawManagerResult = initDrawManager({
     container: config.previewContainer,
-    getCodeModifier: () => {
-      const source = state.get().source
-      const sourceMap = state.get().sourceMap
-      if (!sourceMap) {
-        throw new Error('SourceMap not available')
-      }
-      return new CodeModifier(source, sourceMap)
-    },
-    sourceMap: () => state.get().sourceMap,
-    gridSize: 8,  // 8px grid snapping
-    enableSmartGuides: true,  // Enable alignment guides
-    snapTolerance: 4,  // 4px snap threshold
-    // Phase 5: Use cached layoutInfo instead of DOM reads
-    getLayoutInfo: () => state.get().layoutInfo,
+    editor: config.editor,
+    editorController,
   })
-
-  drawManager.onDrawComplete = (result) => {
-    if (result.success && result.modificationResult) {
-      console.log('[DrawManager] Component created:', result.nodeId)
-
-      // Apply code change to editor (adjust for prelude offset)
-      const preludeOffset = state.get().preludeOffset
-      const change = result.modificationResult.change
-
-      const adjustedChange = {
-        from: change.from - preludeOffset,
-        to: change.to - preludeOffset,
-        insert: change.insert
-      }
-
-      // Validate adjusted change range
-      const docLength = editorController.getContent().length
-      if (adjustedChange.from >= 0 && adjustedChange.to <= docLength && adjustedChange.from <= adjustedChange.to) {
-        // Apply change to editor
-        config.editor.dispatch({
-          changes: adjustedChange
-        })
-
-        // Compile will be triggered automatically by editor change
-        console.log('[DrawManager] Editor updated')
-      } else {
-        console.warn('[DrawManager] Invalid change range, forcing recompile', {
-          original: change,
-          adjusted: adjustedChange,
-          preludeOffset,
-          docLength
-        })
-        // Force recompile
-        events.emit('compile:requested', {})
-      }
-    }
-  }
-
-  drawManager.onDrawCancel = () => {
-    console.log('[DrawManager] Drawing cancelled')
-  }
-
-  drawManager.onError = (error) => {
-    console.error('[DrawManager] Error:', error)
-  }
-
-  studio.drawManager = drawManager
+  studio.drawManager = drawManagerResult.drawManager
+  eventUnsubscribes.push(drawManagerResult.dispose)
 
   // ============================================
   // Drag & Drop System - Webflow Style
   // ============================================
-  //
-  // Handles both NEW components (from palette) and MOVING elements (in preview).
-  // Uses line indicators to show insertion point.
-  // No absolute positioning, no 9-zone system.
-
-  // Create code executor for drag-drop operations
-  const codeExecutor = createCodeExecutor({
-    getSource: () => editorController.getContent(),
-    getResolvedSource: () => {
-      // Resolved source = prelude + current file (matches SourceMap positions)
-      const resolved = state.get().resolvedSource
-      return resolved || editorController.getContent()
-    },
-    getPreludeOffset: () => state.get().preludeOffset,
-    getSourceMap: () => state.get().sourceMap,
-    getCurrentFile: () => getCurrentFileCallback?.() || 'index.mir',
-    applyChange: (newSource: string) => {
-      const currentContent = editorController.getContent()
-      if (newSource !== currentContent) {
-        config.editor.dispatch({
-          changes: { from: 0, to: currentContent.length, insert: newSource }
-        })
-      }
-    },
-    recompile: async () => {
-      events.emit('compile:requested', {})
-    },
-    createModifier: (source: string, sourceMap: SourceMap) => {
-      return new CodeModifier(source, sourceMap)
-    },
-  })
-
-  // ============================================
-  // Drag & Drop System (Hexagonal Architecture)
-  // ============================================
-  const dragDropV2 = bootstrapDragDrop({
+  const dragDropResult = initDragDrop({
     container: config.previewContainer,
-    getSource: () => editorController.getContent(),
-    getResolvedSource: () => state.get().resolvedSource,
-    getPreludeOffset: () => state.get().preludeOffset,
-    getSourceMap: () => state.get().sourceMap,
+    editor: config.editor,
+    editorController,
     getCurrentFile: () => getCurrentFileCallback?.() || 'index.mir',
-    applyChange: (newSource: string) => {
-      editorController.setContent(newSource)
-    },
-    recompile: () => {
-      events.emit('compile:requested', {})
-    },
-    createModifier: (source: string, sourceMap: SourceMap) => {
-      return new CodeModifier(source, sourceMap)
-    },
-    getLayoutInfo: () => state.get().layoutInfo,
-    enableAltDuplicate: true,
-    onDragStart: (source: any) => {
-      if (source.type === 'canvas') {
-        console.log('[DragDrop] Move started:', source.nodeId)
-      } else {
-        console.log('[DragDrop] Insert started:', source.componentName)
-      }
-    },
-    onDrop: (source: any, result: any) => {
-      console.log('[DragDrop] Drop:', source.type, result.placement, result.targetId)
-      if (result.target?.nodeId) {
-        actions.setDeferredSelection({
-          type: 'nodeId',
-          nodeId: result.target.nodeId,
-          origin: 'preview',
-        })
-      }
-    },
-    onDragEnd: (source: any, success: boolean) => {
-      console.log('[DragDrop] End:', success ? 'success' : 'cancelled')
-    },
   })
-
-  // Legacy adapter for compatibility with app.js (uses makeElementDraggable)
-  // Also exposes test API methods for E2E testing
-  const dragDropSystem: DragDropSystem = {
-    init: () => {},
-    registerPaletteItem: () => () => {},
-    enableCanvasDrag: (nodeId: string) => {
-      const element = config.previewContainer.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
-      if (!element) return () => {}
-      return dragDropV2.registerCanvasElement(nodeId, element)
-    },
-    makeElementDraggable: (element: HTMLElement) => {
-      const nodeId = element.getAttribute('data-mirror-id')
-      if (!nodeId) {
-        console.warn('[DragDrop] makeElementDraggable: element has no data-mirror-id')
-        return () => {}
-      }
-      return dragDropV2.registerCanvasElement(nodeId, element)
-    },
-    disable: () => dragDropV2.disable(),
-    enable: () => dragDropV2.enable(),
-    isDisabled: () => dragDropV2.isDisabled(),
-    dispose: () => dragDropV2.dispose(),
-
-    // ============================================
-    // Test API Methods (for E2E testing)
-    // ============================================
-    simulateInsert: (params: {
-      componentName: string
-      targetNodeId: string
-      placement: 'before' | 'after' | 'inside'
-      properties?: string
-      textContent?: string
-    }) => {
-      return dragDropV2.controller.simulateInsert({
-        ...params,
-        container: config.previewContainer,
-        nodeIdAttr: 'data-mirror-id',
-      })
-    },
-
-    simulateInsertAbsolute: (params: {
-      componentName: string
-      targetNodeId: string
-      position: { x: number; y: number }
-      properties?: string
-      textContent?: string
-    }) => {
-      return dragDropV2.controller.simulateInsertAbsolute({
-        ...params,
-        container: config.previewContainer,
-        nodeIdAttr: 'data-mirror-id',
-      })
-    },
-
-    simulateMove: (params: {
-      sourceNodeId: string
-      targetNodeId: string
-      placement: 'before' | 'after' | 'inside'
-    }) => {
-      return dragDropV2.controller.simulateMove({
-        ...params,
-        container: config.previewContainer,
-        nodeIdAttr: 'data-mirror-id',
-      })
-    },
-
-    simulateDragTo: (cursor: { x: number; y: number }) => {
-      // Create a generic source for position calculation
-      const source = {
-        type: 'palette' as const,
-        componentName: 'Frame',
-      }
-      return dragDropV2.controller.simulateDragTo(source, cursor)
-    },
-
-    getState: () => {
-      const state = dragDropV2.controller.getState()
-      const context = dragDropV2.controller.getContext()
-      return {
-        isActive: state.type === 'dragging' || state.type === 'over-target',
-        source: context.source || null,
-        currentTarget: state.type === 'over-target' ? state.target : null,
-        currentResult: state.type === 'over-target' ? state.result : null,
-      }
-    },
-
-    getVisualState: () => {
-      const visualState = dragDropV2.controller.getVisualState()
-      return {
-        indicatorVisible: visualState.hasIndicator,
-        indicatorRect: null, // Would need to query DOM for actual rect
-        parentOutlineVisible: visualState.hasOutline,
-        parentOutlineRect: null, // Would need to query DOM for actual rect
-      }
-    },
-  } as unknown as DragDropSystem
-
-  studio.dragDrop = dragDropSystem
-  initStudioTestAPI(studio, dragDropSystem)
+  studio.dragDrop = dragDropResult.system
+  eventUnsubscribes.push(dragDropResult.dispose)
+  initStudioTestAPI(studio, dragDropResult.system)
 
   // Expose for E2E testing
   if (typeof window !== 'undefined') {
-    ;(window as any).__mirrorDragDropV2__ = dragDropV2
+    window.__mirrorDragDropV2__ = dragDropResult.v2
   }
-
-  console.log('[Studio] Drag-drop initialized')
-
-  // Disable drag during compile to prevent stale SourceMap issues
-  eventUnsubscribes.push(
-    events.on('compile:requested', () => {
-      dragDropSystem.disable()
-    })
-  )
-
-  eventUnsubscribes.push(
-    events.on('compile:completed', () => {
-      dragDropSystem.enable()
-    })
-  )
 
   // ============================================
   // Component Event Handlers
@@ -901,6 +615,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
           properties: item.properties,
           textContent: item.textContent,
           children: item.children,
+          fromComponentPanel: true,
         }, {
           componentId: item.id,
           filename: currentFile,
@@ -927,7 +642,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   initializeActivityBar()
 
   // Expose studio on window for legacy code (PanelResizer, cleanup.js)
-  ;(window as any).MirrorStudio = studio
+  window.MirrorStudio = studio
 
   console.log('[Studio] New architecture initialized')
   return studio
@@ -991,22 +706,24 @@ function initializePanelToolbar(): void {
   }
 
   // Toggle menu open/close
-  menuButton.addEventListener('click', (e) => {
+  const handleMenuButtonClick = (e: Event) => {
     e.stopPropagation()
     menu.classList.toggle('open')
     menuButton.classList.toggle('active', menu.classList.contains('open'))
-  })
+  }
+  menuButton.addEventListener('click', handleMenuButtonClick)
 
   // Close menu when clicking outside
-  document.addEventListener('click', (e) => {
+  const handleDocumentClick = (e: Event) => {
     if (!menu.contains(e.target as Node) && !menuButton.contains(e.target as Node)) {
       menu.classList.remove('open')
       menuButton.classList.remove('active')
     }
-  })
+  }
+  document.addEventListener('click', handleDocumentClick)
 
   // Handle checkbox changes
-  menu.addEventListener('change', (e) => {
+  const handleMenuChange = (e: Event) => {
     const target = e.target as HTMLInputElement
     if (target.type !== 'checkbox') return
 
@@ -1015,6 +732,14 @@ function initializePanelToolbar(): void {
     if (!panelKey) return
 
     actions.setPanelVisibility(panelKey, target.checked)
+  }
+  menu.addEventListener('change', handleMenuChange)
+
+  // Track cleanup for DOM event listeners
+  eventUnsubscribes.push(() => {
+    menuButton.removeEventListener('click', handleMenuButtonClick)
+    document.removeEventListener('click', handleDocumentClick)
+    menu.removeEventListener('change', handleMenuChange)
   })
 
   // Sync checkboxes with visibility changes

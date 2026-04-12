@@ -1,4 +1,8 @@
 /**
+ * @vitest-environment jsdom
+ */
+
+/**
  * Hug Sizing Edge Cases
  *
  * Tests for hug (fit-content) sizing in various scenarios
@@ -25,11 +29,12 @@ function renderMirror(code: string): HTMLElement {
   const ast = parse(code)
   let domCode = generateDOM(ast)
   domCode = domCode.replace(/^export\s+function/gm, 'function')
+  // Note: createUI() returns the root element directly, not an object with { root }
   const fn = new Function(domCode + '\nreturn createUI();')
-  const ui = fn()
-  container.appendChild(ui.root)
+  const root = fn() as HTMLElement
+  container.appendChild(root)
   // Skip the <style> element - find first non-style child
-  const children = Array.from(ui.root.children) as HTMLElement[]
+  const children = Array.from(root.children) as HTMLElement[]
   return children.find(el => el.tagName.toLowerCase() !== 'style') as HTMLElement
 }
 

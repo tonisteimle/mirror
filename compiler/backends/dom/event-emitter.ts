@@ -370,6 +370,25 @@ function emitRuntimeAction(
         ctx.emit(`_runtime.openUrl('${url}', { newTab: ${newTab} })`)
       }
       break
+    // CRUD actions
+    case 'add':
+      emitAddAction(ctx, action)
+      break
+    case 'remove':
+      emitRemoveAction(ctx, action, currentVar)
+      break
+    case 'create':
+      emitCreateAction(ctx, action, currentVar)
+      break
+    case 'save':
+      emitSaveAction(ctx, action, currentVar)
+      break
+    case 'delete':
+      emitDeleteAction(ctx, action, currentVar)
+      break
+    case 'revert':
+      emitRevertAction(ctx, action, currentVar)
+      break
     default:
       // Custom function: inject element as first parameter
       if (action.args && action.args.length > 0) {
@@ -564,5 +583,120 @@ function emitInputAction(ctx: EventEmitterContext, fnName: string, action: IRAct
         ctx.emit(`_runtime.clearError(${currentVar})`)
       }
       break
+  }
+}
+
+/**
+ * Emit add() action for CRUD operations
+ * Generates: _runtime.add('collectionName', { key: value, ... })
+ */
+function emitAddAction(ctx: EventEmitterContext, action: IRAction): void {
+  if (!action.args || action.args.length === 0) {
+    ctx.emit(`// Warning: add() requires collection name`)
+    return
+  }
+
+  const collectionName = action.args[0]
+
+  // Check for named parameters (key: value pairs)
+  const namedParams: string[] = []
+  for (let i = 1; i < action.args.length; i++) {
+    const arg = action.args[i]
+    if (arg.includes(':')) {
+      const [key, val] = arg.split(':').map(s => s.trim())
+      // Handle different value types
+      if (val === 'true' || val === 'false') {
+        namedParams.push(`${key}: ${val}`)
+      } else if (!isNaN(Number(val))) {
+        namedParams.push(`${key}: ${val}`)
+      } else {
+        // String value
+        namedParams.push(`${key}: "${val}"`)
+      }
+    }
+  }
+
+  if (namedParams.length > 0) {
+    ctx.emit(`_runtime.add('${collectionName}', { ${namedParams.join(', ')} })`)
+  } else {
+    ctx.emit(`_runtime.add('${collectionName}')`)
+  }
+}
+
+/**
+ * Emit remove() action for CRUD operations
+ * Generates: _runtime.remove(itemVar)
+ */
+function emitRemoveAction(ctx: EventEmitterContext, action: IRAction, currentVar: string): void {
+  if (!action.args || action.args.length === 0) {
+    ctx.emit(`// Warning: remove() requires item reference`)
+    return
+  }
+
+  const itemRef = action.args[0]
+  // If it's a loop variable reference (like 'todo'), it should be available in scope
+  ctx.emit(`_runtime.remove(${itemRef})`)
+}
+
+/**
+ * Emit create action - creates a new entry in a collection
+ * create(collectionName) - creates empty entry
+ * create(collectionName, initialValues) - creates with initial data
+ */
+function emitCreateAction(ctx: EventEmitterContext, action: IRAction, currentVar: string): void {
+  if (!action.args || action.args.length === 0) {
+    ctx.emit(`// Warning: create() requires collection name`)
+    return
+  }
+  const collectionName = action.args[0]
+  if (action.args.length > 1) {
+    const initialValues = action.args[1]
+    ctx.emit(`_runtime.create('${collectionName}', ${initialValues})`)
+  } else {
+    ctx.emit(`_runtime.create('${collectionName}')`)
+  }
+}
+
+/**
+ * Emit save action - saves current item in a collection
+ * save(collectionName) - saves the current selected item
+ */
+function emitSaveAction(ctx: EventEmitterContext, action: IRAction, currentVar: string): void {
+  if (!action.args || action.args.length === 0) {
+    ctx.emit(`_runtime.save()`)
+  } else {
+    const target = action.args[0]
+    ctx.emit(`_runtime.save('${target}')`)
+  }
+}
+
+/**
+ * Emit delete action - deletes an entry from a collection
+ * delete(itemRef) - deletes the specified item
+ * Note: 'delete' is a JS reserved word, so we use _runtime.deleteItem()
+ */
+function emitDeleteAction(ctx: EventEmitterContext, action: IRAction, currentVar: string): void {
+  if (!action.args || action.args.length === 0) {
+    ctx.emit(`_runtime.deleteItem(${currentVar})`)
+  } else {
+    const target = action.args[0]
+    // Check if it's a variable reference or a string
+    if (target.startsWith('$')) {
+      ctx.emit(`_runtime.deleteItem($get('${target.slice(1)}'))`)
+    } else {
+      ctx.emit(`_runtime.deleteItem('${target}')`)
+    }
+  }
+}
+
+/**
+ * Emit revert action - reverts changes to an entry
+ */
+function emitRevertAction(ctx: EventEmitterContext, action: IRAction, currentVar: string): void {
+  if (!action.args || action.args.length === 0) {
+    ctx.emit(`_runtime.revert()`)
+  } else {
+    const target = action.args[0]
+    ctx.emit(`_runtime.revert('${target}')`)
   }
 }

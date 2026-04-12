@@ -18,6 +18,7 @@ import {
   findClosestTarget,
   getChildRects,
   getContainerRect,
+  clearTargetCache,
 } from '../../../studio/drag-drop/system/target-detector'
 import {
   createMockDOMAdapter,
@@ -305,17 +306,25 @@ describe('getContainerRect with DOMAdapter', () => {
     expect(rect.height).toBe(300)
   })
 
-  it('uses layoutInfo when available', () => {
+  it('always uses DOM for viewport coordinates, ignoring layoutInfo', () => {
+    // layoutInfo contains container-relative coordinates, but getContainerRect
+    // needs viewport coordinates for cursor comparison. Converting container-relative
+    // to viewport would require walking up the parent chain - not worth the complexity.
+    // getBoundingClientRect gives us viewport coords directly.
     const element = createTestElement('div', { [NODE_ID_ATTR]: 'container' })
+    mockAdapter.setBoundingClientRectForElement(element, createMockRect(100, 100, 400, 300))
+
     const layoutInfo = new Map([
       ['container', { x: 50, y: 50, width: 200, height: 150, parentId: null }],
     ])
 
     const rect = getContainerRect(element, layoutInfo, NODE_ID_ATTR, mockAdapter)
 
-    expect(rect.x).toBe(50)
-    expect(rect.y).toBe(50)
-    // DOM adapter should not be called when layoutInfo is available
+    // Should use DOM coordinates, not layoutInfo
+    expect(rect.x).toBe(100)
+    expect(rect.y).toBe(100)
+    expect(rect.width).toBe(400)
+    expect(rect.height).toBe(300)
   })
 })
 
@@ -483,6 +492,10 @@ describe('Mode Transition Integration', () => {
 
     const flexTarget = detectTarget(element, NODE_ID_ATTR, mockAdapter)
     expect(flexTarget?.layoutType).toBe('flex')
+
+    // Clear cache to simulate new drag operation
+    // (cache is cleared between drag operations, not within a single drag)
+    clearTargetCache()
 
     // Simulate transition: add stacked layout attribute
     element.dataset.layout = 'stacked'

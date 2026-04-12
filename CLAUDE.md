@@ -2086,6 +2086,9 @@ Mirror hat eingebaute Funktionen für die häufigsten UI-Patterns. Du musst sie 
 | `back()` | Browser zurück |  |
 | `forward()` | Browser vorwärts |  |
 | `openUrl("...")` | URL öffnen (neuer Tab) |  |
+| **CRUD** | `add(collection)` | Eintrag zur Sammlung hinzufügen |
+| `add(collection, field: value)` | Mit Initialwerten hinzufügen |  |
+| `remove(item)` | Eintrag entfernen (im `each` Loop) |  |
 
 ### Feedback: toast()
 
@@ -2270,6 +2273,68 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
 | `scrollToTop()` | Zum Anfang scrollen |
 | `scrollToBottom()` | Zum Ende scrollen |
 
+### CRUD: Sammlungen bearbeiten
+
+Für dynamische Listen – Items hinzufügen, bearbeiten und entfernen. Perfekt für Todo-Listen, Warenkörbe oder jede Art von bearbeitbarer Sammlung:
+
+```mirror
+todos:
+  task1:
+    text: "Erste Aufgabe"
+    done: false
+
+Frame gap 12, bg #0a0a0a, pad 16, rad 8
+  // Neues Item hinzufügen
+  Button "Neue Aufgabe", pad 10 20, bg #2271C1, col white, rad 6, add(todos, text: "Neue Aufgabe", done: false)
+
+  // Liste mit Bearbeiten und Löschen
+  each todo in $todos
+    Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 6
+      Checkbox "", checked todo.done
+      Text todo.text, col white, editable, grow
+      Button "×", pad 6 12, bg #ef4444, col white, rad 4, remove(todo)
+```
+
+**Was passiert hier?**
+
+- `add(todos, text: "...", done: false)` – fügt einen neuen Eintrag mit Initialwerten hinzu
+- `editable` – macht den Text direkt im UI bearbeitbar (Doppelklick zum Editieren)
+- `remove(todo)` – entfernt den Eintrag aus der Sammlung
+
+| Funktion | Beschreibung |
+| --- | --- |
+| `add(collection)` | Leeren Eintrag zur Sammlung hinzufügen |
+| `add(collection, field: value, ...)` | Eintrag mit Initialwerten hinzufügen |
+| `remove(item)` | Eintrag entfernen (innerhalb `each` Loop) |
+
+| Property | Beschreibung |
+| --- | --- |
+| `editable` | Text inline bearbeitbar machen |
+
+> **Hinweis:** `remove(item)` funktioniert nur innerhalb eines `each` Loops – dort ist `item` die Loop-Variable, die auf den aktuellen Eintrag verweist.
+
+#### Praktisch: Einkaufsliste
+
+```mirror
+items:
+  milk:
+    name: "Milch"
+  bread:
+    name: "Brot"
+
+Frame gap 12, bg #1a1a1a, pad 20, rad 12, w 280
+  Text "Einkaufsliste", col white, fs 18, weight 600
+
+  each item in $items
+    Frame hor, gap 12, ver-center, pad 8, bg #252525, rad 6
+      Text item.name, col white, editable, grow
+      Button "×", pad 4 10, bg transparent, col #888, rad 4, remove(item)
+        hover:
+          col #ef4444
+
+  Button "Hinzufügen", pad 10 16, bg #333, col white, rad 6, w full, add(items, name: "Neuer Artikel")
+```
+
 ### Funktionen kombinieren
 
 Du kannst mehrere Funktionen bei einem Klick ausführen:
@@ -2393,6 +2458,14 @@ function absenden() {
 | `back()` | Browser zurück |
 | `forward()` | Browser vorwärts |
 | `openUrl("...")` | URL öffnen |
+
+#### CRUD (Sammlungen)
+
+| `add(collection)` | Eintrag hinzufügen |
+| --- | --- |
+| `add(collection, field: value)` | Mit Initialwerten |
+| `remove(item)` | Eintrag entfernen (im Loop) |
+| `editable` | Text inline bearbeitbar |
 
 
 ---
@@ -4569,6 +4642,7 @@ Frame gap 16
 | src | - | - |
 | placeholder | - | - |
 | focusable | - | *(standalone)* |
+| editable | - | *(standalone)* |
 | keyboard-nav | keynav | *(standalone)* |
 | readonly | - | *(standalone)* |
 | type | - | - |
@@ -4665,6 +4739,8 @@ Frame gap 16
 | increment | - |
 | decrement | - |
 | copy | - |
+| add | - |
+| remove | - |
 | create | - |
 | save | - |
 | revert | - |

@@ -36,9 +36,8 @@ export {
   type NumericValue,
 } from './dsl'
 
-// Primitives
+// Primitives - Note: PRIMITIVES was removed, use isPrimitive() instead
 export {
-  PRIMITIVES,
   ZAG_PRIMITIVES,
   COMPOUND_PRIMITIVES,
   CHART_PRIMITIVES,
@@ -48,14 +47,14 @@ export {
 export * from './properties'
 
 // Zag-specific
-export { isZagPrimitive, getZagSlotDefs, type ZagSlotDef } from './zag-primitives'
-export { getZagPropMetadata, type ZagPropMeta, type ZagPropMetaEntry } from './zag-prop-metadata'
+export { isZagPrimitive, getSlotDef, getSlotMappings, type ZagSlotDef, type ZagPrimitiveDef } from './zag-primitives'
+export { getZagPropMetadata, type ZagPropMeta } from './zag-prop-metadata'
 
 // Component templates
 export { COMPONENT_TEMPLATES, adjustTemplateIndentation } from './component-templates'
 
 // Compound primitives
-export { getCompoundPrimitive, type CompoundPrimitiveDef, type SlotDef } from './compound-primitives'
+export { getCompoundPrimitive, type CompoundPrimitiveDef, type CompoundSlotDef } from './compound-primitives'
 
 // Component tokens
 export * from './component-tokens'
@@ -67,4 +66,17 @@ export * from './theme-generator'
 export * from './color-utils'
 
 // Layout defaults
-export { getLayoutDefaults, type LayoutDefaults } from './layout-defaults'
+export {
+  NON_CONTAINER_PRIMITIVES,
+  isContainer,
+  FLEX_DEFAULTS,
+  CONTAINER_DEFAULTS,
+  NINE_ZONE,
+  CENTER_ALIGNMENT,
+  getFlexDefaults,
+  getNineZoneAlignment,
+  isNineZonePosition,
+  type NineZonePosition,
+  type SizingMode,
+  type SizingFlags,
+} from './layout-defaults'

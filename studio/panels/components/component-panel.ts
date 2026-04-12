@@ -7,7 +7,7 @@
  * - User-defined components from the current file
  */
 
-import type { AST } from '../../../compiler/parser/ast'
+import type { AST } from '../../../compiler'
 import type {
   ComponentItem,
   ComponentSection,
@@ -211,7 +211,9 @@ export class ComponentPanel {
       : (cb: () => void) => setTimeout(cb, 100)
 
     scheduleIdle(() => {
-      this.ghostRenderer.warmCache(allItems).catch(() => {})
+      this.ghostRenderer.warmCache(allItems).catch((err) => {
+        console.warn('[ComponentPanel] Ghost cache warming failed:', err)
+      })
     })
   }
 

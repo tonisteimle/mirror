@@ -34,11 +34,12 @@ describe('State Children Feature', () => {
     return generateDOM(ast)
   }
 
-  function runCode(code: string): any {
+  function runCode(code: string): HTMLElement {
     // Strip export keyword for browser execution
     const execCode = code.replace('export function createUI', 'function createUI')
+    // Note: createUI() returns the root element directly, not an object with { root }
     const fn = new dom.window.Function(execCode + '\nreturn createUI();')
-    return fn()
+    return fn() as HTMLElement
   }
 
   describe('Parser: State children', () => {
@@ -168,9 +169,9 @@ ExpandBtn: hor, gap 8, pad 12, bg #333
 ExpandBtn
 `
       const generated = compile(code)
-      const ui = runCode(generated)
+      const root = runCode(generated)
 
-      const btn = ui.root.querySelector('[data-mirror-id]') as HTMLElement
+      const btn = root.querySelector('[data-mirror-id]') as HTMLElement
 
       // Initial state: should have "Show more"
       expect(btn.textContent).toBe('Show more')
@@ -200,9 +201,9 @@ ExpandBtn: hor, gap 8, pad 12
 ExpandBtn
 `
       const generated = compile(code)
-      const ui = runCode(generated)
+      const root = runCode(generated)
 
-      const btn = ui.root.querySelector('[data-mirror-id]') as HTMLElement
+      const btn = root.querySelector('[data-mirror-id]') as HTMLElement
 
       // Initial: 2 children
       expect(btn.children.length).toBe(2)

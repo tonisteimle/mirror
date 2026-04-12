@@ -49,15 +49,16 @@ export function renderWithRuntime(code: string, container: HTMLElement): {
   )
 
   // Execute the code
+  // Note: createUI() returns the root element directly with methods attached
   const fn = new Function(domCode + '\nreturn createUI();')
-  const ui = fn()
+  const root = fn() as HTMLElement & { elements?: Record<string, HTMLElement>; update?: () => void }
 
-  container.appendChild(ui.root)
+  container.appendChild(root)
 
   return {
-    root: ui.root as HTMLElement,
-    elements: ui.elements || {},
-    update: ui.update || (() => {})
+    root,
+    elements: root.elements || {},
+    update: root.update || (() => {})
   }
 }
 

@@ -38,7 +38,7 @@ export interface AgentIntegrationConfig {
   /** Get current file name */
   getCurrentFile?: () => string
   /** Get all project files with types */
-  getFiles?: () => { name: string; type: 'tokens' | 'components' | 'component' | 'layout' | 'unknown'; code: string }[]
+  getFiles?: () => { name: string; type: 'tokens' | 'components' | 'component' | 'layout' | 'data' | 'unknown'; code: string }[]
   /** Get all code concatenated */
   getAllCode?: () => string
   /** Update file content */

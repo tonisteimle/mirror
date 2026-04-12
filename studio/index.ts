@@ -44,8 +44,8 @@ export * from './agent'
 // Storage (abstracted file system)
 export * from './storage'
 
-// Desktop Files (file tree UI and operations)
-export * from './desktop-files'
+// Desktop Files - loaded separately at runtime (has circular dep on dist/index.js)
+// See: studio/desktop-files.js
 
 // UI Components (Zag.js-based)
 export * from './ui'

@@ -1,0 +1,306 @@
+// Adressverwaltung mit Speicherfunktion
+
+// === DESIGN TOKENS ===
+primary.bg: #3b82f6
+primary-light.bg: #60a5fa
+accent.bg: #10b981
+danger.bg: #ef4444
+warning.bg: #f59e0b
+
+surface.bg: #ffffff
+surface-secondary.bg: #f8fafc
+surface-tertiary.bg: #f1f5f9
+border.boc: #e2e8f0
+border-dark.boc: #cbd5e1
+
+text-primary.col: #0f172a
+text-secondary.col: #475569
+text-muted.col: #94a3b8
+
+// === KOMPONENTEN ===
+
+// Eingabefeld mit Label
+FormField: Frame gap 4, w full
+  FieldLabel: col $text-secondary, fs 13, weight 500
+  FieldInput: Input bg $surface, col $text-primary, pad 10 12, rad 6, w full, bor 1, boc $border
+    focus:
+      boc $primary
+
+// Action Button
+Btn: Button pad 10 16, rad 6, fs 13, weight 500, cursor pointer
+  hover 0.15s:
+    opacity 0.9
+
+// Icon Button
+IconBtn: Frame w 36, h 36, rad 6, center, cursor pointer
+  hover 0.15s:
+    bg $surface-tertiary
+
+// Adresskarte
+AddressCard: Frame pad 16, bg $surface, rad 8, gap 8, bor 1, boc $border, cursor pointer
+  hover 0.2s:
+    boc $primary-light
+    shadow sm
+  selected:
+    boc $primary
+    bg #eff6ff
+
+// Badge
+Badge: Frame pad 4 8, rad 4, fs 11, weight 500
+
+// === DATEN ===
+
+addresses:
+  addr1:
+    id: "addr1"
+    firstName: "Max"
+    lastName: "Mustermann"
+    company: "Muster GmbH"
+    street: "Hauptstraße 42"
+    zip: "10115"
+    city: "Berlin"
+    country: "Deutschland"
+    phone: "+49 30 12345678"
+    email: "max@muster.de"
+    category: "Geschäftlich"
+  addr2:
+    id: "addr2"
+    firstName: "Anna"
+    lastName: "Schmidt"
+    company: ""
+    street: "Seestraße 15"
+    zip: "80331"
+    city: "München"
+    country: "Deutschland"
+    phone: "+49 89 87654321"
+    email: "anna.schmidt@email.de"
+    category: "Privat"
+  addr3:
+    id: "addr3"
+    firstName: "Thomas"
+    lastName: "Weber"
+    company: "Weber & Partner"
+    street: "Kirchweg 8"
+    zip: "20095"
+    city: "Hamburg"
+    country: "Deutschland"
+    phone: "+49 40 11223344"
+    email: "t.weber@partner.de"
+    category: "Geschäftlich"
+  addr4:
+    id: "addr4"
+    firstName: "Lisa"
+    lastName: "Braun"
+    company: ""
+    street: "Parkallee 23"
+    zip: "50667"
+    city: "Köln"
+    country: "Deutschland"
+    phone: "+49 221 55667788"
+    email: "lisa.braun@mail.de"
+    category: "Familie"
+
+selectedAddress: null
+editMode: false
+searchQuery: ""
+
+// === LAYOUT ===
+
+Frame w full, h full, hor, bg $surface-secondary
+
+  // Linke Seite - Adressliste
+  Frame w 380, h full, bg $surface, bor 0 1 0 0, boc $border, gap 0
+
+    // Header
+    Frame pad 20, gap 16, bor 0 0 1 0, boc $border
+      Frame hor, spread, ver-center
+        Frame hor, gap 12, ver-center
+          Frame w 40, h 40, bg $primary, rad 8, center
+            Icon "book-user", ic white, is 20
+          Frame gap 0
+            Text "Adressen", col $text-primary, fs 18, weight 700
+            Text "Verwaltung", col $text-muted, fs 12
+
+        Btn bg $primary, col white, create(addresses)
+          Frame hor, gap 6, ver-center
+            Icon "plus", ic white, is 16
+            Text "Neu"
+
+      // Suchfeld
+      Frame hor, gap 8, ver-center, w full
+        Frame grow, hor, ver-center, bg $surface-secondary, rad 6, pad 0 12, bor 1, boc $border
+          Icon "search", ic $text-muted, is 16
+          Input placeholder "Suchen...", bg transparent, col $text-primary, pad 10, w full, bor 0, bind searchQuery
+
+    // Adressliste
+    Frame pad 12, gap 8, grow, scroll
+
+      each address in $addresses
+        AddressCard exclusive(), bind selectedAddress
+          Frame hor, spread, ver-center
+            Frame hor, gap 12, ver-center
+              Frame w 44, h 44, rad 99, bg $surface-tertiary, center
+                Text $address.firstName[0] + $address.lastName[0], col $text-secondary, fs 14, weight 600
+              Frame gap 2
+                Text $address.firstName + " " + $address.lastName, col $text-primary, fs 14, weight 600
+                Text $address.city, col $text-muted, fs 12
+            Badge bg $address.category === "Geschäftlich" ? #dbeafe : $address.category === "Privat" ? #dcfce7 : #fef3c7, col $address.category === "Geschäftlich" ? #1d4ed8 : $address.category === "Privat" ? #15803d : #a16207
+              Text "$address.category"
+
+    // Footer mit Anzahl
+    Frame pad 16, bor 1 0 0 0, boc $border, hor, ver-center, gap 8
+      Icon "users", ic $text-muted, is 16
+      Text "4 Adressen", col $text-muted, fs 13
+
+  // Rechte Seite - Detail/Bearbeitung
+  Frame w full, h full, pad 24, gap 20, scroll
+
+    // Wenn keine Adresse ausgewählt
+    if !$selectedAddress
+      Frame w full, h full, center, gap 16
+        Frame w 80, h 80, rad 99, bg $surface-tertiary, center
+          Icon "mouse-pointer-click", ic $text-muted, is 32
+        Text "Adresse auswählen", col $text-secondary, fs 16, weight 500
+        Text "Wähle eine Adresse aus der Liste oder erstelle eine neue.", col $text-muted, fs 14, center, w 280
+
+    // Wenn Adresse ausgewählt - Detailansicht
+    if $selectedAddress
+      Frame gap 24, w full
+
+        // Header mit Aktionen
+        Frame hor, spread, ver-center
+          Frame hor, gap 16, ver-center
+            Frame w 64, h 64, rad 99, bg $primary, center
+              Text $selectedAddress.firstName[0] + $selectedAddress.lastName[0], col white, fs 20, weight 600
+            Frame gap 4
+              Text $selectedAddress.firstName + " " + $selectedAddress.lastName, col $text-primary, fs 24, weight 700
+              Text $selectedAddress.company, col $text-secondary, fs 14
+
+          Frame hor, gap 8
+            IconBtn bor 1, boc $border
+              Icon "edit-2", ic $text-secondary, is 18
+            IconBtn bor 1, boc $border
+              Icon "trash-2", ic $danger, is 18
+
+        // Adresse
+        Frame gap 16, bg $surface-secondary, pad 20, rad 8
+          Frame hor, gap 8, ver-center
+            Icon "map-pin", ic $primary, is 18
+            Text "Adresse", col $text-primary, fs 14, weight 600
+
+          Frame gap 4, pad 0 0 0 26
+            Text $selectedAddress.street, col $text-primary, fs 14
+            Text $selectedAddress.zip + " " + $selectedAddress.city, col $text-primary, fs 14
+            Text $selectedAddress.country, col $text-secondary, fs 13
+
+        // Kontakt
+        Frame gap 16, bg $surface-secondary, pad 20, rad 8
+          Frame hor, gap 8, ver-center
+            Icon "phone", ic $primary, is 18
+            Text "Kontakt", col $text-primary, fs 14, weight 600
+
+          Frame gap 8, pad 0 0 0 26
+            Frame hor, gap 8, ver-center
+              Icon "phone", ic $text-muted, is 14
+              Text $selectedAddress.phone, col $text-primary, fs 14
+            Frame hor, gap 8, ver-center
+              Icon "mail", ic $text-muted, is 14
+              Text $selectedAddress.email, col $text-primary, fs 14
+
+        // Kategorie
+        Frame hor, gap 8, ver-center
+          Text "Kategorie:", col $text-secondary, fs 13
+          Badge bg $selectedAddress.category === "Geschäftlich" ? #dbeafe : $selectedAddress.category === "Privat" ? #dcfce7 : #fef3c7, col $selectedAddress.category === "Geschäftlich" ? #1d4ed8 : $selectedAddress.category === "Privat" ? #15803d : #a16207
+            Text "$selectedAddress.category"
+
+// Bearbeitungsformular (als Dialog/Overlay)
+Dialog name EditDialog
+  Trigger: Frame hidden
+  Backdrop: bg rgba(0,0,0,0.5)
+  Content: Frame w 560, bg $surface, rad 12, shadow lg, pad 0, clip
+
+    // Dialog Header
+    Frame hor, spread, ver-center, pad 20, bor 0 0 1 0, boc $border
+      Text "Adresse bearbeiten", col $text-primary, fs 18, weight 600
+      CloseTrigger: IconBtn
+        Icon "x", ic $text-secondary, is 20
+
+    // Formular
+    Frame pad 24, gap 20
+
+      // Name
+      Frame hor, gap 16
+        FormField grow
+          FieldLabel "Vorname"
+          FieldInput placeholder "Max"
+        FormField grow
+          FieldLabel "Nachname"
+          FieldInput placeholder "Mustermann"
+
+      // Firma
+      FormField
+        FieldLabel "Firma (optional)"
+        FieldInput placeholder "Firmenname"
+
+      // Adresse
+      FormField
+        FieldLabel "Straße & Hausnummer"
+        FieldInput placeholder "Hauptstraße 42"
+
+      Frame hor, gap 16
+        FormField w 120
+          FieldLabel "PLZ"
+          FieldInput placeholder "10115"
+        FormField grow
+          FieldLabel "Stadt"
+          FieldInput placeholder "Berlin"
+
+      FormField
+        FieldLabel "Land"
+        FieldInput placeholder "Deutschland"
+
+      // Kontakt
+      Frame hor, gap 16
+        FormField grow
+          FieldLabel "Telefon"
+          FieldInput placeholder "+49 30 12345678"
+        FormField grow
+          FieldLabel "E-Mail"
+          FieldInput placeholder "max@example.de"
+
+      // Kategorie
+      FormField
+        FieldLabel "Kategorie"
+        Frame hor, gap 8
+          Btn bg $surface-tertiary, col $text-primary, bor 1, boc $border, exclusive()
+            on:
+              bg $primary
+              col white
+              boc $primary
+            Text "Privat"
+          Btn bg $surface-tertiary, col $text-primary, bor 1, boc $border, exclusive()
+            on:
+              bg $primary
+              col white
+              boc $primary
+            Text "Geschäftlich"
+          Btn bg $surface-tertiary, col $text-primary, bor 1, boc $border, exclusive()
+            on:
+              bg $primary
+              col white
+              boc $primary
+            Text "Familie"
+
+    // Dialog Footer
+    Frame hor, spread, pad 20, bor 1 0 0 0, boc $border, bg $surface-secondary
+      Btn bg $surface, col $danger, bor 1, boc $danger, delete(selectedAddress)
+        Frame hor, gap 6, ver-center
+          Icon "trash-2", ic $danger, is 16
+          Text "Löschen"
+      Frame hor, gap 12
+        CloseTrigger: Btn bg $surface, col $text-secondary, bor 1, boc $border
+          Text "Abbrechen"
+        Btn bg $primary, col white, save(selectedAddress), toast("Adresse gespeichert!", "success")
+          Frame hor, gap 6, ver-center
+            Icon "save", ic white, is 16
+            Text "Speichern"

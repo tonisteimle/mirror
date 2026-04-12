@@ -77,6 +77,24 @@ export const LAYOUT_BOOLEANS = new Set<string>([
 ])
 
 /**
+ * Position booleans that are commonly used as align values.
+ * These are NOT in LAYOUT_BOOLEANS to avoid breaking "align top left"
+ */
+export const POSITION_BOOLEANS = new Set<string>([
+  'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center',
+])
+
+/**
+ * All boolean properties combined - used for parser property recognition.
+ * Combines BOOLEAN_PROPERTIES (schema-derived), LAYOUT_BOOLEANS, and POSITION_BOOLEANS.
+ */
+export const ALL_BOOLEAN_PROPERTIES = new Set<string>([
+  ...BOOLEAN_PROPERTIES,
+  ...LAYOUT_BOOLEANS,
+  ...POSITION_BOOLEANS,
+])
+
+/**
  * Get all property names and aliases from the schema.
  */
 export function getAllSchemaPropertyNames(): Set<string> {

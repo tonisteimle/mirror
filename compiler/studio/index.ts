@@ -164,3 +164,14 @@ export {
   type RobustResult,
   type RobustOptions,
 } from './robust-modifier'
+
+// Layout detection utilities
+export {
+  detectLayout,
+  isHorizontalLayout,
+  getLayoutDirection,
+  isAbsoluteLayoutContainer,
+  clientToContainer,
+  type LayoutType,
+  type LayoutInfo,
+} from './utils/layout-detection'

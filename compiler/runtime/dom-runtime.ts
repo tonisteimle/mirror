@@ -54,6 +54,7 @@ export interface MirrorElement extends HTMLElement {
   _baseStyles?: Record<string, string>
   _initialState?: string
   _visibleWhen?: string
+  _visibilityPaths?: string[]  // Paths this element's visibility depends on
   _selectionBinding?: string
   _textBinding?: string
   _textPlaceholder?: string
@@ -79,6 +80,8 @@ export interface MirrorElement extends HTMLElement {
     renderThen: () => DocumentFragment
     renderElse?: () => DocumentFragment
   }
+  // Loop item stored on template elements for bind/exclusive()
+  _loopItem?: unknown
   // State machine (interaction model)
   _stateMachine?: {
     initial: string
@@ -1602,6 +1605,333 @@ function updateBoundTokenElements(tokenName: string, value: unknown): void {
 }
 
 // ============================================
+// CRUD OPERATIONS
+// ============================================
+
+/**
+ * Counter for unique ID generation (avoids collision within same millisecond)
+ */
+let _idCounter = 0
+
+/**
+ * Generate a unique ID for new entries
+ * Uses timestamp + counter + random to avoid collisions on rapid calls
+ */
+function generateEntryId(prefix = 'item'): string {
+  _idCounter = (_idCounter + 1) % 100000
+  const random = Math.random().toString(36).slice(2, 6)
+  return `${prefix}_${Date.now()}_${_idCounter}_${random}`
+}
+
+/**
+ * Add a new entry to a collection
+ * @param collectionName Collection name (with or without $)
+ * @param values Optional initial values for the entry
+ * @returns The key of the newly added entry
+ */
+export function add(
+  collectionName: string,
+  values?: Record<string, unknown>
+): string {
+  const name = collectionName.startsWith('$') ? collectionName.slice(1) : collectionName
+  const data = getMirrorData()
+
+  // Generate a unique key
+  const key = generateEntryId(name.slice(0, 3))
+
+  // Handle array collections
+  if (Array.isArray(data[name])) {
+    const arr = data[name] as unknown[]
+    const newItem = { _key: key, ...(values || {}) }
+    arr.push(newItem)
+    refreshEachLoops(name)
+    return key
+  }
+
+  // Get or create the collection (object)
+  if (!data[name] || typeof data[name] !== 'object') {
+    data[name] = {}
+  }
+
+  const collection = data[name] as Record<string, unknown>
+
+  // Add the entry with _key
+  collection[key] = { _key: key, ...(values || {}) }
+
+  // Re-render affected each loops
+  refreshEachLoops(name)
+
+  return key
+}
+
+/**
+ * Remove an entry from a collection
+ * Can be called with an item object that has _key property (from each loop)
+ */
+export function remove(
+  itemOrKey: unknown
+): void {
+  if (!itemOrKey) {
+    console.warn('[Mirror] remove() called with null/undefined')
+    return
+  }
+
+  if (typeof itemOrKey === 'object') {
+    const item = itemOrKey as Record<string, unknown>
+    if (typeof item._key !== 'string') {
+      console.warn('[Mirror] remove() called with item without _key')
+      return
+    }
+
+    const entryKey = item._key
+    const data = getMirrorData()
+
+    // Find the collection containing this item
+    for (const [collectionName, collectionData] of Object.entries(data)) {
+      if (collectionData && typeof collectionData === 'object' && !Array.isArray(collectionData)) {
+        const col = collectionData as Record<string, unknown>
+        if (col[entryKey]) {
+          delete col[entryKey]
+          refreshEachLoops(collectionName)
+          return
+        }
+      }
+    }
+    console.warn(`[Mirror] remove() could not find item with key "${entryKey}"`)
+  }
+}
+
+/**
+ * Create a new entry in a collection
+ * @param collectionName The name of the collection
+ * @param initialValues Optional initial values for the new entry
+ */
+export function create(
+  collectionName: string,
+  initialValues?: Record<string, unknown>
+): Record<string, unknown> | null {
+  const data = getMirrorData()
+  const collection = data[collectionName]
+
+  if (!collection || typeof collection !== 'object' || Array.isArray(collection)) {
+    console.warn(`[Mirror] create() - collection "${collectionName}" not found or invalid`)
+    return null
+  }
+
+  // Generate a unique key
+  const newKey = `new_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+
+  // Create the new entry with default values from existing entries (schema inference)
+  const existingEntries = Object.values(collection as Record<string, unknown>)
+  const template = existingEntries[0] as Record<string, unknown> | undefined
+  const newEntry: Record<string, unknown> = { _key: newKey }
+
+  // Copy structure from template if available
+  if (template) {
+    for (const key of Object.keys(template)) {
+      if (key !== '_key') {
+        const templateValue = template[key]
+        // Set default values based on type
+        if (typeof templateValue === 'string') newEntry[key] = ''
+        else if (typeof templateValue === 'number') newEntry[key] = 0
+        else if (typeof templateValue === 'boolean') newEntry[key] = false
+        else if (Array.isArray(templateValue)) newEntry[key] = []
+        else if (templateValue && typeof templateValue === 'object') newEntry[key] = {}
+        else newEntry[key] = null
+      }
+    }
+  }
+
+  // Override with provided initial values
+  if (initialValues) {
+    Object.assign(newEntry, initialValues)
+  }
+
+  // Add to collection
+  ;(collection as Record<string, unknown>)[newKey] = newEntry
+
+  // Refresh UI
+  refreshEachLoops(collectionName)
+
+  return newEntry
+}
+
+/**
+ * Save changes to the current data (placeholder for persistence)
+ * In a real app, this would sync to a backend
+ * @param target Optional target identifier
+ */
+export function save(target?: string): void {
+  const data = getMirrorData()
+
+  // For now, just log that save was called
+  // In a real implementation, this would persist to localStorage, API, etc.
+  console.log('[Mirror] save() called', target ? `for ${target}` : '', data)
+
+  // Dispatch a custom event that apps can listen to for persistence
+  window.dispatchEvent(new CustomEvent('mirror:save', {
+    detail: { target, data }
+  }))
+}
+
+/**
+ * Delete an item from its collection
+ * Note: Named deleteItem to avoid conflict with JS reserved word 'delete'
+ * @param itemOrKey The item object (with _key) or the key string
+ */
+export function deleteItem(
+  itemOrKey: unknown
+): void {
+  // Delegate to remove() which handles the actual deletion
+  remove(itemOrKey)
+}
+
+/**
+ * Revert changes to an entry (placeholder)
+ * @param target Optional target identifier
+ */
+export function revert(target?: string): void {
+  console.log('[Mirror] revert() called', target ? `for ${target}` : '')
+
+  // Dispatch a custom event
+  window.dispatchEvent(new CustomEvent('mirror:revert', {
+    detail: { target }
+  }))
+}
+
+/**
+ * Set a nested field value using dot notation path
+ */
+function setNestedField(obj: Record<string, unknown>, path: string, value: unknown): void {
+  const parts = path.split('.')
+  let current = obj
+
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i]
+    if (current[part] === undefined || current[part] === null) {
+      current[part] = {}
+    }
+    current = current[part] as Record<string, unknown>
+  }
+
+  current[parts[parts.length - 1]] = value
+}
+
+/**
+ * Update a field in an item
+ * @param item The item object (with _key)
+ * @param field The field name to update (supports dot notation)
+ * @param value The new value
+ */
+export function updateField(
+  item: Record<string, unknown>,
+  field: string,
+  value: unknown
+): void {
+  if (typeof item._key !== 'string') {
+    console.warn('[Mirror] updateField() called with item without _key')
+    return
+  }
+
+  const data = getMirrorData()
+  const entryKey = item._key
+
+  for (const [collectionName, collectionData] of Object.entries(data)) {
+    if (collectionData && typeof collectionData === 'object' && !Array.isArray(collectionData)) {
+      const col = collectionData as Record<string, unknown>
+      if (col[entryKey]) {
+        const entry = col[entryKey] as Record<string, unknown>
+
+        // Support dot notation for nested fields
+        if (field.includes('.')) {
+          setNestedField(entry, field, value)
+          setNestedField(item, field, value)
+        } else {
+          entry[field] = value
+          item[field] = value
+        }
+
+        refreshEachLoops(collectionName)
+        return
+      }
+    }
+  }
+
+  console.warn(`[Mirror] Could not find item with key "${entryKey}" in any collection`)
+}
+
+/**
+ * Setup editable behavior on a text element
+ */
+export function setupEditable(
+  element: HTMLElement,
+  item: Record<string, unknown>,
+  field: string
+): void {
+  element.addEventListener('dblclick', () => {
+    element.contentEditable = 'true'
+    element.focus()
+
+    const handleBlur = () => {
+      element.contentEditable = 'false'
+      const newValue = element.textContent || ''
+      updateField(item, field, newValue)
+      element.removeEventListener('blur', handleBlur)
+    }
+
+    element.addEventListener('blur', handleBlur)
+  })
+}
+
+/**
+ * Re-render all each loops that use a specific collection
+ */
+function refreshEachLoops(collectionName: string): void {
+  const containers = document.querySelectorAll('[data-each-container]') as NodeListOf<MirrorElement>
+
+  containers.forEach(container => {
+    const config = container._eachConfig
+    if (!config) return
+
+    // Check if this loop uses the changed collection
+    const loopCollection = typeof config.collection === 'string'
+      ? config.collection
+      : null
+
+    if (loopCollection !== collectionName) return
+
+    // Clear existing items
+    container.innerHTML = ''
+
+    // Get fresh data
+    const data = getMirrorData()
+    let items = data[collectionName]
+
+    if (!items || typeof items !== 'object') return
+
+    // Convert object entries to array with _key
+    let itemsArray: Record<string, unknown>[]
+    if (Array.isArray(items)) {
+      itemsArray = items as Record<string, unknown>[]
+    } else {
+      itemsArray = Object.entries(items).map(([k, v]) =>
+        typeof v === 'object' && v !== null
+          ? { _key: k, ...(v as object) }
+          : { _key: k, value: v }
+      )
+    }
+
+    // Render each item using the template function
+    if (config.renderItem) {
+      itemsArray.forEach((item, index) => {
+        const itemEl = config.renderItem!(item, index)
+        container.appendChild(itemEl)
+      })
+    }
+  })
+}
+
+// ============================================
 // CLIPBOARD
 // ============================================
 
@@ -2503,14 +2833,29 @@ export function exclusiveTransition(
   while (container) {
     const bindVar = container.dataset.bind
     if (bindVar) {
-      // Get the text content of the activated element
-      const activeText = el.textContent?.trim() || ''
+      // Get the loop item if available (from each loops), otherwise fall back to textContent
+      // Walk up from el to find the _loopItem, checking each parent including itemContainer
+      let loopItem = el._loopItem
+      if (loopItem === undefined) {
+        // Check parent elements (template elements might store the item on a wrapper)
+        let walker = el.parentElement as MirrorElement | null
+        while (walker && loopItem === undefined) {
+          if (walker._loopItem !== undefined) {
+            loopItem = walker._loopItem
+          } else if (walker.dataset?.eachItem !== undefined) {
+            // Stop at eachItem container boundary
+            break
+          }
+          walker = walker.parentElement as MirrorElement | null
+        }
+      }
+      const activeValue = loopItem !== undefined ? loopItem : (el.textContent?.trim() || '')
       // Update the global state and notify bound elements
       if (typeof window !== 'undefined') {
         window._mirrorState = window._mirrorState || {}
-        window._mirrorState[bindVar] = activeText
+        window._mirrorState[bindVar] = activeValue
       }
-      notifyDataChange(bindVar, activeText)
+      notifyDataChange(bindVar, activeValue)
       break
     }
     container = container.parentElement as MirrorElement | null
@@ -3823,6 +4168,12 @@ const _valueBindings: Map<string, Set<MirrorElement>> = new Map()
 const _textBindings: Map<string, Set<MirrorElement>> = new Map()
 
 /**
+ * Registry of elements with visibility conditions (_visibleWhen) that depend on data
+ * Maps path (e.g., "selectedAddress") to Set of elements whose visibility depends on that data
+ */
+const _visibilityBindings: Map<string, Set<MirrorElement>> = new Map()
+
+/**
  * Register an input element for two-way data binding
  * @param el The input element to bind
  * @param path The data path (e.g., "user.name")
@@ -3848,6 +4199,42 @@ export function bindText(el: MirrorElement, path: string): void {
     _textBindings.set(path, new Set())
   }
   _textBindings.get(path)!.add(el)
+}
+
+/**
+ * Register an element for visibility binding (elements with _visibleWhen that depends on data)
+ * @param el The element with _visibleWhen condition
+ * @param path The data path the visibility depends on (e.g., "selectedAddress")
+ */
+export function bindVisibility(el: MirrorElement, path: string): void {
+  if (!el || !path) return
+  // Store all paths this element depends on
+  if (!el._visibilityPaths) {
+    el._visibilityPaths = []
+  }
+  el._visibilityPaths.push(path)
+  // Register in the bindings map
+  if (!_visibilityBindings.has(path)) {
+    _visibilityBindings.set(path, new Set())
+  }
+  _visibilityBindings.get(path)!.add(el)
+}
+
+/**
+ * Evaluate a visibility condition using $get for data lookup
+ * @param condition The visibility condition (e.g., "!$selectedAddress" or "$selectedAddress")
+ */
+function _evaluateVisibilityCondition(condition: string): boolean {
+  try {
+    // Replace $varName with $get("varName") for evaluation
+    const evalCondition = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+    // Use Function constructor to evaluate in the context with $get
+    const $getFunc = (window as unknown as { $get: (path: string) => unknown }).$get
+    const result = new Function('$get', 'return ' + evalCondition)($getFunc)
+    return !!result
+  } catch (e) {
+    return false
+  }
 }
 
 /**
@@ -3885,6 +4272,17 @@ export function notifyDataChange(path: string, value: unknown): void {
         }
       } else {
         el.textContent = stringValue
+      }
+    }
+  }
+
+  // Update visibility of elements with _visibleWhen that depend on this path
+  const visElements = _visibilityBindings.get(path)
+  if (visElements) {
+    for (const el of visElements) {
+      if (el._visibleWhen) {
+        const visible = _evaluateVisibilityCondition(el._visibleWhen)
+        el.style.display = visible ? '' : 'none'
       }
     }
   }
@@ -4315,6 +4713,7 @@ export const runtime = {
   // Two-Way Data Binding
   bindValue,
   bindText,
+  bindVisibility,
   notifyDataChange,
   unbindValue,
   // Charts

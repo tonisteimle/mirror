@@ -5,6 +5,10 @@ export default defineConfig({
   format: ['esm'],
   outDir: 'studio/dist',
   splitting: false,
+  // Replace process.env.NODE_ENV for browser compatibility
+  define: {
+    'process.env.NODE_ENV': '"production"',
+  },
   // Bundle everything EXCEPT these packages (loaded via importmap)
   external: [
     'tom-select',

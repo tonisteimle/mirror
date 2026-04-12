@@ -75,6 +75,7 @@ interface ExtendedIRItem extends Omit<IRItem, 'items'> {
 }
 
 // ZagTransformerContext is now just TransformerContext (addPropertyPosition added to base)
+type ZagTransformerContext = TransformerContext
 
 // =============================================================================
 // Machine Config Property Names

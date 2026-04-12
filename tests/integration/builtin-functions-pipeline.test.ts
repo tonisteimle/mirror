@@ -51,12 +51,13 @@ function compileAndExecute(mirrorCode: string, data: Record<string, unknown> = {
   })
 
   // The generated code includes the runtime, so we just need to execute it
+  // Note: createUI() returns the root element directly with API methods attached
   const executableCode = jsCode.replace(/^export /gm, '')
   const wrappedCode = `
     (function() {
       ${executableCode}
-      window.__mirrorAPI = createUI(${JSON.stringify(data)});
-      window.__mirrorRoot = window.__mirrorAPI.root;
+      window.__mirrorRoot = createUI(${JSON.stringify(data)});
+      window.__mirrorAPI = window.__mirrorRoot;
       window._runtime = _runtime;
     })();
   `

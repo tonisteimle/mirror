@@ -37,13 +37,14 @@ function render(code: string): HTMLElement {
   let domCode = generateDOM(ast)
   domCode = domCode.replace(/^export\s+function/gm, 'function')
 
+  // Note: createUI() returns the root element directly, not an object with { root }
   const fn = new Function(domCode + '\nreturn createUI();')
-  const ui = fn()
+  const mirrorRoot = fn() as HTMLElement
 
-  container.appendChild(ui.root)
+  container.appendChild(mirrorRoot)
 
   // Skip the <style> element - find first non-style child
-  const children = Array.from(ui.root.children) as HTMLElement[]
+  const children = Array.from(mirrorRoot.children) as HTMLElement[]
   const root = children.find(el => el.tagName.toLowerCase() !== 'style') as HTMLElement
   return root
 }
@@ -871,12 +872,13 @@ each $item in $items
     let domCode = generateDOM(ast)
     domCode = domCode.replace(/^export\s+function/gm, 'function')
 
+    // Note: createUI() returns the root element directly
     const fn = new Function(domCode + '\nreturn createUI({ items: [] });')
-    const ui = fn()
-    container.appendChild(ui.root)
+    const root = fn() as HTMLElement
+    container.appendChild(root)
 
     // Container existiert
-    expect(ui.root).toBeDefined()
+    expect(root).toBeDefined()
   })
 
   it.skip('each rendert items aus daten', () => {
@@ -891,12 +893,13 @@ each $task in $tasks
     let domCode = generateDOM(ast)
     domCode = domCode.replace(/^export\s+function/gm, 'function')
 
+    // Note: createUI() returns the root element directly
     const fn = new Function(domCode + '\nreturn createUI({ tasks: [{ title: "A" }, { title: "B" }] });')
-    const ui = fn()
-    container.appendChild(ui.root)
+    const root = fn() as HTMLElement
+    container.appendChild(root)
 
     // Items werden gerendert
-    const items = ui.root.querySelectorAll('[data-each-item]')
+    const items = root.querySelectorAll('[data-each-item]')
     expect(items.length).toBe(2)
   })
 
@@ -918,12 +921,12 @@ if (true)
     let domCode = generateDOM(ast)
     domCode = domCode.replace(/^export\s+function/gm, 'function')
 
-    // true ist immer true
+    // Note: createUI() returns the root element directly
     const fn = new Function('const isVisible = true;\n' + domCode + '\nreturn createUI();')
-    const ui = fn()
-    container.appendChild(ui.root)
+    const root = fn() as HTMLElement
+    container.appendChild(root)
 
-    expect(ui.root).toBeDefined()
+    expect(root).toBeDefined()
   })
 
 })

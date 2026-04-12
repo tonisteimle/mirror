@@ -2,9 +2,14 @@
  * Property Panel Types
  */
 
-import type { BreadcrumbItem } from '../../../compiler/studio/selection-manager'
-import type { ExtractedElement, ExtractedProperty, PropertyCategory } from '../../../compiler/studio/property-extractor'
-import type { ModificationResult, FilesAccess } from '../../../compiler/studio/code-modifier'
+import type {
+  BreadcrumbItem,
+  ExtractedElement,
+  ExtractedProperty,
+  PropertyCategory,
+  ModificationResult,
+  FilesAccess,
+} from '../../../compiler'
 
 /**
  * Interface for selection providers

@@ -131,7 +131,8 @@ export class ParserUtils {
     return {
       line: token.line,
       column: token.column,
-      offset: 0, // Token doesn't track offset
+      endLine: token.line,
+      endColumn: token.column + (token.value?.length || 0),
     }
   }
 
@@ -145,7 +146,6 @@ export class ParserUtils {
   ): void {
     const t = token || ParserUtils.current(ctx)
     ctx.errors.push({
-      type: 'ParseError',
       message,
       line: t?.line ?? 0,
       column: t?.column ?? 0,

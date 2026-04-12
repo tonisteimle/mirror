@@ -42,11 +42,12 @@ function render(code: string): HTMLElement {
   let domCode = generateDOM(ast)
   domCode = domCode.replace(/^export\s+function/gm, 'function')
 
+  // Note: createUI() returns the root element directly, not an object with { root }
   const fn = new Function(domCode + '\nreturn createUI();')
-  const ui = fn()
+  const root = fn() as HTMLElement
 
-  container.appendChild(ui.root)
-  return ui.root as HTMLElement
+  container.appendChild(root)
+  return root
 }
 
 // ============================================================

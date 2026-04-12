@@ -13,9 +13,7 @@ import type {
   CompilationTiming,
 } from './types'
 import { buildPrelude, countPreludeLines, adjustLineNumber } from './prelude-builder'
-import type { AST, ParseError } from '../../../compiler/parser/ast'
-import type { IR } from '../../../compiler/ir/types'
-import type { SourceMap } from '../../../compiler/ir/source-map'
+import type { AST, ParseError, IR, SourceMap } from '../../../compiler'
 
 export type { CompileOptions, CompilationResult, PreludeResult, CompilerEvents, Warning }
 export { buildPrelude, countPreludeLines, adjustLineNumber }

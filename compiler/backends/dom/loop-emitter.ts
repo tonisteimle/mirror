@@ -47,6 +47,13 @@ export function emitEachLoop(
   ctx.emit(`const ${containerId}_container = document.createElement('div')`)
   ctx.emit(`${containerId}_container.dataset.eachContainer = '${each.id}'`)
   ctx.emit(`${containerId}_container.style.display = 'contents';`)
+
+  // Check if any template node has bind - set data-bind on container so runtime can find it
+  const bindNode = each.template.find(node => node.bind)
+  if (bindNode) {
+    const bindVar = bindNode.bind!.startsWith('$') ? bindNode.bind!.slice(1) : bindNode.bind!
+    ctx.emit(`${containerId}_container.dataset.bind = '${bindVar}'`)
+  }
   ctx.emit('')
 
   // Store template factory for runtime updates

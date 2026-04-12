@@ -4,7 +4,7 @@
  * All property panel sections extend this base class for consistency.
  */
 
-import type { PropertyCategory, ExtractedProperty } from '../../../../compiler/studio/property-extractor'
+import type { PropertyCategory, ExtractedProperty } from '../../../../compiler'
 import type { SpacingToken, ColorToken } from '../types'
 
 /**
@@ -24,7 +24,7 @@ export interface SectionData {
   // All properties for the element (used by color section)
   allProperties?: ExtractedProperty[]
   // Callbacks
-  getSpacingTokens?: (propType: 'pad' | 'mar' | 'gap' | 'rad') => SpacingToken[]
+  getSpacingTokens?: (propType: 'pad' | 'mar' | 'gap' | 'rad' | 'fs') => SpacingToken[]
   getColorTokens?: () => ColorToken[]
   resolveTokenValue?: (tokenRef: string) => string | null
 }

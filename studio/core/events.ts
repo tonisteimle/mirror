@@ -105,6 +105,8 @@ export interface StudioEvents {
   'compile:completed': { ast: AST; ir: IR; sourceMap: SourceMap; version?: number; hasErrors?: boolean }
   /** Emitted when compilation fails */
   'compile:failed': { error: string }
+  /** Emitted when layout cache is invalidated */
+  'layout:invalidated': { reason: 'scroll' | 'zoom' | 'resize' | 'transform' | 'manual' }
   /** User-facing notification events */
   'notification:info': { message: string; duration?: number }
   'notification:success': { message: string; duration?: number }

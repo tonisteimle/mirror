@@ -16,6 +16,7 @@ export type {
   ComponentPanelConfig,
   ComponentPanelCallbacks,
   ComponentDragData,
+  ComponentChild,
   ComponentIcon,
 } from './types'
 

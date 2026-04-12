@@ -58,8 +58,7 @@ import {
 import { VisualSystem } from '../../visual/system'
 import { StrategyRegistry, createWebflowRegistry } from '../../strategies/registry'
 import { CodeExecutor } from '../../executor/code-executor'
-import type { SourceMap } from '../../../../compiler/ir/source-map'
-import type { CodeModifier } from '../../../../compiler/studio/code-modifier'
+import type { SourceMap, CodeModifier } from '../../../../compiler'
 
 // ============================================
 // Default Size Provider

@@ -34,10 +34,12 @@ export class FlexWithChildrenStrategy implements DropStrategy {
     }
 
     // Find closest child and edge
+    // Default to vertical if direction is null (shouldn't happen for flex layouts)
+    const direction = target.direction ?? 'vertical'
     const { childRect, placement, index, isNoOp } = this.findClosestChild(
       cursor,
       childRects,
-      target.direction,
+      direction,
       source
     )
 
@@ -134,11 +136,21 @@ export class FlexWithChildrenStrategy implements DropStrategy {
     const placement: 'before' | 'after' = cursorPos < rectCenter ? 'before' : 'after'
 
     // Check if this would be a no-op (no actual change)
+    //
+    // A move is a no-op only when:
+    // 1. Inserting before self (insertionIndex === sourceIndex)
+    // 2. Inserting after self AND cursor is on self (closestIndex === sourceIndex)
+    //
+    // The old check "insertionIndex === sourceIndex + 1" was WRONG because it
+    // didn't distinguish between:
+    // - "after B" (hovering on B) → no-op
+    // - "before C" (hovering on C) → real move!
+    // Both have insertionIndex = sourceIndex + 1 but only the first is a no-op.
     let isNoOp = false
     if (sourceIndex !== -1) {
       const insertionIndex = placement === 'before' ? closestIndex : closestIndex + 1
-      // Inserting at current position or position+1 means no change
-      isNoOp = insertionIndex === sourceIndex || insertionIndex === sourceIndex + 1
+      isNoOp = (insertionIndex === sourceIndex) ||
+               (closestIndex === sourceIndex && placement === 'after')
     }
 
     return {

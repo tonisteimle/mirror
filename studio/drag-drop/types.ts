@@ -69,7 +69,7 @@ export interface DropTarget {
   nodeId: string
   element: HTMLElement
   layoutType: LayoutType
-  direction: Direction
+  direction: Direction | null // null for positioned layouts where direction doesn't apply
   hasChildren: boolean
   isPositioned: boolean
 }

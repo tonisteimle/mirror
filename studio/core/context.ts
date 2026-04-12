@@ -11,7 +11,7 @@ import { executor, CommandExecutor } from './command-executor'
 import { StateSelectionAdapter, getStateSelectionAdapter } from './selection-adapter'
 import type { EditorController } from '../editor'
 import type { PreviewController } from '../preview'
-import type { SyncCoordinator } from '../sync'
+import type { SyncCoordinatorV2 as SyncCoordinator } from '../sync'
 
 export interface StudioContext {
   /** Central state store */

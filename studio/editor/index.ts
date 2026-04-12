@@ -15,6 +15,7 @@ import { state, actions, events } from '../core'
 // ============================================
 
 // Ports (interfaces)
+// Note: SelectionOrigin is already exported from core, so we alias it here
 export type {
   EditorPort,
   ExtendedEditorPort,
@@ -23,7 +24,7 @@ export type {
   EditorPorts,
   CursorPosition as EditorCursorPosition,
   StateCursor,
-  SelectionOrigin,
+  SelectionOrigin as EditorSelectionOrigin,
   Selection as EditorSelection,
   LineInfo,
   CleanupFn as EditorCleanupFn,

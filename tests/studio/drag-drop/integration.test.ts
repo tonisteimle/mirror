@@ -174,10 +174,16 @@ describe('Integration: Full Drag-Drop Flow', () => {
       eventPort.simulateDragStart(mockSource, { x: 100, y: 100 })
       eventPort.simulateDragEnd()
 
-      // All visual elements should be removed
-      expect(document.getElementById('mirror-drop-indicator')).toBeNull()
-      expect(document.getElementById('mirror-drop-ghost')).toBeNull()
-      expect(document.getElementById('mirror-drop-parent-outline')).toBeNull()
+      // All visual elements should be hidden (element pooling)
+      const indicator = document.getElementById('mirror-drop-indicator')
+      const ghost = document.getElementById('mirror-drop-ghost')
+      const outline = document.getElementById('mirror-drop-parent-outline')
+
+      // Elements may or may not exist (depends on whether they were created)
+      // If they exist, they should be hidden
+      if (indicator) expect(indicator.style.display).toBe('none')
+      if (ghost) expect(ghost.style.display).toBe('none')
+      if (outline) expect(outline.style.display).toBe('none')
     })
   })
 
@@ -319,7 +325,7 @@ describe('Integration: DOM Adapter Coordination', () => {
   })
 
   describe('Visual Port Creates Correct Elements', () => {
-    it('creates and removes indicator', () => {
+    it('creates and hides indicator (element pooling)', () => {
       const visualPort = createDOMVisualPort(container)
 
       visualPort.showIndicator({
@@ -332,10 +338,12 @@ describe('Integration: DOM Adapter Coordination', () => {
 
       visualPort.hideAll()
 
-      expect(document.getElementById('mirror-drop-indicator')).toBeNull()
+      // Element is hidden, not removed (element pooling for performance)
+      const indicator = document.getElementById('mirror-drop-indicator')
+      expect(indicator?.style.display).toBe('none')
     })
 
-    it('creates and removes ghost', () => {
+    it('creates and hides ghost (element pooling)', () => {
       const visualPort = createDOMVisualPort(container)
 
       visualPort.showIndicator({
@@ -348,10 +356,12 @@ describe('Integration: DOM Adapter Coordination', () => {
 
       visualPort.hideAll()
 
-      expect(document.getElementById('mirror-drop-ghost')).toBeNull()
+      // Element is hidden, not removed (element pooling for performance)
+      const ghost = document.getElementById('mirror-drop-ghost')
+      expect(ghost?.style.display).toBe('none')
     })
 
-    it('creates and removes outline', () => {
+    it('creates and hides outline (element pooling)', () => {
       const visualPort = createDOMVisualPort(container)
 
       visualPort.showOutline({ x: 0, y: 0, width: 400, height: 300 })
@@ -360,7 +370,9 @@ describe('Integration: DOM Adapter Coordination', () => {
 
       visualPort.hideAll()
 
-      expect(document.getElementById('mirror-drop-parent-outline')).toBeNull()
+      // Element is hidden, not removed (element pooling for performance)
+      const outline = document.getElementById('mirror-drop-parent-outline')
+      expect(outline?.style.display).toBe('none')
     })
   })
 })

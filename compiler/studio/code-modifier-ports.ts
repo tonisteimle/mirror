@@ -194,6 +194,11 @@ export interface DocumentPort {
    * Apply a change and return new source
    */
   applyChange(from: number, to: number, insert: string): string
+
+  /**
+   * Set the full source code (optional - for rollback support)
+   */
+  setSource?(source: string): void
 }
 
 // ============================================

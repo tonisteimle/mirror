@@ -5,8 +5,12 @@
  * internally while exposing the same interface as the legacy PropertyPanel.
  */
 
-import type { PropertyExtractor, ExtractedElement } from '../../../compiler/studio/property-extractor'
-import type { CodeModifier, ModificationResult } from '../../../compiler/studio/code-modifier'
+import type {
+  PropertyExtractor,
+  ExtractedElement,
+  CodeModifier,
+  ModificationResult,
+} from '../../../compiler'
 import type { PropertyPanelPorts } from './ports'
 import { createProductionPorts, type SelectionProvider, type ProductionPortsConfig } from './adapters/production-adapters'
 import { PropertyPanelView, createPropertyPanelView } from './view'

@@ -26,53 +26,14 @@ import {
   ERROR_CODES,
   ErrorSeverity,
 } from './types'
-
-// ============================================================================
-// Levenshtein Distance for Suggestions
-// ============================================================================
-
-function levenshtein(a: string, b: string): number {
-  const matrix: number[][] = []
-
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i]
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j
-  }
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1]
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        )
-      }
-    }
-  }
-
-  return matrix[b.length][a.length]
-}
-
-function suggestSimilar(input: string, candidates: Iterable<string>, maxDistance = 3): string | undefined {
-  let best: string | undefined
-  let bestDistance = Infinity
-
-  for (const candidate of candidates) {
-    const distance = levenshtein(input.toLowerCase(), candidate.toLowerCase())
-    if (distance < bestDistance && distance <= maxDistance) {
-      bestDistance = distance
-      best = candidate
-    }
-  }
-
-  return best
-}
+import { suggestSimilar } from './string-utils'
+import {
+  KNOWN_STATE_STYLE_EXTRAS,
+  KNOWN_NON_SCHEMA_PROPERTIES,
+  REQUIRED_PROPERTIES,
+  PROPERTY_RANGES,
+  ZONE_ALIGNMENT_PROPS,
+} from './validation-config'
 
 // ============================================================================
 // Validator Class
@@ -89,28 +50,6 @@ export class Validator {
   private tokenDefinitions: Map<string, { line: number; column: number }> = new Map() // Track token definition locations
   private errors: ValidationError[] = []
   private warnings: ValidationError[] = []
-
-  /**
-   * Known extra properties valid in state blocks (style overrides)
-   * Consolidated from multiple locations to ensure consistency
-   */
-  private static readonly KNOWN_STATE_STYLE_EXTRAS = new Set([
-    'bg', 'col', 'color', 'opacity', 'opa', 'o', 'scale',
-    'bor', 'border', 'boc', 'rad', 'radius',
-    'pad', 'padding', 'margin', 'w', 'h', 'fs', 'weight',
-  ])
-
-  /**
-   * Known non-schema properties (HTML attributes, icon props, hover states, animation)
-   */
-  private static readonly KNOWN_NON_SCHEMA_PROPERTIES = new Set([
-    'content', 'href', 'src', 'placeholder', 'value', 'type', 'name', 'id',
-    'icon-size', 'is', 'icon-color', 'ic', 'icon-weight', 'iw', 'fill',
-    'animation', 'anim',
-    'hover-bg', 'hover-col', 'hover-opacity', 'hover-opa',
-    'hover-scale', 'hover-bor', 'hover-border', 'hover-boc',
-    'hover-border-color', 'hover-rad', 'hover-radius',
-  ])
 
   constructor() {
     this.rules = generateValidationRules()
@@ -396,7 +335,7 @@ export class Validator {
 
       const propDef = this.rules.validProperties.get(propName)
       if (!propDef) {
-        if (!Validator.KNOWN_STATE_STYLE_EXTRAS.has(propName)) {
+        if (!KNOWN_STATE_STYLE_EXTRAS.has(propName)) {
           const suggestion = suggestSimilar(propName, this.rules.validProperties.keys())
           this.addError(
             ERROR_CODES.UNKNOWN_PROPERTY,
@@ -487,7 +426,7 @@ export class Validator {
     }
 
     // Check if it's a known style property (valid in state blocks)
-    if (Validator.KNOWN_STATE_STYLE_EXTRAS.has(propName)) {
+    if (KNOWN_STATE_STYLE_EXTRAS.has(propName)) {
       return // Valid property used in state block
     }
 
@@ -521,7 +460,7 @@ export class Validator {
     // Check for unknown property
     if (!propDef) {
       // Check if it's a known non-schema property
-      if (!Validator.KNOWN_NON_SCHEMA_PROPERTIES.has(prop.name)) {
+      if (!KNOWN_NON_SCHEMA_PROPERTIES.has(prop.name)) {
         const suggestion = suggestSimilar(prop.name, this.rules.validProperties.keys())
         this.addError(
           ERROR_CODES.UNKNOWN_PROPERTY,
@@ -661,7 +600,7 @@ export class Validator {
       if (propName) {
         const propDef = this.rules.validProperties.get(propName)
         if (!propDef) {
-          if (!Validator.KNOWN_STATE_STYLE_EXTRAS.has(propName)) {
+          if (!KNOWN_STATE_STYLE_EXTRAS.has(propName)) {
             const suggestion = suggestSimilar(propName, this.rules.validProperties.keys())
             this.addError(
               ERROR_CODES.UNKNOWN_PROPERTY,
@@ -890,24 +829,6 @@ export class Validator {
   }
 
   /**
-   * Layout conflict pairs - these should not be used together
-   */
-  private static readonly LAYOUT_CONFLICTS: [string[], string][] = [
-    // Direction conflicts
-    [['hor', 'horizontal', 'ver', 'vertical'], 'Cannot use both horizontal and vertical layout'],
-    // Alignment conflicts
-    [['center', 'cen', 'spread'], 'Cannot use both center and spread'],
-    // Grid vs Flex conflicts
-    [['grid', 'hor', 'horizontal'], 'Cannot combine grid with horizontal flex'],
-    [['grid', 'ver', 'vertical'], 'Cannot combine grid with vertical flex'],
-    // 9-zone alignment conflicts (only one can be active)
-    [['tl', 'top-left', 'tc', 'top-center', 'tr', 'top-right',
-      'cl', 'center-left', 'cr', 'center-right',
-      'bl', 'bottom-left', 'bc', 'bottom-center', 'br', 'bottom-right'],
-      'Cannot use multiple position alignments'],
-  ]
-
-  /**
    * Check for conflicting layout properties
    */
   private checkLayoutConflicts(properties: Property[], line: number, column: number): void {
@@ -952,10 +873,7 @@ export class Validator {
     }
 
     // Check 9-zone alignment (only one allowed)
-    const zoneProps = ['tl', 'top-left', 'tc', 'top-center', 'tr', 'top-right',
-                       'cl', 'center-left', 'cr', 'center-right',
-                       'bl', 'bottom-left', 'bc', 'bottom-center', 'br', 'bottom-right']
-    const activeZones = zoneProps.filter(z => propNames.has(z))
+    const activeZones = ZONE_ALIGNMENT_PROPS.filter(z => propNames.has(z))
     if (activeZones.length > 1) {
       this.addError(
         ERROR_CODES.LAYOUT_CONFLICT,
@@ -992,21 +910,11 @@ export class Validator {
   }
 
   /**
-   * Required properties per component type
-   */
-  private static readonly REQUIRED_PROPERTIES: Record<string, string[]> = {
-    'image': ['src'],
-    'img': ['src'],
-    'link': ['href'],
-    'a': ['href'],
-  }
-
-  /**
    * Check that required properties are present
    */
   private checkRequiredProperties(componentName: string, properties: Property[], line: number, column: number): void {
     const compLower = componentName.toLowerCase()
-    const required = Validator.REQUIRED_PROPERTIES[compLower]
+    const required = REQUIRED_PROPERTIES[compLower]
 
     if (!required) return
 
@@ -1026,27 +934,11 @@ export class Validator {
   }
 
   /**
-   * Property value ranges
-   */
-  private static readonly PROPERTY_RANGES: Record<string, { min?: number; max?: number; description: string }> = {
-    'opacity': { min: 0, max: 1, description: 'between 0 and 1' },
-    'opa': { min: 0, max: 1, description: 'between 0 and 1' },
-    'o': { min: 0, max: 1, description: 'between 0 and 1' },
-    'scale': { min: 0, description: 'greater than 0' },
-    // Animation-related properties
-    'threshold': { min: 0, max: 1, description: 'between 0 and 1' },
-    'stagger': { min: 0, description: 'greater than or equal to 0' },
-    // Scroll properties (any number allowed - can be negative for parallax)
-    'scroll-y': { description: 'any number' },
-    'scroll-x': { description: 'any number' },
-  }
-
-  /**
    * Check numeric property ranges
    */
   private checkPropertyRanges(properties: Property[]): void {
     for (const prop of properties) {
-      const range = Validator.PROPERTY_RANGES[prop.name.toLowerCase()]
+      const range = PROPERTY_RANGES[prop.name.toLowerCase()]
       if (!range) continue
 
       for (const val of prop.values) {

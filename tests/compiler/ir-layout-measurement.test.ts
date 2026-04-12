@@ -1,4 +1,8 @@
 /**
+ * @vitest-environment jsdom
+ */
+
+/**
  * Layout Measurement Tests
  *
  * These tests verify layout behavior by rendering DOM elements
@@ -44,14 +48,15 @@ function renderMirror(code: string): HTMLElement {
   domCode = domCode.replace(/^export\s+function/gm, 'function')
 
   // Execute the generated code
+  // Note: createUI() returns the root element directly, not an object with { root }
   const fn = new Function(domCode + '\nreturn createUI();')
-  const ui = fn()
+  const root = fn() as HTMLElement
 
   // Mount to container
-  container.appendChild(ui.root)
+  container.appendChild(root)
 
   // Return the first actual component (skip mirror-root wrapper and style element)
-  const children = Array.from(ui.root.children) as HTMLElement[]
+  const children = Array.from(root.children) as HTMLElement[]
   return children.find(el => el.tagName.toLowerCase() !== 'style') as HTMLElement
 }
 

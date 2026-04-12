@@ -84,6 +84,7 @@ describe('SyncCoordinator', () => {
       const spy = vi.spyOn(events, 'on')
       coordinator.subscribe()
       expect(spy).toHaveBeenCalledWith('selection:changed', expect.any(Function))
+      spy.mockRestore() // Explicitly restore to avoid leaking to next test
     })
 
     it('should not double-subscribe when called multiple times', () => {

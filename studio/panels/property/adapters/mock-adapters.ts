@@ -5,8 +5,7 @@
  * Ermöglichen vollständige Testbarkeit ohne DOM, ohne globalen State.
  */
 
-import type { ExtractedElement, ExtractedProperty, PropertyCategory } from '../../../../compiler/studio/property-extractor'
-import type { ModificationResult } from '../../../../compiler/studio/code-modifier'
+import type { ExtractedElement, ExtractedProperty, PropertyCategory, ModificationResult } from '../../../../compiler'
 import type {
   SelectionPort,
   PropertyExtractionPort,

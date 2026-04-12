@@ -11,6 +11,7 @@ import {
   PROPERTY_STARTERS,
   BOOLEAN_PROPERTIES,
   LAYOUT_BOOLEANS,
+  ALL_BOOLEAN_PROPERTIES,
   KEYBOARD_KEYS,
   STATE_NAMES,
   SYSTEM_STATES,
@@ -31,24 +32,14 @@ import { isCompoundPrimitive, isCompoundSlot } from '../schema/compound-primitiv
 import { logParser as log } from '../utils/logger'
 import { isChartPrimitive, isChartSlot, getChartSlot, getChartSlotProperty } from '../schema/chart-primitives'
 import type { ChartSlotNode } from './ast'
+import { parseZagComponent as parseZagComponentExtracted, type ZagParserCallbacks } from './zag-parser'
+import type { ParserContext } from './parser-context'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
 type PropertyValue = string | number | boolean | number[] | TokenReference | LoopVarReference | Conditional | ComputedExpression
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
-
-// Add position booleans that are commonly used as align values
-// These are NOT in LAYOUT_BOOLEANS to avoid breaking "align top left"
-const POSITION_BOOLEANS = new Set([
-  'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center',
-])
-
-// Combined boolean properties for parsing (includes position booleans)
-const ALL_BOOLEAN_PROPERTIES = new Set([
-  ...BOOLEAN_PROPERTIES,
-  ...POSITION_BOOLEANS,
-])
 
 // Note: KEYBOARD_KEYS and STATE_NAMES are now imported from parser-helpers.ts
 // They are derived from the schema (dsl.ts) to ensure consistency.
@@ -1221,7 +1212,7 @@ export class Parser {
       if (isZagPrimitive(name.value)) {
         // Consume the colon and parse as Zag component
         this.advance() // consume ':'
-        return this.parseZagComponent(name, true) // true = already consumed colon
+        return this.parseZagComponentWithContext(name, true) // true = already consumed colon
       }
       return this.parseComponentDefinitionWithDefaultPrimitive(name)
     }
@@ -1608,7 +1599,7 @@ export class Parser {
 
     // Check if this is a Zag primitive (e.g., Select, Accordion)
     if (isZagPrimitive(name.value)) {
-      return this.parseZagComponent(name)
+      return this.parseZagComponentWithContext(name)
     }
 
     // Check if this is a Compound primitive (e.g., Shell)
@@ -2469,869 +2460,73 @@ export class Parser {
   }
 
   /**
-   * Parse a Zag component (Select, Accordion, etc.)
-   *
-   * Syntax:
-   *   Select placeholder "Choose..."
-   *     Trigger:
-   *       pad 12, bg #1e1e2e
-   *       hover:
-   *         bg #2a2a3e
-   *     Content:
-   *       bg #2a2a3e, rad 8
-   *     Item "Option A"
-   *     Item "Option B" disabled
+   * Wrapper method that calls the extracted Zag parser.
+   * Creates context and callbacks for the modular parser.
    */
-  private parseZagComponent(nameToken: Token, colonAlreadyConsumed = false): ZagNode {
-    // Consume colon if present and not already consumed
-    if (!colonAlreadyConsumed && this.check('COLON')) {
-      this.advance()
+  private parseZagComponentWithContext(nameToken: Token, colonAlreadyConsumed = false): ZagNode {
+    const ctx: ParserContext = {
+      tokens: this.tokens,
+      source: this.source,
+      loopVariables: this.loopVariables,
+      pos: this.pos,
+      errors: this.errors,
     }
 
-    const zagPrimitive = getZagPrimitive(nameToken.value)
-    const machineType = zagPrimitive?.machine ?? 'unknown'
-
-    const zagNode: ZagNode = {
-      type: 'ZagComponent',
-      machine: machineType,
-      name: nameToken.value,
-      properties: [],
-      slots: {},
-      items: [],
-      events: [],
-      line: nameToken.line,
-      column: nameToken.column,
-    }
-
-    // Parse inline properties (e.g., placeholder "Choose...", multiple, disabled)
-    this.parseZagInlineProperties(zagNode)
-
-    // Extract initial state from properties (same logic as for regular instances)
-    const initialStateIndex = zagNode.properties.findIndex(p => {
-      const name = p.name
-      return (
-        p.values.length === 0 &&
-        name[0] === name[0].toLowerCase() &&
-        !PROPERTY_STARTERS.has(name) &&
-        !ALL_BOOLEAN_PROPERTIES.has(name) &&
-        !EVENT_NAMES.has(name) &&
-        !STATE_MODIFIERS.has(name) &&
-        name !== 'when' &&
-        name !== 'as' &&
-        name !== 'content'
-      )
-    })
-    if (initialStateIndex !== -1) {
-      const stateProp = zagNode.properties[initialStateIndex]
-      zagNode.initialState = stateProp.name
-      zagNode.properties.splice(initialStateIndex, 1)
-    }
-
-    // Check for colon at end of line - this marks it as a DEFINITION, not an instance
-    // Select placeholder "...":  → Definition (not rendered)
-    // Select placeholder "..."   → Instance (rendered)
-    if (this.check('COLON')) {
-      this.advance()
-      zagNode.isDefinition = true
-    }
-
-    // Skip newline before checking for indented body
-    this.skipNewlines()
-
-    // Parse indented body (slots and items)
-    if (this.check('INDENT')) {
-      this.advance()
-      this.parseZagComponentBody(zagNode)
-    }
-
-    return zagNode
-  }
-
-  /**
-   * Parse inline properties specific to Zag components
-   */
-  private parseZagInlineProperties(zagNode: ZagNode): void {
-    const zagPrimitive = getZagPrimitive(zagNode.name)
-    const validProps = new Set(zagPrimitive?.props ?? [])
-
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('COLON') && !this.isAtEnd()) {
-      // Skip commas
-      if (this.check('COMMA') || this.check('SEMICOLON')) {
-        this.advance()
-        continue
-      }
-
-      // Check for Zag-specific properties
-      if (this.check('IDENTIFIER')) {
-        const propName = this.current().value
-
-        // Boolean Zag properties (e.g., multiple, searchable, clearable, disabled)
-        if (validProps.has(propName) && !this.checkNext('STRING') && !this.checkNext('NUMBER') && !this.checkNext('LBRACKET')) {
-          const token = this.advance()
-          zagNode.properties.push({
-            type: 'Property',
-            name: propName,
-            values: [true],
-            line: token.line,
-            column: token.column,
-          })
-          continue
-        }
-
-        // Zag property with value (e.g., placeholder "Choose...", defaultValue [20, 80])
-        if (validProps.has(propName)) {
-          const token = this.advance()
-          const values: PropertyValue[] = []
-
-          // Parse value(s) - stop at COLON (end of Select line), NEWLINE, INDENT, COMMA, SEMICOLON
-          while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('COMMA') && !this.check('SEMICOLON') && !this.check('COLON') && !this.isAtEnd()) {
-            if (this.check('STRING')) {
-              values.push(this.advance().value)
-            } else if (this.check('NUMBER')) {
-              values.push(parseFloat(this.advance().value))
-            } else if (this.check('LBRACKET')) {
-              // Array value: [20, 80]
-              values.push(this.parseNumericArray())
-            } else if (this.check('IDENTIFIER') && validProps.has(this.current().value)) {
-              // Next property starting
-              break
-            } else {
-              values.push(this.advance().value)
-            }
-          }
-
-          zagNode.properties.push({
-            type: 'Property',
-            name: propName,
-            // Cast needed: PropertyValue includes number[] for array props (e.g., slider defaultValue [20, 80])
-            values: values as Property['values'],
-            line: token.line,
-            column: token.column,
-          })
-          continue
-        }
-      }
-
-      // Fall through to regular property parsing
-      const properties: Property[] = []
-      this.parseInlineProperties(properties)
-      zagNode.properties.push(...properties)
-      break
-    }
-  }
-
-  /**
-   * Parse the body of a Zag component (slots and items)
-   */
-  private parseZagComponentBody(zagNode: ZagNode): void {
-    while (!this.check('DEDENT') && !this.isAtEnd()) {
-      this.skipNewlines()
-      if (this.check('DEDENT') || this.isAtEnd()) break
-
-      // IMPORTANT: Check for Item BEFORE slots, because "Item" can be both a slot and an item keyword
-      // Item definitions are distinguished by having: Item "Label" or Item value "x" or Item name "field"
-      // Slot definitions look like: Item: (just keyword + colon)
-      if (this.check('IDENTIFIER') && isZagItemKeyword(zagNode.name, this.current().value)) {
-        // Check if this looks like an item definition
-        const nextToken = this.tokens[this.pos + 1]
-        // Get valid item properties from the primitive definition
-        const zagDef = getZagPrimitive(zagNode.name)
-        const validItemProps = new Set(zagDef?.itemProps || ['value', 'label'])
-
-        const isItemDefinition = nextToken && (
-          nextToken.type === 'STRING' ||
-          (nextToken.type === 'IDENTIFIER' && validItemProps.has(nextToken.value))
-        )
-
-        if (isItemDefinition) {
-          const item = this.parseZagItem(zagNode.name)
-          if (item) zagNode.items.push(item)
-          continue
-        }
-      }
-
-      // Check for Group definition: Group "Label" or Group label "Label"
-      if (this.check('IDENTIFIER') && isZagGroupKeyword(zagNode.name, this.current().value)) {
-        const group = this.parseZagGroup(zagNode.name)
-        if (group) zagNode.items.push(group)
-        continue
-      }
-
-      // Check for slot definition: SlotName: or SlotName, props: or SlotName with indented children
-      // Slots can have inline properties before the colon (e.g., "Trigger, hor, spread:")
-      if (this.check('IDENTIFIER')) {
-        const slotName = this.current().value
-
-        // Verify this is a valid slot for this Zag component
-        if (isZagSlot(zagNode.name, slotName)) {
-          // Check for colon on line OR just slot name followed by NEWLINE+INDENT (children follow)
-          const hasColon = this.hasColonOnLine()
-          const hasIndentedChildren = this.checkNext('NEWLINE') || this.checkNext('INDENT')
-
-          if (hasColon || hasIndentedChildren) {
-            this.advance() // slot name
-            // Parse inline properties until we hit the colon or newline
-            const properties: Property[] = []
-            while (!this.check('COLON') && !this.check('NEWLINE') && !this.check('INDENT') && !this.isAtEnd()) {
-              if (this.check('COMMA')) {
-                this.advance()
-                continue
-              }
-              if (this.check('IDENTIFIER')) {
-                const prop = this.parseProperty()
-                if (prop) properties.push(prop)
-              } else {
-                this.advance()
-              }
-            }
-            if (this.check('COLON')) {
-              this.advance() // consume colon
-            }
-            const slot = this.parseZagSlot(zagNode.name, slotName, zagNode)
-            // Merge parsed properties into slot
-            slot.properties = [...properties, ...slot.properties]
-            zagNode.slots[slotName] = slot
-            continue
-          }
-        }
-      }
-
-      // Check for Zag properties (placeholder, defaultValue, disabled, etc.)
-      const zagPrimitive = getZagPrimitive(zagNode.name)
-      const validProps = new Set(zagPrimitive?.props ?? [])
-      if (this.check('IDENTIFIER') && validProps.has(this.current().value)) {
-        const propName = this.current().value
-        const token = this.advance()
-
-        // Boolean property (no value following)
-        if (this.check('NEWLINE') || this.check('DEDENT') || this.isAtEnd()) {
-          zagNode.properties.push({
-            type: 'Property',
-            name: propName,
-            values: [true],
-            line: token.line,
-            column: token.column,
-          })
-          continue
-        }
-
-        // Property with value(s)
-        const values: PropertyValue[] = []
-        while (!this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd()) {
-          if (this.check('STRING')) {
-            values.push(this.advance().value)
-          } else if (this.check('NUMBER')) {
-            values.push(parseFloat(this.advance().value))
-          } else if (this.check('COMMA')) {
-            this.advance()
-          } else if (this.check('IDENTIFIER') && validProps.has(this.current().value)) {
-            break // Next property
-          } else {
-            values.push(this.advance().value)
-          }
-        }
-
-        if (values.length > 0) {
-          zagNode.properties.push({
-            type: 'Property',
-            name: propName,
-            values: values as Property['values'],
-            line: token.line,
-            column: token.column,
-          })
-        } else {
-          // Boolean if no values parsed
-          zagNode.properties.push({
-            type: 'Property',
-            name: propName,
-            values: [true],
-            line: token.line,
-            column: token.column,
-          })
-        }
-        continue
-      }
-
-      // Check for Item definition: Item/Tab/Step "Label" or Item value "val" label "Label"
-      if (this.check('IDENTIFIER') && isZagItemKeyword(zagNode.name, this.current().value)) {
-        const item = this.parseZagItem(zagNode.name)
-        if (item) zagNode.items.push(item)
-        continue
-      }
-
-      // Check for Group definition: Group "Label" or Group label "Label"
-      if (this.check('IDENTIFIER') && isZagGroupKeyword(zagNode.name, this.current().value)) {
-        const group = this.parseZagGroup(zagNode.name)
-        if (group) zagNode.items.push(group)
-        continue
-      }
-
-      // Check for events (onclick, onchange, etc.)
-      if (this.check('IDENTIFIER') && this.current().value.startsWith('on')) {
-        const event = this.parseEvent()
-        if (event) zagNode.events.push(event)
-        continue
-      }
-
-      // Skip unknown tokens
-      this.advance()
-    }
-
-    if (this.check('DEDENT')) this.advance()
-  }
-
-  /**
-   * Parse a Zag slot definition
-   *
-   * Syntax:
-   *   Trigger:
-   *     pad 12, bg #1e1e2e
-   *     hover:
-   *       bg #2a2a3e
-   */
-  private parseZagSlot(componentName: string, slotName: string, parentZagNode?: ZagNode): ZagSlotDef {
-    const startLine = this.previous()?.line ?? 1
-    const startColumn = this.previous()?.column ?? 1
-
-    const slot: ZagSlotDef = {
-      name: slotName,
-      properties: [],
-      states: [],
-      children: [],
-      sourcePosition: {
-        line: startLine,
-        column: startColumn,
-        endLine: startLine,
-        endColumn: startColumn,
+    const callbacks: ZagParserCallbacks = {
+      parseInlineProperties: (properties, events) => {
+        this.pos = ctx.pos
+        this.parseInlineProperties(properties, events)
+        ctx.pos = this.pos
       },
-    }
-
-    // Check if what follows the colon is a primitive element (Button, Text, Frame, etc.)
-    // In this case, parse it as a child instance, not as properties
-    // Example: Trigger: Button "Toggle" -> Button is a child, not a property
-    if (this.check('IDENTIFIER') && isPrimitive(this.current().value)) {
-      const nameToken = this.advance()
-      const child = this.parseInstance(nameToken)
-      if (child.type !== 'ZagComponent') {
-        slot.children.push(child as Instance | Slot)
-      }
-    } else {
-      // Parse inline properties after colon
-      this.parseInlineProperties(slot.properties)
-    }
-
-    // Skip newline before checking for indented body
-    this.skipNewlines()
-
-    // Parse indented body (properties, states, children)
-    if (this.check('INDENT')) {
-      this.advance()
-      this.parseZagSlotBody(slot, componentName, parentZagNode)
-    }
-
-    return slot
-  }
-
-  /**
-   * Parse the body of a Zag slot
-   */
-  private parseZagSlotBody(slot: ZagSlotDef, componentName?: string, parentZagNode?: ZagNode): void {
-    while (!this.check('DEDENT') && !this.isAtEnd()) {
-      this.skipNewlines()
-      if (this.check('DEDENT') || this.isAtEnd()) break
-
-      // State block: hover: or selected:
-      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
-        const stateName = this.current().value
-        // Check if this looks like a state (from schema)
-        if (STATE_NAMES.has(stateName)) {
-          const stateToken = this.advance()
-          this.advance() // colon
-
-          const state: State = {
-            type: 'State',
-            name: stateToken.value,
-            properties: [],
-            childOverrides: [],
-            line: stateToken.line,
-            column: stateToken.column,
-          }
-
-          // Parse inline properties
-          this.parseInlineProperties(state.properties)
-
-          // Parse block properties
-          this.skipNewlines()
-          if (this.check('INDENT')) {
-            this.advance()
-            while (!this.check('DEDENT') && !this.isAtEnd()) {
-              this.skipNewlines()
-              if (this.check('DEDENT')) break
-
-              const properties: Property[] = []
-              this.parseInlineProperties(properties)
-              state.properties.push(...properties)
-            }
-            if (this.check('DEDENT')) this.advance()
-          }
-
-          slot.states.push(state)
-          continue
-        }
-      }
-
-      // Property line
-      if (this.check('IDENTIFIER') && PROPERTY_STARTERS.has(this.current().value)) {
-        const properties: Property[] = []
-        this.parseInlineProperties(properties)
-        slot.properties.push(...properties)
-        continue
-      }
-
-      // Check for Item children - add to parent ZagNode's items
-      if (this.check('IDENTIFIER') && componentName && parentZagNode &&
-          isZagItemKeyword(componentName, this.current().value)) {
-        const item = this.parseZagItem(componentName)
-        if (item) parentZagNode.items.push(item)
-        continue
-      }
-
-      // Check for Group children - add to parent ZagNode's items
-      if (this.check('IDENTIFIER') && componentName && parentZagNode &&
-          isZagGroupKeyword(componentName, this.current().value)) {
-        const group = this.parseZagGroup(componentName)
-        if (group) parentZagNode.items.push(group)
-        continue
-      }
-
-      // Child instance
-      if (this.check('IDENTIFIER')) {
-        const name = this.advance()
-        const child = this.parseInstance(name)
-        if (child.type !== 'ZagComponent') {
-          slot.children.push(child as Instance | Slot)
-        }
-        continue
-      }
-
-      this.advance()
-    }
-
-    if (this.check('DEDENT')) this.advance()
-  }
-
-  /**
-   * Parse a Zag Item (Item, Tab, Step, Slide, etc.)
-   *
-   * Syntax:
-   *   Item "Option A"
-   *   Tab "Home"
-   *     Text "Welcome content"
-   *   Step "Account" target "#signup-form"
-   *   Item value "opt-a" label "Option A" disabled
-   */
-  private parseZagItem(componentName: string): ZagItem | null {
-    const itemToken = this.advance() // 'Item'
-    const startLine = itemToken.line
-    const startColumn = itemToken.column
-
-    const item: ZagItem = {
-      sourcePosition: {
-        line: startLine,
-        column: startColumn,
-        endLine: startLine,
-        endColumn: startColumn,
+      parseProperty: () => {
+        this.pos = ctx.pos
+        const result = this.parseProperty()
+        ctx.pos = this.pos
+        return result
       },
-    }
-
-    // Layout properties that can be on items
-    const layoutProps = ['ver', 'hor', 'vertical', 'horizontal', 'gap', 'pad', 'spread', 'center', 'g', 'p']
-
-    // Parse item content
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('COLON') && !this.isAtEnd()) {
-      // Skip commas
-      if (this.check('COMMA') || this.check('SEMICOLON')) {
-        this.advance()
-        continue
-      }
-
-      // String as label (shorthand)
-      // Note: value is NOT auto-derived from label here - that happens in IR transformation
-      // This ensures loadFromFile is only set when value is explicitly provided
-      if (this.check('STRING') && !item.label) {
-        const str = this.advance()
-        item.label = str.value
-        continue
-      }
-
-      // Explicit value: value "val"
-      if (this.check('IDENTIFIER') && this.current().value === 'value') {
-        this.advance()
-        if (this.check('STRING')) {
-          item.value = this.advance().value
-        }
-        continue
-      }
-
-      // Explicit label: label "Label"
-      if (this.check('IDENTIFIER') && this.current().value === 'label') {
-        this.advance()
-        if (this.check('STRING')) {
-          item.label = this.advance().value
-        }
-        continue
-      }
-
-      // disabled flag
-      if (this.check('IDENTIFIER') && this.current().value === 'disabled') {
-        this.advance()
-        item.disabled = true
-        continue
-      }
-
-      // target property (for Tour steps): target "#element"
-      if (this.check('IDENTIFIER') && this.current().value === 'target') {
-        this.advance()
-        if (this.check('STRING')) {
-          item.target = this.advance().value
-        }
-        continue
-      }
-
-      // icon property: icon "star"
-      if (this.check('IDENTIFIER') && this.current().value === 'icon') {
-        this.advance()
-        if (this.check('STRING')) {
-          item.icon = this.advance().value
-        }
-        continue
-      }
-
-      // badge property (SideNav): badge "5"
-      if (this.check('IDENTIFIER') && this.current().value === 'badge') {
-        this.advance()
-        if (this.check('STRING')) {
-          item.badge = this.advance().value
-        }
-        continue
-      }
-
-      // arrow flag (SideNav): arrow
-      if (this.check('IDENTIFIER') && this.current().value === 'arrow') {
-        this.advance()
-        item.arrow = true
-        continue
-      }
-
-      // show syntax: show ViewName [from FileName]
-      // - show Settings → local element or Settings.mirror
-      // - show Settings from Content → Settings element from Content.mirror
-      if (this.check('IDENTIFIER') && this.current().value === 'show') {
-        this.advance() // consume 'show'
-        if (this.check('IDENTIFIER')) {
-          item.shows = this.advance().value
-          // Check for "from FileName"
-          if (this.check('IDENTIFIER') && this.current().value === 'from') {
-            this.advance() // consume 'from'
-            if (this.check('IDENTIFIER')) {
-              item.showsFrom = this.advance().value
-            }
-          }
-        }
-        continue
-      }
-
-      // Legacy: shows property (SideNav): shows ViewName
-      if (this.check('IDENTIFIER') && this.current().value === 'shows') {
-        this.advance()
-        if (this.check('IDENTIFIER')) {
-          item.shows = this.advance().value
-        }
-        continue
-      }
-
-      // navigate(ViewName) function call syntax - convert to shows property
-      // This allows: NavItem "Dashboard", navigate(DashboardView)
-      if (this.check('IDENTIFIER') && this.current().value === 'navigate' && this.checkNext('LPAREN')) {
-        this.advance() // consume 'navigate'
-        this.advance() // consume '('
-        if (this.check('IDENTIFIER')) {
-          item.shows = this.advance().value
-        }
-        if (this.check('RPAREN')) {
-          this.advance() // consume ')'
-        }
-        continue
-      }
-
-      // Layout properties (ver, hor, gap, pad, spread, etc.)
-      if (this.check('IDENTIFIER') && layoutProps.includes(this.current().value)) {
-        // Initialize properties array if needed
-        if (!item.properties) item.properties = []
-        const propToken = this.current()
-        const propName = this.advance().value
-        // Check for value(s)
-        const values: (string | number | boolean)[] = []
-        while (this.check('NUMBER') || this.check('STRING')) {
-          const valToken = this.advance()
-          values.push(valToken.type === 'NUMBER' ? Number(valToken.value) : valToken.value)
-        }
-        // If no values, treat as boolean flag (e.g., "ver" = true)
-        if (values.length === 0) values.push(true)
-        item.properties.push({ type: 'Property', name: propName, values, line: propToken.line, column: propToken.column })
-        continue
-      }
-
-      // Dynamic item properties from primitive definition (name, placeholder, multiline, etc.)
-      const zagDef = getZagPrimitive(componentName)
-      const validItemProps = new Set(zagDef?.itemProps || [])
-      if (this.check('IDENTIFIER') && validItemProps.has(this.current().value)) {
-        const propToken = this.current()
-        const propName = this.advance().value
-
-        // Check for value - can be STRING, NUMBER, or boolean (no value)
-        // Use type assertion for dynamic property assignment on ZagItem
-        const itemRecord = item as unknown as Record<string, unknown>
-        if (this.check('STRING')) {
-          const value = this.advance().value
-          // Set directly on item for these well-known properties
-          itemRecord[propName] = value
-        } else if (this.check('NUMBER')) {
-          const value = Number(this.advance().value)
-          itemRecord[propName] = value
-        } else {
-          // Boolean flag (e.g., "multiline", "required")
-          itemRecord[propName] = true
-        }
-        continue
-      }
-
-      // Unknown, stop parsing properties
-      break
-    }
-
-    // Check for colon (indicates inline or indented children)
-    if (this.check('COLON')) {
-      this.advance()
-      item.children = []
-
-      // Parse inline children on same line
-      // Children are separated by commas followed by capitalized component names
-      // e.g., "Box w 8, h 8, bg #fff, Text "label"" - commas between props don't separate children
-      while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
-        // Skip leading commas
-        if (this.check('COMMA')) {
-          this.advance()
-          continue
-        }
-
-        // Check if this looks like a component (capitalized identifier)
-        if (this.check('IDENTIFIER')) {
-          const name = this.current().value
-          const isComponent = name.charAt(0) === name.charAt(0).toUpperCase()
-
-          if (isComponent) {
-            const childName = this.advance()
-
-            // Create child instance
-            const child: Instance = {
-              type: 'Instance',
-              component: childName.value,
-              name: null,
-              properties: [],
-              children: [],
-              line: childName.line,
-              column: childName.column,
-            }
-
-            // Parse child's properties until we hit a comma followed by another component
-            while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
-              // Check for comma - if followed by capitalized identifier, it's a new child
-              if (this.check('COMMA')) {
-                const nextToken = this.tokens[this.pos + 1]
-                if (nextToken && nextToken.type === 'IDENTIFIER') {
-                  const nextName = nextToken.value
-                  const isNextComponent = nextName.charAt(0) === nextName.charAt(0).toUpperCase()
-                  if (isNextComponent) {
-                    // This comma separates children - break to outer loop
-                    break
-                  }
-                }
-                // Comma between properties - skip it and continue
-                this.advance()
-                continue
-              }
-
-              // String content
-              if (this.check('STRING')) {
-                const str = this.advance()
-                child.properties.push({
-                  type: 'Property',
-                  name: 'content',
-                  values: [str.value],
-                  line: str.line,
-                  column: str.column,
-                })
-                continue
-              }
-
-              // Property (lowercase identifier)
-              if (this.check('IDENTIFIER')) {
-                const prop = this.parseProperty()
-                if (prop) child.properties.push(prop)
-                continue
-              }
-
-              break
-            }
-
-            item.children.push(child)
-          } else {
-            // Lowercase - not a component, stop parsing
-            break
-          }
-        } else {
-          break
-        }
-      }
-    }
-
-    // Skip newline
-    this.skipNewlines()
-
-    // Check for indented children (custom item content)
-    if (this.check('INDENT')) {
-      this.advance()
-      if (!item.children) item.children = []
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
+      parseNumericArray: () => {
+        this.pos = ctx.pos
+        const result = this.parseNumericArray()
+        ctx.pos = this.pos
+        return result
+      },
+      parseEvent: () => {
+        this.pos = ctx.pos
+        const result = this.parseEvent()
+        ctx.pos = this.pos
+        return result
+      },
+      parseInstance: (token) => {
+        this.pos = ctx.pos
+        const result = this.parseInstance(token)
+        ctx.pos = this.pos
+        return result
+      },
+      skipNewlines: () => {
+        this.pos = ctx.pos
         this.skipNewlines()
-        if (this.check('DEDENT') || this.isAtEnd()) break
-
-        if (this.check('IDENTIFIER')) {
-          const name = this.advance()
-          const child = this.parseInstance(name)
-          if (child.type !== 'ZagComponent') {
-            item.children.push(child as Instance)
-          }
-        } else {
-          this.advance()
-        }
-      }
-      if (this.check('DEDENT')) this.advance()
-    }
-
-    // Update end position
-    const prevToken = this.previous()
-    if (prevToken) {
-      item.sourcePosition.endLine = prevToken.line
-      item.sourcePosition.endColumn = prevToken.column
-    }
-
-    return item
-  }
-
-  /**
-   * Parse a Zag Group (container for related items)
-   *
-   * Syntax:
-   *   Group "Fruits"
-   *     Item "Apple"
-   *     Item "Banana"
-   *   Group label "Vegetables"
-   *     Item "Carrot"
-   *     Item "Tomato"
-   */
-  private parseZagGroup(componentName: string): ZagItem | null {
-    const groupToken = this.advance() // 'Group'
-    const startLine = groupToken.line
-    const startColumn = groupToken.column
-
-    const group: ZagItem = {
-      isGroup: true,
-      items: [],
-      sourcePosition: {
-        line: startLine,
-        column: startColumn,
-        endLine: startLine,
-        endColumn: startColumn,
+        ctx.pos = this.pos
+      },
+      previous: () => {
+        this.pos = ctx.pos
+        const result = this.previous()
+        ctx.pos = this.pos
+        return result
+      },
+      hasColonOnLine: () => {
+        this.pos = ctx.pos
+        const result = this.hasColonOnLine()
+        ctx.pos = this.pos
+        return result
       },
     }
 
-    // Parse group properties (label)
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
-      // Skip commas
-      if (this.check('COMMA') || this.check('SEMICOLON')) {
-        this.advance()
-        continue
-      }
-
-      // String as label (shorthand): Group "Fruits"
-      if (this.check('STRING') && !group.label) {
-        const str = this.advance()
-        group.label = str.value
-        continue
-      }
-
-      // Explicit label: label "Fruits"
-      if (this.check('IDENTIFIER') && this.current().value === 'label') {
-        this.advance()
-        if (this.check('STRING')) {
-          group.label = this.advance().value
-        }
-        continue
-      }
-
-      // collapsible flag (SideNav groups)
-      if (this.check('IDENTIFIER') && this.current().value === 'collapsible') {
-        this.advance()
-        group.collapsible = true
-        continue
-      }
-
-      // defaultOpen flag (SideNav groups)
-      if (this.check('IDENTIFIER') && this.current().value === 'defaultOpen') {
-        this.advance()
-        group.defaultOpen = true
-        continue
-      }
-
-      break
-    }
-
-    // Consume newline
-    if (this.check('NEWLINE')) this.advance()
-
-    // Parse indented children (Items)
-    if (this.check('INDENT')) {
-      this.advance() // consume INDENT
-
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
-        this.skipNewlines()
-        if (this.check('DEDENT') || this.isAtEnd()) break
-
-        // Check for Item
-        if (this.check('IDENTIFIER') && isZagItemKeyword(componentName, this.current().value)) {
-          const item = this.parseZagItem(componentName)
-          if (item) group.items!.push(item)
-          continue
-        }
-
-        // Skip unknown tokens
-        this.advance()
-      }
-
-      if (this.check('DEDENT')) this.advance()
-    }
-
-    // Update end position
-    const prevToken = this.previous()
-    if (prevToken) {
-      group.sourcePosition.endLine = prevToken.line
-      group.sourcePosition.endColumn = prevToken.column
-    }
-
-    return group
+    const result = parseZagComponentExtracted(ctx, nameToken, callbacks, colonAlreadyConsumed)
+    this.pos = ctx.pos
+    this.errors = ctx.errors
+    return result
   }
+
 
   /**
    * Look ahead to check if the current line contains inline child syntax (semicolons)
@@ -5044,17 +4239,54 @@ export class Parser {
           thenValue = this.advance().value
         }
 
-        // Expect colon for else
+        // Expect colon for else - collect the entire else expression including nested ternaries
         let elseValue: string | number = ''
         if (this.check('COLON')) {
           this.advance()
-          if (this.check('STRING')) {
-            elseValue = this.advance().value
-          } else if (this.check('NUMBER')) {
-            elseValue = this.advance().value
-          } else if (this.check('IDENTIFIER')) {
-            elseValue = this.advance().value
+          // Collect the entire else part, which might be a nested ternary
+          // e.g., $a === "B" ? #222 : #333
+          const elseTokens: string[] = []
+          while (!this.check('COMMA') && !this.check('SEMICOLON') && !this.check('NEWLINE') &&
+                 !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+            // Check for inline state syntax: "hover:" - stop collecting
+            if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+              const identValue = this.current().value
+              if (identValue[0] === identValue[0].toLowerCase() && !KEYBOARD_KEYS.has(identValue)) {
+                break
+              }
+            }
+
+            const token = this.current()
+            if (token.type === 'STRING') {
+              elseTokens.push(`"${this.advance().value}"`)
+            } else if (token.type === 'DOT') {
+              elseTokens.push(this.advance().value)
+            } else if (token.type === 'QUESTION') {
+              elseTokens.push(' ? ')
+              this.advance()
+            } else if (token.type === 'COLON') {
+              elseTokens.push(' : ')
+              this.advance()
+            } else if (token.type === 'STRICT_EQUAL') {
+              elseTokens.push(' === ')
+              this.advance()
+            } else if (token.type === 'STRICT_NOT_EQUAL') {
+              elseTokens.push(' !== ')
+              this.advance()
+            } else if (token.type === 'NOT_EQUAL') {
+              elseTokens.push(' != ')
+              this.advance()
+            } else if (token.type === 'GT' || token.type === 'LT' || token.type === 'GTE' || token.type === 'LTE') {
+              elseTokens.push(` ${this.advance().value} `)
+            } else {
+              // Add space before token if needed (except after DOT)
+              if (elseTokens.length > 0 && elseTokens[elseTokens.length - 1] !== '.') {
+                elseTokens.push(' ')
+              }
+              elseTokens.push(this.advance().value)
+            }
           }
+          elseValue = elseTokens.join('').trim()
         }
 
         values.push({

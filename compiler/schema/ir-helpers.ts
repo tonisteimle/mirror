@@ -538,6 +538,55 @@ export function getColorAcceptingProperties(): string[] {
 }
 
 // ============================================================================
+// Property to Token Suffix Mapping
+// ============================================================================
+
+/**
+ * Maps property names to their token suffixes.
+ * Used for context-based token resolution.
+ * e.g., 'bg' -> '.bg' means 'primary' with property 'bg' looks for 'primary.bg'
+ */
+export const PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
+  // Background
+  'bg': '.bg',
+  'background': '.bg',
+  // Color
+  'col': '.col',
+  'color': '.col',
+  'c': '.col',
+  // Border color
+  'boc': '.boc',
+  'border-color': '.boc',
+  // Radius
+  'rad': '.rad',
+  'radius': '.rad',
+  // Padding
+  'pad': '.pad',
+  'padding': '.pad',
+  'p': '.pad',
+  // Margin
+  'mar': '.mar',
+  'margin': '.mar',
+  'm': '.mar',
+  // Gap
+  'gap': '.gap',
+  'g': '.gap',
+  // Width/Height
+  'w': '.w',
+  'width': '.w',
+  'h': '.h',
+  'height': '.h',
+  // Font size
+  'fs': '.fs',
+  'font-size': '.fs',
+  // Icon
+  'ic': '.ic',
+  'icon-color': '.ic',
+  'is': '.is',
+  'icon-size': '.is',
+}
+
+// ============================================================================
 // Event Mapping
 // ============================================================================
 

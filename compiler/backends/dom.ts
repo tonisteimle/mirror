@@ -744,8 +744,20 @@ class DOMGenerator {
     // Visible when state condition
     if (node.visibleWhen) {
       this.emit(`${varName}._visibleWhen = '${node.visibleWhen}'`)
-      this.emit(`// Initially hidden until parent state matches`)
+      this.emit(`// Initially hidden until condition is met`)
       this.emit(`${varName}.style.display = 'none'`)
+
+      // If the condition references data (contains $), register visibility binding
+      // so it gets re-evaluated when that data changes
+      const dataMatches = node.visibleWhen.match(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g)
+      if (dataMatches) {
+        for (const match of dataMatches) {
+          const path = match.slice(1) // Remove $ prefix
+          // Use the base path (e.g., "selectedAddress" not "selectedAddress.name")
+          const basePath = path.split('.')[0]
+          this.emit(`_runtime.bindVisibility(${varName}, '${basePath}')`)
+        }
+      }
     }
 
     // Selection binding - for exclusive() to update a variable with selected content
@@ -1196,6 +1208,8 @@ class DOMGenerator {
     this.emit(`const ${varName} = document.createElement('${node.tag}')`)
     // Index appended for uniqueness: node-5[0], node-5[1], etc.
     this.emit(`${varName}.dataset.mirrorId = '${node.id}[' + ${indexVar} + ']'`)
+    // Store the loop item on the element for bind/exclusive() to access
+    this.emit(`${varName}._loopItem = ${itemVar}`)
     if (node.name) {
       this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
     }
@@ -1253,6 +1267,25 @@ class DOMGenerator {
     // Add event listeners
     for (const event of node.events) {
       this.emitTemplateEventListener(varName, event, itemVar)
+    }
+
+    // Handle editable property - generates setupEditable call for in-place editing
+    const editableProp = node.properties.find(p => p.name === 'data-editable' && p.value === true)
+    if (editableProp) {
+      // Find the field being edited from textContent (e.g., "todo.text" → "text")
+      const textContentProp = node.properties.find(p => p.name === 'textContent')
+      if (textContentProp && typeof textContentProp.value === 'string') {
+        const fieldMatch = textContentProp.value.match(/__loopVar:([^,\s]+)/)
+        if (fieldMatch) {
+          const fullPath = fieldMatch[1]
+          // Extract field name from itemVar.field (e.g., "todo.text" → "text")
+          const parts = fullPath.split('.')
+          if (parts.length >= 2) {
+            const field = parts.slice(1).join('.')
+            this.emit(`_runtime.setupEditable(${varName}, ${itemVar}, '${field}')`)
+          }
+        }
+      }
     }
 
     // Handle nested each loop if present
@@ -1375,6 +1408,22 @@ class DOMGenerator {
   }
 
   private resolveTemplateStyleValue(value: string, itemVar: string): string {
+    // Handle __conditional: markers (ternary expressions from IR)
+    // Format: __conditional:condition?thenValue:elseValue
+    if (value.includes('__conditional:')) {
+      return this.resolveConditionalExpression(value, itemVar)
+    }
+
+    // Handle __loopVar: markers
+    if (value.includes('__loopVar:')) {
+      let resolved = value.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
+      // Wrap in parentheses if it's an expression
+      if (resolved.includes(' ')) {
+        return `(${resolved})`
+      }
+      return resolved
+    }
+
     // Check if value is exactly the item variable (e.g., $color -> color)
     if (value === `$${itemVar}`) {
       return itemVar
@@ -1385,6 +1434,123 @@ class DOMGenerator {
       return resolved
     }
     return `'${value}'`
+  }
+
+  /**
+   * Resolve __conditional: markers into proper JavaScript ternary expressions
+   * Handles nested conditionals (chained ternary)
+   */
+  private resolveConditionalExpression(value: string, itemVar: string): string {
+    // Parse __conditional:condition?then:else pattern
+    // Note: 'else' part may itself be another __conditional (nested ternary)
+    const parseConditional = (str: string): string => {
+      if (!str.startsWith('__conditional:')) {
+        // Not a conditional - resolve as a value
+        return this.resolveConditionalValue(str, itemVar)
+      }
+
+      // Remove __conditional: prefix
+      const content = str.slice('__conditional:'.length)
+
+      // Find the ? that separates condition from then/else
+      // Need to be careful with nested conditionals
+      let questionPos = -1
+      let depth = 0
+      for (let i = 0; i < content.length; i++) {
+        const char = content[i]
+        if (char === '(') depth++
+        else if (char === ')') depth--
+        else if (char === '?' && depth === 0 && !content.slice(i-1, i+1).match(/[=!<>]=?\?/)) {
+          // Found ? not part of === or !== etc
+          questionPos = i
+          break
+        }
+      }
+
+      if (questionPos === -1) {
+        // No valid ternary found, return as-is
+        return this.resolveConditionalValue(content, itemVar)
+      }
+
+      const condition = content.slice(0, questionPos)
+      const rest = content.slice(questionPos + 1)
+
+      // Find the : that separates then from else
+      // Need to handle nested __conditional: in else part
+      let colonPos = -1
+      depth = 0
+      let inConditional = false
+      for (let i = 0; i < rest.length; i++) {
+        const char = rest[i]
+        if (rest.slice(i).startsWith('__conditional:')) {
+          inConditional = true
+        }
+        if (char === '(') depth++
+        else if (char === ')') depth--
+        else if (char === ':' && depth === 0 && !inConditional) {
+          colonPos = i
+          break
+        }
+        // Reset inConditional after seeing a ? in nested conditional
+        if (char === '?' && inConditional) {
+          inConditional = false
+        }
+      }
+
+      if (colonPos === -1) {
+        // Fallback: split at first : not in nested conditional
+        colonPos = rest.indexOf(':')
+      }
+
+      const thenValue = rest.slice(0, colonPos)
+      const elseValue = rest.slice(colonPos + 1)
+
+      // Resolve the condition (replace __loopVar: markers)
+      const resolvedCondition = this.resolveLoopVarMarkers(condition)
+
+      // Recursively parse then/else (may be nested conditionals)
+      const resolvedThen = parseConditional(thenValue)
+      const resolvedElse = parseConditional(elseValue)
+
+      return `(${resolvedCondition} ? ${resolvedThen} : ${resolvedElse})`
+    }
+
+    return parseConditional(value)
+  }
+
+  /**
+   * Resolve a single value in a conditional (color, string, etc.)
+   */
+  private resolveConditionalValue(value: string, itemVar: string): string {
+    // Handle __loopVar: markers
+    if (value.includes('__loopVar:')) {
+      return this.resolveLoopVarMarkers(value)
+    }
+
+    // Handle item variable reference
+    if (value.includes(`$${itemVar}.`)) {
+      return value.replace(new RegExp(`\\$${itemVar}\\.`, 'g'), `${itemVar}.`)
+    }
+
+    // Check if it's a color (hex)
+    if (value.startsWith('#')) {
+      return `"${value}"`
+    }
+
+    // Check if it's a number
+    if (/^-?\d+(\.\d+)?$/.test(value)) {
+      return value
+    }
+
+    // Default: wrap in quotes
+    return `"${value}"`
+  }
+
+  /**
+   * Replace __loopVar: markers with actual variable references
+   */
+  private resolveLoopVarMarkers(str: string): string {
+    return str.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
   }
 
   /**
@@ -1455,41 +1621,39 @@ class DOMGenerator {
   }
 
   private emitPublicAPI(): void {
-    this.emit('// Public API')
-    this.emit('const api = {')
-    this.indent++
-
-    this.emit('root: _root,')
+    this.emit('// Attach API methods directly to _root for intuitive usage')
+    this.emit('// createUI() returns the DOM node directly, with API methods attached')
     this.emit('')
 
     // Generate accessors for named instances
     const namedNodes = this.collectNamedNodes(this.ir.nodes)
     for (const node of namedNodes) {
-      this.emit(`get ${node.instanceName}() {`)
+      this.emit(`Object.defineProperty(_root, '${node.instanceName}', {`)
       this.indent++
-      this.emit(`return _runtime.wrap(_elements['${node.instanceName}'])`)
+      this.emit(`get() { return _runtime.wrap(_elements['${node.instanceName}']) },`)
+      this.emit('enumerable: true')
       this.indent--
-      this.emit('},')
+      this.emit('})')
     }
 
     this.emit('')
     this.emit('// State management')
-    this.emit('setState(key, value) {')
+    this.emit('_root.setState = function(key, value) {')
     this.indent++
     this.emit('_state[key] = value')
     this.emit('this.update()')
     this.indent--
-    this.emit('},')
+    this.emit('}')
     this.emit('')
 
-    this.emit('getState(key) {')
+    this.emit('_root.getState = function(key) {')
     this.indent++
     this.emit('return _state[key]')
     this.indent--
-    this.emit('},')
+    this.emit('}')
     this.emit('')
 
-    this.emit('update() {')
+    this.emit('_root.update = function() {')
     this.indent++
     this.emit('// Re-render each loops based on state changes')
     this.emit("for (const el of _root.querySelectorAll('[data-each-container]')) {")
@@ -1527,12 +1691,10 @@ class DOMGenerator {
     this.indent--
     this.emit('}')
     this.indent--
-    this.emit('},')
-
-    this.indent--
     this.emit('}')
+
     this.emit('')
-    this.emit('return api')
+    this.emit('return _root')
   }
 
 

@@ -942,7 +942,7 @@ function emitTooltipComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitte
   }
 
   // Emit machine configuration
-  emitMachineConfig(ctx, varName, node, 'tooltip')
+  emitMachineConfig(ctx, varName, 'tooltip', node.id, node.machineConfig || {})
 
   // Trigger element
   const triggerSlot = node.slots['Trigger']
@@ -1011,7 +1011,7 @@ function emitDialogComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitter
   }
 
   // Emit machine configuration
-  emitMachineConfig(ctx, varName, node, 'dialog')
+  emitMachineConfig(ctx, varName, 'dialog', node.id, node.machineConfig || {})
 
   // Trigger button
   const triggerSlot = node.slots['Trigger']
@@ -2599,7 +2599,7 @@ function emitListboxComponent(node: IRZagNode, parentVar: string, ctx: ZagEmitte
   }
 
   // Emit machine configuration
-  emitMachineConfig(ctx, varName, 'listbox', node)
+  emitMachineConfig(ctx, varName, 'listbox', node.id, node.machineConfig || {})
 
   // Apply root styles
   emitSlotStyles(ctx, varName, node.slots['Root'])

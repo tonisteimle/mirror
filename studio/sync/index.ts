@@ -16,6 +16,7 @@ export { SyncCoordinator, createSyncCoordinator, type SyncTargets, type SyncCoor
 // ============================================
 
 // Ports (interfaces)
+// Note: SelectionOrigin, BreadcrumbItem, CleanupFn are exported from core to avoid duplicate exports
 export type {
   EventBusPort,
   StateStorePort,
@@ -23,13 +24,10 @@ export type {
   ClockPort,
   SourceMapPort,
   SyncPorts,
-  SelectionOrigin,
   SelectionChangedEvent,
-  BreadcrumbItem,
   PreviewElement,
   SourceMapNode,
   SourceMapDefinition,
-  CleanupFn,
 } from './ports'
 
 // New SyncCoordinator with ports

@@ -21,7 +21,7 @@ import type {
   CleanupFn,
 } from '../ports'
 import { state, actions, events } from '../../core'
-import type { SourceMap } from '../../../compiler/ir/source-map'
+import type { SourceMap } from '../../../compiler'
 
 // ============================================
 // Production Event Bus Port

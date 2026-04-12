@@ -1,229 +1,51 @@
 /**
  * State Store for Studio
+ *
+ * Central state management for the Mirror Studio.
+ * Types are defined in state-types.ts, Store class in store.ts.
  */
 
 import type { AST, ParseError } from '../../compiler/parser/ast'
 import type { IR } from '../../compiler/ir/types'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import { events } from './events'
+import { Store } from './store'
+import { initSelectors, computed, createSelector } from './selectors'
+import type {
+  SelectionOrigin,
+  BreadcrumbItem,
+  CompileResult,
+  DeferredSelection,
+  PendingSelection,
+  PanelVisibility,
+  PanelSizes,
+  PanelSettings,
+  LayoutRect,
+  StudioState,
+  Subscriber,
+  Selector,
+} from './state-types'
+
+// Re-export types for backward compatibility
+export type {
+  SelectionOrigin,
+  BreadcrumbItem,
+  CompileResult,
+  DeferredSelection,
+  PendingSelection,
+  PanelVisibility,
+  PanelSizes,
+  PanelSettings,
+  LayoutRect,
+  StudioState,
+  Subscriber,
+  Selector,
+}
 
 // Debug flag - set to true to enable verbose state logging
 const DEBUG_STATE = false
 
-export type SelectionOrigin = 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' | 'drag-drop'
-
-export interface BreadcrumbItem {
-  nodeId: string
-  name: string
-}
-
-/**
- * Compile result - atomically updated together
- */
-export interface CompileResult {
-  ast: AST
-  ir: IR
-  sourceMap: SourceMap
-  errors: ParseError[]
-  version: number  // Incremented on each compile
-  timestamp: number
-}
-
-/**
- * Deferred selection - resolved after compile completes
- *
- * Two modes:
- * - 'nodeId': When the nodeId is known but SourceMap isn't ready (e.g., undo/redo during compile)
- * - 'line': When only the line number is known (e.g., drag-drop insert)
- */
-export type DeferredSelection =
-  | {
-      type: 'nodeId'
-      /** The nodeId to select once SourceMap is available */
-      nodeId: string
-      /** Origin of the selection request */
-      origin: SelectionOrigin
-    }
-  | {
-      type: 'line'
-      /** Line number in the current file (1-based) where the element was inserted */
-      line: number
-      /** Component name that was inserted (e.g., "Frame", "Text") */
-      componentName: string
-      /** Origin of the selection request */
-      origin: SelectionOrigin
-    }
-
-/**
- * @deprecated Use DeferredSelection with type: 'line' instead
- * Kept for backward compatibility
- */
-export interface PendingSelection {
-  /** Line number in the current file (1-based) where the element was inserted */
-  line: number
-  /** Component name that was inserted (e.g., "Frame", "Text") */
-  componentName: string
-  /** Origin of the selection request */
-  origin: SelectionOrigin
-}
-
-/**
- * Panel visibility state for individual panels
- */
-export interface PanelVisibility {
-  prompt: boolean
-  files: boolean
-  code: boolean
-  components: boolean
-  preview: boolean
-  property: boolean
-}
-
-/**
- * Panel sizes (pixels)
- */
-export interface PanelSizes {
-  sidebar: number
-  components: number
-  editor: number
-  preview: number
-}
-
-/**
- * Combined panel settings for localStorage persistence
- */
-export interface PanelSettings {
-  visibility: PanelVisibility
-  sizes: PanelSizes
-}
-
 const PANEL_SETTINGS_KEY = 'mirror-panel-settings'
-
-/**
- * Layout information for a single element
- * Extracted once after render, used by all visual systems (handles, resize, overlays)
- */
-export interface LayoutRect {
-  /** Position relative to preview container */
-  x: number
-  y: number
-  /** Element dimensions */
-  width: number
-  height: number
-  /** Padding values */
-  padding: {
-    top: number
-    right: number
-    bottom: number
-    left: number
-  }
-  /** Gap between children (for flex/grid containers) */
-  gap: number
-  /** Border radius */
-  radius: number
-  /** Whether element has position: absolute */
-  isAbsolute: boolean
-  /** Parent node ID (for hierarchy) */
-  parentId: string | null
-  /** Flex direction if container */
-  flexDirection: 'row' | 'column' | null
-  /** Whether element is a flex/grid container */
-  isContainer: boolean
-}
-
-export interface StudioState {
-  source: string
-  /** Resolved source = prelude + current file (used by CodeModifier to match SourceMap positions) */
-  resolvedSource: string
-  ast: AST | null
-  ir: IR | null
-  sourceMap: SourceMap | null
-  errors: ParseError[]
-  /** Compile version - use to detect stale SourceMap */
-  compileVersion: number
-  /** Timestamp of last successful compile */
-  compileTimestamp: number
-  /** True while compilation is in progress */
-  compiling: boolean
-  selection: { nodeId: string | null; origin: SelectionOrigin }
-  /** Multi-selection for grouping operations (Shift+Click) */
-  multiSelection: string[]
-  breadcrumb: BreadcrumbItem[]
-  cursor: { line: number; column: number }
-  editorHasFocus: boolean
-  currentFile: string
-  files: Record<string, string>
-  fileTypes: Record<string, string>
-  panels: { left: boolean; right: boolean }
-  /** Individual panel visibility */
-  panelVisibility: PanelVisibility
-  /** Panel sizes (percentages) */
-  panelSizes: PanelSizes
-  mode: 'mirror' | 'react'
-  /** Character offset where current file starts in resolvedSource */
-  preludeOffset: number
-  /** Pending selection to be resolved after compile completes (line-based) */
-  pendingSelection: PendingSelection | null
-  /** Queued selection when SourceMap not yet available (nodeId-based) */
-  queuedSelection: { nodeId: string; origin: SelectionOrigin } | null
-  /** Unified deferred selection - replaces pendingSelection and queuedSelection */
-  deferredSelection: DeferredSelection | null
-  /** Inline text editing state */
-  inlineEditActive: boolean
-  /** Node ID currently being inline edited */
-  inlineEditNodeId: string | null
-  /** Preview zoom level (100 = 100%) */
-  previewZoom: number
-  /** Play mode - disables editor interactions, allows component testing */
-  playMode: boolean
-  /** Layout information for all elements, extracted after render */
-  layoutInfo: Map<string, LayoutRect>
-  /** Layout version - incremented after each layout extraction */
-  layoutVersion: number
-}
-
-export type Subscriber<T> = (state: T, prevState: T) => void
-export type Selector<T, R> = (state: T) => R
-
-class Store<T extends object> {
-  private state: T
-  private subscribers: Set<Subscriber<T>> = new Set()
-
-  constructor(initialState: T) {
-    this.state = initialState
-  }
-
-  get(): Readonly<T> {
-    return this.state
-  }
-
-  set(partial: Partial<T>): void {
-    const prevState = this.state
-    this.state = { ...this.state, ...partial }
-    this.notify(prevState)
-  }
-
-  subscribe(subscriber: Subscriber<T>): () => void {
-    this.subscribers.add(subscriber)
-    return () => this.subscribers.delete(subscriber)
-  }
-
-  private notify(prevState: T): void {
-    for (const subscriber of this.subscribers) {
-      try {
-        subscriber(this.state, prevState)
-      } catch (e) {
-        const error = e instanceof Error ? e : new Error(String(e))
-        console.error('[State] Subscriber error:', error.message, error.stack)
-        // Emit error event for centralized error handling
-        events.emit('state:error', {
-          error,
-          context: 'subscriber notification',
-        })
-      }
-    }
-  }
-}
 
 /**
  * Default panel visibility
@@ -319,6 +141,12 @@ const initialState: StudioState = {
 }
 
 export const state = new Store<StudioState>(initialState)
+
+// Initialize selectors with state getter
+initSelectors(() => state.get())
+
+// Re-export selectors for backward compatibility
+export { computed, createSelector }
 
 export const actions = {
   setSource(source: string, origin: 'editor' | 'command' | 'external' = 'external'): void {
@@ -1004,124 +832,4 @@ export const selectors = {
   getPreviewZoom: () => state.get().previewZoom,
   getLayoutInfo: () => state.get().layoutInfo,
   getLayoutVersion: () => state.get().layoutVersion,
-}
-
-/**
- * Memoized selector factory
- * Caches result based on dependency values
- */
-function createSelector<TDeps extends unknown[], TResult>(
-  getDeps: (s: StudioState) => TDeps,
-  compute: (...deps: TDeps) => TResult
-): () => TResult {
-  let cachedDeps: TDeps | null = null
-  let cachedResult: TResult
-
-  return () => {
-    const currentState = state.get()
-    const deps = getDeps(currentState)
-
-    // Check if dependencies changed (shallow comparison)
-    const depsChanged = cachedDeps === null || deps.some((dep, i) => dep !== cachedDeps![i])
-
-    if (depsChanged) {
-      cachedDeps = deps
-      cachedResult = compute(...deps)
-    }
-
-    return cachedResult
-  }
-}
-
-/**
- * Computed selectors - memoized derived values
- */
-export const computed = {
-  /**
-   * Get the currently selected node (memoized)
-   */
-  getSelectedNode: createSelector(
-    (s) => [s.selection.nodeId, s.sourceMap] as const,
-    (nodeId, sourceMap) => {
-      if (!nodeId || !sourceMap) return null
-      return sourceMap.getNodeById(nodeId)
-    }
-  ),
-
-  /**
-   * Get the parent of the selected node (memoized)
-   */
-  getSelectedNodeParent: createSelector(
-    (s) => [s.selection.nodeId, s.sourceMap] as const,
-    (nodeId, sourceMap) => {
-      if (!nodeId || !sourceMap) return null
-      const node = sourceMap.getNodeById(nodeId)
-      if (!node?.parentId) return null
-      return sourceMap.getNodeById(node.parentId)
-    }
-  ),
-
-  /**
-   * Get all nodes in multi-selection (memoized)
-   */
-  getMultiSelectedNodes: createSelector(
-    (s) => [s.multiSelection, s.sourceMap] as const,
-    (nodeIds, sourceMap) => {
-      if (!sourceMap || nodeIds.length === 0) return []
-      return nodeIds
-        .map(id => sourceMap.getNodeById(id))
-        .filter((n): n is NonNullable<typeof n> => n !== null)
-    }
-  ),
-
-  /**
-   * Check if multi-selection nodes are siblings (same parent)
-   */
-  isValidGroupSelection: createSelector(
-    (s) => [s.multiSelection, s.sourceMap] as const,
-    (nodeIds, sourceMap) => {
-      if (!sourceMap || nodeIds.length < 2) return false
-      const nodes = nodeIds
-        .map(id => sourceMap.getNodeById(id))
-        .filter((n): n is NonNullable<typeof n> => n !== null)
-      if (nodes.length !== nodeIds.length) return false
-
-      // All nodes must have the same parent
-      const firstParent = nodes[0].parentId
-      return nodes.every(n => n.parentId === firstParent)
-    }
-  ),
-
-  /**
-   * Get breadcrumb path from root to selected node (memoized)
-   */
-  getSelectionBreadcrumb: createSelector(
-    (s) => [s.selection.nodeId, s.sourceMap] as const,
-    (nodeId, sourceMap) => {
-      if (!nodeId || !sourceMap) return []
-
-      const path: BreadcrumbItem[] = []
-      let currentId: string | undefined = nodeId
-
-      while (currentId) {
-        const node = sourceMap.getNodeById(currentId)
-        if (!node) break
-        path.unshift({ nodeId: currentId, name: node.componentName })
-        currentId = node.parentId
-      }
-
-      return path
-    }
-  ),
-
-  /**
-   * Get children of the selected node (memoized)
-   */
-  getSelectedNodeChildren: createSelector(
-    (s) => [s.selection.nodeId, s.sourceMap] as const,
-    (nodeId, sourceMap) => {
-      if (!nodeId || !sourceMap) return []
-      return sourceMap.getChildren(nodeId)
-    }
-  ),
 }

@@ -63,10 +63,7 @@ export class CodeModifierV2 {
     if (!this.snapshot) return false
 
     // Update source via document port (if it supports it)
-    const doc = this.ports.document as any
-    if (typeof doc.setSource === 'function') {
-      doc.setSource(this.snapshot.source)
-    }
+    this.ports.document.setSource?.(this.snapshot.source)
 
     this.snapshot = null
     return true
@@ -282,10 +279,7 @@ export class CodeModifierV2 {
       currentSource.substring(insertPosition)
 
     // Update document via applyChange
-    const doc = this.ports.document as any
-    if (typeof doc.setSource === 'function') {
-      doc.setSource(newSource)
-    }
+    this.ports.document.setSource?.(newSource)
 
     return {
       success: true,
@@ -341,10 +335,7 @@ export class CodeModifierV2 {
       currentSource.substring(insertPosition)
 
     // Update document
-    const doc = this.ports.document as any
-    if (typeof doc.setSource === 'function') {
-      doc.setSource(newSource)
-    }
+    this.ports.document.setSource?.(newSource)
 
     return {
       success: true,
@@ -416,10 +407,7 @@ export class CodeModifierV2 {
       currentSource.substring(insertPosition)
 
     // Update document
-    const doc = this.ports.document as any
-    if (typeof doc.setSource === 'function') {
-      doc.setSource(newSource)
-    }
+    this.ports.document.setSource?.(newSource)
 
     return {
       success: true,
@@ -476,10 +464,7 @@ export class CodeModifierV2 {
       currentSource.substring(adjustedEndOffset)
 
     // Update document
-    const doc = this.ports.document as any
-    if (typeof doc.setSource === 'function') {
-      doc.setSource(newSource)
-    }
+    this.ports.document.setSource?.(newSource)
 
     return {
       success: true,
@@ -632,10 +617,7 @@ export class CodeModifierV2 {
       newSource.substring(insertPosition)
 
     // Update document
-    const doc = this.ports.document as any
-    if (typeof doc.setSource === 'function') {
-      doc.setSource(newSource)
-    }
+    this.ports.document.setSource?.(newSource)
 
     return {
       success: true,
@@ -727,10 +709,7 @@ export class CodeModifierV2 {
       currentSource.substring(insertPosition)
 
     // Update document
-    const doc = this.ports.document as any
-    if (typeof doc.setSource === 'function') {
-      doc.setSource(newSource)
-    }
+    this.ports.document.setSource?.(newSource)
 
     return {
       success: true,

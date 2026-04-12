@@ -13,8 +13,7 @@
  * This is a REFERENCE IMPLEMENTATION - adapt it to your specific needs.
  */
 
-import type { SourceMap } from '../../../compiler/ir/source-map'
-import type { CodeModifier } from '../../../compiler/studio'
+import type { SourceMap, CodeModifier } from '../../../compiler'
 import type { LayoutRect } from '../../core/state'
 import type { DragSource, DropResult } from '../types'
 import {

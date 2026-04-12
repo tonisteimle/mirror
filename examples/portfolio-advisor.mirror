@@ -1,0 +1,416 @@
+// Portfolio Management System - Kundenberater Ansicht
+
+// === DESIGN TOKENS ===
+primary.bg: #1e40af
+primary-light.bg: #3b82f6
+accent.bg: #10b981
+danger.bg: #ef4444
+warning.bg: #f59e0b
+
+surface.bg: #0f172a
+surface-secondary.bg: #1e293b
+surface-tertiary.bg: #334155
+border.boc: #475569
+
+text-primary.col: #f8fafc
+text-secondary.col: #94a3b8
+text-muted.col: #64748b
+
+// === KOMPONENTEN ===
+
+// Stat Card
+StatCard: Frame bg $surface-secondary, pad 20, rad 12, gap 8, min-w 180
+  Label: col $text-muted, fs 12, uppercase, weight 500
+  Value: col $text-primary, fs 28, weight 700
+  Change: fs 13, weight 600
+
+// Position Row
+PositionRow: Frame hor, spread, ver-center, pad 16, bg $surface-secondary, rad 8, w full
+  Asset: Frame hor, gap 12, ver-center
+    Logo: Frame w 40, h 40, rad 8, center
+    Info: Frame gap 2
+      Name: col $text-primary, fs 14, weight 600
+      Type: col $text-muted, fs 12
+  Data: Frame hor, gap 32, ver-center
+    Col: Frame gap 2, w 100
+      Label: col $text-muted, fs 11, uppercase
+      Value: col $text-primary, fs 14, weight 500
+
+// Action Button
+ActionBtn: Button pad 10 16, rad 8, fs 13, weight 500, cursor pointer
+  hover 0.15s:
+    opacity 0.9
+
+// Nav Item
+NavItem: Frame hor, gap 12, ver-center, pad 12 16, rad 8, col $text-secondary, cursor pointer
+  hover 0.15s:
+    bg $surface-tertiary
+    col $text-primary
+  active:
+    bg $primary
+    col white
+
+// === DATEN ===
+
+client:
+  name: "Dr. Martin Schneider"
+  id: "KD-2847593"
+  advisor: "Sarah Müller"
+  riskProfile: "Ausgewogen"
+
+portfolioStats:
+  totalValue: 847520
+  dayChange: 3247.80
+  dayChangePercent: 0.38
+  ytdReturn: 12.4
+  allocation:
+    stocks: 62
+    bonds: 25
+    cash: 8
+    alternatives: 5
+
+positions:
+  aapl:
+    name: "Apple Inc."
+    isin: "US0378331005"
+    type: "Aktie"
+    quantity: 150
+    avgPrice: 142.50
+    currentPrice: 178.72
+    value: 26808
+    change: 2.34
+    weight: 3.2
+    color: #555
+  msft:
+    name: "Microsoft Corp."
+    isin: "US5949181045"
+    type: "Aktie"
+    quantity: 85
+    avgPrice: 285.00
+    currentPrice: 378.91
+    value: 32207
+    change: 1.87
+    weight: 3.8
+    color: #0078d4
+  nvda:
+    name: "NVIDIA Corp."
+    isin: "US67066G1040"
+    type: "Aktie"
+    quantity: 40
+    avgPrice: 450.00
+    currentPrice: 875.28
+    value: 35011
+    change: -1.24
+    weight: 4.1
+    color: #76b900
+  vanguard:
+    name: "Vanguard Total Bond"
+    isin: "US9219378356"
+    type: "ETF - Anleihen"
+    quantity: 2500
+    avgPrice: 78.50
+    currentPrice: 74.82
+    value: 187050
+    change: 0.12
+    weight: 22.1
+    color: #c23b22
+  siemens:
+    name: "Siemens AG"
+    isin: "DE0007236101"
+    type: "Aktie"
+    quantity: 200
+    avgPrice: 125.00
+    currentPrice: 168.45
+    value: 33690
+    change: 0.95
+    weight: 4.0
+    color: #009999
+  ishares:
+    name: "iShares MSCI World"
+    isin: "IE00B4L5Y983"
+    type: "ETF - Aktien"
+    quantity: 1200
+    avgPrice: 72.00
+    currentPrice: 82.47
+    value: 98964
+    change: 0.67
+    weight: 11.7
+    color: #000
+
+performanceData:
+  Jan: 2.1
+  Feb: 1.8
+  Mar: -0.5
+  Apr: 3.2
+  May: 1.4
+  Jun: 2.8
+  Jul: -1.2
+  Aug: 0.9
+  Sep: 1.5
+  Oct: 2.3
+  Nov: 1.1
+  Dec: 0.8
+
+// === LAYOUT ===
+
+Frame w full, h full, hor, bg $surface
+
+  // Sidebar
+  Frame w 240, h full, bg $surface-secondary, pad 16, gap 24, bor 0 1 0 0, boc $border
+
+    // Logo
+    Frame hor, gap 12, ver-center, pad 8
+      Frame w 36, h 36, bg $primary, rad 8, center
+        Icon "briefcase", ic white, is 20
+      Frame gap 0
+        Text "WealthPro", col $text-primary, fs 16, weight 700
+        Text "Advisor Suite", col $text-muted, fs 11
+
+    // Navigation
+    Frame gap 4, grow
+      Text "NAVIGATION", col $text-muted, fs 10, uppercase, weight 600, pad 8 16
+      NavItem active
+        Icon "layout-dashboard", is 18
+        Text "Dashboard"
+      NavItem
+        Icon "users", is 18
+        Text "Kunden"
+      NavItem
+        Icon "pie-chart", is 18
+        Text "Portfolios"
+      NavItem
+        Icon "trending-up", is 18
+        Text "Märkte"
+      NavItem
+        Icon "file-text", is 18
+        Text "Berichte"
+      NavItem
+        Icon "settings", is 18
+        Text "Einstellungen"
+
+    // User
+    Frame hor, gap 12, ver-center, pad 12, bg $surface-tertiary, rad 8
+      Frame w 36, h 36, bg $primary-light, rad 99, center
+        Text "SM", col white, fs 13, weight 600
+      Frame gap 0, grow
+        Text "$client.advisor", col $text-primary, fs 13, weight 500
+        Text "Senior Berater", col $text-muted, fs 11
+
+  // Main Content
+  Frame w full, h full, gap 24, pad 24, scroll
+
+    // Header
+    Frame hor, spread, ver-center, w full
+      Frame gap 4
+        Frame hor, gap 8, ver-center
+          Text "Portfolio-Übersicht", col $text-primary, fs 24, weight 700
+          Frame pad 4 10, bg $surface-tertiary, rad 4
+            Text "Live", col $accent, fs 11, weight 600
+        Text "Letzte Aktualisierung: Heute, 14:32 Uhr", col $text-muted, fs 13
+
+      Frame hor, gap 12
+        ActionBtn bg $surface-tertiary, col $text-primary
+          Frame hor, gap 8, ver-center
+            Icon "download", ic $text-secondary, is 16
+            Text "Export"
+        ActionBtn bg $primary, col white
+          Frame hor, gap 8, ver-center
+            Icon "plus", ic white, is 16
+            Text "Neue Order"
+
+    // Client Info Bar
+    Frame hor, spread, ver-center, w full, pad 16, bg $surface-secondary, rad 12
+      Frame hor, gap 24, ver-center
+        Frame hor, gap 12, ver-center
+          Frame w 48, h 48, bg $primary-light, rad 99, center
+            Text "MS", col white, fs 16, weight 600
+          Frame gap 2
+            Text "$client.name", col $text-primary, fs 16, weight 600
+            Text "Kunden-Nr: $client.id", col $text-muted, fs 12
+
+        Divider w 1, h 40, bg $border
+
+        Frame gap 2
+          Text "Risikoprofil", col $text-muted, fs 11
+          Frame hor, gap 6, ver-center
+            Frame w 8, h 8, rad 99, bg $warning
+            Text "$client.riskProfile", col $text-primary, fs 14, weight 500
+
+      Frame hor, gap 8
+        ActionBtn bg $surface-tertiary, col $text-primary
+          Icon "phone", ic $text-secondary, is 16
+        ActionBtn bg $surface-tertiary, col $text-primary
+          Icon "mail", ic $text-secondary, is 16
+        ActionBtn bg $surface-tertiary, col $text-primary
+          Icon "file-plus", ic $text-secondary, is 16
+
+    // Stats Row
+    Frame hor, gap 16, w full
+      StatCard grow
+        Label "Portfoliowert"
+        Frame hor, gap 4, ver-center
+          Text "CHF", col $text-muted, fs 16
+          Value "847'520"
+        Change col $accent
+          Frame hor, gap 4, ver-center
+            Icon "trending-up", ic $accent, is 14
+            Text "+CHF 3'247.80 (0.38%) heute"
+
+      StatCard grow
+        Label "YTD Performance"
+        Value "+12.4%"
+        Change col $accent
+          Text "vs. Benchmark +8.2%"
+
+      StatCard grow
+        Label "Aktienquote"
+        Value "62%"
+        Change col $text-secondary
+          Text "Zielallokation: 60%"
+
+      StatCard grow
+        Label "Liquidität"
+        Frame hor, gap 4, ver-center
+          Text "CHF", col $text-muted, fs 16
+          Value "67'802"
+        Change col $text-secondary
+          Text "8% des Portfolios"
+
+    // Main Grid
+    Frame hor, gap 24, w full, grow
+
+      // Positions Table
+      Frame grow, gap 16
+        Frame hor, spread, ver-center
+          Text "Positionen", col $text-primary, fs 18, weight 600
+          Frame hor, gap 8
+            Input placeholder "Suchen...", bg $surface-secondary, col $text-primary, pad 10 12, rad 8, w 200, bor 1, boc $border
+            Frame pad 10, bg $surface-secondary, rad 8, cursor pointer, bor 1, boc $border
+              Icon "filter", ic $text-secondary, is 18
+
+        Frame gap 8, w full
+          // Table Header
+          Frame hor, spread, ver-center, pad 12 16, w full
+            Frame w 200
+              Text "INSTRUMENT", col $text-muted, fs 11, uppercase, weight 600
+            Frame hor, gap 32
+              Frame w 80
+                Text "STÜCK", col $text-muted, fs 11, uppercase, weight 600
+              Frame w 100
+                Text "KURS", col $text-muted, fs 11, uppercase, weight 600
+              Frame w 120
+                Text "WERT (CHF)", col $text-muted, fs 11, uppercase, weight 600
+              Frame w 80
+                Text "ÄNDERUNG", col $text-muted, fs 11, uppercase, weight 600
+              Frame w 60
+                Text "GEWICHT", col $text-muted, fs 11, uppercase, weight 600
+
+          // Positions
+          each position in $positions
+            PositionRow
+              Asset
+                Logo bg $position.color
+                  Text $position.name[0], col white, fs 14, weight 700
+                Info
+                  Name "$position.name"
+                  Type "$position.type"
+              Data
+                Col w 80
+                  Value "$position.quantity"
+                Col w 100
+                  Value "$position.currentPrice"
+                Col w 120
+                  Value "$position.value"
+                Col w 80
+                  Value col $position.change > 0 ? $accent : $danger
+                    Text $position.change + "%"
+                Col w 60
+                  Value $position.weight + "%"
+
+      // Right Sidebar
+      Frame w 320, gap 16
+
+        // Performance Chart
+        Frame bg $surface-secondary, pad 20, rad 12, gap 16
+          Frame hor, spread, ver-center
+            Text "Performance YTD", col $text-primary, fs 16, weight 600
+            Frame hor, gap 8
+              Frame pad 6 10, bg $surface-tertiary, rad 6, cursor pointer
+                Text "1M", col $text-muted, fs 12
+              Frame pad 6 10, bg $primary, rad 6, cursor pointer
+                Text "YTD", col white, fs 12
+              Frame pad 6 10, bg $surface-tertiary, rad 6, cursor pointer
+                Text "1J", col $text-muted, fs 12
+
+          Line $performanceData, w full, h 160, colors #3b82f6
+            Grid: col #334155
+            Line: width 2, tension 0.4
+            Point: size 0
+
+        // Allocation
+        Frame bg $surface-secondary, pad 20, rad 12, gap 16
+          Text "Asset Allocation", col $text-primary, fs 16, weight 600
+
+          Frame gap 12
+            // Stocks
+            Frame gap 6
+              Frame hor, spread
+                Text "Aktien", col $text-primary, fs 13
+                Text "62%", col $text-primary, fs 13, weight 600
+              Frame w full, h 8, bg $surface-tertiary, rad 4
+                Frame w 62%, h full, bg $primary-light, rad 4
+
+            // Bonds
+            Frame gap 6
+              Frame hor, spread
+                Text "Anleihen", col $text-primary, fs 13
+                Text "25%", col $text-primary, fs 13, weight 600
+              Frame w full, h 8, bg $surface-tertiary, rad 4
+                Frame w 25%, h full, bg #8b5cf6, rad 4
+
+            // Cash
+            Frame gap 6
+              Frame hor, spread
+                Text "Liquidität", col $text-primary, fs 13
+                Text "8%", col $text-primary, fs 13, weight 600
+              Frame w full, h 8, bg $surface-tertiary, rad 4
+                Frame w 8%, h full, bg $accent, rad 4
+
+            // Alternatives
+            Frame gap 6
+              Frame hor, spread
+                Text "Alternative", col $text-primary, fs 13
+                Text "5%", col $text-primary, fs 13, weight 600
+              Frame w full, h 8, bg $surface-tertiary, rad 4
+                Frame w 5%, h full, bg $warning, rad 4
+
+        // Recent Activity
+        Frame bg $surface-secondary, pad 20, rad 12, gap 16
+          Frame hor, spread, ver-center
+            Text "Letzte Aktivitäten", col $text-primary, fs 16, weight 600
+            Text "Alle", col $primary-light, fs 13, cursor pointer
+
+          Frame gap 12
+            Frame hor, gap 12, ver-center
+              Frame w 36, h 36, bg rgba(16,185,129,0.2), rad 8, center
+                Icon "arrow-up-right", ic $accent, is 16
+              Frame gap 2, grow
+                Text "Kauf NVIDIA", col $text-primary, fs 13, weight 500
+                Text "10 Stück @ 865.00", col $text-muted, fs 12
+              Text "Heute", col $text-muted, fs 11
+
+            Frame hor, gap 12, ver-center
+              Frame w 36, h 36, bg rgba(239,68,68,0.2), rad 8, center
+                Icon "arrow-down-right", ic $danger, is 16
+              Frame gap 2, grow
+                Text "Verkauf Tesla", col $text-primary, fs 13, weight 500
+                Text "25 Stück @ 242.50", col $text-muted, fs 12
+              Text "Gestern", col $text-muted, fs 11
+
+            Frame hor, gap 12, ver-center
+              Frame w 36, h 36, bg rgba(59,130,246,0.2), rad 8, center
+                Icon "refresh-cw", ic $primary-light, is 16
+              Frame gap 2, grow
+                Text "Rebalancing", col $text-primary, fs 13, weight 500
+                Text "Portfolio angepasst", col $text-muted, fs 12
+              Text "12.04.", col $text-muted, fs 11

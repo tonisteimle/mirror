@@ -911,6 +911,66 @@ const _runtime = {
     this._refreshEachLoops(collectionName)
   },
 
+  // Create new entry in collection
+  create(collectionName, initialValues = {}) {
+    const name = collectionName.startsWith('$') ? collectionName.slice(1) : collectionName
+    const data = window.__mirrorData || {}
+    const collection = data[name]
+
+    if (!collection || typeof collection !== 'object' || Array.isArray(collection)) {
+      console.warn('[Mirror] create() - collection not found:', name)
+      return null
+    }
+
+    // Generate unique key
+    const newKey = 'new_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9)
+
+    // Get template from existing entry
+    const entries = Object.values(collection)
+    const template = entries[0]
+    const newEntry = { _key: newKey }
+
+    // Copy structure from template
+    if (template && typeof template === 'object') {
+      for (const key of Object.keys(template)) {
+        if (key !== '_key') {
+          const val = template[key]
+          if (typeof val === 'string') newEntry[key] = ''
+          else if (typeof val === 'number') newEntry[key] = 0
+          else if (typeof val === 'boolean') newEntry[key] = false
+          else newEntry[key] = null
+        }
+      }
+    }
+
+    // Apply initial values
+    Object.assign(newEntry, initialValues)
+
+    // Add to collection
+    collection[newKey] = newEntry
+    this._refreshEachLoops(name)
+
+    return newEntry
+  },
+
+  // Save (dispatch event for persistence)
+  save(target) {
+    const data = window.__mirrorData || {}
+    console.log('[Mirror] save()', target || '', data)
+    window.dispatchEvent(new CustomEvent('mirror:save', { detail: { target, data } }))
+  },
+
+  // Delete item (alias for remove, avoids reserved word)
+  deleteItem(itemOrKey) {
+    this.remove(itemOrKey)
+  },
+
+  // Revert changes (dispatch event)
+  revert(target) {
+    console.log('[Mirror] revert()', target || '')
+    window.dispatchEvent(new CustomEvent('mirror:revert', { detail: { target } }))
+  },
+
   // Update field in item
   updateField(item, field, value) {
     if (!item || typeof item._key !== 'string') {
@@ -992,6 +1052,7 @@ const _runtime = {
   // Bindings Registry: path → Set of bound elements
   _inputBindings: new Map(),
   _textBindings: new Map(),
+  _visibilityBindings: new Map(),  // path → Set of elements with _visibleWhen depending on this path
 
   // Register element for two-way value binding (Input, Textarea)
   bindValue(el, path) {
@@ -1012,6 +1073,34 @@ const _runtime = {
       this._textBindings.set(path, new Set())
     }
     this._textBindings.get(path).add(el)
+  },
+
+  // Register element for visibility binding (elements with _visibleWhen that depends on data)
+  bindVisibility(el, path) {
+    if (!el || !path) return
+    // Store all paths this element depends on
+    if (!el._visibilityPaths) {
+      el._visibilityPaths = []
+    }
+    el._visibilityPaths.push(path)
+    // Register in the bindings map
+    if (!this._visibilityBindings.has(path)) {
+      this._visibilityBindings.set(path, new Set())
+    }
+    this._visibilityBindings.get(path).add(el)
+  },
+
+  // Evaluate a visibility condition using $get
+  _evaluateVisibilityCondition(condition) {
+    try {
+      // Replace $varName with $get("varName") for evaluation
+      const evalCondition = condition.replace(/\\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+      // Use Function constructor to evaluate in the context with $get
+      const result = new Function('$get', 'return ' + evalCondition)($get)
+      return !!result
+    } catch (e) {
+      return false
+    }
   },
 
   // Set data value and notify all bound elements
@@ -1040,6 +1129,17 @@ const _runtime = {
           }
         } else {
           el.textContent = value ?? ''
+        }
+      }
+    }
+
+    // Update visibility of elements with _visibleWhen that depend on this path
+    const visElements = this._visibilityBindings.get(path)
+    if (visElements) {
+      for (const el of visElements) {
+        if (el._visibleWhen) {
+          const visible = this._evaluateVisibilityCondition(el._visibleWhen)
+          el.style.display = visible ? '' : 'none'
         }
       }
     }
@@ -1386,14 +1486,29 @@ const _runtime = {
     while (container) {
       const bindVar = container.dataset?.bind
       if (bindVar) {
-        // Get the text content of the activated element
-        const activeText = el.textContent?.trim() || ''
+        // Get the loop item if available (from each loops), otherwise fall back to textContent
+        // Walk up from el to find the _loopItem, checking each parent including itemContainer
+        let loopItem = el._loopItem
+        if (loopItem === undefined) {
+          // Check parent elements (template elements might store the item on a wrapper)
+          let walker = el.parentElement
+          while (walker && loopItem === undefined) {
+            if (walker._loopItem !== undefined) {
+              loopItem = walker._loopItem
+            } else if (walker.dataset?.eachItem !== undefined) {
+              // Stop at eachItem container boundary
+              break
+            }
+            walker = walker.parentElement
+          }
+        }
+        const activeValue = loopItem !== undefined ? loopItem : (el.textContent?.trim() || '')
         // Update the global state and notify bound elements
         if (typeof window !== 'undefined') {
           window._mirrorState = window._mirrorState || {}
-          window._mirrorState[bindVar] = activeText
+          window._mirrorState[bindVar] = activeValue
         }
-        this.notifyDataChange && this.notifyDataChange(bindVar, activeText)
+        this.notifyDataChange && this.notifyDataChange(bindVar, activeValue)
         break
       }
       container = container.parentElement

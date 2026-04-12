@@ -5,7 +5,7 @@
  * Wires up event handlers from Sections to Controller actions.
  */
 
-import type { ExtractedElement, PropertyCategory } from '../../../compiler/studio/property-extractor'
+import type { ExtractedElement, PropertyCategory } from '../../../compiler'
 import type { PropertyPanelPorts, PropertyChange } from './ports'
 import type { PanelState } from './state-machine'
 import { PropertyPanelController, createPropertyPanelController } from './controller'

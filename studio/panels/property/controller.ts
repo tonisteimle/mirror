@@ -11,7 +11,7 @@
  * - Ist vollständig testbar ohne DOM
  */
 
-import type { ExtractedElement } from '../../../compiler/studio/property-extractor'
+import type { ExtractedElement } from '../../../compiler'
 import type { PropertyPanelPorts, PropertyChange, CleanupFn } from './ports'
 import {
   type PanelState,
@@ -263,6 +263,9 @@ export class PropertyPanelController {
    * Dispatches an event with debouncing.
    */
   private debouncedDispatch(key: string, event: PanelEvent): void {
+    // Don't schedule new timers after disposal
+    if (this.disposed) return
+
     // Clear existing timer for this key
     const existingTimer = this.debounceTimers.get(key)
     if (existingTimer) {
@@ -271,6 +274,8 @@ export class PropertyPanelController {
 
     // Set new timer
     const timer = setTimeout(() => {
+      // Check disposed again in callback (race condition protection)
+      if (this.disposed) return
       this.debounceTimers.delete(key)
       this.dispatch(event)
     }, this.options.debounceTime)

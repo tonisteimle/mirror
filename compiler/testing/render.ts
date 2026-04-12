@@ -44,11 +44,9 @@ export function renderMirror(code: string, container?: HTMLElement): RenderConte
   domCode = domCode.replace(/^export\s+function/gm, 'function')
 
   // Execute the generated code
+  // Note: createUI() returns the root element directly, not an object with { root }
   const fn = new Function(domCode + '\nreturn createUI();')
-  const ui = fn() as { root: HTMLElement; [key: string]: unknown }
-
-  // Get the actual content element (skip <style> tag)
-  const root = ui.root
+  const root = fn() as HTMLElement
 
   // Append to container
   const targetContainer = container || document.body

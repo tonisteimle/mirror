@@ -1916,6 +1916,21 @@ export const SCHEMA: Record<string, PropertyDef> = {
     },
   },
 
+  editable: {
+    name: 'editable',
+    aliases: [],
+    category: 'input',
+    description: 'Make text element inline-editable',
+
+    keywords: {
+      _standalone: {
+        description: 'Element text can be edited inline',
+        css: [],  // Sets data-editable, not CSS
+        example: 'Text item.name, editable',
+      },
+    },
+  },
+
   'keyboard-nav': {
     name: 'keyboard-nav',
     aliases: ['keynav'],

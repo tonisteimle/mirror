@@ -189,14 +189,19 @@ export function getChildRects(
   const containerNodeId = container.getAttribute(nodeIdAttr)
 
   // Try to use layoutInfo if available (Phase 5 optimization)
+  // Convert container-relative coords to viewport coords for cursor comparison
   if (layoutInfo && containerNodeId) {
+    // Get container's viewport position to convert relative coords to viewport
+    const containerRect = domAdapter.getBoundingClientRect(container)
+
     for (const [nodeId, layout] of layoutInfo) {
       if (layout.parentId === containerNodeId) {
         children.push({
           nodeId,
           rect: {
-            x: layout.x,
-            y: layout.y,
+            // Convert from container-relative to viewport coordinates
+            x: containerRect.x + layout.x,
+            y: containerRect.y + layout.y,
             width: layout.width,
             height: layout.height,
           },
@@ -209,13 +214,14 @@ export function getChildRects(
   }
 
   // Fallback to DOM reads
+  // Note: Use Element to include both HTML and SVG elements
   for (const child of container.children) {
-    if (!(child instanceof HTMLElement)) continue
+    if (!(child instanceof Element)) continue
 
     const nodeId = child.getAttribute(nodeIdAttr)
     if (!nodeId) continue
 
-    const domRect = domAdapter.getBoundingClientRect(child)
+    const domRect = domAdapter.getBoundingClientRect(child as HTMLElement)
     children.push({
       nodeId,
       rect: {
@@ -249,14 +255,19 @@ export function getSiblingRects(
   const containerNodeId = container.getAttribute(nodeIdAttr)
 
   // Try to use layoutInfo if available (Phase 5 optimization)
+  // Convert container-relative coords to viewport coords for cursor comparison
   if (layoutInfo && containerNodeId) {
+    // Get container's viewport position to convert relative coords to viewport
+    const containerRect = domAdapter.getBoundingClientRect(container)
+
     for (const [nodeId, layout] of layoutInfo) {
       if (layout.parentId === containerNodeId && nodeId !== excludeNodeId) {
         siblings.push({
           nodeId,
           rect: {
-            x: layout.x,
-            y: layout.y,
+            // Convert from container-relative to viewport coordinates
+            x: containerRect.x + layout.x,
+            y: containerRect.y + layout.y,
             width: layout.width,
             height: layout.height,
           },
@@ -269,15 +280,16 @@ export function getSiblingRects(
   }
 
   // Fallback to DOM reads
+  // Note: Use Element to include both HTML and SVG elements
   for (const child of container.children) {
-    if (!(child instanceof HTMLElement)) continue
+    if (!(child instanceof Element)) continue
 
     const nodeId = child.getAttribute(nodeIdAttr)
     if (!nodeId || nodeId === excludeNodeId) continue
 
     siblings.push({
       nodeId,
-      rect: domAdapter.getBoundingClientRect(child),
+      rect: domAdapter.getBoundingClientRect(child as HTMLElement),
     })
   }
 
@@ -340,13 +352,14 @@ export function detectDirection(style: CSSStyleDeclaration): Direction {
 
 /**
  * Check if element has valid children (with node IDs)
+ * Note: Uses Element to include both HTML and SVG elements
  */
 export function hasValidChildren(
   element: HTMLElement,
   nodeIdAttr: string
 ): boolean {
   for (const child of element.children) {
-    if (!(child instanceof HTMLElement)) continue
+    if (!(child instanceof Element)) continue
     if (child.getAttribute(nodeIdAttr)) return true
   }
   return false
@@ -368,9 +381,14 @@ export function isPositionedContainer(
 /**
  * Get container rect
  * @param element - The element to get the rect for
- * @param layoutInfo - Optional cached layout info (Phase 5 optimization)
- * @param nodeIdAttr - Attribute name for node ID
+ * @param layoutInfo - Optional cached layout info (not used, kept for API compatibility)
+ * @param nodeIdAttr - Attribute name for node ID (not used, kept for API compatibility)
  * @param domAdapter - Optional DOM adapter for testability (defaults to real DOM)
+ *
+ * IMPORTANT: Always returns viewport coordinates from DOM.
+ * layoutInfo contains container-relative coordinates and would require walking
+ * up the entire parent chain to convert to viewport - not worth the complexity.
+ * getBoundingClientRect gives us viewport coords directly.
  */
 export function getContainerRect(
   element: HTMLElement,
@@ -378,26 +396,7 @@ export function getContainerRect(
   nodeIdAttr: string = DEFAULT_NODE_ID_ATTR,
   domAdapter: DOMAdapter = getDefaultDOMAdapter()
 ): DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number } {
-  // Try to use layoutInfo if available (Phase 5 optimization)
-  if (layoutInfo) {
-    const nodeId = element.getAttribute(nodeIdAttr)
-    if (nodeId) {
-      const layout = layoutInfo.get(nodeId)
-      if (layout) {
-        return {
-          x: layout.x,
-          y: layout.y,
-          width: layout.width,
-          height: layout.height,
-          top: layout.y,
-          left: layout.x,
-          right: layout.x + layout.width,
-          bottom: layout.y + layout.height,
-        }
-      }
-    }
-  }
-
-  // Fallback to DOM read
+  // Always use DOM read to get viewport coordinates
+  // layoutInfo contains container-relative coords which would need complex conversion
   return domAdapter.getBoundingClientRect(element)
 }

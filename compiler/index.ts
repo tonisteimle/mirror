@@ -18,7 +18,15 @@ export type { ReadFileFn, ListFilesFn, ProjectFiles } from './preprocessor'
 export { parseDataFile, parseDataFiles, mergeDataFiles, serializeDataForJS } from './parser/data-parser'
 export type { DataFile, DataEntry, DataAttribute, DataMarkdownBlock, DataParseError, DataValue } from './parser/data-types'
 
-export type { AST, Node } from './parser/ast'
+export type {
+  AST,
+  Node,
+  Instance,
+  ComponentDefinition,
+  TokenDefinition,
+  Slot,
+  ParseError,
+} from './parser/ast'
 export type { IR, SourcePosition, PropertySourceMap, IRZagNode, IRSlot, IRItem } from './ir/types'
 
 // Studio module exports for bidirectional editing

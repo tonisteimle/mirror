@@ -46,16 +46,7 @@ type PropertyValue = string | number | boolean | TokenReference | LoopVarReferen
 /** Child node type that can be transformed - matches transformChild parameter */
 type TransformableChild = Instance | Text | Slot
 
-/** Conditional block node structure - 'if condition' blocks in Mirror DSL */
-interface ConditionalBlock {
-  type: 'Conditional'
-  condition: string
-  then: (Instance | Slot)[]
-  else?: (Instance | Slot)[]
-  line: number
-  column: number
-}
-
+// ConditionalBlock has been moved to transformers/control-flow-transformer.ts
 // SyntheticSlotDef and SyntheticZagItem moved to transformers/zag-transformer.ts
 
 import {
@@ -98,7 +89,6 @@ import { transformTable as transformTableExtracted, humanizeFieldName } from './
 import { transformChart as transformChartExtracted } from './transformers/chart-transformer'
 import {
   transformZagComponent as transformZagComponentExtracted,
-  buildZagNodeFromInstance as buildZagNodeFromInstanceExtracted,
 } from './transformers/zag-transformer'
 import type { TransformerContext, ParentLayoutContext } from './transformers/transformer-context'
 import {
@@ -158,6 +148,46 @@ import {
   resolveComponent as resolveComponentExtracted,
   type ComponentResolverContext,
 } from './transformers/component-resolver'
+import {
+  childOverridesToInstances as childOverridesToInstancesExtracted,
+  mergeSlotPropertiesIntoFiller as mergeSlotPropertiesIntoFillerExtracted,
+} from './transformers/slot-utils'
+import {
+  fixLoopVariableReferences as fixLoopVariableReferencesExtracted,
+} from './transformers/loop-utils'
+import {
+  transformStates as transformStatesExtracted,
+  applyStateChildOverrides as applyStateChildOverridesExtracted,
+  type StateStylesContext,
+} from './transformers/state-styles-transformer'
+import {
+  extractInlineStatesAndEvents as extractInlineStatesAndEventsExtracted,
+  type InlineExtractionContext,
+} from './transformers/inline-extraction'
+import {
+  transformEach as transformEachExtracted,
+  transformConditional as transformConditionalExtracted,
+  type ConditionalBlock,
+  type ControlFlowContext,
+} from './transformers/control-flow-transformer'
+import {
+  validateProperty as validatePropertyExtracted,
+  isKnownProperty as isKnownPropertyExtracted,
+  addWarning as addWarningExtracted,
+  type ValidationContext,
+} from './transformers/validation'
+import {
+  expandPropertySets as expandPropertySetsExtracted,
+} from './transformers/property-set-expander'
+import {
+  transformCompoundPrimitive as transformCompoundPrimitiveExtracted,
+  transformCompoundSlot as transformCompoundSlotExtracted,
+  type CompoundTransformContext,
+} from './transformers/compound-transformer'
+import {
+  transformStateChild as transformStateChildExtracted,
+  type StateChildContext,
+} from './transformers/state-child-transformer'
 
 export type { IR, IRWarning } from './types'
 export {
@@ -249,15 +279,7 @@ class IRTransformer {
    * Add a validation warning
    */
   private addWarning(warning: IRWarning): void {
-    // Avoid duplicate warnings
-    const isDuplicate = this.warnings.some(w =>
-      w.type === warning.type &&
-      w.message === warning.message &&
-      w.property === warning.property
-    )
-    if (!isDuplicate) {
-      this.warnings.push(warning)
-    }
+    addWarningExtracted({ warnings: this.warnings }, warning)
   }
 
   /**
@@ -265,50 +287,14 @@ class IRTransformer {
    * Returns true if valid, false if unknown. Emits warnings for unknown properties.
    */
   private validateProperty(propName: string, position?: SourcePosition): boolean {
-    // Non-CSS properties are always valid
-    if (NON_CSS_PROPERTIES.has(propName)) {
-      return true
-    }
-
-    // For hover- prefix, validate the base property
-    if (propName.startsWith('hover-')) {
-      const baseProp = propName.replace('hover-', '')
-      if (this.isKnownProperty(baseProp)) {
-        return true
-      }
-      this.addWarning({
-        type: 'unknown-property',
-        message: `Unknown property: '${propName}'`,
-        property: propName,
-        position,
-      })
-      return false
-    }
-
-    // Use isKnownProperty for the actual check (avoids duplication)
-    if (this.isKnownProperty(propName)) {
-      return true
-    }
-
-    // Unknown property - add warning
-    this.addWarning({
-      type: 'unknown-property',
-      message: `Unknown property: '${propName}'`,
-      property: propName,
-      position,
-    })
-
-    return false
+    return validatePropertyExtracted(propName, { warnings: this.warnings }, position)
   }
 
   /**
    * Check if a property is known (without emitting warnings)
    */
   private isKnownProperty(propName: string): boolean {
-    if (NON_CSS_PROPERTIES.has(propName)) return true
-    if (findProperty(propName)) return true
-    if (PROPERTY_TO_CSS[propName]) return true
-    return false
+    return isKnownPropertyExtracted(propName)
   }
 
   /**
@@ -524,14 +510,74 @@ class IRTransformer {
 
   /**
    * Build a synthetic ZagNode from an Instance that inherits from a Zag primitive
-   * Delegates to extracted function in zag-transformer.ts
    */
   private buildZagNodeFromInstance(
     instance: Instance,
     resolvedComponent: ComponentDefinition | null,
     primitive: string
   ): ZagNode {
-    return buildZagNodeFromInstanceExtracted(instance, resolvedComponent, primitive)
+    // Get machine name from ZAG_PRIMITIVES
+    const zagDef = ZAG_PRIMITIVES[primitive]
+    const machine = zagDef?.machine || primitive.toLowerCase()
+
+    // Merge properties from resolved component and instance
+    const allProperties = resolvedComponent
+      ? mergeProperties(resolvedComponent.properties, instance.properties)
+      : instance.properties
+
+    // Extract slots and items from children
+    const slots: Record<string, ZagSlotDef> = {}
+    const items: ZagItem[] = []
+
+    for (const child of instance.children) {
+      if (child.type === 'Instance') {
+        const childInstance = child as Instance
+        const childName = childInstance.name || ''
+        const srcPos = {
+          line: childInstance.line,
+          column: childInstance.column,
+          endLine: childInstance.line,
+          endColumn: childInstance.column,
+        }
+        // Check if child is a slot definition (ends with :) or known slot name
+        if (childInstance.isDefinition || (zagDef?.slots && zagDef.slots.includes(childName.replace(':', '')))) {
+          const slotName = childName.replace(':', '')
+          slots[slotName] = {
+            name: slotName,
+            properties: childInstance.properties,
+            states: [],
+            children: childInstance.children as (Instance | Slot | Text)[],
+            sourcePosition: srcPos,
+          }
+        } else {
+          // Treat as item - get text content from first Text child or name
+          let label = childName
+          const textChild = childInstance.children.find(c => c.type === 'Text') as Text | undefined
+          if (textChild) {
+            label = textChild.content
+          }
+          items.push({
+            value: childName,
+            label,
+            properties: childInstance.properties,
+            children: childInstance.children as (Instance | Text)[],
+            sourcePosition: srcPos,
+          })
+        }
+      }
+    }
+
+    return {
+      type: 'ZagComponent',
+      machine,
+      name: primitive,
+      properties: allProperties,
+      slots,
+      items,
+      events: instance.events || [],
+      line: instance.line,
+      column: instance.column,
+    }
   }
 
   /**
@@ -559,182 +605,25 @@ class IRTransformer {
 
   /**
    * Transform a Compound primitive (Shell, etc.) into an IRNode
-   *
-   * Compound primitives are pre-built layout components with:
-   * - Default CSS Grid/Flex styles from the schema
-   * - Named slots (Header, Sidebar, Main, Footer) with their own default styles
-   * - Nested slots (Logo, Nav, SidebarGroup, etc.)
+   * Delegates to extracted compound-transformer.ts
    */
   private transformCompoundPrimitive(
     instance: Instance,
     parentId?: string,
     parentLayoutContext?: ParentLayoutContext
   ): IRNode {
-    const nodeId = this.generateId()
-    const compoundType = instance.compoundType!
-    const compoundDef = getCompoundPrimitive(compoundType)
-
-    if (!compoundDef) {
-      // Fallback: treat as regular instance
-      return this.transformInstance({ ...instance, isCompound: false }, parentId, false, false, parentLayoutContext)
+    const ctx: CompoundTransformContext = {
+      generateId: () => this.generateId(),
+      transformProperties: (props, prim, plc) => this.transformProperties(props, prim, plc),
+      transformInstance: (inst, pid, isEach, isCond, plc) => this.transformInstance(inst, pid, isEach, isCond, plc),
+      createTextNode: (text) => this.createTextNode(text),
+      tokenSet: this.tokenSet,
+      includeSourceMap: this.includeSourceMap,
+      addToSourceMap: this.includeSourceMap
+        ? (nodeId, name, pos, opts) => this.sourceMapBuilder.addNode(nodeId, name, pos, opts)
+        : undefined,
     }
-
-    // Start with default styles from schema
-    const styles: IRStyle[] = []
-    if (compoundDef.defaultStyles) {
-      for (const [prop, value] of Object.entries(compoundDef.defaultStyles)) {
-        styles.push({ property: prop, value })
-      }
-    }
-
-    // Only transform user-specified properties if there are any
-    // This prevents transformProperties from adding default flex styles
-    if (instance.properties && instance.properties.length > 0) {
-      const userStyles = this.transformProperties(instance.properties, 'frame', parentLayoutContext)
-      for (const style of userStyles) {
-        // Remove existing style with same property (user overrides default)
-        const existingIndex = styles.findIndex(s => s.property === style.property && !s.state)
-        if (existingIndex !== -1) {
-          styles.splice(existingIndex, 1)
-        }
-        styles.push(style)
-      }
-    }
-
-    // Transform children as compound slots
-    const children: IRNode[] = []
-    for (const child of instance.children || []) {
-      if (isInstance(child)) {
-        const childNode = this.transformCompoundSlot(child, compoundType, nodeId)
-        children.push(childNode)
-      } else if (isText(child)) {
-        children.push(this.createTextNode(child))
-      }
-    }
-
-    // Track source position
-    let sourcePosition: SourcePosition | undefined
-    if (this.includeSourceMap) {
-      sourcePosition = calculateSourcePosition(instance.line, instance.column)
-      this.sourceMapBuilder.addNode(
-        nodeId,
-        instance.component,
-        sourcePosition,
-        { isDefinition: instance.isDefinition || false }
-      )
-    }
-
-    // Extract instanceName from 'name' property if not set via 'named' keyword
-    const nameProp = instance.properties?.find(p => p.name === 'name')
-    const instanceNameFromProp = nameProp ? resolveValueExtracted(nameProp.values, this.tokenSet) : undefined
-    const resolvedInstanceName = instance.name || instanceNameFromProp || undefined
-
-    return {
-      id: nodeId,
-      tag: 'div',
-      primitive: 'compound',
-      name: instance.component,
-      instanceName: resolvedInstanceName,
-      properties: [],
-      styles,
-      events: [],
-      children,
-      sourcePosition,
-    }
-  }
-
-  /**
-   * Transform a child of a Compound primitive with slot-specific styles
-   */
-  private transformCompoundSlot(
-    child: Instance,
-    compoundType: string,
-    parentId: string
-  ): IRNode {
-    const slotDef = getCompoundSlotDef(compoundType, child.component)
-    const compoundDef = getCompoundPrimitive(compoundType)
-
-    // If this is a known slot, apply default styles
-    if (slotDef) {
-      const nodeId = this.generateId()
-
-      // Start with slot default styles from COMPOUND_SLOT_MAPPINGS
-      const styles: IRStyle[] = []
-      if (slotDef.styles) {
-        for (const [prop, value] of Object.entries(slotDef.styles)) {
-          styles.push({ property: prop, value })
-        }
-      }
-
-      // Also apply slotStyles from the CompoundPrimitiveDef (higher priority)
-      // These include grid-area and other layout-specific styles
-      if (compoundDef?.slotStyles?.[child.component]) {
-        for (const [prop, value] of Object.entries(compoundDef.slotStyles[child.component])) {
-          // Override or add
-          const existingIndex = styles.findIndex(s => s.property === prop)
-          if (existingIndex !== -1) {
-            styles[existingIndex].value = value
-          } else {
-            styles.push({ property: prop, value })
-          }
-        }
-      }
-
-      // Only transform user-specified properties if there are any
-      if (child.properties && child.properties.length > 0) {
-        const userStyles = this.transformProperties(child.properties, 'frame')
-        for (const style of userStyles) {
-          const existingIndex = styles.findIndex(s => s.property === style.property && !s.state)
-          if (existingIndex !== -1) {
-            styles.splice(existingIndex, 1)
-          }
-          styles.push(style)
-        }
-      }
-
-      // Transform children recursively (they might also be compound slots)
-      const slotChildren: IRNode[] = []
-      for (const grandChild of child.children || []) {
-        if (isInstance(grandChild)) {
-          // Check if grandchild is also a compound slot
-          if (isCompoundSlot(compoundType, grandChild.component)) {
-            slotChildren.push(this.transformCompoundSlot(grandChild, compoundType, nodeId))
-          } else {
-            slotChildren.push(this.transformInstance(grandChild, nodeId))
-          }
-        } else if (isText(grandChild)) {
-          slotChildren.push(this.createTextNode(grandChild))
-        }
-      }
-
-      // Track source position
-      let sourcePosition: SourcePosition | undefined
-      if (this.includeSourceMap) {
-        sourcePosition = calculateSourcePosition(child.line, child.column)
-        this.sourceMapBuilder.addNode(
-          nodeId,
-          child.component,
-          sourcePosition,
-          { isDefinition: false }
-        )
-      }
-
-      return {
-        id: nodeId,
-        tag: slotDef.element,
-        primitive: 'compound-slot',
-        name: child.component,
-        instanceName: child.name || undefined,
-        properties: [],
-        styles,
-        events: transformEvents(child.events || []),
-        children: slotChildren,
-        sourcePosition,
-      }
-    }
-
-    // Not a known slot - transform as regular instance
-    return this.transformInstance(child, parentId)
+    return transformCompoundPrimitiveExtracted(instance, ctx, parentId, parentLayoutContext)
   }
 
   /**
@@ -857,14 +746,19 @@ class IRTransformer {
       }
     }
 
+    // Create context for state transformation
+    const stateCtx: StateStylesContext = {
+      propertyToCSS: (prop) => this.propertyToCSS(prop),
+    }
+
     // Add state styles from component definition
     const stateStyles = resolvedComponent?.states
-      ? this.transformStates(resolvedComponent.states)
+      ? transformStatesExtracted(resolvedComponent.states, stateCtx)
       : []
 
     // Add state styles from instance inline states (e.g., "Frame bg #333 hover: bg light")
     const instanceStateStyles = instance.states?.length
-      ? this.transformStates(instance.states)
+      ? transformStatesExtracted(instance.states, stateCtx)
       : []
 
     // Transform events from component definition FIRST (needed for state machine check)
@@ -892,7 +786,7 @@ class IRTransformer {
       this.extractInlineStatesAndEvents(instance.children || [])
 
     // Convert childOverrides to instance children for slot filling
-    const childOverrideInstances = this.childOverridesToInstances(instance.childOverrides || [])
+    const childOverrideInstances = childOverridesToInstancesExtracted(instance.childOverrides || [])
 
     // Generate node ID FIRST so we can pass it to children as their parentId
     const nodeId = this.generateId()
@@ -1004,7 +898,7 @@ class IRTransformer {
     // Apply state childOverrides to children
     // This adds state-conditional styles to matching child nodes
     if (resolvedComponent?.states) {
-      this.applyStateChildOverrides(children, resolvedComponent.states)
+      applyStateChildOverridesExtracted(children, resolvedComponent.states, stateCtx)
     }
 
     // Auto-absolute: If parent has position: relative, all children get position: absolute
@@ -1058,132 +952,29 @@ class IRTransformer {
   }
 
   private transformEach(each: Each): IRNode {
-    const nodeId = this.generateId()
-
-    // Transform children and fix initialState → textContent for loop variable references
-    const template = each.children.map(child => {
-      const irNode = this.transformInstance(child, nodeId, true)
-      // If a child has initialState matching the loop variable, it's a variable reference
-      // Convert it to textContent (e.g., "Text item" should display item's value, not be a state)
-      this.fixLoopVariableReferences(irNode, each.item, each.index)
-      return irNode
-    })
-
-    const eachData: IREach = {
-      id: nodeId,
-      itemVar: each.item,
-      indexVar: each.index,
-      collection: each.collection,
-      filter: each.filter,
-      orderBy: each.orderBy,
-      orderDesc: each.orderDesc,
-      template,
-    }
-
-    // Track source position for each loop
-    let sourcePosition: SourcePosition | undefined
-    if (this.includeSourceMap) {
-      sourcePosition = calculateSourcePosition(each.line, each.column)
-      this.sourceMapBuilder.addNode(
-        nodeId,
-        'Each',
-        sourcePosition,
-        { isDefinition: false, isEachTemplate: true }
-      )
-    }
-
-    return {
-      id: nodeId,
-      tag: 'div',
-      name: 'Each',
-      properties: [],
-      styles: [],
-      events: [],
-      children: [],
-      each: eachData,
-      sourcePosition,
-    }
-  }
-
-  /**
-   * Fix loop variable references in each template nodes.
-   * When parsing "Text item" inside "each item in ...", the parser incorrectly
-   * sets initialState: "item" instead of textContent. This method fixes that
-   * by converting initialState matching the loop variable to textContent.
-   */
-  private fixLoopVariableReferences(node: IRNode, itemVar: string, indexVar?: string): void {
-    // Check if this node has initialState matching the item variable
-    // Handle both with and without $ prefix (e.g., "task" or "$task")
-    if (node.initialState === itemVar || node.initialState === `$${itemVar}`) {
-      // Convert to textContent property with $item reference
-      node.properties.push({
-        name: 'textContent',
-        value: `$${itemVar}`,
-      })
-      delete node.initialState
-    }
-
-    // Check if this node has initialState matching the index variable
-    if (indexVar && (node.initialState === indexVar || node.initialState === `$${indexVar}`)) {
-      // Convert to textContent property with $index reference
-      node.properties.push({
-        name: 'textContent',
-        value: `$${indexVar}`,
-      })
-      delete node.initialState
-    }
-
-    // Also handle dot notation: initialState: "item.name" or "$item.name" → textContent: "$item.name"
-    if (node.initialState?.startsWith(`${itemVar}.`) || node.initialState?.startsWith(`$${itemVar}.`)) {
-      // Ensure value has $ prefix
-      const value = node.initialState.startsWith('$') ? node.initialState : `$${node.initialState}`
-      node.properties.push({
-        name: 'textContent',
-        value,
-      })
-      delete node.initialState
-    }
-
-    // Recursively fix children
-    for (const child of node.children) {
-      this.fixLoopVariableReferences(child, itemVar, indexVar)
-    }
-  }
-
-  private transformConditional(cond: ConditionalBlock): IRNode {
-    const nodeId = this.generateId()
-    const conditionalData: IRConditional = {
-      id: nodeId,
-      condition: cond.condition,
-      then: cond.then.map((child: Instance | Slot) => this.transformInstance(child, nodeId, false, true)),
-      else: cond.else?.length
-        ? cond.else.map((child: Instance | Slot) => this.transformInstance(child, nodeId, false, true))
+    const ctx: ControlFlowContext = {
+      generateId: () => this.generateId(),
+      transformInstance: (inst, pid, isEach, isCond) => this.transformInstance(inst, pid, isEach, isCond),
+      includeSourceMap: this.includeSourceMap,
+      addToSourceMap: this.includeSourceMap
+        ? (nodeId, name, pos, opts) => this.sourceMapBuilder.addNode(nodeId, name, pos, opts)
         : undefined,
     }
+    return transformEachExtracted(each, ctx)
+  }
 
-    // Track source position for conditional
-    let sourcePosition: SourcePosition | undefined
-    if (this.includeSourceMap) {
-      sourcePosition = calculateSourcePosition(cond.line, cond.column)
-      this.sourceMapBuilder.addNode(
-        nodeId,
-        'Conditional',
-        sourcePosition,
-        { isDefinition: false, isConditional: true }
-      )
-    }
+  // fixLoopVariableReferences has been extracted to ./transformers/loop-utils.ts
 
-    return {
-      id: nodeId,
-      tag: 'div',
-      name: 'Conditional',
-      properties: [],
-      styles: [],
-      events: [],
-      children: [],
-      conditional: conditionalData,
-      sourcePosition,
+  private transformConditional(cond: ConditionalBlock): IRNode {
+    const ctx: ControlFlowContext = {
+      generateId: () => this.generateId(),
+      transformInstance: (inst, pid, isEach, isCond) => this.transformInstance(inst, pid, isEach, isCond),
+      includeSourceMap: this.includeSourceMap,
+      addToSourceMap: this.includeSourceMap
+        ? (nodeId, name, pos, opts) => this.sourceMapBuilder.addNode(nodeId, name, pos, opts)
+        : undefined,
     }
+    return transformConditionalExtracted(cond, ctx)
   }
 
   /**
@@ -1291,7 +1082,7 @@ class IRTransformer {
         // Process ALL instances for this slot (there may be multiple)
         const fillers = slotFillers.get(childName) || []
         for (const filler of fillers) {
-          const mergedFiller = this.mergeSlotPropertiesIntoFiller(filler, slotProperties)
+          const mergedFiller = mergeSlotPropertiesIntoFillerExtracted(filler, slotProperties)
           const node = this.transformChild(mergedFiller, parentId, parentLayoutContext)
           if (slotVisibleWhen && !node.visibleWhen) {
             node.visibleWhen = slotVisibleWhen
@@ -1355,7 +1146,7 @@ class IRTransformer {
             // Inherit styles and visibility conditions from slot definition
             for (const filler of fillers) {
               // Merge slot properties with filler properties (filler wins on conflict)
-              const mergedFiller = this.mergeSlotPropertiesIntoFiller(filler, slotProperties)
+              const mergedFiller = mergeSlotPropertiesIntoFillerExtracted(filler, slotProperties)
               const node = this.transformChild(mergedFiller, parentId, parentLayoutContext)
               // Transfer slot's visibleWhen to filler if slot has one
               if (slotVisibleWhen && !node.visibleWhen) {
@@ -1404,7 +1195,7 @@ class IRTransformer {
           if (fillers && fillers.length > 0) {
             for (const filler of fillers) {
               // Merge slot properties into filler (slot provides defaults)
-              const mergedFiller = this.mergeSlotPropertiesIntoFiller(filler, slotObj.properties || [])
+              const mergedFiller = mergeSlotPropertiesIntoFillerExtracted(filler, slotObj.properties || [])
               result.push(this.transformChild(mergedFiller, parentId, parentLayoutContext))
             }
             slotFillers.delete(slotObj.name)
@@ -1432,72 +1223,8 @@ class IRTransformer {
     return result
   }
 
-  /**
-   * Convert childOverrides to Instance objects for slot filling
-   *
-   * childOverrides syntax: NavItem Icon "home"; Label "Home"
-   * Each override becomes a pseudo-Instance that fills the corresponding slot
-   */
-  private childOverridesToInstances(overrides: ChildOverride[]): Instance[] {
-    return overrides.map(override => ({
-      type: 'Instance' as const,
-      component: override.childName,
-      name: null,
-      properties: override.properties,
-      children: [],
-      line: override.properties[0]?.line || 0,
-      column: override.properties[0]?.column || 0,
-    }))
-  }
-
-  /**
-   * Merge slot properties into a filler element.
-   * Slot properties provide defaults, filler properties override them.
-   *
-   * Example:
-   *   Slot definition: Title: fs 16, weight 500, col white
-   *   Filler: Title "Hello", col red
-   *   Result: fs 16, weight 500, col red (filler's col wins)
-   */
-  private mergeSlotPropertiesIntoFiller(
-    filler: Instance | Text,
-    slotProperties: Property[]
-  ): Instance | Text {
-    // If no slot properties, return filler as-is
-    if (slotProperties.length === 0) {
-      return filler
-    }
-
-    // Text nodes need to be wrapped or converted to Instance
-    if (isText(filler) || hasContent(filler)) {
-      const text = filler as Text
-      // Create an Instance that acts as a styled text container
-      return {
-        type: 'Instance',
-        component: 'Text',
-        name: null,
-        properties: [...slotProperties, { name: 'content', value: text.content, line: text.line, column: text.column }],
-        children: [],
-        line: text.line,
-        column: text.column,
-      } as Instance
-    }
-
-    // For Instance fillers, merge properties (filler wins on conflict)
-    const fillerInstance = filler as Instance
-    const fillerPropNames = new Set(fillerInstance.properties.map(p => p.name))
-
-    // Add slot properties that aren't overridden by filler
-    const mergedProperties = [
-      ...slotProperties.filter(p => !fillerPropNames.has(p.name)),
-      ...fillerInstance.properties,
-    ]
-
-    return {
-      ...fillerInstance,
-      properties: mergedProperties,
-    }
-  }
+  // childOverridesToInstances and mergeSlotPropertiesIntoFiller
+  // have been extracted to ./transformers/slot-utils.ts
 
   private transformChild(child: Instance | Text | Slot, parentId?: string, parentLayoutContext?: ParentLayoutContext): IRNode {
     if (isSlot(child)) {
@@ -1528,85 +1255,17 @@ class IRTransformer {
 
   /**
    * Extract inline states and events from instance children.
-   *
-   * The parser treats inline constructs like:
-   * - `state hover bg #333` as a child Instance with component="state"
-   * - `onclick toggle` as a child Instance with component="onclick"
-   *
-   * This method identifies and extracts them, returning:
-   * - inlineStateStyles: IRStyle[] with state attribute
-   * - inlineEvents: IREvent[]
-   * - remainingChildren: actual UI children
+   * Delegates to extracted inline-extraction.ts
    */
   private extractInlineStatesAndEvents(children: (Instance | Text)[]): {
     inlineStateStyles: IRStyle[]
     inlineEvents: IREvent[]
     remainingChildren: (Instance | Text)[]
   } {
-    const inlineStateStyles: IRStyle[] = []
-    const inlineEvents: IREvent[] = []
-    const remainingChildren: (Instance | Text)[] = []
-
-    for (const child of children) {
-      // Only process Instance type
-      if (!isInstance(child)) {
-        remainingChildren.push(child)
-        continue
-      }
-
-      const inst = child
-      const component = inst.component.toLowerCase()
-
-      // Check for inline state: "state hover bg #333"
-      if (component === 'state') {
-        // First property should be the state name, rest are styles
-        const props = inst.properties
-        if (props.length > 0) {
-          // First value of first property is the state name
-          const stateNameProp = props[0]
-          const stateName = stateNameProp.name
-
-          // Rest of the properties are the styles for this state
-          const stateProps = props.slice(1)
-          for (const prop of stateProps) {
-            const cssStyles = this.propertyToCSS(prop)
-            for (const style of cssStyles) {
-              inlineStateStyles.push({ ...style, state: stateName })
-            }
-          }
-        }
-        continue
-      }
-
-      // Check for inline event: "onclick toggle" or "onhover highlight"
-      if (component.startsWith('on')) {
-        const eventName = mapEventToDom(component)
-        const actions: IRAction[] = []
-
-        // Parse actions from properties
-        for (const prop of inst.properties) {
-          // Action name is the property name, target is the first value
-          actions.push({
-            type: prop.name,
-            target: prop.values.length > 0 ? String(prop.values[0]) : undefined,
-            args: prop.values.slice(1).map(v => String(v)),
-          })
-        }
-
-        if (actions.length > 0) {
-          inlineEvents.push({
-            name: eventName,
-            actions,
-          })
-        }
-        continue
-      }
-
-      // Not a state or event, keep as regular child
-      remainingChildren.push(child)
+    const ctx: InlineExtractionContext = {
+      propertyToCSS: (prop) => this.propertyToCSS(prop),
     }
-
-    return { inlineStateStyles, inlineEvents, remainingChildren }
+    return extractInlineStatesAndEventsExtracted(children, ctx)
   }
 
   // resolveComponent and mergeStates have been extracted to transformers/component-resolver.ts
@@ -1629,33 +1288,10 @@ class IRTransformer {
 
   /**
    * Expand property sets in a list of properties.
-   * A property set reference looks like: { name: 'content', values: [{ kind: 'token', name: 'cardstyle' }] }
-   * If 'cardstyle' is a property set (token with properties), expand it to its properties.
+   * Delegates to extracted property-set-expander.ts
    */
   private expandPropertySets(properties: Property[]): Property[] {
-    const expanded: Property[] = []
-
-    for (const prop of properties) {
-      // Check if this is a property set reference (propset property from parser)
-      // Syntax: Frame $cardstyle → propset: { kind: 'token', name: 'cardstyle' }
-      if (prop.name === 'propset' && prop.values.length === 1) {
-        const val = prop.values[0]
-        if (typeof val === 'object' && val.kind === 'token') {
-          const tokenName = val.name
-          const propertySet = this.propertySetMap.get(tokenName)
-          if (propertySet) {
-            // Expand the property set - add all its properties
-            expanded.push(...propertySet)
-            continue
-          }
-        }
-      }
-
-      // Regular property - keep as is
-      expanded.push(prop)
-    }
-
-    return expanded
+    return expandPropertySetsExtracted(properties, this.propertySetMap)
   }
 
   /**
@@ -1846,50 +1482,7 @@ class IRTransformer {
   // Layout functions (applyAlignmentsToContext, generateLayoutStyles, resolveGridColumns)
   // have been extracted to transformers/layout-transformer.ts
 
-  /**
-   * Transform states to CSS styles with state attribute
-   */
-  private transformStates(states: State[]): IRStyle[] {
-    const styles: IRStyle[] = []
-
-    // Collect transition info for system states with animation/duration
-    const transitionProps: Map<string, { duration: number; easing?: string }> = new Map()
-
-    for (const state of states) {
-      for (const prop of state.properties) {
-        const cssStyles = this.propertyToCSS(prop)
-        for (const style of cssStyles) {
-          styles.push({ ...style, state: state.name })
-
-          // Track CSS properties that need transitions for system states
-          if (SYSTEM_STATES.has(state.name) && state.animation?.duration) {
-            transitionProps.set(style.property, {
-              duration: state.animation.duration,
-              easing: state.animation.easing,
-            })
-          }
-        }
-      }
-      // Note: childOverrides are handled separately in applyStateChildOverrides
-    }
-
-    // Generate CSS transition property for base element if any system states have animations
-    if (transitionProps.size > 0) {
-      const transitions: string[] = []
-      for (const [prop, { duration, easing }] of transitionProps) {
-        const durationMs = duration * 1000
-        const easingStr = easing || 'ease'
-        transitions.push(`${prop} ${durationMs}ms ${easingStr}`)
-      }
-      // Add transition style without state (applies to base element)
-      styles.push({
-        property: 'transition',
-        value: transitions.join(', '),
-      })
-    }
-
-    return styles
-  }
+  // transformStates has been extracted to transformers/state-styles-transformer.ts
 
   /**
    * Build state machine configuration from states with triggers
@@ -1921,38 +1514,7 @@ class IRTransformer {
   // State conversion functions (convertStateDependency, convertStateAnimation)
   // have been extracted to transformers/data-transformer.ts
 
-  /**
-   * Apply state childOverrides to children
-   *
-   * When a state has childOverrides like:
-   *   state filled
-   *     Value col #fff
-   *
-   * This adds state-conditional styles to the matching child node.
-   */
-  private applyStateChildOverrides(children: IRNode[], states: State[]): void {
-    for (const state of states) {
-      for (const override of state.childOverrides) {
-        // Find matching child by name
-        const matchingChild = children.find(
-          child => child.name === override.childName
-        )
-
-        if (matchingChild) {
-          // Convert override properties to CSS styles with state condition
-          for (const prop of override.properties) {
-            const cssStyles = this.propertyToCSS(prop)
-            for (const style of cssStyles) {
-              matchingChild.styles.push({
-                ...style,
-                state: state.name,
-              })
-            }
-          }
-        }
-      }
-    }
-  }
+  // applyStateChildOverrides has been extracted to transformers/state-styles-transformer.ts
 
   /**
    * Convert Mirror property to CSS
@@ -1996,62 +1558,13 @@ class IRTransformer {
 
   /**
    * Transform a state child (Instance) to IRNode
-   * Used for state children (like Figma Variants)
+   * Delegates to extracted state-child-transformer.ts
    */
   private transformStateChild(instance: Instance): IRNode | null {
-    if (!instance || !instance.component) {
-      return null
+    const ctx: StateChildContext = {
+      generateNodeId: () => `state-child-${this.nodeIdCounter++}`,
+      transformProperties: (props, prim) => this.transformProperties(props, prim),
     }
-
-    // Determine HTML tag
-    const tag = this.getTag(instance.component, null)
-
-    // Get primitive for defaults
-    const primitive = instance.component.toLowerCase()
-
-    // Get primitive defaults and convert to Property format
-    const primitiveDefaults = convertDefaultsToProperties(getPrimitiveDefaults(primitive))
-
-    // Merge properties: Primitive Defaults < Instance Properties
-    const properties = mergeProperties(primitiveDefaults, instance.properties)
-
-    // Transform to styles
-    const styles = this.transformProperties(properties, primitive)
-
-    // Create node ID
-    const nodeId = `state-child-${this.nodeIdCounter++}`
-
-    // Create base node
-    const node: IRNode = {
-      id: nodeId,
-      tag,
-      primitive,
-      name: instance.component,
-      properties: [],
-      styles,
-      events: [],
-      children: [],
-    }
-
-    // Add text content if present
-    const contentProp = instance.properties.find(p => p.name === 'content')
-    if (contentProp && contentProp.values.length > 0) {
-      node.properties.push({
-        name: 'textContent',
-        value: String(contentProp.values[0]),
-      })
-    }
-
-    // Transform children recursively
-    if (instance.children && instance.children.length > 0) {
-      for (const child of instance.children) {
-        const irChild = this.transformStateChild(child as Instance)
-        if (irChild) {
-          node.children.push(irChild)
-        }
-      }
-    }
-
-    return node
+    return transformStateChildExtracted(instance, ctx)
   }
 }

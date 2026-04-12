@@ -5,9 +5,8 @@
  * Verbinden das Property Panel mit dem echten System.
  */
 
-import type { PropertyExtractor, ExtractedElement } from '../../../../compiler/studio/property-extractor'
-import type { CodeModifier, ModificationResult } from '../../../../compiler/studio/code-modifier'
-import { isAbsoluteLayoutContainer } from '../../../../compiler/studio/utils/layout-detection'
+import type { PropertyExtractor, ExtractedElement, CodeModifier, ModificationResult } from '../../../../compiler'
+import { isAbsoluteLayoutContainer } from '../../../../compiler'
 import { events, state } from '../../../core'
 import { TokenCache } from '../utils/tokens'
 import type {

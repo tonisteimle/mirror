@@ -381,7 +381,7 @@ describe('DOMVisualPort', () => {
   })
 
   describe('hideAll', () => {
-    it('removes all visual elements', () => {
+    it('hides all visual elements (element pooling)', () => {
       const port = createDOMVisualPort(container)
 
       port.showIndicator({
@@ -393,8 +393,11 @@ describe('DOMVisualPort', () => {
 
       port.hideAll()
 
-      expect(document.getElementById('mirror-drop-indicator')).toBeNull()
-      expect(document.getElementById('mirror-parent-outline')).toBeNull()
+      // Elements are hidden, not removed (element pooling for performance)
+      const indicator = document.getElementById('mirror-drop-indicator')
+      const outline = document.getElementById('mirror-drop-parent-outline')
+      expect(indicator?.style.display).toBe('none')
+      expect(outline?.style.display).toBe('none')
     })
   })
 })

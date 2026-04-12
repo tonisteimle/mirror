@@ -286,14 +286,15 @@ describe('VisualSystem Ghost Indicator', () => {
       visualSystem.showIndicator(lineHint)
       expect(document.getElementById(VISUAL_IDS.indicator)).not.toBeNull()
 
-      // Show ghost - should remove line indicator
+      // Show ghost - should hide line indicator (element pooling)
       const ghostHint: VisualHint = {
         type: 'ghost',
         rect: { x: 100, y: 100, width: 100, height: 40 },
       }
       visualSystem.showIndicator(ghostHint)
 
-      expect(document.getElementById(VISUAL_IDS.indicator)).toBeNull()
+      const indicator = document.getElementById(VISUAL_IDS.indicator)
+      expect(indicator?.style.display).toBe('none')
       expect(document.getElementById(VISUAL_IDS.ghost)).not.toBeNull()
     })
 
@@ -306,14 +307,15 @@ describe('VisualSystem Ghost Indicator', () => {
       visualSystem.showIndicator(ghostHint)
       expect(document.getElementById(VISUAL_IDS.ghost)).not.toBeNull()
 
-      // Show line indicator - should remove ghost
+      // Show line indicator - should hide ghost (element pooling)
       const lineHint: VisualHint = {
         type: 'line',
         rect: { x: 100, y: 100, width: 200, height: 2 },
       }
       visualSystem.showIndicator(lineHint)
 
-      expect(document.getElementById(VISUAL_IDS.ghost)).toBeNull()
+      const ghost = document.getElementById(VISUAL_IDS.ghost)
+      expect(ghost?.style.display).toBe('none')
       expect(document.getElementById(VISUAL_IDS.indicator)).not.toBeNull()
     })
   })
@@ -323,7 +325,9 @@ describe('VisualSystem Ghost Indicator', () => {
   // ============================================
 
   describe('cleanup', () => {
-    it('removes ghost element on clear()', () => {
+    it('hides ghost element on clear() (element pooling)', () => {
+      // clear() hides elements but doesn't remove them from DOM
+      // This is by design - element pooling for performance
       const hint: VisualHint = {
         type: 'ghost',
         rect: { x: 100, y: 100, width: 100, height: 40 },
@@ -332,7 +336,9 @@ describe('VisualSystem Ghost Indicator', () => {
 
       visualSystem.clear()
 
-      expect(document.getElementById(VISUAL_IDS.ghost)).toBeNull()
+      const ghostEl = document.getElementById(VISUAL_IDS.ghost)
+      expect(ghostEl).not.toBeNull()
+      expect(ghostEl?.style.display).toBe('none')
     })
 
     it('resets ghost state on clear()', () => {
