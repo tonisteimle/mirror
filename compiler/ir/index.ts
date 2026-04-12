@@ -107,6 +107,7 @@ import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 import { isZagPrimitive, ZAG_PRIMITIVES, getItemKeywords, getZagPrimitive } from '../schema/zag-primitives'
 import { isCompoundPrimitive, getCompoundPrimitive, getCompoundSlotDef, isCompoundSlot } from '../schema/compound-primitives'
 import { isChartPrimitive, getChartPrimitive, getChartSlotProperty } from '../schema/chart-primitives'
+import { isContainer as isContainerPrimitive, FLEX_DEFAULTS } from '../schema/layout-defaults'
 import type { IRChartSlot } from './types'
 import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helpers'
 // Extracted transformers
