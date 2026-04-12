@@ -306,11 +306,12 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         container: componentPanelContainer,
         showTabBar: true,
         defaultTab: 'basic',
-        // Include user components from .com files
+        // Include user components from all files (definitions can be in any file)
         getComFiles: getFilesCallback ? () => {
           const files = getFilesCallback()
+          // Parse all files for component definitions, not just .com files
           return files
-            .filter(f => f.type === 'components' || f.type === 'component')
+            .filter(f => f.type !== 'tokens' && f.type !== 'data')
             .map(f => ({ name: f.name, content: f.code }))
         } : undefined,
       },
@@ -346,8 +347,9 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         container: userComponentsPanelContainer,
         getComFiles: () => {
           const files = getFilesCallback()
+          // Parse all files for component definitions, not just .com files
           return files
-            .filter(f => f.type === 'components' || f.type === 'component')
+            .filter(f => f.type !== 'tokens' && f.type !== 'data')
             .map(f => ({ name: f.name, content: f.code }))
         },
       },
