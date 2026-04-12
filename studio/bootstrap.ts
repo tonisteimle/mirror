@@ -747,6 +747,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   })
 
   // Legacy adapter for compatibility with app.js (uses makeElementDraggable)
+  // Also exposes test API methods for E2E testing
   const dragDropSystem: DragDropSystem = {
     init: () => {},
     registerPaletteItem: () => () => {},
@@ -767,6 +768,49 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     enable: () => dragDropV2.enable(),
     isDisabled: () => dragDropV2.isDisabled(),
     dispose: () => dragDropV2.dispose(),
+
+    // ============================================
+    // Test API Methods (for E2E testing)
+    // ============================================
+    simulateInsert: (params: {
+      componentName: string
+      targetNodeId: string
+      placement: 'before' | 'after' | 'inside'
+      properties?: string
+      textContent?: string
+    }) => {
+      return dragDropV2.controller.simulateInsert({
+        ...params,
+        container: config.previewContainer,
+        nodeIdAttr: 'data-mirror-id',
+      })
+    },
+
+    simulateInsertAbsolute: (params: {
+      componentName: string
+      targetNodeId: string
+      position: { x: number; y: number }
+      properties?: string
+      textContent?: string
+    }) => {
+      return dragDropV2.controller.simulateInsertAbsolute({
+        ...params,
+        container: config.previewContainer,
+        nodeIdAttr: 'data-mirror-id',
+      })
+    },
+
+    simulateMove: (params: {
+      sourceNodeId: string
+      targetNodeId: string
+      placement: 'before' | 'after' | 'inside'
+    }) => {
+      return dragDropV2.controller.simulateMove({
+        ...params,
+        container: config.previewContainer,
+        nodeIdAttr: 'data-mirror-id',
+      })
+    },
   } as unknown as DragDropSystem
 
   studio.dragDrop = dragDropSystem

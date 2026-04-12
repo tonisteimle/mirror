@@ -648,6 +648,76 @@ export class DragDropController {
   }
 
   /**
+   * TEST API: Simulate inserting a new component with absolute positioning.
+   * Used for inserting into stacked/pos containers where x/y coordinates are needed.
+   *
+   * @param componentName - Name of component to insert
+   * @param targetNodeId - Node ID of target container
+   * @param position - The x/y position relative to the container
+   * @param container - Container element to search in
+   * @param nodeIdAttr - Attribute name for node IDs
+   */
+  simulateInsertAbsolute(params: {
+    componentName: string
+    targetNodeId: string
+    position: Point
+    properties?: string
+    textContent?: string
+    container: HTMLElement
+    nodeIdAttr?: string
+  }): { success: boolean; error?: string } {
+    const {
+      componentName,
+      targetNodeId,
+      position,
+      properties,
+      textContent,
+      container,
+      nodeIdAttr = 'data-node-id',
+    } = params
+
+    // Find target element
+    const targetElement = container.querySelector(
+      `[${nodeIdAttr}="${targetNodeId}"]`
+    ) as HTMLElement | null
+
+    if (!targetElement) {
+      return { success: false, error: `Target element "${targetNodeId}" not found` }
+    }
+
+    // Build properties with x/y coordinates
+    const positionProps = `x ${Math.round(position.x)}, y ${Math.round(position.y)}`
+    const finalProperties = properties
+      ? `${positionProps}, ${properties}`
+      : positionProps
+
+    const source: DragSource = {
+      type: 'palette',
+      componentName,
+      properties: finalProperties,
+      textContent,
+    }
+
+    const target: DropTarget = {
+      nodeId: targetNodeId,
+      element: targetElement,
+      layoutType: 'positioned', // Force positioned for absolute insert
+      direction: null,
+      hasChildren: targetElement.children.length > 0,
+      isPositioned: true,
+    }
+
+    const result: DropResult = {
+      target,
+      placement: 'inside', // Absolute positioned elements go inside
+      targetId: targetNodeId,
+      position, // Include position for the executor
+    }
+
+    return this.simulateDrop({ source, target, result })
+  }
+
+  /**
    * TEST API: Get visual system state for assertions.
    * Note: Requires VisualPort to implement getState() method.
    */
