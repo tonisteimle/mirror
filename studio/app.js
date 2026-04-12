@@ -28,8 +28,6 @@ import {
   getIconTriggerPrimitives,
   // Ghost Renderer for palette drag previews
   getGhostRenderer,
-  // DragDropService - must use studio bundle to share GhostRenderer instance
-  DragDropService,
   // Inline Prompt Extension (AI code generation)
   inlinePromptExtension,
   // Fixer Service (AI multi-file code generation)
@@ -40,6 +38,8 @@ import {
   insertComponentCode,
   insertComponentWithDefinition,
   generateComponentCodeFromDragData,
+  // Property Panel
+  PropertyPanel,
 } from './dist/index.js?v=126'
 
 // Annotation to mark changes from property panel (for skipping debounce)
@@ -4816,23 +4816,14 @@ function updateStudio(ast, ir, sourceMap, source) {
     }
     studioPropertyPanel.updateDependencies(studioPropertyExtractor, studioCodeModifier)
   } else {
-    studioPropertyPanel = new MirrorLang.PropertyPanel(
+    studioPropertyPanel = new PropertyPanel(
       propertyPanelContainer,
       studioSelectionManager,
       studioPropertyExtractor,
       studioCodeModifier,
       handleStudioCodeChange,
       {
-        getAllSource: getAllProjectSource,
-        filesAccess: {
-          getFile: (path) => files[path],
-          setFile: (path, content) => {
-            files[path] = content
-            saveFile(path, content)
-            // Component file updated - the main file change will trigger recompile
-          },
-          getCurrentFile: () => currentFile
-        }
+        getAllSource: getAllProjectSource
       }
     )
   }
