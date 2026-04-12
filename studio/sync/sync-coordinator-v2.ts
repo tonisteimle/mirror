@@ -28,6 +28,7 @@ import type {
   CleanupFn,
 } from './ports'
 import { LineOffsetService } from './line-offset-service'
+import { logSync } from '../../compiler/utils/logger'
 import type { SourceMapPortWithSetter } from './adapters/production-adapters'
 
 // ============================================
@@ -103,7 +104,7 @@ export class SyncCoordinator {
 
     const cleanup = this.ports.eventBus.onSelectionChanged(({ nodeId, origin }) => {
       if (this.config.debug) {
-        console.log('[SyncCoordinator] selection:changed event', { nodeId, origin })
+        logSync.debug(' selection:changed event', { nodeId, origin })
       }
       this.doSync(nodeId, origin)
     })
@@ -111,7 +112,7 @@ export class SyncCoordinator {
     this.cleanupFns.push(cleanup)
 
     if (this.config.debug) {
-      console.log('[SyncCoordinator] Subscribed to selection:changed')
+      logSync.debug(' Subscribed to selection:changed')
     }
   }
 
@@ -201,7 +202,7 @@ export class SyncCoordinator {
       const currentSelection = this.ports.stateStore.getSelection()
       if (currentSelection.nodeId) {
         if (this.config.debug) {
-          console.log('[SyncCoordinator] Initial sync with existing selection', {
+          logSync.debug(' Initial sync with existing selection', {
             nodeId: currentSelection.nodeId,
           })
         }
@@ -213,7 +214,7 @@ export class SyncCoordinator {
       const rootElement = this.ports.domQuery.findRootMirrorElement()
       if (rootElement) {
         if (this.config.debug) {
-          console.log('[SyncCoordinator] Initial sync - selecting root element', {
+          logSync.debug(' Initial sync - selecting root element', {
             nodeId: rootElement.nodeId,
           })
         }
@@ -240,7 +241,7 @@ export class SyncCoordinator {
    */
   handleCursorMove(editorLine: number): void {
     if (this.config.debug) {
-      console.log('[SyncCoordinator] handleCursorMove', {
+      logSync.debug(' handleCursorMove', {
         editorLine,
         lastLine: this.lastCursorLine,
         offset: this.lineOffset.getOffset(),
@@ -275,7 +276,7 @@ export class SyncCoordinator {
     }
 
     if (this.config.debug) {
-      console.log('[SyncCoordinator] handlePreviewClick', { nodeId })
+      logSync.debug(' handlePreviewClick', { nodeId })
     }
 
     this.ports.stateStore.setSelection(nodeId, 'preview')
@@ -316,7 +317,7 @@ export class SyncCoordinator {
     // Queue sync if one is already in progress
     if (this.syncInProgress) {
       if (this.config.debug) {
-        console.log('[SyncCoordinator] Queuing sync (already in progress)', { nodeId, origin })
+        logSync.debug(' Queuing sync (already in progress)', { nodeId, origin })
       }
       this.pendingSync = { nodeId, origin }
       return
@@ -328,7 +329,7 @@ export class SyncCoordinator {
     this.syncInProgress = true
     try {
       if (this.config.debug) {
-        console.log('[SyncCoordinator] doSync', {
+        logSync.debug(' doSync', {
           nodeId,
           origin,
           hasScrollTarget: !!this.targets.scrollEditorToLine,
@@ -338,7 +339,7 @@ export class SyncCoordinator {
       // Abort if sourceMap changed during sync setup
       if (this.sourceMapVersion !== capturedVersion) {
         if (this.config.debug) {
-          console.log('[SyncCoordinator] Aborting sync - sourceMap changed')
+          logSync.debug(' Aborting sync - sourceMap changed')
         }
         return
       }
@@ -347,7 +348,7 @@ export class SyncCoordinator {
         const node = this.ports.sourceMap.getNodeById(nodeId)
 
         if (this.config.debug) {
-          console.log('[SyncCoordinator] node lookup', {
+          logSync.debug(' node lookup', {
             found: !!node,
             position: node?.position,
             offset: this.lineOffset.getOffset(),
@@ -361,7 +362,7 @@ export class SyncCoordinator {
           const isInFile = this.lineOffset.isInCurrentFile(sourceMapLine)
 
           if (this.config.debug) {
-            console.log('[SyncCoordinator] scroll check', {
+            logSync.debug(' scroll check', {
               sourceMapLine,
               editorLine,
               isInFile,
@@ -394,7 +395,7 @@ export class SyncCoordinator {
         const pending = this.pendingSync
         this.pendingSync = null
         if (this.config.debug) {
-          console.log('[SyncCoordinator] Processing queued sync', pending)
+          logSync.debug(' Processing queued sync', pending)
         }
         this.doSync(pending.nodeId, pending.origin)
       }
@@ -406,13 +407,13 @@ export class SyncCoordinator {
    */
   private executeCursorSync(sourceMapLine: number): void {
     if (this.config.debug) {
-      console.log('[SyncCoordinator] executeCursorSync', { sourceMapLine })
+      logSync.debug(' executeCursorSync', { sourceMapLine })
     }
 
     // First try to find an instance node
     const node = this.ports.sourceMap.getNodeAtLine(sourceMapLine)
     if (this.config.debug) {
-      console.log('[SyncCoordinator] node at line', { node: node?.nodeId })
+      logSync.debug(' node at line', { node: node?.nodeId })
     }
 
     if (node && node.nodeId) {
@@ -423,7 +424,7 @@ export class SyncCoordinator {
     // If no instance found, try to find a definition (for .com files)
     const definition = this.ports.sourceMap.getDefinitionAtLine(sourceMapLine)
     if (this.config.debug) {
-      console.log('[SyncCoordinator] definition at line', { definition: definition?.componentName })
+      logSync.debug(' definition at line', { definition: definition?.componentName })
     }
 
     if (definition && definition.componentName) {

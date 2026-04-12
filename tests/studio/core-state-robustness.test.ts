@@ -7,9 +7,10 @@
  * 3. Compile status tracking (setCompiling)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { state, actions, selectors } from '../../studio/core/state'
 import { events } from '../../studio/core/events'
+import { setLogLevel, getLogLevel, type LogLevel } from '../../compiler/utils/logger'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import type { AST } from '../../compiler/parser/ast'
 import type { IR } from '../../compiler/ir/types'
@@ -382,7 +383,9 @@ describe('Selection Validation', () => {
     actions.setSelection('node-999', 'editor')
 
     expect(state.get().selection.nodeId).toBeNull()
+    // Logger adds '[State]' prefix as first argument
     expect(warnSpy).toHaveBeenCalledWith(
+      '[State]',
       expect.stringContaining('Cannot select non-existent node')
     )
 
@@ -414,6 +417,9 @@ describe('Selection Validation', () => {
 
   it('queues selection during compile when SourceMap missing', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    // Enable info logging for this test (default level is 'warn')
+    const originalLevel = getLogLevel()
+    setLogLevel('info')
 
     // Clear sourceMap to simulate pre-compile state
     state.set({ sourceMap: null })
@@ -424,10 +430,13 @@ describe('Selection Validation', () => {
     expect(state.get().deferredSelection).toEqual({ type: 'nodeId', nodeId: 'new-node', origin: 'editor' })
     // Also check legacy queuedSelection for backward compatibility
     expect(state.get().queuedSelection).toEqual({ nodeId: 'new-node', origin: 'editor' })
+    // Logger adds '[State]' prefix as first argument
     expect(logSpy).toHaveBeenCalledWith(
+      '[State]',
       expect.stringContaining('Deferring selection during compile')
     )
 
+    setLogLevel(originalLevel)
     logSpy.mockRestore()
   })
 

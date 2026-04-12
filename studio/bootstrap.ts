@@ -29,6 +29,7 @@ import { initStudioTestAPI } from './test-api'
 import { triggerRename, isRenameActive, closeRename } from './rename'
 import type { AST, IR, SourceMap, CodeChange } from '../compiler'
 import type { EditorView } from '@codemirror/view'
+import { logBootstrap, logAgent } from '../compiler/utils/logger'
 
 export interface BootstrapConfig {
   /** CodeMirror EditorView instance */
@@ -276,11 +277,11 @@ function generateChildCode(child: ComponentChild, indent: number): string {
 }
 
 export function initializeStudio(config: BootstrapConfig): StudioInstance {
-  console.log('[Studio] Initializing new architecture...')
+  logBootstrap.info(' Initializing new architecture...')
 
   // Load user settings from server (non-blocking)
   initUserSettings().catch(err => {
-    console.warn('[Studio] Failed to load user settings:', err)
+    logBootstrap.warn(' Failed to load user settings:', err)
   })
 
   // Initialize grid settings provider (breaks circular dependency)
@@ -336,7 +337,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         },
       }
     )
-    console.log('[Studio] ComponentPanel initialized')
+    logBootstrap.info(' ComponentPanel initialized')
   }
 
   // Initialize User Components Panel if container and getFiles provided
@@ -373,11 +374,11 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
           }
         },
         onRefresh: () => {
-          console.log('[Studio] UserComponentsPanel refreshed')
+          logBootstrap.info(' UserComponentsPanel refreshed')
         },
       }
     )
-    console.log('[Studio] UserComponentsPanel initialized')
+    logBootstrap.info(' UserComponentsPanel initialized')
   }
 
   // Initialize AI Agent if API key provided
@@ -391,13 +392,13 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       updateFile: config.updateFile,
       switchToFile: config.switchToFile,
       onCommand: (command) => {
-        console.log('[Agent] Command executed:', command.type)
+        logAgent.info(' Command executed:', command.type)
       },
       onError: (error) => {
-        console.error('[Agent] Error:', error)
+        logAgent.error(' Error:', error)
       }
     })
-    console.log('[Studio] AI Agent initialized')
+    logBootstrap.info(' AI Agent initialized')
   }
 
   // Editor
@@ -424,11 +425,11 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
           filename: currentFile,
         })
         studio.editorDropHandler?.insertComponentCode(code, position)
-        console.log('[Studio] Component dropped into editor:', dragData.componentName)
+        logBootstrap.info(' Component dropped into editor:', dragData.componentName)
       },
     })
     studio.editorDropHandler.attach()
-    console.log('[Studio] EditorDropHandler initialized')
+    logBootstrap.info(' EditorDropHandler initialized')
   }
 
   // Preview (with direct manipulation handles, keyboard shortcuts, context menu, visual code system, and element move)
@@ -452,7 +453,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     container: config.previewContainer,
     autoExtract: true,
     onLayoutExtracted: () => {
-      console.log('[RenderPipeline] Layout extracted, version:', state.get().layoutVersion)
+      logBootstrap.debug(' Layout extracted, version:', state.get().layoutVersion)
     },
   })
   studio.renderPipeline = renderPipeline
@@ -561,7 +562,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   document.addEventListener('keydown', handleF2Rename)
   eventUnsubscribes.push(() => document.removeEventListener('keydown', handleF2Rename))
 
-  console.log('[Studio] F2 Rename Symbol handler initialized')
+  logBootstrap.info(' F2 Rename Symbol handler initialized')
 
   // Initialize DrawManager for component drawing
   const drawManagerResult = initDrawManager({
@@ -628,7 +629,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Handle component tab changes
   eventUnsubscribes.push(
     events.on('components:tab-changed', ({ tab }) => {
-      console.log('[Studio] Component tab changed to:', tab)
+      logBootstrap.info(' Component tab changed to:', tab)
     })
   )
 
@@ -644,7 +645,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Expose studio on window for legacy code (PanelResizer, cleanup.js)
   window.MirrorStudio = studio
 
-  console.log('[Studio] New architecture initialized')
+  logBootstrap.info(' New architecture initialized')
   return studio
 }
 
@@ -680,11 +681,11 @@ function initializePanelVisibility(): void {
       if (panelEl) {
         panelEl.classList.toggle('panel-hidden', !visible)
       }
-      console.log(`[PanelVisibility] ${panel}: ${visible}`)
+      logBootstrap.debug(` ${panel}: ${visible}`)
     })
   )
 
-  console.log('[Studio] Panel visibility initialized')
+  logBootstrap.info(' Panel visibility initialized')
 }
 
 /**
@@ -752,7 +753,7 @@ function initializePanelToolbar(): void {
     })
   )
 
-  console.log('[Studio] View menu initialized')
+  logBootstrap.info(' View menu initialized')
 }
 
 // Store global Activity Bar instance
@@ -764,7 +765,7 @@ let globalActivityBar: ActivityBar | null = null
 function initializeActivityBar(): void {
   const container = document.getElementById('activity-bar-container')
   if (!container) {
-    console.warn('[Studio] Activity bar container not found')
+    logBootstrap.warn(' Activity bar container not found')
     return
   }
 
@@ -806,7 +807,7 @@ function initializeActivityBar(): void {
     })
   )
 
-  console.log('[Studio] Activity Bar initialized')
+  logBootstrap.info(' Activity Bar initialized')
 }
 
 /**
@@ -863,7 +864,7 @@ export function updateStudioState(ast: AST, ir: IR | null, sourceMap: SourceMap,
           getAllSource: getAllSourceCallback ?? (() => state.get().source),
         }
       )
-      console.log('[Studio] PropertyPanel initialized')
+      logBootstrap.info(' PropertyPanel initialized')
     } else {
       // Update dependencies on subsequent compiles
       studio.propertyPanel.updateDependencies(propertyExtractor, codeModifier)
