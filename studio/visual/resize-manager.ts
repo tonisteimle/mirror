@@ -6,11 +6,10 @@
  */
 
 import { OverlayManager } from './overlay-manager'
-import { events } from '../core'
+import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 import { MIN_RESIZE_SIZE, DEFAULT_CONTAINER_SIZE } from './constants/sizing'
 import { calculateBoundingBox, calculateResizedPositions, type BoundingBox, type Rect } from '../preview/multi-selection-bounds'
-import type { LayoutRect } from '../core/state'
 
 /** @deprecated Use MIN_RESIZE_SIZE from constants/sizing.ts */
 const MIN_ELEMENT_SIZE = MIN_RESIZE_SIZE
@@ -50,15 +49,12 @@ export interface ResizeManagerConfig {
   container: HTMLElement
   overlayManager: OverlayManager
   getSourceMap: () => { getNodeById: (id: string) => { parentId?: string } | null } | null
-  /** Get cached layout info from state (Phase 3 optimization) */
-  getLayoutInfo?: () => Map<string, LayoutRect> | null
 }
 
 export class ResizeManager {
   private container: HTMLElement
   private overlayManager: OverlayManager
   private getSourceMap: ResizeManagerConfig['getSourceMap']
-  private getLayoutInfo: ResizeManagerConfig['getLayoutInfo']
 
   private handles: HTMLElement[] = []
   private activeResize: ResizeState | null = null
@@ -78,7 +74,6 @@ export class ResizeManager {
     this.container = config.container
     this.overlayManager = config.overlayManager
     this.getSourceMap = config.getSourceMap
-    this.getLayoutInfo = config.getLayoutInfo
 
     this.boundMouseDown = this.onMouseDown.bind(this)
     this.boundMouseMove = this.onMouseMove.bind(this)
@@ -95,22 +90,22 @@ export class ResizeManager {
     this.hideHandles()
     this.currentNodeId = nodeId
 
-    // Try to get layout from cached layoutInfo first (Phase 3 optimization)
-    const layoutInfo = this.getLayoutInfo?.()
-    const layoutRect = layoutInfo?.get(nodeId)
+    // Use LayoutService for unified layout access (cache-first, DOM-fallback)
+    const layoutService = getLayoutService()
+    const layout = layoutService?.getLayout(nodeId)
 
     let relRect: { left: number; top: number; width: number; height: number }
 
-    if (layoutRect) {
-      // Use cached layout info - no DOM read needed
+    if (layout) {
+      // Use layout from service (either cached or freshly read from DOM)
       relRect = {
-        left: layoutRect.x,
-        top: layoutRect.y,
-        width: layoutRect.width,
-        height: layoutRect.height,
+        left: layout.x,
+        top: layout.y,
+        width: layout.width,
+        height: layout.height,
       }
     } else {
-      // Fallback to DOM read if layoutInfo not available
+      // Ultimate fallback if LayoutService not available
       const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
       if (!element) return
 

@@ -113,9 +113,9 @@ export class HandleManager {
   private calculateHandles(element: HTMLElement, nodeId: string): Handle[] {
     const handles: Handle[] = []
 
-    // Try to get layout from cached layoutInfo first (Phase 4 optimization)
-    const layoutInfo = this.getLayoutInfo?.()
-    const layoutRect = layoutInfo?.get(nodeId)
+    // Use LayoutService for unified layout access (cache-first, DOM-fallback)
+    const layoutService = getLayoutService()
+    const layout = layoutService?.getLayout(nodeId)
 
     let relLeft: number
     let relTop: number
@@ -127,19 +127,19 @@ export class HandleManager {
     let flexDirection: string
     let isContainer: boolean
 
-    if (layoutRect) {
-      // Use cached layout info - no DOM read needed
-      relLeft = layoutRect.x
-      relTop = layoutRect.y
-      width = layoutRect.width
-      height = layoutRect.height
-      padding = layoutRect.padding
-      radius = layoutRect.radius
-      gap = layoutRect.gap
-      flexDirection = layoutRect.flexDirection || 'column'
-      isContainer = layoutRect.isContainer
+    if (layout) {
+      // Use layout from service (either cached or freshly read from DOM)
+      relLeft = layout.x
+      relTop = layout.y
+      width = layout.width
+      height = layout.height
+      padding = layout.padding
+      radius = layout.radius
+      gap = layout.gap
+      flexDirection = layout.flexDirection || 'column'
+      isContainer = layout.isContainer
     } else {
-      // Fallback to DOM read if layoutInfo not available
+      // Ultimate fallback if LayoutService not available
       const rect = element.getBoundingClientRect()
       const containerRect = this.container.getBoundingClientRect()
       const style = window.getComputedStyle(element)
@@ -229,29 +229,17 @@ export class HandleManager {
     const isHorizontal = flexDirection === 'row' || flexDirection === 'row-reverse'
 
     if (isContainer) {
-      // Try to find gap position from children in layoutInfo
+      // Try to find gap position using LayoutService
       let gapX: number
       let gapY: number
       let hasGapPosition = false
 
-      if (layoutInfo) {
-        // Find first two children in layoutInfo
-        const children: LayoutRect[] = []
-        for (const [childId, childLayout] of layoutInfo) {
-          if (childLayout.parentId === nodeId) {
-            children.push(childLayout)
-            if (children.length >= 2) break
-          }
-        }
-
-        if (children.length >= 2) {
-          if (isHorizontal) {
-            gapX = (children[0].x + children[0].width + children[1].x) / 2
-            gapY = relTop + height / 2
-          } else {
-            gapX = relLeft + width / 2
-            gapY = (children[0].y + children[0].height + children[1].y) / 2
-          }
+      if (layoutService) {
+        // Use LayoutService to get gap position
+        const gapPos = layoutService.getGapPosition(nodeId)
+        if (gapPos) {
+          gapX = gapPos.x
+          gapY = gapPos.y
           hasGapPosition = true
         }
       }
