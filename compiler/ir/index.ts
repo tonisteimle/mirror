@@ -125,6 +125,10 @@ import { isCompoundPrimitive, getCompoundPrimitive, getCompoundSlotDef, isCompou
 import { isChartPrimitive, getChartPrimitive, getChartSlotProperty } from '../schema/chart-primitives'
 import type { IRChartSlot } from './types'
 import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helpers'
+// Extracted transformers
+import { transformTable as transformTableExtracted, humanizeFieldName } from './transformers/table-transformer'
+import { transformChart as transformChartExtracted } from './transformers/chart-transformer'
+import type { TransformerContext } from './transformers/transformer-context'
 import {
   isContainer as isContainerPrimitive,
   FLEX_DEFAULTS,
@@ -548,6 +552,23 @@ class IRTransformer {
 
   private generateId(): string {
     return `node-${++this.nodeIdCounter}`
+  }
+
+  /**
+   * Create a TransformerContext for use with extracted transformers
+   */
+  private createTransformerContext(): TransformerContext {
+    return {
+      generateId: () => this.generateId(),
+      transformProperties: (props, primitive, parentCtx) => this.transformProperties(props, primitive, parentCtx),
+      transformChild: (child, parentId, parentCtx) => this.transformChild(child, parentId, parentCtx),
+      includeSourceMap: this.includeSourceMap,
+      addToSourceMap: this.includeSourceMap
+        ? (nodeId, name, sourcePosition, options) => {
+            this.sourceMapBuilder.addNode(nodeId, name, sourcePosition, options)
+          }
+        : undefined,
+    }
   }
 
   /**
@@ -1143,271 +1164,11 @@ class IRTransformer {
 
   /**
    * Transform a TableNode to an IRTable
-   *
-   * Handles:
-   * - Data source reference ($collection)
-   * - Query clauses (where, by, grouped by)
-   * - Column definitions (inferred + overrides)
-   * - Slots (Header, Row, Footer, Group, SortIcon, SortAsc, SortDesc, Paginator)
-   * - Selection mode
-   * - Sticky header
+   * Delegates to extracted table-transformer.ts
    */
   private transformTable(table: TableNode): IRTable {
-    const nodeId = this.generateId()
-
-    // Extract selection mode from properties
-    const selectionModeProp = table.properties.find(p => p.name === 'selectionMode')
-    const selectionMode = selectionModeProp?.values[0] as 'single' | 'multi' | undefined
-
-    // Extract pageSize from properties
-    const pageSizeProp = table.properties.find(p => p.name === 'pageSize')
-    const pageSize = pageSizeProp?.values[0] ? parseInt(String(pageSizeProp.values[0]), 10) : undefined
-
-    // Transform column definitions
-    const columns: IRTableColumn[] = (table.columns || []).map(col => this.transformTableColumn(col))
-
-    // If no columns defined, they will be inferred at runtime from data schema
-    // The backend will handle this
-
-    // Transform table-level styles (excluding behavioral props)
-    const behavioralProps = new Set(['selectionMode', 'pageSize', 'stickyHeader'])
-    const tableStyleProps = table.properties.filter(p => !behavioralProps.has(p.name))
-    const tableStyles = this.transformProperties(tableStyleProps, 'frame')
-
-    // Transform slots to IRNode arrays
-    const headerSlot = table.headerSlot
-      ? this.transformTableSlotChildren(table.headerSlot)
-      : undefined
-    const headerSlotStyles = table.headerSlot
-      ? this.transformTableSlotStyles(table.headerSlot)
-      : undefined
-    // Transform static header row from Header: Row "A", "B" syntax
-    const headerStaticRow = table.headerSlot?.staticRow
-      ? this.transformTableStaticRow(table.headerSlot.staticRow)
-      : undefined
-    const rowSlot = table.rowSlot
-      ? this.transformTableSlotChildren(table.rowSlot)
-      : undefined
-    const rowSlotStyles = table.rowSlot
-      ? this.transformTableSlotStyles(table.rowSlot)
-      : undefined
-    // Zebra striping: odd/even row styles
-    const rowOddStyles = table.rowOddSlot
-      ? this.transformTableSlotStyles(table.rowOddSlot)
-      : undefined
-    const rowEvenStyles = table.rowEvenSlot
-      ? this.transformTableSlotStyles(table.rowEvenSlot)
-      : undefined
-    const footerSlot = table.footerSlot
-      ? this.transformTableSlotChildren(table.footerSlot)
-      : undefined
-    const footerSlotStyles = table.footerSlot
-      ? this.transformTableSlotStyles(table.footerSlot)
-      : undefined
-    // Transform static footer row from Footer: Row "A", "B" syntax
-    const footerStaticRow = table.footerSlot?.staticRow
-      ? this.transformTableStaticRow(table.footerSlot.staticRow)
-      : undefined
-    const groupSlot = table.groupSlot
-      ? this.transformTableSlotChildren(table.groupSlot)
-      : undefined
-    const groupSlotStyles = table.groupSlot
-      ? this.transformTableSlotStyles(table.groupSlot)
-      : undefined
-
-    // Transform sort icon slots
-    const sortIconSlot = table.sortIconSlot
-      ? this.transformTableSlotChildren(table.sortIconSlot)
-      : undefined
-    const sortAscSlot = table.sortAscSlot
-      ? this.transformTableSlotChildren(table.sortAscSlot)
-      : undefined
-    const sortDescSlot = table.sortDescSlot
-      ? this.transformTableSlotChildren(table.sortDescSlot)
-      : undefined
-
-    // Transform paginator slot
-    const paginatorSlot = table.paginatorSlot
-      ? this.transformTableSlotChildren(table.paginatorSlot)
-      : undefined
-    const paginatorSlotStyles = table.paginatorSlot
-      ? this.transformTableSlotStyles(table.paginatorSlot)
-      : undefined
-    // Handle paginator sub-slots (children and styles)
-    const paginatorPrevSlot = table.paginatorSlot?.prevSlot
-      ? this.transformTableSlotChildren(table.paginatorSlot.prevSlot)
-      : undefined
-    const paginatorPrevSlotStyles = table.paginatorSlot?.prevSlot
-      ? this.transformTableSlotStyles(table.paginatorSlot.prevSlot)
-      : undefined
-    const paginatorNextSlot = table.paginatorSlot?.nextSlot
-      ? this.transformTableSlotChildren(table.paginatorSlot.nextSlot)
-      : undefined
-    const paginatorNextSlotStyles = table.paginatorSlot?.nextSlot
-      ? this.transformTableSlotStyles(table.paginatorSlot.nextSlot)
-      : undefined
-    const paginatorPageInfoSlot = table.paginatorSlot?.pageInfoSlot
-      ? this.transformTableSlotChildren(table.paginatorSlot.pageInfoSlot)
-      : undefined
-    const paginatorPageInfoSlotStyles = table.paginatorSlot?.pageInfoSlot
-      ? this.transformTableSlotStyles(table.paginatorSlot.pageInfoSlot)
-      : undefined
-
-    // Build source position
-    const sourcePosition: SourcePosition = {
-      line: table.line ?? 0,
-      column: table.column ?? 0,
-      endLine: table.line ?? 0,
-      endColumn: table.column ?? 0,
-    }
-
-    // Transform static rows for manual tables
-    const staticRows = table.staticRows?.map(row => this.transformTableStaticRow(row))
-
-    // Create the IRTable node
-    const irTable: IRTable = {
-      id: nodeId,
-      tag: 'div',
-      primitive: 'table',
-      name: 'Table',
-      isTableComponent: true,
-      dataSource: table.dataSource
-        ? (table.dataSource.startsWith('$') ? table.dataSource.slice(1) : table.dataSource)
-        : undefined,
-      filter: table.filter,
-      orderBy: table.orderBy,
-      orderDesc: table.orderDesc,
-      groupBy: table.groupBy,
-      columns,
-      selectionMode,
-      pageSize,
-      stickyHeader: table.stickyHeader,
-      headerSlot,
-      headerSlotStyles,
-      headerStaticRow,
-      rowSlot,
-      rowSlotStyles,
-      rowOddStyles,
-      rowEvenStyles,
-      footerSlot,
-      footerSlotStyles,
-      footerStaticRow,
-      groupSlot,
-      groupSlotStyles,
-      staticRows,
-      sortIconSlot,
-      sortAscSlot,
-      sortDescSlot,
-      paginatorSlot,
-      paginatorSlotStyles,
-      paginatorPrevSlot,
-      paginatorPrevSlotStyles,
-      paginatorNextSlot,
-      paginatorNextSlotStyles,
-      paginatorPageInfoSlot,
-      paginatorPageInfoSlotStyles,
-      properties: [],
-      styles: tableStyles,
-      events: [],
-      children: [],
-      sourcePosition,
-    }
-
-    // Add to source map for selection support in Studio
-    if (this.includeSourceMap && sourcePosition) {
-      this.sourceMapBuilder.addNode(
-        nodeId,
-        'Table',
-        sourcePosition,
-        { isDefinition: false }
-      )
-    }
-
-    return irTable
-  }
-
-  /**
-   * Transform a TableColumnNode to an IRTableColumn
-   */
-  private transformTableColumn(col: TableColumnNode): IRTableColumn {
-    return {
-      field: col.field,
-      label: col.label ?? this.humanizeFieldName(col.field),
-      width: col.width,
-      prefix: col.prefix,
-      suffix: col.suffix,
-      align: col.align as 'left' | 'right' | 'center' | undefined,
-      sortable: col.sortable,
-      sortDesc: col.sortDesc,
-      filterable: col.filterable,
-      hidden: col.hidden,
-      aggregation: col.aggregation as 'sum' | 'avg' | 'count' | undefined,
-      inferredType: 'string',  // Default, will be overridden at runtime
-      customCell: col.customCell
-        ? col.customCell.map(child => this.transformChild(child))
-        : undefined,
-      cellStyles: col.cellProperties
-        ? this.transformProperties(col.cellProperties, 'frame')
-        : undefined,
-      headerCellStyles: col.headerCellProperties
-        ? this.transformProperties(col.headerCellProperties, 'frame')
-        : undefined,
-    }
-  }
-
-  /**
-   * Transform table slot children to IRNode array
-   */
-  private transformTableSlotChildren(slot: TableSlotNode): IRNode[] {
-    return (slot.children || []).map(child => this.transformChild(child))
-  }
-
-  /**
-   * Transform table slot properties to IRStyle array
-   */
-  private transformTableSlotStyles(slot: TableSlotNode): IRStyle[] {
-    if (!slot.properties || slot.properties.length === 0) {
-      return []
-    }
-    return this.transformProperties(slot.properties, 'frame')
-  }
-
-  /**
-   * Transform a static table row
-   */
-  private transformTableStaticRow(row: TableStaticRowNode): IRTableStaticRow {
-    return {
-      cells: row.cells.map(cell => this.transformTableStaticCell(cell)),
-      styles: this.transformProperties(row.properties, 'frame'),
-    }
-  }
-
-  /**
-   * Transform a static table cell
-   */
-  private transformTableStaticCell(cell: TableStaticCellNode): IRTableStaticCell {
-    return {
-      text: cell.text,
-      children: cell.children?.map(child => this.transformChild(child)),
-      styles: this.transformProperties(cell.properties, 'frame'),
-    }
-  }
-
-  /**
-   * Convert a field name to a human-readable label
-   * e.g., "firstName" -> "First Name", "user_id" -> "User Id"
-   */
-  private humanizeFieldName(field: string): string {
-    return field
-      // Insert space before uppercase letters
-      .replace(/([A-Z])/g, ' $1')
-      // Replace underscores and hyphens with spaces
-      .replace(/[_-]/g, ' ')
-      // Capitalize first letter of each word
-      .replace(/\b\w/g, c => c.toUpperCase())
-      // Trim and normalize spaces
-      .trim()
-      .replace(/\s+/g, ' ')
+    const ctx = this.createTransformerContext()
+    return transformTableExtracted(ctx, table)
   }
 
   /**
@@ -1560,159 +1321,15 @@ class IRTransformer {
     primitive: string,
     parentLayoutContext?: ParentLayoutContext
   ): IRNode {
-    const nodeId = this.generateId()
-    const chartDef = getChartPrimitive(instance.component) || getChartPrimitive(primitive)
-    const chartType = chartDef?.chartType || 'line'
-    const chartDefaults = chartDef?.defaults || {}
-
-    // Merge properties
-    const properties = this.mergeProperties(
-      resolvedComponent?.properties || [],
-      instance.properties
+    const ctx = this.createTransformerContext()
+    return transformChartExtracted(
+      ctx,
+      instance,
+      resolvedComponent,
+      primitive,
+      (base, override) => this.mergeProperties(base, override),
+      parentLayoutContext
     )
-
-    // Extract chart-specific properties
-    // Data binding can come from:
-    // 1. textContent property (for string data references like "$sales")
-    // 2. propset property with token kind (for $variable references like $data)
-    let dataBinding: string | undefined
-    const textContentProp = properties.find(p => p.name === 'textContent')
-    const propsetProp = properties.find(p => p.name === 'propset')
-
-    if (textContentProp?.values[0]) {
-      dataBinding = String(textContentProp.values[0])
-    } else if (propsetProp?.values[0]) {
-      const val = propsetProp.values[0]
-      if (typeof val === 'object' && val !== null && 'kind' in val && (val as TokenReference).kind === 'token') {
-        dataBinding = '$' + (val as TokenReference).name
-      } else if (typeof val === 'string' && val.startsWith('$')) {
-        dataBinding = val
-      }
-    }
-
-    const xField = properties.find(p => p.name === 'x')?.values[0]
-    const yField = properties.find(p => p.name === 'y')?.values[0]
-    const colors = properties.find(p => p.name === 'colors')?.values
-    const title = properties.find(p => p.name === 'title')?.values[0]
-
-    // Handle standalone boolean properties (e.g., "legend" without a value means true)
-    const legendProp = properties.find(p => p.name === 'legend')
-    const legend = legendProp ? (legendProp.values[0] ?? true) : undefined
-
-    const stackedProp = properties.find(p => p.name === 'stacked')
-    const stacked = stackedProp ? (stackedProp.values[0] ?? true) : undefined
-
-    const fillProp = properties.find(p => p.name === 'fill')
-    // Use chart defaults for fill if not explicitly set (important for Area charts)
-    const fill = fillProp ? (fillProp.values[0] ?? true) : chartDefaults.fill
-
-    const tensionProp = properties.find(p => p.name === 'tension')
-    // Use chart defaults for tension if not explicitly set
-    const tension = tensionProp ? tensionProp.values[0] : chartDefaults.tension
-
-    // For grid and axes, check the actual value (not just presence)
-    const gridProp = properties.find(p => p.name === 'grid')
-    const grid = gridProp?.values[0]
-
-    const axesProp = properties.find(p => p.name === 'axes')
-    const axes = axesProp?.values[0]
-
-    // Transform sizing properties to styles
-    const styles = this.transformProperties(properties, 'frame', parentLayoutContext)
-
-    // Build IRProperties for chart config
-    const irProperties: IRProperty[] = [
-      { name: 'chartType', value: chartType },
-    ]
-
-    if (dataBinding) {
-      irProperties.push({ name: 'data', value: String(dataBinding) })
-    }
-    if (xField) {
-      irProperties.push({ name: 'xField', value: String(xField) })
-    }
-    if (yField) {
-      irProperties.push({ name: 'yField', value: String(yField) })
-    }
-    if (colors && colors.length > 0) {
-      irProperties.push({ name: 'colors', value: colors.join(',') })
-    }
-    if (title) {
-      irProperties.push({ name: 'title', value: String(title) })
-    }
-    // Helper to convert string booleans ("true"/"false") to actual booleans
-    const toBool = (v: unknown): boolean => {
-      if (typeof v === 'boolean') return v
-      if (typeof v === 'string') return v.toLowerCase() !== 'false'
-      return Boolean(v)
-    }
-
-    if (legend !== undefined) {
-      irProperties.push({ name: 'legend', value: toBool(legend) })
-    }
-    if (stacked !== undefined) {
-      irProperties.push({ name: 'stacked', value: toBool(stacked) })
-    }
-    if (fill !== undefined) {
-      irProperties.push({ name: 'fill', value: toBool(fill) })
-    }
-    if (tension !== undefined) {
-      irProperties.push({ name: 'tension', value: Number(tension) })
-    }
-    if (grid !== undefined) {
-      irProperties.push({ name: 'grid', value: toBool(grid) })
-    }
-    if (axes !== undefined) {
-      irProperties.push({ name: 'axes', value: toBool(axes) })
-    }
-
-    // Process chart slots (XAxis:, YAxis:, Legend:, etc.)
-    const chartSlots: IRChartSlot[] = []
-    if (instance.chartSlots) {
-      for (const [slotName, slotNode] of Object.entries(instance.chartSlots)) {
-        const slotConfig: Record<string, string | number | boolean> = {}
-
-        // Map each property to its Chart.js path
-        for (const prop of slotNode.properties) {
-          const slotPropDef = getChartSlotProperty(slotName, prop.name)
-          if (slotPropDef && prop.values.length > 0) {
-            const value = prop.values[0]
-            // Convert value to appropriate type
-            if (slotPropDef.type === 'number') {
-              slotConfig[slotPropDef.chartJsPath] = Number(value)
-            } else if (slotPropDef.type === 'boolean') {
-              slotConfig[slotPropDef.chartJsPath] = toBool(value)
-            } else {
-              slotConfig[slotPropDef.chartJsPath] = String(value)
-            }
-          }
-        }
-
-        if (Object.keys(slotConfig).length > 0) {
-          chartSlots.push({ name: slotName, config: slotConfig })
-        }
-      }
-    }
-
-    // Add chart slots to properties if any exist
-    if (chartSlots.length > 0) {
-      irProperties.push({ name: 'chartSlots', value: JSON.stringify(chartSlots) })
-    }
-
-    return {
-      id: nodeId,
-      tag: 'div',
-      primitive: 'chart',
-      name: instance.name || instance.component,
-      instanceName: instance.name || undefined,
-      properties: irProperties,
-      styles,
-      events: [],
-      children: [],
-      sourcePosition: instance.line !== undefined
-        ? { line: instance.line, column: instance.column ?? 0, endLine: instance.line, endColumn: instance.column ?? 0 }
-        : undefined,
-    }
   }
 
   /**
