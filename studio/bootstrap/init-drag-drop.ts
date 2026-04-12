@@ -11,16 +11,22 @@ import {
   bootstrapDragDrop,
   type DragDropSystem,
   type DragDropBootstrapResult,
+  type DragSource,
+  type DropResult,
 } from '../drag-drop'
 import { CodeModifier } from '../../compiler/studio'
 import type { EditorController } from '../editor'
+import type { EditorView } from '@codemirror/view'
 import type { SourceMap } from '../../compiler/ir/source-map'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('DragDrop')
 
 export interface DragDropInitConfig {
   /** Preview container element */
   container: HTMLElement
   /** CodeMirror editor instance */
-  editor: any
+  editor: EditorView
   /** Editor controller */
   editorController: EditorController
   /** Get current file name */
@@ -92,15 +98,15 @@ export function initDragDrop(config: DragDropInitConfig): DragDropInitResult {
     },
     getLayoutInfo: () => state.get().layoutInfo,
     enableAltDuplicate: true,
-    onDragStart: (source: any) => {
+    onDragStart: (source: DragSource) => {
       if (source.type === 'canvas') {
-        console.log('[DragDrop] Move started:', source.nodeId)
+        log.info(' Move started:', source.nodeId)
       } else {
-        console.log('[DragDrop] Insert started:', source.componentName)
+        log.info(' Insert started:', source.componentName)
       }
     },
-    onDrop: (source: any, result: any) => {
-      console.log('[DragDrop] Drop:', source.type, result.placement, result.targetId)
+    onDrop: (source: DragSource, result: DropResult) => {
+      log.info(' Drop:', source.type, result.placement, result.targetId)
       if (result.target?.nodeId) {
         actions.setDeferredSelection({
           type: 'nodeId',
@@ -109,8 +115,8 @@ export function initDragDrop(config: DragDropInitConfig): DragDropInitResult {
         })
       }
     },
-    onDragEnd: (source: any, success: boolean) => {
-      console.log('[DragDrop] End:', success ? 'success' : 'cancelled')
+    onDragEnd: (source: DragSource, success: boolean) => {
+      log.info(' End:', success ? 'success' : 'cancelled')
     },
   })
 
@@ -127,7 +133,7 @@ export function initDragDrop(config: DragDropInitConfig): DragDropInitResult {
     makeElementDraggable: (element: HTMLElement) => {
       const nodeId = element.getAttribute('data-mirror-id')
       if (!nodeId) {
-        console.warn('[DragDrop] makeElementDraggable: element has no data-mirror-id')
+        log.warn(' makeElementDraggable: element has no data-mirror-id')
         return () => {}
       }
       return dragDropV2.registerCanvasElement(nodeId, element)
@@ -228,7 +234,7 @@ export function initDragDrop(config: DragDropInitConfig): DragDropInitResult {
     ;(window as any).__mirrorDragDropV2__ = dragDropV2
   }
 
-  console.log('[Studio] Drag-drop initialized')
+  log.info('Drag-drop initialized')
 
   return {
     system: dragDropSystem,

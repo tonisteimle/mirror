@@ -7,6 +7,9 @@
 
 import { storage } from './index'
 import { isTauri } from './providers'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('ProjectActions')
 
 // Custom dialog module (loaded globally)
 declare const MirrorDialog: {
@@ -191,7 +194,7 @@ async function browserImportProject(): Promise<boolean> {
           const content = await file.text()
           projectFiles[relativePath] = content
         } catch (err) {
-          console.warn(`[ProjectActions] Failed to read ${file.name}:`, err)
+          log.warn(`Failed to read ${file.name}:`, err)
         }
       }
 
@@ -238,7 +241,7 @@ async function tauriNewProject(): Promise<void> {
   if (tauriBridge?.newProject) {
     await tauriBridge.newProject()
   } else {
-    console.warn('[ProjectActions] Tauri bridge not available')
+    log.warn('Tauri bridge not available')
   }
 }
 

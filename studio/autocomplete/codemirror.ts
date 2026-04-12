@@ -5,6 +5,7 @@
  */
 
 import type { CompletionContext, CompletionResult, Completion as CMCompletion } from '@codemirror/autocomplete'
+import type { Text } from '@codemirror/state'
 import { getAutocompleteEngine, type Completion } from './index'
 import { COMPONENT_TEMPLATES, adjustTemplateIndentation } from '../../compiler/schema/component-templates'
 
@@ -134,8 +135,8 @@ export function mirrorCompletions(context: CompletionContext): CompletionResult 
  * This needs access to the document to parse component definitions
  */
 export function createSlotCompletions(
-  findParentComponent: (doc: any, pos: number) => string | null,
-  extractComponentSlots: (doc: any) => Record<string, string[]>
+  findParentComponent: (doc: Text, pos: number) => string | null,
+  extractComponentSlots: (doc: Text) => Record<string, string[]>
 ) {
   return function slotCompletions(context: CompletionContext): CompletionResult | null {
     const line = context.state.doc.lineAt(context.pos)

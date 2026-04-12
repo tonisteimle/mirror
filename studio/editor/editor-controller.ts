@@ -22,6 +22,9 @@ import type {
   CursorPosition,
   CleanupFn,
 } from './ports'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('EditorController')
 
 // ============================================
 // Configuration
@@ -262,7 +265,7 @@ export class EditorController {
   scrollToLineAndSelect(lineNumber: number): void {
     const lineCount = this.ports.editor.getLineCount()
     if (lineNumber < 1 || lineNumber > lineCount) {
-      console.warn('[EditorController] scrollToLineAndSelect: line out of bounds', {
+      log.warn('scrollToLineAndSelect: line out of bounds', {
         lineNumber,
         lineCount,
       })

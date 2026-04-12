@@ -46,6 +46,9 @@ import { getRenameEngine } from './rename-engine'
 import { createRenameCommand } from './rename-command'
 import { getRenameUI } from './rename-ui'
 import type { EditorController } from '../editor'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('Rename')
 
 export interface RenameConfig {
   /** Editor controller instance */
@@ -73,24 +76,24 @@ export function triggerRename(config: RenameConfig): void {
   const symbol = engine.getSymbolAtPosition(source, cursor.line, cursor.column)
 
   if (!symbol) {
-    console.log('[Rename] No symbol found at cursor position')
+    log.info(' No symbol found at cursor position')
     events.emit('rename:no-symbol', { line: cursor.line, column: cursor.column })
     return
   }
 
-  console.log('[Rename] Symbol found:', symbol.name, symbol.type)
+  log.info(' Symbol found:', symbol.name, symbol.type)
 
   // Get cursor screen position for UI placement
   const editorView = editor.getEditorView()
   if (!editorView) {
-    console.warn('[Rename] EditorView not available')
+    log.warn(' EditorView not available')
     return
   }
 
   // Get position from CodeMirror
   const pos = editorView.coordsAtPos(cursor.offset)
   if (!pos) {
-    console.warn('[Rename] Could not get cursor coordinates')
+    log.warn(' Could not get cursor coordinates')
     return
   }
 
@@ -114,9 +117,9 @@ export function triggerRename(config: RenameConfig): void {
         if (command) {
           const result = executor.execute(command)
           if (result.success) {
-            console.log('[Rename] Success:', symbol.name, '→', newName)
+            log.info(' Success:', symbol.name, '→', newName)
           } else {
-            console.error('[Rename] Failed:', result.error)
+            log.error(' Failed:', result.error)
             events.emit('notification:error', {
               message: result.error || 'Failed to rename symbol',
             })
@@ -128,7 +131,7 @@ export function triggerRename(config: RenameConfig): void {
         }
       },
       onCancel: () => {
-        console.log('[Rename] Cancelled')
+        log.info(' Cancelled')
       },
       validate: (name: string) => engine.validateName(name, symbol.type),
     }

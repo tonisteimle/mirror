@@ -17,6 +17,9 @@ import {
   generateDefaultContent,
   isSupportedExtension
 } from './utils'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('FileTreeController')
 
 // =============================================================================
 // Types
@@ -84,7 +87,7 @@ export class FileTreeController {
       try {
         this.state.filesCache[path] = await this.storage.readFile(path)
       } catch (e) {
-        console.warn('[FileTreeController] Failed to cache new file:', path)
+        log.warn('Failed to cache new file:', path)
       }
       // Auto-select new file
       await this.selectFile(path)

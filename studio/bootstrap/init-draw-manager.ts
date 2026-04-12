@@ -9,12 +9,16 @@ import { state, events } from '../core'
 import { DrawManager, createDrawManager } from '../visual/draw-manager'
 import { CodeModifier } from '../../compiler/studio'
 import type { EditorController } from '../editor'
+import type { EditorView } from '@codemirror/view'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('DrawManagerInit')
 
 export interface DrawManagerInitConfig {
   /** Preview container element */
   container: HTMLElement
   /** CodeMirror editor instance */
-  editor: any
+  editor: EditorView
   /** Editor controller */
   editorController: EditorController
 }
@@ -52,7 +56,7 @@ export function initDrawManager(config: DrawManagerInitConfig): DrawManagerInitR
 
   drawManager.onDrawComplete = (result) => {
     if (result.success && result.modificationResult) {
-      console.log('[DrawManager] Component created:', result.nodeId)
+      log.info(' Component created:', result.nodeId)
 
       // Apply code change to editor (adjust for prelude offset)
       const preludeOffset = state.get().preludeOffset
@@ -73,9 +77,9 @@ export function initDrawManager(config: DrawManagerInitConfig): DrawManagerInitR
         })
 
         // Compile will be triggered automatically by editor change
-        console.log('[DrawManager] Editor updated')
+        log.info(' Editor updated')
       } else {
-        console.warn('[DrawManager] Invalid change range, forcing recompile', {
+        log.warn(' Invalid change range, forcing recompile', {
           original: change,
           adjusted: adjustedChange,
           preludeOffset,
@@ -88,11 +92,11 @@ export function initDrawManager(config: DrawManagerInitConfig): DrawManagerInitR
   }
 
   drawManager.onDrawCancel = () => {
-    console.log('[DrawManager] Drawing cancelled')
+    log.info(' Drawing cancelled')
   }
 
   drawManager.onError = (error) => {
-    console.error('[DrawManager] Error:', error)
+    log.error(' Error:', error)
   }
 
   return {

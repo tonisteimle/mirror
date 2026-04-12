@@ -18,6 +18,9 @@ import {
   canUngroup,
 } from './shared-actions'
 import { MIRROR_ID_SELECTOR } from './constants'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('ContextMenu')
 
 export interface ContextMenuConfig {
   container: HTMLElement
@@ -144,7 +147,7 @@ export class ContextMenu {
           try {
             item.action()
           } catch (e) {
-            console.error('[ContextMenu] Action failed:', e)
+            log.error('Action failed:', e)
           }
         }, { signal: this.menuAbortController?.signal })
       }

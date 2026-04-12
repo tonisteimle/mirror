@@ -7,6 +7,9 @@
  */
 
 import type { StorageProvider, StorageProject, StorageItem, StorageFile, StorageFolder } from '../types'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('LocalStorageProvider')
 
 // =============================================================================
 // Constants
@@ -116,12 +119,12 @@ export class LocalStorageProvider implements StorageProvider {
 
       // Wenn komplett leer, Demo-Projekt laden
       if (Object.keys(this.files).length === 0) {
-        console.log('[LocalStorageProvider] Empty storage, loading demo project')
+        log.info('Empty storage, loading demo project')
         this.files = { ...DEFAULT_PROJECT }
         this.saveToStorage()
       }
     } catch (err) {
-      console.error('[LocalStorageProvider] Failed to load from localStorage:', err)
+      log.error('Failed to load from localStorage:', err)
       this.files = { ...DEFAULT_PROJECT }
     }
   }
@@ -130,7 +133,7 @@ export class LocalStorageProvider implements StorageProvider {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.files))
     } catch (err) {
-      console.error('[LocalStorageProvider] Failed to save to localStorage:', err)
+      log.error('Failed to save to localStorage:', err)
     }
   }
 

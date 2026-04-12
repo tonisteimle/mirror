@@ -10,6 +10,9 @@ import { Prec, Transaction } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import type { BasePicker } from '../pickers'
 import { events } from '../core/events'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('TriggerManager')
 import type {
   TriggerConfig,
   TriggerState,
@@ -73,7 +76,7 @@ export class EditorTriggerManager {
    */
   register(config: TriggerConfig): void {
     if (this.triggers.has(config.id)) {
-      console.warn(`[TriggerManager] Trigger "${config.id}" already registered, overwriting.`)
+      log.warn(`Trigger "${config.id}" already registered, overwriting.`)
     }
     this.triggers.set(config.id, config)
   }
@@ -159,7 +162,7 @@ export class EditorTriggerManager {
   ): void {
     const config = this.triggers.get(triggerId)
     if (!config) {
-      console.warn(`[TriggerManager] Unknown trigger: ${triggerId}`)
+      log.warn(`Unknown trigger: ${triggerId}`)
       return
     }
 
@@ -327,7 +330,7 @@ export class EditorTriggerManager {
         config.onSelect(selectedValue, this.state.context, view)
       }
     } catch (error) {
-      console.error('[TriggerManager] Error in onSelect callback:', error)
+      log.error('Error in onSelect callback:', error)
     } finally {
       this.hidePicker()
       view.focus()

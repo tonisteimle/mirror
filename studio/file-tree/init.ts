@@ -8,6 +8,9 @@
 import { storage, projectActions } from '../storage'
 import { FileTreeController } from './controller'
 import { FileTreeView } from './view'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('FileTree')
 
 // Custom dialog module (loaded globally)
 declare const MirrorDialog: {
@@ -205,7 +208,7 @@ export async function initFileTree(options: FileTreeOptions = {}): Promise<FileT
     await storage.init()
   }
 
-  console.log(`[FileTree] Initialized with ${storage.providerType} provider`)
+  log.info(`Initialized with ${storage.providerType} provider`)
 
   // Create controller
   controller = new FileTreeController(storage)
@@ -213,7 +216,7 @@ export async function initFileTree(options: FileTreeOptions = {}): Promise<FileT
     onFileSelect,
     onFileChange,
     onError: (error, op) => {
-      console.error(`[FileTree] Error in ${op}:`, error)
+      log.error(`Error in ${op}:`, error)
       onError?.(error, op)
     },
     onTreeChange: () => {
@@ -236,7 +239,7 @@ export async function initFileTree(options: FileTreeOptions = {}): Promise<FileT
         await storage.openProject(projects[0].id)
       }
     } catch (e) {
-      console.error('[FileTree] Failed to open project:', e)
+      log.error('Failed to open project:', e)
     }
   }
 

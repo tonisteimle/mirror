@@ -12,6 +12,9 @@
  */
 
 import { actions, type LayoutRect } from '../core/state'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('LayoutExtractor')
 
 /**
  * Extract layout information from all elements in the preview container
@@ -106,7 +109,7 @@ export function extractElementLayout(
       isContainer,
     }
   } catch (error) {
-    console.warn('[LayoutExtractor] Failed to extract layout for element:', error)
+    log.warn('Failed to extract layout for element:', error)
     return null
   }
 }

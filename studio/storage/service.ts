@@ -15,6 +15,9 @@ import type {
 import { getFileType } from './types'
 import { StorageEventEmitter } from './events'
 import { detectProvider } from './providers'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('Storage')
 
 // =============================================================================
 // Cache Entry
@@ -84,14 +87,14 @@ export class StorageService {
    */
   async init(): Promise<void> {
     if (this.initialized) {
-      console.warn('[Storage] Already initialized')
+      log.warn('Already initialized')
       return
     }
 
     this.provider = await detectProvider()
     this.initialized = true
 
-    console.log(`[Storage] Initialized with ${this.provider.type} provider`)
+    log.info(`Initialized with ${this.provider.type} provider`)
   }
 
   /**
@@ -112,7 +115,7 @@ export class StorageService {
     const { createProvider } = await import('./providers')
     const newProvider = createProvider(type)
     this.setProvider(newProvider)
-    console.log(`[Storage] Switched to ${type} provider`)
+    log.info(`Switched to ${type} provider`)
   }
 
   // ===========================================================================
@@ -485,7 +488,7 @@ export class StorageService {
         results.push({ ...f, content })
       } catch (error) {
         // Log warning but continue with other files
-        console.warn(`[Storage] Failed to load prelude file ${f.path}:`, error)
+        log.warn(`Failed to load prelude file ${f.path}:`, error)
         this.events.emit('error', {
           error: error as Error,
           operation: 'getPreludeFiles',

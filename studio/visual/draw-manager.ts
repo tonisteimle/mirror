@@ -14,6 +14,9 @@ import { DrawRectRenderer } from './draw-rect-renderer'
 import { SnapIntegration, createSnapIntegration } from './snap-integration'
 import { GuideRenderer } from './smart-guides/guide-renderer'
 import { events } from '../core/events'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('DrawManager')
 
 const MIN_SIZE = 10 // Minimum width/height in pixels
 
@@ -142,21 +145,21 @@ export class DrawManager {
    */
   enterDrawMode(component: ComponentItem): void {
     if (this.mode !== 'idle') {
-      console.warn('[DrawManager] Already in draw mode')
+      log.warn(' Already in draw mode')
       return
     }
 
     this.componentToDraw = component
     this.transitionTo('ready')
 
-    console.log('[DrawManager] Entered draw mode:', component.name)
+    log.info(' Entered draw mode:', component.name)
   }
 
   /**
    * Cancel current drawing operation
    */
   cancel(): void {
-    console.log('[DrawManager] Cancelling draw mode')
+    log.info(' Cancelling draw mode')
     this.cleanup()
     this.transitionTo('idle')
     this.onDrawCancel?.()
@@ -193,7 +196,7 @@ export class DrawManager {
     const oldMode = this.mode
     this.mode = newMode
 
-    console.log(`[DrawManager] ${oldMode} → ${newMode}`)
+    log.debug(`${oldMode} → ${newMode}`)
 
     // State exit actions
     if (oldMode === 'ready') {
@@ -449,7 +452,7 @@ export class DrawManager {
       )
 
       if (result.success) {
-        console.log('[DrawManager] Component created successfully')
+        log.info(' Component created successfully')
 
         this.onDrawComplete?.({
           success: true,
@@ -465,7 +468,7 @@ export class DrawManager {
         throw new Error(result.error || 'Failed to create component')
       }
     } catch (error) {
-      console.error('[DrawManager] Error creating component:', error)
+      log.error(' Error creating component:', error)
       this.showError(error instanceof Error ? error.message : 'Failed to create component')
       this.cleanup()
       this.transitionTo('idle')
@@ -613,7 +616,7 @@ export class DrawManager {
    * Show error message
    */
   private showError(message: string): void {
-    console.warn('[DrawManager]', message)
+    log.warn('', message)
     // Emit error event for centralized notification handling
     events.emit('draw:error', { error: message })
   }

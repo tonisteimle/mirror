@@ -8,6 +8,9 @@
 import { state as studioState } from '../core/state'
 import { events } from '../core/events'
 import type { AST, ComponentDefinition } from '../../compiler/parser/ast'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('MCPStateCollector')
 
 export interface MCPState {
   /** Current file path */
@@ -257,7 +260,7 @@ class StateCollector {
       try {
         listener(this.currentState)
       } catch (e) {
-        console.error('[MCP StateCollector] Listener error:', e)
+        log.error('Listener error:', e)
       }
     }
   }

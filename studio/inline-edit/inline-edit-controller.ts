@@ -9,6 +9,9 @@ import { state, actions, events } from '../core'
 import { InlineEditSession, createInlineEditSession } from './inline-edit-session'
 import { isEditableType, type InlineEditConfig, type InlineEditResult } from './types'
 import type { SourceMap } from '../../compiler/ir/source-map'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('InlineEdit')
 
 /** Minimum delay (ms) before starting edit mode to prevent accidental activation */
 const EDIT_START_DELAY = 150
@@ -86,13 +89,13 @@ export class InlineEditController {
     ) as HTMLElement | null
 
     if (!element) {
-      console.warn('[InlineEdit] Element not found:', nodeId)
+      log.warn(' Element not found:', nodeId)
       return false
     }
 
     // Check if element type is editable
     if (!this.isElementEditable(nodeId)) {
-      console.log('[InlineEdit] Element not editable:', nodeId)
+      log.info(' Element not editable:', nodeId)
       return false
     }
 
@@ -118,7 +121,7 @@ export class InlineEditController {
     // Callback
     this.onEditStart?.(nodeId, element)
 
-    console.log('[InlineEdit] Started editing:', nodeId)
+    log.info(' Started editing:', nodeId)
     return true
   }
 
@@ -239,18 +242,18 @@ export class InlineEditController {
     // Get component type from SourceMap
     const sourceMap = this.sourceMap || state.get().sourceMap
     if (!sourceMap) {
-      console.warn('[InlineEdit] No SourceMap available')
+      log.warn(' No SourceMap available')
       return false
     }
 
     const node = sourceMap.getNodeById(nodeId)
     if (!node) {
-      console.warn('[InlineEdit] Node not found in SourceMap:', nodeId)
+      log.warn(' Node not found in SourceMap:', nodeId)
       return false
     }
 
     const editable = isEditableType(node.componentName)
-    console.log('[InlineEdit] Component type:', node.componentName, 'editable:', editable)
+    log.info(' Component type:', node.componentName, 'editable:', editable)
     return editable
   }
 
@@ -258,7 +261,7 @@ export class InlineEditController {
    * Handle session end
    */
   private handleSessionEnd(result: InlineEditResult): void {
-    console.log('[InlineEdit] Session ended:', result)
+    log.info(' Session ended:', result)
 
     // Clear session
     this.currentSession = null

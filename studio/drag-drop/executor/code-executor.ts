@@ -7,10 +7,14 @@
  * Supports: before, after, inside, absolute placements.
  */
 
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('CodeExecutor')
+
 // Debug logging - disabled in production
 const DEBUG = false
 const debug = DEBUG
-  ? (...args: unknown[]) => console.log('[CodeExecutor]', ...args)
+  ? (...args: unknown[]) => log.debug(...args)
   : () => {}
 
 import type {
@@ -116,7 +120,7 @@ export class CodeExecutor implements ICodeExecutor {
 
       // Trigger recompile (async, don't await)
       this.deps.recompile().catch(err => {
-        console.error('[CodeExecutor] Recompile failed:', err)
+        log.error('Recompile failed:', err)
       })
 
       return {
@@ -124,7 +128,7 @@ export class CodeExecutor implements ICodeExecutor {
         newSource: newEditorContent,
       }
     } catch (err) {
-      console.error('[CodeExecutor] Exception:', err)
+      log.error('Exception:', err)
       return {
         success: false,
         error: err instanceof Error ? err.message : String(err),
@@ -202,7 +206,7 @@ export class CodeExecutor implements ICodeExecutor {
 
       // Trigger recompile
       this.deps.recompile().catch(err => {
-        console.error('[CodeExecutor] Recompile failed:', err)
+        log.error('Recompile failed:', err)
       })
 
       return {
@@ -240,7 +244,7 @@ export class CodeExecutor implements ICodeExecutor {
       // Auto-add to .com file when dropping on .mir file
       if (fileType === 'mir') {
         addComponentToComFile(source.componentId).catch(err => {
-          console.warn('[CodeExecutor] Auto-add to .com failed:', err)
+          log.warn('Auto-add to .com failed:', err)
         })
       }
     }

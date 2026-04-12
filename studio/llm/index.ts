@@ -6,6 +6,9 @@
  */
 
 import { state, executor, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, MoveNodeCommand, UpdateSourceCommand, BatchCommand, type Command } from '../core'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('LLMBridge')
 
 export interface LLMCommandPayload {
   type: string
@@ -78,10 +81,10 @@ export class LLMBridge {
         if (node) {
           return node.nodeId
         }
-        console.warn(`[LLMBridge] No node found at line ${lineNumber}`)
+        log.warn(`No node found at line ${lineNumber}`)
         return null
       }
-      console.warn(`[LLMBridge] No sourceMap available for line resolution`)
+      log.warn(`No sourceMap available for line resolution`)
       return null
     }
 

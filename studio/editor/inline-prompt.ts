@@ -21,6 +21,9 @@ import {
 } from '@codemirror/view'
 import { StateField, StateEffect } from '@codemirror/state'
 import type { FixerResponse } from '../agent/types'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('InlinePrompt')
 
 // ============================================
 // CONSTANTS
@@ -388,7 +391,7 @@ async function handlePromptSubmit(
 
     // FIX: Check if view is still valid before proceeding
     if (!isViewValid(view)) {
-      console.warn('[InlinePrompt] View was destroyed before operation started')
+      log.warn(' View was destroyed before operation started')
       return
     }
 
@@ -402,7 +405,7 @@ async function handlePromptSubmit(
 
     // FIX: Check if view is still valid after async operation
     if (!isViewValid(view)) {
-      console.warn('[InlinePrompt] View was destroyed during processing')
+      log.warn(' View was destroyed during processing')
       return
     }
 
@@ -479,7 +482,7 @@ function replacePromptWithCode(
 ) {
   // FIX: Check if view is still valid
   if (!isViewValid(view)) {
-    console.warn('[InlinePrompt] View was destroyed before code replacement')
+    log.warn(' View was destroyed before code replacement')
     return
   }
 
@@ -499,7 +502,7 @@ function replacePromptWithCode(
     // FIX #9: Validate line still exists
     const lineCount = view.state.doc.lines
     if (lineNumber < 1 || lineNumber > lineCount) {
-      console.warn('[InlinePrompt] Line no longer exists:', lineNumber)
+      log.warn(' Line no longer exists:', lineNumber)
       view.dispatch({
         effects: setPromptState.of(null)
       })
@@ -510,7 +513,7 @@ function replacePromptWithCode(
 
     // Verify this is still a prompt line (user might have edited)
     if (!isPromptLine(line.text)) {
-      console.warn('[InlinePrompt] Line is no longer a prompt:', line.text)
+      log.warn(' Line is no longer a prompt:', line.text)
       view.dispatch({
         effects: setPromptState.of(null)
       })
@@ -549,7 +552,7 @@ function replacePromptWithCode(
       })
     }
   } catch (error) {
-    console.error('[InlinePrompt] Error replacing code:', error)
+    log.error(' Error replacing code:', error)
     // Clear state on error
     view.dispatch({
       effects: setPromptState.of(null)

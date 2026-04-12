@@ -12,6 +12,9 @@ import type { EditorView, ViewUpdate } from '@codemirror/view'
 import { Transaction } from '@codemirror/state'
 import type { TriggerConfig, TriggerContext } from './types'
 import { getTriggerManager } from '../trigger-manager'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('ColorTrigger')
 
 export const COLOR_HASH_TRIGGER_ID = 'color-hash'
 export const COLOR_DOUBLECLICK_TRIGGER_ID = 'color-doubleclick'
@@ -69,7 +72,7 @@ class GlobalColorPickerWrapper {
     const view = colorState.currentView
 
     if (!context || !view) {
-      console.warn('[ColorTrigger] No context or view available')
+      log.warn('No context or view available')
       return
     }
 
@@ -102,7 +105,7 @@ class GlobalColorPickerWrapper {
       )
       colorState.isOpen = true
     } else {
-      console.warn('[ColorTrigger] window.showColorPicker not available')
+      log.warn('window.showColorPicker not available')
     }
   }
 

@@ -21,6 +21,9 @@
 
 import { events } from '../core/events'
 import { extractAndStoreLayout } from './layout-extractor'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('RenderPipeline')
 
 export interface RenderPipelineConfig {
   /**
@@ -145,7 +148,7 @@ export class RenderPipeline {
       events.emit('preview:rendered', { success: true })
       this.onLayoutExtracted?.()
     } catch (error) {
-      console.error('[RenderPipeline] Layout extraction failed:', error)
+      log.error('Layout extraction failed:', error)
       events.emit('preview:rendered', { success: false })
     }
   }

@@ -6,6 +6,9 @@
 
 import type { StorageProvider, StorageProject, StorageItem } from '../types'
 import { isMirrorFile } from '../types'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('TauriProvider')
 
 // =============================================================================
 // TauriBridge Storage Type
@@ -69,7 +72,7 @@ export class TauriProvider implements StorageProvider {
         updatedAt: new Date()
       }))
     } catch (error) {
-      console.error('[TauriProvider] Failed to list projects:', error)
+      log.error('Failed to list projects:', error)
       return []
     }
   }
@@ -104,7 +107,7 @@ App bg #18181b, pad 24
 
   async deleteProject(_id: string): Promise<void> {
     // Sicherheitshalber nicht implementiert
-    console.warn('[TauriProvider] deleteProject not implemented for safety')
+    log.warn('deleteProject not implemented for safety')
     throw new Error('Deleting projects from file system is disabled for safety')
   }
 
@@ -143,7 +146,7 @@ App bg #18181b, pad 24
     if (depth > this.MAX_DEPTH) {
       // Warn user once about depth limit
       if (!this.depthWarningShown) {
-        console.warn(`[TauriProvider] Maximum folder depth (${this.MAX_DEPTH}) reached. Some nested folders may not be shown.`)
+        log.warn(`Maximum folder depth (${this.MAX_DEPTH}) reached. Some nested folders may not be shown.`)
         this.depthWarningShown = true
       }
       return []
@@ -186,7 +189,7 @@ App bg #18181b, pad 24
 
       return items
     } catch (error) {
-      console.error('[TauriProvider] Failed to load folder:', folderPath, error)
+      log.error('Failed to load folder:', folderPath, error)
       return []
     }
   }

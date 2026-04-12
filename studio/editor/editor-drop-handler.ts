@@ -16,6 +16,9 @@ import {
   hasComponentDefinition,
   findDefinitionInsertPosition,
 } from '../panels/components/component-templates'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('ComponentDrop')
 
 export interface EditorDropPosition {
   /** Line number (1-indexed, or 0 for "before first line") */
@@ -324,7 +327,7 @@ export function insertComponentWithDefinition(
       selection: { anchor: instanceOffset + defInsertLength + instanceText.length },
     })
 
-    console.log(`[ComponentDrop] Inserted definition for ${componentName} and instance`)
+    log.info(`Inserted definition for ${componentName} and instance`)
   } else {
     // Just insert the instance (definition already exists or not needed)
     insertComponentCode(view, code, pos)
@@ -384,7 +387,7 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
       // Get component data
       const dataStr = event.dataTransfer.getData('application/mirror-component')
       if (!dataStr) {
-        console.error('[ComponentDrop] No component data in drop')
+        log.error('No component data in drop')
         return true  // Still prevent default
       }
 
@@ -393,7 +396,7 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
       try {
         dragData = JSON.parse(dataStr)
       } catch {
-        console.error('[ComponentDrop] Failed to parse drag data')
+        log.error('Failed to parse drag data')
         return true
       }
 
@@ -404,7 +407,7 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
       // Call the handler
       config.onDrop(dragData, pos, view)
 
-      console.log('[ComponentDrop] Component dropped at cursor:', dragData.componentName, `line ${pos.line}`)
+      log.info('Component dropped at cursor:', dragData.componentName, `line ${pos.line}`)
 
       return true  // CRITICAL: Prevents CodeMirror from inserting text/plain
     },
@@ -434,7 +437,7 @@ export class EditorDropHandler {
 
   attach(): void {
     // No-op: Extension handles everything now
-    console.log('[EditorDropHandler] Using CodeMirror extension (attach is no-op)')
+    log.info('Using CodeMirror extension (attach is no-op)')
   }
 
   detach(): void {

@@ -5,6 +5,10 @@
  * and toggles the 'filled' class accordingly.
  */
 
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('SlotVisibility')
+
 export interface SlotVisibilityConfig {
   /** The container to observe for slot elements */
   container: HTMLElement
@@ -96,7 +100,7 @@ export class SlotVisibilityService {
         }
       } catch (error) {
         // Don't let errors in mutation handling disconnect the observer
-        console.warn('[SlotVisibility] Error processing mutation:', error)
+        log.warn('Error processing mutation:', error)
       }
     }
 
@@ -117,7 +121,7 @@ export class SlotVisibilityService {
         try {
           this.updateSlotState(slot)
         } catch (error) {
-          console.warn('[SlotVisibility] Error updating slot:', error)
+          log.warn('Error updating slot:', error)
         }
       }
       this.pendingSlots.clear()

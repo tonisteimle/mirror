@@ -392,17 +392,3 @@ export function getUIIcon(name: UIIconName, className?: string): string {
   return `<svg${classAttr} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${UI_ICONS[name]}</svg>`
 }
 
-// =============================================================================
-// BACKWARDS COMPATIBILITY
-// =============================================================================
-
-/** @deprecated Use PROPERTY_ICONS instead */
-export const PROPERTY_ICON_PATHS = PROPERTY_ICONS
-
-/** @deprecated Use getLayoutIcon instead */
-export function getIcon(name: LayoutIconName, className?: string): string {
-  return getLayoutIcon(name, className)
-}
-
-/** @deprecated Use LAYOUT_ICONS instead */
-export const ICONS = LAYOUT_ICONS

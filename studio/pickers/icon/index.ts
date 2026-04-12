@@ -9,6 +9,9 @@ import { ICONS, searchIcons, getIconsByCategory, getCategories } from './icon-da
 import type { IconDefinition, IconCategory, IconCategoryName } from './types'
 import { getUserSettings } from '../../storage/user-settings'
 import { getTriggerManager } from '../../editor/trigger-manager'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('IconPicker')
 
 export { ICONS, searchIcons, getIconsByCategory, getCategories }
 export type { IconDefinition, IconCategory, IconCategoryName }
@@ -94,7 +97,7 @@ export class IconPicker extends BasePicker {
       this.icons = lucideIcons
       this.lucideLoaded = true
 
-      console.log(`Loaded ${lucideIcons.length} Lucide icons`)
+      log.info(`Loaded ${lucideIcons.length} Lucide icons`)
 
       // Re-apply current search query if one exists, otherwise show all
       if (this.searchQuery) {
@@ -106,7 +109,7 @@ export class IconPicker extends BasePicker {
         }
       }
     } catch (err) {
-      console.error('Failed to load Lucide icons:', err)
+      log.error('Failed to load Lucide icons:', err)
     }
   }
 

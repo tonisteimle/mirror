@@ -5,6 +5,9 @@
  */
 
 import type { StorageEventMap } from './types'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('StorageEvents')
 
 type EventCallback<K extends keyof StorageEventMap> = (payload: StorageEventMap[K]) => void
 
@@ -50,7 +53,7 @@ export class StorageEventEmitter {
         try {
           handler(payload)
         } catch (error) {
-          console.error(`[StorageEvents] Error in ${event} handler:`, error)
+          log.error(`Error in ${event} handler:`, error)
         }
       })
     }

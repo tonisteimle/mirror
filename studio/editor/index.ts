@@ -8,7 +8,11 @@
  * 2. Hexagonal: Port-based architecture for testability (editor-controller.ts)
  */
 
+import { EditorView } from '@codemirror/view'
 import { state, actions, events } from '../core'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('EditorController')
 
 // ============================================
 // New Hexagonal Architecture (v2)
@@ -130,7 +134,7 @@ export type CursorCallback = (position: CursorPosition) => void
 export type FocusCallback = (hasFocus: boolean) => void
 
 export class EditorController {
-  private editorView: any = null
+  private editorView: EditorView | null = null
   private container: HTMLElement | null = null
   private changeCallbacks: Set<ChangeCallback> = new Set()
   private cursorCallbacks: Set<CursorCallback> = new Set()
@@ -146,7 +150,7 @@ export class EditorController {
     this.boundHandleMouseDown = this.handleMouseDown.bind(this)
   }
 
-  initialize(editorView: any): void {
+  initialize(editorView: EditorView): void {
     this.editorView = editorView
     this.attachFocusListeners()
   }
@@ -210,7 +214,7 @@ export class EditorController {
   /**
    * Get the underlying CodeMirror EditorView
    */
-  getEditorView(): any {
+  getEditorView(): EditorView | null {
     return this.editorView
   }
 
@@ -280,11 +284,11 @@ export class EditorController {
     if (!this.editorView) return
     try {
       const lineInfo = this.editorView.state.doc.line(lineNumber)
-      const effect = this.editorView.constructor.scrollIntoView(lineInfo.from, { y: center ? 'center' : 'start' })
+      const effect = EditorView.scrollIntoView(lineInfo.from, { y: center ? 'center' : 'start' })
       this.editorView.dispatch({ effects: effect })
     } catch (e) {
       // Line number may be out of bounds after code changes
-      console.warn('[EditorController] scrollToLine failed:', lineNumber, e)
+      log.warn('scrollToLine failed:', lineNumber, e)
     }
   }
 
@@ -294,14 +298,14 @@ export class EditorController {
     // Bounds check before accessing line
     const maxLine = this.editorView.state.doc.lines
     if (lineNumber < 1 || lineNumber > maxLine) {
-      console.warn('[EditorController] scrollToLineAndSelect: line out of bounds', { lineNumber, maxLine })
+      log.warn('scrollToLineAndSelect: line out of bounds', { lineNumber, maxLine })
       return
     }
 
     try {
       const currentCursor = this.getCursor()
       const lineInfo = this.editorView.state.doc.line(lineNumber)
-      const effect = this.editorView.constructor.scrollIntoView(lineInfo.from, { y: 'center' })
+      const effect = EditorView.scrollIntoView(lineInfo.from, { y: 'center' })
 
       // If cursor is already on the target line, only scroll - don't move cursor
       // This prevents cursor jumping to line start when user is at end of line
@@ -312,7 +316,7 @@ export class EditorController {
       }
     } catch (e) {
       // Line number may be out of bounds after code changes
-      console.warn('[EditorController] scrollToLineAndSelect failed:', lineNumber, e)
+      log.warn('scrollToLineAndSelect failed:', lineNumber, e)
     }
   }
 

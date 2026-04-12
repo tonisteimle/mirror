@@ -37,6 +37,9 @@ import {
   type Effect,
   type TransitionResult,
 } from './state-machine'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('DragDrop')
 
 // ============================================
 // Configuration
@@ -327,7 +330,7 @@ export class DragDropController {
       // Update visuals
       this.updateVisuals(effectiveResult, childRects, containerRect)
     } catch (error) {
-      console.error('[DragDrop] Target detection failed:', error)
+      log.error('Target detection failed:', error)
       // Cancel the drag operation gracefully
       if (isOverTarget(this.state)) {
         this.dispatch({ type: 'TARGET_LOST' })

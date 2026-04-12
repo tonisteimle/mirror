@@ -8,6 +8,9 @@
 import type { StorageItem, StorageFolder } from '../storage/types'
 import { FileTreeController, type ContextMenuTarget } from './controller'
 import { getFileType, sortTreeItems } from './utils'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('FileTreeView')
 
 // Custom dialog module (loaded globally)
 declare const MirrorDialog: {
@@ -74,7 +77,7 @@ export class FileTreeView {
   mount(containerId: string): void {
     this.container = document.getElementById(containerId)
     if (!this.container) {
-      console.error(`[FileTreeView] Container not found: ${containerId}`)
+      log.error(`Container not found: ${containerId}`)
       return
     }
 

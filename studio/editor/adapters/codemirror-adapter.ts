@@ -14,6 +14,9 @@ import type {
   LineInfo,
   CleanupFn,
 } from '../ports'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('CodeMirrorAdapter')
 
 // ============================================
 // Types
@@ -196,7 +199,7 @@ export function createCodeMirrorAdapter(config: CodeMirrorAdapterConfig): Extend
         )
         view.dispatch({ effects: effect })
       } catch (e) {
-        console.warn('[CodeMirrorAdapter] scrollToLine failed:', lineNumber, e)
+        log.warn('scrollToLine failed:', lineNumber, e)
       }
     },
 

@@ -8,6 +8,9 @@ import type { StorageProvider, ProviderType } from '../types'
 import { TauriProvider, isTauri } from './tauri'
 import { LocalStorageProvider, isLocalStorageAvailable } from './localstorage'
 import { DemoProvider } from './demo'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('Storage')
 
 export { TauriProvider, isTauri } from './tauri'
 export { LocalStorageProvider, isLocalStorageAvailable } from './localstorage'
@@ -23,13 +26,13 @@ export { DemoProvider } from './demo'
 export async function detectProvider(): Promise<StorageProvider> {
   // 1. Tauri verfügbar?
   if (isTauri()) {
-    console.log('[Storage] Tauri detected, using TauriProvider')
+    log.info('Tauri detected, using TauriProvider')
     return new TauriProvider()
   }
 
   // 2. LocalStorage (Standard für Browser)
   if (isLocalStorageAvailable()) {
-    console.log('[Storage] Using LocalStorageProvider')
+    log.info('Using LocalStorageProvider')
     return new LocalStorageProvider()
   }
 

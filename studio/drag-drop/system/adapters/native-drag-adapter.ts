@@ -22,6 +22,9 @@
 
 import type { DragSource, Point, ComponentChild } from '../../types'
 import type { EventPort } from '../ports'
+import { createLogger } from '../../../shared/compiler-types'
+
+const log = createLogger('DragDrop')
 
 // ============================================
 // Types
@@ -211,7 +214,7 @@ export function createNativeDragAdapter(config: NativeDragAdapterConfig): Native
         size,
       }
     } catch (error) {
-      console.warn('[DragDrop] Failed to parse component drag data:', error)
+      log.warn('Failed to parse component drag data:', error)
       return null
     }
   }

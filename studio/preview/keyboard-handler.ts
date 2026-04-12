@@ -21,6 +21,9 @@ import {
 import { SetPositionCommand } from '../core/commands'
 import type { CommandContext } from '../core/commands'
 import { isAbsoluteLayoutContainer } from '../../compiler/studio/utils/layout-detection'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('KeyboardHandler')
 
 export interface KeyboardHandlerConfig {
   container: HTMLElement
@@ -313,7 +316,7 @@ export class KeyboardHandler {
 
     const currentPos = this.getCurrentPosition(nodeId)
     if (!currentPos) {
-      console.warn('[KeyboardHandler] Cannot determine position for element:', nodeId)
+      log.warn('Cannot determine position for element:', nodeId)
       events.emit('notification:warning', {
         message: 'Element-Position konnte nicht ermittelt werden',
         duration: 2000,
@@ -327,7 +330,7 @@ export class KeyboardHandler {
     // Execute position command
     const ctx = this.getCommandContext()
     if (!ctx) {
-      console.warn('[KeyboardHandler] No command context available for position update')
+      log.warn('No command context available for position update')
       // PREV-013: Provide user feedback instead of silent failure
       events.emit('notification:warning', {
         message: 'Aktion nicht verfügbar - bitte erneut versuchen',

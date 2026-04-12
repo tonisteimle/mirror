@@ -9,6 +9,9 @@ import type { Command, CommandContext, CommandResult } from '../core/commands'
 import { events } from '../core/events'
 import type { SymbolType, SymbolLocation } from './rename-engine'
 import { getRenameEngine } from './rename-engine'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('RenameCommand')
 
 export interface FileChange {
   oldContent: string
@@ -161,7 +164,7 @@ export function createRenameCommand(params: CreateRenameCommandParams): RenameSy
   const engine = getRenameEngine()
   const validation = engine.validateName(newName, symbolType)
   if (!validation.valid) {
-    console.warn('[RenameCommand] Invalid name:', validation.error)
+    log.warn('Invalid name:', validation.error)
     return null
   }
 
@@ -173,7 +176,7 @@ export function createRenameCommand(params: CreateRenameCommandParams): RenameSy
   )
 
   if (result.locations.length === 0) {
-    console.warn('[RenameCommand] No references found for:', oldName)
+    log.warn('No references found for:', oldName)
     return null
   }
 
