@@ -11,7 +11,7 @@
 | Phase 1.1: Parser Split | ✅ Abgeschlossen | 100% |
 | Phase 1.2: IR Transformer Refactoring | 🔄 Teilweise | ~15% |
 | Phase 1.3: Validator Modularisierung | ⏳ Ausstehend | 0% |
-| Phase 1.4: DOM Backend | 🔄 Teilweise | ~40% |
+| Phase 1.4: DOM Backend | 🔄 Teilweise | ~50% |
 | Phase 1.5: EmitterContext Konsolidierung | ✅ Abgeschlossen | 100% |
 | Phase 2.1: PropertyPanel Split | ✅ Abgeschlossen | 100% |
 | Phase 2.2: State Store Simplification | ⏳ Ausstehend | 0% |
@@ -86,7 +86,7 @@ compiler/validator/
 ### Phase 1.4: DOM Backend 🔄
 
 **Ursprünglich:** dom.ts mit 7.754 Zeilen
-**Aktuell:** 4.192 Zeilen (~46% Reduktion)
+**Aktuell:** 3.836 Zeilen (~50.5% Reduktion)
 
 **Extrahierte Module:**
 ```
@@ -173,7 +173,7 @@ studio/panels/property/
 | Datei | Vorher | Nachher | Reduktion |
 |-------|--------|---------|-----------|
 | compiler/ir/index.ts | 5.127 | 4.744 | -7.5% |
-| compiler/backends/dom.ts | 7.754 | 4.192 | -46% |
+| compiler/backends/dom.ts | 7.754 | 3.836 | -50.5% |
 | studio/panels/property/ | 4.181 (1 Datei) | ~6.947 (25 Dateien) | Modularisiert |
 
 ---
