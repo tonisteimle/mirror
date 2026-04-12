@@ -40,6 +40,8 @@ export interface LayoutContext {
   // Track if width/height were explicitly set (for hug-by-default behavior)
   hasExplicitWidth?: boolean
   hasExplicitHeight?: boolean
+  // Track if any children have w full (parent should NOT use fit-content)
+  childHasWidthFull?: boolean
 }
 
 /**
@@ -311,10 +313,28 @@ export function generateLayoutStyles(ctx: LayoutContext, primitive: string): IRS
   const finalDirection = direction || 'column'
   styles.push({ property: 'flex-direction', value: finalDirection })
 
-  // Hug content by default: elements should fit their content unless explicit width is set
-  // This prevents the common "everything is full-width" problem in flex layouts
-  if (!ctx.hasExplicitWidth) {
+  // Width behavior depends on whether this is a container or not:
+  // - CONTAINERS (Frame, Card, etc.): Should STRETCH to fill parent (no fit-content)
+  // - NON-CONTAINERS (Text, Button, etc.): Should HUG content (fit-content)
+  //
+  // EXCEPTION for non-containers: Don't use fit-content when centering is used
+  const hasCenteringThatNeedsWidth =
+    (finalDirection === 'column' && (ctx.alignItems === 'center' || ctx._hAlign === 'center')) ||
+    (finalDirection === 'row' && (ctx.justifyContent === 'center' || ctx._hAlign === 'center'))
+
+  // Only non-containers should use fit-content (hug behavior)
+  // Containers should stretch to fill their parent
+  const shouldUseFitContent = !isContainer && !ctx.hasExplicitWidth && !hasCenteringThatNeedsWidth
+
+  if (shouldUseFitContent) {
     styles.push({ property: 'width', value: 'fit-content' })
+  }
+
+  // Containers need align-self: stretch to fill parent width (since parent has align-items: flex-start)
+  // Also needed when centering is used or children have w full
+  const needsStretch = (isContainer || hasCenteringThatNeedsWidth || ctx.childHasWidthFull) && !ctx.hasExplicitWidth
+  if (needsStretch) {
+    styles.push({ property: 'align-self', value: 'stretch' })
   }
 
   // Map horizontal/vertical alignment to justify-content/align-items based on direction

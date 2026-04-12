@@ -76,8 +76,6 @@ export {
 // This re-export was removed to break circular dependency (compiler/ should not import from studio/)
 // If you need PropertyPanel, import from 'studio/panels' instead
 
-export { PROPERTY_ICON_PATHS } from './icons'
-
 // DropZoneCalculator removed in v2.2 - use studio/drag-drop instead
 
 export {

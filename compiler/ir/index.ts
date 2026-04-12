@@ -704,18 +704,82 @@ class IRTransformer {
     // Determine HTML tag
     const tag = this.getTag(instance.component, resolvedComponent)
 
-    // Merge properties: Primitive Defaults < Component Defaults < Instance Properties
+    // Expand component references in instance properties BEFORE merging
+    // This handles syntax like: Input placeholder "...", InputField
+    // where InputField is a component whose properties should be applied
+    const expandedInstanceProps = this.expandPropertySets(instance.properties)
+
+    // Merge properties: Primitive Defaults < Component Defaults < Expanded Instance Properties
     const properties = mergeProperties(
       primitiveDefaults,
       mergeProperties(
         resolvedComponent?.properties || [],
-        instance.properties
+        expandedInstanceProps
       )
     )
 
+    // Check if any descendants have w full (recursive check)
+    // If so, parent should NOT use fit-content (children need space to expand into)
+    // This also checks component references (like InputField) that might bring in w full
+    const hasWidthFullInDescendants = (children: any[]): boolean => {
+      for (const child of children) {
+        // Check direct properties for w full
+        if (child.properties) {
+          const hasDirectWidthFull = child.properties.some((p: Property) =>
+            (p.name === 'w' || p.name === 'width') && p.values[0] === 'full'
+          )
+          if (hasDirectWidthFull) return true
+
+          // Check component references used as style mixins (e.g., InputField)
+          // These are properties with PascalCase names and empty values
+          for (const p of child.properties) {
+            if (p.values.length === 0 && p.name.length > 0) {
+              const firstChar = p.name[0]
+              if (firstChar === firstChar.toUpperCase() && firstChar !== firstChar.toLowerCase()) {
+                // This is a PascalCase property - check if it's a component with w full
+                const referencedComponent = this.componentMap.get(p.name)
+                if (referencedComponent) {
+                  const hasComponentWidthFull = referencedComponent.properties.some((cp: Property) =>
+                    (cp.name === 'w' || cp.name === 'width') && cp.values[0] === 'full'
+                  )
+                  if (hasComponentWidthFull) return true
+                }
+              }
+            }
+          }
+        }
+
+        // Check if child's base component has w full (e.g., MyInput as Input: w full)
+        if (child.component) {
+          const childComponent = this.componentMap.get(child.component)
+          if (childComponent) {
+            const hasComponentWidthFull = childComponent.properties.some((p: Property) =>
+              (p.name === 'w' || p.name === 'width') && p.values[0] === 'full'
+            )
+            if (hasComponentWidthFull) return true
+          }
+        }
+
+        // Recursively check children's children
+        if (child.children && child.children.length > 0) {
+          // Only recurse if this child doesn't have explicit width (otherwise it constrains its children)
+          const childHasExplicitWidth = child.properties?.some((p: Property) =>
+            (p.name === 'w' || p.name === 'width') && p.values[0] !== 'full'
+          )
+          if (!childHasExplicitWidth && hasWidthFullInDescendants(child.children)) {
+            return true
+          }
+        }
+      }
+      return false
+    }
+
+    const childHasWidthFull = hasWidthFullInDescendants(instance.children || [])
+
     // Transform to styles (with intelligent layout merging)
     // Pass parent layout context for context-aware property handling (e.g., x/y in grid)
-    const styles = this.transformProperties(properties, primitive, parentLayoutContext)
+    const childrenInfo = childHasWidthFull ? { hasWidthFull: true } : undefined
+    const styles = this.transformProperties(properties, primitive, parentLayoutContext, childrenInfo)
 
     // For root elements (no parent), convert flex-based "full" to explicit 100%
     // This is needed because "w full, h full" becomes flex styles which don't work at root level
@@ -1287,11 +1351,11 @@ class IRTransformer {
   }
 
   /**
-   * Expand property sets in a list of properties.
+   * Expand property sets and component style mixins in a list of properties.
    * Delegates to extracted property-set-expander.ts
    */
   private expandPropertySets(properties: Property[]): Property[] {
-    return expandPropertySetsExtracted(properties, this.propertySetMap)
+    return expandPropertySetsExtracted(properties, this.propertySetMap, this.componentMap)
   }
 
   /**
@@ -1301,7 +1365,12 @@ class IRTransformer {
    * It collects all layout-related properties first, then generates consistent CSS.
    * It also collects transform properties to combine them into a single transform value.
    */
-  private transformProperties(properties: Property[], primitive: string = 'frame', parentLayoutContext?: ParentLayoutContext): IRStyle[] {
+  private transformProperties(
+    properties: Property[],
+    primitive: string = 'frame',
+    parentLayoutContext?: ParentLayoutContext,
+    childrenInfo?: { hasWidthFull?: boolean }
+  ): IRStyle[] {
     // First, expand any property set references
     const expandedProperties = this.expandPropertySets(properties)
 
@@ -1324,6 +1393,11 @@ class IRTransformer {
     const hasExplicitHeight = expandedProperties.some(p => p.name === 'h' || p.name === 'height' || p.name === 'size')
     layoutContext.hasExplicitWidth = hasExplicitWidth
     layoutContext.hasExplicitHeight = hasExplicitHeight
+
+    // If children have w full, parent should NOT use fit-content
+    if (childrenInfo?.hasWidthFull) {
+      layoutContext.childHasWidthFull = true
+    }
 
     // Collect layout values to process together (preserving order for "last wins")
     // This includes both direction (hor/ver) and alignment (9-zone, center, etc.)

@@ -18,6 +18,10 @@ export type { ReadFileFn, ListFilesFn, ProjectFiles } from './preprocessor'
 export { parseDataFile, parseDataFiles, mergeDataFiles, serializeDataForJS } from './parser/data-parser'
 export type { DataFile, DataEntry, DataAttribute, DataMarkdownBlock, DataParseError, DataValue } from './parser/data-types'
 
+// Logger utilities
+export { createLogger, setLogLevel, getLogLevel } from './utils/logger'
+export type { LogLevel } from './utils/logger'
+
 export type {
   AST,
   Node,
