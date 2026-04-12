@@ -7,6 +7,9 @@
 // Types
 export { ZAG_SLOT_NAMES, type GenerateDOMOptions } from './types'
 
+// Emitter Context
+export type { EmitterContext, EmitterFn, DeferredWhenWatcher } from './emitter-context'
+
 // Utilities
 export { escapeJSString, sanitizeVarName, cssPropertyToJS, generateVarName } from './utils'
 
