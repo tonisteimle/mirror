@@ -83,3 +83,18 @@ export function emitRuntimeInit(ctx: ZagEmitterContext, varName: string, initFn:
   ctx.emit(`}`)
   ctx.emit('')
 }
+
+/**
+ * Format a field name into a human-readable label
+ * e.g., "firstName" -> "First Name", "user_email" -> "User Email"
+ */
+export function formatFieldLabel(fieldName: string): string {
+  return fieldName
+    .replace(/([A-Z])/g, ' $1') // camelCase to spaces
+    .replace(/[_-]/g, ' ') // snake_case/kebab-case to spaces
+    .replace(/\s+/g, ' ') // normalize spaces
+    .trim()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}

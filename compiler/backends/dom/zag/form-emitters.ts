@@ -6,7 +6,13 @@
 
 import type { IRZagNode, IRSlot, IRNode, IRItem } from '../../../ir/types'
 import type { ZagEmitterContext, ZagEmitterFn } from '../zag-emitter-context'
-import { emitSlotStyles, emitComponentHeader, emitMachineConfig, emitRuntimeInit } from './helpers'
+import {
+  emitSlotStyles,
+  emitComponentHeader,
+  emitMachineConfig,
+  emitRuntimeInit,
+  formatFieldLabel,
+} from './helpers'
 
 export function emitSwitchComponent(
   node: IRZagNode,
