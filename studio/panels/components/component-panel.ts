@@ -17,10 +17,7 @@ import type {
   ComponentChild,
 } from './types'
 import { getComponentIcon } from '../../icons'
-import {
-  LAYOUT_SECTION,
-  COMPONENTS_SECTION,
-} from './layout-presets'
+import { LAYOUT_SECTION, COMPONENTS_SECTION } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 import { createLogger } from '../../../compiler/utils/logger'
@@ -74,7 +71,9 @@ function parseComFile(content: string): ParsedComponent[] {
  */
 export class ComponentPanel {
   private container: HTMLElement
-  private config: Required<Omit<ComponentPanelConfig, 'container' | 'getComFiles'>> & { getComFiles?: () => Array<{ name: string; content: string }> }
+  private config: Required<Omit<ComponentPanelConfig, 'container' | 'getComFiles'>> & {
+    getComFiles?: () => Array<{ name: string; content: string }>
+  }
   private callbacks: ComponentPanelCallbacks
   private sections: ComponentSection[] = []
   private searchQuery: string = ''
@@ -210,12 +209,13 @@ export class ComponentPanel {
 
     // Warm cache asynchronously (low priority)
     // Use requestIdleCallback if available, otherwise setTimeout
-    const scheduleIdle = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback
-      : (cb: () => void) => setTimeout(cb, 100)
+    const scheduleIdle =
+      typeof requestIdleCallback !== 'undefined'
+        ? requestIdleCallback
+        : (cb: () => void) => setTimeout(cb, 100)
 
     scheduleIdle(() => {
-      this.ghostRenderer.warmCache(allItems).catch((err) => {
+      this.ghostRenderer.warmCache(allItems).catch(err => {
         log.warn('Ghost cache warming failed:', err)
       })
     })
@@ -264,10 +264,14 @@ export class ComponentPanel {
     searchInput.className = 'component-panel-search-input'
     searchInput.value = this.searchQuery
 
-    searchInput.addEventListener('input', (e) => {
-      this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase()
-      this.updateVisibility()
-    }, { signal: this.abortController?.signal })
+    searchInput.addEventListener(
+      'input',
+      e => {
+        this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase()
+        this.updateVisibility()
+      },
+      { signal: this.abortController?.signal }
+    )
 
     searchContainer.appendChild(searchInput)
     return searchContainer
@@ -295,7 +299,9 @@ export class ComponentPanel {
 
       const toggle = document.createElement('span')
       toggle.className = 'component-panel-section-toggle'
-      toggle.innerHTML = section.isExpanded ? ComponentPanel.CHEVRON_DOWN : ComponentPanel.CHEVRON_RIGHT
+      toggle.innerHTML = section.isExpanded
+        ? ComponentPanel.CHEVRON_DOWN
+        : ComponentPanel.CHEVRON_RIGHT
 
       const nameSpan = document.createElement('span')
       nameSpan.className = 'component-panel-section-name'
@@ -304,11 +310,17 @@ export class ComponentPanel {
       header.appendChild(toggle)
       header.appendChild(nameSpan)
 
-      header.addEventListener('click', () => {
-        section.isExpanded = !section.isExpanded
-        sectionEl.classList.toggle('collapsed', !section.isExpanded)
-        toggle.innerHTML = section.isExpanded ? ComponentPanel.CHEVRON_DOWN : ComponentPanel.CHEVRON_RIGHT
-      }, { signal: this.abortController?.signal })
+      header.addEventListener(
+        'click',
+        () => {
+          section.isExpanded = !section.isExpanded
+          sectionEl.classList.toggle('collapsed', !section.isExpanded)
+          toggle.innerHTML = section.isExpanded
+            ? ComponentPanel.CHEVRON_DOWN
+            : ComponentPanel.CHEVRON_RIGHT
+        },
+        { signal: this.abortController?.signal }
+      )
 
       sectionEl.appendChild(header)
     }
@@ -360,18 +372,30 @@ export class ComponentPanel {
     const signal = this.abortController?.signal
 
     // Drag events
-    itemEl.addEventListener('dragstart', (e) => {
-      this.handleDragStart(item, e)
-    }, { signal })
+    itemEl.addEventListener(
+      'dragstart',
+      e => {
+        this.handleDragStart(item, e)
+      },
+      { signal }
+    )
 
-    itemEl.addEventListener('dragend', (e) => {
-      this.handleDragEnd(item, e)
-    }, { signal })
+    itemEl.addEventListener(
+      'dragend',
+      e => {
+        this.handleDragEnd(item, e)
+      },
+      { signal }
+    )
 
     // Click to insert
-    itemEl.addEventListener('click', () => {
-      this.callbacks.onClick?.(item)
-    }, { signal })
+    itemEl.addEventListener(
+      'click',
+      () => {
+        this.callbacks.onClick?.(item)
+      },
+      { signal }
+    )
 
     return itemEl
   }
@@ -402,58 +426,89 @@ export class ComponentPanel {
     const target = event.target as HTMLElement
     target.classList.add('dragging')
 
-    // Try to use cached rendered ghost (sync path)
-    const cached = this.ghostRenderer.renderSync(item)
-    if (cached) {
-      this.setupDragImage(event, cached.element, cached.size)
-    } else {
-      // Fallback: use a placeholder with default size
-      this.setupFallbackDragImage(event, item)
-    }
+    // Show visible drag image with icon + text
+    this.setupVisibleDragImage(event, item)
 
     // Notify callback
     this.callbacks.onDragStart?.(item, event)
   }
 
   /**
-   * Setup an invisible drag image.
-   * We use visual indicators (line, highlight) instead of a ghost.
+   * Setup drag image showing icon + text (like in the panel)
    */
-  private setupDragImage(event: DragEvent, _element: HTMLElement, _size: { width: number; height: number }): void {
-    this.setupInvisibleDragImage(event)
+  private setupDragImage(
+    event: DragEvent,
+    _element: HTMLElement,
+    _size: { width: number; height: number }
+  ): void {
+    // Use visible drag image - handled in handleDragStart
   }
 
   /**
-   * Setup an invisible drag image (fallback path)
+   * Setup drag image showing icon + text (fallback path)
    */
   private setupFallbackDragImage(event: DragEvent, _item: ComponentItem): void {
-    this.setupInvisibleDragImage(event)
+    // Use visible drag image - handled in handleDragStart
   }
 
   /**
-   * Create a minimal transparent drag image
+   * Create a visible drag image with icon + text
    */
-  private setupInvisibleDragImage(event: DragEvent): void {
+  private setupVisibleDragImage(event: DragEvent, item: ComponentItem): void {
     if (!event.dataTransfer) return
 
-    // Create a 1x1 transparent element
+    // Create drag image element
     const dragImage = document.createElement('div')
     dragImage.id = 'component-drag-image'
     Object.assign(dragImage.style, {
       position: 'fixed',
       left: '-9999px',
       top: '-9999px',
-      width: '1px',
-      height: '1px',
-      opacity: '0',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '8px 12px',
+      background: '#1a1a1a',
+      border: '1px solid #333',
+      borderRadius: '6px',
+      color: '#fff',
+      fontSize: '13px',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
       pointerEvents: 'none',
+      whiteSpace: 'nowrap',
     })
 
-    document.body.appendChild(dragImage)
-    event.dataTransfer.setDragImage(dragImage, 0, 0)
+    // Add icon
+    const iconSpan = document.createElement('span')
+    iconSpan.innerHTML = getComponentIcon(item.icon)
+    Object.assign(iconSpan.style, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '16px',
+      height: '16px',
+      color: '#888',
+    })
+    // Style the SVG inside
+    const svg = iconSpan.querySelector('svg')
+    if (svg) {
+      svg.style.width = '16px'
+      svg.style.height = '16px'
+    }
+    dragImage.appendChild(iconSpan)
 
-    // Clean up after a short delay
-    setTimeout(() => dragImage.remove(), 100)
+    // Add text
+    const textSpan = document.createElement('span')
+    textSpan.textContent = item.name
+    dragImage.appendChild(textSpan)
+
+    // Must be in DOM for setDragImage to work
+    document.body.appendChild(dragImage)
+    event.dataTransfer.setDragImage(dragImage, 20, 20)
+
+    // Clean up after browser has captured the image
+    setTimeout(() => dragImage.remove(), 0)
   }
 
   /**
@@ -553,7 +608,8 @@ export class ComponentPanel {
     const items = this.panelElement.querySelectorAll<HTMLElement>('.component-panel-item')
 
     for (const itemEl of items) {
-      const name = itemEl.querySelector('.component-panel-item-name')?.textContent?.toLowerCase() ?? ''
+      const name =
+        itemEl.querySelector('.component-panel-item-name')?.textContent?.toLowerCase() ?? ''
       const matches = !this.searchQuery || name.includes(this.searchQuery)
       itemEl.style.display = matches ? '' : 'none'
     }
@@ -561,7 +617,9 @@ export class ComponentPanel {
     // Hide empty sections
     const sections = this.panelElement.querySelectorAll<HTMLElement>('.component-panel-section')
     for (const sectionEl of sections) {
-      const visibleItems = sectionEl.querySelectorAll('.component-panel-item:not([style*="display: none"])')
+      const visibleItems = sectionEl.querySelectorAll(
+        '.component-panel-item:not([style*="display: none"])'
+      )
       sectionEl.style.display = visibleItems.length > 0 ? '' : 'none'
     }
   }
