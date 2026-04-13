@@ -6,7 +6,50 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
-import type { AST, Program, TokenDefinition, ComponentDefinition, Instance, Property, State, Event, Action, Each, Slot, Expression, Conditional, ConditionalNode, TokenReference, ComputedExpression, LoopVarReference, ParseError, JavaScriptBlock, AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty, ZagNode, ZagSlotDef, ZagItem, SourcePosition, ChildOverride, StateDependency, StateAnimation, DataAttribute, DataBlock, SchemaDefinition, SchemaField, SchemaType, SchemaConstraint, TableNode, TableColumnNode, TableSlotNode, TableStaticRowNode, TableStaticCellNode, DataReference, DataReferenceArray } from './ast'
+import type {
+  AST,
+  Program,
+  TokenDefinition,
+  ComponentDefinition,
+  Instance,
+  Property,
+  State,
+  Event,
+  Action,
+  Each,
+  Slot,
+  Expression,
+  Conditional,
+  ConditionalNode,
+  TokenReference,
+  ComputedExpression,
+  LoopVarReference,
+  ParseError,
+  JavaScriptBlock,
+  AnimationDefinition,
+  AnimationKeyframe,
+  AnimationKeyframeProperty,
+  ZagNode,
+  ZagSlotDef,
+  ZagItem,
+  SourcePosition,
+  ChildOverride,
+  StateDependency,
+  StateAnimation,
+  DataAttribute,
+  DataBlock,
+  SchemaDefinition,
+  SchemaField,
+  SchemaType,
+  SchemaConstraint,
+  TableNode,
+  TableColumnNode,
+  TableSlotNode,
+  TableStaticRowNode,
+  TableStaticCellNode,
+  DataReference,
+  DataReferenceArray,
+} from './ast'
 import {
   PROPERTY_STARTERS,
   BOOLEAN_PROPERTIES,
@@ -27,16 +70,39 @@ import {
   isValidProperty,
 } from '../schema/parser-helpers'
 import { isPrimitive, getEvent } from '../schema/dsl'
-import { isZagPrimitive, getZagPrimitive, isZagSlot, isZagItemKeyword, isZagGroupKeyword } from '../schema/zag-primitives'
+import {
+  isZagPrimitive,
+  getZagPrimitive,
+  isZagSlot,
+  isZagItemKeyword,
+  isZagGroupKeyword,
+} from '../schema/zag-primitives'
 import { isCompoundPrimitive, isCompoundSlot } from '../schema/compound-primitives'
 import { logParser as log } from '../utils/logger'
-import { isChartPrimitive, isChartSlot, getChartSlot, getChartSlotProperty } from '../schema/chart-primitives'
+import {
+  isChartPrimitive,
+  isChartSlot,
+  getChartSlot,
+  getChartSlotProperty,
+} from '../schema/chart-primitives'
 import type { ChartSlotNode } from './ast'
-import { parseZagComponent as parseZagComponentExtracted, type ZagParserCallbacks } from './zag-parser'
+import {
+  parseZagComponent as parseZagComponentExtracted,
+  type ZagParserCallbacks,
+} from './zag-parser'
+import { parseAnimationDefinition as parseAnimationDefinitionExtracted } from './animation-parser'
 import type { ParserContext } from './parser-context'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
-type PropertyValue = string | number | boolean | number[] | TokenReference | LoopVarReference | Conditional | ComputedExpression
+type PropertyValue =
+  | string
+  | number
+  | boolean
+  | number[]
+  | TokenReference
+  | LoopVarReference
+  | Conditional
+  | ComputedExpression
 
 // JavaScript keywords that signal the start of JS code
 const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
@@ -141,9 +207,12 @@ export class Parser {
       // Also handles legacy: $name: value (without .)
       // Note: Excludes names with . which are handled by other rules
       // Boolean values (true/false) are IDENTIFIER tokens
-      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
-          !this.peekAt(0)?.value.includes('.') &&
-          (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING') || this.isBooleanIdentifier(2))) {
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('COLON') &&
+        !this.peekAt(0)?.value.includes('.') &&
+        (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING') || this.isBooleanIdentifier(2))
+      ) {
         const token = this.parseTokenDefinition(currentSection)
         if (token) program.tokens.push(token)
         continue
@@ -153,10 +222,13 @@ export class Parser {
       // e.g., primary.bg: #2271C1 or card.rad: 12 or btn.col: white
       // The lexer combines name.suffix into one IDENTIFIER token
       // Note: No $ prefix at definition - $ is only used when referencing
-      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
-          this.peekAt(0)?.value.includes('.') &&
-          !this.peekAt(0)?.value.startsWith('$') &&
-          (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING') || this.checkAt(2, 'IDENTIFIER'))) {
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('COLON') &&
+        this.peekAt(0)?.value.includes('.') &&
+        !this.peekAt(0)?.value.startsWith('$') &&
+        (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING') || this.checkAt(2, 'IDENTIFIER'))
+      ) {
         const token = this.parseTokenWithSuffixSingleToken(currentSection)
         if (token) program.tokens.push(token)
         continue
@@ -164,10 +236,14 @@ export class Parser {
 
       // Token definition with suffix (legacy: separate tokens): name.suffix: value
       // This handles cases where lexer might produce separate tokens
-      if (this.check('IDENTIFIER') && this.checkNext('DOT') &&
-          !this.peekAt(0)?.value.startsWith('$') &&
-          this.checkAt(2, 'IDENTIFIER') && this.checkAt(3, 'COLON') &&
-          (this.checkAt(4, 'NUMBER') || this.checkAt(4, 'STRING') || this.checkAt(4, 'IDENTIFIER'))) {
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('DOT') &&
+        !this.peekAt(0)?.value.startsWith('$') &&
+        this.checkAt(2, 'IDENTIFIER') &&
+        this.checkAt(3, 'COLON') &&
+        (this.checkAt(4, 'NUMBER') || this.checkAt(4, 'STRING') || this.checkAt(4, 'IDENTIFIER'))
+      ) {
         const token = this.parseTokenWithSuffix(currentSection)
         if (token) program.tokens.push(token)
         continue
@@ -176,12 +252,15 @@ export class Parser {
       // Token reference: name.suffix: $other (token referencing another token)
       // e.g., accent.bg: $primary or surface.bg: $grey-800
       // Left side has no $, right side has $ (it's a reference)
-      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
-          this.checkAt(2, 'IDENTIFIER') &&
-          this.peekAt(0)?.value.includes('.') &&
-          !this.peekAt(0)?.value.startsWith('$') &&
-          this.peekAt(2)?.value.startsWith('$') &&
-          (this.checkAt(3, 'NEWLINE') || this.checkAt(3, 'EOF') || this.checkAt(3, 'COMMENT'))) {
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('COLON') &&
+        this.checkAt(2, 'IDENTIFIER') &&
+        this.peekAt(0)?.value.includes('.') &&
+        !this.peekAt(0)?.value.startsWith('$') &&
+        this.peekAt(2)?.value.startsWith('$') &&
+        (this.checkAt(3, 'NEWLINE') || this.checkAt(3, 'EOF') || this.checkAt(3, 'COMMENT'))
+      ) {
         const token = this.parseTokenReference(currentSection)
         if (token) program.tokens.push(token)
         continue
@@ -189,21 +268,27 @@ export class Parser {
 
       // Legacy token definition with $ prefix (still supported for backwards compatibility)
       // e.g., $primary.bg: #2271C1
-      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
-          this.peekAt(0)?.value.startsWith('$') &&
-          this.peekAt(0)?.value.includes('.') &&
-          (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING') || this.checkAt(2, 'IDENTIFIER'))) {
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('COLON') &&
+        this.peekAt(0)?.value.startsWith('$') &&
+        this.peekAt(0)?.value.includes('.') &&
+        (this.checkAt(2, 'NUMBER') || this.checkAt(2, 'STRING') || this.checkAt(2, 'IDENTIFIER'))
+      ) {
         const token = this.parseTokenWithSuffixSingleToken(currentSection)
         if (token) program.tokens.push(token)
         continue
       }
 
       // Legacy token reference with $ on both sides
-      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
-          this.checkAt(2, 'IDENTIFIER') &&
-          this.peekAt(0)?.value.startsWith('$') &&
-          this.peekAt(2)?.value.startsWith('$') &&
-          (this.checkAt(3, 'NEWLINE') || this.checkAt(3, 'EOF') || this.checkAt(3, 'COMMENT'))) {
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('COLON') &&
+        this.checkAt(2, 'IDENTIFIER') &&
+        this.peekAt(0)?.value.startsWith('$') &&
+        this.peekAt(2)?.value.startsWith('$') &&
+        (this.checkAt(3, 'NEWLINE') || this.checkAt(3, 'EOF') || this.checkAt(3, 'COMMENT'))
+      ) {
         const token = this.parseTokenReference(currentSection)
         if (token) program.tokens.push(token)
         continue
@@ -211,8 +296,11 @@ export class Parser {
 
       // Schema definition: $schema: (with or without fields)
       // Must be checked BEFORE data object since $schema is a special case
-      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
-          this.peekAt(0)?.value === '$schema') {
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('COLON') &&
+        this.peekAt(0)?.value === '$schema'
+      ) {
         const schema = this.parseSchema()
         if (schema) program.schema = schema
         continue
@@ -236,13 +324,19 @@ export class Parser {
         // Strip $ prefix for checking - the name after $ must not contain .
         const nameWithoutDollar = name?.startsWith('$') ? name.slice(1) : name
         const hasNoDot = !nameWithoutDollar?.includes('.')
-        const isLowercase = nameWithoutDollar && nameWithoutDollar[0] === nameWithoutDollar[0].toLowerCase() && hasNoDot
+        const isLowercase =
+          nameWithoutDollar &&
+          nameWithoutDollar[0] === nameWithoutDollar[0].toLowerCase() &&
+          hasNoDot
 
         if (isLowercase) {
           // Look ahead past COLON to determine type
           // Use MAX_LOOKAHEAD to prevent DoS on malformed input
           let lookAhead = 2
-          while ((this.checkAt(lookAhead, 'NEWLINE') || this.checkAt(lookAhead, 'COMMENT')) && lookAhead < Parser.MAX_LOOKAHEAD) {
+          while (
+            (this.checkAt(lookAhead, 'NEWLINE') || this.checkAt(lookAhead, 'COMMENT')) &&
+            lookAhead < Parser.MAX_LOOKAHEAD
+          ) {
             lookAhead++
           }
 
@@ -257,7 +351,12 @@ export class Parser {
           // Property Set has a valid property name after the colon (not followed by another colon or equals)
           // Note: If position 3 is EQUALS, it's legacy syntax: name: type = value
           const afterColon = this.peekAt(2)?.value
-          if (afterColon && isValidProperty(afterColon) && !this.checkAt(3, 'COLON') && !this.checkAt(3, 'EQUALS')) {
+          if (
+            afterColon &&
+            isValidProperty(afterColon) &&
+            !this.checkAt(3, 'COLON') &&
+            !this.checkAt(3, 'EQUALS')
+          ) {
             const propSet = this.parsePropertySet(currentSection)
             if (propSet) program.tokens.push(propSet)
             continue
@@ -266,8 +365,12 @@ export class Parser {
       }
 
       // Legacy token definition: name: type = value (still supported)
-      if (this.check('IDENTIFIER') && this.checkNext('COLON') &&
-          this.checkAt(2, 'IDENTIFIER') && this.checkAt(3, 'EQUALS')) {
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('COLON') &&
+        this.checkAt(2, 'IDENTIFIER') &&
+        this.checkAt(3, 'EQUALS')
+      ) {
         const token = this.parseLegacyTokenDefinition(currentSection)
         if (token) program.tokens.push(token)
         continue
@@ -293,7 +396,7 @@ export class Parser {
         if (jsBlock) {
           program.javascript = jsBlock
         }
-        break  // JavaScript consumes rest of file
+        break // JavaScript consumes rest of file
       }
 
       // Component, Animation, Instance, or ZagComponent
@@ -347,7 +450,7 @@ export class Parser {
     let charPos = 0
 
     for (let i = 0; i < startToken.line - 1; i++) {
-      charPos += lines[i].length + 1  // +1 for newline
+      charPos += lines[i].length + 1 // +1 for newline
     }
     const actualStartColumn = startToken.column - startToken.value.length
     charPos += actualStartColumn - 1
@@ -467,7 +570,12 @@ export class Parser {
 
     // Infer type from suffix
     let tokenType: 'color' | 'size' | 'font' | 'icon' = 'color'
-    if (suffix.value === 'pad' || suffix.value === 'gap' || suffix.value === 'margin' || suffix.value === 'rad') {
+    if (
+      suffix.value === 'pad' ||
+      suffix.value === 'gap' ||
+      suffix.value === 'margin' ||
+      suffix.value === 'rad'
+    ) {
       tokenType = 'size'
     } else if (suffix.value === 'font') {
       tokenType = 'font'
@@ -573,7 +681,11 @@ export class Parser {
     const fields: SchemaField[] = []
 
     // Parse fields until DEDENT
-    for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
+    for (
+      let iter = 0;
+      !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
+      iter++
+    ) {
       this.skipNewlines()
       if (this.check('DEDENT') || this.isAtEnd()) break
 
@@ -727,7 +839,11 @@ export class Parser {
     const blocks: DataBlock[] = []
 
     // Parse attributes and blocks until DEDENT
-    for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
+    for (
+      let iter = 0;
+      !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
+      iter++
+    ) {
       this.skipNewlines()
       if (this.check('DEDENT') || this.isAtEnd()) break
 
@@ -747,11 +863,14 @@ export class Parser {
 
       // Check for simple list item: identifier without colon
       // e.g., colors: \n  rot \n  grün \n  blau
-      if (this.check('IDENTIFIER') && (this.checkNext('NEWLINE') || this.checkNext('DEDENT') || this.peekAt(1) === undefined)) {
+      if (
+        this.check('IDENTIFIER') &&
+        (this.checkNext('NEWLINE') || this.checkNext('DEDENT') || this.peekAt(1) === undefined)
+      ) {
         const token = this.advance()
         attributes.push({
           key: token.value,
-          value: token.value,  // key IS the value for simple list items
+          value: token.value, // key IS the value for simple list items
           line: token.line,
         })
         continue
@@ -808,7 +927,11 @@ export class Parser {
       // Parse nested attributes recursively
       const children: DataAttribute[] = []
 
-      for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
+      for (
+        let iter = 0;
+        !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
+        iter++
+      ) {
         this.skipNewlines()
         if (this.check('DEDENT') || this.isAtEnd()) break
 
@@ -925,7 +1048,11 @@ export class Parser {
     const items: string[] = []
     this.advance() // [
 
-    for (let iter = 0; !this.isAtEnd() && !this.check('RBRACKET') && iter < Parser.MAX_ITERATIONS; iter++) {
+    for (
+      let iter = 0;
+      !this.isAtEnd() && !this.check('RBRACKET') && iter < Parser.MAX_ITERATIONS;
+      iter++
+    ) {
       if (this.check('STRING')) {
         items.push(this.advance().value)
       } else if (this.check('IDENTIFIER')) {
@@ -954,7 +1081,11 @@ export class Parser {
     const items: number[] = []
     this.advance() // [
 
-    for (let iter = 0; !this.isAtEnd() && !this.check('RBRACKET') && iter < Parser.MAX_ITERATIONS; iter++) {
+    for (
+      let iter = 0;
+      !this.isAtEnd() && !this.check('RBRACKET') && iter < Parser.MAX_ITERATIONS;
+      iter++
+    ) {
       if (this.check('NUMBER')) {
         items.push(parseFloat(this.advance().value))
       } else if (this.check('COMMA')) {
@@ -1028,7 +1159,11 @@ export class Parser {
     // Token types that should not have space after them
     const noSpaceAfter = new Set(['STAR', 'LPAREN', 'LBRACKET', 'AT'])
 
-    for (let outerIter = 0; !this.isAtEnd() && !this.check('DEDENT') && outerIter < Parser.MAX_ITERATIONS; outerIter++) {
+    for (
+      let outerIter = 0;
+      !this.isAtEnd() && !this.check('DEDENT') && outerIter < Parser.MAX_ITERATIONS;
+      outerIter++
+    ) {
       if (this.check('NEWLINE')) {
         contentLines.push('')
         this.advance()
@@ -1037,7 +1172,14 @@ export class Parser {
 
       // Collect all tokens on this line as raw content
       const lineTokens: { type: string; value: string }[] = []
-      for (let innerIter = 0; !this.isAtEnd() && !this.check('NEWLINE') && !this.check('DEDENT') && innerIter < Parser.MAX_ITERATIONS; innerIter++) {
+      for (
+        let innerIter = 0;
+        !this.isAtEnd() &&
+        !this.check('NEWLINE') &&
+        !this.check('DEDENT') &&
+        innerIter < Parser.MAX_ITERATIONS;
+        innerIter++
+      ) {
         const token = this.advance()
         lineTokens.push({ type: token.type, value: token.value })
       }
@@ -1049,7 +1191,8 @@ export class Parser {
         const prevToken = i > 0 ? lineTokens[i - 1] : null
 
         // Determine if we need a space before this token
-        const needSpace = lineContent.length > 0 &&
+        const needSpace =
+          lineContent.length > 0 &&
           !lineContent.endsWith(' ') &&
           !noSpaceBefore.has(token.type) &&
           (prevToken ? !noSpaceAfter.has(prevToken.type) : true)
@@ -1114,7 +1257,14 @@ export class Parser {
     // Parse properties on the same line until NEWLINE or EOF
     const properties: Property[] = []
 
-    for (let iter = 0; !this.isAtEnd() && !this.check('NEWLINE') && !this.check('EOF') && iter < Parser.MAX_ITERATIONS; iter++) {
+    for (
+      let iter = 0;
+      !this.isAtEnd() &&
+      !this.check('NEWLINE') &&
+      !this.check('EOF') &&
+      iter < Parser.MAX_ITERATIONS;
+      iter++
+    ) {
       // Skip comma separators
       if (this.check('COMMA')) {
         this.advance()
@@ -1151,12 +1301,12 @@ export class Parser {
   private parseRoutePath(): string | null {
     if (!this.check('IDENTIFIER')) return null
 
-    let path = this.advance().value  // First identifier
+    let path = this.advance().value // First identifier
 
     // Continue while we see SLASH followed by IDENTIFIER
     while (this.check('SLASH') && this.checkNext('IDENTIFIER')) {
       this.advance() // consume SLASH
-      path += '/' + this.advance().value  // append next segment
+      path += '/' + this.advance().value // append next segment
     }
 
     return path
@@ -1185,7 +1335,14 @@ export class Parser {
     return undefined
   }
 
-  private parseComponentOrInstance(): ComponentDefinition | Instance | Slot | AnimationDefinition | ZagNode | TableNode | null {
+  private parseComponentOrInstance():
+    | ComponentDefinition
+    | Instance
+    | Slot
+    | AnimationDefinition
+    | ZagNode
+    | TableNode
+    | null {
     const name = this.advance()
 
     // Component definition: Name as primitive:
@@ -1195,7 +1352,7 @@ export class Parser {
       // 'animation' is now a regular IDENTIFIER (not a keyword)
       const nextToken = this.peekAt(1)
       if (nextToken && nextToken.type === 'IDENTIFIER' && nextToken.value === 'animation') {
-        return this.parseAnimationDefinition(name)
+        return this.parseAnimationDefinitionWithContext(name)
       }
       return this.parseComponentDefinition(name)
     }
@@ -1317,219 +1474,6 @@ export class Parser {
     }
 
     return component
-  }
-
-  /**
-   * Parse animation definition
-   *
-   * Syntax:
-   * FadeUp as animation: ease-out
-   *   0.00 opacity 0, y-offset 20
-   *   0.30 opacity 1, y-offset 0
-   *   1.00 // end marker (optional)
-   *
-   * With roles:
-   * StaggeredFade as animation: ease-out
-   *   roles item1, item2, item3
-   *   0.00 item1 opacity 0
-   *   0.10 item2 opacity 0
-   *   1.00 all opacity 1
-   */
-  private parseAnimationDefinition(name: Token): AnimationDefinition | null {
-    this.advance() // as
-    this.advance() // animation
-
-    if (!this.expect('COLON')) {
-      this.errors[this.errors.length - 1].hint = 'Add a colon after "animation"'
-      this.recoverToNextDefinition()
-      return null
-    }
-
-    const animation: AnimationDefinition = {
-      type: 'Animation',
-      name: name.value,
-      keyframes: [],
-      line: name.line,
-      column: name.column,
-    }
-
-    // Parse optional easing on the same line: FadeUp as animation: ease-out
-    if (this.check('IDENTIFIER') && !this.check('NEWLINE')) {
-      animation.easing = this.advance().value
-    }
-
-    // Skip to indented block
-    this.skipNewlines()
-
-    if (!this.check('INDENT')) {
-      this.addError('Animation definition must have an indented body with keyframes')
-      return animation
-    }
-
-    this.advance() // consume INDENT
-
-    // Parse animation body
-    while (!this.check('DEDENT') && !this.isAtEnd()) {
-      this.skipNewlines()
-      if (this.check('DEDENT') || this.isAtEnd()) break
-
-      // Skip commas
-      if (this.check('COMMA') || this.check('SEMICOLON')) {
-        this.advance()
-        continue
-      }
-
-      // Parse roles: item1, item2, item3
-      if (this.check('IDENTIFIER') && this.current().value === 'roles') {
-        this.advance() // consume 'roles'
-        animation.roles = []
-        while (!this.check('NEWLINE') && !this.isAtEnd()) {
-          if (this.check('COMMA')) {
-            this.advance()
-            continue
-          }
-          if (this.check('IDENTIFIER')) {
-            animation.roles.push(this.advance().value)
-          } else {
-            break
-          }
-        }
-        continue
-      }
-
-      // Parse keyframe: 0.00 property value, property value
-      // Keyframes start with a number (time)
-      if (this.check('NUMBER')) {
-        const keyframe = this.parseAnimationKeyframe()
-        if (keyframe) {
-          animation.keyframes.push(keyframe)
-        }
-        continue
-      }
-
-      // Skip unknown tokens
-      this.advance()
-    }
-
-    if (this.check('DEDENT')) this.advance()
-
-    // Calculate duration from last keyframe (if time is > 1.0, treat as ms)
-    if (animation.keyframes.length > 0) {
-      const lastKeyframe = animation.keyframes[animation.keyframes.length - 1]
-      if (lastKeyframe.time > 1.0) {
-        // Time is in milliseconds
-        animation.duration = lastKeyframe.time
-      }
-    }
-
-    return animation
-  }
-
-  /**
-   * Parse a single keyframe line
-   *
-   * Syntax:
-   * 0.00 opacity 0, y-offset 20
-   * 0.30 item1 opacity 1
-   * 1.00 all opacity 1, y-offset 0
-   */
-  private parseAnimationKeyframe(): AnimationKeyframe | null {
-    // Safety: Check bounds before advancing
-    if (this.isAtEnd()) {
-      return null
-    }
-
-    // Time value (e.g., 0.00, 0.30, 1.00, or 300 for ms)
-    const timeToken = this.advance()
-    const time = parseFloat(timeToken.value)
-
-    const keyframe: AnimationKeyframe = {
-      time,
-      properties: [],
-    }
-
-    // Parse properties on this line with loop guard
-    let lastPos = this.pos
-    const maxIterations = 100 // Reasonable limit for keyframe properties
-
-    for (let i = 0; i < maxIterations && !this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd(); i++) {
-      if (this.check('COMMA') || this.check('SEMICOLON')) {
-        this.advance()
-        continue
-      }
-
-      if (this.check('IDENTIFIER')) {
-        const prop = this.parseAnimationKeyframeProperty()
-        if (prop) {
-          keyframe.properties.push(prop)
-        }
-      } else {
-        break
-      }
-
-      // Verify progress to prevent infinite loop
-      if (this.pos === lastPos) {
-        break
-      }
-      lastPos = this.pos
-    }
-
-    return keyframe
-  }
-
-  /**
-   * Parse a keyframe property
-   *
-   * Syntax:
-   * opacity 0
-   * y-offset 20
-   * item1 opacity 0  (with role target)
-   * all scale 1.2    (with 'all' target)
-   */
-  private parseAnimationKeyframeProperty(): AnimationKeyframeProperty | null {
-    if (!this.check('IDENTIFIER')) return null
-
-    const firstToken = this.advance()
-    let target: string | undefined
-    let propName: string
-    let propValue: string | number
-
-    // Check if this is a role target followed by property name
-    // e.g., "item1 opacity 0" or "all scale 1.2"
-    if (this.check('IDENTIFIER')) {
-      // First token is the target, second is the property name
-      target = firstToken.value
-      propName = this.advance().value
-
-      // Get value
-      if (this.check('NUMBER')) {
-        propValue = parseFloat(this.advance().value)
-      } else if (this.check('STRING')) {
-        propValue = this.advance().value
-      } else if (this.check('IDENTIFIER')) {
-        propValue = this.advance().value
-      } else {
-        return null
-      }
-    } else if (this.check('NUMBER') || this.check('STRING')) {
-      // First token is the property name, directly followed by value
-      propName = firstToken.value
-
-      if (this.check('NUMBER')) {
-        propValue = parseFloat(this.advance().value)
-      } else {
-        propValue = this.advance().value
-      }
-    } else {
-      // No value found
-      return null
-    }
-
-    return {
-      target,
-      name: propName,
-      value: propValue,
-    }
   }
 
   // Parse component definition without explicit primitive: Name:
@@ -1807,9 +1751,7 @@ export class Parser {
       for (const action of event.actions) {
         if (action.name === 'select') {
           // Check if multi: select(multi)
-          const isMulti = action.args?.some(arg =>
-            typeof arg === 'string' && arg === 'multi'
-          )
+          const isMulti = action.args?.some(arg => typeof arg === 'string' && arg === 'multi')
           table.properties.push({
             type: 'Property',
             name: 'selectionMode',
@@ -1886,13 +1828,33 @@ export class Parser {
    */
   private parseTableExpression(): string {
     const parts: string[] = []
-    const comparisonTokens = new Set(['EQUALS', 'GT', 'LT', 'GTE', 'LTE', 'NOT_EQUAL', 'STRICT_EQUAL', 'STRICT_NOT_EQUAL', 'AND_AND', 'OR_OR', 'BANG'])
+    const comparisonTokens = new Set([
+      'EQUALS',
+      'GT',
+      'LT',
+      'GTE',
+      'LTE',
+      'NOT_EQUAL',
+      'STRICT_EQUAL',
+      'STRICT_NOT_EQUAL',
+      'AND_AND',
+      'OR_OR',
+      'BANG',
+    ])
 
     // Safety guard to prevent infinite loops
     let lastPos = this.pos
     const maxIterations = 1000 // Reasonable limit for expression parsing
 
-    for (let i = 0; i < maxIterations && !this.isAtEnd() && !this.check('COMMA') && !this.check('NEWLINE') && !this.check('INDENT'); i++) {
+    for (
+      let i = 0;
+      i < maxIterations &&
+      !this.isAtEnd() &&
+      !this.check('COMMA') &&
+      !this.check('NEWLINE') &&
+      !this.check('INDENT');
+      i++
+    ) {
       const token = this.current()
 
       // Stop at clause keywords (these have their own token types)
@@ -1908,17 +1870,17 @@ export class Parser {
       } else if (comparisonTokens.has(token.type)) {
         // Map token types to JavaScript operators
         const opMap: Record<string, string> = {
-          'EQUALS': '==',
-          'GT': '>',
-          'LT': '<',
-          'GTE': '>=',
-          'LTE': '<=',
-          'NOT_EQUAL': '!=',
-          'STRICT_EQUAL': '===',
-          'STRICT_NOT_EQUAL': '!==',
-          'AND_AND': '&&',
-          'OR_OR': '||',
-          'BANG': '!',
+          EQUALS: '==',
+          GT: '>',
+          LT: '<',
+          GTE: '>=',
+          LTE: '<=',
+          NOT_EQUAL: '!=',
+          STRICT_EQUAL: '===',
+          STRICT_NOT_EQUAL: '!==',
+          AND_AND: '&&',
+          OR_OR: '||',
+          BANG: '!',
         }
         parts.push(opMap[token.type] || token.value)
       } else if (token.type === 'OR') {
@@ -2217,8 +2179,18 @@ export class Parser {
 
     // Column-config properties (not style properties)
     const columnConfigProps = new Set([
-      'w', 'width', 'prefix', 'suffix', 'align', 'sortable', 'desc',
-      'filterable', 'hidden', 'sum', 'avg', 'count'
+      'w',
+      'width',
+      'prefix',
+      'suffix',
+      'align',
+      'sortable',
+      'desc',
+      'filterable',
+      'hidden',
+      'sum',
+      'avg',
+      'count',
     ])
 
     // Field name or custom label
@@ -2297,7 +2269,12 @@ export class Parser {
             column: prevToken?.column ?? 0,
           }
           // Collect value(s) for this property
-          while (!this.check('COMMA') && !this.check('NEWLINE') && !this.check('INDENT') && !this.isAtEnd()) {
+          while (
+            !this.check('COMMA') &&
+            !this.check('NEWLINE') &&
+            !this.check('INDENT') &&
+            !this.isAtEnd()
+          ) {
             const token = this.advance()
             if (token.type === 'NUMBER') {
               // Hex colors like #333 come as NUMBER tokens - keep as string
@@ -2333,7 +2310,11 @@ export class Parser {
           continue
         }
 
-        if (this.check('IDENTIFIER') && this.current().value === 'Cell' && this.checkNext('COLON')) {
+        if (
+          this.check('IDENTIFIER') &&
+          this.current().value === 'Cell' &&
+          this.checkNext('COLON')
+        ) {
           this.advance() // Cell
           this.advance() // :
           column.customCell = this.parseTableCellSlot()
@@ -2391,7 +2372,11 @@ export class Parser {
             const name = this.current().value
 
             // Special case: Row without colon inside Header or Footer slot = static row
-            if ((slotName === 'Header' || slotName === 'Footer') && name === 'Row' && !this.checkNext('COLON')) {
+            if (
+              (slotName === 'Header' || slotName === 'Footer') &&
+              name === 'Row' &&
+              !this.checkNext('COLON')
+            ) {
               this.advance() // Row
               slot.staticRow = this.parseTableStaticRow()
             } else {
@@ -2496,7 +2481,7 @@ export class Parser {
         ctx.pos = this.pos
         return result
       },
-      parseInstance: (token) => {
+      parseInstance: token => {
         this.pos = ctx.pos
         const result = this.parseInstance(token)
         ctx.pos = this.pos
@@ -2527,6 +2512,24 @@ export class Parser {
     return result
   }
 
+  /**
+   * Wrapper method that calls the extracted Animation parser.
+   * Creates context for the modular parser.
+   */
+  private parseAnimationDefinitionWithContext(nameToken: Token): AnimationDefinition | null {
+    const ctx: ParserContext = {
+      tokens: this.tokens,
+      source: this.source,
+      loopVariables: this.loopVariables,
+      pos: this.pos,
+      errors: this.errors,
+    }
+
+    const result = parseAnimationDefinitionExtracted(ctx, nameToken)
+    this.pos = ctx.pos
+    this.errors = ctx.errors
+    return result
+  }
 
   /**
    * Look ahead to check if the current line contains inline child syntax (semicolons)
@@ -2590,8 +2593,8 @@ export class Parser {
   private parseInlineChildrenAfterSemicolon(parent: Instance): void {
     // Check if the first token is PascalCase (all children mode) or lowercase (properties mode)
     const firstToken = this.current()
-    const firstIsPascalCase = firstToken?.type === 'IDENTIFIER' &&
-      firstToken.value[0] === firstToken.value[0].toUpperCase()
+    const firstIsPascalCase =
+      firstToken?.type === 'IDENTIFIER' && firstToken.value[0] === firstToken.value[0].toUpperCase()
 
     if (firstIsPascalCase) {
       // All elements are children (e.g., NavItem Icon "home"; Label "Home")
@@ -2811,13 +2814,15 @@ export class Parser {
                 type: 'Instance',
                 component: 'Text',
                 name: null,
-                properties: [{
-                  type: 'Property',
-                  name: 'content',
-                  values: [str.value],
-                  line: str.line,
-                  column: str.column,
-                }],
+                properties: [
+                  {
+                    type: 'Property',
+                    name: 'content',
+                    values: [str.value],
+                    line: str.line,
+                    column: str.column,
+                  },
+                ],
                 children: [],
                 states: [],
                 events: [],
@@ -2905,13 +2910,15 @@ export class Parser {
                   type: 'Instance',
                   component: 'Text',
                   name: null,
-                  properties: [{
-                    type: 'Property',
-                    name: 'content',
-                    values: [str.value],
-                    line: str.line,
-                    column: str.column,
-                  }],
+                  properties: [
+                    {
+                      type: 'Property',
+                      name: 'content',
+                      values: [str.value],
+                      line: str.line,
+                      column: str.column,
+                    },
+                  ],
                   children: [],
                   states: [],
                   events: [],
@@ -2997,13 +3004,15 @@ export class Parser {
                     type: 'Instance',
                     component: 'Text',
                     name: null,
-                    properties: [{
-                      type: 'Property',
-                      name: 'content',
-                      values: [str.value],
-                      line: str.line,
-                      column: str.column,
-                    }],
+                    properties: [
+                      {
+                        type: 'Property',
+                        name: 'content',
+                        values: [str.value],
+                        line: str.line,
+                        column: str.column,
+                      },
+                    ],
                     children: [],
                     states: [],
                     events: [],
@@ -3067,24 +3076,34 @@ export class Parser {
 
         // Known properties that take any identifier value (including PascalCase like "Arial")
         const propertiesWithAnyValue = new Set([
-          'font', 'cursor', 'align', 'weight', 'animation', 'anim',
+          'font',
+          'cursor',
+          'align',
+          'weight',
+          'animation',
+          'anim',
         ])
 
         // Property line: identifier followed by values (NUMBER, STRING, IDENTIFIER)
         const next = this.peekAt(1)
         // If next token looks like a value (NUMBER, STRING, or simple IDENTIFIER not starting with uppercase)
         // then it's a property
-        if (next && (next.type === 'NUMBER' || next.type === 'STRING' ||
-            (next.type === 'IDENTIFIER' && !this.current().value.startsWith('on')))) {
+        if (
+          next &&
+          (next.type === 'NUMBER' ||
+            next.type === 'STRING' ||
+            (next.type === 'IDENTIFIER' && !this.current().value.startsWith('on')))
+        ) {
           // Check if it's likely a property (next is value) vs child instance (next is STRING only)
           // Property: pad 16, bg #FFF, col white, font Arial
           // Instance: Button "Click", Text "Hello"
           // Heuristic: if name is lowercase and next is number/identifier, it's a property
           // Exception: known properties like "font" can take PascalCase values
-          const isLikelyProperty = name[0] === name[0].toLowerCase() &&
+          const isLikelyProperty =
+            name[0] === name[0].toLowerCase() &&
             (next.type === 'NUMBER' ||
-             propertiesWithAnyValue.has(name) ||
-             (next.type === 'IDENTIFIER' && next.value[0] === next.value[0].toLowerCase()))
+              propertiesWithAnyValue.has(name) ||
+              (next.type === 'IDENTIFIER' && next.value[0] === next.value[0].toLowerCase()))
 
           if (isLikelyProperty) {
             const prop = this.parseProperty()
@@ -3097,8 +3116,13 @@ export class Parser {
       // Event with colon: onclick: action
       // Events are "on" + event name (onclick, onhover, etc.)
       // NOT just "on" or "off" which are state names
-      const isEventName = (name: string) => name.startsWith('on') && name.length > 2 && name !== 'on'
-      if (this.check('IDENTIFIER') && this.checkNext('COLON') && isEventName(this.current().value)) {
+      const isEventName = (name: string) =>
+        name.startsWith('on') && name.length > 2 && name !== 'on'
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('COLON') &&
+        isEventName(this.current().value)
+      ) {
         const event = this.parseEvent()
         if (event) component.events.push(event)
         continue
@@ -3206,7 +3230,11 @@ export class Parser {
 
         // Has children - parse them and set visibleWhen on each
         this.advance() // consume INDENT
-        for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
+        for (
+          let iter = 0;
+          !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
+          iter++
+        ) {
           this.skipNewlines()
           if (this.check('DEDENT') || this.isAtEnd()) break
 
@@ -3259,13 +3287,15 @@ export class Parser {
           type: 'Instance',
           component: 'Text',
           name: null,
-          properties: [{
-            type: 'Property',
-            name: 'content',
-            values: [str.value],
-            line: str.line,
-            column: str.column,
-          }],
+          properties: [
+            {
+              type: 'Property',
+              name: 'content',
+              values: [str.value],
+              line: str.line,
+              column: str.column,
+            },
+          ],
           children: [],
           states: [],
           events: [],
@@ -3320,7 +3350,11 @@ export class Parser {
 
         // Has children - parse them and set visibleWhen on each
         this.advance() // consume INDENT
-        for (let iter = 0; !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS; iter++) {
+        for (
+          let iter = 0;
+          !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
+          iter++
+        ) {
           this.skipNewlines()
           if (this.check('DEDENT') || this.isAtEnd()) break
 
@@ -3458,8 +3492,8 @@ export class Parser {
               const externalState = this.advance().value
               // Create a 'when' dependency pointing to the external element's state
               when = {
-                target: stateToken.value,  // The element name (e.g., MenuBtn)
-                state: externalState,       // The state name (e.g., open)
+                target: stateToken.value, // The element name (e.g., MenuBtn)
+                state: externalState, // The state name (e.g., open)
               }
               // Use a synthetic state name for this block (e.g., "_MenuBtn_open")
               externalStateName = `_${stateToken.value}_${externalState}`
@@ -3615,10 +3649,13 @@ export class Parser {
                   // Syntax: SearchInput.searching:
                   //           searching        ← this is the target state
                   // But NOT if it's a known property like 'visible', 'hidden', etc.
-                  if (state.when && !state.targetState &&
-                      propName[0] === propName[0].toLowerCase() &&
-                      !ALL_BOOLEAN_PROPERTIES.has(propName) &&
-                      (this.checkNext('NEWLINE') || this.checkNext('DEDENT') || this.isAtEnd())) {
+                  if (
+                    state.when &&
+                    !state.targetState &&
+                    propName[0] === propName[0].toLowerCase() &&
+                    !ALL_BOOLEAN_PROPERTIES.has(propName) &&
+                    (this.checkNext('NEWLINE') || this.checkNext('DEDENT') || this.isAtEnd())
+                  ) {
                     // This is a target state reference
                     state.targetState = this.advance().value
                   } else {
@@ -3633,13 +3670,15 @@ export class Parser {
                   type: 'Instance',
                   component: 'Text',
                   name: null,
-                  properties: [{
-                    type: 'Property',
-                    name: 'content',
-                    values: [str.value],
-                    line: str.line,
-                    column: str.column,
-                  }],
+                  properties: [
+                    {
+                      type: 'Property',
+                      name: 'content',
+                      values: [str.value],
+                      line: str.line,
+                      column: str.column,
+                    },
+                  ],
                   children: [],
                   states: [],
                   events: [],
@@ -3667,7 +3706,7 @@ export class Parser {
           const token = this.advance()
           instance.properties.push({
             type: 'Property',
-            name: 'propset',  // Property set reference, expanded in IR
+            name: 'propset', // Property set reference, expanded in IR
             values: [{ kind: 'token' as const, name: token.value.slice(1) }],
             line: token.line,
             column: token.column,
@@ -3695,9 +3734,7 @@ export class Parser {
         // Chart slot: XAxis:, YAxis:, Legend:, etc.
         // Only parse if this is a chart primitive and the identifier is a valid chart slot
         const isChartSlotSyntax =
-          isChartSlot(name) &&
-          this.checkNext('COLON') &&
-          isChartPrimitive(instance.component)
+          isChartSlot(name) && this.checkNext('COLON') && isChartPrimitive(instance.component)
 
         if (isChartSlotSyntax) {
           const slotToken = this.advance() // consume slot name
@@ -3759,7 +3796,12 @@ export class Parser {
    * Children are separated by commas followed by capitalized component names
    */
   private parseInlineChildren(instance: Instance): void {
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+    while (
+      !this.check('NEWLINE') &&
+      !this.check('INDENT') &&
+      !this.check('DEDENT') &&
+      !this.isAtEnd()
+    ) {
       // Skip leading commas
       if (this.check('COMMA') || this.check('SEMICOLON')) {
         this.advance()
@@ -3786,7 +3828,12 @@ export class Parser {
           }
 
           // Parse child's properties until we hit a comma followed by another component
-          while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+          while (
+            !this.check('NEWLINE') &&
+            !this.check('INDENT') &&
+            !this.check('DEDENT') &&
+            !this.isAtEnd()
+          ) {
             // Check for comma - if followed by capitalized identifier, it's a new child
             if (this.check('COMMA')) {
               const nextToken = this.tokens[this.pos + 1]
@@ -3837,9 +3884,19 @@ export class Parser {
     }
   }
 
-  private parseInlineProperties(properties: Property[], events?: Event[], options?: { stopAtSemicolon?: boolean }): void {
+  private parseInlineProperties(
+    properties: Property[],
+    events?: Event[],
+    options?: { stopAtSemicolon?: boolean }
+  ): void {
     const stopAtSemicolon = options?.stopAtSemicolon ?? false
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.check('COLON') && !this.isAtEnd()) {
+    while (
+      !this.check('NEWLINE') &&
+      !this.check('INDENT') &&
+      !this.check('DEDENT') &&
+      !this.check('COLON') &&
+      !this.isAtEnd()
+    ) {
       // Skip commas (and semicolons unless stopAtSemicolon is true)
       if (this.check('COMMA')) {
         this.advance()
@@ -3863,7 +3920,12 @@ export class Parser {
           const parts: ComputedExpression['parts'] = [str.value]
           const operators: string[] = []
 
-          while (this.check('PLUS') || this.check('MINUS') || this.check('STAR') || this.check('SLASH')) {
+          while (
+            this.check('PLUS') ||
+            this.check('MINUS') ||
+            this.check('STAR') ||
+            this.check('SLASH')
+          ) {
             operators.push(this.advance().value)
 
             // Get the next operand (may be a parenthesized sub-expression)
@@ -3919,7 +3981,7 @@ export class Parser {
         if (routePath) {
           properties.push({
             type: 'Property',
-            name: '_route',  // Special prefix to identify route properties
+            name: '_route', // Special prefix to identify route properties
             values: [routePath],
             line: routeToken.line,
             column: routeToken.column,
@@ -4024,12 +4086,22 @@ export class Parser {
         const tokenRef: TokenReference = { kind: 'token', name: tokenName }
 
         // Check if followed by + for expression
-        if (this.check('PLUS') || this.check('MINUS') || this.check('STAR') || this.check('SLASH')) {
+        if (
+          this.check('PLUS') ||
+          this.check('MINUS') ||
+          this.check('STAR') ||
+          this.check('SLASH')
+        ) {
           // Build a computed expression, handling parentheses properly
           const parts: ComputedExpression['parts'] = [tokenRef]
           const operators: string[] = []
 
-          while (this.check('PLUS') || this.check('MINUS') || this.check('STAR') || this.check('SLASH')) {
+          while (
+            this.check('PLUS') ||
+            this.check('MINUS') ||
+            this.check('STAR') ||
+            this.check('SLASH')
+          ) {
             operators.push(this.advance().value)
 
             // Get the next operand (may be a parenthesized sub-expression)
@@ -4088,12 +4160,22 @@ export class Parser {
           }
 
           // Check if followed by + for expression (e.g., index + 1)
-          if (this.check('PLUS') || this.check('MINUS') || this.check('STAR') || this.check('SLASH')) {
+          if (
+            this.check('PLUS') ||
+            this.check('MINUS') ||
+            this.check('STAR') ||
+            this.check('SLASH')
+          ) {
             const loopVarRef = { kind: 'loopVar' as const, name: varAccess }
             const parts: ComputedExpression['parts'] = [loopVarRef]
             const operators: string[] = []
 
-            while (this.check('PLUS') || this.check('MINUS') || this.check('STAR') || this.check('SLASH')) {
+            while (
+              this.check('PLUS') ||
+              this.check('MINUS') ||
+              this.check('STAR') ||
+              this.check('SLASH')
+            ) {
               operators.push(this.advance().value)
               this.collectExpressionOperand(parts, operators)
             }
@@ -4142,7 +4224,11 @@ export class Parser {
         // Check for inline state syntax: "hover: bg light"
         // State names are lowercase (hover, focus, active, selected, etc.)
         // Exception: keyboard keys like "enter:" are NOT states
-        if (this.checkNext('COLON') && identName[0] === identName[0].toLowerCase() && !KEYBOARD_KEYS.has(identName)) {
+        if (
+          this.checkNext('COLON') &&
+          identName[0] === identName[0].toLowerCase() &&
+          !KEYBOARD_KEYS.has(identName)
+        ) {
           // This is an inline state - stop here, let parseInstanceBody handle it
           break
         }
@@ -4193,13 +4279,28 @@ export class Parser {
     if (!this.check('IDENTIFIER')) return null
 
     const name = this.advance()
-    const values: (string | number | boolean | TokenReference | LoopVarReference | Conditional | ComputedExpression)[] = []
+    const values: (
+      | string
+      | number
+      | boolean
+      | TokenReference
+      | LoopVarReference
+      | Conditional
+      | ComputedExpression
+    )[] = []
 
     // Collect values, watching for ternary operator (?)
     // JavaScript ternary: condition ? thenValue : elseValue
     const collectedTokens: { type: string; value: string }[] = []
 
-    while (!this.check('COMMA') && !this.check('SEMICOLON') && !this.check('NEWLINE') && !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+    while (
+      !this.check('COMMA') &&
+      !this.check('SEMICOLON') &&
+      !this.check('NEWLINE') &&
+      !this.check('INDENT') &&
+      !this.check('DEDENT') &&
+      !this.isAtEnd()
+    ) {
       // Check for ternary operator
       if (this.check('QUESTION')) {
         this.advance() // consume ?
@@ -4246,8 +4347,14 @@ export class Parser {
           // Collect the entire else part, which might be a nested ternary
           // e.g., $a === "B" ? #222 : #333
           const elseTokens: string[] = []
-          while (!this.check('COMMA') && !this.check('SEMICOLON') && !this.check('NEWLINE') &&
-                 !this.check('INDENT') && !this.check('DEDENT') && !this.isAtEnd()) {
+          while (
+            !this.check('COMMA') &&
+            !this.check('SEMICOLON') &&
+            !this.check('NEWLINE') &&
+            !this.check('INDENT') &&
+            !this.check('DEDENT') &&
+            !this.isAtEnd()
+          ) {
             // Check for inline state syntax: "hover:" - stop collecting
             if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
               const identValue = this.current().value
@@ -4277,7 +4384,12 @@ export class Parser {
             } else if (token.type === 'NOT_EQUAL') {
               elseTokens.push(' != ')
               this.advance()
-            } else if (token.type === 'GT' || token.type === 'LT' || token.type === 'GTE' || token.type === 'LTE') {
+            } else if (
+              token.type === 'GT' ||
+              token.type === 'LT' ||
+              token.type === 'GTE' ||
+              token.type === 'LTE'
+            ) {
               elseTokens.push(` ${this.advance().value} `)
             } else {
               // Add space before token if needed (except after DOT)
@@ -4312,12 +4424,25 @@ export class Parser {
 
       // Collect comparison, logical, and arithmetic operators for expressions
       // Also collect parentheses for grouping: ($a + $b) * $c
-      if (this.check('STRICT_EQUAL') || this.check('STRICT_NOT_EQUAL') ||
-          this.check('NOT_EQUAL') || this.check('GT') || this.check('LT') ||
-          this.check('GTE') || this.check('LTE') || this.check('AND_AND') ||
-          this.check('OR_OR') || this.check('BANG') || this.check('DOT') ||
-          this.check('PLUS') || this.check('MINUS') || this.check('STAR') || this.check('SLASH') ||
-          this.check('LPAREN') || this.check('RPAREN')) {
+      if (
+        this.check('STRICT_EQUAL') ||
+        this.check('STRICT_NOT_EQUAL') ||
+        this.check('NOT_EQUAL') ||
+        this.check('GT') ||
+        this.check('LT') ||
+        this.check('GTE') ||
+        this.check('LTE') ||
+        this.check('AND_AND') ||
+        this.check('OR_OR') ||
+        this.check('BANG') ||
+        this.check('DOT') ||
+        this.check('PLUS') ||
+        this.check('MINUS') ||
+        this.check('STAR') ||
+        this.check('SLASH') ||
+        this.check('LPAREN') ||
+        this.check('RPAREN')
+      ) {
         collectedTokens.push({ type: this.current().type, value: this.advance().value })
       } else if (this.check('NUMBER')) {
         collectedTokens.push({ type: 'NUMBER', value: this.advance().value })
@@ -4330,7 +4455,11 @@ export class Parser {
         // Check for inline state syntax: "hover:" - stop collecting values
         // This allows "Frame bg #333 hover: bg light" to work
         // Exception: keyboard keys like "enter:" are NOT states
-        if (this.checkNext('COLON') && identValue[0] === identValue[0].toLowerCase() && !KEYBOARD_KEYS.has(identValue)) {
+        if (
+          this.checkNext('COLON') &&
+          identValue[0] === identValue[0].toLowerCase() &&
+          !KEYBOARD_KEYS.has(identValue)
+        ) {
           break
         }
 
@@ -4346,10 +4475,8 @@ export class Parser {
         // Exception: If the previous token was a DOT, this is a property access continuation
         // e.g., "value row.c" → row.c is a single property access, not row + color property
         // This is critical for loop variables like row.title, row.status, etc.
-        const isDirectionValue = (
-          DIRECTIONAL_PROPERTIES.has(name.value) &&
-          isDirectionForProperty(name.value, identValue)
-        )
+        const isDirectionValue =
+          DIRECTIONAL_PROPERTIES.has(name.value) && isDirectionForProperty(name.value, identValue)
         const prevToken = collectedTokens[collectedTokens.length - 1]
         const isPropertyAccess = prevToken && prevToken.type === 'DOT'
         if (PROPERTY_STARTERS.has(identValue) && !isDirectionValue && !isPropertyAccess) {
@@ -4400,8 +4527,8 @@ export class Parser {
 
     // No ternary found - convert collected tokens to values
     // Check if we have arithmetic operators - if so, build a ComputedExpression
-    const hasArithmeticOperators = collectedTokens.some(t =>
-      t.type === 'PLUS' || t.type === 'MINUS' || t.type === 'STAR' || t.type === 'SLASH'
+    const hasArithmeticOperators = collectedTokens.some(
+      t => t.type === 'PLUS' || t.type === 'MINUS' || t.type === 'STAR' || t.type === 'SLASH'
     )
 
     if (hasArithmeticOperators) {
@@ -4413,7 +4540,12 @@ export class Parser {
       while (i < collectedTokens.length) {
         const token = collectedTokens[i]
 
-        if (token.type === 'PLUS' || token.type === 'MINUS' || token.type === 'STAR' || token.type === 'SLASH') {
+        if (
+          token.type === 'PLUS' ||
+          token.type === 'MINUS' ||
+          token.type === 'STAR' ||
+          token.type === 'SLASH'
+        ) {
           operators.push(token.value)
         } else if (token.type === 'LPAREN' || token.type === 'RPAREN') {
           // Track parentheses in parts as special strings
@@ -4421,9 +4553,11 @@ export class Parser {
         } else if (token.type === 'IDENTIFIER') {
           // Check for property access chain: identifier.identifier.identifier...
           let combined = token.value
-          while (i + 2 < collectedTokens.length &&
-                 collectedTokens[i + 1].type === 'DOT' &&
-                 collectedTokens[i + 2].type === 'IDENTIFIER') {
+          while (
+            i + 2 < collectedTokens.length &&
+            collectedTokens[i + 1].type === 'DOT' &&
+            collectedTokens[i + 2].type === 'IDENTIFIER'
+          ) {
             combined += '.' + collectedTokens[i + 2].value
             i += 2
           }
@@ -4463,9 +4597,11 @@ export class Parser {
         if (token.type === 'IDENTIFIER') {
           // Check for property access chain: identifier.identifier.identifier...
           let combined = token.value
-          while (i + 2 < collectedTokens.length &&
-                 collectedTokens[i + 1].type === 'DOT' &&
-                 collectedTokens[i + 2].type === 'IDENTIFIER') {
+          while (
+            i + 2 < collectedTokens.length &&
+            collectedTokens[i + 1].type === 'DOT' &&
+            collectedTokens[i + 2].type === 'IDENTIFIER'
+          ) {
             combined += '.' + collectedTokens[i + 2].value
             i += 2
           }
@@ -4575,7 +4711,7 @@ export class Parser {
     const eventDef = getEvent(eventName)
     if (eventDef?.key) {
       eventKey = eventDef.key
-      eventName = 'on' + eventDef.dom  // e.g., 'onkeydown'
+      eventName = 'on' + eventDef.dom // e.g., 'onkeydown'
     }
 
     const event: Event = {
@@ -4617,7 +4753,12 @@ export class Parser {
     }
 
     // Parse inline actions
-    while (!this.check('NEWLINE') && !this.check('COMMA') && !this.check('SEMICOLON') && !this.isAtEnd()) {
+    while (
+      !this.check('NEWLINE') &&
+      !this.check('COMMA') &&
+      !this.check('SEMICOLON') &&
+      !this.isAtEnd()
+    ) {
       if (this.check('IDENTIFIER')) {
         const action = this.parseAction()
         if (action) event.actions.push(action)
@@ -4702,7 +4843,7 @@ export class Parser {
     // Function call syntax required: actionName(arg1, arg2, ...)
     // Examples: toggle(), cycle(a, b, c), show(Menu), animate(FadeIn)
     if (this.check('LPAREN')) {
-      this.advance()  // consume '('
+      this.advance() // consume '('
       action.args = []
       action.isFunctionCall = true
 
@@ -4725,7 +4866,7 @@ export class Parser {
       }
 
       if (this.check('RPAREN')) {
-        this.advance()  // consume ')'
+        this.advance() // consume ')'
       }
 
       return action
@@ -5287,7 +5428,10 @@ export class Parser {
       }
 
       // Stop at newline/indent when not inside parentheses
-      if (parenDepth === 0 && (this.check('NEWLINE') || this.check('INDENT') || this.check('DEDENT'))) {
+      if (
+        parenDepth === 0 &&
+        (this.check('NEWLINE') || this.check('INDENT') || this.check('DEDENT'))
+      ) {
         break
       }
 
@@ -5326,7 +5470,13 @@ export class Parser {
         expr += `"${token.value}"`
       } else {
         // Add space before token if needed
-        if (expr && !expr.endsWith('(') && !expr.endsWith('!') && !expr.endsWith('.') && !expr.endsWith(' ')) {
+        if (
+          expr &&
+          !expr.endsWith('(') &&
+          !expr.endsWith('!') &&
+          !expr.endsWith('.') &&
+          !expr.endsWith(' ')
+        ) {
           expr += ' '
         }
         expr += token.value
@@ -5387,7 +5537,7 @@ export class Parser {
   private parseWhenClause(): StateDependency {
     // Parse first dependency
     const target = this.advance().value // Element name
-    const state = this.advance().value  // state name
+    const state = this.advance().value // state name
 
     const dependency: StateDependency = {
       target,
@@ -5449,7 +5599,8 @@ export class Parser {
         const colonToken = this.peekAt(durationOffset)
         if (colonToken?.type === 'COLON') {
           // Verify this is a valid state name (lowercase, not an event)
-          const isLikelyState = currentName[0] === currentName[0].toLowerCase() && !EVENT_NAMES.has(currentName)
+          const isLikelyState =
+            currentName[0] === currentName[0].toLowerCase() && !EVENT_NAMES.has(currentName)
           return isLikelyState
         }
       }
@@ -5722,13 +5873,15 @@ export class Parser {
             type: 'Instance',
             component: 'Text',
             name: null,
-            properties: [{
-              type: 'Property',
-              name: 'content',
-              values: [str.value],
-              line: str.line,
-              column: str.column,
-            }],
+            properties: [
+              {
+                type: 'Property',
+                name: 'content',
+                values: [str.value],
+                line: str.line,
+                column: str.column,
+              },
+            ],
             children: [],
             states: [],
             events: [],
