@@ -3266,6 +3266,52 @@ export class Parser {
           this.advance()
         }
         if (this.check('DEDENT')) this.advance()
+
+        // Check for optional 'else' block - set visibleWhen to negated condition
+        this.skipNewlines()
+        if (this.check('ELSE')) {
+          this.advance() // consume ELSE
+          this.skipNewlines()
+          const negatedCondition = '!' + visibleWhen
+          if (this.check('INDENT')) {
+            this.advance() // consume INDENT
+            for (
+              let iter = 0;
+              !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
+              iter++
+            ) {
+              this.skipNewlines()
+              if (this.check('DEDENT') || this.isAtEnd()) break
+
+              // Child component definition in else block: ChildName as primitive:
+              if (this.check('IDENTIFIER') && this.checkNext('AS')) {
+                const childName = this.advance()
+                const child = this.parseComponentDefinition(childName)
+                if (child) {
+                  child.visibleWhen = negatedCondition
+                  component.children.push(child as unknown as Instance)
+                }
+                continue
+              }
+
+              // Child instance in else block
+              if (this.check('IDENTIFIER')) {
+                const name = this.advance()
+                const child = this.parseInstance(name)
+                if (child.type === 'Instance') {
+                  child.visibleWhen = negatedCondition
+                  component.children.push(child)
+                } else if (child.type === 'Slot') {
+                  component.children.push(child)
+                }
+                continue
+              }
+
+              this.advance()
+            }
+            if (this.check('DEDENT')) this.advance()
+          }
+        }
         continue
       }
 
@@ -3377,6 +3423,44 @@ export class Parser {
           this.advance()
         }
         if (this.check('DEDENT')) this.advance()
+
+        // Check for optional 'else' block - set visibleWhen to negated condition
+        this.skipNewlines()
+        if (this.check('ELSE')) {
+          this.advance() // consume ELSE
+          this.skipNewlines()
+          const negatedCondition = '!' + visibleWhen
+          if (this.check('INDENT')) {
+            this.advance() // consume INDENT
+            for (
+              let iter = 0;
+              !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
+              iter++
+            ) {
+              this.skipNewlines()
+              if (this.check('DEDENT') || this.isAtEnd()) break
+
+              // Child instance in else block
+              if (this.check('IDENTIFIER')) {
+                const name = this.advance()
+                const child = this.parseInstance(name)
+                if (child.type === 'Instance') {
+                  child.visibleWhen = negatedCondition
+                }
+                if (!instance.children) instance.children = []
+                if (child.type === 'Instance' || child.type === 'Slot') {
+                  instance.children.push(child)
+                } else if (child.type === 'ZagComponent') {
+                  instance.children.push(child as ZagNode)
+                }
+                continue
+              }
+
+              this.advance()
+            }
+            if (this.check('DEDENT')) this.advance()
+          }
+        }
         continue
       }
 
@@ -4849,8 +4933,27 @@ export class Parser {
 
       while (!this.check('RPAREN') && !this.isAtEnd()) {
         // Parse argument (identifier, string, or number)
+        // Also handle named parameters: key: value or key: $token
         if (this.check('IDENTIFIER')) {
-          action.args.push(this.advance().value)
+          const name = this.advance().value
+          // Check for named parameter (key: value)
+          if (this.check('COLON')) {
+            this.advance() // consume ':'
+            // Get the value (identifier, $token, string, number, or boolean)
+            if (this.check('IDENTIFIER')) {
+              const val = this.advance().value
+              action.args.push(`${name}: ${val}`)
+            } else if (this.check('STRING')) {
+              const val = this.advance().value
+              action.args.push(`${name}: ${val}`)
+            } else if (this.check('NUMBER')) {
+              const val = this.advance().value
+              action.args.push(`${name}: ${val}`)
+            }
+          } else {
+            // Simple identifier argument
+            action.args.push(name)
+          }
         } else if (this.check('STRING')) {
           action.args.push(this.advance().value)
         } else if (this.check('NUMBER')) {

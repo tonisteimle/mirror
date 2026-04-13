@@ -67,7 +67,7 @@ export function initDragDrop(config: DragDropInitConfig): DragDropInitResult {
       const currentContent = editorController.getContent()
       if (newSource !== currentContent) {
         editor.dispatch({
-          changes: { from: 0, to: currentContent.length, insert: newSource }
+          changes: { from: 0, to: currentContent.length, insert: newSource },
         })
       }
     },
@@ -186,6 +186,18 @@ export function initDragDrop(config: DragDropInitConfig): DragDropInitResult {
       })
     },
 
+    simulateDuplicate: (params: {
+      sourceNodeId: string
+      targetNodeId: string
+      placement: 'before' | 'after' | 'inside'
+    }) => {
+      return dragDropV2.controller.simulateDuplicate({
+        ...params,
+        container,
+        nodeIdAttr: 'data-mirror-id',
+      })
+    },
+
     simulateDragTo: (cursor: { x: number; y: number }) => {
       // Create a generic source for position calculation
       const source = {
@@ -199,7 +211,10 @@ export function initDragDrop(config: DragDropInitConfig): DragDropInitResult {
       const dragState = dragDropV2.controller.getState()
       return {
         isActive: dragState.type === 'dragging' || dragState.type === 'over-target',
-        source: (dragState.type === 'dragging' || dragState.type === 'over-target') ? dragState.source : null,
+        source:
+          dragState.type === 'dragging' || dragState.type === 'over-target'
+            ? dragState.source
+            : null,
         currentTarget: dragState.type === 'over-target' ? dragState.target : null,
         currentResult: dragState.type === 'over-target' ? dragState.result : null,
       }

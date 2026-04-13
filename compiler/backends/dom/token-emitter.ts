@@ -48,10 +48,7 @@ export interface TokenEmitterData {
 /**
  * Emit all token and data initialization code.
  */
-export function emitTokens(
-  ctx: TokenEmitterContext,
-  data: TokenEmitterData
-): void {
+export function emitTokens(ctx: TokenEmitterContext, data: TokenEmitterData): void {
   const { tokens, dataFiles } = data
 
   // Always emit __mirrorData and $get helper for $-variable support
@@ -67,7 +64,8 @@ export function emitTokens(
 
     if (token.value !== undefined) {
       // Simple token with value
-      const value = typeof token.value === 'string' ? `"${escapeJSString(token.value)}"` : token.value
+      const value =
+        typeof token.value === 'string' ? `"${escapeJSString(token.value)}"` : token.value
       ctx.emit(`"${tokenKey}": ${value},`)
     } else if (token.data !== undefined) {
       // Inline data object - serialize nested structure
@@ -146,7 +144,9 @@ function emitCollectionStore(ctx: TokenEmitterContext): void {
   ctx.emit('this._subscribers.forEach(fn => fn())')
   ctx.indentOut()
   ctx.emit('},')
-  ctx.emit('subscribe(fn) { this._subscribers.add(fn); return () => this._subscribers.delete(fn) },')
+  ctx.emit(
+    'subscribe(fn) { this._subscribers.add(fn); return () => this._subscribers.delete(fn) },'
+  )
   ctx.emit('add(item) {')
   ctx.indentIn()
   ctx.emit('const newItem = { id: item.id || Date.now().toString(36), ...item }')
@@ -215,10 +215,21 @@ function emitAggregationHelpers(ctx: TokenEmitterContext): void {
   ctx.emit('const $agg = {')
   ctx.indentIn()
   ctx.emit('count: (arr) => Array.isArray(arr) ? arr.length : 0,')
-  ctx.emit('sum: (arr, field) => Array.isArray(arr) ? arr.reduce((s, i) => s + (Number($getField(i, field)) || 0), 0) : 0,')
-  ctx.emit('avg: (arr, field) => { const a = Array.isArray(arr) ? arr : []; return a.length ? $agg.sum(a, field) / a.length : 0 },')
-  ctx.emit('min: (arr, field) => Array.isArray(arr) && arr.length ? Math.min(...arr.map(i => Number($getField(i, field)) || 0)) : 0,')
-  ctx.emit('max: (arr, field) => Array.isArray(arr) && arr.length ? Math.max(...arr.map(i => Number($getField(i, field)) || 0)) : 0,')
+  ctx.emit(
+    'sum: (arr, field) => Array.isArray(arr) ? arr.reduce((s, i) => s + (Number($getField(i, field)) || 0), 0) : 0,'
+  )
+  ctx.emit(
+    'avg: (arr, field) => { const a = Array.isArray(arr) ? arr : []; return a.length ? $agg.sum(a, field) / a.length : 0 },'
+  )
+  ctx.emit(
+    'unique: (arr, field) => Array.isArray(arr) ? [...new Set(field ? arr.map(i => $getField(i, field)) : arr)] : [],'
+  )
+  ctx.emit(
+    'min: (arr, field) => Array.isArray(arr) && arr.length ? Math.min(...arr.map(i => Number($getField(i, field)) || 0)) : 0,'
+  )
+  ctx.emit(
+    'max: (arr, field) => Array.isArray(arr) && arr.length ? Math.max(...arr.map(i => Number($getField(i, field)) || 0)) : 0,'
+  )
   ctx.emit('first: (arr) => Array.isArray(arr) ? arr[0] : undefined,')
   ctx.emit('last: (arr) => Array.isArray(arr) ? arr[arr.length - 1] : undefined,')
   ctx.indentOut()
@@ -236,8 +247,12 @@ function emitGetHelper(ctx: TokenEmitterContext): void {
   ctx.indentIn()
 
   // Check for aggregation method pattern
-  ctx.emit('// Check for aggregation pattern: collection.count, collection.sum(field), items.first.name')
-  ctx.emit('const aggMatch = name.match(/^(.+)\\.(count|sum|avg|min|max|first|last)(?:\\(([^)]+)\\))?(\\..+)?$/)')
+  ctx.emit(
+    '// Check for aggregation pattern: collection.count, collection.sum(field), items.first.name'
+  )
+  ctx.emit(
+    'const aggMatch = name.match(/^(.+)\\.(count|sum|avg|min|max|first|last)(?:\\(([^)]+)\\))?(\\..+)?$/)'
+  )
   ctx.emit('if (aggMatch) {')
   ctx.indentIn()
   ctx.emit('const [, collectionPath, method, field, postAccessor] = aggMatch')
@@ -290,7 +305,9 @@ function emitGetHelper(ctx: TokenEmitterContext): void {
   ctx.emit('')
 
   // Check _mirrorState
-  ctx.emit('if (window._mirrorState && name in window._mirrorState) return window._mirrorState[name]')
+  ctx.emit(
+    'if (window._mirrorState && name in window._mirrorState) return window._mirrorState[name]'
+  )
   ctx.emit('')
 
   // Nested access
@@ -337,6 +354,8 @@ function emitSetHelper(ctx: TokenEmitterContext): void {
   ctx.emit('if (_runtime && _runtime.notifyDataChange) _runtime.notifyDataChange(path, value)')
   ctx.indentOut()
   ctx.emit('}')
+  ctx.emit('// Expose $set globally for runtime access (Select two-way binding)')
+  ctx.emit('if (typeof window !== "undefined") window.$set = $set')
   ctx.emit('')
 }
 
@@ -347,10 +366,7 @@ function emitSetHelper(ctx: TokenEmitterContext): void {
 /**
  * Emit collection methods from .data files.
  */
-export function emitMethods(
-  ctx: TokenEmitterContext,
-  dataFiles?: DataFile[]
-): void {
+export function emitMethods(ctx: TokenEmitterContext, dataFiles?: DataFile[]): void {
   if (!dataFiles || dataFiles.length === 0) return
 
   // Collect all methods from all data files
@@ -452,13 +468,20 @@ export function serializeDataValue(value: unknown): string {
 
   if (Array.isArray(value)) {
     // String array or reference array
-    if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null && '__ref' in value[0]) {
+    if (
+      value.length > 0 &&
+      typeof value[0] === 'object' &&
+      value[0] !== null &&
+      '__ref' in value[0]
+    ) {
       // Reference array
       const refs = value.map(ref => serializeDataValue(ref))
       return `[${refs.join(', ')}]`
     }
     // Regular string array
-    const items = value.map(item => typeof item === 'string' ? `"${escapeJSString(item)}"` : String(item))
+    const items = value.map(item =>
+      typeof item === 'string' ? `"${escapeJSString(item)}"` : String(item)
+    )
     return `[${items.join(', ')}]`
   }
 
@@ -470,8 +493,8 @@ export function serializeDataValue(value: unknown): string {
 
     // Check for reference array
     if (isIRDataReferenceArray(value)) {
-      const refs = value.references.map(ref =>
-        `{ __ref: true, collection: "${ref.collection}", entry: "${ref.entry}" }`
+      const refs = value.references.map(
+        ref => `{ __ref: true, collection: "${ref.collection}", entry: "${ref.entry}" }`
       )
       return `[${refs.join(', ')}]`
     }

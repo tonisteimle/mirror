@@ -124,6 +124,7 @@ export function createNativeDragAdapter(config: NativeDragAdapterConfig): Native
 
       active = true
       currentSource = source
+      console.log('[NativeDragAdapter] DRAG_START source:', JSON.stringify(source, null, 2))
       eventPort.triggerDragStart(source, cursor)
     } else {
       // Subsequent dragovers are moves
@@ -160,12 +161,21 @@ export function createNativeDragAdapter(config: NativeDragAdapterConfig): Native
 
     // Re-extract source from actual drop data (may have more complete data)
     const source = extractDragSourceFromData(e)
+    console.log(
+      '[NativeDragAdapter] DROP extracted source:',
+      source ? JSON.stringify(source, null, 2) : 'null'
+    )
     if (source && active) {
       // Update source with complete data from drop
       currentSource = source
+      console.log('[NativeDragAdapter] DROP updated currentSource')
     }
 
     if (active) {
+      console.log(
+        '[NativeDragAdapter] DROP calling triggerDragEnd, currentSource:',
+        JSON.stringify(currentSource, null, 2)
+      )
       eventPort.triggerDragEnd()
       resetState()
     }

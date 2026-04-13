@@ -23,14 +23,15 @@ import { SCHEMA, DSL, PropertyDef } from './dsl'
 export const PROPERTY_STARTERS = new Set<string>([
   // ALL from schema - properties that take values (numeric, color, keywords, or custom)
   ...Object.values(SCHEMA)
-    .filter(prop =>
-      prop.numeric ||
-      prop.color ||
-      (prop.keywords && Object.keys(prop.keywords).length > 0 && !prop.keywords._standalone)
+    .filter(
+      prop =>
+        prop.numeric ||
+        prop.color ||
+        (prop.keywords && Object.keys(prop.keywords).length > 0 && !prop.keywords._standalone)
     )
     .flatMap(prop => [prop.name, ...prop.aliases]),
   // Special keywords that take a value
-  'bind',  // bind varName - tracks active exclusive() child content
+  'bind', // bind varName - tracks active exclusive() child content
 ])
 
 /**
@@ -53,27 +54,49 @@ export const BOOLEAN_PROPERTIES = new Set<string>([
  */
 export const LAYOUT_BOOLEANS = new Set<string>([
   // Core layout booleans
-  'horizontal', 'hor', 'vertical', 'ver',
-  'center', 'cen',
-  'spread', 'wrap', 'stacked', 'dense',
+  'horizontal',
+  'hor',
+  'vertical',
+  'ver',
+  'center',
+  'cen',
+  'spread',
+  'wrap',
+  'stacked',
+  'dense',
 
   // Position
-  'absolute', 'abs', 'fixed', 'relative',
+  'absolute',
+  'abs',
+  'fixed',
+  'relative',
 
   // Visibility
-  'hidden', 'visible', 'disabled',
+  'hidden',
+  'visible',
+  'disabled',
 
   // Scroll
-  'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'clip',
+  'scroll',
+  'scroll-ver',
+  'scroll-hor',
+  'scroll-both',
+  'clip',
 
   // Typography modifiers
-  'truncate', 'italic', 'underline', 'uppercase', 'lowercase',
+  'truncate',
+  'italic',
+  'underline',
+  'uppercase',
+  'lowercase',
 
   // Flex
-  'grow', 'shrink',
+  'grow',
+  'shrink',
 
   // Input
-  'focusable', 'readonly',
+  'focusable',
+  'readonly',
 ])
 
 /**
@@ -81,7 +104,12 @@ export const LAYOUT_BOOLEANS = new Set<string>([
  * These are NOT in LAYOUT_BOOLEANS to avoid breaking "align top left"
  */
 export const POSITION_BOOLEANS = new Set<string>([
-  'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center',
+  'left',
+  'right',
+  'top',
+  'bottom',
+  'hor-center',
+  'ver-center',
 ])
 
 /**
@@ -112,9 +140,11 @@ export function getAllSchemaPropertyNames(): Set<string> {
  * Check if a property name is a valid property from the schema.
  */
 export function isValidProperty(name: string): boolean {
-  return getAllSchemaPropertyNames().has(name) ||
+  return (
+    getAllSchemaPropertyNames().has(name) ||
     PROPERTY_STARTERS.has(name) ||
     BOOLEAN_PROPERTIES.has(name)
+  )
 }
 
 /**
@@ -170,15 +200,45 @@ export const CUSTOM_STATES = new Set<string>(
     .map(([name]) => name)
 )
 
+// ============================================================================
+// SIZE STATES - from DSL.sizeStates
+// ============================================================================
+
+/**
+ * Built-in size states (CSS Container Queries).
+ * These respond to the element's own width, not the viewport.
+ * Source: DSL.sizeStates in dsl.ts
+ */
+export const SIZE_STATES = new Set<string>(Object.keys(DSL.sizeStates))
+
+/**
+ * Check if a state name is a size state.
+ * Includes built-in size states and custom ones defined via tokens.
+ */
+export function isSizeState(name: string, customSizeStates?: Set<string>): boolean {
+  return SIZE_STATES.has(name) || (customSizeStates?.has(name) ?? false)
+}
+
+/**
+ * Get the default thresholds for a built-in size state.
+ * Returns undefined for custom size states (which have their own thresholds via tokens).
+ */
+export function getSizeStateThresholds(name: string): { min?: number; max?: number } | undefined {
+  const def = DSL.sizeStates[name]
+  if (!def) return undefined
+  return {
+    min: def.defaultMin,
+    max: def.defaultMax,
+  }
+}
+
 /**
  * State modifiers for the interaction model.
  * - exclusive: only one element in group can have this state
  * - toggle: same trigger toggles state on/off
  * - initial: explicitly mark as initial state
  */
-export const STATE_MODIFIERS = new Set<string>([
-  'exclusive', 'toggle', 'initial',
-])
+export const STATE_MODIFIERS = new Set<string>(['exclusive', 'toggle', 'initial'])
 
 // ============================================================================
 // DIRECTIONAL PROPERTIES - from SCHEMA[prop].directional

@@ -2,7 +2,7 @@
 
 **Die Sprache für AI-unterstütztes UI-Design.**
 
-Mirror ist eine DSL, die AI versteht *und* Menschen lesen können. AI generiert Code, Designer verfeinern ihn – ohne Framework-Wissen, ohne Build-Tools.
+Mirror ist eine DSL, die AI versteht _und_ Menschen lesen können. AI generiert Code, Designer verfeinern ihn – ohne Framework-Wissen, ohne Build-Tools.
 
 ## Vision
 
@@ -69,19 +69,19 @@ dist/                  # Build Output
 
 ## Wichtige Dateien
 
-| Datei | Beschreibung |
-|-------|--------------|
-| `studio/bootstrap.ts` | Architektur Entry Point |
-| `studio/core/state.ts` | Single Source of Truth |
-| `studio/modules/file-manager/` | File Operations |
-| `studio/modules/compiler/` | Compiler Wrapper |
-| `studio/pickers/` | Color, Token, Icon, Animation Picker |
-| `studio/panels/` | Property, Tree, Files Panel |
-| `compiler/ir/index.ts` | IR-Transformation, SourceMap |
-| `compiler/backends/dom.ts` | DOM Code-Generator |
-| `compiler/studio/code-modifier.ts` | Code-Änderungen |
-| `compiler/schema/dsl.ts` | DSL Schema (Single Source of Truth) |
-| `compiler/validator/index.ts` | Code Validator API |
+| Datei                              | Beschreibung                         |
+| ---------------------------------- | ------------------------------------ |
+| `studio/bootstrap.ts`              | Architektur Entry Point              |
+| `studio/core/state.ts`             | Single Source of Truth               |
+| `studio/modules/file-manager/`     | File Operations                      |
+| `studio/modules/compiler/`         | Compiler Wrapper                     |
+| `studio/pickers/`                  | Color, Token, Icon, Animation Picker |
+| `studio/panels/`                   | Property, Tree, Files Panel          |
+| `compiler/ir/index.ts`             | IR-Transformation, SourceMap         |
+| `compiler/backends/dom.ts`         | DOM Code-Generator                   |
+| `compiler/studio/code-modifier.ts` | Code-Änderungen                      |
+| `compiler/schema/dsl.ts`           | DSL Schema (Single Source of Truth)  |
+| `compiler/validator/index.ts`      | Code Validator API                   |
 
 ## Commands
 
@@ -93,17 +93,85 @@ npm run validate       # Code validieren (z.B. npm run validate app.mirror)
 ./deploy.sh            # Production Deploy
 ```
 
+## Compiler CLI
+
+Das CLI kompiliert Mirror-Projekte zu JavaScript (DOM oder React).
+
+### Installation & Aufruf
+
+```bash
+# Nach npm install / npm link
+mirror-compile app.mir -o dist/app.js
+
+# Oder direkt
+npx tsx compiler/cli.ts app.mir -o dist/app.js
+```
+
+### Dateitypen
+
+| Typ            | Extensions            | Beschreibung                     |
+| -------------- | --------------------- | -------------------------------- |
+| **Layout**     | `.mir`, `.mirror`     | UI-Layouts und App-Struktur      |
+| **Tokens**     | `.tok`, `.tokens`     | Design Tokens (Farben, Abstände) |
+| **Components** | `.com`, `.components` | Wiederverwendbare Komponenten    |
+| **Data**       | `.yaml`, `.yml`       | Strukturierte Datenquellen       |
+
+### Projekt-Struktur
+
+```
+my-app/
+├── data/           # .yaml, .yml Dateien
+├── tokens/         # .tok, .tokens Dateien
+├── components/     # .com, .components Dateien
+├── layouts/        # .mir, .mirror Dateien
+├── screens/        # .mir, .mirror Dateien
+├── tokens.tok      # Alternative: Root-Datei
+├── components.com  # Alternative: Root-Datei
+└── app.mir         # Entry Point
+```
+
+### Beispiele
+
+```bash
+# Einzelne Datei
+mirror-compile app.mir -o dist/app.js
+
+# Mehrere Dateien (Reihenfolge wichtig!)
+mirror-compile tokens.tok components.com app.mir -o dist/bundle.js
+
+# Projekt-Modus (automatische Reihenfolge)
+mirror-compile --project my-app -o dist/app.js
+
+# Watch-Mode
+mirror-compile --project my-app -o dist/app.js --watch
+
+# React-Output
+mirror-compile app.mir --react -o App.tsx
+
+# Verbose (zeigt geladene Dateien)
+mirror-compile --project my-app -v -o dist/app.js
+```
+
+### Verarbeitungsreihenfolge (Projekt-Modus)
+
+1. `data/` → Datenquellen
+2. `tokens/` → Design Tokens
+3. `components/` → Komponenten
+4. `layouts/` → Layouts
+5. `screens/` → Screens
+6. Root-Dateien → App Entry Points
+
 ## Architektur
 
 ### Kern-Konzepte
 
-| Konzept | Beschreibung |
-|---------|--------------|
-| **State Store** | Single Source of Truth in `studio/core/state.ts` |
-| **Event Bus** | Lose Kopplung via Events |
-| **Command Pattern** | Undo/Redo für alle Änderungen |
-| **SourceMap** | Bidirektionales Editing (Preview ↔ Code) |
-| **SyncCoordinator** | Editor ↔ Preview ↔ Panel Sync |
+| Konzept             | Beschreibung                                     |
+| ------------------- | ------------------------------------------------ |
+| **State Store**     | Single Source of Truth in `studio/core/state.ts` |
+| **Event Bus**       | Lose Kopplung via Events                         |
+| **Command Pattern** | Undo/Redo für alle Änderungen                    |
+| **SourceMap**       | Bidirektionales Editing (Preview ↔ Code)         |
+| **SyncCoordinator** | Editor ↔ Preview ↔ Panel Sync                    |
 
 ## Cache Busting
 
@@ -125,7 +193,7 @@ Das folgende Tutorial ist die vollständige Referenz für die Mirror DSL. Es wir
 
 ## Elemente & Hierarchie
 
-*Die Grundbausteine jeder Mirror-Oberfläche*
+_Die Grundbausteine jeder Mirror-Oberfläche_
 
 In diesem Kapitel lernst du die Basis-Syntax von Mirror: Wie du Elemente erstellst, sie mit Properties gestaltest und durch Einrückung verschachtelst.
 
@@ -158,15 +226,15 @@ Frame gap 12, pad 16, bg #1a1a1a, rad 8
   Input placeholder "E-Mail eingeben...", bg #333, col white, pad 10, rad 4
 ```
 
-| Primitive | Beschreibung |
-| --- | --- |
-| `Frame` | Container – das zentrale Layout-Element |
-| `Text` | Textinhalt |
-| `Image` | Bild |
-| `Icon` | Icon (Lucide oder Material) |
-| `Button` | Klickbarer Button |
-| `Input` | Einzeiliges Eingabefeld |
-| `Link` | Anklickbarer Link |
+| Primitive | Beschreibung                            |
+| --------- | --------------------------------------- |
+| `Frame`   | Container – das zentrale Layout-Element |
+| `Text`    | Textinhalt                              |
+| `Image`   | Bild                                    |
+| `Icon`    | Icon (Lucide oder Material)             |
+| `Button`  | Klickbarer Button                       |
+| `Input`   | Einzeiliges Eingabefeld                 |
+| `Link`    | Anklickbarer Link                       |
 
 > **Hinweis:** Weitere Primitives: `Textarea`, `Label`, `Divider`, `Spacer`, semantische Elemente (`Header`, `Nav`, `Main`, `Section`, `Footer`, `H1`–`H6`) und über 50 Zag-Komponenten (`Dialog`, `Tabs`, `Menu`, `Select`, etc.).
 
@@ -197,15 +265,15 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
     Frame w 50, h 50, bg #f59e0b, rad 25
 ```
 
-| Property | Beschreibung | Beispiel |
-| --- | --- | --- |
-| `bg` | Hintergrundfarbe | `bg #2271C1` |
-| `col` | Textfarbe | `col white` |
-| `pad` | Innenabstand (zwischen Rand und Inhalt) | `pad 12` oder `pad 12 24` |
-| `mar` | Außenabstand (zwischen Elementen) | `mar 16` |
-| `w` / `h` | Breite / Höhe | `w 200, h 100` |
-| `rad` | Eckenradius | `rad 8` |
-| `fs` | Schriftgröße | `fs 18` |
+| Property  | Beschreibung                            | Beispiel                  |
+| --------- | --------------------------------------- | ------------------------- |
+| `bg`      | Hintergrundfarbe                        | `bg #2271C1`              |
+| `col`     | Textfarbe                               | `col white`               |
+| `pad`     | Innenabstand (zwischen Rand und Inhalt) | `pad 12` oder `pad 12 24` |
+| `mar`     | Außenabstand (zwischen Elementen)       | `mar 16`                  |
+| `w` / `h` | Breite / Höhe                           | `w 200, h 100`            |
+| `rad`     | Eckenradius                             | `rad 8`                   |
+| `fs`      | Schriftgröße                            | `fs 18`                   |
 
 ### Hierarchie durch Einrückung
 
@@ -293,14 +361,14 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
     Text "C", col white
 ```
 
-| Property | Beschreibung |
-| --- | --- |
-| `hor` | Kinder horizontal anordnen |
-| `ver` | Kinder vertikal anordnen (Standard) |
-| `gap` | Abstand zwischen Kindern |
-| `center` | Kinder zentrieren (beide Achsen) |
-| `spread` | Kinder an Rändern verteilen |
-| `wrap` | Kinder umbrechen wenn kein Platz |
+| Property | Beschreibung                        |
+| -------- | ----------------------------------- |
+| `hor`    | Kinder horizontal anordnen          |
+| `ver`    | Kinder vertikal anordnen (Standard) |
+| `gap`    | Abstand zwischen Kindern            |
+| `center` | Kinder zentrieren (beide Achsen)    |
+| `spread` | Kinder an Rändern verteilen         |
+| `wrap`   | Kinder umbrechen wenn kein Platz    |
 
 ### Icons
 
@@ -328,12 +396,12 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
       Text "Speichern"
 ```
 
-| Property | Beschreibung | Beispiel |
-| --- | --- | --- |
-| `is` | Icon-Größe in Pixel | `is 24` |
-| `ic` | Icon-Farbe | `ic #2271C1` |
-| `iw` | Strichstärke | `iw 1.5` |
-| `fill` | Ausgefüllte Variante | `Icon "heart", fill` |
+| Property | Beschreibung         | Beispiel             |
+| -------- | -------------------- | -------------------- |
+| `is`     | Icon-Größe in Pixel  | `is 24`              |
+| `ic`     | Icon-Farbe           | `ic #2271C1`         |
+| `iw`     | Strichstärke         | `iw 1.5`             |
+| `fill`   | Ausgefüllte Variante | `Icon "heart", fill` |
 
 ### Praxisbeispiel: Card
 
@@ -374,21 +442,20 @@ Frame w 300, bg #1a1a1a, rad 12, pad 20, gap 16
 
 ### Das Wichtigste
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `Element "Text", prop value` | Grundsyntax |
-| `Frame, Text, Button, Input` | Primitives |
-| `bg, col, pad, rad, w, h, fs` | Styling |
-| `hor, ver, gap, center, spread` | Layout |
-| `2 Leerzeichen Einrückung` | Kind-Element |
-| `Frame props; Kind1; Kind2` | Kurzschreibweise |
-
+| Syntax                          | Bedeutung        |
+| ------------------------------- | ---------------- |
+| `Element "Text", prop value`    | Grundsyntax      |
+| `Frame, Text, Button, Input`    | Primitives       |
+| `bg, col, pad, rad, w, h, fs`   | Styling          |
+| `hor, ver, gap, center, spread` | Layout           |
+| `2 Leerzeichen Einrückung`      | Kind-Element     |
+| `Frame props; Kind1; Kind2`     | Kurzschreibweise |
 
 ---
 
 ## Wiederverwendbare Komponenten
 
-*Styles einmal definieren, überall verwenden*
+_Styles einmal definieren, überall verwenden_
 
 In diesem Kapitel lernst du, wie du eigene Komponenten erstellst. Das Kernkonzept: **Mit `:` definierst du, ohne `:` verwendest du.** Diese Regel gilt überall – für Komponenten, für Variationen, für Kind-Komponenten.
 
@@ -422,10 +489,10 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 
 Die Komponente `Btn:` speichert alle Properties. Bei `Btn "Text"` werden diese Properties angewendet und der Text eingefügt.
 
-| Syntax | Bedeutung |
-| --- | --- |
+| Syntax  | Bedeutung             |
+| ------- | --------------------- |
 | `Name:` | Komponente definieren |
-| `Name` | Komponente verwenden |
+| `Name`  | Komponente verwenden  |
 
 ### Properties überschreiben
 
@@ -497,11 +564,11 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 
 > **Hinweis:** **Tipp:** Du kannst auch direkt von Primitives erben. `PrimaryBtn as Button: bg #2271C1` erzeugt einen Button mit allen Standard-Button-Eigenschaften plus blauem Hintergrund.
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `DangerBtn as Btn:` | DangerBtn erbt von Btn |
-| `PrimaryBtn as Button:` | Von Primitive erben |
-| `DangerBtn "Text"` | DangerBtn verwenden |
+| Syntax                  | Bedeutung              |
+| ----------------------- | ---------------------- |
+| `DangerBtn as Btn:`     | DangerBtn erbt von Btn |
+| `PrimaryBtn as Button:` | Von Primitive erben    |
+| `DangerBtn "Text"`      | DangerBtn verwenden    |
 
 ### Komplexe Komponenten
 
@@ -561,10 +628,10 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
 
 `Title:` und `Desc:` sind Komponenten-Definitionen innerhalb von `Card:`. Sie haben eigene Styles (Schriftgröße, Farbe). Bei der Verwendung schreibst du `Title "Text"` und `Desc "Text"` – ohne Doppelpunkt, wie bei jeder Komponenten-Verwendung.
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `Title:` in Definition | Kind-Komponente definieren |
-| `Title "Text"` bei Verwendung | Kind-Komponente befüllen |
+| Syntax                        | Bedeutung                  |
+| ----------------------------- | -------------------------- |
+| `Title:` in Definition        | Kind-Komponente definieren |
+| `Title "Text"` bei Verwendung | Kind-Komponente befüllen   |
 
 ### Kind-Komponenten mit mehreren Elementen
 
@@ -637,22 +704,21 @@ Der Vorteil: Die gesamte Formatierung ist in der Definition. Bei der Verwendung 
 
 **Eine Regel:** Mit `:` definierst du, ohne `:` verwendest du.
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `Btn:` | Komponente definieren |
-| `Btn "OK"` | Komponente verwenden |
-| `Btn "OK", bg #333` | Properties überschreiben |
-| `Card` + Kinder | Kinder hinzufügen |
+| Syntax                 | Bedeutung                  |
+| ---------------------- | -------------------------- |
+| `Btn:`                 | Komponente definieren      |
+| `Btn "OK"`             | Komponente verwenden       |
+| `Btn "OK", bg #333`    | Properties überschreiben   |
+| `Card` + Kinder        | Kinder hinzufügen          |
 | `Title:` in Komponente | Kind-Komponente definieren |
-| `Title "Text"` | Kind-Komponente befüllen |
-| `DangerBtn as Btn:` | Variation als Komponente |
-
+| `Title "Text"`         | Kind-Komponente befüllen   |
+| `DangerBtn as Btn:`    | Variation als Komponente   |
 
 ---
 
 ## Design Tokens
 
-*Werte zentral definieren und überall verwenden*
+_Werte zentral definieren und überall verwenden_
 
 Im letzten Kapitel hast du gelernt, Struktur zu abstrahieren – mit Komponenten. Dieses Kapitel zeigt, wie du **Werte** abstrahierst: Farben, Abstände, Radien. Statt Hex-Codes überall zu wiederholen, definierst du sie einmal als Token.
 
@@ -705,14 +771,14 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 
 Der Suffix sagt, wofür der Token gedacht ist:
 
-| Suffix | Bedeutung | Beispiel |
-| --- | --- | --- |
-| `.bg` | Hintergrundfarbe | `primary.bg: #2271C1` |
-| `.col` | Textfarbe | `muted.col: #888` |
-| `.boc` | Border-Farbe | `border.boc: #333` |
-| `.rad` | Radius | `card.rad: 8` |
-| `.pad` | Padding | `space.pad: 16` |
-| `.gap` | Abstand | `space.gap: 12` |
+| Suffix | Bedeutung        | Beispiel              |
+| ------ | ---------------- | --------------------- |
+| `.bg`  | Hintergrundfarbe | `primary.bg: #2271C1` |
+| `.col` | Textfarbe        | `muted.col: #888`     |
+| `.boc` | Border-Farbe     | `border.boc: #333`    |
+| `.rad` | Radius           | `card.rad: 8`         |
+| `.pad` | Padding          | `space.pad: 16`       |
+| `.gap` | Abstand          | `space.gap: 12`       |
 
 > **Hinweis:** **Warum das hilft:** Das ermöglicht intelligentes Autocomplete. Tippst du `bg $`, zeigt die IDE nur Tokens mit `.bg` Suffix. So siehst du sofort, welche Tokens für Hintergrundfarben gedacht sind.
 
@@ -741,7 +807,7 @@ Card
 
 ### Semantische Tokens
 
-Der wichtigste Tipp: Benenne Tokens nach ihrer *Bedeutung*, nicht nach ihrem Wert. Statt `$blue` schreib `$primary` – das beschreibt die Funktion, nicht die Farbe.
+Der wichtigste Tipp: Benenne Tokens nach ihrer _Bedeutung_, nicht nach ihrem Wert. Statt `$blue` schreib `$primary` – das beschreibt die Funktion, nicht die Farbe.
 
 Warum? Deine Komponenten wissen dann nicht, dass "primary" gerade blau ist – sie wissen nur, dass es die Hauptfarbe ist. Willst du später die Primärfarbe ändern, änderst du nur den Token.
 
@@ -831,7 +897,7 @@ Frame $cardbase
 
 Jetzt siehst du das große Bild: Ein vollständiges Design System hat drei Ebenen, die aufeinander aufbauen:
 
-Am Ende sind die Instanzen komplett sauber – du siehst nur noch, *was* angezeigt wird, nicht *wie*:
+Am Ende sind die Instanzen komplett sauber – du siehst nur noch, _was_ angezeigt wird, nicht _wie_:
 
 ```mirror
 // 1. TOKENS – Werte zentral definieren
@@ -871,30 +937,29 @@ Card
 
 #### Einzelne Tokens
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `primary.bg: #2271C1` | Token definieren (mit Suffix) |
-| `bg $primary` | Token verwenden (mit `$`) |
-| `primary` statt `blue` | Semantisch benennen |
+| Syntax                 | Bedeutung                     |
+| ---------------------- | ----------------------------- |
+| `primary.bg: #2271C1`  | Token definieren (mit Suffix) |
+| `bg $primary`          | Token verwenden (mit `$`)     |
+| `primary` statt `blue` | Semantisch benennen           |
 
 #### Property Sets (Style-Bündel)
 
-| Syntax | Bedeutung |
-| --- | --- |
+| Syntax                                 | Bedeutung                             |
+| -------------------------------------- | ------------------------------------- |
 | `cardstyle: bg #1a1a1a, pad 16, rad 8` | Property Set definieren (ohne Suffix) |
-| `Frame $cardstyle` | Alle Properties auf einmal anwenden |
-| `heading: fs 24, weight bold` | Typografie-Stile bündeln |
+| `Frame $cardstyle`                     | Alle Properties auf einmal anwenden   |
+| `heading: fs 24, weight bold`          | Typografie-Stile bündeln              |
 
 **Drei Stufen:** Tokens → Komponenten → Instanzen
 
 Tokens abstrahieren Werte, Property Sets bündeln Styles, Komponenten abstrahieren Struktur. Zusammen ergeben sie ein konsistentes Design System.
 
-
 ---
 
 ## Layout
 
-*Flex, Grid und Positionierung*
+_Flex, Grid und Positionierung_
 
 Mirror bietet drei Layout-Systeme: **Flex** für fließende Layouts (Navigation, Cards), **Grid** für strukturierte Raster (Dashboards, Page-Layouts), und **Stacked** für überlagerte Elemente (Badges, Overlays).
 
@@ -976,12 +1041,12 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
     Text "nur horizontal", col white
 ```
 
-| Ausrichtung | Beschreibung |
-| --- | --- |
-| `center` | Beide Achsen zentrieren |
-| `ver-center` | Nur vertikal zentrieren (bei `hor`) |
+| Ausrichtung  | Beschreibung                          |
+| ------------ | ------------------------------------- |
+| `center`     | Beide Achsen zentrieren               |
+| `ver-center` | Nur vertikal zentrieren (bei `hor`)   |
 | `hor-center` | Nur horizontal zentrieren (bei `ver`) |
-| `spread` | Kinder an Rändern verteilen |
+| `spread`     | Kinder an Rändern verteilen           |
 
 #### 9 Positionen
 
@@ -1169,11 +1234,11 @@ Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
 
 ### Zusammenfassung
 
-| System | Verwendung |
-| --- | --- |
-| **Flex** | Fließende Layouts (Navigation, Cards) |
-| **Grid** | Strukturierte Raster (Dashboards) |
-| **Stacked** | Überlagerungen (Badges, Overlays) |
+| System      | Verwendung                            |
+| ----------- | ------------------------------------- |
+| **Flex**    | Fließende Layouts (Navigation, Cards) |
+| **Grid**    | Strukturierte Raster (Dashboards)     |
+| **Stacked** | Überlagerungen (Badges, Overlays)     |
 
 **Flex:**
 
@@ -1201,12 +1266,11 @@ Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
 - `w`, `h` – Größe
 - `z N` – Stapelreihenfolge
 
-
 ---
 
 ## Styling
 
-*Farben, Typografie, Borders und Effekte*
+_Farben, Typografie, Borders und Effekte_
 
 In den vorherigen Kapiteln hast du Layout und Struktur kennengelernt. Dieses Kapitel zeigt alle **visuellen Properties** – von Farben über Typografie bis zu Effekten. Es ist als Referenz gedacht: Schau hier nach, wenn du wissen willst, wie ein bestimmter Effekt funktioniert.
 
@@ -1476,12 +1540,11 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
 - `opacity` – Transparenz
 - `cursor pointer/grab/move` – Mauszeiger
 
-
 ---
 
 ## States
 
-*Wie Elemente ihr Aussehen ändern*
+_Wie Elemente ihr Aussehen ändern_
 
 Bisher haben wir statische UIs gebaut. Jetzt lernen wir, wie Elemente ihr Aussehen ändern können – bei Hover, bei Klick, oder wenn etwas anderes passiert. Das Konzept dahinter: **States**.
 
@@ -1499,9 +1562,9 @@ Btn "Klick mich"
 
 Der Button startet grau. Bei Klick wird er blau. Nochmal klicken – wieder grau.
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `on:` | **State** – definiert das Aussehen |
+| Syntax     | Bedeutung                                   |
+| ---------- | ------------------------------------------- |
+| `on:`      | **State** – definiert das Aussehen          |
 | `toggle()` | **Funktion** – wechselt den State bei Klick |
 
 ### System-States: hover, focus, active, disabled
@@ -1519,12 +1582,12 @@ Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
 Btn "Hover und Klick mich"
 ```
 
-| System-State | Wann aktiv? |
-| --- | --- |
-| `hover:` | Maus ist über dem Element |
-| `focus:` | Element hat Tastatur-Fokus |
-| `active:` | Während Mausklick gedrückt |
-| `disabled:` | Element ist deaktiviert |
+| System-State | Wann aktiv?                |
+| ------------ | -------------------------- |
+| `hover:`     | Maus ist über dem Element  |
+| `focus:`     | Element hat Tastatur-Fokus |
+| `active:`    | Während Mausklick gedrückt |
+| `disabled:`  | Element ist deaktiviert    |
 
 #### Focus und Disabled
 
@@ -1593,7 +1656,7 @@ ExpandBtn: pad 12, bg #333, col white, rad 6, hor, ver-center, gap 8, cursor poi
 ExpandBtn
 ```
 
-Im Base-State zeigt der Button "Mehr zeigen" mit Pfeil nach unten. Im `open`-State wird *alles* ausgetauscht: anderer Text, anderes Icon.
+Im Base-State zeigt der Button "Mehr zeigen" mit Pfeil nach unten. Im `open`-State wird _alles_ ausgetauscht: anderer Text, anderes Icon.
 
 > **Hinweis:** **Wie Figma Variants:** Jeder State kann eine komplett andere Version der Komponente sein – nicht nur andere Farben, sondern andere Inhalte, andere Struktur.
 
@@ -1626,7 +1689,7 @@ StatusBtn
 
 ### Nur einer aktiv: exclusive()
 
-Bei Tabs oder Radio-Buttons soll immer nur *ein* Element aktiv sein. Wenn du eines aktivierst, werden alle anderen automatisch deaktiviert:
+Bei Tabs oder Radio-Buttons soll immer nur _ein_ Element aktiv sein. Wenn du eines aktivierst, werden alle anderen automatisch deaktiviert:
 
 ```mirror
 Tab: pad 12 20, rad 6, bg #333, col #888, cursor pointer, exclusive()
@@ -1672,7 +1735,7 @@ Frame gap 8, bind city
 
 ### Auf andere Elemente reagieren
 
-Manchmal soll ein Element sein Aussehen ändern, wenn ein *anderes* Element seinen State wechselt. Klassisches Beispiel: Ein Menü wird sichtbar, wenn ein Button aktiviert wird.
+Manchmal soll ein Element sein Aussehen ändern, wenn ein _anderes_ Element seinen State wechselt. Klassisches Beispiel: Ein Menü wird sichtbar, wenn ein Button aktiviert wird.
 
 Dafür brauchst du zwei Dinge:
 
@@ -1735,12 +1798,12 @@ Frame gap 8
       bg #ef444422
 ```
 
-| Event | Beschreibung |
-| --- | --- |
-| `toggle()` | Bei Klick (Default) |
-| `onenter toggle()` | Bei Enter-Taste |
-| `onescape toggle()` | Bei Escape-Taste |
-| `onspace toggle()` | Bei Leertaste |
+| Event                | Beschreibung        |
+| -------------------- | ------------------- |
+| `toggle()`           | Bei Klick (Default) |
+| `onenter toggle()`   | Bei Enter-Taste     |
+| `onescape toggle()`  | Bei Escape-Taste    |
+| `onspace toggle()`   | Bei Leertaste       |
 | `onkeydown arrow-up` | Bei Pfeiltaste hoch |
 
 ---
@@ -1751,44 +1814,203 @@ Frame gap 8
 
 #### System-States (automatisch)
 
-| State | Wann aktiv? |
-| --- | --- |
-| `hover:` | Maus über Element |
-| `focus:` | Tastatur-Fokus |
-| `active:` | Während Klick |
+| State       | Wann aktiv?         |
+| ----------- | ------------------- |
+| `hover:`    | Maus über Element   |
+| `focus:`    | Tastatur-Fokus      |
+| `active:`   | Während Klick       |
 | `disabled:` | Element deaktiviert |
 
 #### Custom States (manuell)
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `on:` | Custom State definieren (Name frei wählbar) |
-| `toggle()` | State bei Klick wechseln |
-| `exclusive()` | Nur einer aktiv (Geschwister aus) |
-| `bind varName` | Aktiven Wert in Variable speichern |
-| `Btn "Text", on` | Instanz startet im State |
+| Syntax           | Bedeutung                                   |
+| ---------------- | ------------------------------------------- |
+| `on:`            | Custom State definieren (Name frei wählbar) |
+| `toggle()`       | State bei Klick wechseln                    |
+| `exclusive()`    | Nur einer aktiv (Geschwister aus)           |
+| `bind varName`   | Aktiven Wert in Variable speichern          |
+| `Btn "Text", on` | Instanz startet im State                    |
 
 #### Cross-Element
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `name MenuBtn` | Element benennen |
+| Syntax          | Bedeutung                        |
+| --------------- | -------------------------------- |
+| `name MenuBtn`  | Element benennen                 |
 | `MenuBtn.open:` | Reagieren wenn MenuBtn in "open" |
 
 #### Events
 
-| Event | Beschreibung |
-| --- | --- |
-| `toggle()` | Bei Klick (Default) |
-| `onenter fn()` | Bei Enter-Taste |
-| `onescape fn()` | Bei Escape-Taste |
+| Event           | Beschreibung        |
+| --------------- | ------------------- |
+| `toggle()`      | Bei Klick (Default) |
+| `onenter fn()`  | Bei Enter-Taste     |
+| `onescape fn()` | Bei Escape-Taste    |
 
+---
+
+## Size-States (Responsive Komponenten)
+
+_Element-basierte Responsive Layouts mit CSS Container Queries_
+
+Size-States sind ein spezieller State-Typ, der auf die **Breite des Elements selbst** reagiert – nicht auf die Viewport-Breite wie Media Queries. Sie nutzen CSS Container Queries für native Browser-Unterstützung ohne JavaScript.
+
+### Das Konzept
+
+Während `hover:` oder `on:` auf Benutzer-Interaktionen reagieren, reagieren Size-States auf die **Größe des Elements**:
+
+```mirror
+Card: bg #1a1a1a, pad 16, rad 8
+  compact:              // Element < 400px breit
+    pad 8
+    fs 12
+  regular:              // Element 400-800px breit
+    pad 16
+  wide:                 // Element > 800px breit
+    pad 24
+    hor                 // Layout wechselt zu horizontal
+```
+
+**Warum Element-basiert?** Eine Card in einer schmalen Sidebar soll anders aussehen als dieselbe Card im Hauptbereich – unabhängig von der Bildschirmgröße.
+
+### Built-in Size-States
+
+Mirror bietet drei vordefinierte Size-States:
+
+| Size-State | Bedingung         | Typische Verwendung      |
+| ---------- | ----------------- | ------------------------ |
+| `compact:` | Element < 400px   | Schmale Sidebars, Mobile |
+| `regular:` | Element 400-800px | Standard-Layouts         |
+| `wide:`    | Element > 800px   | Breite Hauptbereiche     |
+
+```mirror
+Frame bg #1a1a1a, pad 16
+  compact:
+    pad 8
+    Text "Kompakt", col white
+  regular:
+    pad 16
+    Text "Normal", col white
+  wide:
+    pad 24
+    Text "Breit", col white
+```
+
+### Mit System-States kombinieren
+
+Size-States und System-States (hover, focus) arbeiten unabhängig voneinander:
+
+```mirror
+Card: bg #1a1a1a, pad 16, rad 8, cursor pointer
+  hover:
+    bg #252525
+  compact:
+    pad 8
+  wide:
+    pad 24
+    hor
+```
+
+Das Element reagiert auf Hover (interaktiv) **und** auf seine eigene Breite (responsiv) – beide Mechanismen greifen gleichzeitig.
+
+### Custom Size-States mit Tokens
+
+Du kannst eigene Size-States definieren oder die Default-Schwellenwerte überschreiben:
+
+```mirror
+// Eigenen Size-State definieren
+tiny.max: 200
+
+// Default-Schwellenwert überschreiben
+compact.max: 300
+wide.min: 1200
+
+Frame bg #1a1a1a
+  tiny:                 // Eigener Size-State: < 200px
+    pad 4
+    fs 10
+  compact:              // Überschrieben: < 300px (statt 400px)
+    pad 8
+  wide:                 // Überschrieben: > 1200px (statt 800px)
+    pad 32
+```
+
+| Token              | Beschreibung                  |
+| ------------------ | ----------------------------- |
+| `statename.max: N` | Maximale Breite für den State |
+| `statename.min: N` | Minimale Breite für den State |
+
+### Technische Umsetzung
+
+Mirror generiert **CSS Container Queries** – keine JavaScript-Größenüberwachung:
+
+```css
+/* Generierter CSS-Code */
+[data-mirror-id='el_1'] {
+  container-type: inline-size;
+}
+
+@container (max-width: 400px) {
+  [data-mirror-id='el_1'] {
+    padding: 8px;
+  }
+}
+
+@container (min-width: 800px) {
+  [data-mirror-id='el_1'] {
+    padding: 24px;
+  }
+}
+```
+
+**Vorteile:**
+
+- Browser-native, kein JavaScript-Overhead
+- Funktioniert mit verschachtelten Containern
+- ~92%+ Browser-Unterstützung
+
+### Praxisbeispiel: Responsive Card
+
+```mirror
+Card: bg #1a1a1a, rad 12, pad 20, gap 16
+  compact:
+    pad 12
+    gap 8
+    Title: fs 14
+  wide:
+    hor
+    pad 24
+    gap 24
+
+  Title: col white, fs 18, weight 600
+  Desc: col #888, fs 14
+
+Card
+  Title "Projekt Alpha"
+  Desc "Eine responsive Card, die sich an ihren Container anpasst."
+```
+
+---
+
+### Zusammenfassung
+
+| Size-State | Schwellenwert     |
+| ---------- | ----------------- |
+| `compact:` | Element < 400px   |
+| `regular:` | Element 400-800px |
+| `wide:`    | Element > 800px   |
+
+| Token              | Beschreibung                |
+| ------------------ | --------------------------- |
+| `tiny.max: 200`    | Neuen Size-State erstellen  |
+| `compact.max: 300` | Schwellenwert überschreiben |
+
+**Unterschied zu System-States:** Size-States reagieren auf **Element-Breite** (CSS Container Queries), System-States auf **Benutzer-Interaktion** (CSS Pseudo-Classes).
 
 ---
 
 ## Animationen
 
-*Bewegung und Übergänge*
+_Bewegung und Übergänge_
 
 Im letzten Kapitel hast du States kennengelernt – wie Elemente ihr Aussehen ändern. Dieses Kapitel zeigt, wie diese Änderungen **animiert** werden: **Transitions** für sanfte Übergänge und **Presets** für typische Effekte (pulse, bounce, shake, spin).
 
@@ -1846,13 +2068,13 @@ Frame gap 8
 - `ease-in` — startet langsam, endet schnell (gut für Verschwinden)
 - `ease-in-out` — beides kombiniert (gut für Hin-und-her)
 
-| Easing | Gefühl | Typische Verwendung |
-| --- | --- | --- |
-| `ease` | Natürlich (Default) | Allgemein |
-| `ease-out` | Langsames Ende | Elemente erscheinen |
-| `ease-in` | Langsamer Start | Elemente verschwinden |
-| `ease-in-out` | Beides | Hin-und-her |
-| `linear` | Gleichmäßig | Spinner, Fortschritt |
+| Easing        | Gefühl              | Typische Verwendung   |
+| ------------- | ------------------- | --------------------- |
+| `ease`        | Natürlich (Default) | Allgemein             |
+| `ease-out`    | Langsames Ende      | Elemente erscheinen   |
+| `ease-in`     | Langsamer Start     | Elemente verschwinden |
+| `ease-in-out` | Beides              | Hin-und-her           |
+| `linear`      | Gleichmäßig         | Spinner, Fortschritt  |
 
 ### Animation Presets
 
@@ -1877,12 +2099,12 @@ Frame hor, gap 12, wrap, bg #0a0a0a, pad 16, rad 8
 - `anim shake` — Element schüttelt sich (gut für Fehler)
 - `anim spin` — Element dreht sich (gut für Loading)
 
-| Preset | Effekt | Typische Verwendung |
-| --- | --- | --- |
-| `pulse` | Pulsieren | Hinweis, "neu" |
-| `bounce` | Hüpfen | Bestätigung, Erfolg |
-| `shake` | Schütteln | Fehler, ungültig |
-| `spin` | Drehen | Loading |
+| Preset   | Effekt    | Typische Verwendung |
+| -------- | --------- | ------------------- |
+| `pulse`  | Pulsieren | Hinweis, "neu"      |
+| `bounce` | Hüpfen    | Bestätigung, Erfolg |
+| `shake`  | Schütteln | Fehler, ungültig    |
+| `spin`   | Drehen    | Loading             |
 
 > **Hinweis:** **Weniger ist mehr:** Nicht alles animieren — nur was Bedeutung hat. `shake` = Fehler, `bounce` = Erfolg, `pulse` = Aufmerksamkeit. Nutze das bewusst.
 
@@ -2003,36 +2225,35 @@ Nach dem Klick wechselt der Button in den `saved`-State mit grünem Hintergrund 
 
 #### Transitions
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `hover 0.2s:` | State mit 200ms Übergang |
-| `hover 0.3s ease-out:` | Mit Easing-Funktion |
-| `on 0.2s:` | Custom State mit Animation |
+| Syntax                 | Bedeutung                  |
+| ---------------------- | -------------------------- |
+| `hover 0.2s:`          | State mit 200ms Übergang   |
+| `hover 0.3s ease-out:` | Mit Easing-Funktion        |
+| `on 0.2s:`             | Custom State mit Animation |
 
 #### Animation Presets
 
-| Preset | Effekt |
-| --- | --- |
-| `anim pulse` | Pulsieren (Aufmerksamkeit) |
-| `anim bounce` | Hüpfen (Erfolg) |
-| `anim shake` | Schütteln (Fehler) |
-| `anim spin` | Drehen (Loading) |
+| Preset        | Effekt                     |
+| ------------- | -------------------------- |
+| `anim pulse`  | Pulsieren (Aufmerksamkeit) |
+| `anim bounce` | Hüpfen (Erfolg)            |
+| `anim shake`  | Schütteln (Fehler)         |
+| `anim spin`   | Drehen (Loading)           |
 
 #### Easing
 
-| Easing | Gefühl |
-| --- | --- |
-| `ease` | Natürlich (Default) |
-| `ease-out` | Langsames Ende |
-| `ease-in` | Langsamer Start |
-| `ease-in-out` | Beides kombiniert |
-
+| Easing        | Gefühl              |
+| ------------- | ------------------- |
+| `ease`        | Natürlich (Default) |
+| `ease-out`    | Langsames Ende      |
+| `ease-in`     | Langsamer Start     |
+| `ease-in-out` | Beides kombiniert   |
 
 ---
 
 ## Functions
 
-*Eingebaute und eigene Funktionen*
+_Eingebaute und eigene Funktionen_
 
 In Kapitel 6 hast du `toggle()` und `exclusive()` kennengelernt – zwei eingebaute Funktionen für State-Wechsel. Mirror bietet viele weitere **eingebaute Funktionen** für typische UI-Patterns: Feedback, Navigation, Zähler, Scroll und mehr.
 
@@ -2051,11 +2272,11 @@ Btn "An/Aus"
 
 Wenn du eine Funktion als Property schreibst, wird sie automatisch bei **Klick** ausgeführt. Das ist der häufigste Fall – deshalb ist Klick der Default.
 
-| Syntax | Bedeutung |
-| --- | --- |
-| `Button "X", toggle()` | Funktion bei Klick (Kurzform) |
-| `Button "X", show(Menu)` | Element zeigen bei Klick |
-| `Button "X", toggle(), toast("OK")` | Mehrere Funktionen |
+| Syntax                              | Bedeutung                     |
+| ----------------------------------- | ----------------------------- |
+| `Button "X", toggle()`              | Funktion bei Klick (Kurzform) |
+| `Button "X", show(Menu)`            | Element zeigen bei Klick      |
+| `Button "X", toggle(), toast("OK")` | Mehrere Funktionen            |
 
 > **Hinweis:** **Faustregel:** Kurzschreibweise für Klick-Events (99% der Fälle). Für andere Events wie Enter oder Escape gibt es Shorthands (`onenter`, `onescape`) – siehe States.
 
@@ -2063,32 +2284,32 @@ Wenn du eine Funktion als Property schreibst, wird sie automatisch bei **Klick**
 
 Mirror hat eingebaute Funktionen für die häufigsten UI-Patterns. Du musst sie nicht importieren – sie sind einfach da:
 
-| Kategorie | Funktion | Was sie tut |
-| --- | --- | --- |
-| **State** | `toggle()` | State wechseln (an/aus oder cyclen) |
-| `exclusive()` | Nur diesen aktivieren |  |
-| **Sichtbarkeit** | `show(Element)` | Element sichtbar machen |
-| `hide(Element)` | Element verstecken |  |
-| **Feedback** | `toast("Text")` | Toast-Benachrichtigung |
-| **Input** | `focus(Element)` | Fokus setzen |
-| `clear(Element)` | Eingabe löschen |  |
-| `setError(Element, "msg")` | Fehler-State setzen |  |
-| `clearError(Element)` | Fehler-State entfernen |  |
-| **Zähler** | `increment(token)` | Token +1 |
-| `decrement(token)` | Token -1 |  |
-| `set(token, value)` | Token auf Wert setzen |  |
-| `reset(token)` | Auf Initialwert zurücksetzen |  |
-| **Scroll** | `scrollTo(Element)` | Zu Element scrollen |
-| `scrollToTop()` | Zum Seitenanfang |  |
-| `scrollToBottom()` | Zum Seitenende |  |
-| **Clipboard** | `copy("Text")` | In Zwischenablage kopieren |
-| **Navigation** | `navigate(View)` | Zu View wechseln |
-| `back()` | Browser zurück |  |
-| `forward()` | Browser vorwärts |  |
-| `openUrl("...")` | URL öffnen (neuer Tab) |  |
-| **CRUD** | `add(collection)` | Eintrag zur Sammlung hinzufügen |
-| `add(collection, field: value)` | Mit Initialwerten hinzufügen |  |
-| `remove(item)` | Eintrag entfernen (im `each` Loop) |  |
+| Kategorie                       | Funktion                           | Was sie tut                         |
+| ------------------------------- | ---------------------------------- | ----------------------------------- |
+| **State**                       | `toggle()`                         | State wechseln (an/aus oder cyclen) |
+| `exclusive()`                   | Nur diesen aktivieren              |                                     |
+| **Sichtbarkeit**                | `show(Element)`                    | Element sichtbar machen             |
+| `hide(Element)`                 | Element verstecken                 |                                     |
+| **Feedback**                    | `toast("Text")`                    | Toast-Benachrichtigung              |
+| **Input**                       | `focus(Element)`                   | Fokus setzen                        |
+| `clear(Element)`                | Eingabe löschen                    |                                     |
+| `setError(Element, "msg")`      | Fehler-State setzen                |                                     |
+| `clearError(Element)`           | Fehler-State entfernen             |                                     |
+| **Zähler**                      | `increment(token)`                 | Token +1                            |
+| `decrement(token)`              | Token -1                           |                                     |
+| `set(token, value)`             | Token auf Wert setzen              |                                     |
+| `reset(token)`                  | Auf Initialwert zurücksetzen       |                                     |
+| **Scroll**                      | `scrollTo(Element)`                | Zu Element scrollen                 |
+| `scrollToTop()`                 | Zum Seitenanfang                   |                                     |
+| `scrollToBottom()`              | Zum Seitenende                     |                                     |
+| **Clipboard**                   | `copy("Text")`                     | In Zwischenablage kopieren          |
+| **Navigation**                  | `navigate(View)`                   | Zu View wechseln                    |
+| `back()`                        | Browser zurück                     |                                     |
+| `forward()`                     | Browser vorwärts                   |                                     |
+| `openUrl("...")`                | URL öffnen (neuer Tab)             |                                     |
+| **CRUD**                        | `add(collection)`                  | Eintrag zur Sammlung hinzufügen     |
+| `add(collection, field: value)` | Mit Initialwerten hinzufügen       |                                     |
+| `remove(item)`                  | Eintrag entfernen (im `each` Loop) |                                     |
 
 ### Feedback: toast()
 
@@ -2102,12 +2323,12 @@ Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Button "Warnung", pad 10 20, bg #f59e0b, col black, rad 6, toast("Achtung!", "warning")
 ```
 
-| Syntax | Beschreibung |
-| --- | --- |
-| `toast("Text")` | Standard-Toast (info) |
-| `toast("Text", "success")` | Grüner Erfolgs-Toast |
-| `toast("Text", "error")` | Roter Fehler-Toast |
-| `toast("Text", "warning")` | Gelber Warn-Toast |
+| Syntax                         | Beschreibung                          |
+| ------------------------------ | ------------------------------------- |
+| `toast("Text")`                | Standard-Toast (info)                 |
+| `toast("Text", "success")`     | Grüner Erfolgs-Toast                  |
+| `toast("Text", "error")`       | Roter Fehler-Toast                    |
+| `toast("Text", "warning")`     | Gelber Warn-Toast                     |
 | `toast("Text", "info", "top")` | Position: top, bottom, top-left, etc. |
 
 ### Input: focus(), clear(), setError()
@@ -2127,14 +2348,14 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
       Button "OK", pad 8 16, bg #10b981, col white, rad 6, clearError(EmailInput)
 ```
 
-| Funktion | Beschreibung |
-| --- | --- |
-| `focus(Element)` | Fokus auf Element setzen |
-| `blur(Element)` | Fokus entfernen |
-| `clear(Element)` | Eingabewert löschen |
-| `selectText(Element)` | Text im Feld markieren |
+| Funktion                   | Beschreibung                    |
+| -------------------------- | ------------------------------- |
+| `focus(Element)`           | Fokus auf Element setzen        |
+| `blur(Element)`            | Fokus entfernen                 |
+| `clear(Element)`           | Eingabewert löschen             |
+| `selectText(Element)`      | Text im Feld markieren          |
 | `setError(Element, "msg")` | Fehler-State + Nachricht setzen |
-| `clearError(Element)` | Fehler-State entfernen |
+| `clearError(Element)`      | Fehler-State entfernen          |
 
 > **Hinweis:** **Hinweis:** `setError()` aktiviert den `invalid:` State und zeigt die Fehlermeldung an. Mit `clearError()` wird beides zurückgesetzt.
 
@@ -2151,12 +2372,12 @@ Frame hor, gap 12, ver-center, bg #1a1a1a, pad 16, rad 8
   Button "+", pad 8 16, bg #2271C1, col white, rad 6, fs 18, increment(count)
 ```
 
-| Funktion | Beschreibung |
-| --- | --- |
-| `increment(token)` | Token-Wert um 1 erhöhen |
-| `decrement(token)` | Token-Wert um 1 verringern |
-| `set(token, 5)` | Token auf bestimmten Wert setzen |
-| `reset(token)` | Auf Initialwert zurücksetzen |
+| Funktion           | Beschreibung                     |
+| ------------------ | -------------------------------- |
+| `increment(token)` | Token-Wert um 1 erhöhen          |
+| `decrement(token)` | Token-Wert um 1 verringern       |
+| `set(token, 5)`    | Token auf bestimmten Wert setzen |
+| `reset(token)`     | Auf Initialwert zurücksetzen     |
 
 > **Hinweis:** **Hinweis:** Die Funktionen arbeiten mit Tokens (Variablen). Definiere den Token mit Startwert (`count: 0`) und verwende ihn mit `$count`.
 
@@ -2241,12 +2462,12 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
     openUrl("https://mirror-lang.dev")
 ```
 
-| Funktion | Beschreibung |
-| --- | --- |
+| Funktion             | Beschreibung                          |
+| -------------------- | ------------------------------------- |
 | `navigate(ViewName)` | Zu einer View wechseln (siehe Seiten) |
-| `back()` | Browser-History zurück |
-| `forward()` | Browser-History vorwärts |
-| `openUrl("...")` | URL in neuem Tab öffnen |
+| `back()`             | Browser-History zurück                |
+| `forward()`          | Browser-History vorwärts              |
+| `openUrl("...")`     | URL in neuem Tab öffnen               |
 
 ### Scroll: scrollTo(), scrollToTop()
 
@@ -2267,11 +2488,11 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
   Button "Nach oben", pad 10 20, bg #333, col white, rad 6, scrollToTop()
 ```
 
-| Funktion | Beschreibung |
-| --- | --- |
+| Funktion            | Beschreibung                  |
+| ------------------- | ----------------------------- |
 | `scrollTo(Element)` | Zu benanntem Element scrollen |
-| `scrollToTop()` | Zum Anfang scrollen |
-| `scrollToBottom()` | Zum Ende scrollen |
+| `scrollToTop()`     | Zum Anfang scrollen           |
+| `scrollToBottom()`  | Zum Ende scrollen             |
 
 ### CRUD: Sammlungen bearbeiten
 
@@ -2301,14 +2522,14 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
 - `editable` – macht den Text direkt im UI bearbeitbar (Doppelklick zum Editieren)
 - `remove(todo)` – entfernt den Eintrag aus der Sammlung
 
-| Funktion | Beschreibung |
-| --- | --- |
-| `add(collection)` | Leeren Eintrag zur Sammlung hinzufügen |
-| `add(collection, field: value, ...)` | Eintrag mit Initialwerten hinzufügen |
-| `remove(item)` | Eintrag entfernen (innerhalb `each` Loop) |
+| Funktion                             | Beschreibung                              |
+| ------------------------------------ | ----------------------------------------- |
+| `add(collection)`                    | Leeren Eintrag zur Sammlung hinzufügen    |
+| `add(collection, field: value, ...)` | Eintrag mit Initialwerten hinzufügen      |
+| `remove(item)`                       | Eintrag entfernen (innerhalb `each` Loop) |
 
-| Property | Beschreibung |
-| --- | --- |
+| Property   | Beschreibung                   |
+| ---------- | ------------------------------ |
 | `editable` | Text inline bearbeitbar machen |
 
 > **Hinweis:** `remove(item)` funktioniert nur innerhalb eines `each` Loops – dort ist `item` die Loop-Variable, die auf den aktuellen Eintrag verweist.
@@ -2396,16 +2617,16 @@ function absenden() {
 
 #### Element-Eigenschaften
 
-| Eigenschaft | Lesen | Schreiben |
-| --- | --- | --- |
-| `.state` | Aktueller State | State wechseln |
-| `.visible` | Ist sichtbar? | Sichtbarkeit ändern |
-| `.value` | Eingabewert (Input) | Wert setzen |
-| `.content` | Textinhalt | Text ändern |
+| Eigenschaft | Lesen               | Schreiben           |
+| ----------- | ------------------- | ------------------- |
+| `.state`    | Aktueller State     | State wechseln      |
+| `.visible`  | Ist sichtbar?       | Sichtbarkeit ändern |
+| `.value`    | Eingabewert (Input) | Wert setzen         |
+| `.content`  | Textinhalt          | Text ändern         |
 
-**Zusammenspiel:** Du als Designer bestimmst *wie* jeder State aussieht. Die Funktion bestimmt *wann* welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
+**Zusammenspiel:** Du als Designer bestimmst _wie_ jeder State aussieht. Die Funktion bestimmt _wann_ welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
 
-> **Hinweis:** **Zusammenspiel:** Du als Designer bestimmst *wie* jeder State aussieht. Die Funktion bestimmt *wann* welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
+> **Hinweis:** **Zusammenspiel:** Du als Designer bestimmst _wie_ jeder State aussieht. Die Funktion bestimmt _wann_ welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
 
 ---
 
@@ -2413,66 +2634,65 @@ function absenden() {
 
 #### State & Sichtbarkeit
 
-| `toggle()` | State wechseln |
-| --- | --- |
+| `toggle()`    | State wechseln        |
+| ------------- | --------------------- |
 | `exclusive()` | Nur diesen aktivieren |
-| `show(Name)` | Element zeigen |
-| `hide(Name)` | Element verstecken |
+| `show(Name)`  | Element zeigen        |
+| `hide(Name)`  | Element verstecken    |
 
 #### Feedback
 
-| `toast("Text")` | Toast-Benachrichtigung |
-| --- | --- |
+| `toast("Text")`            | Toast-Benachrichtigung                  |
+| -------------------------- | --------------------------------------- |
 | `toast("Text", "success")` | Mit Type: info, success, error, warning |
 
 #### Input Control
 
-| `focus(Element)` | Fokus setzen |
-| --- | --- |
-| `blur(Element)` | Fokus entfernen |
-| `clear(Element)` | Eingabe löschen |
-| `selectText(Element)` | Text markieren |
-| `setError(Element, "msg")` | Fehler setzen |
-| `clearError(Element)` | Fehler entfernen |
+| `focus(Element)`           | Fokus setzen     |
+| -------------------------- | ---------------- |
+| `blur(Element)`            | Fokus entfernen  |
+| `clear(Element)`           | Eingabe löschen  |
+| `selectText(Element)`      | Text markieren   |
+| `setError(Element, "msg")` | Fehler setzen    |
+| `clearError(Element)`      | Fehler entfernen |
 
 #### Zähler & Werte
 
-| `increment(token)` | Token +1 |
-| --- | --- |
-| `decrement(token)` | Token -1 |
-| `set(token, value)` | Wert setzen |
-| `reset(token)` | Zurücksetzen |
+| `increment(token)`  | Token +1     |
+| ------------------- | ------------ |
+| `decrement(token)`  | Token -1     |
+| `set(token, value)` | Wert setzen  |
+| `reset(token)`      | Zurücksetzen |
 
 #### Clipboard & Scroll
 
-| `copy("Text")` | In Zwischenablage |
-| --- | --- |
+| `copy("Text")`      | In Zwischenablage   |
+| ------------------- | ------------------- |
 | `scrollTo(Element)` | Zu Element scrollen |
-| `scrollToTop()` | Zum Anfang |
-| `scrollToBottom()` | Zum Ende |
+| `scrollToTop()`     | Zum Anfang          |
+| `scrollToBottom()`  | Zum Ende            |
 
 #### Navigation
 
 | `navigate(View)` | Zu View wechseln |
-| --- | --- |
-| `back()` | Browser zurück |
-| `forward()` | Browser vorwärts |
-| `openUrl("...")` | URL öffnen |
+| ---------------- | ---------------- |
+| `back()`         | Browser zurück   |
+| `forward()`      | Browser vorwärts |
+| `openUrl("...")` | URL öffnen       |
 
 #### CRUD (Sammlungen)
 
-| `add(collection)` | Eintrag hinzufügen |
-| --- | --- |
-| `add(collection, field: value)` | Mit Initialwerten |
-| `remove(item)` | Eintrag entfernen (im Loop) |
-| `editable` | Text inline bearbeitbar |
-
+| `add(collection)`               | Eintrag hinzufügen          |
+| ------------------------------- | --------------------------- |
+| `add(collection, field: value)` | Mit Initialwerten           |
+| `remove(item)`                  | Eintrag entfernen (im Loop) |
+| `editable`                      | Text inline bearbeitbar     |
 
 ---
 
 ## Daten
 
-*Echte Daten statt Platzhalter*
+_Echte Daten statt Platzhalter_
 
 Bisher hast du Text direkt in Komponenten geschrieben: `Text "Max Mustermann"`. Das funktioniert – aber was, wenn derselbe Name an 10 Stellen steht und du ihn ändern willst? Oder wenn du den Prototyp mit verschiedenen Testdaten zeigen möchtest?
 
@@ -2560,7 +2780,7 @@ each color in $colors
     Text "$color", col white
 ```
 
-**Keine Doppelpunkte nötig** – der Eintrag *ist* der Wert. Sauberer als JSON-Arrays und konsistent mit dem Rest von Mirror.
+**Keine Doppelpunkte nötig** – der Eintrag _ist_ der Wert. Sauberer als JSON-Arrays und konsistent mit dem Rest von Mirror.
 
 ### Datenobjekte: Zusammengehörige Daten gruppieren
 
@@ -2594,15 +2814,15 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 
 Datenobjekte unterstützen Strings, Zahlen und Booleans:
 
-| Typ | Beispiel |
-| --- | --- |
-| String | `name: "Max"` |
-| Zahl | `age: 25` |
+| Typ     | Beispiel       |
+| ------- | -------------- |
+| String  | `name: "Max"`  |
+| Zahl    | `age: 25`      |
 | Boolean | `active: true` |
 
 ### Sammlungen: Mehrere Einträge
 
-Ein einzelnes Datenobjekt ist gut für *einen* Benutzer. Aber was wenn du eine **Liste von Benutzern** hast? Dafür gibt es Sammlungen – mehrere benannte Einträge unter einem gemeinsamen Namen:
+Ein einzelnes Datenobjekt ist gut für _einen_ Benutzer. Aber was wenn du eine **Liste von Benutzern** hast? Dafür gibt es Sammlungen – mehrere benannte Einträge unter einem gemeinsamen Namen:
 
 ```mirror
 users:
@@ -2733,7 +2953,7 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Zuständig: $tasks.task1.assignee.name", col #888
 ```
 
-Frame gap 8, bg #1a1a1a, pad 16, rad 8 Text "$tasks.task1.title", col white, weight 500 Text "Zuständig: $tasks.task1.assignee.name", col #888 `$tasks.task1.assignee` ist der User `$users.toni`. Mit `.name` greifst du auf dessen Attribute zu.
+Frame gap 8, bg #1a1a1a, pad 16, rad 8 Text "$tasks.task1.title", col white, weight 500 Text "Zuständig: $tasks.task1.assignee.name", col #888 `$tasks.task1.assignee`ist der User`$users.toni`. Mit `.name` greifst du auf dessen Attribute zu.
 
 #### N-zu-N Relationen
 
@@ -2960,10 +3180,10 @@ Button "Themed", bg theme === "dark" ? $primary : $muted, col white, pad 10 20, 
 
 ### Block vs. Inline
 
-| Syntax | Verwendung |
-| --- | --- |
+| Syntax              | Verwendung                     |
+| ------------------- | ------------------------------ |
 | `if` / `else` Block | Ganze Elemente ein-/ausblenden |
-| `condition ? a : b` | Einzelne Property-Werte |
+| `condition ? a : b` | Einzelne Property-Werte        |
 
 **Faustregel:**
 
@@ -3029,38 +3249,37 @@ Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
 
 #### Variablen & Daten
 
-| Konzept | Syntax |
-| --- | --- |
-| Variable definieren | `name: "Wert"` |
-| In Text verwenden | `Text "$name"` |
-| String-Interpolation | `Text "Hallo $name!"` |
-| Arithmetik | `$a * $b` |
-| Datenobjekt | `users:` + eingerückte Einträge |
-| Eintrag adressieren | `Text "$users.max.name"` |
-| Iteration | `each user in $users` |
-| Loop-Variable | `Text "$user.name"` |
-| Relation | `assignee: $users.toni` |
+| Konzept              | Syntax                          |
+| -------------------- | ------------------------------- |
+| Variable definieren  | `name: "Wert"`                  |
+| In Text verwenden    | `Text "$name"`                  |
+| String-Interpolation | `Text "Hallo $name!"`           |
+| Arithmetik           | `$a * $b`                       |
+| Datenobjekt          | `users:` + eingerückte Einträge |
+| Eintrag adressieren  | `Text "$users.max.name"`        |
+| Iteration            | `each user in $users`           |
+| Loop-Variable        | `Text "$user.name"`             |
+| Relation             | `assignee: $users.toni`         |
 
 #### Bedingungen
 
-| Syntax | Beispiel |
-| --- | --- |
-| `if bedingung` | `if loggedIn` |
-| `if ... else` | `if count > 0 ... else` |
-| `&&`, `||`, `!` | `if isAdmin && hasAccess` |
-| `===`, `>`, `<` | `if status === "active"` |
-| Ternary | `bg active ? #2271C1 : #333` |
+| Syntax          | Beispiel                     |
+| --------------- | ---------------------------- | ------ | ------------------------- |
+| `if bedingung`  | `if loggedIn`                |
+| `if ... else`   | `if count > 0 ... else`      |
+| `&&`, `         |                              | `, `!` | `if isAdmin && hasAccess` |
+| `===`, `>`, `<` | `if status === "active"`     |
+| Ternary         | `bg active ? #2271C1 : #333` |
 
 **Variablen:** Definition mit `name:`, Verwendung in Text mit `"$name"`.
 
 **Bedingungen:** Block Conditionals für Elemente, Inline Conditionals für Properties.
 
-
 ---
 
 ## Seiten & Navigation
 
-*Content referenzieren mit show*
+_Content referenzieren mit show_
 
 Mit `show` referenzierst du Content – aus der gleichen Datei oder aus anderen Dateien. Das ist die Basis für Apps mit mehreren Seiten.
 
@@ -3068,10 +3287,10 @@ Mit `show` referenzierst du Content – aus der gleichen Datei oder aus anderen 
 
 `show` sagt: "Zeige diesen Content an". Der Content kann aus drei Quellen kommen:
 
-| Syntax | Bedeutung | Beispiel |
-| --- | --- | --- |
-| `show X` | Zeige lokales Element X | `show HomeView` → Element mit `name HomeView` |
-| `show X` | Oder: Lade Datei X.mirror | `show Home` → `Home.mirror` |
+| Syntax          | Bedeutung                         | Beispiel                                                           |
+| --------------- | --------------------------------- | ------------------------------------------------------------------ |
+| `show X`        | Zeige lokales Element X           | `show HomeView` → Element mit `name HomeView`                      |
+| `show X`        | Oder: Lade Datei X.mirror         | `show Home` → `Home.mirror`                                        |
 | `show X from Y` | Lade Element X aus Datei Y.mirror | `show Settings from Pages` → Element "Settings" aus `Pages.mirror` |
 
 **Priorität:** Wenn ein lokales Element mit dem Namen existiert, wird es verwendet. Sonst wird eine Datei geladen.
@@ -3168,12 +3387,12 @@ Tabs defaultValue "Home"
 
 ### Wann was verwenden?
 
-| Situation | Empfehlung |
-| --- | --- |
-| Kleiner, einfacher Content | Inline (als Kinder) |
-| Views in der gleichen Datei | `show ViewName` |
-| Jede Seite ist eigenständig | `show Dateiname` |
-| Mehrere Views gruppiert | `show ViewName from Datei` |
+| Situation                   | Empfehlung                 |
+| --------------------------- | -------------------------- |
+| Kleiner, einfacher Content  | Inline (als Kinder)        |
+| Views in der gleichen Datei | `show ViewName`            |
+| Jede Seite ist eigenständig | `show Dateiname`           |
+| Mehrere Views gruppiert     | `show ViewName from Datei` |
 
 Mischen ist erlaubt:
 
@@ -3249,28 +3468,27 @@ Frame gap 16
 
 #### show Syntax
 
-| Syntax | Wirkung |
-| --- | --- |
-| `show X` | Zeige lokales Element X (braucht `name X`) |
-| `show X` | Oder: Lade X.mirror (wenn kein lokales Element) |
-| `show X from Y` | Lade Element X aus Y.mirror |
+| Syntax          | Wirkung                                         |
+| --------------- | ----------------------------------------------- |
+| `show X`        | Zeige lokales Element X (braucht `name X`)      |
+| `show X`        | Oder: Lade X.mirror (wenn kein lokales Element) |
+| `show X from Y` | Lade Element X aus Y.mirror                     |
 
 #### Vergleich
 
-| Methode | Verwendung |
-| --- | --- |
-| Inline (Kinder) | Kleiner Content direkt im Tab |
-| `show ViewName` | Lokale Views in gleicher Datei |
-| `show Dateiname` | Content aus eigener Datei |
-| `show X from Y` | Spezifisches Element aus Datei |
-| `use datei` | Komponenten importieren |
-
+| Methode          | Verwendung                     |
+| ---------------- | ------------------------------ |
+| Inline (Kinder)  | Kleiner Content direkt im Tab  |
+| `show ViewName`  | Lokale Views in gleicher Datei |
+| `show Dateiname` | Content aus eigener Datei      |
+| `show X from Y`  | Spezifisches Element aus Datei |
+| `use datei`      | Komponenten importieren        |
 
 ---
 
 ## Eingabe
 
-*Formular-Komponenten*
+_Formular-Komponenten_
 
 Interaktive Formular-Komponenten. Alle haben ein Default-Styling – du kannst sie direkt verwenden oder das Aussehen anpassen.
 
@@ -3356,13 +3574,22 @@ Ein Dropdown zur Auswahl aus mehreren Optionen:
 
 ```mirror
 Select placeholder "Stadt wählen..."
-    Option "Berlin", value "berlin"
-    Option "Hamburg", value "hamburg"
-    Option "München", value "munich"
-    Option "Köln", value "cologne"
+    Option "Berlin"
+    Option "Hamburg"
+    Option "München"
+    Option "Köln"
 ```
 
-Jede `Option` braucht einen `value`. Mit `placeholder` zeigst du Text, wenn nichts ausgewählt ist. Das Dropdown öffnet bei Klick, ist mit Pfeiltasten navigierbar und schließt bei Auswahl oder Escape.
+`Option "Text"` reicht – der `value` wird automatisch vom Label übernommen. Bei Bedarf kannst du einen expliziten `value` setzen:
+
+```mirror
+Select placeholder "Land wählen..."
+    Option "Deutschland", value "de"
+    Option "Österreich", value "at"
+    Option "Schweiz", value "ch"
+```
+
+Mit `placeholder` zeigst du Text, wenn nichts ausgewählt ist. Das Dropdown öffnet bei Klick, ist mit Pfeiltasten navigierbar und schließt bei Auswahl oder Escape.
 
 ### DatePicker
 
@@ -3431,27 +3658,26 @@ Switch "Dark Mode"
 
 ### Zusammenfassung
 
-| Komponente | Verwendung |
-| --- | --- |
-| `Input` | Einzeiliges Textfeld |
-| `Textarea` | Mehrzeiliges Textfeld |
-| `Checkbox` | Einzelne Ja/Nein-Auswahl |
-| `Switch` | An/Aus-Toggle (visuell klarer) |
-| `RadioGroup` + `RadioItem` | Eine aus mehreren Optionen |
-| `Slider` | Numerischer Bereich |
-| `Select` + `Option` | Dropdown-Auswahl |
-| `DatePicker` | Kalender-Auswahl |
+| Komponente                 | Verwendung                     |
+| -------------------------- | ------------------------------ |
+| `Input`                    | Einzeiliges Textfeld           |
+| `Textarea`                 | Mehrzeiliges Textfeld          |
+| `Checkbox`                 | Einzelne Ja/Nein-Auswahl       |
+| `Switch`                   | An/Aus-Toggle (visuell klarer) |
+| `RadioGroup` + `RadioItem` | Eine aus mehreren Optionen     |
+| `Slider`                   | Numerischer Bereich            |
+| `Select` + `Option`        | Dropdown-Auswahl               |
+| `DatePicker`               | Kalender-Auswahl               |
 
 **Tastatursteuerung:** `Frame keyboard-nav` aktiviert Enter/Escape-Navigation für Formulare.
 
 **Custom Styling:** Über Kind-Komponenten wie `Root:`, `Control:`, `Label:` – siehe Referenz
 
-
 ---
 
 ## Navigation
 
-*Tabs und SideNav*
+_Tabs und SideNav_
 
 Zwei Komponenten für Navigation: **Tabs** wechseln zwischen Ansichten. **SideNav** ist eine Sidebar-Navigation.
 
@@ -3583,12 +3809,11 @@ SideNav defaultValue "dashboard", w 220
 
 **NavGroup** gruppiert Items, optional `collapsible`.
 
-
 ---
 
 ## Overlays
 
-*Dialog und Tooltip*
+_Dialog und Tooltip_
 
 Overlays erscheinen über dem normalen Content. Beide folgen dem gleichen Muster: `Trigger:` ist das auslösende Element, `Content:` der Overlay-Inhalt.
 
@@ -3712,12 +3937,11 @@ Frame hor, gap 8, pad 16
 
 **Custom Styling:** Auch Overlays haben Kind-Komponenten – siehe Referenz.
 
-
 ---
 
 ## Tabellen
 
-*Statische und datengebundene Tabellen*
+_Statische und datengebundene Tabellen_
 
 Tabellen zeigen strukturierte Daten. **Statische Tabellen** für feste Inhalte. **Datengebundene Tabellen** für dynamische Daten mit Filtern und Sortieren.
 
@@ -4003,28 +4227,27 @@ Table $products by price desc, gap 4, w full
 
 #### Styling
 
-| `Table $data, bg #111, pad 16, rad 12` | Table-Level Styles |
-| --- | --- |
-| `Header: bg #222, pad 12` | Kopfzeilen-Styles |
-| `Footer: bg #222, pad 12` | Fußzeilen-Styles |
-| `Row: pad 12, bg #1a1a1a` | Zeilen-Styles (alle Zeilen) |
-| `RowOdd: bg #1a1a1a` | Ungerade Zeilen (Zebra) |
-| `RowEven: bg #151515` | Gerade Zeilen (Zebra) |
-| `Column title, col white, pad 12` | Spalten/Zellen-Styles |
+| `Table $data, bg #111, pad 16, rad 12` | Table-Level Styles          |
+| -------------------------------------- | --------------------------- |
+| `Header: bg #222, pad 12`              | Kopfzeilen-Styles           |
+| `Footer: bg #222, pad 12`              | Fußzeilen-Styles            |
+| `Row: pad 12, bg #1a1a1a`              | Zeilen-Styles (alle Zeilen) |
+| `RowOdd: bg #1a1a1a`                   | Ungerade Zeilen (Zebra)     |
+| `RowEven: bg #151515`                  | Gerade Zeilen (Zebra)       |
+| `Column title, col white, pad 12`      | Spalten/Zellen-Styles       |
 
 #### Daten-Operationen
 
-| `where row.done == false` | Filtern |
-| --- | --- |
-| `by priority` | Aufsteigend sortieren |
-| `by price desc` | Absteigend sortieren |
-
+| `where row.done == false` | Filtern               |
+| ------------------------- | --------------------- |
+| `by priority`             | Aufsteigend sortieren |
+| `by price desc`           | Absteigend sortieren  |
 
 ---
 
 ## Charts
 
-*Datenvisualisierung mit Chart.js*
+_Datenvisualisierung mit Chart.js_
 
 Charts machen Daten sichtbar. Mirror bietet einfache Primitives für die häufigsten Chart-Typen – **Line**, **Bar**, **Pie** und mehr. Die Daten kommen aus Variablen, das Styling ist minimal.
 
@@ -4108,15 +4331,15 @@ users:
 Area $users, w 350, h 180
 ```
 
-| Typ | Verwendung |
-| --- | --- |
-| `Line` | Trends, Entwicklung über Zeit |
-| `Bar` | Kategorien vergleichen |
-| `Pie` | Anteile eines Ganzen |
-| `Donut` | Anteile (mit Platz für Zahl in der Mitte) |
-| `Area` | Volumen, kumulative Werte |
-| `Scatter` | Korrelationen zwischen zwei Werten |
-| `Radar` | Mehrdimensionale Vergleiche |
+| Typ       | Verwendung                                |
+| --------- | ----------------------------------------- |
+| `Line`    | Trends, Entwicklung über Zeit             |
+| `Bar`     | Kategorien vergleichen                    |
+| `Pie`     | Anteile eines Ganzen                      |
+| `Donut`   | Anteile (mit Platz für Zahl in der Mitte) |
+| `Area`    | Volumen, kumulative Werte                 |
+| `Scatter` | Korrelationen zwischen zwei Werten        |
+| `Radar`   | Mehrdimensionale Vergleiche               |
 
 ### Datenformate
 
@@ -4336,17 +4559,17 @@ Frame bg #0a0a0a, pad 20, rad 12
     Line: width 2, tension 0.3
 ```
 
-| Subkomponente | Charts | Properties |
-| --- | --- | --- |
-| `XAxis:` | Line, Bar, Scatter | col, label, fs, min, max, visible |
-| `YAxis:` | Line, Bar, Scatter | col, label, fs, min, max, visible |
-| `Grid:` | Line, Bar, Scatter, Radar | col, width, dash, visible |
-| `Point:` | Line, Scatter, Radar | size, bg, boc, bor, hover-size |
-| `Legend:` | Alle | visible, pos, col, fs |
-| `Title:` | Alle | text, col, fs, weight, pos, visible |
-| `Line:` | Line, Area | width, tension, fill, dash |
-| `Bar:` | Bar | rad, bor, boc |
-| `Arc:` | Pie, Donut | bor, boc, offset, hover-offset |
+| Subkomponente | Charts                    | Properties                          |
+| ------------- | ------------------------- | ----------------------------------- |
+| `XAxis:`      | Line, Bar, Scatter        | col, label, fs, min, max, visible   |
+| `YAxis:`      | Line, Bar, Scatter        | col, label, fs, min, max, visible   |
+| `Grid:`       | Line, Bar, Scatter, Radar | col, width, dash, visible           |
+| `Point:`      | Line, Scatter, Radar      | size, bg, boc, bor, hover-size      |
+| `Legend:`     | Alle                      | visible, pos, col, fs               |
+| `Title:`      | Alle                      | text, col, fs, weight, pos, visible |
+| `Line:`       | Line, Area                | width, tension, fill, dash          |
+| `Bar:`        | Bar                       | rad, bor, boc                       |
+| `Arc:`        | Pie, Donut                | bor, boc, offset, hover-offset      |
 
 ### In Layouts einbetten
 
@@ -4405,45 +4628,44 @@ Frame gap 16
 
 #### Chart-Typen
 
-| Primitive | Beschreibung |
-| --- | --- |
-| `Line` | Liniendiagramm (Trends) |
-| `Bar` | Balkendiagramm (Vergleiche) |
-| `Pie` | Kreisdiagramm (Anteile) |
-| `Donut` | Ring-Diagramm |
-| `Area` | Flächendiagramm |
-| `Scatter` | Streudiagramm |
-| `Radar` | Netzdiagramm |
+| Primitive | Beschreibung                |
+| --------- | --------------------------- |
+| `Line`    | Liniendiagramm (Trends)     |
+| `Bar`     | Balkendiagramm (Vergleiche) |
+| `Pie`     | Kreisdiagramm (Anteile)     |
+| `Donut`   | Ring-Diagramm               |
+| `Area`    | Flächendiagramm             |
+| `Scatter` | Streudiagramm               |
+| `Radar`   | Netzdiagramm                |
 
 #### Properties
 
-| Property | Beschreibung |
-| --- | --- |
-| `$data` | Datenquelle (Variable) |
-| `x "field"` | Feld für Labels |
-| `y "field"` | Feld für Werte |
-| `colors #a #b` | Farbpalette |
-| `title "Text"` | Chart-Titel |
-| `legend true` | Legende anzeigen |
-| `grid false` | Rasterlinien ausblenden |
-| `axes false` | Achsen ausblenden |
+| Property       | Beschreibung            |
+| -------------- | ----------------------- |
+| `$data`        | Datenquelle (Variable)  |
+| `x "field"`    | Feld für Labels         |
+| `y "field"`    | Feld für Werte          |
+| `colors #a #b` | Farbpalette             |
+| `title "Text"` | Chart-Titel             |
+| `legend true`  | Legende anzeigen        |
+| `grid false`   | Rasterlinien ausblenden |
+| `axes false`   | Achsen ausblenden       |
 
 #### Subkomponenten
 
-| Slot | Wichtige Properties |
-| --- | --- |
+| Slot                | Wichtige Properties      |
+| ------------------- | ------------------------ |
 | `XAxis:` / `YAxis:` | col, label, fs, min, max |
-| `Grid:` | col, dash, visible |
-| `Point:` | size, bg, hover-size |
-| `Legend:` | pos, col, fs, visible |
-| `Title:` | text, col, fs, weight |
-| `Line:` | width, tension, fill |
-| `Bar:` | rad, bor, boc |
+| `Grid:`             | col, dash, visible       |
+| `Point:`            | size, bg, hover-size     |
+| `Legend:`           | pos, col, fs, visible    |
+| `Title:`            | text, col, fs, weight    |
+| `Line:`             | width, tension, fill     |
+| `Bar:`              | rad, bor, boc            |
 
 **Sizing:** Charts nehmen `w` und `h` wie jedes andere Element. Mit `w full` füllen sie den Container.
 
 **Subkomponenten:** Mit `XAxis:`, `Point:` etc. passt du jeden Aspekt des Charts an – konsistent mit Mirrors Komponenten-Syntax.
-
 
 ---
 
@@ -4453,41 +4675,49 @@ Frame gap 16
 
 ### Syntax
 
-| Falsch | Richtig | Warum |
-|--------|---------|-------|
-| `Text "Hello" col white` | `Text "Hello", col white` | Komma nach String |
-| `Frame w 100px` | `Frame w 100` | Keine Einheiten |
-| `Frame w "200"` | `Frame w 200` | Zahlen ohne Quotes |
+| Falsch                   | Richtig                   | Warum              |
+| ------------------------ | ------------------------- | ------------------ |
+| `Text "Hello" col white` | `Text "Hello", col white` | Komma nach String  |
+| `Frame w 100px`          | `Frame w 100`             | Keine Einheiten    |
+| `Frame w "200"`          | `Frame w 200`             | Zahlen ohne Quotes |
 
 ### Komponenten
 
-| Falsch | Richtig | Warum |
-|--------|---------|-------|
-| `Btn: "Speichern"` | `Btn "Speichern"` | Kein `:` bei Verwendung |
-| `PrimaryBtn pad 12` | `PrimaryBtn: pad 12` | `:` bei Definition |
+| Falsch                      | Richtig                        | Warum                          |
+| --------------------------- | ------------------------------ | ------------------------------ |
+| `Btn: "Speichern"`          | `Btn "Speichern"`              | Kein `:` bei Verwendung        |
+| `PrimaryBtn pad 12`         | `PrimaryBtn: pad 12`           | `:` bei Definition             |
 | `PrimaryBtn: Button pad 12` | `PrimaryBtn as Button: pad 12` | `as` bei Primitive-Erweiterung |
 
 ### Tokens
 
-| Falsch | Richtig | Warum |
-|--------|---------|-------|
-| `$primary.bg: #2563eb` | `primary.bg: #2563eb` | Kein `$` bei Definition |
-| `bg $primary.bg` | `bg $primary` | Kein Suffix bei Verwendung |
-| `bg primary` | `bg $primary` | `$` bei Verwendung |
+| Falsch                 | Richtig               | Warum                      |
+| ---------------------- | --------------------- | -------------------------- |
+| `$primary.bg: #2563eb` | `primary.bg: #2563eb` | Kein `$` bei Definition    |
+| `bg $primary.bg`       | `bg $primary`         | Kein Suffix bei Verwendung |
+| `bg primary`           | `bg $primary`         | `$` bei Verwendung         |
 
 ### States
 
-| Falsch | Richtig | Warum |
-|--------|---------|-------|
-| `hover` (ohne `:`) | `hover:` | State braucht `:` |
-| `toggle` (ohne `()`) | `toggle()` | Funktion braucht `()` |
-| `Btn "Text", on:` | `Btn "Text", on` | Kein `:` bei Instanz |
+| Falsch               | Richtig          | Warum                 |
+| -------------------- | ---------------- | --------------------- |
+| `hover` (ohne `:`)   | `hover:`         | State braucht `:`     |
+| `toggle` (ohne `()`) | `toggle()`       | Funktion braucht `()` |
+| `Btn "Text", on:`    | `Btn "Text", on` | Kein `:` bei Instanz  |
+
+### Size-States
+
+| Falsch                      | Richtig                   | Warum                                      |
+| --------------------------- | ------------------------- | ------------------------------------------ |
+| `@media (max-width: 400px)` | `compact:`                | Size-States nutzen, nicht Media Queries    |
+| `compact.max 300`           | `compact.max: 300`        | Token-Syntax mit `:`                       |
+| `tiny: pad 4` (ohne Token)  | `tiny.max: 200` + `tiny:` | Custom Size-State braucht Token-Definition |
 
 ### Icons
 
-| Falsch | Richtig | Warum |
-|--------|---------|-------|
-| `Icon check` | `Icon "check"` | Name in Quotes |
+| Falsch                     | Richtig                    | Warum                          |
+| -------------------------- | -------------------------- | ------------------------------ |
+| `Icon check`               | `Icon "check"`             | Name in Quotes                 |
 | `Icon "check", is #10b981` | `Icon "check", ic #10b981` | `ic` für Farbe, `is` für Größe |
 
 ---
@@ -4498,178 +4728,178 @@ Frame gap 16
 
 ### Primitives
 
-| Primitive | HTML | Aliases |
-|-----------|------|---------|
-| Frame | `<div>` | Box |
-| Text | `<span>` | - |
-| Button | `<button>` | - |
-| Input | `<input>` | - |
-| Textarea | `<textarea>` | - |
-| Label | `<label>` | - |
-| Image | `<img>` | Img |
-| Icon | `<span>` | - |
-| Link | `<a>` | - |
-| Slot | `<div>` | - |
-| Divider | `<hr>` | - |
-| Spacer | `<div>` | - |
-| Header | `<header>` | - |
-| Nav | `<nav>` | - |
-| Main | `<main>` | - |
-| Section | `<section>` | - |
-| Article | `<article>` | - |
-| Aside | `<aside>` | - |
-| Footer | `<footer>` | - |
-| H1 | `<h1>` | - |
-| H2 | `<h2>` | - |
-| H3 | `<h3>` | - |
-| H4 | `<h4>` | - |
-| H5 | `<h5>` | - |
-| H6 | `<h6>` | - |
+| Primitive | HTML         | Aliases |
+| --------- | ------------ | ------- |
+| Frame     | `<div>`      | Box     |
+| Text      | `<span>`     | -       |
+| Button    | `<button>`   | -       |
+| Input     | `<input>`    | -       |
+| Textarea  | `<textarea>` | -       |
+| Label     | `<label>`    | -       |
+| Image     | `<img>`      | Img     |
+| Icon      | `<span>`     | -       |
+| Link      | `<a>`        | -       |
+| Slot      | `<div>`      | -       |
+| Divider   | `<hr>`       | -       |
+| Spacer    | `<div>`      | -       |
+| Header    | `<header>`   | -       |
+| Nav       | `<nav>`      | -       |
+| Main      | `<main>`     | -       |
+| Section   | `<section>`  | -       |
+| Article   | `<article>`  | -       |
+| Aside     | `<aside>`    | -       |
+| Footer    | `<footer>`   | -       |
+| H1        | `<h1>`       | -       |
+| H2        | `<h2>`       | -       |
+| H3        | `<h3>`       | -       |
+| H4        | `<h4>`       | -       |
+| H5        | `<h5>`       | -       |
+| H6        | `<h6>`       | -       |
 
 ### Zag Primitives (Behavior Components)
 
 > Note: Select, Checkbox, Radio are now Zag components with full accessibility and keyboard navigation.
 
-| Component | Machine | Slots | Description |
-|-----------|---------|-------|-------------|
-| **Selection & Dropdowns** | | | |
-| Select | select | Trigger, Content, Item +8 | Dropdown select with keyboard navigation |
-| **Menus** | | | |
-| **Form Controls** | | | |
-| Checkbox | checkbox | Root, Control, Label +2 | Checkbox with label |
-| Switch | switch | Track, Thumb, Label | Toggle switch |
-| RadioGroup | radio-group | Root, Item, ItemControl +4 | Radio button group |
-| Slider | slider | Root, Track, Range +6 | Range slider |
-| **Date & Time** | | | |
-| DatePicker | date-picker | Root, Label, Control +20 | Date picker calendar |
-| **Overlays & Modals** | | | |
-| Dialog | dialog | Trigger, Backdrop, Positioner +4 | Modal dialog |
-| Tooltip | tooltip | Trigger, Positioner, Content +1 | Hover tooltip |
-| **Navigation** | | | |
-| Tabs | tabs | Root, List, Trigger +2 | Tabbed navigation |
-| **Media & Files** | | | |
-| **Feedback & Status** | | | |
-| **Utility** | | | |
+| Component                 | Machine     | Slots                            | Description                              |
+| ------------------------- | ----------- | -------------------------------- | ---------------------------------------- |
+| **Selection & Dropdowns** |             |                                  |                                          |
+| Select                    | select      | Trigger, Content, Item +8        | Dropdown select with keyboard navigation |
+| **Menus**                 |             |                                  |                                          |
+| **Form Controls**         |             |                                  |                                          |
+| Checkbox                  | checkbox    | Root, Control, Label +2          | Checkbox with label                      |
+| Switch                    | switch      | Track, Thumb, Label              | Toggle switch                            |
+| RadioGroup                | radio-group | Root, Item, ItemControl +4       | Radio button group                       |
+| Slider                    | slider      | Root, Track, Range +6            | Range slider                             |
+| **Date & Time**           |             |                                  |                                          |
+| DatePicker                | date-picker | Root, Label, Control +20         | Date picker calendar                     |
+| **Overlays & Modals**     |             |                                  |                                          |
+| Dialog                    | dialog      | Trigger, Backdrop, Positioner +4 | Modal dialog                             |
+| Tooltip                   | tooltip     | Trigger, Positioner, Content +1  | Hover tooltip                            |
+| **Navigation**            |             |                                  |                                          |
+| Tabs                      | tabs        | Root, List, Trigger +2           | Tabbed navigation                        |
+| **Media & Files**         |             |                                  |                                          |
+| **Feedback & Status**     |             |                                  |                                          |
+| **Utility**               |             |                                  |                                          |
 
 ### Compound Primitives (Layout Components)
 
 > Pre-built layout components for rapid prototyping. Fully customizable.
 
-| Component | Slots | Nested Slots | Description |
-|-----------|-------|--------------|-------------|
-| Table | Column, Header, Row, Footer, Group |  | Data-driven table with auto-generated columns from data schema |
+| Component | Slots                              | Nested Slots | Description                                                    |
+| --------- | ---------------------------------- | ------------ | -------------------------------------------------------------- |
+| Table     | Column, Header, Row, Footer, Group |              | Data-driven table with auto-generated columns from data schema |
 
 ### Properties
 
-| Property | Aliases | Werte |
-|----------|---------|-------|
-| width | w | full, hug, <number>, $token |
-| height | h | full, hug, <number>, $token |
-| size | - | full, hug, <number>, $token |
-| min-width | minw | <number>, $token |
-| max-width | maxw | <number>, $token |
-| min-height | minh | <number>, $token |
-| max-height | maxh | <number>, $token |
-| aspect | - | square, video, <number> |
-| horizontal | hor | *(standalone)* |
-| vertical | ver | *(standalone)* |
-| gap | g | <number>, $token |
-| center | cen | *(standalone)* |
-| spread | - | *(standalone)* |
-| top-left | tl | *(standalone)* |
-| top-center | tc | *(standalone)* |
-| top-right | tr | *(standalone)* |
-| center-left | cl | *(standalone)* |
-| center-right | cr | *(standalone)* |
-| bottom-left | bl | *(standalone)* |
-| bottom-center | bc | *(standalone)* |
-| bottom-right | br | *(standalone)* |
-| wrap | - | *(standalone)* |
-| stacked | - | *(standalone)* |
-| grid | - | auto, <number> |
-| dense | - | *(standalone)* |
-| gap-x | gx | <number>, $token |
-| gap-y | gy | <number>, $token |
-| row-height | rh | <number>, $token |
-| grow | - | *(standalone)* |
-| shrink | - | *(standalone)* |
-| align | - | top, bottom, left, right, center |
-| left | - | *(standalone)* |
-| right | - | *(standalone)* |
-| top | - | *(standalone)* |
-| bottom | - | *(standalone)* |
-| hor-center | - | *(standalone)* |
-| ver-center | - | *(standalone)* |
-| padding | pad, p | <number>, $token |
-| margin | mar, m | <number>, $token |
-| background | bg | <color>, $token |
-| color | col, c | <color>, $token |
-| border-color | boc | <color>, $token |
-| border | bor | <number>, $token |
-| radius | rad | <number>, $token |
-| font-size | fs | <number>, $token |
-| weight | - | thin, light, normal, medium, semibold, bold, black, <number> |
-| line | - | <number>, $token |
-| font | - | sans, serif, mono, roboto, $token |
-| text-align | - | left, center, right, justify |
-| italic | - | *(standalone)* |
-| underline | - | *(standalone)* |
-| uppercase | - | *(standalone)* |
-| lowercase | - | *(standalone)* |
-| truncate | - | *(standalone)* |
-| x | - | <number> |
-| y | - | <number> |
-| z | - | <number> |
-| absolute | abs | *(standalone)* |
-| fixed | - | *(standalone)* |
-| relative | - | *(standalone)* |
-| rotate | rot | <number> |
-| scale | - | <number> |
-| opacity | o, opa | <number> |
-| shadow | - | sm, md, lg |
-| cursor | - | pointer, grab, move, text, wait, not-allowed |
-| blur | - | <number> |
-| backdrop-blur | blur-bg | <number> |
-| hidden | - | *(standalone)* |
-| visible | - | *(standalone)* |
-| disabled | - | *(standalone)* |
-| scroll | scroll-ver | *(standalone)* |
-| scroll-hor | - | *(standalone)* |
-| scroll-both | - | *(standalone)* |
-| clip | - | *(standalone)* |
-| content | - | - |
-| href | - | - |
-| src | - | - |
-| placeholder | - | - |
-| focusable | - | *(standalone)* |
-| editable | - | *(standalone)* |
-| keyboard-nav | keynav | *(standalone)* |
-| readonly | - | *(standalone)* |
-| type | - | - |
-| name | - | - |
-| value | - | - |
-| checked | - | *(standalone)* |
-| text | - | - |
-| icon-size | is | <number>, $token |
-| icon-color | ic | <color>, $token |
-| icon-weight | iw | <number> |
-| fill | - | *(standalone)* |
-| animation | anim | fade-in, fade-out, slide-in, slide-out, slide-up, slide-down, slide-left, slide-right, scale-in, scale-out, bounce, pulse, shake, spin, reveal-up, reveal-scale, reveal-fade |
-| x-offset | - | <number> |
-| y-offset | - | <number> |
-| hover-bg | hover-background | <color>, $token |
-| hover-col | hover-color, hover-c | <color>, $token |
-| hover-opacity | hover-opa, hover-o | <number> |
-| hover-scale | - | <number> |
-| hover-border | hover-bor | <number> |
-| hover-border-color | hover-boc | <color>, $token |
-| hover-radius | hover-rad | <number> |
+| Property           | Aliases              | Werte                                                                                                                                                                        |
+| ------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| width              | w                    | full, hug, <number>, $token                                                                                                                                                  |
+| height             | h                    | full, hug, <number>, $token                                                                                                                                                  |
+| size               | -                    | full, hug, <number>, $token                                                                                                                                                  |
+| min-width          | minw                 | <number>, $token                                                                                                                                                             |
+| max-width          | maxw                 | <number>, $token                                                                                                                                                             |
+| min-height         | minh                 | <number>, $token                                                                                                                                                             |
+| max-height         | maxh                 | <number>, $token                                                                                                                                                             |
+| aspect             | -                    | square, video, <number>                                                                                                                                                      |
+| horizontal         | hor                  | _(standalone)_                                                                                                                                                               |
+| vertical           | ver                  | _(standalone)_                                                                                                                                                               |
+| gap                | g                    | <number>, $token                                                                                                                                                             |
+| center             | cen                  | _(standalone)_                                                                                                                                                               |
+| spread             | -                    | _(standalone)_                                                                                                                                                               |
+| top-left           | tl                   | _(standalone)_                                                                                                                                                               |
+| top-center         | tc                   | _(standalone)_                                                                                                                                                               |
+| top-right          | tr                   | _(standalone)_                                                                                                                                                               |
+| center-left        | cl                   | _(standalone)_                                                                                                                                                               |
+| center-right       | cr                   | _(standalone)_                                                                                                                                                               |
+| bottom-left        | bl                   | _(standalone)_                                                                                                                                                               |
+| bottom-center      | bc                   | _(standalone)_                                                                                                                                                               |
+| bottom-right       | br                   | _(standalone)_                                                                                                                                                               |
+| wrap               | -                    | _(standalone)_                                                                                                                                                               |
+| stacked            | -                    | _(standalone)_                                                                                                                                                               |
+| grid               | -                    | auto, <number>                                                                                                                                                               |
+| dense              | -                    | _(standalone)_                                                                                                                                                               |
+| gap-x              | gx                   | <number>, $token                                                                                                                                                             |
+| gap-y              | gy                   | <number>, $token                                                                                                                                                             |
+| row-height         | rh                   | <number>, $token                                                                                                                                                             |
+| grow               | -                    | _(standalone)_                                                                                                                                                               |
+| shrink             | -                    | _(standalone)_                                                                                                                                                               |
+| align              | -                    | top, bottom, left, right, center                                                                                                                                             |
+| left               | -                    | _(standalone)_                                                                                                                                                               |
+| right              | -                    | _(standalone)_                                                                                                                                                               |
+| top                | -                    | _(standalone)_                                                                                                                                                               |
+| bottom             | -                    | _(standalone)_                                                                                                                                                               |
+| hor-center         | -                    | _(standalone)_                                                                                                                                                               |
+| ver-center         | -                    | _(standalone)_                                                                                                                                                               |
+| padding            | pad, p               | <number>, $token                                                                                                                                                             |
+| margin             | mar, m               | <number>, $token                                                                                                                                                             |
+| background         | bg                   | <color>, $token                                                                                                                                                              |
+| color              | col, c               | <color>, $token                                                                                                                                                              |
+| border-color       | boc                  | <color>, $token                                                                                                                                                              |
+| border             | bor                  | <number>, $token                                                                                                                                                             |
+| radius             | rad                  | <number>, $token                                                                                                                                                             |
+| font-size          | fs                   | <number>, $token                                                                                                                                                             |
+| weight             | -                    | thin, light, normal, medium, semibold, bold, black, <number>                                                                                                                 |
+| line               | -                    | <number>, $token                                                                                                                                                             |
+| font               | -                    | sans, serif, mono, roboto, $token                                                                                                                                            |
+| text-align         | -                    | left, center, right, justify                                                                                                                                                 |
+| italic             | -                    | _(standalone)_                                                                                                                                                               |
+| underline          | -                    | _(standalone)_                                                                                                                                                               |
+| uppercase          | -                    | _(standalone)_                                                                                                                                                               |
+| lowercase          | -                    | _(standalone)_                                                                                                                                                               |
+| truncate           | -                    | _(standalone)_                                                                                                                                                               |
+| x                  | -                    | <number>                                                                                                                                                                     |
+| y                  | -                    | <number>                                                                                                                                                                     |
+| z                  | -                    | <number>                                                                                                                                                                     |
+| absolute           | abs                  | _(standalone)_                                                                                                                                                               |
+| fixed              | -                    | _(standalone)_                                                                                                                                                               |
+| relative           | -                    | _(standalone)_                                                                                                                                                               |
+| rotate             | rot                  | <number>                                                                                                                                                                     |
+| scale              | -                    | <number>                                                                                                                                                                     |
+| opacity            | o, opa               | <number>                                                                                                                                                                     |
+| shadow             | -                    | sm, md, lg                                                                                                                                                                   |
+| cursor             | -                    | pointer, grab, move, text, wait, not-allowed                                                                                                                                 |
+| blur               | -                    | <number>                                                                                                                                                                     |
+| backdrop-blur      | blur-bg              | <number>                                                                                                                                                                     |
+| hidden             | -                    | _(standalone)_                                                                                                                                                               |
+| visible            | -                    | _(standalone)_                                                                                                                                                               |
+| disabled           | -                    | _(standalone)_                                                                                                                                                               |
+| scroll             | scroll-ver           | _(standalone)_                                                                                                                                                               |
+| scroll-hor         | -                    | _(standalone)_                                                                                                                                                               |
+| scroll-both        | -                    | _(standalone)_                                                                                                                                                               |
+| clip               | -                    | _(standalone)_                                                                                                                                                               |
+| content            | -                    | -                                                                                                                                                                            |
+| href               | -                    | -                                                                                                                                                                            |
+| src                | -                    | -                                                                                                                                                                            |
+| placeholder        | -                    | -                                                                                                                                                                            |
+| focusable          | -                    | _(standalone)_                                                                                                                                                               |
+| editable           | -                    | _(standalone)_                                                                                                                                                               |
+| keyboard-nav       | keynav               | _(standalone)_                                                                                                                                                               |
+| readonly           | -                    | _(standalone)_                                                                                                                                                               |
+| type               | -                    | -                                                                                                                                                                            |
+| name               | -                    | -                                                                                                                                                                            |
+| value              | -                    | -                                                                                                                                                                            |
+| checked            | -                    | _(standalone)_                                                                                                                                                               |
+| text               | -                    | -                                                                                                                                                                            |
+| icon-size          | is                   | <number>, $token                                                                                                                                                             |
+| icon-color         | ic                   | <color>, $token                                                                                                                                                              |
+| icon-weight        | iw                   | <number>                                                                                                                                                                     |
+| fill               | -                    | _(standalone)_                                                                                                                                                               |
+| animation          | anim                 | fade-in, fade-out, slide-in, slide-out, slide-up, slide-down, slide-left, slide-right, scale-in, scale-out, bounce, pulse, shake, spin, reveal-up, reveal-scale, reveal-fade |
+| x-offset           | -                    | <number>                                                                                                                                                                     |
+| y-offset           | -                    | <number>                                                                                                                                                                     |
+| hover-bg           | hover-background     | <color>, $token                                                                                                                                                              |
+| hover-col          | hover-color, hover-c | <color>, $token                                                                                                                                                              |
+| hover-opacity      | hover-opa, hover-o   | <number>                                                                                                                                                                     |
+| hover-scale        | -                    | <number>                                                                                                                                                                     |
+| hover-border       | hover-bor            | <number>                                                                                                                                                                     |
+| hover-border-color | hover-boc            | <color>, $token                                                                                                                                                              |
+| hover-radius       | hover-rad            | <number>                                                                                                                                                                     |
 
 ### Zag Behavior Properties
 
 > Component-specific behavior properties for Zag components.
 
-*50 components with 195 behavior properties total.*
+_50 components with 195 behavior properties total._
 
 **Boolean:** addOnBlur, addOnPaste, allowCustomValue, allowDrop, allowDuplicate, allowHalf, allowMouseWheel, autoFocus, autoStart, autoplay, checked, clampValueOnBlur, clearable, closeOnClick, closeOnEscape, closeOnOutsideClick, closeOnScroll, closeOnSelect, collapsible, countdown, deselectable, directory, disabled, draggable, fixedWeeks, indeterminate, interactive, invalid, lazyMount, linear, lockAspectRatio, loop, loopFocus, mask, modal, multiple, open, openOnChange, otp, pauseOnHover, preventInteraction, preventScroll, readOnly, required, resizable, restoreFocus, searchable, selectOnFocus, trapFocus, typeahead, unmountOnExit, visible
 
@@ -4681,76 +4911,85 @@ Frame gap 16
 
 ### Events
 
-| Event | DOM | Key? |
-|-------|-----|------|
-| onclick | click | - |
-| onhover | mouseenter | - |
-| onfocus | focus | - |
-| onblur | blur | - |
-| onchange | change | - |
-| oninput | input | - |
-| onkeydown | keydown | ✓ |
-| onkeyup | keyup | ✓ |
-| onclick-outside | click-outside | - |
-| onload | load | - |
-| onviewenter | enter | - |
-| onviewexit | exit | - |
-| onenter | keydown | - |
-| onkeyenter | keydown | - |
-| onkeyescape | keydown | - |
-| onkeyspace | keydown | - |
-| onescape | keydown | - |
-| onspace | keydown | - |
+| Event           | DOM           | Key? |
+| --------------- | ------------- | ---- |
+| onclick         | click         | -    |
+| onhover         | mouseenter    | -    |
+| onfocus         | focus         | -    |
+| onblur          | blur          | -    |
+| onchange        | change        | -    |
+| oninput         | input         | -    |
+| onkeydown       | keydown       | ✓    |
+| onkeyup         | keyup         | ✓    |
+| onclick-outside | click-outside | -    |
+| onload          | load          | -    |
+| onviewenter     | enter         | -    |
+| onviewexit      | exit          | -    |
+| onenter         | keydown       | -    |
+| onkeyenter      | keydown       | -    |
+| onkeyescape     | keydown       | -    |
+| onkeyspace      | keydown       | -    |
+| onescape        | keydown       | -    |
+| onspace         | keydown       | -    |
 
 ### Actions
 
-| Action | Targets |
-|--------|---------|
-| show | - |
-| hide | - |
-| toggle | - |
-| open | - |
-| close | - |
-| select | - |
-| highlight | next, prev, first, last |
-| activate | - |
-| deactivate | - |
-| page | - |
-| call | - |
-| assign | - |
-| focus | - |
-| blur | - |
-| submit | - |
-| reset | - |
-| navigate | - |
-| showAt | - |
-| showBelow | - |
-| showAbove | - |
-| showLeft | - |
-| showRight | - |
-| showModal | - |
-| dismiss | - |
-| scrollTo | - |
-| scrollBy | - |
-| scrollToTop | - |
-| scrollToBottom | - |
-| get | - |
-| set | - |
-| increment | - |
-| decrement | - |
-| copy | - |
-| add | - |
-| remove | - |
-| create | - |
-| save | - |
-| revert | - |
-| delete | - |
+| Action         | Targets                 |
+| -------------- | ----------------------- |
+| show           | -                       |
+| hide           | -                       |
+| toggle         | -                       |
+| open           | -                       |
+| close          | -                       |
+| select         | -                       |
+| highlight      | next, prev, first, last |
+| activate       | -                       |
+| deactivate     | -                       |
+| page           | -                       |
+| call           | -                       |
+| assign         | -                       |
+| focus          | -                       |
+| blur           | -                       |
+| submit         | -                       |
+| reset          | -                       |
+| navigate       | -                       |
+| showAt         | -                       |
+| showBelow      | -                       |
+| showAbove      | -                       |
+| showLeft       | -                       |
+| showRight      | -                       |
+| showModal      | -                       |
+| dismiss        | -                       |
+| scrollTo       | -                       |
+| scrollBy       | -                       |
+| scrollToTop    | -                       |
+| scrollToBottom | -                       |
+| get            | -                       |
+| set            | -                       |
+| increment      | -                       |
+| decrement      | -                       |
+| copy           | -                       |
+| add            | -                       |
+| remove         | -                       |
+| create         | -                       |
+| save           | -                       |
+| revert         | -                       |
+| delete         | -                       |
 
 ### States
 
 **System:** hover, focus, active, disabled
 
 **Custom:** selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error
+
+**Size-States (CSS Container Queries):** compact, regular, wide
+
+| Size-State | Default Threshold  | Token Override                         |
+| ---------- | ------------------ | -------------------------------------- |
+| `compact:` | < 400px            | `compact.max: N`                       |
+| `regular:` | 400-800px          | `regular.min: N`, `regular.max: N`     |
+| `wide:`    | > 800px            | `wide.min: N`                          |
+| Custom     | Defined via tokens | `statename.min: N`, `statename.max: N` |
 
 ### Keyboard Keys
 
@@ -4761,6 +5000,7 @@ escape, enter, space, tab, backspace, delete, arrow-up, arrow-down, arrow-left, 
 ## Tests
 
 Tests in `tests/`:
+
 - `tests/compiler/` - IR, Backend, Layout, Zag-Komponenten
 - `tests/studio/` - Panels, Pickers, Editor, Sync
 - `tests/e2e/` - Playwright Browser-Tests

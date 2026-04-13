@@ -28,7 +28,14 @@ import {
 } from './style-utils-transformer'
 
 /** Property value type from AST - matches Property.values element type */
-type PropertyValue = string | number | boolean | TokenReference | LoopVarReference | Conditional | ComputedExpression
+type PropertyValue =
+  | string
+  | number
+  | boolean
+  | TokenReference
+  | LoopVarReference
+  | Conditional
+  | ComputedExpression
 
 /**
  * Context interface for property transformation.
@@ -101,10 +108,15 @@ export function propertyToCSS(
 
   // Handle gradient syntax: bg grad #color1 #color2, col grad #color1 #color2
   // Supports: grad, grad-ver, grad N (angle), and multiple colors
-  if ((name === 'background' || name === 'bg' || name === 'color' || name === 'col' || name === 'c') &&
-      values.length >= 2 &&
-      (String(values[0]) === 'grad' || String(values[0]).startsWith('grad-'))) {
-
+  if (
+    (name === 'background' ||
+      name === 'bg' ||
+      name === 'color' ||
+      name === 'col' ||
+      name === 'c') &&
+    values.length >= 2 &&
+    (String(values[0]) === 'grad' || String(values[0]).startsWith('grad-'))
+  ) {
     const gradType = String(values[0])
     const isTextGradient = name === 'color' || name === 'col' || name === 'c'
 
@@ -208,37 +220,84 @@ export function propertyToCSS(
 
   // Handle directional padding: pad left 20, pad top 8 bottom 24, pad x 16, pad left right 8
   if ((name === 'pad' || name === 'padding' || name === 'p') && values.length >= 2) {
-    const directions = ['left', 'right', 'top', 'bottom', 'down', 'l', 'r', 't', 'b', 'x', 'y', 'horizontal', 'vertical', 'hor', 'ver']
+    const directions = [
+      'left',
+      'right',
+      'top',
+      'bottom',
+      'down',
+      'l',
+      'r',
+      't',
+      'b',
+      'x',
+      'y',
+      'horizontal',
+      'vertical',
+      'hor',
+      'ver',
+    ]
     if (directions.includes(String(values[0]))) {
       return parseDirectionalSpacing('padding', values)
     }
     // Multi-value shorthand: pad 16 24 → padding: 16px 24px
-    // Check if all values are numeric (not directions)
-    const allNumeric = values.every(v => /^-?\d+(\.\d+)?(%|px)?$/.test(String(v)))
-    if (allNumeric && values.length <= 4) {
-      const paddingValue = values.map(v => {
-        const str = String(v)
-        if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
-        return str
-      }).join(' ')
+    // Also handles mixed values like pad 8 $token → padding: 8px var(--token)
+    if (values.length <= 4) {
+      const paddingValue = values
+        .map(v => {
+          // Handle token references: { kind: "token", name: "space-md" }
+          if (v && typeof v === 'object' && 'kind' in v && v.kind === 'token') {
+            const tokenName = (v as { kind: string; name: string }).name
+            return `var(--${tokenName}-pad)`
+          }
+          const str = String(v)
+          // Add px to plain numeric values
+          if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
+          return str
+        })
+        .join(' ')
       return [{ property: 'padding', value: paddingValue }]
     }
   }
 
   // Handle directional margin: margin left 8, margin top 16 bottom 24, margin x 16
   if ((name === 'margin' || name === 'm') && values.length >= 2) {
-    const directions = ['left', 'right', 'top', 'bottom', 'down', 'l', 'r', 't', 'b', 'x', 'y', 'horizontal', 'vertical', 'hor', 'ver']
+    const directions = [
+      'left',
+      'right',
+      'top',
+      'bottom',
+      'down',
+      'l',
+      'r',
+      't',
+      'b',
+      'x',
+      'y',
+      'horizontal',
+      'vertical',
+      'hor',
+      'ver',
+    ]
     if (directions.includes(String(values[0]))) {
       return parseDirectionalSpacing('margin', values)
     }
     // Multi-value shorthand: margin 16 24 → margin: 16px 24px
-    const allNumeric = values.every(v => /^-?\d+(\.\d+)?(%|px|auto)?$/.test(String(v)))
-    if (allNumeric && values.length <= 4) {
-      const marginValue = values.map(v => {
-        const str = String(v)
-        if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
-        return str
-      }).join(' ')
+    // Also handles mixed values like margin 8 $token → margin: 8px var(--token)
+    if (values.length <= 4) {
+      const marginValue = values
+        .map(v => {
+          // Handle token references: { kind: "token", name: "space-md" }
+          if (v && typeof v === 'object' && 'kind' in v && v.kind === 'token') {
+            const tokenName = (v as { kind: string; name: string }).name
+            return `var(--${tokenName}-pad)`
+          }
+          const str = String(v)
+          // Add px to plain numeric values (preserve 'auto')
+          if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
+          return str
+        })
+        .join(' ')
       return [{ property: 'margin', value: marginValue }]
     }
   }
@@ -262,6 +321,22 @@ export function propertyToCSS(
       const uniqueDirs = [...new Set(borderDirs)]
       return uniqueDirs.map(dir => ({ property: `border-${dir}`, value: borderValue }))
     }
+    // Check for border-width shorthand: bor 0 0 1 0 → border-width: 0 0 1px 0; border-style: solid
+    // This is when we have 2-4 numeric values (top [right] [bottom] [left])
+    const allNumeric = values.every(v => /^\d+$/.test(String(v)))
+    if (allNumeric && values.length >= 2 && values.length <= 4) {
+      const widthValue = values
+        .map(v => {
+          const str = String(v)
+          return str === '0' ? '0' : `${str}px`
+        })
+        .join(' ')
+      // border-width needs border-style to be visible
+      return [
+        { property: 'border-style', value: 'solid' },
+        { property: 'border-width', value: widthValue },
+      ]
+    }
     // Non-directional multi-value border: bor 1 #333 → border: 1px solid #333
     const borderValue = formatBorderValue(values)
     return [{ property: 'border', value: borderValue }]
@@ -271,14 +346,14 @@ export function propertyToCSS(
   // Uses CORNER_MAP from schema/ir-helpers.ts
   if ((name === 'rad' || name === 'radius') && values.length >= 1) {
     const cornerMap: Record<string, string[]> = {
-      'tl': ['border-top-left-radius'],
-      'tr': ['border-top-right-radius'],
-      'bl': ['border-bottom-left-radius'],
-      'br': ['border-bottom-right-radius'],
-      't': ['border-top-left-radius', 'border-top-right-radius'],
-      'b': ['border-bottom-left-radius', 'border-bottom-right-radius'],
-      'l': ['border-top-left-radius', 'border-bottom-left-radius'],
-      'r': ['border-top-right-radius', 'border-bottom-right-radius'],
+      tl: ['border-top-left-radius'],
+      tr: ['border-top-right-radius'],
+      bl: ['border-bottom-left-radius'],
+      br: ['border-bottom-right-radius'],
+      t: ['border-top-left-radius', 'border-top-right-radius'],
+      b: ['border-bottom-left-radius', 'border-bottom-right-radius'],
+      l: ['border-top-left-radius', 'border-bottom-left-radius'],
+      r: ['border-top-right-radius', 'border-bottom-right-radius'],
     }
     const firstVal = String(values[0])
     if (cornerMap[firstVal] && values.length >= 2) {
@@ -289,11 +364,13 @@ export function propertyToCSS(
     }
     // Multi-value radius shorthand: rad 8 16 → border-radius: 8px 16px
     if (values.length >= 2 && values.every(v => /^-?\d+(\.\d+)?(%|px)?$/.test(String(v)))) {
-      const radiusValue = values.map(v => {
-        const str = String(v)
-        if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
-        return str
-      }).join(' ')
+      const radiusValue = values
+        .map(v => {
+          const str = String(v)
+          if (/^-?\d+(\.\d+)?$/.test(str)) return `${str}px`
+          return str
+        })
+        .join(' ')
       return [{ property: 'border-radius', value: radiusValue }]
     }
   }
@@ -338,7 +415,7 @@ export function propertyToCSS(
       // Also add width: 100% so the element fills the cell horizontally
       return [
         { property: 'grid-column', value: `span ${numVal}` },
-        { property: 'width', value: '100%' }
+        { property: 'width', value: '100%' },
       ]
     }
     // If not numeric, fall through to default handling (hug, full, etc.)
@@ -352,7 +429,7 @@ export function propertyToCSS(
       // Also add height: 100% so the element fills the cell vertically
       return [
         { property: 'grid-row', value: `span ${numVal}` },
-        { property: 'height', value: '100%' }
+        { property: 'height', value: '100%' },
       ]
     }
     // If not numeric, fall through to default handling (hug, full, etc.)
@@ -407,10 +484,10 @@ export function propertyToCSS(
       'slide-out': 'mirror-slide-out 0.3s ease forwards',
       'scale-in': 'mirror-scale-in 0.3s ease forwards',
       'scale-out': 'mirror-scale-out 0.3s ease forwards',
-      'bounce': 'mirror-bounce 0.5s ease infinite',
-      'pulse': 'mirror-pulse 1s ease infinite',
-      'shake': 'mirror-shake 0.5s ease',
-      'spin': 'mirror-spin 1s linear infinite',
+      bounce: 'mirror-bounce 0.5s ease infinite',
+      pulse: 'mirror-pulse 1s ease infinite',
+      shake: 'mirror-shake 0.5s ease',
+      spin: 'mirror-spin 1s linear infinite',
     }
     const animValue = animationMap[animName] || animName
     return [{ property: 'animation', value: animValue }]
@@ -486,8 +563,10 @@ export function propertyToCSS(
   // For cross-axis (h full in hor, w full in ver), use align-self: stretch instead
   if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'full') {
     const isWidth = name === 'width' || name === 'w'
-    const isHorizontalFlex = parentLayoutContext?.type === 'flex' && parentLayoutContext?.flexDirection === 'row'
-    const isVerticalFlex = parentLayoutContext?.type === 'flex' && parentLayoutContext?.flexDirection === 'column'
+    const isHorizontalFlex =
+      parentLayoutContext?.type === 'flex' && parentLayoutContext?.flexDirection === 'row'
+    const isVerticalFlex =
+      parentLayoutContext?.type === 'flex' && parentLayoutContext?.flexDirection === 'column'
 
     // Check if this 'full' is on the main axis of the flex container
     const isMainAxis = (isWidth && isHorizontalFlex) || (!isWidth && isVerticalFlex)
@@ -511,15 +590,20 @@ export function propertyToCSS(
 
   // Handle width/height 'hug' before schema
   if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'hug') {
-    return [{ property: name === 'width' || name === 'w' ? 'width' : 'height', value: 'fit-content' }]
+    return [
+      { property: name === 'width' || name === 'w' ? 'width' : 'height', value: 'fit-content' },
+    ]
   }
 
   // Handle numeric width/height in flex containers - prevent shrinking
   // Value can be number or numeric string from parser
-  const isNumericValue = typeof value === 'number' ||
-                         (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value))
-  if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') &&
-      isNumericValue && parentLayoutContext?.type === 'flex') {
+  const isNumericValue =
+    typeof value === 'number' || (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value))
+  if (
+    (name === 'width' || name === 'w' || name === 'height' || name === 'h') &&
+    isNumericValue &&
+    parentLayoutContext?.type === 'flex'
+  ) {
     const isWidth = name === 'width' || name === 'w'
     const cssValue = formatCSSValue(name, String(value))
     return [
@@ -570,12 +654,14 @@ export function propertyToCSS(
 
     // grid 30% 70% → explicit columns
     if (gridValues.length >= 2) {
-      const columns = gridValues.map(v => {
-        const str = String(v)
-        if (/^\d+$/.test(str)) return `${str}px`
-        if (str.endsWith('%')) return str
-        return str
-      }).join(' ')
+      const columns = gridValues
+        .map(v => {
+          const str = String(v)
+          if (/^\d+$/.test(str)) return `${str}px`
+          if (str.endsWith('%')) return str
+          return str
+        })
+        .join(' ')
       return [
         { property: 'display', value: 'grid' },
         { property: 'grid-template-columns', value: columns },

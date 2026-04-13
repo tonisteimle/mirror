@@ -10,18 +10,9 @@
  * - Controller: Koordiniert Events → State Machine → Effects → Ports
  */
 
-import type {
-  DragSource,
-  DropTarget,
-  DropResult,
-  Point,
-  Rect,
-} from '../types'
+import type { DragSource, DropTarget, DropResult, Point, Rect } from '../types'
 import type { ChildRect } from '../strategies/types'
-import type {
-  DragDropPorts,
-  CleanupFn,
-} from './ports'
+import type { DragDropPorts, CleanupFn } from './ports'
 
 import {
   transition,
@@ -133,7 +124,7 @@ export class DragDropController {
     )
 
     this.cleanupFns.push(
-      this.ports.events.onDragMove((cursor) => {
+      this.ports.events.onDragMove(cursor => {
         this.dispatch({ type: 'DRAG_MOVE', cursor })
         this.updateTargetDetection(cursor)
       })
@@ -341,11 +332,7 @@ export class DragDropController {
   /**
    * Update visual indicators based on current result.
    */
-  private updateVisuals(
-    result: DropResult,
-    childRects: ChildRect[],
-    containerRect: Rect
-  ): void {
+  private updateVisuals(result: DropResult, childRects: ChildRect[], containerRect: Rect): void {
     const hint = this.ports.targetDetection.getVisualHint(result, childRects, containerRect)
 
     if (hint) {
@@ -512,11 +499,10 @@ export class DragDropController {
    * @param params - Drop parameters
    * @returns Result object with success status and optional error
    */
-  simulateDrop(params: {
-    source: DragSource
-    target: DropTarget
-    result: DropResult
-  }): { success: boolean; error?: string } {
+  simulateDrop(params: { source: DragSource; target: DropTarget; result: DropResult }): {
+    success: boolean
+    error?: string
+  } {
     try {
       // Reset dropExecuted flag
       this.dropExecuted = false
@@ -590,7 +576,13 @@ export class DragDropController {
     container: HTMLElement
     nodeIdAttr?: string
   }): { success: boolean; error?: string } {
-    const { sourceNodeId, targetNodeId, placement, container, nodeIdAttr = 'data-mirror-id' } = params
+    const {
+      sourceNodeId,
+      targetNodeId,
+      placement,
+      container,
+      nodeIdAttr = 'data-mirror-id',
+    } = params
 
     // Prevent self-drop
     if (sourceNodeId === targetNodeId && placement === 'inside') {
@@ -702,6 +694,92 @@ export class DragDropController {
   }
 
   /**
+   * TEST API: Simulate duplicating a canvas element.
+   * Creates a copy of the element at a new position (like Alt+Drop).
+   *
+   * @param sourceNodeId - Node ID of element to duplicate
+   * @param targetNodeId - Node ID of target container/element
+   * @param placement - Where to place ('before', 'after', 'inside')
+   * @param container - Container element to search in
+   * @param nodeIdAttr - Attribute name for node IDs
+   */
+  simulateDuplicate(params: {
+    sourceNodeId: string
+    targetNodeId: string
+    placement: 'before' | 'after' | 'inside'
+    container: HTMLElement
+    nodeIdAttr?: string
+  }): { success: boolean; error?: string } {
+    const {
+      sourceNodeId,
+      targetNodeId,
+      placement,
+      container,
+      nodeIdAttr = 'data-mirror-id',
+    } = params
+
+    // Prevent self-drop when inside
+    if (sourceNodeId === targetNodeId && placement === 'inside') {
+      return { success: false, error: 'Cannot duplicate element into itself' }
+    }
+
+    // Find source element
+    const sourceElement = container.querySelector(
+      `[${nodeIdAttr}="${sourceNodeId}"]`
+    ) as HTMLElement | null
+
+    if (!sourceElement) {
+      return { success: false, error: `Source element "${sourceNodeId}" not found` }
+    }
+
+    // Find target element
+    const targetElement = container.querySelector(
+      `[${nodeIdAttr}="${targetNodeId}"]`
+    ) as HTMLElement | null
+
+    if (!targetElement) {
+      return { success: false, error: `Target element "${targetNodeId}" not found` }
+    }
+
+    const source: DragSource = {
+      type: 'canvas',
+      nodeId: sourceNodeId,
+      element: sourceElement,
+    }
+
+    const target: DropTarget = {
+      nodeId: targetNodeId,
+      element: targetElement,
+      layoutType: this.ports.style.getLayoutType(targetElement),
+      direction: this.ports.style.getDirection(targetElement),
+      hasChildren: targetElement.children.length > 0,
+      isPositioned: false,
+    }
+
+    const result: DropResult = {
+      target,
+      placement,
+      targetId: targetNodeId,
+    }
+
+    // Execute as duplicate (force shouldDuplicate = true)
+    try {
+      const canDuplicate = this.ports.execution.canDuplicate(source)
+      if (!canDuplicate) {
+        return { success: false, error: 'Element cannot be duplicated' }
+      }
+
+      const execResult = this.ports.execution.execute(source, result, true) // shouldDuplicate = true
+      return { success: execResult.success, error: execResult.error }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    }
+  }
+
+  /**
    * TEST API: Simulate inserting a new component with absolute positioning.
    * Used for inserting into stacked/pos containers where x/y coordinates are needed.
    *
@@ -741,9 +819,7 @@ export class DragDropController {
 
     // Build properties with x/y coordinates
     const positionProps = `x ${Math.round(position.x)}, y ${Math.round(position.y)}`
-    const finalProperties = properties
-      ? `${positionProps}, ${properties}`
-      : positionProps
+    const finalProperties = properties ? `${positionProps}, ${properties}` : positionProps
 
     const source: DragSource = {
       type: 'palette',
@@ -783,10 +859,11 @@ export class DragDropController {
     // The actual visual state would need to be tracked by the VisualPort.
     return {
       hasIndicator: this.state.type === 'over-target',
-      hasOutline: this.state.type === 'over-target' &&
+      hasOutline:
+        this.state.type === 'over-target' &&
         (this.state.result.placement === 'before' ||
-         this.state.result.placement === 'after' ||
-         this.state.result.placement === 'absolute'),
+          this.state.result.placement === 'after' ||
+          this.state.result.placement === 'absolute'),
     }
   }
 }

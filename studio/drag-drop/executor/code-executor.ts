@@ -11,11 +11,9 @@ import { createLogger } from '../../../compiler/utils/logger'
 
 const log = createLogger('CodeExecutor')
 
-// Debug logging - disabled in production
-const DEBUG = false
-const debug = DEBUG
-  ? (...args: unknown[]) => log.debug(...args)
-  : () => {}
+// Debug logging - ENABLED for debugging
+const DEBUG = true
+const debug = DEBUG ? (...args: unknown[]) => log.debug(...args) : () => {}
 
 import type {
   DragSource,
@@ -110,9 +108,7 @@ export class CodeExecutor implements ICodeExecutor {
 
       // Extract editor content (after prelude) from modified source
       const newSource = modResult.newSource ?? ''
-      const newEditorContent = preludeOffset > 0
-        ? newSource.substring(preludeOffset)
-        : newSource
+      const newEditorContent = preludeOffset > 0 ? newSource.substring(preludeOffset) : newSource
 
       // Apply the change (editor content only)
       debug('Applying change, new editor content length:', newEditorContent.length)
@@ -167,19 +163,11 @@ export class CodeExecutor implements ICodeExecutor {
       switch (result.placement) {
         case 'before':
         case 'after':
-          modResult = modifier.duplicateNode(
-            source.nodeId,
-            result.targetId,
-            result.placement
-          )
+          modResult = modifier.duplicateNode(source.nodeId, result.targetId, result.placement)
           break
 
         case 'inside':
-          modResult = modifier.duplicateNode(
-            source.nodeId,
-            result.target.nodeId,
-            'inside'
-          )
+          modResult = modifier.duplicateNode(source.nodeId, result.target.nodeId, 'inside')
           break
 
         default:
@@ -197,9 +185,8 @@ export class CodeExecutor implements ICodeExecutor {
       }
 
       // Extract editor content (after prelude) from modified source
-      const newEditorContent = preludeOffset > 0
-        ? modResult.newSource.substring(preludeOffset)
-        : modResult.newSource
+      const newEditorContent =
+        preludeOffset > 0 ? modResult.newSource.substring(preludeOffset) : modResult.newSource
 
       // Apply the change (editor content only)
       this.deps.applyChange(newEditorContent)
@@ -308,15 +295,10 @@ export class CodeExecutor implements ICodeExecutor {
     switch (result.placement) {
       case 'before':
       case 'after':
-        return modifier.addChildRelativeTo(
-          result.targetId,
-          componentName,
-          result.placement,
-          {
-            properties,
-            textContent: source.textContent,
-          }
-        )
+        return modifier.addChildRelativeTo(result.targetId, componentName, result.placement, {
+          properties,
+          textContent: source.textContent,
+        })
 
       case 'inside':
         return modifier.addChild(result.target.nodeId, componentName, {
@@ -353,11 +335,7 @@ export class CodeExecutor implements ICodeExecutor {
     switch (result.placement) {
       case 'before':
       case 'after':
-        return modifier.moveNode(
-          source.nodeId,
-          result.targetId,
-          result.placement
-        )
+        return modifier.moveNode(source.nodeId, result.targetId, result.placement)
 
       case 'inside':
         return modifier.moveNode(

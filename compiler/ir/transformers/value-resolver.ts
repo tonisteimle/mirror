@@ -5,10 +5,22 @@
  * Extracted from IRTransformer for modularity.
  */
 
-import type { TokenReference, LoopVarReference, Conditional, ComputedExpression } from '../../parser/ast'
+import type {
+  TokenReference,
+  LoopVarReference,
+  Conditional,
+  ComputedExpression,
+} from '../../parser/ast'
 
 // Local type definition - matches parser usage
-type PropertyValue = string | number | boolean | TokenReference | LoopVarReference | Conditional | ComputedExpression
+type PropertyValue =
+  | string
+  | number
+  | boolean
+  | TokenReference
+  | LoopVarReference
+  | Conditional
+  | ComputedExpression
 import type { IRProperty } from '../types'
 import { PROPERTY_TO_TOKEN_SUFFIX } from '../../schema/ir-helpers'
 import { buildExpressionString } from './expression-transformer'
@@ -260,14 +272,24 @@ export function extractHTMLProperties(
     // Note: 'hidden' is handled as CSS (display: none) not HTML attribute
     // This allows state transitions with 'visible' to properly show the element
     // Icon properties - pass through as data attributes for runtime handling
+    // Pass prop.name to enable context-based token resolution (e.g., $success → success.ic)
     if (prop.name === 'icon-size' || prop.name === 'is') {
-      htmlProps.push({ name: 'data-icon-size', value: resolveValue(prop.values, tokenSet) })
+      htmlProps.push({
+        name: 'data-icon-size',
+        value: resolveValue(prop.values, tokenSet, prop.name),
+      })
     }
     if (prop.name === 'icon-color' || prop.name === 'ic') {
-      htmlProps.push({ name: 'data-icon-color', value: resolveValue(prop.values, tokenSet) })
+      htmlProps.push({
+        name: 'data-icon-color',
+        value: resolveValue(prop.values, tokenSet, prop.name),
+      })
     }
     if (prop.name === 'icon-weight' || prop.name === 'iw') {
-      htmlProps.push({ name: 'data-icon-weight', value: resolveValue(prop.values, tokenSet) })
+      htmlProps.push({
+        name: 'data-icon-weight',
+        value: resolveValue(prop.values, tokenSet, prop.name),
+      })
     }
     if (prop.name === 'fill') {
       htmlProps.push({ name: 'data-icon-fill', value: true })

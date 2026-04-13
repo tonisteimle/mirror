@@ -1187,6 +1187,64 @@ const _runtime = {
         }
       }
     }
+
+    // Refresh all each loops as their filter expressions may depend on the changed value
+    this._refreshAllEachLoops()
+  },
+
+  // Refresh all each loops (for filter variable changes)
+  _refreshAllEachLoops() {
+    const containers = document.querySelectorAll('[data-each-container]')
+    const data = window.__mirrorData || {}
+
+    containers.forEach(container => {
+      const config = container._eachConfig
+      if (!config) return
+
+      const collectionName = typeof config.collection === 'string' ? config.collection : null
+      if (!collectionName) return
+
+      // Clear existing items
+      container.innerHTML = ''
+
+      // Get fresh data
+      const items = data[collectionName]
+      if (!items || typeof items !== 'object') return
+
+      // Convert to array
+      let itemsArray
+      if (Array.isArray(items)) {
+        itemsArray = items
+      } else {
+        itemsArray = Object.entries(items).map(([k, v]) =>
+          typeof v === 'object' && v !== null ? { _key: k, ...v } : { _key: k, value: v }
+        )
+      }
+
+      // Apply filter
+      if (config.filterFn) {
+        itemsArray = itemsArray.filter(config.filterFn)
+      }
+
+      // Apply sorting
+      if (config.orderBy) {
+        const sortDir = config.orderDesc ? -1 : 1
+        itemsArray = [...itemsArray].sort((a, b) => {
+          const aVal = a[config.orderBy]
+          const bVal = b[config.orderBy]
+          if (aVal < bVal) return -sortDir
+          if (aVal > bVal) return sortDir
+          return 0
+        })
+      }
+
+      // Render
+      if (config.renderItem) {
+        itemsArray.forEach((item, index) => {
+          container.appendChild(config.renderItem(item, index))
+        })
+      }
+    })
   },
 
   // Remove element from bindings (cleanup)

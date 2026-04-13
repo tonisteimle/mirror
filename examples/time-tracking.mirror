@@ -1,0 +1,215 @@
+// Time Tracking App
+// Professional, minimal design
+
+// =============================================================================
+// TOKENS
+// =============================================================================
+
+bg.bg: #0f0f0f
+card.bg: #1a1a1a
+card-alt.bg: #151515
+accent.bg: #3b82f6
+accent-hover.bg: #2563eb
+success.bg: #10b981
+warning.bg: #f59e0b
+danger.bg: #ef4444
+muted.bg: #262626
+
+text.col: #f5f5f5
+text-secondary.col: #a3a3a3
+text-muted.col: #525252
+accent.col: #3b82f6
+success.col: #10b981
+warning.col: #f59e0b
+danger.col: #ef4444
+
+border.boc: #2a2a2a
+border-hover.boc: #404040
+
+// =============================================================================
+// DATA
+// =============================================================================
+
+stats:
+  totalHours: 168.5
+  targetHours: 176
+  overtime: 12.5
+  vacation: 18
+  vacationUsed: 7
+
+entries:
+  e1:
+    date: "12.04.2026"
+    project: "Website Relaunch"
+    client: "Müller AG"
+    task: "Design Review"
+    hours: 4.5
+    billable: true
+  e2:
+    date: "12.04.2026"
+    project: "Mobile App"
+    client: "Schmidt GmbH"
+    task: "API Integration"
+    hours: 3.0
+    billable: true
+  e3:
+    date: "11.04.2026"
+    project: "Website Relaunch"
+    client: "Müller AG"
+    task: "Wireframes"
+    hours: 6.0
+    billable: true
+  e4:
+    date: "11.04.2026"
+    project: "Intern"
+    client: "—"
+    task: "Team Meeting"
+    hours: 1.5
+    billable: false
+  e5:
+    date: "10.04.2026"
+    project: "Mobile App"
+    client: "Schmidt GmbH"
+    task: "Testing"
+    hours: 5.0
+    billable: true
+  e6:
+    date: "10.04.2026"
+    project: "Support"
+    client: "Weber & Co"
+    task: "Bug Fix"
+    hours: 2.5
+    billable: true
+
+// =============================================================================
+// COMPONENTS
+// =============================================================================
+
+// Cards
+StatCard: Frame bg $card, pad 14, rad 6, gap 4, w full, h full, cursor pointer
+  Label: col $text-muted, fs 10, uppercase, letter 0.5
+  Value: col $text, fs 20, weight 600
+  Sub: col $text-secondary, fs 10
+  hover 0.2s:
+    bg #1f1f1f
+
+// Buttons
+BtnPrimary as Button: bg $accent, col white, pad 6 12, rad 4, fs 11, weight 500, cursor pointer
+  hover 0.15s:
+    bg $accent-hover
+
+BtnSecondary as Button: bg $muted, col $text-secondary, pad 6 12, rad 4, fs 11, weight 500, cursor pointer
+  hover 0.15s:
+    bg #333
+    col $text
+
+// Form
+SelectField: Frame bg $card-alt, bor 1, boc $border, pad 0 10, rad 4, h 32, hor, spread, ver-center, cursor pointer
+  Label: col $text, fs 11
+  hover 0.15s:
+    boc $border-hover
+    bg #1a1a1a
+
+// Table
+TableHeader: Frame hor, pad 6 10, bg $card-alt, rad 4, gap 6
+TableRow: Frame hor, pad 8 10, bor 0 0 1 0, boc $border, gap 6, ver-center, cursor pointer
+  hover 0.15s:
+    bg #222
+
+// Badges
+Badge: Frame pad 2 6, rad 3, fs 9, weight 500
+BadgeSuccess: Badge bg rgba(16,185,129,0.15), col $success
+BadgeMuted: Badge bg $muted, col $text-muted
+
+// =============================================================================
+// LAYOUT
+// =============================================================================
+
+Frame w 900, bg $bg, pad 24, gap 16, mar 0 auto
+
+  // Header
+  Frame hor, ver-center, gap 16
+    Frame gap 2
+      Text "Zeiterfassung", col $text, fs 18, weight 600
+      Text "April 2026", col $text-secondary, fs 11
+    Spacer grow
+    Frame hor, gap 6
+      BtnSecondary "Export"
+      BtnPrimary "Neuer Eintrag"
+
+  // Stats Row
+  Frame hor, gap 12, h 90
+
+    StatCard
+      Label "Stunden Monat"
+      Value "168.5"
+      Frame hor, gap 4, ver-center
+        Frame w 80, h 3, bg $muted, rad 2
+          Frame w 64, h 3, bg $accent, rad 2
+        Sub "von 176h"
+
+    StatCard
+      Label "Überstunden"
+      Value "+12.5"
+      Sub "kumuliert", col $success
+
+    StatCard
+      Label "Resturlaub"
+      Value "11"
+      Sub "von 18 Tagen"
+
+    StatCard
+      Label "Verrechenbar"
+      Value "89%"
+      Sub "Ziel: 85%", col $success
+
+  // Filters
+  Frame bg $card, pad 10, rad 6, hor, gap 10, ver-center
+    Text "Filter:", col $text-muted, fs 10, w 36
+    SelectField, w 140
+      Label "Alle Projekte"
+      Icon "chevron-down", ic $text-muted, is 12
+    SelectField, w 130
+      Label "Alle Kunden"
+      Icon "chevron-down", ic $text-muted, is 12
+    SelectField, w 110
+      Label "Diese Woche"
+      Icon "chevron-down", ic $text-muted, is 12
+    Spacer grow
+    Input placeholder "Suchen...", bg $card-alt, bor 1, boc $border, col $text, pad 0 10, rad 4, fs 11, w 160, h 32
+      hover 0.15s:
+        boc $border-hover
+      focus 0.15s:
+        boc $accent
+
+  // Table
+  Frame bg $card, rad 6, clip
+    TableHeader
+      Text "Datum", col $text-muted, fs 10, uppercase, w 70
+      Text "Projekt", col $text-muted, fs 10, uppercase, w 130
+      Text "Kunde", col $text-muted, fs 10, uppercase, w 100
+      Text "Tätigkeit", col $text-muted, fs 10, uppercase, w 140, grow
+      Text "Stunden", col $text-muted, fs 10, uppercase, w 60, right
+      Frame w 32, center
+        Icon "receipt", ic $text-muted, is 12
+
+    Frame gap 0
+      each entry in $entries
+        TableRow
+          Text entry.date, col $text-secondary, fs 11, w 70
+          Text entry.project, col $text, fs 11, w 130, weight 500
+          Text entry.client, col $text-secondary, fs 11, w 100
+          Text entry.task, col $text, fs 11, w 140, grow
+          Text entry.hours + "h", col $text, fs 11, w 60, right, weight 500
+          Frame w 32, center
+            if entry.billable
+              Icon "circle-check", ic $success, is 16
+            else
+              Icon "minus", ic $text-muted, is 16
+
+    // Footer
+    Frame hor, spread, ver-center, pad 10, bg $card-alt
+      Text "6 Einträge", col $text-muted, fs 10
+      Frame hor, gap 6, ver-center
+        Text "Total:", col $text-secondary, fs 11
+        Text "21.5h", col $text, fs 12, weight 600

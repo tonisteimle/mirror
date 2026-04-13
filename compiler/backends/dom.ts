@@ -57,6 +57,7 @@ import {
 import type { EventEmitterContext } from './dom/event-emitter'
 import { emitTokens as emitTokensExtracted } from './dom/token-emitter'
 import type { TokenEmitterContext } from './dom/token-emitter'
+import { getSizeStateThresholds, SIZE_STATES } from '../schema/parser-helpers'
 
 // Re-export types for external consumers
 export type { GenerateDOMOptions } from './dom/types'
@@ -409,7 +410,8 @@ class DOMGenerator {
         )
 
         // Add px unit for numeric spacing/sizing tokens
-        const needsPx = /\.(pad|gap|rad|radius|margin|size)$/.test(token.name)
+        // Including: pad, gap, rad, margin, size, fs (font-size), w (width), h (height), is (icon-size)
+        const needsPx = /\.(pad|gap|rad|radius|margin|size|fs|w|h|is)$/.test(token.name)
         if (needsPx && typeof value === 'number') {
           value = `${value}px`
         } else if (needsPx && typeof value === 'string' && /^\d+$/.test(value)) {
@@ -433,6 +435,9 @@ class DOMGenerator {
 
     // Emit CSS for system states (hover, focus, active, disabled)
     this.emitSystemStateCSS()
+
+    // Emit CSS @container queries for size-states (compact, regular, wide)
+    this.emitSizeStateCSS()
 
     this.emit('`')
     this.emit('_root.appendChild(_style)')
@@ -504,7 +509,8 @@ class DOMGenerator {
       for (const [state, styles] of Object.entries(byState)) {
         const pseudoClass = state === 'disabled' ? '[disabled]' : `:${state}`
         this.emit('')
-        this.emit(`[data-mirror-id="${node.id}"]${pseudoClass} {`)
+        // Use prefix selector (^=) to match both static nodes (node-55) and loop nodes (node-55[0], node-55[1], etc.)
+        this.emit(`[data-mirror-id^="${node.id}"]${pseudoClass} {`)
         this.indent++
         for (const style of styles) {
           this.emit(`${style.property}: ${style.value} !important;`)
@@ -518,6 +524,115 @@ class DOMGenerator {
     for (const child of node.children) {
       this.emitNodeStateCSS(child, systemStates)
     }
+
+    // Also process template nodes inside each loops
+    if (node.each?.template) {
+      for (const templateNode of node.each.template) {
+        this.emitNodeStateCSS(templateNode, systemStates)
+      }
+    }
+  }
+
+  /**
+   * Emit CSS @container queries for size-states (compact, regular, wide)
+   *
+   * Size-states use CSS Container Queries, which respond to the element's own width
+   * (not the viewport). This enables truly component-scoped responsive behavior.
+   */
+  private emitSizeStateCSS(): void {
+    for (const node of this.ir.nodes) {
+      this.emitNodeSizeStateCSS(node)
+    }
+  }
+
+  private emitNodeSizeStateCSS(node: IRNode): void {
+    // Collect size-state styles for this node
+    const sizeStateStyles = node.styles.filter(s => s.sizeState)
+
+    if (sizeStateStyles.length > 0) {
+      const bySizeState = this.groupBySizeState(sizeStateStyles)
+
+      for (const [sizeState, styles] of Object.entries(bySizeState)) {
+        const query = this.buildContainerQuery(sizeState)
+        if (!query) continue // Skip if we couldn't build a query
+
+        this.emit('')
+        this.emit(`/* Size-state: ${sizeState} */`)
+        this.emit(`@container ${query} {`)
+        this.indent++
+        // Use prefix selector (^=) to match both static nodes and loop nodes
+        this.emit(`[data-mirror-id^="${node.id}"] {`)
+        this.indent++
+        for (const style of styles) {
+          this.emit(`${style.property}: ${style.value} !important;`)
+        }
+        this.indent--
+        this.emit('}')
+        this.indent--
+        this.emit('}')
+      }
+    }
+
+    // Recurse into children
+    for (const child of node.children) {
+      this.emitNodeSizeStateCSS(child)
+    }
+
+    // Also process template nodes inside each loops
+    if (node.each?.template) {
+      for (const templateNode of node.each.template) {
+        this.emitNodeSizeStateCSS(templateNode)
+      }
+    }
+  }
+
+  /**
+   * Build a CSS container query condition for a size-state
+   *
+   * @param sizeState The size-state name (compact, regular, wide, or custom)
+   * @returns CSS query string like "(max-width: 400px)" or "(min-width: 400px) and (max-width: 800px)"
+   */
+  private buildContainerQuery(sizeState: string): string | null {
+    // Get thresholds - either from built-in defaults or custom tokens
+    const thresholds = this.getResolvedSizeStateThresholds(sizeState)
+    if (!thresholds.min && !thresholds.max) return null
+
+    const parts: string[] = []
+    if (thresholds.min !== undefined) {
+      parts.push(`(min-width: ${thresholds.min}px)`)
+    }
+    if (thresholds.max !== undefined) {
+      parts.push(`(max-width: ${thresholds.max}px)`)
+    }
+
+    return parts.join(' and ')
+  }
+
+  /**
+   * Get the resolved thresholds for a size-state, considering custom token overrides
+   */
+  private getResolvedSizeStateThresholds(sizeState: string): { min?: number; max?: number } {
+    // First check for custom token overrides (e.g., "compact.max: 300")
+    const customMin = this.tokenMap.get(`${sizeState}.min`)
+    const customMax = this.tokenMap.get(`${sizeState}.max`)
+
+    // Get built-in defaults
+    const defaults = getSizeStateThresholds(sizeState)
+
+    return {
+      min: typeof customMin === 'number' ? customMin : defaults?.min,
+      max: typeof customMax === 'number' ? customMax : defaults?.max,
+    }
+  }
+
+  private groupBySizeState(styles: IRStyle[]): Record<string, IRStyle[]> {
+    const result: Record<string, IRStyle[]> = {}
+    for (const style of styles) {
+      const sizeState = style.sizeState || 'default'
+      if (!result[sizeState]) result[sizeState] = []
+      result[sizeState].push(style)
+    }
+    return result
   }
 
   private emitCreateUI(): void {
@@ -753,8 +868,8 @@ class DOMGenerator {
       this.emit(`_runtime.createChart(${varName}, ${varName}_config)`)
     }
 
-    // Apply base styles
-    const baseStyles = node.styles.filter(s => !s.state)
+    // Apply base styles (excluding state-specific and size-state styles)
+    const baseStyles = node.styles.filter(s => !s.state && !s.sizeState)
     if (baseStyles.length > 0) {
       this.emit(`Object.assign(${varName}.style, {`)
       this.indent++
@@ -763,6 +878,12 @@ class DOMGenerator {
       }
       this.indent--
       this.emit('})')
+    }
+
+    // Set container-type for size-states (CSS Container Queries)
+    // This enables @container queries to respond to this element's size
+    if (node.needsContainer) {
+      this.emit(`${varName}.style.containerType = 'inline-size'`)
     }
 
     // Set data-layout for drop strategy detection
@@ -1308,6 +1429,75 @@ class DOMGenerator {
   }
 
   private emitEachTemplateNode(
+    node: IRNode,
+    parentVar: string,
+    itemVar: string,
+    indexVar: string = 'index'
+  ): void {
+    // Handle conditionals inside loops - use loop variables directly
+    if (node.conditional) {
+      const cond = node.conditional
+      const condId = this.sanitizeVarName(cond.id)
+      // Resolve condition for loop context: loop variables stay as-is (local JS vars),
+      // only $-prefixed data variables get wrapped in $get()
+      const resolvedCondition = this.resolveLoopCondition(cond.condition, itemVar, indexVar)
+
+      this.emit(`// Conditional in loop`)
+      this.emit(`const ${condId}_container = document.createElement('div')`)
+      this.emit(`${condId}_container.style.display = 'contents';`)
+      this.emit(`if (${resolvedCondition}) {`)
+      this.indent++
+      for (const child of cond.then) {
+        this.emitEachTemplateNode(child, `${condId}_container`, itemVar, indexVar)
+      }
+      this.indent--
+      if (cond.else && cond.else.length > 0) {
+        this.emit(`} else {`)
+        this.indent++
+        for (const child of cond.else) {
+          this.emitEachTemplateNode(child, `${condId}_container`, itemVar, indexVar)
+        }
+        this.indent--
+      }
+      this.emit(`}`)
+      this.emit(`${parentVar}.appendChild(${condId}_container)`)
+      return
+    }
+
+    // Handle visibleWhen inside loops - use inline if statement with loop variables
+    // When a node has visibleWhen referencing a loop variable (e.g., "entry.billable" or "!entry.billable"),
+    // wrap the node creation in an if statement instead of using _visibleWhen runtime binding
+    if (node.visibleWhen) {
+      // Check if the visibleWhen references the loop variable
+      // Strip leading ! for negated conditions
+      const conditionWithoutNot = node.visibleWhen.startsWith('!')
+        ? node.visibleWhen.slice(1)
+        : node.visibleWhen
+      const firstPart = conditionWithoutNot.split('.')[0]
+      if (firstPart === itemVar || firstPart === indexVar) {
+        // Loop variable reference - emit inline if statement
+        const resolvedCondition = this.resolveLoopCondition(node.visibleWhen, itemVar, indexVar)
+        this.emit(`if (${resolvedCondition}) {`)
+        this.indent++
+        // Create a copy of the node without visibleWhen to avoid infinite recursion
+        const nodeWithoutVisibleWhen = { ...node, visibleWhen: undefined }
+        this.emitEachTemplateNodeContent(nodeWithoutVisibleWhen, parentVar, itemVar, indexVar)
+        this.indent--
+        this.emit(`}`)
+        return
+      }
+      // If visibleWhen doesn't reference loop variable, fall through to normal handling
+      // The _visibleWhen runtime binding will handle it
+    }
+
+    this.emitEachTemplateNodeContent(node, parentVar, itemVar, indexVar)
+  }
+
+  /**
+   * Emit the actual content of an each template node.
+   * Separated from emitEachTemplateNode to allow conditional wrapping.
+   */
+  private emitEachTemplateNodeContent(
     node: IRNode,
     parentVar: string,
     itemVar: string,
@@ -2017,6 +2207,26 @@ class DOMGenerator {
   }
 
   /**
+   * Resolve condition for loop context: loop variables (itemVar, indexVar) stay as-is
+   * because they are local JavaScript variables. Only $-prefixed data variables get $get().
+   * e.g., "entry.billable" stays as "entry.billable" (local var)
+   * e.g., "$config.showAll" becomes "$get('config.showAll')"
+   */
+  private resolveLoopCondition(condition: string, itemVar: string, indexVar: string): string {
+    let result = condition
+
+    // Handle $-prefixed data variables - wrap in $get()
+    result = result.replace(
+      /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
+      '$get("$1")'
+    )
+
+    // Loop variables (itemVar, indexVar) and their properties are local JS variables,
+    // so they stay as-is (e.g., "entry.billable" remains "entry.billable")
+    return result
+  }
+
+  /**
    * Transform condition expression to use $get() for variable lookups
    * e.g., "loggedIn" → "$get("loggedIn")"
    * e.g., "isAdmin && hasPermission" → "$get("isAdmin") && $get("hasPermission")"
@@ -2048,24 +2258,75 @@ class DOMGenerator {
       'const',
     ])
 
-    // First handle __loopVar: markers (from loop variables)
+    // First, collect all loop variable references marked with __loopVar:
+    // These should NOT be wrapped in $get() - they are function parameters
+    const loopVars = new Set<string>()
+    condition.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*)/g, (_, varName) => {
+      // Add the base variable name (e.g., "entry" from "entry.project")
+      const baseName = varName.split('.')[0]
+      loopVars.add(baseName)
+      return ''
+    })
+
+    // Handle __loopVar: markers - strip the prefix but keep the variable name
     let result = condition.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
 
     // Then handle $-prefixed variables (already explicit)
+    // Only capture the variable name, not method calls (stop at parenthesis)
+    // $variable.property → $get("variable.property")
+    // $variable.method() → $get("variable").method() (method is handled separately)
     result = result.replace(
-      /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
-      '$get("$1")'
+      /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*?)(?=\s*\(|$|[^a-zA-Z0-9_.])/g,
+      (match, varPath) => {
+        // Check if next char is '(' - means this is followed by method call
+        // In that case, only capture up to the last dot before method
+        const parts = varPath.split('.')
+        if (parts.length > 1) {
+          // Check if the last part is likely a method (followed by parenthesis in original)
+          // Since we can't easily look ahead, we check common method names
+          const methodNames = new Set([
+            'toLowerCase',
+            'toUpperCase',
+            'includes',
+            'startsWith',
+            'endsWith',
+            'trim',
+            'split',
+            'join',
+            'map',
+            'filter',
+            'find',
+            'some',
+            'every',
+            'reduce',
+            'toString',
+            'valueOf',
+          ])
+          const lastPart = parts[parts.length - 1]
+          if (methodNames.has(lastPart)) {
+            // Last part is a method - only wrap up to the property before it
+            const varOnly = parts.slice(0, -1).join('.')
+            return `$get("${varOnly}").${lastPart}`
+          }
+        }
+        return `$get("${varPath}")`
+      }
     )
 
     // Now handle bare identifiers (not already wrapped, not in quotes, not reserved)
     // This regex finds identifiers with optional dot notation
-    // We use a function to check if it's reserved
+    // We use a function to check if it's reserved or a loop variable
+    // The lookbehind excludes: " (in string), \w (part of word), $ (variable), . (method call), ) (after function call)
     result = result.replace(
-      /(?<!["\w$])([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)(?!["\w(])/g,
+      /(?<!["\w$.)])([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)(?!["\w(])/g,
       (match, identifier) => {
-        // Don't wrap if it's a reserved word
         const firstPart = identifier.split('.')[0]
+        // Don't wrap if it's a reserved word
         if (reserved.has(firstPart)) {
+          return match
+        }
+        // Don't wrap if it's a loop variable (marked with __loopVar:)
+        if (loopVars.has(firstPart)) {
           return match
         }
         // Don't wrap if it's already wrapped in $get

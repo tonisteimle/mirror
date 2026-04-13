@@ -1,0 +1,49 @@
+// Time Tracking Entries
+
+e1:
+  date: "12.04.2026"
+  project: "Website Relaunch"
+  client: "Müller AG"
+  task: "Design Review"
+  hours: 4.5
+  billable: true
+
+e2:
+  date: "12.04.2026"
+  project: "Mobile App"
+  client: "Schmidt GmbH"
+  task: "API Integration"
+  hours: 3.0
+  billable: true
+
+e3:
+  date: "11.04.2026"
+  project: "Website Relaunch"
+  client: "Müller AG"
+  task: "Wireframes"
+  hours: 6.0
+  billable: true
+
+e4:
+  date: "11.04.2026"
+  project: "Intern"
+  client: "—"
+  task: "Team Meeting"
+  hours: 1.5
+  billable: false
+
+e5:
+  date: "10.04.2026"
+  project: "Mobile App"
+  client: "Schmidt GmbH"
+  task: "Testing"
+  hours: 5.0
+  billable: true
+
+e6:
+  date: "10.04.2026"
+  project: "Support"
+  client: "Weber & Co"
+  task: "Bug Fix"
+  hours: 2.5
+  billable: true

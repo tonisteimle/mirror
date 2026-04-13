@@ -1,0 +1,361 @@
+// Time Tracking App
+// Professional, minimal design - REFACTORED v2
+
+// =============================================================================
+// TOKENS
+// =============================================================================
+
+// Colors - Background
+bg.bg: #0f0f0f
+card.bg: #1a1a1a
+card-alt.bg: #151515
+card-hover.bg: #1f1f1f
+row-hover.bg: #222222
+muted.bg: #262626
+muted-hover.bg: #333333
+accent.bg: #3b82f6
+accent-hover.bg: #2563eb
+success.bg: #10b981
+warning.bg: #f59e0b
+danger.bg: #ef4444
+
+// Colors - Text
+text.col: #f5f5f5
+text-secondary.col: #a3a3a3
+text-muted.col: #525252
+accent.col: #3b82f6
+success.col: #10b981
+warning.col: #f59e0b
+danger.col: #ef4444
+
+// Colors - Border
+border.boc: #2a2a2a
+border-hover.boc: #404040
+
+// Spacing
+space-sm.pad: 6
+space-md.pad: 10
+space-lg.pad: 14
+space-xl.pad: 24
+
+// Gap
+gap-xs.gap: 2
+gap-sm.gap: 4
+gap-md.gap: 6
+gap-lg.gap: 10
+gap-xl.gap: 12
+gap-2xl.gap: 16
+
+// Radius
+rad-sm.rad: 2
+rad-md.rad: 4
+rad-lg.rad: 6
+
+// Font Sizes
+fs-sm.fs: 10
+fs-md.fs: 11
+fs-lg.fs: 12
+fs-xl.fs: 18
+fs-2xl.fs: 20
+
+// Icon Sizes
+icon-sm.is: 12
+icon-md.is: 16
+
+// Column Widths
+col-date.w: 70
+col-project.w: 130
+col-client.w: 100
+col-task.w: 140
+col-hours.w: 60
+col-status.w: 32
+
+// =============================================================================
+// FILTER STATE
+// =============================================================================
+
+filterProject: ""
+filterClient: ""
+searchQuery: ""
+
+// =============================================================================
+// NEW ENTRY FORM STATE
+// =============================================================================
+
+newDate: "13.04.2026"
+newProject: "Website Relaunch"
+newClient: "Müller AG"
+newTask: ""
+newHours: 1
+newBillable: true
+
+// =============================================================================
+// DATA
+// =============================================================================
+
+entries:
+  e1:
+    date: "12.04.2026"
+    project: "Website Relaunch"
+    client: "Müller AG"
+    task: "Design Review"
+    hours: 4.5
+    billable: true
+  e2:
+    date: "12.04.2026"
+    project: "Mobile App"
+    client: "Schmidt GmbH"
+    task: "API Integration"
+    hours: 3.0
+    billable: true
+  e3:
+    date: "11.04.2026"
+    project: "Website Relaunch"
+    client: "Müller AG"
+    task: "Wireframes"
+    hours: 6.0
+    billable: true
+  e4:
+    date: "11.04.2026"
+    project: "Intern"
+    client: "—"
+    task: "Team Meeting"
+    hours: 1.5
+    billable: false
+  e5:
+    date: "10.04.2026"
+    project: "Mobile App"
+    client: "Schmidt GmbH"
+    task: "Testing"
+    hours: 5.0
+    billable: true
+  e6:
+    date: "10.04.2026"
+    project: "Support"
+    client: "Weber & Co"
+    task: "Bug Fix"
+    hours: 2.5
+    billable: true
+
+// =============================================================================
+// COMPONENTS
+// =============================================================================
+
+// Buttons
+BtnPrimary as Button: bg $accent, col white, pad $space-sm $space-md, rad $rad-md, fs $fs-md, weight 500, cursor pointer
+  hover 0.15s:
+    bg $accent-hover
+
+BtnSecondary as Button: bg $muted, col $text-secondary, pad $space-sm $space-md, rad $rad-md, fs $fs-md, weight 500, cursor pointer
+  hover 0.15s:
+    bg $muted-hover
+    col $text
+
+// Typography
+PageTitle: Text col $text, fs $fs-xl, weight 600
+PageSubtitle: Text col $text-secondary, fs $fs-md
+SectionLabel: Text col $text-muted, fs $fs-sm, uppercase, letter 0.5
+
+// Cards
+StatCard: Frame bg $card, pad $space-lg, rad $rad-lg, gap $gap-sm, w full, h full, cursor pointer
+  Label: col $text-muted, fs $fs-sm, uppercase, letter 0.5
+  Value: col $text, fs $fs-2xl, weight 600
+  Sub: col $text-secondary, fs $fs-sm
+  SubSuccess: col $success, fs $fs-sm
+  hover 0.2s:
+    bg $card-hover
+
+// Form Elements
+SelectField: Frame bg $card-alt, bor 1, boc $border, pad 0 10, rad 4, h 32, hor, spread, ver-center, cursor pointer
+  Label: col $text, fs $fs-md
+  hover 0.15s:
+    boc $border-hover
+    bg $card
+
+SearchInput: Input bg $card-alt, bor 1, boc $border, col $text, pad 0 $space-md, rad $rad-md, fs $fs-md, h 32
+  hover 0.15s:
+    boc $border-hover
+  focus 0.15s:
+    boc $accent
+
+// Form Components for Dialog
+FormField: Frame gap $gap-xs
+  Label: col $text-secondary, fs $fs-sm
+
+FormInput: Input bg $card-alt, bor 1, boc $border, col $text, pad $space-sm $space-md, rad $rad-md, fs $fs-md, w full
+  focus 0.15s:
+    boc $accent
+
+FormSelect: Select w full
+  Trigger: bg $card-alt, bor 1, boc $border, col $text, pad $space-sm $space-md, rad $rad-md, fs $fs-md
+  Content: bg $card, bor 1, boc $border, rad $rad-md
+
+// Table Components
+TableHeader: Frame hor, pad $space-sm $space-md, bg $card-alt, rad $rad-md, gap $gap-md
+HeaderCell: Text col $text-muted, fs $fs-sm, uppercase
+
+// Original: pad 8 10 - $space-sm ist nur 6, daher explizit 8
+TableRow: Frame hor, pad 8 $space-md, bor 0 0 1 0, boc $border, gap $gap-md, ver-center, cursor pointer
+  hover 0.15s:
+    bg $row-hover
+
+// Table Cells - typed for consistency
+CellDate: Text col $text-secondary, fs $fs-md, w $col-date
+CellProject: Text col $text, fs $fs-md, w $col-project, weight 500
+CellClient: Text col $text-secondary, fs $fs-md, w $col-client
+CellTask: Text col $text, fs $fs-md, w $col-task, grow
+CellHours: Text col $text, fs $fs-md, w $col-hours, right, weight 500
+
+// =============================================================================
+// LAYOUT
+// =============================================================================
+
+Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
+
+  // Header
+  Frame hor, ver-center, gap $gap-2xl
+    Frame gap $gap-xs
+      PageTitle "Zeiterfassung"
+      PageSubtitle "April 2026"
+    Spacer grow
+    Frame hor, gap $gap-md
+      BtnSecondary "Export"
+
+      // Dialog for new entry
+      Dialog
+        Trigger: Button "Neuer Eintrag", bg $accent, col white, pad $space-sm $space-md, rad $rad-md, fs $fs-md, weight 500, cursor pointer
+        Content: Frame bg $card, pad $space-xl, rad $rad-lg, gap $gap-xl, w 400
+          // Dialog Header
+          Frame hor, spread, ver-center
+            Text "Neuer Zeiteintrag", col $text, fs $fs-xl, weight 600
+            CloseTrigger: Frame cursor pointer, pad $space-sm, rad $rad-md
+              Icon "x", ic #888, is 18
+              hover 0.15s:
+                bg $muted
+
+          // Form Fields
+          Frame gap $gap-lg
+            // Date
+            FormField
+              Label "Datum"
+              FormInput value $newDate, bind newDate
+
+            // Project Selection
+            FormField
+              Label "Projekt"
+              Select w full, bind newProject
+                Option "Website Relaunch", value "Website Relaunch"
+                Option "Mobile App", value "Mobile App"
+                Option "Intern", value "Intern"
+                Option "Support", value "Support"
+
+            // Client Selection
+            FormField
+              Label "Kunde"
+              Select w full, bind newClient
+                Option "Müller AG", value "Müller AG"
+                Option "Schmidt GmbH", value "Schmidt GmbH"
+                Option "Weber & Co", value "Weber & Co"
+                Option "—", value "—"
+
+            // Task
+            FormField
+              Label "Tätigkeit"
+              FormInput placeholder "Was wurde gemacht?", bind newTask
+
+            // Hours and Billable Row
+            Frame hor, gap $gap-lg
+              FormField grow
+                Label "Stunden"
+                FormInput type "number", value $newHours, bind newHours
+
+              Frame gap $gap-xs, ver-center
+                Label " ", col transparent, fs $fs-sm
+                Checkbox "Verrechenbar", checked, bind newBillable
+
+          // Actions
+          Frame hor, gap $gap-md, right
+            CloseTrigger: BtnSecondary "Abbrechen"
+            Button "Eintrag erstellen", bg $accent, col white, pad $space-sm $space-md, rad $rad-md, fs $fs-md, weight 500, cursor pointer, add(entries, date: $newDate, project: $newProject, client: $newClient, task: $newTask, hours: $newHours, billable: $newBillable)
+
+  // Stats Row
+  Frame hor, gap $gap-xl, h 90
+
+    StatCard
+      Label "Stunden Monat"
+      Value "168.5"
+      Frame hor, gap $gap-sm, ver-center
+        Frame w 80, h 3, bg $muted, rad $rad-sm
+          Frame w 64, h 3, bg $accent, rad $rad-sm
+        // BUG WORKAROUND: Sub inside Frame doesn't inherit child component styles
+        // Sub would need to be a direct child of StatCard to get fs $fs-sm, col $text-secondary
+        Text "von 176h", col $text-secondary, fs $fs-sm
+
+    StatCard
+      Label "Überstunden"
+      Value "+12.5"
+      SubSuccess "kumuliert"
+
+    StatCard
+      Label "Resturlaub"
+      Value "11"
+      Sub "von 18 Tagen"
+
+    StatCard
+      Label "Verrechenbar"
+      Value "89%"
+      SubSuccess "Ziel: 85%"
+
+  // Filters - functional with Select and bind
+  Frame bg $card, pad $space-md, rad $rad-lg, hor, gap $gap-lg, ver-center
+    SectionLabel "Filter:", w 36
+
+    Select placeholder "Alle Projekte", w 150, bind filterProject
+      Option "Alle Projekte", value ""
+      Option "Website Relaunch", value "Website Relaunch"
+      Option "Mobile App", value "Mobile App"
+      Option "Intern", value "Intern"
+      Option "Support", value "Support"
+
+    Select placeholder "Alle Kunden", w 140, bind filterClient
+      Option "Alle Kunden", value ""
+      Option "Müller AG", value "Müller AG"
+      Option "Schmidt GmbH", value "Schmidt GmbH"
+      Option "Weber & Co", value "Weber & Co"
+
+    Spacer grow
+    SearchInput, placeholder "Suchen...", w 180, bind searchQuery
+
+  // Table
+  Frame bg $card, rad $rad-lg, clip
+    TableHeader
+      HeaderCell "Datum", w $col-date
+      HeaderCell "Projekt", w $col-project
+      HeaderCell "Kunde", w $col-client
+      HeaderCell "Tätigkeit", w $col-task, grow
+      HeaderCell "Stunden", w $col-hours, right
+      Frame w $col-status, center
+        // BUG WORKAROUND: ic/is $token doesn't resolve
+        Icon "receipt", ic #525252, is 12
+
+    Frame gap 0
+      // Filter: project, client, and search query
+      each entry in $entries where ($filterProject == "" || entry.project == $filterProject) && ($filterClient == "" || entry.client == $filterClient) && ($searchQuery == "" || entry.task.toLowerCase().includes($searchQuery.toLowerCase()) || entry.project.toLowerCase().includes($searchQuery.toLowerCase()))
+        TableRow
+          CellDate entry.date
+          CellProject entry.project
+          CellClient entry.client
+          CellTask entry.task
+          CellHours entry.hours + "h"
+          Frame w $col-status, center
+            if entry.billable
+              Icon "circle-check", ic #10b981, is 16
+            else
+              Icon "minus", ic #525252, is 16
+
+    // Footer
+    Frame hor, spread, ver-center, pad $space-md, bg $card-alt
+      Text "6 Einträge", col $text-muted, fs $fs-sm
+      Frame hor, gap $gap-md, ver-center
+        Text "Total:", col $text-secondary, fs $fs-md
+        Text "21.5h", col $text, fs $fs-lg, weight 600

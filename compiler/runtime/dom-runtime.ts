@@ -1999,6 +1999,84 @@ function refreshEachLoops(collectionName: string): void {
       )
     }
 
+    // Apply filter if present
+    if (config.filterFn) {
+      itemsArray = itemsArray.filter(config.filterFn)
+    }
+
+    // Apply sorting if present
+    if (config.orderBy) {
+      const sortDir = config.orderDesc ? -1 : 1
+      itemsArray = [...itemsArray].sort((a, b) => {
+        const aVal = a[config.orderBy as string]
+        const bVal = b[config.orderBy as string]
+        if (aVal < bVal) return -sortDir
+        if (aVal > bVal) return sortDir
+        return 0
+      })
+    }
+
+    // Render each item using the template function
+    if (config.renderItem) {
+      itemsArray.forEach((item, index) => {
+        const itemEl = config.renderItem!(item, index)
+        container.appendChild(itemEl)
+      })
+    }
+  })
+}
+
+/**
+ * Refresh all each loops (for when filter variables change)
+ * Unlike refreshEachLoops which only refreshes loops for a specific collection,
+ * this refreshes ALL each loops in the document.
+ */
+export function refreshAllEachLoops(): void {
+  const containers = document.querySelectorAll('[data-each-container]') as NodeListOf<MirrorElement>
+  const data = getMirrorData()
+
+  containers.forEach(container => {
+    const config = container._eachConfig
+    if (!config) return
+
+    // Get collection name
+    const collectionName = typeof config.collection === 'string' ? config.collection : null
+    if (!collectionName) return
+
+    // Clear existing items
+    container.innerHTML = ''
+
+    // Get fresh data
+    const items = data[collectionName]
+    if (!items || typeof items !== 'object') return
+
+    // Convert object entries to array with _key
+    let itemsArray: Record<string, unknown>[]
+    if (Array.isArray(items)) {
+      itemsArray = items as Record<string, unknown>[]
+    } else {
+      itemsArray = Object.entries(items).map(([k, v]) =>
+        typeof v === 'object' && v !== null ? { _key: k, ...(v as object) } : { _key: k, value: v }
+      )
+    }
+
+    // Apply filter if present
+    if (config.filterFn) {
+      itemsArray = itemsArray.filter(config.filterFn)
+    }
+
+    // Apply sorting if present
+    if (config.orderBy) {
+      const sortDir = config.orderDesc ? -1 : 1
+      itemsArray = [...itemsArray].sort((a, b) => {
+        const aVal = a[config.orderBy as string]
+        const bVal = b[config.orderBy as string]
+        if (aVal < bVal) return -sortDir
+        if (aVal > bVal) return sortDir
+        return 0
+      })
+    }
+
     // Render each item using the template function
     if (config.renderItem) {
       itemsArray.forEach((item, index) => {
@@ -4552,6 +4630,9 @@ export function notifyDataChange(path: string, value: unknown): void {
       }
     }
   }
+
+  // Refresh all each loops as their filter expressions may depend on the changed value
+  refreshAllEachLoops()
 }
 
 /**

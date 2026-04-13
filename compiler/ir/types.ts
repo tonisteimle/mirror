@@ -32,20 +32,20 @@ export interface IR {
 
 export interface IREach {
   id: string
-  itemVar: string               // Loop variable name (e.g., 'task')
-  indexVar?: string             // Optional index variable name (e.g., 'i')
-  collection: string            // Collection variable (e.g., 'tasks')
-  filter?: string               // Optional filter expression
-  orderBy?: string              // Field to sort by (e.g., 'priority')
-  orderDesc?: boolean           // Descending order
-  template: IRNode[]            // Template nodes to render for each item
+  itemVar: string // Loop variable name (e.g., 'task')
+  indexVar?: string // Optional index variable name (e.g., 'i')
+  collection: string // Collection variable (e.g., 'tasks')
+  filter?: string // Optional filter expression
+  orderBy?: string // Field to sort by (e.g., 'priority')
+  orderDesc?: boolean // Descending order
+  template: IRNode[] // Template nodes to render for each item
 }
 
 export interface IRConditional {
   id: string
-  condition: string             // JavaScript expression
-  then: IRNode[]                // Nodes to render if condition is true
-  else?: IRNode[]               // Nodes to render if condition is false
+  condition: string // JavaScript expression
+  then: IRNode[] // Nodes to render if condition is true
+  else?: IRNode[] // Nodes to render if condition is false
 }
 
 /**
@@ -56,30 +56,31 @@ export type LayoutType = 'absolute' | 'flex' | 'grid'
 
 export interface IRNode {
   id: string
-  tag: string                    // div, span, button, input, etc.
-  primitive?: string             // Original primitive type (icon, frame, text, etc.)
-  name?: string                  // Component name (Card, Button)
-  instanceName?: string          // Named instance (saveBtn)
+  tag: string // div, span, button, input, etc.
+  primitive?: string // Original primitive type (icon, frame, text, etc.)
+  name?: string // Component name (Card, Button)
+  instanceName?: string // Named instance (saveBtn)
   properties: IRProperty[]
   styles: IRStyle[]
   events: IREvent[]
   children: IRNode[]
-  each?: IREach                  // If this node is an each loop container
-  conditional?: IRConditional    // If this node is a conditional container
-  visibleWhen?: string           // State-based visibility: "if (open)" → "open"
-  initialState?: string          // Initial state: "closed", "open", etc.
-  selection?: string             // Selection binding: "$selected"
-  bind?: string                  // Bind active exclusive() child: "bind value" → "value"
-  route?: string                 // Navigation target: "Home"
-  navContainer?: string          // ID of parent Nav container (for selected sync)
-  stateMachine?: IRStateMachine  // State machine configuration (interaction model)
-  sourcePosition?: SourcePosition              // Source position for bidirectional editing
-  propertySourceMaps?: PropertySourceMap[]     // Per-property source positions
-  isDefinition?: boolean                       // True if this is a component definition (not instance)
-  layoutType?: LayoutType                      // Explicit layout type (for drop strategy detection)
-  valueBinding?: string                        // Token path for two-way binding (e.g., "user.name")
-  keyboardNav?: boolean                        // Enable keyboard navigation for form containers
-  _sizing?: SizingFlags                        // Internal: tracks how width/height were sized (not CSS marker)
+  each?: IREach // If this node is an each loop container
+  conditional?: IRConditional // If this node is a conditional container
+  visibleWhen?: string // State-based visibility: "if (open)" → "open"
+  initialState?: string // Initial state: "closed", "open", etc.
+  selection?: string // Selection binding: "$selected"
+  bind?: string // Bind active exclusive() child: "bind value" → "value"
+  route?: string // Navigation target: "Home"
+  navContainer?: string // ID of parent Nav container (for selected sync)
+  stateMachine?: IRStateMachine // State machine configuration (interaction model)
+  sourcePosition?: SourcePosition // Source position for bidirectional editing
+  propertySourceMaps?: PropertySourceMap[] // Per-property source positions
+  isDefinition?: boolean // True if this is a component definition (not instance)
+  layoutType?: LayoutType // Explicit layout type (for drop strategy detection)
+  valueBinding?: string // Token path for two-way binding (e.g., "user.name")
+  keyboardNav?: boolean // Enable keyboard navigation for form containers
+  _sizing?: SizingFlags // Internal: tracks how width/height were sized (not CSS marker)
+  needsContainer?: boolean // True if element uses size-states (needs container-type: inline-size)
 }
 
 export interface IRProperty {
@@ -126,7 +127,14 @@ export interface IRConditionalValue {
 /**
  * Property value type - all possible values in properties
  */
-export type IRPropertyValue = string | number | boolean | IRTokenReference | IRLoopVarReference | IRComputedExpression | IRConditionalValue
+export type IRPropertyValue =
+  | string
+  | number
+  | boolean
+  | IRTokenReference
+  | IRLoopVarReference
+  | IRComputedExpression
+  | IRConditionalValue
 
 /**
  * Layout property for items - supports multiple values for properties like padding
@@ -138,24 +146,25 @@ export interface IRItemProperty {
 }
 
 export interface IRStyle {
-  property: string              // CSS property (padding, background, etc.)
-  value: string                 // CSS value
-  state?: string                // hover, focus, active, disabled, or custom
+  property: string // CSS property (padding, background, etc.)
+  value: string // CSS value
+  state?: string // hover, focus, active, disabled, or custom
+  sizeState?: string // compact, regular, wide (CSS Container Query)
 }
 
 export interface IREvent {
-  name: string                  // click, keydown, change, etc.
-  key?: string                  // For keyboard events (escape, enter, etc.)
+  name: string // click, keydown, change, etc.
+  key?: string // For keyboard events (escape, enter, etc.)
   actions: IRAction[]
   modifiers?: IREventModifier[]
 }
 
 export interface IRAction {
-  type: string                  // toggle, show, hide, select, etc.
-  target?: string               // Element name or relative (next, prev)
+  type: string // toggle, show, hide, select, etc.
+  target?: string // Element name or relative (next, prev)
   args?: string[]
-  isFunctionCall?: boolean      // true for new syntax: toggle(), cycle(), customFn()
-  isBuiltinStateFunction?: boolean  // true for built-in: toggle, cycle, exclusive
+  isFunctionCall?: boolean // true for new syntax: toggle(), cycle(), customFn()
+  isBuiltinStateFunction?: boolean // true for built-in: toggle, cycle, exclusive
 }
 
 export interface IREventModifier {
@@ -299,14 +308,24 @@ export interface IRDataReferenceArray {
  * Type guard to check if a value is an IRDataReference
  */
 export function isIRDataReference(value: unknown): value is IRDataReference {
-  return typeof value === 'object' && value !== null && '__ref' in value && (value as IRDataReference).__ref === true
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    '__ref' in value &&
+    (value as IRDataReference).__ref === true
+  )
 }
 
 /**
  * Type guard to check if a value is an IRDataReferenceArray
  */
 export function isIRDataReferenceArray(value: unknown): value is IRDataReferenceArray {
-  return typeof value === 'object' && value !== null && '__refArray' in value && (value as IRDataReferenceArray).__refArray === true
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    '__refArray' in value &&
+    (value as IRDataReferenceArray).__refArray === true
+  )
 }
 
 /**
@@ -338,23 +357,23 @@ export interface IRWarning {
  * Ready for code generation with normalized keyframes and timing.
  */
 export interface IRAnimation {
-  name: string                  // Animation name (e.g., 'FadeUp')
-  easing: string                // Default easing (e.g., 'ease-out')
-  duration?: number             // Duration in ms (optional, can be set at runtime)
-  roles?: string[]              // Named roles for choreography
+  name: string // Animation name (e.g., 'FadeUp')
+  easing: string // Default easing (e.g., 'ease-out')
+  duration?: number // Duration in ms (optional, can be set at runtime)
+  roles?: string[] // Named roles for choreography
   keyframes: IRAnimationKeyframe[]
 }
 
 export interface IRAnimationKeyframe {
-  time: number                  // Normalized time (0-1) or absolute ms
+  time: number // Normalized time (0-1) or absolute ms
   properties: IRAnimationProperty[]
 }
 
 export interface IRAnimationProperty {
-  target?: string               // Role name for choreography ('item1', 'all')
-  property: string              // CSS property name (e.g., 'opacity', 'transform')
-  value: string                 // CSS value
-  easing?: string               // Per-property easing override
+  target?: string // Role name for choreography ('item1', 'all')
+  property: string // CSS property name (e.g., 'opacity', 'transform')
+  value: string // CSS value
+  easing?: string // Per-property easing override
 }
 
 // ============================================================================

@@ -7,15 +7,32 @@
 
 import type { State, Property } from '../../parser/ast'
 import type { IRStyle, IRNode } from '../types'
+import { SIZE_STATES, isSizeState } from '../../schema/parser-helpers'
 
 // System states that are handled by CSS pseudo-classes
-const SYSTEM_STATES = new Set(['hover', 'focus', 'active', 'disabled', 'focus-within', 'focus-visible'])
+const SYSTEM_STATES = new Set([
+  'hover',
+  'focus',
+  'active',
+  'disabled',
+  'focus-within',
+  'focus-visible',
+])
 
 /**
  * Context for state transformation functions
  */
 export interface StateStylesContext {
   propertyToCSS: (prop: Property) => IRStyle[]
+  customSizeStates?: Set<string> // Custom size states defined via tokens (e.g., tiny.max: 200)
+}
+
+/**
+ * Result of state transformation including metadata
+ */
+export interface StateTransformResult {
+  styles: IRStyle[]
+  hasSizeStates: boolean // True if any size-states were used (node needs container-type)
 }
 
 /**
@@ -23,19 +40,30 @@ export interface StateStylesContext {
  *
  * @param states Array of state definitions from AST
  * @param ctx Context with propertyToCSS function
- * @returns Array of IR styles with state conditions
+ * @returns Array of IR styles with state conditions and metadata
  */
-export function transformStates(states: State[], ctx: StateStylesContext): IRStyle[] {
+export function transformStates(states: State[], ctx: StateStylesContext): StateTransformResult {
   const styles: IRStyle[] = []
+  let hasSizeStates = false
 
   // Collect transition info for system states with animation/duration
   const transitionProps: Map<string, { duration: number; easing?: string }> = new Map()
 
   for (const state of states) {
+    // Check if this is a size-state (built-in or custom)
+    const isSizeStateType = isSizeState(state.name, ctx.customSizeStates)
+
     for (const prop of state.properties) {
       const cssStyles = ctx.propertyToCSS(prop)
       for (const style of cssStyles) {
-        styles.push({ ...style, state: state.name })
+        if (isSizeStateType) {
+          // Size-state: use sizeState field (for CSS Container Queries)
+          styles.push({ ...style, sizeState: state.name })
+          hasSizeStates = true
+        } else {
+          // Regular state: use state field
+          styles.push({ ...style, state: state.name })
+        }
 
         // Track CSS properties that need transitions for system states
         if (SYSTEM_STATES.has(state.name) && state.animation?.duration) {
@@ -64,7 +92,7 @@ export function transformStates(states: State[], ctx: StateStylesContext): IRSty
     })
   }
 
-  return styles
+  return { styles, hasSizeStates }
 }
 
 /**
@@ -88,9 +116,7 @@ export function applyStateChildOverrides(
   for (const state of states) {
     for (const override of state.childOverrides) {
       // Find matching child by name
-      const matchingChild = children.find(
-        child => child.name === override.childName
-      )
+      const matchingChild = children.find(child => child.name === override.childName)
 
       if (matchingChild) {
         // Convert override properties to CSS styles with state condition

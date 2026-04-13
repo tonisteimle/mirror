@@ -9,7 +9,7 @@
 import type { Each, Instance, Slot, ConditionalNode } from '../../parser/ast'
 import type { IRNode, IREach, IRConditional, SourcePosition } from '../types'
 import { calculateSourcePosition } from '../source-map'
-import { fixLoopVariableReferences } from './loop-utils'
+import { fixLoopVariableReferences, markLoopVariablesInFilter } from './loop-utils'
 
 /** Child type that can appear in Each loops */
 type EachChild = Instance | Slot | ConditionalNode | Each
@@ -65,12 +65,18 @@ export function transformEach(each: Each, ctx: ControlFlowContext): IRNode {
     return irNode
   })
 
+  // Transform filter expression to mark loop variable references
+  // so they don't get wrapped in $get() by the backend
+  const transformedFilter = each.filter
+    ? markLoopVariablesInFilter(each.filter, each.item, each.index)
+    : undefined
+
   const eachData: IREach = {
     id: nodeId,
     itemVar: each.item,
     indexVar: each.index,
     collection: each.collection,
-    filter: each.filter,
+    filter: transformedFilter,
     orderBy: each.orderBy,
     orderDesc: each.orderDesc,
     template,
@@ -80,12 +86,10 @@ export function transformEach(each: Each, ctx: ControlFlowContext): IRNode {
   let sourcePosition: SourcePosition | undefined
   if (ctx.includeSourceMap && ctx.addToSourceMap) {
     sourcePosition = calculateSourcePosition(each.line, each.column)
-    ctx.addToSourceMap(
-      nodeId,
-      'Each',
-      sourcePosition,
-      { isDefinition: false, isEachTemplate: true }
-    )
+    ctx.addToSourceMap(nodeId, 'Each', sourcePosition, {
+      isDefinition: false,
+      isEachTemplate: true,
+    })
   }
 
   return {
@@ -113,7 +117,9 @@ export function transformConditional(cond: ConditionalBlock, ctx: ControlFlowCon
   const conditionalData: IRConditional = {
     id: nodeId,
     condition: cond.condition,
-    then: cond.then.map((child: Instance | Slot) => ctx.transformInstance(child, nodeId, false, true)),
+    then: cond.then.map((child: Instance | Slot) =>
+      ctx.transformInstance(child, nodeId, false, true)
+    ),
     else: cond.else?.length
       ? cond.else.map((child: Instance | Slot) => ctx.transformInstance(child, nodeId, false, true))
       : undefined,
@@ -123,12 +129,10 @@ export function transformConditional(cond: ConditionalBlock, ctx: ControlFlowCon
   let sourcePosition: SourcePosition | undefined
   if (ctx.includeSourceMap && ctx.addToSourceMap) {
     sourcePosition = calculateSourcePosition(cond.line, cond.column)
-    ctx.addToSourceMap(
-      nodeId,
-      'Conditional',
-      sourcePosition,
-      { isDefinition: false, isConditional: true }
-    )
+    ctx.addToSourceMap(nodeId, 'Conditional', sourcePosition, {
+      isDefinition: false,
+      isConditional: true,
+    })
   }
 
   return {

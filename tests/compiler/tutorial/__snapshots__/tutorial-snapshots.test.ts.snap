@@ -11889,6 +11889,2923 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
 }
 `;
 
+exports[`Tutorial IR Snapshots > 04 - layout > Example 11 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Normale Card",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "500px breit – kein Size-State aktiv",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "12px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Card",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "12px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "500px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "12px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "compact",
+              "value": "8px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-6",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Kompakte Card",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "300px breit – compact: ist aktiv",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "12px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Card",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "12px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "300px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "12px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "compact",
+              "value": "8px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "16px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 04 - layout > Example 12 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Icon",
+              "primitive": "icon",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "box",
+                },
+                {
+                  "name": "data-icon-color",
+                  "value": "#2271C1",
+                },
+                {
+                  "name": "data-icon-size",
+                  "value": "24",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "color",
+                  "value": "#2271C1",
+                },
+                {
+                  "property": "font-size",
+                  "value": "24px",
+                },
+                {
+                  "property": "width",
+                  "value": "24px",
+                },
+                {
+                  "property": "height",
+                  "value": "24px",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Compact (300px)",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Card",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "12px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "width",
+              "value": "300px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "12px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "compact",
+              "value": "8px",
+            },
+            {
+              "property": "padding",
+              "sizeState": "wide",
+              "value": "24px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "16px",
+            },
+            {
+              "property": "display",
+              "sizeState": "wide",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "sizeState": "wide",
+              "value": "row",
+            },
+            {
+              "property": "align-items",
+              "sizeState": "wide",
+              "value": "center",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-6",
+              "isDefinition": false,
+              "name": "Icon",
+              "primitive": "icon",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "box",
+                },
+                {
+                  "name": "data-icon-color",
+                  "value": "#10b981",
+                },
+                {
+                  "name": "data-icon-size",
+                  "value": "24",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "color",
+                  "value": "#10b981",
+                },
+                {
+                  "property": "font-size",
+                  "value": "24px",
+                },
+                {
+                  "property": "width",
+                  "value": "24px",
+                },
+                {
+                  "property": "height",
+                  "value": "24px",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Regular (600px)",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Card",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "12px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "width",
+              "value": "600px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "12px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "compact",
+              "value": "8px",
+            },
+            {
+              "property": "padding",
+              "sizeState": "wide",
+              "value": "24px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "16px",
+            },
+            {
+              "property": "display",
+              "sizeState": "wide",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "sizeState": "wide",
+              "value": "row",
+            },
+            {
+              "property": "align-items",
+              "sizeState": "wide",
+              "value": "center",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-9",
+              "isDefinition": false,
+              "name": "Icon",
+              "primitive": "icon",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "box",
+                },
+                {
+                  "name": "data-icon-color",
+                  "value": "#f59e0b",
+                },
+                {
+                  "name": "data-icon-size",
+                  "value": "24",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "color",
+                  "value": "#f59e0b",
+                },
+                {
+                  "property": "font-size",
+                  "value": "24px",
+                },
+                {
+                  "property": "width",
+                  "value": "24px",
+                },
+                {
+                  "property": "height",
+                  "value": "24px",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-10",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Wide (900px)",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-8",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Card",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "12px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "width",
+              "value": "900px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "12px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "compact",
+              "value": "8px",
+            },
+            {
+              "property": "padding",
+              "sizeState": "wide",
+              "value": "24px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "16px",
+            },
+            {
+              "property": "display",
+              "sizeState": "wide",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "sizeState": "wide",
+              "value": "row",
+            },
+            {
+              "property": "align-items",
+              "sizeState": "wide",
+              "value": "center",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "16px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 04 - layout > Example 13 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Title",
+              "primitive": "title",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Kompakt",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "16px",
+                },
+                {
+                  "property": "font-weight",
+                  "value": "600",
+                },
+                {
+                  "property": "font-size",
+                  "state": "compact",
+                  "value": "13px",
+                },
+                {
+                  "property": "font-size",
+                  "state": "wide",
+                  "value": "20px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Desc",
+              "primitive": "desc",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Kleine Schrift, wenig Padding",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "14px",
+                },
+                {
+                  "property": "font-size",
+                  "state": "compact",
+                  "value": "12px",
+                },
+                {
+                  "property": "font-size",
+                  "state": "wide",
+                  "value": "15px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Panel",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "280px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "12px",
+            },
+            {
+              "property": "padding",
+              "sizeState": "wide",
+              "value": "32px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "12px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-6",
+              "isDefinition": false,
+              "name": "Title",
+              "primitive": "title",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Regular",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "16px",
+                },
+                {
+                  "property": "font-weight",
+                  "value": "600",
+                },
+                {
+                  "property": "font-size",
+                  "state": "compact",
+                  "value": "13px",
+                },
+                {
+                  "property": "font-size",
+                  "state": "wide",
+                  "value": "20px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Desc",
+              "primitive": "desc",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Standard-Darstellung",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "14px",
+                },
+                {
+                  "property": "font-size",
+                  "state": "compact",
+                  "value": "12px",
+                },
+                {
+                  "property": "font-size",
+                  "state": "wide",
+                  "value": "15px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "name": "Panel",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "600px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "12px",
+            },
+            {
+              "property": "padding",
+              "sizeState": "wide",
+              "value": "32px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "12px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-9",
+              "isDefinition": false,
+              "name": "Title",
+              "primitive": "title",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Breit",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "16px",
+                },
+                {
+                  "property": "font-weight",
+                  "value": "600",
+                },
+                {
+                  "property": "font-size",
+                  "state": "compact",
+                  "value": "13px",
+                },
+                {
+                  "property": "font-size",
+                  "state": "wide",
+                  "value": "20px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-10",
+              "isDefinition": false,
+              "name": "Desc",
+              "primitive": "desc",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Große Schrift, viel Padding",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "14px",
+                },
+                {
+                  "property": "font-size",
+                  "state": "compact",
+                  "value": "12px",
+                },
+                {
+                  "property": "font-size",
+                  "state": "wide",
+                  "value": "15px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-8",
+          "isDefinition": false,
+          "name": "Panel",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "950px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "12px",
+            },
+            {
+              "property": "padding",
+              "sizeState": "wide",
+              "value": "32px",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "12px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "16px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 04 - layout > Example 14 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Icon",
+              "primitive": "icon",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "box",
+                },
+                {
+                  "name": "data-icon-color",
+                  "value": "white",
+                },
+                {
+                  "name": "data-icon-size",
+                  "value": "20",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "font-size",
+                  "value": "20px",
+                },
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Card",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "120px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "tiny",
+              "value": "8px",
+            },
+            {
+              "property": "display",
+              "sizeState": "wide",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "sizeState": "wide",
+              "value": "row",
+            },
+            {
+              "property": "align-items",
+              "sizeState": "wide",
+              "value": "center",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "16px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Icon",
+              "primitive": "icon",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "box",
+                },
+                {
+                  "name": "data-icon-color",
+                  "value": "white",
+                },
+                {
+                  "name": "data-icon-size",
+                  "value": "20",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "font-size",
+                  "value": "20px",
+                },
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Card",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "tiny",
+              "value": "8px",
+            },
+            {
+              "property": "display",
+              "sizeState": "wide",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "sizeState": "wide",
+              "value": "row",
+            },
+            {
+              "property": "align-items",
+              "sizeState": "wide",
+              "value": "center",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "16px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Icon",
+              "primitive": "icon",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "box",
+                },
+                {
+                  "name": "data-icon-color",
+                  "value": "white",
+                },
+                {
+                  "name": "data-icon-size",
+                  "value": "20",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "font-size",
+                  "value": "20px",
+                },
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-6",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Card",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "400px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "tiny",
+              "value": "8px",
+            },
+            {
+              "property": "display",
+              "sizeState": "wide",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "sizeState": "wide",
+              "value": "row",
+            },
+            {
+              "property": "align-items",
+              "sizeState": "wide",
+              "value": "center",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "16px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-9",
+              "isDefinition": false,
+              "name": "Icon",
+              "primitive": "icon",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "box",
+                },
+                {
+                  "name": "data-icon-color",
+                  "value": "white",
+                },
+                {
+                  "name": "data-icon-size",
+                  "value": "20",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "font-size",
+                  "value": "20px",
+                },
+                {
+                  "property": "width",
+                  "value": "20px",
+                },
+                {
+                  "property": "height",
+                  "value": "20px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-8",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Card",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "600px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "sizeState": "tiny",
+              "value": "8px",
+            },
+            {
+              "property": "display",
+              "sizeState": "wide",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "sizeState": "wide",
+              "value": "row",
+            },
+            {
+              "property": "align-items",
+              "sizeState": "wide",
+              "value": "center",
+            },
+            {
+              "property": "gap",
+              "sizeState": "wide",
+              "value": "16px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "compact.max",
+      "type": "color",
+      "value": 250,
+    },
+    {
+      "name": "wide.min",
+      "type": "color",
+      "value": 500,
+    },
+    {
+      "name": "tiny.max",
+      "type": "color",
+      "value": 150,
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-4",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "home",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "18",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "18px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-5",
+                  "isDefinition": false,
+                  "name": "Label",
+                  "primitive": "label",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Home",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "label",
+                },
+              ],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "row",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "center",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 12px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "color",
+                  "value": "#ccc",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+                {
+                  "property": "padding",
+                  "state": "compact",
+                  "value": "10px",
+                },
+                {
+                  "property": "display",
+                  "state": "compact",
+                  "value": "flex",
+                },
+                {
+                  "property": "justify-content",
+                  "state": "compact",
+                  "value": "center",
+                },
+                {
+                  "property": "align-items",
+                  "state": "compact",
+                  "value": "center",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-7",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "folder",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "18",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "18px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-8",
+                  "isDefinition": false,
+                  "name": "Label",
+                  "primitive": "label",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Projekte",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "label",
+                },
+              ],
+              "events": [],
+              "id": "node-6",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "row",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "center",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 12px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "color",
+                  "value": "#ccc",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-10",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "settings",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "18",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "18px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-11",
+                  "isDefinition": false,
+                  "name": "Label",
+                  "primitive": "label",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Settings",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "label",
+                },
+              ],
+              "events": [],
+              "id": "node-9",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "row",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "center",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 12px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "color",
+                  "value": "#ccc",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "NavBar",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "12px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "350px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "display",
+              "sizeState": "compact",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "sizeState": "compact",
+              "value": "column",
+            },
+            {
+              "property": "gap",
+              "sizeState": "compact",
+              "value": "4px",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "8px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-14",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "home",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "18",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "18px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-15",
+                  "isDefinition": false,
+                  "name": "Label",
+                  "primitive": "label",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Home",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "label",
+                },
+              ],
+              "events": [],
+              "id": "node-13",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "row",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "center",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 12px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "color",
+                  "value": "#ccc",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+                {
+                  "property": "padding",
+                  "state": "compact",
+                  "value": "10px",
+                },
+                {
+                  "property": "display",
+                  "state": "compact",
+                  "value": "flex",
+                },
+                {
+                  "property": "justify-content",
+                  "state": "compact",
+                  "value": "center",
+                },
+                {
+                  "property": "align-items",
+                  "state": "compact",
+                  "value": "center",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-17",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "folder",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "18",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "18px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-18",
+                  "isDefinition": false,
+                  "name": "Label",
+                  "primitive": "label",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Projekte",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "label",
+                },
+              ],
+              "events": [],
+              "id": "node-16",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "row",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "center",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 12px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "color",
+                  "value": "#ccc",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-20",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "settings",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "18",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "18px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-21",
+                  "isDefinition": false,
+                  "name": "Label",
+                  "primitive": "label",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Settings",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "label",
+                },
+              ],
+              "events": [],
+              "id": "node-19",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "row",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "center",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 12px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "color",
+                  "value": "#ccc",
+                },
+                {
+                  "property": "font-size",
+                  "value": "13px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-12",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "NavBar",
+          "needsContainer": true,
+          "primitive": "Frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "padding",
+              "value": "12px",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "80px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "display",
+              "sizeState": "compact",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "sizeState": "compact",
+              "value": "column",
+            },
+            {
+              "property": "gap",
+              "sizeState": "compact",
+              "value": "4px",
+            },
+            {
+              "property": "padding",
+              "sizeState": "compact",
+              "value": "8px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "16px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
 exports[`Tutorial IR Snapshots > 05 - styling > Example 1 1`] = `
 {
   "animations": [],
@@ -27360,6 +30277,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
             },
           ],
           "tag": "span",
+          "visibleWhen": "!count > 0",
         },
       ],
       "events": [],
@@ -27889,6 +30807,32 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
                       },
                     ],
                     "tag": "span",
+                    "visibleWhen": "!$task.done",
+                  },
+                  {
+                    "children": [],
+                    "events": [],
+                    "id": "node-6",
+                    "isDefinition": false,
+                    "name": "Text",
+                    "primitive": "text",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "$task.title",
+                      },
+                    ],
+                    "styles": [
+                      {
+                        "property": "color",
+                        "value": "white",
+                      },
+                      {
+                        "property": "font-size",
+                        "value": "13px",
+                      },
+                    ],
+                    "tag": "span",
                   },
                 ],
                 "events": [],
@@ -27933,31 +30877,6 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
                   },
                 ],
                 "tag": "div",
-              },
-              {
-                "children": [],
-                "events": [],
-                "id": "node-6",
-                "isDefinition": false,
-                "name": "Text",
-                "primitive": "text",
-                "properties": [
-                  {
-                    "name": "textContent",
-                    "value": "$task.title",
-                  },
-                ],
-                "styles": [
-                  {
-                    "property": "color",
-                    "value": "white",
-                  },
-                  {
-                    "property": "font-size",
-                    "value": "13px",
-                  },
-                ],
-                "tag": "span",
               },
             ],
           },
@@ -28502,6 +31421,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
             },
           ],
           "tag": "span",
+          "visibleWhen": "!hasItems",
         },
         {
           "children": [],
@@ -28527,6 +31447,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
             },
           ],
           "tag": "span",
+          "visibleWhen": "!hasItems",
         },
         {
           "children": [],
@@ -28552,6 +31473,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
             },
           ],
           "tag": "span",
+          "visibleWhen": "!hasItems",
         },
       ],
       "events": [],
@@ -28750,6 +31672,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
             },
           ],
           "tag": "span",
+          "visibleWhen": "!loading",
         },
       ],
       "events": [],
@@ -29058,6 +31981,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
             },
           ],
           "tag": "button",
+          "visibleWhen": "!$user.loggedIn",
         },
       ],
       "events": [],
@@ -32681,8 +35605,12 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 2 1`] = `
               "value": "24px",
             },
             {
-              "property": "border",
-              "value": "0px solid 0px 1px 0px",
+              "property": "border-style",
+              "value": "solid",
+            },
+            {
+              "property": "border-width",
+              "value": "0 0 1px 0",
             },
             {
               "property": "border-color",
@@ -37528,8 +40456,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 2 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "border",
-          "value": "0px solid 0px 1px 0px",
+          "property": "border-style",
+          "value": "solid",
+        },
+        {
+          "property": "border-width",
+          "value": "0 0 1px 0",
         },
         {
           "property": "border-color",
@@ -37693,8 +40625,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 3 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "border",
-          "value": "0px solid 0px 1px 0px",
+          "property": "border-style",
+          "value": "solid",
+        },
+        {
+          "property": "border-width",
+          "value": "0 0 1px 0",
         },
         {
           "property": "border-color",
@@ -39100,8 +42036,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 8 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "border",
-          "value": "0px solid 0px 1px 0px",
+          "property": "border-style",
+          "value": "solid",
+        },
+        {
+          "property": "border-width",
+          "value": "0 0 1px 0",
         },
         {
           "property": "border-color",
@@ -39331,8 +42271,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 9 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "border",
-          "value": "0px solid 0px 1px 0px",
+          "property": "border-style",
+          "value": "solid",
+        },
+        {
+          "property": "border-width",
+          "value": "0 0 1px 0",
         },
         {
           "property": "border-color",
@@ -39516,8 +42460,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 10 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "border",
-          "value": "0px solid 0px 1px 0px",
+          "property": "border-style",
+          "value": "solid",
+        },
+        {
+          "property": "border-width",
+          "value": "0 0 1px 0",
         },
         {
           "property": "border-color",
@@ -39695,8 +42643,12 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 11 1`] = `
           "value": "12px 16px",
         },
         {
-          "property": "border",
-          "value": "0px solid 0px 1px 0px",
+          "property": "border-style",
+          "value": "solid",
+        },
+        {
+          "property": "border-width",
+          "value": "0 0 1px 0",
         },
         {
           "property": "border-color",

@@ -27,23 +27,27 @@ export type { LoopEmitterContext } from './base-emitter-context'
  * - Initial render with data binding
  * - Support for filter and orderBy
  */
-export function emitEachLoop(
-  ctx: LoopEmitterContext,
-  each: IREach,
-  parentVar: string
-): void {
+export function emitEachLoop(ctx: LoopEmitterContext, each: IREach, parentVar: string): void {
   const containerId = ctx.sanitizeVarName(each.id)
   // Strip $ prefix for valid JavaScript variable names
   const itemVar = each.itemVar.startsWith('$') ? each.itemVar.slice(1) : each.itemVar
-  const indexVar = each.indexVar ? (each.indexVar.startsWith('$') ? each.indexVar.slice(1) : each.indexVar) : 'index'
+  const indexVar = each.indexVar
+    ? each.indexVar.startsWith('$')
+      ? each.indexVar.slice(1)
+      : each.indexVar
+    : 'index'
   const rawCollection = each.collection.startsWith('$') ? each.collection.slice(1) : each.collection
 
   // Check if collection is an inline array literal
   const isInlineArray = rawCollection.startsWith('[')
   // Sanitize collection name for valid JS variable (replace dots with underscores)
-  const collectionVarName = isInlineArray ? `${containerId}_inlineData` : rawCollection.replace(/\./g, '_')
+  const collectionVarName = isInlineArray
+    ? `${containerId}_inlineData`
+    : rawCollection.replace(/\./g, '_')
 
-  ctx.emit(`// Each loop: ${itemVar}${each.indexVar ? ', ' + indexVar : ''} in ${isInlineArray ? '[...]' : rawCollection}`)
+  ctx.emit(
+    `// Each loop: ${itemVar}${each.indexVar ? ', ' + indexVar : ''} in ${isInlineArray ? '[...]' : rawCollection}`
+  )
   ctx.emit(`const ${containerId}_container = document.createElement('div')`)
   ctx.emit(`${containerId}_container.dataset.eachContainer = '${each.id}'`)
   ctx.emit(`${containerId}_container.style.display = 'contents';`)
@@ -64,7 +68,9 @@ export function emitEachLoop(
   ctx.emit(`collection: ${isInlineArray ? rawCollection : `'${rawCollection}'`},`)
   if (each.filter) {
     // Store as function to avoid eval() at runtime
-    ctx.emit(`filterFn: (${itemVar}) => ${each.filter},`)
+    // Transform $variable references to $get("variable") calls
+    const resolvedFilter = ctx.resolveConditionVariables(each.filter)
+    ctx.emit(`filterFn: (${itemVar}) => ${resolvedFilter},`)
   }
   if (each.orderBy) {
     ctx.emit(`orderBy: ${JSON.stringify(each.orderBy)},`)
@@ -100,14 +106,20 @@ export function emitEachLoop(
     // Convert objects to arrays using Object.entries() for entry-format data
     // - For simple lists (key === value): returns the value directly
     // - For objects: injects _key so the entry name is accessible
-    ctx.emit(`const ${collectionVarName}Data = (function(d) { if (Array.isArray(d)) return d; if (d && typeof d === 'object') { return Object.entries(d).map(([k, v]) => typeof v === 'object' && v !== null ? { _key: k, ...v } : v); } return []; })($get('${rawCollection}'))`)
+    ctx.emit(
+      `const ${collectionVarName}Data = (function(d) { if (Array.isArray(d)) return d; if (d && typeof d === 'object') { return Object.entries(d).map(([k, v]) => typeof v === 'object' && v !== null ? { _key: k, ...v } : v); } return []; })($get('${rawCollection}'))`
+    )
   }
 
   let processedVarName = isInlineArray ? collectionVarName : `${collectionVarName}Data`
 
   // Apply filter if present
   if (each.filter) {
-    ctx.emit(`let ${collectionVarName}Filtered = ${processedVarName}.filter(${itemVar} => ${each.filter})`)
+    // Transform $variable references to $get("variable") calls
+    const resolvedFilter = ctx.resolveConditionVariables(each.filter)
+    ctx.emit(
+      `let ${collectionVarName}Filtered = ${processedVarName}.filter(${itemVar} => ${resolvedFilter})`
+    )
     processedVarName = `${collectionVarName}Filtered`
   }
 
@@ -129,7 +141,9 @@ export function emitEachLoop(
 
   ctx.emit(`${processedVarName}.forEach((${itemVar}, ${indexVar}) => {`)
   ctx.indentIn()
-  ctx.emit(`${containerId}_container.appendChild(${containerId}_container._eachConfig.renderItem(${itemVar}, ${indexVar}))`)
+  ctx.emit(
+    `${containerId}_container.appendChild(${containerId}_container._eachConfig.renderItem(${itemVar}, ${indexVar}))`
+  )
   ctx.indentOut()
   ctx.emit('})')
   ctx.emit('')
@@ -198,12 +212,16 @@ export function emitConditional(
   ctx.emit(`// Initial conditional render`)
   ctx.emit(`if (${resolvedCondition}) {`)
   ctx.indentIn()
-  ctx.emit(`${containerId}_container.appendChild(${containerId}_container._conditionalConfig.renderThen())`)
+  ctx.emit(
+    `${containerId}_container.appendChild(${containerId}_container._conditionalConfig.renderThen())`
+  )
   ctx.indentOut()
   if (cond.else && cond.else.length > 0) {
     ctx.emit(`} else {`)
     ctx.indentIn()
-    ctx.emit(`${containerId}_container.appendChild(${containerId}_container._conditionalConfig.renderElse())`)
+    ctx.emit(
+      `${containerId}_container.appendChild(${containerId}_container._conditionalConfig.renderElse())`
+    )
     ctx.indentOut()
   }
   ctx.emit(`}`)

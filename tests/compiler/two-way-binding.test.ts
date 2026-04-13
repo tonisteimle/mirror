@@ -80,6 +80,67 @@ Input value $posts.first.title
       expect(inputNode).toBeDefined()
       expect(inputNode!.valueBinding).toBe('posts.first.title')
     })
+
+    // Simplified bind syntax tests (bind without explicit value)
+    test('Input with only bind property gets valueBinding', () => {
+      const code = `
+$searchTerm: ""
+
+Input bind searchTerm, placeholder "Search..."
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      const inputNode = ir.nodes.find(n => n.primitive === 'input')
+      expect(inputNode).toBeDefined()
+      expect(inputNode!.valueBinding).toBe('searchTerm')
+    })
+
+    test('Textarea with only bind property gets valueBinding', () => {
+      const code = `
+$content: ""
+
+Textarea bind content
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      const textareaNode = ir.nodes.find(n => n.primitive === 'textarea')
+      expect(textareaNode).toBeDefined()
+      expect(textareaNode!.valueBinding).toBe('content')
+    })
+
+    test('Select with bind property has bind set', () => {
+      const code = `
+$city: ""
+
+Select bind city
+  Option "Berlin"
+  Option "Hamburg"
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      // Select is a Zag component, so bind is stored as node.bind (not valueBinding)
+      // The Zag runtime handles Select binding internally via dataset.bind
+      const selectNode = ir.nodes.find(n => n.primitive?.toLowerCase() === 'select')
+      expect(selectNode).toBeDefined()
+      expect(selectNode!.bind).toBe('city')
+    })
+
+    test('bind with $ prefix is normalized', () => {
+      const code = `
+$name: ""
+
+Input bind $name
+`
+      const ast = parse(code)
+      const ir = toIR(ast)
+
+      const inputNode = ir.nodes.find(n => n.primitive === 'input')
+      expect(inputNode).toBeDefined()
+      expect(inputNode!.valueBinding).toBe('name')
+    })
   })
 
   describe('DOM Code Generation', () => {
@@ -96,7 +157,7 @@ Input value $user.name
       expect(output).toContain('$get("user.name")')
 
       // Should have input event listener
-      expect(output).toContain('addEventListener(\'input\'')
+      expect(output).toContain("addEventListener('input'")
       expect(output).toContain('$set("user.name"')
 
       // Should register binding

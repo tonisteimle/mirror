@@ -8,6 +8,15 @@ export default defineConfig([
     dts: true,
     clean: true,
   },
+  // CLI build
+  {
+    entry: ['compiler/cli.ts'],
+    format: ['esm'],
+    banner: {
+      js: '#!/usr/bin/env node',
+    },
+    clean: false,
+  },
   // IIFE build for browsers
   {
     entry: ['compiler/index.ts'],
@@ -20,7 +29,7 @@ export default defineConfig([
       'process.env.BABEL_TYPES_8_BREAKING': 'false',
       'process.env.DEBUG': '""',
       'process.env.FORCE_COLOR': '"false"',
-      'process': 'undefined',
+      process: 'undefined',
     },
     // Inject a minimal process shim
     banner: {

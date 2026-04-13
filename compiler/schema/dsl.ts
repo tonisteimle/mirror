@@ -142,7 +142,21 @@ export interface PropertyDef {
   /** Kurzformen */
   aliases: string[]
   /** Kategorie für Docs */
-  category: 'sizing' | 'layout' | 'spacing' | 'color' | 'border' | 'typography' | 'effect' | 'position' | 'transform' | 'content' | 'input' | 'icon' | 'animation' | 'state-variant'
+  category:
+    | 'sizing'
+    | 'layout'
+    | 'spacing'
+    | 'color'
+    | 'border'
+    | 'typography'
+    | 'effect'
+    | 'position'
+    | 'transform'
+    | 'content'
+    | 'input'
+    | 'icon'
+    | 'animation'
+    | 'state-variant'
   /** Beschreibung */
   description: string
   /** Erlaubte Keyword-Werte */
@@ -197,6 +211,15 @@ export interface StateDef {
   system?: boolean
 }
 
+export interface SizeStateDef {
+  /** Description */
+  description: string
+  /** Default minimum width in px (element must be >= this) */
+  defaultMin?: number
+  /** Default maximum width in px (element must be <= this) */
+  defaultMax?: number
+}
+
 // ============================================================================
 // DSL Schema Definition
 // ============================================================================
@@ -207,12 +230,29 @@ export const DSL = {
   // ---------------------------------------------------------------------------
   keywords: {
     reserved: [
-      'as', 'extends', 'named', 'each', 'in', 'if', 'else', 'then', 'where',
-      'and', 'or', 'not', 'data', 'keys', 'selection',
-      'bind',   // Bind active exclusive() child content to variable
-      'route',  // @deprecated - use navigate() or Tab/NavItem without children instead
-      'with', 'by', 'asc', 'desc', 'grouped',
-      'use',    // Import components: use components
+      'as',
+      'extends',
+      'named',
+      'each',
+      'in',
+      'if',
+      'else',
+      'then',
+      'where',
+      'and',
+      'or',
+      'not',
+      'data',
+      'keys',
+      'selection',
+      'bind', // Bind active exclusive() child content to variable
+      'route', // @deprecated - use navigate() or Tab/NavItem without children instead
+      'with',
+      'by',
+      'asc',
+      'desc',
+      'grouped',
+      'use', // Import components: use components
     ] as const,
   },
 
@@ -221,7 +261,11 @@ export const DSL = {
   // ---------------------------------------------------------------------------
   primitives: {
     // Layout primitives
-    Frame: { html: 'div', aliases: ['Box'], description: 'Container with vertical layout (default)' },
+    Frame: {
+      html: 'div',
+      aliases: ['Box'],
+      description: 'Container with vertical layout (default)',
+    },
     Text: { html: 'span', description: 'Text element' },
 
     // Form elements (basic HTML - complex forms use Zag components)
@@ -328,7 +372,10 @@ export const DSL = {
     // Clipboard actions
     copy: { description: 'Copy text to clipboard' },
     // CRUD actions
-    create: { description: 'Create new entry and set as current', params: ['collection', 'initialValues?'] },
+    create: {
+      description: 'Create new entry and set as current',
+      params: ['collection', 'initialValues?'],
+    },
     save: { description: 'Save current changes to collection' },
     revert: { description: 'Discard pending changes' },
     delete: { description: 'Delete entry from collection', params: ['entry?', 'confirm?'] },
@@ -361,12 +408,35 @@ export const DSL = {
   } as Record<string, StateDef>,
 
   // ---------------------------------------------------------------------------
+  // Size States (CSS Container Queries)
+  // ---------------------------------------------------------------------------
+  /**
+   * Size-based states using CSS Container Queries.
+   * These respond to the element's own width, not the viewport.
+   * Custom size states can be defined via tokens: tiny.max: 200
+   */
+  sizeStates: {
+    compact: { description: 'Element width < 400px', defaultMax: 400 },
+    regular: { description: 'Element width 400-800px', defaultMin: 400, defaultMax: 800 },
+    wide: { description: 'Element width > 800px', defaultMin: 800 },
+  } as Record<string, SizeStateDef>,
+
+  // ---------------------------------------------------------------------------
   // Keyboard Keys (for onkeydown)
   // ---------------------------------------------------------------------------
   keys: [
-    'escape', 'enter', 'space', 'tab', 'backspace', 'delete',
-    'arrow-up', 'arrow-down', 'arrow-left', 'arrow-right',
-    'home', 'end',
+    'escape',
+    'enter',
+    'space',
+    'tab',
+    'backspace',
+    'delete',
+    'arrow-up',
+    'arrow-down',
+    'arrow-left',
+    'arrow-right',
+    'home',
+    'end',
   ] as const,
 
   // ---------------------------------------------------------------------------
@@ -412,12 +482,23 @@ export const DSL = {
   // Animation Presets (for state transitions)
   // ---------------------------------------------------------------------------
   animationPresets: [
-    'fade-in', 'fade-out',
-    'slide-in', 'slide-out',
-    'slide-up', 'slide-down', 'slide-left', 'slide-right',
-    'scale-in', 'scale-out',
-    'bounce', 'pulse', 'shake', 'spin',
-    'reveal-up', 'reveal-scale', 'reveal-fade',
+    'fade-in',
+    'fade-out',
+    'slide-in',
+    'slide-out',
+    'slide-up',
+    'slide-down',
+    'slide-left',
+    'slide-right',
+    'scale-in',
+    'scale-out',
+    'bounce',
+    'pulse',
+    'shake',
+    'spin',
+    'reveal-up',
+    'reveal-scale',
+    'reveal-fade',
   ] as const,
 
   // ---------------------------------------------------------------------------
@@ -484,7 +565,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Fixed width in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'width', value: `${n}px` }],
+      css: n => [{ property: 'width', value: `${n}px` }],
       example: 'Box w 200',
     },
 
@@ -517,7 +598,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Fixed height in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'height', value: `${n}px` }],
+      css: n => [{ property: 'height', value: `${n}px` }],
       example: 'Box h 200',
     },
 
@@ -554,7 +635,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Square size in pixels (or font-size for text)',
       unit: 'px',
-      css: (n) => [
+      css: n => [
         { property: 'width', value: `${n}px` },
         { property: 'height', value: `${n}px` },
       ],
@@ -573,7 +654,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Minimum width in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'min-width', value: `${n}px` }],
+      css: n => [{ property: 'min-width', value: `${n}px` }],
       example: 'Box minw 100',
     },
 
@@ -589,7 +670,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Maximum width in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'max-width', value: `${n}px` }],
+      css: n => [{ property: 'max-width', value: `${n}px` }],
       example: 'Box maxw 500',
     },
 
@@ -605,7 +686,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Minimum height in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'min-height', value: `${n}px` }],
+      css: n => [{ property: 'min-height', value: `${n}px` }],
       example: 'Box minh 50',
     },
 
@@ -621,7 +702,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Maximum height in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'max-height', value: `${n}px` }],
+      css: n => [{ property: 'max-height', value: `${n}px` }],
       example: 'Box maxh 300',
     },
 
@@ -649,7 +730,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     numeric: {
       description: 'Custom aspect ratio (e.g., 16/9)',
-      css: (n) => [{ property: 'aspect-ratio', value: String(n) }],
+      css: n => [{ property: 'aspect-ratio', value: String(n) }],
       example: 'Box aspect 4/3',
     },
   },
@@ -704,7 +785,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Gap in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'gap', value: `${n}px` }],
+      css: n => [{ property: 'gap', value: `${n}px` }],
       example: 'Box gap 16',
     },
 
@@ -961,7 +1042,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     numeric: {
       description: 'Number of equal columns',
-      css: (n) => [
+      css: n => [
         { property: 'display', value: 'grid' },
         { property: 'grid-template-columns', value: `repeat(${n}, 1fr)` },
       ],
@@ -978,7 +1059,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     keywords: {
       _standalone: {
         description: 'Enable dense auto-placement in grid',
-        css: [],  // Handled in layout context, not standalone CSS
+        css: [], // Handled in layout context, not standalone CSS
         example: 'Box grid 3 dense',
       },
     },
@@ -993,7 +1074,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Column gap in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'column-gap', value: `${n}px` }],
+      css: n => [{ property: 'column-gap', value: `${n}px` }],
       example: 'Box grid 3 gap-x 16',
     },
 
@@ -1009,7 +1090,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Row gap in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'row-gap', value: `${n}px` }],
+      css: n => [{ property: 'row-gap', value: `${n}px` }],
       example: 'Box grid 3 gap-y 24',
     },
 
@@ -1025,7 +1106,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Row height in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'grid-auto-rows', value: `${n}px` }],
+      css: n => [{ property: 'grid-auto-rows', value: `${n}px` }],
       example: 'Box grid 3 row-height 100',
     },
 
@@ -1223,7 +1304,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Padding in pixels (all sides)',
       unit: 'px',
-      css: (n) => [{ property: 'padding', value: `${n}px` }],
+      css: n => [{ property: 'padding', value: `${n}px` }],
       example: 'Box pad 16',
     },
 
@@ -1244,7 +1325,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Margin in pixels (all sides)',
       unit: 'px',
-      css: (n) => [{ property: 'margin', value: `${n}px` }],
+      css: n => [{ property: 'margin', value: `${n}px` }],
       example: 'Box margin 16',
     },
 
@@ -1268,7 +1349,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     color: {
       description: 'Hex color or token',
-      css: (c) => [{ property: 'background', value: c }],
+      css: c => [{ property: 'background', value: c }],
     },
 
     token: true,
@@ -1283,7 +1364,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     color: {
       description: 'Hex color or token',
-      css: (c) => [{ property: 'color', value: c }],
+      css: c => [{ property: 'color', value: c }],
     },
 
     token: true,
@@ -1298,7 +1379,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     color: {
       description: 'Hex color or token',
-      css: (c) => [{ property: 'border-color', value: c }],
+      css: c => [{ property: 'border-color', value: c }],
     },
 
     token: true,
@@ -1317,7 +1398,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Border width in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'border', value: `${n}px solid currentColor` }],
+      css: n => [{ property: 'border', value: `${n}px solid currentColor` }],
       example: 'Box bor 1 #333',
     },
 
@@ -1338,7 +1419,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Radius in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'border-radius', value: `${n}px` }],
+      css: n => [{ property: 'border-radius', value: `${n}px` }],
       example: 'Box rad 8',
     },
 
@@ -1346,14 +1427,14 @@ export const SCHEMA: Record<string, PropertyDef> = {
       directions: ['tl', 'tr', 'bl', 'br', 't', 'b', 'l', 'r'],
       css: (dir, val) => {
         const mapping: Record<string, string[]> = {
-          'tl': ['border-top-left-radius'],
-          'tr': ['border-top-right-radius'],
-          'bl': ['border-bottom-left-radius'],
-          'br': ['border-bottom-right-radius'],
-          't': ['border-top-left-radius', 'border-top-right-radius'],
-          'b': ['border-bottom-left-radius', 'border-bottom-right-radius'],
-          'l': ['border-top-left-radius', 'border-bottom-left-radius'],
-          'r': ['border-top-right-radius', 'border-bottom-right-radius'],
+          tl: ['border-top-left-radius'],
+          tr: ['border-top-right-radius'],
+          bl: ['border-bottom-left-radius'],
+          br: ['border-bottom-right-radius'],
+          t: ['border-top-left-radius', 'border-top-right-radius'],
+          b: ['border-bottom-left-radius', 'border-bottom-right-radius'],
+          l: ['border-top-left-radius', 'border-bottom-left-radius'],
+          r: ['border-top-right-radius', 'border-bottom-right-radius'],
         }
         const props = mapping[dir] || []
         return props.map(p => ({ property: p, value: val }))
@@ -1376,7 +1457,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Font size in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'font-size', value: `${n}px` }],
+      css: n => [{ property: 'font-size', value: `${n}px` }],
       example: 'Text fs 16',
     },
 
@@ -1394,15 +1475,18 @@ export const SCHEMA: Record<string, PropertyDef> = {
       light: { description: 'Font weight 300', css: [{ property: 'font-weight', value: '300' }] },
       normal: { description: 'Font weight 400', css: [{ property: 'font-weight', value: '400' }] },
       medium: { description: 'Font weight 500', css: [{ property: 'font-weight', value: '500' }] },
-      semibold: { description: 'Font weight 600', css: [{ property: 'font-weight', value: '600' }] },
+      semibold: {
+        description: 'Font weight 600',
+        css: [{ property: 'font-weight', value: '600' }],
+      },
       bold: { description: 'Font weight 700', css: [{ property: 'font-weight', value: '700' }] },
       black: { description: 'Font weight 900', css: [{ property: 'font-weight', value: '900' }] },
     },
 
     numeric: {
       description: 'Font weight (100-900)',
-      unit: '',  // unitless
-      css: (n) => [{ property: 'font-weight', value: String(n) }],
+      unit: '', // unitless
+      css: n => [{ property: 'font-weight', value: String(n) }],
       example: 'Text weight 600',
     },
   },
@@ -1415,7 +1499,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     numeric: {
       description: 'Line height (unitless or pixels)',
-      css: (n) => [{ property: 'line-height', value: n > 10 ? `${n}px` : String(n) }],
+      css: n => [{ property: 'line-height', value: n > 10 ? `${n}px` : String(n) }],
       example: 'Text line 1.5',
     },
 
@@ -1429,10 +1513,22 @@ export const SCHEMA: Record<string, PropertyDef> = {
     description: 'Font family',
 
     keywords: {
-      sans: { description: 'Sans-serif font stack', css: [{ property: 'font-family', value: 'system-ui, sans-serif' }] },
-      serif: { description: 'Serif font stack', css: [{ property: 'font-family', value: 'Georgia, serif' }] },
-      mono: { description: 'Monospace font stack', css: [{ property: 'font-family', value: 'ui-monospace, monospace' }] },
-      roboto: { description: 'Roboto font', css: [{ property: 'font-family', value: 'Roboto, system-ui, sans-serif' }] },
+      sans: {
+        description: 'Sans-serif font stack',
+        css: [{ property: 'font-family', value: 'system-ui, sans-serif' }],
+      },
+      serif: {
+        description: 'Serif font stack',
+        css: [{ property: 'font-family', value: 'Georgia, serif' }],
+      },
+      mono: {
+        description: 'Monospace font stack',
+        css: [{ property: 'font-family', value: 'ui-monospace, monospace' }],
+      },
+      roboto: {
+        description: 'Roboto font',
+        css: [{ property: 'font-family', value: 'Roboto, system-ui, sans-serif' }],
+      },
     },
 
     token: true,
@@ -1544,9 +1640,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'X offset in pixels',
       unit: 'px',
-      css: (n) => [
-        { property: 'transform', value: `translateX(${n}px)` },
-      ],
+      css: n => [{ property: 'transform', value: `translateX(${n}px)` }],
       example: 'Box x 100',
     },
   },
@@ -1560,9 +1654,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Y offset in pixels',
       unit: 'px',
-      css: (n) => [
-        { property: 'transform', value: `translateY(${n}px)` },
-      ],
+      css: n => [{ property: 'transform', value: `translateY(${n}px)` }],
       example: 'Box y 50',
     },
   },
@@ -1575,8 +1667,8 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     numeric: {
       description: 'Z-index value',
-      unit: '',  // unitless
-      css: (n) => [{ property: 'z-index', value: String(n) }],
+      unit: '', // unitless
+      css: n => [{ property: 'z-index', value: String(n) }],
       example: 'Box z 10',
     },
   },
@@ -1639,7 +1731,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Rotation in degrees',
       unit: 'deg',
-      css: (n) => [{ property: 'transform', value: `rotate(${n}deg)` }],
+      css: n => [{ property: 'transform', value: `rotate(${n}deg)` }],
       example: 'Box rotate 45',
     },
   },
@@ -1652,7 +1744,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     numeric: {
       description: 'Scale factor',
-      css: (n) => [{ property: 'transform', value: `scale(${n})` }],
+      css: n => [{ property: 'transform', value: `scale(${n})` }],
       example: 'Box scale 1.2',
     },
   },
@@ -1669,8 +1761,8 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     numeric: {
       description: 'Opacity (0-1)',
-      unit: '',  // unitless
-      css: (n) => [{ property: 'opacity', value: String(n) }],
+      unit: '', // unitless
+      css: n => [{ property: 'opacity', value: String(n) }],
       example: 'Box opacity 0.5',
     },
   },
@@ -1712,7 +1804,10 @@ export const SCHEMA: Record<string, PropertyDef> = {
       move: { description: 'Move cursor', css: [{ property: 'cursor', value: 'move' }] },
       text: { description: 'Text cursor', css: [{ property: 'cursor', value: 'text' }] },
       wait: { description: 'Wait cursor', css: [{ property: 'cursor', value: 'wait' }] },
-      'not-allowed': { description: 'Not allowed cursor', css: [{ property: 'cursor', value: 'not-allowed' }] },
+      'not-allowed': {
+        description: 'Not allowed cursor',
+        css: [{ property: 'cursor', value: 'not-allowed' }],
+      },
     },
   },
 
@@ -1725,7 +1820,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Blur radius in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'filter', value: `blur(${n}px)` }],
+      css: n => [{ property: 'filter', value: `blur(${n}px)` }],
       example: 'Box blur 5',
     },
   },
@@ -1739,7 +1834,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Blur radius in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'backdrop-filter', value: `blur(${n}px)` }],
+      css: n => [{ property: 'backdrop-filter', value: `blur(${n}px)` }],
       example: 'Box backdrop-blur 10',
     },
   },
@@ -1910,7 +2005,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     keywords: {
       _standalone: {
         description: 'Element can receive focus',
-        css: [],  // Sets tabindex, not CSS
+        css: [], // Sets tabindex, not CSS
         example: 'Box focusable',
       },
     },
@@ -1925,7 +2020,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     keywords: {
       _standalone: {
         description: 'Element text can be edited inline',
-        css: [],  // Sets data-editable, not CSS
+        css: [], // Sets data-editable, not CSS
         example: 'Text item.name, editable',
       },
     },
@@ -1940,7 +2035,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     keywords: {
       _standalone: {
         description: 'Enter moves to next field, Escape blurs, Tab cycles through fields',
-        css: [],  // Runtime behavior, not CSS
+        css: [], // Runtime behavior, not CSS
         example: 'Frame keyboard-nav',
       },
     },
@@ -1955,7 +2050,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     keywords: {
       _standalone: {
         description: 'Input is readonly',
-        css: [],  // Sets attribute, not CSS
+        css: [], // Sets attribute, not CSS
         example: 'Input readonly',
       },
     },
@@ -1967,7 +2062,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     category: 'input',
     description: 'Input type (text, password, email, number, etc.)',
 
-    keywords: {},  // Accepts any string value
+    keywords: {}, // Accepts any string value
   },
 
   name: {
@@ -1976,7 +2071,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     category: 'input',
     description: 'Form element name attribute',
 
-    keywords: {},  // Accepts any string value
+    keywords: {}, // Accepts any string value
   },
 
   value: {
@@ -1985,7 +2080,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     category: 'input',
     description: 'Form element value',
 
-    keywords: {},  // Accepts any value
+    keywords: {}, // Accepts any value
   },
 
   checked: {
@@ -1997,7 +2092,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     keywords: {
       _standalone: {
         description: 'Element is checked',
-        css: [],  // Sets attribute, not CSS
+        css: [], // Sets attribute, not CSS
         example: 'Checkbox checked',
       },
     },
@@ -2009,7 +2104,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     category: 'content',
     description: 'Text content (alternative to content property)',
 
-    keywords: {},  // Accepts any string value
+    keywords: {}, // Accepts any string value
   },
 
   // ---------------------------------------------------------------------------
@@ -2025,7 +2120,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Icon size in pixels',
       unit: 'px',
-      css: (n) => [
+      css: n => [
         { property: 'font-size', value: `${n}px` },
         { property: 'width', value: `${n}px` },
         { property: 'height', value: `${n}px` },
@@ -2044,7 +2139,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     color: {
       description: 'Icon color',
-      css: (c) => [{ property: 'color', value: c }],
+      css: c => [{ property: 'color', value: c }],
     },
 
     token: true,
@@ -2059,7 +2154,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Icon weight (100-900)',
       unit: '',
-      css: (n) => [{ property: 'font-weight', value: String(n) }],
+      css: n => [{ property: 'font-weight', value: String(n) }],
       example: 'Icon icon-weight 300',
     },
   },
@@ -2073,7 +2168,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     keywords: {
       _standalone: {
         description: 'Use filled icon variant',
-        css: [],  // Sets data attribute
+        css: [], // Sets data attribute
         example: 'Icon fill',
       },
     },
@@ -2100,10 +2195,10 @@ export const SCHEMA: Record<string, PropertyDef> = {
       'slide-right': { description: 'Slide right animation', css: [] },
       'scale-in': { description: 'Scale in animation', css: [] },
       'scale-out': { description: 'Scale out animation', css: [] },
-      'bounce': { description: 'Bounce animation', css: [] },
-      'pulse': { description: 'Pulse animation', css: [] },
-      'shake': { description: 'Shake animation', css: [] },
-      'spin': { description: 'Spin animation', css: [] },
+      bounce: { description: 'Bounce animation', css: [] },
+      pulse: { description: 'Pulse animation', css: [] },
+      shake: { description: 'Shake animation', css: [] },
+      spin: { description: 'Spin animation', css: [] },
       'reveal-up': { description: 'Scroll reveal - slide up', css: [] },
       'reveal-scale': { description: 'Scroll reveal - scale in', css: [] },
       'reveal-fade': { description: 'Scroll reveal - fade in', css: [] },
@@ -2119,7 +2214,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'X offset in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'transform', value: `translateX(${n}px)` }],
+      css: n => [{ property: 'transform', value: `translateX(${n}px)` }],
       example: 'Box x-offset 10',
     },
   },
@@ -2133,7 +2228,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Y offset in pixels',
       unit: 'px',
-      css: (n) => [{ property: 'transform', value: `translateY(${n}px)` }],
+      css: n => [{ property: 'transform', value: `translateY(${n}px)` }],
       example: 'Box y-offset 10',
     },
   },
@@ -2150,7 +2245,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     color: {
       description: 'Background color on hover',
-      css: (c) => [{ property: 'background', value: c }],
+      css: c => [{ property: 'background', value: c }],
     },
 
     token: true,
@@ -2164,7 +2259,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     color: {
       description: 'Text color on hover',
-      css: (c) => [{ property: 'color', value: c }],
+      css: c => [{ property: 'color', value: c }],
     },
 
     token: true,
@@ -2179,7 +2274,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Opacity on hover (0-1)',
       unit: '',
-      css: (n) => [{ property: 'opacity', value: String(n) }],
+      css: n => [{ property: 'opacity', value: String(n) }],
       example: 'Button hover-opacity 0.8',
     },
   },
@@ -2192,7 +2287,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     numeric: {
       description: 'Scale factor on hover',
-      css: (n) => [{ property: 'transform', value: `scale(${n})` }],
+      css: n => [{ property: 'transform', value: `scale(${n})` }],
       example: 'Button hover-scale 1.05',
     },
   },
@@ -2206,7 +2301,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Border width on hover',
       unit: 'px',
-      css: (n) => [{ property: 'border-width', value: `${n}px` }],
+      css: n => [{ property: 'border-width', value: `${n}px` }],
       example: 'Button hover-border 2',
     },
   },
@@ -2219,7 +2314,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
     color: {
       description: 'Border color on hover',
-      css: (c) => [{ property: 'border-color', value: c }],
+      css: c => [{ property: 'border-color', value: c }],
     },
 
     token: true,
@@ -2234,7 +2329,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Border radius on hover',
       unit: 'px',
-      css: (n) => [{ property: 'border-radius', value: `${n}px` }],
+      css: n => [{ property: 'border-radius', value: `${n}px` }],
       example: 'Button hover-radius 8',
     },
   },
@@ -2317,7 +2412,7 @@ export function findProperty(nameOrAlias: string): PropertyDef | undefined {
  * Get all properties by category
  */
 export function getPropertiesByCategory(category: PropertyDef['category']): PropertyDef[] {
-  return Object.values(SCHEMA).filter((p) => p.category === category)
+  return Object.values(SCHEMA).filter(p => p.category === category)
 }
 
 /**
@@ -2327,7 +2422,7 @@ export function getKeywordsForProperty(nameOrAlias: string): string[] {
   const prop = findProperty(nameOrAlias)
   if (!prop?.keywords) return []
 
-  return Object.keys(prop.keywords).filter((k) => k !== '_standalone')
+  return Object.keys(prop.keywords).filter(k => k !== '_standalone')
 }
 
 /**

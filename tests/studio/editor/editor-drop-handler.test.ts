@@ -209,6 +209,235 @@ Frame gap 12
       const result = editor.state.doc.toString()
       expect(result).toContain('  Button "Click"')
     })
+
+    // ========================================================================
+    // CRITICAL: Offset calculation tests (regression tests for the bug)
+    // ========================================================================
+
+    it('CRITICAL: inserts Checkbox definition AND instance without RangeError', () => {
+      editor = createTestEditor('Frame gap 8')
+
+      const pos: EditorDropPosition = {
+        line: 1,
+        column: 0,
+        offset: 11, // After "Frame gap 8"
+        indent: 2,
+      }
+
+      // This should NOT throw RangeError
+      expect(() => {
+        insertComponentWithDefinition(editor, 'Checkbox "Label"', pos, 'Checkbox')
+      }).not.toThrow()
+
+      const result = editor.state.doc.toString()
+
+      // Definition should be inserted
+      expect(result).toContain('Checkbox:')
+      expect(result).toContain('Control:')
+      expect(result).toContain('Label:')
+
+      // Instance should be inserted
+      expect(result).toContain('Checkbox "Label"')
+    })
+
+    it('CRITICAL: inserts Select definition AND instance without RangeError', () => {
+      editor = createTestEditor('Frame gap 8')
+
+      const pos: EditorDropPosition = {
+        line: 1,
+        column: 0,
+        offset: 11,
+        indent: 2,
+      }
+
+      expect(() => {
+        insertComponentWithDefinition(editor, 'Select placeholder "Choose"', pos, 'Select')
+      }).not.toThrow()
+
+      const result = editor.state.doc.toString()
+
+      // Definition
+      expect(result).toContain('Select:')
+      expect(result).toContain('Trigger:')
+      expect(result).toContain('Content:')
+
+      // Instance
+      expect(result).toContain('Select placeholder "Choose"')
+    })
+
+    it('CRITICAL: inserts Dialog definition AND instance without RangeError', () => {
+      editor = createTestEditor('Frame gap 8')
+
+      const pos: EditorDropPosition = {
+        line: 1,
+        column: 0,
+        offset: 11,
+        indent: 2,
+      }
+
+      expect(() => {
+        insertComponentWithDefinition(editor, 'Dialog\n  Trigger: Button "Open"', pos, 'Dialog')
+      }).not.toThrow()
+
+      const result = editor.state.doc.toString()
+
+      // Definition
+      expect(result).toContain('Dialog:')
+      expect(result).toContain('Backdrop:')
+
+      // Instance
+      expect(result).toContain('Dialog')
+      expect(result).toContain('Trigger:')
+    })
+
+    it('CRITICAL: offset calculation is correct when definition comes before instance', () => {
+      // This tests the exact scenario that caused the bug:
+      // - Definition inserted at position 0
+      // - Instance inserted at position 11 (original offset)
+      // - CodeMirror expects positions relative to ORIGINAL document
+      editor = createTestEditor('Frame gap 8')
+
+      const pos: EditorDropPosition = {
+        line: 1,
+        column: 0,
+        offset: 11, // This is the original offset in the document
+        indent: 2,
+      }
+
+      insertComponentWithDefinition(editor, 'Checkbox "Test"', pos, 'Checkbox')
+
+      const result = editor.state.doc.toString()
+      const lines = result.split('\n')
+
+      // Structure should be:
+      // 1. Definition at top
+      // 2. Empty line(s)
+      // 3. Original Frame content
+      // 4. Instance
+
+      // Definition should be first
+      expect(lines[0]).toContain('Checkbox:')
+
+      // Frame should still exist
+      expect(result).toContain('Frame gap 8')
+
+      // Instance should be after Frame
+      const frameIndex = result.indexOf('Frame gap 8')
+      const instanceIndex = result.indexOf('Checkbox "Test"')
+      expect(instanceIndex).toBeGreaterThan(frameIndex)
+    })
+
+    it('handles multiple component insertions sequentially', () => {
+      editor = createTestEditor('Frame gap 8')
+
+      // First: Insert Checkbox
+      const pos1: EditorDropPosition = {
+        line: 1,
+        column: 0,
+        offset: 11,
+        indent: 2,
+      }
+
+      insertComponentWithDefinition(editor, 'Checkbox "First"', pos1, 'Checkbox')
+
+      // Second: Insert Select (at new position after first insertion)
+      const doc = editor.state.doc.toString()
+      const newOffset = doc.length
+
+      const pos2: EditorDropPosition = {
+        line: editor.state.doc.lines,
+        column: 0,
+        offset: newOffset,
+        indent: 2,
+      }
+
+      expect(() => {
+        insertComponentWithDefinition(editor, 'Select placeholder "Choose"', pos2, 'Select')
+      }).not.toThrow()
+
+      const finalResult = editor.state.doc.toString()
+
+      // Both definitions should exist
+      expect(finalResult).toContain('Checkbox:')
+      expect(finalResult).toContain('Select:')
+
+      // Both instances should exist
+      expect(finalResult).toContain('Checkbox "First"')
+      expect(finalResult).toContain('Select placeholder "Choose"')
+    })
+
+    it('does not insert duplicate definition when inserting second instance', () => {
+      // Start with code that already has Checkbox definition
+      const existingCode = `Checkbox:
+  Control: w 18, h 18
+  Label: col white
+
+Frame gap 8
+  Checkbox "First"`
+
+      editor = createTestEditor(existingCode)
+
+      const pos: EditorDropPosition = {
+        line: 6,
+        column: 0,
+        offset: existingCode.length,
+        indent: 2,
+      }
+
+      insertComponentWithDefinition(editor, 'Checkbox "Second"', pos, 'Checkbox')
+
+      const result = editor.state.doc.toString()
+
+      // Should have exactly ONE Checkbox: definition
+      const defMatches = result.match(/Checkbox:/g) || []
+      expect(defMatches.length).toBe(1)
+
+      // Should have TWO Checkbox instances
+      const instanceMatches = result.match(/Checkbox "[^"]+"/g) || []
+      expect(instanceMatches.length).toBe(2)
+    })
+
+    it('handles empty document gracefully', () => {
+      editor = createTestEditor('')
+
+      const pos: EditorDropPosition = {
+        line: 0,
+        column: 0,
+        offset: 0,
+        indent: 0,
+      }
+
+      expect(() => {
+        insertComponentWithDefinition(editor, 'Checkbox "Test"', pos, 'Checkbox')
+      }).not.toThrow()
+
+      const result = editor.state.doc.toString()
+      expect(result).toContain('Checkbox:')
+      expect(result).toContain('Checkbox "Test"')
+    })
+
+    it('handles document with only tokens', () => {
+      editor = createTestEditor('primary.bg: #5BA8F5\nmuted.col: #888')
+
+      const pos: EditorDropPosition = {
+        line: 2,
+        column: 0,
+        offset: 35,
+        indent: 0,
+      }
+
+      expect(() => {
+        insertComponentWithDefinition(editor, 'Checkbox "Test"', pos, 'Checkbox')
+      }).not.toThrow()
+
+      const result = editor.state.doc.toString()
+
+      // Tokens should still be there
+      expect(result).toContain('primary.bg: #5BA8F5')
+
+      // Definition should be inserted
+      expect(result).toContain('Checkbox:')
+    })
   })
 
   // ============================================

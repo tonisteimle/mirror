@@ -8,23 +8,8 @@
  * with their machine configurations, slots, and items.
  */
 
-import type {
-  Property,
-  ZagNode,
-  ZagSlotDef,
-  ZagItem,
-  Instance,
-  Text,
-  Slot,
-} from '../../parser/ast'
-import type {
-  IRNode,
-  IRZagNode,
-  IRSlot,
-  IRItem,
-  IRItemProperty,
-  SourcePosition,
-} from '../types'
+import type { Property, ZagNode, ZagSlotDef, ZagItem, Instance, Text, Slot } from '../../parser/ast'
+import type { IRNode, IRZagNode, IRSlot, IRItem, IRItemProperty, SourcePosition } from '../types'
 import type { TransformerContext, ParentLayoutContext } from './transformer-context'
 import { ZAG_PRIMITIVES } from '../../schema/dsl'
 
@@ -85,20 +70,85 @@ type ZagTransformerContext = TransformerContext
  * Set of property names that are machine configuration (not styling).
  */
 const MACHINE_CONFIG_PROPS = new Set([
-  'placeholder', 'multiple', 'searchable', 'clearable', 'keepOpen', 'disabled',
-  'value', 'defaultValue', 'step', 'allowMouseWheel', 'clampValueOnBlur',
-  'maxTags', 'allowDuplicate', 'submitMode', 'placement', 'offset', 'deselectable',
-  'orientation', 'activationMode', 'loopFocus', 'checked', 'defaultChecked',
-  'indeterminate', 'collapsible', 'collapsed', 'label', 'invalid', 'readOnly', 'required',
-  'name', 'src', 'fallback', 'accept', 'maxFiles', 'maxSize', 'allowOversize',
-  'minSize', 'min', 'max', 'count', 'allowHalf', 'dir', 'size', 'length',
-  'blurOnComplete', 'otp', 'type', 'visible', 'defaultVisible',
-  'collection', 'auto', 'validateOnBlur', 'validateOnChange',
-  'items', 'slidesPerView', 'loop', 'autoPlay', 'autoPlayInterval',
-  'steps', 'defaultStep', 'linear', 'totalPages', 'page', 'defaultPage', 'siblingCount',
-  'data', 'expandedKeys', 'defaultExpandedKeys', 'selectedKeys', 'defaultSelectedKeys',
-  'locale', 'selectionMode', 'mode', 'fixedWeeks', 'startOfWeek', 'closeOnSelect', 'inline',
-  'icon', 'mask',
+  'placeholder',
+  'multiple',
+  'searchable',
+  'clearable',
+  'keepOpen',
+  'disabled',
+  'value',
+  'defaultValue',
+  'step',
+  'allowMouseWheel',
+  'clampValueOnBlur',
+  'maxTags',
+  'allowDuplicate',
+  'submitMode',
+  'placement',
+  'offset',
+  'deselectable',
+  'orientation',
+  'activationMode',
+  'loopFocus',
+  'checked',
+  'defaultChecked',
+  'indeterminate',
+  'collapsible',
+  'collapsed',
+  'label',
+  'invalid',
+  'readOnly',
+  'required',
+  'name',
+  'src',
+  'fallback',
+  'accept',
+  'maxFiles',
+  'maxSize',
+  'allowOversize',
+  'minSize',
+  'min',
+  'max',
+  'count',
+  'allowHalf',
+  'dir',
+  'size',
+  'length',
+  'blurOnComplete',
+  'otp',
+  'type',
+  'visible',
+  'defaultVisible',
+  'collection',
+  'auto',
+  'validateOnBlur',
+  'validateOnChange',
+  'items',
+  'slidesPerView',
+  'loop',
+  'autoPlay',
+  'autoPlayInterval',
+  'steps',
+  'defaultStep',
+  'linear',
+  'totalPages',
+  'page',
+  'defaultPage',
+  'siblingCount',
+  'data',
+  'expandedKeys',
+  'defaultExpandedKeys',
+  'selectedKeys',
+  'defaultSelectedKeys',
+  'locale',
+  'selectionMode',
+  'mode',
+  'fixedWeeks',
+  'startOfWeek',
+  'closeOnSelect',
+  'inline',
+  'icon',
+  'mask',
 ])
 
 // =============================================================================
@@ -123,8 +173,21 @@ export function transformZagComponent(
   // Collect styling properties separately
   const stylingProperties: Property[] = []
 
+  // Extract bind property if present
+  let bindValue: string | undefined
+
   // Process properties
   for (const prop of zagNode.properties || []) {
+    // Handle bind property specially - it's not a machine config or styling property
+    if (prop.name === 'bind') {
+      const values = prop.values as (string | number | boolean)[]
+      if (values.length > 0) {
+        const rawValue = String(values[0])
+        // Remove leading $ if present
+        bindValue = rawValue.startsWith('$') ? rawValue.slice(1) : rawValue
+      }
+      continue
+    }
     if (!MACHINE_CONFIG_PROPS.has(prop.name)) {
       stylingProperties.push(prop)
       continue
@@ -139,14 +202,15 @@ export function transformZagComponent(
   const items = transformItems(ctx, zagNode.items || [])
 
   // Source position
-  const sourcePosition = zagNode.line !== undefined
-    ? {
-        line: zagNode.line,
-        column: zagNode.column ?? 0,
-        endLine: zagNode.line,
-        endColumn: zagNode.column ?? 0,
-      }
-    : undefined
+  const sourcePosition =
+    zagNode.line !== undefined
+      ? {
+          line: zagNode.line,
+          column: zagNode.column ?? 0,
+          endLine: zagNode.line,
+          endColumn: zagNode.column ?? 0,
+        }
+      : undefined
 
   // Transform styling properties to CSS styles
   const styles = ctx.transformProperties(stylingProperties, 'div', parentLayoutContext)
@@ -168,6 +232,7 @@ export function transformZagComponent(
     machineConfig,
     sourcePosition,
     isDefinition: zagNode.isDefinition ?? false,
+    bind: bindValue,
   }
 
   // Add to source map
@@ -252,7 +317,9 @@ function processMachineConfigProperty(
       break
     case 'value':
     case 'defaultValue': {
-      const nonEmptyValues = values.filter((v: PropertyValue) => v !== '' && v !== undefined && v !== null)
+      const nonEmptyValues = values.filter(
+        (v: PropertyValue) => v !== '' && v !== undefined && v !== null
+      )
       if (nonEmptyValues.length === 0) {
         // Skip
       } else if (nonEmptyValues.length === 1) {
@@ -316,14 +383,18 @@ function processMachineConfigProperty(
       break
     case 'collection': {
       const collectionValue = String(values[0] ?? '')
-      machineConfig.collection = collectionValue.startsWith('$') ? collectionValue.slice(1) : collectionValue
+      machineConfig.collection = collectionValue.startsWith('$')
+        ? collectionValue.slice(1)
+        : collectionValue
       break
     }
     case 'items':
     case 'steps':
     case 'data':
       try {
-        machineConfig[prop.name === 'data' ? 'items' : prop.name] = JSON.parse(String(values[0] ?? '[]'))
+        machineConfig[prop.name === 'data' ? 'items' : prop.name] = JSON.parse(
+          String(values[0] ?? '[]')
+        )
       } catch {
         machineConfig[prop.name === 'data' ? 'items' : prop.name] = values
       }
@@ -333,9 +404,11 @@ function processMachineConfigProperty(
     case 'selectedKeys':
     case 'defaultSelectedKeys':
       try {
-        machineConfig[prop.name.replace('default', '').replace(/^[A-Z]/, c => c.toLowerCase())] = JSON.parse(String(values[0] ?? '[]'))
+        machineConfig[prop.name.replace('default', '').replace(/^[A-Z]/, c => c.toLowerCase())] =
+          JSON.parse(String(values[0] ?? '[]'))
       } catch {
-        machineConfig[prop.name.replace('default', '').replace(/^[A-Z]/, c => c.toLowerCase())] = values.map(String)
+        machineConfig[prop.name.replace('default', '').replace(/^[A-Z]/, c => c.toLowerCase())] =
+          values.map(String)
       }
       break
   }
@@ -372,10 +445,7 @@ function getDefaultForProp(name: string): number | string {
 /**
  * Transform slots from ZagNode.
  */
-function transformSlots(
-  ctx: ZagTransformerContext,
-  zagNode: ZagNode
-): Record<string, IRSlot> {
+function transformSlots(ctx: ZagTransformerContext, zagNode: ZagNode): Record<string, IRSlot> {
   const slots: Record<string, IRSlot> = {}
 
   // Process defined slots
@@ -445,10 +515,7 @@ function transformSlots(
 /**
  * Transform items from ZagNode.
  */
-function transformItems(
-  ctx: ZagTransformerContext,
-  items: ZagItem[]
-): ExtendedIRItem[] {
+function transformItems(ctx: ZagTransformerContext, items: ZagItem[]): ExtendedIRItem[] {
   const transformItem = (item: ZagItem): ExtendedIRItem => {
     const irItem: ExtendedIRItem = {
       value: item.value ?? item.label ?? '',
@@ -497,9 +564,7 @@ function transformItems(
 
     // Children
     if (item.children && item.children.length > 0) {
-      irItem.children = item.children.map((child: TransformableChild) =>
-        ctx.transformChild(child)
-      )
+      irItem.children = item.children.map((child: TransformableChild) => ctx.transformChild(child))
     } else if (item.shows) {
       irItem.shows = item.shows
       if (item.showsFrom) {

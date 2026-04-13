@@ -326,6 +326,245 @@ Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
 
     </section>
 
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Responsive Layout</h2>
+      <p>Klassische Media Queries reagieren auf die <strong>Viewport-Größe</strong> – das Browserfenster. Aber eine Card in einer schmalen Sidebar braucht ein anderes Layout als dieselbe Card im breiten Hauptbereich, obwohl der Viewport gleich groß ist.</p>
+      <p>Size-States lösen dieses Problem: Komponenten passen sich an ihre <strong>eigene Größe</strong> an.</p>
+
+      <h3>Das Konzept</h3>
+      <p>Size-States funktionieren wie andere States (<code>hover:</code>, <code>on:</code>) – aber sie werden durch die Breite des Elements selbst aktiviert:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Card: bg #1a1a1a, pad 16, rad 8, gap 12, ver
+  // compact: wird aktiv wenn Card schmaler als 400px
+  compact:
+    pad 12, gap 8
+
+Frame gap 16
+  Card w 500
+    Text "Normale Card", col white
+    Text "500px breit – kein Size-State aktiv", col #888, fs 12
+
+  Card w 300
+    Text "Kompakte Card", col white
+    Text "300px breit – compact: ist aktiv", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>Die Card definiert einen <code>compact:</code> State mit weniger Padding</li>
+        <li>Bei 500px Breite: kein Size-State aktiv → normales Layout</li>
+        <li>Bei 300px Breite: <code>compact:</code> aktiv (unter 400px) → reduziertes Padding</li>
+        <li>Die Card entscheidet selbst – unabhängig vom Viewport</li>
+      </ul>
+
+      <h3>Eingebaute Size-States</h3>
+      <p>Mirror hat drei vordefinierte Size-States:</p>
+      <table class="ref-table">
+        <tr><th>Size-State</th><th>Aktiv wenn</th><th>Default-Schwelle</th></tr>
+        <tr><td><code>compact:</code></td><td>Element ist schmal</td><td>&lt; 400px</td></tr>
+        <tr><td><code>regular:</code></td><td>Element hat mittlere Breite</td><td>400px – 800px</td></tr>
+        <tr><td><code>wide:</code></td><td>Element ist breit</td><td>&gt; 800px</td></tr>
+      </table>
+
+      <div class="note">
+        <strong>Wichtig:</strong> Ohne aktiven Size-State gilt das normale Layout (die Properties außerhalb der States). Size-States <em>überschreiben</em> einzelne Properties – alles andere bleibt erhalten.
+      </div>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Card: bg #1a1a1a, rad 8, gap 12, ver
+  // Normales Layout (kein Size-State aktiv)
+  pad 16
+
+  // Schmal: kompakter
+  compact:
+    pad 12, gap 8
+
+  // Breit: mehr Platz, horizontal
+  wide:
+    pad 24, gap 16, hor
+
+Frame gap 16
+  Card w 300
+    Icon "box", ic #2271C1, is 24
+    Text "Compact (300px)", col white, fs 13
+
+  Card w 600
+    Icon "box", ic #10b981, is 24
+    Text "Regular (600px)", col white, fs 13
+
+  Card w 900
+    Icon "box", ic #f59e0b, is 24
+    Text "Wide (900px)", col white, fs 13</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Kind-Komponenten in Size-States</h3>
+      <p>Size-States können auch Kind-Komponenten überschreiben. Die Syntax: Innerhalb des States definierst du die Kind-Komponente mit <code>:</code> neu:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Panel: bg #1a1a1a, pad 20, rad 8, gap 8
+  // Kind-Komponenten mit Default-Styling
+  Title: col white, fs 16, weight 600
+  Desc: col #888, fs 14
+
+  compact:
+    pad 12
+    // Kind-Komponenten für compact überschreiben
+    Title: fs 13
+    Desc: fs 12
+
+  wide:
+    pad 32, gap 12
+    Title: fs 20
+    Desc: fs 15
+
+Frame gap 16
+  Panel w 280
+    Title "Kompakt"
+    Desc "Kleine Schrift, wenig Padding"
+
+  Panel w 600
+    Title "Regular"
+    Desc "Standard-Darstellung"
+
+  Panel w 950
+    Title "Breit"
+    Desc "Große Schrift, viel Padding"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>Title:</code> und <code>Desc:</code> haben Default-Styles (fs 16, fs 14)</li>
+        <li>Im <code>compact:</code> State werden sie kleiner (fs 13, fs 12)</li>
+        <li>Im <code>wide:</code> State werden sie größer (fs 20, fs 15)</li>
+        <li>Nicht überschriebene Properties (wie <code>col</code>) bleiben erhalten</li>
+      </ul>
+
+      <h3>Eigene Size-States definieren</h3>
+      <p>Die Defaults (400px, 800px) passen nicht für jeden Anwendungsfall. Du kannst sie überschreiben oder komplett eigene Size-States definieren:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Eingebaute Defaults überschreiben
+compact.max: 250
+wide.min: 500
+
+// Eigenen Size-State definieren
+tiny.max: 150
+
+Card: bg #1a1a1a, pad 16, rad 8, gap 8, ver
+  tiny:
+    pad 8
+    Text "Winzig!", col #ef4444, fs 10
+  compact:
+    Text "Kompakt", col #f59e0b, fs 12
+  wide:
+    hor, gap 16
+    Text "Breit genug für horizontal", col #10b981
+
+Frame gap 12
+  Card w 120
+    Icon "box", ic white, is 20
+  Card w 200
+    Icon "box", ic white, is 20
+  Card w 400
+    Icon "box", ic white, is 20
+  Card w 600
+    Icon "box", ic white, is 20</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Token-Syntax:</strong></p>
+      <table class="ref-table">
+        <tr><th>Token</th><th>Bedeutung</th></tr>
+        <tr><td><code>name.max: 400</code></td><td>State aktiv wenn Breite ≤ 400px</td></tr>
+        <tr><td><code>name.min: 600</code></td><td>State aktiv wenn Breite ≥ 600px</td></tr>
+        <tr><td><code>name.min</code> + <code>name.max</code></td><td>State aktiv wenn Breite im Bereich</td></tr>
+      </table>
+
+      <div class="note">
+        <strong>Bereiche definieren:</strong> Für einen State wie <code>regular:</code> der nur in einem bestimmten Bereich aktiv ist, definierst du beide Grenzen:<br>
+        <code>regular.min: 400</code><br>
+        <code>regular.max: 800</code><br>
+        → State aktiv wenn 400px ≤ Breite ≤ 800px
+      </div>
+
+      <h3>Praktisch: Responsive Navigation</h3>
+      <p>Eine Navigation die bei wenig Platz zu einer Icon-Leiste wird:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>NavBar: bg #1a1a1a, pad 12, rad 8, hor, gap 8, ver-center
+  NavItem: hor, gap 8, pad 8 12, rad 6, ver-center, cursor pointer
+    Label: col #ccc, fs 13
+    hover:
+      bg #333
+
+  // Unter 200px: nur Icons, vertikal gestapelt
+  compact.max: 200
+  compact:
+    ver, gap 4, pad 8
+    NavItem: pad 10, center
+      Label: hidden
+
+Frame gap 16
+  NavBar w 350
+    NavItem
+      Icon "home", ic #888, is 18
+      Label "Home"
+    NavItem
+      Icon "folder", ic #888, is 18
+      Label "Projekte"
+    NavItem
+      Icon "settings", ic #888, is 18
+      Label "Settings"
+
+  NavBar w 80
+    NavItem
+      Icon "home", ic #888, is 18
+      Label "Home"
+    NavItem
+      Icon "folder", ic #888, is 18
+      Label "Projekte"
+    NavItem
+      Icon "settings", ic #888, is 18
+      Label "Settings"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>NavBar definiert <code>compact.max: 200</code> – ein eigener Schwellenwert nur für diese Komponente</li>
+        <li>Bei 350px: Normal – horizontal mit Text</li>
+        <li>Bei 80px: <code>compact:</code> aktiv – vertikal, nur Icons (<code>Label: hidden</code>)</li>
+        <li>Dieselbe Komponente, unterschiedliches Layout je nach verfügbarem Platz</li>
+      </ul>
+
+      <h3>Wann Size-States verwenden?</h3>
+      <table class="ref-table">
+        <tr><th>Situation</th><th>Lösung</th></tr>
+        <tr><td>Card soll sich an Container anpassen</td><td>Size-States</td></tr>
+        <tr><td>Sidebar vs. Hauptbereich</td><td>Size-States</td></tr>
+        <tr><td>Mobile vs. Desktop App-Layout</td><td>Media Queries (Viewport)</td></tr>
+        <tr><td>Komponente in verschiedenen Kontexten</td><td>Size-States</td></tr>
+      </table>
+
+      <div class="note">
+        <strong>Zusammenspiel mit anderen States:</strong> Size-States können mit <code>hover:</code>, <code>on:</code> etc. kombiniert werden. Alle aktiven States werden zusammengeführt – spezifischere States überschreiben allgemeinere.
+      </div>
+
+    </section>
+
     <div class="summary">
       <h2>Zusammenfassung</h2>
       <table class="ref-table">
@@ -333,6 +572,7 @@ Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
         <tr><td><strong>Flex</strong></td><td>Fließende Layouts (Navigation, Cards)</td></tr>
         <tr><td><strong>Grid</strong></td><td>Strukturierte Raster (Dashboards)</td></tr>
         <tr><td><strong>Stacked</strong></td><td>Überlagerungen (Badges, Overlays)</td></tr>
+        <tr><td><strong>Size-States</strong></td><td>Responsive Komponenten (Container Queries)</td></tr>
       </table>
 
       <p><strong>Flex:</strong></p>
@@ -360,6 +600,15 @@ Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
         <li><code>x</code>, <code>y</code> – Position (wie Figma)</li>
         <li><code>w</code>, <code>h</code> – Größe</li>
         <li><code>z N</code> – Stapelreihenfolge</li>
+      </ul>
+      <p><strong>Size-States:</strong></p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>compact:</code> (&lt;400px), <code>regular:</code> (400-800px), <code>wide:</code> (&gt;800px)</li>
+        <li><code>name.max: 400</code> – State aktiv wenn Breite ≤ 400px</li>
+        <li><code>name.min: 800</code> – State aktiv wenn Breite ≥ 800px</li>
+        <li>Beide definieren für Bereiche: <code>name.min</code> + <code>name.max</code></li>
+        <li>Kind-Komponenten überschreiben: <code>compact: Title: fs 12</code></li>
+        <li>Reagiert auf Element-Größe, nicht Viewport</li>
       </ul>
     </div>
 

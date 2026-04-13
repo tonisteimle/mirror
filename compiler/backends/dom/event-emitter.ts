@@ -16,16 +16,16 @@ export type { EventEmitterContext } from './base-emitter-context'
  */
 export function mapKeyName(key: string): string {
   const mapping: Record<string, string> = {
-    'escape': 'Escape',
-    'enter': 'Enter',
-    'tab': 'Tab',
-    'space': ' ',
+    escape: 'Escape',
+    enter: 'Enter',
+    tab: 'Tab',
+    space: ' ',
     'arrow-up': 'ArrowUp',
     'arrow-down': 'ArrowDown',
     'arrow-left': 'ArrowLeft',
     'arrow-right': 'ArrowRight',
-    'backspace': 'Backspace',
-    'delete': 'Delete',
+    backspace: 'Backspace',
+    delete: 'Delete',
   }
   return mapping[key] || key
 }
@@ -59,7 +59,9 @@ export function emitEnterExitObserver(
 
   ctx.emit(`if (!${varName}._enterExitObserver) {`)
   ctx.indentIn()
-  ctx.emit(`_runtime.setupEnterExitObserver(${varName}, ${varName}._enterCallback, ${varName}._exitCallback)`)
+  ctx.emit(
+    `_runtime.setupEnterExitObserver(${varName}, ${varName}._enterCallback, ${varName}._exitCallback)`
+  )
   ctx.indentOut()
   ctx.emit(`}`)
 }
@@ -170,18 +172,14 @@ export function emitTemplateEventListener(
  * Emit an action call.
  * This is the main action dispatch function.
  */
-export function emitAction(
-  ctx: EventEmitterContext,
-  action: IRAction,
-  currentVar: string
-): void {
+export function emitAction(ctx: EventEmitterContext, action: IRAction, currentVar: string): void {
   // Function call syntax: toggle(), exclusive(), show(Menu), animate(FadeIn), customFn()
   if (action.isFunctionCall) {
     if (action.isBuiltinStateFunction) {
       // Built-in state functions: toggle(), cycle() (alias), exclusive()
       switch (action.type) {
         case 'toggle':
-        case 'cycle':  // cycle() is now an alias for toggle()
+        case 'cycle': // cycle() is now an alias for toggle()
           if (action.args && action.args.length > 0) {
             const states = action.args.map(s => `'${s}'`).join(', ')
             ctx.emit(`_runtime.stateMachineToggle(${currentVar}, [${states}])`)
@@ -190,7 +188,9 @@ export function emitAction(
           }
           break
         case 'exclusive':
-          ctx.emit(`_runtime.exclusiveTransition(${currentVar}, Object.keys(${currentVar}._stateMachine?.states || {}).find(s => s !== 'default') || 'active')`)
+          ctx.emit(
+            `_runtime.exclusiveTransition(${currentVar}, Object.keys(${currentVar}._stateMachine?.states || {}).find(s => s !== 'default') || 'active')`
+          )
           break
       }
     } else {
@@ -206,7 +206,9 @@ export function emitAction(
   if (isElementTransition) {
     ctx.emit(`_runtime.transitionTo(_elements['${action.type}'], '${action.target}')`)
   } else {
-    ctx.emit(`// Warning: Action '${action.type}' requires function call syntax, e.g., ${action.type}()`)
+    ctx.emit(
+      `// Warning: Action '${action.type}' requires function call syntax, e.g., ${action.type}()`
+    )
   }
 }
 
@@ -436,8 +438,13 @@ function emitAnimateAction(ctx: EventEmitterContext, action: IRAction, currentVa
       const staggerMatch = restArgs.find(a => a.startsWith('stagger'))
       if (staggerMatch) {
         const staggerValue = staggerMatch.replace('stagger', '').trim() || '100'
-        const elemTargets = restArgs.filter(a => !a.startsWith('stagger')).map(t => `_elements['${t}']`).join(', ')
-        ctx.emit(`_runtime.animate('${animationName}', [${elemTargets}], { stagger: ${staggerValue} })`)
+        const elemTargets = restArgs
+          .filter(a => !a.startsWith('stagger'))
+          .map(t => `_elements['${t}']`)
+          .join(', ')
+        ctx.emit(
+          `_runtime.animate('${animationName}', [${elemTargets}], { stagger: ${staggerValue} })`
+        )
       } else {
         const targets = restArgs.map(t => `_elements['${t}']`).join(', ')
         ctx.emit(`_runtime.animate('${animationName}', [${targets}])`)
@@ -448,20 +455,34 @@ function emitAnimateAction(ctx: EventEmitterContext, action: IRAction, currentVa
   }
 }
 
-function emitPositionAction(ctx: EventEmitterContext, fnName: string, action: IRAction, currentVar: string): void {
+function emitPositionAction(
+  ctx: EventEmitterContext,
+  fnName: string,
+  action: IRAction,
+  currentVar: string
+): void {
   if (action.args && action.args.length > 0) {
     const target = action.args[0]
     if (fnName === 'showAt') {
       const position = action.args[1] || 'below'
-      ctx.emit(`_runtime.showAt(_elements['${target}'] || '${target}', ${currentVar}, '${position}')`)
+      ctx.emit(
+        `_runtime.showAt(_elements['${target}'] || '${target}', ${currentVar}, '${position}')`
+      )
     } else {
       const offset = action.args[1] || '4'
-      ctx.emit(`_runtime.${fnName}(_elements['${target}'] || '${target}', ${currentVar}, ${offset})`)
+      ctx.emit(
+        `_runtime.${fnName}(_elements['${target}'] || '${target}', ${currentVar}, ${offset})`
+      )
     }
   }
 }
 
-function emitScrollAction(ctx: EventEmitterContext, fnName: string, action: IRAction, currentVar: string): void {
+function emitScrollAction(
+  ctx: EventEmitterContext,
+  fnName: string,
+  action: IRAction,
+  currentVar: string
+): void {
   switch (fnName) {
     case 'scrollTo':
       if (action.args && action.args.length > 0) {
@@ -550,7 +571,12 @@ function emitValueAction(ctx: EventEmitterContext, fnName: string, action: IRAct
   }
 }
 
-function emitInputAction(ctx: EventEmitterContext, fnName: string, action: IRAction, currentVar: string): void {
+function emitInputAction(
+  ctx: EventEmitterContext,
+  fnName: string,
+  action: IRAction,
+  currentVar: string
+): void {
   const target = action.args?.[0]
 
   switch (fnName) {
@@ -609,6 +635,10 @@ function emitAddAction(ctx: EventEmitterContext, action: IRAction): void {
         namedParams.push(`${key}: ${val}`)
       } else if (!isNaN(Number(val))) {
         namedParams.push(`${key}: ${val}`)
+      } else if (val.startsWith('$')) {
+        // Token/variable reference - emit runtime $get call
+        const varName = val.slice(1) // Remove $ prefix
+        namedParams.push(`${key}: $get('${varName}')`)
       } else {
         // String value
         namedParams.push(`${key}: "${val}"`)

@@ -184,6 +184,8 @@ function $set(path, value) {
   // Notify runtime of data change for reactive updates
   if (_runtime && _runtime.notifyDataChange) _runtime.notifyDataChange(path, value)
 }
+// Expose $set globally for runtime access (Select two-way binding)
+if (typeof window !== "undefined") window.$set = $set
 
 // Design Tokens (for CSS variables)
 const tokens = __mirrorData
@@ -244,116 +246,116 @@ export function createUI(data = {}) {
   @keyframes mirror-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
   @keyframes mirror-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   
-  [data-mirror-id="node-5"]:hover {
+  [data-mirror-id^="node-5"]:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-9"]:hover {
+  [data-mirror-id^="node-9"]:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-12"]:hover {
+  [data-mirror-id^="node-12"]:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-15"]:hover {
+  [data-mirror-id^="node-15"]:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-18"]:hover {
+  [data-mirror-id^="node-18"]:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-23"]:hover {
+  [data-mirror-id^="node-23"]:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-26"]:hover {
+  [data-mirror-id^="node-26"]:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-29"]:hover {
+  [data-mirror-id^="node-29"]:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-34"]:hover {
+  [data-mirror-id^="node-34"]:hover {
     background: var(--bg-hover) !important;
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-45"]:hover {
+  [data-mirror-id^="node-45"]:hover {
     color: var(--text-primary) !important;
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-46"]:hover {
+  [data-mirror-id^="node-46"]:hover {
     color: var(--text-primary) !important;
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-47"]:hover {
+  [data-mirror-id^="node-47"]:hover {
     color: var(--text-primary) !important;
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-48"]:hover {
+  [data-mirror-id^="node-48"]:hover {
     color: var(--text-primary) !important;
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-66"]:hover {
+  [data-mirror-id^="node-66"]:hover {
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-69"]:hover {
+  [data-mirror-id^="node-69"]:hover {
     background: #2563eb !important;
   }
   
-  [data-mirror-id="node-135"]:hover {
+  [data-mirror-id^="node-135"]:hover {
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-136"]:hover {
+  [data-mirror-id^="node-136"]:hover {
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-137"]:hover {
+  [data-mirror-id^="node-137"]:hover {
     color: var(--text-primary) !important;
   }
   
-  [data-mirror-id="node-169"]:hover {
+  [data-mirror-id^="node-169"]:hover {
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-178"]:hover {
+  [data-mirror-id^="node-178"]:hover {
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-196"]:hover {
+  [data-mirror-id^="node-196"]:hover {
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-214"]:hover {
+  [data-mirror-id^="node-214"]:hover {
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-232"]:hover {
+  [data-mirror-id^="node-232"]:hover {
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-250"]:hover {
+  [data-mirror-id^="node-250"]:hover {
     background: var(--bg-hover) !important;
   }
   
-  [data-mirror-id="node-268"]:hover {
+  [data-mirror-id^="node-268"]:hover {
     background: var(--bg-hover) !important;
   }
   `
@@ -391,7 +393,8 @@ export function createUI(data = {}) {
     'align-self': 'stretch',
     'min-height': '0',
     'background': 'var(--bg-secondary)',
-    'border': '0px solid 1px 0px 0px',
+    'border-style': 'solid',
+    'border-width': '0 1px 0 0',
     'border-color': 'rgba(255,255,255,0.06)',
     'padding': 'var(--space-lg)',
   })
@@ -1086,9 +1089,10 @@ export function createUI(data = {}) {
     'height': '64px',
     'flex-shrink': '0',
     'background': 'var(--bg-secondary)',
-    'border': '0px solid 0px 1px 0px',
+    'border-style': 'solid',
+    'border-width': '0 0 1px 0',
     'border-color': 'rgba(255,255,255,0.06)',
-    'padding': '0 var(--space-xl)',
+    'padding': '0px var(--space.xl-pad)',
   })
   node_38.dataset.layout = 'flex'
   node_38.dataset.component = 'Frame'
@@ -3149,7 +3153,7 @@ export function createUI(data = {}) {
     'font-size': '13px',
     'font-weight': '600',
     'color': 'var(--text-primary)',
-    'margin': '0 0 0 auto',
+    'margin': '0px 0px 0px auto',
   })
   node_151.dataset.component = 'Text'
   node_148.appendChild(node_151)
@@ -3212,7 +3216,7 @@ export function createUI(data = {}) {
     'font-size': '13px',
     'font-weight': '600',
     'color': 'var(--text-primary)',
-    'margin': '0 0 0 auto',
+    'margin': '0px 0px 0px auto',
   })
   node_155.dataset.component = 'Text'
   node_152.appendChild(node_155)
@@ -3275,7 +3279,7 @@ export function createUI(data = {}) {
     'font-size': '13px',
     'font-weight': '600',
     'color': 'var(--text-primary)',
-    'margin': '0 0 0 auto',
+    'margin': '0px 0px 0px auto',
   })
   node_159.dataset.component = 'Text'
   node_156.appendChild(node_159)
@@ -3338,7 +3342,7 @@ export function createUI(data = {}) {
     'font-size': '13px',
     'font-weight': '600',
     'color': 'var(--text-primary)',
-    'margin': '0 0 0 auto',
+    'margin': '0px 0px 0px auto',
   })
   node_163.dataset.component = 'Text'
   node_160.appendChild(node_163)
@@ -3466,8 +3470,9 @@ export function createUI(data = {}) {
     'display': 'flex',
     'flex-direction': 'row',
     'align-items': 'center',
-    'padding': 'var(--space-md) var(--space-lg)',
-    'border': '0px solid 0px 1px 0px',
+    'padding': 'var(--space.md-pad) var(--space.lg-pad)',
+    'border-style': 'solid',
+    'border-width': '0 0 1px 0',
     'border-color': 'rgba(255,255,255,0.06)',
     'width': '100%',
     'align-self': 'stretch',
@@ -3604,7 +3609,8 @@ export function createUI(data = {}) {
     'flex-direction': 'row',
     'align-items': 'center',
     'padding': 'var(--space-lg)',
-    'border': '0px solid 0px 1px 0px',
+    'border-style': 'solid',
+    'border-width': '0 0 1px 0',
     'border-color': 'rgba(255,255,255,0.04)',
     'width': '100%',
     'align-self': 'stretch',
@@ -3895,7 +3901,8 @@ export function createUI(data = {}) {
     'flex-direction': 'row',
     'align-items': 'center',
     'padding': 'var(--space-lg)',
-    'border': '0px solid 0px 1px 0px',
+    'border-style': 'solid',
+    'border-width': '0 0 1px 0',
     'border-color': 'rgba(255,255,255,0.04)',
     'width': '100%',
     'align-self': 'stretch',
@@ -4186,7 +4193,8 @@ export function createUI(data = {}) {
     'flex-direction': 'row',
     'align-items': 'center',
     'padding': 'var(--space-lg)',
-    'border': '0px solid 0px 1px 0px',
+    'border-style': 'solid',
+    'border-width': '0 0 1px 0',
     'border-color': 'rgba(255,255,255,0.04)',
     'width': '100%',
     'align-self': 'stretch',
@@ -4477,7 +4485,8 @@ export function createUI(data = {}) {
     'flex-direction': 'row',
     'align-items': 'center',
     'padding': 'var(--space-lg)',
-    'border': '0px solid 0px 1px 0px',
+    'border-style': 'solid',
+    'border-width': '0 0 1px 0',
     'border-color': 'rgba(255,255,255,0.04)',
     'width': '100%',
     'align-self': 'stretch',
@@ -4767,7 +4776,8 @@ export function createUI(data = {}) {
     'flex-direction': 'row',
     'align-items': 'center',
     'padding': 'var(--space-lg)',
-    'border': '0px solid 0px 1px 0px',
+    'border-style': 'solid',
+    'border-width': '0 0 1px 0',
     'border-color': 'rgba(255,255,255,0.04)',
     'width': '100%',
     'align-self': 'stretch',
@@ -5057,7 +5067,8 @@ export function createUI(data = {}) {
     'flex-direction': 'row',
     'align-items': 'center',
     'padding': 'var(--space-lg)',
-    'border': '0px solid 0px 1px 0px',
+    'border-style': 'solid',
+    'border-width': '0 0 1px 0',
     'border-color': 'rgba(255,255,255,0.04)',
     'width': '100%',
     'align-self': 'stretch',
@@ -7547,6 +7558,64 @@ const _runtime = {
         }
       }
     }
+
+    // Refresh all each loops as their filter expressions may depend on the changed value
+    this._refreshAllEachLoops()
+  },
+
+  // Refresh all each loops (for filter variable changes)
+  _refreshAllEachLoops() {
+    const containers = document.querySelectorAll('[data-each-container]')
+    const data = window.__mirrorData || {}
+
+    containers.forEach(container => {
+      const config = container._eachConfig
+      if (!config) return
+
+      const collectionName = typeof config.collection === 'string' ? config.collection : null
+      if (!collectionName) return
+
+      // Clear existing items
+      container.innerHTML = ''
+
+      // Get fresh data
+      const items = data[collectionName]
+      if (!items || typeof items !== 'object') return
+
+      // Convert to array
+      let itemsArray
+      if (Array.isArray(items)) {
+        itemsArray = items
+      } else {
+        itemsArray = Object.entries(items).map(([k, v]) =>
+          typeof v === 'object' && v !== null ? { _key: k, ...v } : { _key: k, value: v }
+        )
+      }
+
+      // Apply filter
+      if (config.filterFn) {
+        itemsArray = itemsArray.filter(config.filterFn)
+      }
+
+      // Apply sorting
+      if (config.orderBy) {
+        const sortDir = config.orderDesc ? -1 : 1
+        itemsArray = [...itemsArray].sort((a, b) => {
+          const aVal = a[config.orderBy]
+          const bVal = b[config.orderBy]
+          if (aVal < bVal) return -sortDir
+          if (aVal > bVal) return sortDir
+          return 0
+        })
+      }
+
+      // Render
+      if (config.renderItem) {
+        itemsArray.forEach((item, index) => {
+          container.appendChild(config.renderItem(item, index))
+        })
+      }
+    })
   },
 
   // Remove element from bindings (cleanup)
@@ -8219,7 +8288,7 @@ const _runtime = {
     const isDeselectable = config.machineConfig?.deselectable
     const placement = config.machineConfig?.placement || 'bottom-start'
     const offset = config.machineConfig?.offset ?? 4
-    const items = content.querySelectorAll('[data-mirror-item]')
+    const items = Array.from(content.querySelectorAll('[data-value]'))
 
     // ========================================
     // DEFAULT STYLING (Tutorial-konform)
@@ -8472,7 +8541,7 @@ const _runtime = {
 
       // Keyboard navigation for search input
       searchInput.addEventListener('keydown', (e) => {
-        const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(i => i.style.display !== 'none')
+        const visibleItems = Array.from(content.querySelectorAll('[data-value]')).filter(i => i.style.display !== 'none')
         const count = visibleItems.length
 
         switch (e.key) {
@@ -8528,6 +8597,13 @@ const _runtime = {
         detail: { value: newValue, previousValue },
         bubbles: true
       }))
+      // Two-way binding: update bound variable via $set
+      const bindVar = el.dataset.bind
+      if (bindVar && typeof window !== 'undefined' && typeof window.$set === 'function') {
+        // For single select, use the first value; for multiple, use the array
+        const bindValue = isMultiple ? newValue : (newValue[0] || '')
+        window.$set(bindVar, bindValue)
+      }
     }
 
     const getItemLabel = (item) => {
@@ -8558,7 +8634,7 @@ const _runtime = {
       items.forEach(item => {
         const ind = item.querySelector('[data-slot="ItemIndicator"]')
         if (ind) {
-          const isSelected = el._zagState.value.includes(item.dataset.mirrorItem)
+          const isSelected = el._zagState.value.includes(item.dataset.value)
 
           if (isMultiple) {
             // Checkbox style: fill background and show checkmark when selected
@@ -8600,7 +8676,7 @@ const _runtime = {
       tagGroup.style.cssText = 'display:flex;flex-wrap:nowrap;gap:4px;overflow:hidden;flex:1;'
 
       for (const val of el._zagState.value) {
-        const matchItem = Array.from(items).find(i => i.dataset.mirrorItem === val)
+        const matchItem = Array.from(items).find(i => i.dataset.value === val)
         const label = matchItem ? getItemLabel(matchItem) : val
 
         const tag = document.createElement('span')
@@ -8619,7 +8695,7 @@ const _runtime = {
           e.stopPropagation()
           const idx = el._zagState.value.indexOf(val)
           if (idx > -1) el._zagState.value.splice(idx, 1)
-          const matchItem = Array.from(items).find(i => i.dataset.mirrorItem === val)
+          const matchItem = Array.from(items).find(i => i.dataset.value === val)
           if (matchItem) matchItem.removeAttribute('data-selected')
           updateCheckIcons()
           renderTags()
@@ -8651,7 +8727,7 @@ const _runtime = {
           triggerText.style.color = '#666'
           if (clearButton) clearButton.style.display = 'none'
         } else {
-          const matchItem = Array.from(items).find(i => i.dataset.mirrorItem === el._zagState.value[0])
+          const matchItem = Array.from(items).find(i => i.dataset.value === el._zagState.value[0])
           triggerText.textContent = matchItem ? getItemLabel(matchItem) : el._zagState.value[0]
           triggerText.style.color = '#e0e0e0'
           if (clearButton) clearButton.style.display = 'flex'
@@ -8683,7 +8759,7 @@ const _runtime = {
       const preselectArr = Array.isArray(preselect) ? preselect : [preselect]
       el._zagState.value = preselectArr
       items.forEach(item => {
-        if (preselectArr.includes(item.dataset.mirrorItem)) {
+        if (preselectArr.includes(item.dataset.value)) {
           item.setAttribute('data-selected', 'true')
         }
       })
@@ -8789,7 +8865,7 @@ const _runtime = {
       }
 
       // When open: navigate with arrows
-      const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(i => i.style.display !== 'none')
+      const visibleItems = Array.from(content.querySelectorAll('[data-value]')).filter(i => i.style.display !== 'none')
       const count = visibleItems.length
 
       switch (e.key) {
@@ -8873,7 +8949,7 @@ const _runtime = {
 
       item.addEventListener('click', (e) => {
         e.stopPropagation()
-        const itemValue = item.dataset.mirrorItem
+        const itemValue = item.dataset.value
         const previousValue = [...el._zagState.value]
 
         if (isMultiple) {
@@ -8940,7 +9016,7 @@ const _runtime = {
         return
       }
 
-      const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(i => i.style.display !== 'none')
+      const visibleItems = Array.from(content.querySelectorAll('[data-value]')).filter(i => i.style.display !== 'none')
       const count = visibleItems.length
 
       switch (e.key) {
@@ -12107,7 +12183,7 @@ const _runtime = {
     const triggerText = el.querySelector('[data-slot="TriggerText"]')
     const triggerArrow = el.querySelector('[data-slot="TriggerArrow"]')
     const content = el.querySelector('[data-slot="Content"]')
-    const items = el.querySelectorAll('[data-slot="Item"]')
+    const items = Array.from(el.querySelectorAll('[data-slot="Item"]'))
 
     if (!trigger || !content || items.length === 0) return
 
@@ -12302,6 +12378,13 @@ const _runtime = {
 
       updateTriggerText()
       updateItemStates()
+
+      // Update bound variable if data-bind is set
+      const bindVar = el.dataset.bind
+      if (bindVar && typeof window.$set === 'function') {
+        const newValue = multiple ? [...el._selectState.selectedValues] : (el._selectState.selectedValues[0] || '')
+        window.$set(bindVar, newValue)
+      }
 
       el.dispatchEvent(new CustomEvent('change', {
         detail: { value: multiple ? [...el._selectState.selectedValues] : el._selectState.selectedValues[0] },

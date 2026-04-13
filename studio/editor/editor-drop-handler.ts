@@ -317,24 +317,27 @@ export function insertComponentWithDefinition(
       instanceOffset = targetLine.to
     }
 
-    // Adjust instance offset if definition is inserted before it
-    if (defOffset <= instanceOffset) {
-      instanceOffset += defInsertLength
-    }
-
     const instanceText = pos.line === 0 ? indentedCode + '\n' : '\n' + indentedCode
 
     // Apply both changes in a single transaction
+    // CodeMirror changes are specified relative to the ORIGINAL document,
+    // so instanceOffset stays as calculated (no adjustment for definition insertion)
+    // The selection anchor needs to account for both insertions
+    const finalAnchor =
+      defOffset <= instanceOffset
+        ? instanceOffset + defInsertLength + instanceText.length
+        : instanceOffset + instanceText.length
+
     view.dispatch({
       changes: [
         { from: defOffset, to: defOffset, insert: defText },
         {
-          from: instanceOffset + defInsertLength,
-          to: instanceOffset + defInsertLength,
+          from: instanceOffset,
+          to: instanceOffset,
           insert: instanceText,
         },
       ],
-      selection: { anchor: instanceOffset + defInsertLength + instanceText.length },
+      selection: { anchor: finalAnchor },
     })
 
     log.info(`Inserted definition for ${componentName} and instance`)

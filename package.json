@@ -15,7 +15,8 @@
     "dist"
   ],
   "bin": {
-    "mirror-validate": "./dist/validator/cli.js"
+    "mirror-validate": "./dist/validator/cli.js",
+    "mirror-compile": "./dist/cli.js"
   },
   "scripts": {
     "validate": "npx tsx src/validator/cli.ts",

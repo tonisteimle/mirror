@@ -25,6 +25,12 @@ export function emitSelectComponent(
   }
 
   // Emit machine configuration
+  // Handle bind attribute for two-way data binding
+  if (node.bind) {
+    const bindVar = node.bind.startsWith('$') ? node.bind.slice(1) : node.bind
+    ctx.emit(`${varName}.dataset.bind = '${bindVar}'`)
+  }
+
   ctx.emit(`${varName}._zagConfig = {`)
   ctx.indentIn()
   ctx.emit(`type: 'select',`)
@@ -95,8 +101,9 @@ export function emitSelectComponent(
   for (let i = 0; i < node.items.length; i++) {
     const item = node.items[i]
     const itemVar = `${varName}_item${i}`
-    const itemValue = item.value || item.label || `item-${i}`
-    const itemLabel = item.label || itemValue
+    // Use nullish coalescing to preserve empty string values
+    const itemValue = item.value ?? item.label ?? `item-${i}`
+    const itemLabel = item.label ?? itemValue
 
     ctx.emit(`// Item: ${itemLabel}`)
     ctx.emit(`const ${itemVar} = document.createElement('div')`)

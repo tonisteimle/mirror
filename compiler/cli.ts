@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Mirror Compiler CLI
  *
@@ -21,6 +20,45 @@ import { generateReact } from './backends/react'
 import { combineProjectFilesWithData } from './preprocessor'
 import { parseDataFiles, parseDataFile } from './parser/data-parser'
 import type { DataFile } from './parser/data-types'
+
+// ============================================
+// File Extensions (matching studio/storage/types.ts)
+// ============================================
+
+const FILE_EXTENSIONS = {
+  layout: ['.mir', '.mirror'],
+  tokens: ['.tok', '.tokens'],
+  component: ['.com', '.components'],
+  data: ['.yaml', '.yml', '.data'], // .data for backwards compatibility
+} as const
+
+type MirrorFileType = 'layout' | 'tokens' | 'component' | 'data' | 'unknown'
+
+function getFileType(filename: string): MirrorFileType {
+  for (const [type, extensions] of Object.entries(FILE_EXTENSIONS)) {
+    if (extensions.some(ext => filename.endsWith(ext))) {
+      return type as MirrorFileType
+    }
+  }
+  return 'unknown'
+}
+
+function isMirrorCodeFile(filename: string): boolean {
+  const codeExtensions = [
+    ...FILE_EXTENSIONS.layout,
+    ...FILE_EXTENSIONS.tokens,
+    ...FILE_EXTENSIONS.component,
+  ]
+  return codeExtensions.some(ext => filename.endsWith(ext))
+}
+
+function isDataFile(filename: string): boolean {
+  return FILE_EXTENSIONS.data.some(ext => filename.endsWith(ext))
+}
+
+function getAllMirrorExtensions(): string[] {
+  return Object.values(FILE_EXTENSIONS).flat()
+}
 
 // ============================================
 // ANSI Colors
@@ -117,11 +155,17 @@ function printHelp(): void {
 ${c('Mirror Compiler', 'bold')} ${c('v2.0.0', 'dim')}
 
 ${c('USAGE:', 'yellow')}
-  mirror-compile <file.mirror> [options]
+  mirror-compile <files...> [options]
   mirror-compile --project <dir> [options]
 
 ${c('ARGUMENTS:', 'yellow')}
-  <file.mirror>          Input file(s) to compile
+  <files...>             Input file(s) to compile
+
+${c('FILE TYPES:', 'yellow')}
+  Layout/App:   .mir, .mirror     UI layouts and app structure
+  Tokens:       .tok, .tokens     Design tokens (colors, spacing)
+  Components:   .com, .components Reusable component definitions
+  Data:         .yaml, .yml       Structured data sources
 
 ${c('OPTIONS:', 'yellow')}
   -o, --output <file>    Output file (default: stdout)
@@ -137,30 +181,31 @@ ${c('OPTIONS:', 'yellow')}
 
 ${c('EXAMPLES:', 'yellow')}
   ${c('# Compile single file to stdout', 'dim')}
-  mirror-compile app.mirror
+  mirror-compile app.mir
 
   ${c('# Compile to output file', 'dim')}
-  mirror-compile app.mirror -o dist/app.js
+  mirror-compile app.mir -o dist/app.js
 
-  ${c('# Compile multiple files', 'dim')}
-  mirror-compile tokens.mirror components.mirror app.mirror -o dist/bundle.js
+  ${c('# Compile multiple files (order matters!)', 'dim')}
+  mirror-compile tokens.tok components.com app.mir -o dist/bundle.js
 
   ${c('# Compile project directory', 'dim')}
   mirror-compile --project examples/task-app -o dist/task-app.js
 
   ${c('# Generate React components', 'dim')}
-  mirror-compile app.mirror --react -o App.tsx
+  mirror-compile app.mir --react -o App.tsx
 
   ${c('# Watch mode', 'dim')}
-  mirror-compile app.mirror -o dist/app.js --watch
+  mirror-compile app.mir -o dist/app.js --watch
 
 ${c('PROJECT STRUCTURE:', 'yellow')}
-  When using --project, files are processed in order:
-    1. data/       → Data definitions (.data files)
-    2. tokens/     → Design tokens
-    3. components/ → Reusable components
-    4. layouts/    → Layout components
-    5. *.mirror    → Main application files
+  When using --project, files are processed in dependency order:
+    1. data/       → Data sources (.yaml, .yml)
+    2. tokens/     → Design tokens (.tok, .tokens)
+    3. components/ → Components (.com, .components)
+    4. layouts/    → Layouts (.mir, .mirror)
+    5. screens/    → Screen layouts (.mir, .mirror)
+    6. Root files  → App entry points
 
 ${c('OUTPUT:', 'yellow')}
   DOM backend generates vanilla JavaScript that can be:
@@ -197,7 +242,7 @@ function writeFile(filePath: string, content: string): void {
   fs.writeFileSync(absolutePath, content, 'utf-8')
 }
 
-function listFiles(dir: string, extension: string): string[] {
+function listFiles(dir: string, extensions: string[]): string[] {
   const absoluteDir = path.resolve(dir)
   if (!fs.existsSync(absoluteDir)) {
     return []
@@ -205,16 +250,32 @@ function listFiles(dir: string, extension: string): string[] {
 
   const files = fs.readdirSync(absoluteDir)
   return files
-    .filter(f => f.endsWith(extension))
+    .filter(f => extensions.some(ext => f.endsWith(ext)))
     .map(f => path.join(absoluteDir, f))
 }
 
-function listMirrorFiles(dir: string): string[] {
-  return listFiles(dir, '.mirror')
+function listMirrorCodeFiles(dir: string): string[] {
+  return listFiles(dir, [
+    ...FILE_EXTENSIONS.layout,
+    ...FILE_EXTENSIONS.tokens,
+    ...FILE_EXTENSIONS.component,
+  ])
+}
+
+function listTokenFiles(dir: string): string[] {
+  return listFiles(dir, [...FILE_EXTENSIONS.tokens])
+}
+
+function listComponentFiles(dir: string): string[] {
+  return listFiles(dir, [...FILE_EXTENSIONS.component])
+}
+
+function listLayoutFiles(dir: string): string[] {
+  return listFiles(dir, [...FILE_EXTENSIONS.layout])
 }
 
 function listDataFiles(dir: string): string[] {
-  return listFiles(dir, '.data')
+  return listFiles(dir, [...FILE_EXTENSIONS.data])
 }
 
 // ============================================
@@ -234,11 +295,7 @@ interface CompileResult {
   }
 }
 
-function compileFiles(
-  files: string[],
-  backend: 'dom' | 'react',
-  verbose: boolean
-): CompileResult {
+function compileFiles(files: string[], backend: 'dom' | 'react', verbose: boolean): CompileResult {
   const startTime = Date.now()
   const warnings: string[] = []
 
@@ -250,17 +307,21 @@ function compileFiles(
 
     for (const file of files) {
       if (verbose) {
-        console.error(c(`  Reading ${file}...`, 'dim'))
+        const fileType = getFileType(file)
+        console.error(c(`  Reading ${file} (${fileType})...`, 'dim'))
       }
 
       const content = readFile(file)
       totalLines += content.split('\n').length
 
-      if (file.endsWith('.data')) {
-        // Parse data file
-        const dataFile = parseDataFile(content, path.basename(file, '.data'))
+      if (isDataFile(file)) {
+        // Parse data file - extract name without extension
+        const basename = path.basename(file)
+        const ext = FILE_EXTENSIONS.data.find(e => basename.endsWith(e)) || ''
+        const name = basename.slice(0, -ext.length)
+        const dataFile = parseDataFile(content, name)
         dataFiles.push(dataFile)
-      } else if (file.endsWith('.mirror')) {
+      } else if (isMirrorCodeFile(file)) {
         // Add mirror code with file separator comment
         if (combinedCode) {
           combinedCode += '\n\n'
@@ -343,64 +404,94 @@ function compileProject(
   verbose: boolean
 ): CompileResult {
   const startTime = Date.now()
+  const absoluteProjectDir = path.resolve(projectDir)
 
   if (verbose) {
     console.error(c(`Compiling project: ${projectDir}`, 'cyan'))
   }
 
-  // Collect files in order
+  // Collect files in dependency order:
+  // 1. Data → 2. Tokens → 3. Components → 4. Layouts/Screens
+  // All paths are stored as absolute paths for proper deduplication
   const files: string[] = []
 
-  // 1. Data files
-  const dataDir = path.join(projectDir, 'data')
-  files.push(...listDataFiles(dataDir))
-
-  // 2. Tokens
-  const tokensDir = path.join(projectDir, 'tokens')
-  files.push(...listMirrorFiles(tokensDir))
-
-  // Also check for tokens.mirror in root
-  const tokensFile = path.join(projectDir, 'tokens.mirror')
-  if (fs.existsSync(tokensFile) && !files.includes(tokensFile)) {
-    files.push(tokensFile)
+  // Helper to add file if not already present (handles path normalization)
+  const addFile = (filePath: string): boolean => {
+    const absolutePath = path.resolve(filePath)
+    if (!files.includes(absolutePath)) {
+      files.push(absolutePath)
+      return true
+    }
+    return false
   }
 
-  // 3. Components
-  const componentsDir = path.join(projectDir, 'components')
-  files.push(...listMirrorFiles(componentsDir))
-
-  // Also check for components.mirror in root
-  const componentsFile = path.join(projectDir, 'components.mirror')
-  if (fs.existsSync(componentsFile) && !files.includes(componentsFile)) {
-    files.push(componentsFile)
-  }
-
-  // 4. Data.mirror in root
-  const dataFile = path.join(projectDir, 'data.mirror')
-  if (fs.existsSync(dataFile) && !files.includes(dataFile)) {
-    files.push(dataFile)
-  }
-
-  // 5. Layouts
-  const layoutsDir = path.join(projectDir, 'layouts')
-  files.push(...listMirrorFiles(layoutsDir))
-
-  // 6. Screens
-  const screensDir = path.join(projectDir, 'screens')
-  files.push(...listMirrorFiles(screensDir))
-
-  // 7. Root .mirror files (excluding already added ones)
-  const rootFiles = listMirrorFiles(projectDir)
-  for (const file of rootFiles) {
-    if (!files.includes(file)) {
-      files.push(file)
+  // Helper to add multiple files
+  const addFiles = (filePaths: string[]): void => {
+    for (const filePath of filePaths) {
+      addFile(filePath)
     }
   }
 
+  // Helper to find root file with any valid extension
+  const findRootFile = (baseName: string, extensions: readonly string[]): string | null => {
+    for (const ext of extensions) {
+      const filePath = path.join(absoluteProjectDir, baseName + ext)
+      if (fs.existsSync(filePath) && !files.includes(filePath)) {
+        return filePath
+      }
+    }
+    return null
+  }
+
+  // 1. Data files from data/ directory
+  const dataDir = path.join(absoluteProjectDir, 'data')
+  addFiles(listDataFiles(dataDir))
+
+  // Also check for data files in root (data.yaml, data.yml, data.data)
+  const rootDataFile = findRootFile('data', FILE_EXTENSIONS.data)
+  if (rootDataFile) addFile(rootDataFile)
+
+  // 2. Tokens from tokens/ directory
+  const tokensDir = path.join(absoluteProjectDir, 'tokens')
+  addFiles(listTokenFiles(tokensDir))
+
+  // Also check for tokens file in root (tokens.tok, tokens.tokens, tokens.mir, tokens.mirror)
+  const rootTokensFile = findRootFile('tokens', [
+    ...FILE_EXTENSIONS.tokens,
+    ...FILE_EXTENSIONS.layout,
+  ])
+  if (rootTokensFile) addFile(rootTokensFile)
+
+  // 3. Components from components/ directory
+  const componentsDir = path.join(absoluteProjectDir, 'components')
+  addFiles(listComponentFiles(componentsDir))
+
+  // Also check for components file in root
+  const rootComponentsFile = findRootFile('components', [
+    ...FILE_EXTENSIONS.component,
+    ...FILE_EXTENSIONS.layout,
+  ])
+  if (rootComponentsFile) addFile(rootComponentsFile)
+
+  // 4. Layouts from layouts/ directory
+  const layoutsDir = path.join(absoluteProjectDir, 'layouts')
+  addFiles(listLayoutFiles(layoutsDir))
+
+  // 5. Screens from screens/ directory
+  const screensDir = path.join(absoluteProjectDir, 'screens')
+  addFiles(listLayoutFiles(screensDir))
+
+  // 6. Root layout files (app.mir, main.mir, index.mir, etc.)
+  addFiles(listLayoutFiles(absoluteProjectDir))
+
+  // 7. Any remaining code files in root not yet added
+  addFiles(listMirrorCodeFiles(absoluteProjectDir))
+
   if (files.length === 0) {
+    const allExts = getAllMirrorExtensions().join(', ')
     return {
       success: false,
-      error: `No .mirror or .data files found in ${projectDir}`,
+      error: `No Mirror files found in ${projectDir}\nSupported extensions: ${allExts}`,
       warnings: [],
       stats: {
         inputFiles: 0,
@@ -425,6 +516,25 @@ function compileProject(
 // Watch Mode
 // ============================================
 
+/**
+ * Debounce utility - delays execution until no calls for `delay` ms
+ */
+function debounce<T extends (...args: unknown[]) => void>(
+  fn: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout | null = null
+  return (...args: Parameters<T>) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+    timeoutId = setTimeout(() => {
+      fn(...args)
+      timeoutId = null
+    }, delay)
+  }
+}
+
 function watchFiles(
   files: string[],
   projectDir: string | undefined,
@@ -433,6 +543,37 @@ function watchFiles(
 ): void {
   console.error(c('\nWatching for changes... (Ctrl+C to stop)', 'cyan'))
 
+  // Debounce compile to avoid multiple rapid rebuilds
+  const debouncedCompile = debounce(() => {
+    compile()
+  }, 150)
+
+  // Track changed files for better logging
+  let pendingChanges: string[] = []
+
+  const handleChange = (filename: string) => {
+    if (!pendingChanges.includes(filename)) {
+      pendingChanges.push(filename)
+    }
+
+    // Log and compile with debouncing
+    debouncedCompile()
+
+    // Clear pending changes after debounce settles
+    setTimeout(() => {
+      if (pendingChanges.length > 0) {
+        const fileList =
+          pendingChanges.length <= 3
+            ? pendingChanges.join(', ')
+            : `${pendingChanges.slice(0, 2).join(', ')} +${pendingChanges.length - 2} more`
+        console.error(
+          c(`\n[${new Date().toLocaleTimeString()}] Change detected: ${fileList}`, 'yellow')
+        )
+        pendingChanges = []
+      }
+    }, 50)
+  }
+
   const watchPaths = projectDir ? [projectDir] : files
 
   for (const watchPath of watchPaths) {
@@ -440,18 +581,17 @@ function watchFiles(
 
     if (fs.statSync(absolutePath).isDirectory()) {
       // Watch directory recursively
+      const allExtensions = getAllMirrorExtensions()
       fs.watch(absolutePath, { recursive: true }, (eventType, filename) => {
-        if (filename && (filename.endsWith('.mirror') || filename.endsWith('.data'))) {
-          console.error(c(`\n[${new Date().toLocaleTimeString()}] Change detected: ${filename}`, 'yellow'))
-          compile()
+        if (filename && allExtensions.some(ext => filename.endsWith(ext))) {
+          handleChange(filename)
         }
       })
     } else {
       // Watch single file
-      fs.watch(absolutePath, (eventType) => {
+      fs.watch(absolutePath, eventType => {
         if (eventType === 'change') {
-          console.error(c(`\n[${new Date().toLocaleTimeString()}] Change detected: ${path.basename(absolutePath)}`, 'yellow'))
-          compile()
+          handleChange(path.basename(absolutePath))
         }
       })
     }
@@ -535,8 +675,8 @@ function main(): void {
       writeFile(options.output, result.output!)
       console.error(
         c(`✓ Compiled successfully`, 'green') +
-        c(` → ${options.output}`, 'dim') +
-        c(` (${result.stats.outputLines} lines, ${result.stats.compileTime}ms)`, 'dim')
+          c(` → ${options.output}`, 'dim') +
+          c(` (${result.stats.outputLines} lines, ${result.stats.compileTime}ms)`, 'dim')
       )
     } else {
       // Output to stdout
@@ -545,7 +685,10 @@ function main(): void {
       if (options.verbose) {
         console.error(
           c(`\n✓ Compiled successfully`, 'green') +
-          c(` (${result.stats.inputFiles} files, ${result.stats.inputLines} → ${result.stats.outputLines} lines, ${result.stats.compileTime}ms)`, 'dim')
+            c(
+              ` (${result.stats.inputFiles} files, ${result.stats.inputLines} → ${result.stats.outputLines} lines, ${result.stats.compileTime}ms)`,
+              'dim'
+            )
         )
       }
     }

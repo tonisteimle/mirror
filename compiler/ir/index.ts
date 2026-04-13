@@ -39,7 +39,14 @@ import type {
 import { logIR as log } from '../utils/logger'
 
 /** Property value type from AST - can be literal, token ref, loop var, conditional, or expression */
-type PropertyValue = string | number | boolean | TokenReference | LoopVarReference | ASTConditional | ComputedExpression
+type PropertyValue =
+  | string
+  | number
+  | boolean
+  | TokenReference
+  | LoopVarReference
+  | ASTConditional
+  | ComputedExpression
 
 // ExpressionPart has been moved to transformers/expression-transformer.ts
 
@@ -59,7 +66,39 @@ import {
   hasContent,
   isTable,
 } from '../parser/ast'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IRProperty, IREach, IRConditional, SourcePosition, PropertySourceMap, IRAnimation, IRAnimationKeyframe, IRAnimationProperty, IRWarning, LayoutType, IRSlot, IRItem, IRItemProperty, IRZagNode, IRStateMachine, IRStateDefinition, IRStateTransition, IRToken, IRTable, IRTableColumn, IRTableStaticRow, IRTableStaticCell, IRDataObject, IRDataValue, IRDataReference, IRDataReferenceArray } from './types'
+import type {
+  IR,
+  IRNode,
+  IRStyle,
+  IREvent,
+  IRAction,
+  IRProperty,
+  IREach,
+  IRConditional,
+  SourcePosition,
+  PropertySourceMap,
+  IRAnimation,
+  IRAnimationKeyframe,
+  IRAnimationProperty,
+  IRWarning,
+  LayoutType,
+  IRSlot,
+  IRItem,
+  IRItemProperty,
+  IRZagNode,
+  IRStateMachine,
+  IRStateDefinition,
+  IRStateTransition,
+  IRToken,
+  IRTable,
+  IRTableColumn,
+  IRTableStaticRow,
+  IRTableStaticCell,
+  IRDataObject,
+  IRDataValue,
+  IRDataReference,
+  IRDataReferenceArray,
+} from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { getPrimitiveDefaults, type DefaultProperty } from '../schema/primitives'
 import {
@@ -79,17 +118,27 @@ import {
 } from '../schema/ir-helpers'
 import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 import { isZagPrimitive, ZAG_PRIMITIVES } from '../schema/zag-primitives'
-import { isCompoundPrimitive, getCompoundPrimitive, getCompoundSlotDef, isCompoundSlot } from '../schema/compound-primitives'
-import { isChartPrimitive, getChartPrimitive, getChartSlotProperty } from '../schema/chart-primitives'
+import {
+  isCompoundPrimitive,
+  getCompoundPrimitive,
+  getCompoundSlotDef,
+  isCompoundSlot,
+} from '../schema/compound-primitives'
+import {
+  isChartPrimitive,
+  getChartPrimitive,
+  getChartSlotProperty,
+} from '../schema/chart-primitives'
 import { isContainer as isContainerPrimitive, FLEX_DEFAULTS } from '../schema/layout-defaults'
 import type { IRChartSlot } from './types'
 import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helpers'
 // Extracted transformers
-import { transformTable as transformTableExtracted, humanizeFieldName } from './transformers/table-transformer'
-import { transformChart as transformChartExtracted } from './transformers/chart-transformer'
 import {
-  transformZagComponent as transformZagComponentExtracted,
-} from './transformers/zag-transformer'
+  transformTable as transformTableExtracted,
+  humanizeFieldName,
+} from './transformers/table-transformer'
+import { transformChart as transformChartExtracted } from './transformers/chart-transformer'
+import { transformZagComponent as transformZagComponentExtracted } from './transformers/zag-transformer'
 import type { TransformerContext, ParentLayoutContext } from './transformers/transformer-context'
 import {
   type LayoutContext,
@@ -124,10 +173,7 @@ import {
   mergeProperties,
   extractValueBinding,
 } from './transformers/property-utils-transformer'
-import {
-  type ExpressionPart,
-  buildExpressionString,
-} from './transformers/expression-transformer'
+import { type ExpressionPart, buildExpressionString } from './transformers/expression-transformer'
 import {
   propertyToCSS as propertyToCSSExtracted,
   type PropertyTransformContext,
@@ -152,13 +198,12 @@ import {
   childOverridesToInstances as childOverridesToInstancesExtracted,
   mergeSlotPropertiesIntoFiller as mergeSlotPropertiesIntoFillerExtracted,
 } from './transformers/slot-utils'
-import {
-  fixLoopVariableReferences as fixLoopVariableReferencesExtracted,
-} from './transformers/loop-utils'
+import { fixLoopVariableReferences as fixLoopVariableReferencesExtracted } from './transformers/loop-utils'
 import {
   transformStates as transformStatesExtracted,
   applyStateChildOverrides as applyStateChildOverridesExtracted,
   type StateStylesContext,
+  type StateTransformResult,
 } from './transformers/state-styles-transformer'
 import {
   extractInlineStatesAndEvents as extractInlineStatesAndEventsExtracted,
@@ -176,9 +221,7 @@ import {
   addWarning as addWarningExtracted,
   type ValidationContext,
 } from './transformers/validation'
-import {
-  expandPropertySets as expandPropertySetsExtracted,
-} from './transformers/property-set-expander'
+import { expandPropertySets as expandPropertySetsExtracted } from './transformers/property-set-expander'
 import {
   transformCompoundPrimitive as transformCompoundPrimitiveExtracted,
   transformCompoundSlot as transformCompoundSlotExtracted,
@@ -236,11 +279,14 @@ class IRTransformer {
   private ast: AST
   private componentMap: Map<string, ComponentDefinition> = new Map()
   private tokenSet: Set<string> = new Set()
-  private propertySetMap: Map<string, Property[]> = new Map()  // Property sets (tokens with multiple properties)
+  private propertySetMap: Map<string, Property[]> = new Map() // Property sets (tokens with multiple properties)
   private nodeIdCounter = 0
   private includeSourceMap: boolean
   private sourceMapBuilder: SourceMapBuilder
   private warnings: IRWarning[] = []
+  // Custom size-state thresholds from tokens like "compact.max: 300" or "tiny.max: 200"
+  private customSizeStates: Map<string, { min?: number; max?: number }> = new Map()
+  private customSizeStateNames: Set<string> = new Set()
 
   constructor(ast: AST, includeSourceMap: boolean = false) {
     this.ast = ast
@@ -258,6 +304,35 @@ class IRTransformer {
       if (token.properties && token.properties.length > 0) {
         this.propertySetMap.set(token.name, token.properties)
       }
+    }
+    // Process size-state tokens (e.g., "compact.max: 300", "tiny.min: 100")
+    this.processSizeStateTokens()
+  }
+
+  /**
+   * Process tokens with .min/.max suffix for custom size-state thresholds
+   * Examples:
+   *   compact.max: 300  → override built-in compact max threshold
+   *   tiny.max: 200     → define new "tiny" size-state with max threshold
+   */
+  private processSizeStateTokens(): void {
+    for (const token of this.ast.tokens) {
+      if (token.value === undefined || typeof token.value !== 'number') continue
+
+      const match = token.name.match(/^(\w+)\.(min|max)$/)
+      if (!match) continue
+
+      const [, stateName, bound] = match
+      const existing = this.customSizeStates.get(stateName) || {}
+
+      if (bound === 'min') {
+        existing.min = token.value
+      } else if (bound === 'max') {
+        existing.max = token.value
+      }
+
+      this.customSizeStates.set(stateName, existing)
+      this.customSizeStateNames.add(stateName)
     }
   }
 
@@ -361,14 +436,9 @@ class IRTransformer {
       for (const comp of this.ast.components) {
         if (comp.line !== undefined && comp.column !== undefined) {
           const position = calculateSourcePosition(comp.line, comp.column)
-          this.sourceMapBuilder.addNode(
-            comp.nodeId || `def-${comp.name}`,
-            comp.name,
-            position,
-            {
-              isDefinition: true,
-            }
-          )
+          this.sourceMapBuilder.addNode(comp.nodeId || `def-${comp.name}`, comp.name, position, {
+            isDefinition: true,
+          })
         }
       }
     }
@@ -407,8 +477,10 @@ class IRTransformer {
   private createTransformerContext(): TransformerContext {
     return {
       generateId: () => this.generateId(),
-      transformProperties: (props, primitive, parentCtx) => this.transformProperties(props, primitive, parentCtx),
-      transformChild: (child, parentId, parentCtx) => this.transformChild(child, parentId, parentCtx),
+      transformProperties: (props, primitive, parentCtx) =>
+        this.transformProperties(props, primitive, parentCtx),
+      transformChild: (child, parentId, parentCtx) =>
+        this.transformChild(child, parentId, parentCtx),
       includeSourceMap: this.includeSourceMap,
       addToSourceMap: this.includeSourceMap
         ? (nodeId, name, sourcePosition, options) => {
@@ -436,12 +508,14 @@ class IRTransformer {
       styles: [],
       events: [],
       children: [],
-      sourcePosition: instance?.line ? {
-        line: instance.line,
-        column: instance.column ?? 0,
-        endLine: instance.line,
-        endColumn: instance.column ?? 0,
-      } : undefined,
+      sourcePosition: instance?.line
+        ? {
+            line: instance.line,
+            column: instance.column ?? 0,
+            endLine: instance.line,
+            endColumn: instance.column ?? 0,
+          }
+        : undefined,
     }
   }
 
@@ -459,30 +533,24 @@ class IRTransformer {
     }
 
     // Source position for SourceMap
-    const sourcePosition = slot.line !== undefined && slot.column !== undefined
-      ? { line: slot.line, column: slot.column, endLine: slot.line, endColumn: slot.column }
-      : undefined
+    const sourcePosition =
+      slot.line !== undefined && slot.column !== undefined
+        ? { line: slot.line, column: slot.column, endLine: slot.line, endColumn: slot.column }
+        : undefined
 
     // Add to source map builder (required for replaceSlot to work)
     if (this.includeSourceMap && sourcePosition) {
-      this.sourceMapBuilder.addNode(
-        nodeId,
-        'Slot',
-        sourcePosition,
-        {
-          isDefinition: false,
-          parentId,
-        }
-      )
+      this.sourceMapBuilder.addNode(nodeId, 'Slot', sourcePosition, {
+        isDefinition: false,
+        parentId,
+      })
     }
 
     return {
       id: nodeId,
       tag: 'div',
       primitive: 'slot',
-      properties: [
-        { name: 'textContent', value: slot.name }
-      ],
+      properties: [{ name: 'textContent', value: slot.name }],
       styles,
       events: [],
       children: [],
@@ -494,7 +562,10 @@ class IRTransformer {
    * Transform a ZagComponent AST node into an IRZagNode
    * Delegates to extracted zag-transformer.ts
    */
-  private transformZagComponent(zagNode: ZagNode, parentLayoutContext?: ParentLayoutContext): IRNode {
+  private transformZagComponent(
+    zagNode: ZagNode,
+    parentLayoutContext?: ParentLayoutContext
+  ): IRNode {
     const ctx = this.createTransformerContext()
     return transformZagComponentExtracted(ctx, zagNode, parentLayoutContext)
   }
@@ -540,7 +611,10 @@ class IRTransformer {
           endColumn: childInstance.column,
         }
         // Check if child is a slot definition (ends with :) or known slot name
-        if (childInstance.isDefinition || (zagDef?.slots && zagDef.slots.includes(childName.replace(':', '')))) {
+        if (
+          childInstance.isDefinition ||
+          (zagDef?.slots && zagDef.slots.includes(childName.replace(':', '')))
+        ) {
           const slotName = childName.replace(':', '')
           slots[slotName] = {
             name: slotName,
@@ -615,8 +689,9 @@ class IRTransformer {
     const ctx: CompoundTransformContext = {
       generateId: () => this.generateId(),
       transformProperties: (props, prim, plc) => this.transformProperties(props, prim, plc),
-      transformInstance: (inst, pid, isEach, isCond, plc) => this.transformInstance(inst, pid, isEach, isCond, plc),
-      createTextNode: (text) => this.createTextNode(text),
+      transformInstance: (inst, pid, isEach, isCond, plc) =>
+        this.transformInstance(inst, pid, isEach, isCond, plc),
+      createTextNode: text => this.createTextNode(text),
       tokenSet: this.tokenSet,
       includeSourceMap: this.includeSourceMap,
       addToSourceMap: this.includeSourceMap
@@ -664,7 +739,7 @@ class IRTransformer {
       this.addWarning({
         type: 'invalid-instance',
         message: 'Instance missing component name',
-        position: instance.position
+        position: instance.position,
       })
       return this.createEmptyNode(instance)
     }
@@ -673,7 +748,7 @@ class IRTransformer {
     const component = this.componentMap.get(instance.component)
     const resolverCtx: ComponentResolverContext = {
       componentMap: this.componentMap,
-      addWarning: (warning) => this.addWarning(warning as IRWarning),
+      addWarning: warning => this.addWarning(warning as IRWarning),
     }
     const resolvedComponent = component ? resolveComponentExtracted(component, resolverCtx) : null
 
@@ -690,7 +765,12 @@ class IRTransformer {
 
     // Handle Chart primitives (Line, Bar, Pie, etc.)
     if (isChartPrimitive(instance.component) || isChartPrimitive(primitive)) {
-      return this.transformChartPrimitive(instance, resolvedComponent, primitive, parentLayoutContext)
+      return this.transformChartPrimitive(
+        instance,
+        resolvedComponent,
+        primitive,
+        parentLayoutContext
+      )
     }
 
     // Handle Compound primitives (Shell, etc.)
@@ -712,10 +792,7 @@ class IRTransformer {
     // Merge properties: Primitive Defaults < Component Defaults < Expanded Instance Properties
     const properties = mergeProperties(
       primitiveDefaults,
-      mergeProperties(
-        resolvedComponent?.properties || [],
-        expandedInstanceProps
-      )
+      mergeProperties(resolvedComponent?.properties || [], expandedInstanceProps)
     )
 
     // Check if any descendants have w full (recursive check)
@@ -725,8 +802,8 @@ class IRTransformer {
       for (const child of children) {
         // Check direct properties for w full
         if (child.properties) {
-          const hasDirectWidthFull = child.properties.some((p: Property) =>
-            (p.name === 'w' || p.name === 'width') && p.values[0] === 'full'
+          const hasDirectWidthFull = child.properties.some(
+            (p: Property) => (p.name === 'w' || p.name === 'width') && p.values[0] === 'full'
           )
           if (hasDirectWidthFull) return true
 
@@ -739,8 +816,9 @@ class IRTransformer {
                 // This is a PascalCase property - check if it's a component with w full
                 const referencedComponent = this.componentMap.get(p.name)
                 if (referencedComponent) {
-                  const hasComponentWidthFull = referencedComponent.properties.some((cp: Property) =>
-                    (cp.name === 'w' || cp.name === 'width') && cp.values[0] === 'full'
+                  const hasComponentWidthFull = referencedComponent.properties.some(
+                    (cp: Property) =>
+                      (cp.name === 'w' || cp.name === 'width') && cp.values[0] === 'full'
                   )
                   if (hasComponentWidthFull) return true
                 }
@@ -753,8 +831,8 @@ class IRTransformer {
         if (child.component) {
           const childComponent = this.componentMap.get(child.component)
           if (childComponent) {
-            const hasComponentWidthFull = childComponent.properties.some((p: Property) =>
-              (p.name === 'w' || p.name === 'width') && p.values[0] === 'full'
+            const hasComponentWidthFull = childComponent.properties.some(
+              (p: Property) => (p.name === 'w' || p.name === 'width') && p.values[0] === 'full'
             )
             if (hasComponentWidthFull) return true
           }
@@ -763,8 +841,8 @@ class IRTransformer {
         // Recursively check children's children
         if (child.children && child.children.length > 0) {
           // Only recurse if this child doesn't have explicit width (otherwise it constrains its children)
-          const childHasExplicitWidth = child.properties?.some((p: Property) =>
-            (p.name === 'w' || p.name === 'width') && p.values[0] !== 'full'
+          const childHasExplicitWidth = child.properties?.some(
+            (p: Property) => (p.name === 'w' || p.name === 'width') && p.values[0] !== 'full'
           )
           if (!childHasExplicitWidth && hasWidthFullInDescendants(child.children)) {
             return true
@@ -779,7 +857,12 @@ class IRTransformer {
     // Transform to styles (with intelligent layout merging)
     // Pass parent layout context for context-aware property handling (e.g., x/y in grid)
     const childrenInfo = childHasWidthFull ? { hasWidthFull: true } : undefined
-    const styles = this.transformProperties(properties, primitive, parentLayoutContext, childrenInfo)
+    const styles = this.transformProperties(
+      properties,
+      primitive,
+      parentLayoutContext,
+      childrenInfo
+    )
 
     // For root elements (no parent), convert flex-based "full" to explicit 100%
     // This is needed because "w full, h full" becomes flex styles which don't work at root level
@@ -810,39 +893,36 @@ class IRTransformer {
       }
     }
 
-    // Create context for state transformation
+    // Create context for state transformation (includes custom size-state thresholds)
     const stateCtx: StateStylesContext = {
-      propertyToCSS: (prop) => this.propertyToCSS(prop),
+      propertyToCSS: prop => this.propertyToCSS(prop),
+      customSizeStates: this.customSizeStateNames,
     }
 
     // Add state styles from component definition
-    const stateStyles = resolvedComponent?.states
+    const stateResult: StateTransformResult = resolvedComponent?.states
       ? transformStatesExtracted(resolvedComponent.states, stateCtx)
-      : []
+      : { styles: [], hasSizeStates: false }
 
     // Add state styles from instance inline states (e.g., "Frame bg #333 hover: bg light")
-    const instanceStateStyles = instance.states?.length
+    const instanceStateResult: StateTransformResult = instance.states?.length
       ? transformStatesExtracted(instance.states, stateCtx)
-      : []
+      : { styles: [], hasSizeStates: false }
+
+    // Check if this node uses size-states (needs container-type: inline-size)
+    const needsContainer = stateResult.hasSizeStates || instanceStateResult.hasSizeStates
 
     // Transform events from component definition FIRST (needed for state machine check)
-    const events = resolvedComponent?.events
-      ? transformEvents(resolvedComponent.events)
-      : []
+    const events = resolvedComponent?.events ? transformEvents(resolvedComponent.events) : []
 
     // Transform events from instance inline events (e.g., "Input onkeydown enter: submit")
-    const instanceEvents = instance.events?.length
-      ? transformEvents(instance.events)
-      : []
+    const instanceEvents = instance.events?.length ? transformEvents(instance.events) : []
 
     // Combine all events to check for state machine functions
     const allEvents = [...events, ...instanceEvents]
 
     // Build state machine from states with triggers OR if there are state machine events
-    const allStates = [
-      ...(resolvedComponent?.states || []),
-      ...(instance.states || []),
-    ]
+    const allStates = [...(resolvedComponent?.states || []), ...(instance.states || [])]
     const stateMachine = this.buildStateMachine(allStates, allEvents)
 
     // Extract inline states and events from instance children
@@ -859,7 +939,9 @@ class IRTransformer {
     // If this element is a grid container, children get grid context for x/y/w/h
     // For flex containers, track direction so w full / h full can use appropriate strategy
     const isGridContainer = styles.some(s => s.property === 'display' && s.value === 'grid')
-    const isAbsoluteContainer = styles.some(s => s.property === 'position' && s.value === 'relative')
+    const isAbsoluteContainer = styles.some(
+      s => s.property === 'position' && s.value === 'relative'
+    )
     const isHorizontal = properties.some(p => p.name === 'hor' || p.name === 'horizontal')
     let childLayoutContext: ParentLayoutContext | undefined
     if (isGridContainer) {
@@ -907,8 +989,14 @@ class IRTransformer {
     // If any state has children (Figma Variants pattern), add element's children as default state children
     // This enables proper swapping when toggling: on -> default should restore original children
     if (stateMachine && children.length > 0) {
-      const anyStateHasChildren = Object.values(stateMachine.states).some(s => s.children && s.children.length > 0)
-      if (anyStateHasChildren && stateMachine.states['default'] && !stateMachine.states['default'].children) {
+      const anyStateHasChildren = Object.values(stateMachine.states).some(
+        s => s.children && s.children.length > 0
+      )
+      if (
+        anyStateHasChildren &&
+        stateMachine.states['default'] &&
+        !stateMachine.states['default'].children
+      ) {
         stateMachine.states['default'].children = children
       }
     }
@@ -917,7 +1005,7 @@ class IRTransformer {
     if (route) {
       events.push({
         name: 'click',
-        actions: [{ type: 'navigate', target: route }]
+        actions: [{ type: 'navigate', target: route }],
       })
     }
 
@@ -940,18 +1028,13 @@ class IRTransformer {
       }
 
       // Add to source map builder
-      this.sourceMapBuilder.addNode(
-        nodeId,
-        instance.component,
-        sourcePosition,
-        {
-          instanceName: instance.name || undefined,
-          isDefinition: false,
-          isEachTemplate,
-          isConditional,
-          parentId,
-        }
-      )
+      this.sourceMapBuilder.addNode(nodeId, instance.component, sourcePosition, {
+        instanceName: instance.name || undefined,
+        isDefinition: false,
+        isEachTemplate,
+        isConditional,
+        parentId,
+      })
 
       // Add property positions to the node mapping
       for (const propMap of propertySourceMaps) {
@@ -979,13 +1062,22 @@ class IRTransformer {
     // Extract instanceName from 'name' property if not set via 'named' keyword
     // This allows `name MenuBtn` syntax to work for state references like `MenuBtn.open:`
     const nameProp = properties.find(p => p.name === 'name')
-    const instanceNameFromProp = nameProp ? resolveValueExtracted(nameProp.values, this.tokenSet) : undefined
+    const instanceNameFromProp = nameProp
+      ? resolveValueExtracted(nameProp.values, this.tokenSet)
+      : undefined
     const resolvedInstanceName = instance.name || instanceNameFromProp || undefined
 
-    // Extract valueBinding for two-way data binding (only for input elements)
-    const valueBinding = (primitive === 'input' || primitive === 'textarea')
-      ? extractValueBinding(properties)
-      : undefined
+    // Extract valueBinding for two-way data binding (for input and textarea)
+    // Note: Select is a Zag component and handles bind internally via zag-transformer
+    // 'bind' property can be used for two-way binding without explicit 'value'
+    const primitiveLower = primitive.toLowerCase()
+    const isInputElement = primitiveLower === 'input' || primitiveLower === 'textarea'
+    let valueBinding = isInputElement ? extractValueBinding(properties) : undefined
+    // If no valueBinding from 'value' prop, but 'bind' is set, use 'bind' for two-way binding
+    // This allows simplified syntax: `Input bind varName` instead of `Input value $varName, bind varName`
+    if (!valueBinding && bind && isInputElement) {
+      valueBinding = bind.startsWith('$') ? bind.slice(1) : bind
+    }
 
     // Check for keyboard-nav property (enables form keyboard navigation)
     const hasKeyboardNav = properties.some(p => p.name === 'keyboard-nav' || p.name === 'keynav')
@@ -997,7 +1089,12 @@ class IRTransformer {
       name: instance.component,
       instanceName: resolvedInstanceName,
       properties: extractHTMLPropertiesExtracted(properties, this.tokenSet, primitive),
-      styles: [...styles, ...stateStyles, ...instanceStateStyles, ...inlineStateStyles],
+      styles: [
+        ...styles,
+        ...stateResult.styles,
+        ...instanceStateResult.styles,
+        ...inlineStateStyles,
+      ],
       events: [...events, ...instanceEvents, ...inlineEvents],
       children,
       visibleWhen,
@@ -1012,13 +1109,15 @@ class IRTransformer {
       isDefinition: instance.isDefinition ?? false,
       valueBinding,
       keyboardNav: hasKeyboardNav || undefined,
+      needsContainer: needsContainer || undefined,
     }
   }
 
   private transformEach(each: Each): IRNode {
     const ctx: ControlFlowContext = {
       generateId: () => this.generateId(),
-      transformInstance: (inst, pid, isEach, isCond) => this.transformInstance(inst, pid, isEach, isCond),
+      transformInstance: (inst, pid, isEach, isCond) =>
+        this.transformInstance(inst, pid, isEach, isCond),
       includeSourceMap: this.includeSourceMap,
       addToSourceMap: this.includeSourceMap
         ? (nodeId, name, pos, opts) => this.sourceMapBuilder.addNode(nodeId, name, pos, opts)
@@ -1032,7 +1131,8 @@ class IRTransformer {
   private transformConditional(cond: ConditionalBlock): IRNode {
     const ctx: ControlFlowContext = {
       generateId: () => this.generateId(),
-      transformInstance: (inst, pid, isEach, isCond) => this.transformInstance(inst, pid, isEach, isCond),
+      transformInstance: (inst, pid, isEach, isCond) =>
+        this.transformInstance(inst, pid, isEach, isCond),
       includeSourceMap: this.includeSourceMap,
       addToSourceMap: this.includeSourceMap
         ? (nodeId, name, pos, opts) => this.sourceMapBuilder.addNode(nodeId, name, pos, opts)
@@ -1057,7 +1157,9 @@ class IRTransformer {
     // If no component children (no slot definitions), just transform instance children directly
     // This preserves the original order for simple containers like Box with mixed children
     if (componentChildren.length === 0) {
-      return instanceChildren.map(child => this.transformChild(child, parentId, parentLayoutContext))
+      return instanceChildren.map(child =>
+        this.transformChild(child, parentId, parentLayoutContext)
+      )
     }
 
     // Build map of instance children by component name (slot fillers)
@@ -1241,9 +1343,19 @@ class IRTransformer {
                 visibleWhen: slotVisibleWhen,
                 initialState: slotInitialState,
               }
-              result.push(this.transformInstance(pseudoInstance, parentId, false, false, parentLayoutContext))
+              result.push(
+                this.transformInstance(pseudoInstance, parentId, false, false, parentLayoutContext)
+              )
             } else if (slotIsInstance) {
-              result.push(this.transformInstance(slot as Instance, parentId, false, false, parentLayoutContext))
+              result.push(
+                this.transformInstance(
+                  slot as Instance,
+                  parentId,
+                  false,
+                  false,
+                  parentLayoutContext
+                )
+              )
             }
           }
         } else if (isSlot(slot)) {
@@ -1259,7 +1371,10 @@ class IRTransformer {
           if (fillers && fillers.length > 0) {
             for (const filler of fillers) {
               // Merge slot properties into filler (slot provides defaults)
-              const mergedFiller = mergeSlotPropertiesIntoFillerExtracted(filler, slotObj.properties || [])
+              const mergedFiller = mergeSlotPropertiesIntoFillerExtracted(
+                filler,
+                slotObj.properties || []
+              )
               result.push(this.transformChild(mergedFiller, parentId, parentLayoutContext))
             }
             slotFillers.delete(slotObj.name)
@@ -1290,7 +1405,11 @@ class IRTransformer {
   // childOverridesToInstances and mergeSlotPropertiesIntoFiller
   // have been extracted to ./transformers/slot-utils.ts
 
-  private transformChild(child: Instance | Text | Slot, parentId?: string, parentLayoutContext?: ParentLayoutContext): IRNode {
+  private transformChild(
+    child: Instance | Text | Slot,
+    parentId?: string,
+    parentLayoutContext?: ParentLayoutContext
+  ): IRNode {
     if (isSlot(child)) {
       return this.transformSlotPrimitive(child, parentId)
     }
@@ -1327,7 +1446,7 @@ class IRTransformer {
     remainingChildren: (Instance | Text)[]
   } {
     const ctx: InlineExtractionContext = {
-      propertyToCSS: (prop) => this.propertyToCSS(prop),
+      propertyToCSS: prop => this.propertyToCSS(prop),
     }
     return extractInlineStatesAndEventsExtracted(children, ctx)
   }
@@ -1382,15 +1501,27 @@ class IRTransformer {
 
     // Check for explicit min/max width/height properties
     // These should NOT be overwritten by automatic min-width: 0 from w full
-    const hasExplicitMinWidth = expandedProperties.some(p => p.name === 'minw' || p.name === 'min-width')
-    const hasExplicitMinHeight = expandedProperties.some(p => p.name === 'minh' || p.name === 'min-height')
-    const hasExplicitMaxWidth = expandedProperties.some(p => p.name === 'maxw' || p.name === 'max-width')
-    const hasExplicitMaxHeight = expandedProperties.some(p => p.name === 'maxh' || p.name === 'max-height')
+    const hasExplicitMinWidth = expandedProperties.some(
+      p => p.name === 'minw' || p.name === 'min-width'
+    )
+    const hasExplicitMinHeight = expandedProperties.some(
+      p => p.name === 'minh' || p.name === 'min-height'
+    )
+    const hasExplicitMaxWidth = expandedProperties.some(
+      p => p.name === 'maxw' || p.name === 'max-width'
+    )
+    const hasExplicitMaxHeight = expandedProperties.some(
+      p => p.name === 'maxh' || p.name === 'max-height'
+    )
 
     // Check for explicit width/height properties (for hug-by-default behavior)
     // When no width is set, containers should hug their content (fit-content)
-    const hasExplicitWidth = expandedProperties.some(p => p.name === 'w' || p.name === 'width' || p.name === 'size')
-    const hasExplicitHeight = expandedProperties.some(p => p.name === 'h' || p.name === 'height' || p.name === 'size')
+    const hasExplicitWidth = expandedProperties.some(
+      p => p.name === 'w' || p.name === 'width' || p.name === 'size'
+    )
+    const hasExplicitHeight = expandedProperties.some(
+      p => p.name === 'h' || p.name === 'height' || p.name === 'size'
+    )
     layoutContext.hasExplicitWidth = hasExplicitWidth
     layoutContext.hasExplicitHeight = hasExplicitHeight
 
@@ -1407,7 +1538,8 @@ class IRTransformer {
     for (const prop of expandedProperties) {
       const name = prop.name
       // Boolean property: either [true] or [] (empty values)
-      const isBoolean = (prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0
+      const isBoolean =
+        (prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0
 
       // Direction properties - collect for order-aware processing
       if ((name === 'horizontal' || name === 'hor') && isBoolean) {
@@ -1444,7 +1576,10 @@ class IRTransformer {
 
       // Gap
       if ((name === 'gap' || name === 'g') && !isBoolean) {
-        layoutContext.gap = formatCSSValue(name, resolveValueExtracted(prop.values, this.tokenSet, name))
+        layoutContext.gap = formatCSSValue(
+          name,
+          resolveValueExtracted(prop.values, this.tokenSet, name)
+        )
         continue
       }
 
@@ -1468,20 +1603,29 @@ class IRTransformer {
 
       // Gap-x (column-gap)
       if ((name === 'gap-x' || name === 'gx') && !isBoolean) {
-        layoutContext.columnGap = formatCSSValue(name, resolveValueExtracted(prop.values, this.tokenSet, name))
+        layoutContext.columnGap = formatCSSValue(
+          name,
+          resolveValueExtracted(prop.values, this.tokenSet, name)
+        )
         continue
       }
 
       // Gap-y (row-gap)
       if ((name === 'gap-y' || name === 'gy') && !isBoolean) {
-        layoutContext.rowGap = formatCSSValue(name, resolveValueExtracted(prop.values, this.tokenSet, name))
+        layoutContext.rowGap = formatCSSValue(
+          name,
+          resolveValueExtracted(prop.values, this.tokenSet, name)
+        )
         continue
       }
 
       // Row-height (grid-auto-rows) - only handle in grid context
       // Otherwise let it fall through to schema-based handling
       if ((name === 'row-height' || name === 'rh') && !isBoolean && layoutContext.isGrid) {
-        layoutContext.rowHeight = formatCSSValue(name, resolveValueExtracted(prop.values, this.tokenSet, name))
+        layoutContext.rowHeight = formatCSSValue(
+          name,
+          resolveValueExtracted(prop.values, this.tokenSet, name)
+        )
         continue
       }
 
@@ -1509,12 +1653,13 @@ class IRTransformer {
     // Transform emission moved to AFTER this pass so properties can add to transformContext
     for (const prop of expandedProperties) {
       const name = prop.name
-      const isBoolean = (prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0
+      const isBoolean =
+        (prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0
 
       // Skip layout properties (already handled)
       if (DIRECTION_PROPERTIES.has(name) && isBoolean) continue
       if (ALIGNMENT_PROPERTIES.has(name) && isBoolean) continue
-      if (name === 'align' && !isBoolean) continue  // align top left → flex alignment
+      if (name === 'align' && !isBoolean) continue // align top left → flex alignment
       if (name === 'wrap' && isBoolean) continue
       if ((name === 'gap' || name === 'g') && !isBoolean) continue
       if (name === 'grid') continue
@@ -1576,14 +1721,13 @@ class IRTransformer {
   private buildStateMachine(states: State[], events?: IREvent[]): IRStateMachine | undefined {
     // Create context for the extracted function
     const ctx: StateMachineTransformContext = {
-      propertyToCSS: (prop) => this.propertyToCSS(prop),
-      transformStateChild: (instance) => this.transformStateChild(instance),
+      propertyToCSS: prop => this.propertyToCSS(prop),
+      transformStateChild: instance => this.transformStateChild(instance),
     }
     return buildStateMachineExtracted(states, ctx, events)
   }
 
   // buildStateMachine implementation extracted to transformers/state-machine-transformer.ts
-
 
   // State conversion functions (convertStateDependency, convertStateAnimation)
   // have been extracted to transformers/data-transformer.ts
@@ -1594,17 +1738,22 @@ class IRTransformer {
    * Convert Mirror property to CSS
    * @param parentLayoutContext - If parent is grid, x/y/w/h generate grid positioning instead of absolute
    */
-  private propertyToCSS(prop: Property, primitive: string = 'frame', transformContext?: { transforms: string[] }, parentLayoutContext?: ParentLayoutContext): IRStyle[] {
+  private propertyToCSS(
+    prop: Property,
+    primitive: string = 'frame',
+    transformContext?: { transforms: string[] },
+    parentLayoutContext?: ParentLayoutContext
+  ): IRStyle[] {
     // Create context for the extracted function
     const ctx: PropertyTransformContext = {
-      resolveValue: (values, propertyName) => resolveValueExtracted(values, this.tokenSet, propertyName),
+      resolveValue: (values, propertyName) =>
+        resolveValueExtracted(values, this.tokenSet, propertyName),
       validateProperty: (propName, position) => this.validateProperty(propName, position),
     }
     return propertyToCSSExtracted(prop, ctx, primitive, transformContext, parentLayoutContext)
   }
 
   // propertyToCSS implementation extracted to transformers/property-transformer.ts
-
 
   /**
    * Format value for CSS
