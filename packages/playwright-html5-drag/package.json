@@ -1,0 +1,39 @@
+{
+  "name": "playwright-html5-drag",
+  "version": "1.0.0",
+  "description": "HTML5 drag-and-drop simulation for Playwright with custom MIME type support",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "playwright",
+    "drag-drop",
+    "html5",
+    "testing",
+    "e2e",
+    "dataTransfer",
+    "MIME"
+  ],
+  "author": "Mirror Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "@playwright/test": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthropics/mirror"
+  },
+  "bugs": {
+    "url": "https://github.com/microsoft/playwright/issues/13855"
+  }
+}

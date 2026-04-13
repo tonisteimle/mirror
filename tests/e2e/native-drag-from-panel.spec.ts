@@ -26,7 +26,7 @@ async function waitForStudioReady(page: Page) {
 }
 
 async function setEditorContent(page: Page, content: string) {
-  await page.evaluate((newContent) => {
+  await page.evaluate(newContent => {
     const studio = (window as any).__mirrorStudio__
     if (studio?.editor) {
       studio.editor.setContent(newContent)
@@ -104,56 +104,17 @@ test.describe('Native Drag: Component Panel to Preview', () => {
     // The main test is that no error occurred
   })
 
-  test('native drag creates element in preview', async ({ page }) => {
-    // Set up simple content
-    await setEditorContent(page, 'Frame ver, gap 8, w 200, h 200')
-
-    const initialCount = await getPreviewElementCount(page)
-
-    // Find Button component item
-    const buttonItem = page.locator('#components-panel .component-panel-item:has-text("Button")')
-
-    // If not found, try Frame
-    const componentItem = await buttonItem.count() > 0
-      ? buttonItem
-      : page.locator('#components-panel .component-panel-item').first()
-
-    await expect(componentItem).toBeVisible({ timeout: 5000 })
-
-    // Get bounding boxes
-    const itemBox = await componentItem.boundingBox()
-    const preview = page.locator('#preview [data-mirror-id]').first()
-    const previewBox = await preview.boundingBox()
-
-    if (!itemBox || !previewBox) {
-      test.skip()
-      return
-    }
-
-    // Perform native drag
-    await page.mouse.move(itemBox.x + itemBox.width / 2, itemBox.y + itemBox.height / 2)
-    await page.mouse.down()
-
-    // Move to preview center
-    await page.mouse.move(
-      previewBox.x + previewBox.width / 2,
-      previewBox.y + previewBox.height / 2,
-      { steps: 10 }
-    )
-
-    // Drop
-    await page.mouse.up()
-
-    // Wait for recompile
-    await page.waitForTimeout(1500)
-
-    // Check if element count increased
-    const finalCount = await getPreviewElementCount(page)
-
-    // The drop should have created a new element
-    // Note: This might not always work due to drag-drop complexity
-    // But it should at least not crash
-    expect(finalCount).toBeGreaterThanOrEqual(initialCount)
+  /**
+   * KNOWN LIMITATION: Playwright's mouse events don't trigger HTML5 drag-and-drop properly.
+   * The component panel items have draggable="true" and set custom MIME type data on dragstart,
+   * but Playwright's mouse.down/move/up don't trigger the drag event handlers.
+   *
+   * Real native drag tests are in native-drag-to-preview.spec.ts which uses page.evaluate()
+   * to dispatch proper DragEvent objects with correctly configured dataTransfer.
+   */
+  test.skip('native drag creates element in preview', async ({ page }) => {
+    // This test is skipped because Playwright's mouse events don't work with HTML5 drag-and-drop.
+    // See native-drag-to-preview.spec.ts for proper native drag tests.
   })
 
   test('preview elements have correct attribute', async ({ page }) => {
@@ -199,10 +160,13 @@ test.describe('Native Drag: Sanity Checks', () => {
       })
 
       // Set the correct MIME type
-      event.dataTransfer?.setData('application/mirror-component', JSON.stringify({
-        componentId: 'frame',
-        componentName: 'Frame',
-      }))
+      event.dataTransfer?.setData(
+        'application/mirror-component',
+        JSON.stringify({
+          componentId: 'frame',
+          componentName: 'Frame',
+        })
+      )
 
       // Note: dataTransfer.types is readonly in synthetic events
       // This test mainly verifies no JS errors occur
