@@ -127,23 +127,8 @@ export class CommandExecutor {
   }
 }
 
-// Global executor instance (uses legacy context by default)
+// Global executor instance
 export const executor = new CommandExecutor()
-
-/** @deprecated Use executor.execute() directly with injected context */
-export function execute(command: Command): CommandResult {
-  return executor.execute(command)
-}
-
-/** @deprecated Use executor.undo() directly */
-export function undo(): CommandResult {
-  return executor.undo()
-}
-
-/** @deprecated Use executor.redo() directly */
-export function redo(): CommandResult {
-  return executor.redo()
-}
 
 export function canUndo(): boolean {
   return executor.canUndo()

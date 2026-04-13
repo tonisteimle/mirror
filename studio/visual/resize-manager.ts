@@ -9,10 +9,12 @@ import { OverlayManager } from './overlay-manager'
 import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 import { MIN_RESIZE_SIZE, DEFAULT_CONTAINER_SIZE } from './constants/sizing'
-import { calculateBoundingBox, calculateResizedPositions, type BoundingBox, type Rect } from '../preview/multi-selection-bounds'
-
-/** @deprecated Use MIN_RESIZE_SIZE from constants/sizing.ts */
-const MIN_ELEMENT_SIZE = MIN_RESIZE_SIZE
+import {
+  calculateBoundingBox,
+  calculateResizedPositions,
+  type BoundingBox,
+  type Rect,
+} from '../preview/multi-selection-bounds'
 
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
@@ -144,11 +146,7 @@ export class ResizeManager {
     const handlesContainer = this.overlayManager.getResizeHandlesContainer()
 
     // Create handles using shared helper
-    this.createHandlesForRect(
-      handlesContainer,
-      relRect,
-      { nodeId, borderColor: '#5BA8F5' }
-    )
+    this.createHandlesForRect(handlesContainer, relRect, { nodeId, borderColor: '#5BA8F5' })
   }
 
   /**
@@ -226,7 +224,12 @@ export class ResizeManager {
     // Create handles using shared helper
     this.createHandlesForRect(
       handlesContainer,
-      { left: boundingBox.x, top: boundingBox.y, width: boundingBox.width, height: boundingBox.height },
+      {
+        left: boundingBox.x,
+        top: boundingBox.y,
+        width: boundingBox.width,
+        height: boundingBox.height,
+      },
       { nodeIds, borderColor: '#10B981', isMulti: true }
     )
 
@@ -284,7 +287,7 @@ export class ResizeManager {
       boxSizing: 'border-box',
     })
     handlesContainer.appendChild(outline)
-    this.handles.push(outline)  // Track so it gets removed with hideHandles
+    this.handles.push(outline) // Track so it gets removed with hideHandles
   }
 
   hideHandles(): void {
@@ -381,8 +384,8 @@ export class ResizeManager {
       startWidth = rect.width
       startHeight = rect.height
       isAbsolute = computedStyle.position === 'absolute'
-      startLeft = parseFloat(computedStyle.left) || (rect.left - containerRect.left)
-      startTop = parseFloat(computedStyle.top) || (rect.top - containerRect.top)
+      startLeft = parseFloat(computedStyle.left) || rect.left - containerRect.left
+      startTop = parseFloat(computedStyle.top) || rect.top - containerRect.top
     }
 
     this.activeResize = {
@@ -443,7 +446,17 @@ export class ResizeManager {
 
     if (!this.activeResize) return
 
-    const { handle, startX, startY, startWidth, startHeight, startLeft, startTop, nodeId, element } = this.activeResize
+    const {
+      handle,
+      startX,
+      startY,
+      startWidth,
+      startHeight,
+      startLeft,
+      startTop,
+      nodeId,
+      element,
+    } = this.activeResize
     const dx = e.clientX - startX
     const dy = e.clientY - startY
 
@@ -465,13 +478,13 @@ export class ResizeManager {
     }
 
     // Clamp to minimum size
-    if (newWidth < MIN_ELEMENT_SIZE) {
-      if (handle.includes('w')) newLeft = startLeft + (startWidth - MIN_ELEMENT_SIZE)
-      newWidth = MIN_ELEMENT_SIZE
+    if (newWidth < MIN_RESIZE_SIZE) {
+      if (handle.includes('w')) newLeft = startLeft + (startWidth - MIN_RESIZE_SIZE)
+      newWidth = MIN_RESIZE_SIZE
     }
-    if (newHeight < MIN_ELEMENT_SIZE) {
-      if (handle.includes('n')) newTop = startTop + (startHeight - MIN_ELEMENT_SIZE)
-      newHeight = MIN_ELEMENT_SIZE
+    if (newHeight < MIN_RESIZE_SIZE) {
+      if (handle.includes('n')) newTop = startTop + (startHeight - MIN_RESIZE_SIZE)
+      newHeight = MIN_RESIZE_SIZE
     }
 
     // LIVE VISUAL FEEDBACK: Apply size directly to the element
@@ -570,7 +583,17 @@ export class ResizeManager {
 
     if (!this.activeResize) return
 
-    const { nodeId, handle, currentWidth, currentHeight, currentLeft, currentTop, startLeft, startTop, isAbsolute } = this.activeResize
+    const {
+      nodeId,
+      handle,
+      currentWidth,
+      currentHeight,
+      currentLeft,
+      currentTop,
+      startLeft,
+      startTop,
+      isAbsolute,
+    } = this.activeResize
 
     // Cursor zurücksetzen
     document.body.style.cursor = ''
@@ -660,8 +683,8 @@ export class ResizeManager {
     if (handle.includes('n')) newHeight = boundingBox.height - dy
 
     // Clamp to minimum size
-    newWidth = Math.max(MIN_ELEMENT_SIZE, newWidth)
-    newHeight = Math.max(MIN_ELEMENT_SIZE, newHeight)
+    newWidth = Math.max(MIN_RESIZE_SIZE, newWidth)
+    newHeight = Math.max(MIN_RESIZE_SIZE, newHeight)
 
     this.activeMultiResize.currentWidth = newWidth
     this.activeMultiResize.currentHeight = newHeight
@@ -737,17 +760,28 @@ export class ResizeManager {
     this.showMultiHandles(nodeIds)
   }
 
-  private getAnchorFromHandle(handle: ResizeHandle): 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' {
+  private getAnchorFromHandle(
+    handle: ResizeHandle
+  ): 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' {
     switch (handle) {
-      case 'se': return 'top-left'
-      case 'sw': return 'top-right'
-      case 'ne': return 'bottom-left'
-      case 'nw': return 'bottom-right'
-      case 'e': return 'top-left'
-      case 'w': return 'top-right'
-      case 's': return 'top-left'
-      case 'n': return 'bottom-left'
-      default: return 'top-left'
+      case 'se':
+        return 'top-left'
+      case 'sw':
+        return 'top-right'
+      case 'ne':
+        return 'bottom-left'
+      case 'nw':
+        return 'bottom-right'
+      case 'e':
+        return 'top-left'
+      case 'w':
+        return 'top-right'
+      case 's':
+        return 'top-left'
+      case 'n':
+        return 'bottom-left'
+      default:
+        return 'top-left'
     }
   }
 
@@ -805,8 +839,8 @@ export class ResizeManager {
 
   private detectSizingMode(newSize: number, available: number, childMin: number): SizingMode {
     // Use both absolute and percentage-based thresholds for better detection
-    const SNAP_THRESHOLD_PX = 20  // Absolute threshold in pixels
-    const SNAP_THRESHOLD_PCT = 0.05  // 5% of available space
+    const SNAP_THRESHOLD_PX = 20 // Absolute threshold in pixels
+    const SNAP_THRESHOLD_PCT = 0.05 // 5% of available space
 
     // Calculate effective threshold (use larger of the two)
     const fillThreshold = Math.max(SNAP_THRESHOLD_PX, available * SNAP_THRESHOLD_PCT)
@@ -820,7 +854,7 @@ export class ResizeManager {
 
     // Wenn nahe am Minimum der Kinder → hug
     // Also trigger hug if size is less than children minimum
-    if (childMin > MIN_ELEMENT_SIZE && newSize <= childMin + hugThreshold) {
+    if (childMin > MIN_RESIZE_SIZE && newSize <= childMin + hugThreshold) {
       return 'hug'
     }
 
@@ -828,7 +862,10 @@ export class ResizeManager {
     return Math.round(newSize)
   }
 
-  private getAvailableSpace(parentId: string, excludeId: string): { width: number; height: number } {
+  private getAvailableSpace(
+    parentId: string,
+    excludeId: string
+  ): { width: number; height: number } {
     // Use LayoutService to get parent layout
     const layoutService = getLayoutService()
     const parentLayout = layoutService?.getLayout(parentId)
@@ -880,8 +917,10 @@ export class ResizeManager {
 
       // Try to get sibling layout from service
       const siblingLayout = layoutService?.getLayout(siblingId!)
-      const siblingWidth = siblingLayout?.width ?? (sibling as HTMLElement).getBoundingClientRect().width
-      const siblingHeight = siblingLayout?.height ?? (sibling as HTMLElement).getBoundingClientRect().height
+      const siblingWidth =
+        siblingLayout?.width ?? (sibling as HTMLElement).getBoundingClientRect().width
+      const siblingHeight =
+        siblingLayout?.height ?? (sibling as HTMLElement).getBoundingClientRect().height
 
       if (isHorizontal) {
         availableWidth -= siblingWidth + gap
@@ -891,8 +930,8 @@ export class ResizeManager {
     })
 
     return {
-      width: Math.max(MIN_ELEMENT_SIZE, availableWidth),
-      height: Math.max(MIN_ELEMENT_SIZE, availableHeight),
+      width: Math.max(MIN_RESIZE_SIZE, availableWidth),
+      height: Math.max(MIN_RESIZE_SIZE, availableHeight),
     }
   }
 
@@ -903,8 +942,8 @@ export class ResizeManager {
     if (layoutService) {
       const childLayouts = layoutService.getChildrenLayouts(nodeId)
 
-      let minWidth = MIN_ELEMENT_SIZE
-      let minHeight = MIN_ELEMENT_SIZE
+      let minWidth = MIN_RESIZE_SIZE
+      let minHeight = MIN_RESIZE_SIZE
 
       for (const layout of childLayouts) {
         minWidth = Math.max(minWidth, layout.width)
@@ -919,10 +958,10 @@ export class ResizeManager {
 
     // Ultimate fallback if LayoutService not available or no children found
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
-    if (!element) return { width: MIN_ELEMENT_SIZE, height: MIN_ELEMENT_SIZE }
+    if (!element) return { width: MIN_RESIZE_SIZE, height: MIN_RESIZE_SIZE }
 
-    let minWidth = MIN_ELEMENT_SIZE
-    let minHeight = MIN_ELEMENT_SIZE
+    let minWidth = MIN_RESIZE_SIZE
+    let minHeight = MIN_RESIZE_SIZE
 
     const children = element.querySelectorAll(':scope > [data-mirror-id]')
     children.forEach(child => {

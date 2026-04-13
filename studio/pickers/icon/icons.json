@@ -1,70 +1,478 @@
 [
-  {"name": "rows-3", "path": "", "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M21 9H3\"/><path d=\"M21 15H3\"/>", "style": "stroke", "category": "layout", "tags": ["vertical", "stack", "column", "vstack", "rows"]},
-  {"name": "columns-3", "path": "", "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M9 3v18\"/><path d=\"M15 3v18\"/>", "style": "stroke", "category": "layout", "tags": ["horizontal", "stack", "row", "hstack", "columns"]},
-  {"name": "grid-2x2", "path": "", "svg": "<rect width=\"7\" height=\"7\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"14\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"3\" y=\"14\" rx=\"1\"/>", "style": "stroke", "category": "layout", "tags": ["grid", "2x2", "tiles", "gallery"]},
-  {"name": "grid-3x3", "path": "", "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M3 9h18\"/><path d=\"M3 15h18\"/><path d=\"M9 3v18\"/><path d=\"M15 3v18\"/>", "style": "stroke", "category": "layout", "tags": ["grid", "3x3", "tiles", "nine"]},
-  {"name": "wrap-text", "path": "", "svg": "<path d=\"M3 6h18\"/><path d=\"M3 12h15a3 3 0 1 1 0 6h-4\"/><path d=\"m10 18 4-4-4-4\"/><path d=\"M3 18h7\"/>", "style": "stroke", "category": "layout", "tags": ["wrap", "flex", "flow"]},
-  {"name": "align-center", "path": "", "svg": "<path d=\"M12 2v20\"/><path d=\"M8 10H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h4\"/><path d=\"M16 10h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4\"/><path d=\"M8 20H7a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h1\"/><path d=\"M16 14h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1\"/>", "style": "stroke", "category": "layout", "tags": ["center", "middle", "align"]},
-  {"name": "between-horizontal-start", "path": "", "svg": "<rect width=\"6\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><rect width=\"6\" height=\"10\" x=\"16\" y=\"7\" rx=\"2\"/><path d=\"M12 2v20\"/>", "style": "stroke", "category": "layout", "tags": ["spread", "distribute", "space", "between"]},
-  {"name": "align-start-vertical", "path": "", "svg": "<rect width=\"14\" height=\"6\" x=\"2\" y=\"16\" rx=\"2\"/><rect width=\"10\" height=\"6\" x=\"2\" y=\"2\" rx=\"2\"/><rect width=\"6\" height=\"6\" x=\"2\" y=\"9\" rx=\"2\"/>", "style": "stroke", "category": "layout", "tags": ["start", "left", "align"]},
-  {"name": "align-end-vertical", "path": "", "svg": "<rect width=\"14\" height=\"6\" x=\"8\" y=\"16\" rx=\"2\"/><rect width=\"10\" height=\"6\" x=\"12\" y=\"2\" rx=\"2\"/><rect width=\"6\" height=\"6\" x=\"16\" y=\"9\" rx=\"2\"/>", "style": "stroke", "category": "layout", "tags": ["end", "right", "align"]},
-  {"name": "scroll", "path": "", "svg": "<path d=\"M19 17V5a2 2 0 0 0-2-2H4\"/><path d=\"M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3\"/>", "style": "stroke", "category": "layout", "tags": ["scroll", "overflow", "scrollable"]},
-  {"name": "layers", "path": "", "svg": "<path d=\"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z\"/><path d=\"m22 12.5-8.58 3.9a2 2 0 0 1-1.66 0L2 12.5\"/><path d=\"m22 17.5-8.58 3.9a2 2 0 0 1-1.66 0L2 17.5\"/>", "style": "stroke", "category": "layout", "tags": ["stacked", "layers", "overlay", "z-index"]},
-  {"name": "panel-left", "path": "", "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M9 3v18\"/>", "style": "stroke", "category": "layout", "tags": ["sidebar", "aside", "split", "two-column", "left"]},
-  {"name": "panel-right", "path": "", "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M15 3v18\"/>", "style": "stroke", "category": "layout", "tags": ["sidebar", "aside", "split", "two-column", "right"]},
-  {"name": "panel-top", "path": "", "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M3 9h18\"/>", "style": "stroke", "category": "layout", "tags": ["header", "top", "appbar", "navbar"]},
-  {"name": "panel-bottom", "path": "", "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M3 15h18\"/>", "style": "stroke", "category": "layout", "tags": ["footer", "bottom"]},
-  {"name": "layout-dashboard", "path": "", "svg": "<rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/>", "style": "stroke", "category": "layout", "tags": ["dashboard", "mosaic", "bento"]},
-  {"name": "square", "path": "", "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/>", "style": "stroke", "category": "layout", "tags": ["card", "container", "box"]},
-  {"name": "app-window", "path": "", "svg": "<rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"2\"/><path d=\"M10 4v4\"/><path d=\"M2 8h20\"/><path d=\"M6 4v4\"/>", "style": "stroke", "category": "layout", "tags": ["modal", "dialog", "window", "popup"]},
-  {"name": "gallery-horizontal", "path": "", "svg": "<path d=\"M2 3v18\"/><rect width=\"12\" height=\"18\" x=\"6\" y=\"3\" rx=\"2\"/><path d=\"M22 3v18\"/>", "style": "stroke", "category": "layout", "tags": ["carousel", "slider", "gallery"]},
-  {"name": "list", "path": "", "svg": "<path d=\"M3 12h.01\"/><path d=\"M3 18h.01\"/><path d=\"M3 6h.01\"/><path d=\"M8 12h13\"/><path d=\"M8 18h13\"/><path d=\"M8 6h13\"/>", "style": "stroke", "category": "layout", "tags": ["list", "rows", "items"]},
-  {"name": "text-cursor-input", "path": "", "svg": "<path d=\"M5 4h1a3 3 0 0 1 3 3 3 3 0 0 1 3-3h1\"/><path d=\"M13 20h-1a3 3 0 0 1-3-3 3 3 0 0 1-3 3H5\"/><path d=\"M5 16H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h1\"/><path d=\"M13 8h7a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-7\"/><path d=\"M9 7v10\"/>", "style": "stroke", "category": "layout", "tags": ["form", "input", "field"]},
-  {"name": "check", "path": "", "svg": "<path d=\"M20 6 9 17l-5-5\"/>", "style": "stroke", "category": "action", "tags": ["done", "ok", "yes", "confirm"]},
-  {"name": "x", "path": "", "svg": "<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>", "style": "stroke", "category": "action", "tags": ["close", "cancel", "remove", "delete"]},
-  {"name": "plus", "path": "", "svg": "<path d=\"M5 12h14\"/><path d=\"M12 5v14\"/>", "style": "stroke", "category": "action", "tags": ["add", "new", "create"]},
-  {"name": "minus", "path": "", "svg": "<path d=\"M5 12h14\"/>", "style": "stroke", "category": "action", "tags": ["remove", "subtract"]},
-  {"name": "search", "path": "", "svg": "<circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/>", "style": "stroke", "category": "action", "tags": ["find", "magnify"]},
-  {"name": "settings", "path": "", "svg": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "style": "stroke", "category": "action", "tags": ["gear", "cog", "preferences"]},
-  {"name": "trash-2", "path": "", "svg": "<path d=\"M3 6h18\"/><path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\"/><path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\"/><line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\"/><line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\"/>", "style": "stroke", "category": "action", "tags": ["delete", "remove"]},
-  {"name": "edit", "path": "", "svg": "<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\"/><path d=\"m15 5 4 4\"/>", "style": "stroke", "category": "action", "tags": ["pencil", "modify", "write"]},
-  {"name": "copy", "path": "", "svg": "<rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\" ry=\"2\"/><path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\"/>", "style": "stroke", "category": "action", "tags": ["duplicate", "clone"]},
-  {"name": "save", "path": "", "svg": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>", "style": "stroke", "category": "action", "tags": ["disk", "floppy"]},
-  {"name": "download", "path": "", "svg": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" x2=\"12\" y1=\"15\" y2=\"3\"/>", "style": "stroke", "category": "action", "tags": ["export"]},
-  {"name": "upload", "path": "", "svg": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"17 8 12 3 7 8\"/><line x1=\"12\" x2=\"12\" y1=\"3\" y2=\"15\"/>", "style": "stroke", "category": "action", "tags": ["import"]},
-  {"name": "refresh-cw", "path": "", "svg": "<path d=\"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/><path d=\"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16\"/><path d=\"M3 21v-5h5\"/>", "style": "stroke", "category": "action", "tags": ["reload", "sync"]},
-  {"name": "chevron-down", "path": "", "svg": "<path d=\"m6 9 6 6 6-6\"/>", "style": "stroke", "category": "navigation", "tags": ["expand", "dropdown", "down"]},
-  {"name": "chevron-up", "path": "", "svg": "<path d=\"m18 15-6-6-6 6\"/>", "style": "stroke", "category": "navigation", "tags": ["collapse", "up"]},
-  {"name": "chevron-left", "path": "", "svg": "<path d=\"m15 18-6-6 6-6\"/>", "style": "stroke", "category": "navigation", "tags": ["back", "left", "previous"]},
-  {"name": "chevron-right", "path": "", "svg": "<path d=\"m9 18 6-6-6-6\"/>", "style": "stroke", "category": "navigation", "tags": ["forward", "right", "next"]},
-  {"name": "arrow-left", "path": "", "svg": "<path d=\"m12 19-7-7 7-7\"/><path d=\"M19 12H5\"/>", "style": "stroke", "category": "navigation", "tags": ["back", "left"]},
-  {"name": "arrow-right", "path": "", "svg": "<path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/>", "style": "stroke", "category": "navigation", "tags": ["forward", "right"]},
-  {"name": "arrow-up", "path": "", "svg": "<path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/>", "style": "stroke", "category": "navigation", "tags": ["up", "top"]},
-  {"name": "arrow-down", "path": "", "svg": "<path d=\"M12 5v14\"/><path d=\"m19 12-7 7-7-7\"/>", "style": "stroke", "category": "navigation", "tags": ["down", "bottom"]},
-  {"name": "menu", "path": "", "svg": "<line x1=\"4\" x2=\"20\" y1=\"12\" y2=\"12\"/><line x1=\"4\" x2=\"20\" y1=\"6\" y2=\"6\"/><line x1=\"4\" x2=\"20\" y1=\"18\" y2=\"18\"/>", "style": "stroke", "category": "navigation", "tags": ["hamburger", "bars"]},
-  {"name": "more-vertical", "path": "", "svg": "<circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"12\" cy=\"5\" r=\"1\"/><circle cx=\"12\" cy=\"19\" r=\"1\"/>", "style": "stroke", "category": "navigation", "tags": ["dots", "options", "menu"]},
-  {"name": "more-horizontal", "path": "", "svg": "<circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"19\" cy=\"12\" r=\"1\"/><circle cx=\"5\" cy=\"12\" r=\"1\"/>", "style": "stroke", "category": "navigation", "tags": ["dots", "options"]},
-  {"name": "home", "path": "", "svg": "<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>", "style": "stroke", "category": "navigation", "tags": ["house"]},
-  {"name": "external-link", "path": "", "svg": "<path d=\"M15 3h6v6\"/><path d=\"M10 14 21 3\"/><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/>", "style": "stroke", "category": "navigation", "tags": ["link", "open", "new-tab"]},
-  {"name": "file", "path": "", "svg": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/>", "style": "stroke", "category": "content", "tags": ["document", "paper"]},
-  {"name": "folder", "path": "", "svg": "<path d=\"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z\"/>", "style": "stroke", "category": "content", "tags": ["directory"]},
-  {"name": "image", "path": "", "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" ry=\"2\"/><circle cx=\"9\" cy=\"9\" r=\"2\"/><path d=\"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\"/>", "style": "stroke", "category": "content", "tags": ["photo", "picture"]},
-  {"name": "link", "path": "", "svg": "<path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"/><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"/>", "style": "stroke", "category": "content", "tags": ["url", "chain"]},
-  {"name": "paperclip", "path": "", "svg": "<path d=\"m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48\"/>", "style": "stroke", "category": "content", "tags": ["attachment", "clip"]},
-  {"name": "user", "path": "", "svg": "<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/>", "style": "stroke", "category": "social", "tags": ["person", "account", "profile"]},
-  {"name": "users", "path": "", "svg": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "style": "stroke", "category": "social", "tags": ["people", "group", "team"]},
-  {"name": "bell", "path": "", "svg": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/><path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/>", "style": "stroke", "category": "social", "tags": ["notification", "alert"]},
-  {"name": "mail", "path": "", "svg": "<rect width=\"20\" height=\"16\" x=\"2\" y=\"4\" rx=\"2\"/><path d=\"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7\"/>", "style": "stroke", "category": "social", "tags": ["email", "envelope"]},
-  {"name": "message-circle", "path": "", "svg": "<path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/>", "style": "stroke", "category": "social", "tags": ["chat", "comment"]},
-  {"name": "heart", "path": "", "svg": "<path d=\"M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z\"/>", "style": "stroke", "category": "social", "tags": ["favorite", "love", "like"]},
-  {"name": "star", "path": "", "svg": "<path d=\"M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z\"/>", "style": "stroke", "category": "social", "tags": ["rate", "favorite"]},
-  {"name": "share", "path": "", "svg": "<path d=\"M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8\"/><polyline points=\"16 6 12 2 8 6\"/><line x1=\"12\" x2=\"12\" y1=\"2\" y2=\"15\"/>", "style": "stroke", "category": "social", "tags": ["send"]},
-  {"name": "play", "path": "", "svg": "<polygon points=\"6 3 20 12 6 21 6 3\"/>", "style": "stroke", "category": "media", "tags": ["start", "video"]},
-  {"name": "pause", "path": "", "svg": "<rect x=\"14\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/><rect x=\"6\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/>", "style": "stroke", "category": "media", "tags": ["stop"]},
-  {"name": "volume-2", "path": "", "svg": "<path d=\"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z\"/><path d=\"M16 9a5 5 0 0 1 0 6\"/><path d=\"M19.364 18.364a9 9 0 0 0 0-12.728\"/>", "style": "stroke", "category": "media", "tags": ["sound", "audio", "speaker"]},
-  {"name": "volume-x", "path": "", "svg": "<path d=\"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z\"/><line x1=\"22\" x2=\"16\" y1=\"9\" y2=\"15\"/><line x1=\"16\" x2=\"22\" y1=\"9\" y2=\"15\"/>", "style": "stroke", "category": "media", "tags": ["mute", "silent"]},
-  {"name": "eye", "path": "", "svg": "<path d=\"M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "style": "stroke", "category": "toggle", "tags": ["show", "view", "visibility"]},
-  {"name": "eye-off", "path": "", "svg": "<path d=\"M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49\"/><path d=\"M14.084 14.158a3 3 0 0 1-4.242-4.242\"/><path d=\"M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143\"/><path d=\"m2 2 20 20\"/>", "style": "stroke", "category": "toggle", "tags": ["hide", "hidden"]},
-  {"name": "lock", "path": "", "svg": "<rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/>", "style": "stroke", "category": "toggle", "tags": ["security", "locked", "private"]},
-  {"name": "unlock", "path": "", "svg": "<rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 9.9-1\"/>", "style": "stroke", "category": "toggle", "tags": ["security", "unlocked"]}
+  {
+    "name": "rows-3",
+    "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M21 9H3\"/><path d=\"M21 15H3\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["vertical", "stack", "column", "vstack", "rows"]
+  },
+  {
+    "name": "columns-3",
+    "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M9 3v18\"/><path d=\"M15 3v18\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["horizontal", "stack", "row", "hstack", "columns"]
+  },
+  {
+    "name": "grid-2x2",
+    "svg": "<rect width=\"7\" height=\"7\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"14\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"3\" y=\"14\" rx=\"1\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["grid", "2x2", "tiles", "gallery"]
+  },
+  {
+    "name": "grid-3x3",
+    "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M3 9h18\"/><path d=\"M3 15h18\"/><path d=\"M9 3v18\"/><path d=\"M15 3v18\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["grid", "3x3", "tiles", "nine"]
+  },
+  {
+    "name": "wrap-text",
+    "svg": "<path d=\"M3 6h18\"/><path d=\"M3 12h15a3 3 0 1 1 0 6h-4\"/><path d=\"m10 18 4-4-4-4\"/><path d=\"M3 18h7\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["wrap", "flex", "flow"]
+  },
+  {
+    "name": "align-center",
+    "svg": "<path d=\"M12 2v20\"/><path d=\"M8 10H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h4\"/><path d=\"M16 10h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4\"/><path d=\"M8 20H7a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h1\"/><path d=\"M16 14h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["center", "middle", "align"]
+  },
+  {
+    "name": "between-horizontal-start",
+    "svg": "<rect width=\"6\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\"/><rect width=\"6\" height=\"10\" x=\"16\" y=\"7\" rx=\"2\"/><path d=\"M12 2v20\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["spread", "distribute", "space", "between"]
+  },
+  {
+    "name": "align-start-vertical",
+    "svg": "<rect width=\"14\" height=\"6\" x=\"2\" y=\"16\" rx=\"2\"/><rect width=\"10\" height=\"6\" x=\"2\" y=\"2\" rx=\"2\"/><rect width=\"6\" height=\"6\" x=\"2\" y=\"9\" rx=\"2\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["start", "left", "align"]
+  },
+  {
+    "name": "align-end-vertical",
+    "svg": "<rect width=\"14\" height=\"6\" x=\"8\" y=\"16\" rx=\"2\"/><rect width=\"10\" height=\"6\" x=\"12\" y=\"2\" rx=\"2\"/><rect width=\"6\" height=\"6\" x=\"16\" y=\"9\" rx=\"2\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["end", "right", "align"]
+  },
+  {
+    "name": "scroll",
+    "svg": "<path d=\"M19 17V5a2 2 0 0 0-2-2H4\"/><path d=\"M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["scroll", "overflow", "scrollable"]
+  },
+  {
+    "name": "layers",
+    "svg": "<path d=\"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z\"/><path d=\"m22 12.5-8.58 3.9a2 2 0 0 1-1.66 0L2 12.5\"/><path d=\"m22 17.5-8.58 3.9a2 2 0 0 1-1.66 0L2 17.5\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["stacked", "layers", "overlay", "z-index"]
+  },
+  {
+    "name": "panel-left",
+    "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M9 3v18\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["sidebar", "aside", "split", "two-column", "left"]
+  },
+  {
+    "name": "panel-right",
+    "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M15 3v18\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["sidebar", "aside", "split", "two-column", "right"]
+  },
+  {
+    "name": "panel-top",
+    "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M3 9h18\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["header", "top", "appbar", "navbar"]
+  },
+  {
+    "name": "panel-bottom",
+    "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M3 15h18\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["footer", "bottom"]
+  },
+  {
+    "name": "layout-dashboard",
+    "svg": "<rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["dashboard", "mosaic", "bento"]
+  },
+  {
+    "name": "square",
+    "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["card", "container", "box"]
+  },
+  {
+    "name": "app-window",
+    "svg": "<rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"2\"/><path d=\"M10 4v4\"/><path d=\"M2 8h20\"/><path d=\"M6 4v4\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["modal", "dialog", "window", "popup"]
+  },
+  {
+    "name": "gallery-horizontal",
+    "svg": "<path d=\"M2 3v18\"/><rect width=\"12\" height=\"18\" x=\"6\" y=\"3\" rx=\"2\"/><path d=\"M22 3v18\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["carousel", "slider", "gallery"]
+  },
+  {
+    "name": "list",
+    "svg": "<path d=\"M3 12h.01\"/><path d=\"M3 18h.01\"/><path d=\"M3 6h.01\"/><path d=\"M8 12h13\"/><path d=\"M8 18h13\"/><path d=\"M8 6h13\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["list", "rows", "items"]
+  },
+  {
+    "name": "text-cursor-input",
+    "svg": "<path d=\"M5 4h1a3 3 0 0 1 3 3 3 3 0 0 1 3-3h1\"/><path d=\"M13 20h-1a3 3 0 0 1-3-3 3 3 0 0 1-3 3H5\"/><path d=\"M5 16H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h1\"/><path d=\"M13 8h7a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-7\"/><path d=\"M9 7v10\"/>",
+    "style": "stroke",
+    "category": "layout",
+    "tags": ["form", "input", "field"]
+  },
+  {
+    "name": "check",
+    "svg": "<path d=\"M20 6 9 17l-5-5\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["done", "ok", "yes", "confirm"]
+  },
+  {
+    "name": "x",
+    "svg": "<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["close", "cancel", "remove", "delete"]
+  },
+  {
+    "name": "plus",
+    "svg": "<path d=\"M5 12h14\"/><path d=\"M12 5v14\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["add", "new", "create"]
+  },
+  {
+    "name": "minus",
+    "svg": "<path d=\"M5 12h14\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["remove", "subtract"]
+  },
+  {
+    "name": "search",
+    "svg": "<circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["find", "magnify"]
+  },
+  {
+    "name": "settings",
+    "svg": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["gear", "cog", "preferences"]
+  },
+  {
+    "name": "trash-2",
+    "svg": "<path d=\"M3 6h18\"/><path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\"/><path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\"/><line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\"/><line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["delete", "remove"]
+  },
+  {
+    "name": "edit",
+    "svg": "<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\"/><path d=\"m15 5 4 4\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["pencil", "modify", "write"]
+  },
+  {
+    "name": "copy",
+    "svg": "<rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\" ry=\"2\"/><path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["duplicate", "clone"]
+  },
+  {
+    "name": "save",
+    "svg": "<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["disk", "floppy"]
+  },
+  {
+    "name": "download",
+    "svg": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" x2=\"12\" y1=\"15\" y2=\"3\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["export"]
+  },
+  {
+    "name": "upload",
+    "svg": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"17 8 12 3 7 8\"/><line x1=\"12\" x2=\"12\" y1=\"3\" y2=\"15\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["import"]
+  },
+  {
+    "name": "refresh-cw",
+    "svg": "<path d=\"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/><path d=\"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16\"/><path d=\"M3 21v-5h5\"/>",
+    "style": "stroke",
+    "category": "action",
+    "tags": ["reload", "sync"]
+  },
+  {
+    "name": "chevron-down",
+    "svg": "<path d=\"m6 9 6 6 6-6\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["expand", "dropdown", "down"]
+  },
+  {
+    "name": "chevron-up",
+    "svg": "<path d=\"m18 15-6-6-6 6\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["collapse", "up"]
+  },
+  {
+    "name": "chevron-left",
+    "svg": "<path d=\"m15 18-6-6 6-6\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["back", "left", "previous"]
+  },
+  {
+    "name": "chevron-right",
+    "svg": "<path d=\"m9 18 6-6-6-6\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["forward", "right", "next"]
+  },
+  {
+    "name": "arrow-left",
+    "svg": "<path d=\"m12 19-7-7 7-7\"/><path d=\"M19 12H5\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["back", "left"]
+  },
+  {
+    "name": "arrow-right",
+    "svg": "<path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["forward", "right"]
+  },
+  {
+    "name": "arrow-up",
+    "svg": "<path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["up", "top"]
+  },
+  {
+    "name": "arrow-down",
+    "svg": "<path d=\"M12 5v14\"/><path d=\"m19 12-7 7-7-7\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["down", "bottom"]
+  },
+  {
+    "name": "menu",
+    "svg": "<line x1=\"4\" x2=\"20\" y1=\"12\" y2=\"12\"/><line x1=\"4\" x2=\"20\" y1=\"6\" y2=\"6\"/><line x1=\"4\" x2=\"20\" y1=\"18\" y2=\"18\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["hamburger", "bars"]
+  },
+  {
+    "name": "more-vertical",
+    "svg": "<circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"12\" cy=\"5\" r=\"1\"/><circle cx=\"12\" cy=\"19\" r=\"1\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["dots", "options", "menu"]
+  },
+  {
+    "name": "more-horizontal",
+    "svg": "<circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"19\" cy=\"12\" r=\"1\"/><circle cx=\"5\" cy=\"12\" r=\"1\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["dots", "options"]
+  },
+  {
+    "name": "home",
+    "svg": "<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["house"]
+  },
+  {
+    "name": "external-link",
+    "svg": "<path d=\"M15 3h6v6\"/><path d=\"M10 14 21 3\"/><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/>",
+    "style": "stroke",
+    "category": "navigation",
+    "tags": ["link", "open", "new-tab"]
+  },
+  {
+    "name": "file",
+    "svg": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/>",
+    "style": "stroke",
+    "category": "content",
+    "tags": ["document", "paper"]
+  },
+  {
+    "name": "folder",
+    "svg": "<path d=\"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z\"/>",
+    "style": "stroke",
+    "category": "content",
+    "tags": ["directory"]
+  },
+  {
+    "name": "image",
+    "svg": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" ry=\"2\"/><circle cx=\"9\" cy=\"9\" r=\"2\"/><path d=\"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\"/>",
+    "style": "stroke",
+    "category": "content",
+    "tags": ["photo", "picture"]
+  },
+  {
+    "name": "link",
+    "svg": "<path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"/><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"/>",
+    "style": "stroke",
+    "category": "content",
+    "tags": ["url", "chain"]
+  },
+  {
+    "name": "paperclip",
+    "svg": "<path d=\"m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48\"/>",
+    "style": "stroke",
+    "category": "content",
+    "tags": ["attachment", "clip"]
+  },
+  {
+    "name": "user",
+    "svg": "<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/>",
+    "style": "stroke",
+    "category": "social",
+    "tags": ["person", "account", "profile"]
+  },
+  {
+    "name": "users",
+    "svg": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>",
+    "style": "stroke",
+    "category": "social",
+    "tags": ["people", "group", "team"]
+  },
+  {
+    "name": "bell",
+    "svg": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/><path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/>",
+    "style": "stroke",
+    "category": "social",
+    "tags": ["notification", "alert"]
+  },
+  {
+    "name": "mail",
+    "svg": "<rect width=\"20\" height=\"16\" x=\"2\" y=\"4\" rx=\"2\"/><path d=\"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7\"/>",
+    "style": "stroke",
+    "category": "social",
+    "tags": ["email", "envelope"]
+  },
+  {
+    "name": "message-circle",
+    "svg": "<path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/>",
+    "style": "stroke",
+    "category": "social",
+    "tags": ["chat", "comment"]
+  },
+  {
+    "name": "heart",
+    "svg": "<path d=\"M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z\"/>",
+    "style": "stroke",
+    "category": "social",
+    "tags": ["favorite", "love", "like"]
+  },
+  {
+    "name": "star",
+    "svg": "<path d=\"M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z\"/>",
+    "style": "stroke",
+    "category": "social",
+    "tags": ["rate", "favorite"]
+  },
+  {
+    "name": "share",
+    "svg": "<path d=\"M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8\"/><polyline points=\"16 6 12 2 8 6\"/><line x1=\"12\" x2=\"12\" y1=\"2\" y2=\"15\"/>",
+    "style": "stroke",
+    "category": "social",
+    "tags": ["send"]
+  },
+  {
+    "name": "play",
+    "svg": "<polygon points=\"6 3 20 12 6 21 6 3\"/>",
+    "style": "stroke",
+    "category": "media",
+    "tags": ["start", "video"]
+  },
+  {
+    "name": "pause",
+    "svg": "<rect x=\"14\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/><rect x=\"6\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/>",
+    "style": "stroke",
+    "category": "media",
+    "tags": ["stop"]
+  },
+  {
+    "name": "volume-2",
+    "svg": "<path d=\"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z\"/><path d=\"M16 9a5 5 0 0 1 0 6\"/><path d=\"M19.364 18.364a9 9 0 0 0 0-12.728\"/>",
+    "style": "stroke",
+    "category": "media",
+    "tags": ["sound", "audio", "speaker"]
+  },
+  {
+    "name": "volume-x",
+    "svg": "<path d=\"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z\"/><line x1=\"22\" x2=\"16\" y1=\"9\" y2=\"15\"/><line x1=\"16\" x2=\"22\" y1=\"9\" y2=\"15\"/>",
+    "style": "stroke",
+    "category": "media",
+    "tags": ["mute", "silent"]
+  },
+  {
+    "name": "eye",
+    "svg": "<path d=\"M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>",
+    "style": "stroke",
+    "category": "toggle",
+    "tags": ["show", "view", "visibility"]
+  },
+  {
+    "name": "eye-off",
+    "svg": "<path d=\"M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49\"/><path d=\"M14.084 14.158a3 3 0 0 1-4.242-4.242\"/><path d=\"M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143\"/><path d=\"m2 2 20 20\"/>",
+    "style": "stroke",
+    "category": "toggle",
+    "tags": ["hide", "hidden"]
+  },
+  {
+    "name": "lock",
+    "svg": "<rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/>",
+    "style": "stroke",
+    "category": "toggle",
+    "tags": ["security", "locked", "private"]
+  },
+  {
+    "name": "unlock",
+    "svg": "<rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 9.9-1\"/>",
+    "style": "stroke",
+    "category": "toggle",
+    "tags": ["security", "unlocked"]
+  }
 ]
