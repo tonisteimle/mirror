@@ -1,0 +1,8 @@
+dist/
+node_modules/
+coverage/
+*.min.js
+*.d.ts
+studio/dist/
+packages/*/dist/
+packages/*/node_modules/
