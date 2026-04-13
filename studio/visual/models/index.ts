@@ -7,8 +7,6 @@
  * - Models contain pure state and calculations
  * - Controllers (thin DOM layer) use models for logic
  * - Renderers read from models to update DOM
- *
- * Note: Drag & Drop models are now in studio/drag-drop/types.ts
  */
 
 // Coordinate Transformations

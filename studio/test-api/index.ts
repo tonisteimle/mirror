@@ -159,9 +159,8 @@ export function getStudioTestAPI(): StudioTestAPI {
  * Call this during app initialization (only in test/dev environments)
  *
  * @param _studio - Studio instance (optional, for future use)
- * @param _dragDrop - DragDropSystem instance (optional, for future use)
  */
-export function initStudioTestAPI(_studio?: unknown, _dragDrop?: unknown): void {
+export function initStudioTestAPI(_studio?: unknown): void {
   const api = getStudioTestAPI()
 
   // Register on window for Playwright access

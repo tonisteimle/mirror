@@ -28,6 +28,11 @@ success.col: #10b981
 warning.col: #f59e0b
 danger.col: #ef4444
 
+// Colors - Icons
+text-muted.ic: #525252
+success.ic: #10b981
+muted.ic: #666666
+
 // Colors - Border
 border.boc: #2a2a2a
 border-hover.boc: #404040
@@ -223,15 +228,17 @@ Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
 
       // Dialog for new entry
       Dialog closeOnOutsideClick
-        Trigger: BtnPrimary "Neuer Eintrag"
-        Content: Frame bg $card, pad 16, rad 8, gap 12, w 360
+        Trigger:
+          BtnPrimary "Neuer Eintrag"
+        Content: Frame bg $card, pad $space-xl, rad $rad-lg, gap $gap-xl, w 360
           // Dialog Header mit Close Button
-          Frame hor, spread, ver-center, borb 1, boc $border, pad 0 0 12 0
+          Frame hor, spread, ver-center, borb 1, boc $border, pad 0 0 $gap-xl 0
             Text "Neuer Zeiteintrag", col $text, fs 14, weight 600
-            CloseTrigger: Icon "x", ic #666, is 16, cursor pointer
+            CloseTrigger:
+              Icon "x", ic $muted, is $icon-md, cursor pointer
 
           // Form Fields
-          Frame gap 12
+          Frame gap $gap-xl
             // Date
             FormField
               Label "Datum"
@@ -269,8 +276,9 @@ Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
             Checkbox "Verrechenbar", checked, bind newBillable
 
           // Actions
-          Frame hor, gap 8, right, bort 1, boc $border, pad 12 0 0 0
-            CloseTrigger: BtnSecondary "Abbrechen"
+          Frame hor, gap $gap-lg, right, bort 1, boc $border, pad $gap-xl 0 0 0
+            CloseTrigger:
+              BtnSecondary "Abbrechen"
             BtnPrimary "Speichern", add(entries, date: $newDate, project: $newProject, client: $newClient, task: $newTask, hours: $newHours, billable: $newBillable)
 
   // Stats Row
@@ -282,9 +290,7 @@ Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
       Frame hor, gap $gap-sm, ver-center
         Frame w 80, h 3, bg $muted, rad $rad-sm
           Frame w 64, h 3, bg $accent, rad $rad-sm
-        // BUG WORKAROUND: Sub inside Frame doesn't inherit child component styles
-        // Sub would need to be a direct child of StatCard to get fs $fs-sm, col $text-secondary
-        Text "von 176h", col $text-secondary, fs $fs-sm
+        Sub "von 176h"
 
     StatCard
       Label "Überstunden"
@@ -330,8 +336,7 @@ Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
       HeaderCell "Tätigkeit", w $col-task, grow
       HeaderCell "Stunden", w $col-hours, right
       Frame w $col-status, center
-        // BUG WORKAROUND: ic/is $token doesn't resolve
-        Icon "receipt", ic #525252, is 12
+        Icon "receipt", ic $text-muted, is $icon-sm
 
     Frame gap 0
       // Filter: project, client, and search query
@@ -344,9 +349,9 @@ Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
           CellHours entry.hours + "h"
           Frame w $col-status, center
             if entry.billable
-              Icon "circle-check", ic #10b981, is 16
+              Icon "circle-check", ic $success, is $icon-md
             else
-              Icon "minus", ic #525252, is 16
+              Icon "minus", ic $text-muted, is $icon-md
 
     // Footer
     Frame hor, spread, ver-center, pad $space-md, bg $card-alt

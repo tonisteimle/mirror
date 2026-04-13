@@ -32,12 +32,42 @@ export function emitTooltipComponent(
   const triggerSlot = node.slots['Trigger']
   const triggerVar = `${varName}_trigger`
   ctx.emit(`// Trigger`)
-  ctx.emit(`const ${triggerVar} = document.createElement('button')`)
-  ctx.emit(`${triggerVar}.type = 'button'`)
+
+  // Check if trigger slot has children
+  const hasTriggerChildren = triggerSlot?.children && triggerSlot.children.length > 0
+
+  // Check if first child is already a clickable element (Button, Link)
+  const firstChild = triggerSlot?.children?.[0] as IRNode | undefined
+  const firstChildIsClickable =
+    firstChild &&
+    (firstChild.primitive === 'Button' ||
+      firstChild.primitive === 'Link' ||
+      firstChild.primitive === 'button' ||
+      firstChild.primitive === 'a')
+
+  if (hasTriggerChildren && firstChildIsClickable) {
+    // Child is already a button/link - use neutral span wrapper
+    ctx.emit(`const ${triggerVar} = document.createElement('span')`)
+    ctx.emit(`${triggerVar}.style.display = 'inline-block'`)
+  } else {
+    // No children or children are not buttons - use button element
+    ctx.emit(`const ${triggerVar} = document.createElement('button')`)
+    ctx.emit(`${triggerVar}.type = 'button'`)
+  }
+
   ctx.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
   emitSlotStyles(ctx, triggerVar, triggerSlot)
-  const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Hover me'
-  ctx.emit(`${triggerVar}.textContent = '${ctx.escapeString(String(triggerLabel))}'`)
+
+  // Emit children if present, otherwise fallback text
+  if (hasTriggerChildren) {
+    for (const child of triggerSlot!.children!) {
+      ctx.emitNode(child as IRNode, triggerVar)
+    }
+  } else {
+    const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Hover me'
+    ctx.emit(`${triggerVar}.textContent = '${ctx.escapeString(String(triggerLabel))}'`)
+  }
+
   ctx.emit(`${varName}.appendChild(${triggerVar})`)
   ctx.emit('')
 
@@ -97,13 +127,43 @@ export function emitDialogComponent(
   const triggerSlot = node.slots['Trigger']
   const triggerVar = `${varName}_trigger`
   ctx.emit(`// Trigger`)
-  ctx.emit(`const ${triggerVar} = document.createElement('button')`)
-  ctx.emit(`${triggerVar}.type = 'button'`)
+
+  // Check if trigger slot has children
+  const hasTriggerChildren = triggerSlot?.children && triggerSlot.children.length > 0
+
+  // Check if first child is already a clickable element (Button, Link)
+  const firstChild = triggerSlot?.children?.[0] as IRNode | undefined
+  const firstChildIsClickable =
+    firstChild &&
+    (firstChild.primitive === 'Button' ||
+      firstChild.primitive === 'Link' ||
+      firstChild.primitive === 'button' ||
+      firstChild.primitive === 'a')
+
+  if (hasTriggerChildren && firstChildIsClickable) {
+    // Child is already a button/link - use neutral span wrapper to avoid nested buttons
+    ctx.emit(`const ${triggerVar} = document.createElement('span')`)
+    ctx.emit(`${triggerVar}.style.display = 'inline-block'`)
+  } else {
+    // No children or children are not buttons - use button element
+    ctx.emit(`const ${triggerVar} = document.createElement('button')`)
+    ctx.emit(`${triggerVar}.type = 'button'`)
+  }
+
   ctx.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
   ctx.emit(`${triggerVar}.setAttribute('aria-haspopup', 'dialog')`)
   emitSlotStyles(ctx, triggerVar, triggerSlot)
-  const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Open Dialog'
-  ctx.emit(`${triggerVar}.textContent = '${ctx.escapeString(String(triggerLabel))}'`)
+
+  // Emit children if present, otherwise fallback text
+  if (hasTriggerChildren) {
+    for (const child of triggerSlot!.children!) {
+      ctx.emitNode(child as IRNode, triggerVar)
+    }
+  } else {
+    const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Open Dialog'
+    ctx.emit(`${triggerVar}.textContent = '${ctx.escapeString(String(triggerLabel))}'`)
+  }
+
   ctx.emit(`${varName}.appendChild(${triggerVar})`)
   ctx.emit('')
 
@@ -212,14 +272,44 @@ export function emitPopoverComponent(
   const triggerSlot = node.slots['Trigger']
   const triggerVar = `${varName}_trigger`
   ctx.emit(`// Trigger`)
-  ctx.emit(`const ${triggerVar} = document.createElement('button')`)
-  ctx.emit(`${triggerVar}.type = 'button'`)
+
+  // Check if trigger slot has children
+  const hasTriggerChildren = triggerSlot?.children && triggerSlot.children.length > 0
+
+  // Check if first child is already a clickable element (Button, Link)
+  const firstChild = triggerSlot?.children?.[0] as IRNode | undefined
+  const firstChildIsClickable =
+    firstChild &&
+    (firstChild.primitive === 'Button' ||
+      firstChild.primitive === 'Link' ||
+      firstChild.primitive === 'button' ||
+      firstChild.primitive === 'a')
+
+  if (hasTriggerChildren && firstChildIsClickable) {
+    // Child is already a button/link - use neutral span wrapper
+    ctx.emit(`const ${triggerVar} = document.createElement('span')`)
+    ctx.emit(`${triggerVar}.style.display = 'inline-block'`)
+  } else {
+    // No children or children are not buttons - use button element
+    ctx.emit(`const ${triggerVar} = document.createElement('button')`)
+    ctx.emit(`${triggerVar}.type = 'button'`)
+  }
+
   ctx.emit(`${triggerVar}.dataset.slot = 'Trigger'`)
   ctx.emit(`${triggerVar}.setAttribute('aria-haspopup', 'dialog')`)
   ctx.emit(`${triggerVar}.setAttribute('aria-expanded', 'false')`)
   emitSlotStyles(ctx, triggerVar, triggerSlot)
-  const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Open Popover'
-  ctx.emit(`${triggerVar}.textContent = '${ctx.escapeString(String(triggerLabel))}'`)
+
+  // Emit children if present, otherwise fallback text
+  if (hasTriggerChildren) {
+    for (const child of triggerSlot!.children!) {
+      ctx.emitNode(child as IRNode, triggerVar)
+    }
+  } else {
+    const triggerLabel = node.machineConfig.label || node.machineConfig.trigger || 'Open Popover'
+    ctx.emit(`${triggerVar}.textContent = '${ctx.escapeString(String(triggerLabel))}'`)
+  }
+
   ctx.emit(`${varName}.appendChild(${triggerVar})`)
   ctx.emit('')
 

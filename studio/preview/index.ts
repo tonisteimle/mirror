@@ -2,7 +2,18 @@
  * Preview Module - Preview Controller
  */
 
-import { state, actions, events, executor, ResizeCommand, SetPropertyCommand, MoveNodeWithLayoutCommand, createLayoutService, setLayoutService, type LayoutService } from '../core'
+import {
+  state,
+  actions,
+  events,
+  executor,
+  ResizeCommand,
+  SetPropertyCommand,
+  MoveNodeWithLayoutCommand,
+  createLayoutService,
+  setLayoutService,
+  type LayoutService,
+} from '../core'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import { HandleManager, createHandleManager } from './handle-manager'
 import { KeyboardHandler, createKeyboardHandler } from './keyboard-handler'
@@ -39,11 +50,7 @@ export {
 } from './keyboard-handler'
 
 // Re-export context menu
-export {
-  ContextMenu,
-  createContextMenu,
-  type ContextMenuConfig,
-} from './context-menu'
+export { ContextMenu, createContextMenu, type ContextMenuConfig } from './context-menu'
 
 // Re-export visual code system
 export {
@@ -82,12 +89,7 @@ export {
 } from './constants'
 
 // Re-export breadcrumb
-export {
-  PreviewBreadcrumb,
-  createPreviewBreadcrumb,
-  type BreadcrumbConfig,
-} from './breadcrumb'
-
+export { PreviewBreadcrumb, createPreviewBreadcrumb, type BreadcrumbConfig } from './breadcrumb'
 
 export interface PreviewConfig {
   container: HTMLElement
@@ -272,34 +274,40 @@ export class PreviewController {
       getSourceMap: () => this.sourceMap as any,
       // LayoutService is now used via global singleton (getLayoutService())
     })
-    // Note: DragDropVisualizer is now handled by the new DragSystem
 
     // Listen for resize:end events to execute commands
-    this.unsubscribeResize = events.on('resize:end', (data: { nodeId: string; width: SizingMode; height: SizingMode; x?: number; y?: number }) => {
-      // Execute resize command for width/height
-      const command = new ResizeCommand({
-        nodeId: data.nodeId,
-        width: data.width === 'fill' ? 'full' : data.width,
-        height: data.height === 'fill' ? 'full' : data.height,
-      })
-      executor.execute(command)
+    this.unsubscribeResize = events.on(
+      'resize:end',
+      (data: { nodeId: string; width: SizingMode; height: SizingMode; x?: number; y?: number }) => {
+        // Execute resize command for width/height
+        const command = new ResizeCommand({
+          nodeId: data.nodeId,
+          width: data.width === 'fill' ? 'full' : data.width,
+          height: data.height === 'fill' ? 'full' : data.height,
+        })
+        executor.execute(command)
 
-      // Execute additional commands for x/y position changes (absolute positioned elements)
-      if (data.x !== undefined) {
-        executor.execute(new SetPropertyCommand({
-          nodeId: data.nodeId,
-          property: 'x',
-          value: String(data.x),
-        }))
+        // Execute additional commands for x/y position changes (absolute positioned elements)
+        if (data.x !== undefined) {
+          executor.execute(
+            new SetPropertyCommand({
+              nodeId: data.nodeId,
+              property: 'x',
+              value: String(data.x),
+            })
+          )
+        }
+        if (data.y !== undefined) {
+          executor.execute(
+            new SetPropertyCommand({
+              nodeId: data.nodeId,
+              property: 'y',
+              value: String(data.y),
+            })
+          )
+        }
       }
-      if (data.y !== undefined) {
-        executor.execute(new SetPropertyCommand({
-          nodeId: data.nodeId,
-          property: 'y',
-          value: String(data.y),
-        }))
-      }
-    })
+    )
   }
 
   attach(): void {
@@ -315,8 +323,6 @@ export class PreviewController {
       this.container.addEventListener('mouseover', this.boundHandleMouseOver)
       this.container.addEventListener('mouseout', this.boundHandleMouseOut)
     }
-    // Note: Component drop from Component Panel is handled by DragDropManager in app.js
-    // Do NOT add duplicate dragover/drop/dragleave handlers here
     // Start observing slot visibility
     this.slotVisibilityService?.attach()
   }
@@ -490,26 +496,26 @@ export class PreviewController {
    * - For 'inside' (empty container): Line in the center of the container
    */
   showDropZone(info: {
-    targetRect?: { left: number; top: number; width: number; height: number };
-    semanticZone?: string;
-    placement?: 'before' | 'after' | 'inside';
-    parentDirection?: 'horizontal' | 'vertical';
+    targetRect?: { left: number; top: number; width: number; height: number }
+    semanticZone?: string
+    placement?: 'before' | 'after' | 'inside'
+    parentDirection?: 'horizontal' | 'vertical'
     // New: insertion line position (calculated by DropZoneCalculator)
-    insertionLinePosition?: number;
+    insertionLinePosition?: number
     // New: container rect for full-width/height lines
-    containerRect?: { left: number; top: number; width: number; height: number };
+    containerRect?: { left: number; top: number; width: number; height: number }
     // Legacy support for rect-only calls
-    left?: number;
-    top?: number;
-    width?: number;
-    height?: number;
+    left?: number
+    top?: number
+    width?: number
+    height?: number
   }): void {
     // Support both new format (targetRect) and legacy format (direct rect properties)
     const viewportRect = info.targetRect || {
       left: info.left || 0,
       top: info.top || 0,
       width: info.width || 0,
-      height: info.height || 0
+      height: info.height || 0,
     }
 
     // Convert viewport coordinates to container-relative coordinates
@@ -566,7 +572,9 @@ export class PreviewController {
   }
 
   getElementByNodeId(nodeId: string): HTMLElement | null {
-    return this.container.querySelector(`[${this.config.nodeIdAttribute}="${nodeId}"]`) as HTMLElement | null
+    return this.container.querySelector(
+      `[${this.config.nodeIdAttribute}="${nodeId}"]`
+    ) as HTMLElement | null
   }
 
   onSelect(callback: SelectionCallback): () => void {

@@ -2,8 +2,6 @@
  * Visual Code System - Module Exports
  *
  * Stellt visuelle Manipulation-Features für Mirror Studio bereit.
- *
- * Note: Drag & Drop is now handled by studio/drag-drop module
  */
 
 // Overlay Manager
