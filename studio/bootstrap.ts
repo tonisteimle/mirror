@@ -158,7 +158,6 @@ export const studio: StudioInstance = {
     studio.propertyPanel?.detach()
     studio.componentPanel?.dispose()
     studio.userComponentsPanel?.dispose()
-    studio.editorDropHandler?.detach()
     studio.drawManager?.dispose()
     studio.inlineEdit?.dispose()
     studio.dragDrop?.dispose()
@@ -172,7 +171,6 @@ export const studio: StudioInstance = {
     studio.propertyPanel = null
     studio.componentPanel = null
     studio.userComponentsPanel = null
-    studio.editorDropHandler = null
     studio.breadcrumb = null
     studio.drawManager = null
     studio.inlineEdit = null
