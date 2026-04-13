@@ -89,8 +89,11 @@ export class DragPreview {
   }
 
   private handleDragEnter(e: DragEvent): void {
+    log.info('dragenter', e.dataTransfer?.types)
+
     // Check if this is a component drag
     if (!e.dataTransfer?.types.includes('application/mirror-component')) {
+      log.info('Not a component drag, ignoring')
       return
     }
 
@@ -99,8 +102,11 @@ export class DragPreview {
 
     // Get drag data from global store (dataTransfer.getData doesn't work in dragenter)
     const dragData = getCurrentDragData()
+    log.info('Drag data from store:', dragData)
     if (dragData) {
       this.showGhost(dragData, e.clientX, e.clientY)
+    } else {
+      log.warn('No drag data in store!')
     }
   }
 
@@ -149,7 +155,9 @@ export class DragPreview {
 
     // Try to render the component
     const code = this.buildCode(dragData)
+    log.info('Rendering code:', code)
     const rendered = this.renderComponent(code)
+    log.info('Rendered element:', rendered)
 
     if (rendered) {
       // Rendered component - minimal ghost styling
