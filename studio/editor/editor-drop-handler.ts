@@ -1,8 +1,10 @@
 /**
  * Editor Drop Handler - Handle component drops into CodeMirror editor
  *
- * SIMPLIFIED: Always inserts at current cursor position.
- * No complex mouse-position-to-code-position calculation needed.
+ * Uses mouse coordinates for precise drop positioning:
+ * - Calculates line from Y coordinate (snaps to line boundaries)
+ * - Calculates indentation from X coordinate (snaps to 2-space increments)
+ * - Shows visual drop indicator during drag
  *
  * Uses CodeMirror's native extension system (EditorView.domEventHandlers)
  * to properly intercept drops and prevent default text insertion.
@@ -75,7 +77,7 @@ function getCursorPosition(view: EditorView): EditorDropPosition {
   // Calculate indent from the current line's leading whitespace
   const lineText = line.text
   const leadingSpaces = lineText.match(/^(\s*)/)?.[1].length || 0
-  const indent = Math.floor(leadingSpaces / 2) * 2  // Snap to even numbers
+  const indent = Math.floor(leadingSpaces / 2) * 2 // Snap to even numbers
 
   return {
     line: lineNumber,
@@ -133,7 +135,7 @@ function getPositionFromCoords(view: EditorView, x: number, y: number): EditorDr
   const relativeX = x - contentLeft
   const charWidth = view.defaultCharacterWidth
   const rawColumn = Math.max(0, Math.floor(relativeX / charWidth))
-  const indent = Math.floor(rawColumn / 2) * 2  // Snap to even numbers
+  const indent = Math.floor(rawColumn / 2) * 2 // Snap to even numbers
 
   // Handle edge case for line 0 (before first line)
   if (targetLine === 0) {
@@ -185,7 +187,7 @@ function showDropIndicator(view: EditorView, pos: EditorDropPosition): void {
   }
 
   const contentLeftOffset = contentRect.left - editorRect.left
-  const indentLeft = contentLeftOffset + (pos.indent * charWidth)
+  const indentLeft = contentLeftOffset + pos.indent * charWidth
 
   indicator.style.display = 'block'
   indicator.style.left = `${indentLeft}px`
@@ -214,10 +216,12 @@ export function insertComponentCode(view: EditorView, code: string, pos: EditorD
 
   // Add base indent to each line (preserving relative indentation)
   const lines = code.split('\n')
-  const indentedLines = lines.map(line => {
-    if (!line.trim()) return ''
-    return baseIndent + line
-  }).filter(line => line.trim() !== '' || lines.length === 1)
+  const indentedLines = lines
+    .map(line => {
+      if (!line.trim()) return ''
+      return baseIndent + line
+    })
+    .filter(line => line.trim() !== '' || lines.length === 1)
 
   const indentedCode = indentedLines.join('\n')
 
@@ -295,10 +299,12 @@ export function insertComponentWithDefinition(
     const totalLines = doc.lines
     const baseIndent = ' '.repeat(pos.indent)
     const lines = code.split('\n')
-    const indentedLines = lines.map(line => {
-      if (!line.trim()) return ''
-      return baseIndent + line
-    }).filter(line => line.trim() !== '' || lines.length === 1)
+    const indentedLines = lines
+      .map(line => {
+        if (!line.trim()) return ''
+        return baseIndent + line
+      })
+      .filter(line => line.trim() !== '' || lines.length === 1)
     const indentedCode = indentedLines.join('\n')
 
     // Calculate instance offset
@@ -322,7 +328,11 @@ export function insertComponentWithDefinition(
     view.dispatch({
       changes: [
         { from: defOffset, to: defOffset, insert: defText },
-        { from: instanceOffset + defInsertLength, to: instanceOffset + defInsertLength, insert: instanceText },
+        {
+          from: instanceOffset + defInsertLength,
+          to: instanceOffset + defInsertLength,
+          insert: instanceText,
+        },
       ],
       selection: { anchor: instanceOffset + defInsertLength + instanceText.length },
     })
@@ -356,7 +366,13 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
       // Add visual highlight to editor
       view.dom.classList.add('editor-drop-target')
 
-      return true  // Prevent default handling
+      // Show drop indicator at mouse position
+      const pos = getPositionFromCoords(view, event.clientX, event.clientY)
+      if (pos) {
+        showDropIndicator(view, pos)
+      }
+
+      return true // Prevent default handling
     },
 
     dragleave(event: DragEvent, view: EditorView) {
@@ -369,6 +385,7 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
       const relatedTarget = event.relatedTarget as HTMLElement | null
       if (!relatedTarget || !view.dom.contains(relatedTarget)) {
         view.dom.classList.remove('editor-drop-target')
+        hideDropIndicator()
       }
 
       return false
@@ -388,7 +405,7 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
       const dataStr = event.dataTransfer.getData('application/mirror-component')
       if (!dataStr) {
         log.error('No component data in drop')
-        return true  // Still prevent default
+        return true // Still prevent default
       }
 
       // Parse component data
@@ -400,58 +417,21 @@ export function createComponentDropExtension(config: ComponentDropConfig): Exten
         return true
       }
 
-      // SIMPLIFIED: Always use current cursor position
-      // No need to calculate position from mouse coordinates
-      const pos = getCursorPosition(view)
+      // Use mouse coordinates for precise drop position
+      // Falls back to cursor position if coordinate conversion fails
+      const pos =
+        getPositionFromCoords(view, event.clientX, event.clientY) || getCursorPosition(view)
 
       // Call the handler
       config.onDrop(dragData, pos, view)
 
-      log.info('Component dropped at cursor:', dragData.componentName, `line ${pos.line}`)
+      log.info(
+        'Component dropped at:',
+        dragData.componentName,
+        `line ${pos.line}, indent ${pos.indent}`
+      )
 
-      return true  // CRITICAL: Prevents CodeMirror from inserting text/plain
+      return true // CRITICAL: Prevents CodeMirror from inserting text/plain
     },
   })
-}
-
-// ============================================================================
-// Legacy EditorDropHandler class (for backward compatibility during transition)
-// ============================================================================
-
-export interface EditorDropHandlerConfig {
-  editor: EditorView
-  onDrop?: (data: ComponentDragData, position: EditorDropPosition) => void
-}
-
-/**
- * @deprecated Use createComponentDropExtension instead
- */
-export class EditorDropHandler {
-  private editor: EditorView
-  private onDropCallback?: EditorDropHandlerConfig['onDrop']
-
-  constructor(config: EditorDropHandlerConfig) {
-    this.editor = config.editor
-    this.onDropCallback = config.onDrop
-  }
-
-  attach(): void {
-    // No-op: Extension handles everything now
-    log.info('Using CodeMirror extension (attach is no-op)')
-  }
-
-  detach(): void {
-    hideDropIndicator()
-    dropIndicator?.remove()
-    dropIndicator = null
-    currentView = null
-  }
-
-  insertComponentCode(code: string, pos: EditorDropPosition): void {
-    insertComponentCode(this.editor, code, pos)
-  }
-}
-
-export function createEditorDropHandler(config: EditorDropHandlerConfig): EditorDropHandler {
-  return new EditorDropHandler(config)
 }

@@ -2,28 +2,59 @@
  * Studio Bootstrap - Integration with app.js
  */
 
-import { state, actions, events, executor, setCommandContext, getStateSelectionAdapter, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, createStudioContext, setStudioContext, type Command, type CommandContext, type StudioContext } from './core'
+import {
+  state,
+  actions,
+  events,
+  executor,
+  setCommandContext,
+  getStateSelectionAdapter,
+  SetPropertyCommand,
+  RemovePropertyCommand,
+  InsertComponentCommand,
+  DeleteNodeCommand,
+  createStudioContext,
+  setStudioContext,
+  type Command,
+  type CommandContext,
+  type StudioContext,
+} from './core'
 import { type SyncCoordinatorV2 as SyncCoordinator } from './sync'
-import { AutocompleteEngine, getAutocompleteEngine, type AutocompleteRequest, type AutocompleteResult } from './autocomplete'
-import { EditorController, createEditorController, setEditorController, EditorDropHandler, createEditorDropHandler } from './editor'
-import { PreviewController, createPreviewController, setPreviewController, PreviewBreadcrumb, createPreviewBreadcrumb } from './preview'
+import {
+  AutocompleteEngine,
+  getAutocompleteEngine,
+  type AutocompleteRequest,
+  type AutocompleteResult,
+} from './autocomplete'
+import { EditorController, createEditorController, setEditorController } from './editor'
+import {
+  PreviewController,
+  createPreviewController,
+  setPreviewController,
+  PreviewBreadcrumb,
+  createPreviewBreadcrumb,
+} from './preview'
 import { RenderPipeline, createRenderPipeline } from './preview/render-pipeline'
 import { LLMBridge, getLLMBridge, getContextBuilder, getEditPrompt, type LLMResponse } from './llm'
 import { initializeAgent, getAgentIntegration, type AgentIntegration } from './agent'
 import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../compiler/studio'
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel } from './panels'
-import { ComponentPanel, createComponentPanel, UserComponentsPanel, createUserComponentsPanel, getComponentTemplate, getFileType, type ComponentDragData, type ComponentChild } from './panels/components'
+import {
+  ComponentPanel,
+  createComponentPanel,
+  UserComponentsPanel,
+  createUserComponentsPanel,
+  getComponentTemplate,
+  getFileType,
+  type ComponentDragData,
+  type ComponentChild,
+} from './panels/components'
 import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
 import type { DrawManager } from './visual/draw-manager'
 import type { InlineEditController } from './inline-edit'
 import { type DragDropSystem } from './drag-drop'
-import {
-  initDragDrop,
-  initDrawManager,
-  initInlineEdit,
-  initSync,
-} from './bootstrap/index'
+import { initDragDrop, initDrawManager, initInlineEdit, initSync } from './bootstrap/index'
 import { initUserSettings } from './storage/user-settings'
 import { initStudioTestAPI } from './test-api'
 import { triggerRename, isRenameActive, closeRename } from './rename'
@@ -48,7 +79,11 @@ export interface BootstrapConfig {
   /** Callback to get current file name */
   getCurrentFile?: () => string
   /** Callback to get all project files with types */
-  getFiles?: () => { name: string; type: 'tokens' | 'components' | 'component' | 'layout' | 'data' | 'unknown'; code: string }[]
+  getFiles?: () => {
+    name: string
+    type: 'tokens' | 'components' | 'component' | 'layout' | 'data' | 'unknown'
+    code: string
+  }[]
   /** Callback to update file content */
   updateFile?: (filename: string, content: string) => void
   /** Callback to switch to file */
@@ -69,7 +104,6 @@ export interface StudioInstance {
   propertyPanel: PropertyPanel | null
   componentPanel: ComponentPanel | null
   userComponentsPanel: UserComponentsPanel | null
-  editorDropHandler: EditorDropHandler | null
   breadcrumb: PreviewBreadcrumb | null
   autocomplete: AutocompleteEngine
   llm: LLMBridge
@@ -104,7 +138,6 @@ export const studio: StudioInstance = {
   propertyPanel: null,
   componentPanel: null,
   userComponentsPanel: null,
-  editorDropHandler: null,
   breadcrumb: null,
   autocomplete: getAutocompleteEngine(),
   llm: getLLMBridge(),
@@ -311,13 +344,15 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         showTabBar: true,
         defaultTab: 'basic',
         // Include user components from all files (definitions can be in any file)
-        getComFiles: getFilesCallback ? () => {
-          const files = getFilesCallback()
-          // Parse all files for component definitions, not just .com files
-          return files
-            .filter(f => f.type !== 'tokens' && f.type !== 'data')
-            .map(f => ({ name: f.name, content: f.code }))
-        } : undefined,
+        getComFiles: getFilesCallback
+          ? () => {
+              const files = getFilesCallback()
+              // Parse all files for component definitions, not just .com files
+              return files
+                .filter(f => f.type !== 'tokens' && f.type !== 'data')
+                .map(f => ({ name: f.name, content: f.code }))
+            }
+          : undefined,
       },
       {
         onDragStart: (item, event) => {
@@ -326,7 +361,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         onDragEnd: (item, event) => {
           events.emit('component:drag-end', { item, event })
         },
-        onClick: (item) => {
+        onClick: item => {
           // Enter draw mode if DrawManager is available
           if (studio.drawManager) {
             studio.drawManager.enterDrawMode(item)
@@ -364,7 +399,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
         onDragEnd: (item, event) => {
           events.emit('component:drag-end', { item, event })
         },
-        onClick: (item) => {
+        onClick: item => {
           // Enter draw mode if DrawManager is available
           if (studio.drawManager) {
             studio.drawManager.enterDrawMode(item)
@@ -391,12 +426,12 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       getAllCode: config.getAllSource,
       updateFile: config.updateFile,
       switchToFile: config.switchToFile,
-      onCommand: (command) => {
+      onCommand: command => {
         logAgent.info(' Command executed:', command.type)
       },
-      onError: (error) => {
+      onError: error => {
         logAgent.error(' Error:', error)
-      }
+      },
     })
     logBootstrap.info(' AI Agent initialized')
   }
@@ -412,25 +447,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   studioContext.editor = editorController
   studio.editor = editorController
 
-  // Editor Drop Handler - allows dragging components into code editor
-  const editorView = editorController.getEditorView()
-  if (editorView) {
-    studio.editorDropHandler = createEditorDropHandler({
-      editor: editorView,
-      onDrop: (dragData, position) => {
-        // Generate component code (use template based on file type)
-        const currentFile = getCurrentFileCallback?.() || 'index.mir'
-        const code = generateComponentCodeFromDragData(dragData, {
-          componentId: dragData.componentId,
-          filename: currentFile,
-        })
-        studio.editorDropHandler?.insertComponentCode(code, position)
-        logBootstrap.info(' Component dropped into editor:', dragData.componentName)
-      },
-    })
-    studio.editorDropHandler.attach()
-    logBootstrap.info(' EditorDropHandler initialized')
-  }
+  // Editor Drop Handler is now handled by createComponentDropExtension in app.js
+  // Uses CodeMirror's native extension system for proper drop handling
 
   // Preview (with direct manipulation handles, keyboard shortcuts, context menu, visual code system, and element move)
   const previewController = createPreviewController({
@@ -459,12 +477,14 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   studio.renderPipeline = renderPipeline
 
   // Breadcrumb (hierarchy display above preview)
-  const breadcrumbContainer = config.previewContainer.parentElement?.querySelector('#preview-breadcrumb') as HTMLElement | null
+  const breadcrumbContainer = config.previewContainer.parentElement?.querySelector(
+    '#preview-breadcrumb'
+  ) as HTMLElement | null
   if (breadcrumbContainer) {
     const breadcrumb = createPreviewBreadcrumb({
       container: breadcrumbContainer,
       events,
-      onItemClick: (nodeId) => {
+      onItemClick: nodeId => {
         // Navigate to parent element when breadcrumb item is clicked
         if (studio.sync) {
           studio.sync.handleSelectionChange(nodeId, 'panel')
@@ -508,12 +528,12 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     getPreludeOffset: () => state.get().preludeOffset,
     applyChange: (change: CodeChange) => config.editor.dispatch({ changes: change }),
     compile: () => events.emit('compile:requested', {}),
-    clearSelection: (origin) => syncCoordinator.clearSelection(origin),
+    clearSelection: origin => syncCoordinator.clearSelection(origin),
   })
 
   // Wire events
-  editorController.onContentChange((content) => state.set({ source: content }))
-  editorController.onCursorMove((position) => {
+  editorController.onContentChange(content => state.set({ source: content }))
+  editorController.onCursorMove(position => {
     actions.setCursor(position.line, position.column)
     // Cursor changes only happen when editor is focused, so always sync
     // (editorHasFocus state may be stale due to event timing)
@@ -521,7 +541,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       studioContext.sync.handleCursorMove(position.line)
     }
   })
-  previewController.onSelect((nodeId) => {
+  previewController.onSelect(nodeId => {
     if (nodeId && studioContext?.sync) studioContext.sync.handlePreviewClick(nodeId)
   })
 
@@ -610,17 +630,20 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       } else if (studio.editor) {
         // Insert at cursor in editor (use template based on file type)
         const currentFile = getCurrentFileCallback?.() || 'index.mir'
-        const code = generateComponentCodeFromDragData({
-          componentName: item.template,
-          componentId: item.id,
-          properties: item.properties,
-          textContent: item.textContent,
-          children: item.children,
-          fromComponentPanel: true,
-        }, {
-          componentId: item.id,
-          filename: currentFile,
-        })
+        const code = generateComponentCodeFromDragData(
+          {
+            componentName: item.template,
+            componentId: item.id,
+            properties: item.properties,
+            textContent: item.textContent,
+            children: item.children,
+            fromComponentPanel: true,
+          },
+          {
+            componentId: item.id,
+            filename: currentFile,
+          }
+        )
         studio.editor.insertAtCursor('\n' + code)
       }
     })
@@ -659,7 +682,8 @@ const panelElements: Record<string, HTMLElement | null> = {}
 function initializePanelVisibility(): void {
   // Build panel element mapping
   panelElements.prompt = document.getElementById('chat-panel')
-  panelElements.files = document.getElementById('explorer-panel') || document.querySelector('.sidebar')
+  panelElements.files =
+    document.getElementById('explorer-panel') || document.querySelector('.sidebar')
   panelElements.code = document.querySelector('.editor-panel')
   panelElements.components = document.getElementById('components-panel')
   panelElements.preview = document.querySelector('.preview-panel')
@@ -700,7 +724,9 @@ function initializePanelToolbar(): void {
   const visibility = state.get().panelVisibility
   for (const panelKey of Object.keys(panelElements)) {
     const isVisible = visibility[panelKey as keyof typeof visibility]
-    const checkbox = menu.querySelector(`[data-panel="${panelKey}"] input`) as HTMLInputElement | null
+    const checkbox = menu.querySelector(
+      `[data-panel="${panelKey}"] input`
+    ) as HTMLInputElement | null
     if (checkbox) {
       checkbox.checked = isVisible
     }
@@ -746,7 +772,9 @@ function initializePanelToolbar(): void {
   // Sync checkboxes with visibility changes
   eventUnsubscribes.push(
     events.on('panel:visibility-changed', ({ panel, visible }) => {
-      const checkbox = menu.querySelector(`[data-panel="${panel}"] input`) as HTMLInputElement | null
+      const checkbox = menu.querySelector(
+        `[data-panel="${panel}"] input`
+      ) as HTMLInputElement | null
       if (checkbox) {
         checkbox.checked = visible
       }
@@ -814,7 +842,12 @@ function initializeActivityBar(): void {
  * Update studio state after compilation
  * Uses atomic setCompileResult to ensure consistency
  */
-export function updateStudioState(ast: AST, ir: IR | null, sourceMap: SourceMap, source: string): void {
+export function updateStudioState(
+  ast: AST,
+  ir: IR | null,
+  sourceMap: SourceMap,
+  source: string
+): void {
   // Use atomic compile result update - this ensures AST, IR, SourceMap, and errors
   // are all updated together with a new compile version
   actions.setCompileResult({
@@ -848,7 +881,7 @@ export function updateStudioState(ast: AST, ir: IR | null, sourceMap: SourceMap,
         selectionAdapter,
         propertyExtractor,
         codeModifier,
-        (result) => {
+        result => {
           if (result.success && result.newSource) {
             state.set({ source: result.newSource })
             events.emit('source:changed', { source: result.newSource, origin: 'panel' })
@@ -856,7 +889,7 @@ export function updateStudioState(ast: AST, ir: IR | null, sourceMap: SourceMap,
           } else if (!result.success) {
             // Emit error notification for user feedback
             events.emit('notification:error', {
-              message: result.error || 'Failed to update property'
+              message: result.error || 'Failed to update property',
             })
           }
         },
@@ -888,8 +921,13 @@ export function getCompletions(request: AutocompleteRequest): AutocompleteResult
   return studio.autocomplete.getCompletions(request)
 }
 
-export function executeLLMResponse(response: LLMResponse | string): { success: boolean; error?: string } {
-  return typeof response === 'string' ? studio.llm.executeJSON(response) : studio.llm.executeResponse(response)
+export function executeLLMResponse(response: LLMResponse | string): {
+  success: boolean
+  error?: string
+} {
+  return typeof response === 'string'
+    ? studio.llm.executeJSON(response)
+    : studio.llm.executeResponse(response)
 }
 
 export function buildLLMPrompt(userRequest: string): string {
@@ -900,7 +938,10 @@ export function getLLMContext() {
   return getContextBuilder().buildContext()
 }
 
-export function handleSelectionChange(nodeId: string | null, origin: 'editor' | 'preview' | 'panel' | 'keyboard'): void {
+export function handleSelectionChange(
+  nodeId: string | null,
+  origin: 'editor' | 'preview' | 'panel' | 'keyboard'
+): void {
   if (studio.sync) {
     nodeId ? studio.sync.handleSelectionChange(nodeId, origin) : studio.sync.clearSelection(origin)
   }
@@ -914,7 +955,11 @@ export function removeProperty(nodeId: string, property: string): boolean {
   return executor.execute(new RemovePropertyCommand({ nodeId, property })).success
 }
 
-export function insertComponent(parentId: string, component: string, options?: { position?: 'first' | 'last' | number; properties?: string }): boolean {
+export function insertComponent(
+  parentId: string,
+  component: string,
+  options?: { position?: 'first' | 'last' | number; properties?: string }
+): boolean {
   return executor.execute(new InsertComponentCommand({ parentId, component, ...options })).success
 }
 
@@ -922,7 +967,9 @@ export function deleteNode(nodeId: string): boolean {
   return executor.execute(new DeleteNodeCommand({ nodeId })).success
 }
 
-export function onSelectionChange(callback: (nodeId: string | null, origin: string) => void): () => void {
+export function onSelectionChange(
+  callback: (nodeId: string | null, origin: string) => void
+): () => void {
   return events.on('selection:changed', ({ nodeId, origin }) => callback(nodeId, origin))
 }
 
@@ -930,6 +977,8 @@ export function onSourceChange(callback: (source: string, origin: string) => voi
   return events.on('source:changed', ({ source, origin }) => callback(source, origin))
 }
 
-export function onCompileComplete(callback: (data: { ast: AST; ir: IR | null; sourceMap: SourceMap }) => void): () => void {
+export function onCompileComplete(
+  callback: (data: { ast: AST; ir: IR | null; sourceMap: SourceMap }) => void
+): () => void {
   return events.on('compile:completed', callback)
 }
