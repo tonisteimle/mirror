@@ -5,14 +5,15 @@
  */
 
 // ============================================
-// Types
+// Legacy Types (deprecated, for backwards compatibility)
 // ============================================
 
-export type {
-  DragDropConfig,
-  DragDropSystem,
-  DragState,
-} from './types'
+/** @deprecated Use DragDropBootstrapConfig instead */
+export type { DragDropConfig } from './types'
+/** @deprecated Use DragDropController instead */
+export type { DragDropSystem } from './types'
+/** @deprecated Use NewDragState from state-machine.ts instead */
+export type { DragState } from './types'
 export {
   detectTarget,
   findClosestTarget,

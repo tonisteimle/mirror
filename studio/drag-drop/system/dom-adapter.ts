@@ -1,8 +1,12 @@
 /**
  * DOM Adapter
  *
- * Abstracts DOM-dependent operations to enable unit testing
- * without requiring a full DOM environment.
+ * Low-level abstraction for DOM operations. Used by:
+ * - target-detector.ts (for element detection)
+ * - adapters/dom-adapters.ts (for port implementations)
+ *
+ * This enables unit testing without a full DOM environment.
+ * For the full Ports & Adapters architecture, see ./adapters/
  */
 
 /**
