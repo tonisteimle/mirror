@@ -53,8 +53,7 @@ import {
 import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
 import type { DrawManager } from './visual/draw-manager'
 import type { InlineEditController } from './inline-edit'
-import { type DragDropSystem } from './drag-drop'
-import { initDragDrop, initDrawManager, initInlineEdit, initSync } from './bootstrap/index'
+import { initDrawManager, initInlineEdit, initSync } from './bootstrap/index'
 import { initUserSettings } from './storage/user-settings'
 import { initStudioTestAPI } from './test-api'
 import { triggerRename, isRenameActive, closeRename } from './rename'
@@ -110,7 +109,6 @@ export interface StudioInstance {
   agent: AgentIntegration | null
   drawManager: DrawManager | null
   inlineEdit: InlineEditController | null
-  dragDrop: DragDropSystem | null
   /** Cleanup all event subscriptions and resources */
   dispose: () => void
 }
@@ -118,7 +116,6 @@ export interface StudioInstance {
 // Extend Window interface for global properties
 declare global {
   interface Window {
-    __mirrorDragDropV2__?: unknown
     MirrorStudio?: StudioInstance
   }
 }
@@ -144,7 +141,6 @@ export const studio: StudioInstance = {
   agent: null,
   drawManager: null,
   inlineEdit: null,
-  dragDrop: null,
   dispose: () => {
     // Unsubscribe all event listeners
     for (const unsubscribe of eventUnsubscribes) {
@@ -160,7 +156,6 @@ export const studio: StudioInstance = {
     studio.userComponentsPanel?.dispose()
     studio.drawManager?.dispose()
     studio.inlineEdit?.dispose()
-    studio.dragDrop?.dispose()
     studio.preview?.dispose()
 
     // Clear references
@@ -174,7 +169,6 @@ export const studio: StudioInstance = {
     studio.breadcrumb = null
     studio.drawManager = null
     studio.inlineEdit = null
-    studio.dragDrop = null
     studio.agent = null
   },
 }
@@ -591,23 +585,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   studio.drawManager = drawManagerResult.drawManager
   eventUnsubscribes.push(drawManagerResult.dispose)
 
-  // ============================================
-  // Drag & Drop System - Webflow Style
-  // ============================================
-  const dragDropResult = initDragDrop({
-    container: config.previewContainer,
-    editor: config.editor,
-    editorController,
-    getCurrentFile: () => getCurrentFileCallback?.() || 'index.mir',
-  })
-  studio.dragDrop = dragDropResult.system
-  eventUnsubscribes.push(dragDropResult.dispose)
-  initStudioTestAPI(studio, dragDropResult.system)
-
-  // Expose for E2E testing
-  if (typeof window !== 'undefined') {
-    window.__mirrorDragDropV2__ = dragDropResult.v2
-  }
+  // Initialize test API (without drag-drop for now)
+  initStudioTestAPI(studio, null)
 
   // ============================================
   // Component Event Handlers

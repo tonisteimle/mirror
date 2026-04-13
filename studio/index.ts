@@ -32,9 +32,6 @@ export * from './preview'
 // Visual (overlay, resize, etc.)
 export * from './visual'
 
-// Drag & Drop (Pragmatic DnD based)
-export * from './drag-drop'
-
 // LLM
 export * from './llm'
 

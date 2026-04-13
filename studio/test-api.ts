@@ -9,7 +9,6 @@
  */
 
 import type { StudioInstance } from './bootstrap'
-import type { DragDropSystem } from './drag-drop'
 import { events, type StudioEvents } from './core/events'
 import { getTriggerManager } from './editor/trigger-manager'
 import { createLogger } from '../compiler/utils/logger'
@@ -42,7 +41,6 @@ export interface StudioTestAPI {
 
 declare global {
   interface Window {
-    __mirrorDragDrop__?: DragDropSystem
     __mirrorStudio__?: StudioInstance
     __STUDIO_TEST__?: StudioTestAPI
   }
@@ -157,11 +155,10 @@ function createStudioTestAPI(): StudioTestAPI {
  * Exposes studio systems on the window object for Playwright tests.
  *
  * @param studio - The studio instance
- * @param dragDrop - The drag-drop system instance
+ * @param _dragDrop - Unused, kept for backwards compatibility
  */
-export function initStudioTestAPI(studio: StudioInstance, dragDrop: DragDropSystem): void {
+export function initStudioTestAPI(studio: StudioInstance, _dragDrop: unknown): void {
   if (typeof window !== 'undefined') {
-    window.__mirrorDragDrop__ = dragDrop
     window.__mirrorStudio__ = studio
     window.__STUDIO_TEST__ = createStudioTestAPI()
   }
@@ -175,7 +172,6 @@ export function initStudioTestAPI(studio: StudioInstance, dragDrop: DragDropSyst
  */
 export function cleanupStudioTestAPI(): void {
   if (typeof window !== 'undefined') {
-    delete window.__mirrorDragDrop__
     delete window.__mirrorStudio__
     delete window.__STUDIO_TEST__
   }
