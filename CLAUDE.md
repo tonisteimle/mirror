@@ -265,15 +265,17 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
     Frame w 50, h 50, bg #f59e0b, rad 25
 ```
 
-| Property  | Beschreibung                            | Beispiel                  |
-| --------- | --------------------------------------- | ------------------------- |
-| `bg`      | Hintergrundfarbe                        | `bg #2271C1`              |
-| `col`     | Textfarbe                               | `col white`               |
-| `pad`     | Innenabstand (zwischen Rand und Inhalt) | `pad 12` oder `pad 12 24` |
-| `mar`     | Außenabstand (zwischen Elementen)       | `mar 16`                  |
-| `w` / `h` | Breite / Höhe                           | `w 200, h 100`            |
-| `rad`     | Eckenradius                             | `rad 8`                   |
-| `fs`      | Schriftgröße                            | `fs 18`                   |
+| Property          | Beschreibung                            | Beispiel                  |
+| ----------------- | --------------------------------------- | ------------------------- |
+| `bg`              | Hintergrundfarbe                        | `bg #2271C1`              |
+| `col`             | Textfarbe                               | `col white`               |
+| `pad`             | Innenabstand (zwischen Rand und Inhalt) | `pad 12` oder `pad 12 24` |
+| `pad-x` / `pad-y` | Horizontaler / vertikaler Innenabstand  | `pad-x 16` oder `px 16`   |
+| `mar`             | Außenabstand (zwischen Elementen)       | `mar 16`                  |
+| `mar-x` / `mar-y` | Horizontaler / vertikaler Außenabstand  | `mar-x 8` oder `mx 8`     |
+| `w` / `h`         | Breite / Höhe                           | `w 200, h 100`            |
+| `rad`             | Eckenradius                             | `rad 8`                   |
+| `fs`              | Schriftgröße                            | `fs 18`                   |
 
 ### Hierarchie durch Einrückung
 
@@ -1465,6 +1467,29 @@ Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Frame w 70, h 50, bg #1a1a1a, rad 6, center, cursor not-allowed
     Text "not-allowed", col #888, fs 9
 ```
+
+### Hover-Properties
+
+Für einfache Hover-Effekte ohne State-Block gibt es Inline-Properties:
+
+```mirror
+Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
+  Button "Hover mich", bg #333, col white, pad 10 20, rad 6, hover-bg #2271C1
+  Button "Scale", bg #333, col white, pad 10 20, rad 6, hover-scale 1.05
+  Button "Opacity", bg #2271C1, col white, pad 10 20, rad 6, hover-opacity 0.8
+```
+
+| Property             | Alias                    | Beschreibung               |
+| -------------------- | ------------------------ | -------------------------- |
+| `hover-bg`           | `hover-background`       | Hintergrundfarbe bei Hover |
+| `hover-col`          | `hover-color`, `hover-c` | Textfarbe bei Hover        |
+| `hover-opacity`      | `hover-opa`, `hover-o`   | Transparenz bei Hover      |
+| `hover-scale`        | -                        | Skalierung bei Hover       |
+| `hover-border`       | `hover-bor`              | Border-Breite bei Hover    |
+| `hover-border-color` | `hover-boc`              | Border-Farbe bei Hover     |
+| `hover-radius`       | `hover-rad`              | Border-Radius bei Hover    |
+
+> **Hinweis:** Für komplexere Hover-Effekte (mehrere Properties, Animationen) verwende den `hover:` State-Block.
 
 ### Praktisch: Button Varianten
 
@@ -2877,6 +2902,50 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 
 Jedes verschachtelte Objekt hat einen Namen und ist direkt adressierbar: `$method.steps.planning.title`
 
+### Aggregationsmethoden
+
+Sammlungen haben eingebaute Methoden für häufige Berechnungen:
+
+```mirror
+tasks:
+  t1:
+    title: "Design Review"
+    hours: 4
+  t2:
+    title: "Development"
+    hours: 8
+  t3:
+    title: "Testing"
+    hours: 2
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Anzahl: $tasks.count Tasks", col white
+  Text "Erster: $tasks.first.title", col #888
+  Text "Letzter: $tasks.last.title", col #888
+```
+
+| Methode   | Beschreibung        | Beispiel             |
+| --------- | ------------------- | -------------------- |
+| `.count`  | Anzahl der Einträge | `$tasks.count`       |
+| `.first`  | Erster Eintrag      | `$tasks.first.title` |
+| `.last`   | Letzter Eintrag     | `$tasks.last.title`  |
+| `.unique` | Deduplizierte Werte | `$colors.unique`     |
+
+Beispiel mit einfacher Liste:
+
+```mirror
+colors:
+  red
+  blue
+  red
+  green
+  blue
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Alle: $colors.count Farben", col white
+  Text "Einzigartig: $colors.unique", col #888
+```
+
 ### Externe Daten: .data-Dateien
 
 Für größere Datenmengen oder Wiederverwendung: Daten in `.data`-Dateien auslagern. **Die Syntax ist identisch** – nur in einer separaten Datei:
@@ -3261,6 +3330,15 @@ Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
 | Loop-Variable        | `Text "$user.name"`             |
 | Relation             | `assignee: $users.toni`         |
 
+#### Aggregationsmethoden
+
+| Methode   | Beispiel             |
+| --------- | -------------------- |
+| `.count`  | `$tasks.count`       |
+| `.first`  | `$tasks.first.title` |
+| `.last`   | `$tasks.last.title`  |
+| `.unique` | `$colors.unique`     |
+
 #### Bedingungen
 
 | Syntax          | Beispiel                     |
@@ -3601,6 +3679,29 @@ DatePicker
 
 Mit den Buttons oben wechselst du zwischen Monaten.
 
+### Two-Way Binding
+
+Mit `bind` verknüpfst du ein Eingabefeld mit einer Variable. Änderungen im Feld aktualisieren die Variable automatisch:
+
+```mirror
+searchTerm: ""
+
+Frame gap 12, w 280
+  Input bind searchTerm, placeholder "Suchen..."
+  Text "Du suchst: $searchTerm", col #888
+```
+
+`bind varName` ersetzt die alte Syntax `value $varName, bind varName`. Die vereinfachte Syntax funktioniert für `Input`, `Textarea` und `Select`:
+
+```mirror
+city: ""
+
+Select bind city, placeholder "Stadt wählen..."
+  Option "Berlin"
+  Option "Hamburg"
+  Option "München"
+```
+
 ### Tastatursteuerung
 
 Mit `keyboard-nav` (oder `keynav`) auf einem Container aktivierst du Tastaturnavigation für Formulare:
@@ -3668,6 +3769,10 @@ Switch "Dark Mode"
 | `Slider`                   | Numerischer Bereich            |
 | `Select` + `Option`        | Dropdown-Auswahl               |
 | `DatePicker`               | Kalender-Auswahl               |
+
+**Two-Way Binding:** `Input bind varName` verknüpft Eingabe mit Variable. Gilt auch für `Textarea` und `Select`.
+
+**Option Defaults:** `Option "Text"` reicht – der `value` wird automatisch vom Label übernommen.
 
 **Tastatursteuerung:** `Frame keyboard-nav` aktiviert Enter/Escape-Navigation für Formulare.
 
@@ -4831,11 +4936,19 @@ Frame gap 16
 | hor-center         | -                    | _(standalone)_                                                                                                                                                               |
 | ver-center         | -                    | _(standalone)_                                                                                                                                                               |
 | padding            | pad, p               | <number>, $token                                                                                                                                                             |
+| pad-x              | px                   | <number>, $token                                                                                                                                                             |
+| pad-y              | py                   | <number>, $token                                                                                                                                                             |
 | margin             | mar, m               | <number>, $token                                                                                                                                                             |
+| mar-x              | mx                   | <number>, $token                                                                                                                                                             |
+| mar-y              | my                   | <number>, $token                                                                                                                                                             |
 | background         | bg                   | <color>, $token                                                                                                                                                              |
 | color              | col, c               | <color>, $token                                                                                                                                                              |
 | border-color       | boc                  | <color>, $token                                                                                                                                                              |
 | border             | bor                  | <number>, $token                                                                                                                                                             |
+| border-top         | bor-t, bort          | <number>, $token                                                                                                                                                             |
+| border-bottom      | bor-b, borb          | <number>, $token                                                                                                                                                             |
+| border-left        | bor-l, borl          | <number>, $token                                                                                                                                                             |
+| border-right       | bor-r, borr          | <number>, $token                                                                                                                                                             |
 | radius             | rad                  | <number>, $token                                                                                                                                                             |
 | font-size          | fs                   | <number>, $token                                                                                                                                                             |
 | weight             | -                    | thin, light, normal, medium, semibold, bold, black, <number>                                                                                                                 |

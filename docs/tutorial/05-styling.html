@@ -134,6 +134,34 @@
       <div class="note">
         <strong>Praxis-Tipp:</strong> Ein subtiler 1px-Border (<code>bor 1, boc #333</code>) auf dunklem Hintergrund gibt Elementen Tiefe, ohne aufdringlich zu wirken. Das ist ein häufig genutztes Pattern für Cards und Inputs.
       </div>
+
+      <h3>Gerichtete Borders</h3>
+      <p>Für einzelne Seiten gibt es Shortcuts:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 8, bg #0a0a0a, pad 16, rad 8
+  // Nur unten
+  Frame w 200, h 40, bg #1a1a1a, border-bottom 2, boc #2271C1, center
+    Text "border-bottom", col #888, fs 11
+
+  // Nur links
+  Frame w 200, h 40, bg #1a1a1a, bor-l 3, boc #10b981, center
+    Text "bor-l (Shortcut)", col #888, fs 11
+
+  // Oben und unten
+  Frame w 200, h 40, bg #1a1a1a, bort 1, borb 1, boc #f59e0b, center
+    Text "bort + borb", col #888, fs 11</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Property</th><th>Alias</th><th>Seite</th></tr>
+        <tr><td><code>border-top</code></td><td><code>bor-t</code>, <code>bort</code></td><td>Oben</td></tr>
+        <tr><td><code>border-bottom</code></td><td><code>bor-b</code>, <code>borb</code></td><td>Unten</td></tr>
+        <tr><td><code>border-left</code></td><td><code>bor-l</code>, <code>borl</code></td><td>Links</td></tr>
+        <tr><td><code>border-right</code></td><td><code>bor-r</code>, <code>borr</code></td><td>Rechts</td></tr>
+      </table>
     </section>
 
 
@@ -283,6 +311,45 @@
     Text "not-allowed", col #888, fs 9</textarea>
         </div>
         <div class="playground-preview"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Hover-Properties</h2>
+      <p>Für einfache Hover-Effekte ohne State-Block gibt es Inline-Properties. Diese sind kürzer als ein <code>hover:</code> State:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
+  // Mit hover-bg und hover-col
+  Button "Hover mich", bg #333, col white, pad 10 20, rad 6, hover-bg #2271C1, hover-col white
+
+  // Mit hover-scale
+  Frame w 60, h 60, bg #2271C1, rad 8, center, cursor pointer, hover-scale 1.1
+    Text "Scale", col white, fs 10
+
+  // Mit hover-opacity
+  Frame w 60, h 60, bg #10b981, rad 8, center, cursor pointer, hover-opacity 0.7
+    Text "Opacity", col white, fs 10</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Property</th><th>Alias</th><th>Beschreibung</th></tr>
+        <tr><td><code>hover-bg</code></td><td><code>hover-background</code></td><td>Hintergrundfarbe bei Hover</td></tr>
+        <tr><td><code>hover-col</code></td><td><code>hover-color</code>, <code>hover-c</code></td><td>Textfarbe bei Hover</td></tr>
+        <tr><td><code>hover-opacity</code></td><td><code>hover-opa</code>, <code>hover-o</code></td><td>Transparenz bei Hover</td></tr>
+        <tr><td><code>hover-scale</code></td><td>–</td><td>Skalierung bei Hover</td></tr>
+        <tr><td><code>hover-border</code></td><td><code>hover-bor</code></td><td>Border-Breite bei Hover</td></tr>
+        <tr><td><code>hover-border-color</code></td><td><code>hover-boc</code></td><td>Border-Farbe bei Hover</td></tr>
+        <tr><td><code>hover-radius</code></td><td><code>hover-rad</code></td><td>Border-Radius bei Hover</td></tr>
+      </table>
+
+      <div class="note">
+        <strong>Wann was nutzen?</strong> Hover-Properties sind ideal für einfache Farbwechsel oder kleine Transformationen. Für komplexere Hover-Effekte (mehrere Properties ändern, Kinder hinzufügen) nutze den <code>hover:</code> State-Block aus dem States-Kapitel.
       </div>
 
     </section>

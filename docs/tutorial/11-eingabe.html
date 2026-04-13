@@ -150,15 +150,26 @@
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Select placeholder "Stadt wählen..."
-    Option "Berlin", value "berlin"
-    Option "Hamburg", value "hamburg"
-    Option "München", value "munich"
-    Option "Köln", value "cologne"</textarea>
+    Option "Berlin"
+    Option "Hamburg"
+    Option "München"
+    Option "Köln"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Jede <code>Option</code> braucht einen <code>value</code>. Mit <code>placeholder</code> zeigst du Text, wenn nichts ausgewählt ist. Das Dropdown öffnet bei Klick, ist mit Pfeiltasten navigierbar und schließt bei Auswahl oder Escape.</p>
+      <p><code>Option "Text"</code> reicht – der <code>value</code> wird automatisch vom Label übernommen. Mit <code>placeholder</code> zeigst du Text, wenn nichts ausgewählt ist. Das Dropdown öffnet bei Klick, ist mit Pfeiltasten navigierbar und schließt bei Auswahl oder Escape.</p>
+
+      <p>Für unterschiedliche Werte (z.B. für Datenbanken) kannst du <code>value</code> explizit setzen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Select placeholder "Status wählen..."
+    Option "In Bearbeitung", value "in_progress"
+    Option "Abgeschlossen", value "done"
+    Option "Abgebrochen", value "cancelled"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
     </section>
 
 
@@ -177,6 +188,45 @@
       </div>
 
       <p>Mit den Buttons oben wechselst du zwischen Monaten.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- TWO-WAY BINDING -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Two-Way Binding</h2>
+      <p>Mit <code>bind</code> verknüpfst du ein Eingabefeld mit einer Variable. Änderungen im Feld aktualisieren die Variable automatisch:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>searchTerm: ""
+
+Frame gap 12, w 280
+  Input bind searchTerm, placeholder "Suchen..."
+  Text "Du suchst: $searchTerm", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><code>bind varName</code> ersetzt die alte Syntax <code>value $varName, bind varName</code>. Tippe in das Feld – der Text darunter aktualisiert sich sofort.</p>
+
+      <h3>Mit Select</h3>
+      <p>Auch Select unterstützt <code>bind</code>:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>city: ""
+
+Frame gap 12, w 280
+  Select bind city, placeholder "Stadt wählen..."
+    Option "Berlin"
+    Option "Hamburg"
+    Option "München"
+  Text "Gewählt: $city", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
     </section>
 
 
@@ -280,6 +330,10 @@ Checkbox "Newsletter"
         <tr><td><code>Select</code> + <code>Option</code></td><td>Dropdown-Auswahl</td></tr>
         <tr><td><code>DatePicker</code></td><td>Kalender-Auswahl</td></tr>
       </table>
+
+      <p><strong>Two-Way Binding:</strong> <code>Input bind varName</code> verknüpft Eingabe mit Variable. Gilt auch für <code>Textarea</code> und <code>Select</code>.</p>
+
+      <p><strong>Option Defaults:</strong> <code>Option "Text"</code> reicht – der <code>value</code> wird automatisch vom Label übernommen.</p>
 
       <p><strong>Tastatursteuerung:</strong> <code>Frame keyboard-nav</code> aktiviert Enter/Escape-Navigation für Formulare.</p>
 

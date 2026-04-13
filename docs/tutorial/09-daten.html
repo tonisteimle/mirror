@@ -375,6 +375,60 @@ website:
 
     <!-- ============================================================ -->
     <section>
+      <h2>Aggregationsmethoden</h2>
+      <p>Sammlungen haben eingebaute Methoden für häufige Berechnungen:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>tasks:
+  t1:
+    title: "Design Review"
+    hours: 4
+  t2:
+    title: "Development"
+    hours: 8
+  t3:
+    title: "Testing"
+    hours: 2
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Anzahl: $tasks.count Tasks", col white
+  Text "Erster: $tasks.first.title", col #888
+  Text "Letzter: $tasks.last.title", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Methode</th><th>Beschreibung</th><th>Beispiel</th></tr>
+        <tr><td><code>.count</code></td><td>Anzahl der Einträge</td><td><code>$tasks.count</code></td></tr>
+        <tr><td><code>.first</code></td><td>Erster Eintrag</td><td><code>$tasks.first.title</code></td></tr>
+        <tr><td><code>.last</code></td><td>Letzter Eintrag</td><td><code>$tasks.last.title</code></td></tr>
+        <tr><td><code>.unique</code></td><td>Deduplizierte Werte</td><td><code>$colors.unique</code></td></tr>
+      </table>
+
+      <h3>Beispiel: Statistiken</h3>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>colors:
+  red
+  blue
+  red
+  green
+  blue
+  red
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Alle: $colors.count Farben", col white
+  Text "Einzigartig: $colors.unique", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>Praktisch: Produktliste</h2>
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -728,6 +782,15 @@ Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
         <tr><td>Iteration</td><td><code>each user in $users</code></td></tr>
         <tr><td>Loop-Variable</td><td><code>Text "$user.name"</code></td></tr>
         <tr><td>Relation</td><td><code>assignee: $users.toni</code></td></tr>
+      </table>
+
+      <h3>Aggregationsmethoden</h3>
+      <table class="ref-table">
+        <tr><th>Methode</th><th>Beispiel</th></tr>
+        <tr><td><code>.count</code></td><td><code>$tasks.count</code></td></tr>
+        <tr><td><code>.first</code></td><td><code>$tasks.first.title</code></td></tr>
+        <tr><td><code>.last</code></td><td><code>$tasks.last.title</code></td></tr>
+        <tr><td><code>.unique</code></td><td><code>$colors.unique</code></td></tr>
       </table>
 
       <h3>Bedingungen</h3>
