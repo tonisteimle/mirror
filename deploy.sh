@@ -140,11 +140,11 @@ put desktop-files.js
 put dialog.js
 put cleanup.js
 
-# Upload studio/dist (new architecture modules)
+# Upload studio/dist (new architecture modules + chunks)
 mkdir -f dist
 cd dist
 lcd $STUDIO_DIR/dist
-put index.js
+mput *.js
 put mirror-defaults.css
 
 # Upload compiled JS (the compiler) to /mirror/dist/browser/
