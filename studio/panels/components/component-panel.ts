@@ -20,6 +20,7 @@ import { getComponentIcon } from '../../icons'
 import { LAYOUT_SECTION, COMPONENTS_SECTION } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
+import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
 import { createLogger } from '../../../compiler/utils/logger'
 
 const log = createLogger('ComponentPanel')
@@ -422,6 +423,14 @@ export class ComponentPanel {
     event.dataTransfer.setData('text/plain', '\n')
     event.dataTransfer.effectAllowed = 'copy'
 
+    // Store drag data globally for DragPreview (dataTransfer not readable in dragenter)
+    setCurrentDragData({
+      componentId: item.id,
+      componentName: item.template,
+      properties: item.properties,
+      textContent: item.textContent,
+    })
+
     // Add dragging class
     const target = event.target as HTMLElement
     target.classList.add('dragging')
@@ -518,6 +527,9 @@ export class ComponentPanel {
     // Remove dragging class
     const target = event.target as HTMLElement
     target.classList.remove('dragging')
+
+    // Clear global drag data
+    clearCurrentDragData()
 
     // Notify callback
     this.callbacks.onDragEnd?.(item, event)

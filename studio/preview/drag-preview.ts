@@ -2,13 +2,45 @@
  * Drag Preview - Shows rendered component when dragging over canvas
  *
  * Minimal implementation:
- * - Outside canvas: invisible (browser default)
+ * - Outside canvas: icon + text (native drag image)
  * - Inside canvas: show rendered component as ghost
  */
 
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('DragPreview')
+
+// =============================================================================
+// Global Drag Data Store
+// =============================================================================
+// Browser security prevents reading drag data during dragenter/dragover.
+// We store the data globally when drag starts and read it here.
+
+export interface ComponentDragData {
+  componentId?: string
+  componentName: string
+  properties?: string
+  textContent?: string
+}
+
+let currentDragData: ComponentDragData | null = null
+
+/** Set current drag data (called by ComponentPanel on dragstart) */
+export function setCurrentDragData(data: ComponentDragData | null): void {
+  currentDragData = data
+  log.debug('Drag data set:', data?.componentName ?? 'null')
+}
+
+/** Get current drag data */
+export function getCurrentDragData(): ComponentDragData | null {
+  return currentDragData
+}
+
+/** Clear current drag data (called on dragend) */
+export function clearCurrentDragData(): void {
+  currentDragData = null
+  log.debug('Drag data cleared')
+}
 
 export interface DragPreviewConfig {
   /** The preview/canvas container */
@@ -65,15 +97,10 @@ export class DragPreview {
     e.preventDefault()
     this.isOverCanvas = true
 
-    // Get drag data and show ghost
-    const data = e.dataTransfer.getData('application/mirror-component')
-    if (data) {
-      try {
-        const dragData = JSON.parse(data)
-        this.showGhost(dragData, e.clientX, e.clientY)
-      } catch (err) {
-        log.warn('Failed to parse drag data:', err)
-      }
+    // Get drag data from global store (dataTransfer.getData doesn't work in dragenter)
+    const dragData = getCurrentDragData()
+    if (dragData) {
+      this.showGhost(dragData, e.clientX, e.clientY)
     }
   }
 
