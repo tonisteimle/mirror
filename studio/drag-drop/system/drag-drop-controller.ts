@@ -256,9 +256,15 @@ export class DragDropController {
     const source = getSource(this.state)
     if (!source) return
 
+    // Performance timing
+    const perfStart = performance.now()
+    const timings: Record<string, number> = {}
+
     try {
       // Find target under cursor
+      const t0 = performance.now()
       const target = this.ports.targetDetection.findTarget(cursor, source)
+      timings.findTarget = performance.now() - t0
 
       if (!target) {
         // Lost target
@@ -269,8 +275,13 @@ export class DragDropController {
       }
 
       // Get rects for calculation
+      const t1 = performance.now()
       const childRects = this.ports.layout.getChildRects(target.element)
+      timings.getChildRects = performance.now() - t1
+
+      const t2 = performance.now()
       const containerRect = this.ports.layout.getContainerRect(target.element)
+      timings.getContainerRect = performance.now() - t2
 
       if (!containerRect) {
         if (isOverTarget(this.state)) {
@@ -280,6 +291,7 @@ export class DragDropController {
       }
 
       // Calculate drop result
+      const t3 = performance.now()
       const result = this.ports.targetDetection.calculateResult(
         cursor,
         target,
@@ -287,12 +299,16 @@ export class DragDropController {
         childRects,
         containerRect
       )
+      timings.calculateResult = performance.now() - t3
 
       // Handle mode debouncing
+      const t4 = performance.now()
       const newMode = this.getDropMode(target)
       const effectiveResult = this.handleModeTransition(newMode, result)
+      timings.modeTransition = performance.now() - t4
 
       // Dispatch appropriate event
+      const t5 = performance.now()
       if (isOverTarget(this.state)) {
         // Already over a target - check if it changed
         if (this.state.target.nodeId !== target.nodeId) {
@@ -317,9 +333,21 @@ export class DragDropController {
           containerRect,
         })
       }
+      timings.dispatch = performance.now() - t5
 
       // Update visuals
+      const t6 = performance.now()
       this.updateVisuals(effectiveResult, childRects, containerRect)
+      timings.updateVisuals = performance.now() - t6
+
+      // Log total time if > 5ms (potential performance issue)
+      const totalTime = performance.now() - perfStart
+      if (totalTime > 5) {
+        log.warn(`[PERF] updateTargetDetection took ${totalTime.toFixed(1)}ms`, {
+          layout: target.layoutType,
+          ...timings,
+        })
+      }
     } catch (error) {
       log.error('Target detection failed:', error)
       // Cancel the drag operation gracefully
