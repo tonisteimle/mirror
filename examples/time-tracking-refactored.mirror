@@ -222,61 +222,56 @@ Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
       BtnSecondary "Export"
 
       // Dialog for new entry
-      Dialog
-        Trigger: Button "Neuer Eintrag", bg $accent, col white, pad $space-sm $space-md, rad $rad-md, fs $fs-md, weight 500, cursor pointer
-        Content: Frame bg $card, pad $space-xl, rad $rad-lg, gap $gap-xl, w 400
-          // Dialog Header
-          Frame hor, spread, ver-center
-            Text "Neuer Zeiteintrag", col $text, fs $fs-xl, weight 600
-            CloseTrigger: Frame cursor pointer, pad $space-sm, rad $rad-md
-              Icon "x", ic #888, is 18
-              hover 0.15s:
-                bg $muted
+      Dialog closeOnOutsideClick
+        Trigger: BtnPrimary "Neuer Eintrag"
+        Content: Frame bg $card, pad 16, rad 8, gap 12, w 360
+          // Dialog Header mit Close Button
+          Frame hor, spread, ver-center, borb 1, boc $border, pad 0 0 12 0
+            Text "Neuer Zeiteintrag", col $text, fs 14, weight 600
+            CloseTrigger: Icon "x", ic #666, is 16, cursor pointer
 
           // Form Fields
-          Frame gap $gap-lg
+          Frame gap 12
             // Date
             FormField
               Label "Datum"
-              FormInput value $newDate, bind newDate
+              FormInput bind newDate
 
             // Project Selection
             FormField
               Label "Projekt"
-              Select w full, bind newProject
-                Option "Website Relaunch", value "Website Relaunch"
-                Option "Mobile App", value "Mobile App"
-                Option "Intern", value "Intern"
-                Option "Support", value "Support"
+              Select placeholder "Projekt wählen...", w full, bind newProject
+                Option "Website Relaunch"
+                Option "Mobile App"
+                Option "Intern"
+                Option "Support"
 
             // Client Selection
             FormField
               Label "Kunde"
-              Select w full, bind newClient
-                Option "Müller AG", value "Müller AG"
-                Option "Schmidt GmbH", value "Schmidt GmbH"
-                Option "Weber & Co", value "Weber & Co"
-                Option "—", value "—"
+              Select placeholder "Kunde wählen...", w full, bind newClient
+                Option "Müller AG"
+                Option "Schmidt GmbH"
+                Option "Weber & Co"
+                Option "—"
 
             // Task
             FormField
               Label "Tätigkeit"
               FormInput placeholder "Was wurde gemacht?", bind newTask
 
-            // Hours and Billable Row
-            Frame hor, gap $gap-lg
-              FormField grow
-                Label "Stunden"
-                FormInput type "number", value $newHours, bind newHours
+            // Hours
+            FormField
+              Label "Stunden"
+              FormInput type "number", bind newHours, w 80
 
-              Frame gap $gap-xs, ver-center
-                Label " ", col transparent, fs $fs-sm
-                Checkbox "Verrechenbar", checked, bind newBillable
+            // Billable Checkbox
+            Checkbox "Verrechenbar", checked, bind newBillable
 
           // Actions
-          Frame hor, gap $gap-md, right
+          Frame hor, gap 8, right, bort 1, boc $border, pad 12 0 0 0
             CloseTrigger: BtnSecondary "Abbrechen"
-            Button "Eintrag erstellen", bg $accent, col white, pad $space-sm $space-md, rad $rad-md, fs $fs-md, weight 500, cursor pointer, add(entries, date: $newDate, project: $newProject, client: $newClient, task: $newTask, hours: $newHours, billable: $newBillable)
+            BtnPrimary "Speichern", add(entries, date: $newDate, project: $newProject, client: $newClient, task: $newTask, hours: $newHours, billable: $newBillable)
 
   // Stats Row
   Frame hor, gap $gap-xl, h 90
