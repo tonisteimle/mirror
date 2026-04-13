@@ -88,7 +88,14 @@ export class DragPreview {
   // handleDragEnter is no longer used - we detect entry via handleDragOver
 
   private handleDragOver(e: DragEvent): void {
-    if (!e.dataTransfer?.types.includes('application/mirror-component')) {
+    // Check for Mirror component drag - types is a DOMStringList, use contains()
+    const types = e.dataTransfer?.types
+    const hasMirrorComponent =
+      types &&
+      (types.includes?.('application/mirror-component') ||
+        Array.from(types).includes('application/mirror-component'))
+
+    if (!hasMirrorComponent) {
       return
     }
 
@@ -178,16 +185,19 @@ export class DragPreview {
         position: 'fixed',
         pointerEvents: 'none',
         zIndex: '10000',
-        opacity: '0.8',
+        opacity: '0.9',
         transform: 'translate(-50%, -50%)',
         transition: 'none',
-        background: '#1a1a1a',
-        border: '1px solid #333',
-        borderRadius: '4px',
-        padding: '8px 12px',
+        background: '#2563eb',
+        border: '1px solid #3b82f6',
+        borderRadius: '6px',
+        padding: '10px 16px',
         color: 'white',
-        fontSize: '13px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        fontSize: '14px',
+        fontWeight: '500',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        boxShadow: '0 8px 24px rgba(37, 99, 235, 0.4)',
+        whiteSpace: 'nowrap',
       })
       this.ghostElement.textContent = dragData.componentName
     }
