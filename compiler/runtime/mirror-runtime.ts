@@ -653,6 +653,9 @@ function renderNode(node: MirrorNode): HTMLElement {
     el.dataset.visibleWhen = node.props['visible-when']
     el.style.display = 'none' // Hidden until parent state matches
   }
+  if (node.props.stacked) {
+    el.dataset.layout = 'stacked'
+  }
 
   // Apply states
   if (node.props.states) {
@@ -699,6 +702,9 @@ function renderComponent(node: MirrorNode, def: ComponentDef): HTMLElement {
   }
   if (mergedProps.state) {
     el.dataset.state = mergedProps.state
+  }
+  if (mergedProps.stacked) {
+    el.dataset.layout = 'stacked'
   }
 
   // States
