@@ -424,12 +424,16 @@ export class ComponentPanel {
     event.dataTransfer.effectAllowed = 'copy'
 
     // Store drag data globally for DragPreview (dataTransfer not readable in dragenter)
-    setCurrentDragData({
-      componentId: item.id,
-      componentName: item.template,
-      properties: item.properties,
-      textContent: item.textContent,
-    })
+    // Pass the full item so GhostRenderer can render it properly
+    setCurrentDragData(
+      {
+        componentId: item.id,
+        componentName: item.template,
+        properties: item.properties,
+        textContent: item.textContent,
+      },
+      item
+    )
 
     // Add dragging class
     const target = event.target as HTMLElement
