@@ -104,15 +104,15 @@ BtnSecondary as Button: bg $muted, col $text-secondary, pad 6 12, rad 4, fs 11, 
     col $text
 
 // Form
-SelectField: Frame bg $card-alt, bor 1, boc $border, pad 0 10, rad 4, h 32, hor, spread, ver-center, cursor pointer
+SelectField: Frame bg $card-alt, bor 1, boc $border, px 10, rad 4, h 32, hor, spread, ver-center, cursor pointer
   Label: col $text, fs 11
   hover 0.15s:
     boc $border-hover
     bg #1a1a1a
 
 // Table
-TableHeader: Frame hor, pad 6 10, bg $card-alt, rad 4, gap 6
-TableRow: Frame hor, pad 8 10, bor 0 0 1 0, boc $border, gap 6, ver-center, cursor pointer
+TableHeader: Frame hor, py 6, px 10, bg $card-alt, rad 4, gap 6
+TableRow: Frame hor, py 8, px 10, borb 1, boc $border, gap 6, ver-center, cursor pointer
   hover 0.15s:
     bg #222
 
@@ -176,7 +176,7 @@ Frame w 900, bg $bg, pad 24, gap 16, mar 0 auto
       Label "Diese Woche"
       Icon "chevron-down", ic $text-muted, is 12
     Spacer grow
-    Input placeholder "Suchen...", bg $card-alt, bor 1, boc $border, col $text, pad 0 10, rad 4, fs 11, w 160, h 32
+    Input placeholder "Suchen...", bg $card-alt, bor 1, boc $border, col $text, px 10, rad 4, fs 11, w 160, h 32
       hover 0.15s:
         boc $border-hover
       focus 0.15s:

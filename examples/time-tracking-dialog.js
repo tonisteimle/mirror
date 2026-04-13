@@ -179,6 +179,8 @@ const $agg = {
     const a = Array.isArray(arr) ? arr : []
     return a.length ? $agg.sum(a, field) / a.length : 0
   },
+  unique: (arr, field) =>
+    Array.isArray(arr) ? [...new Set(field ? arr.map(i => $getField(i, field)) : arr)] : [],
   min: (arr, field) =>
     Array.isArray(arr) && arr.length
       ? Math.min(...arr.map(i => Number($getField(i, field)) || 0))
@@ -194,7 +196,9 @@ const $agg = {
 // $-variable accessor with aggregation support
 function $get(name) {
   // Check for aggregation pattern: collection.count, collection.sum(field), items.first.name
-  const aggMatch = name.match(/^(.+)\.(count|sum|avg|min|max|first|last)(?:\(([^)]+)\))?(\..+)?$/)
+  const aggMatch = name.match(
+    /^(.+)\.(count|sum|avg|min|max|first|last|unique)(?:\(([^)]+)\))?(\..+)?$/
+  )
   if (aggMatch) {
     const [, collectionPath, method, field, postAccessor] = aggMatch
     const collection = $get(collectionPath)
