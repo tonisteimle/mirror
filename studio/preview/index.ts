@@ -221,10 +221,8 @@ export class PreviewController {
     // Initialize Drag Preview (always enabled)
     this.dragPreview = createDragPreview({
       container: this.container,
-      renderComponent: _code => {
-        // For now, return null to use fallback (component name only)
-        // TODO: Implement actual rendering
-        return null
+      renderComponent: code => {
+        return this.renderMirrorCode(code)
       },
     })
     this.dragPreview.attach()
@@ -751,6 +749,51 @@ export class PreviewController {
   private removeHoverHighlight(nodeId: string): void {
     const element = this.getElementByNodeId(nodeId)
     element?.classList.remove(this.config.hoverClass)
+  }
+
+  /**
+   * Render Mirror code to an HTML element for drag preview
+   */
+  private renderMirrorCode(code: string): HTMLElement | null {
+    try {
+      // Get Mirror compiler from global scope
+      const Mirror = (window as unknown as Record<string, unknown>).Mirror as
+        | {
+            parse(code: string): { errors?: Array<{ message: string }> }
+            generateDOM(ast: unknown): string
+          }
+        | undefined
+
+      if (!Mirror) {
+        return null
+      }
+
+      // Parse and generate DOM code
+      const ast = Mirror.parse(code)
+      if (ast.errors && ast.errors.length > 0) {
+        return null
+      }
+
+      const jsCode = Mirror.generateDOM(ast)
+
+      // Execute to get UI object
+      const execCode = jsCode
+        .replace('export function createUI', 'function createUI')
+        .replace(/document\.body\.appendChild\([^)]+\)/g, '')
+
+      const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
+      const ui = fn() as { root: HTMLElement } | null
+
+      if (!ui || !ui.root) {
+        return null
+      }
+
+      // Return the rendered element (first child of root wrapper)
+      const rendered = (ui.root.firstElementChild as HTMLElement) || ui.root
+      return rendered
+    } catch {
+      return null
+    }
   }
 }
 

@@ -117,22 +117,6 @@ export class DragPreview {
     if (!this.ghostElement) {
       this.ghostElement = document.createElement('div')
       this.ghostElement.id = 'drag-preview-ghost'
-      Object.assign(this.ghostElement.style, {
-        position: 'fixed',
-        pointerEvents: 'none',
-        zIndex: '10000',
-        opacity: '0.8',
-        transform: 'translate(-50%, -50%)',
-        transition: 'none',
-        // Visual styling
-        background: '#1a1a1a',
-        border: '1px solid #333',
-        borderRadius: '4px',
-        padding: '8px 12px',
-        color: 'white',
-        fontSize: '13px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      })
       document.body.appendChild(this.ghostElement)
     }
 
@@ -141,10 +125,40 @@ export class DragPreview {
     const rendered = this.renderComponent(code)
 
     if (rendered) {
+      // Rendered component - minimal ghost styling
+      Object.assign(this.ghostElement.style, {
+        position: 'fixed',
+        pointerEvents: 'none',
+        zIndex: '10000',
+        opacity: '0.85',
+        transform: 'translate(-50%, -50%)',
+        transition: 'none',
+        // No box styling - let the component show naturally
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        padding: '0',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+      })
       this.ghostElement.innerHTML = ''
       this.ghostElement.appendChild(rendered)
     } else {
-      // Fallback: show component name
+      // Fallback: show component name with box styling
+      Object.assign(this.ghostElement.style, {
+        position: 'fixed',
+        pointerEvents: 'none',
+        zIndex: '10000',
+        opacity: '0.8',
+        transform: 'translate(-50%, -50%)',
+        transition: 'none',
+        background: '#1a1a1a',
+        border: '1px solid #333',
+        borderRadius: '4px',
+        padding: '8px 12px',
+        color: 'white',
+        fontSize: '13px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      })
       this.ghostElement.textContent = dragData.componentName
     }
 
