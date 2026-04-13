@@ -141,7 +141,7 @@ export interface EventPort {
 
 export type DragStartHandler = (source: DragSource, cursor: Point) => void
 export type DragMoveHandler = (cursor: Point) => void
-export type DragEndHandler = () => void
+export type DragEndHandler = (updatedSource?: DragSource) => void
 export type DragCancelHandler = () => void
 export type KeyHandler = () => void
 export type CleanupFn = () => void
@@ -167,13 +167,16 @@ export interface ExtendedEventPort extends EventPort {
    * Register a palette item as draggable.
    * @returns Cleanup function to remove the draggable behavior
    */
-  registerPaletteDrag(element: HTMLElement, data: {
-    componentId?: string
-    componentName: string
-    properties?: string
-    textContent?: string
-    children?: ComponentChild[]
-  }): CleanupFn
+  registerPaletteDrag(
+    element: HTMLElement,
+    data: {
+      componentId?: string
+      componentName: string
+      properties?: string
+      textContent?: string
+      children?: ComponentChild[]
+    }
+  ): CleanupFn
 }
 
 // ============================================
@@ -261,11 +264,7 @@ export interface TargetDetectionPort {
   /**
    * Berechnet den Visual Hint für das aktuelle Result.
    */
-  getVisualHint(
-    result: DropResult,
-    childRects: ChildRect[],
-    containerRect: Rect
-  ): VisualHint | null
+  getVisualHint(result: DropResult, childRects: ChildRect[], containerRect: Rect): VisualHint | null
 
   /**
    * Prüft ob ein Drop auf einen Container-Sibling umgeleitet werden soll.

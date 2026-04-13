@@ -56,7 +56,7 @@ export interface DragContext {
 export type DragEvent =
   | { type: 'DRAG_START'; source: DragSource; cursor: Point }
   | { type: 'DRAG_MOVE'; cursor: Point }
-  | { type: 'DRAG_END' }
+  | { type: 'DRAG_END'; updatedSource?: DragSource }
   | { type: 'DRAG_CANCEL' }
   | {
       type: 'TARGET_FOUND'
@@ -127,10 +127,7 @@ export function transition(
         return {
           state: { type: 'idle' },
           context: { ...context, isDisabled: true },
-          effects: [
-            { type: 'HIDE_VISUALS' },
-            { type: 'NOTIFY_DRAG_END', source, success: false },
-          ],
+          effects: [{ type: 'HIDE_VISUALS' }, { type: 'NOTIFY_DRAG_END', source, success: false }],
         }
       }
       return { state, context: { ...context, isDisabled: true }, effects: [] }
@@ -281,20 +278,24 @@ function transitionFromOverTarget(
         effects: [{ type: 'HIDE_VISUALS' }],
       }
 
-    case 'DRAG_END':
+    case 'DRAG_END': {
+      // Use updated source from DROP event if available (has correct componentName)
+      // Otherwise fall back to the original source from DRAG_START
+      const finalSource = event.updatedSource ?? state.source
       return {
         state: {
           type: 'dropped',
-          source: state.source,
+          source: finalSource,
           result: state.result,
         },
         context,
         effects: [
-          { type: 'EXECUTE_DROP', source: state.source, result: state.result },
+          { type: 'EXECUTE_DROP', source: finalSource, result: state.result },
           { type: 'HIDE_VISUALS' },
-          { type: 'NOTIFY_DRAG_END', source: state.source, success: true },
+          { type: 'NOTIFY_DRAG_END', source: finalSource, success: true },
         ],
       }
+    }
 
     case 'DRAG_CANCEL':
       return {

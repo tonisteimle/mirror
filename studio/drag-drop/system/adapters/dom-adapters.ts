@@ -285,7 +285,7 @@ export type DOMEventPort = ExtendedEventPort & {
   // Methods to trigger events (called by actual event sources)
   triggerDragStart(source: DragSource, cursor: Point): void
   triggerDragMove(cursor: Point): void
-  triggerDragEnd(): void
+  triggerDragEnd(updatedSource?: DragSource): void
   triggerDragCancel(): void
 }
 
@@ -520,8 +520,8 @@ export function createDOMEventPort(): DOMEventPort {
       handlers.dragMove.forEach(h => h(cursor))
     },
 
-    triggerDragEnd(): void {
-      handlers.dragEnd.forEach(h => h())
+    triggerDragEnd(updatedSource?: DragSource): void {
+      handlers.dragEnd.forEach(h => h(updatedSource))
     },
 
     triggerDragCancel(): void {

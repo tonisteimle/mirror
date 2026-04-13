@@ -131,8 +131,8 @@ export class DragDropController {
     )
 
     this.cleanupFns.push(
-      this.ports.events.onDragEnd(() => {
-        this.dispatch({ type: 'DRAG_END' })
+      this.ports.events.onDragEnd(updatedSource => {
+        this.dispatch({ type: 'DRAG_END', updatedSource })
       })
     )
 

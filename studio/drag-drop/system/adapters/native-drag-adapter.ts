@@ -53,7 +53,7 @@ export interface NativeDragAdapterConfig {
   eventPort: EventPort & {
     triggerDragStart(source: DragSource, cursor: Point): void
     triggerDragMove(cursor: Point): void
-    triggerDragEnd(): void
+    triggerDragEnd(updatedSource?: DragSource): void
     triggerDragCancel(): void
   }
 
@@ -173,10 +173,11 @@ export function createNativeDragAdapter(config: NativeDragAdapterConfig): Native
 
     if (active) {
       console.log(
-        '[NativeDragAdapter] DROP calling triggerDragEnd, currentSource:',
+        '[NativeDragAdapter] DROP calling triggerDragEnd with updatedSource:',
         JSON.stringify(currentSource, null, 2)
       )
-      eventPort.triggerDragEnd()
+      // Pass the updated source (with correct componentName) to triggerDragEnd
+      eventPort.triggerDragEnd(currentSource ?? undefined)
       resetState()
     }
   }
