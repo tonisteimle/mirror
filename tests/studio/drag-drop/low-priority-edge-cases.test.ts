@@ -52,11 +52,15 @@ describe('Alt-Key Timing', () => {
     expect(ctx.isAltKeyPressed).toBe(true)
 
     // Start drag - Alt should still be pressed
-    const dragStart = transition(state, {
-      type: 'DRAG_START',
-      source: { type: 'palette', componentName: 'Button' },
-      position: { x: 100, y: 100 },
-    }, ctx)
+    const dragStart = transition(
+      state,
+      {
+        type: 'DRAG_START',
+        source: { type: 'palette', componentName: 'Button' },
+        position: { x: 100, y: 100 },
+      },
+      ctx
+    )
     state = dragStart.state
     ctx = dragStart.context
     expect(ctx.isAltKeyPressed).toBe(true)
@@ -99,11 +103,11 @@ describe('Alt-Key Timing', () => {
   })
 
   it('handles Alt key during DISABLE', () => {
-    let state: DragState = {
+    const state: DragState = {
       type: 'dragging',
       source: { type: 'palette', componentName: 'Button' },
     }
-    let ctx = { ...context, isAltKeyPressed: true }
+    const ctx = { ...context, isAltKeyPressed: true }
 
     // Disable while Alt is pressed
     const result = transition(state, { type: 'DISABLE' }, ctx)
@@ -297,15 +301,22 @@ describe('Target Cache Behavior', () => {
 
   const mockAdapter = {
     getBoundingClientRect: () => ({
-      x: 0, y: 0, width: 100, height: 100,
-      top: 0, left: 0, right: 100, bottom: 100,
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      right: 100,
+      bottom: 100,
       toJSON: () => ({}),
     }),
-    getComputedStyle: () => ({
-      display: 'flex',
-      flexDirection: 'row',
-      position: 'static',
-    } as CSSStyleDeclaration),
+    getComputedStyle: () =>
+      ({
+        display: 'flex',
+        flexDirection: 'row',
+        position: 'static',
+      }) as CSSStyleDeclaration,
   }
 
   it('caches results for same element', () => {
@@ -401,11 +412,15 @@ describe('State Machine Edge Cases', () => {
     const state: DragState = { type: 'idle' }
     const disabledContext = { ...context, isDisabled: true }
 
-    const result = transition(state, {
-      type: 'DRAG_START',
-      source: { type: 'palette', componentName: 'Button' },
-      position: { x: 100, y: 100 },
-    }, disabledContext)
+    const result = transition(
+      state,
+      {
+        type: 'DRAG_START',
+        source: { type: 'palette', componentName: 'Button' },
+        position: { x: 100, y: 100 },
+      },
+      disabledContext
+    )
 
     // Should remain in idle state
     expect(result.state.type).toBe('idle')
@@ -433,9 +448,7 @@ describe('State Machine Edge Cases', () => {
     const result = transition(state, { type: 'DISABLE' }, context)
 
     expect(result.state.type).toBe('idle')
-    expect(result.effects).toContainEqual(
-      expect.objectContaining({ type: 'HIDE_VISUALS' })
-    )
+    expect(result.effects).toContainEqual(expect.objectContaining({ type: 'HIDE_VISUALS' }))
     expect(result.effects).toContainEqual(
       expect.objectContaining({
         type: 'NOTIFY_DRAG_END',

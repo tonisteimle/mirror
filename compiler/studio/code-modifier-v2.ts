@@ -254,11 +254,7 @@ export class CodeModifierV2 {
     const children = this.ports.sourceMap.getChildren(parentId)
 
     // Calculate insertion point and indentation
-    const insertionInfo = this.calculateChildInsertionPoint(
-      parentMapping,
-      children,
-      position
-    )
+    const insertionInfo = this.calculateChildInsertionPoint(parentMapping, children, position)
 
     // Build the new component line
     const componentLine = this.buildComponentLine(
@@ -274,7 +270,8 @@ export class CodeModifierV2 {
 
     // Apply the change
     const currentSource = this.ports.document.getSource()
-    const newSource = currentSource.substring(0, insertPosition) +
+    const newSource =
+      currentSource.substring(0, insertPosition) +
       insertText +
       currentSource.substring(insertPosition)
 
@@ -312,11 +309,7 @@ export class CodeModifierV2 {
     const children = this.ports.sourceMap.getChildren(parentId)
 
     // Calculate insertion point and indentation
-    const insertionInfo = this.calculateChildInsertionPoint(
-      parentMapping,
-      children,
-      position
-    )
+    const insertionInfo = this.calculateChildInsertionPoint(parentMapping, children, position)
 
     // Adjust template indentation
     const adjustedTemplate = this.ports.template.adjustIndentation(
@@ -330,7 +323,8 @@ export class CodeModifierV2 {
 
     // Apply the change
     const currentSource = this.ports.document.getSource()
-    const newSource = currentSource.substring(0, insertPosition) +
+    const newSource =
+      currentSource.substring(0, insertPosition) +
       insertText +
       currentSource.substring(insertPosition)
 
@@ -378,12 +372,7 @@ export class CodeModifierV2 {
     const indent = this.ports.document.getLineIndent(siblingLine)
 
     // Build the new component line
-    const componentLine = this.buildComponentLine(
-      componentName,
-      properties,
-      textContent,
-      indent
-    )
+    const componentLine = this.buildComponentLine(componentName, properties, textContent, indent)
 
     let insertPosition: number
     let insertText: string
@@ -396,13 +385,17 @@ export class CodeModifierV2 {
       // Insert after sibling (at end of sibling's block)
       const siblingEndLine = this.getBlockEndLine(siblingMapping.position.line)
       const endLineContent = lines[siblingEndLine - 1]
-      insertPosition = this.ports.document.getCharacterOffset(siblingEndLine, endLineContent.length + 1)
+      insertPosition = this.ports.document.getCharacterOffset(
+        siblingEndLine,
+        endLineContent.length + 1
+      )
       insertText = `\n${componentLine}`
     }
 
     // Apply the change
     const currentSource = this.ports.document.getSource()
-    const newSource = currentSource.substring(0, insertPosition) +
+    const newSource =
+      currentSource.substring(0, insertPosition) +
       insertText +
       currentSource.substring(insertPosition)
 
@@ -442,7 +435,7 @@ export class CodeModifierV2 {
     // Calculate character offsets
     const startOffset = this.ports.document.getCharacterOffset(startLine, 1)
     const endLineContent = lines[endLine - 1]
-    let endOffset = this.ports.document.getCharacterOffset(endLine, endLineContent.length + 1)
+    const endOffset = this.ports.document.getCharacterOffset(endLine, endLineContent.length + 1)
 
     // Handle newlines
     let adjustedStartOffset = startOffset
@@ -460,8 +453,8 @@ export class CodeModifierV2 {
 
     // Apply the change
     const currentSource = this.ports.document.getSource()
-    const newSource = currentSource.substring(0, adjustedStartOffset) +
-      currentSource.substring(adjustedEndOffset)
+    const newSource =
+      currentSource.substring(0, adjustedStartOffset) + currentSource.substring(adjustedEndOffset)
 
     // Update document
     this.ports.document.setSource?.(newSource)
@@ -560,12 +553,14 @@ export class CodeModifierV2 {
     let insertText: string
 
     if (placement === 'inside') {
-      const children = this.ports.sourceMap.getChildren(targetId)
+      const children = this.ports.sourceMap
+        .getChildren(targetId)
         .filter(c => c.nodeId !== sourceNodeId)
         .sort((a, b) => a.position.line - b.position.line)
 
       if (children.length > 0) {
-        const validIndex = typeof insertionIndex === 'number' &&
+        const validIndex =
+          typeof insertionIndex === 'number' &&
           Number.isFinite(insertionIndex) &&
           insertionIndex >= 0 &&
           insertionIndex < children.length
@@ -576,16 +571,24 @@ export class CodeModifierV2 {
           if (insertPosition < 0) insertPosition = 0
         } else {
           const lastChild = children.reduce((a, b) =>
-            (a.position.endLine ?? a.position.line) > (b.position.endLine ?? b.position.line) ? a : b
+            (a.position.endLine ?? a.position.line) > (b.position.endLine ?? b.position.line)
+              ? a
+              : b
           )
           const lastChildEndLine = lastChild.position.endLine ?? lastChild.position.line
           const lastChildLineContent = lines[lastChildEndLine - 1]
-          insertPosition = this.ports.document.getCharacterOffset(lastChildEndLine, lastChildLineContent.length + 1)
+          insertPosition = this.ports.document.getCharacterOffset(
+            lastChildEndLine,
+            lastChildLineContent.length + 1
+          )
         }
       } else {
         const parentLine = targetMapping.position.line
         const parentLineContent = lines[parentLine - 1]
-        insertPosition = this.ports.document.getCharacterOffset(parentLine, parentLineContent.length + 1)
+        insertPosition = this.ports.document.getCharacterOffset(
+          parentLine,
+          parentLineContent.length + 1
+        )
       }
       insertText = `\n${reindentedBlock}`
     } else if (placement === 'before') {
@@ -595,7 +598,10 @@ export class CodeModifierV2 {
     } else {
       const targetEndLine = this.getBlockEndLine(targetMapping.position.line)
       const targetEndContent = lines[targetEndLine - 1]
-      insertPosition = this.ports.document.getCharacterOffset(targetEndLine, targetEndContent.length + 1)
+      insertPosition = this.ports.document.getCharacterOffset(
+        targetEndLine,
+        targetEndContent.length + 1
+      )
       insertText = `\n${reindentedBlock}`
     }
 
@@ -610,11 +616,10 @@ export class CodeModifierV2 {
     const oldSourceLength = currentSource.length
 
     // First remove, then insert
-    let newSource = currentSource.substring(0, adjustedRemoveStart) +
-      currentSource.substring(removeEnd)
-    newSource = newSource.substring(0, insertPosition) +
-      insertText +
-      newSource.substring(insertPosition)
+    let newSource =
+      currentSource.substring(0, adjustedRemoveStart) + currentSource.substring(removeEnd)
+    newSource =
+      newSource.substring(0, insertPosition) + insertText + newSource.substring(insertPosition)
 
     // Update document
     this.ports.document.setSource?.(newSource)
@@ -684,11 +689,17 @@ export class CodeModifierV2 {
         )
         const lastChildEndLine = lastChild.position.endLine ?? lastChild.position.line
         const lastChildLineContent = lines[lastChildEndLine - 1]
-        insertPosition = this.ports.document.getCharacterOffset(lastChildEndLine, lastChildLineContent.length + 1)
+        insertPosition = this.ports.document.getCharacterOffset(
+          lastChildEndLine,
+          lastChildLineContent.length + 1
+        )
       } else {
         const parentLine = targetMapping.position.line
         const parentLineContent = lines[parentLine - 1]
-        insertPosition = this.ports.document.getCharacterOffset(parentLine, parentLineContent.length + 1)
+        insertPosition = this.ports.document.getCharacterOffset(
+          parentLine,
+          parentLineContent.length + 1
+        )
       }
       insertText = `\n${reindentedBlock}`
     } else if (placement === 'before') {
@@ -698,13 +709,17 @@ export class CodeModifierV2 {
     } else {
       const targetEndLine = this.getBlockEndLine(targetMapping.position.line)
       const targetEndContent = lines[targetEndLine - 1]
-      insertPosition = this.ports.document.getCharacterOffset(targetEndLine, targetEndContent.length + 1)
+      insertPosition = this.ports.document.getCharacterOffset(
+        targetEndLine,
+        targetEndContent.length + 1
+      )
       insertText = `\n${reindentedBlock}`
     }
 
     // Apply the change (insert only, no removal)
     const currentSource = this.ports.document.getSource()
-    const newSource = currentSource.substring(0, insertPosition) +
+    const newSource =
+      currentSource.substring(0, insertPosition) +
       insertText +
       currentSource.substring(insertPosition)
 
@@ -752,9 +767,7 @@ export class CodeModifierV2 {
     const childIndent = parentIndent + '  '
 
     // Sort children by line number
-    const sortedChildren = [...children].sort(
-      (a, b) => a.position.line - b.position.line
-    )
+    const sortedChildren = [...children].sort((a, b) => a.position.line - b.position.line)
 
     if (sortedChildren.length === 0) {
       // No children - insert after parent
@@ -852,16 +865,18 @@ export class CodeModifierV2 {
    */
   private reindentBlock(block: string, oldIndent: string, newIndent: string): string {
     const lines = block.split('\n')
-    return lines.map((line, index) => {
-      if (index === 0) {
-        return newIndent + line.substring(oldIndent.length)
-      }
-      if (line.startsWith(oldIndent)) {
-        const extraIndent = line.substring(oldIndent.length)
-        return newIndent + extraIndent
-      }
-      return line
-    }).join('\n')
+    return lines
+      .map((line, index) => {
+        if (index === 0) {
+          return newIndent + line.substring(oldIndent.length)
+        }
+        if (line.startsWith(oldIndent)) {
+          const extraIndent = line.substring(oldIndent.length)
+          return newIndent + extraIndent
+        }
+        return line
+      })
+      .join('\n')
   }
 }
 

@@ -128,12 +128,8 @@ function parseData(
     if (typeof obj[keys[0]] === 'object') {
       const items = keys.map(k => obj[k] as Record<string, unknown>)
       return {
-        labels: xField
-          ? items.map(item => String(item[xField] ?? ''))
-          : keys,
-        values: yField
-          ? items.map(item => Number(item[yField] ?? 0))
-          : items.map(() => 0),
+        labels: xField ? items.map(item => String(item[xField] ?? '')) : keys,
+        values: yField ? items.map(item => Number(item[yField] ?? 0)) : items.map(() => 0),
       }
     }
   }
@@ -156,7 +152,7 @@ function setNestedValue(obj: Record<string, any>, path: string, value: unknown):
   let current = obj
 
   for (let i = 0; i < parts.length - 1; i++) {
-    let part = parts[i]
+    const part = parts[i]
 
     // Handle array notation like 'datasets[0]'
     const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/)
@@ -197,10 +193,7 @@ function setNestedValue(obj: Record<string, any>, path: string, value: unknown):
 /**
  * Create a chart in the given element
  */
-export async function createChart(
-  element: HTMLElement,
-  config: ChartConfig
-): Promise<void> {
+export async function createChart(element: HTMLElement, config: ChartConfig): Promise<void> {
   await loadChartJs()
 
   // Chart.js requires a container with position:relative and overflow:hidden
@@ -218,12 +211,7 @@ export async function createChart(
   wrapper.appendChild(canvas)
 
   // Parse data
-  const { labels, values } = parseData(
-    config.data,
-    config.type,
-    config.xField,
-    config.yField
-  )
+  const { labels, values } = parseData(config.data, config.type, config.xField, config.yField)
 
   const colors = config.colors || DEFAULT_COLORS
   const isPieType = config.type === 'pie' || config.type === 'doughnut'
@@ -234,14 +222,16 @@ export async function createChart(
     type: config.type,
     data: {
       labels,
-      datasets: [{
-        data: values,
-        backgroundColor: isPieType ? colors : colors[0] + '33',
-        borderColor: isPieType ? colors : colors[0],
-        borderWidth: isPieType ? 1 : 2,
-        fill: config.fill ?? (config.type === 'line' ? false : true),
-        tension: config.tension ?? 0.3,
-      }],
+      datasets: [
+        {
+          data: values,
+          backgroundColor: isPieType ? colors : colors[0] + '33',
+          borderColor: isPieType ? colors : colors[0],
+          borderWidth: isPieType ? 1 : 2,
+          fill: config.fill ?? (config.type === 'line' ? false : true),
+          tension: config.tension ?? 0.3,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -255,21 +245,23 @@ export async function createChart(
           text: config.title,
         },
       },
-      scales: isPieType ? undefined : {
-        x: {
-          display: config.axes ?? true,
-          grid: {
-            display: config.grid ?? true,
+      scales: isPieType
+        ? undefined
+        : {
+            x: {
+              display: config.axes ?? true,
+              grid: {
+                display: config.grid ?? true,
+              },
+            },
+            y: {
+              display: config.axes ?? true,
+              grid: {
+                display: config.grid ?? true,
+              },
+              stacked: config.stacked,
+            },
           },
-        },
-        y: {
-          display: config.axes ?? true,
-          grid: {
-            display: config.grid ?? true,
-          },
-          stacked: config.stacked,
-        },
-      },
     },
   }
 

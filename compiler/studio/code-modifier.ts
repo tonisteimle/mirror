@@ -19,9 +19,15 @@ import type { SourcePosition } from '../ir/types'
 import { logCodeModifier as log } from '../utils/logger'
 // SemanticZone type for insertWithWrapper
 type SemanticZone =
-  | 'top-left' | 'top-center' | 'top-right'
-  | 'center-left' | 'center' | 'center-right'
-  | 'bottom-left' | 'bottom-center' | 'bottom-right'
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center-left'
+  | 'center'
+  | 'center-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
 import {
   parseLine,
   updatePropertyInLine,
@@ -38,9 +44,9 @@ import { adjustTemplateIndentation } from '../schema/component-templates'
  * Result of a code modification
  */
 export interface CodeChange {
-  from: number       // Start position (character offset)
-  to: number         // End position (character offset)
-  insert: string     // Text to insert
+  from: number // Start position (character offset)
+  to: number // End position (character offset)
+  insert: string // Text to insert
 }
 
 /**
@@ -366,11 +372,7 @@ export class CodeModifier {
     const children = this.sourceMap.getChildren(parentId)
 
     // Calculate insertion point and indentation
-    const insertionInfo = this.calculateChildInsertionPoint(
-      parentMapping,
-      children,
-      position
-    )
+    const insertionInfo = this.calculateChildInsertionPoint(parentMapping, children, position)
 
     // Build the new component line
     const componentLine = this.buildComponentLine(
@@ -386,9 +388,7 @@ export class CodeModifier {
 
     // Apply the change
     const newSource =
-      this.source.substring(0, insertPosition) +
-      insertText +
-      this.source.substring(insertPosition)
+      this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
 
     // CRITICAL: Persist the changes for subsequent calls
     this.source = newSource
@@ -432,17 +432,10 @@ export class CodeModifier {
     const children = this.sourceMap.getChildren(parentId)
 
     // Calculate insertion point and indentation
-    const insertionInfo = this.calculateChildInsertionPoint(
-      parentMapping,
-      children,
-      position
-    )
+    const insertionInfo = this.calculateChildInsertionPoint(parentMapping, children, position)
 
     // Adjust template indentation
-    const adjustedTemplate = adjustTemplateIndentation(
-      templateCode,
-      insertionInfo.indent
-    )
+    const adjustedTemplate = adjustTemplateIndentation(templateCode, insertionInfo.indent)
 
     // Create the change
     const insertText = `\n${adjustedTemplate}`
@@ -450,9 +443,7 @@ export class CodeModifier {
 
     // Apply the change
     const newSource =
-      this.source.substring(0, insertPosition) +
-      insertText +
-      this.source.substring(insertPosition)
+      this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
 
     // CRITICAL: Persist the changes for subsequent calls
     this.source = newSource
@@ -492,7 +483,9 @@ export class CodeModifier {
         lineIndex,
         totalLines: this.lines.length,
       })
-      return this.errorResult(`Invalid line position for sibling: ${siblingId} (line ${siblingMapping.position.line})`)
+      return this.errorResult(
+        `Invalid line position for sibling: ${siblingId} (line ${siblingMapping.position.line})`
+      )
     }
 
     // Get sibling's line to determine indentation
@@ -520,9 +513,7 @@ export class CodeModifier {
 
     // Apply the change
     const newSource =
-      this.source.substring(0, insertPosition) +
-      insertText +
-      this.source.substring(insertPosition)
+      this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
 
     // CRITICAL: Persist the changes for subsequent calls
     this.source = newSource
@@ -565,7 +556,9 @@ export class CodeModifier {
         lineIndex,
         totalLines: this.lines.length,
       })
-      return this.errorResult(`Invalid line position for sibling: ${siblingId} (line ${siblingMapping.position.line})`)
+      return this.errorResult(
+        `Invalid line position for sibling: ${siblingId} (line ${siblingMapping.position.line})`
+      )
     }
 
     // Get sibling's line to determine indentation
@@ -573,12 +566,7 @@ export class CodeModifier {
     const indent = this.getLineIndent(siblingLine)
 
     // Build the new component line
-    const componentLine = this.buildComponentLine(
-      componentName,
-      properties,
-      textContent,
-      indent
-    )
+    const componentLine = this.buildComponentLine(componentName, properties, textContent, indent)
 
     let insertPosition: number
     let insertText: string
@@ -598,9 +586,7 @@ export class CodeModifier {
 
     // Apply the change
     const newSource =
-      this.source.substring(0, insertPosition) +
-      insertText +
-      this.source.substring(insertPosition)
+      this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
 
     // CRITICAL: Persist the changes for subsequent calls
     this.source = newSource
@@ -633,7 +619,7 @@ export class CodeModifier {
     // Calculate character offsets for the entire block
     const startOffset = this.getCharacterOffset(startLine, 1)
     const endLineContent = this.lines[endLine - 1]
-    let endOffset = this.getCharacterOffset(endLine, endLineContent.length + 1)
+    const endOffset = this.getCharacterOffset(endLine, endLineContent.length + 1)
 
     // Determine what to remove:
     // We need to remove exactly ONE newline (either before or after the block)
@@ -653,8 +639,8 @@ export class CodeModifier {
     }
 
     // Build the new source
-    const newSource = this.source.substring(0, adjustedStartOffset) +
-                      this.source.substring(adjustedEndOffset)
+    const newSource =
+      this.source.substring(0, adjustedStartOffset) + this.source.substring(adjustedEndOffset)
 
     // Persist changes for subsequent operations
     this.source = newSource
@@ -707,7 +693,10 @@ export class CodeModifier {
       const transferProps = ['w', 'h', 'minw', 'maxw', 'minh', 'maxh', 'pad', 'margin']
 
       // Parse slot properties
-      const slotPropParts = slotProperties.split(',').map(p => p.trim()).filter(Boolean)
+      const slotPropParts = slotProperties
+        .split(',')
+        .map(p => p.trim())
+        .filter(Boolean)
 
       // Only transfer layout properties that aren't already in the new component
       for (const prop of slotPropParts) {
@@ -742,9 +731,7 @@ export class CodeModifier {
 
     // Build new source
     const newSource =
-      this.source.substring(0, startOffset) +
-      newLine + '\n' +
-      this.source.substring(endOffset)
+      this.source.substring(0, startOffset) + newLine + '\n' + this.source.substring(endOffset)
 
     // Persist changes for subsequent operations
     this.source = newSource
@@ -855,7 +842,8 @@ export class CodeModifier {
 
     if (placement === 'inside') {
       // Insert as child of target
-      const children = this.sourceMap.getChildren(targetId)
+      const children = this.sourceMap
+        .getChildren(targetId)
         // Filter out the source node if it's already a child (prevents self-reference issues)
         .filter(c => c.nodeId !== sourceNodeId)
         // Sort by line number for correct ordering
@@ -863,7 +851,8 @@ export class CodeModifier {
 
       if (children.length > 0) {
         // Check if insertionIndex specifies a valid position
-        const validIndex = typeof insertionIndex === 'number' &&
+        const validIndex =
+          typeof insertionIndex === 'number' &&
           Number.isFinite(insertionIndex) &&
           insertionIndex >= 0 &&
           insertionIndex < children.length
@@ -879,7 +868,10 @@ export class CodeModifier {
           )
           const lastChildEndLine = lastChild.position.endLine
           const lastChildLineContent = this.lines[lastChildEndLine - 1]
-          insertPosition = this.getCharacterOffset(lastChildEndLine, lastChildLineContent.length + 1)
+          insertPosition = this.getCharacterOffset(
+            lastChildEndLine,
+            lastChildLineContent.length + 1
+          )
         }
       } else {
         // After parent line (no children yet)
@@ -912,7 +904,8 @@ export class CodeModifier {
     let newSource = this.source.substring(0, adjustedRemoveStart) + this.source.substring(removeEnd)
 
     // Then insert at the new position
-    newSource = newSource.substring(0, insertPosition) + insertText + newSource.substring(insertPosition)
+    newSource =
+      newSource.substring(0, insertPosition) + insertText + newSource.substring(insertPosition)
 
     // Save old source length before persisting (needed for CodeMirror change)
     const oldSourceLength = this.source.length
@@ -1005,7 +998,8 @@ export class CodeModifier {
     }
 
     // Insert without removing original
-    const newSource = this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
+    const newSource =
+      this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
 
     // Persist changes for subsequent operations
     this.source = newSource
@@ -1043,18 +1037,20 @@ export class CodeModifier {
    */
   private reindentBlock(block: string, oldIndent: string, newIndent: string): string {
     const lines = block.split('\n')
-    return lines.map((line, index) => {
-      if (index === 0) {
-        // First line: replace old indent with new
-        return newIndent + line.substring(oldIndent.length)
-      }
-      // Other lines: adjust relative indentation
-      if (line.startsWith(oldIndent)) {
-        const extraIndent = line.substring(oldIndent.length)
-        return newIndent + extraIndent
-      }
-      return line
-    }).join('\n')
+    return lines
+      .map((line, index) => {
+        if (index === 0) {
+          // First line: replace old indent with new
+          return newIndent + line.substring(oldIndent.length)
+        }
+        // Other lines: adjust relative indentation
+        if (line.startsWith(oldIndent)) {
+          const extraIndent = line.substring(oldIndent.length)
+          return newIndent + extraIndent
+        }
+        return line
+      })
+      .join('\n')
   }
 
   /**
@@ -1071,9 +1067,7 @@ export class CodeModifier {
     const childIndent = parentIndent + '  ' // 2 spaces more than parent
 
     // Sort children by line number
-    const sortedChildren = [...children].sort(
-      (a, b) => a.position.line - b.position.line
-    )
+    const sortedChildren = [...children].sort((a, b) => a.position.line - b.position.line)
 
     if (sortedChildren.length === 0) {
       // No children yet - insert after parent line
@@ -1451,7 +1445,7 @@ export class CodeModifier {
     // Build the component definition line
     // Format: ComponentName: prop1 val, prop2 val
     const propsString = parsedLine.properties
-      .map(p => p.isBoolean ? p.name : `${p.name} ${p.value}`)
+      .map(p => (p.isBoolean ? p.name : `${p.name} ${p.value}`))
       .join(', ')
     const definitionLine = `${componentName}: ${propsString}`
 
@@ -1590,7 +1584,7 @@ export class CodeModifier {
         if (currentIndent <= baseIndent && i > startIndex) {
           break
         }
-        endLine = i + 1  // Convert back to 1-based for getCharacterOffset
+        endLine = i + 1 // Convert back to 1-based for getCharacterOffset
       }
 
       const from = this.getCharacterOffset(startLine, 1)
@@ -1610,7 +1604,11 @@ export class CodeModifier {
     } else {
       // Create new animation - insert at top of file after tokens
       const insertPosition = this.findAnimationInsertPosition()
-      const newSource = this.source.substring(0, insertPosition) + dsl + '\n\n' + this.source.substring(insertPosition)
+      const newSource =
+        this.source.substring(0, insertPosition) +
+        dsl +
+        '\n\n' +
+        this.source.substring(insertPosition)
 
       // Persist changes for subsequent operations
       this.source = newSource
@@ -1742,11 +1740,11 @@ export class CodeModifier {
 
       const currentIndent = line.match(/^(\s*)/)?.[1].length || 0
       if (currentIndent <= baseIndent && i > startIndex) {
-        break  // Reached end of animation block
+        break // Reached end of animation block
       }
 
       // Track last line of animation block for fallback insert position
-      lastKeyframeLine = i + 1  // 1-based
+      lastKeyframeLine = i + 1 // 1-based
 
       // Check if this line is a keyframe (starts with a time value)
       const keyframeMatch = line.match(/^\s*([\d.]+)\s+/)
@@ -1754,7 +1752,7 @@ export class CodeModifier {
         const lineTime = parseFloat(keyframeMatch[1])
         if (lineTime < time) {
           // Insert after this keyframe (sorted by time)
-          insertLine = i + 2  // i is 0-based, +1 for 1-based, +1 for "after"
+          insertLine = i + 2 // i is 0-based, +1 for 1-based, +1 for "after"
         }
       }
     }
@@ -1768,7 +1766,11 @@ export class CodeModifier {
 
     // insertLine is already 1-based
     const insertPosition = this.getCharacterOffset(insertLine, 1)
-    const newSource = this.source.substring(0, insertPosition) + newLine + '\n' + this.source.substring(insertPosition)
+    const newSource =
+      this.source.substring(0, insertPosition) +
+      newLine +
+      '\n' +
+      this.source.substring(insertPosition)
 
     // Persist changes for subsequent operations
     this.source = newSource
@@ -1797,15 +1799,15 @@ export class CodeModifier {
    * - align-items: flex-start (left-aligned)
    */
   private static readonly ZONE_CONTAINER_LAYOUT: Record<SemanticZone, string> = {
-    'top-left':       'top-left',
-    'top-center':     'top-center',
-    'top-right':      'top-right',
-    'center-left':    '',  // default, no layout needed
-    'center':         'center',
-    'center-right':   'center-right',
-    'bottom-left':    'bottom-left',
-    'bottom-center':  'bottom-center',
-    'bottom-right':   'bottom-right',
+    'top-left': 'top-left',
+    'top-center': 'top-center',
+    'top-right': 'top-right',
+    'center-left': '', // default, no layout needed
+    center: 'center',
+    'center-right': 'center-right',
+    'bottom-left': 'bottom-left',
+    'bottom-center': 'bottom-center',
+    'bottom-right': 'bottom-right',
   }
 
   /**
@@ -1820,10 +1822,19 @@ export class CodeModifier {
    */
   private containerHasLayoutDirection(containerLine: string): boolean {
     const layoutProps = [
-      'ver', 'hor', 'center', 'spread', 'grid',
-      'left', 'right', 'top', 'bottom', 'hor-center', 'ver-center',
+      'ver',
+      'hor',
+      'center',
+      'spread',
+      'grid',
+      'left',
+      'right',
+      'top',
+      'bottom',
+      'hor-center',
+      'ver-center',
       // Absolute layout properties - don't add flex layout to these containers
-      'stacked'
+      'stacked',
     ]
     const parsedLine = parseLine(containerLine)
     return parsedLine.properties.some(p => layoutProps.includes(p.name))
@@ -1834,10 +1845,7 @@ export class CodeModifier {
    *
    * Returns a modified source with layout properties added to the container line.
    */
-  applyLayoutToContainer(
-    containerId: string,
-    semanticZone: SemanticZone
-  ): ModificationResult {
+  applyLayoutToContainer(containerId: string, semanticZone: SemanticZone): ModificationResult {
     const layoutProps = this.getLayoutForZone(semanticZone)
 
     // No layout needed for center-left (default)
@@ -1871,7 +1879,10 @@ export class CodeModifier {
 
     // Add each layout property
     let newLine = containerLine
-    const propsToAdd = layoutProps.split(',').map(p => p.trim()).filter(Boolean)
+    const propsToAdd = layoutProps
+      .split(',')
+      .map(p => p.trim())
+      .filter(Boolean)
 
     for (const prop of propsToAdd) {
       // Handle boolean props (ver, hor, center, spread) vs value props
@@ -1959,11 +1970,13 @@ export class CodeModifier {
 
       // If layout was applied, update our internal state and track the change
       // Check for actual changes: either content was replaced (from !== to) or new content inserted
-      const hasLayoutChange = layoutResult.change.from !== layoutResult.change.to || layoutResult.change.insert
+      const hasLayoutChange =
+        layoutResult.change.from !== layoutResult.change.to || layoutResult.change.insert
       if (hasLayoutChange) {
         layoutChange = layoutResult.change
         // Calculate how much the layout change shifted positions
-        layoutLengthDelta = layoutResult.change.insert.length - (layoutResult.change.to - layoutResult.change.from)
+        layoutLengthDelta =
+          layoutResult.change.insert.length - (layoutResult.change.to - layoutResult.change.from)
         this.source = layoutResult.newSource
         this.lines = this.source.split('\n')
       }
@@ -2040,8 +2053,9 @@ export class CodeModifier {
     }
 
     // Sort by line number
-    const sortedNodes = (mappings.filter(Boolean) as NodeMapping[])
-      .sort((a, b) => a.position.line - b.position.line)
+    const sortedNodes = (mappings.filter(Boolean) as NodeMapping[]).sort(
+      (a, b) => a.position.line - b.position.line
+    )
 
     const firstNode = sortedNodes[0]
     const lastNode = sortedNodes[sortedNodes.length - 1]
@@ -2188,10 +2202,7 @@ export class CodeModifier {
    *
    * @returns ModificationResult with oldText for undo support
    */
-  updateTextContent(
-    nodeId: string,
-    newText: string
-  ): ModificationResult & { oldText?: string } {
+  updateTextContent(nodeId: string, newText: string): ModificationResult & { oldText?: string } {
     const nodeMapping = this.sourceMap.getNodeById(nodeId)
     if (!nodeMapping) {
       return { ...this.errorResult(`Node not found: ${nodeId}`), oldText: undefined }
@@ -2225,7 +2236,10 @@ export class CodeModifier {
       const componentEndApprox = parsedLine.indent.length + (parsedLine.componentPart?.length || 0)
       const textStart = line.indexOf(parsedLine.textContent, componentEndApprox)
       if (textStart !== -1) {
-        newLine = line.substring(0, textStart) + `"${escapedNewText}"` + line.substring(textStart + parsedLine.textContent.length)
+        newLine =
+          line.substring(0, textStart) +
+          `"${escapedNewText}"` +
+          line.substring(textStart + parsedLine.textContent.length)
       } else {
         // Fallback: rebuild line
         newLine = this.rebuildLineWithText(parsedLine, escapedNewText)
@@ -2287,7 +2301,7 @@ export class CodeModifier {
     // Add properties
     if (parsedLine.properties.length > 0) {
       const propsStr = parsedLine.properties
-        .map(p => p.isBoolean ? p.name : `${p.name} ${p.value}`)
+        .map(p => (p.isBoolean ? p.name : `${p.name} ${p.value}`))
         .join(', ')
       line += `, ${propsStr}`
     }
@@ -2454,11 +2468,7 @@ export class CodeModifier {
    * @param eventName - Event name to remove (onclick, onhover, etc.)
    * @param key - Optional key to match (for keyboard events)
    */
-  removeEvent(
-    nodeId: string,
-    eventName: string,
-    key?: string
-  ): ModificationResult {
+  removeEvent(nodeId: string, eventName: string, key?: string): ModificationResult {
     const nodeMapping = this.sourceMap.getNodeById(nodeId)
     if (!nodeMapping) {
       return this.errorResult(`Node not found: ${nodeId}`)
@@ -2488,8 +2498,8 @@ export class CodeModifier {
 
     // Remove the event from the line
     // Handle comma before or after the event
-    let startIdx = eventToRemove.startIndex
-    let endIdx = eventToRemove.endIndex
+    const startIdx = eventToRemove.startIndex
+    const endIdx = eventToRemove.endIndex
 
     // Check for leading comma and space
     const beforeEvent = line.substring(0, startIdx)
@@ -2591,9 +2601,10 @@ export class CodeModifier {
     const newEventStr = this.formatEventString(newEventName, newActionName, newTarget, newKey)
 
     // Replace the old event with the new one
-    const newLine = line.substring(0, eventToUpdate.startIndex) +
-                    newEventStr +
-                    line.substring(eventToUpdate.endIndex)
+    const newLine =
+      line.substring(0, eventToUpdate.startIndex) +
+      newEventStr +
+      line.substring(eventToUpdate.endIndex)
 
     // Calculate character offsets for the change
     const lineStartOffset = this.getCharacterOffset(nodeLine, 1)

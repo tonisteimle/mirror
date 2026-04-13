@@ -17,8 +17,22 @@ const SECTION_PATTERN = /^---\s*(.+?)\s*---$/
  * Primitives that should not appear as user components
  */
 const PRIMITIVES = new Set([
-  'box', 'frame', 'text', 'button', 'input', 'icon', 'image', 'img', 'slot',
-  'vbox', 'hbox', 'vstack', 'hstack', 'zstack', 'grid', 'list',
+  'box',
+  'frame',
+  'text',
+  'button',
+  'input',
+  'icon',
+  'image',
+  'img',
+  'slot',
+  'vbox',
+  'hbox',
+  'vstack',
+  'hstack',
+  'zstack',
+  'grid',
+  'list',
 ])
 
 /**
@@ -35,20 +49,20 @@ export function parseComponentSections(ast: AST, source?: string): ComponentSect
   const componentItems: ComponentItem[] = ast.components
     .filter(component => !PRIMITIVES.has(component.name.toLowerCase()))
     .map(component => ({
-    id: `user-${component.name}`,
-    name: component.name,
-    category: 'Components',
-    template: component.name,
-    icon: 'custom' as const,
-    isUserDefined: true,
-    description: `User-defined component`,
-    line: component.line,
-  }))
+      id: `user-${component.name}`,
+      name: component.name,
+      category: 'Components',
+      template: component.name,
+      icon: 'custom' as const,
+      isUserDefined: true,
+      description: `User-defined component`,
+      line: component.line,
+    }))
 
   // If source is provided, try to group components by sections
   if (source && componentItems.length > 0) {
     const lines = source.split('\n')
-    let currentSection: ComponentSection | null = null
+    const currentSection: ComponentSection | null = null
     const sectionBoundaries: Array<{ name: string; startLine: number }> = []
 
     // First pass: find all section headers and their line numbers
@@ -125,12 +139,14 @@ export function extractComponentInfo(component: ComponentDefinition): Partial<Co
 
   // Extract properties from the component
   for (const prop of component.properties) {
-    const values = prop.values.map(v => {
-      if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-        return String(v)
-      }
-      return ''
-    }).filter(Boolean)
+    const values = prop.values
+      .map(v => {
+        if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+          return String(v)
+        }
+        return ''
+      })
+      .filter(Boolean)
 
     if (values.length > 0) {
       props.push(`${prop.name} ${values.join(' ')}`)

@@ -12,6 +12,9 @@ import type { StudioInstance } from './bootstrap'
 import type { DragDropSystem } from './drag-drop'
 import { events, type StudioEvents } from './core/events'
 import { getTriggerManager } from './editor/trigger-manager'
+import { createLogger } from '../compiler/utils/logger'
+
+const log = createLogger('TestAPI')
 
 export interface StudioTestAPI {
   /** Wait for any picker to open */
@@ -19,7 +22,10 @@ export interface StudioTestAPI {
   /** Wait for any picker to close */
   waitForPickerClose(timeout?: number): Promise<{ pickerId: string; reason: string }>
   /** Wait for a specific trigger to activate */
-  waitForTrigger(triggerId: string, timeout?: number): Promise<{ triggerId: string; startPos: number }>
+  waitForTrigger(
+    triggerId: string,
+    timeout?: number
+  ): Promise<{ triggerId: string; startPos: number }>
   /** Wait for a specific trigger to deactivate */
   waitForTriggerDeactivate(triggerId: string, timeout?: number): Promise<{ triggerId: string }>
   /** Check if any picker is currently open */
@@ -57,7 +63,7 @@ function waitForEvent<K extends keyof StudioEvents>(
       reject(new Error(`Timeout waiting for event: ${event}`))
     }, timeout)
 
-    const unsubscribe = events.on(event, (payload) => {
+    const unsubscribe = events.on(event, payload => {
       clearTimeout(timeoutId)
       unsubscribe()
       resolve(payload)
@@ -79,7 +85,7 @@ function waitForEventWithFilter<K extends keyof StudioEvents>(
       reject(new Error(`Timeout waiting for event: ${event}`))
     }, timeout)
 
-    const unsubscribe = events.on(event, (payload) => {
+    const unsubscribe = events.on(event, payload => {
       if (filter(payload)) {
         clearTimeout(timeoutId)
         unsubscribe()
@@ -105,7 +111,7 @@ function createStudioTestAPI(): StudioTestAPI {
     waitForTrigger(triggerId: string, timeout = DEFAULT_TIMEOUT) {
       return waitForEventWithFilter(
         'trigger:activated',
-        (payload) => payload.triggerId === triggerId,
+        payload => payload.triggerId === triggerId,
         timeout
       )
     },
@@ -113,7 +119,7 @@ function createStudioTestAPI(): StudioTestAPI {
     waitForTriggerDeactivate(triggerId: string, timeout = DEFAULT_TIMEOUT) {
       return waitForEventWithFilter(
         'trigger:deactivated',
-        (payload) => payload.triggerId === triggerId,
+        payload => payload.triggerId === triggerId,
         timeout
       )
     },
@@ -153,17 +159,14 @@ function createStudioTestAPI(): StudioTestAPI {
  * @param studio - The studio instance
  * @param dragDrop - The drag-drop system instance
  */
-export function initStudioTestAPI(
-  studio: StudioInstance,
-  dragDrop: DragDropSystem
-): void {
+export function initStudioTestAPI(studio: StudioInstance, dragDrop: DragDropSystem): void {
   if (typeof window !== 'undefined') {
     window.__mirrorDragDrop__ = dragDrop
     window.__mirrorStudio__ = studio
     window.__STUDIO_TEST__ = createStudioTestAPI()
   }
 
-  console.log('[Studio] Test API initialized')
+  log.info('Test API initialized')
 }
 
 /**

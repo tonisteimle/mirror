@@ -58,7 +58,7 @@ export interface MirrorElement extends HTMLElement {
   _baseStyles?: Record<string, string>
   _initialState?: string
   _visibleWhen?: string
-  _visibilityPaths?: string[]  // Paths this element's visibility depends on
+  _visibilityPaths?: string[] // Paths this element's visibility depends on
   _selectionBinding?: string
   _textBinding?: string
   _textPlaceholder?: string
@@ -90,12 +90,15 @@ export interface MirrorElement extends HTMLElement {
   _stateMachine?: {
     initial: string
     current: string
-    states: Record<string, {
-      styles: Record<string, string>
-      children?: () => HTMLElement[]  // Factory function to create state children
-      enter?: StateAnimation  // Animation when entering this state
-      exit?: StateAnimation   // Animation when leaving this state
-    }>
+    states: Record<
+      string,
+      {
+        styles: Record<string, string>
+        children?: () => HTMLElement[] // Factory function to create state children
+        enter?: StateAnimation // Animation when entering this state
+        exit?: StateAnimation // Animation when leaving this state
+      }
+    >
     transitions: Array<{
       to: string
       trigger: string
@@ -111,14 +114,14 @@ export interface MirrorElement extends HTMLElement {
  * Mirror property to CSS mapping
  */
 export const PROP_MAP: Record<string, string> = {
-  'bg': 'background',
-  'col': 'color',
-  'pad': 'padding',
-  'rad': 'borderRadius',
-  'gap': 'gap',
-  'w': 'width',
-  'h': 'height',
-  'opacity': 'opacity',
+  bg: 'background',
+  col: 'color',
+  pad: 'padding',
+  rad: 'borderRadius',
+  gap: 'gap',
+  w: 'width',
+  h: 'height',
+  opacity: 'opacity',
 }
 
 // ============================================
@@ -191,7 +194,7 @@ let _cleanupObserver: MutationObserver | null = null
 export function initCleanupObserver(): void {
   if (_cleanupObserver || typeof MutationObserver === 'undefined') return
 
-  _cleanupObserver = new MutationObserver((mutations) => {
+  _cleanupObserver = new MutationObserver(mutations => {
     for (const mutation of mutations) {
       for (const node of mutation.removedNodes) {
         if (node.nodeType === Node.ELEMENT_NODE) {
@@ -217,7 +220,7 @@ export function initCleanupObserver(): void {
 
   _cleanupObserver.observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
   })
 }
 
@@ -258,23 +261,23 @@ function batchInFrame(fn: () => void): void {
 // ============================================
 
 const ALIGN_MAP: Record<string, string> = {
-  'left': 'flex-start',
-  'right': 'flex-end',
-  'center': 'center',
-  'top': 'flex-start',
-  'bottom': 'flex-end',
+  left: 'flex-start',
+  right: 'flex-end',
+  center: 'center',
+  top: 'flex-start',
+  bottom: 'flex-end',
 }
 
 const REVERSE_ALIGN_MAP: Record<string, string> = {
   'flex-start': 'left',
   'flex-end': 'right',
-  'center': 'center',
+  center: 'center',
 }
 
 const VERT_ALIGN_MAP: Record<string, string> = {
   'flex-start': 'top',
   'flex-end': 'bottom',
-  'center': 'center',
+  center: 'center',
 }
 
 /**
@@ -356,47 +359,118 @@ export function wrap(el: MirrorElement | null): ElementWrapper | null {
   return {
     _el: el,
 
-    get text() { return el.textContent || '' },
-    set text(v: string) { el.textContent = v },
-    get value() { return (el as HTMLInputElement).value },
-    set value(v: string) { (el as HTMLInputElement).value = v },
+    get text() {
+      return el.textContent || ''
+    },
+    set text(v: string) {
+      el.textContent = v
+    },
+    get value() {
+      return (el as HTMLInputElement).value
+    },
+    set value(v: string) {
+      ;(el as HTMLInputElement).value = v
+    },
 
-    get visible() { return el.style.display !== 'none' },
-    set visible(v: boolean) { el.style.display = v ? '' : 'none' },
-    get hidden() { return el.hidden },
-    set hidden(v: boolean) { el.hidden = v; el.style.display = v ? 'none' : '' },
+    get visible() {
+      return el.style.display !== 'none'
+    },
+    set visible(v: boolean) {
+      el.style.display = v ? '' : 'none'
+    },
+    get hidden() {
+      return el.hidden
+    },
+    set hidden(v: boolean) {
+      el.hidden = v
+      el.style.display = v ? 'none' : ''
+    },
 
-    get align() { return getAlign(el, 'align') },
-    set align(v: string) { alignToCSS(el, 'align', v) },
-    get verAlign() { return getAlign(el, 'ver-align') },
-    set verAlign(v: string) { alignToCSS(el, 'ver-align', v) },
+    get align() {
+      return getAlign(el, 'align')
+    },
+    set align(v: string) {
+      alignToCSS(el, 'align', v)
+    },
+    get verAlign() {
+      return getAlign(el, 'ver-align')
+    },
+    set verAlign(v: string) {
+      alignToCSS(el, 'ver-align', v)
+    },
 
-    get bg() { return el.style.background },
-    set bg(v: string) { el.style.background = v },
-    get col() { return el.style.color },
-    set col(v: string) { el.style.color = v },
-    get pad() { return el.style.padding },
-    set pad(v: string | number) { el.style.padding = typeof v === 'number' ? v + 'px' : v },
-    get gap() { return el.style.gap },
-    set gap(v: string | number) { el.style.gap = typeof v === 'number' ? v + 'px' : v },
-    get rad() { return el.style.borderRadius },
-    set rad(v: string | number) { el.style.borderRadius = typeof v === 'number' ? v + 'px' : v },
-    get w() { return el.style.width },
-    set w(v: string | number) { el.style.width = typeof v === 'number' ? v + 'px' : v },
-    get h() { return el.style.height },
-    set h(v: string | number) { el.style.height = typeof v === 'number' ? v + 'px' : v },
-    get opacity() { return el.style.opacity },
-    set opacity(v: string | number) { el.style.opacity = String(v) },
+    get bg() {
+      return el.style.background
+    },
+    set bg(v: string) {
+      el.style.background = v
+    },
+    get col() {
+      return el.style.color
+    },
+    set col(v: string) {
+      el.style.color = v
+    },
+    get pad() {
+      return el.style.padding
+    },
+    set pad(v: string | number) {
+      el.style.padding = typeof v === 'number' ? v + 'px' : v
+    },
+    get gap() {
+      return el.style.gap
+    },
+    set gap(v: string | number) {
+      el.style.gap = typeof v === 'number' ? v + 'px' : v
+    },
+    get rad() {
+      return el.style.borderRadius
+    },
+    set rad(v: string | number) {
+      el.style.borderRadius = typeof v === 'number' ? v + 'px' : v
+    },
+    get w() {
+      return el.style.width
+    },
+    set w(v: string | number) {
+      el.style.width = typeof v === 'number' ? v + 'px' : v
+    },
+    get h() {
+      return el.style.height
+    },
+    set h(v: string | number) {
+      el.style.height = typeof v === 'number' ? v + 'px' : v
+    },
+    get opacity() {
+      return el.style.opacity
+    },
+    set opacity(v: string | number) {
+      el.style.opacity = String(v)
+    },
 
-    get state() { return el.dataset.state || 'default' },
-    set state(v: string) { setState(el, v) },
+    get state() {
+      return el.dataset.state || 'default'
+    },
+    set state(v: string) {
+      setState(el, v)
+    },
 
-    set onclick(fn: (e: MouseEvent) => void) { el.addEventListener('click', fn) },
-    set onchange(fn: (e: Event) => void) { el.addEventListener('change', fn) },
+    set onclick(fn: (e: MouseEvent) => void) {
+      el.addEventListener('click', fn)
+    },
+    set onchange(fn: (e: Event) => void) {
+      el.addEventListener('change', fn)
+    },
 
-    addClass(c: string) { el.classList.add(c) },
-    removeClass(c: string) { el.classList.remove(c) },
-    toggleClass(c: string) { el.classList.toggle(c) },
+    addClass(c: string) {
+      el.classList.add(c)
+    },
+    removeClass(c: string) {
+      el.classList.remove(c)
+    },
+    toggleClass(c: string) {
+      el.classList.toggle(c)
+    },
     setStyle(prop: string, val: string) {
       // Security: Only allow whitelisted CSS properties
       if (!isAllowedCSSProperty(prop)) {
@@ -411,7 +485,9 @@ export function wrap(el: MirrorElement | null): ElementWrapper | null {
       }
       ;(el.style as unknown as Record<string, string>)[prop] = safeVal
     },
-    getStyle(prop: string) { return (el.style as unknown as Record<string, string>)[prop] },
+    getStyle(prop: string) {
+      return (el.style as unknown as Record<string, string>)[prop]
+    },
   }
 }
 
@@ -484,11 +560,19 @@ export function close(el: MirrorElement | null): void {
   if (!el) return
 
   const initialState = el._initialState
-  if (initialState === 'closed' || initialState === 'open' ||
-      el.dataset.state === 'open' || el.dataset.state === 'closed') {
+  if (
+    initialState === 'closed' ||
+    initialState === 'open' ||
+    el.dataset.state === 'open' ||
+    el.dataset.state === 'closed'
+  ) {
     setState(el, 'closed')
-  } else if (initialState === 'expanded' || initialState === 'collapsed' ||
-             el.dataset.state === 'expanded' || el.dataset.state === 'collapsed') {
+  } else if (
+    initialState === 'expanded' ||
+    initialState === 'collapsed' ||
+    el.dataset.state === 'expanded' ||
+    el.dataset.state === 'collapsed'
+  ) {
     setState(el, 'collapsed')
   } else {
     hide(el)
@@ -647,9 +731,10 @@ export function showAt(
   options?: PositionOptions
 ): void {
   // Resolve element by name if string
-  const el = typeof element === 'string'
-    ? document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
-    : element
+  const el =
+    typeof element === 'string'
+      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
+      : element
 
   if (!el) return
 
@@ -750,14 +835,12 @@ export function showRight(
 /**
  * Show element as centered modal with optional backdrop
  */
-export function showModal(
-  element: MirrorElement | string | null,
-  backdrop: boolean = true
-): void {
+export function showModal(element: MirrorElement | string | null, backdrop: boolean = true): void {
   // Resolve element by name if string
-  const el = typeof element === 'string'
-    ? document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
-    : element
+  const el =
+    typeof element === 'string'
+      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
+      : element
 
   if (!el) return
 
@@ -872,9 +955,10 @@ export function showModal(
  */
 export function dismiss(element: MirrorElement | string | null): void {
   // Resolve element by name if string
-  const el = typeof element === 'string'
-    ? document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
-    : element
+  const el =
+    typeof element === 'string'
+      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
+      : element
 
   if (!el) return
 
@@ -917,8 +1001,12 @@ export function dismiss(element: MirrorElement | string | null): void {
   }
 
   // Restore focus to previously focused element
-  if (el._previouslyFocused && typeof el._previouslyFocused === 'object' && 'focus' in el._previouslyFocused) {
-    (el._previouslyFocused as HTMLElement).focus()
+  if (
+    el._previouslyFocused &&
+    typeof el._previouslyFocused === 'object' &&
+    'focus' in el._previouslyFocused
+  ) {
+    ;(el._previouslyFocused as HTMLElement).focus()
     delete el._previouslyFocused
   }
 
@@ -950,7 +1038,7 @@ function getFormFocusables(container: HTMLElement): HTMLElement[] {
     'select:not([disabled])',
     'textarea:not([disabled])',
     'button:not([disabled])',
-    '[tabindex]:not([tabindex="-1"]):not([disabled])'
+    '[tabindex]:not([tabindex="-1"]):not([disabled])',
   ].join(', ')
 
   return Array.from(container.querySelectorAll<HTMLElement>(selector))
@@ -974,7 +1062,8 @@ function getFormFocusables(container: HTMLElement): HTMLElement[] {
  * Focus the next form element after the current one
  */
 export function focusNextInput(current: HTMLElement): boolean {
-  const container = current.closest('form') || current.closest('[data-mirror-form]') || document.body
+  const container =
+    current.closest('form') || current.closest('[data-mirror-form]') || document.body
   const focusables = getFormFocusables(container)
   const currentIndex = focusables.indexOf(current)
 
@@ -989,7 +1078,8 @@ export function focusNextInput(current: HTMLElement): boolean {
  * Focus the previous form element before the current one
  */
 export function focusPrevInput(current: HTMLElement): boolean {
-  const container = current.closest('form') || current.closest('[data-mirror-form]') || document.body
+  const container =
+    current.closest('form') || current.closest('[data-mirror-form]') || document.body
   const focusables = getFormFocusables(container)
   const currentIndex = focusables.indexOf(current)
 
@@ -1033,11 +1123,13 @@ export function setupFormNavigation(form: HTMLElement): void {
 
         if (isLast) {
           // Submit the form if it's the last field
-          const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]') as HTMLElement
+          const submitBtn = form.querySelector(
+            'button[type="submit"], input[type="submit"]'
+          ) as HTMLElement
           if (submitBtn) {
             submitBtn.click()
           } else if (form.tagName.toLowerCase() === 'form') {
-            (form as HTMLFormElement).requestSubmit()
+            ;(form as HTMLFormElement).requestSubmit()
           }
         } else {
           // Move to next field
@@ -1049,7 +1141,7 @@ export function setupFormNavigation(form: HTMLElement): void {
     // Handle Escape key - blur current field
     if (e.key === 'Escape') {
       if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
-        (target as HTMLElement).blur()
+        ;(target as HTMLElement).blur()
       }
     }
   })
@@ -1089,10 +1181,7 @@ export function setupAutoSelect(input: HTMLInputElement | HTMLTextAreaElement): 
 /**
  * Setup click-outside handler for auto-dismissing overlays
  */
-function setupClickOutsideHandler(
-  element: MirrorElement,
-  trigger: MirrorElement | null
-): void {
+function setupClickOutsideHandler(element: MirrorElement, trigger: MirrorElement | null): void {
   // Remove existing handler
   if (element._clickOutsideHandler) {
     document.removeEventListener('click', element._clickOutsideHandler)
@@ -1155,14 +1244,12 @@ export interface ScrollToOptions {
  * @param element Element to scroll to (or name string)
  * @param options Scroll options: { behavior?, block?, inline? }
  */
-export function scrollTo(
-  element: MirrorElement | string | null,
-  options?: ScrollToOptions
-): void {
+export function scrollTo(element: MirrorElement | string | null, options?: ScrollToOptions): void {
   // Resolve element by name if string
-  const el = typeof element === 'string'
-    ? document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
-    : element
+  const el =
+    typeof element === 'string'
+      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
+      : element
 
   if (!el) return
 
@@ -1189,9 +1276,10 @@ export function scrollBy(
   behavior: 'smooth' | 'instant' = 'smooth'
 ): void {
   // Resolve element by name if string
-  const el = typeof container === 'string'
-    ? document.querySelector(`[data-mirror-name="${container}"]`) as MirrorElement
-    : container
+  const el =
+    typeof container === 'string'
+      ? (document.querySelector(`[data-mirror-name="${container}"]`) as MirrorElement)
+      : container
 
   if (!el) return
 
@@ -1218,9 +1306,10 @@ export function scrollToTop(
   }
 
   // Resolve element by name if string
-  const el = typeof element === 'string'
-    ? document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
-    : element
+  const el =
+    typeof element === 'string'
+      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
+      : element
 
   if (!el) return
 
@@ -1243,9 +1332,10 @@ export function scrollToBottom(
   }
 
   // Resolve element by name if string
-  const el = typeof element === 'string'
-    ? document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
-    : element
+  const el =
+    typeof element === 'string'
+      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
+      : element
 
   if (!el) return
 
@@ -1343,7 +1433,7 @@ function parseSimpleYAML(text: string): unknown {
         // Nested property in array object
         const lastItem = currentArray[currentArray.length - 1]
         if (typeof lastItem === 'object' && lastItem !== null) {
-          (lastItem as Record<string, unknown>)[key] = parseYAMLValue(value)
+          ;(lastItem as Record<string, unknown>)[key] = parseYAMLValue(value)
         }
       }
     }
@@ -1362,8 +1452,10 @@ function parseSimpleYAML(text: string): unknown {
  */
 function parseYAMLValue(value: string): unknown {
   // Remove quotes
-  if ((value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
     return value.slice(1, -1)
   }
 
@@ -1472,7 +1564,7 @@ export async function loadMirrorData(basePath = '/data/', manifest?: string[]): 
   try {
     const response = await fetch(basePath + 'manifest.json')
     if (response.ok) {
-      const files = await response.json() as string[]
+      const files = (await response.json()) as string[]
       await loadYAMLFiles(files, basePath)
     }
   } catch {
@@ -1523,15 +1615,12 @@ export function set(tokenName: string, value: unknown): void {
  * @param tokenName Token name (with or without $)
  * @param options Options: { min?, max?, step? }
  */
-export function increment(
-  tokenName: string,
-  options?: CounterOptions
-): void {
+export function increment(tokenName: string, options?: CounterOptions): void {
   const name = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
   const state = getMirrorState()
   const { min, max, step = 1 } = options || {}
 
-  let current = typeof state[name] === 'number' ? state[name] as number : 0
+  const current = typeof state[name] === 'number' ? (state[name] as number) : 0
   let newValue = current + step
 
   // Apply max constraint
@@ -1548,15 +1637,12 @@ export function increment(
  * @param tokenName Token name (with or without $)
  * @param options Options: { min?, max?, step? }
  */
-export function decrement(
-  tokenName: string,
-  options?: CounterOptions
-): void {
+export function decrement(tokenName: string, options?: CounterOptions): void {
   const name = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
   const state = getMirrorState()
   const { min, max, step = 1 } = options || {}
 
-  let current = typeof state[name] === 'number' ? state[name] as number : 0
+  const current = typeof state[name] === 'number' ? (state[name] as number) : 0
   let newValue = current - step
 
   // Apply min constraint
@@ -1573,10 +1659,7 @@ export function decrement(
  * @param tokenName Token name (with or without $)
  * @param initialValue Optional initial value (default: 0)
  */
-export function reset(
-  tokenName: string,
-  initialValue: unknown = 0
-): void {
+export function reset(tokenName: string, initialValue: unknown = 0): void {
   set(tokenName, initialValue)
 }
 
@@ -1585,7 +1668,9 @@ export function reset(
  */
 function updateBoundTokenElements(tokenName: string, value: unknown): void {
   // Find all elements with this token binding
-  const elements = document.querySelectorAll(`[data-token-binding="${tokenName}"], [data-mirror-token="${tokenName}"]`)
+  const elements = document.querySelectorAll(
+    `[data-token-binding="${tokenName}"], [data-mirror-token="${tokenName}"]`
+  )
 
   elements.forEach(el => {
     const htmlEl = el as HTMLElement
@@ -1595,7 +1680,7 @@ function updateBoundTokenElements(tokenName: string, value: unknown): void {
     }
     // Update input value
     if (htmlEl.tagName === 'INPUT') {
-      (htmlEl as HTMLInputElement).value = String(value)
+      ;(htmlEl as HTMLInputElement).value = String(value)
     }
   })
 
@@ -1633,10 +1718,7 @@ function generateEntryId(prefix = 'item'): string {
  * @param values Optional initial values for the entry
  * @returns The key of the newly added entry
  */
-export function add(
-  collectionName: string,
-  values?: Record<string, unknown>
-): string {
+export function add(collectionName: string, values?: Record<string, unknown>): string {
   const name = collectionName.startsWith('$') ? collectionName.slice(1) : collectionName
   const data = getMirrorData()
 
@@ -1672,9 +1754,7 @@ export function add(
  * Remove an entry from a collection
  * Can be called with an item object that has _key property (from each loop)
  */
-export function remove(
-  itemOrKey: unknown
-): void {
+export function remove(itemOrKey: unknown): void {
   if (!itemOrKey) {
     console.warn('[Mirror] remove() called with null/undefined')
     return
@@ -1773,9 +1853,11 @@ export function save(target?: string): void {
   if (isDebug()) console.log('[Mirror] save() called', target ? `for ${target}` : '', data)
 
   // Dispatch a custom event that apps can listen to for persistence
-  window.dispatchEvent(new CustomEvent('mirror:save', {
-    detail: { target, data }
-  }))
+  window.dispatchEvent(
+    new CustomEvent('mirror:save', {
+      detail: { target, data },
+    })
+  )
 }
 
 /**
@@ -1783,9 +1865,7 @@ export function save(target?: string): void {
  * Note: Named deleteItem to avoid conflict with JS reserved word 'delete'
  * @param itemOrKey The item object (with _key) or the key string
  */
-export function deleteItem(
-  itemOrKey: unknown
-): void {
+export function deleteItem(itemOrKey: unknown): void {
   // Delegate to remove() which handles the actual deletion
   remove(itemOrKey)
 }
@@ -1798,9 +1878,11 @@ export function revert(target?: string): void {
   if (isDebug()) console.log('[Mirror] revert() called', target ? `for ${target}` : '')
 
   // Dispatch a custom event
-  window.dispatchEvent(new CustomEvent('mirror:revert', {
-    detail: { target }
-  }))
+  window.dispatchEvent(
+    new CustomEvent('mirror:revert', {
+      detail: { target },
+    })
+  )
 }
 
 /**
@@ -1827,11 +1909,7 @@ function setNestedField(obj: Record<string, unknown>, path: string, value: unkno
  * @param field The field name to update (supports dot notation)
  * @param value The new value
  */
-export function updateField(
-  item: Record<string, unknown>,
-  field: string,
-  value: unknown
-): void {
+export function updateField(item: Record<string, unknown>, field: string, value: unknown): void {
   if (typeof item._key !== 'string') {
     console.warn('[Mirror] updateField() called with item without _key')
     return
@@ -1898,9 +1976,7 @@ function refreshEachLoops(collectionName: string): void {
     if (!config) return
 
     // Check if this loop uses the changed collection
-    const loopCollection = typeof config.collection === 'string'
-      ? config.collection
-      : null
+    const loopCollection = typeof config.collection === 'string' ? config.collection : null
 
     if (loopCollection !== collectionName) return
 
@@ -1909,7 +1985,7 @@ function refreshEachLoops(collectionName: string): void {
 
     // Get fresh data
     const data = getMirrorData()
-    let items = data[collectionName]
+    const items = data[collectionName]
 
     if (!items || typeof items !== 'object') return
 
@@ -1919,9 +1995,7 @@ function refreshEachLoops(collectionName: string): void {
       itemsArray = items as Record<string, unknown>[]
     } else {
       itemsArray = Object.entries(items).map(([k, v]) =>
-        typeof v === 'object' && v !== null
-          ? { _key: k, ...(v as object) }
-          : { _key: k, value: v }
+        typeof v === 'object' && v !== null ? { _key: k, ...(v as object) } : { _key: k, value: v }
       )
     }
 
@@ -2002,7 +2076,10 @@ export async function copy(
  * Toast management with ID-based tracking to prevent race conditions
  */
 let _toastCounter = 0
-const _activeToasts = new Map<number, { element: HTMLElement; dismissTimeout: number; fadeTimeout: number }>()
+const _activeToasts = new Map<
+  number,
+  { element: HTMLElement; dismissTimeout: number; fadeTimeout: number }
+>()
 
 /**
  * Dismiss a specific toast by ID, or the most recent toast if no ID provided
@@ -2077,8 +2154,8 @@ export function toast(
 
   // Position
   const positionStyles: Record<string, Record<string, string>> = {
-    'top': { top: '20px', left: '50%', transform: 'translateX(-50%) translateY(-10px)' },
-    'bottom': { bottom: '20px', left: '50%', transform: 'translateX(-50%) translateY(10px)' },
+    top: { top: '20px', left: '50%', transform: 'translateX(-50%) translateY(-10px)' },
+    bottom: { bottom: '20px', left: '50%', transform: 'translateX(-50%) translateY(10px)' },
     'top-left': { top: '20px', left: '20px', transform: 'translateY(-10px)' },
     'top-right': { top: '20px', right: '20px', transform: 'translateY(-10px)' },
     'bottom-left': { bottom: '20px', left: '20px', transform: 'translateY(10px)' },
@@ -2087,11 +2164,11 @@ export function toast(
   Object.assign(toastEl.style, positionStyles[position])
 
   // Type colors
-  const typeColors: Record<string, { bg: string, color: string }> = {
-    'info': { bg: '#1a1a1a', color: '#fff' },
-    'success': { bg: '#10b981', color: '#fff' },
-    'error': { bg: '#ef4444', color: '#fff' },
-    'warning': { bg: '#f59e0b', color: '#000' },
+  const typeColors: Record<string, { bg: string; color: string }> = {
+    info: { bg: '#1a1a1a', color: '#fff' },
+    success: { bg: '#10b981', color: '#fff' },
+    error: { bg: '#ef4444', color: '#fff' },
+    warning: { bg: '#f59e0b', color: '#000' },
   }
   const colors = typeColors[type]
   toastEl.style.background = colors.bg
@@ -2103,8 +2180,12 @@ export function toast(
   requestAnimationFrame(() => {
     toastEl.style.opacity = '1'
     toastEl.style.transform = position.includes('top')
-      ? (position === 'top' ? 'translateX(-50%) translateY(0)' : 'translateY(0)')
-      : (position === 'bottom' ? 'translateX(-50%) translateY(0)' : 'translateY(0)')
+      ? position === 'top'
+        ? 'translateX(-50%) translateY(0)'
+        : 'translateY(0)'
+      : position === 'bottom'
+        ? 'translateX(-50%) translateY(0)'
+        : 'translateY(0)'
   })
 
   // Setup auto-dismiss with tracked timeouts
@@ -2191,10 +2272,12 @@ export function debounce<T extends (...args: unknown[]) => void>(
  */
 export function focus(el: MirrorElement | null): void {
   if (!el) return
-  if (el instanceof HTMLInputElement ||
-      el instanceof HTMLTextAreaElement ||
-      el instanceof HTMLSelectElement ||
-      el instanceof HTMLButtonElement) {
+  if (
+    el instanceof HTMLInputElement ||
+    el instanceof HTMLTextAreaElement ||
+    el instanceof HTMLSelectElement ||
+    el instanceof HTMLButtonElement
+  ) {
     el.focus()
   } else if (el.tabIndex >= 0 || el.hasAttribute('tabindex')) {
     el.focus()
@@ -2207,10 +2290,12 @@ export function focus(el: MirrorElement | null): void {
  */
 export function blur(el: MirrorElement | null): void {
   if (!el) return
-  if (el instanceof HTMLInputElement ||
-      el instanceof HTMLTextAreaElement ||
-      el instanceof HTMLSelectElement ||
-      el instanceof HTMLButtonElement) {
+  if (
+    el instanceof HTMLInputElement ||
+    el instanceof HTMLTextAreaElement ||
+    el instanceof HTMLSelectElement ||
+    el instanceof HTMLButtonElement
+  ) {
     el.blur()
   } else {
     el.blur()
@@ -2337,10 +2422,7 @@ const ALLOWED_URL_PROTOCOLS = ['http:', 'https:', 'mailto:', 'tel:']
  * @param url - URL to open
  * @param options - Options: { newTab? }
  */
-export function openUrl(
-  url: string,
-  options?: { newTab?: boolean }
-): void {
+export function openUrl(url: string, options?: { newTab?: boolean }): void {
   const { newTab = true } = options || {}
 
   // Security: Validate URL protocol to prevent XSS via javascript: or data: URLs
@@ -2604,10 +2686,7 @@ export function toggleState(el: MirrorElement | null, state1: string, state2?: s
  * @param el The element with state machine
  * @param stateOrder Optional explicit state order
  */
-export function stateMachineToggle(
-  el: MirrorElement | null,
-  stateOrder?: string[]
-): void {
+export function stateMachineToggle(el: MirrorElement | null, stateOrder?: string[]): void {
   if (!el?._stateMachine) return
 
   const sm = el._stateMachine
@@ -2750,10 +2829,7 @@ export function transitionTo(
 
       // Safety timeout: ensure _isTransitioning is always reset
       // Animation duration + delay + buffer (max 10 seconds)
-      const maxDuration = Math.min(
-        ((anim.duration || 0.3) + (anim.delay || 0)) * 1000 + 500,
-        10000
-      )
+      const maxDuration = Math.min(((anim.duration || 0.3) + (anim.delay || 0)) * 1000 + 500, 10000)
       const safetyTimeout = setTimeout(() => {
         if (el._isTransitioning) {
           el._isTransitioning = false
@@ -2813,8 +2889,10 @@ export function exclusiveTransition(
   if (parent) {
     const componentName = el.dataset.component
     const siblings = componentName
-      ? parent.querySelectorAll(`[data-component="${componentName}"]`) as NodeListOf<MirrorElement>
-      : parent.querySelectorAll('[data-mirror-id]') as NodeListOf<MirrorElement>
+      ? (parent.querySelectorAll(
+          `[data-component="${componentName}"]`
+        ) as NodeListOf<MirrorElement>)
+      : (parent.querySelectorAll('[data-mirror-id]') as NodeListOf<MirrorElement>)
     siblings.forEach(sibling => {
       if (sibling !== el && sibling._stateMachine) {
         const sibSm = sibling._stateMachine
@@ -2853,7 +2931,7 @@ export function exclusiveTransition(
           walker = walker.parentElement as MirrorElement | null
         }
       }
-      const activeValue = loopItem !== undefined ? loopItem : (el.textContent?.trim() || '')
+      const activeValue = loopItem !== undefined ? loopItem : el.textContent?.trim() || ''
       // Update the global state and notify bound elements
       if (typeof window !== 'undefined') {
         window._mirrorState = window._mirrorState || {}
@@ -2936,7 +3014,7 @@ export function watchStates(
   updateState()
 
   // Watch for state changes on target elements
-  const observer = new MutationObserver((mutations) => {
+  const observer = new MutationObserver(mutations => {
     // Check if element still connected (handles root removal case)
     if (!el.isConnected) {
       cleanup()
@@ -2960,7 +3038,7 @@ export function watchStates(
 
   // Cleanup: disconnect observer when element is removed from DOM
   // Use another MutationObserver on the parent to detect removal
-  const cleanupObserver = new MutationObserver((mutations) => {
+  const cleanupObserver = new MutationObserver(mutations => {
     // Check if element still connected (handles root removal case)
     if (!el.isConnected) {
       cleanup()
@@ -3031,7 +3109,7 @@ function evaluateCondition(condition: string, currentState: string | undefined):
     }
 
     // Get state value (default to checking against current state)
-    let value = states[stateName] !== undefined ? states[stateName] : (currentState === stateName)
+    let value = states[stateName] !== undefined ? states[stateName] : currentState === stateName
     if (negate) value = !value
 
     // Apply operator
@@ -3090,11 +3168,12 @@ export function navigate(targetName: string, clickedElement: MirrorElement | nul
   if (!targetName) return
 
   // Get the root node (Shadow DOM root or document) to support both contexts
-  const root = clickedElement ? clickedElement.getRootNode() as Document | ShadowRoot : document
+  const root = clickedElement ? (clickedElement.getRootNode() as Document | ShadowRoot) : document
 
   // Try data-mirror-name first (from name property), then fall back to data-component
-  const target = root.querySelector(`[data-mirror-name="${targetName}"]`) as HTMLElement | null
-    || root.querySelector(`[data-component="${targetName}"]`) as HTMLElement | null
+  const target =
+    (root.querySelector(`[data-mirror-name="${targetName}"]`) as HTMLElement | null) ||
+    (root.querySelector(`[data-component="${targetName}"]`) as HTMLElement | null)
   if (!target) return
 
   if (target.parentElement) {
@@ -3178,23 +3257,23 @@ function sanitizePageName(name: string): string | null {
 function validateCompiledCode(code: string): boolean {
   // Check for dangerous patterns that shouldn't be in Mirror compiler output
   const dangerousPatterns = [
-    /\beval\s*\(/i,                    // eval()
-    /\bFunction\s*\(/i,                // Function constructor
-    /\bsetTimeout\s*\(\s*['"`]/i,      // setTimeout with string
-    /\bsetInterval\s*\(\s*['"`]/i,     // setInterval with string
-    /\bdocument\s*\.\s*write/i,        // document.write
-    /\binnerHTML\s*=\s*[^'"`]/,        // innerHTML assignment (non-literal)
-    /\b__proto__\s*=/i,                // prototype pollution
-    /\bprototype\s*\[/i,               // prototype access
-    /\bconstructor\s*\[/i,             // constructor access
-    /\bimport\s*\(/i,                  // dynamic import
-    /\brequire\s*\(/i,                 // require (shouldn't be in browser code)
-    /\bprocess\s*\./i,                 // Node.js process
-    /\bchild_process/i,                // Node.js child_process
-    /\bfs\s*\./i,                      // Node.js fs
-    /<script/i,                        // Script tags in strings
-    /javascript\s*:/i,                 // javascript: URLs
-    /data\s*:\s*text\/html/i,          // data: HTML URLs
+    /\beval\s*\(/i, // eval()
+    /\bFunction\s*\(/i, // Function constructor
+    /\bsetTimeout\s*\(\s*['"`]/i, // setTimeout with string
+    /\bsetInterval\s*\(\s*['"`]/i, // setInterval with string
+    /\bdocument\s*\.\s*write/i, // document.write
+    /\binnerHTML\s*=\s*[^'"`]/, // innerHTML assignment (non-literal)
+    /\b__proto__\s*=/i, // prototype pollution
+    /\bprototype\s*\[/i, // prototype access
+    /\bconstructor\s*\[/i, // constructor access
+    /\bimport\s*\(/i, // dynamic import
+    /\brequire\s*\(/i, // require (shouldn't be in browser code)
+    /\bprocess\s*\./i, // Node.js process
+    /\bchild_process/i, // Node.js child_process
+    /\bfs\s*\./i, // Node.js fs
+    /<script/i, // Script tags in strings
+    /javascript\s*:/i, // javascript: URLs
+    /data\s*:\s*text\/html/i, // data: HTML URLs
   ]
 
   for (const pattern of dangerousPatterns) {
@@ -3258,7 +3337,9 @@ export function navigateToPage(pageName: string, clickedElement: MirrorElement |
 
   const filename = safeName.endsWith('.mirror') ? safeName : safeName + '.mirror'
 
-  const readFile = _readFileCallback || (window as { _mirrorReadFile?: (f: string) => string | null })._mirrorReadFile
+  const readFile =
+    _readFileCallback ||
+    (window as { _mirrorReadFile?: (f: string) => string | null })._mirrorReadFile
   if (!readFile) {
     console.warn('No readFile callback available for page navigation')
     return
@@ -3270,7 +3351,13 @@ export function navigateToPage(pageName: string, clickedElement: MirrorElement |
     return
   }
 
-  const Mirror = (window as { Mirror?: { compile: (code: string, opts?: { readFile?: (f: string) => string | null }) => string } }).Mirror
+  const Mirror = (
+    window as {
+      Mirror?: {
+        compile: (code: string, opts?: { readFile?: (f: string) => string | null }) => string
+      }
+    }
+  ).Mirror
   if (!Mirror?.compile) {
     console.warn('Mirror compiler not available for dynamic page loading')
     return
@@ -3343,7 +3430,8 @@ export function updateSelectionBinding(el: MirrorElement): void {
     if (parent._selectionBinding) {
       const value = el.textContent?.trim() || ''
       const varName = parent._selectionBinding
-      const mirrorState = ((window as { _mirrorState?: Record<string, string> })._mirrorState ||= {})
+      const mirrorState = ((window as { _mirrorState?: Record<string, string> })._mirrorState ||=
+        {})
       mirrorState[varName] = value
       updateBoundElements(varName, value)
       return
@@ -3427,7 +3515,7 @@ export async function loadIcon(el: MirrorElement, iconName: string): Promise<voi
       pendingIconRequests.set(iconName, pending)
     }
 
-    svgText = await pending ?? undefined
+    svgText = (await pending) ?? undefined
 
     // Clean up pending request
     pendingIconRequests.delete(iconName)
@@ -3471,60 +3559,182 @@ export async function loadIcon(el: MirrorElement, iconName: string): Promise<voi
  */
 const ALLOWED_CSS_PROPERTIES = new Set([
   // Layout
-  'display', 'position', 'top', 'right', 'bottom', 'left', 'z-index',
-  'float', 'clear', 'overflow', 'overflow-x', 'overflow-y', 'clip',
-  'visibility', 'opacity',
+  'display',
+  'position',
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'z-index',
+  'float',
+  'clear',
+  'overflow',
+  'overflow-x',
+  'overflow-y',
+  'clip',
+  'visibility',
+  'opacity',
   // Flexbox
-  'flex', 'flex-direction', 'flex-wrap', 'flex-flow', 'flex-grow',
-  'flex-shrink', 'flex-basis', 'justify-content', 'align-items',
-  'align-self', 'align-content', 'order', 'gap', 'row-gap', 'column-gap',
+  'flex',
+  'flex-direction',
+  'flex-wrap',
+  'flex-flow',
+  'flex-grow',
+  'flex-shrink',
+  'flex-basis',
+  'justify-content',
+  'align-items',
+  'align-self',
+  'align-content',
+  'order',
+  'gap',
+  'row-gap',
+  'column-gap',
   // Grid
-  'grid', 'grid-template', 'grid-template-columns', 'grid-template-rows',
-  'grid-template-areas', 'grid-column', 'grid-row', 'grid-area',
-  'grid-auto-columns', 'grid-auto-rows', 'grid-auto-flow',
-  'grid-column-start', 'grid-column-end', 'grid-row-start', 'grid-row-end',
-  'place-content', 'place-items', 'place-self',
+  'grid',
+  'grid-template',
+  'grid-template-columns',
+  'grid-template-rows',
+  'grid-template-areas',
+  'grid-column',
+  'grid-row',
+  'grid-area',
+  'grid-auto-columns',
+  'grid-auto-rows',
+  'grid-auto-flow',
+  'grid-column-start',
+  'grid-column-end',
+  'grid-row-start',
+  'grid-row-end',
+  'place-content',
+  'place-items',
+  'place-self',
   // Box model
-  'width', 'min-width', 'max-width', 'height', 'min-height', 'max-height',
-  'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-  'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-  'box-sizing', 'aspect-ratio',
+  'width',
+  'min-width',
+  'max-width',
+  'height',
+  'min-height',
+  'max-height',
+  'margin',
+  'margin-top',
+  'margin-right',
+  'margin-bottom',
+  'margin-left',
+  'padding',
+  'padding-top',
+  'padding-right',
+  'padding-bottom',
+  'padding-left',
+  'box-sizing',
+  'aspect-ratio',
   // Typography
-  'font', 'font-family', 'font-size', 'font-weight', 'font-style',
-  'font-variant', 'line-height', 'letter-spacing', 'word-spacing',
-  'text-align', 'text-decoration', 'text-transform', 'text-indent',
-  'text-overflow', 'white-space', 'word-break', 'word-wrap', 'overflow-wrap',
+  'font',
+  'font-family',
+  'font-size',
+  'font-weight',
+  'font-style',
+  'font-variant',
+  'line-height',
+  'letter-spacing',
+  'word-spacing',
+  'text-align',
+  'text-decoration',
+  'text-transform',
+  'text-indent',
+  'text-overflow',
+  'white-space',
+  'word-break',
+  'word-wrap',
+  'overflow-wrap',
   // Colors & backgrounds
-  'color', 'background', 'background-color', 'background-image',
-  'background-position', 'background-size', 'background-repeat',
-  'background-attachment', 'background-clip', 'background-origin',
+  'color',
+  'background',
+  'background-color',
+  'background-image',
+  'background-position',
+  'background-size',
+  'background-repeat',
+  'background-attachment',
+  'background-clip',
+  'background-origin',
   // Borders
-  'border', 'border-width', 'border-style', 'border-color',
-  'border-top', 'border-right', 'border-bottom', 'border-left',
-  'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width',
-  'border-top-style', 'border-right-style', 'border-bottom-style', 'border-left-style',
-  'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color',
-  'border-radius', 'border-top-left-radius', 'border-top-right-radius',
-  'border-bottom-left-radius', 'border-bottom-right-radius',
-  'border-collapse', 'border-spacing',
+  'border',
+  'border-width',
+  'border-style',
+  'border-color',
+  'border-top',
+  'border-right',
+  'border-bottom',
+  'border-left',
+  'border-top-width',
+  'border-right-width',
+  'border-bottom-width',
+  'border-left-width',
+  'border-top-style',
+  'border-right-style',
+  'border-bottom-style',
+  'border-left-style',
+  'border-top-color',
+  'border-right-color',
+  'border-bottom-color',
+  'border-left-color',
+  'border-radius',
+  'border-top-left-radius',
+  'border-top-right-radius',
+  'border-bottom-left-radius',
+  'border-bottom-right-radius',
+  'border-collapse',
+  'border-spacing',
   // Effects
-  'box-shadow', 'text-shadow', 'filter', 'backdrop-filter',
-  'mix-blend-mode', 'background-blend-mode',
+  'box-shadow',
+  'text-shadow',
+  'filter',
+  'backdrop-filter',
+  'mix-blend-mode',
+  'background-blend-mode',
   // Transforms
-  'transform', 'transform-origin', 'transform-style',
-  'perspective', 'perspective-origin',
+  'transform',
+  'transform-origin',
+  'transform-style',
+  'perspective',
+  'perspective-origin',
   // Transitions & animations
-  'transition', 'transition-property', 'transition-duration',
-  'transition-timing-function', 'transition-delay',
-  'animation', 'animation-name', 'animation-duration', 'animation-timing-function',
-  'animation-delay', 'animation-iteration-count', 'animation-direction',
-  'animation-fill-mode', 'animation-play-state',
+  'transition',
+  'transition-property',
+  'transition-duration',
+  'transition-timing-function',
+  'transition-delay',
+  'animation',
+  'animation-name',
+  'animation-duration',
+  'animation-timing-function',
+  'animation-delay',
+  'animation-iteration-count',
+  'animation-direction',
+  'animation-fill-mode',
+  'animation-play-state',
   // Others
-  'cursor', 'pointer-events', 'user-select', 'resize', 'outline',
-  'outline-width', 'outline-style', 'outline-color', 'outline-offset',
-  'list-style', 'list-style-type', 'list-style-position', 'list-style-image',
-  'table-layout', 'vertical-align', 'object-fit', 'object-position',
-  'scroll-behavior', 'scroll-snap-type', 'scroll-snap-align',
+  'cursor',
+  'pointer-events',
+  'user-select',
+  'resize',
+  'outline',
+  'outline-width',
+  'outline-style',
+  'outline-color',
+  'outline-offset',
+  'list-style',
+  'list-style-type',
+  'list-style-position',
+  'list-style-image',
+  'table-layout',
+  'vertical-align',
+  'object-fit',
+  'object-position',
+  'scroll-behavior',
+  'scroll-snap-type',
+  'scroll-snap-align',
 ])
 
 /**
@@ -3655,16 +3865,16 @@ function sanitizeSVG(svgText: string): string | null {
 
     // Remove dangerous elements (XSS vectors and external resource loaders)
     const dangerousElements = [
-      'script',         // JavaScript execution
-      'foreignObject',  // Can embed HTML/scripts
-      'use',            // Can reference external resources
-      'image',          // Can load external images
-      'a',              // Links with javascript: href
-      'style',          // CSS injection, can exfiltrate data
-      'defs',           // Can contain style elements
-      'metadata',       // Can contain arbitrary XML
-      'animate',        // Can trigger events via onbegin/onend
-      'set',            // Can modify attributes dynamically
+      'script', // JavaScript execution
+      'foreignObject', // Can embed HTML/scripts
+      'use', // Can reference external resources
+      'image', // Can load external images
+      'a', // Links with javascript: href
+      'style', // CSS injection, can exfiltrate data
+      'defs', // Can contain style elements
+      'metadata', // Can contain arbitrary XML
+      'animate', // Can trigger events via onbegin/onend
+      'set', // Can modify attributes dynamically
     ]
     for (const tag of dangerousElements) {
       const elements = svg.querySelectorAll(tag)
@@ -3796,7 +4006,7 @@ const ANIMATION_PRESETS: Record<string, { keyframes: Keyframe[]; easing?: string
     ],
     easing: 'ease-in',
   },
-  'bounce': {
+  bounce: {
     keyframes: [
       { transform: 'scale(1)' },
       { transform: 'scale(1.1)' },
@@ -3805,7 +4015,7 @@ const ANIMATION_PRESETS: Record<string, { keyframes: Keyframe[]; easing?: string
     ],
     easing: 'ease-out',
   },
-  'pulse': {
+  pulse: {
     keyframes: [
       { transform: 'scale(1)', opacity: 1 },
       { transform: 'scale(1.05)', opacity: 0.8 },
@@ -3813,7 +4023,7 @@ const ANIMATION_PRESETS: Record<string, { keyframes: Keyframe[]; easing?: string
     ],
     easing: 'ease-in-out',
   },
-  'shake': {
+  shake: {
     keyframes: [
       { transform: 'translateX(0)' },
       { transform: 'translateX(-5px)' },
@@ -3824,11 +4034,8 @@ const ANIMATION_PRESETS: Record<string, { keyframes: Keyframe[]; easing?: string
     ],
     easing: 'ease-in-out',
   },
-  'spin': {
-    keyframes: [
-      { transform: 'rotate(0deg)' },
-      { transform: 'rotate(360deg)' },
-    ],
+  spin: {
+    keyframes: [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
     easing: 'linear',
   },
 }
@@ -3845,7 +4052,7 @@ export function playStateAnimation(
   anim: StateAnimation,
   styles?: Record<string, string>
 ): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const duration = (anim.duration || 0.3) * 1000
     const delay = (anim.delay || 0) * 1000
     const easing = anim.easing || 'ease-out'
@@ -3858,7 +4065,7 @@ export function playStateAnimation(
         // This ensures fade-in, slide-in etc. are actually visible during animation
         // Note: check 'display' in styles, not styles.display, because '' is falsy but valid
         if (styles && 'display' in styles) {
-          el.style.display = styles.display || 'flex'  // Default to flex if empty string
+          el.style.display = styles.display || 'flex' // Default to flex if empty string
           el.hidden = false
         }
 
@@ -3916,13 +4123,19 @@ export function playStateAnimation(
 /**
  * Animation registry
  */
-const _animations: Map<string, {
-  name: string
-  easing: string
-  duration?: number
-  roles?: string[]
-  keyframes: { time: number; properties: { property: string; value: string; target?: string }[] }[]
-}> = new Map()
+const _animations: Map<
+  string,
+  {
+    name: string
+    easing: string
+    duration?: number
+    roles?: string[]
+    keyframes: {
+      time: number
+      properties: { property: string; value: string; target?: string }[]
+    }[]
+  }
+> = new Map()
 
 /**
  * Register an animation definition
@@ -3947,7 +4160,10 @@ export function getAnimation(name: string) {
 /**
  * Convert Mirror keyframes to Web Animations API format
  */
-function convertKeyframes(keyframes: { time: number; properties: { property: string; value: string }[] }[], duration: number): Keyframe[] {
+function convertKeyframes(
+  keyframes: { time: number; properties: { property: string; value: string }[] }[],
+  duration: number
+): Keyframe[] {
   const result: Keyframe[] = []
 
   for (const kf of keyframes) {
@@ -3980,7 +4196,14 @@ function convertKeyframes(keyframes: { time: number; properties: { property: str
 export function animate(
   animationName: string,
   elements: MirrorElement | MirrorElement[] | null,
-  options: { duration?: number; delay?: number; stagger?: number; loop?: boolean; reverse?: boolean; fill?: FillMode } = {}
+  options: {
+    duration?: number
+    delay?: number
+    stagger?: number
+    loop?: boolean
+    reverse?: boolean
+    fill?: FillMode
+  } = {}
 ): Animation[] | null {
   if (!elements) return null
 
@@ -4004,7 +4227,7 @@ export function animate(
       easing: animation.easing,
       fill: options.fill || 'forwards',
       iterations: options.loop ? Infinity : 1,
-      direction: options.reverse ? 'reverse' : 'normal'
+      direction: options.reverse ? 'reverse' : 'normal',
     })
 
     animations.push(anim)
@@ -4021,15 +4244,18 @@ export function setupEnterExitObserver(
   onEnter?: () => void,
   onExit?: () => void
 ): IntersectionObserver {
-  const observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) {
-        onEnter?.()
-      } else {
-        onExit?.()
+  const observer = new IntersectionObserver(
+    entries => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          onEnter?.()
+        } else {
+          onExit?.()
+        }
       }
-    }
-  }, { threshold: 0.1 })
+    },
+    { threshold: 0.1 }
+  )
 
   observer.observe(el)
   return observer
@@ -4045,17 +4271,20 @@ export function setupEnterExitObserver(
 export interface MotionConfig {
   duration?: number
   delay?: number
-  easing?: string | number[]  // string easing or cubic-bezier array
+  easing?: string | number[] // string easing or cubic-bezier array
 }
 
 /**
  * Animation presets with Motion One
  * Maps preset names to Motion One animation options
  */
-const MOTION_PRESETS: Record<string, {
-  keyframes: Record<string, unknown[]>
-  options: { duration?: number; easing?: string | number[] }
-}> = {
+const MOTION_PRESETS: Record<
+  string,
+  {
+    keyframes: Record<string, unknown[]>
+    options: { duration?: number; easing?: string | number[] }
+  }
+> = {
   'fade-in': {
     keyframes: { opacity: [0, 1] },
     options: { duration: 0.3, easing: 'ease-out' },
@@ -4066,7 +4295,7 @@ const MOTION_PRESETS: Record<string, {
   },
   'slide-up': {
     keyframes: { transform: ['translateY(20px)', 'translateY(0)'], opacity: [0, 1] },
-    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] },  // ease-out-expo
+    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] }, // ease-out-expo
   },
   'slide-down': {
     keyframes: { transform: ['translateY(-20px)', 'translateY(0)'], opacity: [0, 1] },
@@ -4082,25 +4311,34 @@ const MOTION_PRESETS: Record<string, {
   },
   'scale-in': {
     keyframes: { transform: ['scale(0.9)', 'scale(1)'], opacity: [0, 1] },
-    options: { duration: 0.3, easing: [0.34, 1.56, 0.64, 1] },  // back-out for bounce
+    options: { duration: 0.3, easing: [0.34, 1.56, 0.64, 1] }, // back-out for bounce
   },
   'scale-out': {
     keyframes: { transform: ['scale(1)', 'scale(0.9)'], opacity: [1, 0] },
     options: { duration: 0.2, easing: 'ease-in' },
   },
-  'bounce': {
+  bounce: {
     keyframes: { transform: ['scale(1)', 'scale(1.15)', 'scale(0.95)', 'scale(1.02)', 'scale(1)'] },
     options: { duration: 0.5, easing: 'ease-out' },
   },
-  'pulse': {
+  pulse: {
     keyframes: { transform: ['scale(1)', 'scale(1.05)', 'scale(1)'], opacity: [1, 0.85, 1] },
     options: { duration: 0.6, easing: 'ease-in-out' },
   },
-  'shake': {
-    keyframes: { transform: ['translateX(0)', 'translateX(-8px)', 'translateX(8px)', 'translateX(-4px)', 'translateX(4px)', 'translateX(0)'] },
+  shake: {
+    keyframes: {
+      transform: [
+        'translateX(0)',
+        'translateX(-8px)',
+        'translateX(8px)',
+        'translateX(-4px)',
+        'translateX(4px)',
+        'translateX(0)',
+      ],
+    },
     options: { duration: 0.4, easing: 'ease-in-out' },
   },
-  'spin': {
+  spin: {
     keyframes: { transform: ['rotate(0deg)', 'rotate(360deg)'] },
     options: { duration: 1, easing: 'linear' },
   },
@@ -4117,7 +4355,7 @@ export function motionAnimate(
   preset: string | Record<string, unknown[]>,
   config?: MotionConfig
 ): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let keyframes: Record<string, unknown[]>
     let baseOptions: { duration?: number; easing?: string | number[] } = {}
 
@@ -4144,14 +4382,14 @@ export function motionAnimate(
     // Run animation
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const animation = motionAnimateFn(el, keyframes as any, options as any)
-    animation.finished.then(() => resolve())
+    animation.finished.then(() => resolve()).catch(() => resolve()) // Resolve even on animation failure to not block
   })
 }
 
 /**
  * Get motion preset by name
  */
-export function getMotionPreset(name: string): typeof MOTION_PRESETS[string] | undefined {
+export function getMotionPreset(name: string): (typeof MOTION_PRESETS)[string] | undefined {
   return MOTION_PRESETS[name]
 }
 
@@ -4279,7 +4517,7 @@ export function notifyDataChange(path: string, value: unknown): void {
       for (const el of inputElements) {
         // Skip the element that's currently being typed in
         if (el !== document.activeElement) {
-          (el as HTMLInputElement).value = stringValue
+          ;(el as HTMLInputElement).value = stringValue
         }
       }
     }
@@ -4439,12 +4677,8 @@ function parseChartData(
     if (typeof obj[keys[0]] === 'object') {
       const items = keys.map(k => obj[k] as Record<string, unknown>)
       return {
-        labels: xField
-          ? items.map(item => String(item[xField] ?? ''))
-          : keys,
-        values: yField
-          ? items.map(item => Number(item[yField] ?? 0))
-          : items.map(() => 0),
+        labels: xField ? items.map(item => String(item[xField] ?? '')) : keys,
+        values: yField ? items.map(item => Number(item[yField] ?? 0)) : items.map(() => 0),
       }
     }
   }
@@ -4520,10 +4754,7 @@ function setNestedValue(obj: Record<string, any>, path: string, value: unknown):
 /**
  * Create a chart in the given element
  */
-export async function createChart(
-  element: HTMLElement,
-  config: ChartConfig
-): Promise<void> {
+export async function createChart(element: HTMLElement, config: ChartConfig): Promise<void> {
   await loadChartJs()
 
   // Chart.js requires a container with position:relative and overflow:hidden
@@ -4541,12 +4772,7 @@ export async function createChart(
   wrapper.appendChild(canvas)
 
   // Parse data
-  const { labels, values } = parseChartData(
-    config.data,
-    config.type,
-    config.xField,
-    config.yField
-  )
+  const { labels, values } = parseChartData(config.data, config.type, config.xField, config.yField)
 
   const colors = config.colors || DEFAULT_CHART_COLORS
   const isPieType = config.type === 'pie' || config.type === 'doughnut'
@@ -4557,14 +4783,16 @@ export async function createChart(
     type: config.type,
     data: {
       labels,
-      datasets: [{
-        data: values,
-        backgroundColor: isPieType ? colors : colors[0] + '33',
-        borderColor: isPieType ? colors : colors[0],
-        borderWidth: isPieType ? 1 : 2,
-        fill: config.fill ?? (config.type === 'line' ? false : true),
-        tension: config.tension ?? 0.3,
-      }],
+      datasets: [
+        {
+          data: values,
+          backgroundColor: isPieType ? colors : colors[0] + '33',
+          borderColor: isPieType ? colors : colors[0],
+          borderWidth: isPieType ? 1 : 2,
+          fill: config.fill ?? (config.type === 'line' ? false : true),
+          tension: config.tension ?? 0.3,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -4578,21 +4806,23 @@ export async function createChart(
           text: config.title,
         },
       },
-      scales: isPieType ? undefined : {
-        x: {
-          display: config.axes ?? true,
-          grid: {
-            display: config.grid ?? true,
+      scales: isPieType
+        ? undefined
+        : {
+            x: {
+              display: config.axes ?? true,
+              grid: {
+                display: config.grid ?? true,
+              },
+            },
+            y: {
+              display: config.axes ?? true,
+              grid: {
+                display: config.grid ?? true,
+              },
+              stacked: config.stacked,
+            },
           },
-        },
-        y: {
-          display: config.axes ?? true,
-          grid: {
-            display: config.grid ?? true,
-          },
-          stacked: config.stacked,
-        },
-      },
     },
   }
 

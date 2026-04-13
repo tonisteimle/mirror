@@ -16,7 +16,7 @@ export interface IconTriggerState {
 }
 
 // Module state
-let triggerState: IconTriggerState = {
+const triggerState: IconTriggerState = {
   isOpen: false,
   startPos: null,
   picker: null,

@@ -1,0 +1,85 @@
+/**
+ * Zag Emitter Helper Functions
+ *
+ * Shared utilities for all Zag component emitters.
+ */
+
+import type { IRZagNode, IRSlot } from '../../../ir/types'
+import type { ZagEmitterContext } from '../zag-emitter-context'
+
+/**
+ * Emit styles for a slot element
+ */
+export function emitSlotStyles(
+  ctx: ZagEmitterContext,
+  varName: string,
+  slot: IRSlot | undefined
+): void {
+  if (slot?.styles && slot.styles.length > 0) {
+    ctx.emit(`${varName}.setAttribute('data-styled', 'true')`)
+    ctx.emit(`Object.assign(${varName}.style, {`)
+    ctx.indentIn()
+    for (const style of slot.styles) {
+      ctx.emit(`'${style.property}': '${style.value}',`)
+    }
+    ctx.indentOut()
+    ctx.emit('})')
+  }
+}
+
+/**
+ * Emit the common component header
+ */
+export function emitComponentHeader(
+  ctx: ZagEmitterContext,
+  node: IRZagNode,
+  varName: string,
+  tagName: string,
+  zagType: string
+): void {
+  ctx.emit(`// ${node.name || zagType} Component`)
+  ctx.emit(`const ${varName} = document.createElement('${tagName}')`)
+  ctx.emit(`_elements['${node.id}'] = ${varName}`)
+  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
+  ctx.emit(`${varName}.dataset.zagComponent = '${zagType}'`)
+  if (node.name) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+  }
+}
+
+/**
+ * Emit the machine configuration
+ */
+export function emitMachineConfig(
+  ctx: ZagEmitterContext,
+  varName: string,
+  zagType: string,
+  nodeId: string,
+  machineConfig: Record<string, unknown>,
+  extra?: string
+): void {
+  ctx.emit(`${varName}._zagConfig = {`)
+  ctx.indentIn()
+  ctx.emit(`type: '${zagType}',`)
+  ctx.emit(`id: '${nodeId}',`)
+  ctx.emit(`machineConfig: ${JSON.stringify(machineConfig)},`)
+  if (extra) {
+    ctx.emit(extra)
+  }
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+}
+
+/**
+ * Emit runtime initialization
+ */
+export function emitRuntimeInit(ctx: ZagEmitterContext, varName: string, initFn: string): void {
+  ctx.emit(`// Initialize ${initFn.replace('init', '').replace('Component', '')}`)
+  ctx.emit(`if (typeof _runtime !== 'undefined' && _runtime.${initFn}) {`)
+  ctx.indentIn()
+  ctx.emit(`_runtime.${initFn}(${varName})`)
+  ctx.indentOut()
+  ctx.emit(`}`)
+  ctx.emit('')
+}

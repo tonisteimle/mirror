@@ -40,10 +40,7 @@ import type {
   KeyHandler,
   CleanupFn,
 } from '../ports'
-import {
-  draggable,
-  monitorForElements,
-} from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
+import { draggable, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
 import type { DOMAdapter } from '../dom-adapter'
 import { getDefaultDOMAdapter } from '../dom-adapter'
@@ -135,8 +132,8 @@ export function createDOMLayoutPort(config: DOMAdaptersConfig): CacheableLayoutP
 
   // Drag-scoped cache: cleared on drag end
   // Key: nodeId of parent element
-  let childRectsCache = new Map<string, ChildRect[]>()
-  let containerRectCache = new Map<string, Rect>()
+  const childRectsCache = new Map<string, ChildRect[]>()
+  const containerRectCache = new Map<string, Rect>()
 
   return {
     clearCache(): void {
@@ -325,7 +322,7 @@ export function createDOMEventPort(): DOMEventPort {
     if (!keyDownListener) {
       keyDownListener = (e: KeyboardEvent) => {
         const key = e.key
-        handlers.keyDown.get(key)?.forEach((h) => h())
+        handlers.keyDown.get(key)?.forEach(h => h())
       }
       document.addEventListener('keydown', keyDownListener)
     }
@@ -333,7 +330,7 @@ export function createDOMEventPort(): DOMEventPort {
     if (!keyUpListener) {
       keyUpListener = (e: KeyboardEvent) => {
         const key = e.key
-        handlers.keyUp.get(key)?.forEach((h) => h())
+        handlers.keyUp.get(key)?.forEach(h => h())
       }
       document.addEventListener('keyup', keyUpListener)
     }
@@ -379,7 +376,7 @@ export function createDOMEventPort(): DOMEventPort {
             x: location.current.input.clientX,
             y: location.current.input.clientY,
           }
-          handlers.dragStart.forEach((h) => h(dragSource!, cursor))
+          handlers.dragStart.forEach(h => h(dragSource!, cursor))
         }
       },
 
@@ -388,11 +385,11 @@ export function createDOMEventPort(): DOMEventPort {
           x: location.current.input.clientX,
           y: location.current.input.clientY,
         }
-        handlers.dragMove.forEach((h) => h(cursor))
+        handlers.dragMove.forEach(h => h(cursor))
       },
 
       onDrop: () => {
-        handlers.dragEnd.forEach((h) => h())
+        handlers.dragEnd.forEach(h => h())
       },
     })
   }
@@ -490,13 +487,16 @@ export function createDOMEventPort(): DOMEventPort {
     },
 
     // Extended: Register palette item as draggable
-    registerPaletteDrag(element: HTMLElement, data: {
-      componentId?: string
-      componentName: string
-      properties?: string
-      textContent?: string
-      children?: ComponentChild[]
-    }): CleanupFn {
+    registerPaletteDrag(
+      element: HTMLElement,
+      data: {
+        componentId?: string
+        componentName: string
+        properties?: string
+        textContent?: string
+        children?: ComponentChild[]
+      }
+    ): CleanupFn {
       ensureMonitor()
 
       const cleanup = draggable({
@@ -513,19 +513,19 @@ export function createDOMEventPort(): DOMEventPort {
 
     // Trigger methods (called by external event sources like NativeDragAdapter)
     triggerDragStart(source: DragSource, cursor: Point): void {
-      handlers.dragStart.forEach((h) => h(source, cursor))
+      handlers.dragStart.forEach(h => h(source, cursor))
     },
 
     triggerDragMove(cursor: Point): void {
-      handlers.dragMove.forEach((h) => h(cursor))
+      handlers.dragMove.forEach(h => h(cursor))
     },
 
     triggerDragEnd(): void {
-      handlers.dragEnd.forEach((h) => h())
+      handlers.dragEnd.forEach(h => h())
     },
 
     triggerDragCancel(): void {
-      handlers.dragCancel.forEach((h) => h())
+      handlers.dragCancel.forEach(h => h())
     },
   }
 }
@@ -707,7 +707,12 @@ export function createDOMTargetDetectionPort(config: DOMAdaptersConfig): TargetD
 
       // Get child rects for the redirect target
       const layoutInfo = getLayoutInfo?.()
-      const redirectChildRects = getChildRectsFromDOM(prevElement, nodeIdAttr, layoutInfo, domAdapter)
+      const redirectChildRects = getChildRectsFromDOM(
+        prevElement,
+        nodeIdAttr,
+        layoutInfo,
+        domAdapter
+      )
 
       // Calculate new result: insert after last child
       const newResult: DropResult = {

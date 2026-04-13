@@ -33,9 +33,16 @@ export interface CodeChange {
 }
 
 export interface StudioEvents {
-  'source:changed': { source: string; origin: 'editor' | 'command' | 'external' | 'panel' | 'drag-drop' | 'keyboard'; change?: CodeChange }
+  'source:changed': {
+    source: string
+    origin: 'editor' | 'command' | 'external' | 'panel' | 'drag-drop' | 'keyboard'
+    change?: CodeChange
+  }
   'source:compiled': { success: boolean; errors: ParseError[] }
-  'selection:changed': { nodeId: string | null; origin: 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' | 'drag-drop' }
+  'selection:changed': {
+    nodeId: string | null
+    origin: 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' | 'drag-drop'
+  }
   /** Emitted when selection becomes invalid (e.g., selected node removed) */
   'selection:invalidated': { nodeId: string }
   /** Emitted when selection falls back to a different node (e.g., after queued selection fails) */
@@ -60,7 +67,10 @@ export interface StudioEvents {
   'panel:property-changed': { nodeId: string; property: string; value: string }
   'panel:property-removed': { nodeId: string; property: string }
   'panel:update-requested': { nodeId: string }
-  'panel:visibility-changed': { panel: 'prompt' | 'files' | 'code' | 'components' | 'preview' | 'property'; visible: boolean }
+  'panel:visibility-changed': {
+    panel: 'prompt' | 'files' | 'code' | 'components' | 'preview' | 'property'
+    visible: boolean
+  }
   'panel:sizes-changed': { sizes: { sidebar: number; editor: number; preview: number } }
   'breadcrumb:changed': { breadcrumb: Array<{ nodeId: string; name: string }> }
   'breadcrumb:update-requested': { chain: Array<{ nodeId: string; name: string }> }
@@ -91,13 +101,38 @@ export interface StudioEvents {
   /** Resize events (Visual Code System) */
   'resize:start': { nodeId: string; handle: string; startWidth: number; startHeight: number }
   'resize:move': { nodeId: string; width: 'fill' | 'hug' | number; height: 'fill' | 'hug' | number }
-  'resize:end': { nodeId: string; width: 'fill' | 'hug' | number; height: 'fill' | 'hug' | number; x?: number; y?: number }
+  'resize:end': {
+    nodeId: string
+    width: 'fill' | 'hug' | number
+    height: 'fill' | 'hug' | number
+    x?: number
+    y?: number
+  }
   /** Multi-selection resize events (Feature 4) */
-  'multiResize:start': { nodeIds: string[]; handle: string; boundingBox: { x: number; y: number; width: number; height: number } }
-  'multiResize:move': { nodeIds: string[]; width: number; height: number; scaleX: number; scaleY: number }
-  'multiResize:end': { nodeIds: string[]; scaleX: number; scaleY: number; anchor: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' }
+  'multiResize:start': {
+    nodeIds: string[]
+    handle: string
+    boundingBox: { x: number; y: number; width: number; height: number }
+  }
+  'multiResize:move': {
+    nodeIds: string[]
+    width: number
+    height: number
+    scaleX: number
+    scaleY: number
+  }
+  'multiResize:end': {
+    nodeIds: string[]
+    scaleX: number
+    scaleY: number
+    anchor: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center'
+  }
   /** Drag from palette events (Visual Code System) */
-  'drag:start': { type: 'component' | 'container' | 'layout'; component: string; defaultProps?: string }
+  'drag:start': {
+    type: 'component' | 'container' | 'layout'
+    component: string
+    defaultProps?: string
+  }
   'drop:component': { dragData: ComponentDragData; dropZone: DropZone }
   /** Emitted when compilation is requested */
   'compile:requested': Record<string, never>
@@ -106,7 +141,13 @@ export interface StudioEvents {
   /** Emitted when compilation is idle (not in progress) */
   'compile:idle': void
   /** Emitted when compilation completes successfully */
-  'compile:completed': { ast: AST; ir: IR; sourceMap: SourceMap; version?: number; hasErrors?: boolean }
+  'compile:completed': {
+    ast: AST
+    ir: IR
+    sourceMap: SourceMap
+    version?: number
+    hasErrors?: boolean
+  }
   /** Emitted when compilation fails */
   'compile:failed': { error: string }
   /** Emitted when layout cache is invalidated */
@@ -123,11 +164,21 @@ export interface StudioEvents {
   /** Grid settings changed */
   'grid:changed': { enabled: boolean; size: number; showVisual: boolean; color: string }
   /** Smart guides settings changed */
-  'smartGuides:changed': { enabled: boolean; threshold: number; color: string; showDistances: boolean }
+  'smartGuides:changed': {
+    enabled: boolean
+    threshold: number
+    color: string
+    showDistances: boolean
+  }
   /** General settings changed */
   'settings:changed': { moveStep: number; moveStepShift: number; showPositionLabels: boolean }
   /** Handle snap settings changed */
-  'handleSnap:changed': { enabled: boolean; gridSize: number; customPoints: number[]; threshold: number }
+  'handleSnap:changed': {
+    enabled: boolean
+    gridSize: number
+    customPoints: number[]
+    threshold: number
+  }
   /** Inline text editing started */
   'inline-edit:started': { nodeId: string; element: HTMLElement }
   /** Inline text editing input changed */
@@ -139,7 +190,10 @@ export interface StudioEvents {
   /** Component added to project from All tab */
   'components:added-to-project': { componentName: string }
   /** Component dropped into editor */
-  'component:editor-dropped': { data: ComponentDragData; position: { line: number; column: number; offset: number } }
+  'component:editor-dropped': {
+    data: ComponentDragData
+    position: { line: number; column: number; offset: number }
+  }
   /** User settings loaded */
   'userSettings:loaded': { settings: Record<string, unknown> }
   /** Preview rendered */
@@ -153,7 +207,10 @@ export interface StudioEvents {
   /** Draw events */
   'draw:error': { error: string; context?: string }
   /** Picker events (for testing) */
-  'picker:opened': { pickerId: string; pickerType: 'token' | 'color' | 'icon' | 'animation' | 'action' | 'unknown' }
+  'picker:opened': {
+    pickerId: string
+    pickerType: 'token' | 'color' | 'icon' | 'animation' | 'action' | 'unknown'
+  }
   'picker:closed': { pickerId: string; reason: 'select' | 'escape' | 'click-outside' | 'unknown' }
   /** Trigger events (for testing) */
   'trigger:activated': { triggerId: string; startPos: number }
@@ -162,7 +219,13 @@ export interface StudioEvents {
   'rename:ui-opened': { symbolName: string; symbolType: 'component' | 'token' }
   'rename:ui-closed': Record<string, never>
   'rename:no-symbol': { line: number; column: number }
-  'rename:completed': { oldName: string; newName: string; symbolType: 'component' | 'token'; fileCount: number; locationCount: number }
+  'rename:completed': {
+    oldName: string
+    newName: string
+    symbolType: 'component' | 'token'
+    fileCount: number
+    locationCount: number
+  }
   'rename:undone': { oldName: string; newName: string; symbolType: 'component' | 'token' }
   /** File update requested (from rename or other cross-file operations) */
   'file:update-requested': { filename: string; content: string }
@@ -243,7 +306,11 @@ export class EventBus {
     return this.on(event, wrapper)
   }
 
-  emit<K extends keyof StudioEvents>(event: K, payload: StudioEvents[K]): void {
+  emit<K extends keyof StudioEvents>(
+    event: K,
+    ...args: StudioEvents[K] extends void ? [] : [payload: StudioEvents[K]]
+  ): void {
+    const payload = args[0] as StudioEvents[K]
     // Run through middleware chain
     let currentPayload: unknown = payload
     let meta: EventMeta = { timestamp: Date.now(), eventType: event }
@@ -288,15 +355,19 @@ export class EventBus {
  * Built-in middleware: Logger
  * Logs all events to console (can be filtered by pattern)
  */
-export function createLoggerMiddleware(options: {
-  filter?: RegExp | ((event: string) => boolean)
-  collapsed?: boolean
-} = {}): EventMiddleware {
+export function createLoggerMiddleware(
+  options: {
+    filter?: RegExp | ((event: string) => boolean)
+    collapsed?: boolean
+  } = {}
+): EventMiddleware {
   const { filter, collapsed = true } = options
 
   return (event, payload, meta) => {
     const shouldLog = filter
-      ? (typeof filter === 'function' ? filter(event) : filter.test(event))
+      ? typeof filter === 'function'
+        ? filter(event)
+        : filter.test(event)
       : true
 
     if (shouldLog) {
@@ -327,8 +398,8 @@ export function createAnalyticsMiddleware(): EventMiddleware & {
   }
 
   // Attach utility methods
-  (middleware as any).getStats = () => ({ ...counts });
-  (middleware as any).reset = () => {
+  ;(middleware as any).getStats = () => ({ ...counts })
+  ;(middleware as any).reset = () => {
     for (const key of Object.keys(counts)) delete counts[key]
   }
 
@@ -344,10 +415,14 @@ export function onSourceChanged(handler: EventHandler<StudioEvents['source:chang
   return events.on('source:changed', handler)
 }
 
-export function onSelectionChanged(handler: EventHandler<StudioEvents['selection:changed']>): () => void {
+export function onSelectionChanged(
+  handler: EventHandler<StudioEvents['selection:changed']>
+): () => void {
   return events.on('selection:changed', handler)
 }
 
-export function onCommandExecuted(handler: EventHandler<StudioEvents['command:executed']>): () => void {
+export function onCommandExecuted(
+  handler: EventHandler<StudioEvents['command:executed']>
+): () => void {
   return events.on('command:executed', handler)
 }

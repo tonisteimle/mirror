@@ -19,14 +19,19 @@ function createSourceMap(config: {
   const builder = new SourceMapBuilder()
 
   for (const node of config.nodes) {
-    builder.addNode(node.id, node.componentName, {
-      line: node.line,
-      column: 1,
-      endLine: node.endLine,
-      endColumn: 100,
-    }, {
-      parentId: node.parentId,
-    })
+    builder.addNode(
+      node.id,
+      node.componentName,
+      {
+        line: node.line,
+        column: 1,
+        endLine: node.endLine,
+        endColumn: 100,
+      },
+      {
+        parentId: node.parentId,
+      }
+    )
   }
 
   return builder.build()
@@ -43,7 +48,7 @@ describe('CodeModifier.wrapNodes', () => {
         { id: 'app', componentName: 'App', line: 1, endLine: 3 },
         { id: 'btn1', componentName: 'Button', line: 2, endLine: 2, parentId: 'app' },
         { id: 'btn2', componentName: 'Button', line: 3, endLine: 3, parentId: 'app' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -51,7 +56,7 @@ describe('CodeModifier.wrapNodes', () => {
 
     expect(result.success).toBe(true)
     expect(result.newSource).toContain('Box hor')
-    expect(result.newSource).toContain('    Button "First"')  // Re-indented
+    expect(result.newSource).toContain('    Button "First"') // Re-indented
     expect(result.newSource).toContain('    Button "Second"') // Re-indented
   })
 
@@ -65,7 +70,7 @@ describe('CodeModifier.wrapNodes', () => {
         { id: 'app', componentName: 'App', line: 1, endLine: 3 },
         { id: 'txt1', componentName: 'Text', line: 2, endLine: 2, parentId: 'app' },
         { id: 'txt2', componentName: 'Text', line: 3, endLine: 3, parentId: 'app' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -87,7 +92,7 @@ describe('CodeModifier.wrapNodes', () => {
         { id: 'box', componentName: 'Box', line: 2, endLine: 3, parentId: 'app' },
         { id: 'btn', componentName: 'Button', line: 3, endLine: 3, parentId: 'box' },
         { id: 'txt', componentName: 'Text', line: 4, endLine: 4, parentId: 'app' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -107,7 +112,7 @@ describe('CodeModifier.wrapNodes', () => {
       nodes: [
         { id: 'app', componentName: 'App', line: 1, endLine: 2 },
         { id: 'btn', componentName: 'Button', line: 2, endLine: 2, parentId: 'app' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -129,7 +134,7 @@ describe('CodeModifier.wrapNodes', () => {
         { id: 'box', componentName: 'Box', line: 2, endLine: 3, parentId: 'app' },
         { id: 'btn1', componentName: 'Button', line: 3, endLine: 3, parentId: 'box' },
         { id: 'btn2', componentName: 'Button', line: 4, endLine: 4, parentId: 'app' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -147,7 +152,7 @@ describe('CodeModifier.wrapNodes', () => {
       nodes: [
         { id: 'app', componentName: 'App', line: 1, endLine: 2 },
         { id: 'btn', componentName: 'Button', line: 2, endLine: 2, parentId: 'app' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -169,7 +174,7 @@ describe('CodeModifier.wrapNodes', () => {
         { id: 'container', componentName: 'Container', line: 2, endLine: 4, parentId: 'app' },
         { id: 'btnA', componentName: 'Button', line: 3, endLine: 3, parentId: 'container' },
         { id: 'btnB', componentName: 'Button', line: 4, endLine: 4, parentId: 'container' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -177,10 +182,10 @@ describe('CodeModifier.wrapNodes', () => {
 
     expect(result.success).toBe(true)
     // Wrapper should be at same level as original nodes (4 spaces)
-    expect(result.newSource).toMatch(/    Box hor/)
+    expect(result.newSource).toMatch(/ {4}Box hor/)
     // Children should be indented 2 more spaces (6 spaces)
-    expect(result.newSource).toMatch(/      Button "A"/)
-    expect(result.newSource).toMatch(/      Button "B"/)
+    expect(result.newSource).toMatch(/ {6}Button "A"/)
+    expect(result.newSource).toMatch(/ {6}Button "B"/)
   })
 })
 
@@ -197,7 +202,7 @@ describe('CodeModifier.unwrapNode', () => {
         { id: 'box', componentName: 'Box', line: 2, endLine: 4, parentId: 'app' },
         { id: 'btn1', componentName: 'Button', line: 3, endLine: 3, parentId: 'box' },
         { id: 'btn2', componentName: 'Button', line: 4, endLine: 4, parentId: 'box' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -225,7 +230,7 @@ describe('CodeModifier.unwrapNode', () => {
         { id: 'container', componentName: 'Container', line: 3, endLine: 4, parentId: 'wrapper' },
         { id: 'text', componentName: 'Text', line: 4, endLine: 4, parentId: 'container' },
         { id: 'btn', componentName: 'Button', line: 5, endLine: 5, parentId: 'wrapper' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -249,7 +254,7 @@ describe('CodeModifier.unwrapNode', () => {
       nodes: [
         { id: 'app', componentName: 'App', line: 1, endLine: 2 },
         { id: 'btn', componentName: 'Button', line: 2, endLine: 2, parentId: 'app' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -267,7 +272,7 @@ describe('CodeModifier.unwrapNode', () => {
       nodes: [
         { id: 'app', componentName: 'App', line: 1, endLine: 2 },
         { id: 'btn', componentName: 'Button', line: 2, endLine: 2, parentId: 'app' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -285,7 +290,7 @@ describe('CodeModifier.unwrapNode', () => {
       nodes: [
         { id: 'app', componentName: 'App', line: 1, endLine: 2 },
         { id: 'btn', componentName: 'Button', line: 2, endLine: 2, parentId: 'app' },
-      ]
+      ],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -306,7 +311,7 @@ describe('CodeModifier.unwrapNode', () => {
         { id: 'app', componentName: 'App', line: 1, endLine: 3 },
         { id: 'btn1', componentName: 'Button', line: 2, endLine: 2, parentId: 'app' },
         { id: 'btn2', componentName: 'Button', line: 3, endLine: 3, parentId: 'app' },
-      ]
+      ],
     })
 
     // Wrap them
@@ -321,7 +326,7 @@ describe('CodeModifier.unwrapNode', () => {
         { id: 'box', componentName: 'Box', line: 2, endLine: 4, parentId: 'app' },
         { id: 'btn1', componentName: 'Button', line: 3, endLine: 3, parentId: 'box' },
         { id: 'btn2', componentName: 'Button', line: 4, endLine: 4, parentId: 'box' },
-      ]
+      ],
     })
 
     const modifier2 = new CodeModifier(wrapResult.newSource, sourceMap2)

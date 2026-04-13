@@ -52,7 +52,7 @@ const defaultPanelVisibility: PanelVisibility = {
   prompt: true,
   files: true,
   code: true,
-  components: true,  // Standalone components panel
+  components: true, // Standalone components panel
   preview: true,
   property: true,
 }
@@ -157,7 +157,7 @@ export const actions = {
    */
   setCompiling(compiling: boolean): void {
     state.set({ compiling })
-    events.emit(compiling ? 'compile:started' : 'compile:idle', undefined as any)
+    events.emit(compiling ? 'compile:started' : 'compile:idle')
   },
 
   /**
@@ -272,7 +272,10 @@ export const actions = {
         if (fallbackId) {
           logState.info(` Fallback selection: ${fallbackId}`)
           state.set({ selection: { nodeId: fallbackId, origin: latestState.selection.origin } })
-          events.emit('selection:changed', { nodeId: fallbackId, origin: latestState.selection.origin })
+          events.emit('selection:changed', {
+            nodeId: fallbackId,
+            origin: latestState.selection.origin,
+          })
         } else {
           logState.warn(` No fallback found, clearing selection`)
           state.set({ selection: { nodeId: null, origin: latestState.selection.origin } })
@@ -352,7 +355,7 @@ export const actions = {
   },
   setEditorFocus(hasFocus: boolean): void {
     state.set({ editorHasFocus: hasFocus })
-    events.emit(hasFocus ? 'editor:focused' : 'editor:blurred', undefined as any)
+    events.emit(hasFocus ? 'editor:focused' : 'editor:blurred')
   },
 
   /**
@@ -793,7 +796,9 @@ export const actions = {
    *
    * @param reason - Why the layout was invalidated (for debugging)
    */
-  invalidateLayoutInfo(reason: 'scroll' | 'zoom' | 'resize' | 'transform' | 'manual' = 'manual'): void {
+  invalidateLayoutInfo(
+    reason: 'scroll' | 'zoom' | 'resize' | 'transform' | 'manual' = 'manual'
+  ): void {
     const currentState = state.get()
     // Only invalidate if there's actually cached data
     if (currentState.layoutInfo.size === 0) {

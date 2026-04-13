@@ -14,7 +14,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 // ============================================
 
 import type { SectionDependencies } from '../../studio/panels/property/base/section'
-import type { PropertyChangeCallback, SectionData, ExtractedProperty } from '../../studio/panels/property/types'
+import type {
+  PropertyChangeCallback,
+  SectionData,
+  ExtractedProperty,
+} from '../../studio/panels/property/types'
 
 // ============================================
 // Mock Factories
@@ -44,7 +48,7 @@ function createMockCodeModifier(): MockCodeModifier {
     updateProperty: vi.fn().mockReturnValue({ success: true }),
     addProperty: vi.fn().mockReturnValue({ success: true }),
     removeProperty: vi.fn().mockReturnValue({ success: true }),
-    getSource: vi.fn().mockReturnValue('')
+    getSource: vi.fn().mockReturnValue(''),
   }
 }
 
@@ -54,7 +58,7 @@ function createMockSelectionProvider(): MockSelectionProvider {
     subscribeBreadcrumb: vi.fn().mockReturnValue(() => {}),
     getSelection: vi.fn().mockReturnValue(null),
     clearSelection: vi.fn(),
-    select: vi.fn()
+    select: vi.fn(),
   }
 }
 
@@ -63,20 +67,26 @@ function createMockPropertyExtractor(): MockPropertyExtractor {
     extract: vi.fn().mockReturnValue({
       nodeId: 'test-node',
       nodeName: 'Frame',
-      categories: []
-    })
+      categories: [],
+    }),
   }
 }
 
-function createMockElement(overrides: Partial<{
-  nodeId: string
-  templateId: string
-  nodeName: string
-  categories: Array<{ name: string; label: string; properties: ExtractedProperty[] }>
-  interactions: Array<{ name: string; args: string[] }>
-  events: Array<{ name: string; key?: string; actions: Array<{ name: string; target?: string; isFunctionCall: boolean }> }>
-  actions: Array<{ name: string; target?: string; isFunctionCall: boolean }>
-}> = {}) {
+function createMockElement(
+  overrides: Partial<{
+    nodeId: string
+    templateId: string
+    nodeName: string
+    categories: Array<{ name: string; label: string; properties: ExtractedProperty[] }>
+    interactions: Array<{ name: string; args: string[] }>
+    events: Array<{
+      name: string
+      key?: string
+      actions: Array<{ name: string; target?: string; isFunctionCall: boolean }>
+    }>
+    actions: Array<{ name: string; target?: string; isFunctionCall: boolean }>
+  }> = {}
+) {
   return {
     nodeId: 'test-node-1',
     templateId: undefined,
@@ -85,13 +95,13 @@ function createMockElement(overrides: Partial<{
       {
         name: 'layout',
         label: 'Layout',
-        properties: []
-      }
+        properties: [],
+      },
     ],
     interactions: [],
     events: [],
     actions: [],
-    ...overrides
+    ...overrides,
   }
 }
 
@@ -101,7 +111,7 @@ function createMockProperty(overrides: Partial<ExtractedProperty> = {}): Extract
     value: '',
     hasValue: false,
     source: 'default',
-    ...overrides
+    ...overrides,
   }
 }
 
@@ -132,7 +142,7 @@ describe('Property Panel Signal Handling', () => {
         '__INTERACTION__',
         '__ADD_EVENT__',
         '__EDIT_EVENT__',
-        '__DELETE_EVENT__'
+        '__DELETE_EVENT__',
       ]
 
       // All signals must start with __
@@ -215,9 +225,9 @@ describe('Property Panel Signal Handling', () => {
 
     it('should call appropriate handler for each signal type', () => {
       const handlers: Record<string, ReturnType<typeof vi.fn>> = {
-        '__LAYOUT__': vi.fn(),
-        '__ALIGNMENT__': vi.fn(),
-        '__PAD_TOKEN__': vi.fn()
+        __LAYOUT__: vi.fn(),
+        __ALIGNMENT__: vi.fn(),
+        __PAD_TOKEN__: vi.fn(),
       }
 
       const handleSpecialSignal = (signal: string, value: string) => {
@@ -251,13 +261,20 @@ describe('Property Change Flow', () => {
       const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
       // Simulate debounced property change
-      const debouncedUpdate = (property: string, value: string, source: 'input' | 'token' | 'toggle') => {
+      const debouncedUpdate = (
+        property: string,
+        value: string,
+        source: 'input' | 'token' | 'toggle'
+      ) => {
         if (source === 'input') {
           const existingTimer = debounceTimers.get(property)
           if (existingTimer) clearTimeout(existingTimer)
-          debounceTimers.set(property, setTimeout(() => {
-            mockModifier.updateProperty('node-1', property, value)
-          }, debounceTime))
+          debounceTimers.set(
+            property,
+            setTimeout(() => {
+              mockModifier.updateProperty('node-1', property, value)
+            }, debounceTime)
+          )
         } else {
           mockModifier.updateProperty('node-1', property, value)
         }
@@ -282,7 +299,11 @@ describe('Property Change Flow', () => {
     it('should immediately apply token source changes', () => {
       const mockModifier = createMockCodeModifier()
 
-      const handlePropertyChange = (property: string, value: string, source: 'input' | 'token' | 'toggle') => {
+      const handlePropertyChange = (
+        property: string,
+        value: string,
+        source: 'input' | 'token' | 'toggle'
+      ) => {
         if (source === 'token') {
           mockModifier.updateProperty('node-1', property, value)
         }
@@ -295,7 +316,11 @@ describe('Property Change Flow', () => {
     it('should immediately apply toggle source changes', () => {
       const mockModifier = createMockCodeModifier()
 
-      const handlePropertyChange = (property: string, value: string, source: 'input' | 'token' | 'toggle') => {
+      const handlePropertyChange = (
+        property: string,
+        value: string,
+        source: 'input' | 'token' | 'toggle'
+      ) => {
         if (source === 'toggle') {
           mockModifier.updateProperty('node-1', property, value)
         }
@@ -328,7 +353,7 @@ describe('Property Change Flow', () => {
     it('should prefer templateId over nodeId', () => {
       const element = createMockElement({
         nodeId: 'instance-123',
-        templateId: 'template-456'
+        templateId: 'template-456',
       })
 
       // The panel should use templateId when available
@@ -339,7 +364,7 @@ describe('Property Change Flow', () => {
     it('should fall back to nodeId when templateId is undefined', () => {
       const element = createMockElement({
         nodeId: 'instance-123',
-        templateId: undefined
+        templateId: undefined,
       })
 
       const nodeId = element.templateId || element.nodeId
@@ -358,7 +383,7 @@ describe('Error Recovery', () => {
       const mockModifier = createMockCodeModifier()
 
       // Simulate the check for currentElement
-      let currentElement: ReturnType<typeof createMockElement> | null = null
+      const currentElement: ReturnType<typeof createMockElement> | null = null
 
       const handlePropertyChange = (property: string, value: string) => {
         if (!currentElement) return // Early return pattern
@@ -372,7 +397,7 @@ describe('Error Recovery', () => {
 
     it('should handle null categories gracefully', () => {
       const element = createMockElement({
-        categories: []
+        categories: [],
       })
 
       // Empty categories array should not cause errors
@@ -382,11 +407,13 @@ describe('Error Recovery', () => {
 
     it('should handle missing property in category gracefully', () => {
       const element = createMockElement({
-        categories: [{
-          name: 'layout',
-          label: 'Layout',
-          properties: [createMockProperty({ name: 'hor', value: 'true' })]
-        }]
+        categories: [
+          {
+            name: 'layout',
+            label: 'Layout',
+            properties: [createMockProperty({ name: 'hor', value: 'true' })],
+          },
+        ],
       })
 
       const layoutCat = element.categories.find(c => c.name === 'layout')
@@ -430,7 +457,7 @@ describe('Error Recovery', () => {
       const mockModifier = createMockCodeModifier()
       mockModifier.updateProperty.mockReturnValue({
         success: false,
-        error: 'Could not find node'
+        error: 'Could not find node',
       })
 
       const result = mockModifier.updateProperty('node-1', 'bg', '#fff')
@@ -443,7 +470,7 @@ describe('Error Recovery', () => {
       const mockModifier = createMockCodeModifier()
       mockModifier.removeProperty.mockReturnValue({
         success: false,
-        error: 'Property not found'
+        error: 'Property not found',
       })
 
       const result = mockModifier.removeProperty('node-1', 'bg')
@@ -455,7 +482,7 @@ describe('Error Recovery', () => {
       const mockModifier = createMockCodeModifier()
       mockModifier.addProperty.mockReturnValue({
         success: false,
-        error: 'Invalid property'
+        error: 'Invalid property',
       })
 
       const result = mockModifier.addProperty('node-1', 'invalidProp', 'value')
@@ -497,7 +524,7 @@ describe('Section Coordination', () => {
         onPropertyChange: mockOnPropertyChange,
         escapeHtml: (str: string) => str,
         getSpacingTokens: () => [],
-        getColorTokens: () => []
+        getColorTokens: () => [],
       }
 
       // Callback should be available
@@ -509,13 +536,14 @@ describe('Section Coordination', () => {
       const testCases = [
         { input: '<script>', expected: '&lt;script&gt;' },
         { input: '"quotes"', expected: '&quot;quotes&quot;' },
-        { input: "it's", expected: "it&#39;s" },
-        { input: 'normal text', expected: 'normal text' }
+        { input: "it's", expected: 'it&#39;s' },
+        { input: 'normal text', expected: 'normal text' },
       ]
 
       const escapeHtml = (str: string) =>
-        str.replace(/[&<>"']/g, c =>
-          ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c)
+        str.replace(
+          /[&<>"']/g,
+          c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] || c
         )
 
       testCases.forEach(({ input, expected }) => {
@@ -526,17 +554,16 @@ describe('Section Coordination', () => {
     it('should provide token getter functions to sections', () => {
       const mockSpacingTokens = [
         { name: 'sm', fullName: 'sm.pad', value: '8' },
-        { name: 'md', fullName: 'md.pad', value: '16' }
+        { name: 'md', fullName: 'md.pad', value: '16' },
       ]
-      const mockColorTokens = [
-        { name: 'primary', value: '#2563eb' }
-      ]
+      const mockColorTokens = [{ name: 'primary', value: '#2563eb' }]
 
       const deps: SectionDependencies = {
         onPropertyChange: vi.fn(),
         escapeHtml: (str: string) => str,
-        getSpacingTokens: (suffix: string) => mockSpacingTokens.filter(t => t.fullName.endsWith(suffix)),
-        getColorTokens: () => mockColorTokens
+        getSpacingTokens: (suffix: string) =>
+          mockSpacingTokens.filter(t => t.fullName.endsWith(suffix)),
+        getColorTokens: () => mockColorTokens,
       }
 
       expect(deps.getSpacingTokens('.pad')).toEqual(mockSpacingTokens)
@@ -550,8 +577,8 @@ describe('Section Coordination', () => {
         categories: [
           { name: 'layout', label: 'Layout', properties: [] },
           { name: 'sizing', label: 'Sizing', properties: [] },
-          { name: 'spacing', label: 'Spacing', properties: [] }
-        ]
+          { name: 'spacing', label: 'Spacing', properties: [] },
+        ],
       })
 
       // Sections should render based on available categories
@@ -566,16 +593,16 @@ describe('Section Coordination', () => {
     it('should pass correct data to each section', () => {
       const layoutProperties = [
         createMockProperty({ name: 'hor', value: 'true', hasValue: true }),
-        createMockProperty({ name: 'gap', value: '8' })
+        createMockProperty({ name: 'gap', value: '8' }),
       ]
 
       const sectionData: SectionData = {
         category: {
           name: 'layout',
           label: 'Layout',
-          properties: layoutProperties
+          properties: layoutProperties,
         },
-        nodeId: 'test-node'
+        nodeId: 'test-node',
       }
 
       expect(sectionData.category?.name).toBe('layout')
@@ -683,7 +710,7 @@ describe('Debounce Behavior', () => {
   it('should debounce per-property independently', () => {
     const callbacks: Record<string, ReturnType<typeof vi.fn>> = {
       width: vi.fn(),
-      height: vi.fn()
+      height: vi.fn(),
     }
     const debounceTime = 150
     const timeouts: Record<string, ReturnType<typeof setTimeout>> = {}
@@ -767,12 +794,18 @@ describe('Dispose and Cleanup', () => {
     const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
     // Set up some timers
-    debounceTimers.set('width', setTimeout(() => {}, 150))
-    debounceTimers.set('height', setTimeout(() => {}, 150))
+    debounceTimers.set(
+      'width',
+      setTimeout(() => {}, 150)
+    )
+    debounceTimers.set(
+      'height',
+      setTimeout(() => {}, 150)
+    )
 
     // Dispose should clear all timers
     const dispose = () => {
-      debounceTimers.forEach((timer) => clearTimeout(timer))
+      debounceTimers.forEach(timer => clearTimeout(timer))
       debounceTimers.clear()
     }
 

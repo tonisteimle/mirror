@@ -279,7 +279,7 @@ describe('NativeDragAdapter', () => {
 
   describe('Disabled State', () => {
     it('ignores events when disabled', () => {
-      let disabled = false
+      const disabled = false
       adapter = createNativeDragAdapter({
         container,
         eventPort,
@@ -346,7 +346,7 @@ describe('NativeDragAdapter', () => {
       adapter = createNativeDragAdapter({
         container,
         eventPort,
-        getDefaultSize: (name) => customSizes[name] ?? { width: 50, height: 50 },
+        getDefaultSize: name => customSizes[name] ?? { width: 50, height: 50 },
       })
       adapter.init()
 
@@ -383,15 +383,12 @@ describe('NativeDragAdapter + DragDropController Integration', () => {
 
   it('can be used with DOMEventPort', async () => {
     // This test verifies the adapter works with the DOM EventPort
-    const { createDOMEventPort } = await import(
-      '../../../studio/drag-drop/system/adapters/dom-adapters'
-    )
-    const { DragDropController } = await import(
-      '../../../studio/drag-drop/system/drag-drop-controller'
-    )
-    const { createMockPorts } = await import(
-      '../../../studio/drag-drop/system/adapters/mock-adapters'
-    )
+    const { createDOMEventPort } =
+      await import('../../../studio/drag-drop/system/adapters/dom-adapters')
+    const { DragDropController } =
+      await import('../../../studio/drag-drop/system/drag-drop-controller')
+    const { createMockPorts } =
+      await import('../../../studio/drag-drop/system/adapters/mock-adapters')
 
     // Use mock ports but replace events with DOM event port
     const mockPorts = createMockPorts()
@@ -445,9 +442,8 @@ describe('NativeDragAdapter + DragDropController Integration', () => {
   })
 
   it('full drag flow: start → move → drop', async () => {
-    const { createDOMEventPort } = await import(
-      '../../../studio/drag-drop/system/adapters/dom-adapters'
-    )
+    const { createDOMEventPort } =
+      await import('../../../studio/drag-drop/system/adapters/dom-adapters')
 
     const domEventPort = createDOMEventPort()
 
@@ -498,9 +494,8 @@ describe('NativeDragAdapter + DragDropController Integration', () => {
   })
 
   it('drag cancel flow: start → move → leave', async () => {
-    const { createDOMEventPort } = await import(
-      '../../../studio/drag-drop/system/adapters/dom-adapters'
-    )
+    const { createDOMEventPort } =
+      await import('../../../studio/drag-drop/system/adapters/dom-adapters')
 
     const domEventPort = createDOMEventPort()
 

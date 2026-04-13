@@ -22,7 +22,7 @@ import _traverse, { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 
 // Handle ESM/CJS interop - Babel exports differ based on bundler
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const traverse = (_traverse as { default?: typeof _traverse }).default || _traverse
 
 // ============================================================================
@@ -50,18 +50,31 @@ export interface ValidationResult {
 
 // These hooks are forbidden (side effects, complex state)
 const FORBIDDEN_HOOKS = [
-  'useEffect', 'useContext', 'useReducer',
-  'useCallback', 'useMemo', 'useRef', 'useLayoutEffect',
-  'useImperativeHandle', 'useDebugValue'
+  'useEffect',
+  'useContext',
+  'useReducer',
+  'useCallback',
+  'useMemo',
+  'useRef',
+  'useLayoutEffect',
+  'useImperativeHandle',
+  'useDebugValue',
 ]
 
 // useState is ALLOWED for hover/selected states
 
 // These are allowed event handlers
 const ALLOWED_EVENTS = [
-  'onClick', 'onMouseEnter', 'onMouseLeave',
-  'onFocus', 'onBlur', 'onChange', 'onInput',
-  'onKeyDown', 'onKeyUp', 'onKeyPress'
+  'onClick',
+  'onMouseEnter',
+  'onMouseLeave',
+  'onFocus',
+  'onBlur',
+  'onChange',
+  'onInput',
+  'onKeyDown',
+  'onKeyUp',
+  'onKeyPress',
 ]
 
 // ============================================================================
@@ -93,8 +106,9 @@ export function validateReactCode(code: string): ValidationResult {
               message: `Hook "${callee.name}" ist nicht erlaubt. Nur useState für einfache Zustände.`,
               line: path.node.loc?.start.line,
               column: path.node.loc?.start.column,
-              suggestion: 'Entferne den Hook. Für Hover-States nutze useState mit onMouseEnter/onMouseLeave.',
-              severity: 'error'
+              suggestion:
+                'Entferne den Hook. Für Hover-States nutze useState mit onMouseEnter/onMouseLeave.',
+              severity: 'error',
             })
           }
         }
@@ -111,8 +125,8 @@ export function validateReactCode(code: string): ValidationResult {
               rule: 'tokens-format',
               message: 'tokens sollte ein Objekt-Literal sein.',
               line: path.node.loc?.start.line,
-              suggestion: 'const tokens = { \'$primary\': \'#5BA8F5\', ... }',
-              severity: 'warning'
+              suggestion: "const tokens = { '$primary': '#5BA8F5', ... }",
+              severity: 'warning',
             })
           }
         }
@@ -131,7 +145,7 @@ export function validateReactCode(code: string): ValidationResult {
               const objPattern = params[0]
               const propNames = objPattern.properties
                 .filter((p): p is t.ObjectProperty => t.isObjectProperty(p))
-                .map(p => t.isIdentifier(p.key) ? p.key.name : null)
+                .map(p => (t.isIdentifier(p.key) ? p.key.name : null))
                 .filter(Boolean)
 
               // Check for recommended props (warning, not error)
@@ -141,7 +155,7 @@ export function validateReactCode(code: string): ValidationResult {
                   message: `Komponente "${name}" sollte "children" als Prop haben.`,
                   line: path.node.loc?.start.line,
                   suggestion: `const ${name} = ({ children, style, ...props }) => (...)`,
-                  severity: 'warning'
+                  severity: 'warning',
                 })
               }
               if (!propNames.includes('style')) {
@@ -150,7 +164,7 @@ export function validateReactCode(code: string): ValidationResult {
                   message: `Komponente "${name}" sollte "style" als Prop haben für Override-Styles.`,
                   line: path.node.loc?.start.line,
                   suggestion: `const ${name} = ({ children, style, ...props }) => (...)`,
-                  severity: 'warning'
+                  severity: 'warning',
                 })
               }
 
@@ -162,7 +176,7 @@ export function validateReactCode(code: string): ValidationResult {
                 message: `Komponente "${name}" sollte Props destrukturieren.`,
                 line: path.node.loc?.start.line,
                 suggestion: `const ${name} = ({ children, style, ...props }) => (...)`,
-                severity: 'warning'
+                severity: 'warning',
               })
             }
           }
@@ -202,10 +216,11 @@ export function validateReactCode(code: string): ValidationResult {
             if (!t.isObjectExpression(expr) && !t.isIdentifier(expr)) {
               errors.push({
                 rule: 'style-format',
-                message: 'Style muss ein Objekt-Literal oder Variable sein: style={{ ... }} oder style={dynamicStyle}',
+                message:
+                  'Style muss ein Objekt-Literal oder Variable sein: style={{ ... }} oder style={dynamicStyle}',
                 line: path.node.loc?.start.line,
                 suggestion: 'Verwende: style={{ property: value }} oder style={dynamicStyle}',
-                severity: 'error'
+                severity: 'error',
               })
             }
           } else if (t.isStringLiteral(value)) {
@@ -214,7 +229,7 @@ export function validateReactCode(code: string): ValidationResult {
               message: 'Verwende kein CSS-String. Nutze Objekt-Syntax: style={{ ... }}',
               line: path.node.loc?.start.line,
               suggestion: 'Ändere style="..." zu style={{ ... }}',
-              severity: 'error'
+              severity: 'error',
             })
           }
         }
@@ -226,7 +241,7 @@ export function validateReactCode(code: string): ValidationResult {
             message: 'Verwende "style={{ }}" statt "className". Inline-Styles sind erforderlich.',
             line: path.node.loc?.start.line,
             suggestion: 'Ersetze className durch style={{ ... }}',
-            severity: 'error'
+            severity: 'error',
           })
         }
       },
@@ -240,10 +255,10 @@ export function validateReactCode(code: string): ValidationResult {
             message: `CSS-Import "${source}" ist nicht erlaubt. Nutze Inline-Styles.`,
             line: path.node.loc?.start.line,
             suggestion: 'Entferne den CSS-Import und nutze style={{ ... }}',
-            severity: 'error'
+            severity: 'error',
           })
         }
-      }
+      },
     })
 
     // Check for tokens block
@@ -251,8 +266,9 @@ export function validateReactCode(code: string): ValidationResult {
       errors.push({
         rule: 'tokens-required',
         message: 'Ein "const tokens = { ... }" Block mit Farbdefinitionen fehlt.',
-        suggestion: 'Füge hinzu: const tokens = { \'$primary\': \'#5BA8F5\', \'$bg.app\': \'#09090B\', ... }',
-        severity: 'error'
+        suggestion:
+          "Füge hinzu: const tokens = { '$primary': '#5BA8F5', '$bg.app': '#09090B', ... }",
+        severity: 'error',
       })
     }
 
@@ -262,23 +278,22 @@ export function validateReactCode(code: string): ValidationResult {
         rule: 'app-required',
         message: 'Eine "export default function App()" Komponente fehlt.',
         suggestion: 'Füge hinzu: export default function App() { return (...) }',
-        severity: 'error'
+        severity: 'error',
       })
     }
-
   } catch (e) {
     errors.push({
       rule: 'parse-error',
       message: `Syntax-Fehler: ${e instanceof Error ? e.message : String(e)}`,
       suggestion: 'Überprüfe die JSX-Syntax auf Fehler.',
-      severity: 'error'
+      severity: 'error',
     })
   }
 
   return {
     valid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   }
 }
 

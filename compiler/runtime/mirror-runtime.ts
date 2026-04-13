@@ -181,8 +181,8 @@ export interface MirrorProps {
   named?: string
 
   // State
-  state?: string                              // initial state
-  states?: Record<string, Partial<MirrorProps>>  // state definitions
+  state?: string // initial state
+  states?: Record<string, Partial<MirrorProps>> // state definitions
 
   // Visibility condition
   'visible-when'?: string
@@ -215,8 +215,8 @@ export type Action = string
 
 /** Element node in the tree */
 export interface MirrorNode {
-  type: string                    // Component/primitive name
-  content?: string                // Text content or icon name
+  type: string // Component/primitive name
+  content?: string // Text content or icon name
   props: MirrorProps
   children: MirrorNode[]
   slots: Record<string, MirrorNode | string>
@@ -292,22 +292,108 @@ export function M(
   const cleanProps: MirrorProps = {}
 
   const knownProps = new Set([
-    'hor', 'horizontal', 'ver', 'vertical', 'gap', 'g', 'spread', 'wrap', 'stacked', 'grid',
-    'left', 'right', 'top', 'bottom', 'center', 'cen', 'hor-center', 'ver-center',
-    'width', 'w', 'height', 'h', 'size', 'min-width', 'minw', 'max-width', 'maxw',
-    'min-height', 'minh', 'max-height', 'maxh',
-    'pad', 'padding', 'p', 'margin', 'm',
-    'bg', 'background', 'col', 'color', 'c', 'boc', 'border-color',
-    'bor', 'border', 'rad', 'radius',
-    'font-size', 'fs', 'weight', 'line', 'font', 'text-align',
-    'italic', 'underline', 'truncate', 'uppercase', 'lowercase',
-    'icon-size', 'is', 'icon-weight', 'iw', 'icon-color', 'ic', 'fill',
-    'opacity', 'o', 'shadow', 'cursor', 'z', 'hidden', 'visible', 'disabled',
-    'rotate', 'rot', 'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'clip',
-    'hover-bg', 'hover-col', 'hover-opacity', 'hover-scale',
-    'placeholder', 'value', 'src', 'href', 'type',
-    'named', 'state', 'states', 'visible-when', 'route', 'selection',
-    'onclick', 'onhover', 'onfocus', 'onblur', 'onchange', 'oninput', 'onclick-outside'
+    'hor',
+    'horizontal',
+    'ver',
+    'vertical',
+    'gap',
+    'g',
+    'spread',
+    'wrap',
+    'stacked',
+    'grid',
+    'left',
+    'right',
+    'top',
+    'bottom',
+    'center',
+    'cen',
+    'hor-center',
+    'ver-center',
+    'width',
+    'w',
+    'height',
+    'h',
+    'size',
+    'min-width',
+    'minw',
+    'max-width',
+    'maxw',
+    'min-height',
+    'minh',
+    'max-height',
+    'maxh',
+    'pad',
+    'padding',
+    'p',
+    'margin',
+    'm',
+    'bg',
+    'background',
+    'col',
+    'color',
+    'c',
+    'boc',
+    'border-color',
+    'bor',
+    'border',
+    'rad',
+    'radius',
+    'font-size',
+    'fs',
+    'weight',
+    'line',
+    'font',
+    'text-align',
+    'italic',
+    'underline',
+    'truncate',
+    'uppercase',
+    'lowercase',
+    'icon-size',
+    'is',
+    'icon-weight',
+    'iw',
+    'icon-color',
+    'ic',
+    'fill',
+    'opacity',
+    'o',
+    'shadow',
+    'cursor',
+    'z',
+    'hidden',
+    'visible',
+    'disabled',
+    'rotate',
+    'rot',
+    'scroll',
+    'scroll-ver',
+    'scroll-hor',
+    'scroll-both',
+    'clip',
+    'hover-bg',
+    'hover-col',
+    'hover-opacity',
+    'hover-scale',
+    'placeholder',
+    'value',
+    'src',
+    'href',
+    'type',
+    'named',
+    'state',
+    'states',
+    'visible-when',
+    'route',
+    'selection',
+    'onclick',
+    'onhover',
+    'onfocus',
+    'onblur',
+    'onchange',
+    'oninput',
+    'onclick-outside',
   ])
 
   // Dynamic property assignment requires any cast due to index signature conflicts
@@ -330,7 +416,7 @@ export function M(
     content,
     props: cleanProps,
     children,
-    slots
+    slots,
   }
 }
 
@@ -351,12 +437,12 @@ interface DefineBuilder {
  *   .slots('Title', 'Content')
  *   .build()
  */
-M.define = function(name: string, props: MirrorProps = {}): DefineBuilder {
+M.define = function (name: string, props: MirrorProps = {}): DefineBuilder {
   const def: ComponentDef = {
     name,
     props,
     slots: [],
-    extends: undefined
+    extends: undefined,
   }
 
   const builder: DefineBuilder = {
@@ -370,7 +456,7 @@ M.define = function(name: string, props: MirrorProps = {}): DefineBuilder {
     },
     build() {
       components.set(name, def)
-    }
+    },
   }
 
   return builder
@@ -381,7 +467,7 @@ M.define = function(name: string, props: MirrorProps = {}): DefineBuilder {
  *
  * M.extend('Button', 'DangerButton', { bg: '#EF4444' })
  */
-M.extend = function(parent: string, name: string, props: MirrorProps = {}): void {
+M.extend = function (parent: string, name: string, props: MirrorProps = {}): void {
   const parentDef = components.get(parent)
   if (!parentDef) {
     console.warn(`Parent component '${parent}' not found`)
@@ -391,7 +477,7 @@ M.extend = function(parent: string, name: string, props: MirrorProps = {}): void
     name,
     props: { ...parentDef?.props, ...props },
     slots: parentDef?.slots || [],
-    extends: parent
+    extends: parent,
   })
 }
 
@@ -416,7 +502,7 @@ M.extend = function(parent: string, name: string, props: MirrorProps = {}): void
  *     M('Box', [M('Text', '$task.title')])
  *   ], 'task.done === false')
  */
-M.each = function(
+M.each = function (
   itemVar: string,
   collection: string,
   template: MirrorNode[],
@@ -430,8 +516,8 @@ M.each = function(
     _each: {
       itemVar,
       collection,
-      filter
-    }
+      filter,
+    },
   }
 }
 
@@ -454,7 +540,7 @@ M.each = function(
  *     [M('LoginButton')]  // else branch (optional)
  *   )
  */
-M.if = function(
+M.if = function (
   condition: string,
   thenBranch: MirrorNode[],
   elseBranch?: MirrorNode[]
@@ -466,8 +552,8 @@ M.if = function(
     slots: {},
     _if: {
       condition,
-      else: elseBranch
-    }
+      else: elseBranch,
+    },
   }
 }
 
@@ -477,7 +563,8 @@ M.if = function(
 
 /** Tag mapping */
 const TAG_MAP: Record<string, string> = {
-  Box: 'div', Frame: 'div',
+  Box: 'div',
+  Frame: 'div',
   Text: 'span',
   Button: 'button',
   Input: 'input',
@@ -489,20 +576,20 @@ const TAG_MAP: Record<string, string> = {
   Header: 'header',
   Footer: 'footer',
   Section: 'section',
-  Article: 'article'
+  Article: 'article',
 }
 
 /** Shadow presets */
 const SHADOW_MAP: Record<string, string> = {
   sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
   md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-  lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+  lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
 }
 
 /**
  * Render to DOM
  */
-M.render = function(node: MirrorNode, container: HTMLElement = document.body): MirrorUI {
+M.render = function (node: MirrorNode, container: HTMLElement = document.body): MirrorUI {
   const root = renderNode(node)
   container.appendChild(root)
 
@@ -516,7 +603,7 @@ M.render = function(node: MirrorNode, container: HTMLElement = document.body): M
     destroy: () => {
       cleanup(root)
       root.remove()
-    }
+    },
   }
 }
 
@@ -564,7 +651,7 @@ function renderNode(node: MirrorNode): HTMLElement {
   }
   if (node.props['visible-when']) {
     el.dataset.visibleWhen = node.props['visible-when']
-    el.style.display = 'none'  // Hidden until parent state matches
+    el.style.display = 'none' // Hidden until parent state matches
   }
 
   // Apply states
@@ -586,9 +673,8 @@ function renderNode(node: MirrorNode): HTMLElement {
 
   // Render slot fills
   for (const [slotName, slotContent] of Object.entries(node.slots)) {
-    const slotEl = typeof slotContent === 'string'
-      ? renderNode(M('Text', slotContent))
-      : renderNode(slotContent)
+    const slotEl =
+      typeof slotContent === 'string' ? renderNode(M('Text', slotContent)) : renderNode(slotContent)
     slotEl.dataset.slot = slotName
     el.appendChild(slotEl)
   }
@@ -628,9 +714,10 @@ function renderComponent(node: MirrorNode, def: ComponentDef): HTMLElement {
   for (const slotName of def.slots) {
     const slotContent = node.slots[slotName]
     if (slotContent) {
-      const slotEl = typeof slotContent === 'string'
-        ? renderNode(M('Text', slotContent))
-        : renderNode(slotContent)
+      const slotEl =
+        typeof slotContent === 'string'
+          ? renderNode(M('Text', slotContent))
+          : renderNode(slotContent)
       slotEl.dataset.slot = slotName
       el.appendChild(slotEl)
     }
@@ -651,7 +738,7 @@ function applyStyles(el: HTMLElement, props: MirrorProps): void {
 
 function propsToCSS(props: Partial<MirrorProps>): Record<string, string> {
   const css: Record<string, string> = {}
-  const px = (v: number | string) => typeof v === 'number' ? `${v}px` : v
+  const px = (v: number | string) => (typeof v === 'number' ? `${v}px` : v)
 
   // Layout
   if (props.hor || props.horizontal) {
@@ -692,8 +779,10 @@ function propsToCSS(props: Partial<MirrorProps>): Record<string, string> {
   }
   if (props.left) css.alignItems = css.flexDirection === 'row' ? css.alignItems : 'flex-start'
   if (props.right) css.alignItems = css.flexDirection === 'row' ? css.alignItems : 'flex-end'
-  if (props.top) css.justifyContent = css.flexDirection === 'column' ? 'flex-start' : css.justifyContent
-  if (props.bottom) css.justifyContent = css.flexDirection === 'column' ? 'flex-end' : css.justifyContent
+  if (props.top)
+    css.justifyContent = css.flexDirection === 'column' ? 'flex-start' : css.justifyContent
+  if (props.bottom)
+    css.justifyContent = css.flexDirection === 'column' ? 'flex-end' : css.justifyContent
 
   // Sizing
   const formatSize = (v: number | string | 'hug' | 'full'): string => {
@@ -831,36 +920,45 @@ function propsToCSS(props: Partial<MirrorProps>): Record<string, string> {
 
 function applyAttributes(el: HTMLElement, props: MirrorProps): void {
   if (props.placeholder !== undefined) {
-    (el as HTMLInputElement).placeholder = props.placeholder
+    ;(el as HTMLInputElement).placeholder = props.placeholder
   }
   if (props.value !== undefined) {
-    (el as HTMLInputElement).value = props.value
+    ;(el as HTMLInputElement).value = props.value
   }
   if (props.src !== undefined) {
-    (el as HTMLImageElement).src = props.src
+    ;(el as HTMLImageElement).src = props.src
   }
   if (props.href !== undefined) {
-    (el as HTMLAnchorElement).href = props.href
+    ;(el as HTMLAnchorElement).href = props.href
   }
   if (props.type !== undefined) {
-    (el as HTMLInputElement).type = props.type
+    ;(el as HTMLInputElement).type = props.type
   }
   if (props.disabled) {
-    (el as HTMLButtonElement).disabled = true
+    ;(el as HTMLButtonElement).disabled = true
   }
 }
 
 function applyEvents(el: HTMLElement, props: MirrorProps): void {
   const eventProps = [
-    'onclick', 'onhover', 'onfocus', 'onblur', 'onchange', 'oninput', 'onclick-outside'
+    'onclick',
+    'onhover',
+    'onfocus',
+    'onblur',
+    'onchange',
+    'oninput',
+    'onclick-outside',
   ] as const
 
   for (const eventProp of eventProps) {
     const actions = props[eventProp]
     if (actions) {
-      const eventName = eventProp === 'onhover' ? 'mouseenter'
-        : eventProp === 'onclick-outside' ? 'click-outside'
-        : eventProp.slice(2)
+      const eventName =
+        eventProp === 'onhover'
+          ? 'mouseenter'
+          : eventProp === 'onclick-outside'
+            ? 'click-outside'
+            : eventProp.slice(2)
 
       attachEvent(el, eventName, normalizeActions(actions))
     }
@@ -903,25 +1001,30 @@ function attachEvent(el: HTMLElement, eventName: string, actions: string[]): voi
   })
 }
 
-function attachKeyEvent(el: HTMLElement, eventType: string, keyName: string, actions: string[]): void {
+function attachKeyEvent(
+  el: HTMLElement,
+  eventType: string,
+  keyName: string,
+  actions: string[]
+): void {
   // Make element focusable
   if (!el.hasAttribute('tabindex')) {
     el.setAttribute('tabindex', '0')
   }
 
   const keyMap: Record<string, string> = {
-    'escape': 'Escape',
-    'enter': 'Enter',
-    'tab': 'Tab',
-    'space': ' ',
+    escape: 'Escape',
+    enter: 'Enter',
+    tab: 'Tab',
+    space: ' ',
     'arrow-up': 'ArrowUp',
     'arrow-down': 'ArrowDown',
     'arrow-left': 'ArrowLeft',
     'arrow-right': 'ArrowRight',
-    'backspace': 'Backspace',
-    'delete': 'Delete',
-    'home': 'Home',
-    'end': 'End'
+    backspace: 'Backspace',
+    delete: 'Delete',
+    home: 'Home',
+    end: 'End',
   }
 
   el.addEventListener(eventType, (e: Event) => {
@@ -994,7 +1097,7 @@ function executeAction(el: HTMLElement, action: string): void {
       runtime.navigateToPage(target)
       break
     case 'focus':
-      (targetEl || el)?.focus()
+      ;(targetEl || el)?.focus()
       break
     case 'call':
       const fn = (window as unknown as WindowWithMirrorFunctions)[target]
@@ -1044,7 +1147,7 @@ const runtime = {
     if (!el) return
     // Save current display before hiding (unless already hidden)
     if (el.style.display !== 'none') {
-      (el as MirrorElement)._savedDisplay = el.style.display
+      ;(el as MirrorElement)._savedDisplay = el.style.display
     }
     el.hidden = true
     el.style.display = 'none'
@@ -1171,7 +1274,8 @@ const runtime = {
         for (const p of Object.keys(state)) props.add(p)
       }
       for (const p of Array.from(props)) {
-        mirrorEl._baseStyles[p] = (el.style as CSSStyleDeclaration & Record<string, string>)[p] || ''
+        mirrorEl._baseStyles[p] =
+          (el.style as CSSStyleDeclaration & Record<string, string>)[p] || ''
       }
     }
 
@@ -1199,7 +1303,8 @@ const runtime = {
       mirrorEl._baseStyles = {}
       const props = Object.keys(mirrorEl._stateStyles[state])
       for (const p of props) {
-        mirrorEl._baseStyles[p] = (el.style as CSSStyleDeclaration & Record<string, string>)[p] || ''
+        mirrorEl._baseStyles[p] =
+          (el.style as CSSStyleDeclaration & Record<string, string>)[p] || ''
       }
     }
 
@@ -1226,14 +1331,14 @@ const runtime = {
     if (!target?.parentElement) return
     for (const sibling of Array.from(target.parentElement.children)) {
       if ((sibling as HTMLElement).dataset?.component) {
-        (sibling as HTMLElement).style.display = sibling === target ? '' : 'none'
+        ;(sibling as HTMLElement).style.display = sibling === target ? '' : 'none'
       }
     }
   },
 
   navigateToPage(_pageName: string) {
     console.warn('Page navigation requires Mirror compiler')
-  }
+  },
 }
 
 // =============================================================================
@@ -1279,7 +1384,7 @@ async function loadIcon(el: HTMLElement, name: string, props: MirrorProps): Prom
  *
  * This is DETERMINISTIC: same input always produces same output
  */
-M.toMirror = function(node: MirrorNode, indent: number = 0): string {
+M.toMirror = function (node: MirrorNode, indent: number = 0): string {
   const lines: string[] = []
   const spaces = '  '.repeat(indent)
 
@@ -1554,53 +1659,157 @@ export interface ValidationWarning {
 // Valid component/primitive names
 const VALID_COMPONENTS = new Set([
   // Primitives
-  'box', 'frame', 'text', 'button', 'input', 'textarea', 'image', 'link', 'icon',
+  'box',
+  'frame',
+  'text',
+  'button',
+  'input',
+  'textarea',
+  'image',
+  'link',
+  'icon',
   // Semantic
-  'header', 'nav', 'main', 'section', 'article', 'aside', 'footer',
+  'header',
+  'nav',
+  'main',
+  'section',
+  'article',
+  'aside',
+  'footer',
   // Headings
-  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
   // Special
-  '_each', '_if'
+  '_each',
+  '_if',
 ])
 
 // Valid property names
 const VALID_PROPERTIES = new Set([
   // Layout
-  'hor', 'horizontal', 'ver', 'vertical', 'gap', 'g', 'spread', 'wrap', 'stacked', 'grid',
+  'hor',
+  'horizontal',
+  'ver',
+  'vertical',
+  'gap',
+  'g',
+  'spread',
+  'wrap',
+  'stacked',
+  'grid',
   // Alignment
-  'left', 'right', 'top', 'bottom', 'center', 'cen', 'hor-center', 'ver-center',
+  'left',
+  'right',
+  'top',
+  'bottom',
+  'center',
+  'cen',
+  'hor-center',
+  'ver-center',
   // Sizing
-  'width', 'w', 'height', 'h', 'size', 'min-width', 'minw', 'max-width', 'maxw',
-  'min-height', 'minh', 'max-height', 'maxh',
+  'width',
+  'w',
+  'height',
+  'h',
+  'size',
+  'min-width',
+  'minw',
+  'max-width',
+  'maxw',
+  'min-height',
+  'minh',
+  'max-height',
+  'maxh',
   // Spacing
-  'pad', 'padding', 'p', 'margin', 'm',
+  'pad',
+  'padding',
+  'p',
+  'margin',
+  'm',
   // Colors
-  'bg', 'background', 'col', 'color', 'c', 'boc', 'border-color',
+  'bg',
+  'background',
+  'col',
+  'color',
+  'c',
+  'boc',
+  'border-color',
   // Border
-  'bor', 'border', 'rad', 'radius',
+  'bor',
+  'border',
+  'rad',
+  'radius',
   // Typography
-  'font-size', 'fs', 'weight', 'line', 'font', 'text-align',
-  'italic', 'underline', 'truncate', 'uppercase', 'lowercase',
+  'font-size',
+  'fs',
+  'weight',
+  'line',
+  'font',
+  'text-align',
+  'italic',
+  'underline',
+  'truncate',
+  'uppercase',
+  'lowercase',
   // Icon
-  'icon-size', 'is', 'icon-weight', 'iw', 'icon-color', 'ic', 'fill',
+  'icon-size',
+  'is',
+  'icon-weight',
+  'iw',
+  'icon-color',
+  'ic',
+  'fill',
   // Visual
-  'opacity', 'o', 'shadow', 'cursor', 'z', 'hidden', 'visible', 'disabled', 'rotate', 'rot',
+  'opacity',
+  'o',
+  'shadow',
+  'cursor',
+  'z',
+  'hidden',
+  'visible',
+  'disabled',
+  'rotate',
+  'rot',
   // Scroll
-  'scroll', 'scroll-ver', 'scroll-hor', 'scroll-both', 'clip',
+  'scroll',
+  'scroll-ver',
+  'scroll-hor',
+  'scroll-both',
+  'clip',
   // Hover inline
-  'hover-bg', 'hover-col', 'hover-opacity', 'hover-scale',
+  'hover-bg',
+  'hover-col',
+  'hover-opacity',
+  'hover-scale',
   // HTML specific
-  'placeholder', 'value', 'src', 'href', 'type',
+  'placeholder',
+  'value',
+  'src',
+  'href',
+  'type',
   // Instance naming
   'named',
   // State
-  'state', 'states',
+  'state',
+  'states',
   // Visibility & routing
-  'visible-when', 'route', 'selection',
+  'visible-when',
+  'route',
+  'selection',
   // Events
-  'onclick', 'onhover', 'onfocus', 'onblur', 'onchange', 'oninput', 'onclick-outside',
+  'onclick',
+  'onhover',
+  'onfocus',
+  'onblur',
+  'onchange',
+  'oninput',
+  'onclick-outside',
   // Focusable
-  'focusable'
+  'focusable',
 ])
 
 /**
@@ -1612,7 +1821,7 @@ const VALID_PROPERTIES = new Set([
  *   console.error(result.errors)
  * }
  */
-M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): ValidationResult {
+M.validate = function (node: MirrorNode | MirrorNode[], path: string = 'root'): ValidationResult {
   const errors: ValidationError[] = []
   const warnings: ValidationWarning[] = []
 
@@ -1631,7 +1840,7 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
     errors.push({
       path,
       message: `Expected MirrorNode object, got ${typeof node}`,
-      type: 'invalid_structure'
+      type: 'invalid_structure',
     })
     return { valid: false, errors, warnings }
   }
@@ -1641,7 +1850,7 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
     errors.push({
       path,
       message: `Node must have a 'type' property (string)`,
-      type: 'invalid_structure'
+      type: 'invalid_structure',
     })
   } else {
     const typeLower = node.type.toLowerCase()
@@ -1651,7 +1860,7 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
       warnings.push({
         path,
         message: `Unknown component type '${node.type}'. Valid primitives: Box, Text, Button, Input, Icon, etc.`,
-        type: 'unknown_property'
+        type: 'unknown_property',
       })
     }
   }
@@ -1669,7 +1878,7 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
         warnings.push({
           path: `${path}.props.${key}`,
           message: `Unknown property '${key}'`,
-          type: 'unknown_property'
+          type: 'unknown_property',
         })
       }
 
@@ -1680,7 +1889,7 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
             errors.push({
               path: `${path}.props.states.${stateName}`,
               message: `State '${stateName}' must be an object with properties`,
-              type: 'invalid_value'
+              type: 'invalid_value',
             })
           }
         }
@@ -1690,7 +1899,7 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
     errors.push({
       path: `${path}.props`,
       message: `'props' must be an object, got ${typeof node.props}`,
-      type: 'invalid_structure'
+      type: 'invalid_structure',
     })
   }
 
@@ -1700,7 +1909,7 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
       errors.push({
         path: `${path}.children`,
         message: `'children' must be an array, got ${typeof node.children}`,
-        type: 'invalid_structure'
+        type: 'invalid_structure',
       })
     } else {
       for (let i = 0; i < node.children.length; i++) {
@@ -1717,14 +1926,14 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
       errors.push({
         path: `${path}._each.itemVar`,
         message: `_each.itemVar must be a string`,
-        type: 'invalid_structure'
+        type: 'invalid_structure',
       })
     }
     if (typeof node._each.collection !== 'string') {
       errors.push({
         path: `${path}._each.collection`,
         message: `_each.collection must be a string`,
-        type: 'invalid_structure'
+        type: 'invalid_structure',
       })
     }
   }
@@ -1735,14 +1944,14 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
       errors.push({
         path: `${path}._if.condition`,
         message: `_if.condition must be a string`,
-        type: 'invalid_structure'
+        type: 'invalid_structure',
       })
     }
     if (node._if.else !== undefined && !Array.isArray(node._if.else)) {
       errors.push({
         path: `${path}._if.else`,
         message: `_if.else must be an array`,
-        type: 'invalid_structure'
+        type: 'invalid_structure',
       })
     }
   }
@@ -1759,84 +1968,87 @@ M.validate = function(node: MirrorNode | MirrorNode[], path: string = 'root'): V
  */
 const PROPERTY_CORRECTIONS: Record<string, string> = {
   // Color
-  'color': 'col',
+  color: 'col',
   'background-color': 'bg',
-  'backgroundColor': 'bg',
+  backgroundColor: 'bg',
 
   // Sizing
-  'size': 'is',  // For icons - common LLM mistake
-  'fontSize': 'font-size',
-  'borderRadius': 'rad',
+  size: 'is', // For icons - common LLM mistake
+  fontSize: 'font-size',
+  borderRadius: 'rad',
   'border-radius': 'rad',
 
   // Spacing
-  'padding': 'pad',
-  'paddingTop': 'pad',
-  'paddingBottom': 'pad',
-  'paddingLeft': 'pad',
-  'paddingRight': 'pad',
+  padding: 'pad',
+  paddingTop: 'pad',
+  paddingBottom: 'pad',
+  paddingLeft: 'pad',
+  paddingRight: 'pad',
   'padding-top': 'pad',
   'padding-bottom': 'pad',
   'padding-left': 'pad',
   'padding-right': 'pad',
-  'marginTop': 'margin',
-  'marginBottom': 'margin',
-  'marginLeft': 'margin',
-  'marginRight': 'margin',
+  marginTop: 'margin',
+  marginBottom: 'margin',
+  marginLeft: 'margin',
+  marginRight: 'margin',
   'margin-top': 'margin',
   'margin-bottom': 'margin',
   'margin-left': 'margin',
   'margin-right': 'margin',
 
   // Layout
-  'flexDirection': 'hor',
+  flexDirection: 'hor',
   'flex-direction': 'hor',
-  'justifyContent': 'center',
+  justifyContent: 'center',
   'justify-content': 'center',
-  'alignItems': 'center',
+  alignItems: 'center',
   'align-items': 'center',
-  'flexWrap': 'wrap',
+  flexWrap: 'wrap',
   'flex-wrap': 'wrap',
 
   // Visual
-  'boxShadow': 'shadow',
+  boxShadow: 'shadow',
   'box-shadow': 'shadow',
-  'zIndex': 'z',
+  zIndex: 'z',
   'z-index': 'z',
 
   // Typography
-  'fontWeight': 'weight',
+  fontWeight: 'weight',
   'font-weight': 'weight',
-  'lineHeight': 'line',
+  lineHeight: 'line',
   'line-height': 'line',
-  'fontFamily': 'font',
+  fontFamily: 'font',
   'font-family': 'font',
-  'textAlign': 'text-align',
+  textAlign: 'text-align',
 }
 
 /**
  * Properties to remove completely (handled differently or invalid)
  */
 const PROPERTIES_TO_REMOVE = new Set([
-  'display',      // M() uses flex by default
+  'display', // M() uses flex by default
   'flexGrow',
   'flex-grow',
   'flexShrink',
   'flex-shrink',
   'boxSizing',
   'box-sizing',
-  'position',     // Will be extracted from style
-  'top', 'left', 'right', 'bottom',  // Will be extracted from style
-  'transform',    // Use rotate/scale instead
+  'position', // Will be extracted from style
+  'top',
+  'left',
+  'right',
+  'bottom', // Will be extracted from style
+  'transform', // Use rotate/scale instead
 ])
 
 /**
  * Properties that need special handling (not just rename or remove)
  */
 const SPECIAL_PROPERTIES = new Set([
-  'flex',         // flex: 1 → w: 'full'
-  'style',        // Parse CSS string
-  'states',       // Recursive correction
+  'flex', // flex: 1 → w: 'full'
+  'style', // Parse CSS string
+  'states', // Recursive correction
 ])
 
 /**
@@ -1844,7 +2056,10 @@ const SPECIAL_PROPERTIES = new Set([
  */
 function parseStyleString(styleStr: string): Record<string, string> {
   const result: Record<string, string> = {}
-  const rules = styleStr.split(';').map(s => s.trim()).filter(Boolean)
+  const rules = styleStr
+    .split(';')
+    .map(s => s.trim())
+    .filter(Boolean)
 
   for (const rule of rules) {
     const colonIdx = rule.indexOf(':')
@@ -1964,7 +2179,7 @@ function cssToMirrorProps(cssProps: Record<string, string>): Partial<MirrorProps
         // Ignore - M() uses flex by default
         // But grid is special
         if (value === 'grid') {
-          mirrorProps.grid = 1  // Default grid
+          mirrorProps.grid = 1 // Default grid
         }
         break
 
@@ -2039,7 +2254,12 @@ export interface CorrectionResult {
 
 export interface CorrectionEntry {
   path: string
-  type: 'property_renamed' | 'property_removed' | 'style_extracted' | 'value_fixed' | 'icon_size_fixed'
+  type:
+    | 'property_renamed'
+    | 'property_removed'
+    | 'style_extracted'
+    | 'value_fixed'
+    | 'icon_size_fixed'
   original: string
   corrected: string
 }
@@ -2055,8 +2275,8 @@ export interface CorrectionEntry {
  * const { node, corrections } = M.correct(llmOutput)
  * // node now has { col: '#fff' } and style is processed
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): CorrectionResult {
+
+M.correct = function (node: MirrorNode | MirrorNode[], path: string = 'root'): CorrectionResult {
   const corrections: CorrectionEntry[] = []
   const warnings: string[] = []
 
@@ -2072,7 +2292,7 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
     return {
       node: correctedChildren as any,
       corrections,
-      warnings
+      warnings,
     }
   }
 
@@ -2084,7 +2304,9 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
     children: [],
     slots: { ...node.slots },
     _each: node._each ? { ...node._each } : undefined,
-    _if: node._if ? { ...node._if, else: node._if.else ? [...node._if.else] : undefined } : undefined
+    _if: node._if
+      ? { ...node._if, else: node._if.else ? [...node._if.else] : undefined }
+      : undefined,
   }
 
   // 1. Fix property names
@@ -2098,7 +2320,7 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
           path: `${path}.props.flex`,
           type: 'value_fixed',
           original: 'flex: 1',
-          corrected: "w: 'full'"
+          corrected: "w: 'full'",
         })
       }
       // Skip further processing of flex
@@ -2112,19 +2334,19 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
         path: `${path}.props.${key}`,
         type: 'property_renamed',
         original: key,
-        corrected: correctedKey
+        corrected: correctedKey,
       })
 
       // Special handling for size → is (only for Icon)
       if (key === 'size' && correctedNode.type === 'Icon') {
-        (newProps as any)[correctedKey] = value
+        ;(newProps as any)[correctedKey] = value
       } else if (key === 'size' && correctedNode.type !== 'Icon') {
         // size for non-icons - might be width/height
         newProps.w = value as any
         newProps.h = value as any
         corrections[corrections.length - 1].corrected = 'w, h'
       } else {
-        (newProps as any)[correctedKey] = value
+        ;(newProps as any)[correctedKey] = value
       }
     }
     // Check if property should be removed
@@ -2133,7 +2355,7 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
         path: `${path}.props.${key}`,
         type: 'property_removed',
         original: `${key}: ${JSON.stringify(value)}`,
-        corrected: '(removed)'
+        corrected: '(removed)',
       })
     }
     // Handle inline style string
@@ -2145,16 +2367,20 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
         path: `${path}.props.style`,
         type: 'style_extracted',
         original: value,
-        corrected: JSON.stringify(extractedProps)
+        corrected: JSON.stringify(extractedProps),
       })
 
       // Check for positioning that we can't fully support
       // position:relative is OK - converted to stacked
       if (cssProps['position'] && cssProps['position'] !== 'relative') {
-        warnings.push(`${path}: position:'${cssProps['position']}' not fully supported in M(). Consider restructuring layout.`)
+        warnings.push(
+          `${path}: position:'${cssProps['position']}' not fully supported in M(). Consider restructuring layout.`
+        )
       }
       if (cssProps['top'] || cssProps['left'] || cssProps['right'] || cssProps['bottom']) {
-        warnings.push(`${path}: absolute positioning (top/left/right/bottom) not supported in M(). Use layout props instead.`)
+        warnings.push(
+          `${path}: absolute positioning (top/left/right/bottom) not supported in M(). Use layout props instead.`
+        )
       }
 
       // Merge extracted props
@@ -2165,12 +2391,15 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
       const correctedStates: Record<string, Partial<MirrorProps>> = {}
       for (const [stateName, stateProps] of Object.entries(value as object)) {
         if (typeof stateProps === 'object' && stateProps !== null) {
-          const stateResult = M.correct({
-            type: 'Box',
-            props: stateProps as any,
-            children: [],
-            slots: {}
-          }, `${path}.props.states.${stateName}`)
+          const stateResult = M.correct(
+            {
+              type: 'Box',
+              props: stateProps as any,
+              children: [],
+              slots: {},
+            },
+            `${path}.props.states.${stateName}`
+          )
           correctedStates[stateName] = stateResult.node.props
           corrections.push(...stateResult.corrections)
         } else {
@@ -2181,7 +2410,7 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
     }
     // Keep other properties as-is
     else {
-      (newProps as any)[key] = value
+      ;(newProps as any)[key] = value
     }
   }
 
@@ -2196,7 +2425,7 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
         path: `${path}.props.size`,
         type: 'icon_size_fixed',
         original: 'size',
-        corrected: 'is'
+        corrected: 'is',
       })
     }
   }
@@ -2239,7 +2468,7 @@ M.correct = function(node: MirrorNode | MirrorNode[], path: string = 'root'): Co
 /**
  * Correct and validate in one step
  */
-M.correctAndValidate = function(node: MirrorNode | MirrorNode[]): {
+M.correctAndValidate = function (node: MirrorNode | MirrorNode[]): {
   node: MirrorNode | MirrorNode[]
   corrections: CorrectionEntry[]
   validation: ValidationResult
@@ -2252,14 +2481,14 @@ M.correctAndValidate = function(node: MirrorNode | MirrorNode[]): {
     validation.warnings.push({
       path: 'correction',
       message: warning,
-      type: 'suspicious_value'
+      type: 'suspicious_value',
     })
   }
 
   return {
     node: correctionResult.node,
     corrections: correctionResult.corrections,
-    validation
+    validation,
   }
 }
 

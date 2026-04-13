@@ -3,29 +3,82 @@
 
 // Mirror Data Context (Tokens + Data Files)
 // Exposed to window for debugging and two-way binding
-const __mirrorData = window.__mirrorData = {
-  "primary.bg": "#3b82f6",
-  "primary-light.bg": "#60a5fa",
-  "accent.bg": "#10b981",
-  "danger.bg": "#ef4444",
-  "warning.bg": "#f59e0b",
-  "surface.bg": "#ffffff",
-  "surface-secondary.bg": "#f8fafc",
-  "surface-tertiary.bg": "#f1f5f9",
-  "border.boc": "#e2e8f0",
-  "border-dark.boc": "#cbd5e1",
-  "text-primary.col": "#0f172a",
-  "text-secondary.col": "#475569",
-  "text-muted.col": "#94a3b8",
-  "addresses": { "addr1": { "id": "addr1", "firstName": "Max", "lastName": "Mustermann", "company": "Muster GmbH", "street": "Hauptstraße 42", "zip": "10115", "city": "Berlin", "country": "Deutschland", "phone": "+49 30 12345678", "email": "max@muster.de", "category": "Geschäftlich" }, "addr2": { "id": "addr2", "firstName": "Anna", "lastName": "Schmidt", "company": "", "street": "Seestraße 15", "zip": "80331", "city": "München", "country": "Deutschland", "phone": "+49 89 87654321", "email": "anna.schmidt@email.de", "category": "Privat" }, "addr3": { "id": "addr3", "firstName": "Thomas", "lastName": "Weber", "company": "Weber & Partner", "street": "Kirchweg 8", "zip": "20095", "city": "Hamburg", "country": "Deutschland", "phone": "+49 40 11223344", "email": "t.weber@partner.de", "category": "Geschäftlich" }, "addr4": { "id": "addr4", "firstName": "Lisa", "lastName": "Braun", "company": "", "street": "Parkallee 23", "zip": "50667", "city": "Köln", "country": "Deutschland", "phone": "+49 221 55667788", "email": "lisa.braun@mail.de", "category": "Familie" } },
-  "editMode": false,
-  "searchQuery": "",
-}
+const __mirrorData = (window.__mirrorData = {
+  'primary.bg': '#3b82f6',
+  'primary-light.bg': '#60a5fa',
+  'accent.bg': '#10b981',
+  'danger.bg': '#ef4444',
+  'warning.bg': '#f59e0b',
+  'surface.bg': '#ffffff',
+  'surface-secondary.bg': '#f8fafc',
+  'surface-tertiary.bg': '#f1f5f9',
+  'border.boc': '#e2e8f0',
+  'border-dark.boc': '#cbd5e1',
+  'text-primary.col': '#0f172a',
+  'text-secondary.col': '#475569',
+  'text-muted.col': '#94a3b8',
+  addresses: {
+    addr1: {
+      id: 'addr1',
+      firstName: 'Max',
+      lastName: 'Mustermann',
+      company: 'Muster GmbH',
+      street: 'Hauptstraße 42',
+      zip: '10115',
+      city: 'Berlin',
+      country: 'Deutschland',
+      phone: '+49 30 12345678',
+      email: 'max@muster.de',
+      category: 'Geschäftlich',
+    },
+    addr2: {
+      id: 'addr2',
+      firstName: 'Anna',
+      lastName: 'Schmidt',
+      company: '',
+      street: 'Seestraße 15',
+      zip: '80331',
+      city: 'München',
+      country: 'Deutschland',
+      phone: '+49 89 87654321',
+      email: 'anna.schmidt@email.de',
+      category: 'Privat',
+    },
+    addr3: {
+      id: 'addr3',
+      firstName: 'Thomas',
+      lastName: 'Weber',
+      company: 'Weber & Partner',
+      street: 'Kirchweg 8',
+      zip: '20095',
+      city: 'Hamburg',
+      country: 'Deutschland',
+      phone: '+49 40 11223344',
+      email: 't.weber@partner.de',
+      category: 'Geschäftlich',
+    },
+    addr4: {
+      id: 'addr4',
+      firstName: 'Lisa',
+      lastName: 'Braun',
+      company: '',
+      street: 'Parkallee 23',
+      zip: '50667',
+      city: 'Köln',
+      country: 'Deutschland',
+      phone: '+49 221 55667788',
+      email: 'lisa.braun@mail.de',
+      category: 'Familie',
+    },
+  },
+  editMode: false,
+  searchQuery: '',
+})
 
 // Collection Store for reactive CRUD
-const __collections = window.__collections = {}
+const __collections = (window.__collections = {})
 function $collection(name) {
-  const n = name.startsWith("$") ? name.slice(1) : name
+  const n = name.startsWith('$') ? name.slice(1) : name
   if (!__collections[n]) {
     const items = __mirrorData[n] || []
     const itemsArray = Array.isArray(items) ? items : Object.values(items)
@@ -33,13 +86,18 @@ function $collection(name) {
       items: itemsArray,
       _current: null,
       _subscribers: new Set(),
-      get current() { return this._current },
+      get current() {
+        return this._current
+      },
       set current(item) {
         if (this._current === item) return
         this._current = item
         this._subscribers.forEach(fn => fn())
       },
-      subscribe(fn) { this._subscribers.add(fn); return () => this._subscribers.delete(fn) },
+      subscribe(fn) {
+        this._subscribers.add(fn)
+        return () => this._subscribers.delete(fn)
+      },
       add(item) {
         const newItem = { id: item.id || Date.now().toString(36), ...item }
         this.items.push(newItem)
@@ -55,7 +113,7 @@ function $collection(name) {
       update(item, changes) {
         Object.assign(item, changes)
         this._subscribers.forEach(fn => fn())
-      }
+      },
     }
   }
   return __collections[n]
@@ -63,7 +121,7 @@ function $collection(name) {
 
 // Reference resolver for data relations
 function $resolveRef(value) {
-  if (value && typeof value === "object" && value.__ref) {
+  if (value && typeof value === 'object' && value.__ref) {
     const resolved = __mirrorData[value.collection]?.[value.entry]
     return resolved !== undefined ? resolved : value
   }
@@ -75,15 +133,25 @@ function $resolveRef(value) {
 
 // Aggregation methods for collections
 // Helper to get nested property value: "data.stats.value" -> obj.data.stats.value
-const $getField = (obj, path) => path.split(".").reduce((o, k) => o?.[k], obj)
+const $getField = (obj, path) => path.split('.').reduce((o, k) => o?.[k], obj)
 const $agg = {
-  count: (arr) => Array.isArray(arr) ? arr.length : 0,
-  sum: (arr, field) => Array.isArray(arr) ? arr.reduce((s, i) => s + (Number($getField(i, field)) || 0), 0) : 0,
-  avg: (arr, field) => { const a = Array.isArray(arr) ? arr : []; return a.length ? $agg.sum(a, field) / a.length : 0 },
-  min: (arr, field) => Array.isArray(arr) && arr.length ? Math.min(...arr.map(i => Number($getField(i, field)) || 0)) : 0,
-  max: (arr, field) => Array.isArray(arr) && arr.length ? Math.max(...arr.map(i => Number($getField(i, field)) || 0)) : 0,
-  first: (arr) => Array.isArray(arr) ? arr[0] : undefined,
-  last: (arr) => Array.isArray(arr) ? arr[arr.length - 1] : undefined,
+  count: arr => (Array.isArray(arr) ? arr.length : 0),
+  sum: (arr, field) =>
+    Array.isArray(arr) ? arr.reduce((s, i) => s + (Number($getField(i, field)) || 0), 0) : 0,
+  avg: (arr, field) => {
+    const a = Array.isArray(arr) ? arr : []
+    return a.length ? $agg.sum(a, field) / a.length : 0
+  },
+  min: (arr, field) =>
+    Array.isArray(arr) && arr.length
+      ? Math.min(...arr.map(i => Number($getField(i, field)) || 0))
+      : 0,
+  max: (arr, field) =>
+    Array.isArray(arr) && arr.length
+      ? Math.max(...arr.map(i => Number($getField(i, field)) || 0))
+      : 0,
+  first: arr => (Array.isArray(arr) ? arr[0] : undefined),
+  last: arr => (Array.isArray(arr) ? arr[arr.length - 1] : undefined),
 }
 
 // $-variable accessor with aggregation support
@@ -97,7 +165,7 @@ function $get(name) {
       let result = field ? $agg[method](collection, field) : $agg[method](collection)
       // Handle post-accessor like .name after .first
       if (postAccessor && result != null) {
-        const accessParts = postAccessor.slice(1).split(".")
+        const accessParts = postAccessor.slice(1).split('.')
         for (const part of accessParts) {
           if (result == null) break
           result = result[part]
@@ -107,7 +175,7 @@ function $get(name) {
     }
     return 0
   }
-  
+
   // Check for .current pattern (CRUD selection)
   const currentMatch = name.match(/^([^.]+)\.current(\..*)?$/)
   if (currentMatch) {
@@ -115,7 +183,7 @@ function $get(name) {
     const coll = $collection(collectionName)
     let result = coll.current
     if (postAccessor && result != null) {
-      const accessParts = postAccessor.slice(1).split(".")
+      const accessParts = postAccessor.slice(1).split('.')
       for (const part of accessParts) {
         if (result == null) break
         result = result[part]
@@ -123,11 +191,11 @@ function $get(name) {
     }
     return result
   }
-  
+
   if (window._mirrorState && name in window._mirrorState) return window._mirrorState[name]
-  
+
   if (name in __mirrorData) return $resolveRef(__mirrorData[name])
-  const parts = name.split(".")
+  const parts = name.split('.')
   let val = __mirrorData[parts[0]] ?? globalThis[parts[0]]
   for (let i = 1; i < parts.length && val != null; i++) {
     val = $resolveRef(val[parts[i]])
@@ -140,7 +208,7 @@ function $set(path, value) {
   if (path in __mirrorData) {
     __mirrorData[path] = value
   } else {
-    const parts = path.split(".")
+    const parts = path.split('.')
     let obj = __mirrorData
     for (let i = 0; i < parts.length - 1; i++) {
       if (obj[parts[i]] === undefined) obj[parts[i]] = {}
@@ -159,12 +227,12 @@ export function createUI(data = {}) {
   const _elements = {}
   const _state = { ...data }
   const _listeners = new Map()
-  
+
   // Root container
   const _root = document.createElement('div')
   _root.className = 'mirror-root'
   _root.dataset.mirrorRoot = 'true'
-  
+
   // Inject CSS styles
   const _style = document.createElement('style')
   _style.textContent = `
@@ -265,7 +333,7 @@ export function createUI(data = {}) {
   }
   `
   _root.appendChild(_style)
-  
+
   // Frame
   const node_1 = document.createElement('div')
   _elements['node-1'] = node_1
@@ -273,12 +341,12 @@ export function createUI(data = {}) {
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'Frame'
   Object.assign(node_1.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
     'align-items': 'flex-start',
-    'width': '100%',
-    'height': '100%',
-    'background': 'var(--surface-secondary-bg)',
+    width: '100%',
+    height: '100%',
+    background: 'var(--surface-secondary-bg)',
   })
   node_1.dataset.layout = 'flex'
   node_1.dataset.component = 'Frame'
@@ -288,17 +356,17 @@ export function createUI(data = {}) {
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Frame'
   Object.assign(node_2.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '0px',
-    'width': '380px',
+    gap: '0px',
+    width: '380px',
     'flex-shrink': '0',
-    'height': '100%',
+    height: '100%',
     'align-self': 'stretch',
     'min-height': '0',
-    'background': 'var(--surface-bg)',
-    'border': '0px solid 1px 0px 0px',
+    background: 'var(--surface-bg)',
+    border: '0px solid 1px 0px 0px',
     'border-color': 'var(--border-boc)',
   })
   node_2.dataset.component = 'Frame'
@@ -308,13 +376,13 @@ export function createUI(data = {}) {
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Frame'
   Object.assign(node_3.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '16px',
-    'padding': '20px',
-    'border': '0px solid 0px 1px 0px',
+    gap: '16px',
+    padding: '20px',
+    border: '0px solid 0px 1px 0px',
     'border-color': 'var(--border-boc)',
   })
   node_3.dataset.component = 'Frame'
@@ -324,9 +392,9 @@ export function createUI(data = {}) {
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Frame'
   Object.assign(node_4.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'justify-content': 'space-between',
     'align-items': 'center',
   })
@@ -338,11 +406,11 @@ export function createUI(data = {}) {
   node_5.dataset.mirrorId = 'node-5'
   node_5.dataset.mirrorName = 'Frame'
   Object.assign(node_5.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '12px',
+    gap: '12px',
   })
   node_5.dataset.layout = 'flex'
   node_5.dataset.component = 'Frame'
@@ -352,15 +420,15 @@ export function createUI(data = {}) {
   node_6.dataset.mirrorId = 'node-6'
   node_6.dataset.mirrorName = 'Frame'
   Object.assign(node_6.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'width': '40px',
+    width: '40px',
     'flex-shrink': '0',
-    'height': '40px',
+    height: '40px',
     'flex-shrink': '0',
-    'background': 'var(--primary-bg)',
+    background: 'var(--primary-bg)',
     'border-radius': '8px',
   })
   node_6.dataset.component = 'Frame'
@@ -369,43 +437,43 @@ export function createUI(data = {}) {
   _elements['node-7'] = node_7
   node_7.dataset.mirrorId = 'node-7'
   node_7.dataset.mirrorName = 'Icon'
-  node_7.setAttribute('data-icon-color', "white")
-  node_7.setAttribute('data-icon-size', "20")
+  node_7.setAttribute('data-icon-color', 'white')
+  node_7.setAttribute('data-icon-size', '20')
   // Icon default styles
   Object.assign(node_7.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_7, "book-user")
+  _runtime.loadIcon(node_7, 'book-user')
   Object.assign(node_7.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '20px',
-    'width': '20px',
-    'height': '20px',
+    width: '20px',
+    height: '20px',
   })
   node_7.dataset.component = 'Icon'
   node_6.appendChild(node_7)
-  
+
   node_5.appendChild(node_6)
-  
+
   // Frame
   const node_8 = document.createElement('div')
   _elements['node-8'] = node_8
   node_8.dataset.mirrorId = 'node-8'
   node_8.dataset.mirrorName = 'Frame'
   Object.assign(node_8.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '0px',
+    gap: '0px',
   })
   node_8.dataset.component = 'Frame'
   // Text
@@ -413,52 +481,52 @@ export function createUI(data = {}) {
   _elements['node-9'] = node_9
   node_9.dataset.mirrorId = 'node-9'
   node_9.dataset.mirrorName = 'Text'
-  node_9.textContent = "Adressen"
+  node_9.textContent = 'Adressen'
   Object.assign(node_9.style, {
-    'color': 'var(--text-primary-col)',
+    color: 'var(--text-primary-col)',
     'font-size': '18px',
     'font-weight': '700',
   })
   node_9.dataset.component = 'Text'
   node_8.appendChild(node_9)
-  
+
   // Text
   const node_10 = document.createElement('span')
   _elements['node-10'] = node_10
   node_10.dataset.mirrorId = 'node-10'
   node_10.dataset.mirrorName = 'Text'
-  node_10.textContent = "Verwaltung"
+  node_10.textContent = 'Verwaltung'
   Object.assign(node_10.style, {
-    'color': 'var(--text-muted-col)',
+    color: 'var(--text-muted-col)',
     'font-size': '12px',
   })
   node_10.dataset.component = 'Text'
   node_8.appendChild(node_10)
-  
+
   node_5.appendChild(node_8)
-  
+
   node_4.appendChild(node_5)
-  
+
   // Btn
   const node_11 = document.createElement('button')
   _elements['node-11'] = node_11
   node_11.dataset.mirrorId = 'node-11'
   node_11.dataset.mirrorName = 'Btn'
   Object.assign(node_11.style, {
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
-    'padding': '10px 16px',
+    padding: '10px 16px',
     'border-radius': '6px',
-    'border': '0px solid currentColor',
-    'cursor': 'pointer',
+    border: '0px solid currentColor',
+    cursor: 'pointer',
     'font-size': '13px',
     'font-weight': '500',
-    'background': 'var(--primary-bg)',
-    'color': 'white',
-    'transition': 'opacity 150ms ease',
+    background: 'var(--primary-bg)',
+    color: 'white',
+    transition: 'opacity 150ms ease',
   })
   node_11.dataset.component = 'Btn'
-  node_11.addEventListener('click', (e) => {
+  node_11.addEventListener('click', e => {
     _runtime.create('addresses')
   })
   // Frame
@@ -467,11 +535,11 @@ export function createUI(data = {}) {
   node_12.dataset.mirrorId = 'node-12'
   node_12.dataset.mirrorName = 'Frame'
   Object.assign(node_12.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '6px',
+    gap: '6px',
   })
   node_12.dataset.layout = 'flex'
   node_12.dataset.component = 'Frame'
@@ -480,56 +548,56 @@ export function createUI(data = {}) {
   _elements['node-13'] = node_13
   node_13.dataset.mirrorId = 'node-13'
   node_13.dataset.mirrorName = 'Icon'
-  node_13.setAttribute('data-icon-color', "white")
-  node_13.setAttribute('data-icon-size', "16")
+  node_13.setAttribute('data-icon-color', 'white')
+  node_13.setAttribute('data-icon-size', '16')
   // Icon default styles
   Object.assign(node_13.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_13, "plus")
+  _runtime.loadIcon(node_13, 'plus')
   Object.assign(node_13.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
+    width: '16px',
+    height: '16px',
   })
   node_13.dataset.component = 'Icon'
   node_12.appendChild(node_13)
-  
+
   // Text
   const node_14 = document.createElement('span')
   _elements['node-14'] = node_14
   node_14.dataset.mirrorId = 'node-14'
   node_14.dataset.mirrorName = 'Text'
-  node_14.textContent = "Neu"
+  node_14.textContent = 'Neu'
   node_14.dataset.component = 'Text'
   node_12.appendChild(node_14)
-  
+
   node_11.appendChild(node_12)
-  
+
   node_4.appendChild(node_11)
-  
+
   node_3.appendChild(node_4)
-  
+
   // Frame
   const node_15 = document.createElement('div')
   _elements['node-15'] = node_15
   node_15.dataset.mirrorId = 'node-15'
   node_15.dataset.mirrorName = 'Frame'
   Object.assign(node_15.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
     'align-items': 'center',
-    'gap': '8px',
-    'width': '100%',
+    gap: '8px',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
@@ -541,15 +609,15 @@ export function createUI(data = {}) {
   node_16.dataset.mirrorId = 'node-16'
   node_16.dataset.mirrorName = 'Frame'
   Object.assign(node_16.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
     'flex-grow': '1',
-    'background': 'var(--surface-secondary-bg)',
+    background: 'var(--surface-secondary-bg)',
     'border-radius': '6px',
-    'padding': '0px 12px',
-    'border': '1px solid currentColor',
+    padding: '0px 12px',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_16.dataset.layout = 'flex'
@@ -559,70 +627,70 @@ export function createUI(data = {}) {
   _elements['node-17'] = node_17
   node_17.dataset.mirrorId = 'node-17'
   node_17.dataset.mirrorName = 'Icon'
-  node_17.setAttribute('data-icon-color', "$text-muted")
-  node_17.setAttribute('data-icon-size', "16")
+  node_17.setAttribute('data-icon-color', '$text-muted')
+  node_17.setAttribute('data-icon-size', '16')
   // Icon default styles
   Object.assign(node_17.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_17, "search")
+  _runtime.loadIcon(node_17, 'search')
   Object.assign(node_17.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
+    width: '16px',
+    height: '16px',
   })
   node_17.dataset.component = 'Icon'
   node_16.appendChild(node_17)
-  
+
   // Input
   const node_18 = document.createElement('input')
   _elements['node-18'] = node_18
   node_18.dataset.mirrorId = 'node-18'
   node_18.dataset.mirrorName = 'Input'
-  node_18.setAttribute('placeholder', "Suchen...")
+  node_18.setAttribute('placeholder', 'Suchen...')
   Object.assign(node_18.style, {
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
-    'padding': '10px',
+    padding: '10px',
     'border-radius': '6px',
-    'border': '0px solid currentColor',
-    'flex': '1 1 0%',
+    border: '0px solid currentColor',
+    flex: '1 1 0%',
     'min-width': '0',
-    'background': 'transparent',
-    'color': 'var(--text-primary-col)',
+    background: 'transparent',
+    color: 'var(--text-primary-col)',
   })
   node_18.dataset.bind = 'searchQuery'
   node_18.dataset.component = 'Input'
   node_18.dataset.slot = 'Input'
   node_16.appendChild(node_18)
-  
+
   node_15.appendChild(node_16)
-  
+
   node_3.appendChild(node_15)
-  
+
   node_2.appendChild(node_3)
-  
+
   // Frame
   const node_19 = document.createElement('div')
   _elements['node-19'] = node_19
   node_19.dataset.mirrorId = 'node-19'
   node_19.dataset.mirrorName = 'Frame'
   Object.assign(node_19.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '8px',
-    'padding': '12px',
+    gap: '8px',
+    padding: '12px',
     'flex-grow': '1',
     'overflow-y': 'auto',
   })
@@ -630,8 +698,8 @@ export function createUI(data = {}) {
   // Each loop: address in addresses
   const node_20_container = document.createElement('div')
   node_20_container.dataset.eachContainer = 'node-20'
-  node_20_container.style.display = 'contents';
-  
+  node_20_container.style.display = 'contents'
+
   _elements['node-20'] = node_20_container
   node_20_container._eachConfig = {
     itemVar: 'address',
@@ -639,71 +707,68 @@ export function createUI(data = {}) {
     renderItem: (address, index) => {
       const itemContainer = document.createElement('div')
       itemContainer.dataset.eachItem = index
-      itemContainer.style.display = 'contents';
+      itemContainer.style.display = 'contents'
       const node_21_tpl = document.createElement('div')
       node_21_tpl.dataset.mirrorId = 'node-21[' + index + ']'
       node_21_tpl.dataset.mirrorName = 'AddressCard'
       Object.assign(node_21_tpl.style, {
-        'display': 'flex',
+        display: 'flex',
         'flex-direction': 'column',
-        'width': 'fit-content',
+        width: 'fit-content',
         'align-items': 'flex-start',
-        'gap': '8px',
-        'padding': '16px',
-        'background': 'var(--surface-bg)',
+        gap: '8px',
+        padding: '16px',
+        background: 'var(--surface-bg)',
         'border-radius': '8px',
-        'border': '1px solid currentColor',
+        border: '1px solid currentColor',
         'border-color': 'var(--border-boc)',
-        'cursor': 'pointer',
-        'transition': 'border-color 200ms ease, box-shadow 200ms ease',
+        cursor: 'pointer',
+        transition: 'border-color 200ms ease, box-shadow 200ms ease',
       })
       node_21_tpl._stateMachine = {
         initial: 'default',
         current: 'default',
         states: {
-          'hover': {
+          hover: {
             styles: {
               'border-color': '$primary-light',
               'box-shadow': '0 1px 2px rgba(0,0,0,0.05)',
             },
           },
-          'selected': {
+          selected: {
             styles: {
               'border-color': '$primary',
-              'background': '#eff6ff',
+              background: '#eff6ff',
             },
           },
-          'default': {
-            styles: {
-            },
+          default: {
+            styles: {},
           },
         },
-        transitions: [
-          { to: 'hover', trigger: 'onclick', modifier: 'exclusive' },
-        ],
+        transitions: [{ to: 'hover', trigger: 'onclick', modifier: 'exclusive' }],
       }
       node_21_tpl._baseStyles = {
         'border-color': node_21_tpl.style['border-color'] || '',
         'box-shadow': node_21_tpl.style['box-shadow'] || '',
-        'background': node_21_tpl.style['background'] || '',
+        background: node_21_tpl.style['background'] || '',
       }
       node_21_tpl.dataset.state = 'default'
       Object.assign(node_21_tpl.style, node_21_tpl._stateMachine.states['default'].styles)
-      node_21_tpl.addEventListener('click', (e) => {
+      node_21_tpl.addEventListener('click', e => {
         const sm = node_21_tpl._stateMachine
         const current = sm.current
         _runtime.exclusiveTransition(node_21_tpl, 'hover')
       })
-      node_21_tpl.addEventListener('click', (e) => {
+      node_21_tpl.addEventListener('click', e => {
         _runtime.exclusive(node_21_tpl)
       })
       const node_22_tpl = document.createElement('div')
       node_22_tpl.dataset.mirrorId = 'node-22[' + index + ']'
       node_22_tpl.dataset.mirrorName = 'Frame'
       Object.assign(node_22_tpl.style, {
-        'display': 'flex',
+        display: 'flex',
         'flex-direction': 'row',
-        'width': 'fit-content',
+        width: 'fit-content',
         'justify-content': 'space-between',
         'align-items': 'center',
       })
@@ -711,32 +776,32 @@ export function createUI(data = {}) {
       node_23_tpl.dataset.mirrorId = 'node-23[' + index + ']'
       node_23_tpl.dataset.mirrorName = 'Frame'
       Object.assign(node_23_tpl.style, {
-        'display': 'flex',
+        display: 'flex',
         'flex-direction': 'row',
-        'width': 'fit-content',
+        width: 'fit-content',
         'align-items': 'center',
-        'gap': '12px',
+        gap: '12px',
       })
       const node_24_tpl = document.createElement('div')
       node_24_tpl.dataset.mirrorId = 'node-24[' + index + ']'
       node_24_tpl.dataset.mirrorName = 'Frame'
       Object.assign(node_24_tpl.style, {
-        'display': 'flex',
+        display: 'flex',
         'flex-direction': 'column',
         'justify-content': 'center',
         'align-items': 'center',
-        'width': '44px',
+        width: '44px',
         'flex-shrink': '0',
-        'height': '44px',
+        height: '44px',
         'flex-shrink': '0',
         'border-radius': '99px',
-        'background': 'var(--surface-tertiary-bg)',
+        background: 'var(--surface-tertiary-bg)',
       })
       const node_25_tpl = document.createElement('span')
       node_25_tpl.dataset.mirrorId = 'node-25[' + index + ']'
       node_25_tpl.dataset.mirrorName = 'Text'
       Object.assign(node_25_tpl.style, {
-        'color': 'var(--text-secondary-col)',
+        color: 'var(--text-secondary-col)',
         'font-size': '14px',
         'font-weight': '600',
       })
@@ -746,18 +811,18 @@ export function createUI(data = {}) {
       node_26_tpl.dataset.mirrorId = 'node-26[' + index + ']'
       node_26_tpl.dataset.mirrorName = 'Frame'
       Object.assign(node_26_tpl.style, {
-        'display': 'flex',
+        display: 'flex',
         'flex-direction': 'column',
-        'width': 'fit-content',
+        width: 'fit-content',
         'align-items': 'flex-start',
-        'gap': '2px',
+        gap: '2px',
       })
       const node_27_tpl = document.createElement('span')
       node_27_tpl.dataset.mirrorId = 'node-27[' + index + ']'
       node_27_tpl.dataset.mirrorName = 'Text'
-      node_27_tpl.textContent = address.firstName + " " + address.lastName
+      node_27_tpl.textContent = address.firstName + ' ' + address.lastName
       Object.assign(node_27_tpl.style, {
-        'color': 'var(--text-primary-col)',
+        color: 'var(--text-primary-col)',
         'font-size': '14px',
         'font-weight': '600',
       })
@@ -766,7 +831,7 @@ export function createUI(data = {}) {
       node_28_tpl.dataset.mirrorId = 'node-28[' + index + ']'
       node_28_tpl.dataset.mirrorName = 'Text'
       Object.assign(node_28_tpl.style, {
-        'color': 'var(--text-muted-col)',
+        color: 'var(--text-muted-col)',
         'font-size': '12px',
       })
       node_26_tpl.appendChild(node_28_tpl)
@@ -776,16 +841,26 @@ export function createUI(data = {}) {
       node_29_tpl.dataset.mirrorId = 'node-29[' + index + ']'
       node_29_tpl.dataset.mirrorName = 'Badge'
       Object.assign(node_29_tpl.style, {
-        'display': 'flex',
+        display: 'flex',
         'flex-direction': 'column',
-        'width': 'fit-content',
+        width: 'fit-content',
         'align-items': 'flex-start',
-        'padding': '4px 8px',
+        padding: '4px 8px',
         'border-radius': '4px',
         'font-size': '11px',
         'font-weight': '500',
-        'background': (address.category === "Geschäftlich" ? "#dbeafe" : (address.category === "Privat" ? "#dcfce7" : "#fef3c7")),
-        'color': (address.category === "Geschäftlich" ? "#1d4ed8" : (address.category === "Privat" ? "#15803d" : "#a16207")),
+        background:
+          address.category === 'Geschäftlich'
+            ? '#dbeafe'
+            : address.category === 'Privat'
+              ? '#dcfce7'
+              : '#fef3c7',
+        color:
+          address.category === 'Geschäftlich'
+            ? '#1d4ed8'
+            : address.category === 'Privat'
+              ? '#15803d'
+              : '#a16207',
       })
       const node_30_tpl = document.createElement('span')
       node_30_tpl.dataset.mirrorId = 'node-30[' + index + ']'
@@ -798,30 +873,38 @@ export function createUI(data = {}) {
       return itemContainer
     },
   }
-  
+
   // Initial render
-  const addressesData = (function(d) { if (Array.isArray(d)) return d; if (d && typeof d === 'object') { return Object.entries(d).map(([k, v]) => typeof v === 'object' && v !== null ? { _key: k, ...v } : v); } return []; })($get('addresses'))
+  const addressesData = (function (d) {
+    if (Array.isArray(d)) return d
+    if (d && typeof d === 'object') {
+      return Object.entries(d).map(([k, v]) =>
+        typeof v === 'object' && v !== null ? { _key: k, ...v } : v
+      )
+    }
+    return []
+  })($get('addresses'))
   addressesData.forEach((address, index) => {
     node_20_container.appendChild(node_20_container._eachConfig.renderItem(address, index))
   })
-  
+
   node_19.appendChild(node_20_container)
-  
+
   node_2.appendChild(node_19)
-  
+
   // Frame
   const node_31 = document.createElement('div')
   _elements['node-31'] = node_31
   node_31.dataset.mirrorId = 'node-31'
   node_31.dataset.mirrorName = 'Frame'
   Object.assign(node_31.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '8px',
-    'padding': '16px',
-    'border': '1px solid 0px 0px 0px',
+    gap: '8px',
+    padding: '16px',
+    border: '1px solid 0px 0px 0px',
     'border-color': 'var(--border-boc)',
   })
   node_31.dataset.layout = 'flex'
@@ -831,63 +914,63 @@ export function createUI(data = {}) {
   _elements['node-32'] = node_32
   node_32.dataset.mirrorId = 'node-32'
   node_32.dataset.mirrorName = 'Icon'
-  node_32.setAttribute('data-icon-color', "$text-muted")
-  node_32.setAttribute('data-icon-size', "16")
+  node_32.setAttribute('data-icon-color', '$text-muted')
+  node_32.setAttribute('data-icon-size', '16')
   // Icon default styles
   Object.assign(node_32.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_32, "users")
+  _runtime.loadIcon(node_32, 'users')
   Object.assign(node_32.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
+    width: '16px',
+    height: '16px',
   })
   node_32.dataset.component = 'Icon'
   node_31.appendChild(node_32)
-  
+
   // Text
   const node_33 = document.createElement('span')
   _elements['node-33'] = node_33
   node_33.dataset.mirrorId = 'node-33'
   node_33.dataset.mirrorName = 'Text'
-  node_33.textContent = "4 Adressen"
+  node_33.textContent = '4 Adressen'
   Object.assign(node_33.style, {
-    'color': 'var(--text-muted-col)',
+    color: 'var(--text-muted-col)',
     'font-size': '13px',
   })
   node_33.dataset.component = 'Text'
   node_31.appendChild(node_33)
-  
+
   node_2.appendChild(node_31)
-  
+
   node_1.appendChild(node_2)
-  
+
   // Frame
   const node_34 = document.createElement('div')
   _elements['node-34'] = node_34
   node_34.dataset.mirrorId = 'node-34'
   node_34.dataset.mirrorName = 'Frame'
   Object.assign(node_34.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '20px',
-    'flex': '1 1 0%',
+    gap: '20px',
+    flex: '1 1 0%',
     'min-width': '0',
-    'height': '100%',
+    height: '100%',
     'align-self': 'stretch',
     'min-height': '0',
-    'padding': '24px',
+    padding: '24px',
     'overflow-y': 'auto',
   })
   node_34.dataset.component = 'Frame'
@@ -897,15 +980,15 @@ export function createUI(data = {}) {
   node_35.dataset.mirrorId = 'node-35'
   node_35.dataset.mirrorName = 'Frame'
   Object.assign(node_35.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'gap': '16px',
-    'width': '100%',
+    gap: '16px',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'flex': '1 1 0%',
+    flex: '1 1 0%',
     'min-height': '0',
   })
   node_35._visibleWhen = '!$selectedAddress'
@@ -918,16 +1001,16 @@ export function createUI(data = {}) {
   node_36.dataset.mirrorId = 'node-36'
   node_36.dataset.mirrorName = 'Frame'
   Object.assign(node_36.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'width': '80px',
+    width: '80px',
     'flex-shrink': '0',
-    'height': '80px',
+    height: '80px',
     'flex-shrink': '0',
     'border-radius': '99px',
-    'background': 'var(--surface-tertiary-bg)',
+    background: 'var(--surface-tertiary-bg)',
   })
   node_36.dataset.component = 'Frame'
   // Icon
@@ -935,78 +1018,78 @@ export function createUI(data = {}) {
   _elements['node-37'] = node_37
   node_37.dataset.mirrorId = 'node-37'
   node_37.dataset.mirrorName = 'Icon'
-  node_37.setAttribute('data-icon-color', "$text-muted")
-  node_37.setAttribute('data-icon-size', "32")
+  node_37.setAttribute('data-icon-color', '$text-muted')
+  node_37.setAttribute('data-icon-size', '32')
   // Icon default styles
   Object.assign(node_37.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_37, "mouse-pointer-click")
+  _runtime.loadIcon(node_37, 'mouse-pointer-click')
   Object.assign(node_37.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '32px',
-    'width': '32px',
-    'height': '32px',
+    width: '32px',
+    height: '32px',
   })
   node_37.dataset.component = 'Icon'
   node_36.appendChild(node_37)
-  
+
   node_35.appendChild(node_36)
-  
+
   // Text
   const node_38 = document.createElement('span')
   _elements['node-38'] = node_38
   node_38.dataset.mirrorId = 'node-38'
   node_38.dataset.mirrorName = 'Text'
-  node_38.textContent = "Adresse auswählen"
+  node_38.textContent = 'Adresse auswählen'
   Object.assign(node_38.style, {
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '16px',
     'font-weight': '500',
   })
   node_38.dataset.component = 'Text'
   node_35.appendChild(node_38)
-  
+
   // Text
   const node_39 = document.createElement('span')
   _elements['node-39'] = node_39
   node_39.dataset.mirrorId = 'node-39'
   node_39.dataset.mirrorName = 'Text'
-  node_39.textContent = "Wähle eine Adresse aus der Liste oder erstelle eine neue."
+  node_39.textContent = 'Wähle eine Adresse aus der Liste oder erstelle eine neue.'
   Object.assign(node_39.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'color': 'var(--text-muted-col)',
+    color: 'var(--text-muted-col)',
     'font-size': '14px',
-    'width': '280px',
+    width: '280px',
     'flex-shrink': '0',
   })
   node_39.dataset.component = 'Text'
   node_35.appendChild(node_39)
-  
+
   node_34.appendChild(node_35)
-  
+
   // Frame
   const node_40 = document.createElement('div')
   _elements['node-40'] = node_40
   node_40.dataset.mirrorId = 'node-40'
   node_40.dataset.mirrorName = 'Frame'
   Object.assign(node_40.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '24px',
-    'width': '100%',
+    gap: '24px',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
@@ -1020,9 +1103,9 @@ export function createUI(data = {}) {
   node_41.dataset.mirrorId = 'node-41'
   node_41.dataset.mirrorName = 'Frame'
   Object.assign(node_41.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'justify-content': 'space-between',
     'align-items': 'center',
   })
@@ -1034,11 +1117,11 @@ export function createUI(data = {}) {
   node_42.dataset.mirrorId = 'node-42'
   node_42.dataset.mirrorName = 'Frame'
   Object.assign(node_42.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '16px',
+    gap: '16px',
   })
   node_42.dataset.layout = 'flex'
   node_42.dataset.component = 'Frame'
@@ -1048,16 +1131,16 @@ export function createUI(data = {}) {
   node_43.dataset.mirrorId = 'node-43'
   node_43.dataset.mirrorName = 'Frame'
   Object.assign(node_43.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'width': '64px',
+    width: '64px',
     'flex-shrink': '0',
-    'height': '64px',
+    height: '64px',
     'flex-shrink': '0',
     'border-radius': '99px',
-    'background': 'var(--primary-bg)',
+    background: 'var(--primary-bg)',
   })
   node_43.dataset.component = 'Frame'
   // Text
@@ -1066,26 +1149,26 @@ export function createUI(data = {}) {
   node_44.dataset.mirrorId = 'node-44'
   node_44.dataset.mirrorName = 'Text'
   Object.assign(node_44.style, {
-    'color': 'white',
+    color: 'white',
     'font-size': '20px',
     'font-weight': '600',
   })
   node_44.dataset.component = 'Text'
   node_43.appendChild(node_44)
-  
+
   node_42.appendChild(node_43)
-  
+
   // Frame
   const node_45 = document.createElement('div')
   _elements['node-45'] = node_45
   node_45.dataset.mirrorId = 'node-45'
   node_45.dataset.mirrorName = 'Frame'
   Object.assign(node_45.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '4px',
+    gap: '4px',
   })
   node_45.dataset.component = 'Frame'
   // Text
@@ -1093,45 +1176,46 @@ export function createUI(data = {}) {
   _elements['node-46'] = node_46
   node_46.dataset.mirrorId = 'node-46'
   node_46.dataset.mirrorName = 'Text'
-  node_46.textContent = $get("selectedAddress.firstName") + " " + $get("selectedAddress.lastName")
-  node_46._textTemplate = () => $get("selectedAddress.firstName") + " " + $get("selectedAddress.lastName")
-  _runtime.bindText(node_46, "selectedAddress.firstName")
-  _runtime.bindText(node_46, "selectedAddress.lastName")
+  node_46.textContent = $get('selectedAddress.firstName') + ' ' + $get('selectedAddress.lastName')
+  node_46._textTemplate = () =>
+    $get('selectedAddress.firstName') + ' ' + $get('selectedAddress.lastName')
+  _runtime.bindText(node_46, 'selectedAddress.firstName')
+  _runtime.bindText(node_46, 'selectedAddress.lastName')
   Object.assign(node_46.style, {
-    'color': 'var(--text-primary-col)',
+    color: 'var(--text-primary-col)',
     'font-size': '24px',
     'font-weight': '700',
   })
   node_46.dataset.component = 'Text'
   node_45.appendChild(node_46)
-  
+
   // Text
   const node_47 = document.createElement('span')
   _elements['node-47'] = node_47
   node_47.dataset.mirrorId = 'node-47'
   node_47.dataset.mirrorName = 'Text'
   Object.assign(node_47.style, {
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '14px',
   })
   node_47.dataset.component = 'Text'
   node_45.appendChild(node_47)
-  
+
   node_42.appendChild(node_45)
-  
+
   node_41.appendChild(node_42)
-  
+
   // Frame
   const node_48 = document.createElement('div')
   _elements['node-48'] = node_48
   node_48.dataset.mirrorId = 'node-48'
   node_48.dataset.mirrorName = 'Frame'
   Object.assign(node_48.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '8px',
+    gap: '8px',
   })
   node_48.dataset.layout = 'flex'
   node_48.dataset.component = 'Frame'
@@ -1141,19 +1225,19 @@ export function createUI(data = {}) {
   node_49.dataset.mirrorId = 'node-49'
   node_49.dataset.mirrorName = 'IconBtn'
   Object.assign(node_49.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'width': '36px',
+    width: '36px',
     'flex-shrink': '0',
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
     'border-radius': '6px',
-    'cursor': 'pointer',
-    'border': '1px solid currentColor',
+    cursor: 'pointer',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
-    'transition': 'background 150ms ease',
+    transition: 'background 150ms ease',
   })
   node_49.dataset.component = 'IconBtn'
   // Icon
@@ -1161,51 +1245,51 @@ export function createUI(data = {}) {
   _elements['node-50'] = node_50
   node_50.dataset.mirrorId = 'node-50'
   node_50.dataset.mirrorName = 'Icon'
-  node_50.setAttribute('data-icon-color', "$text-secondary")
-  node_50.setAttribute('data-icon-size', "18")
+  node_50.setAttribute('data-icon-color', '$text-secondary')
+  node_50.setAttribute('data-icon-size', '18')
   // Icon default styles
   Object.assign(node_50.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_50, "edit-2")
+  _runtime.loadIcon(node_50, 'edit-2')
   Object.assign(node_50.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '18px',
-    'width': '18px',
-    'height': '18px',
+    width: '18px',
+    height: '18px',
   })
   node_50.dataset.component = 'Icon'
   node_49.appendChild(node_50)
-  
+
   node_48.appendChild(node_49)
-  
+
   // IconBtn
   const node_51 = document.createElement('div')
   _elements['node-51'] = node_51
   node_51.dataset.mirrorId = 'node-51'
   node_51.dataset.mirrorName = 'IconBtn'
   Object.assign(node_51.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'width': '36px',
+    width: '36px',
     'flex-shrink': '0',
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
     'border-radius': '6px',
-    'cursor': 'pointer',
-    'border': '1px solid currentColor',
+    cursor: 'pointer',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
-    'transition': 'background 150ms ease',
+    transition: 'background 150ms ease',
   })
   node_51.dataset.component = 'IconBtn'
   // Icon
@@ -1213,49 +1297,49 @@ export function createUI(data = {}) {
   _elements['node-52'] = node_52
   node_52.dataset.mirrorId = 'node-52'
   node_52.dataset.mirrorName = 'Icon'
-  node_52.setAttribute('data-icon-color', "$danger")
-  node_52.setAttribute('data-icon-size', "18")
+  node_52.setAttribute('data-icon-color', '$danger')
+  node_52.setAttribute('data-icon-size', '18')
   // Icon default styles
   Object.assign(node_52.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_52, "trash-2")
+  _runtime.loadIcon(node_52, 'trash-2')
   Object.assign(node_52.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '18px',
-    'width': '18px',
-    'height': '18px',
+    width: '18px',
+    height: '18px',
   })
   node_52.dataset.component = 'Icon'
   node_51.appendChild(node_52)
-  
+
   node_48.appendChild(node_51)
-  
+
   node_41.appendChild(node_48)
-  
+
   node_40.appendChild(node_41)
-  
+
   // Frame
   const node_53 = document.createElement('div')
   _elements['node-53'] = node_53
   node_53.dataset.mirrorId = 'node-53'
   node_53.dataset.mirrorName = 'Frame'
   Object.assign(node_53.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '16px',
-    'background': 'var(--surface-secondary-bg)',
-    'padding': '20px',
+    gap: '16px',
+    background: 'var(--surface-secondary-bg)',
+    padding: '20px',
     'border-radius': '8px',
   })
   node_53.dataset.component = 'Frame'
@@ -1265,11 +1349,11 @@ export function createUI(data = {}) {
   node_54.dataset.mirrorId = 'node-54'
   node_54.dataset.mirrorName = 'Frame'
   Object.assign(node_54.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '8px',
+    gap: '8px',
   })
   node_54.dataset.layout = 'flex'
   node_54.dataset.component = 'Frame'
@@ -1278,58 +1362,58 @@ export function createUI(data = {}) {
   _elements['node-55'] = node_55
   node_55.dataset.mirrorId = 'node-55'
   node_55.dataset.mirrorName = 'Icon'
-  node_55.setAttribute('data-icon-color', "$primary")
-  node_55.setAttribute('data-icon-size', "18")
+  node_55.setAttribute('data-icon-color', '$primary')
+  node_55.setAttribute('data-icon-size', '18')
   // Icon default styles
   Object.assign(node_55.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_55, "map-pin")
+  _runtime.loadIcon(node_55, 'map-pin')
   Object.assign(node_55.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '18px',
-    'width': '18px',
-    'height': '18px',
+    width: '18px',
+    height: '18px',
   })
   node_55.dataset.component = 'Icon'
   node_54.appendChild(node_55)
-  
+
   // Text
   const node_56 = document.createElement('span')
   _elements['node-56'] = node_56
   node_56.dataset.mirrorId = 'node-56'
   node_56.dataset.mirrorName = 'Text'
-  node_56.textContent = "Adresse"
+  node_56.textContent = 'Adresse'
   Object.assign(node_56.style, {
-    'color': 'var(--text-primary-col)',
+    color: 'var(--text-primary-col)',
     'font-size': '14px',
     'font-weight': '600',
   })
   node_56.dataset.component = 'Text'
   node_54.appendChild(node_56)
-  
+
   node_53.appendChild(node_54)
-  
+
   // Frame
   const node_57 = document.createElement('div')
   _elements['node-57'] = node_57
   node_57.dataset.mirrorId = 'node-57'
   node_57.dataset.mirrorName = 'Frame'
   Object.assign(node_57.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'padding': '0px 0px 0px 26px',
+    gap: '4px',
+    padding: '0px 0px 0px 26px',
   })
   node_57.dataset.component = 'Frame'
   // Text
@@ -1338,57 +1422,57 @@ export function createUI(data = {}) {
   node_58.dataset.mirrorId = 'node-58'
   node_58.dataset.mirrorName = 'Text'
   Object.assign(node_58.style, {
-    'color': 'var(--text-primary-col)',
+    color: 'var(--text-primary-col)',
     'font-size': '14px',
   })
   node_58.dataset.component = 'Text'
   node_57.appendChild(node_58)
-  
+
   // Text
   const node_59 = document.createElement('span')
   _elements['node-59'] = node_59
   node_59.dataset.mirrorId = 'node-59'
   node_59.dataset.mirrorName = 'Text'
-  node_59.textContent = $get("selectedAddress.zip") + " " + $get("selectedAddress.city")
-  node_59._textTemplate = () => $get("selectedAddress.zip") + " " + $get("selectedAddress.city")
-  _runtime.bindText(node_59, "selectedAddress.zip")
-  _runtime.bindText(node_59, "selectedAddress.city")
+  node_59.textContent = $get('selectedAddress.zip') + ' ' + $get('selectedAddress.city')
+  node_59._textTemplate = () => $get('selectedAddress.zip') + ' ' + $get('selectedAddress.city')
+  _runtime.bindText(node_59, 'selectedAddress.zip')
+  _runtime.bindText(node_59, 'selectedAddress.city')
   Object.assign(node_59.style, {
-    'color': 'var(--text-primary-col)',
+    color: 'var(--text-primary-col)',
     'font-size': '14px',
   })
   node_59.dataset.component = 'Text'
   node_57.appendChild(node_59)
-  
+
   // Text
   const node_60 = document.createElement('span')
   _elements['node-60'] = node_60
   node_60.dataset.mirrorId = 'node-60'
   node_60.dataset.mirrorName = 'Text'
   Object.assign(node_60.style, {
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
   })
   node_60.dataset.component = 'Text'
   node_57.appendChild(node_60)
-  
+
   node_53.appendChild(node_57)
-  
+
   node_40.appendChild(node_53)
-  
+
   // Frame
   const node_61 = document.createElement('div')
   _elements['node-61'] = node_61
   node_61.dataset.mirrorId = 'node-61'
   node_61.dataset.mirrorName = 'Frame'
   Object.assign(node_61.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '16px',
-    'background': 'var(--surface-secondary-bg)',
-    'padding': '20px',
+    gap: '16px',
+    background: 'var(--surface-secondary-bg)',
+    padding: '20px',
     'border-radius': '8px',
   })
   node_61.dataset.component = 'Frame'
@@ -1398,11 +1482,11 @@ export function createUI(data = {}) {
   node_62.dataset.mirrorId = 'node-62'
   node_62.dataset.mirrorName = 'Frame'
   Object.assign(node_62.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '8px',
+    gap: '8px',
   })
   node_62.dataset.layout = 'flex'
   node_62.dataset.component = 'Frame'
@@ -1411,58 +1495,58 @@ export function createUI(data = {}) {
   _elements['node-63'] = node_63
   node_63.dataset.mirrorId = 'node-63'
   node_63.dataset.mirrorName = 'Icon'
-  node_63.setAttribute('data-icon-color', "$primary")
-  node_63.setAttribute('data-icon-size', "18")
+  node_63.setAttribute('data-icon-color', '$primary')
+  node_63.setAttribute('data-icon-size', '18')
   // Icon default styles
   Object.assign(node_63.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_63, "phone")
+  _runtime.loadIcon(node_63, 'phone')
   Object.assign(node_63.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '18px',
-    'width': '18px',
-    'height': '18px',
+    width: '18px',
+    height: '18px',
   })
   node_63.dataset.component = 'Icon'
   node_62.appendChild(node_63)
-  
+
   // Text
   const node_64 = document.createElement('span')
   _elements['node-64'] = node_64
   node_64.dataset.mirrorId = 'node-64'
   node_64.dataset.mirrorName = 'Text'
-  node_64.textContent = "Kontakt"
+  node_64.textContent = 'Kontakt'
   Object.assign(node_64.style, {
-    'color': 'var(--text-primary-col)',
+    color: 'var(--text-primary-col)',
     'font-size': '14px',
     'font-weight': '600',
   })
   node_64.dataset.component = 'Text'
   node_62.appendChild(node_64)
-  
+
   node_61.appendChild(node_62)
-  
+
   // Frame
   const node_65 = document.createElement('div')
   _elements['node-65'] = node_65
   node_65.dataset.mirrorId = 'node-65'
   node_65.dataset.mirrorName = 'Frame'
   Object.assign(node_65.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '8px',
-    'padding': '0px 0px 0px 26px',
+    gap: '8px',
+    padding: '0px 0px 0px 26px',
   })
   node_65.dataset.component = 'Frame'
   // Frame
@@ -1471,11 +1555,11 @@ export function createUI(data = {}) {
   node_66.dataset.mirrorId = 'node-66'
   node_66.dataset.mirrorName = 'Frame'
   Object.assign(node_66.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '8px',
+    gap: '8px',
   })
   node_66.dataset.layout = 'flex'
   node_66.dataset.component = 'Frame'
@@ -1484,55 +1568,55 @@ export function createUI(data = {}) {
   _elements['node-67'] = node_67
   node_67.dataset.mirrorId = 'node-67'
   node_67.dataset.mirrorName = 'Icon'
-  node_67.setAttribute('data-icon-color', "$text-muted")
-  node_67.setAttribute('data-icon-size', "14")
+  node_67.setAttribute('data-icon-color', '$text-muted')
+  node_67.setAttribute('data-icon-size', '14')
   // Icon default styles
   Object.assign(node_67.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_67, "phone")
+  _runtime.loadIcon(node_67, 'phone')
   Object.assign(node_67.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '14px',
-    'width': '14px',
-    'height': '14px',
+    width: '14px',
+    height: '14px',
   })
   node_67.dataset.component = 'Icon'
   node_66.appendChild(node_67)
-  
+
   // Text
   const node_68 = document.createElement('span')
   _elements['node-68'] = node_68
   node_68.dataset.mirrorId = 'node-68'
   node_68.dataset.mirrorName = 'Text'
   Object.assign(node_68.style, {
-    'color': 'var(--text-primary-col)',
+    color: 'var(--text-primary-col)',
     'font-size': '14px',
   })
   node_68.dataset.component = 'Text'
   node_66.appendChild(node_68)
-  
+
   node_65.appendChild(node_66)
-  
+
   // Frame
   const node_69 = document.createElement('div')
   _elements['node-69'] = node_69
   node_69.dataset.mirrorId = 'node-69'
   node_69.dataset.mirrorName = 'Frame'
   Object.assign(node_69.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '8px',
+    gap: '8px',
   })
   node_69.dataset.layout = 'flex'
   node_69.dataset.component = 'Frame'
@@ -1541,59 +1625,59 @@ export function createUI(data = {}) {
   _elements['node-70'] = node_70
   node_70.dataset.mirrorId = 'node-70'
   node_70.dataset.mirrorName = 'Icon'
-  node_70.setAttribute('data-icon-color', "$text-muted")
-  node_70.setAttribute('data-icon-size', "14")
+  node_70.setAttribute('data-icon-color', '$text-muted')
+  node_70.setAttribute('data-icon-size', '14')
   // Icon default styles
   Object.assign(node_70.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_70, "mail")
+  _runtime.loadIcon(node_70, 'mail')
   Object.assign(node_70.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '14px',
-    'width': '14px',
-    'height': '14px',
+    width: '14px',
+    height: '14px',
   })
   node_70.dataset.component = 'Icon'
   node_69.appendChild(node_70)
-  
+
   // Text
   const node_71 = document.createElement('span')
   _elements['node-71'] = node_71
   node_71.dataset.mirrorId = 'node-71'
   node_71.dataset.mirrorName = 'Text'
   Object.assign(node_71.style, {
-    'color': 'var(--text-primary-col)',
+    color: 'var(--text-primary-col)',
     'font-size': '14px',
   })
   node_71.dataset.component = 'Text'
   node_69.appendChild(node_71)
-  
+
   node_65.appendChild(node_69)
-  
+
   node_61.appendChild(node_65)
-  
+
   node_40.appendChild(node_61)
-  
+
   // Frame
   const node_72 = document.createElement('div')
   _elements['node-72'] = node_72
   node_72.dataset.mirrorId = 'node-72'
   node_72.dataset.mirrorName = 'Frame'
   Object.assign(node_72.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '8px',
+    gap: '8px',
   })
   node_72.dataset.layout = 'flex'
   node_72.dataset.component = 'Frame'
@@ -1602,30 +1686,32 @@ export function createUI(data = {}) {
   _elements['node-73'] = node_73
   node_73.dataset.mirrorId = 'node-73'
   node_73.dataset.mirrorName = 'Text'
-  node_73.textContent = "Kategorie:"
+  node_73.textContent = 'Kategorie:'
   Object.assign(node_73.style, {
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
   })
   node_73.dataset.component = 'Text'
   node_72.appendChild(node_73)
-  
+
   // Badge
   const node_74 = document.createElement('div')
   _elements['node-74'] = node_74
   node_74.dataset.mirrorId = 'node-74'
   node_74.dataset.mirrorName = 'Badge'
   Object.assign(node_74.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'padding': '4px 8px',
+    padding: '4px 8px',
     'border-radius': '4px',
     'font-size': '11px',
     'font-weight': '500',
-    'background': '__conditional:__loopVar:selectedAddress.category === "Geschäftlich"?#dbeafe:__conditional:__loopVar:selectedAddress.category === "Privat"?#dcfce7:#fef3c7',
-    'color': '__conditional:__loopVar:selectedAddress.category === "Geschäftlich"?#1d4ed8:__conditional:__loopVar:selectedAddress.category === "Privat"?#15803d:#a16207',
+    background:
+      '__conditional:__loopVar:selectedAddress.category === "Geschäftlich"?#dbeafe:__conditional:__loopVar:selectedAddress.category === "Privat"?#dcfce7:#fef3c7',
+    color:
+      '__conditional:__loopVar:selectedAddress.category === "Geschäftlich"?#1d4ed8:__conditional:__loopVar:selectedAddress.category === "Privat"?#15803d:#a16207',
   })
   node_74.dataset.component = 'Badge'
   // Text
@@ -1633,22 +1719,22 @@ export function createUI(data = {}) {
   _elements['node-75'] = node_75
   node_75.dataset.mirrorId = 'node-75'
   node_75.dataset.mirrorName = 'Text'
-  node_75.textContent = $get("selectedAddress.category")
-  node_75._textTemplate = () => $get("selectedAddress.category")
-  _runtime.bindText(node_75, "selectedAddress.category")
+  node_75.textContent = $get('selectedAddress.category')
+  node_75._textTemplate = () => $get('selectedAddress.category')
+  _runtime.bindText(node_75, 'selectedAddress.category')
   node_75.dataset.component = 'Text'
   node_74.appendChild(node_75)
-  
+
   node_72.appendChild(node_74)
-  
+
   node_40.appendChild(node_72)
-  
+
   node_34.appendChild(node_40)
-  
+
   node_1.appendChild(node_34)
-  
+
   _root.appendChild(node_1)
-  
+
   // Dialog Component: Dialog
   const node_76 = document.createElement('div')
   _elements['node-76'] = node_76
@@ -1661,7 +1747,7 @@ export function createUI(data = {}) {
     id: 'dialog',
     machineConfig: undefined,
   }
-  
+
   // Trigger
   const node_76_trigger = document.createElement('button')
   node_76_trigger.type = 'button'
@@ -1669,38 +1755,38 @@ export function createUI(data = {}) {
   node_76_trigger.setAttribute('aria-haspopup', 'dialog')
   node_76_trigger.textContent = 'Open Dialog'
   node_76.appendChild(node_76_trigger)
-  
+
   // Backdrop
   const node_76_backdrop = document.createElement('div')
   node_76_backdrop.dataset.slot = 'Backdrop'
   node_76_backdrop.setAttribute('data-styled', 'true')
   Object.assign(node_76_backdrop.style, {
-    'background': 'rgba(0,0,0,0.5)',
+    background: 'rgba(0,0,0,0.5)',
   })
   node_76.appendChild(node_76_backdrop)
-  
+
   // Content (modal)
   const node_76_content = document.createElement('div')
   node_76_content.dataset.slot = 'Content'
   node_76_content.setAttribute('role', 'dialog')
   node_76_content.setAttribute('aria-modal', 'true')
   node_76.appendChild(node_76_content)
-  
+
   // Frame
   const node_78 = document.createElement('div')
   _elements['node-78'] = node_78
   node_78.dataset.mirrorId = 'node-78'
   node_78.dataset.mirrorName = 'Frame'
   Object.assign(node_78.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'width': '560px',
-    'background': 'var(--surface-bg)',
+    width: '560px',
+    background: 'var(--surface-bg)',
     'border-radius': '12px',
     'box-shadow': '0 10px 15px rgba(0,0,0,0.1)',
-    'padding': '0px',
-    'overflow': 'hidden',
+    padding: '0px',
+    overflow: 'hidden',
   })
   node_78.dataset.component = 'Frame'
   // Frame
@@ -1709,13 +1795,13 @@ export function createUI(data = {}) {
   node_79.dataset.mirrorId = 'node-79'
   node_79.dataset.mirrorName = 'Frame'
   Object.assign(node_79.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'justify-content': 'space-between',
     'align-items': 'center',
-    'padding': '20px',
-    'border': '0px solid 0px 1px 0px',
+    padding: '20px',
+    border: '0px solid 0px 1px 0px',
     'border-color': 'var(--border-boc)',
   })
   node_79.dataset.layout = 'flex'
@@ -1725,24 +1811,24 @@ export function createUI(data = {}) {
   _elements['node-80'] = node_80
   node_80.dataset.mirrorId = 'node-80'
   node_80.dataset.mirrorName = 'Text'
-  node_80.textContent = "Adresse bearbeiten"
+  node_80.textContent = 'Adresse bearbeiten'
   Object.assign(node_80.style, {
-    'color': 'var(--text-primary-col)',
+    color: 'var(--text-primary-col)',
     'font-size': '18px',
     'font-weight': '600',
   })
   node_80.dataset.component = 'Text'
   node_79.appendChild(node_80)
-  
+
   // CloseTrigger
   const node_81 = document.createElement('div')
   _elements['node-81'] = node_81
   node_81.dataset.mirrorId = 'node-81'
   node_81.dataset.mirrorName = 'CloseTrigger'
   Object.assign(node_81.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
   })
   node_81.dataset.component = 'CloseTrigger'
@@ -1753,66 +1839,66 @@ export function createUI(data = {}) {
   node_82.dataset.mirrorId = 'node-82'
   node_82.dataset.mirrorName = 'IconBtn'
   Object.assign(node_82.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'width': '36px',
+    width: '36px',
     'flex-shrink': '0',
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
     'border-radius': '6px',
-    'cursor': 'pointer',
-    'transition': 'background 150ms ease',
+    cursor: 'pointer',
+    transition: 'background 150ms ease',
   })
   node_82.dataset.component = 'IconBtn'
   node_81.appendChild(node_82)
-  
+
   // Icon
   const node_83 = document.createElement('span')
   _elements['node-83'] = node_83
   node_83.dataset.mirrorId = 'node-83'
   node_83.dataset.mirrorName = 'Icon'
-  node_83.setAttribute('data-icon-color', "$text-secondary")
-  node_83.setAttribute('data-icon-size', "20")
+  node_83.setAttribute('data-icon-color', '$text-secondary')
+  node_83.setAttribute('data-icon-size', '20')
   // Icon default styles
   Object.assign(node_83.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_83, "x")
+  _runtime.loadIcon(node_83, 'x')
   Object.assign(node_83.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '20px',
-    'width': '20px',
-    'height': '20px',
+    width: '20px',
+    height: '20px',
   })
   node_83.dataset.component = 'Icon'
   node_81.appendChild(node_83)
-  
+
   node_79.appendChild(node_81)
-  
+
   node_78.appendChild(node_79)
-  
+
   // Frame
   const node_84 = document.createElement('div')
   _elements['node-84'] = node_84
   node_84.dataset.mirrorId = 'node-84'
   node_84.dataset.mirrorName = 'Frame'
   Object.assign(node_84.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '20px',
-    'padding': '24px',
+    gap: '20px',
+    padding: '24px',
   })
   node_84.dataset.component = 'Frame'
   // Frame
@@ -1821,11 +1907,11 @@ export function createUI(data = {}) {
   node_85.dataset.mirrorId = 'node-85'
   node_85.dataset.mirrorName = 'Frame'
   Object.assign(node_85.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '16px',
+    gap: '16px',
   })
   node_85.dataset.layout = 'flex'
   node_85.dataset.component = 'Frame'
@@ -1835,11 +1921,11 @@ export function createUI(data = {}) {
   node_86.dataset.mirrorId = 'node-86'
   node_86.dataset.mirrorName = 'FormField'
   Object.assign(node_86.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
+    gap: '4px',
+    flex: '1 1 0%',
     'min-width': '0',
     'flex-grow': '1',
   })
@@ -1849,55 +1935,55 @@ export function createUI(data = {}) {
   _elements['node-87'] = node_87
   node_87.dataset.mirrorId = 'node-87'
   node_87.dataset.mirrorName = 'FieldLabel'
-  node_87.textContent = "Vorname"
+  node_87.textContent = 'Vorname'
   Object.assign(node_87.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_87.dataset.component = 'FieldLabel'
   node_86.appendChild(node_87)
-  
+
   // FieldInput
   const node_88 = document.createElement('div')
   _elements['node-88'] = node_88
   node_88.dataset.mirrorId = 'node-88'
   node_88.dataset.mirrorName = 'FieldInput'
-  node_88.setAttribute('placeholder', "Max")
+  node_88.setAttribute('placeholder', 'Max')
   Object.assign(node_88.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_88.dataset.component = 'FieldInput'
   node_86.appendChild(node_88)
-  
+
   node_85.appendChild(node_86)
-  
+
   // FormField
   const node_89 = document.createElement('div')
   _elements['node-89'] = node_89
   node_89.dataset.mirrorId = 'node-89'
   node_89.dataset.mirrorName = 'FormField'
   Object.assign(node_89.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
+    gap: '4px',
+    flex: '1 1 0%',
     'min-width': '0',
     'flex-grow': '1',
   })
@@ -1907,57 +1993,57 @@ export function createUI(data = {}) {
   _elements['node-90'] = node_90
   node_90.dataset.mirrorId = 'node-90'
   node_90.dataset.mirrorName = 'FieldLabel'
-  node_90.textContent = "Nachname"
+  node_90.textContent = 'Nachname'
   Object.assign(node_90.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_90.dataset.component = 'FieldLabel'
   node_89.appendChild(node_90)
-  
+
   // FieldInput
   const node_91 = document.createElement('div')
   _elements['node-91'] = node_91
   node_91.dataset.mirrorId = 'node-91'
   node_91.dataset.mirrorName = 'FieldInput'
-  node_91.setAttribute('placeholder', "Mustermann")
+  node_91.setAttribute('placeholder', 'Mustermann')
   Object.assign(node_91.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_91.dataset.component = 'FieldInput'
   node_89.appendChild(node_91)
-  
+
   node_85.appendChild(node_89)
-  
+
   node_84.appendChild(node_85)
-  
+
   // FormField
   const node_92 = document.createElement('div')
   _elements['node-92'] = node_92
   node_92.dataset.mirrorId = 'node-92'
   node_92.dataset.mirrorName = 'FormField'
   Object.assign(node_92.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '100%',
+    gap: '4px',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
@@ -1967,55 +2053,55 @@ export function createUI(data = {}) {
   _elements['node-93'] = node_93
   node_93.dataset.mirrorId = 'node-93'
   node_93.dataset.mirrorName = 'FieldLabel'
-  node_93.textContent = "Firma (optional)"
+  node_93.textContent = 'Firma (optional)'
   Object.assign(node_93.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_93.dataset.component = 'FieldLabel'
   node_92.appendChild(node_93)
-  
+
   // FieldInput
   const node_94 = document.createElement('div')
   _elements['node-94'] = node_94
   node_94.dataset.mirrorId = 'node-94'
   node_94.dataset.mirrorName = 'FieldInput'
-  node_94.setAttribute('placeholder', "Firmenname")
+  node_94.setAttribute('placeholder', 'Firmenname')
   Object.assign(node_94.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_94.dataset.component = 'FieldInput'
   node_92.appendChild(node_94)
-  
+
   node_84.appendChild(node_92)
-  
+
   // FormField
   const node_95 = document.createElement('div')
   _elements['node-95'] = node_95
   node_95.dataset.mirrorId = 'node-95'
   node_95.dataset.mirrorName = 'FormField'
   Object.assign(node_95.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '100%',
+    gap: '4px',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
@@ -2025,55 +2111,55 @@ export function createUI(data = {}) {
   _elements['node-96'] = node_96
   node_96.dataset.mirrorId = 'node-96'
   node_96.dataset.mirrorName = 'FieldLabel'
-  node_96.textContent = "Straße & Hausnummer"
+  node_96.textContent = 'Straße & Hausnummer'
   Object.assign(node_96.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_96.dataset.component = 'FieldLabel'
   node_95.appendChild(node_96)
-  
+
   // FieldInput
   const node_97 = document.createElement('div')
   _elements['node-97'] = node_97
   node_97.dataset.mirrorId = 'node-97'
   node_97.dataset.mirrorName = 'FieldInput'
-  node_97.setAttribute('placeholder', "Hauptstraße 42")
+  node_97.setAttribute('placeholder', 'Hauptstraße 42')
   Object.assign(node_97.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_97.dataset.component = 'FieldInput'
   node_95.appendChild(node_97)
-  
+
   node_84.appendChild(node_95)
-  
+
   // Frame
   const node_98 = document.createElement('div')
   _elements['node-98'] = node_98
   node_98.dataset.mirrorId = 'node-98'
   node_98.dataset.mirrorName = 'Frame'
   Object.assign(node_98.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '16px',
+    gap: '16px',
   })
   node_98.dataset.layout = 'flex'
   node_98.dataset.component = 'Frame'
@@ -2083,11 +2169,11 @@ export function createUI(data = {}) {
   node_99.dataset.mirrorId = 'node-99'
   node_99.dataset.mirrorName = 'FormField'
   Object.assign(node_99.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '120px',
+    gap: '4px',
+    width: '120px',
     'flex-shrink': '0',
   })
   node_99.dataset.component = 'FormField'
@@ -2096,55 +2182,55 @@ export function createUI(data = {}) {
   _elements['node-100'] = node_100
   node_100.dataset.mirrorId = 'node-100'
   node_100.dataset.mirrorName = 'FieldLabel'
-  node_100.textContent = "PLZ"
+  node_100.textContent = 'PLZ'
   Object.assign(node_100.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_100.dataset.component = 'FieldLabel'
   node_99.appendChild(node_100)
-  
+
   // FieldInput
   const node_101 = document.createElement('div')
   _elements['node-101'] = node_101
   node_101.dataset.mirrorId = 'node-101'
   node_101.dataset.mirrorName = 'FieldInput'
-  node_101.setAttribute('placeholder', "10115")
+  node_101.setAttribute('placeholder', '10115')
   Object.assign(node_101.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_101.dataset.component = 'FieldInput'
   node_99.appendChild(node_101)
-  
+
   node_98.appendChild(node_99)
-  
+
   // FormField
   const node_102 = document.createElement('div')
   _elements['node-102'] = node_102
   node_102.dataset.mirrorId = 'node-102'
   node_102.dataset.mirrorName = 'FormField'
   Object.assign(node_102.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
+    gap: '4px',
+    flex: '1 1 0%',
     'min-width': '0',
     'flex-grow': '1',
   })
@@ -2154,57 +2240,57 @@ export function createUI(data = {}) {
   _elements['node-103'] = node_103
   node_103.dataset.mirrorId = 'node-103'
   node_103.dataset.mirrorName = 'FieldLabel'
-  node_103.textContent = "Stadt"
+  node_103.textContent = 'Stadt'
   Object.assign(node_103.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_103.dataset.component = 'FieldLabel'
   node_102.appendChild(node_103)
-  
+
   // FieldInput
   const node_104 = document.createElement('div')
   _elements['node-104'] = node_104
   node_104.dataset.mirrorId = 'node-104'
   node_104.dataset.mirrorName = 'FieldInput'
-  node_104.setAttribute('placeholder', "Berlin")
+  node_104.setAttribute('placeholder', 'Berlin')
   Object.assign(node_104.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_104.dataset.component = 'FieldInput'
   node_102.appendChild(node_104)
-  
+
   node_98.appendChild(node_102)
-  
+
   node_84.appendChild(node_98)
-  
+
   // FormField
   const node_105 = document.createElement('div')
   _elements['node-105'] = node_105
   node_105.dataset.mirrorId = 'node-105'
   node_105.dataset.mirrorName = 'FormField'
   Object.assign(node_105.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '100%',
+    gap: '4px',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
@@ -2214,55 +2300,55 @@ export function createUI(data = {}) {
   _elements['node-106'] = node_106
   node_106.dataset.mirrorId = 'node-106'
   node_106.dataset.mirrorName = 'FieldLabel'
-  node_106.textContent = "Land"
+  node_106.textContent = 'Land'
   Object.assign(node_106.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_106.dataset.component = 'FieldLabel'
   node_105.appendChild(node_106)
-  
+
   // FieldInput
   const node_107 = document.createElement('div')
   _elements['node-107'] = node_107
   node_107.dataset.mirrorId = 'node-107'
   node_107.dataset.mirrorName = 'FieldInput'
-  node_107.setAttribute('placeholder', "Deutschland")
+  node_107.setAttribute('placeholder', 'Deutschland')
   Object.assign(node_107.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_107.dataset.component = 'FieldInput'
   node_105.appendChild(node_107)
-  
+
   node_84.appendChild(node_105)
-  
+
   // Frame
   const node_108 = document.createElement('div')
   _elements['node-108'] = node_108
   node_108.dataset.mirrorId = 'node-108'
   node_108.dataset.mirrorName = 'Frame'
   Object.assign(node_108.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '16px',
+    gap: '16px',
   })
   node_108.dataset.layout = 'flex'
   node_108.dataset.component = 'Frame'
@@ -2272,11 +2358,11 @@ export function createUI(data = {}) {
   node_109.dataset.mirrorId = 'node-109'
   node_109.dataset.mirrorName = 'FormField'
   Object.assign(node_109.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
+    gap: '4px',
+    flex: '1 1 0%',
     'min-width': '0',
     'flex-grow': '1',
   })
@@ -2286,55 +2372,55 @@ export function createUI(data = {}) {
   _elements['node-110'] = node_110
   node_110.dataset.mirrorId = 'node-110'
   node_110.dataset.mirrorName = 'FieldLabel'
-  node_110.textContent = "Telefon"
+  node_110.textContent = 'Telefon'
   Object.assign(node_110.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_110.dataset.component = 'FieldLabel'
   node_109.appendChild(node_110)
-  
+
   // FieldInput
   const node_111 = document.createElement('div')
   _elements['node-111'] = node_111
   node_111.dataset.mirrorId = 'node-111'
   node_111.dataset.mirrorName = 'FieldInput'
-  node_111.setAttribute('placeholder', "+49 30 12345678")
+  node_111.setAttribute('placeholder', '+49 30 12345678')
   Object.assign(node_111.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_111.dataset.component = 'FieldInput'
   node_109.appendChild(node_111)
-  
+
   node_108.appendChild(node_109)
-  
+
   // FormField
   const node_112 = document.createElement('div')
   _elements['node-112'] = node_112
   node_112.dataset.mirrorId = 'node-112'
   node_112.dataset.mirrorName = 'FormField'
   Object.assign(node_112.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'flex': '1 1 0%',
+    gap: '4px',
+    flex: '1 1 0%',
     'min-width': '0',
     'flex-grow': '1',
   })
@@ -2344,57 +2430,57 @@ export function createUI(data = {}) {
   _elements['node-113'] = node_113
   node_113.dataset.mirrorId = 'node-113'
   node_113.dataset.mirrorName = 'FieldLabel'
-  node_113.textContent = "E-Mail"
+  node_113.textContent = 'E-Mail'
   Object.assign(node_113.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_113.dataset.component = 'FieldLabel'
   node_112.appendChild(node_113)
-  
+
   // FieldInput
   const node_114 = document.createElement('div')
   _elements['node-114'] = node_114
   node_114.dataset.mirrorId = 'node-114'
   node_114.dataset.mirrorName = 'FieldInput'
-  node_114.setAttribute('placeholder', "max@example.de")
+  node_114.setAttribute('placeholder', 'max@example.de')
   Object.assign(node_114.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_114.dataset.component = 'FieldInput'
   node_112.appendChild(node_114)
-  
+
   node_108.appendChild(node_112)
-  
+
   node_84.appendChild(node_108)
-  
+
   // FormField
   const node_115 = document.createElement('div')
   _elements['node-115'] = node_115
   node_115.dataset.mirrorId = 'node-115'
   node_115.dataset.mirrorName = 'FormField'
   Object.assign(node_115.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': '4px',
-    'width': '100%',
+    gap: '4px',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
@@ -2404,52 +2490,52 @@ export function createUI(data = {}) {
   _elements['node-116'] = node_116
   node_116.dataset.mirrorId = 'node-116'
   node_116.dataset.mirrorName = 'FieldLabel'
-  node_116.textContent = "Kategorie"
+  node_116.textContent = 'Kategorie'
   Object.assign(node_116.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    color: 'var(--text-secondary-col)',
     'font-size': '13px',
     'font-weight': '500',
   })
   node_116.dataset.component = 'FieldLabel'
   node_115.appendChild(node_116)
-  
+
   // FieldInput
   const node_117 = document.createElement('div')
   _elements['node-117'] = node_117
   node_117.dataset.mirrorId = 'node-117'
   node_117.dataset.mirrorName = 'FieldInput'
   Object.assign(node_117.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-primary-col)',
-    'padding': '10px 12px',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-primary-col)',
+    padding: '10px 12px',
     'border-radius': '6px',
-    'width': '100%',
+    width: '100%',
     'align-self': 'stretch',
     'min-width': '0',
-    'border': '1px solid currentColor',
+    border: '1px solid currentColor',
     'border-color': 'var(--border-boc)',
   })
   node_117.dataset.component = 'FieldInput'
   node_115.appendChild(node_117)
-  
+
   // Frame
   const node_118 = document.createElement('div')
   _elements['node-118'] = node_118
   node_118.dataset.mirrorId = 'node-118'
   node_118.dataset.mirrorName = 'Frame'
   Object.assign(node_118.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '8px',
+    gap: '8px',
   })
   node_118.dataset.layout = 'flex'
   node_118.dataset.component = 'Frame'
@@ -2459,23 +2545,23 @@ export function createUI(data = {}) {
   node_119.dataset.mirrorId = 'node-119'
   node_119.dataset.mirrorName = 'Btn'
   Object.assign(node_119.style, {
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
-    'padding': '10px 16px',
+    padding: '10px 16px',
     'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
+    border: '1px solid currentColor',
+    cursor: 'pointer',
     'font-size': '13px',
     'font-weight': '500',
-    'background': 'var(--surface-tertiary-bg)',
-    'color': 'var(--text-primary-col)',
+    background: 'var(--surface-tertiary-bg)',
+    color: 'var(--text-primary-col)',
     'border-color': 'var(--border-boc)',
-    'transition': 'opacity 150ms ease',
+    transition: 'opacity 150ms ease',
   })
   node_119._stateStyles = {
-    'on': {
-      'background': 'var(--primary-bg)',
-      'color': 'white',
+    on: {
+      background: 'var(--primary-bg)',
+      color: 'white',
       'border-color': '$primary',
     },
   }
@@ -2483,36 +2569,33 @@ export function createUI(data = {}) {
     initial: 'default',
     current: 'default',
     states: {
-      'hover': {
+      hover: {
         styles: {
-          'opacity': '0.9',
+          opacity: '0.9',
         },
       },
-      'on': {
+      on: {
         styles: {
-          'background': 'var(--primary-bg)',
-          'color': 'white',
+          background: 'var(--primary-bg)',
+          color: 'white',
           'border-color': '$primary',
         },
       },
-      'default': {
-        styles: {
-        },
+      default: {
+        styles: {},
       },
     },
-    transitions: [
-      { to: 'on', trigger: 'onclick', modifier: 'exclusive' },
-    ],
+    transitions: [{ to: 'on', trigger: 'onclick', modifier: 'exclusive' }],
   }
   node_119._baseStyles = {
-    'opacity': node_119.style['opacity'] || '',
-    'background': node_119.style['background'] || '',
-    'color': node_119.style['color'] || '',
+    opacity: node_119.style['opacity'] || '',
+    background: node_119.style['background'] || '',
+    color: node_119.style['color'] || '',
     'border-color': node_119.style['border-color'] || '',
   }
   node_119.dataset.state = 'default'
   Object.assign(node_119.style, node_119._stateMachine.states['default'].styles)
-  node_119.addEventListener('click', (e) => {
+  node_119.addEventListener('click', e => {
     const sm = node_119._stateMachine
     const current = sm.current
     _runtime.exclusiveTransition(node_119, 'on')
@@ -2523,35 +2606,35 @@ export function createUI(data = {}) {
   _elements['node-120'] = node_120
   node_120.dataset.mirrorId = 'node-120'
   node_120.dataset.mirrorName = 'Text'
-  node_120.textContent = "Privat"
+  node_120.textContent = 'Privat'
   node_120.dataset.component = 'Text'
   node_119.appendChild(node_120)
-  
+
   node_118.appendChild(node_119)
-  
+
   // Btn
   const node_121 = document.createElement('button')
   _elements['node-121'] = node_121
   node_121.dataset.mirrorId = 'node-121'
   node_121.dataset.mirrorName = 'Btn'
   Object.assign(node_121.style, {
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
-    'padding': '10px 16px',
+    padding: '10px 16px',
     'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
+    border: '1px solid currentColor',
+    cursor: 'pointer',
     'font-size': '13px',
     'font-weight': '500',
-    'background': 'var(--surface-tertiary-bg)',
-    'color': 'var(--text-primary-col)',
+    background: 'var(--surface-tertiary-bg)',
+    color: 'var(--text-primary-col)',
     'border-color': 'var(--border-boc)',
-    'transition': 'opacity 150ms ease',
+    transition: 'opacity 150ms ease',
   })
   node_121._stateStyles = {
-    'on': {
-      'background': 'var(--primary-bg)',
-      'color': 'white',
+    on: {
+      background: 'var(--primary-bg)',
+      color: 'white',
       'border-color': '$primary',
     },
   }
@@ -2559,36 +2642,33 @@ export function createUI(data = {}) {
     initial: 'default',
     current: 'default',
     states: {
-      'hover': {
+      hover: {
         styles: {
-          'opacity': '0.9',
+          opacity: '0.9',
         },
       },
-      'on': {
+      on: {
         styles: {
-          'background': 'var(--primary-bg)',
-          'color': 'white',
+          background: 'var(--primary-bg)',
+          color: 'white',
           'border-color': '$primary',
         },
       },
-      'default': {
-        styles: {
-        },
+      default: {
+        styles: {},
       },
     },
-    transitions: [
-      { to: 'on', trigger: 'onclick', modifier: 'exclusive' },
-    ],
+    transitions: [{ to: 'on', trigger: 'onclick', modifier: 'exclusive' }],
   }
   node_121._baseStyles = {
-    'opacity': node_121.style['opacity'] || '',
-    'background': node_121.style['background'] || '',
-    'color': node_121.style['color'] || '',
+    opacity: node_121.style['opacity'] || '',
+    background: node_121.style['background'] || '',
+    color: node_121.style['color'] || '',
     'border-color': node_121.style['border-color'] || '',
   }
   node_121.dataset.state = 'default'
   Object.assign(node_121.style, node_121._stateMachine.states['default'].styles)
-  node_121.addEventListener('click', (e) => {
+  node_121.addEventListener('click', e => {
     const sm = node_121._stateMachine
     const current = sm.current
     _runtime.exclusiveTransition(node_121, 'on')
@@ -2599,35 +2679,35 @@ export function createUI(data = {}) {
   _elements['node-122'] = node_122
   node_122.dataset.mirrorId = 'node-122'
   node_122.dataset.mirrorName = 'Text'
-  node_122.textContent = "Geschäftlich"
+  node_122.textContent = 'Geschäftlich'
   node_122.dataset.component = 'Text'
   node_121.appendChild(node_122)
-  
+
   node_118.appendChild(node_121)
-  
+
   // Btn
   const node_123 = document.createElement('button')
   _elements['node-123'] = node_123
   node_123.dataset.mirrorId = 'node-123'
   node_123.dataset.mirrorName = 'Btn'
   Object.assign(node_123.style, {
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
-    'padding': '10px 16px',
+    padding: '10px 16px',
     'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
+    border: '1px solid currentColor',
+    cursor: 'pointer',
     'font-size': '13px',
     'font-weight': '500',
-    'background': 'var(--surface-tertiary-bg)',
-    'color': 'var(--text-primary-col)',
+    background: 'var(--surface-tertiary-bg)',
+    color: 'var(--text-primary-col)',
     'border-color': 'var(--border-boc)',
-    'transition': 'opacity 150ms ease',
+    transition: 'opacity 150ms ease',
   })
   node_123._stateStyles = {
-    'on': {
-      'background': 'var(--primary-bg)',
-      'color': 'white',
+    on: {
+      background: 'var(--primary-bg)',
+      color: 'white',
       'border-color': '$primary',
     },
   }
@@ -2635,36 +2715,33 @@ export function createUI(data = {}) {
     initial: 'default',
     current: 'default',
     states: {
-      'hover': {
+      hover: {
         styles: {
-          'opacity': '0.9',
+          opacity: '0.9',
         },
       },
-      'on': {
+      on: {
         styles: {
-          'background': 'var(--primary-bg)',
-          'color': 'white',
+          background: 'var(--primary-bg)',
+          color: 'white',
           'border-color': '$primary',
         },
       },
-      'default': {
-        styles: {
-        },
+      default: {
+        styles: {},
       },
     },
-    transitions: [
-      { to: 'on', trigger: 'onclick', modifier: 'exclusive' },
-    ],
+    transitions: [{ to: 'on', trigger: 'onclick', modifier: 'exclusive' }],
   }
   node_123._baseStyles = {
-    'opacity': node_123.style['opacity'] || '',
-    'background': node_123.style['background'] || '',
-    'color': node_123.style['color'] || '',
+    opacity: node_123.style['opacity'] || '',
+    background: node_123.style['background'] || '',
+    color: node_123.style['color'] || '',
     'border-color': node_123.style['border-color'] || '',
   }
   node_123.dataset.state = 'default'
   Object.assign(node_123.style, node_123._stateMachine.states['default'].styles)
-  node_123.addEventListener('click', (e) => {
+  node_123.addEventListener('click', e => {
     const sm = node_123._stateMachine
     const current = sm.current
     _runtime.exclusiveTransition(node_123, 'on')
@@ -2675,33 +2752,33 @@ export function createUI(data = {}) {
   _elements['node-124'] = node_124
   node_124.dataset.mirrorId = 'node-124'
   node_124.dataset.mirrorName = 'Text'
-  node_124.textContent = "Familie"
+  node_124.textContent = 'Familie'
   node_124.dataset.component = 'Text'
   node_123.appendChild(node_124)
-  
+
   node_118.appendChild(node_123)
-  
+
   node_115.appendChild(node_118)
-  
+
   node_84.appendChild(node_115)
-  
+
   node_78.appendChild(node_84)
-  
+
   // Frame
   const node_125 = document.createElement('div')
   _elements['node-125'] = node_125
   node_125.dataset.mirrorId = 'node-125'
   node_125.dataset.mirrorName = 'Frame'
   Object.assign(node_125.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'justify-content': 'space-between',
     'align-items': 'flex-start',
-    'padding': '20px',
-    'border': '1px solid 0px 0px 0px',
+    padding: '20px',
+    border: '1px solid 0px 0px 0px',
     'border-color': 'var(--border-boc)',
-    'background': 'var(--surface-secondary-bg)',
+    background: 'var(--surface-secondary-bg)',
   })
   node_125.dataset.layout = 'flex'
   node_125.dataset.component = 'Frame'
@@ -2711,21 +2788,21 @@ export function createUI(data = {}) {
   node_126.dataset.mirrorId = 'node-126'
   node_126.dataset.mirrorName = 'Btn'
   Object.assign(node_126.style, {
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
-    'padding': '10px 16px',
+    padding: '10px 16px',
     'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
+    border: '1px solid currentColor',
+    cursor: 'pointer',
     'font-size': '13px',
     'font-weight': '500',
-    'background': 'var(--surface-bg)',
-    'color': '$danger',
+    background: 'var(--surface-bg)',
+    color: '$danger',
     'border-color': '$danger',
-    'transition': 'opacity 150ms ease',
+    transition: 'opacity 150ms ease',
   })
   node_126.dataset.component = 'Btn'
-  node_126.addEventListener('click', (e) => {
+  node_126.addEventListener('click', e => {
     _runtime.deleteItem('selectedAddress')
   })
   // Frame
@@ -2734,11 +2811,11 @@ export function createUI(data = {}) {
   node_127.dataset.mirrorId = 'node-127'
   node_127.dataset.mirrorName = 'Frame'
   Object.assign(node_127.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '6px',
+    gap: '6px',
   })
   node_127.dataset.layout = 'flex'
   node_127.dataset.component = 'Frame'
@@ -2747,54 +2824,54 @@ export function createUI(data = {}) {
   _elements['node-128'] = node_128
   node_128.dataset.mirrorId = 'node-128'
   node_128.dataset.mirrorName = 'Icon'
-  node_128.setAttribute('data-icon-color', "$danger")
-  node_128.setAttribute('data-icon-size', "16")
+  node_128.setAttribute('data-icon-color', '$danger')
+  node_128.setAttribute('data-icon-size', '16')
   // Icon default styles
   Object.assign(node_128.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_128, "trash-2")
+  _runtime.loadIcon(node_128, 'trash-2')
   Object.assign(node_128.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
+    width: '16px',
+    height: '16px',
   })
   node_128.dataset.component = 'Icon'
   node_127.appendChild(node_128)
-  
+
   // Text
   const node_129 = document.createElement('span')
   _elements['node-129'] = node_129
   node_129.dataset.mirrorId = 'node-129'
   node_129.dataset.mirrorName = 'Text'
-  node_129.textContent = "Löschen"
+  node_129.textContent = 'Löschen'
   node_129.dataset.component = 'Text'
   node_127.appendChild(node_129)
-  
+
   node_126.appendChild(node_127)
-  
+
   node_125.appendChild(node_126)
-  
+
   // Frame
   const node_130 = document.createElement('div')
   _elements['node-130'] = node_130
   node_130.dataset.mirrorId = 'node-130'
   node_130.dataset.mirrorName = 'Frame'
   Object.assign(node_130.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
-    'gap': '12px',
+    gap: '12px',
   })
   node_130.dataset.layout = 'flex'
   node_130.dataset.component = 'Frame'
@@ -2804,9 +2881,9 @@ export function createUI(data = {}) {
   node_131.dataset.mirrorId = 'node-131'
   node_131.dataset.mirrorName = 'CloseTrigger'
   Object.assign(node_131.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'flex-start',
   })
   node_131.dataset.component = 'CloseTrigger'
@@ -2817,53 +2894,53 @@ export function createUI(data = {}) {
   node_132.dataset.mirrorId = 'node-132'
   node_132.dataset.mirrorName = 'Btn'
   Object.assign(node_132.style, {
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
-    'padding': '10px 16px',
+    padding: '10px 16px',
     'border-radius': '6px',
-    'border': '1px solid currentColor',
-    'cursor': 'pointer',
+    border: '1px solid currentColor',
+    cursor: 'pointer',
     'font-size': '13px',
     'font-weight': '500',
-    'background': 'var(--surface-bg)',
-    'color': 'var(--text-secondary-col)',
+    background: 'var(--surface-bg)',
+    color: 'var(--text-secondary-col)',
     'border-color': 'var(--border-boc)',
-    'transition': 'opacity 150ms ease',
+    transition: 'opacity 150ms ease',
   })
   node_132.dataset.component = 'Btn'
   node_131.appendChild(node_132)
-  
+
   // Text
   const node_133 = document.createElement('span')
   _elements['node-133'] = node_133
   node_133.dataset.mirrorId = 'node-133'
   node_133.dataset.mirrorName = 'Text'
-  node_133.textContent = "Abbrechen"
+  node_133.textContent = 'Abbrechen'
   node_133.dataset.component = 'Text'
   node_131.appendChild(node_133)
-  
+
   node_130.appendChild(node_131)
-  
+
   // Btn
   const node_134 = document.createElement('button')
   _elements['node-134'] = node_134
   node_134.dataset.mirrorId = 'node-134'
   node_134.dataset.mirrorName = 'Btn'
   Object.assign(node_134.style, {
-    'height': '36px',
+    height: '36px',
     'flex-shrink': '0',
-    'padding': '10px 16px',
+    padding: '10px 16px',
     'border-radius': '6px',
-    'border': '0px solid currentColor',
-    'cursor': 'pointer',
+    border: '0px solid currentColor',
+    cursor: 'pointer',
     'font-size': '13px',
     'font-weight': '500',
-    'background': 'var(--primary-bg)',
-    'color': 'white',
-    'transition': 'opacity 150ms ease',
+    background: 'var(--primary-bg)',
+    color: 'white',
+    transition: 'opacity 150ms ease',
   })
   node_134.dataset.component = 'Btn'
-  node_134.addEventListener('click', (e) => {
+  node_134.addEventListener('click', e => {
     _runtime.save('selectedAddress')
     _runtime.toast('Adresse gespeichert!', { type: 'success', position: 'bottom' })
   })
@@ -2873,11 +2950,11 @@ export function createUI(data = {}) {
   node_135.dataset.mirrorId = 'node-135'
   node_135.dataset.mirrorName = 'Frame'
   Object.assign(node_135.style, {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
+    width: 'fit-content',
     'align-items': 'center',
-    'gap': '6px',
+    gap: '6px',
   })
   node_135.dataset.layout = 'flex'
   node_135.dataset.component = 'Frame'
@@ -2886,88 +2963,86 @@ export function createUI(data = {}) {
   _elements['node-136'] = node_136
   node_136.dataset.mirrorId = 'node-136'
   node_136.dataset.mirrorName = 'Icon'
-  node_136.setAttribute('data-icon-color', "white")
-  node_136.setAttribute('data-icon-size', "16")
+  node_136.setAttribute('data-icon-color', 'white')
+  node_136.setAttribute('data-icon-size', '16')
   // Icon default styles
   Object.assign(node_136.style, {
-    'display': 'inline-flex',
+    display: 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
     'flex-shrink': '0',
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_136, "save")
+  _runtime.loadIcon(node_136, 'save')
   Object.assign(node_136.style, {
-    'width': '20px',
+    width: '20px',
     'flex-shrink': '0',
-    'height': '20px',
+    height: '20px',
     'flex-shrink': '0',
     'font-size': '16px',
-    'width': '16px',
-    'height': '16px',
+    width: '16px',
+    height: '16px',
   })
   node_136.dataset.component = 'Icon'
   node_135.appendChild(node_136)
-  
+
   // Text
   const node_137 = document.createElement('span')
   _elements['node-137'] = node_137
   node_137.dataset.mirrorId = 'node-137'
   node_137.dataset.mirrorName = 'Text'
-  node_137.textContent = "Speichern"
+  node_137.textContent = 'Speichern'
   node_137.dataset.component = 'Text'
   node_135.appendChild(node_137)
-  
+
   node_134.appendChild(node_135)
-  
+
   node_130.appendChild(node_134)
-  
+
   node_125.appendChild(node_130)
-  
+
   node_78.appendChild(node_125)
-  
+
   node_76_content.appendChild(node_78)
-  
+
   _root.appendChild(node_76)
-  
+
   // Initialize Dialog
   if (typeof _runtime !== 'undefined' && _runtime.initDialogComponent) {
     _runtime.initDialogComponent(node_76)
   }
-  
-  
+
   // Attach API methods directly to _root for intuitive usage
   // createUI() returns the DOM node directly, with API methods attached
-  
-  
+
   // State management
-  _root.setState = function(key, value) {
+  _root.setState = function (key, value) {
     _state[key] = value
     this.update()
   }
-  
-  _root.getState = function(key) {
+
+  _root.getState = function (key) {
     return _state[key]
   }
-  
-  _root.update = function() {
+
+  _root.update = function () {
     // Re-render each loops based on state changes
     for (const el of _root.querySelectorAll('[data-each-container]')) {
       if (el._eachConfig) {
         const { collection, renderItem, filterFn } = el._eachConfig
         const items = _state[collection] || []
         const filtered = filterFn ? items.filter(filterFn) : items
-        el.innerHTML = ""
+        el.innerHTML = ''
         filtered.forEach((item, index) => el.appendChild(renderItem(item, index)))
       }
     }
-    
+
     // Re-render conditionals based on state changes
     for (const el of _root.querySelectorAll('[data-conditional-id]')) {
       if (el._conditionalConfig) {
         const { condition, renderThen, renderElse } = el._conditionalConfig
-        el.innerHTML = ""
+        el.innerHTML = ''
         if (condition()) {
           el.appendChild(renderThen())
         } else if (renderElse) {
@@ -2976,70 +3051,95 @@ export function createUI(data = {}) {
       }
     }
   }
-  
+
   return _root
 }
-
 
 // Mirror DOM Runtime
 const _runtime = {
   // Property mapping
   _propMap: {
-    'bg': 'background',
-    'col': 'color',
-    'pad': 'padding',
-    'rad': 'borderRadius',
-    'gap': 'gap',
-    'w': 'width',
-    'h': 'height',
-    'opacity': 'opacity',
+    bg: 'background',
+    col: 'color',
+    pad: 'padding',
+    rad: 'borderRadius',
+    gap: 'gap',
+    w: 'width',
+    h: 'height',
+    opacity: 'opacity',
   },
 
   // SVG Icon Constants (extracted to avoid duplication)
   _icons: {
-    chevronDown: (size = 14) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`,
-    chevronUp: (size = 14) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"></polyline></svg>`,
-    chevronLeft: (size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`,
-    chevronRight: (size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`,
-    chevronDouble: (size = 12) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>`,
-    check: (size = 14, strokeWidth = 2) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-    x: (size = 14) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
-    minus: (size = 12) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
-    calendar: (size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
-    user: (size = 24) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
-    upload: (size = 40) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`,
-    file: (size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
-    eyeOff: (size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`,
-    eye: (size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
+    chevronDown: (size = 14) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`,
+    chevronUp: (size = 14) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"></polyline></svg>`,
+    chevronLeft: (size = 16) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`,
+    chevronRight: (size = 16) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`,
+    chevronDouble: (size = 12) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>`,
+    check: (size = 14, strokeWidth = 2) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+    x: (size = 14) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+    minus: (size = 12) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    calendar: (size = 16) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    user: (size = 24) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+    upload: (size = 40) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`,
+    file: (size = 20) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
+    eyeOff: (size = 20) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`,
+    eye: (size = 20) =>
+      `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
   },
 
   // Alignment helpers
   _alignToCSS(el, prop, value) {
     const dir = el.style.flexDirection || 'column'
     const isRow = dir === 'row'
-    const alignMap = { 'left': 'flex-start', 'right': 'flex-end', 'center': 'center', 'top': 'flex-start', 'bottom': 'flex-end' }
+    const alignMap = {
+      left: 'flex-start',
+      right: 'flex-end',
+      center: 'center',
+      top: 'flex-start',
+      bottom: 'flex-end',
+    }
     const cssVal = alignMap[value] || value
 
     if (prop === 'align' || prop === 'hor-align') {
-      if (isRow) { el.style.justifyContent = cssVal }
-      else { el.style.alignItems = cssVal }
+      if (isRow) {
+        el.style.justifyContent = cssVal
+      } else {
+        el.style.alignItems = cssVal
+      }
     } else if (prop === 'ver-align') {
-      if (isRow) { el.style.alignItems = cssVal }
-      else { el.style.justifyContent = cssVal }
+      if (isRow) {
+        el.style.alignItems = cssVal
+      } else {
+        el.style.justifyContent = cssVal
+      }
     }
   },
 
   _getAlign(el, prop) {
     const dir = el.style.flexDirection || 'column'
     const isRow = dir === 'row'
-    const reverseMap = { 'flex-start': 'left', 'flex-end': 'right', 'center': 'center' }
+    const reverseMap = { 'flex-start': 'left', 'flex-end': 'right', center: 'center' }
 
     if (prop === 'align' || prop === 'hor-align') {
       const val = isRow ? el.style.justifyContent : el.style.alignItems
       return reverseMap[val] || val
     } else if (prop === 'ver-align') {
       const val = isRow ? el.style.alignItems : el.style.justifyContent
-      const vertMap = { 'flex-start': 'top', 'flex-end': 'bottom', 'center': 'center' }
+      const vertMap = { 'flex-start': 'top', 'flex-end': 'bottom', center: 'center' }
       return vertMap[val] || val
     }
   },
@@ -3050,43 +3150,118 @@ const _runtime = {
     const self = this
     return {
       _el: el,
-      get text() { return el.textContent },
-      set text(v) { el.textContent = v },
-      get value() { return el.value },
-      set value(v) { el.value = v },
-      get visible() { return el.style.display !== 'none' },
-      set visible(v) { el.style.display = v ? '' : 'none' },
-      get hidden() { return el.hidden },
-      set hidden(v) { el.hidden = v; el.style.display = v ? 'none' : '' },
-      get align() { return self._getAlign(el, 'align') },
-      set align(v) { self._alignToCSS(el, 'align', v) },
-      get verAlign() { return self._getAlign(el, 'ver-align') },
-      set verAlign(v) { self._alignToCSS(el, 'ver-align', v) },
-      get bg() { return el.style.background },
-      set bg(v) { el.style.background = v },
-      get col() { return el.style.color },
-      set col(v) { el.style.color = v },
-      get pad() { return el.style.padding },
-      set pad(v) { el.style.padding = typeof v === 'number' ? v + 'px' : v },
-      get gap() { return el.style.gap },
-      set gap(v) { el.style.gap = typeof v === 'number' ? v + 'px' : v },
-      get rad() { return el.style.borderRadius },
-      set rad(v) { el.style.borderRadius = typeof v === 'number' ? v + 'px' : v },
-      get w() { return el.style.width },
-      set w(v) { el.style.width = typeof v === 'number' ? v + 'px' : v },
-      get h() { return el.style.height },
-      set h(v) { el.style.height = typeof v === 'number' ? v + 'px' : v },
-      get opacity() { return el.style.opacity },
-      set opacity(v) { el.style.opacity = v },
-      get state() { return el.dataset.state || 'default' },
-      set state(v) { self.setState(el, v) },
-      set onclick(fn) { el.addEventListener('click', fn) },
-      set onchange(fn) { el.addEventListener('change', fn) },
-      addClass(c) { el.classList.add(c) },
-      removeClass(c) { el.classList.remove(c) },
-      toggleClass(c) { el.classList.toggle(c) },
-      setStyle(prop, val) { el.style[prop] = val },
-      getStyle(prop) { return el.style[prop] },
+      get text() {
+        return el.textContent
+      },
+      set text(v) {
+        el.textContent = v
+      },
+      get value() {
+        return el.value
+      },
+      set value(v) {
+        el.value = v
+      },
+      get visible() {
+        return el.style.display !== 'none'
+      },
+      set visible(v) {
+        el.style.display = v ? '' : 'none'
+      },
+      get hidden() {
+        return el.hidden
+      },
+      set hidden(v) {
+        el.hidden = v
+        el.style.display = v ? 'none' : ''
+      },
+      get align() {
+        return self._getAlign(el, 'align')
+      },
+      set align(v) {
+        self._alignToCSS(el, 'align', v)
+      },
+      get verAlign() {
+        return self._getAlign(el, 'ver-align')
+      },
+      set verAlign(v) {
+        self._alignToCSS(el, 'ver-align', v)
+      },
+      get bg() {
+        return el.style.background
+      },
+      set bg(v) {
+        el.style.background = v
+      },
+      get col() {
+        return el.style.color
+      },
+      set col(v) {
+        el.style.color = v
+      },
+      get pad() {
+        return el.style.padding
+      },
+      set pad(v) {
+        el.style.padding = typeof v === 'number' ? v + 'px' : v
+      },
+      get gap() {
+        return el.style.gap
+      },
+      set gap(v) {
+        el.style.gap = typeof v === 'number' ? v + 'px' : v
+      },
+      get rad() {
+        return el.style.borderRadius
+      },
+      set rad(v) {
+        el.style.borderRadius = typeof v === 'number' ? v + 'px' : v
+      },
+      get w() {
+        return el.style.width
+      },
+      set w(v) {
+        el.style.width = typeof v === 'number' ? v + 'px' : v
+      },
+      get h() {
+        return el.style.height
+      },
+      set h(v) {
+        el.style.height = typeof v === 'number' ? v + 'px' : v
+      },
+      get opacity() {
+        return el.style.opacity
+      },
+      set opacity(v) {
+        el.style.opacity = v
+      },
+      get state() {
+        return el.dataset.state || 'default'
+      },
+      set state(v) {
+        self.setState(el, v)
+      },
+      set onclick(fn) {
+        el.addEventListener('click', fn)
+      },
+      set onchange(fn) {
+        el.addEventListener('change', fn)
+      },
+      addClass(c) {
+        el.classList.add(c)
+      },
+      removeClass(c) {
+        el.classList.remove(c)
+      },
+      toggleClass(c) {
+        el.classList.toggle(c)
+      },
+      setStyle(prop, val) {
+        el.style[prop] = val
+      },
+      getStyle(prop) {
+        return el.style[prop]
+      },
     }
   },
 
@@ -3126,9 +3301,19 @@ const _runtime = {
   close(el) {
     if (!el) return
     const initialState = el._initialState
-    if (initialState === 'closed' || initialState === 'open' || el.dataset.state === 'open' || el.dataset.state === 'closed') {
+    if (
+      initialState === 'closed' ||
+      initialState === 'open' ||
+      el.dataset.state === 'open' ||
+      el.dataset.state === 'closed'
+    ) {
       this.setState(el, 'closed')
-    } else if (initialState === 'expanded' || initialState === 'collapsed' || el.dataset.state === 'expanded' || el.dataset.state === 'collapsed') {
+    } else if (
+      initialState === 'expanded' ||
+      initialState === 'collapsed' ||
+      el.dataset.state === 'expanded' ||
+      el.dataset.state === 'collapsed'
+    ) {
       this.setState(el, 'collapsed')
     } else {
       this.hide(el)
@@ -3147,7 +3332,7 @@ const _runtime = {
 
     const rect = trigger.getBoundingClientRect()
     el.style.position = 'fixed'
-    el.style.top = (rect.bottom + offset) + 'px'
+    el.style.top = rect.bottom + offset + 'px'
     el.style.left = rect.left + 'px'
     el.style.zIndex = '1000'
     el.hidden = false
@@ -3163,7 +3348,7 @@ const _runtime = {
     const rect = trigger.getBoundingClientRect()
     const elRect = el.getBoundingClientRect()
     el.style.position = 'fixed'
-    el.style.top = (rect.top - elRect.height - offset) + 'px'
+    el.style.top = rect.top - elRect.height - offset + 'px'
     el.style.left = rect.left + 'px'
     el.style.zIndex = '1000'
     el.hidden = false
@@ -3180,7 +3365,7 @@ const _runtime = {
     const elRect = el.getBoundingClientRect()
     el.style.position = 'fixed'
     el.style.top = rect.top + 'px'
-    el.style.left = (rect.left - elRect.width - offset) + 'px'
+    el.style.left = rect.left - elRect.width - offset + 'px'
     el.style.zIndex = '1000'
     el.hidden = false
     el.style.display = el._savedDisplay || ''
@@ -3195,7 +3380,7 @@ const _runtime = {
     const rect = trigger.getBoundingClientRect()
     el.style.position = 'fixed'
     el.style.top = rect.top + 'px'
-    el.style.left = (rect.right + offset) + 'px'
+    el.style.left = rect.right + offset + 'px'
     el.style.zIndex = '1000'
     el.hidden = false
     el.style.display = el._savedDisplay || ''
@@ -3203,11 +3388,16 @@ const _runtime = {
 
   showAt(el, trigger, position = 'below', offset = 4) {
     switch (position) {
-      case 'below': return this.showBelow(el, trigger, offset)
-      case 'above': return this.showAbove(el, trigger, offset)
-      case 'left': return this.showLeft(el, trigger, offset)
-      case 'right': return this.showRight(el, trigger, offset)
-      default: return this.showBelow(el, trigger, offset)
+      case 'below':
+        return this.showBelow(el, trigger, offset)
+      case 'above':
+        return this.showAbove(el, trigger, offset)
+      case 'left':
+        return this.showLeft(el, trigger, offset)
+      case 'right':
+        return this.showRight(el, trigger, offset)
+      default:
+        return this.showBelow(el, trigger, offset)
     }
   },
 
@@ -3221,7 +3411,8 @@ const _runtime = {
     if (backdrop) {
       const bd = document.createElement('div')
       bd.dataset.mirrorBackdrop = 'true'
-      bd.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999'
+      bd.style.cssText =
+        'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999'
       document.body.appendChild(bd)
     }
 
@@ -3333,8 +3524,8 @@ const _runtime = {
 
     // Position styles
     const posStyles = {
-      'top': { top: '20px', left: '50%', transform: 'translateX(-50%) translateY(-10px)' },
-      'bottom': { bottom: '20px', left: '50%', transform: 'translateX(-50%) translateY(10px)' },
+      top: { top: '20px', left: '50%', transform: 'translateX(-50%) translateY(-10px)' },
+      bottom: { bottom: '20px', left: '50%', transform: 'translateX(-50%) translateY(10px)' },
       'top-left': { top: '20px', left: '20px', transform: 'translateY(-10px)' },
       'top-right': { top: '20px', right: '20px', transform: 'translateY(-10px)' },
       'bottom-left': { bottom: '20px', left: '20px', transform: 'translateY(10px)' },
@@ -3344,10 +3535,10 @@ const _runtime = {
 
     // Type colors
     const typeColors = {
-      'info': { bg: '#1a1a1a', color: '#fff', border: '#333' },
-      'success': { bg: '#052e16', color: '#4ade80', border: '#166534' },
-      'error': { bg: '#450a0a', color: '#f87171', border: '#991b1b' },
-      'warning': { bg: '#422006', color: '#fbbf24', border: '#92400e' },
+      info: { bg: '#1a1a1a', color: '#fff', border: '#333' },
+      success: { bg: '#052e16', color: '#4ade80', border: '#166534' },
+      error: { bg: '#450a0a', color: '#f87171', border: '#991b1b' },
+      warning: { bg: '#422006', color: '#fbbf24', border: '#92400e' },
     }
     const colors = typeColors[type] || typeColors.info
     toastEl.style.background = colors.bg
@@ -3359,7 +3550,7 @@ const _runtime = {
     // Store toast info
     this._activeToasts.set(toastId, {
       element: toastEl,
-      timerId: null
+      timerId: null,
     })
 
     // Animate in
@@ -3407,7 +3598,8 @@ const _runtime = {
 
   focus(el) {
     if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    const target =
+      typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
     if (target && typeof target.focus === 'function') {
       target.focus()
     }
@@ -3415,7 +3607,8 @@ const _runtime = {
 
   blur(el) {
     if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    const target =
+      typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
     if (target && typeof target.blur === 'function') {
       target.blur()
     }
@@ -3423,7 +3616,8 @@ const _runtime = {
 
   clear(el) {
     if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    const target =
+      typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
     if (target && 'value' in target) {
       target.value = ''
       target.dispatchEvent(new Event('input', { bubbles: true }))
@@ -3432,7 +3626,8 @@ const _runtime = {
 
   selectText(el) {
     if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    const target =
+      typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
     if (target && typeof target.select === 'function') {
       target.select()
     }
@@ -3440,7 +3635,8 @@ const _runtime = {
 
   setError(el, message) {
     if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    const target =
+      typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
     if (!target) return
 
     // Set invalid state
@@ -3467,7 +3663,8 @@ const _runtime = {
 
   clearError(el) {
     if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
+    const target =
+      typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
     if (!target) return
 
     // Clear invalid state
@@ -3499,9 +3696,10 @@ const _runtime = {
     if (!url) return
     const { newTab = true } = options
     // Ensure URL has a protocol
-    const fullUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')
-      ? url
-      : 'https://' + url
+    const fullUrl =
+      url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')
+        ? url
+        : 'https://' + url
     const target = newTab ? '_blank' : '_self'
     window.open(fullUrl, target, newTab ? 'noopener,noreferrer' : undefined)
   },
@@ -3522,7 +3720,8 @@ const _runtime = {
     container._keyboardNavSetup = true
 
     // Selector for form inputs
-    const inputSelector = 'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])'
+    const inputSelector =
+      'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])'
 
     // Get ordered list of inputs
     const getInputs = () => {
@@ -3535,7 +3734,7 @@ const _runtime = {
       })
     }
 
-    container.addEventListener('keydown', (e) => {
+    container.addEventListener('keydown', e => {
       const target = e.target
       if (!target.matches || !target.matches(inputSelector)) return
 
@@ -3613,13 +3812,16 @@ const _runtime = {
         // Update icon direction with default SVGs
         if (isActive) {
           if (state.desc) {
-            icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>'
+            icon.innerHTML =
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l5 5 5-5"/></svg>'
           } else {
-            icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 14l5-5 5 5"/></svg>'
+            icon.innerHTML =
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 14l5-5 5 5"/></svg>'
           }
         } else {
           // Reset to default double chevron
-          icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>'
+          icon.innerHTML =
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>'
         }
       }
     })
@@ -3630,8 +3832,10 @@ const _runtime = {
 
     const rows = Array.from(body.querySelectorAll('.mirror-table-row'))
     rows.sort((a, b) => {
-      const aVal = a.dataset[field] || a.querySelector('[data-field="' + field + '"]')?.textContent || ''
-      const bVal = b.dataset[field] || b.querySelector('[data-field="' + field + '"]')?.textContent || ''
+      const aVal =
+        a.dataset[field] || a.querySelector('[data-field="' + field + '"]')?.textContent || ''
+      const bVal =
+        b.dataset[field] || b.querySelector('[data-field="' + field + '"]')?.textContent || ''
 
       // Try numeric comparison first
       const aNum = parseFloat(aVal)
@@ -3693,7 +3897,7 @@ const _runtime = {
     const end = start + state.size
 
     rows.forEach((row, index) => {
-      row.style.display = (index >= start && index < end) ? '' : 'none'
+      row.style.display = index >= start && index < end ? '' : 'none'
     })
 
     // Update page info
@@ -3755,9 +3959,12 @@ const _runtime = {
 
   increment(name, options = {}) {
     // Read from __mirrorData for consistency
-    const current = (window.__mirrorData && name in window.__mirrorData)
-      ? (typeof window.__mirrorData[name] === 'number' ? window.__mirrorData[name] : 0)
-      : (this._tokens[name] || 0)
+    const current =
+      window.__mirrorData && name in window.__mirrorData
+        ? typeof window.__mirrorData[name] === 'number'
+          ? window.__mirrorData[name]
+          : 0
+        : this._tokens[name] || 0
     const step = options.step || 1
     let newVal = current + step
     if (options.max !== undefined && newVal > options.max) {
@@ -3775,9 +3982,12 @@ const _runtime = {
 
   decrement(name, options = {}) {
     // Read from __mirrorData for consistency
-    const current = (window.__mirrorData && name in window.__mirrorData)
-      ? (typeof window.__mirrorData[name] === 'number' ? window.__mirrorData[name] : 0)
-      : (this._tokens[name] || 0)
+    const current =
+      window.__mirrorData && name in window.__mirrorData
+        ? typeof window.__mirrorData[name] === 'number'
+          ? window.__mirrorData[name]
+          : 0
+        : this._tokens[name] || 0
     const step = options.step || 1
     let newVal = current - step
     if (options.min !== undefined && newVal < options.min) {
@@ -3847,7 +4057,9 @@ const _runtime = {
 
     if (typeof itemOrCollection === 'string') {
       // Called as remove('collectionName', 'key')
-      collectionName = itemOrCollection.startsWith('$') ? itemOrCollection.slice(1) : itemOrCollection
+      collectionName = itemOrCollection.startsWith('$')
+        ? itemOrCollection.slice(1)
+        : itemOrCollection
       entryKey = key
     } else if (itemOrCollection && typeof itemOrCollection === 'object') {
       // Called as remove(item) - find collection by _key
@@ -4042,7 +4254,7 @@ const _runtime = {
   bindText(el, path, expression) {
     if (!el || !path) return
     el._textBinding = path
-    el._textExpression = expression  // For complex expressions like "Hello, " + $name
+    el._textExpression = expression // For complex expressions like "Hello, " + $name
     if (!this._textBindings.has(path)) {
       this._textBindings.set(path, new Set())
     }
@@ -4384,10 +4596,12 @@ const _runtime = {
     // Walk up until we find a real parent (not display:contents or eachItem)
     let parent = el.parentElement
     try {
-      while (parent && (
-        parent.dataset.eachItem !== undefined ||
-        (typeof getComputedStyle === 'function' && getComputedStyle(parent).display === 'contents')
-      )) {
+      while (
+        parent &&
+        (parent.dataset.eachItem !== undefined ||
+          (typeof getComputedStyle === 'function' &&
+            getComputedStyle(parent).display === 'contents'))
+      ) {
         parent = parent.parentElement
       }
     } catch (e) {
@@ -4438,8 +4652,11 @@ const _runtime = {
   // Wrapper for exclusive selection (used by template actions)
   exclusive(el, state) {
     if (!el) return
-    const targetState = state ||
-      (el._stateMachine ? Object.keys(el._stateMachine.states).find(s => s !== 'default') : 'active') ||
+    const targetState =
+      state ||
+      (el._stateMachine
+        ? Object.keys(el._stateMachine.states).find(s => s !== 'default')
+        : 'active') ||
       'active'
     this.exclusiveTransition(el, targetState)
   },
@@ -4473,7 +4690,7 @@ const _runtime = {
       }
     }
     updateState()
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         if (mutation.attributeName === 'data-state') {
           updateState()
@@ -4529,7 +4746,7 @@ const _runtime = {
       }
 
       // Get state value (default to checking against current state)
-      let value = states[stateName] !== undefined ? states[stateName] : (state === stateName)
+      let value = states[stateName] !== undefined ? states[stateName] : state === stateName
       if (negate) value = !value
 
       // Apply operator
@@ -4575,8 +4792,9 @@ const _runtime = {
     // Get the root node (Shadow DOM root or document) to support both contexts
     const root = clickedElement ? clickedElement.getRootNode() : document
     // Try data-mirror-name first (from name property), then fall back to data-component
-    const target = root.querySelector(`[data-mirror-name="${targetName}"]`) ||
-                   root.querySelector(`[data-component="${targetName}"]`)
+    const target =
+      root.querySelector(`[data-mirror-name="${targetName}"]`) ||
+      root.querySelector(`[data-component="${targetName}"]`)
     if (!target) return
     if (target.parentElement) {
       Array.from(target.parentElement.children).forEach(sibling => {
@@ -4858,7 +5076,8 @@ const _runtime = {
     if (!triggerText) {
       triggerText = document.createElement('span')
       triggerText.dataset.slot = 'ValueText'
-      triggerText.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
+      triggerText.style.cssText =
+        'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
       trigger.insertBefore(triggerText, trigger.firstChild)
     }
     el._zagTriggerText = triggerText
@@ -4883,8 +5102,10 @@ const _runtime = {
 
         if (isMultiple) {
           // Multiple: Checkbox style (box with border, filled when selected)
-          check.style.cssText = 'width:15px;height:15px;border-radius:3px;border:1px solid #444;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;'
-          check.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;color:#fff;"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+          check.style.cssText =
+            'width:15px;height:15px;border-radius:3px;border:1px solid #444;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;'
+          check.innerHTML =
+            '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;color:#fff;"><polyline points="20 6 9 17 4 12"></polyline></svg>'
           // Insert at beginning for checkbox
           item.insertBefore(check, item.firstChild)
         } else {
@@ -4907,7 +5128,8 @@ const _runtime = {
         clearButton = document.createElement('button')
         clearButton.type = 'button'
         clearButton.dataset.slot = 'ClearButton'
-        clearButton.style.cssText = 'color:#666;padding:2px;border-radius:4px;cursor:pointer;display:none;background:none;border:none;flex-shrink:0;align-items:center;justify-content:center;'
+        clearButton.style.cssText =
+          'color:#666;padding:2px;border-radius:4px;cursor:pointer;display:none;background:none;border:none;flex-shrink:0;align-items:center;justify-content:center;'
         clearButton.innerHTML = _runtime._icons.x(14)
         clearButton.title = 'Auswahl löschen'
         // Insert before indicator
@@ -4922,7 +5144,7 @@ const _runtime = {
         clearButton.style.color = '#666'
         clearButton.style.background = 'none'
       })
-      clearButton.addEventListener('click', (e) => {
+      clearButton.addEventListener('click', e => {
         e.stopPropagation()
         el._zagState.value = []
         items.forEach(i => {
@@ -4950,7 +5172,8 @@ const _runtime = {
         searchInput.type = 'text'
         searchInput.placeholder = 'Suchen...'
         searchInput.dataset.slot = 'Input'
-        searchInput.style.cssText = 'background:transparent;border:none;border-bottom:1px solid #333;padding:7px 10px;color:#fff;width:100%;font-size:13px;outline:none;'
+        searchInput.style.cssText =
+          'background:transparent;border:none;border-bottom:1px solid #333;padding:7px 10px;color:#fff;width:100%;font-size:13px;outline:none;'
         content.insertBefore(searchInput, content.firstChild)
       }
 
@@ -4960,7 +5183,8 @@ const _runtime = {
         emptyElement = document.createElement('div')
         emptyElement.dataset.slot = 'Empty'
         emptyElement.textContent = 'Keine Ergebnisse'
-        emptyElement.style.cssText = 'padding:16px;text-align:center;color:#666;font-size:12px;display:none;'
+        emptyElement.style.cssText =
+          'padding:16px;text-align:center;color:#666;font-size:12px;display:none;'
         content.appendChild(emptyElement)
       }
       el._zagEmptyElement = emptyElement
@@ -4986,8 +5210,10 @@ const _runtime = {
       })
 
       // Keyboard navigation for search input
-      searchInput.addEventListener('keydown', (e) => {
-        const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(i => i.style.display !== 'none')
+      searchInput.addEventListener('keydown', e => {
+        const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(
+          i => i.style.display !== 'none'
+        )
         const count = visibleItems.length
 
         switch (e.key) {
@@ -5039,13 +5265,15 @@ const _runtime = {
       el.dispatchEvent(new CustomEvent('close', { detail: { value: el._zagState.value } }))
     }
     const fireChangeEvent = (newValue, previousValue) => {
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value: newValue, previousValue },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { value: newValue, previousValue },
+          bubbles: true,
+        })
+      )
     }
 
-    const getItemLabel = (item) => {
+    const getItemLabel = item => {
       // First check for explicit ItemText slot
       const textEl = item.querySelector('[data-slot="ItemText"]')
       if (textEl) return textEl.textContent
@@ -5121,16 +5349,17 @@ const _runtime = {
         const tag = document.createElement('span')
         tag.dataset.slot = 'Pill'
         tag.dataset.value = val
-        tag.style.cssText = 'background:#333;color:#e0e0e0;padding:2px 6px;border-radius:3px;font-size:12px;display:flex;align-items:center;gap:4px;flex-shrink:0;white-space:nowrap;'
+        tag.style.cssText =
+          'background:#333;color:#e0e0e0;padding:2px 6px;border-radius:3px;font-size:12px;display:flex;align-items:center;gap:4px;flex-shrink:0;white-space:nowrap;'
         tag.textContent = label
 
         const removeBtn = document.createElement('span')
         removeBtn.dataset.slot = 'PillRemove'
         removeBtn.style.cssText = 'color:#888;cursor:pointer;display:flex;'
         removeBtn.innerHTML = _runtime._icons.x(12)
-        removeBtn.addEventListener('mouseenter', () => removeBtn.style.color = '#fff')
-        removeBtn.addEventListener('mouseleave', () => removeBtn.style.color = '#888')
-        removeBtn.addEventListener('click', (e) => {
+        removeBtn.addEventListener('mouseenter', () => (removeBtn.style.color = '#fff'))
+        removeBtn.addEventListener('mouseleave', () => (removeBtn.style.color = '#888'))
+        removeBtn.addEventListener('click', e => {
           e.stopPropagation()
           const idx = el._zagState.value.indexOf(val)
           if (idx > -1) el._zagState.value.splice(idx, 1)
@@ -5166,7 +5395,9 @@ const _runtime = {
           triggerText.style.color = '#666'
           if (clearButton) clearButton.style.display = 'none'
         } else {
-          const matchItem = Array.from(items).find(i => i.dataset.mirrorItem === el._zagState.value[0])
+          const matchItem = Array.from(items).find(
+            i => i.dataset.mirrorItem === el._zagState.value[0]
+          )
           triggerText.textContent = matchItem ? getItemLabel(matchItem) : el._zagState.value[0]
           triggerText.style.color = '#e0e0e0'
           if (clearButton) clearButton.style.display = 'flex'
@@ -5213,7 +5444,7 @@ const _runtime = {
     // TRIGGER CLICK
     // ========================================
 
-    trigger.addEventListener('click', (e) => {
+    trigger.addEventListener('click', e => {
       e.stopPropagation()
       const wasOpen = el._zagState.open
       el._zagState.open = !wasOpen
@@ -5240,7 +5471,9 @@ const _runtime = {
             }
             scrollParent = scrollParent.parentElement
           }
-          const containerRect = scrollParent ? scrollParent.getBoundingClientRect() : { bottom: viewportHeight, top: 0 }
+          const containerRect = scrollParent
+            ? scrollParent.getBoundingClientRect()
+            : { bottom: viewportHeight, top: 0 }
 
           const spaceBelow = containerRect.bottom - triggerRect.bottom
           const spaceAbove = triggerRect.top - containerRect.top
@@ -5277,7 +5510,7 @@ const _runtime = {
           searchInput.value = ''
           searchInput.focus()
           // Use 'flex' to preserve horizontal layout
-          items.forEach(item => item.style.display = 'flex')
+          items.forEach(item => (item.style.display = 'flex'))
         }
         el._zagState.highlightedIndex = 0
         this._updateZagHighlight(el, items)
@@ -5293,7 +5526,7 @@ const _runtime = {
     })
 
     // Keyboard navigation on trigger (for non-searchable selects)
-    trigger.addEventListener('keydown', (e) => {
+    trigger.addEventListener('keydown', e => {
       // When closed: open on Enter/Space/ArrowDown
       if (!el._zagState.open) {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
@@ -5304,7 +5537,9 @@ const _runtime = {
       }
 
       // When open: navigate with arrows
-      const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(i => i.style.display !== 'none')
+      const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(
+        i => i.style.display !== 'none'
+      )
       const count = visibleItems.length
 
       switch (e.key) {
@@ -5358,7 +5593,7 @@ const _runtime = {
     // CLICK OUTSIDE
     // ========================================
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', e => {
       if (el._zagState.open && !e.composedPath().includes(el)) {
         el._zagState.open = false
         content.hidden = true
@@ -5386,7 +5621,7 @@ const _runtime = {
         return
       }
 
-      item.addEventListener('click', (e) => {
+      item.addEventListener('click', e => {
         e.stopPropagation()
         const itemValue = item.dataset.mirrorItem
         const previousValue = [...el._zagState.value]
@@ -5446,7 +5681,7 @@ const _runtime = {
     // KEYBOARD NAVIGATION
     // ========================================
 
-    el.addEventListener('keydown', (e) => {
+    el.addEventListener('keydown', e => {
       if (!el._zagState.open) {
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
           e.preventDefault()
@@ -5455,7 +5690,9 @@ const _runtime = {
         return
       }
 
-      const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(i => i.style.display !== 'none')
+      const visibleItems = Array.from(content.querySelectorAll('[data-mirror-item]')).filter(
+        i => i.style.display !== 'none'
+      )
       const count = visibleItems.length
 
       switch (e.key) {
@@ -5533,7 +5770,8 @@ const _runtime = {
     const activationMode = config.machineConfig?.activationMode || 'automatic'
     const loopFocus = config.machineConfig?.loopFocus !== false
     const deselectable = config.machineConfig?.deselectable || false
-    const defaultValue = config.machineConfig?.defaultValue || config.machineConfig?.value || (config.items?.[0]?.value)
+    const defaultValue =
+      config.machineConfig?.defaultValue || config.machineConfig?.value || config.items?.[0]?.value
 
     // Initialize state
     el._tabsState = {
@@ -5595,7 +5833,8 @@ const _runtime = {
     if (indicator) {
       // Always apply structural styles
       indicator.style.position = 'absolute'
-      indicator.style.transition = 'left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease'
+      indicator.style.transition =
+        'left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease'
 
       if (hasCustomIndicator) {
         // Custom indicator with children - center content
@@ -5643,7 +5882,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const selectTab = (value) => {
+    const selectTab = value => {
       const previousValue = el._tabsState.value
 
       // Handle deselectable
@@ -5722,7 +5961,7 @@ const _runtime = {
       }
     }
 
-    const updateIndicator = (activeTrigger) => {
+    const updateIndicator = activeTrigger => {
       if (!indicator || !activeTrigger) return
 
       const isVertical = orientation === 'vertical'
@@ -5734,36 +5973,38 @@ const _runtime = {
         const indicatorRect = indicator.getBoundingClientRect()
         if (isVertical) {
           // Center vertically beside the trigger
-          const triggerCenter = (triggerRect.top - listRect.top) + (triggerRect.height / 2)
-          indicator.style.top = (triggerCenter - (indicatorRect.height / 2)) + 'px'
+          const triggerCenter = triggerRect.top - listRect.top + triggerRect.height / 2
+          indicator.style.top = triggerCenter - indicatorRect.height / 2 + 'px'
           indicator.style.left = '0'
         } else {
           // Center horizontally under the trigger
-          const triggerCenter = (triggerRect.left - listRect.left) + (triggerRect.width / 2)
-          indicator.style.left = (triggerCenter - (indicatorRect.width / 2)) + 'px'
+          const triggerCenter = triggerRect.left - listRect.left + triggerRect.width / 2
+          indicator.style.left = triggerCenter - indicatorRect.width / 2 + 'px'
           indicator.style.bottom = '0'
         }
       } else {
         // Default line indicator - stretch to trigger size
         if (isVertical) {
-          indicator.style.top = (triggerRect.top - listRect.top) + 'px'
+          indicator.style.top = triggerRect.top - listRect.top + 'px'
           indicator.style.height = triggerRect.height + 'px'
         } else {
-          indicator.style.left = (triggerRect.left - listRect.left) + 'px'
+          indicator.style.left = triggerRect.left - listRect.left + 'px'
           indicator.style.width = triggerRect.width + 'px'
         }
       }
     }
 
     const fireChangeEvent = (newValue, previousValue) => {
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value: newValue, previousValue },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { value: newValue, previousValue },
+          bubbles: true,
+        })
+      )
     }
 
     // Handle "show X [from Y]" syntax
-    const loadShowContent = (container) => {
+    const loadShowContent = container => {
       const showsTarget = container.dataset.shows
       const showsFrom = container.dataset.showsFrom
       if (!showsTarget) return
@@ -5775,7 +6016,9 @@ const _runtime = {
         loadElementFromFile(container, showsTarget, showsFrom)
       } else {
         // Try to find local element first
-        const localEl = root.querySelector ? root.querySelector('[name="' + showsTarget + '"]') : document.querySelector('[name="' + showsTarget + '"]')
+        const localEl = root.querySelector
+          ? root.querySelector('[name="' + showsTarget + '"]')
+          : document.querySelector('[name="' + showsTarget + '"]')
         if (localEl) {
           // Clone local element content into container
           container.innerHTML = ''
@@ -5846,7 +6089,7 @@ const _runtime = {
       }
     }
 
-    const loadContentFromFile = (container) => {
+    const loadContentFromFile = container => {
       const filename = container.dataset.loadFromFile
       if (!filename) return
 
@@ -5894,7 +6137,7 @@ const _runtime = {
       }
     }
 
-    const focusTrigger = (index) => {
+    const focusTrigger = index => {
       if (index >= 0 && index < triggers.length) {
         triggers[index].focus()
         el._tabsState.focusedIndex = index
@@ -5950,7 +6193,7 @@ const _runtime = {
     })
 
     // Keyboard navigation on list
-    list.addEventListener('keydown', (e) => {
+    list.addEventListener('keydown', e => {
       const isVertical = orientation === 'vertical'
       const current = el._tabsState.focusedIndex
 
@@ -6004,7 +6247,7 @@ const _runtime = {
     triggers.forEach((trigger, i) => {
       const contentValue = trigger.dataset.value
       const content = Array.from(contents).find(c => c.dataset.value === contentValue)
-      const contentId = content ? (content.id || `tabpanel-${el._zagConfig.id}-${i}`) : ''
+      const contentId = content ? content.id || `tabpanel-${el._zagConfig.id}-${i}` : ''
 
       if (content && !content.id) {
         content.id = contentId
@@ -6028,7 +6271,9 @@ const _runtime = {
     // Update indicator position after render
     requestAnimationFrame(() => {
       if (el._tabsState.value) {
-        const activeTrigger = Array.from(triggers).find(t => t.dataset.value === el._tabsState.value)
+        const activeTrigger = Array.from(triggers).find(
+          t => t.dataset.value === el._tabsState.value
+        )
         if (activeTrigger) {
           updateIndicator(activeTrigger)
         }
@@ -6048,7 +6293,8 @@ const _runtime = {
     if (!track || !thumb) return
 
     // Get config values
-    const defaultChecked = config.machineConfig?.checked || config.machineConfig?.defaultChecked || false
+    const defaultChecked =
+      config.machineConfig?.checked || config.machineConfig?.defaultChecked || false
     const isDisabled = config.machineConfig?.disabled || false
     const isReadOnly = config.machineConfig?.readOnly || false
     const isInvalid = config.machineConfig?.invalid || false
@@ -6104,8 +6350,12 @@ const _runtime = {
     const trackWidth = parseInt(track.style.width) || 36
     const thumbWidth = parseInt(thumb.style.width) || 16
     const trackPadding = parseInt(track.style.padding) || 2
-    const initialTranslate = el._switchState.checked ? (trackWidth - thumbWidth - trackPadding * 2) : 0
-    thumb.style.transform = el._switchState.checked ? `translateX(${initialTranslate}px)` : 'translateX(0)'
+    const initialTranslate = el._switchState.checked
+      ? trackWidth - thumbWidth - trackPadding * 2
+      : 0
+    thumb.style.transform = el._switchState.checked
+      ? `translateX(${initialTranslate}px)`
+      : 'translateX(0)'
 
     // Label styling - default if not set
     if (label) {
@@ -6118,7 +6368,12 @@ const _runtime = {
     // ========================================
 
     // Track if background was customized (set before runtime)
-    const trackBgCustomized = !!track.style.background && track.style.background !== '#4f46e5' && track.style.background !== '#333' && track.style.background !== 'rgb(79, 70, 229)' && track.style.background !== 'rgb(51, 51, 51)'
+    const trackBgCustomized =
+      !!track.style.background &&
+      track.style.background !== '#4f46e5' &&
+      track.style.background !== '#333' &&
+      track.style.background !== 'rgb(79, 70, 229)' &&
+      track.style.background !== 'rgb(51, 51, 51)'
 
     const updateUI = () => {
       const checked = el._switchState.checked
@@ -6135,7 +6390,7 @@ const _runtime = {
       const trackWidth = parseInt(track.style.width) || 36
       const thumbWidth = parseInt(thumb.style.width) || 16
       const padding = parseInt(track.style.padding) || 2
-      const translateX = checked ? (trackWidth - thumbWidth - padding * 2) : 0
+      const translateX = checked ? trackWidth - thumbWidth - padding * 2 : 0
 
       // Thumb transform always needed for animation
       thumb.style.transform = checked ? `translateX(${translateX}px)` : 'translateX(0)'
@@ -6154,10 +6409,12 @@ const _runtime = {
       updateUI()
 
       // Fire change event
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { checked: el._switchState.checked },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { checked: el._switchState.checked },
+          bubbles: true,
+        })
+      )
     }
 
     // ========================================
@@ -6165,13 +6422,13 @@ const _runtime = {
     // ========================================
 
     // Click to toggle
-    el.addEventListener('click', (e) => {
+    el.addEventListener('click', e => {
       e.preventDefault()
       toggle()
     })
 
     // Keyboard support
-    el.addEventListener('keydown', (e) => {
+    el.addEventListener('keydown', e => {
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
         toggle()
@@ -6311,12 +6568,14 @@ const _runtime = {
 
     const isSameDay = (a, b) => {
       if (!a || !b) return false
-      return a.getFullYear() === b.getFullYear() &&
-             a.getMonth() === b.getMonth() &&
-             a.getDate() === b.getDate()
+      return (
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+      )
     }
 
-    const isDateDisabled = (date) => {
+    const isDateDisabled = date => {
       if (minDate && date < minDate) return true
       if (maxDate && date > maxDate) return true
       return false
@@ -6506,7 +6765,7 @@ const _runtime = {
       bindCalendarEvents()
     }
 
-    const renderMonthView = (year) => {
+    const renderMonthView = year => {
       const months = []
       for (let i = 0; i < 12; i++) {
         const date = new Date(year, i, 1)
@@ -6529,7 +6788,9 @@ const _runtime = {
       `
 
       months.forEach((name, i) => {
-        const isCurrentMonth = el._datePickerState.viewDate.getMonth() === i && el._datePickerState.viewDate.getFullYear() === year
+        const isCurrentMonth =
+          el._datePickerState.viewDate.getMonth() === i &&
+          el._datePickerState.viewDate.getFullYear() === year
         html += `
           <button
             data-part="month-table-cell-trigger"
@@ -6545,7 +6806,7 @@ const _runtime = {
       bindCalendarEvents()
     }
 
-    const renderYearView = (centerYear) => {
+    const renderYearView = centerYear => {
       const startYear = centerYear - 5
       const years = []
       for (let i = 0; i < 12; i++) {
@@ -6594,10 +6855,12 @@ const _runtime = {
           selectDate(date)
         })
         btn.addEventListener('mouseenter', () => {
-          if (!btn.disabled) btn.style.background = btn.hasAttribute('data-selected') ? '#4f46e5' : '#252525'
+          if (!btn.disabled)
+            btn.style.background = btn.hasAttribute('data-selected') ? '#4f46e5' : '#252525'
         })
         btn.addEventListener('mouseleave', () => {
-          if (!btn.disabled) btn.style.background = btn.hasAttribute('data-selected') ? '#4f46e5' : 'transparent'
+          if (!btn.disabled)
+            btn.style.background = btn.hasAttribute('data-selected') ? '#4f46e5' : 'transparent'
         })
       })
 
@@ -6641,11 +6904,23 @@ const _runtime = {
       if (prevTrigger) {
         prevTrigger.addEventListener('click', () => {
           if (state.view === 'day') {
-            state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() - 1, 1)
+            state.viewDate = new Date(
+              state.viewDate.getFullYear(),
+              state.viewDate.getMonth() - 1,
+              1
+            )
           } else if (state.view === 'month') {
-            state.viewDate = new Date(state.viewDate.getFullYear() - 1, state.viewDate.getMonth(), 1)
+            state.viewDate = new Date(
+              state.viewDate.getFullYear() - 1,
+              state.viewDate.getMonth(),
+              1
+            )
           } else if (state.view === 'year') {
-            state.viewDate = new Date(state.viewDate.getFullYear() - 12, state.viewDate.getMonth(), 1)
+            state.viewDate = new Date(
+              state.viewDate.getFullYear() - 12,
+              state.viewDate.getMonth(),
+              1
+            )
           }
           renderCalendar()
         })
@@ -6654,11 +6929,23 @@ const _runtime = {
       if (nextTrigger) {
         nextTrigger.addEventListener('click', () => {
           if (state.view === 'day') {
-            state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + 1, 1)
+            state.viewDate = new Date(
+              state.viewDate.getFullYear(),
+              state.viewDate.getMonth() + 1,
+              1
+            )
           } else if (state.view === 'month') {
-            state.viewDate = new Date(state.viewDate.getFullYear() + 1, state.viewDate.getMonth(), 1)
+            state.viewDate = new Date(
+              state.viewDate.getFullYear() + 1,
+              state.viewDate.getMonth(),
+              1
+            )
           } else if (state.view === 'year') {
-            state.viewDate = new Date(state.viewDate.getFullYear() + 12, state.viewDate.getMonth(), 1)
+            state.viewDate = new Date(
+              state.viewDate.getFullYear() + 12,
+              state.viewDate.getMonth(),
+              1
+            )
           }
           renderCalendar()
         })
@@ -6669,7 +6956,7 @@ const _runtime = {
     // DATE SELECTION
     // ========================================
 
-    const selectDate = (date) => {
+    const selectDate = date => {
       const state = el._datePickerState
 
       if (selectionMode === 'single') {
@@ -6698,19 +6985,26 @@ const _runtime = {
       renderCalendar()
 
       // Fire change event
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: {
-          value: state.selectedDates.map(d => d.toISOString().split('T')[0]),
-          dates: state.selectedDates,
-        },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: {
+            value: state.selectedDates.map(d => d.toISOString().split('T')[0]),
+            dates: state.selectedDates,
+          },
+          bubbles: true,
+        })
+      )
 
       // Close popup if configured
       if (closeOnSelect && !isInline && selectionMode === 'single') {
         closeCalendar()
       }
-      if (closeOnSelect && !isInline && selectionMode === 'range' && state.selectedDates.length === 2) {
+      if (
+        closeOnSelect &&
+        !isInline &&
+        selectionMode === 'range' &&
+        state.selectedDates.length === 2
+      ) {
         closeCalendar()
       }
     }
@@ -6758,7 +7052,7 @@ const _runtime = {
     let lastToggleTime = 0
 
     // Toggle calendar helper with debounce
-    const toggleCalendar = (e) => {
+    const toggleCalendar = e => {
       const now = Date.now()
       if (now - lastToggleTime < 100) return // Debounce 100ms
       lastToggleTime = now
@@ -6778,7 +7072,7 @@ const _runtime = {
     // Using both click and pointerdown ensures compatibility with
     // different browsers, Shadow DOM, and automation tools
     trigger.addEventListener('click', toggleCalendar)
-    trigger.addEventListener('pointerdown', (e) => {
+    trigger.addEventListener('pointerdown', e => {
       // Only handle primary button (left click)
       if (e.button !== 0) return
       toggleCalendar(e)
@@ -6786,7 +7080,7 @@ const _runtime = {
 
     // Input click (also opens) - same robust handling
     let lastInputOpenTime = 0
-    const openFromInput = (e) => {
+    const openFromInput = e => {
       const now = Date.now()
       if (now - lastInputOpenTime < 100) return
       lastInputOpenTime = now
@@ -6800,20 +7094,20 @@ const _runtime = {
       }
     }
     input.addEventListener('click', openFromInput)
-    input.addEventListener('pointerdown', (e) => {
+    input.addEventListener('pointerdown', e => {
       if (e.button !== 0) return
       openFromInput(e)
     })
 
     // Click outside to close (use composedPath for Shadow DOM compatibility)
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', e => {
       if (el._datePickerState.open && !e.composedPath().includes(el)) {
         closeCalendar()
       }
     })
 
     // Keyboard navigation
-    el.addEventListener('keydown', (e) => {
+    el.addEventListener('keydown', e => {
       if (e.key === 'Escape' && el._datePickerState.open) {
         closeCalendar()
         trigger.focus()
@@ -6888,7 +7182,7 @@ const _runtime = {
       day: '',
       month: '',
       year: '',
-      focusedSegment: null
+      focusedSegment: null,
     }
 
     // Parse initial value
@@ -6974,7 +7268,7 @@ const _runtime = {
       segment.value = el._dateInputState[type] || ''
 
       // Handle input
-      segment.addEventListener('input', (e) => {
+      segment.addEventListener('input', e => {
         let val = segment.value.replace(/D/g, '')
         if (val.length > maxLength) {
           val = val.slice(0, maxLength)
@@ -7020,7 +7314,7 @@ const _runtime = {
       })
 
       // Handle keyboard
-      segment.addEventListener('keydown', (e) => {
+      segment.addEventListener('keydown', e => {
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
           e.preventDefault()
           let val = parseInt(segment.value || '0', 10)
@@ -7034,15 +7328,19 @@ const _runtime = {
           emitChange()
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
           const currentPos = segment.selectionStart
-          const targetSibling = e.key === 'ArrowLeft'
-            ? segment.previousElementSibling?.previousElementSibling
-            : segment.nextElementSibling?.nextElementSibling
+          const targetSibling =
+            e.key === 'ArrowLeft'
+              ? segment.previousElementSibling?.previousElementSibling
+              : segment.nextElementSibling?.nextElementSibling
 
           if (targetSibling && targetSibling.dataset.slot === 'Segment') {
             if (e.key === 'ArrowLeft' && currentPos === 0) {
               e.preventDefault()
               targetSibling.focus()
-              targetSibling.setSelectionRange(targetSibling.value.length, targetSibling.value.length)
+              targetSibling.setSelectionRange(
+                targetSibling.value.length,
+                targetSibling.value.length
+              )
             } else if (e.key === 'ArrowRight' && currentPos === segment.value.length) {
               e.preventDefault()
               targetSibling.focus()
@@ -7088,7 +7386,7 @@ const _runtime = {
     const segmentConfigs = {
       day: { maxLength: 2, placeholder: 'TT', min: 1, max: 31 },
       month: { maxLength: 2, placeholder: 'MM', min: 1, max: 12 },
-      year: { maxLength: 4, placeholder: 'JJJJ', min: 1900, max: 2100 }
+      year: { maxLength: 4, placeholder: 'JJJJ', min: 1900, max: 2100 },
     }
 
     segments.forEach((type, index) => {
@@ -7118,10 +7416,12 @@ const _runtime = {
 
     const emitChange = () => {
       const date = getDateValue()
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value: date, segments: { ...el._dateInputState } },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { value: date, segments: { ...el._dateInputState } },
+          bubbles: true,
+        })
+      )
     }
 
     // ========================================
@@ -7165,7 +7465,12 @@ const _runtime = {
     const min = config.min !== undefined ? Number(config.min) : -Infinity
     const max = config.max !== undefined ? Number(config.max) : Infinity
     const step = config.step !== undefined ? Number(config.step) : 1
-    const defaultValue = config.defaultValue !== undefined ? Number(config.defaultValue) : (config.value !== undefined ? Number(config.value) : 0)
+    const defaultValue =
+      config.defaultValue !== undefined
+        ? Number(config.defaultValue)
+        : config.value !== undefined
+          ? Number(config.value)
+          : 0
     const isDisabled = config.disabled === true
     const isReadOnly = config.readOnly === true
     const allowMouseWheel = config.allowMouseWheel !== false
@@ -7173,7 +7478,7 @@ const _runtime = {
 
     // State
     el._numberInputState = {
-      value: defaultValue
+      value: defaultValue,
     }
 
     // ========================================
@@ -7214,7 +7519,7 @@ const _runtime = {
     setDefault(input, 'outline', 'none')
 
     // Button styles helper
-    const styleButton = (btn) => {
+    const styleButton = btn => {
       if (!btn) return
       setDefault(btn, 'display', 'flex')
       setDefault(btn, 'alignItems', 'center')
@@ -7235,9 +7540,9 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const clamp = (value) => Math.min(max, Math.max(min, value))
+    const clamp = value => Math.min(max, Math.max(min, value))
 
-    const formatValue = (value) => {
+    const formatValue = value => {
       if (config.formatOptions) {
         try {
           const locale = config.locale || 'en-US'
@@ -7249,7 +7554,7 @@ const _runtime = {
       return String(value)
     }
 
-    const parseValue = (str) => {
+    const parseValue = str => {
       const cleaned = str.replace(/[^\d.\-]/g, '')
       const num = parseFloat(cleaned)
       return isNaN(num) ? el._numberInputState.value : num
@@ -7275,7 +7580,7 @@ const _runtime = {
       }
     }
 
-    const setValue = (newValue) => {
+    const setValue = newValue => {
       const clamped = clamp(newValue)
       if (clamped !== el._numberInputState.value) {
         el._numberInputState.value = clamped
@@ -7344,7 +7649,7 @@ const _runtime = {
       }
     })
 
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', e => {
       if (e.key === 'ArrowUp') {
         e.preventDefault()
         setValue(el._numberInputState.value + step)
@@ -7358,16 +7663,20 @@ const _runtime = {
 
     // Mouse wheel
     if (allowMouseWheel) {
-      input.addEventListener('wheel', (e) => {
-        if (document.activeElement === input && !isDisabled && !isReadOnly) {
-          e.preventDefault()
-          if (e.deltaY < 0) {
-            setValue(el._numberInputState.value + step)
-          } else {
-            setValue(el._numberInputState.value - step)
+      input.addEventListener(
+        'wheel',
+        e => {
+          if (document.activeElement === input && !isDisabled && !isReadOnly) {
+            e.preventDefault()
+            if (e.deltaY < 0) {
+              setValue(el._numberInputState.value + step)
+            } else {
+              setValue(el._numberInputState.value - step)
+            }
           }
-        }
-      }, { passive: false })
+        },
+        { passive: false }
+      )
     }
 
     // Focus styling
@@ -7436,7 +7745,7 @@ const _runtime = {
     // State
     el._tagsInputState = {
       tags: Array.isArray(defaultValue) ? [...defaultValue] : [],
-      highlightedIndex: -1
+      highlightedIndex: -1,
     }
 
     // ========================================
@@ -7506,7 +7815,8 @@ const _runtime = {
         const deleteBtn = document.createElement('button')
         deleteBtn.dataset.slot = 'TagDeleteTrigger'
         deleteBtn.type = 'button'
-        deleteBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+        deleteBtn.innerHTML =
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
         deleteBtn.style.cssText = `
           display: flex;
           align-items: center;
@@ -7528,7 +7838,7 @@ const _runtime = {
           deleteBtn.style.background = 'transparent'
           deleteBtn.style.color = '#888'
         })
-        deleteBtn.addEventListener('click', (e) => {
+        deleteBtn.addEventListener('click', e => {
           e.stopPropagation()
           removeTag(index)
         })
@@ -7553,7 +7863,7 @@ const _runtime = {
       input.placeholder = el._tagsInputState.tags.length > 0 ? '' : placeholder
     }
 
-    const addTag = (value) => {
+    const addTag = value => {
       const trimmed = value.trim()
       if (!trimmed) return false
 
@@ -7569,15 +7879,19 @@ const _runtime = {
 
       el._tagsInputState.tags.push(trimmed)
       renderTags()
-      el.dispatchEvent(new CustomEvent('change', { detail: { tags: [...el._tagsInputState.tags] } }))
+      el.dispatchEvent(
+        new CustomEvent('change', { detail: { tags: [...el._tagsInputState.tags] } })
+      )
       return true
     }
 
-    const removeTag = (index) => {
+    const removeTag = index => {
       if (index < 0 || index >= el._tagsInputState.tags.length) return
       el._tagsInputState.tags.splice(index, 1)
       renderTags()
-      el.dispatchEvent(new CustomEvent('change', { detail: { tags: [...el._tagsInputState.tags] } }))
+      el.dispatchEvent(
+        new CustomEvent('change', { detail: { tags: [...el._tagsInputState.tags] } })
+      )
     }
 
     // ========================================
@@ -7592,7 +7906,7 @@ const _runtime = {
     })
 
     // Input keydown
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', e => {
       if (isDisabled || isReadOnly) return
 
       if (e.key === 'Enter' || e.key === delimiter) {
@@ -7600,7 +7914,11 @@ const _runtime = {
         if (addTag(input.value)) {
           input.value = ''
         }
-      } else if (e.key === 'Backspace' && input.value === '' && el._tagsInputState.tags.length > 0) {
+      } else if (
+        e.key === 'Backspace' &&
+        input.value === '' &&
+        el._tagsInputState.tags.length > 0
+      ) {
         removeTag(el._tagsInputState.tags.length - 1)
       }
     })
@@ -7618,7 +7936,7 @@ const _runtime = {
 
     // Paste handling
     if (addOnPaste) {
-      input.addEventListener('paste', (e) => {
+      input.addEventListener('paste', e => {
         if (isDisabled || isReadOnly) return
         const pasteData = e.clipboardData?.getData('text') || ''
         if (pasteData.includes(delimiter)) {
@@ -7690,7 +8008,7 @@ const _runtime = {
     // State
     el._editableState = {
       value: defaultValue,
-      editing: false
+      editing: false,
     }
 
     // ========================================
@@ -7809,7 +8127,7 @@ const _runtime = {
     }
 
     // Input events
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', e => {
       if (e.key === 'Enter' && (submitMode === 'enter' || submitMode === 'both')) {
         e.preventDefault()
         exitEditMode(true)
@@ -7872,12 +8190,13 @@ const _runtime = {
     const isReadOnly = config.readOnly === true
     const isInvalid = config.invalid === true
     const isRequired = config.required === true
-    const isIndeterminate = config.defaultChecked === 'indeterminate' || config.indeterminate === true
+    const isIndeterminate =
+      config.defaultChecked === 'indeterminate' || config.indeterminate === true
 
     // State
     el._checkboxState = {
       checked: isIndeterminate ? 'indeterminate' : defaultChecked,
-      focused: false
+      focused: false,
     }
 
     // ========================================
@@ -7940,8 +8259,11 @@ const _runtime = {
       const isIndet = el._checkboxState.checked === 'indeterminate'
 
       // Update data attributes
-      el.setAttribute('data-state', isIndet ? 'indeterminate' : (isChecked ? 'checked' : 'unchecked'))
-      control.setAttribute('data-state', isIndet ? 'indeterminate' : (isChecked ? 'checked' : 'unchecked'))
+      el.setAttribute('data-state', isIndet ? 'indeterminate' : isChecked ? 'checked' : 'unchecked')
+      control.setAttribute(
+        'data-state',
+        isIndet ? 'indeterminate' : isChecked ? 'checked' : 'unchecked'
+      )
 
       // Update hidden input
       if (hiddenInput) {
@@ -7954,7 +8276,11 @@ const _runtime = {
         if (!control.style.background || control.style.background === 'transparent') {
           control.style.background = '#5BA8F5'
         }
-        if (!control.style.borderColor || control.style.borderColor === '#555' || control.style.borderColor === 'rgb(85, 85, 85)') {
+        if (
+          !control.style.borderColor ||
+          control.style.borderColor === '#555' ||
+          control.style.borderColor === 'rgb(85, 85, 85)'
+        ) {
           control.style.borderColor = '#5BA8F5'
         }
         if (indicator) {
@@ -7989,10 +8315,12 @@ const _runtime = {
       updateDisplay()
 
       // Dispatch change event
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { checked: el._checkboxState.checked },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { checked: el._checkboxState.checked },
+          bubbles: true,
+        })
+      )
     }
 
     // ========================================
@@ -8000,14 +8328,14 @@ const _runtime = {
     // ========================================
 
     // Click handler (on root label)
-    el.addEventListener('click', (e) => {
+    el.addEventListener('click', e => {
       if (e.target === hiddenInput) return // Let native input handle its clicks
       e.preventDefault()
       toggle()
     })
 
     // Keyboard handler
-    el.addEventListener('keydown', (e) => {
+    el.addEventListener('keydown', e => {
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
         toggle()
@@ -8105,7 +8433,11 @@ const _runtime = {
 
     // State
     el._accordionState = {
-      expandedItems: Array.isArray(defaultValue) ? [...defaultValue] : (defaultValue ? [defaultValue] : [])
+      expandedItems: Array.isArray(defaultValue)
+        ? [...defaultValue]
+        : defaultValue
+          ? [defaultValue]
+          : [],
     }
 
     // ========================================
@@ -8127,7 +8459,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const isExpanded = (value) => el._accordionState.expandedItems.includes(value)
+    const isExpanded = value => el._accordionState.expandedItems.includes(value)
 
     const updateItemState = (item, value, expanded) => {
       const trigger = item.querySelector('[data-slot="ItemTrigger"]')
@@ -8158,7 +8490,7 @@ const _runtime = {
       }
     }
 
-    const toggle = (value) => {
+    const toggle = value => {
       if (isDisabled) return
 
       const currentlyExpanded = isExpanded(value)
@@ -8166,7 +8498,9 @@ const _runtime = {
       if (currentlyExpanded) {
         // Collapse
         if (collapsible || el._accordionState.expandedItems.length > 1) {
-          el._accordionState.expandedItems = el._accordionState.expandedItems.filter(v => v !== value)
+          el._accordionState.expandedItems = el._accordionState.expandedItems.filter(
+            v => v !== value
+          )
         }
       } else {
         // Expand
@@ -8184,10 +8518,16 @@ const _runtime = {
       })
 
       // Dispatch change event
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value: multiple ? [...el._accordionState.expandedItems] : (el._accordionState.expandedItems[0] || null) },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: {
+            value: multiple
+              ? [...el._accordionState.expandedItems]
+              : el._accordionState.expandedItems[0] || null,
+          },
+          bubbles: true,
+        })
+      )
     }
 
     // ========================================
@@ -8269,7 +8609,7 @@ const _runtime = {
     // KEYBOARD NAVIGATION
     // ========================================
 
-    el.addEventListener('keydown', (e) => {
+    el.addEventListener('keydown', e => {
       const triggers = Array.from(el.querySelectorAll('[data-slot="ItemTrigger"]:not([disabled])'))
       const currentIndex = triggers.indexOf(document.activeElement)
 
@@ -8343,8 +8683,12 @@ const _runtime = {
 
     // State
     el._listboxState = {
-      selectedValues: Array.isArray(defaultValue) ? [...defaultValue] : (defaultValue ? [defaultValue] : []),
-      highlightedValue: null
+      selectedValues: Array.isArray(defaultValue)
+        ? [...defaultValue]
+        : defaultValue
+          ? [defaultValue]
+          : [],
+      highlightedValue: null,
     }
 
     // ========================================
@@ -8374,7 +8718,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const isSelected = (value) => el._listboxState.selectedValues.includes(value)
+    const isSelected = value => el._listboxState.selectedValues.includes(value)
 
     const updateItemState = (item, value, selected, highlighted) => {
       const indicator = item.querySelector('[data-slot="ItemIndicator"]')
@@ -8420,13 +8764,19 @@ const _runtime = {
       })
 
       // Dispatch change event
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value: multiple ? [...el._listboxState.selectedValues] : (el._listboxState.selectedValues[0] || null) },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: {
+            value: multiple
+              ? [...el._listboxState.selectedValues]
+              : el._listboxState.selectedValues[0] || null,
+          },
+          bubbles: true,
+        })
+      )
     }
 
-    const highlight = (value) => {
+    const highlight = value => {
       el._listboxState.highlightedValue = value
 
       items.forEach(item => {
@@ -8520,7 +8870,7 @@ const _runtime = {
     // KEYBOARD NAVIGATION
     // ========================================
 
-    el.addEventListener('keydown', (e) => {
+    el.addEventListener('keydown', e => {
       const enabledItems = Array.from(items).filter(item => !item.hasAttribute('data-disabled'))
       const currentIndex = enabledItems.indexOf(document.activeElement)
 
@@ -8540,7 +8890,10 @@ const _runtime = {
         case 'ArrowLeft':
           e.preventDefault()
           if (loopFocus) {
-            nextIndex = currentIndex === -1 ? enabledItems.length - 1 : (currentIndex - 1 + enabledItems.length) % enabledItems.length
+            nextIndex =
+              currentIndex === -1
+                ? enabledItems.length - 1
+                : (currentIndex - 1 + enabledItems.length) % enabledItems.length
           } else {
             nextIndex = Math.max(currentIndex - 1, 0)
           }
@@ -8572,10 +8925,12 @@ const _runtime = {
                 const value = item.dataset.value
                 updateItemState(item, value, true, el._listboxState.highlightedValue === value)
               })
-              el.dispatchEvent(new CustomEvent('change', {
-                detail: { value: [...el._listboxState.selectedValues] },
-                bubbles: true
-              }))
+              el.dispatchEvent(
+                new CustomEvent('change', {
+                  detail: { value: [...el._listboxState.selectedValues] },
+                  bubbles: true,
+                })
+              )
             }
           }
           break
@@ -8641,9 +8996,15 @@ const _runtime = {
     el._selectState = {
       isOpen: false,
       selectedValues: multiple
-        ? (Array.isArray(defaultValue) ? [...defaultValue] : (defaultValue ? [defaultValue] : []))
-        : (defaultValue ? [defaultValue] : []),
-      highlightedIndex: -1
+        ? Array.isArray(defaultValue)
+          ? [...defaultValue]
+          : defaultValue
+            ? [defaultValue]
+            : []
+        : defaultValue
+          ? [defaultValue]
+          : [],
+      highlightedIndex: -1,
     }
 
     // ========================================
@@ -8716,7 +9077,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const isSelected = (value) => el._selectState.selectedValues.includes(value)
+    const isSelected = value => el._selectState.selectedValues.includes(value)
 
     const updateTriggerText = () => {
       if (!triggerText) return
@@ -8733,7 +9094,8 @@ const _runtime = {
         triggerText.style.color = '#e0e0e0'
       } else {
         const item = items.find(i => i.dataset.value === selected[0])
-        triggerText.textContent = item?.querySelector('[data-slot="ItemText"]')?.textContent || selected[0]
+        triggerText.textContent =
+          item?.querySelector('[data-slot="ItemText"]')?.textContent || selected[0]
         triggerText.style.color = '#e0e0e0'
       }
     }
@@ -8804,7 +9166,7 @@ const _runtime = {
       }
     }
 
-    const selectItem = (value) => {
+    const selectItem = value => {
       if (multiple) {
         if (isSelected(value)) {
           el._selectState.selectedValues = el._selectState.selectedValues.filter(v => v !== value)
@@ -8818,10 +9180,16 @@ const _runtime = {
       updateTriggerText()
       updateItemStates()
 
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value: multiple ? [...el._selectState.selectedValues] : el._selectState.selectedValues[0] },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: {
+            value: multiple
+              ? [...el._selectState.selectedValues]
+              : el._selectState.selectedValues[0],
+          },
+          bubbles: true,
+        })
+      )
 
       if (!multiple && closeOnSelect) {
         close()
@@ -8864,7 +9232,7 @@ const _runtime = {
 
       // Click handler
       if (!isItemDisabled) {
-        item.addEventListener('click', (e) => {
+        item.addEventListener('click', e => {
           e.stopPropagation()
           selectItem(item.dataset.value)
         })
@@ -8882,7 +9250,7 @@ const _runtime = {
     // ========================================
 
     if (!isDisabled) {
-      trigger.addEventListener('click', (e) => {
+      trigger.addEventListener('click', e => {
         e.stopPropagation()
         toggle()
       })
@@ -8904,7 +9272,7 @@ const _runtime = {
     // KEYBOARD NAVIGATION
     // ========================================
 
-    el.addEventListener('keydown', (e) => {
+    el.addEventListener('keydown', e => {
       const enabledItems = [...items].filter(i => !i.hasAttribute('data-disabled'))
       const currentIndex = el._selectState.highlightedIndex
       const enabledIndices = enabledItems.map(i => [...items].indexOf(i))
@@ -8980,7 +9348,7 @@ const _runtime = {
     // CLICK OUTSIDE TO CLOSE
     // ========================================
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', e => {
       if (el._selectState.isOpen && !e.composedPath().includes(el)) {
         close()
       }
@@ -9040,7 +9408,7 @@ const _runtime = {
     // State
     el._radioState = {
       selectedValue: defaultValue,
-      focusedIndex: -1
+      focusedIndex: -1,
     }
 
     // ========================================
@@ -9062,7 +9430,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const isSelected = (value) => el._radioState.selectedValue === value
+    const isSelected = value => el._radioState.selectedValue === value
 
     const updateItemStates = () => {
       items.forEach((item, index) => {
@@ -9086,7 +9454,7 @@ const _runtime = {
       })
     }
 
-    const selectItem = (value) => {
+    const selectItem = value => {
       if (isDisabled || isReadOnly) return
 
       el._radioState.selectedValue = value
@@ -9097,10 +9465,12 @@ const _runtime = {
         updateItemStates()
       }
 
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { value },
+          bubbles: true,
+        })
+      )
     }
 
     // ========================================
@@ -9198,7 +9568,7 @@ const _runtime = {
     // Update states based on selection
     const originalUpdateItemStates = updateItemStates
     const enhancedUpdateItemStates = () => {
-      items.forEach((item) => {
+      items.forEach(item => {
         const value = item.dataset.value
         const selected = isSelected(value)
         const control = item.querySelector('[data-slot="ItemControl"]')
@@ -9242,7 +9612,7 @@ const _runtime = {
 
     el.setAttribute('tabindex', isDisabled ? '-1' : '0')
 
-    el.addEventListener('keydown', (e) => {
+    el.addEventListener('keydown', e => {
       const enabledItems = [...items].filter(i => !i.hasAttribute('data-disabled'))
       if (enabledItems.length === 0) return
 
@@ -9344,7 +9714,7 @@ const _runtime = {
     // State
     el._sliderState = {
       value: defaultValue,
-      isDragging: false
+      isDragging: false,
     }
 
     // ========================================
@@ -9414,11 +9784,11 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const getPercent = (value) => ((value - min) / (max - min)) * 100
+    const getPercent = value => ((value - min) / (max - min)) * 100
 
-    const clamp = (value) => Math.min(max, Math.max(min, value))
+    const clamp = value => Math.min(max, Math.max(min, value))
 
-    const roundToStep = (value) => {
+    const roundToStep = value => {
       const steps = Math.round((value - min) / step)
       return clamp(min + steps * step)
     }
@@ -9450,10 +9820,12 @@ const _runtime = {
       if (oldValue !== el._sliderState.value) {
         updateUI()
         if (dispatchEvent) {
-          el.dispatchEvent(new CustomEvent('change', {
-            detail: { value: el._sliderState.value },
-            bubbles: true
-          }))
+          el.dispatchEvent(
+            new CustomEvent('change', {
+              detail: { value: el._sliderState.value },
+              bubbles: true,
+            })
+          )
         }
       }
     }
@@ -9477,7 +9849,7 @@ const _runtime = {
     // ========================================
 
     if (!isDisabled && !isReadOnly) {
-      const startDrag = (e) => {
+      const startDrag = e => {
         e.preventDefault()
         el._sliderState.isDragging = true
         thumb.style.cursor = 'grabbing'
@@ -9488,7 +9860,7 @@ const _runtime = {
         setValue(getValueFromPosition(clientX, clientY))
       }
 
-      const moveDrag = (e) => {
+      const moveDrag = e => {
         if (!el._sliderState.isDragging) return
 
         const clientX = e.touches ? e.touches[0].clientX : e.clientX
@@ -9503,10 +9875,12 @@ const _runtime = {
         thumb.style.cursor = 'grab'
         document.body.style.userSelect = ''
 
-        el.dispatchEvent(new CustomEvent('changeend', {
-          detail: { value: el._sliderState.value },
-          bubbles: true
-        }))
+        el.dispatchEvent(
+          new CustomEvent('changeend', {
+            detail: { value: el._sliderState.value },
+            bubbles: true,
+          })
+        )
       }
 
       // Track click
@@ -9535,7 +9909,10 @@ const _runtime = {
             cleanupObserver.disconnect()
           }
         })
-        cleanupObserver.observe(el.parentElement || document.body, { childList: true, subtree: true })
+        cleanupObserver.observe(el.parentElement || document.body, {
+          childList: true,
+          subtree: true,
+        })
       }
 
       // Thumb hover
@@ -9555,7 +9932,7 @@ const _runtime = {
     // KEYBOARD NAVIGATION
     // ========================================
 
-    thumb.addEventListener('keydown', (e) => {
+    thumb.addEventListener('keydown', e => {
       if (isDisabled || isReadOnly) return
 
       let newValue = el._sliderState.value
@@ -9646,7 +10023,7 @@ const _runtime = {
     el._sliderState = {
       values: [Number(defaultValue[0]), Number(defaultValue[1])],
       activeThumb: null,
-      isDragging: false
+      isDragging: false,
     }
 
     // Create second thumb by cloning the template
@@ -9725,11 +10102,11 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const getPercent = (value) => ((value - min) / (max - min)) * 100
+    const getPercent = value => ((value - min) / (max - min)) * 100
 
     const clamp = (value, minVal, maxVal) => Math.min(maxVal, Math.max(minVal, value))
 
-    const roundToStep = (value) => {
+    const roundToStep = value => {
       const steps = Math.round((value - min) / step)
       return clamp(min + steps * step, min, max)
     }
@@ -9744,14 +10121,14 @@ const _runtime = {
         thumbs[1].style.left = percent1 + '%'
         if (range) {
           range.style.left = percent0 + '%'
-          range.style.width = (percent1 - percent0) + '%'
+          range.style.width = percent1 - percent0 + '%'
         }
       } else {
         thumbs[0].style.bottom = percent0 + '%'
         thumbs[1].style.bottom = percent1 + '%'
         if (range) {
           range.style.bottom = percent0 + '%'
-          range.style.height = (percent1 - percent0) + '%'
+          range.style.height = percent1 - percent0 + '%'
         }
       }
 
@@ -9788,10 +10165,12 @@ const _runtime = {
       if (oldValues[0] !== v0 || oldValues[1] !== v1) {
         updateUI()
         if (dispatchEvent) {
-          el.dispatchEvent(new CustomEvent('change', {
-            detail: { value: el._sliderState.values },
-            bubbles: true
-          }))
+          el.dispatchEvent(
+            new CustomEvent('change', {
+              detail: { value: el._sliderState.values },
+              bubbles: true,
+            })
+          )
         }
       }
     }
@@ -9810,7 +10189,7 @@ const _runtime = {
       return min + percent * (max - min)
     }
 
-    const getClosestThumbIndex = (value) => {
+    const getClosestThumbIndex = value => {
       const [v0, v1] = el._sliderState.values
       const dist0 = Math.abs(value - v0)
       const dist1 = Math.abs(value - v1)
@@ -9842,7 +10221,7 @@ const _runtime = {
         setValues(newValues)
       }
 
-      const moveDrag = (e) => {
+      const moveDrag = e => {
         if (!el._sliderState.isDragging) return
         e.preventDefault()
 
@@ -9866,27 +10245,33 @@ const _runtime = {
           }
           el._sliderState.activeThumb = null
 
-          el.dispatchEvent(new CustomEvent('changeend', {
-            detail: { value: el._sliderState.values },
-            bubbles: true
-          }))
+          el.dispatchEvent(
+            new CustomEvent('changeend', {
+              detail: { value: el._sliderState.values },
+              bubbles: true,
+            })
+          )
         }
       }
 
       // Track click
-      track.addEventListener('mousedown', (e) => startDrag(e))
-      track.addEventListener('touchstart', (e) => startDrag(e), { passive: false })
+      track.addEventListener('mousedown', e => startDrag(e))
+      track.addEventListener('touchstart', e => startDrag(e), { passive: false })
 
       // Thumb-specific drag
       thumbs.forEach((thumb, index) => {
-        thumb.addEventListener('mousedown', (e) => {
+        thumb.addEventListener('mousedown', e => {
           e.stopPropagation()
           startDrag(e, index)
         })
-        thumb.addEventListener('touchstart', (e) => {
-          e.stopPropagation()
-          startDrag(e, index)
-        }, { passive: false })
+        thumb.addEventListener(
+          'touchstart',
+          e => {
+            e.stopPropagation()
+            startDrag(e, index)
+          },
+          { passive: false }
+        )
 
         thumb.addEventListener('mouseenter', () => {
           if (!el._sliderState.isDragging) {
@@ -9922,7 +10307,10 @@ const _runtime = {
             cleanupObserver.disconnect()
           }
         })
-        cleanupObserver.observe(el.parentElement || document.body, { childList: true, subtree: true })
+        cleanupObserver.observe(el.parentElement || document.body, {
+          childList: true,
+          subtree: true,
+        })
       }
     }
 
@@ -9931,7 +10319,7 @@ const _runtime = {
     // ========================================
 
     thumbs.forEach((thumb, index) => {
-      thumb.addEventListener('keydown', (e) => {
+      thumb.addEventListener('keydown', e => {
         if (isDisabled || isReadOnly) return
 
         const newValues = [...el._sliderState.values]
@@ -10014,7 +10402,7 @@ const _runtime = {
     // State
     el._pinInputState = {
       values: Array(length).fill(''),
-      focusedIndex: -1
+      focusedIndex: -1,
     }
 
     // Initialize with default value if provided
@@ -10094,7 +10482,7 @@ const _runtime = {
       updateHiddenInput()
     }
 
-    const focusInput = (index) => {
+    const focusInput = index => {
       if (index >= 0 && index < inputs.length) {
         inputs[index].focus()
         inputs[index].select()
@@ -10102,23 +10490,27 @@ const _runtime = {
     }
 
     const dispatchChange = () => {
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value: getValue(), values: [...el._pinInputState.values] },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { value: getValue(), values: [...el._pinInputState.values] },
+          bubbles: true,
+        })
+      )
     }
 
     const dispatchComplete = () => {
       const value = getValue()
       if (value.length === length && !el._pinInputState.values.includes('')) {
-        el.dispatchEvent(new CustomEvent('complete', {
-          detail: { value, values: [...el._pinInputState.values] },
-          bubbles: true
-        }))
+        el.dispatchEvent(
+          new CustomEvent('complete', {
+            detail: { value, values: [...el._pinInputState.values] },
+            bubbles: true,
+          })
+        )
       }
     }
 
-    const isValidChar = (char) => {
+    const isValidChar = char => {
       if (type === 'numeric') return /^[0-9]$/.test(char)
       if (type === 'alphabetic') return /^[a-zA-Z]$/.test(char)
       if (type === 'alphanumeric') return /^[a-zA-Z0-9]$/.test(char)
@@ -10147,12 +10539,15 @@ const _runtime = {
       })
 
       // Input handling
-      input.addEventListener('input', (e) => {
+      input.addEventListener('input', e => {
         const value = e.target.value
 
         if (value.length > 1) {
           // Handle paste
-          const chars = value.split('').filter(isValidChar).slice(0, length - index)
+          const chars = value
+            .split('')
+            .filter(isValidChar)
+            .slice(0, length - index)
           chars.forEach((char, i) => {
             if (index + i < length) {
               el._pinInputState.values[index + i] = char
@@ -10181,7 +10576,7 @@ const _runtime = {
       })
 
       // Keyboard navigation
-      input.addEventListener('keydown', (e) => {
+      input.addEventListener('keydown', e => {
         switch (e.key) {
           case 'Backspace':
             e.preventDefault()
@@ -10228,7 +10623,7 @@ const _runtime = {
       })
 
       // Prevent typing when already has a value
-      input.addEventListener('keypress', (e) => {
+      input.addEventListener('keypress', e => {
         if (el._pinInputState.values[index] && e.key.length === 1) {
           e.preventDefault()
           // Replace current value with new one
@@ -10246,7 +10641,7 @@ const _runtime = {
     })
 
     // Handle paste on control
-    control.addEventListener('paste', (e) => {
+    control.addEventListener('paste', e => {
       if (isDisabled || isReadOnly) return
 
       e.preventDefault()
@@ -10302,7 +10697,7 @@ const _runtime = {
 
     // State
     el._passwordInputState = {
-      visible: defaultVisible
+      visible: defaultVisible,
     }
 
     // ========================================
@@ -10369,10 +10764,12 @@ const _runtime = {
       el._passwordInputState.visible = !el._passwordInputState.visible
       updateVisibility()
 
-      el.dispatchEvent(new CustomEvent('visibilitychange', {
-        detail: { visible: el._passwordInputState.visible },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('visibilitychange', {
+          detail: { visible: el._passwordInputState.visible },
+          bubbles: true,
+        })
+      )
     }
 
     // ========================================
@@ -10381,7 +10778,7 @@ const _runtime = {
 
     if (!isDisabled) {
       // Toggle visibility on button click
-      visibilityTrigger.addEventListener('click', (e) => {
+      visibilityTrigger.addEventListener('click', e => {
         e.preventDefault()
         toggleVisibility()
       })
@@ -10440,7 +10837,7 @@ const _runtime = {
 
     // State
     el._progressState = {
-      value: value
+      value: value,
     }
 
     // ========================================
@@ -10484,7 +10881,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const getPercent = (val) => {
+    const getPercent = val => {
       if (max === min) return 0
       return Math.min(100, Math.max(0, ((val - min) / (max - min)) * 100))
     }
@@ -10513,7 +10910,7 @@ const _runtime = {
     // PUBLIC API
     // ========================================
 
-    el.setValue = (newValue) => {
+    el.setValue = newValue => {
       el._progressState.value = Math.min(max, Math.max(min, Number(newValue)))
       updateUI()
     }
@@ -10550,7 +10947,7 @@ const _runtime = {
 
     // State
     el._circularProgressState = {
-      value: value
+      value: value,
     }
 
     // Calculate circle geometry
@@ -10604,7 +11001,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const getPercent = (val) => {
+    const getPercent = val => {
       if (max === min) return 0
       return Math.min(100, Math.max(0, ((val - min) / (max - min)) * 100))
     }
@@ -10636,7 +11033,7 @@ const _runtime = {
     // PUBLIC API
     // ========================================
 
-    el.setValue = (newValue) => {
+    el.setValue = newValue => {
       el._circularProgressState.value = Math.min(max, Math.max(min, Number(newValue)))
       updateUI()
     }
@@ -10669,7 +11066,7 @@ const _runtime = {
 
     // State
     el._avatarState = {
-      status: 'loading' // 'loading', 'loaded', 'error'
+      status: 'loading', // 'loading', 'loaded', 'error'
     }
 
     // ========================================
@@ -10718,7 +11115,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const getInitials = (text) => {
+    const getInitials = text => {
       if (!text) return ''
       const words = text.trim().split(/\s+/)
       if (words.length === 1) {
@@ -10782,7 +11179,7 @@ const _runtime = {
     // PUBLIC API
     // ========================================
 
-    el.setSrc = (newSrc) => {
+    el.setSrc = newSrc => {
       if (newSrc) {
         el._avatarState.status = 'loading'
         image.src = newSrc
@@ -10792,7 +11189,7 @@ const _runtime = {
       updateUI()
     }
 
-    el.setName = (newName) => {
+    el.setName = newName => {
       if (!fallbackText) {
         fallback.textContent = getInitials(newName)
       }
@@ -10830,7 +11227,7 @@ const _runtime = {
     // State
     el._fileUploadState = {
       files: [],
-      isDragging: false
+      isDragging: false,
     }
 
     // Apply accept and multiple to input
@@ -10891,7 +11288,8 @@ const _runtime = {
       setDefault(content, 'color', '#888')
       setDefault(content, 'fontSize', '14px')
       // Add upload icon and text
-      content.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg><span>Drag and drop files here</span>'
+      content.innerHTML =
+        '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg><span>Drag and drop files here</span>'
     }
 
     // ItemGroup styles
@@ -10905,7 +11303,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const formatSize = (bytes) => {
+    const formatSize = bytes => {
       if (bytes < 1024) return bytes + ' B'
       if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
@@ -10915,7 +11313,8 @@ const _runtime = {
       const item = document.createElement('div')
       item.dataset.slot = 'Item'
       item.dataset.index = String(index)
-      item.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 12px; background: #1a1a1a; border-radius: 6px; border: 1px solid #333;'
+      item.style.cssText =
+        'display: flex; align-items: center; gap: 12px; padding: 12px; background: #1a1a1a; border-radius: 6px; border: 1px solid #333;'
 
       // File icon
       const icon = document.createElement('span')
@@ -10930,7 +11329,8 @@ const _runtime = {
       const name = document.createElement('div')
       name.dataset.slot = 'ItemName'
       name.textContent = file.name
-      name.style.cssText = 'font-size: 14px; color: #e0e0e0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'
+      name.style.cssText =
+        'font-size: 14px; color: #e0e0e0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'
       info.appendChild(name)
 
       const size = document.createElement('div')
@@ -10946,10 +11346,17 @@ const _runtime = {
       deleteBtn.type = 'button'
       deleteBtn.dataset.slot = 'ItemDelete'
       deleteBtn.innerHTML = _runtime._icons.x(16)
-      deleteBtn.style.cssText = 'padding: 4px; background: transparent; border: none; cursor: pointer; color: #666; border-radius: 4px;'
-      deleteBtn.onmouseenter = () => { deleteBtn.style.backgroundColor = '#333'; deleteBtn.style.color = '#ef4444'; }
-      deleteBtn.onmouseleave = () => { deleteBtn.style.backgroundColor = 'transparent'; deleteBtn.style.color = '#666'; }
-      deleteBtn.onclick = (e) => {
+      deleteBtn.style.cssText =
+        'padding: 4px; background: transparent; border: none; cursor: pointer; color: #666; border-radius: 4px;'
+      deleteBtn.onmouseenter = () => {
+        deleteBtn.style.backgroundColor = '#333'
+        deleteBtn.style.color = '#ef4444'
+      }
+      deleteBtn.onmouseleave = () => {
+        deleteBtn.style.backgroundColor = 'transparent'
+        deleteBtn.style.color = '#666'
+      }
+      deleteBtn.onclick = e => {
         e.stopPropagation()
         el.removeFile(index)
       }
@@ -10982,10 +11389,12 @@ const _runtime = {
       }
 
       // Emit change event
-      el.dispatchEvent(new CustomEvent('files-change', { detail: { files: el._fileUploadState.files } }))
+      el.dispatchEvent(
+        new CustomEvent('files-change', { detail: { files: el._fileUploadState.files } })
+      )
     }
 
-    const addFiles = (fileList) => {
+    const addFiles = fileList => {
       const files = Array.from(fileList)
 
       // Filter by max size
@@ -11016,14 +11425,14 @@ const _runtime = {
     // Click on dropzone or trigger opens file picker
     dropzone.onclick = () => hiddenInput.click()
     if (trigger) {
-      trigger.onclick = (e) => {
+      trigger.onclick = e => {
         e.stopPropagation()
         hiddenInput.click()
       }
     }
 
     // File input change
-    hiddenInput.onchange = (e) => {
+    hiddenInput.onchange = e => {
       if (e.target.files && e.target.files.length > 0) {
         addFiles(e.target.files)
         hiddenInput.value = '' // Reset to allow re-selecting same file
@@ -11031,19 +11440,19 @@ const _runtime = {
     }
 
     // Drag events
-    dropzone.ondragenter = (e) => {
+    dropzone.ondragenter = e => {
       e.preventDefault()
       e.stopPropagation()
       el._fileUploadState.isDragging = true
       updateUI()
     }
 
-    dropzone.ondragover = (e) => {
+    dropzone.ondragover = e => {
       e.preventDefault()
       e.stopPropagation()
     }
 
-    dropzone.ondragleave = (e) => {
+    dropzone.ondragleave = e => {
       e.preventDefault()
       e.stopPropagation()
       // Only set to false if leaving the dropzone entirely
@@ -11053,7 +11462,7 @@ const _runtime = {
       }
     }
 
-    dropzone.ondrop = (e) => {
+    dropzone.ondrop = e => {
       e.preventDefault()
       e.stopPropagation()
       el._fileUploadState.isDragging = false
@@ -11070,7 +11479,7 @@ const _runtime = {
 
     el.getFiles = () => [...el._fileUploadState.files]
 
-    el.removeFile = (index) => {
+    el.removeFile = index => {
       el._fileUploadState.files.splice(index, 1)
       updateUI()
     }
@@ -11080,7 +11489,7 @@ const _runtime = {
       updateUI()
     }
 
-    el.addFiles = (files) => {
+    el.addFiles = files => {
       addFiles(files)
     }
 
@@ -11117,7 +11526,7 @@ const _runtime = {
     el._carouselState = {
       currentIndex: 0,
       totalSlides: items.length,
-      autoPlayTimer: null
+      autoPlayTimer: null,
     }
 
     // ========================================
@@ -11222,12 +11631,13 @@ const _runtime = {
       return slide
     }
 
-    const createIndicator = (index) => {
+    const createIndicator = index => {
       const indicator = document.createElement('button')
       indicator.type = 'button'
       indicator.dataset.slot = 'Indicator'
       indicator.dataset.index = String(index)
-      indicator.style.cssText = 'width: 8px; height: 8px; border-radius: 50%; background: #444; border: none; cursor: pointer; padding: 0; transition: background 0.2s;'
+      indicator.style.cssText =
+        'width: 8px; height: 8px; border-radius: 50%; background: #444; border: none; cursor: pointer; padding: 0; transition: background 0.2s;'
 
       indicator.onclick = () => goTo(index)
 
@@ -11270,10 +11680,12 @@ const _runtime = {
       el.setAttribute('data-total', String(totalSlides))
 
       // Emit change event
-      el.dispatchEvent(new CustomEvent('slide-change', { detail: { index: currentIndex, total: totalSlides } }))
+      el.dispatchEvent(
+        new CustomEvent('slide-change', { detail: { index: currentIndex, total: totalSlides } })
+      )
     }
 
-    const goTo = (index) => {
+    const goTo = index => {
       const { totalSlides } = el._carouselState
       let newIndex = index
 
@@ -11310,7 +11722,7 @@ const _runtime = {
 
     // Keyboard navigation
     el.tabIndex = 0
-    el.onkeydown = (e) => {
+    el.onkeydown = e => {
       if (e.key === 'ArrowLeft') {
         e.preventDefault()
         prev()
@@ -11351,7 +11763,7 @@ const _runtime = {
     el.getCurrentIndex = () => el._carouselState.currentIndex
     el.getTotalSlides = () => el._carouselState.totalSlides
 
-    el.setItems = (newItems) => {
+    el.setItems = newItems => {
       el._carouselState.totalSlides = newItems.length
       el._carouselState.currentIndex = 0
 
@@ -11419,7 +11831,7 @@ const _runtime = {
     // State
     el._stepsState = {
       currentStep: defaultStep,
-      totalSteps: steps.length
+      totalSteps: steps.length,
     }
 
     // ========================================
@@ -11498,13 +11910,15 @@ const _runtime = {
       trigger.type = 'button'
       trigger.dataset.slot = 'Trigger'
       trigger.dataset.index = String(index)
-      trigger.style.cssText = 'display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; padding: 0;'
+      trigger.style.cssText =
+        'display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; padding: 0;'
 
       // Indicator (circle with number)
       const indicator = document.createElement('span')
       indicator.dataset.slot = 'Indicator'
       indicator.textContent = String(index + 1)
-      indicator.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; transition: background-color 0.2s, color 0.2s, border-color 0.2s;'
+      indicator.style.cssText =
+        'width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; transition: background-color 0.2s, color 0.2s, border-color 0.2s;'
       trigger.appendChild(indicator)
 
       // Title
@@ -11529,9 +11943,11 @@ const _runtime = {
         const separator = document.createElement('div')
         separator.dataset.slot = 'Separator'
         if (orientation === 'vertical') {
-          separator.style.cssText = 'width: 2px; height: 24px; background: #333; margin: 8px 0 8px 15px;'
+          separator.style.cssText =
+            'width: 2px; height: 24px; background: #333; margin: 8px 0 8px 15px;'
         } else {
-          separator.style.cssText = 'flex: 1; height: 2px; background: #333; min-width: 24px; margin: 0 8px;'
+          separator.style.cssText =
+            'flex: 1; height: 2px; background: #333; min-width: 24px; margin: 0 8px;'
         }
         item.appendChild(separator)
       }
@@ -11623,10 +12039,12 @@ const _runtime = {
       el.setAttribute('data-total', String(totalSteps))
 
       // Emit change event
-      el.dispatchEvent(new CustomEvent('step-change', { detail: { step: currentStep, total: totalSteps } }))
+      el.dispatchEvent(
+        new CustomEvent('step-change', { detail: { step: currentStep, total: totalSteps } })
+      )
     }
 
-    const goTo = (index) => {
+    const goTo = index => {
       const { totalSteps } = el._stepsState
       const newIndex = Math.max(0, Math.min(totalSteps - 1, index))
       el._stepsState.currentStep = newIndex
@@ -11670,7 +12088,7 @@ const _runtime = {
     el.getTotalSteps = () => el._stepsState.totalSteps
     el.isComplete = () => el._stepsState.currentStep === el._stepsState.totalSteps - 1
 
-    el.setSteps = (newSteps) => {
+    el.setSteps = newSteps => {
       el._stepsState.totalSteps = newSteps.length
       el._stepsState.currentStep = 0
 
@@ -11718,7 +12136,7 @@ const _runtime = {
     // State
     el._paginationState = {
       currentPage: defaultPage,
-      totalPages: totalPages
+      totalPages: totalPages,
     }
 
     // ========================================
@@ -11811,7 +12229,7 @@ const _runtime = {
       return pages
     }
 
-    const createPageItem = (page) => {
+    const createPageItem = page => {
       const item = document.createElement('button')
       item.type = 'button'
       item.dataset.slot = 'Item'
@@ -11819,12 +12237,14 @@ const _runtime = {
       if (page === '...') {
         item.dataset.slot = 'Ellipsis'
         item.textContent = '...'
-        item.style.cssText = 'display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; border: none; color: #666; cursor: default; font-size: 14px;'
+        item.style.cssText =
+          'display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; border: none; color: #666; cursor: default; font-size: 14px;'
         item.disabled = true
       } else {
         item.dataset.page = String(page)
         item.textContent = String(page)
-        item.style.cssText = 'display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: transparent; border: 1px solid #333; cursor: pointer; color: #e0e0e0; font-size: 14px; transition: background-color 0.2s, border-color 0.2s;'
+        item.style.cssText =
+          'display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: transparent; border: 1px solid #333; cursor: pointer; color: #e0e0e0; font-size: 14px; transition: background-color 0.2s, border-color 0.2s;'
 
         item.onmouseenter = () => {
           if (!item.classList.contains('active')) {
@@ -11881,10 +12301,12 @@ const _runtime = {
       el.setAttribute('data-total', String(totalPages))
 
       // Emit change event
-      el.dispatchEvent(new CustomEvent('page-change', { detail: { page: currentPage, total: totalPages } }))
+      el.dispatchEvent(
+        new CustomEvent('page-change', { detail: { page: currentPage, total: totalPages } })
+      )
     }
 
-    const goTo = (page) => {
+    const goTo = page => {
       const { totalPages } = el._paginationState
       const newPage = Math.max(1, Math.min(totalPages, Number(page)))
       el._paginationState.currentPage = newPage
@@ -11921,7 +12343,7 @@ const _runtime = {
     el.getCurrentPage = () => el._paginationState.currentPage
     el.getTotalPages = () => el._paginationState.totalPages
 
-    el.setTotalPages = (total) => {
+    el.setTotalPages = total => {
       el._paginationState.totalPages = total
       if (el._paginationState.currentPage > total) {
         el._paginationState.currentPage = total
@@ -11958,7 +12380,7 @@ const _runtime = {
     // State
     el._treeViewState = {
       expandedKeys: expandedKeys,
-      selectedKeys: selectedKeys
+      selectedKeys: selectedKeys,
     }
 
     // ========================================
@@ -12021,7 +12443,7 @@ const _runtime = {
         setDefault(trigger, 'alignItems', 'center')
         setDefault(trigger, 'gap', '4px')
         setDefault(trigger, 'padding', '6px 8px')
-        setDefault(trigger, 'paddingLeft', (depth * 16 + 8) + 'px')
+        setDefault(trigger, 'paddingLeft', depth * 16 + 8 + 'px')
         setDefault(trigger, 'cursor', 'pointer')
         setDefault(trigger, 'userSelect', 'none')
         setDefault(trigger, 'borderRadius', '4px')
@@ -12050,7 +12472,8 @@ const _runtime = {
         setDefault(indicator, 'height', '16px')
         setDefault(indicator, 'color', '#888')
         setDefault(indicator, 'transition', 'transform 0.15s ease')
-        indicator.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+        indicator.innerHTML =
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
 
         if (expandedKeys.has(id)) {
           indicator.style.transform = 'rotate(90deg)'
@@ -12091,7 +12514,7 @@ const _runtime = {
         li.appendChild(content)
 
         // Click handler for expand/collapse
-        trigger.onclick = (e) => {
+        trigger.onclick = e => {
           e.stopPropagation()
           toggleExpand(id)
           // Also select the item
@@ -12099,7 +12522,7 @@ const _runtime = {
         }
 
         // Indicator click for expand/collapse only
-        indicator.onclick = (e) => {
+        indicator.onclick = e => {
           e.stopPropagation()
           toggleExpand(id)
         }
@@ -12111,7 +12534,7 @@ const _runtime = {
         setDefault(itemContent, 'alignItems', 'center')
         setDefault(itemContent, 'gap', '4px')
         setDefault(itemContent, 'padding', '6px 8px')
-        setDefault(itemContent, 'paddingLeft', (depth * 16 + 28) + 'px')
+        setDefault(itemContent, 'paddingLeft', depth * 16 + 28 + 'px')
         setDefault(itemContent, 'cursor', 'pointer')
         setDefault(itemContent, 'userSelect', 'none')
         setDefault(itemContent, 'borderRadius', '4px')
@@ -12141,7 +12564,7 @@ const _runtime = {
         li.appendChild(itemContent)
 
         // Click handler for selection
-        itemContent.onclick = (e) => {
+        itemContent.onclick = e => {
           e.stopPropagation()
           selectItem(id, e)
         }
@@ -12160,7 +12583,7 @@ const _runtime = {
       return li
     }
 
-    const toggleExpand = (id) => {
+    const toggleExpand = id => {
       const { expandedKeys } = el._treeViewState
       const branch = tree.querySelector(`[data-item-id="${id}"][data-slot="Branch"]`)
       const content = branch?.querySelector(`[data-slot="BranchContent"][data-item-id="${id}"]`)
@@ -12188,17 +12611,23 @@ const _runtime = {
 
       // Clear previous selection unless multi-select
       if (!isMultiple && !isCtrl) {
-        tree.querySelectorAll('[data-slot="BranchTrigger"].selected, [data-slot="ItemContent"].selected').forEach(el => {
-          el.classList.remove('selected')
-          el.style.backgroundColor = ''
-          el.style.color = '#e0e0e0'
-        })
+        tree
+          .querySelectorAll(
+            '[data-slot="BranchTrigger"].selected, [data-slot="ItemContent"].selected'
+          )
+          .forEach(el => {
+            el.classList.remove('selected')
+            el.style.backgroundColor = ''
+            el.style.color = '#e0e0e0'
+          })
         selectedKeys.clear()
       }
 
       // Toggle selection
       const itemEl = tree.querySelector(`[data-item-id="${id}"]`)
-      const trigger = itemEl?.querySelector('[data-slot="BranchTrigger"], [data-slot="ItemContent"]')
+      const trigger = itemEl?.querySelector(
+        '[data-slot="BranchTrigger"], [data-slot="ItemContent"]'
+      )
 
       if (selectedKeys.has(id) && (isMultiple || isCtrl)) {
         selectedKeys.delete(id)
@@ -12219,12 +12648,14 @@ const _runtime = {
       }
 
       // Emit change event
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: {
-          selectedKeys: Array.from(selectedKeys),
-          value: isMultiple ? Array.from(selectedKeys) : Array.from(selectedKeys)[0]
-        }
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: {
+            selectedKeys: Array.from(selectedKeys),
+            value: isMultiple ? Array.from(selectedKeys) : Array.from(selectedKeys)[0],
+          },
+        })
+      )
     }
 
     const renderTree = () => {
@@ -12241,11 +12672,11 @@ const _runtime = {
     el.getSelectedKeys = () => Array.from(el._treeViewState.selectedKeys)
     el.getExpandedKeys = () => Array.from(el._treeViewState.expandedKeys)
 
-    el.select = (id) => selectItem(id)
-    el.toggle = (id) => toggleExpand(id)
+    el.select = id => selectItem(id)
+    el.toggle = id => toggleExpand(id)
 
     el.expandAll = () => {
-      const getAllIds = (items) => {
+      const getAllIds = items => {
         let ids = []
         for (const item of items) {
           if (item.children && item.children.length > 0) {
@@ -12270,7 +12701,7 @@ const _runtime = {
       }
     }
 
-    el.setItems = (newItems) => {
+    el.setItems = newItems => {
       config.items = newItems
       el._treeViewState.expandedKeys.clear()
       el._treeViewState.selectedKeys.clear()
@@ -12334,7 +12765,11 @@ const _runtime = {
       setDefault(el, 'display', 'flex')
       setDefault(el, 'flexDirection', 'column')
       setDefault(el, 'height', '100%')
-      setDefault(el, 'width', collapsed ? 'var(--m-sidenav-collapsed-width, 64px)' : 'var(--m-sidenav-width, 240px)')
+      setDefault(
+        el,
+        'width',
+        collapsed ? 'var(--m-sidenav-collapsed-width, 64px)' : 'var(--m-sidenav-width, 240px)'
+      )
       setDefault(el, 'backgroundColor', 'var(--m-sidenav-bg, #0a0a0a)')
       setDefault(el, 'borderRight', 'var(--m-sidenav-border, 1px solid #1a1a1a)')
     }
@@ -12500,16 +12935,16 @@ const _runtime = {
             if (isOpen) {
               group.setAttribute('data-state', 'closed')
               content.style.display = 'none'
-              if (arrow) arrow.style.transform = ''  // DOWN when closed
+              if (arrow) arrow.style.transform = '' // DOWN when closed
             } else {
               group.setAttribute('data-state', 'open')
               content.style.display = ''
-              if (arrow) arrow.style.transform = 'rotate(180deg)'  // UP when open
+              if (arrow) arrow.style.transform = 'rotate(180deg)' // UP when open
             }
           }
 
           label.onclick = toggleGroup
-          label.onkeydown = (e) => {
+          label.onkeydown = e => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault()
               toggleGroup()
@@ -12528,9 +12963,10 @@ const _runtime = {
 
     const loadContentFromFile = (filename, elementName = null) => {
       // Find the page container (sibling of SideNav)
-      const container = el.parentElement?.querySelector('[data-page-container]')
-        || el.nextElementSibling
-        || el.parentElement?.querySelector(':not([data-zag-component="sidenav"])')
+      const container =
+        el.parentElement?.querySelector('[data-page-container]') ||
+        el.nextElementSibling ||
+        el.parentElement?.querySelector(':not([data-zag-component="sidenav"])')
 
       if (!container) {
         console.warn('No container found for SideNav page content')
@@ -12625,7 +13061,7 @@ const _runtime = {
     // SELECTION LOGIC
     // ========================================
 
-    const selectItem = (value) => {
+    const selectItem = value => {
       el._sideNavState.value = value
 
       // Update all items
@@ -12666,7 +13102,9 @@ const _runtime = {
           loadContentFromFile(showsFrom, showsTarget)
         } else {
           // Try to find local element first
-          const localEl = root.querySelector ? root.querySelector(`[data-mirror-name="${showsTarget}"]`) : document.querySelector(`[data-mirror-name="${showsTarget}"]`)
+          const localEl = root.querySelector
+            ? root.querySelector(`[data-mirror-name="${showsTarget}"]`)
+            : document.querySelector(`[data-mirror-name="${showsTarget}"]`)
           if (localEl) {
             // Collect all view names from NavItems with data-shows
             const allViewNames = new Set()
@@ -12693,10 +13131,12 @@ const _runtime = {
       }
 
       // Dispatch change event
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { value },
+          bubbles: true,
+        })
+      )
     }
 
     // ========================================
@@ -12706,7 +13146,7 @@ const _runtime = {
     navItems.forEach((item, index) => {
       if (item.hasAttribute('data-disabled')) return
 
-      item.onclick = (e) => {
+      item.onclick = e => {
         e.preventDefault()
         selectItem(item.dataset.value)
       }
@@ -12724,7 +13164,7 @@ const _runtime = {
       return Array.from(navItems).filter(item => !item.hasAttribute('data-disabled'))
     }
 
-    const focusItem = (index) => {
+    const focusItem = index => {
       const focusableItems = getFocusableItems()
       if (index < 0) index = focusableItems.length - 1
       if (index >= focusableItems.length) index = 0
@@ -12732,7 +13172,7 @@ const _runtime = {
       focusableItems[index]?.focus()
     }
 
-    el.onkeydown = (e) => {
+    el.onkeydown = e => {
       const focusableItems = getFocusableItems()
       const { focusedIndex } = el._sideNavState
 
@@ -12767,8 +13207,8 @@ const _runtime = {
     // ========================================
 
     el.getValue = () => el._sideNavState.value
-    el.setValue = (value) => selectItem(value)
-    el.select = (value) => selectItem(value)
+    el.setValue = value => selectItem(value)
+    el.select = value => selectItem(value)
 
     // ========================================
     // INITIAL STATE
@@ -12794,13 +13234,13 @@ const _runtime = {
 
     // Get existing elements created by emitter
     const itemEls = el.querySelectorAll('[data-slot="Item"]')
-    let indicator = el.querySelector('[data-slot="Indicator"]')
+    const indicator = el.querySelector('[data-slot="Indicator"]')
 
     if (itemEls.length === 0) return
 
     // State
     el._segmentedState = {
-      value: defaultValue
+      value: defaultValue,
     }
 
     // ========================================
@@ -12839,17 +13279,19 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const selectItem = (value) => {
+    const selectItem = value => {
       if (el._segmentedState.value === value) return
 
       el._segmentedState.value = value
       updateUI()
 
       // Emit change event
-      el.dispatchEvent(new CustomEvent('change', {
-        detail: { value },
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { value },
+          bubbles: true,
+        })
+      )
     }
 
     const updateUI = () => {
@@ -12924,7 +13366,7 @@ const _runtime = {
       }
 
       // Click handler
-      itemEl.onclick = (e) => {
+      itemEl.onclick = e => {
         if (isItemDisabled) return
         selectItem(value)
       }
@@ -12948,7 +13390,7 @@ const _runtime = {
     // ========================================
 
     el.getValue = () => el._segmentedState.value
-    el.setValue = (value) => selectItem(value)
+    el.setValue = value => selectItem(value)
 
     // ========================================
     // INITIAL STATE
@@ -12978,7 +13420,11 @@ const _runtime = {
 
     // State
     el._toggleState = {
-      value: multiple ? (Array.isArray(defaultValue) ? new Set(defaultValue) : new Set()) : defaultValue
+      value: multiple
+        ? Array.isArray(defaultValue)
+          ? new Set(defaultValue)
+          : new Set()
+        : defaultValue,
     }
 
     // ========================================
@@ -13007,7 +13453,7 @@ const _runtime = {
     // HELPER FUNCTIONS
     // ========================================
 
-    const toggleItem = (value) => {
+    const toggleItem = value => {
       if (multiple) {
         const newSet = new Set(el._toggleState.value)
         if (newSet.has(value)) {
@@ -13027,10 +13473,12 @@ const _runtime = {
       const detail = multiple
         ? { value: Array.from(el._toggleState.value) }
         : { value: el._toggleState.value }
-      el.dispatchEvent(new CustomEvent('change', {
-        detail,
-        bubbles: true
-      }))
+      el.dispatchEvent(
+        new CustomEvent('change', {
+          detail,
+          bubbles: true,
+        })
+      )
     }
 
     const updateUI = () => {
@@ -13122,8 +13570,10 @@ const _runtime = {
     // KEYBOARD NAVIGATION
     // ========================================
 
-    el.onkeydown = (e) => {
-      const enabledItems = Array.from(el.querySelectorAll('[data-slot="Item"]:not([data-disabled])'))
+    el.onkeydown = e => {
+      const enabledItems = Array.from(
+        el.querySelectorAll('[data-slot="Item"]:not([data-disabled])')
+      )
       const currentIndex = enabledItems.indexOf(document.activeElement)
 
       let nextIndex = currentIndex
@@ -13168,8 +13618,8 @@ const _runtime = {
     // PUBLIC API
     // ========================================
 
-    el.getValue = () => multiple ? Array.from(el._toggleState.value) : el._toggleState.value
-    el.setValue = (value) => {
+    el.getValue = () => (multiple ? Array.from(el._toggleState.value) : el._toggleState.value)
+    el.setValue = value => {
       if (multiple) {
         el._toggleState.value = new Set(Array.isArray(value) ? value : [value])
       } else {
@@ -13177,7 +13627,7 @@ const _runtime = {
       }
       updateUI()
     }
-    el.toggle = (value) => toggleItem(value)
+    el.toggle = value => toggleItem(value)
 
     // ========================================
     // INITIAL STATE
@@ -13210,7 +13660,7 @@ const _runtime = {
 
     // State
     el._collapsibleState = {
-      open: defaultOpen
+      open: defaultOpen,
     }
 
     // ========================================
@@ -13285,7 +13735,7 @@ const _runtime = {
     trigger.onclick = toggle
 
     // Keyboard support for div trigger
-    trigger.onkeydown = (e) => {
+    trigger.onkeydown = e => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault()
         toggle()
@@ -13334,7 +13784,7 @@ const _runtime = {
     el._tooltipState = {
       open: false,
       openTimer: null,
-      closeTimer: null
+      closeTimer: null,
     }
 
     // ========================================
@@ -13471,7 +13921,7 @@ const _runtime = {
 
     // State
     el._popoverState = {
-      open: defaultOpen
+      open: defaultOpen,
     }
 
     // ========================================
@@ -13551,19 +14001,19 @@ const _runtime = {
 
       switch (placement) {
         case 'top':
-          content.style.bottom = (elRect.height - triggerTop + gap) + 'px'
+          content.style.bottom = elRect.height - triggerTop + gap + 'px'
           content.style.left = triggerLeft + 'px'
           break
         case 'left':
           content.style.top = triggerTop + 'px'
-          content.style.right = (elRect.width - triggerLeft + gap) + 'px'
+          content.style.right = elRect.width - triggerLeft + gap + 'px'
           break
         case 'right':
           content.style.top = triggerTop + 'px'
-          content.style.left = (triggerLeft + triggerRect.width + gap) + 'px'
+          content.style.left = triggerLeft + triggerRect.width + gap + 'px'
           break
         default: // bottom
-          content.style.top = (triggerTop + triggerRect.height + gap) + 'px'
+          content.style.top = triggerTop + triggerRect.height + gap + 'px'
           content.style.left = triggerLeft + 'px'
       }
     }
@@ -13580,7 +14030,7 @@ const _runtime = {
     })
 
     if (closeOnOutsideClick) {
-      document.addEventListener('click', (e) => {
+      document.addEventListener('click', e => {
         if (el._popoverState.open) {
           // Use composedPath() to properly detect clicks in Shadow DOM
           const path = e.composedPath ? e.composedPath() : [e.target]
@@ -13593,7 +14043,7 @@ const _runtime = {
     }
 
     if (closeOnEscape) {
-      document.addEventListener('keydown', (e) => {
+      document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && el._popoverState.open) {
           close()
         }
@@ -13631,7 +14081,7 @@ const _runtime = {
     el._hoverCardState = {
       open: false,
       openTimer: null,
-      closeTimer: null
+      closeTimer: null,
     }
 
     // ========================================
@@ -13708,11 +14158,11 @@ const _runtime = {
 
       switch (placement) {
         case 'top':
-          content.style.bottom = (elRect.height - triggerTop + gap) + 'px'
+          content.style.bottom = elRect.height - triggerTop + gap + 'px'
           content.style.left = triggerLeft + 'px'
           break
         default: // bottom
-          content.style.top = (triggerTop + triggerRect.height + gap) + 'px'
+          content.style.top = triggerTop + triggerRect.height + gap + 'px'
           content.style.left = triggerLeft + 'px'
       }
     }
@@ -13727,7 +14177,7 @@ const _runtime = {
     content.onmouseleave = hide
 
     // Prevent link navigation
-    trigger.onclick = (e) => e.preventDefault()
+    trigger.onclick = e => e.preventDefault()
 
     // ========================================
     // PUBLIC API
@@ -13759,7 +14209,7 @@ const _runtime = {
     // State
     el._dialogState = {
       open: defaultOpen,
-      previousOverflow: ''
+      previousOverflow: '',
     }
 
     // ========================================
@@ -13825,7 +14275,7 @@ const _runtime = {
     }
 
     // Handle Tab key to trap focus within dialog
-    const handleTabKey = (e) => {
+    const handleTabKey = e => {
       if (e.key !== 'Tab' || !el._dialogState.open) return
 
       const focusable = getFocusableElements()
@@ -13914,7 +14364,7 @@ const _runtime = {
     }
 
     if (closeOnEscape) {
-      document.addEventListener('keydown', (e) => {
+      document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && el._dialogState.open) {
           close()
         }
@@ -13936,7 +14386,8 @@ const _runtime = {
   // Icon cache and loading
   _iconCache: new Map(),
   _pendingIcons: new Map(),
-  _fallbackIcon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
+  _fallbackIcon:
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
 
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
@@ -14031,7 +14482,7 @@ const _runtime = {
       if (xField && yField) {
         return {
           labels: data.map(item => item[xField]),
-          values: data.map(item => item[yField])
+          values: data.map(item => item[yField]),
         }
       }
       return { labels: data.map((_, i) => String(i)), values: data }
@@ -14044,13 +14495,13 @@ const _runtime = {
       if (entries.length > 0 && typeof entries[0][1] === 'object' && xField && yField) {
         return {
           labels: entries.map(([_, v]) => v[xField]),
-          values: entries.map(([_, v]) => v[yField])
+          values: entries.map(([_, v]) => v[yField]),
         }
       }
       // Simple key-value pairs
       return {
         labels: entries.map(([k]) => k),
-        values: entries.map(([_, v]) => v)
+        values: entries.map(([_, v]) => v),
       }
     }
 
@@ -14077,8 +14528,16 @@ const _runtime = {
 
     // Default colors
     const defaultColors = [
-      '#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-      '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+      '#2563eb',
+      '#10b981',
+      '#f59e0b',
+      '#ef4444',
+      '#8b5cf6',
+      '#ec4899',
+      '#06b6d4',
+      '#84cc16',
+      '#f97316',
+      '#6366f1',
     ]
     const colors = config.colors || defaultColors
     const chartType = config.type || 'line'
@@ -14092,20 +14551,24 @@ const _runtime = {
       type: chartType,
       data: {
         labels: labels,
-        datasets: [{
-          label: config.title || '', // Empty string fallback for legend
-          data: values,
-          backgroundColor: isPieOrDoughnut
-            ? colors.slice(0, values.length)
-            : (shouldFill ? colors[0] + '40' : colors[0] + '80'),
-          borderColor: isPieOrDoughnut ? colors.slice(0, values.length) : colors[0],
-          borderWidth: isPieOrDoughnut ? 1 : 2,
-          fill: shouldFill ? 'origin' : false,
-          tension: config.tension !== undefined ? config.tension : 0.3,
-          pointBackgroundColor: colors[0],
-          pointBorderColor: colors[0],
-          pointRadius: chartType === 'scatter' ? 5 : 3,
-        }]
+        datasets: [
+          {
+            label: config.title || '', // Empty string fallback for legend
+            data: values,
+            backgroundColor: isPieOrDoughnut
+              ? colors.slice(0, values.length)
+              : shouldFill
+                ? colors[0] + '40'
+                : colors[0] + '80',
+            borderColor: isPieOrDoughnut ? colors.slice(0, values.length) : colors[0],
+            borderWidth: isPieOrDoughnut ? 1 : 2,
+            fill: shouldFill ? 'origin' : false,
+            tension: config.tension !== undefined ? config.tension : 0.3,
+            pointBackgroundColor: colors[0],
+            pointBorderColor: colors[0],
+            pointRadius: chartType === 'scatter' ? 5 : 3,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -14117,33 +14580,37 @@ const _runtime = {
               color: '#ccc',
               // For pie/doughnut: use labels from data (each slice = label)
               // For others: use dataset labels (but we only have one dataset)
-              generateLabels: isPieOrDoughnut ? undefined : (chart) => {
-                // Hide legend for single-dataset charts unless explicitly requested
-                if (!config.legend) return []
-                return Chart.defaults.plugins.legend.labels.generateLabels(chart)
-              }
-            }
+              generateLabels: isPieOrDoughnut
+                ? undefined
+                : chart => {
+                    // Hide legend for single-dataset charts unless explicitly requested
+                    if (!config.legend) return []
+                    return Chart.defaults.plugins.legend.labels.generateLabels(chart)
+                  },
+            },
           },
           title: {
             display: !!config.title,
             text: config.title || '',
-            color: '#fff'
-          }
-        },
-        scales: isPieOrDoughnut ? {} : {
-          x: {
-            display: config.axes !== false,
-            grid: { display: config.grid !== false, color: '#333' },
-            ticks: { color: '#888' }
+            color: '#fff',
           },
-          y: {
-            display: config.axes !== false,
-            grid: { display: config.grid !== false, color: '#333' },
-            ticks: { color: '#888' },
-            beginAtZero: true
-          }
-        }
-      }
+        },
+        scales: isPieOrDoughnut
+          ? {}
+          : {
+              x: {
+                display: config.axes !== false,
+                grid: { display: config.grid !== false, color: '#333' },
+                ticks: { color: '#888' },
+              },
+              y: {
+                display: config.axes !== false,
+                grid: { display: config.grid !== false, color: '#333' },
+                ticks: { color: '#888' },
+                beginAtZero: true,
+              },
+            },
+      },
     }
 
     // Special handling for radar charts
@@ -14152,8 +14619,8 @@ const _runtime = {
         r: {
           grid: { color: '#333' },
           pointLabels: { color: '#888' },
-          ticks: { color: '#888', backdropColor: 'transparent' }
-        }
+          ticks: { color: '#888', backdropColor: 'transparent' },
+        },
       }
     }
 
@@ -14194,8 +14661,8 @@ const _runtime = {
 
     // Easing curves
     const easingMap = {
-      'linear': 'linear',
-      'ease': 'ease',
+      linear: 'linear',
+      ease: 'ease',
       'ease-in': 'ease-in',
       'ease-out': 'ease-out',
       'ease-in-out': 'ease-in-out',
@@ -14204,7 +14671,7 @@ const _runtime = {
     targets.forEach((el, index) => {
       if (!el) return
 
-      const elementDelay = delay + (index * stagger)
+      const elementDelay = delay + index * stagger
 
       // Build keyframes from animation definition
       const keyframes = []
@@ -14219,7 +14686,7 @@ const _runtime = {
           propertyTimelines.get(prop.name).push({
             time: kf.time,
             value: prop.value,
-            easing: prop.easing || animation.easing || 'ease-out'
+            easing: prop.easing || animation.easing || 'ease-out',
           })
         })
       })
@@ -14252,8 +14719,8 @@ const _runtime = {
         duration,
         delay: elementDelay,
         easing: easingMap[animation.easing] || 'ease-out',
-        iterations: loop === true ? Infinity : (typeof loop === 'number' ? loop : 1),
-        fill: 'forwards'
+        iterations: loop === true ? Infinity : typeof loop === 'number' ? loop : 1,
+        fill: 'forwards',
       }
 
       try {
@@ -14269,23 +14736,23 @@ const _runtime = {
 
   _animPropMap(name) {
     const map = {
-      'opacity': 'opacity',
+      opacity: 'opacity',
       'x-offset': 'translateX',
       'y-offset': 'translateY',
-      'scale': 'scale',
+      scale: 'scale',
       'scale-x': 'scaleX',
       'scale-y': 'scaleY',
-      'rotate': 'rotate',
-      'background': 'backgroundColor',
-      'bg': 'backgroundColor',
-      'color': 'color',
-      'col': 'color',
-      'width': 'width',
-      'height': 'height',
-      'padding': 'padding',
-      'pad': 'padding',
-      'radius': 'borderRadius',
-      'rad': 'borderRadius',
+      rotate: 'rotate',
+      background: 'backgroundColor',
+      bg: 'backgroundColor',
+      color: 'color',
+      col: 'color',
+      width: 'width',
+      height: 'height',
+      padding: 'padding',
+      pad: 'padding',
+      radius: 'borderRadius',
+      rad: 'borderRadius',
     }
     return map[name] || name
   },
@@ -14297,7 +14764,14 @@ const _runtime = {
     if (propName === 'rotate') {
       return typeof value === 'number' ? value + 'deg' : value
     }
-    if (propName === 'width' || propName === 'height' || propName === 'padding' || propName === 'pad' || propName === 'radius' || propName === 'rad') {
+    if (
+      propName === 'width' ||
+      propName === 'height' ||
+      propName === 'padding' ||
+      propName === 'pad' ||
+      propName === 'radius' ||
+      propName === 'rad'
+    ) {
       return typeof value === 'number' ? value + 'px' : value
     }
     return value
@@ -14307,15 +14781,18 @@ const _runtime = {
     if (!el) return null
     const element = el._el || el
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          if (onEnter) onEnter()
-        } else {
-          if (onExit) onExit()
-        }
-      })
-    }, { threshold: 0.1 })
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            if (onEnter) onEnter()
+          } else {
+            if (onExit) onExit()
+          }
+        })
+      },
+      { threshold: 0.1 }
+    )
 
     observer.observe(element)
     return observer
@@ -14340,10 +14817,12 @@ const __MIRROR_TEST__ = {
   },
 
   findByName(name) {
-    return document.querySelector(`[data-mirror-name="${name}"]`) ||
-           document.querySelector(`[data-instance-name="${name}"]`) ||
-           document.querySelector(`[data-component-name="${name}"]`) ||
-           document.querySelector(`[name="${name}"]`)
+    return (
+      document.querySelector(`[data-mirror-name="${name}"]`) ||
+      document.querySelector(`[data-instance-name="${name}"]`) ||
+      document.querySelector(`[data-component-name="${name}"]`) ||
+      document.querySelector(`[name="${name}"]`)
+    )
   },
 
   // State Inspection
@@ -14384,28 +14863,57 @@ const __MIRROR_TEST__ = {
   trigger(el, event) {
     if (!el) return
     switch (event) {
-      case 'click': el.click(); break
-      case 'hover': el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true })); break
-      case 'focus': el.focus(); el.dispatchEvent(new FocusEvent('focus', { bubbles: true })); break
-      case 'blur': el.blur(); el.dispatchEvent(new FocusEvent('blur', { bubbles: true })); break
-      case 'change': el.dispatchEvent(new Event('change', { bubbles: true })); break
-      case 'input': el.dispatchEvent(new InputEvent('input', { bubbles: true })); break
+      case 'click':
+        el.click()
+        break
+      case 'hover':
+        el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
+        break
+      case 'focus':
+        el.focus()
+        el.dispatchEvent(new FocusEvent('focus', { bubbles: true }))
+        break
+      case 'blur':
+        el.blur()
+        el.dispatchEvent(new FocusEvent('blur', { bubbles: true }))
+        break
+      case 'change':
+        el.dispatchEvent(new Event('change', { bubbles: true }))
+        break
+      case 'input':
+        el.dispatchEvent(new InputEvent('input', { bubbles: true }))
+        break
     }
   },
 
   triggerKey(el, key, eventType = 'keydown') {
     if (!el) return
     const keyMap = {
-      'enter': 'Enter', 'escape': 'Escape', 'esc': 'Escape', 'space': ' ',
-      'tab': 'Tab', 'backspace': 'Backspace', 'delete': 'Delete',
-      'arrow-up': 'ArrowUp', 'arrow-down': 'ArrowDown',
-      'arrow-left': 'ArrowLeft', 'arrow-right': 'ArrowRight',
-      'up': 'ArrowUp', 'down': 'ArrowDown', 'left': 'ArrowLeft', 'right': 'ArrowRight',
+      enter: 'Enter',
+      escape: 'Escape',
+      esc: 'Escape',
+      space: ' ',
+      tab: 'Tab',
+      backspace: 'Backspace',
+      delete: 'Delete',
+      'arrow-up': 'ArrowUp',
+      'arrow-down': 'ArrowDown',
+      'arrow-left': 'ArrowLeft',
+      'arrow-right': 'ArrowRight',
+      up: 'ArrowUp',
+      down: 'ArrowDown',
+      left: 'ArrowLeft',
+      right: 'ArrowRight',
     }
     const normalizedKey = keyMap[key.toLowerCase()] || key
-    el.dispatchEvent(new KeyboardEvent(eventType, {
-      key: normalizedKey, code: normalizedKey, bubbles: true, cancelable: true
-    }))
+    el.dispatchEvent(
+      new KeyboardEvent(eventType, {
+        key: normalizedKey,
+        code: normalizedKey,
+        bubbles: true,
+        cancelable: true,
+      })
+    )
   },
 
   // Built-in Function Calls
@@ -14415,8 +14923,11 @@ const __MIRROR_TEST__ = {
 
   exclusive(el, state) {
     if (!el) return
-    const targetState = state ||
-      (el._stateMachine ? Object.keys(el._stateMachine.states).find(s => s !== 'default') : 'active') ||
+    const targetState =
+      state ||
+      (el._stateMachine
+        ? Object.keys(el._stateMachine.states).find(s => s !== 'default')
+        : 'active') ||
       'active'
     _runtime.exclusiveTransition(el, targetState)
   },
@@ -14446,7 +14957,9 @@ const __MIRROR_TEST__ = {
     if (!el) return false
     if (el.hidden) return false
     const style = window.getComputedStyle(el)
-    return style.display !== 'none' && style.visibility !== 'hidden' && parseFloat(style.opacity) !== 0
+    return (
+      style.display !== 'none' && style.visibility !== 'hidden' && parseFloat(style.opacity) !== 0
+    )
   },
 
   isHidden(el) {
@@ -14475,11 +14988,21 @@ const __MIRROR_TEST__ = {
     const opacity = parseFloat(style.opacity)
     const hidden = el.hidden
     const visibility = style.visibility
-    let reason = 'visible', visible = true
-    if (display === 'none') { visible = false; reason = 'display' }
-    else if (opacity === 0) { visible = false; reason = 'opacity' }
-    else if (hidden) { visible = false; reason = 'hidden' }
-    else if (visibility === 'hidden') { visible = false; reason = 'visibility' }
+    let reason = 'visible',
+      visible = true
+    if (display === 'none') {
+      visible = false
+      reason = 'display'
+    } else if (opacity === 0) {
+      visible = false
+      reason = 'opacity'
+    } else if (hidden) {
+      visible = false
+      reason = 'hidden'
+    } else if (visibility === 'hidden') {
+      visible = false
+      reason = 'visibility'
+    }
     return { visible, display, opacity, hidden, reason }
   },
 
@@ -14490,12 +15013,23 @@ const __MIRROR_TEST__ = {
 
   waitForHidden(el, timeout = 1000) {
     return new Promise(resolve => {
-      if (!el) { resolve(true); return }
-      if (!this.isVisible(el)) { resolve(true); return }
+      if (!el) {
+        resolve(true)
+        return
+      }
+      if (!this.isVisible(el)) {
+        resolve(true)
+        return
+      }
       const startTime = Date.now()
       const check = setInterval(() => {
-        if (!this.isVisible(el)) { clearInterval(check); resolve(true) }
-        else if (Date.now() - startTime > timeout) { clearInterval(check); resolve(false) }
+        if (!this.isVisible(el)) {
+          clearInterval(check)
+          resolve(true)
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(check)
+          resolve(false)
+        }
       }, 16)
     })
   },
@@ -14503,24 +15037,46 @@ const __MIRROR_TEST__ = {
   // Async Helpers
   waitForState(el, state, timeout = 1000) {
     return new Promise(resolve => {
-      if (!el) { resolve(false); return }
-      if (this.getState(el) === state) { resolve(true); return }
+      if (!el) {
+        resolve(false)
+        return
+      }
+      if (this.getState(el) === state) {
+        resolve(true)
+        return
+      }
       const startTime = Date.now()
       const check = setInterval(() => {
-        if (this.getState(el) === state) { clearInterval(check); resolve(true) }
-        else if (Date.now() - startTime > timeout) { clearInterval(check); resolve(false) }
+        if (this.getState(el) === state) {
+          clearInterval(check)
+          resolve(true)
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(check)
+          resolve(false)
+        }
       }, 16)
     })
   },
 
   waitForVisible(el, visible, timeout = 1000) {
     return new Promise(resolve => {
-      if (!el) { resolve(false); return }
-      if (this.isVisible(el) === visible) { resolve(true); return }
+      if (!el) {
+        resolve(false)
+        return
+      }
+      if (this.isVisible(el) === visible) {
+        resolve(true)
+        return
+      }
       const startTime = Date.now()
       const check = setInterval(() => {
-        if (this.isVisible(el) === visible) { clearInterval(check); resolve(true) }
-        else if (Date.now() - startTime > timeout) { clearInterval(check); resolve(false) }
+        if (this.isVisible(el) === visible) {
+          clearInterval(check)
+          resolve(true)
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(check)
+          resolve(false)
+        }
       }, 16)
     })
   },
@@ -14528,7 +15084,10 @@ const __MIRROR_TEST__ = {
   // Debug
   logStateMachine(el) {
     const info = this.getStateMachineInfo(el)
-    if (!info) { console.log('[Mirror Test API] No state machine'); return }
+    if (!info) {
+      console.log('[Mirror Test API] No state machine')
+      return
+    }
     console.group('[Mirror Test API] State Machine')
     console.log('Current:', info.current)
     console.log('Initial:', info.initial)
@@ -14545,8 +15104,11 @@ const __MIRROR_TEST__ = {
       initial: sm.initial,
       states: Object.keys(sm.states),
       transitions: sm.transitions.map(t => ({
-        trigger: t.trigger, to: t.to, key: t.key, modifier: t.modifier
-      }))
+        trigger: t.trigger,
+        to: t.to,
+        key: t.key,
+        modifier: t.modifier,
+      })),
     }
   },
 
@@ -14665,23 +15227,42 @@ const __MIRROR_TEST__ = {
 
   waitForNavigation(pageName, timeout = 1000) {
     return new Promise(resolve => {
-      if (this.getCurrentPage() === pageName) { resolve(true); return }
+      if (this.getCurrentPage() === pageName) {
+        resolve(true)
+        return
+      }
       const startTime = Date.now()
       const check = setInterval(() => {
-        if (this.getCurrentPage() === pageName) { clearInterval(check); resolve(true) }
-        else if (Date.now() - startTime > timeout) { clearInterval(check); resolve(false) }
+        if (this.getCurrentPage() === pageName) {
+          clearInterval(check)
+          resolve(true)
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(check)
+          resolve(false)
+        }
       }, 16)
     })
   },
 
   waitForViewChange(view, timeout = 1000) {
     return new Promise(resolve => {
-      if (!view) { resolve(false); return }
-      if (this._isViewVisible(view)) { resolve(true); return }
+      if (!view) {
+        resolve(false)
+        return
+      }
+      if (this._isViewVisible(view)) {
+        resolve(true)
+        return
+      }
       const startTime = Date.now()
       const check = setInterval(() => {
-        if (this._isViewVisible(view)) { clearInterval(check); resolve(true) }
-        else if (Date.now() - startTime > timeout) { clearInterval(check); resolve(false) }
+        if (this._isViewVisible(view)) {
+          clearInterval(check)
+          resolve(true)
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(check)
+          resolve(false)
+        }
       }, 16)
     })
   },
@@ -14696,7 +15277,6 @@ const __MIRROR_TEST__ = {
 if (typeof window !== 'undefined') {
   window.__MIRROR_TEST__ = __MIRROR_TEST__
 }
-
 
 // Register tokens in runtime
 _runtime.registerToken('$primary-bg', '#3b82f6')

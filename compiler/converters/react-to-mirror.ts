@@ -10,7 +10,7 @@ import _traverse, { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 
 // Handle ESM/CJS interop - Babel exports differ based on bundler
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const traverse = (_traverse as { default?: typeof _traverse }).default || _traverse
 
 // ============================================================================
@@ -128,9 +128,7 @@ function normalizeValue(value: string | number): string | number {
 // ============================================================================
 
 function isColor(value: string): boolean {
-  return /^#[0-9A-Fa-f]{3,8}$/.test(value) ||
-         /^rgb/.test(value) ||
-         /^hsl/.test(value)
+  return /^#[0-9A-Fa-f]{3,8}$/.test(value) || /^rgb/.test(value) || /^hsl/.test(value)
 }
 
 function generateTokenName(value: string, usage: string, tokens: Map<string, string>): string {
@@ -141,10 +139,10 @@ function generateTokenName(value: string, usage: string, tokens: Map<string, str
 
   // Map usage to semantic token names
   const usageToSemantic: Record<string, string> = {
-    'bg': 'bg',
-    'col': 'col',
-    'boc': 'border',
-    'rad': 'rad',
+    bg: 'bg',
+    col: 'col',
+    boc: 'border',
+    rad: 'rad',
   }
 
   const semantic = usageToSemantic[usage] || usage.replace(/[^a-zA-Z]/g, '')
@@ -166,37 +164,37 @@ function generateTokenName(value: string, usage: string, tokens: Map<string, str
 
 const HTML_TO_MIRROR: Record<string, string> = {
   // Semantic HTML → Mirror components
-  'div': 'Box',
-  'span': 'Text',
-  'p': 'Text',
-  'h1': 'Heading',
-  'h2': 'Heading',
-  'h3': 'Heading',
-  'h4': 'Heading',
-  'h5': 'Heading',
-  'h6': 'Heading',
-  'button': 'Button',
-  'a': 'Link',
-  'img': 'Image',
-  'input': 'Input',
-  'textarea': 'Textarea',
-  'nav': 'Nav',
-  'header': 'Header',
-  'footer': 'Footer',
-  'main': 'Main',
-  'aside': 'Sidebar',
-  'section': 'Section',
-  'article': 'Article',
-  'ul': 'List',
-  'ol': 'List',
-  'li': 'ListItem',
-  'label': 'Label',
-  'form': 'Form',
+  div: 'Box',
+  span: 'Text',
+  p: 'Text',
+  h1: 'Heading',
+  h2: 'Heading',
+  h3: 'Heading',
+  h4: 'Heading',
+  h5: 'Heading',
+  h6: 'Heading',
+  button: 'Button',
+  a: 'Link',
+  img: 'Image',
+  input: 'Input',
+  textarea: 'Textarea',
+  nav: 'Nav',
+  header: 'Header',
+  footer: 'Footer',
+  main: 'Main',
+  aside: 'Sidebar',
+  section: 'Section',
+  article: 'Article',
+  ul: 'List',
+  ol: 'List',
+  li: 'ListItem',
+  label: 'Label',
+  form: 'Form',
 }
 
 function mapHtmlToMirror(tagName: string): string {
   const lower = tagName.toLowerCase()
-  return HTML_TO_MIRROR[lower] || (tagName.charAt(0).toUpperCase() + tagName.slice(1))
+  return HTML_TO_MIRROR[lower] || tagName.charAt(0).toUpperCase() + tagName.slice(1)
 }
 
 // ============================================================================
@@ -274,14 +272,9 @@ function parseStyleObject(
   return properties
 }
 
-function parseJSXElement(
-  node: t.JSXElement,
-  tokens: Map<string, string>
-): MirrorNode {
+function parseJSXElement(node: t.JSXElement, tokens: Map<string, string>): MirrorNode {
   const opening = node.openingElement
-  const tagName = t.isJSXIdentifier(opening.name)
-    ? opening.name.name
-    : 'Unknown'
+  const tagName = t.isJSXIdentifier(opening.name) ? opening.name.name : 'Unknown'
 
   // Convert tag to Mirror component name
   const name = mapHtmlToMirror(tagName)
@@ -370,10 +363,7 @@ function generateMirrorProperties(props: Map<string, string | number | boolean>)
   return parts.join(', ')
 }
 
-function generateMirrorCode(
-  node: MirrorNode,
-  indent: number = 0
-): string {
+function generateMirrorCode(node: MirrorNode, indent: number = 0): string {
   const indentStr = '  '.repeat(indent)
   const props = generateMirrorProperties(new Map(node.properties))
 
@@ -443,7 +433,7 @@ export function convertReactToMirror(reactCode: string): ConversionResult {
                 }
               }
             }
-          }
+          },
         })
       },
 
@@ -471,10 +461,10 @@ export function convertReactToMirror(reactCode: string): ConversionResult {
                 node.name = name
                 instances.push(node)
               }
-            }
+            },
           })
         }
-      }
+      },
     })
 
     // Only process standalone JSX if no functions found
@@ -486,10 +476,9 @@ export function convertReactToMirror(reactCode: string): ConversionResult {
 
           const node = parseJSXElement(path.node, tokens)
           instances.push(node)
-        }
+        },
       })
     }
-
   } catch (e) {
     errors.push(`Parse error: ${e instanceof Error ? e.message : String(e)}`)
   }

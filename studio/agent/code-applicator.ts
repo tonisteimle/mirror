@@ -16,8 +16,8 @@ import { logAgent } from '../../compiler/utils/logger'
 // CONSTANTS
 // ============================================
 
-const INDENT_SIZE = 2  // FIX #14: Spaces per indent level
-const ALLOWED_EXTENSIONS = ['.mir', '.tok', '.com', '.mirror']  // Allowed file types
+const INDENT_SIZE = 2 // FIX #14: Spaces per indent level
+const ALLOWED_EXTENSIONS = ['.mir', '.tok', '.com', '.mirror'] // Allowed file types
 
 // ============================================
 // HELPERS
@@ -101,7 +101,7 @@ export interface ApplyResult {
  */
 interface FileSnapshot {
   path: string
-  content: string | null  // null means file didn't exist
+  content: string | null // null means file didn't exist
   wasCreated: boolean
 }
 
@@ -151,9 +151,8 @@ export class CodeApplicator {
       return {
         success: true,
         filesChanged,
-        filesCreated
+        filesCreated,
       }
-
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error applying changes'
 
@@ -163,9 +162,9 @@ export class CodeApplicator {
 
       return {
         success: false,
-        filesChanged: [],  // Clear since we rolled back
-        filesCreated: [],  // Clear since we rolled back
-        error: errorMessage
+        filesChanged: [], // Clear since we rolled back
+        filesCreated: [], // Clear since we rolled back
+        error: errorMessage,
       }
     }
   }
@@ -177,7 +176,7 @@ export class CodeApplicator {
     return {
       path: filePath,
       content: isCreate ? null : this.config.getFileContent(filePath),
-      wasCreated: isCreate
+      wasCreated: isCreate,
     }
   }
 
@@ -192,7 +191,9 @@ export class CodeApplicator {
         if (snapshot.wasCreated) {
           // File was created, we can't delete it (no deleteFile in config)
           // Just log it - the file will remain but with empty content
-          logAgent.warn(`CodeApplicator: Cannot delete created file during rollback: ${snapshot.path}`)
+          logAgent.warn(
+            `CodeApplicator: Cannot delete created file during rollback: ${snapshot.path}`
+          )
         } else if (snapshot.content !== null) {
           // Restore original content
           await this.config.saveFile(snapshot.path, snapshot.content)
@@ -242,7 +243,9 @@ export class CodeApplicator {
         try {
           await this.config.createFile(file, code)
         } catch (e) {
-          throw new Error(`Fehler beim Erstellen von "${file}": ${e instanceof Error ? e.message : String(e)}`)
+          throw new Error(
+            `Fehler beim Erstellen von "${file}": ${e instanceof Error ? e.message : String(e)}`
+          )
         }
         break
 
@@ -263,8 +266,12 @@ export class CodeApplicator {
   /**
    * Append code to end of file
    */
-  private async appendToFile(filename: string, code: string, isCurrentFile: boolean): Promise<void> {
-    let content = this.config.getFileContent(filename)
+  private async appendToFile(
+    filename: string,
+    code: string,
+    isCurrentFile: boolean
+  ): Promise<void> {
+    const content = this.config.getFileContent(filename)
 
     if (content === null) {
       // File doesn't exist, create it
@@ -299,7 +306,7 @@ export class CodeApplicator {
       validLine = 1
     }
 
-    let content = this.config.getFileContent(filename)
+    const content = this.config.getFileContent(filename)
 
     if (content === null) {
       // File doesn't exist, create it
@@ -332,7 +339,11 @@ export class CodeApplicator {
   /**
    * Replace entire file content
    */
-  private async replaceFileContent(filename: string, code: string, isCurrentFile: boolean): Promise<void> {
+  private async replaceFileContent(
+    filename: string,
+    code: string,
+    isCurrentFile: boolean
+  ): Promise<void> {
     await this.config.saveFile(filename, code)
 
     if (isCurrentFile) {
@@ -387,7 +398,9 @@ export class CodeApplicator {
         const relativeIndent = currentIndent - minIndent
 
         // FIX #14: Use INDENT_SIZE constant for indent calculation
-        const newIndent = ' '.repeat(INDENT_SIZE).repeat(validDepth + Math.floor(relativeIndent / INDENT_SIZE))
+        const newIndent = ' '
+          .repeat(INDENT_SIZE)
+          .repeat(validDepth + Math.floor(relativeIndent / INDENT_SIZE))
 
         // Return new indent + trimmed content
         return newIndent + line.trimStart()

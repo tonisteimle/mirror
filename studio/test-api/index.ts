@@ -7,6 +7,9 @@
 
 import { events, type StudioEvents } from '../core/events'
 import { getTriggerManager } from '../editor/trigger-manager'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('TestAPI')
 
 export interface StudioTestAPI {
   /** Wait for any picker to open */
@@ -14,7 +17,10 @@ export interface StudioTestAPI {
   /** Wait for any picker to close */
   waitForPickerClose(timeout?: number): Promise<{ pickerId: string; reason: string }>
   /** Wait for a specific trigger to activate */
-  waitForTrigger(triggerId: string, timeout?: number): Promise<{ triggerId: string; startPos: number }>
+  waitForTrigger(
+    triggerId: string,
+    timeout?: number
+  ): Promise<{ triggerId: string; startPos: number }>
   /** Wait for a specific trigger to deactivate */
   waitForTriggerDeactivate(triggerId: string, timeout?: number): Promise<{ triggerId: string }>
   /** Check if any picker is currently open */
@@ -24,10 +30,7 @@ export interface StudioTestAPI {
   /** Get the ID of the currently active trigger */
   getActiveTrigger(): string | null
   /** Wait for any event of a specific type */
-  waitForEvent<K extends keyof StudioEvents>(
-    event: K,
-    timeout?: number
-  ): Promise<StudioEvents[K]>
+  waitForEvent<K extends keyof StudioEvents>(event: K, timeout?: number): Promise<StudioEvents[K]>
   /** Get the EventBus for direct access */
   getEventBus(): typeof events
 }
@@ -51,7 +54,7 @@ export function createStudioTestAPI(): StudioTestAPI {
         reject(new Error(`Timeout waiting for event: ${event}`))
       }, timeout)
 
-      const unsubscribe = events.on(event, (payload) => {
+      const unsubscribe = events.on(event, payload => {
         clearTimeout(timeoutId)
         unsubscribe()
         resolve(payload)
@@ -73,7 +76,7 @@ export function createStudioTestAPI(): StudioTestAPI {
         reject(new Error(`Timeout waiting for event: ${event}`))
       }, timeout)
 
-      const unsubscribe = events.on(event, (payload) => {
+      const unsubscribe = events.on(event, payload => {
         if (filter(payload)) {
           clearTimeout(timeoutId)
           unsubscribe()
@@ -95,7 +98,7 @@ export function createStudioTestAPI(): StudioTestAPI {
     waitForTrigger(triggerId: string, timeout = DEFAULT_TIMEOUT) {
       return waitForEventWithFilter(
         'trigger:activated',
-        (payload) => payload.triggerId === triggerId,
+        payload => payload.triggerId === triggerId,
         timeout
       )
     },
@@ -103,7 +106,7 @@ export function createStudioTestAPI(): StudioTestAPI {
     waitForTriggerDeactivate(triggerId: string, timeout = DEFAULT_TIMEOUT) {
       return waitForEventWithFilter(
         'trigger:deactivated',
-        (payload) => payload.triggerId === triggerId,
+        payload => payload.triggerId === triggerId,
         timeout
       )
     },
@@ -166,7 +169,7 @@ export function initStudioTestAPI(_studio?: unknown, _dragDrop?: unknown): void 
     ;(window as Window & { __STUDIO_TEST__?: StudioTestAPI }).__STUDIO_TEST__ = api
   }
 
-  console.log('[Studio] Test API initialized')
+  log.info('Test API initialized')
 }
 
 /**

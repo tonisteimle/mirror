@@ -90,7 +90,7 @@ function initProjectToolbar() {
 
   // Menu button handler
   const menuBtn = document.getElementById('project-menu-btn')
-  menuBtn?.addEventListener('click', (e) => {
+  menuBtn?.addEventListener('click', e => {
     e.stopPropagation()
     toggleProjectMenu(menuBtn)
   })
@@ -148,7 +148,7 @@ function toggleProjectMenu(anchorBtn) {
   menuOpen = true
 
   // Close on click outside
-  const closeMenu = (e) => {
+  const closeMenu = e => {
     if (!menu.contains(e.target) && e.target !== anchorBtn) {
       menu.remove()
       menuOpen = false
@@ -168,11 +168,21 @@ async function handleMenuAction(action) {
 
   switch (action) {
     case 'new':
-      if (!await confirm('Neues Projekt erstellen? Alle aktuellen Änderungen gehen verloren.', { title: 'Neues Projekt' })) return
+      if (
+        !(await confirm('Neues Projekt erstellen? Alle aktuellen Änderungen gehen verloren.', {
+          title: 'Neues Projekt',
+        }))
+      )
+        return
       await projectActions.new()
       break
     case 'demo':
-      if (!await confirm('Demo-Projekt laden? Alle aktuellen Änderungen gehen verloren.', { title: 'Demo laden' })) return
+      if (
+        !(await confirm('Demo-Projekt laden? Alle aktuellen Änderungen gehen verloren.', {
+          title: 'Demo laden',
+        }))
+      )
+        return
       await projectActions.demo()
       break
     case 'load':
@@ -195,10 +205,10 @@ if (document.readyState === 'loading') {
 // State (UI only - file data comes from storage service)
 // =============================================================================
 
-let currentFile = null    // Currently selected file path
-let contextMenu = null    // Current context menu state
-let draggedItem = null    // Currently dragged item path
-let expandedFolders = new Set()  // Track expanded folders (UI state)
+let currentFile = null // Currently selected file path
+let contextMenu = null // Current context menu state
+let draggedItem = null // Currently dragged item path
+const expandedFolders = new Set() // Track expanded folders (UI state)
 
 // Synchronous file cache for app.js compatibility
 // This is updated by storage events and provides sync access to file contents
@@ -227,7 +237,7 @@ const FILE_TYPES = {
     // Lucide: LayoutDashboard
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
-    </svg>`
+    </svg>`,
   },
   tokens: {
     extensions: ['.tok', '.tokens'],
@@ -235,7 +245,7 @@ const FILE_TYPES = {
     // Lucide: Palette
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/>
-    </svg>`
+    </svg>`,
   },
   component: {
     extensions: ['.com', '.components'],
@@ -243,8 +253,8 @@ const FILE_TYPES = {
     // Lucide: Package
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>
-    </svg>`
-  }
+    </svg>`,
+  },
 }
 
 // Icons
@@ -357,7 +367,9 @@ async function preloadAllFiles() {
 
   // Warn about large projects
   if (filePaths.length > LARGE_PROJECT_WARNING) {
-    console.warn(`[DesktopFiles] Large project: ${filePaths.length} files. Loading may take a moment.`)
+    console.warn(
+      `[DesktopFiles] Large project: ${filePaths.length} files. Loading may take a moment.`
+    )
   }
 
   // Load files in batches with concurrency limit
@@ -365,7 +377,7 @@ async function preloadAllFiles() {
   for (let i = 0; i < filePaths.length; i += MAX_CONCURRENT) {
     const batch = filePaths.slice(i, i + MAX_CONCURRENT)
     const results = await Promise.allSettled(
-      batch.map(async (path) => {
+      batch.map(async path => {
         const content = await storage.readFile(path)
         return { path, content }
       })
@@ -401,7 +413,7 @@ export async function initDesktopFiles(options = {}) {
   // Store callbacks
   window._desktopFiles = {
     onFileSelect,
-    onFileChange
+    onFileChange,
   }
 
   // Initialize storage service
@@ -739,11 +751,9 @@ export async function duplicateFile(path) {
  */
 export async function deleteItem(path, isFolder = false) {
   const name = path.split('/').pop()
-  const message = isFolder
-    ? `Ordner "${name}" und alle Inhalte löschen?`
-    : `"${name}" löschen?`
+  const message = isFolder ? `Ordner "${name}" und alle Inhalte löschen?` : `"${name}" löschen?`
 
-  if (!await confirmDelete(name, { message })) return
+  if (!(await confirmDelete(name, { message }))) return
 
   try {
     if (isFolder) {
@@ -787,7 +797,9 @@ function showContextMenu(e, target) {
 
   const isFile = target?.classList.contains('file-tree-file')
   // Only detect folder if target is NOT a file (files are inside folders, so closest() would find parent)
-  const folderElement = !isFile && (target?.classList.contains('file-tree-folder') ? target : target?.closest('.file-tree-folder'))
+  const folderElement =
+    !isFile &&
+    (target?.classList.contains('file-tree-folder') ? target : target?.closest('.file-tree-folder'))
   const isFolder = !!folderElement
   const isRoot = folderElement?.dataset?.root === 'true'
   const path = target?.dataset?.path || target?.closest('[data-path]')?.dataset?.path
@@ -845,7 +857,7 @@ function showContextMenu(e, target) {
   contextMenu = { element: menu, path, isFile, isFolder }
 
   menu.querySelectorAll('.context-menu-item').forEach(item => {
-    item.addEventListener('click', (e) => {
+    item.addEventListener('click', e => {
       e.stopPropagation()
       handleContextAction(item.dataset.action)
     })
@@ -930,7 +942,7 @@ function startInlineRename(path) {
   }
 
   input.addEventListener('blur', finishRename)
-  input.addEventListener('keydown', (e) => {
+  input.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       e.preventDefault()
       input.blur()
@@ -1042,7 +1054,7 @@ function startInlineCreate(type, parentPath) {
     }
   })
 
-  input.addEventListener('keydown', (e) => {
+  input.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       e.preventDefault()
       finished = true
@@ -1065,9 +1077,10 @@ function renderFileTree() {
   initProjectToolbar()
 
   // Render into file-tree-content (inside file-tree-container)
-  const container = document.getElementById('file-tree-content')
-    || document.getElementById('file-tree-container')
-    || document.getElementById('file-tree')
+  const container =
+    document.getElementById('file-tree-content') ||
+    document.getElementById('file-tree-container') ||
+    document.getElementById('file-tree')
   if (!container) return
 
   const tree = storage.getTree()
@@ -1136,12 +1149,13 @@ function sortTreeItems(items) {
 
 function renderTreeItems(items, depth = 1) {
   const sortedItems = sortTreeItems(items)
-  return sortedItems.map(item => {
-    if (item.type === 'folder') {
-      const isExpanded = expandedFolders.has(item.path)
-      const escapedName = escapeHtml(item.name)
-      const escapedPath = escapeAttr(item.path)  // Use escapeAttr for data attributes
-      return `
+  return sortedItems
+    .map(item => {
+      if (item.type === 'folder') {
+        const isExpanded = expandedFolders.has(item.path)
+        const escapedName = escapeHtml(item.name)
+        const escapedPath = escapeAttr(item.path) // Use escapeAttr for data attributes
+        return `
         <div class="file-tree-folder ${isExpanded ? 'expanded' : ''}" data-path="${escapedPath}" draggable="true">
           <div class="file-tree-folder-header" style="padding-left: ${8 + depth * 12}px">
             ${ICON_CHEVRON}
@@ -1152,12 +1166,12 @@ function renderTreeItems(items, depth = 1) {
           </div>
         </div>
       `
-    } else {
-      const fileType = getFileType(item.name)
-      const isActive = currentFile === item.path
-      const escapedName = escapeHtml(item.name)
-      const escapedPath = escapeAttr(item.path)  // Use escapeAttr for data attributes
-      return `
+      } else {
+        const fileType = getFileType(item.name)
+        const isActive = currentFile === item.path
+        const escapedName = escapeHtml(item.name)
+        const escapedPath = escapeAttr(item.path) // Use escapeAttr for data attributes
+        return `
         <div class="file-tree-file ${isActive ? 'active' : ''}"
              data-path="${escapedPath}"
              draggable="true"
@@ -1166,23 +1180,24 @@ function renderTreeItems(items, depth = 1) {
           <span>${escapedName}</span>
         </div>
       `
-    }
-  }).join('')
+      }
+    })
+    .join('')
 }
 
 function attachTreeEvents(container) {
   // File clicks
   container.querySelectorAll('.file-tree-file').forEach(el => {
-    el.addEventListener('click', (e) => {
+    el.addEventListener('click', e => {
       if (e.target.closest('.file-tree-rename-input')) return
       selectFile(el.dataset.path)
     })
-    el.addEventListener('contextmenu', (e) => showContextMenu(e, el))
+    el.addEventListener('contextmenu', e => showContextMenu(e, el))
   })
 
   // Folder toggle
   container.querySelectorAll('.file-tree-folder-header').forEach(el => {
-    el.addEventListener('click', (e) => {
+    el.addEventListener('click', e => {
       if (e.target.closest('.file-tree-rename-input')) return
       const folder = el.closest('.file-tree-folder')
       const path = folder.dataset.path
@@ -1190,14 +1205,14 @@ function attachTreeEvents(container) {
         toggleFolder(path)
       }
     })
-    el.addEventListener('contextmenu', (e) => {
+    el.addEventListener('contextmenu', e => {
       const folder = el.closest('.file-tree-folder')
       showContextMenu(e, folder)
     })
   })
 
   // Empty area context menu
-  container.addEventListener('contextmenu', (e) => {
+  container.addEventListener('contextmenu', e => {
     if (e.target === container || e.target.classList.contains('file-tree-items')) {
       showContextMenu(e, null)
     }
@@ -1224,7 +1239,7 @@ function attachDragEvents(container) {
   container.querySelectorAll('.file-tree-file, .file-tree-folder').forEach(el => {
     if (el.dataset.root === 'true') return
 
-    el.addEventListener('dragstart', (e) => {
+    el.addEventListener('dragstart', e => {
       draggedItem = el.dataset.path
       el.classList.add('dragging')
       e.dataTransfer.effectAllowed = 'move'
@@ -1239,7 +1254,7 @@ function attachDragEvents(container) {
   })
 
   container.querySelectorAll('.file-tree-folder').forEach(folder => {
-    folder.addEventListener('dragover', (e) => {
+    folder.addEventListener('dragover', e => {
       e.preventDefault()
       if (draggedItem && draggedItem !== folder.dataset.path) {
         if (!draggedItem.startsWith(folder.dataset.path + '/')) {
@@ -1249,13 +1264,13 @@ function attachDragEvents(container) {
       }
     })
 
-    folder.addEventListener('dragleave', (e) => {
+    folder.addEventListener('dragleave', e => {
       if (!folder.contains(e.relatedTarget)) {
         folder.classList.remove('drag-over')
       }
     })
 
-    folder.addEventListener('drop', async (e) => {
+    folder.addEventListener('drop', async e => {
       e.preventDefault()
       e.stopPropagation()
       folder.classList.remove('drag-over')
@@ -1325,7 +1340,7 @@ window.desktopFiles = {
   getCurrentFile,
   getFiles,
   getFileContent,
-  updateFileCache
+  updateFileCache,
 }
 
 // Also export for testing

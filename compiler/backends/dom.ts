@@ -7,7 +7,25 @@
 
 import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
-import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional, IRAnimation, IRZagNode, IRStateMachine, IRStateTransition, IRTable, IRTableColumn, IRItem, IRProperty, IRSlot, IRItemProperty } from '../ir/types'
+import type {
+  IR,
+  IRNode,
+  IRStyle,
+  IREvent,
+  IRAction,
+  IREach,
+  IRConditional,
+  IRAnimation,
+  IRZagNode,
+  IRStateMachine,
+  IRStateTransition,
+  IRTable,
+  IRTableColumn,
+  IRItem,
+  IRProperty,
+  IRSlot,
+  IRItemProperty,
+} from '../ir/types'
 import { isIRZagNode, isIRTable } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import { generateTheme, isThemeToken } from '../schema/theme-generator'
@@ -20,11 +38,22 @@ import { escapeJSString, sanitizeVarName, cssPropertyToJS, generateVarName } fro
 import { ZAG_SLOT_NAMES, type GenerateDOMOptions } from './dom/types'
 import type { EmitterContext, DeferredWhenWatcher } from './dom/emitter-context'
 import { emitTable } from './dom/table-emitter'
-import { emitStateMachine as emitStateMachineExtracted, emitDeferredWhenWatchers } from './dom/state-machine-emitter'
+import {
+  emitStateMachine as emitStateMachineExtracted,
+  emitDeferredWhenWatchers,
+} from './dom/state-machine-emitter'
 import type { StateMachineEmitterContext } from './dom/state-machine-emitter'
-import { emitEachLoop as emitEachLoopExtracted, emitConditional as emitConditionalExtracted } from './dom/loop-emitter'
+import {
+  emitEachLoop as emitEachLoopExtracted,
+  emitConditional as emitConditionalExtracted,
+} from './dom/loop-emitter'
 import type { LoopEmitterContext } from './dom/loop-emitter'
-import { emitEventListener as emitEventListenerExtracted, emitTemplateEventListener as emitTemplateEventListenerExtracted, emitAction as emitActionExtracted, mapKeyName } from './dom/event-emitter'
+import {
+  emitEventListener as emitEventListenerExtracted,
+  emitTemplateEventListener as emitTemplateEventListenerExtracted,
+  emitAction as emitActionExtracted,
+  mapKeyName,
+} from './dom/event-emitter'
 import type { EventEmitterContext } from './dom/event-emitter'
 import { emitTokens as emitTokensExtracted } from './dom/token-emitter'
 import type { TokenEmitterContext } from './dom/token-emitter'
@@ -61,11 +90,20 @@ class DOMGenerator {
   private indent = 0
   private lines: string[] = []
   // Deferred when watchers - emitted after DOM is built
-  private deferredWhenWatchers: Array<{ varName: string; transition: IRStateTransition; sm: IRStateMachine }> = []
+  private deferredWhenWatchers: Array<{
+    varName: string
+    transition: IRStateTransition
+    sm: IRStateMachine
+  }> = []
   // Token lookup map for resolving token-to-token references
   private tokenMap: Map<string, string | number | boolean> = new Map()
 
-  constructor(ir: IR, javascript?: JavaScriptBlock, astTokens: TokenDefinition[] = [], dataFiles?: DataFile[]) {
+  constructor(
+    ir: IR,
+    javascript?: JavaScriptBlock,
+    astTokens: TokenDefinition[] = [],
+    dataFiles?: DataFile[]
+  ) {
     this.ir = ir
     this.javascript = javascript
     this.astTokens = astTokens
@@ -87,11 +125,17 @@ class DOMGenerator {
     return {
       emit: (line: string) => this.emit(line),
       getIndent: () => this.indent,
-      setIndent: (level: number) => { this.indent = level },
-      indentIn: () => { this.indent++ },
-      indentOut: () => { this.indent-- },
+      setIndent: (level: number) => {
+        this.indent = level
+      },
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
       sanitizeVarName: (id: string) => this.sanitizeVarName(id),
-      escapeString: (str) => this.escapeString(str),
+      escapeString: str => this.escapeString(str),
       emitNode: (node: IRNode, parentVar: string) => this.emitNode(node, parentVar),
       emitSlotStyles: (varName: string, slot) => {
         if (slot?.styles && slot.styles.length > 0) {
@@ -116,11 +160,17 @@ class DOMGenerator {
       emit: (line: string) => this.emit(line),
       emitRaw: (line: string) => this.lines.push(line),
       getIndent: () => this.indent,
-      setIndent: (level: number) => { this.indent = level },
-      indentIn: () => { this.indent++ },
-      indentOut: () => { this.indent-- },
+      setIndent: (level: number) => {
+        this.indent = level
+      },
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
       sanitizeVarName: (id: string) => this.sanitizeVarName(id),
-      escapeString: (str) => this.escapeString(str),
+      escapeString: str => this.escapeString(str),
       emitNode: (node: IRNode, parentVar: string) => this.emitNode(node, parentVar),
       emitStyles: (varName: string, styles) => {
         const baseStyles = styles.filter(s => !s.state)
@@ -147,7 +197,7 @@ class DOMGenerator {
         }
       },
       getDeferredWhenWatchers: () => this.deferredWhenWatchers,
-      addDeferredWhenWatcher: (watcher) => this.deferredWhenWatchers.push(watcher),
+      addDeferredWhenWatcher: watcher => this.deferredWhenWatchers.push(watcher),
       emitStateMachine: (varName: string, node: IRNode) => this.emitStateMachine(varName, node),
       emitEachLoop: (each, parentVar: string) => this.emitEachLoop(each, parentVar),
       emitConditional: (cond, parentVar: string) => this.emitConditional(cond, parentVar),
@@ -160,7 +210,7 @@ class DOMGenerator {
       resolveTemplateStyleValue: (value: string, itemVar: string) =>
         this.resolveTemplateStyleValue(value, itemVar),
       resolveConditionVariables: (condition: string) => this.resolveConditionVariables(condition),
-      resolveContentValue: (value) => this.resolveContentValue(value as string | number | boolean),
+      resolveContentValue: value => this.resolveContentValue(value as string | number | boolean),
     }
   }
 
@@ -262,7 +312,9 @@ class DOMGenerator {
       this.emit(`properties: [`)
       this.indent++
       for (const prop of keyframe.properties) {
-        this.emit(`{ property: "${prop.property}", value: "${prop.value}"${prop.target ? `, target: "${prop.target}"` : ''} },`)
+        this.emit(
+          `{ property: "${prop.property}", value: "${prop.value}"${prop.target ? `, target: "${prop.target}"` : ''} },`
+        )
       }
       this.indent--
       this.emit(`],`)
@@ -296,8 +348,12 @@ class DOMGenerator {
   private createTokenEmitterContext(): TokenEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
-      indentIn: () => { this.indent++ },
-      indentOut: () => { this.indent-- },
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
     }
   }
 
@@ -347,8 +403,10 @@ class DOMGenerator {
         // Resolve token-to-token references (e.g., $primary.bg: $blue → #2271C1)
         let value = this.resolveTokenValueWithContext(token.value, token.name)
         // Strip $ prefix and convert dots to hyphens for valid CSS variable name
-        const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name)
-          .replace(/\./g, '-')
+        const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name).replace(
+          /\./g,
+          '-'
+        )
 
         // Add px unit for numeric spacing/sizing tokens
         const needsPx = /\.(pad|gap|rad|radius|margin|size)$/.test(token.name)
@@ -392,24 +450,40 @@ class DOMGenerator {
     this.emit('@keyframes mirror-fade-out { from { opacity: 1; } to { opacity: 0; } }')
 
     // slide-in / slide-out (default: from left)
-    this.emit('@keyframes mirror-slide-in { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }')
-    this.emit('@keyframes mirror-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-20px); opacity: 0; } }')
+    this.emit(
+      '@keyframes mirror-slide-in { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }'
+    )
+    this.emit(
+      '@keyframes mirror-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-20px); opacity: 0; } }'
+    )
 
     // scale-in / scale-out
-    this.emit('@keyframes mirror-scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }')
-    this.emit('@keyframes mirror-scale-out { from { transform: scale(1); opacity: 1; } to { transform: scale(0.9); opacity: 0; } }')
+    this.emit(
+      '@keyframes mirror-scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }'
+    )
+    this.emit(
+      '@keyframes mirror-scale-out { from { transform: scale(1); opacity: 1; } to { transform: scale(0.9); opacity: 0; } }'
+    )
 
     // bounce (attention-grabbing, loops)
-    this.emit('@keyframes mirror-bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }')
+    this.emit(
+      '@keyframes mirror-bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }'
+    )
 
     // pulse (attention-grabbing, loops)
-    this.emit('@keyframes mirror-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }')
+    this.emit(
+      '@keyframes mirror-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }'
+    )
 
     // shake (error feedback)
-    this.emit('@keyframes mirror-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }')
+    this.emit(
+      '@keyframes mirror-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }'
+    )
 
     // spin (loading indicator, loops)
-    this.emit('@keyframes mirror-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }')
+    this.emit(
+      '@keyframes mirror-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }'
+    )
   }
 
   private emitSystemStateCSS(): void {
@@ -579,7 +653,8 @@ class DOMGenerator {
       } else if (prop.name === 'disabled' || prop.name === 'hidden') {
         this.emit(`${varName}.${prop.name} = ${prop.value}`)
       } else {
-        const value = typeof prop.value === 'string' ? `"${this.escapeString(String(prop.value))}"` : prop.value
+        const value =
+          typeof prop.value === 'string' ? `"${this.escapeString(String(prop.value))}"` : prop.value
         this.emit(`${varName}.setAttribute('${prop.name}', ${value})`)
       }
     }
@@ -699,8 +774,12 @@ class DOMGenerator {
     // Mark abs containers (fallback for older IR or when layoutType not set)
     // We detect this by checking if the element has position: relative but NOT flex/grid display
     // (flex containers also need position: relative for stacked layouts, so we need to be careful)
-    const hasPositionRelative = baseStyles.some(s => s.property === 'position' && s.value === 'relative')
-    const hasFlexDisplay = baseStyles.some(s => s.property === 'display' && (s.value === 'flex' || s.value === 'grid'))
+    const hasPositionRelative = baseStyles.some(
+      s => s.property === 'position' && s.value === 'relative'
+    )
+    const hasFlexDisplay = baseStyles.some(
+      s => s.property === 'display' && (s.value === 'flex' || s.value === 'grid')
+    )
     if (hasPositionRelative && !hasFlexDisplay && !node.layoutType) {
       this.emit(`${varName}.dataset.mirrorAbs = 'true'`)
     }
@@ -798,7 +877,9 @@ class DOMGenerator {
 
     // Add event listeners
     // Check if there are keyboard events and make element focusable
-    const hasKeyboardEvents = node.events.some(e => e.key || e.name === 'keydown' || e.name === 'keyup')
+    const hasKeyboardEvents = node.events.some(
+      e => e.key || e.name === 'keydown' || e.name === 'keyup'
+    )
     if (hasKeyboardEvents) {
       this.emit(`${varName}.setAttribute('tabindex', '0')`)
     }
@@ -807,7 +888,7 @@ class DOMGenerator {
       // These have only isBuiltinStateFunction actions (toggle, exclusive, cycle)
       const allActionsAreStateMachine = event.actions.every(a => a.isBuiltinStateFunction)
       if (allActionsAreStateMachine && node.stateMachine) {
-        continue  // State machine will handle this event via transitions
+        continue // State machine will handle this event via transitions
       }
       this.emitEventListener(varName, event)
     }
@@ -833,8 +914,10 @@ class DOMGenerator {
     // This implements Figma Variants behavior - each state can have completely different children
     const sm = node.stateMachine
     const effectiveInitial = node.initialState || sm?.initial || 'default'
-    const initialStateHasChildren = sm?.states[effectiveInitial]?.children && sm.states[effectiveInitial].children!.length > 0
-    const shouldSkipDefaultChildren = sm && effectiveInitial !== 'default' && initialStateHasChildren
+    const initialStateHasChildren =
+      sm?.states[effectiveInitial]?.children && sm.states[effectiveInitial].children!.length > 0
+    const shouldSkipDefaultChildren =
+      sm && effectiveInitial !== 'default' && initialStateHasChildren
 
     if (!shouldSkipDefaultChildren) {
       for (const child of node.children) {
@@ -844,10 +927,14 @@ class DOMGenerator {
 
     // Auto-set parent to relative if this element is absolute positioned
     // Only if parent doesn't already have position/layout set
-    const hasPositionAbsolute = baseStyles.some(s => s.property === 'position' && s.value === 'absolute')
+    const hasPositionAbsolute = baseStyles.some(
+      s => s.property === 'position' && s.value === 'absolute'
+    )
     if (hasPositionAbsolute && parentVar !== '_root') {
       this.emit(`// Auto-set parent to relative for absolute child`)
-      this.emit(`if (${parentVar}.style.position !== 'relative' && ${parentVar}.style.position !== 'absolute' && ${parentVar}.style.position !== 'fixed') {`)
+      this.emit(
+        `if (${parentVar}.style.position !== 'relative' && ${parentVar}.style.position !== 'absolute' && ${parentVar}.style.position !== 'fixed') {`
+      )
       this.indent++
       this.emit(`${parentVar}.style.position = 'relative'`)
       // Only set mirrorAbs if parent doesn't have explicit data-layout
@@ -879,11 +966,20 @@ class DOMGenerator {
   private createLoopEmitterContext(): LoopEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
-      indentIn: () => { this.indent++ },
-      indentOut: () => { this.indent-- },
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
       sanitizeVarName: (id: string) => this.sanitizeVarName(id),
       resolveConditionVariables: (condition: string) => this.resolveConditionVariables(condition),
-      emitEachTemplateNode: (node: IRNode, parentVar: string, itemVar: string, indexVar: string) => {
+      emitEachTemplateNode: (
+        node: IRNode,
+        parentVar: string,
+        itemVar: string,
+        indexVar: string
+      ) => {
         this.emitEachTemplateNode(node, parentVar, itemVar, indexVar)
       },
       emitConditionalTemplateNode: (node: IRNode, parentVar: string) => {
@@ -1057,7 +1153,9 @@ class DOMGenerator {
               } else if (padValues.length === 2) {
                 this.emit(`${itemVar}.style.padding = '${padValues[0]}px ${padValues[1]}px'`)
               } else if (padValues.length === 4) {
-                this.emit(`${itemVar}.style.padding = '${padValues[0]}px ${padValues[1]}px ${padValues[2]}px ${padValues[3]}px'`)
+                this.emit(
+                  `${itemVar}.style.padding = '${padValues[0]}px ${padValues[1]}px ${padValues[2]}px ${padValues[3]}px'`
+                )
               }
             } else if (propName === 'spread') {
               this.emit(`${itemVar}.style.display = 'flex'`)
@@ -1143,12 +1241,14 @@ class DOMGenerator {
     // Set HTML properties
     for (const prop of node.properties) {
       if (prop.name === 'textContent') {
-        const value = typeof prop.value === 'string' ? `"${this.escapeString(prop.value)}"` : prop.value
+        const value =
+          typeof prop.value === 'string' ? `"${this.escapeString(prop.value)}"` : prop.value
         this.emit(`${varName}.textContent = ${value}`)
       } else if (prop.name === 'disabled' || prop.name === 'hidden') {
         this.emit(`${varName}.${prop.name} = ${prop.value}`)
       } else {
-        const value = typeof prop.value === 'string' ? `"${this.escapeString(String(prop.value))}"` : prop.value
+        const value =
+          typeof prop.value === 'string' ? `"${this.escapeString(String(prop.value))}"` : prop.value
         this.emit(`${varName}.setAttribute('${prop.name}', ${value})`)
       }
     }
@@ -1174,9 +1274,14 @@ class DOMGenerator {
         const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
         const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
         const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
-        const iconSize = iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
-        const iconColor = iconColorProp?.value || node.styles.find(s => s.property === 'color')?.value || 'currentColor'
-        const iconWeight = iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
+        const iconSize =
+          iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
+        const iconColor =
+          iconColorProp?.value ||
+          node.styles.find(s => s.property === 'color')?.value ||
+          'currentColor'
+        const iconWeight =
+          iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
         this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
         this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
         this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
@@ -1189,7 +1294,7 @@ class DOMGenerator {
       // Skip events that are fully handled by state machine transitions
       const allActionsAreStateMachine = event.actions.every(a => a.isBuiltinStateFunction)
       if (allActionsAreStateMachine && node.stateMachine) {
-        continue  // State machine will handle this event via transitions
+        continue // State machine will handle this event via transitions
       }
       this.emitEventListener(varName, event)
     }
@@ -1202,7 +1307,12 @@ class DOMGenerator {
     this.emit(`${parentVar}.appendChild(${varName})`)
   }
 
-  private emitEachTemplateNode(node: IRNode, parentVar: string, itemVar: string, indexVar: string = 'index'): void {
+  private emitEachTemplateNode(
+    node: IRNode,
+    parentVar: string,
+    itemVar: string,
+    indexVar: string = 'index'
+  ): void {
     const varName = this.sanitizeVarName(node.id) + '_tpl'
 
     this.emit(`const ${varName} = document.createElement('${node.tag}')`)
@@ -1249,9 +1359,14 @@ class DOMGenerator {
         const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
         const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
         const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
-        const iconSize = iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
-        const iconColor = iconColorProp?.value || node.styles.find(s => s.property === 'color')?.value || 'currentColor'
-        const iconWeight = iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
+        const iconSize =
+          iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
+        const iconColor =
+          iconColorProp?.value ||
+          node.styles.find(s => s.property === 'color')?.value ||
+          'currentColor'
+        const iconWeight =
+          iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
         this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
         this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
         this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
@@ -1304,11 +1419,22 @@ class DOMGenerator {
   /**
    * Emit a nested each loop inside a template (for nested loops like `each item in category.items`)
    */
-  private emitNestedEachLoop(each: IREach, parentVar: string, outerItemVar: string, outerIndexVar: string): void {
+  private emitNestedEachLoop(
+    each: IREach,
+    parentVar: string,
+    outerItemVar: string,
+    outerIndexVar: string
+  ): void {
     const containerId = this.sanitizeVarName(each.id)
     const innerItemVar = each.itemVar.startsWith('$') ? each.itemVar.slice(1) : each.itemVar
-    const innerIndexVar = each.indexVar ? (each.indexVar.startsWith('$') ? each.indexVar.slice(1) : each.indexVar) : 'index'
-    const rawCollection = each.collection.startsWith('$') ? each.collection.slice(1) : each.collection
+    const innerIndexVar = each.indexVar
+      ? each.indexVar.startsWith('$')
+        ? each.indexVar.slice(1)
+        : each.indexVar
+      : 'index'
+    const rawCollection = each.collection.startsWith('$')
+      ? each.collection.slice(1)
+      : each.collection
 
     this.emit(`// Nested each loop: ${innerItemVar} in ${rawCollection}`)
     this.emit(`const ${containerId}_container = document.createElement('div')`)
@@ -1355,7 +1481,11 @@ class DOMGenerator {
     this.emit(`${parentVar}.appendChild(${containerId}_container)`)
   }
 
-  private resolveTemplateValue(value: string | number | boolean, itemVar: string, indexVar: string = 'index'): string {
+  private resolveTemplateValue(
+    value: string | number | boolean,
+    itemVar: string,
+    indexVar: string = 'index'
+  ): string {
     if (typeof value === 'string') {
       // Check for __loopVar: markers (set by IR for loop variable references)
       // Use regex replacement for ALL occurrences (handles multiple markers in expressions)
@@ -1366,7 +1496,10 @@ class DOMGenerator {
         // Replace __loopVar:name with just name (including array indexing and nested properties)
         let resolved = value.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
         // Also handle $-variables in expressions
-        resolved = resolved.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g, '$get("$1")')
+        resolved = resolved.replace(
+          /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
+          '$get("$1")'
+        )
         return resolved
       }
 
@@ -1416,7 +1549,7 @@ class DOMGenerator {
 
     // Handle __loopVar: markers
     if (value.includes('__loopVar:')) {
-      let resolved = value.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
+      const resolved = value.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
       // Wrap in parentheses if it's an expression
       if (resolved.includes(' ')) {
         return `(${resolved})`
@@ -1460,7 +1593,7 @@ class DOMGenerator {
         const char = content[i]
         if (char === '(') depth++
         else if (char === ')') depth--
-        else if (char === '?' && depth === 0 && !content.slice(i-1, i+1).match(/[=!<>]=?\?/)) {
+        else if (char === '?' && depth === 0 && !content.slice(i - 1, i + 1).match(/[=!<>]=?\?/)) {
           // Found ? not part of === or !== etc
           questionPos = i
           break
@@ -1559,12 +1692,8 @@ class DOMGenerator {
    */
   private emitTemplateEventListener(varName: string, event: IREvent, itemVar: string): void {
     const ctx = this.createEventEmitterContext()
-    emitTemplateEventListenerExtracted(
-      ctx,
-      varName,
-      event,
-      itemVar,
-      (action, currentVar, item) => this.emitTemplateAction(action, currentVar, item)
+    emitTemplateEventListenerExtracted(ctx, varName, event, itemVar, (action, currentVar, item) =>
+      this.emitTemplateAction(action, currentVar, item)
     )
   }
 
@@ -1603,11 +1732,8 @@ class DOMGenerator {
    */
   private emitEventListener(varName: string, event: IREvent): void {
     const ctx = this.createEventEmitterContext()
-    emitEventListenerExtracted(
-      ctx,
-      varName,
-      event,
-      (action, currentVar) => this.emitAction(action, currentVar)
+    emitEventListenerExtracted(ctx, varName, event, (action, currentVar) =>
+      this.emitAction(action, currentVar)
     )
   }
 
@@ -1697,7 +1823,6 @@ class DOMGenerator {
     this.emit('return _root')
   }
 
-
   private emitRuntime(): void {
     // Emit the pre-built runtime code from separate module
     // This replaces ~778 lines of inline code generation
@@ -1708,8 +1833,10 @@ class DOMGenerator {
     if (this.ir.tokens.length > 0) {
       this.emit('// Register tokens in runtime')
       for (const token of this.ir.tokens) {
-        const tokenKey = (token.name.startsWith('$') ? token.name.slice(1) : token.name)
-          .replace(/\./g, '-')
+        const tokenKey = (token.name.startsWith('$') ? token.name.slice(1) : token.name).replace(
+          /\./g,
+          '-'
+        )
         // Handle numeric values - check if the string represents a number
         let value: string
         if (typeof token.value === 'number') {
@@ -1752,14 +1879,18 @@ class DOMGenerator {
       // Check for loop variable reference (marked by IR)
       if (value.startsWith('__loopVar:')) {
         const varName = value.slice('__loopVar:'.length)
-        return varName  // Return unquoted - it's a JS variable reference
+        return varName // Return unquoted - it's a JS variable reference
       }
 
       // Check if this is a computed expression from the IR
       // Expressions from IR look like: "Hello " + $name or $count * $price
       // They have: quoted strings AND/OR $-variables with operators between them
       // Plain strings look like: Tokens + Komponenten (no quotes, no $)
-      const hasOperators = value.includes(' + ') || value.includes(' - ') || value.includes(' * ') || value.includes(' / ')
+      const hasOperators =
+        value.includes(' + ') ||
+        value.includes(' - ') ||
+        value.includes(' * ') ||
+        value.includes(' / ')
       const hasQuotedParts = /^"[^"]*"/.test(value) || /" [+\-*/] /.test(value)
       const hasDollarVars = /\$[a-zA-Z_]/.test(value)
       const hasLoopVarMarkers = value.includes('__loopVar:')
@@ -1827,15 +1958,21 @@ class DOMGenerator {
   private resolveExpressionVariables(expr: string): string {
     // First, replace __loopVar:name with just name (unquoted)
     // Handles user.name[0] with array indexing
-    let result = expr.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, (match, varName) => {
-      return varName
-    })
+    let result = expr.replace(
+      /__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g,
+      (match, varName) => {
+        return varName
+      }
+    )
     // Then, replace $varName or $var.name.deep patterns (but not $12.4k or $100)
     // Also handles aggregation method calls: $tasks.sum(hours), $items.sum(data.stats.value)
     // The pattern inside parentheses allows dots for nested paths like data.stats.value
-    result = result.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*(?:\([a-zA-Z0-9_.,\s]*\))?)/g, (match, varName) => {
-      return `$get("${varName}")`
-    })
+    result = result.replace(
+      /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*(?:\([a-zA-Z0-9_.,\s]*\))?)/g,
+      (match, varName) => {
+        return `$get("${varName}")`
+      }
+    )
     return result
   }
 
@@ -1846,13 +1983,13 @@ class DOMGenerator {
   private escapeString(str: string | number | boolean | undefined | null): string {
     const s = String(str ?? '')
     return s
-      .replace(/\\/g, '\\\\')   // Backslashes first
-      .replace(/"/g, '\\"')     // Double quotes
-      .replace(/\n/g, '\\n')    // Newlines
-      .replace(/\r/g, '\\r')    // Carriage returns
-      .replace(/\t/g, '\\t')    // Tabs
-      .replace(/\u2028/g, '\\u2028')  // Line separator
-      .replace(/\u2029/g, '\\u2029')  // Paragraph separator
+      .replace(/\\/g, '\\\\') // Backslashes first
+      .replace(/"/g, '\\"') // Double quotes
+      .replace(/\n/g, '\\n') // Newlines
+      .replace(/\r/g, '\\r') // Carriage returns
+      .replace(/\t/g, '\\t') // Tabs
+      .replace(/\u2028/g, '\\u2028') // Line separator
+      .replace(/\u2029/g, '\\u2029') // Paragraph separator
   }
 
   /**
@@ -1860,10 +1997,7 @@ class DOMGenerator {
    * Escapes backticks and backslashes, but preserves ${...} interpolations
    */
   private escapeTemplateString(str: string): string {
-    return str
-      .replace(/\\/g, '\\\\')
-      .replace(/`/g, '\\`')
-      .replace(/\n/g, '\\n')
+    return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\n/g, '\\n')
   }
 
   /**
@@ -1872,9 +2006,13 @@ class DOMGenerator {
   private createEventEmitterContext(): EventEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
-      indentIn: () => { this.indent++ },
-      indentOut: () => { this.indent-- },
-      escapeString: (str) => this.escapeString(str),
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
+      escapeString: str => this.escapeString(str),
     }
   }
 
@@ -1889,29 +2027,51 @@ class DOMGenerator {
   private resolveConditionVariables(condition: string): string {
     // JS keywords and literals that should NOT be wrapped in $get()
     const reserved = new Set([
-      'true', 'false', 'null', 'undefined', 'NaN', 'Infinity',
-      'this', 'typeof', 'instanceof', 'new', 'delete', 'void',
-      'if', 'else', 'return', 'function', 'var', 'let', 'const'
+      'true',
+      'false',
+      'null',
+      'undefined',
+      'NaN',
+      'Infinity',
+      'this',
+      'typeof',
+      'instanceof',
+      'new',
+      'delete',
+      'void',
+      'if',
+      'else',
+      'return',
+      'function',
+      'var',
+      'let',
+      'const',
     ])
 
     // First handle __loopVar: markers (from loop variables)
     let result = condition.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
 
     // Then handle $-prefixed variables (already explicit)
-    result = result.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g, '$get("$1")')
+    result = result.replace(
+      /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
+      '$get("$1")'
+    )
 
     // Now handle bare identifiers (not already wrapped, not in quotes, not reserved)
     // This regex finds identifiers with optional dot notation
     // We use a function to check if it's reserved
-    result = result.replace(/(?<!["\w$])([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)(?!["\w(])/g, (match, identifier) => {
-      // Don't wrap if it's a reserved word
-      const firstPart = identifier.split('.')[0]
-      if (reserved.has(firstPart)) {
-        return match
+    result = result.replace(
+      /(?<!["\w$])([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)(?!["\w(])/g,
+      (match, identifier) => {
+        // Don't wrap if it's a reserved word
+        const firstPart = identifier.split('.')[0]
+        if (reserved.has(firstPart)) {
+          return match
+        }
+        // Don't wrap if it's already wrapped in $get
+        return `$get("${identifier}")`
       }
-      // Don't wrap if it's already wrapped in $get
-      return `$get("${identifier}")`
-    })
+    )
 
     return result
   }
@@ -1931,8 +2091,12 @@ class DOMGenerator {
   private emitStateMachine(varName: string, node: IRNode): void {
     const ctx: StateMachineEmitterContext = {
       emit: (line: string) => this.emit(line),
-      indentIn: () => { this.indent++ },
-      indentOut: () => { this.indent-- },
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
       escapeString: (str: string) => this.escapeString(str),
       addDeferredWhenWatcher: (watcher: DeferredWhenWatcher) => {
         this.deferredWhenWatchers.push(watcher)
@@ -1948,8 +2112,12 @@ class DOMGenerator {
   private emitDeferredWhenWatchersMethod(): void {
     const ctx: StateMachineEmitterContext = {
       emit: (line: string) => this.emit(line),
-      indentIn: () => { this.indent++ },
-      indentOut: () => { this.indent-- },
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
       escapeString: (str: string) => this.escapeString(str),
       addDeferredWhenWatcher: (watcher: DeferredWhenWatcher) => {
         this.deferredWhenWatchers.push(watcher)

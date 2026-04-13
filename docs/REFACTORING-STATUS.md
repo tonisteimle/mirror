@@ -1,24 +1,24 @@
 # Mirror Architektur-Refactoring Status
 
-**Stand:** 12. April 2026
+**Stand:** 13. April 2026
 **Branch:** `cleanup/project-cleanup`
 
 ## Übersicht
 
-| Phase | Status | Fortschritt |
-|-------|--------|-------------|
-| Phase 0: Sicherheit & Quick Wins | ✅ Abgeschlossen | 100% |
-| Phase 1.1: Parser Split | ✅ Abgeschlossen | 100% |
-| Phase 1.2: IR Transformer Refactoring | ✅ Abgeschlossen | 100% |
-| Phase 1.3: Validator Modularisierung | ✅ Abgeschlossen | 100% |
-| Phase 1.4: DOM Backend | ✅ Abgeschlossen | 100% |
-| Phase 1.5: EmitterContext Konsolidierung | ✅ Abgeschlossen | 100% |
-| Phase 2.1: PropertyPanel Split | ✅ Abgeschlossen | 100% |
-| Phase 2.2: State Store Simplification | ✅ Abgeschlossen | 100% |
-| Phase 2.3: Memory Leak Fixes | ✅ Abgeschlossen | 100% |
-| Phase 2.4: SyncCoordinator Stabilisierung | ✅ Abgeschlossen | 100% |
-| Phase 3: Test-Coverage | ⏳ Ausstehend | 0% |
-| Phase 4: Build & TypeScript | ⏳ Ausstehend | 0% |
+| Phase                                     | Status           | Fortschritt |
+| ----------------------------------------- | ---------------- | ----------- |
+| Phase 0: Sicherheit & Quick Wins          | ✅ Abgeschlossen | 100%        |
+| Phase 1.1: Parser Split                   | ✅ Abgeschlossen | 100%        |
+| Phase 1.2: IR Transformer Refactoring     | ✅ Abgeschlossen | 100%        |
+| Phase 1.3: Validator Modularisierung      | ✅ Abgeschlossen | 100%        |
+| Phase 1.4: DOM Backend                    | ✅ Abgeschlossen | 100%        |
+| Phase 1.5: EmitterContext Konsolidierung  | ✅ Abgeschlossen | 100%        |
+| Phase 2.1: PropertyPanel Split            | ✅ Abgeschlossen | 100%        |
+| Phase 2.2: State Store Simplification     | ✅ Abgeschlossen | 100%        |
+| Phase 2.3: Memory Leak Fixes              | ✅ Abgeschlossen | 100%        |
+| Phase 2.4: SyncCoordinator Stabilisierung | ✅ Abgeschlossen | 100%        |
+| Phase 3: Test-Coverage                    | ⏳ Ausstehend    | 0%          |
+| Phase 4: Build & TypeScript               | ⏳ Ausstehend    | 0%          |
 
 ---
 
@@ -36,6 +36,7 @@
 **Aktuell:** parser.ts mit 5.766 Zeilen (**-11.8% Reduktion**)
 
 **Modulare Struktur:**
+
 ```
 compiler/parser/
 ├── index.ts           # Entry Point (64 Zeilen)
@@ -50,6 +51,7 @@ compiler/parser/
 ```
 
 **Extrahierte Table-Parser-Methoden:**
+
 - `parseTable` - Hauptmethode für Table-Komponenten
 - `parseTableClauses` - where/by/grouped Parsing
 - `parseTableExpression` - Filterausdrücke
@@ -61,6 +63,7 @@ compiler/parser/
 - `parseTableCellSlot` - Custom Cell Templates
 
 **Extrahierte Zag-Parser-Methoden:**
+
 - `parseZagComponent` - Hauptmethode für Zag-Komponenten
 - `parseZagInlineProperties` - Inline Properties Parsing
 - `parseZagComponentBody` - Body mit Slots/Items
@@ -77,6 +80,7 @@ compiler/parser/
 **Aktuell:** 1.570 Zeilen (**-69.4% Reduktion**)
 
 **Extrahierte Module:**
+
 ```
 compiler/ir/transformers/
 ├── transformer-context.ts        # Shared Context Interface (~53 Zeilen)
@@ -112,6 +116,7 @@ Orchestrator-Methoden, die viele interne Abhängigkeiten haben und in der Klasse
 **Aktuell:** validator.ts mit 1.012 Zeilen (**-9.6% Reduktion**)
 
 **Modulare Struktur:**
+
 ```
 compiler/validator/
 ├── index.ts              # Entry (222 Zeilen)
@@ -133,6 +138,7 @@ Die Extraktion fokussierte auf reine Utility-Funktionen und statische Konfigurat
 **Aktuell:** 1.860 Zeilen (~76.0% Reduktion)
 
 **Extrahierte Module:**
+
 ```
 compiler/backends/dom/
 ├── index.ts              # Entry Point (71 Zeilen)
@@ -141,7 +147,14 @@ compiler/backends/dom/
 ├── base-emitter-context.ts # Konsolidierte Context-Typen
 ├── emitter-context.ts    # Re-Export (backwards compatibility)
 ├── zag-emitter-context.ts # Re-Export (backwards compatibility)
-├── zag-emitters.ts       # 25 Zag-Komponenten (2.926 Zeilen)
+├── zag-emitters.ts       # Re-Export (60 Zeilen, 98% Reduktion)
+├── zag/                  # Modular Zag Emitters (2.923 Zeilen total)
+│   ├── index.ts          # Entry Point + Registry (183 Zeilen)
+│   ├── helpers.ts        # Shared Helpers (81 Zeilen)
+│   ├── form-emitters.ts  # Switch, Checkbox, RadioGroup, etc. (1.138 Zeilen)
+│   ├── nav-emitters.ts   # Tabs, SideNav, ToggleGroup, etc. (575 Zeilen)
+│   ├── select-emitters.ts # Select, TreeView, Listbox, etc. (419 Zeilen)
+│   └── overlay-emitters.ts # Dialog, Tooltip, Popover, etc. (527 Zeilen)
 ├── table-emitter.ts      # Table Emission
 ├── state-machine-emitter.ts # State Machine
 ├── loop-emitter.ts       # Loop Handling
@@ -162,6 +175,7 @@ dem ZagEmitterContext für Kinder-Rendering.
 ### Phase 1.5: EmitterContext Konsolidierung ✅
 
 **Problem:** 5 verschiedene EmitterContext-Typen mit überlappenden Methoden
+
 - `EmitterContext` (emitter-context.ts)
 - `ZagEmitterContext` (zag-emitter-context.ts)
 - `EventEmitterContext` (event-emitter.ts)
@@ -169,6 +183,7 @@ dem ZagEmitterContext für Kinder-Rendering.
 - `LoopEmitterContext` (loop-emitter.ts)
 
 **Lösung:** Konsolidiert in `base-emitter-context.ts`
+
 ```
 compiler/backends/dom/base-emitter-context.ts
 ├── BaseEmitterContext      # Minimale Methoden (emit, indent, escape)
@@ -180,6 +195,7 @@ compiler/backends/dom/base-emitter-context.ts
 ```
 
 **Vorteile:**
+
 - Single Source of Truth für alle Context-Typen
 - TypeScript Pick statt redundanter Interface-Definitionen
 - Alte Imports bleiben kompatibel (Re-Exports)
@@ -226,6 +242,7 @@ studio/panels/property/
 **Aktuell:** state.ts mit 948 Zeilen (**-16% Reduktion**)
 
 **Modulare Struktur:**
+
 ```
 studio/core/
 ├── state.ts            # Actions, Selectors, Computed (948 Zeilen)
@@ -234,10 +251,12 @@ studio/core/
 ```
 
 **Extrahierte Module:**
+
 - `state-types.ts` - SelectionOrigin, StudioState, LayoutRect, DeferredSelection, etc.
 - `store.ts` - Generische `Store<T>` Klasse mit Subscription-Support
 
 **Vorteile:**
+
 - Typen können ohne zirkuläre Dependencies importiert werden
 - Store-Klasse ist wiederverwendbar für andere State-Container
 - Backward-kompatible Re-Exports in state.ts
@@ -246,14 +265,15 @@ studio/core/
 
 **Analyse und Fixes:**
 
-| Datei | Issue | Severity | Status |
-|-------|-------|----------|--------|
-| `studio/bootstrap.ts` | Panel Toolbar Event Listener ohne Cleanup | MEDIUM | ✅ Behoben |
-| `studio/panels/property/controller.ts` | Race Condition in debouncedDispatch() | MEDIUM | ✅ Behoben |
-| `studio/preview/index.ts` | Scroll/Resize Listener | LOW | ✓ Korrekt |
-| `studio/preview/handle-manager.ts` | Overlay Listener | LOW | ✓ Korrekt |
+| Datei                                  | Issue                                     | Severity | Status     |
+| -------------------------------------- | ----------------------------------------- | -------- | ---------- |
+| `studio/bootstrap.ts`                  | Panel Toolbar Event Listener ohne Cleanup | MEDIUM   | ✅ Behoben |
+| `studio/panels/property/controller.ts` | Race Condition in debouncedDispatch()     | MEDIUM   | ✅ Behoben |
+| `studio/preview/index.ts`              | Scroll/Resize Listener                    | LOW      | ✓ Korrekt  |
+| `studio/preview/handle-manager.ts`     | Overlay Listener                          | LOW      | ✓ Korrekt  |
 
 **Fixes implementiert:**
+
 1. **bootstrap.ts (initializePanelToolbar):**
    - Event Handler in Variablen extrahiert (handleMenuButtonClick, handleDocumentClick, handleMenuChange)
    - Cleanup-Funktion zu `eventUnsubscribes` hinzugefügt
@@ -263,6 +283,7 @@ studio/core/
    - Disposed-Check im setTimeout-Callback für Race Condition Schutz
 
 **Positive Befunde:**
+
 - SyncCoordinator: Proper `cleanupFns` Array
 - RenderPipeline: Korrektes attach/detach Pattern
 - DragDropController: Comprehensive dispose() Methode
@@ -271,20 +292,23 @@ studio/core/
 ### Phase 2.4: SyncCoordinator Stabilisierung ✅
 
 **Problem:** Test "should not double-subscribe when called multiple times" fehlgeschlagen
+
 - Erwartete 1 Aufruf von `events.on`, aber 2 wurden registriert
 
 **Analyse:**
+
 - Vitest `vi.spyOn()` wird nicht automatisch zwischen Tests zurückgesetzt
 - Der Spy aus dem vorherigen Test leckte in den nächsten Test
 - Verursachte falsche Zählung der `events.on` Aufrufe
 
 **Fix implementiert:**
 
-| Datei | Änderung |
-|-------|----------|
+| Datei                                   | Änderung                                  |
+| --------------------------------------- | ----------------------------------------- |
 | `tests/studio/sync-coordinator.test.ts` | `spy.mockRestore()` nach Test hinzugefügt |
 
 **Code:**
+
 ```typescript
 it('should subscribe to selection:changed events', () => {
   const spy = vi.spyOn(events, 'on')
@@ -295,6 +319,7 @@ it('should subscribe to selection:changed events', () => {
 ```
 
 **Ergebnis:**
+
 - Alle 33 SyncCoordinator-Tests bestehen
 - Alle 134 Studio-Tests bestehen
 
@@ -302,28 +327,29 @@ it('should subscribe to selection:changed events', () => {
 
 ## Metriken
 
-| Datei | Vorher | Nachher | Reduktion |
-|-------|--------|---------|-----------|
-| compiler/ir/index.ts | 5.127 | 1.893 | -63.1% |
-| compiler/ir/transformers/zag-transformer.ts | - | 687 | Neu extrahiert |
-| compiler/ir/transformers/layout-transformer.ts | - | 521 | Neu extrahiert |
-| compiler/ir/transformers/data-transformer.ts | - | 213 | Neu extrahiert |
-| compiler/ir/transformers/event-transformer.ts | - | 55 | Neu extrahiert |
-| compiler/ir/transformers/style-utils-transformer.ts | - | 219 | Neu extrahiert |
-| compiler/ir/transformers/property-utils-transformer.ts | - | 183 | Neu extrahiert |
-| compiler/ir/transformers/expression-transformer.ts | - | 75 | Neu extrahiert |
-| compiler/ir/transformers/property-transformer.ts | - | 601 | Neu extrahiert |
-| compiler/ir/transformers/state-machine-transformer.ts | - | 320 | Neu extrahiert |
-| compiler/ir/transformers/value-resolver.ts | - | 240 | Neu extrahiert |
-| compiler/ir/transformers/slot-utils.ts | - | 77 | Neu extrahiert |
-| compiler/ir/transformers/loop-utils.ts | - | 58 | Neu extrahiert |
-| compiler/ir/transformers/state-styles-transformer.ts | - | 109 | Neu extrahiert |
-| compiler/backends/dom.ts | 7.754 | 1.860 | -76.0% |
-| compiler/backends/dom/zag-emitters.ts | - | 2.926 | +25 Komponenten |
-| studio/panels/property/ | 4.181 (1 Datei) | ~6.947 (25 Dateien) | Modularisiert |
-| studio/core/state.ts | 1.127 | 948 | -16% |
-| studio/core/state-types.ts | - | 192 | Neu extrahiert |
-| studio/core/store.ts | - | 66 | Neu extrahiert |
+| Datei                                                  | Vorher          | Nachher             | Reduktion                |
+| ------------------------------------------------------ | --------------- | ------------------- | ------------------------ |
+| compiler/ir/index.ts                                   | 5.127           | 1.893               | -63.1%                   |
+| compiler/ir/transformers/zag-transformer.ts            | -               | 687                 | Neu extrahiert           |
+| compiler/ir/transformers/layout-transformer.ts         | -               | 521                 | Neu extrahiert           |
+| compiler/ir/transformers/data-transformer.ts           | -               | 213                 | Neu extrahiert           |
+| compiler/ir/transformers/event-transformer.ts          | -               | 55                  | Neu extrahiert           |
+| compiler/ir/transformers/style-utils-transformer.ts    | -               | 219                 | Neu extrahiert           |
+| compiler/ir/transformers/property-utils-transformer.ts | -               | 183                 | Neu extrahiert           |
+| compiler/ir/transformers/expression-transformer.ts     | -               | 75                  | Neu extrahiert           |
+| compiler/ir/transformers/property-transformer.ts       | -               | 601                 | Neu extrahiert           |
+| compiler/ir/transformers/state-machine-transformer.ts  | -               | 320                 | Neu extrahiert           |
+| compiler/ir/transformers/value-resolver.ts             | -               | 240                 | Neu extrahiert           |
+| compiler/ir/transformers/slot-utils.ts                 | -               | 77                  | Neu extrahiert           |
+| compiler/ir/transformers/loop-utils.ts                 | -               | 58                  | Neu extrahiert           |
+| compiler/ir/transformers/state-styles-transformer.ts   | -               | 109                 | Neu extrahiert           |
+| compiler/backends/dom.ts                               | 7.754           | 1.860               | -76.0%                   |
+| compiler/backends/dom/zag-emitters.ts                  | 2.926           | 60                  | -98% (now re-exports)    |
+| compiler/backends/dom/zag/ (6 files)                   | -               | 2.923               | Modularized Zag emitters |
+| studio/panels/property/                                | 4.181 (1 Datei) | ~6.947 (25 Dateien) | Modularisiert            |
+| studio/core/state.ts                                   | 1.127           | 948                 | -16%                     |
+| studio/core/state-types.ts                             | -               | 192                 | Neu extrahiert           |
+| studio/core/store.ts                                   | -               | 66                  | Neu extrahiert           |
 
 ---
 
@@ -344,15 +370,18 @@ fc6db80 refactor(dom): extract EmitterContext interface into separate module
 ## Nächste Schritte (Empfohlen)
 
 ### Phase 1.2 Status
+
 IR Transformer Refactoring ist bei ~60% mit 2.057 Zeilen (von ursprünglich 5.127).
 Verbleibende Methoden haben starke Klassen-Abhängigkeiten - weitere Extraktion hat abnehmende Rendite.
 
 ### Mittelfristig
+
 1. **Phase 2.2: State Store Simplification** - Selection-Mechanismen vereinheitlichen
 2. **Phase 2.3: Memory Leak Fixes** - Cleanup-Manager implementieren
 3. **Drag-Drop System** - Laufende Refactoring-Arbeit konsolidieren
 
 ### Langfristig
+
 4. **Phase 3: Test-Coverage** - Runtime und Backend Tests hinzufügen
 5. **Phase 4: Build & TypeScript** - Barrel Exports, ESLint, Prettier
 
@@ -361,10 +390,12 @@ Verbleibende Methoden haben starke Klassen-Abhängigkeiten - weitere Extraktion 
 ## Offene Punkte
 
 ### Tests
+
 - `ir-layout-measurement.test.ts` - Einige Tests fehlgeschlagen (vorbestehendes Problem)
 - Container-Setup-Issue in afterEach Hook
 
 ### Bekannte Einschränkungen
+
 - Parser (parser.ts) noch 5.766 Zeilen - Table/Zag Parser bereits extrahiert
 - Zag-Transformer stark gekoppelt - Extraktion aufwendig
 - transformInstance (~400 Zeilen) - Viele interne Abhängigkeiten
@@ -396,22 +427,23 @@ npm test -- tests/compiler/ir-transformer.test.ts
 
 ### Phase 1: Quick Wins ✅
 
-| Task | Status | Ergebnis |
-|------|--------|----------|
-| 1.1 Selection-API konsolidieren | ✅ | `pendingSelection`, `queuedSelection` deprecated → `deferredSelection` |
-| 1.2 Mock-Adapter externalisieren | ⏭️ Übersprungen | Nicht sinnvoll - Adapter ist Code, keine Daten |
-| 1.3 Icon-Daten externalisieren | ✅ | Icons bleiben inline (Typ-Sicherheit) |
-| 1.4 PreludeService erstellen | ✅ | `studio/core/prelude-service.ts` erstellt, Bug mit character/line offset behoben |
+| Task                             | Status          | Ergebnis                                                                         |
+| -------------------------------- | --------------- | -------------------------------------------------------------------------------- |
+| 1.1 Selection-API konsolidieren  | ✅              | `pendingSelection`, `queuedSelection` deprecated → `deferredSelection`           |
+| 1.2 Mock-Adapter externalisieren | ⏭️ Übersprungen | Nicht sinnvoll - Adapter ist Code, keine Daten                                   |
+| 1.3 Icon-Daten externalisieren   | ✅              | Icons bleiben inline (Typ-Sicherheit)                                            |
+| 1.4 PreludeService erstellen     | ✅              | `studio/core/prelude-service.ts` erstellt, Bug mit character/line offset behoben |
 
 ### Phase 2: Bundle-Optimierung ✅
 
-| Task | Status | Ergebnis |
-|------|--------|----------|
-| 2.1 Code-Splitting aktivieren | ✅ | `splitting: true`, `minify: true` in tsup.config.ts |
-| 2.2 Zag als External | ✅ | 7 Zag-Packages via importmap geladen |
-| 2.3 Atlaskit externalisieren | ✅ | Atlaskit via importmap geladen |
+| Task                          | Status | Ergebnis                                            |
+| ----------------------------- | ------ | --------------------------------------------------- |
+| 2.1 Code-Splitting aktivieren | ✅     | `splitting: true`, `minify: true` in tsup.config.ts |
+| 2.2 Zag als External          | ✅     | 7 Zag-Packages via importmap geladen                |
+| 2.3 Atlaskit externalisieren  | ✅     | Atlaskit via importmap geladen                      |
 
 **Bundle-Größe:**
+
 - Vorher: 119 MB
 - Nachher: 59 MB (-50%)
 - Ziel: ~15-20 MB (nicht erreicht)
@@ -423,6 +455,7 @@ npm test -- tests/compiler/ir-transformer.test.ts
 **Status:** Bereits gut strukturiert (keine Aktion nötig)
 
 **Analyse:**
+
 - Total: 10.107 Zeilen in 23 Dateien
 - Größte Datei: fixer.ts (693 Zeilen)
 - Bereits modular: tools/, prompts/ Unterverzeichnisse
@@ -433,6 +466,7 @@ npm test -- tests/compiler/ir-transformer.test.ts
 **Status:** Abgeschlossen
 
 **Ergebnis:**
+
 - bootstrap.ts: 1.209 → 912 Zeilen (-24.5%)
 - 4 Init-Module extrahiert:
   - `init-sync.ts` (87 Zeilen) - SyncCoordinator Initialisierung
@@ -442,26 +476,33 @@ npm test -- tests/compiler/ir-transformer.test.ts
 - Alle Module haben klare Interfaces (InitConfig / InitResult)
 - Event-Subscriptions gekapselt mit dispose() Callbacks
 
-### Phase 5: Runtime Modularisierung ⏭️
+### Phase 5: Runtime Modularisierung ✅
 
-**Status:** Übersprungen
+**Status:** Abgeschlossen (13. April 2026)
 
-**Analyse:**
-- dom-runtime-string.ts: 11.521 Zeilen
-- **Wichtig:** Dies ist ein eingebetteter JavaScript-String, kein TypeScript-Modul
-- Tree-Shaking nicht anwendbar (String wird komplett eingebettet)
-- Splitting bietet nur Wartbarkeitsvorteile, keine Bundle-Größen-Reduktion
-- Die 59MB Bundle-Größe kommt vom Compiler-Code, nicht vom Runtime-String
+**Ergebnis:**
+
+- dom-runtime-string.ts: 11.813 → 1.906 Zeilen (**-84% Reduktion**)
+- Modulare Struktur mit Template-String-Interpolation
 
 **Struktur:**
-- Core: ~164 LOC (wrapper, visibility)
-- Positioning: ~118 LOC
-- Scroll: ~307 LOC
-- Tables: ~144 LOC
-- Values: ~180 LOC
-- State Management: ~457 LOC
-- **Zag Components (33 Komponenten): ~9.631 LOC (85% der Datei)**
-- API Functions: ~373 LOC
+
+```
+compiler/runtime/
+├── dom-runtime-string.ts    # 1.906 LOC (Core Runtime)
+└── parts/
+    ├── index.ts             # 11 LOC (Barrel Export)
+    ├── charts-runtime.ts    # 328 LOC (Chart.js + Animationen)
+    ├── test-api-runtime.ts  # 383 LOC (__MIRROR_TEST__ API)
+    └── zag-runtime.ts       # 9.275 LOC (33 Zag-Komponenten)
+```
+
+**Vorteile:**
+
+- Jede Zag-Komponente separat editierbar
+- Charts und Test-API isoliert
+- Core Runtime fokussiert auf Kernfunktionalität
+- Template-Interpolation preserviert Runtime-Verhalten
 
 ### Phase 6: Compiler Cleanup ⏳
 
@@ -472,18 +513,26 @@ npm test -- tests/compiler/ir-transformer.test.ts
 ## Zusammenfassung (April 2026)
 
 ### Erreicht
+
 - **Bundle-Größe:** 119 MB → 59 MB (-50%)
 - **Code-Splitting:** Aktiviert mit tsup
 - **Externals:** Zag, Atlaskit, Motion via importmap
 - **PreludeService:** Bug mit character/line offset behoben
 - **Selection-API:** Konsolidiert auf deferredSelection
+- **Runtime Modularisierung:** dom-runtime-string.ts -84% (11.813 → 1.906 LOC)
+- **`any` Types:** Reduziert von 38 auf 9 (-76%)
+- **Deep Imports (4+):** Vollständig eliminiert
 
 ### Nicht erreicht
+
 - **Bundle-Ziel 15-20MB:** Compiler-Code (69K Zeilen) ist der Hauptfaktor
 - Weitere Reduktion erfordert Trennung von Compile-Time vs Runtime-Code
 
 ### Empfehlung
+
 Fokus auf echte architekturelle Verbesserungen statt Dateigröße:
+
 1. IR Transformer weiter extrahieren (transformInstance, propertyToCSS)
 2. Parser-Split abgeschlossen (Table + Zag extrahiert)
 3. Test-Coverage erhöhen
+4. ~~zag-emitters.ts aufteilen (2.926 LOC)~~ ✅ Abgeschlossen (13. April 2026)

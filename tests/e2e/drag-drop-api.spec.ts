@@ -21,7 +21,7 @@ async function waitForStudioReady(page: Page) {
 
 async function setEditorContent(page: Page, content: string) {
   // Use JavaScript to set content directly, bypassing auto-indent
-  await page.evaluate((newContent) => {
+  await page.evaluate(newContent => {
     const studio = (window as any).__mirrorStudio__
     if (studio?.editor) {
       studio.editor.setContent(newContent)
@@ -44,10 +44,7 @@ async function isDragDropAvailable(page: Page): Promise<boolean> {
 }
 
 async function waitForDragDropReady(page: Page) {
-  await page.waitForFunction(
-    () => !!(window as any).__mirrorDragDrop__,
-    { timeout: 10000 }
-  )
+  await page.waitForFunction(() => !!(window as any).__mirrorDragDrop__, { timeout: 10000 })
 }
 
 /**
@@ -84,7 +81,7 @@ function nodeId(n: number): string {
  * Find the node ID for an element by its text content
  */
 async function findNodeIdByText(page: Page, text: string): Promise<string | null> {
-  return page.evaluate((searchText) => {
+  return page.evaluate(searchText => {
     const elements = document.querySelectorAll('[data-mirror-id]')
     for (const el of elements) {
       // Check direct text content (not including children's text)
@@ -140,10 +137,13 @@ test.describe('Drag Drop API: Element Move', () => {
   })
 
   test('move element before sibling', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
+    await setEditorContent(
+      page,
+      `Frame gap 8
   Text "First"
   Text "Second"
-  Text "Third"`)
+  Text "Third"`
+    )
 
     // Find node IDs dynamically by text content
     const thirdId = await findNodeIdByText(page, 'Third')
@@ -153,14 +153,17 @@ test.describe('Drag Drop API: Element Move', () => {
     expect(firstId).not.toBeNull()
 
     // Move "Third" before "First"
-    const result = await page.evaluate(({ sourceId, targetId }) => {
-      const system = (window as any).__mirrorDragDrop__
-      return system.simulateMove({
-        sourceNodeId: sourceId,
-        targetNodeId: targetId,
-        placement: 'before',
-      })
-    }, { sourceId: thirdId, targetId: firstId })
+    const result = await page.evaluate(
+      ({ sourceId, targetId }) => {
+        const system = (window as any).__mirrorDragDrop__
+        return system.simulateMove({
+          sourceNodeId: sourceId,
+          targetNodeId: targetId,
+          placement: 'before',
+        })
+      },
+      { sourceId: thirdId, targetId: firstId }
+    )
 
     expect(result.success).toBe(true)
 
@@ -175,10 +178,13 @@ test.describe('Drag Drop API: Element Move', () => {
   })
 
   test('move element after sibling', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
+    await setEditorContent(
+      page,
+      `Frame gap 8
   Text "A"
   Text "B"
-  Text "C"`)
+  Text "C"`
+    )
 
     // Find node IDs dynamically
     const aId = await findNodeIdByText(page, 'A')
@@ -188,14 +194,17 @@ test.describe('Drag Drop API: Element Move', () => {
     expect(cId).not.toBeNull()
 
     // Move "A" after "C"
-    const result = await page.evaluate(({ sourceId, targetId }) => {
-      const system = (window as any).__mirrorDragDrop__
-      return system.simulateMove({
-        sourceNodeId: sourceId,
-        targetNodeId: targetId,
-        placement: 'after',
-      })
-    }, { sourceId: aId, targetId: cId })
+    const result = await page.evaluate(
+      ({ sourceId, targetId }) => {
+        const system = (window as any).__mirrorDragDrop__
+        return system.simulateMove({
+          sourceNodeId: sourceId,
+          targetNodeId: targetId,
+          placement: 'after',
+        })
+      },
+      { sourceId: aId, targetId: cId }
+    )
 
     expect(result.success).toBe(true)
 
@@ -209,10 +218,13 @@ test.describe('Drag Drop API: Element Move', () => {
   })
 
   test('move element inside container', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
+    await setEditorContent(
+      page,
+      `Frame gap 8
   Frame gap 4
     Text "Inside"
-  Text "Outside"`)
+  Text "Outside"`
+    )
 
     // Find node IDs dynamically
     const outsideId = await findNodeIdByText(page, 'Outside')
@@ -222,7 +234,7 @@ test.describe('Drag Drop API: Element Move', () => {
     expect(insideId).not.toBeNull()
 
     // Find the inner Frame (parent of "Inside" text)
-    const innerFrameId = await page.evaluate((insideNodeId) => {
+    const innerFrameId = await page.evaluate(insideNodeId => {
       const insideEl = document.querySelector(`[data-mirror-id="${insideNodeId}"]`)
       if (!insideEl) return null
       // The parent should be the inner Frame
@@ -236,14 +248,17 @@ test.describe('Drag Drop API: Element Move', () => {
     expect(innerFrameId).not.toBeNull()
 
     // Move "Outside" inside the inner Frame
-    const result = await page.evaluate(({ sourceId, targetId }) => {
-      const system = (window as any).__mirrorDragDrop__
-      return system.simulateMove({
-        sourceNodeId: sourceId,
-        targetNodeId: targetId,
-        placement: 'inside',
-      })
-    }, { sourceId: outsideId, targetId: innerFrameId })
+    const result = await page.evaluate(
+      ({ sourceId, targetId }) => {
+        const system = (window as any).__mirrorDragDrop__
+        return system.simulateMove({
+          sourceNodeId: sourceId,
+          targetNodeId: targetId,
+          placement: 'inside',
+        })
+      },
+      { sourceId: outsideId, targetId: innerFrameId }
+    )
 
     expect(result.success).toBe(true)
 
@@ -255,14 +270,17 @@ test.describe('Drag Drop API: Element Move', () => {
   })
 
   test('returns error for non-existent source', async ({ page }) => {
-    await setEditorContent(page, `Frame
-  Text "Test"`)
+    await setEditorContent(
+      page,
+      `Frame
+  Text "Test"`
+    )
 
     // Find a valid target ID
     const testId = await findNodeIdByText(page, 'Test')
     expect(testId).not.toBeNull()
 
-    const result = await page.evaluate((targetId) => {
+    const result = await page.evaluate(targetId => {
       const system = (window as any).__mirrorDragDrop__
       return system.simulateMove({
         sourceNodeId: 'node-999', // Does not exist
@@ -276,14 +294,17 @@ test.describe('Drag Drop API: Element Move', () => {
   })
 
   test('returns error for non-existent target', async ({ page }) => {
-    await setEditorContent(page, `Frame
-  Text "Test"`)
+    await setEditorContent(
+      page,
+      `Frame
+  Text "Test"`
+    )
 
     // Find a valid source ID
     const testId = await findNodeIdByText(page, 'Test')
     expect(testId).not.toBeNull()
 
-    const result = await page.evaluate((sourceId) => {
+    const result = await page.evaluate(sourceId => {
       const system = (window as any).__mirrorDragDrop__
       return system.simulateMove({
         sourceNodeId: sourceId,
@@ -308,14 +329,17 @@ test.describe('Drag Drop API: Component Insert', () => {
   })
 
   test('insert new component before element', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
-  Text "Original"`)
+    await setEditorContent(
+      page,
+      `Frame gap 8
+  Text "Original"`
+    )
 
     // Find the target node ID
     const originalId = await findNodeIdByText(page, 'Original')
     expect(originalId).not.toBeNull()
 
-    const result = await page.evaluate((targetId) => {
+    const result = await page.evaluate(targetId => {
       const system = (window as any).__mirrorDragDrop__
       return system.simulateInsert({
         componentName: 'Button',
@@ -340,14 +364,17 @@ test.describe('Drag Drop API: Component Insert', () => {
   })
 
   test('insert new component after element', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
-  Text "First"`)
+    await setEditorContent(
+      page,
+      `Frame gap 8
+  Text "First"`
+    )
 
     // Find the target node ID
     const firstId = await findNodeIdByText(page, 'First')
     expect(firstId).not.toBeNull()
 
-    const result = await page.evaluate((targetId) => {
+    const result = await page.evaluate(targetId => {
       const system = (window as any).__mirrorDragDrop__
       return system.simulateInsert({
         componentName: 'Text',
@@ -376,7 +403,7 @@ test.describe('Drag Drop API: Component Insert', () => {
     const frameId = await getNodeIdByIndex(page, 0)
     expect(frameId).not.toBeNull()
 
-    const result = await page.evaluate((targetId) => {
+    const result = await page.evaluate(targetId => {
       const system = (window as any).__mirrorDragDrop__
       return system.simulateInsert({
         componentName: 'Text',
@@ -397,14 +424,17 @@ test.describe('Drag Drop API: Component Insert', () => {
   })
 
   test('insert component with properties', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
-  Text "Existing"`)
+    await setEditorContent(
+      page,
+      `Frame gap 8
+  Text "Existing"`
+    )
 
     // Find the target node ID
     const existingId = await findNodeIdByText(page, 'Existing')
     expect(existingId).not.toBeNull()
 
-    const result = await page.evaluate((targetId) => {
+    const result = await page.evaluate(targetId => {
       const system = (window as any).__mirrorDragDrop__
       return system.simulateInsert({
         componentName: 'Button',
@@ -439,16 +469,19 @@ test.describe('Drag Drop API: Position Calculation', () => {
   // FIXME: simulateDragTo uses elementFromPoint which has coordinate issues in E2E
   // The API works correctly in production but E2E viewport coordinates differ
   test.fixme('calculate drop result at cursor position', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
+    await setEditorContent(
+      page,
+      `Frame gap 8
   Text "First"
-  Text "Second"`)
+  Text "Second"`
+    )
 
     // Find the "Second" element ID
     const secondId = await findNodeIdByText(page, 'Second')
     expect(secondId).not.toBeNull()
 
     // Get position of "Second" element
-    const secondRect = await page.evaluate((nodeId) => {
+    const secondRect = await page.evaluate(nodeId => {
       const el = document.querySelector(`[data-mirror-id="${nodeId}"]`)
       if (!el) return null
       const rect = el.getBoundingClientRect()
@@ -458,7 +491,7 @@ test.describe('Drag Drop API: Position Calculation', () => {
     expect(secondRect).not.toBeNull()
 
     // Calculate drop at top of "Second" (should be "before")
-    const result = await page.evaluate((rect) => {
+    const result = await page.evaluate(rect => {
       const system = (window as any).__mirrorDragDrop__
       return system.simulateDragTo({
         x: rect.x + rect.width / 2,
@@ -507,16 +540,19 @@ test.describe('Drag Drop API: State Inspection', () => {
   })
 
   test('visual state updates during simulateDragTo', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
+    await setEditorContent(
+      page,
+      `Frame gap 8
   Text "A"
-  Text "B"`)
+  Text "B"`
+    )
 
     // Find the "A" element ID
     const aId = await findNodeIdByText(page, 'A')
     expect(aId).not.toBeNull()
 
     // Get position to drag to
-    const rect = await page.evaluate((nodeId) => {
+    const rect = await page.evaluate(nodeId => {
       const el = document.querySelector(`[data-mirror-id="${nodeId}"]`)
       if (!el) return null
       const r = el.getBoundingClientRect()
@@ -526,7 +562,7 @@ test.describe('Drag Drop API: State Inspection', () => {
     expect(rect).not.toBeNull()
 
     // Simulate drag to position (this updates visual state)
-    await page.evaluate((pos) => {
+    await page.evaluate(pos => {
       const system = (window as any).__mirrorDragDrop__
       system.simulateDragTo(pos)
     }, rect)
@@ -554,11 +590,14 @@ test.describe('Drag Drop API: Complex Scenarios', () => {
   })
 
   test('move element between nested containers', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
+    await setEditorContent(
+      page,
+      `Frame gap 8
   Frame gap 4
     Text "In Container 1"
   Frame gap 4
-    Text "In Container 2"`)
+    Text "In Container 2"`
+    )
 
     // Find node IDs dynamically
     const container1TextId = await findNodeIdByText(page, 'In Container 1')
@@ -568,14 +607,17 @@ test.describe('Drag Drop API: Complex Scenarios', () => {
     expect(container2TextId).not.toBeNull()
 
     // Move "In Container 1" after "In Container 2"
-    const result = await page.evaluate(({ sourceId, targetId }) => {
-      const system = (window as any).__mirrorDragDrop__
-      return system.simulateMove({
-        sourceNodeId: sourceId,
-        targetNodeId: targetId,
-        placement: 'after',
-      })
-    }, { sourceId: container1TextId, targetId: container2TextId })
+    const result = await page.evaluate(
+      ({ sourceId, targetId }) => {
+        const system = (window as any).__mirrorDragDrop__
+        return system.simulateMove({
+          sourceNodeId: sourceId,
+          targetNodeId: targetId,
+          placement: 'after',
+        })
+      },
+      { sourceId: container1TextId, targetId: container2TextId }
+    )
 
     expect(result.success).toBe(true)
 
@@ -591,10 +633,13 @@ test.describe('Drag Drop API: Complex Scenarios', () => {
   })
 
   test('multiple sequential moves', async ({ page }) => {
-    await setEditorContent(page, `Frame gap 8
+    await setEditorContent(
+      page,
+      `Frame gap 8
   Text "A"
   Text "B"
-  Text "C"`)
+  Text "C"`
+    )
 
     // Find node IDs dynamically
     const aId = await findNodeIdByText(page, 'A')
@@ -604,14 +649,17 @@ test.describe('Drag Drop API: Complex Scenarios', () => {
     expect(cId).not.toBeNull()
 
     // Move A after C
-    let result = await page.evaluate(({ sourceId, targetId }) => {
-      const system = (window as any).__mirrorDragDrop__
-      return system.simulateMove({
-        sourceNodeId: sourceId,
-        targetNodeId: targetId,
-        placement: 'after',
-      })
-    }, { sourceId: aId, targetId: cId })
+    const result = await page.evaluate(
+      ({ sourceId, targetId }) => {
+        const system = (window as any).__mirrorDragDrop__
+        return system.simulateMove({
+          sourceNodeId: sourceId,
+          targetNodeId: targetId,
+          placement: 'after',
+        })
+      },
+      { sourceId: aId, targetId: cId }
+    )
     expect(result.success).toBe(true)
 
     await page.waitForTimeout(500)
@@ -637,7 +685,7 @@ test.describe('Drag Drop API: Complex Scenarios', () => {
     expect(frameId).not.toBeNull()
 
     // Insert first component
-    let result = await page.evaluate((targetId) => {
+    let result = await page.evaluate(targetId => {
       const system = (window as any).__mirrorDragDrop__
       return system.simulateInsert({
         componentName: 'Text',
@@ -655,7 +703,7 @@ test.describe('Drag Drop API: Complex Scenarios', () => {
     expect(frameIdAfter).not.toBeNull()
 
     // Insert second component
-    result = await page.evaluate((targetId) => {
+    result = await page.evaluate(targetId => {
       const system = (window as any).__mirrorDragDrop__
       return system.simulateInsert({
         componentName: 'Text',
