@@ -44,7 +44,7 @@ export default tseslint.config(
       'no-var': 'error',
 
       // Relaxed for gradual adoption
-      eqeqeq: 'warn',
+      eqeqeq: ['warn', 'always', { null: 'ignore' }], // Allow != null for null/undefined checks
       'no-useless-escape': 'warn',
       'no-useless-assignment': 'warn',
       'no-case-declarations': 'warn',
