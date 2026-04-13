@@ -285,7 +285,7 @@
     }
 
     .activity-bar-container .activity-bar {
-      padding-top: 8px;
+      /* No padding - logo aligns with panel headers */
     }
 
     /* Inactive state for toggle bar - dimmed icon */
@@ -335,8 +335,22 @@
     .activity-bar {
       display: flex;
       flex-direction: column;
-      padding-top: 4px;
       gap: 0;
+    }
+
+    .activity-bar-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: var(--panel-header-height);  /* Same height as panel headers (36px) */
+      margin-bottom: 4px;
+    }
+
+    .activity-bar-logo img {
+      /* Logo is 2x resolution (56x54), display at 24x23 */
+      width: 24px;
+      height: auto;
     }
 
     .activity-bar-item {

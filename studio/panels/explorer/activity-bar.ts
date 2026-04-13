@@ -6,7 +6,7 @@
 
 export interface ActivityBarItem {
   id: string
-  icon: string  // SVG string
+  icon: string // SVG string
   tooltip: string
   /** Initial visibility state */
   active?: boolean
@@ -60,6 +60,12 @@ export class ActivityBar {
     this.element = document.createElement('div')
     this.element.className = 'activity-bar'
 
+    // Add Mirror logo at the top
+    const logo = document.createElement('div')
+    logo.className = 'activity-bar-logo'
+    logo.innerHTML = `<img src="logo.png" alt="Mirror" />`
+    this.element.appendChild(logo)
+
     // Render items
     for (const item of this.items) {
       const button = this.renderItem(item)
@@ -86,9 +92,13 @@ export class ActivityBar {
     button.appendChild(icon)
 
     // Click handler - toggle behavior
-    button.addEventListener('click', () => {
-      this.toggle(item.id)
-    }, { signal: this.abortController?.signal })
+    button.addEventListener(
+      'click',
+      () => {
+        this.toggle(item.id)
+      },
+      { signal: this.abortController?.signal }
+    )
 
     return button
   }
