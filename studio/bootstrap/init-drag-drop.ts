@@ -19,6 +19,8 @@ import type { EditorController } from '../editor'
 import type { EditorView } from '@codemirror/view'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import { createLogger } from '../../compiler/utils/logger'
+import { dragPerf } from '../drag-drop/system/perf-logger'
+import { initTestHarness } from '../drag-drop/test-harness'
 
 const log = createLogger('DragDrop')
 
@@ -91,7 +93,9 @@ export function initDragDrop(config: DragDropInitConfig): DragDropInitResult {
       editorController.setContent(newSource)
     },
     recompile: () => {
+      dragPerf.start('recompile:emit')
       events.emit('compile:requested', {})
+      dragPerf.end('recompile:emit')
     },
     createModifier: (source: string, sourceMap: SourceMap) => {
       return new CodeModifier(source, sourceMap)
@@ -247,6 +251,9 @@ export function initDragDrop(config: DragDropInitConfig): DragDropInitResult {
   // Expose for E2E testing
   if (typeof window !== 'undefined') {
     ;(window as any).__mirrorDragDropV2__ = dragDropV2
+
+    // Initialize test harness for performance testing
+    initTestHarness()
   }
 
   log.info('Drag-drop initialized')

@@ -803,13 +803,29 @@ export class CodeModifier {
     // Re-indent the source block
     let reindentedBlock = this.reindentBlock(sourceBlock, sourceIndent, targetIndent)
 
-    // If properties are specified, add them to the first line of the block
+    // If properties are specified, update or add them to the first line of the block
+    // This properly replaces existing properties (e.g., x, y) instead of appending duplicates
     if (options?.properties) {
       const blockLines = reindentedBlock.split('\n')
       if (blockLines.length > 0) {
-        const firstLine = blockLines[0].trimEnd()
-        // Add properties with comma separator
-        blockLines[0] = firstLine + ', ' + options.properties
+        let firstLine = blockLines[0]
+
+        // Parse the properties to update (format: "x 0, y 84")
+        // Use a dummy component prefix to parse the properties string
+        const propsToUpdate = parseLine('Dummy ' + options.properties)
+
+        // Parse the existing first line
+        let parsedFirstLine = parseLine(firstLine)
+
+        // Update or add each property
+        for (const prop of propsToUpdate.properties) {
+          // updatePropertyInLine handles both update (if exists) and add (if not)
+          firstLine = updatePropertyInLine(parsedFirstLine, prop.name, prop.value)
+          // Re-parse after each modification to get correct positions for next property
+          parsedFirstLine = parseLine(firstLine)
+        }
+
+        blockLines[0] = firstLine
         reindentedBlock = blockLines.join('\n')
       }
     }

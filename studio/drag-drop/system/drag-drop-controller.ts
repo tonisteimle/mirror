@@ -29,6 +29,7 @@ import {
   type TransitionResult,
 } from './state-machine'
 import { createLogger } from '../../../compiler/utils/logger'
+import { dragPerf } from './perf-logger'
 
 const log = createLogger('DragDrop')
 
@@ -234,10 +235,12 @@ export class DragDropController {
 
         case 'NOTIFY_DRAG_START':
           this.dropExecuted = false
+          dragPerf.startSession()
           this.config.onDragStart?.(effect.source)
           break
 
         case 'NOTIFY_DRAG_END':
+          dragPerf.endSession(effect.success)
           this.config.onDragEnd?.(effect.source, effect.success)
           break
       }
@@ -257,14 +260,13 @@ export class DragDropController {
     if (!source) return
 
     // Performance timing
-    const perfStart = performance.now()
-    const timings: Record<string, number> = {}
+    const moveStart = performance.now()
 
     try {
       // Find target under cursor
-      const t0 = performance.now()
+      dragPerf.start('findTarget')
       const target = this.ports.targetDetection.findTarget(cursor, source)
-      timings.findTarget = performance.now() - t0
+      dragPerf.end('findTarget')
 
       if (!target) {
         // Lost target
@@ -275,13 +277,13 @@ export class DragDropController {
       }
 
       // Get rects for calculation
-      const t1 = performance.now()
+      dragPerf.start('getChildRects', { nodeId: target.nodeId, layout: target.layoutType })
       const childRects = this.ports.layout.getChildRects(target.element)
-      timings.getChildRects = performance.now() - t1
+      dragPerf.end('getChildRects')
 
-      const t2 = performance.now()
+      dragPerf.start('getContainerRect')
       const containerRect = this.ports.layout.getContainerRect(target.element)
-      timings.getContainerRect = performance.now() - t2
+      dragPerf.end('getContainerRect')
 
       if (!containerRect) {
         if (isOverTarget(this.state)) {
@@ -291,7 +293,7 @@ export class DragDropController {
       }
 
       // Calculate drop result
-      const t3 = performance.now()
+      dragPerf.start('calculateResult', { layout: target.layoutType })
       const result = this.ports.targetDetection.calculateResult(
         cursor,
         target,
@@ -299,16 +301,16 @@ export class DragDropController {
         childRects,
         containerRect
       )
-      timings.calculateResult = performance.now() - t3
+      dragPerf.end('calculateResult')
 
       // Handle mode debouncing
-      const t4 = performance.now()
+      dragPerf.start('modeTransition')
       const newMode = this.getDropMode(target)
       const effectiveResult = this.handleModeTransition(newMode, result)
-      timings.modeTransition = performance.now() - t4
+      dragPerf.end('modeTransition')
 
       // Dispatch appropriate event
-      const t5 = performance.now()
+      dragPerf.start('dispatch')
       if (isOverTarget(this.state)) {
         // Already over a target - check if it changed
         if (this.state.target.nodeId !== target.nodeId) {
@@ -333,21 +335,16 @@ export class DragDropController {
           containerRect,
         })
       }
-      timings.dispatch = performance.now() - t5
+      dragPerf.end('dispatch')
 
       // Update visuals
-      const t6 = performance.now()
+      dragPerf.start('updateVisuals')
       this.updateVisuals(effectiveResult, childRects, containerRect)
-      timings.updateVisuals = performance.now() - t6
+      dragPerf.end('updateVisuals')
 
-      // Log total time if > 5ms (potential performance issue)
-      const totalTime = performance.now() - perfStart
-      if (totalTime > 5) {
-        log.warn(`[PERF] updateTargetDetection took ${totalTime.toFixed(1)}ms`, {
-          layout: target.layoutType,
-          ...timings,
-        })
-      }
+      // Record move for statistics
+      const totalTime = performance.now() - moveStart
+      dragPerf.recordMove(totalTime, target.layoutType)
     } catch (error) {
       log.error('Target detection failed:', error)
       // Cancel the drag operation gracefully
@@ -433,6 +430,9 @@ export class DragDropController {
   // ============================================
 
   private executeDrop(source: DragSource, result: DropResult): void {
+    const dropStart = performance.now()
+    dragPerf.start('executeDrop:total')
+
     // Prevent double execution
     if (this.dropExecuted) return
     this.dropExecuted = true
@@ -440,6 +440,7 @@ export class DragDropController {
     // Detect no-op drops (element dropped on itself or same position)
     if (this.isNoOpDrop(source, result)) {
       this.config.onNoOpDrop?.(source, result)
+      dragPerf.end('executeDrop:total')
       return
     }
 
@@ -451,10 +452,18 @@ export class DragDropController {
       this.ports.execution.canDuplicate(source)
     )
 
+    dragPerf.start('executeDrop:execute')
     const execResult = this.ports.execution.execute(source, result, shouldDuplicate)
+    dragPerf.end('executeDrop:execute')
 
     if (execResult.success) {
       this.config.onDrop?.(source, result)
+    }
+
+    const dropTime = performance.now() - dropStart
+    dragPerf.end('executeDrop:total')
+    if (dropTime > 50) {
+      console.warn(`[DragPerf] executeDrop took ${dropTime.toFixed(1)}ms`)
     }
   }
 

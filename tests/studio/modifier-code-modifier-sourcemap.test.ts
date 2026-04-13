@@ -42,14 +42,19 @@ function createTestSourceMap(config: {
   const builder = new SourceMapBuilder()
 
   for (const node of config.nodes) {
-    builder.addNode(node.id, node.componentName, {
-      line: node.line,
-      column: 1,
-      endLine: node.endLine,
-      endColumn: 100,
-    }, {
-      parentId: node.parentId,
-    })
+    builder.addNode(
+      node.id,
+      node.componentName,
+      {
+        line: node.line,
+        column: 1,
+        endLine: node.endLine,
+        endColumn: 100,
+      },
+      {
+        parentId: node.parentId,
+      }
+    )
 
     if (node.properties) {
       for (const [propName, pos] of Object.entries(node.properties)) {
@@ -83,9 +88,7 @@ describe('CodeModifier SourceMap: Source Position Mapping', () => {
     it('new child appears at correct line', () => {
       const source = `Container pad 16`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -120,9 +123,7 @@ describe('CodeModifier SourceMap: Source Position Mapping', () => {
     it('handles multi-line insertions', () => {
       const source = `Container`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -279,6 +280,47 @@ describe('CodeModifier SourceMap: Source Position Mapping', () => {
       const secondIndex = lines.findIndex(l => l.includes('Second'))
       expect(firstIndex).toBeGreaterThan(secondIndex)
     })
+
+    it('replaces existing x,y properties instead of appending them', () => {
+      // Regression test for bug where moveNode appended x,y properties
+      // instead of replacing existing ones, causing property accumulation
+      const source = `Container stacked
+  Box x 20, y 20, w 100, h 100`
+      const sourceMap = createTestSourceMap({
+        nodes: [
+          { id: 'node-1', componentName: 'Container', line: 1, endLine: 2 },
+          {
+            id: 'node-2',
+            componentName: 'Box',
+            line: 2,
+            endLine: 2,
+            parentId: 'node-1',
+            properties: {
+              x: { line: 2, column: 7 },
+              y: { line: 2, column: 13 },
+              w: { line: 2, column: 19 },
+              h: { line: 2, column: 27 },
+            },
+          },
+        ],
+      })
+
+      const modifier = new CodeModifier(source, sourceMap)
+      const result = modifier.moveNode('node-2', 'node-1', 'inside', undefined, {
+        properties: 'x 100, y 150',
+      })
+
+      expect(result.success).toBe(true)
+      // Should have the NEW x and y values, not the old ones
+      expect(result.newSource).toContain('x 100')
+      expect(result.newSource).toContain('y 150')
+      // Should NOT have the old x and y values appended
+      expect(result.newSource).not.toContain('x 20')
+      expect(result.newSource).not.toContain('y 20')
+      // w and h should be preserved
+      expect(result.newSource).toContain('w 100')
+      expect(result.newSource).toContain('h 100')
+    })
   })
 
   describe('indentation handling', () => {
@@ -389,9 +431,7 @@ describe('CodeModifier SourceMap: Property Positions', () => {
     it('adds property to node without properties', () => {
       const source = `Box`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Box', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Box', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -466,9 +506,7 @@ describe('CodeModifier SourceMap: Consistency After Modification', () => {
     it('handles multiple addChild operations', () => {
       let source = `Container`
       let sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
       })
 
       // First add
@@ -588,9 +626,7 @@ describe('CodeModifier SourceMap: Error Handling', () => {
   it('returns error for non-existent node in addChild', () => {
     const source = `Container`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -603,9 +639,7 @@ describe('CodeModifier SourceMap: Error Handling', () => {
   it('returns error for non-existent node in removeNode', () => {
     const source = `Container`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -618,9 +652,7 @@ describe('CodeModifier SourceMap: Error Handling', () => {
   it('returns error for non-existent node in moveNode', () => {
     const source = `Container`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -650,9 +682,7 @@ describe('CodeModifier SourceMap: Error Handling', () => {
   it('returns error for non-existent node in updateProperty', () => {
     const source = `Box bg #FFF`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Box', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Box', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -681,9 +711,7 @@ describe('CodeModifier SourceMap: Edge Cases', () => {
   it('handles single-line source', () => {
     const source = `Box`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Box', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Box', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -697,9 +725,7 @@ describe('CodeModifier SourceMap: Edge Cases', () => {
   it('handles node with only text content', () => {
     const source = `Text "Hello World"`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Text', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Text', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -713,9 +739,7 @@ describe('CodeModifier SourceMap: Edge Cases', () => {
   it('handles special characters in text content', () => {
     const source = `Container`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)

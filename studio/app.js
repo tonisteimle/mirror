@@ -1,7 +1,30 @@
 import { EditorState, RangeSetBuilder, Prec, Annotation, Transaction } from '@codemirror/state'
-import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection, Decoration, ViewPlugin } from '@codemirror/view'
-import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo, undoDepth, redoDepth } from '@codemirror/commands'
-import { autocompletion, completionKeymap, startCompletion, closeCompletion } from '@codemirror/autocomplete'
+import {
+  EditorView,
+  keymap,
+  lineNumbers,
+  highlightActiveLineGutter,
+  highlightActiveLine,
+  drawSelection,
+  Decoration,
+  ViewPlugin,
+} from '@codemirror/view'
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentWithTab,
+  undo,
+  redo,
+  undoDepth,
+  redoDepth,
+} from '@codemirror/commands'
+import {
+  autocompletion,
+  completionKeymap,
+  startCompletion,
+  closeCompletion,
+} from '@codemirror/autocomplete'
 import { indentUnit } from '@codemirror/language'
 
 // Custom dialogs
@@ -55,7 +78,7 @@ const fileSwitchAnnotation = Annotation.define()
 const MIRROR_EXTENSIONS = {
   layout: ['.mir', '.mirror'],
   components: ['.com', '.components'],
-  tokens: ['.tok', '.tokens']
+  tokens: ['.tok', '.tokens'],
 }
 
 /**
@@ -68,7 +91,7 @@ function isMirrorFile(filename) {
   const allExtensions = [
     ...MIRROR_EXTENSIONS.layout,
     ...MIRROR_EXTENSIONS.components,
-    ...MIRROR_EXTENSIONS.tokens
+    ...MIRROR_EXTENSIONS.tokens,
   ]
   return allExtensions.some(ext => filename.endsWith(ext))
 }
@@ -100,9 +123,9 @@ function isLayoutFile(filename) {
 const STORAGE_PREFIX = 'mirror-file-'
 const PROJECT_KEY = 'mirror-current-project'
 const STORAGE_VERSION_KEY = 'mirror-storage-version'
-const STORAGE_VERSION = 4  // Increment this when storage format changes
+const STORAGE_VERSION = 4 // Increment this when storage format changes
 
-const DEBUG_SYNC = false  // Enable verbose sync logging
+const DEBUG_SYNC = false // Enable verbose sync logging
 let currentProject = null
 let projects = []
 const files = {}
@@ -204,8 +227,10 @@ function parseYAML(text) {
  */
 function parseYAMLValue(value) {
   // Remove quotes
-  if ((value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
     return value.slice(1, -1)
   }
 
@@ -364,7 +389,11 @@ document.querySelectorAll('.mode-tab').forEach(tab => {
 
         // Update editor with current React file
         window.editor.dispatch({
-          changes: { from: 0, to: window.editor.state.doc.length, insert: reactFiles[reactCurrentFile] || '' }
+          changes: {
+            from: 0,
+            to: window.editor.state.doc.length,
+            insert: reactFiles[reactCurrentFile] || '',
+          },
         })
 
         // Re-render file list with .tsx files
@@ -413,7 +442,11 @@ document.querySelectorAll('.mode-tab').forEach(tab => {
 
         // Update editor with current Mirror file
         window.editor.dispatch({
-          changes: { from: 0, to: window.editor.state.doc.length, insert: files[mirrorCurrentFile] || '' }
+          changes: {
+            from: 0,
+            to: window.editor.state.doc.length,
+            insert: files[mirrorCurrentFile] || '',
+          },
         })
 
         // Re-render file list with .mirror files
@@ -455,7 +488,7 @@ function switchFileReactMode(filename) {
   // Switch to new file
   currentFile = filename
   editor.dispatch({
-    changes: { from: 0, to: editor.state.doc.length, insert: reactFiles[filename] || '' }
+    changes: { from: 0, to: editor.state.doc.length, insert: reactFiles[filename] || '' },
   })
 
   // Update active state in UI
@@ -487,17 +520,17 @@ const FILE_TYPES = {
       <path d="M3 9h18"/>
       <path d="M9 21V9"/>
     </svg>`,
-    template: (name) => `// ${name} Layout
+    template: name => `// ${name} Layout
 // UI Layout Seite
 
 Box pad 24, gap 16, bg #0a0a0f
   Text "${name}", font-size 24, weight bold
   Text "Layout content here..."
 `,
-    detect: (content) => {
+    detect: content => {
       // Default type - only if nothing else matches
       return false
-    }
+    },
   },
   component: {
     label: 'Components',
@@ -510,7 +543,7 @@ Box pad 24, gap 16, bg #0a0a0f
       <rect x="3" y="14" width="7" height="7" rx="1"/>
       <rect x="14" y="14" width="7" height="7" rx="1"/>
     </svg>`,
-    template: (name) => `// ${name} Components
+    template: name => `// ${name} Components
 // Komponenten-Definitionen
 
 // Button Komponente
@@ -522,7 +555,7 @@ Card: pad 16, bg #1a1a23, rad 8
   Title:
   Content:
 `,
-    detect: (lines) => {
+    detect: lines => {
       // Component definitions: Name: (uppercase, ends with colon)
       let hasDefinitions = false
       let hasInstances = false
@@ -534,7 +567,7 @@ Card: pad 16, bg #1a1a23, rad 8
         }
       }
       return hasDefinitions && !hasInstances
-    }
+    },
   },
   tokens: {
     label: 'Tokens',
@@ -546,7 +579,7 @@ Card: pad 16, bg #1a1a23, rad 8
       <circle cx="7" cy="15" r="4"/>
       <circle cx="17" cy="15" r="4"/>
     </svg>`,
-    template: (name) => `// ${name} Design Tokens
+    template: name => `// ${name} Design Tokens
 // Farben, Abstände und Typografie
 
 // Farb-Palette
@@ -576,7 +609,7 @@ s.rad: 4
 m.rad: 8
 l.rad: 12
 `,
-    detect: (lines) => {
+    detect: lines => {
       // Token definitions: $name: value or lowercase: value
       // BUT only if there are NO component instances (those make it a layout)
       let hasTokens = false
@@ -592,7 +625,7 @@ l.rad: 12
       }
       // Only tokens file if has tokens but NO instances
       return hasTokens && !hasInstances
-    }
+    },
   },
   data: {
     label: 'Data',
@@ -603,7 +636,7 @@ l.rad: 12
       <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
       <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
     </svg>`,
-    template: (name) => `// ${name} Data
+    template: name => `// ${name} Data
 // Daten und Collections
 
 $users:
@@ -615,7 +648,7 @@ $tasks:
   - id 1, title "Task 1", done false
   - id 2, title "Task 2", done true
 `,
-    detect: (lines) => {
+    detect: lines => {
       // Data: $name: followed by - items
       for (const line of lines) {
         if (/^\s*-\s+\w+/.test(line)) {
@@ -623,7 +656,7 @@ $tasks:
         }
       }
       return false
-    }
+    },
   },
   javascript: {
     label: 'JavaScript',
@@ -633,7 +666,7 @@ $tasks:
       <path d="M16 18l6-6-6-6"/>
       <path d="M8 6l-6 6 6 6"/>
     </svg>`,
-    template: (name) => `// ${name} JavaScript
+    template: name => `// ${name} JavaScript
 // Custom JavaScript Code
 
 javascript
@@ -649,8 +682,8 @@ end
 `,
     detect: (lines, content) => {
       return content.includes('javascript') && content.includes('end')
-    }
-  }
+    },
+  },
 }
 
 // Detect file type from content
@@ -668,12 +701,13 @@ function detectFileType(nameOrContent, content) {
   if (filename) {
     const lower = filename.toLowerCase()
     if (lower.includes('token')) return 'tokens'
-    if (lower.includes('component')) return 'component'  // Always singular
+    if (lower.includes('component')) return 'component' // Always singular
   }
 
   if (!code || !code.trim()) return 'layout'
 
-  const lines = code.split('\n')
+  const lines = code
+    .split('\n')
     .map(l => l.trim())
     .filter(l => l && !l.startsWith('//') && !l.startsWith('import'))
 
@@ -683,7 +717,7 @@ function detectFileType(nameOrContent, content) {
   const checkOrder = ['javascript', 'data', 'tokens', 'component']
   for (const type of checkOrder) {
     if (FILE_TYPES[type].detect(lines, code)) {
-      return type  // Always return singular form ('component', not 'components')
+      return type // Always return singular form ('component', not 'components')
     }
   }
 
@@ -748,7 +782,9 @@ async function saveCurrentFile() {
     const status = document.getElementById('status')
     if (status) {
       status.textContent = 'Saved'
-      setTimeout(() => { status.textContent = 'Ready' }, 1500)
+      setTimeout(() => {
+        status.textContent = 'Ready'
+      }, 1500)
     }
   }
 }
@@ -817,7 +853,7 @@ function switchFile(filename) {
   // Dispatch with fileSwitchAnnotation to bypass the App lock filter
   editor.dispatch({
     changes: { from: 0, to: editor.state.doc.length, insert: files[filename] || '' },
-    annotations: fileSwitchAnnotation.of(true)
+    annotations: fileSwitchAnnotation.of(true),
   })
 
   // Update active state in UI
@@ -846,10 +882,23 @@ const patterns = [
   { regex: /#[0-9A-Fa-f]{3,8}\b/g, class: 'mir-hex' },
   { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, class: 'mir-number' },
   { regex: /\b(as|extends|named|each|in|if|else|where|then|data)\b/g, class: 'mir-keyword' },
-  { regex: /\b(hover|focus|active|disabled|filled|state|selected|highlighted|on|off)\b/g, class: 'mir-state' },
-  { regex: /\b(onclick|onhover|onfocus|onblur|onchange|oninput|onkeydown|onkeyup|keys)\b/g, class: 'mir-event' },
-  { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|min|max|animate|font-size)\b/g, class: 'mir-property' },
-  { regex: /\b(show|hide|toggle|select|highlight|activate|deactivate|call|open|close|page)\b/g, class: 'mir-action' },
+  {
+    regex: /\b(hover|focus|active|disabled|filled|state|selected|highlighted|on|off)\b/g,
+    class: 'mir-state',
+  },
+  {
+    regex: /\b(onclick|onhover|onfocus|onblur|onchange|oninput|onkeydown|onkeyup|keys)\b/g,
+    class: 'mir-event',
+  },
+  {
+    regex:
+      /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|min|max|animate|font-size)\b/g,
+    class: 'mir-property',
+  },
+  {
+    regex: /\b(show|hide|toggle|select|highlight|activate|deactivate|call|open|close|page)\b/g,
+    class: 'mir-action',
+  },
   { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, class: 'mir-component' },
   { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, class: 'mir-binding' },
 ]
@@ -874,7 +923,7 @@ function tokenize(view) {
       matches.push({
         from: match.index,
         to: match.index + match[0].length,
-        class: pattern.class
+        class: pattern.class,
       })
     }
   }
@@ -899,19 +948,21 @@ function tokenize(view) {
 }
 
 // ViewPlugin for syntax highlighting
-const mirrorHighlight = ViewPlugin.fromClass(class {
-  constructor(view) {
-    this.decorations = tokenize(view)
-  }
-  update(update) {
-    if (update.docChanged || update.viewportChanged) {
-      this.decorations = tokenize(update.view)
+const mirrorHighlight = ViewPlugin.fromClass(
+  class {
+    constructor(view) {
+      this.decorations = tokenize(view)
     }
+    update(update) {
+      if (update.docChanged || update.viewportChanged) {
+        this.decorations = tokenize(update.view)
+      }
+    }
+  },
+  {
+    decorations: v => v.decorations,
   }
-}, {
-  decorations: v => v.decorations
-})
-
+)
 
 // Autocomplete - using modular engine from studio/autocomplete/
 // mirrorCompletions is imported from ./dist/index.js
@@ -922,66 +973,794 @@ const mirrorHighlight = ViewPlugin.fromClass(class {
 
 // Open Color - cleaner palette with single gray scale
 const OPEN_COLORS = [
-  { name: 'gray', shades: ['#f8f9fa', '#f1f3f5', '#e9ecef', '#dee2e6', '#ced4da', '#adb5bd', '#868e96', '#495057', '#343a40', '#212529'] },
-  { name: 'red', shades: ['#fff5f5', '#ffe3e3', '#ffc9c9', '#ffa8a8', '#ff8787', '#ff6b6b', '#fa5252', '#f03e3e', '#e03131', '#c92a2a'] },
-  { name: 'pink', shades: ['#fff0f6', '#ffdeeb', '#fcc2d7', '#faa2c1', '#f783ac', '#f06595', '#e64980', '#d6336c', '#c2255c', '#a61e4d'] },
-  { name: 'grape', shades: ['#f8f0fc', '#f3d9fa', '#eebefa', '#e599f7', '#da77f2', '#cc5de8', '#be4bdb', '#ae3ec9', '#9c36b5', '#862e9c'] },
-  { name: 'violet', shades: ['#f3f0ff', '#e5dbff', '#d0bfff', '#b197fc', '#9775fa', '#845ef7', '#7950f2', '#7048e8', '#6741d9', '#5f3dc4'] },
-  { name: 'indigo', shades: ['#edf2ff', '#dbe4ff', '#bac8ff', '#91a7ff', '#748ffc', '#5c7cfa', '#4c6ef5', '#4263eb', '#3b5bdb', '#364fc7'] },
-  { name: 'blue', shades: ['#e7f5ff', '#d0ebff', '#a5d8ff', '#74c0fc', '#4dabf7', '#339af0', '#228be6', '#1c7ed6', '#1971c2', '#1864ab'] },
-  { name: 'cyan', shades: ['#e3fafc', '#c5f6fa', '#99e9f2', '#66d9e8', '#3bc9db', '#22b8cf', '#15aabf', '#1098ad', '#0c8599', '#0b7285'] },
-  { name: 'teal', shades: ['#e6fcf5', '#c3fae8', '#96f2d7', '#63e6be', '#38d9a9', '#20c997', '#12b886', '#0ca678', '#099268', '#087f5b'] },
-  { name: 'green', shades: ['#ebfbee', '#d3f9d8', '#b2f2bb', '#8ce99a', '#69db7c', '#51cf66', '#40c057', '#37b24d', '#2f9e44', '#2b8a3e'] },
-  { name: 'lime', shades: ['#f4fce3', '#e9fac8', '#d8f5a2', '#c0eb75', '#a9e34b', '#94d82d', '#82c91e', '#74b816', '#66a80f', '#5c940d'] },
-  { name: 'yellow', shades: ['#fff9db', '#fff3bf', '#ffec99', '#ffe066', '#ffd43b', '#fcc419', '#fab005', '#f59f00', '#f08c00', '#e67700'] },
-  { name: 'orange', shades: ['#fff4e6', '#ffe8cc', '#ffd8a8', '#ffc078', '#ffa94d', '#ff922b', '#fd7e14', '#f76707', '#e8590c', '#d9480f'] },
+  {
+    name: 'gray',
+    shades: [
+      '#f8f9fa',
+      '#f1f3f5',
+      '#e9ecef',
+      '#dee2e6',
+      '#ced4da',
+      '#adb5bd',
+      '#868e96',
+      '#495057',
+      '#343a40',
+      '#212529',
+    ],
+  },
+  {
+    name: 'red',
+    shades: [
+      '#fff5f5',
+      '#ffe3e3',
+      '#ffc9c9',
+      '#ffa8a8',
+      '#ff8787',
+      '#ff6b6b',
+      '#fa5252',
+      '#f03e3e',
+      '#e03131',
+      '#c92a2a',
+    ],
+  },
+  {
+    name: 'pink',
+    shades: [
+      '#fff0f6',
+      '#ffdeeb',
+      '#fcc2d7',
+      '#faa2c1',
+      '#f783ac',
+      '#f06595',
+      '#e64980',
+      '#d6336c',
+      '#c2255c',
+      '#a61e4d',
+    ],
+  },
+  {
+    name: 'grape',
+    shades: [
+      '#f8f0fc',
+      '#f3d9fa',
+      '#eebefa',
+      '#e599f7',
+      '#da77f2',
+      '#cc5de8',
+      '#be4bdb',
+      '#ae3ec9',
+      '#9c36b5',
+      '#862e9c',
+    ],
+  },
+  {
+    name: 'violet',
+    shades: [
+      '#f3f0ff',
+      '#e5dbff',
+      '#d0bfff',
+      '#b197fc',
+      '#9775fa',
+      '#845ef7',
+      '#7950f2',
+      '#7048e8',
+      '#6741d9',
+      '#5f3dc4',
+    ],
+  },
+  {
+    name: 'indigo',
+    shades: [
+      '#edf2ff',
+      '#dbe4ff',
+      '#bac8ff',
+      '#91a7ff',
+      '#748ffc',
+      '#5c7cfa',
+      '#4c6ef5',
+      '#4263eb',
+      '#3b5bdb',
+      '#364fc7',
+    ],
+  },
+  {
+    name: 'blue',
+    shades: [
+      '#e7f5ff',
+      '#d0ebff',
+      '#a5d8ff',
+      '#74c0fc',
+      '#4dabf7',
+      '#339af0',
+      '#228be6',
+      '#1c7ed6',
+      '#1971c2',
+      '#1864ab',
+    ],
+  },
+  {
+    name: 'cyan',
+    shades: [
+      '#e3fafc',
+      '#c5f6fa',
+      '#99e9f2',
+      '#66d9e8',
+      '#3bc9db',
+      '#22b8cf',
+      '#15aabf',
+      '#1098ad',
+      '#0c8599',
+      '#0b7285',
+    ],
+  },
+  {
+    name: 'teal',
+    shades: [
+      '#e6fcf5',
+      '#c3fae8',
+      '#96f2d7',
+      '#63e6be',
+      '#38d9a9',
+      '#20c997',
+      '#12b886',
+      '#0ca678',
+      '#099268',
+      '#087f5b',
+    ],
+  },
+  {
+    name: 'green',
+    shades: [
+      '#ebfbee',
+      '#d3f9d8',
+      '#b2f2bb',
+      '#8ce99a',
+      '#69db7c',
+      '#51cf66',
+      '#40c057',
+      '#37b24d',
+      '#2f9e44',
+      '#2b8a3e',
+    ],
+  },
+  {
+    name: 'lime',
+    shades: [
+      '#f4fce3',
+      '#e9fac8',
+      '#d8f5a2',
+      '#c0eb75',
+      '#a9e34b',
+      '#94d82d',
+      '#82c91e',
+      '#74b816',
+      '#66a80f',
+      '#5c940d',
+    ],
+  },
+  {
+    name: 'yellow',
+    shades: [
+      '#fff9db',
+      '#fff3bf',
+      '#ffec99',
+      '#ffe066',
+      '#ffd43b',
+      '#fcc419',
+      '#fab005',
+      '#f59f00',
+      '#f08c00',
+      '#e67700',
+    ],
+  },
+  {
+    name: 'orange',
+    shades: [
+      '#fff4e6',
+      '#ffe8cc',
+      '#ffd8a8',
+      '#ffc078',
+      '#ffa94d',
+      '#ff922b',
+      '#fd7e14',
+      '#f76707',
+      '#e8590c',
+      '#d9480f',
+    ],
+  },
 ]
 
 // Tailwind CSS v3 Colors
 const TAILWIND_COLORS = [
-  { name: 'slate', shades: ['#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b', '#475569', '#334155', '#1e293b', '#0f172a'] },
-  { name: 'gray', shades: ['#f9fafb', '#f3f4f6', '#e5e7eb', '#d1d5db', '#9ca3af', '#6b7280', '#4b5563', '#374151', '#1f2937', '#111827'] },
-  { name: 'zinc', shades: ['#fafafa', '#f4f4f5', '#e4e4e7', '#d4d4d8', '#a1a1aa', '#71717a', '#52525b', '#3f3f46', '#27272a', '#18181b'] },
-  { name: 'red', shades: ['#fef2f2', '#fee2e2', '#fecaca', '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#7f1d1d'] },
-  { name: 'orange', shades: ['#fff7ed', '#ffedd5', '#fed7aa', '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c', '#9a3412', '#7c2d12'] },
-  { name: 'amber', shades: ['#fffbeb', '#fef3c7', '#fde68a', '#fcd34d', '#fbbf24', '#f59e0b', '#d97706', '#b45309', '#92400e', '#78350f'] },
-  { name: 'yellow', shades: ['#fefce8', '#fef9c3', '#fef08a', '#fde047', '#facc15', '#eab308', '#ca8a04', '#a16207', '#854d0e', '#713f12'] },
-  { name: 'lime', shades: ['#f7fee7', '#ecfccb', '#d9f99d', '#bef264', '#a3e635', '#84cc16', '#65a30d', '#4d7c0f', '#3f6212', '#365314'] },
-  { name: 'green', shades: ['#f0fdf4', '#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d', '#166534', '#14532d'] },
-  { name: 'emerald', shades: ['#ecfdf5', '#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857', '#065f46', '#064e3b'] },
-  { name: 'teal', shades: ['#f0fdfa', '#ccfbf1', '#99f6e4', '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e', '#115e59', '#134e4a'] },
-  { name: 'cyan', shades: ['#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63'] },
-  { name: 'sky', shades: ['#f0f9ff', '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#0284c7', '#0369a1', '#075985', '#0c4a6e'] },
-  { name: 'blue', shades: ['#eff6ff', '#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#5BA8F5', '#2271C1', '#1d4ed8', '#1e40af', '#1e3a8a'] },
-  { name: 'indigo', shades: ['#eef2ff', '#e0e7ff', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca', '#3730a3', '#312e81'] },
-  { name: 'violet', shades: ['#f5f3ff', '#ede9fe', '#ddd6fe', '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6', '#4c1d95'] },
-  { name: 'purple', shades: ['#faf5ff', '#f3e8ff', '#e9d5ff', '#d8b4fe', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8', '#581c87'] },
-  { name: 'fuchsia', shades: ['#fdf4ff', '#fae8ff', '#f5d0fe', '#f0abfc', '#e879f9', '#d946ef', '#c026d3', '#a21caf', '#86198f', '#701a75'] },
-  { name: 'pink', shades: ['#fdf2f8', '#fce7f3', '#fbcfe8', '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d', '#9d174d', '#831843'] },
-  { name: 'rose', shades: ['#fff1f2', '#ffe4e6', '#fecdd3', '#fda4af', '#fb7185', '#f43f5e', '#e11d48', '#be123c', '#9f1239', '#881337'] },
+  {
+    name: 'slate',
+    shades: [
+      '#f8fafc',
+      '#f1f5f9',
+      '#e2e8f0',
+      '#cbd5e1',
+      '#94a3b8',
+      '#64748b',
+      '#475569',
+      '#334155',
+      '#1e293b',
+      '#0f172a',
+    ],
+  },
+  {
+    name: 'gray',
+    shades: [
+      '#f9fafb',
+      '#f3f4f6',
+      '#e5e7eb',
+      '#d1d5db',
+      '#9ca3af',
+      '#6b7280',
+      '#4b5563',
+      '#374151',
+      '#1f2937',
+      '#111827',
+    ],
+  },
+  {
+    name: 'zinc',
+    shades: [
+      '#fafafa',
+      '#f4f4f5',
+      '#e4e4e7',
+      '#d4d4d8',
+      '#a1a1aa',
+      '#71717a',
+      '#52525b',
+      '#3f3f46',
+      '#27272a',
+      '#18181b',
+    ],
+  },
+  {
+    name: 'red',
+    shades: [
+      '#fef2f2',
+      '#fee2e2',
+      '#fecaca',
+      '#fca5a5',
+      '#f87171',
+      '#ef4444',
+      '#dc2626',
+      '#b91c1c',
+      '#991b1b',
+      '#7f1d1d',
+    ],
+  },
+  {
+    name: 'orange',
+    shades: [
+      '#fff7ed',
+      '#ffedd5',
+      '#fed7aa',
+      '#fdba74',
+      '#fb923c',
+      '#f97316',
+      '#ea580c',
+      '#c2410c',
+      '#9a3412',
+      '#7c2d12',
+    ],
+  },
+  {
+    name: 'amber',
+    shades: [
+      '#fffbeb',
+      '#fef3c7',
+      '#fde68a',
+      '#fcd34d',
+      '#fbbf24',
+      '#f59e0b',
+      '#d97706',
+      '#b45309',
+      '#92400e',
+      '#78350f',
+    ],
+  },
+  {
+    name: 'yellow',
+    shades: [
+      '#fefce8',
+      '#fef9c3',
+      '#fef08a',
+      '#fde047',
+      '#facc15',
+      '#eab308',
+      '#ca8a04',
+      '#a16207',
+      '#854d0e',
+      '#713f12',
+    ],
+  },
+  {
+    name: 'lime',
+    shades: [
+      '#f7fee7',
+      '#ecfccb',
+      '#d9f99d',
+      '#bef264',
+      '#a3e635',
+      '#84cc16',
+      '#65a30d',
+      '#4d7c0f',
+      '#3f6212',
+      '#365314',
+    ],
+  },
+  {
+    name: 'green',
+    shades: [
+      '#f0fdf4',
+      '#dcfce7',
+      '#bbf7d0',
+      '#86efac',
+      '#4ade80',
+      '#22c55e',
+      '#16a34a',
+      '#15803d',
+      '#166534',
+      '#14532d',
+    ],
+  },
+  {
+    name: 'emerald',
+    shades: [
+      '#ecfdf5',
+      '#d1fae5',
+      '#a7f3d0',
+      '#6ee7b7',
+      '#34d399',
+      '#10b981',
+      '#059669',
+      '#047857',
+      '#065f46',
+      '#064e3b',
+    ],
+  },
+  {
+    name: 'teal',
+    shades: [
+      '#f0fdfa',
+      '#ccfbf1',
+      '#99f6e4',
+      '#5eead4',
+      '#2dd4bf',
+      '#14b8a6',
+      '#0d9488',
+      '#0f766e',
+      '#115e59',
+      '#134e4a',
+    ],
+  },
+  {
+    name: 'cyan',
+    shades: [
+      '#ecfeff',
+      '#cffafe',
+      '#a5f3fc',
+      '#67e8f9',
+      '#22d3ee',
+      '#06b6d4',
+      '#0891b2',
+      '#0e7490',
+      '#155e75',
+      '#164e63',
+    ],
+  },
+  {
+    name: 'sky',
+    shades: [
+      '#f0f9ff',
+      '#e0f2fe',
+      '#bae6fd',
+      '#7dd3fc',
+      '#38bdf8',
+      '#0ea5e9',
+      '#0284c7',
+      '#0369a1',
+      '#075985',
+      '#0c4a6e',
+    ],
+  },
+  {
+    name: 'blue',
+    shades: [
+      '#eff6ff',
+      '#dbeafe',
+      '#bfdbfe',
+      '#93c5fd',
+      '#60a5fa',
+      '#5BA8F5',
+      '#2271C1',
+      '#1d4ed8',
+      '#1e40af',
+      '#1e3a8a',
+    ],
+  },
+  {
+    name: 'indigo',
+    shades: [
+      '#eef2ff',
+      '#e0e7ff',
+      '#c7d2fe',
+      '#a5b4fc',
+      '#818cf8',
+      '#6366f1',
+      '#4f46e5',
+      '#4338ca',
+      '#3730a3',
+      '#312e81',
+    ],
+  },
+  {
+    name: 'violet',
+    shades: [
+      '#f5f3ff',
+      '#ede9fe',
+      '#ddd6fe',
+      '#c4b5fd',
+      '#a78bfa',
+      '#8b5cf6',
+      '#7c3aed',
+      '#6d28d9',
+      '#5b21b6',
+      '#4c1d95',
+    ],
+  },
+  {
+    name: 'purple',
+    shades: [
+      '#faf5ff',
+      '#f3e8ff',
+      '#e9d5ff',
+      '#d8b4fe',
+      '#c084fc',
+      '#a855f7',
+      '#9333ea',
+      '#7e22ce',
+      '#6b21a8',
+      '#581c87',
+    ],
+  },
+  {
+    name: 'fuchsia',
+    shades: [
+      '#fdf4ff',
+      '#fae8ff',
+      '#f5d0fe',
+      '#f0abfc',
+      '#e879f9',
+      '#d946ef',
+      '#c026d3',
+      '#a21caf',
+      '#86198f',
+      '#701a75',
+    ],
+  },
+  {
+    name: 'pink',
+    shades: [
+      '#fdf2f8',
+      '#fce7f3',
+      '#fbcfe8',
+      '#f9a8d4',
+      '#f472b6',
+      '#ec4899',
+      '#db2777',
+      '#be185d',
+      '#9d174d',
+      '#831843',
+    ],
+  },
+  {
+    name: 'rose',
+    shades: [
+      '#fff1f2',
+      '#ffe4e6',
+      '#fecdd3',
+      '#fda4af',
+      '#fb7185',
+      '#f43f5e',
+      '#e11d48',
+      '#be123c',
+      '#9f1239',
+      '#881337',
+    ],
+  },
 ]
 
 // Material Design Colors
 const MATERIAL_COLORS = [
-  { name: 'red', shades: ['#ffebee', '#ffcdd2', '#ef9a9a', '#e57373', '#ef5350', '#f44336', '#e53935', '#d32f2f', '#c62828', '#b71c1c'] },
-  { name: 'pink', shades: ['#fce4ec', '#f8bbd0', '#f48fb1', '#f06292', '#ec407a', '#e91e63', '#d81b60', '#c2185b', '#ad1457', '#880e4f'] },
-  { name: 'purple', shades: ['#f3e5f5', '#e1bee7', '#ce93d8', '#ba68c8', '#ab47bc', '#9c27b0', '#8e24aa', '#7b1fa2', '#6a1b9a', '#4a148c'] },
-  { name: 'deepPurple', shades: ['#ede7f6', '#d1c4e9', '#b39ddb', '#9575cd', '#7e57c2', '#673ab7', '#5e35b1', '#512da8', '#4527a0', '#311b92'] },
-  { name: 'indigo', shades: ['#e8eaf6', '#c5cae9', '#9fa8da', '#7986cb', '#5c6bc0', '#3f51b5', '#3949ab', '#303f9f', '#283593', '#1a237e'] },
-  { name: 'blue', shades: ['#e3f2fd', '#bbdefb', '#90caf9', '#64b5f6', '#42a5f5', '#2196f3', '#1e88e5', '#1976d2', '#1565c0', '#0d47a1'] },
-  { name: 'lightBlue', shades: ['#e1f5fe', '#b3e5fc', '#81d4fa', '#4fc3f7', '#29b6f6', '#03a9f4', '#039be5', '#0288d1', '#0277bd', '#01579b'] },
-  { name: 'cyan', shades: ['#e0f7fa', '#b2ebf2', '#80deea', '#4dd0e1', '#26c6da', '#00bcd4', '#00acc1', '#0097a7', '#00838f', '#006064'] },
-  { name: 'teal', shades: ['#e0f2f1', '#b2dfdb', '#80cbc4', '#4db6ac', '#26a69a', '#009688', '#00897b', '#00796b', '#00695c', '#004d40'] },
-  { name: 'green', shades: ['#e8f5e9', '#c8e6c9', '#a5d6a7', '#81c784', '#66bb6a', '#4caf50', '#43a047', '#388e3c', '#2e7d32', '#1b5e20'] },
-  { name: 'lightGreen', shades: ['#f1f8e9', '#dcedc8', '#c5e1a5', '#aed581', '#9ccc65', '#8bc34a', '#7cb342', '#689f38', '#558b2f', '#33691e'] },
-  { name: 'lime', shades: ['#f9fbe7', '#f0f4c3', '#e6ee9c', '#dce775', '#d4e157', '#cddc39', '#c0ca33', '#afb42b', '#9e9d24', '#827717'] },
-  { name: 'yellow', shades: ['#fffde7', '#fff9c4', '#fff59d', '#fff176', '#ffee58', '#ffeb3b', '#fdd835', '#fbc02d', '#f9a825', '#f57f17'] },
-  { name: 'amber', shades: ['#fff8e1', '#ffecb3', '#ffe082', '#ffd54f', '#ffca28', '#ffc107', '#ffb300', '#ffa000', '#ff8f00', '#ff6f00'] },
-  { name: 'orange', shades: ['#fff3e0', '#ffe0b2', '#ffcc80', '#ffb74d', '#ffa726', '#ff9800', '#fb8c00', '#f57c00', '#ef6c00', '#e65100'] },
-  { name: 'deepOrange', shades: ['#fbe9e7', '#ffccbc', '#ffab91', '#ff8a65', '#ff7043', '#ff5722', '#f4511e', '#e64a19', '#d84315', '#bf360c'] },
-  { name: 'brown', shades: ['#efebe9', '#d7ccc8', '#bcaaa4', '#a1887f', '#8d6e63', '#795548', '#6d4c41', '#5d4037', '#4e342e', '#3e2723'] },
-  { name: 'grey', shades: ['#fafafa', '#f5f5f5', '#eeeeee', '#e0e0e0', '#bdbdbd', '#9e9e9e', '#757575', '#616161', '#424242', '#212121'] },
-  { name: 'blueGrey', shades: ['#eceff1', '#cfd8dc', '#b0bec5', '#90a4ae', '#78909c', '#607d8b', '#546e7a', '#455a64', '#37474f', '#263238'] },
+  {
+    name: 'red',
+    shades: [
+      '#ffebee',
+      '#ffcdd2',
+      '#ef9a9a',
+      '#e57373',
+      '#ef5350',
+      '#f44336',
+      '#e53935',
+      '#d32f2f',
+      '#c62828',
+      '#b71c1c',
+    ],
+  },
+  {
+    name: 'pink',
+    shades: [
+      '#fce4ec',
+      '#f8bbd0',
+      '#f48fb1',
+      '#f06292',
+      '#ec407a',
+      '#e91e63',
+      '#d81b60',
+      '#c2185b',
+      '#ad1457',
+      '#880e4f',
+    ],
+  },
+  {
+    name: 'purple',
+    shades: [
+      '#f3e5f5',
+      '#e1bee7',
+      '#ce93d8',
+      '#ba68c8',
+      '#ab47bc',
+      '#9c27b0',
+      '#8e24aa',
+      '#7b1fa2',
+      '#6a1b9a',
+      '#4a148c',
+    ],
+  },
+  {
+    name: 'deepPurple',
+    shades: [
+      '#ede7f6',
+      '#d1c4e9',
+      '#b39ddb',
+      '#9575cd',
+      '#7e57c2',
+      '#673ab7',
+      '#5e35b1',
+      '#512da8',
+      '#4527a0',
+      '#311b92',
+    ],
+  },
+  {
+    name: 'indigo',
+    shades: [
+      '#e8eaf6',
+      '#c5cae9',
+      '#9fa8da',
+      '#7986cb',
+      '#5c6bc0',
+      '#3f51b5',
+      '#3949ab',
+      '#303f9f',
+      '#283593',
+      '#1a237e',
+    ],
+  },
+  {
+    name: 'blue',
+    shades: [
+      '#e3f2fd',
+      '#bbdefb',
+      '#90caf9',
+      '#64b5f6',
+      '#42a5f5',
+      '#2196f3',
+      '#1e88e5',
+      '#1976d2',
+      '#1565c0',
+      '#0d47a1',
+    ],
+  },
+  {
+    name: 'lightBlue',
+    shades: [
+      '#e1f5fe',
+      '#b3e5fc',
+      '#81d4fa',
+      '#4fc3f7',
+      '#29b6f6',
+      '#03a9f4',
+      '#039be5',
+      '#0288d1',
+      '#0277bd',
+      '#01579b',
+    ],
+  },
+  {
+    name: 'cyan',
+    shades: [
+      '#e0f7fa',
+      '#b2ebf2',
+      '#80deea',
+      '#4dd0e1',
+      '#26c6da',
+      '#00bcd4',
+      '#00acc1',
+      '#0097a7',
+      '#00838f',
+      '#006064',
+    ],
+  },
+  {
+    name: 'teal',
+    shades: [
+      '#e0f2f1',
+      '#b2dfdb',
+      '#80cbc4',
+      '#4db6ac',
+      '#26a69a',
+      '#009688',
+      '#00897b',
+      '#00796b',
+      '#00695c',
+      '#004d40',
+    ],
+  },
+  {
+    name: 'green',
+    shades: [
+      '#e8f5e9',
+      '#c8e6c9',
+      '#a5d6a7',
+      '#81c784',
+      '#66bb6a',
+      '#4caf50',
+      '#43a047',
+      '#388e3c',
+      '#2e7d32',
+      '#1b5e20',
+    ],
+  },
+  {
+    name: 'lightGreen',
+    shades: [
+      '#f1f8e9',
+      '#dcedc8',
+      '#c5e1a5',
+      '#aed581',
+      '#9ccc65',
+      '#8bc34a',
+      '#7cb342',
+      '#689f38',
+      '#558b2f',
+      '#33691e',
+    ],
+  },
+  {
+    name: 'lime',
+    shades: [
+      '#f9fbe7',
+      '#f0f4c3',
+      '#e6ee9c',
+      '#dce775',
+      '#d4e157',
+      '#cddc39',
+      '#c0ca33',
+      '#afb42b',
+      '#9e9d24',
+      '#827717',
+    ],
+  },
+  {
+    name: 'yellow',
+    shades: [
+      '#fffde7',
+      '#fff9c4',
+      '#fff59d',
+      '#fff176',
+      '#ffee58',
+      '#ffeb3b',
+      '#fdd835',
+      '#fbc02d',
+      '#f9a825',
+      '#f57f17',
+    ],
+  },
+  {
+    name: 'amber',
+    shades: [
+      '#fff8e1',
+      '#ffecb3',
+      '#ffe082',
+      '#ffd54f',
+      '#ffca28',
+      '#ffc107',
+      '#ffb300',
+      '#ffa000',
+      '#ff8f00',
+      '#ff6f00',
+    ],
+  },
+  {
+    name: 'orange',
+    shades: [
+      '#fff3e0',
+      '#ffe0b2',
+      '#ffcc80',
+      '#ffb74d',
+      '#ffa726',
+      '#ff9800',
+      '#fb8c00',
+      '#f57c00',
+      '#ef6c00',
+      '#e65100',
+    ],
+  },
+  {
+    name: 'deepOrange',
+    shades: [
+      '#fbe9e7',
+      '#ffccbc',
+      '#ffab91',
+      '#ff8a65',
+      '#ff7043',
+      '#ff5722',
+      '#f4511e',
+      '#e64a19',
+      '#d84315',
+      '#bf360c',
+    ],
+  },
+  {
+    name: 'brown',
+    shades: [
+      '#efebe9',
+      '#d7ccc8',
+      '#bcaaa4',
+      '#a1887f',
+      '#8d6e63',
+      '#795548',
+      '#6d4c41',
+      '#5d4037',
+      '#4e342e',
+      '#3e2723',
+    ],
+  },
+  {
+    name: 'grey',
+    shades: [
+      '#fafafa',
+      '#f5f5f5',
+      '#eeeeee',
+      '#e0e0e0',
+      '#bdbdbd',
+      '#9e9e9e',
+      '#757575',
+      '#616161',
+      '#424242',
+      '#212121',
+    ],
+  },
+  {
+    name: 'blueGrey',
+    shades: [
+      '#eceff1',
+      '#cfd8dc',
+      '#b0bec5',
+      '#90a4ae',
+      '#78909c',
+      '#607d8b',
+      '#546e7a',
+      '#455a64',
+      '#37474f',
+      '#263238',
+    ],
+  },
 ]
 
 const colorPicker = document.getElementById('color-picker')
@@ -1002,18 +1781,18 @@ let hashTriggerActive = false
 let hashTriggerStartPos = null
 let selectedSwatchIndex = 0
 let colorSwatchElements = []
-const SWATCH_COLUMNS = 13  // Number of color columns in grid (Open Color)
-const SWATCH_ROWS = 10    // Number of shades per color
+const SWATCH_COLUMNS = 13 // Number of color columns in grid (Open Color)
+const SWATCH_ROWS = 10 // Number of shades per color
 
 // Color picker tab state
 let currentColorTab = 'custom' // 'custom', 'tailwind', 'open', 'material'
 
 // Custom color picker state (HSV)
 let customColorState = {
-  h: 220,  // Hue (0-360)
-  s: 100,  // Saturation (0-100)
-  v: 100,  // Value/Brightness (0-100)
-  a: 1     // Alpha (0-1)
+  h: 220, // Hue (0-360)
+  s: 100, // Saturation (0-100)
+  v: 100, // Value/Brightness (0-100)
+  a: 1, // Alpha (0-1)
 }
 
 // Build the color grid
@@ -1041,7 +1820,7 @@ function buildColorGrid() {
           updateSelectedSwatch()
         }
       })
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', e => {
         e.preventDefault()
         selectColor(hex.toUpperCase())
       })
@@ -1056,10 +1835,10 @@ buildColorGrid()
 // Build Tailwind color grid
 function buildTailwindColorGrid() {
   colorPickerTailwindGrid.innerHTML = ''
-  TAILWIND_COLORS.forEach((scale) => {
+  TAILWIND_COLORS.forEach(scale => {
     const col = document.createElement('div')
     col.className = 'color-picker-column'
-    scale.shades.forEach((hex) => {
+    scale.shades.forEach(hex => {
       const btn = document.createElement('button')
       btn.className = 'color-swatch'
       btn.style.backgroundColor = hex
@@ -1068,7 +1847,7 @@ function buildTailwindColorGrid() {
         colorPreview.style.backgroundColor = hex
         colorHex.textContent = hex.toUpperCase()
       })
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', e => {
         e.preventDefault()
         selectColor(hex.toUpperCase())
       })
@@ -1082,10 +1861,10 @@ buildTailwindColorGrid()
 // Build Material color grid
 function buildMaterialColorGrid() {
   colorPickerMaterialGrid.innerHTML = ''
-  MATERIAL_COLORS.forEach((scale) => {
+  MATERIAL_COLORS.forEach(scale => {
     const col = document.createElement('div')
     col.className = 'color-picker-column'
-    scale.shades.forEach((hex) => {
+    scale.shades.forEach(hex => {
       const btn = document.createElement('button')
       btn.className = 'color-swatch'
       btn.style.backgroundColor = hex
@@ -1094,7 +1873,7 @@ function buildMaterialColorGrid() {
         colorPreview.style.backgroundColor = hex
         colorHex.textContent = hex.toUpperCase()
       })
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', e => {
         e.preventDefault()
         selectColor(hex.toUpperCase())
       })
@@ -1157,43 +1936,73 @@ function hsvToRgb(h, s, v) {
   s /= 100
   v /= 100
   const c = v * s
-  const x = c * (1 - Math.abs((h / 60) % 2 - 1))
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
   const m = v - c
   let r, g, b
-  if (h < 60) { r = c; g = x; b = 0 }
-  else if (h < 120) { r = x; g = c; b = 0 }
-  else if (h < 180) { r = 0; g = c; b = x }
-  else if (h < 240) { r = 0; g = x; b = c }
-  else if (h < 300) { r = x; g = 0; b = c }
-  else { r = c; g = 0; b = x }
+  if (h < 60) {
+    r = c
+    g = x
+    b = 0
+  } else if (h < 120) {
+    r = x
+    g = c
+    b = 0
+  } else if (h < 180) {
+    r = 0
+    g = c
+    b = x
+  } else if (h < 240) {
+    r = 0
+    g = x
+    b = c
+  } else if (h < 300) {
+    r = x
+    g = 0
+    b = c
+  } else {
+    r = c
+    g = 0
+    b = x
+  }
   return {
     r: Math.round((r + m) * 255),
     g: Math.round((g + m) * 255),
-    b: Math.round((b + m) * 255)
+    b: Math.round((b + m) * 255),
   }
 }
 
 // RGB to Hex
 function rgbToHex(r, g, b) {
-  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase()
+  return (
+    '#' +
+    [r, g, b]
+      .map(x => x.toString(16).padStart(2, '0'))
+      .join('')
+      .toUpperCase()
+  )
 }
 
 // Hex to RGB
 function hexToRgb(hex) {
   hex = hex.replace('#', '')
   if (hex.length === 3) {
-    hex = hex.split('').map(c => c + c).join('')
+    hex = hex
+      .split('')
+      .map(c => c + c)
+      .join('')
   }
   return {
     r: parseInt(hex.slice(0, 2), 16),
     g: parseInt(hex.slice(2, 4), 16),
-    b: parseInt(hex.slice(4, 6), 16)
+    b: parseInt(hex.slice(4, 6), 16),
   }
 }
 
 // RGB to HSV
 function rgbToHsv(r, g, b) {
-  r /= 255; g /= 255; b /= 255
+  r /= 255
+  g /= 255
+  b /= 255
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
   const d = max - min
@@ -1202,9 +2011,15 @@ function rgbToHsv(r, g, b) {
   const v = max
   if (max !== min) {
     switch (max) {
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break
-      case g: h = ((b - r) / d + 2) / 6; break
-      case b: h = ((r - g) / d + 4) / 6; break
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        break
+      case g:
+        h = ((b - r) / d + 2) / 6
+        break
+      case b:
+        h = ((r - g) / d + 4) / 6
+        break
     }
   }
   return { h: h * 360, s: s * 100, v: v * 100 }
@@ -1263,7 +2078,7 @@ function drawColorArea() {
 // Update hue slider thumb position
 function updateHueSlider() {
   if (!colorPickerHueThumb) return
-  const percent = customColorState.h / 360 * 100
+  const percent = (customColorState.h / 360) * 100
   colorPickerHueThumb.style.left = `${percent}%`
 }
 
@@ -1294,7 +2109,7 @@ function updateColorDisplays() {
 
 // Color area mouse events
 if (colorPickerArea) {
-  colorPickerArea.addEventListener('mousedown', (e) => {
+  colorPickerArea.addEventListener('mousedown', e => {
     colorAreaDragging = true
     handleColorAreaMove(e)
   })
@@ -1313,7 +2128,7 @@ function handleColorAreaMove(e) {
 
 // Hue slider mouse events
 if (colorPickerHue) {
-  colorPickerHue.addEventListener('mousedown', (e) => {
+  colorPickerHue.addEventListener('mousedown', e => {
     hueDragging = true
     handleHueMove(e)
   })
@@ -1331,7 +2146,7 @@ function handleHueMove(e) {
 
 // Alpha slider mouse events
 if (colorPickerAlpha) {
-  colorPickerAlpha.addEventListener('mousedown', (e) => {
+  colorPickerAlpha.addEventListener('mousedown', e => {
     alphaDragging = true
     handleAlphaMove(e)
   })
@@ -1347,7 +2162,7 @@ function handleAlphaMove(e) {
 }
 
 // Global mouse move/up for sliders
-document.addEventListener('mousemove', (e) => {
+document.addEventListener('mousemove', e => {
   if (colorAreaDragging) handleColorAreaMove(e)
   if (hueDragging) handleHueMove(e)
   if (alphaDragging) handleAlphaMove(e)
@@ -1361,7 +2176,7 @@ document.addEventListener('mouseup', () => {
 
 // Hex input
 if (colorPickerHexInput) {
-  colorPickerHexInput.addEventListener('input', (e) => {
+  colorPickerHexInput.addEventListener('input', e => {
     let hex = e.target.value.replace('#', '')
     if (hex.length === 6 && /^[0-9A-Fa-f]+$/.test(hex)) {
       const rgb = hexToRgb(hex)
@@ -1375,7 +2190,7 @@ if (colorPickerHexInput) {
     }
   })
 
-  colorPickerHexInput.addEventListener('keydown', (e) => {
+  colorPickerHexInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       e.preventDefault()
       // Use current color from state (not input value) to ensure sync
@@ -1387,7 +2202,7 @@ if (colorPickerHexInput) {
 
 // Opacity input
 if (colorPickerOpacityInput) {
-  colorPickerOpacityInput.addEventListener('input', (e) => {
+  colorPickerOpacityInput.addEventListener('input', e => {
     let val = parseInt(e.target.value.replace('%', ''))
     if (!isNaN(val)) {
       customColorState.a = Math.max(0, Math.min(100, val)) / 100
@@ -1560,7 +2375,7 @@ function buildTokenColors(property) {
         colorHex.textContent = token.name
       })
 
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', e => {
         e.preventDefault()
         // Insert token name instead of hex value
         selectColor(token.name)
@@ -1580,7 +2395,17 @@ function buildTokenColors(property) {
   }
 }
 
-function showColorPicker(x, y, insertPos, replaceRange = null, initialColor = null, isHashTrigger = false, hashStartPos = null, property = null, callback = null) {
+function showColorPicker(
+  x,
+  y,
+  insertPos,
+  replaceRange = null,
+  initialColor = null,
+  isHashTrigger = false,
+  hashStartPos = null,
+  property = null,
+  callback = null
+) {
   colorPickerInsertPos = insertPos
   colorPickerReplaceRange = replaceRange
   hashTriggerActive = isHashTrigger
@@ -1715,7 +2540,9 @@ function navigateSwatches(direction) {
  */
 function validatePosition(pos, docLength, context) {
   if (pos < 0 || pos > docLength) {
-    console.warn(`[ColorPicker] ${context}: Position ${pos} out of bounds [0, ${docLength}], clamping`)
+    console.warn(
+      `[ColorPicker] ${context}: Position ${pos} out of bounds [0, ${docLength}], clamping`
+    )
     return Math.max(0, Math.min(pos, docLength))
   }
   return pos
@@ -1748,7 +2575,9 @@ function selectColor(hex) {
       // Verify # still exists at expected position (catches edge cases)
       const charAtFrom = window.editor.state.doc.sliceString(safeFrom, safeFrom + 1)
       if (charAtFrom !== '#') {
-        console.warn(`[ColorPicker] Hash trigger: Expected # at position ${safeFrom}, found '${charAtFrom}'. Inserting at cursor instead.`)
+        console.warn(
+          `[ColorPicker] Hash trigger: Expected # at position ${safeFrom}, found '${charAtFrom}'. Inserting at cursor instead.`
+        )
         insertColorAtPosition(window.editor, cursorPos, cursorPos, hex)
       } else {
         insertColorAtPosition(window.editor, safeFrom, safeTo, hex)
@@ -1762,7 +2591,9 @@ function selectColor(hex) {
       // Sanity check: Range shouldn't be larger than typical color value
       const rangeSize = safeTo - safeFrom
       if (rangeSize > 20 || rangeSize < 0) {
-        console.warn(`[ColorPicker] Replace mode: Invalid range size ${rangeSize} (${safeFrom}-${safeTo}). Using cursor position.`)
+        console.warn(
+          `[ColorPicker] Replace mode: Invalid range size ${rangeSize} (${safeFrom}-${safeTo}). Using cursor position.`
+        )
         safeFrom = cursorPos
         safeTo = cursorPos
       }
@@ -1776,7 +2607,9 @@ function selectColor(hex) {
       // Drift detection: If position drifted far from cursor, use cursor
       const drift = Math.abs(safePos - cursorPos)
       if (drift > 100) {
-        console.warn(`[ColorPicker] Insert mode: Position drifted ${drift} chars from cursor (${safePos} vs ${cursorPos}). Using cursor.`)
+        console.warn(
+          `[ColorPicker] Insert mode: Position drifted ${drift} chars from cursor (${safePos} vs ${cursorPos}). Using cursor.`
+        )
         safePos = cursorPos
       }
 
@@ -1794,66 +2627,73 @@ function insertColorAtPosition(editor, from, to, hex) {
   editor.dispatch({
     changes: { from, to, insert: hex },
     selection: { anchor: from + hex.length },
-    annotations: Transaction.userEvent.of('input.color')
+    annotations: Transaction.userEvent.of('input.color'),
   })
 }
 
 // Color picker keyboard handling
 // Use capturing phase to intercept events before CodeMirror
-document.addEventListener('keydown', (e) => {
-  if (!colorPickerVisible) return
+document.addEventListener(
+  'keydown',
+  e => {
+    if (!colorPickerVisible) return
 
-  // Escape: close picker (except in hash trigger mode which has its own handler)
-  if (e.key === 'Escape' && !hashTriggerActive) {
-    e.preventDefault()
-    e.stopPropagation()
-    hideColorPicker()
-    if (window.editor) window.editor.focus()
-    return
-  }
+    // Escape: close picker (except in hash trigger mode which has its own handler)
+    if (e.key === 'Escape' && !hashTriggerActive) {
+      e.preventDefault()
+      e.stopPropagation()
+      hideColorPicker()
+      if (window.editor) window.editor.focus()
+      return
+    }
 
-  // Enter: select current color
-  if (e.key === 'Enter') {
-    e.preventDefault()
-    e.stopPropagation()
+    // Enter: select current color
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      e.stopPropagation()
 
-    let colorToSelect = null
+      let colorToSelect = null
 
-    // On custom tab, use the custom color state
-    if (currentColorTab === 'custom') {
-      colorToSelect = getCurrentColorHex()
-    } else {
-      // On swatch tabs, use the selected swatch
-      const selected = colorSwatchElements[selectedSwatchIndex]
-      if (selected) {
-        colorToSelect = selected.dataset.color
+      // On custom tab, use the custom color state
+      if (currentColorTab === 'custom') {
+        colorToSelect = getCurrentColorHex()
+      } else {
+        // On swatch tabs, use the selected swatch
+        const selected = colorSwatchElements[selectedSwatchIndex]
+        if (selected) {
+          colorToSelect = selected.dataset.color
+        }
       }
+
+      if (colorToSelect) {
+        selectColor(colorToSelect.toUpperCase())
+      }
+      return
     }
 
-    if (colorToSelect) {
-      selectColor(colorToSelect.toUpperCase())
+    // Arrow keys: navigate swatches (only on swatch tabs)
+    if (
+      currentColorTab !== 'custom' &&
+      ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)
+    ) {
+      e.preventDefault()
+      e.stopPropagation()
+      const direction = e.key.replace('Arrow', '').toLowerCase()
+      navigateSwatches(direction)
+      return
     }
-    return
-  }
+  },
+  true
+) // Use capturing phase
 
-  // Arrow keys: navigate swatches (only on swatch tabs)
-  if (currentColorTab !== 'custom' && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-    e.preventDefault()
-    e.stopPropagation()
-    const direction = e.key.replace('Arrow', '').toLowerCase()
-    navigateSwatches(direction)
-    return
-  }
-}, true) // Use capturing phase
-
-document.addEventListener('mousedown', (e) => {
+document.addEventListener('mousedown', e => {
   if (colorPickerVisible && !colorPicker.contains(e.target)) {
     hideColorPicker()
   }
 })
 
 // Global API for property panel to use color picker
-window.showColorPickerForProperty = function(x, y, property, currentValue, callback) {
+window.showColorPickerForProperty = function (x, y, property, currentValue, callback) {
   showColorPicker(x, y, null, null, currentValue, false, null, property, callback)
 }
 
@@ -1884,8 +2724,8 @@ const EASING_PRESETS = [
 ]
 
 const EASING_CURVES = {
-  'linear': 'M 0 36 L 36 0',
-  'ease': 'M 0 36 C 9 36, 25 0, 36 0',
+  linear: 'M 0 36 L 36 0',
+  ease: 'M 0 36 C 9 36, 25 0, 36 0',
   'ease-in': 'M 0 36 C 16 36, 30 12, 36 0',
   'ease-out': 'M 0 36 C 0 24, 25 0, 36 0',
   'ease-in-out': 'M 0 36 C 16 36, 20 0, 36 0',
@@ -1993,9 +2833,7 @@ function showAnimationPicker(animationData, lineStart) {
     name: 'FadeUp',
     easing: 'ease-out',
     duration: 0.3,
-    tracks: [
-      { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
-    ],
+    tracks: [{ property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 }],
   }
 
   // Create dialog if not exists
@@ -2031,15 +2869,20 @@ function updateAnimationPickerUI() {
   // Update easing presets
   const presetsContainer = animationPickerDialog.querySelector('.ap-easing-presets')
   if (presetsContainer) {
-    presetsContainer.innerHTML = EASING_PRESETS.map(e => `
+    presetsContainer.innerHTML = EASING_PRESETS.map(
+      e => `
       <button class="ap-easing-btn ${e.value === animationPickerData.easing ? 'active' : ''}" data-easing="${e.value}">${e.name}</button>
-    `).join('')
+    `
+    ).join('')
   }
 
   // Update curve preview
   const curvePath = animationPickerDialog.querySelector('.ap-curve-preview path')
   if (curvePath) {
-    curvePath.setAttribute('d', EASING_CURVES[animationPickerData.easing] || EASING_CURVES['ease-out'])
+    curvePath.setAttribute(
+      'd',
+      EASING_CURVES[animationPickerData.easing] || EASING_CURVES['ease-out']
+    )
   }
 
   // Update tracks
@@ -2103,7 +2946,9 @@ function updateAnimationRuler() {
   for (let i = 0; i <= steps; i++) {
     const time = (i / steps) * animationPickerData.duration
     const percent = (i / steps) * 100
-    marks.push(`<div class="ap-ruler-mark" style="left: ${percent}%"><span>${time.toFixed(2)}</span></div>`)
+    marks.push(
+      `<div class="ap-ruler-mark" style="left: ${percent}%"><span>${time.toFixed(2)}</span></div>`
+    )
   }
   rulerMarks.innerHTML = marks.join('')
 }
@@ -2139,7 +2984,7 @@ function setupAnimationPickerEvents() {
   if (!animationPickerDialog) return
 
   // Button actions
-  animationPickerDialog.addEventListener('click', (e) => {
+  animationPickerDialog.addEventListener('click', e => {
     const target = e.target
     const action = target.closest('[data-action]')?.dataset.action
 
@@ -2177,7 +3022,7 @@ function setupAnimationPickerEvents() {
   // Scrubber
   const scrubber = animationPickerDialog.querySelector('.ap-scrubber')
   if (scrubber) {
-    scrubber.addEventListener('mousedown', (e) => {
+    scrubber.addEventListener('mousedown', e => {
       pauseAnimationPicker()
       handleAnimationScrub(e, scrubber)
     })
@@ -2197,20 +3042,24 @@ function setupAnimationPickerEvents() {
   })
 
   // Option inputs
-  animationPickerDialog.querySelector('.ap-option-input[data-field="delay"]')?.addEventListener('change', (e) => {
-    animationPickerData.delay = parseFloat(e.target.value) || 0
-  })
+  animationPickerDialog
+    .querySelector('.ap-option-input[data-field="delay"]')
+    ?.addEventListener('change', e => {
+      animationPickerData.delay = parseFloat(e.target.value) || 0
+    })
 
-  animationPickerDialog.querySelector('input[data-field="loop"]')?.addEventListener('change', (e) => {
+  animationPickerDialog.querySelector('input[data-field="loop"]')?.addEventListener('change', e => {
     animationPickerData.loop = e.target.checked
   })
 
-  animationPickerDialog.querySelector('input[data-field="reverse"]')?.addEventListener('change', (e) => {
-    animationPickerData.reverse = e.target.checked
-  })
+  animationPickerDialog
+    .querySelector('input[data-field="reverse"]')
+    ?.addEventListener('change', e => {
+      animationPickerData.reverse = e.target.checked
+    })
 
   // Name input
-  animationPickerDialog.querySelector('.ap-name-input')?.addEventListener('change', (e) => {
+  animationPickerDialog.querySelector('.ap-name-input')?.addEventListener('change', e => {
     animationPickerData.name = e.target.value
   })
 }
@@ -2218,7 +3067,7 @@ function setupAnimationPickerEvents() {
 function handleAnimationScrub(e, scrubber) {
   const rect = scrubber.getBoundingClientRect()
 
-  const updateScrub = (e) => {
+  const updateScrub = e => {
     const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
     animationPickerCurrentTime = x
     updateAnimationPlayhead(x)
@@ -2226,7 +3075,7 @@ function handleAnimationScrub(e, scrubber) {
 
   updateScrub(e)
 
-  const onMove = (e) => updateScrub(e)
+  const onMove = e => updateScrub(e)
   const onUp = () => {
     document.removeEventListener('mousemove', onMove)
     document.removeEventListener('mouseup', onUp)
@@ -2250,15 +3099,17 @@ function playAnimationPicker() {
 
   const playBtn = animationPickerDialog.querySelector('.ap-play-btn')
   if (playBtn) {
-    playBtn.innerHTML = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" fill="white"/><rect x="14" y="4" width="4" height="16" fill="white"/></svg>'
+    playBtn.innerHTML =
+      '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" fill="white"/><rect x="14" y="4" width="4" height="16" fill="white"/></svg>'
   }
 
-  const startTime = performance.now() - (animationPickerCurrentTime * animationPickerData.duration * 1000)
+  const startTime =
+    performance.now() - animationPickerCurrentTime * animationPickerData.duration * 1000
 
-  const animate = (now) => {
+  const animate = now => {
     if (!animationPickerIsPlaying) return
 
-    animationPickerCurrentTime = ((now - startTime) / 1000) / animationPickerData.duration
+    animationPickerCurrentTime = (now - startTime) / 1000 / animationPickerData.duration
 
     if (animationPickerCurrentTime >= 1) {
       if (animationPickerData.loop) {
@@ -2670,7 +3521,10 @@ function updateAnimationInCode(data) {
     const line = doc.line(i)
     const text = line.text
     // Stop at empty line, non-indented content, or section header
-    if (text.trim() === '' || (!text.startsWith(' ') && !text.startsWith('\t') && text.trim() !== '')) {
+    if (
+      text.trim() === '' ||
+      (!text.startsWith(' ') && !text.startsWith('\t') && text.trim() !== '')
+    ) {
       endLine = i - 1
       break
     }
@@ -2684,7 +3538,7 @@ function updateAnimationInCode(data) {
   // Replace the animation block
   window.editor.dispatch({
     changes: { from, to, insert: dsl },
-    annotations: Transaction.userEvent.of('input.animation')
+    annotations: Transaction.userEvent.of('input.animation'),
   })
 }
 
@@ -2761,16 +3615,17 @@ function parseAnimationKeyframes(doc, startLine) {
     if (keyframes.length >= 1) {
       const sorted = keyframes.sort((a, b) => a.time - b.time)
       const fromValue = parseFloat(sorted[0].value) || sorted[0].value
-      const toValue = sorted.length > 1
-        ? (parseFloat(sorted[sorted.length - 1].value) || sorted[sorted.length - 1].value)
-        : fromValue
+      const toValue =
+        sorted.length > 1
+          ? parseFloat(sorted[sorted.length - 1].value) || sorted[sorted.length - 1].value
+          : fromValue
 
       tracks.push({
         property,
         startTime: sorted[0].time,
         endTime: sorted.length > 1 ? sorted[sorted.length - 1].time : sorted[0].time + 0.3,
         fromValue,
-        toValue
+        toValue,
       })
     }
   }
@@ -2782,7 +3637,7 @@ function parseAnimationKeyframes(doc, startLine) {
 // See: studio/editor/triggers/animation-trigger.ts
 
 // Keyboard shortcut: Cmd+S to save current file
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 's' && !e.shiftKey) {
     e.preventDefault()
     saveCurrentFile()
@@ -2790,7 +3645,7 @@ document.addEventListener('keydown', (e) => {
 })
 
 // Keyboard shortcut: Cmd+O to open folder (Desktop only)
-document.addEventListener('keydown', async (e) => {
+document.addEventListener('keydown', async e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'o' && !e.shiftKey) {
     e.preventDefault()
     if (isTauriDesktop() && window.desktopFiles) {
@@ -2800,7 +3655,7 @@ document.addEventListener('keydown', async (e) => {
 })
 
 // Keyboard shortcut: Cmd+Shift+A to open animation picker (legacy, kept for convenience)
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'a') {
     e.preventDefault()
 
@@ -2818,21 +3673,25 @@ document.addEventListener('keydown', (e) => {
         const lineNum = line.number
         const tracks = parseAnimationKeyframes(window.editor.state.doc, lineNum)
 
-        showAnimationPicker({
-          name: name,
-          easing: 'ease-out',
-          duration: tracks.length > 0 ? Math.max(...tracks.map(t => t.endTime)) : 0.3,
-          tracks: tracks.length > 0 ? tracks : [
-            { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
-          ]
-        }, lineNum)
+        showAnimationPicker(
+          {
+            name: name,
+            easing: 'ease-out',
+            duration: tracks.length > 0 ? Math.max(...tracks.map(t => t.endTime)) : 0.3,
+            tracks:
+              tracks.length > 0
+                ? tracks
+                : [{ property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 }],
+          },
+          lineNum
+        )
       }
     }
   }
 })
 
 // Close animation picker on Escape
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   if (animationPickerVisible && e.key === 'Escape') {
     hideAnimationPicker()
     if (window.editor) window.editor.focus()
@@ -2840,8 +3699,12 @@ document.addEventListener('keydown', (e) => {
 })
 
 // Close animation picker on click outside
-document.addEventListener('mousedown', (e) => {
-  if (animationPickerVisible && animationPickerContainer && !animationPickerContainer.contains(e.target)) {
+document.addEventListener('mousedown', e => {
+  if (
+    animationPickerVisible &&
+    animationPickerContainer &&
+    !animationPickerContainer.contains(e.target)
+  ) {
     hideAnimationPicker()
   }
 })
@@ -2871,8 +3734,8 @@ function extractInlineToken(lineText) {
   return {
     tokenName,
     tokenValue,
-    fullMatch: match[0],  // "$surface: #333"
-    replacement: `$${tokenName}`,  // "$surface"
+    fullMatch: match[0], // "$surface: #333"
+    replacement: `$${tokenName}`, // "$surface"
   }
 }
 
@@ -2990,7 +3853,7 @@ const autoIndentExtension = EditorView.domEventHandlers({
     if (line.number === 1) {
       view.dispatch({
         changes: { from: cursorPos, insert: '\n' + CHILD_INDENT },
-        selection: { anchor: cursorPos + 1 + CHILD_INDENT.length }
+        selection: { anchor: cursorPos + 1 + CHILD_INDENT.length },
       })
       event.preventDefault()
       return true
@@ -3002,11 +3865,11 @@ const autoIndentExtension = EditorView.domEventHandlers({
 
     view.dispatch({
       changes: { from: cursorPos, insert: '\n' + indent },
-      selection: { anchor: cursorPos + 1 + indent.length }
+      selection: { anchor: cursorPos + 1 + indent.length },
     })
     event.preventDefault()
     return true
-  }
+  },
 })
 
 /**
@@ -3014,29 +3877,32 @@ const autoIndentExtension = EditorView.domEventHandlers({
  * Only applies to .mir (layout) files
  */
 const appLockDecoration = Decoration.mark({ class: 'cm-app-locked' })
-const appLockDecorationPlugin = ViewPlugin.fromClass(class {
-  decorations
-  constructor(view) {
-    this.decorations = this.buildDecorations(view)
-  }
-  update(update) {
-    if (update.docChanged || update.viewportChanged) {
-      this.decorations = this.buildDecorations(update.view)
+const appLockDecorationPlugin = ViewPlugin.fromClass(
+  class {
+    decorations
+    constructor(view) {
+      this.decorations = this.buildDecorations(view)
     }
-  }
-  buildDecorations(view) {
-    const builder = new RangeSetBuilder()
-    // Only show "App" decoration for .mir layout files
-    if (!isLayoutFile(currentFile)) {
+    update(update) {
+      if (update.docChanged || update.viewportChanged) {
+        this.decorations = this.buildDecorations(update.view)
+      }
+    }
+    buildDecorations(view) {
+      const builder = new RangeSetBuilder()
+      // Only show "App" decoration for .mir layout files
+      if (!isLayoutFile(currentFile)) {
+        return builder.finish()
+      }
+      const firstLine = view.state.doc.line(1)
+      if (firstLine.text.startsWith(APP_PREFIX)) {
+        builder.add(firstLine.from, firstLine.from + APP_PREFIX.length, appLockDecoration)
+      }
       return builder.finish()
     }
-    const firstLine = view.state.doc.line(1)
-    if (firstLine.text.startsWith(APP_PREFIX)) {
-      builder.add(firstLine.from, firstLine.from + APP_PREFIX.length, appLockDecoration)
-    }
-    return builder.finish()
-  }
-}, { decorations: v => v.decorations })
+  },
+  { decorations: v => v.decorations }
+)
 
 /**
  * Extension: Handle Enter key for inline token definitions
@@ -3060,7 +3926,7 @@ const inlineTokenExtension = EditorView.domEventHandlers({
 
     // Check for inline token pattern
     const match = extractInlineToken(lineText)
-    if (!match) return false  // No match → normal Enter behavior
+    if (!match) return false // No match → normal Enter behavior
 
     // Add token to tokens file
     addTokenToFile(match.tokenName, match.tokenValue)
@@ -3069,7 +3935,7 @@ const inlineTokenExtension = EditorView.domEventHandlers({
     const newLineText = lineText.replace(match.fullMatch, match.replacement)
     view.dispatch({
       changes: { from: line.from, to: line.to, insert: newLineText + '\n' },
-      selection: { anchor: line.from + newLineText.length + 1 }
+      selection: { anchor: line.from + newLineText.length + 1 },
     })
 
     // Show feedback
@@ -3077,7 +3943,7 @@ const inlineTokenExtension = EditorView.domEventHandlers({
 
     event.preventDefault()
     return true
-  }
+  },
 })
 
 // Create editor
@@ -3144,15 +4010,15 @@ function initializeFixer() {
       return {
         from,
         to,
-        text: window.editor.state.sliceDoc(from, to)
+        text: window.editor.state.sliceDoc(from, to),
       }
     },
-    getFileContent: (filename) => files[filename] || null,
+    getFileContent: filename => files[filename] || null,
     saveFile: async (filename, content) => {
       files[filename] = content
       if (filename === currentFile) {
         window.editor?.dispatch({
-          changes: { from: 0, to: window.editor.state.doc.length, insert: content }
+          changes: { from: 0, to: window.editor.state.doc.length, insert: content },
         })
       }
     },
@@ -3163,9 +4029,9 @@ function initializeFixer() {
         window.DesktopFiles.renderFileTree()
       }
     },
-    updateEditor: (content) => {
+    updateEditor: content => {
       window.editor?.dispatch({
-        changes: { from: 0, to: window.editor.state.doc.length, insert: content }
+        changes: { from: 0, to: window.editor.state.doc.length, insert: content },
       })
     },
     refreshFileTree: () => {
@@ -3173,11 +4039,11 @@ function initializeFixer() {
         window.DesktopFiles.renderFileTree()
       }
     },
-    switchToFile: (filename) => {
+    switchToFile: filename => {
       if (window.DesktopFiles?.selectFile) {
         window.DesktopFiles.selectFile(filename)
       }
-    }
+    },
   })
 
   return fixerService
@@ -3214,7 +4080,7 @@ async function handleInlinePromptSubmit(prompt, line, view) {
 // Create inline prompt extension configuration
 const inlinePromptConfig = {
   onSubmit: handleInlinePromptSubmit,
-  onCancel: () => console.log('[InlinePrompt] Cancelled')
+  onCancel: () => console.log('[InlinePrompt] Cancelled'),
 }
 
 // Initialize modular color picker API for property panel
@@ -3223,7 +4089,7 @@ const editor = new EditorView({
   state: EditorState.create({
     doc: initialCode,
     extensions: [
-      indentUnit.of("  "), // 2 spaces for Mirror DSL
+      indentUnit.of('  '), // 2 spaces for Mirror DSL
       lineNumbers(),
       highlightActiveLineGutter(),
       highlightActiveLine(),
@@ -3234,12 +4100,7 @@ const editor = new EditorView({
         override: [mirrorCompletions],
         activateOnTyping: true,
       }),
-      keymap.of([
-        ...completionKeymap,
-        ...defaultKeymap,
-        ...historyKeymap,
-        indentWithTab,
-      ]),
+      keymap.of([...completionKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
       EditorView.updateListener.of(update => {
         if (update.docChanged) {
           // Skip debounced compile if change came from property panel (already compiled immediately)
@@ -3258,7 +4119,9 @@ const editor = new EditorView({
               const oldPos = colorPickerInsertPos
               colorPickerInsertPos = update.changes.mapPos(colorPickerInsertPos)
               if (oldPos !== colorPickerInsertPos) {
-                console.debug(`[ColorPicker] Insert pos tracked: ${oldPos} → ${colorPickerInsertPos}`)
+                console.debug(
+                  `[ColorPicker] Insert pos tracked: ${oldPos} → ${colorPickerInsertPos}`
+                )
               }
             }
             if (colorPickerReplaceRange) {
@@ -3266,10 +4129,15 @@ const editor = new EditorView({
               const oldTo = colorPickerReplaceRange.to
               colorPickerReplaceRange = {
                 from: update.changes.mapPos(colorPickerReplaceRange.from),
-                to: update.changes.mapPos(colorPickerReplaceRange.to)
+                to: update.changes.mapPos(colorPickerReplaceRange.to),
               }
-              if (oldFrom !== colorPickerReplaceRange.from || oldTo !== colorPickerReplaceRange.to) {
-                console.debug(`[ColorPicker] Replace range tracked: [${oldFrom}, ${oldTo}] → [${colorPickerReplaceRange.from}, ${colorPickerReplaceRange.to}]`)
+              if (
+                oldFrom !== colorPickerReplaceRange.from ||
+                oldTo !== colorPickerReplaceRange.to
+              ) {
+                console.debug(
+                  `[ColorPicker] Replace range tracked: [${oldFrom}, ${oldTo}] → [${colorPickerReplaceRange.from}, ${colorPickerReplaceRange.to}]`
+                )
               }
             }
             if (hashTriggerStartPos !== null) {
@@ -3289,7 +4157,7 @@ const editor = new EditorView({
           studio.editor.notifyCursorMove({
             line: line.number,
             column: newPos - line.from + 1,
-            offset: newPos
+            offset: newPos,
           })
         }
       }),
@@ -3301,18 +4169,20 @@ const editor = new EditorView({
       // Note: App lock removed - implicit root wrapper is now added in compile()
       // Component Drop: Proper CodeMirror integration for drag & drop from component palette
       // Uses insertComponentWithDefinition to add component definition at top if needed
-      Prec.highest(createComponentDropExtension({
-        onDrop: (dragData, position, view) => {
-          const code = generateComponentCodeFromDragData(dragData, {
-            componentId: dragData.componentId,
-            filename: currentFile || 'index.mir',
-          })
-          // Extract component name from template (e.g., "Select", "Checkbox")
-          const componentName = dragData.componentName || dragData.template || ''
-          // Use insertComponentWithDefinition for Zag components (adds definition if missing)
-          insertComponentWithDefinition(view, code, position, componentName)
-        }
-      })),
+      Prec.highest(
+        createComponentDropExtension({
+          onDrop: (dragData, position, view) => {
+            const code = generateComponentCodeFromDragData(dragData, {
+              componentId: dragData.componentId,
+              filename: currentFile || 'index.mir',
+            })
+            // Extract component name from template (e.g., "Select", "Checkbox")
+            const componentName = dragData.componentName || dragData.template || ''
+            // Use insertComponentWithDefinition for Zag components (adds definition if missing)
+            insertComponentWithDefinition(view, code, position, componentName)
+          },
+        })
+      ),
       EditorView.theme({
         '&': { height: '100%' },
         '.cm-scroller': { fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace" },
@@ -3336,7 +4206,7 @@ function debounce(fn, ms) {
 }
 
 // Save current file (debounced) - uses API for logged-in users
-const debouncedSave = debounce((code) => {
+const debouncedSave = debounce(code => {
   saveFile(currentFile, code)
   // Update icon if content type changed
   updateFileIcon(currentFile)
@@ -3412,7 +4282,9 @@ tabs.forEach(tab => {
     tabs.forEach(t => t.classList.remove('active'))
     tabContents.forEach(c => c.classList.remove('active'))
     tab.classList.add('active')
-    document.getElementById(targetId === 'preview' ? 'preview' : 'generated-code').classList.add('active')
+    document
+      .getElementById(targetId === 'preview' ? 'preview' : 'generated-code')
+      .classList.add('active')
   })
 })
 
@@ -3483,7 +4355,10 @@ function autoCreateReferencedFiles(code) {
   const importRegex = /^\s*import\s+(.+)$/gm
   let match
   while ((match = importRegex.exec(code)) !== null) {
-    const names = match[1].split(',').map(s => s.trim()).filter(s => s.length > 0)
+    const names = match[1]
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
     for (const name of names) {
       // Skip if it's a string (quoted)
       if (name.startsWith('"') || name.startsWith("'")) continue
@@ -3546,6 +4421,9 @@ function getPreludeCode(excludeFile) {
 
 // Compile and render
 function compile(code) {
+  const compileStart = performance.now()
+  const timings = {}
+
   // Skip compilation if preview is showing LLM-generated content
   // This preserves the generated HTML app in Spec Studio mode
   const previewEl = document.getElementById('preview')
@@ -3598,7 +4476,7 @@ function compile(code) {
     // For layout files, prepend all tokens and components
     // and wrap user code in an implicit full-screen root container
     let resolvedCode = code
-    currentPreludeOffset = 0  // Reset prelude offset
+    currentPreludeOffset = 0 // Reset prelude offset
     if (fileType === 'layout') {
       const prelude = getPreludeCode(currentFile)
 
@@ -3611,7 +4489,9 @@ function compile(code) {
         const trimmed = line.trim()
         // Component definition: starts with capital letter, ends with ":"
         // But not a state like "hover:" or "focus:" (lowercase)
-        return trimmed.match(/^[A-Z][a-zA-Z0-9]*:/) && !line.startsWith(' ') && !line.startsWith('\t')
+        return (
+          trimmed.match(/^[A-Z][a-zA-Z0-9]*:/) && !line.startsWith(' ') && !line.startsWith('\t')
+        )
       })
 
       if (startsWithApp || hasRootComponentDefs) {
@@ -3628,7 +4508,10 @@ function compile(code) {
         const rootWrapper = 'App'
 
         // Indent user code to be children of the implicit root
-        const indentedCode = code.split('\n').map(line => line ? '  ' + line : '').join('\n')
+        const indentedCode = code
+          .split('\n')
+          .map(line => (line ? '  ' + line : ''))
+          .join('\n')
 
         if (prelude) {
           const separator = '\n\n// === ' + currentFile + ' ===\n'
@@ -3647,7 +4530,9 @@ function compile(code) {
     }
 
     // Parse
+    timings.preludeEnd = performance.now()
     const ast = MirrorLang.parse(resolvedCode)
+    timings.parseEnd = performance.now()
 
     // Check for errors
     if (ast.errors && ast.errors.length > 0) {
@@ -3664,14 +4549,16 @@ function compile(code) {
     }
     // Also update TriggerManager's primitives
     setIconTriggerPrimitives(componentPrimitives)
-    window.componentPrimitives = componentPrimitives  // Update window reference
+    window.componentPrimitives = componentPrimitives // Update window reference
 
     // Build IR with source map for bidirectional editing
     const irResult = MirrorLang.toIR(ast, true)
     let sourceMap = irResult.sourceMap
+    timings.irEnd = performance.now()
 
     // Generate DOM code
     const jsCode = MirrorLang.generateDOM(ast)
+    timings.codegenEnd = performance.now()
     if (generatedCode) generatedCode.textContent = jsCode
 
     // Clear preview and set appropriate class
@@ -3724,6 +4611,7 @@ function compile(code) {
 
       // Inject YAML data into __mirrorData before UI creation
       const yamlInjection = generateYAMLDataInjection()
+      timings.prepExecStart = performance.now()
 
       let ui
       if (hasAutoInit) {
@@ -3735,45 +4623,50 @@ function compile(code) {
         if (yamlInjection) {
           execCode = execCode.replace(
             /(__mirrorData = \{[\s\S]*?\n\})/,
-            (match) => match + yamlInjection
+            match => match + yamlInjection
           )
         }
 
         const fn = new Function(execCode + '\nreturn _ui;')
         ui = fn()
       } else {
-        let execCode = finalJsCode
-          .replace('export function createUI', 'function createUI')
+        let execCode = finalJsCode.replace('export function createUI', 'function createUI')
 
         // Inject YAML data after __mirrorData is defined (search for end of object + newline)
         if (yamlInjection) {
           execCode = execCode.replace(
             /(__mirrorData = \{[\s\S]*?\n\})/,
-            (match) => match + yamlInjection
+            match => match + yamlInjection
           )
         }
 
         const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
         ui = fn()
       }
+      timings.execEnd = performance.now()
 
       // IMPORTANT: Update studio BEFORE DOM update so SourceMap is ready for clicks
       updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
+      timings.updateStudioEnd = performance.now()
 
       // DOM backend returns element directly, not { root: element }
       const rootEl = ui?.root || (ui instanceof Element ? ui : null)
       if (rootEl) {
         preview.appendChild(rootEl)
+        timings.domAppendEnd = performance.now()
         // Make preview elements draggable AFTER DOM update
         makePreviewElementsDraggable()
+        timings.draggablesEnd = performance.now()
         // Refresh preview selection after DOM update
         if (studio.preview) {
           studio.preview.refresh()
         }
+        timings.refreshEnd = performance.now()
         // Trigger initial sync after first compile (selects root element)
         if (studio.sync) {
           studio.sync.triggerInitialSync()
         }
+        timings.syncEnd = performance.now()
       }
     }
 
@@ -3782,6 +4675,35 @@ function compile(code) {
       status.className = 'status ok'
     }
 
+    // Log compile timings
+    const compileEnd = performance.now()
+    const totalTime = compileEnd - compileStart
+    if (totalTime > 50) {
+      // Only log slow compiles
+      console.log('[CompilePerf] ========== SLOW COMPILE ==========')
+      console.log(`[CompilePerf] Total: ${totalTime.toFixed(1)}ms`)
+      console.log(`[CompilePerf] Prelude: ${(timings.preludeEnd - compileStart).toFixed(1)}ms`)
+      console.log(`[CompilePerf] Parse: ${(timings.parseEnd - timings.preludeEnd).toFixed(1)}ms`)
+      console.log(`[CompilePerf] IR: ${(timings.irEnd - timings.parseEnd).toFixed(1)}ms`)
+      console.log(`[CompilePerf] Codegen: ${(timings.codegenEnd - timings.irEnd).toFixed(1)}ms`)
+      if (timings.execEnd) {
+        console.log(`[CompilePerf] Exec: ${(timings.execEnd - timings.prepExecStart).toFixed(1)}ms`)
+        console.log(
+          `[CompilePerf] UpdateStudio: ${(timings.updateStudioEnd - timings.execEnd).toFixed(1)}ms`
+        )
+        console.log(
+          `[CompilePerf] DOM Append: ${(timings.domAppendEnd - timings.updateStudioEnd).toFixed(1)}ms`
+        )
+        console.log(
+          `[CompilePerf] Draggables: ${(timings.draggablesEnd - timings.domAppendEnd).toFixed(1)}ms`
+        )
+        console.log(
+          `[CompilePerf] Refresh: ${(timings.refreshEnd - timings.draggablesEnd).toFixed(1)}ms`
+        )
+        console.log(`[CompilePerf] Sync: ${(timings.syncEnd - timings.refreshEnd).toFixed(1)}ms`)
+      }
+      console.log('[CompilePerf] ================================')
+    }
   } catch (err) {
     // Reset compile status on error
     studioActions.setCompiling(false)
@@ -3815,7 +4737,7 @@ function renderTokensPreview(ast) {
   }
 
   // Helper to check if a token is a color (by name or resolved value)
-  const isColorToken = (t) => {
+  const isColorToken = t => {
     // Check by name suffix
     if (t.name.includes('.bg') || t.name.includes('.col') || t.name.includes('.color')) {
       return true
@@ -3826,9 +4748,15 @@ function renderTokensPreview(ast) {
   }
 
   // Helper to infer token display type
-  const inferTokenType = (t) => {
+  const inferTokenType = t => {
     if (isColorToken(t)) return 'color'
-    if (t.name.includes('.pad') || t.name.includes('.gap') || t.name.includes('.margin') || t.name.includes('.rad')) return 'spacing'
+    if (
+      t.name.includes('.pad') ||
+      t.name.includes('.gap') ||
+      t.name.includes('.margin') ||
+      t.name.includes('.rad')
+    )
+      return 'spacing'
     return 'other'
   }
 
@@ -3865,14 +4793,17 @@ function renderTokensPreview(ast) {
   } else {
     // Fallback: group by automatic categories
     const colorTokens = tokens.filter(t => isColorToken(t))
-    const spacingTokens = tokens.filter(t => t.name.includes('.pad') || t.name.includes('.gap') || t.name.includes('.margin'))
+    const spacingTokens = tokens.filter(
+      t => t.name.includes('.pad') || t.name.includes('.gap') || t.name.includes('.margin')
+    )
     const radiusTokens = tokens.filter(t => t.name.includes('.rad'))
-    const otherTokens = tokens.filter(t =>
-      !isColorToken(t) &&
-      !t.name.includes('.pad') &&
-      !t.name.includes('.gap') &&
-      !t.name.includes('.margin') &&
-      !t.name.includes('.rad')
+    const otherTokens = tokens.filter(
+      t =>
+        !isColorToken(t) &&
+        !t.name.includes('.pad') &&
+        !t.name.includes('.gap') &&
+        !t.name.includes('.margin') &&
+        !t.name.includes('.rad')
     )
 
     if (colorTokens.length > 0) {
@@ -3899,7 +4830,7 @@ function renderTokenSection(title, tokens, type, tokenMap, inferTokenType = null
     let visualCell = ''
 
     // For mixed sections, infer type per token
-    const tokenType = (type === 'mixed' && inferTokenType) ? inferTokenType(token) : type
+    const tokenType = type === 'mixed' && inferTokenType ? inferTokenType(token) : type
 
     if (tokenType === 'color') {
       visualCell = `<div class="tokens-preview-swatch" style="background: ${resolvedValue}"></div>`
@@ -3930,7 +4861,12 @@ function renderTokenSection(title, tokens, type, tokenMap, inferTokenType = null
 
 function isColorValue(value) {
   if (typeof value !== 'string') return false
-  return value.startsWith('#') || value.startsWith('rgb') || value.startsWith('hsl') || value.startsWith('$')
+  return (
+    value.startsWith('#') ||
+    value.startsWith('rgb') ||
+    value.startsWith('hsl') ||
+    value.startsWith('$')
+  )
 }
 
 // Check if value is a direct color (hex, rgb, hsl) - not a token reference
@@ -3984,7 +4920,20 @@ function resolveTokenValue(value) {
 }
 
 // Known behavior states
-const BEHAVIOR_STATES = ['hover', 'active', 'focus', 'disabled', 'selected', 'highlighted', 'expanded', 'collapsed', 'on', 'off', 'valid', 'invalid']
+const BEHAVIOR_STATES = [
+  'hover',
+  'active',
+  'focus',
+  'disabled',
+  'selected',
+  'highlighted',
+  'expanded',
+  'collapsed',
+  'on',
+  'off',
+  'valid',
+  'invalid',
+]
 
 // Render Components Preview
 function renderComponentsPreview(ast) {
@@ -4052,7 +5001,7 @@ function extractComponentSections(ast, components) {
       sectionHeaders.push({
         name: match[1],
         lineStart: i + 1, // 1-based line number
-        lineEnd: lines.length
+        lineEnd: lines.length,
       })
       // Update previous section's end line
       if (sectionHeaders.length > 1) {
@@ -4067,7 +5016,12 @@ function extractComponentSections(ast, components) {
   }
 
   // Group components by section based on line numbers
-  const sections = sectionHeaders.map(h => ({ name: h.name, components: [], lineStart: h.lineStart, lineEnd: h.lineEnd }))
+  const sections = sectionHeaders.map(h => ({
+    name: h.name,
+    components: [],
+    lineStart: h.lineStart,
+    lineEnd: h.lineEnd,
+  }))
   const unsortedComponents = []
 
   for (const comp of components) {
@@ -4116,7 +5070,7 @@ function getComponentStates(comp) {
   }
 
   // Also collect from children
-  const collectFromChildren = (children) => {
+  const collectFromChildren = children => {
     for (const child of children || []) {
       if (child.states) {
         for (const state of child.states) {
@@ -4194,7 +5148,7 @@ function injectComponentPreviewStyles(force = false) {
     }
 
     // Resolve token references (e.g., $surface.bg: $grey-800)
-    const resolveValue = (value) => {
+    const resolveValue = value => {
       if (typeof value === 'string' && value.startsWith('$')) {
         const resolved = tokenMap.get(value)
         if (resolved) return resolveValue(resolved)
@@ -4203,18 +5157,32 @@ function injectComponentPreviewStyles(force = false) {
     }
 
     // Token suffixes that need px units when numeric
-    const pxSuffixes = ['-pad', '-gap', '-rad', '-fs', '-w', '-h', '-minw', '-maxw', '-minh', '-maxh', '-bor']
+    const pxSuffixes = [
+      '-pad',
+      '-gap',
+      '-rad',
+      '-fs',
+      '-w',
+      '-h',
+      '-minw',
+      '-maxw',
+      '-minh',
+      '-maxh',
+      '-bor',
+    ]
 
     // Check if a CSS var name needs px unit
-    const needsPxUnit = (varName) => {
+    const needsPxUnit = varName => {
       return pxSuffixes.some(suffix => varName.endsWith(suffix))
     }
 
     let cssVars = ':root {\n'
     for (const token of ast.tokens) {
       // Strip $ prefix and convert dots to hyphens
-      const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name)
-        .replace(/\./g, '-')
+      const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name).replace(
+        /\./g,
+        '-'
+      )
       let resolvedValue = resolveValue(token.value)
 
       // Add px unit for numeric spacing/sizing values
@@ -4260,8 +5228,10 @@ function renderComponentState(comp, stateName, ast) {
     let code = tokensSource + '\n' + currentFileSource + '\n' + comp.name
 
     const miniAst = MirrorLang.parse(code)
-    const jsCode = MirrorLang.generateDOM(miniAst)
-      .replace('export function createUI', 'function createUI')
+    const jsCode = MirrorLang.generateDOM(miniAst).replace(
+      'export function createUI',
+      'function createUI'
+    )
 
     const fn = new Function(jsCode + '\nreturn createUI ? createUI() : null;')
     const ui = fn()
@@ -4303,15 +5273,15 @@ let studioSelectionManager = null
 let studioPropertyPanel = null
 let studioPropertyExtractor = null
 let studioCodeModifier = null
-let studioRobustModifier = null  // Robust wrapper for atomic updates
-let canvasDragCleanups = []  // Cleanup functions for canvas element drag handlers
-const initializedDraggables = new WeakSet()  // Track elements with drag handlers to prevent duplicates
+let studioRobustModifier = null // Robust wrapper for atomic updates
+let canvasDragCleanups = [] // Cleanup functions for canvas element drag handlers
+const initializedDraggables = new WeakSet() // Track elements with drag handlers to prevent duplicates
 // editorHasFocus is now managed by studio state (studio.state.get().editorHasFocus)
 // This getter provides backwards compatibility for existing code
 function getEditorHasFocus() {
   return studio?.state ? studio.state.get().editorHasFocus : true
 }
-let currentPreludeOffset = 0  // Character offset of prelude in merged source (for adjusting change positions)
+let currentPreludeOffset = 0 // Character offset of prelude in merged source (for adjusting change positions)
 
 /**
  * Ensure codeModifier is in sync with the current editor content.
@@ -4395,9 +5365,9 @@ function getCurrentFileLineOffset() {
   // That's: 2 newlines + 1 comment line + 1 newline = 3 additional lines
   // Actually: the line count is prelude lines + 2 (blank line) + 1 (comment line)
   // The current file content starts on the line AFTER the comment
-  const separatorLines = 3  // \n\n (blank line after prelude) + comment line + \n
+  const separatorLines = 3 // \n\n (blank line after prelude) + comment line + \n
 
-  return preludeLines + separatorLines - 1  // -1 because editor line 1 should map to first content line
+  return preludeLines + separatorLines - 1 // -1 because editor line 1 should map to first content line
 }
 
 // ============================================
@@ -4462,7 +5432,7 @@ function initStudio() {
         return Object.entries(allFiles).map(([name, code]) => ({
           name,
           type: detectFileType(name, code),
-          code
+          code,
         }))
       },
       updateFile: (filename, content) => {
@@ -4470,13 +5440,13 @@ function initStudio() {
         // If it's the current file, update editor
         if (filename === currentFile) {
           editor.dispatch({
-            changes: { from: 0, to: editor.state.doc.length, insert: content }
+            changes: { from: 0, to: editor.state.doc.length, insert: content },
           })
         }
         // Save to storage
         saveFile(filename, content)
       },
-      switchToFile: (filename) => {
+      switchToFile: filename => {
         if (files[filename]) {
           switchFile(filename)
         }
@@ -4556,7 +5526,7 @@ function initPlayMode() {
   }
 
   // Keyboard shortcut: Escape to exit play mode
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && studioState.get().playMode) {
       studioActions.setPlayMode(false)
     }
@@ -4694,6 +5664,21 @@ function setupNotificationHandlers() {
   studio.events.on('notification:error', ({ message, duration }) => {
     showNotification(message, 'error', duration ?? 5000)
   })
+
+  // Immediate compile when requested (bypasses 300ms debounce for drag-drop operations)
+  // This significantly improves perceived performance after drops
+  studio.events.on('compile:requested', () => {
+    // Cancel pending debounce to avoid duplicate compiles
+    if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
+      debouncedCompile.cancel()
+    }
+    // Compile immediately with current editor content
+    const code = editor?.state?.doc?.toString()
+    if (code !== undefined) {
+      compile(code)
+      debouncedSave(code)
+    }
+  })
 }
 
 /**
@@ -4704,7 +5689,7 @@ function setupMoveEventHandlers() {
   if (!studio?.events) return
 
   // Log move:completed events for debugging
-  studio.events.on('move:completed', (data) => {
+  studio.events.on('move:completed', data => {
     console.log('[Move] Completed:', {
       nodeId: data.nodeId,
       targetId: data.targetId,
@@ -4829,7 +5814,7 @@ function updateStudio(ast, ir, sourceMap, source) {
       studioCodeModifier,
       handleStudioCodeChange,
       {
-        getAllSource: getAllProjectSource
+        getAllSource: getAllProjectSource,
       }
     )
   }
@@ -4842,7 +5827,7 @@ function updateStudio(ast, ir, sourceMap, source) {
     studio.editor.notifyCursorMove({
       line: line.number,
       column: pos - line.from + 1,
-      offset: pos
+      offset: pos,
     })
   }
 
@@ -4902,17 +5887,21 @@ function handleStudioCodeChange(result) {
   const adjustedChange = {
     from: result.change.from - currentPreludeOffset,
     to: result.change.to - currentPreludeOffset,
-    insert: result.change.insert
+    insert: result.change.insert,
   }
 
   // Validate adjusted change range before applying (prevents RangeError crashes)
   const docLength = editor.state.doc.length
-  if (adjustedChange.from < 0 || adjustedChange.to > docLength || adjustedChange.from > adjustedChange.to) {
+  if (
+    adjustedChange.from < 0 ||
+    adjustedChange.to > docLength ||
+    adjustedChange.from > adjustedChange.to
+  ) {
     console.warn('Studio: Invalid change range after adjustment', {
       original: result.change,
       adjusted: adjustedChange,
       preludeOffset: currentPreludeOffset,
-      docLength
+      docLength,
     })
     // Force recompile to fix the state mismatch
     debouncedCompile.cancel()
@@ -4925,7 +5914,7 @@ function handleStudioCodeChange(result) {
   const inverseChange = {
     from: adjustedChange.from,
     to: adjustedChange.from + adjustedChange.insert.length,
-    insert: currentSource.substring(adjustedChange.from, adjustedChange.to)
+    insert: currentSource.substring(adjustedChange.from, adjustedChange.to),
   }
 
   // Apply the adjusted change to CodeMirror
@@ -4933,15 +5922,15 @@ function handleStudioCodeChange(result) {
     changes: adjustedChange,
     annotations: [
       propertyPanelChangeAnnotation.of(true),
-      Transaction.userEvent.of('input.property')
-    ]
+      Transaction.userEvent.of('input.property'),
+    ],
   })
 
   // Record the change in CommandExecutor for undo/redo
   const command = new RecordedChangeCommand({
     change: adjustedChange,
     inverseChange: inverseChange,
-    description: 'Property change'
+    description: 'Property change',
   })
   executor.execute(command)
 
@@ -4949,7 +5938,7 @@ function handleStudioCodeChange(result) {
   events.emit('source:changed', {
     source: editor.state.doc.toString(),
     origin: 'panel',
-    change: adjustedChange
+    change: adjustedChange,
   })
 
   // Compile immediately (no debounce for property panel changes)
@@ -5146,7 +6135,7 @@ async function findOrCreateComponentsFile() {
       console.error('[Zag] Failed to create components.com:', err)
       studio.events.emit('notification:error', {
         message: 'Konnte components.com nicht erstellen',
-        duration: 3000
+        duration: 3000,
       })
       return null
     }
@@ -5170,7 +6159,9 @@ async function addZagDefinitionToComponentsFile(definitionCode, filePath) {
   let content = allFiles[filePath] || ''
 
   // Append definition to file
-  content = content.trim() ? content.trimEnd() + '\n\n' + definitionCode + '\n' : definitionCode + '\n'
+  content = content.trim()
+    ? content.trimEnd() + '\n\n' + definitionCode + '\n'
+    : definitionCode + '\n'
 
   if (window.TauriBridge?.isTauri?.()) {
     try {
@@ -5182,14 +6173,14 @@ async function addZagDefinitionToComponentsFile(definitionCode, filePath) {
       console.log('[Zag] Added definition to:', filePath)
       studio.events.emit('notification:success', {
         message: `Definition wurde zu ${filePath.split('/').pop()} hinzugefügt`,
-        duration: 2000
+        duration: 2000,
       })
       return true
     } catch (err) {
       console.error('[Zag] Failed to write to components file:', err)
       studio.events.emit('notification:error', {
         message: `Konnte nicht zu ${filePath.split('/').pop()} speichern`,
-        duration: 3000
+        duration: 3000,
       })
       return false
     }
@@ -5199,7 +6190,7 @@ async function addZagDefinitionToComponentsFile(definitionCode, filePath) {
     console.log('[Zag] Added definition to (browser mode):', filePath)
     studio.events.emit('notification:success', {
       message: `Definition wurde zu ${filePath.split('/').pop()} hinzugefügt`,
-      duration: 2000
+      duration: 2000,
     })
     return true
   }
@@ -5313,7 +6304,10 @@ function addZagDefinitionToCode(definitionCode) {
     for (let i = lastComponent.line; i < lines.length; i++) {
       const line = lines[i]
       // If we hit an empty line or a line that's not indented (new top-level item), stop
-      if (line.trim() === '' || (line.length > 0 && !line.startsWith(' ') && !line.startsWith('\t'))) {
+      if (
+        line.trim() === '' ||
+        (line.length > 0 && !line.startsWith(' ') && !line.startsWith('\t'))
+      ) {
         endLine = i
         break
       }
@@ -5336,25 +6330,25 @@ function addZagDefinitionToCode(definitionCode) {
   const change = {
     from: insertPosition,
     to: insertPosition,
-    insert: insertText
+    insert: insertText,
   }
 
   editor.dispatch({
     changes: change,
-    annotations: Transaction.userEvent.of('input.drop')
+    annotations: Transaction.userEvent.of('input.drop'),
   })
 
   // Record for undo
   const inverseChange = {
     from: insertPosition,
     to: insertPosition + insertText.length,
-    insert: ''
+    insert: '',
   }
 
   const command = new RecordedChangeCommand({
     change: change,
     inverseChange: inverseChange,
-    description: 'Add component definition'
+    description: 'Add component definition',
   })
   executor.execute(command)
 
@@ -5362,7 +6356,7 @@ function addZagDefinitionToCode(definitionCode) {
   events.emit('source:changed', {
     source: editor.state.doc.toString(),
     origin: 'zag-definition',
-    change: change
+    change: change,
   })
 
   return true
@@ -5388,7 +6382,15 @@ async function handleStudioDrop(result) {
 
   // DropResultInfo format:
   // { source, targetNodeId, placement, insertionIndex?, absolutePosition?, alignment?, isDuplicate, delta }
-  const { source, targetNodeId, placement, insertionIndex, absolutePosition, alignment, isDuplicate } = result
+  const {
+    source,
+    targetNodeId,
+    placement,
+    insertionIndex,
+    absolutePosition,
+    alignment,
+    isDuplicate,
+  } = result
 
   let modResult = null
   let componentName = ''
@@ -5413,21 +6415,40 @@ async function handleStudioDrop(result) {
         )
       } else {
         // Fallback to sequential updates (less robust)
-        const resultX = studioCodeModifier.updateProperty(source.nodeId, 'x', String(Math.round(absolutePosition.x)))
+        const resultX = studioCodeModifier.updateProperty(
+          source.nodeId,
+          'x',
+          String(Math.round(absolutePosition.x))
+        )
         if (resultX.success) {
-          const resultY = studioCodeModifier.updateProperty(source.nodeId, 'y', String(Math.round(absolutePosition.y)))
-          modResult = resultY.success ? {
-            success: true,
-            newSource: resultY.newSource,
-            change: { from: resultX.change.from, to: resultX.change.to, insert: resultY.change.insert }
-          } : resultY
+          const resultY = studioCodeModifier.updateProperty(
+            source.nodeId,
+            'y',
+            String(Math.round(absolutePosition.y))
+          )
+          modResult = resultY.success
+            ? {
+                success: true,
+                newSource: resultY.newSource,
+                change: {
+                  from: resultX.change.from,
+                  to: resultX.change.to,
+                  insert: resultY.change.insert,
+                },
+              }
+            : resultY
         } else {
           modResult = resultX
         }
       }
     } else {
       // Move to new parent/position
-      modResult = studioCodeModifier.moveNode(source.nodeId, targetNodeId, placement, insertionIndex)
+      modResult = studioCodeModifier.moveNode(
+        source.nodeId,
+        targetNodeId,
+        placement,
+        insertionIndex
+      )
     }
   } else if (source.type === 'palette') {
     // Adding new component from palette
@@ -5452,7 +6473,9 @@ async function handleStudioDrop(result) {
         relY = absolutePosition.y - (parentRect.top - previewRect.top)
       } else if (!targetElement) {
         // Log warning when target element not found - coordinates won't be transformed
-        console.warn(`[Drop] Target element not found for id "${targetNodeId}", using untransformed coordinates`)
+        console.warn(
+          `[Drop] Target element not found for id "${targetNodeId}", using untransformed coordinates`
+        )
       }
 
       // Adjust for zoom scale - getBoundingClientRect returns zoomed values
@@ -5480,7 +6503,12 @@ async function handleStudioDrop(result) {
 
       // Determine if dropping into a .com (components) file
       const droppingIntoComponentsFile = isComponentsFile(currentFile)
-      console.log('[Drop] File type:', droppingIntoComponentsFile ? '.com' : '.mir', 'File:', currentFile)
+      console.log(
+        '[Drop] File type:',
+        droppingIntoComponentsFile ? '.com' : '.mir',
+        'File:',
+        currentFile
+      )
 
       // Check if definition exists (searches all project files)
       const existingDef = findExistingZagDefinition(componentName)
@@ -5493,7 +6521,7 @@ async function handleStudioDrop(result) {
           console.log('[Drop] Case 1: Component already defined:', existingDef.definitionName)
           studio.events.emit('notification:info', {
             message: `${existingDef.definitionName} ist bereits definiert`,
-            duration: 2000
+            duration: 2000,
           })
           return // Nothing to do
         } else {
@@ -5516,7 +6544,7 @@ async function handleStudioDrop(result) {
 
           studio.events.emit('notification:success', {
             message: `${definitionName} wurde erstellt`,
-            duration: 2000
+            duration: 2000,
           })
           return // No instance needed in .com files
         }
@@ -5549,7 +6577,7 @@ async function handleStudioDrop(result) {
                 console.error('[Drop] Failed to add definition to components file')
                 studio.events.emit('notification:error', {
                   message: 'Konnte Definition nicht erstellen',
-                  duration: 3000
+                  duration: 3000,
                 })
                 return // Abort on failure
               }
@@ -5565,7 +6593,7 @@ async function handleStudioDrop(result) {
             console.error('[Drop] Error creating definition:', err)
             studio.events.emit('notification:error', {
               message: 'Fehler beim Erstellen der Definition',
-              duration: 3000
+              duration: 3000,
             })
             return
           }
@@ -5603,7 +6631,7 @@ async function handleStudioDrop(result) {
         'top-center': 'top',
         'top-right': 'top',
         'center-left': 'left',
-        'center': 'center',
+        center: 'center',
         'center-right': 'right',
         'bottom-left': 'bottom',
         'bottom-center': 'bottom',
@@ -5640,12 +6668,16 @@ function applyDropChange(modResult, componentName = 'Component') {
   const adjustedChange = {
     from: change.from - currentPreludeOffset,
     to: change.to - currentPreludeOffset,
-    insert: change.insert
+    insert: change.insert,
   }
 
   // Validate range
   const docLength = editor.state.doc.length
-  if (adjustedChange.from < 0 || adjustedChange.to > docLength || adjustedChange.from > adjustedChange.to) {
+  if (
+    adjustedChange.from < 0 ||
+    adjustedChange.to > docLength ||
+    adjustedChange.from > adjustedChange.to
+  ) {
     console.warn('Studio: Invalid drop range after offset adjustment')
     return
   }
@@ -5655,20 +6687,20 @@ function applyDropChange(modResult, componentName = 'Component') {
   const inverseChange = {
     from: adjustedChange.from,
     to: adjustedChange.from + adjustedChange.insert.length,
-    insert: currentSource.substring(adjustedChange.from, adjustedChange.to)
+    insert: currentSource.substring(adjustedChange.from, adjustedChange.to),
   }
 
   // Apply the change to CodeMirror
   editor.dispatch({
     changes: adjustedChange,
-    annotations: Transaction.userEvent.of('input.drop')
+    annotations: Transaction.userEvent.of('input.drop'),
   })
 
   // Record the change in CommandExecutor for undo/redo
   const command = new RecordedChangeCommand({
     change: adjustedChange,
     inverseChange: inverseChange,
-    description: 'Drop component'
+    description: 'Drop component',
   })
   executor.execute(command)
 
@@ -5676,7 +6708,7 @@ function applyDropChange(modResult, componentName = 'Component') {
   events.emit('source:changed', {
     source: editor.state.doc.toString(),
     origin: 'drag-drop',
-    change: adjustedChange
+    change: adjustedChange,
   })
 
   // Set pending selection BEFORE compile
@@ -5685,7 +6717,7 @@ function applyDropChange(modResult, componentName = 'Component') {
     studioActions.setPendingSelection({
       line: insertLine.number,
       componentName: componentName,
-      origin: 'drag-drop'
+      origin: 'drag-drop',
     })
   }
 
@@ -5717,7 +6749,7 @@ function handleElementDelete() {
   const adjustedChange = {
     from: result.change.from - currentPreludeOffset,
     to: result.change.to - currentPreludeOffset,
-    insert: result.change.insert
+    insert: result.change.insert,
   }
 
   // Validate range
@@ -5732,20 +6764,20 @@ function handleElementDelete() {
   const inverseChange = {
     from: adjustedChange.from,
     to: adjustedChange.from + adjustedChange.insert.length,
-    insert: currentSource.substring(adjustedChange.from, adjustedChange.to)
+    insert: currentSource.substring(adjustedChange.from, adjustedChange.to),
   }
 
   // Apply the change to CodeMirror
   editor.dispatch({
     changes: adjustedChange,
-    annotations: Transaction.userEvent.of('delete.element')
+    annotations: Transaction.userEvent.of('delete.element'),
   })
 
   // Record the change in CommandExecutor for undo/redo
   const command = new RecordedChangeCommand({
     change: adjustedChange,
     inverseChange: inverseChange,
-    description: `Delete ${nodeId}`
+    description: `Delete ${nodeId}`,
   })
   executor.execute(command)
 
@@ -5753,7 +6785,7 @@ function handleElementDelete() {
   events.emit('source:changed', {
     source: editor.state.doc.toString(),
     origin: 'keyboard',
-    change: adjustedChange
+    change: adjustedChange,
   })
 
   // Clear selection and recompile
@@ -5768,7 +6800,7 @@ function handleElementDelete() {
 }
 
 // Keyboard listener for Delete/Backspace on selected elements
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   // Only handle Delete/Backspace when preview has focus (not editor)
   if (getEditorHasFocus()) return
 
@@ -5783,7 +6815,7 @@ document.addEventListener('keydown', (e) => {
 })
 
 // Global undo/redo via CommandExecutor (when preview has focus)
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   // Don't interfere with editor's own undo/redo
   if (getEditorHasFocus()) return
   // Don't interfere with input fields
@@ -5840,35 +6872,36 @@ compile(initialCode)
 // Works in both Tauri (real files) and Browser (demo files)
 // ==========================================
 if (!isPlaygroundMode) {
-  import('./desktop-files.js').then(module => {
-    // Initialize with callback to load files into editor
-    module.initDesktopFiles({
-      onFileSelect: (filePath, content) => {
-        console.log('[DesktopFiles] Loading file into editor:', filePath)
-        // Update currentFile for appLockExtension
-        currentFile = filePath
-        // Update editor content
-        const transaction = editor.state.update({
-          changes: {
-            from: 0,
-            to: editor.state.doc.length,
-            insert: content
-          },
-          annotations: [fileSwitchAnnotation.of(true)]
-        })
-        editor.dispatch(transaction)
-        // Recompile
-        compile(content)
-      },
-      onFileChange: (filePath, content) => {
-        console.log('[DesktopFiles] File changed:', filePath)
-      }
+  import('./desktop-files.js')
+    .then(module => {
+      // Initialize with callback to load files into editor
+      module.initDesktopFiles({
+        onFileSelect: (filePath, content) => {
+          console.log('[DesktopFiles] Loading file into editor:', filePath)
+          // Update currentFile for appLockExtension
+          currentFile = filePath
+          // Update editor content
+          const transaction = editor.state.update({
+            changes: {
+              from: 0,
+              to: editor.state.doc.length,
+              insert: content,
+            },
+            annotations: [fileSwitchAnnotation.of(true)],
+          })
+          editor.dispatch(transaction)
+          // Recompile
+          compile(content)
+        },
+        onFileChange: (filePath, content) => {
+          console.log('[DesktopFiles] File changed:', filePath)
+        },
+      })
+      console.log('[App] File management initialized')
     })
-    console.log('[App] File management initialized')
-
-  }).catch(err => {
-    console.error('[App] Failed to load studio bundle:', err)
-  })
+    .catch(err => {
+      console.error('[App] Failed to load studio bundle:', err)
+    })
 } else {
   console.log('[App] Playground mode - skipping file management')
 }
@@ -5892,7 +6925,7 @@ async function setupDesktopMenuHandler() {
   }
 
   try {
-    await window.TauriBridge.menu.onMenuClick(async (menuId) => {
+    await window.TauriBridge.menu.onMenuClick(async menuId => {
       console.log('[Menu] Event:', menuId)
 
       switch (menuId) {
@@ -5920,7 +6953,9 @@ async function setupDesktopMenuHandler() {
             console.log('[Menu] new_file - creating:', fileName)
             await window.desktopFiles.createFile(fileName)
           } else {
-            await alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)', { title: 'Kein Projekt' })
+            await alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)', {
+              title: 'Kein Projekt',
+            })
           }
           break
 
@@ -5934,7 +6969,9 @@ async function setupDesktopMenuHandler() {
             console.log('[Menu] new_folder - creating:', folderName)
             await window.desktopFiles.createFolder(folderName)
           } else {
-            await alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)', { title: 'Kein Projekt' })
+            await alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)', {
+              title: 'Kein Projekt',
+            })
           }
           break
 
@@ -5953,35 +6990,35 @@ async function setupDesktopMenuHandler() {
           }
           break
 
-      case 'new_project':
-        // Not needed for desktop - just open folder
-        break
+        case 'new_project':
+          // Not needed for desktop - just open folder
+          break
 
-      // View menu - Panel toggles
-      case 'toggle_prompt':
-      case 'toggle_files':
-      case 'toggle_code':
-      case 'toggle_components':
-      case 'toggle_preview':
-      case 'toggle_property':
-        const panelKey = menuId.replace('toggle_', '')
-        studioActions.setPanelVisibility(panelKey, !studioActions.getPanelVisibility?.(panelKey))
-        break
+        // View menu - Panel toggles
+        case 'toggle_prompt':
+        case 'toggle_files':
+        case 'toggle_code':
+        case 'toggle_components':
+        case 'toggle_preview':
+        case 'toggle_property':
+          const panelKey = menuId.replace('toggle_', '')
+          studioActions.setPanelVisibility(panelKey, !studioActions.getPanelVisibility?.(panelKey))
+          break
 
-      // Zoom controls
-      case 'zoom_in':
-        document.getElementById('zoom-in')?.click()
-        break
-      case 'zoom_out':
-        document.getElementById('zoom-out')?.click()
-        break
-      case 'zoom_reset':
-        document.getElementById('zoom-reset')?.click()
-        break
+        // Zoom controls
+        case 'zoom_in':
+          document.getElementById('zoom-in')?.click()
+          break
+        case 'zoom_out':
+          document.getElementById('zoom-out')?.click()
+          break
+        case 'zoom_reset':
+          document.getElementById('zoom-reset')?.click()
+          break
 
-      default:
-        console.log('[Menu] Unhandled:', menuId)
-    }
+        default:
+          console.log('[Menu] Unhandled:', menuId)
+      }
     })
     console.log('[App] Desktop menu handler registered')
   } catch (err) {
@@ -5998,7 +7035,7 @@ window.studioSelectionManager = studioSelectionManager
 window.startCompletion = startCompletion
 window.closeCompletion = closeCompletion
 window.files = files
-window.studio = studio  // New architecture
+window.studio = studio // New architecture
 window.resetCode = async () => {
   // No longer supported - all content comes from server
   console.log('[App] resetCode is deprecated - content managed by server')
@@ -6060,7 +7097,7 @@ window.resetCode = async () => {
           sidebar: sidebar ? sidebar.offsetWidth : 200,
           components: componentsPanel ? componentsPanel.offsetWidth : 220,
           editor: editorPanel.offsetWidth,
-          preview: previewPanel.offsetWidth
+          preview: previewPanel.offsetWidth,
         }
         window.MirrorStudio.actions.setPanelSizes(sizes)
         console.log('[PanelResizer] Saved sizes:', sizes)
@@ -6076,7 +7113,7 @@ window.resetCode = async () => {
     let sidebarStartX = 0
     let sidebarStartWidth = 0
 
-    sidebarDivider.addEventListener('mousedown', (e) => {
+    sidebarDivider.addEventListener('mousedown', e => {
       isSidebarDragging = true
       sidebarStartX = e.clientX
       sidebarStartWidth = sidebar.offsetWidth
@@ -6086,7 +7123,7 @@ window.resetCode = async () => {
       e.preventDefault()
     })
 
-    document.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', e => {
       if (!isSidebarDragging) return
       const deltaX = e.clientX - sidebarStartX
       const newWidth = Math.max(MIN_SIDEBAR, sidebarStartWidth + deltaX)
@@ -6111,7 +7148,7 @@ window.resetCode = async () => {
     let componentsStartX = 0
     let componentsStartWidth = 0
 
-    componentsDivider.addEventListener('mousedown', (e) => {
+    componentsDivider.addEventListener('mousedown', e => {
       isComponentsDragging = true
       componentsStartX = e.clientX
       componentsStartWidth = componentsPanel.offsetWidth
@@ -6121,7 +7158,7 @@ window.resetCode = async () => {
       e.preventDefault()
     })
 
-    document.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', e => {
       if (!isComponentsDragging) return
       const deltaX = e.clientX - componentsStartX
       const newWidth = Math.max(MIN_COMPONENTS, componentsStartWidth + deltaX)
@@ -6146,7 +7183,7 @@ window.resetCode = async () => {
   let startEditorWidth = 0
   let startPreviewWidth = 0
 
-  editorDivider.addEventListener('mousedown', (e) => {
+  editorDivider.addEventListener('mousedown', e => {
     isDragging = true
     startX = e.clientX
     startEditorWidth = editorPanel.offsetWidth
@@ -6157,7 +7194,7 @@ window.resetCode = async () => {
     e.preventDefault()
   })
 
-  document.addEventListener('mousemove', (e) => {
+  document.addEventListener('mousemove', e => {
     if (!isDragging) return
     const deltaX = e.clientX - startX
     const newEditorWidth = Math.max(MIN_PANEL, startEditorWidth + deltaX)
@@ -6229,7 +7266,9 @@ async function uploadToImgbb(file) {
 
   // Validate format
   if (!SUPPORTED_IMAGE_FORMATS.includes(file.type)) {
-    throw new Error(`Format nicht unterstützt: ${file.type.split('/')[1].toUpperCase()}. Erlaubt: PNG, JPG, GIF, WebP`)
+    throw new Error(
+      `Format nicht unterstützt: ${file.type.split('/')[1].toUpperCase()}. Erlaubt: PNG, JPG, GIF, WebP`
+    )
   }
 
   // Validate size
@@ -6245,7 +7284,7 @@ async function uploadToImgbb(file) {
   // Upload
   const response = await fetch(`${IMGBB_UPLOAD_URL}?key=${apiKey}`, {
     method: 'POST',
-    body: formData
+    body: formData,
   })
 
   if (!response.ok) {
@@ -6284,7 +7323,7 @@ function insertImageUrl(url) {
   window.editor.dispatch({
     changes: { from: pos, to: pos, insert: insertText },
     selection: { anchor: pos + insertText.length },
-    annotations: Transaction.userEvent.of('input.image')
+    annotations: Transaction.userEvent.of('input.image'),
   })
 
   window.editor.focus()
@@ -6297,7 +7336,6 @@ async function handleImageUpload(file) {
 
     const url = await uploadToImgbb(file)
     insertImageUrl(url)
-
   } catch (error) {
     showUploadError(error.message)
   } finally {
@@ -6348,7 +7386,7 @@ function getImageFiles(dataTransfer) {
 // Drag & Drop handlers
 let dragCounter = 0
 
-editorPanel.addEventListener('dragenter', (e) => {
+editorPanel.addEventListener('dragenter', e => {
   if (hasImageFile(e.dataTransfer)) {
     e.preventDefault()
     dragCounter++
@@ -6356,21 +7394,21 @@ editorPanel.addEventListener('dragenter', (e) => {
   }
 })
 
-editorPanel.addEventListener('dragover', (e) => {
+editorPanel.addEventListener('dragover', e => {
   if (hasImageFile(e.dataTransfer)) {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
   }
 })
 
-editorPanel.addEventListener('dragleave', (e) => {
+editorPanel.addEventListener('dragleave', e => {
   dragCounter--
   if (dragCounter === 0) {
     dropOverlay.classList.remove('visible')
   }
 })
 
-editorPanel.addEventListener('drop', async (e) => {
+editorPanel.addEventListener('drop', async e => {
   dragCounter = 0
   dropOverlay.classList.remove('visible')
 
@@ -6403,7 +7441,7 @@ editorPanel.addEventListener('drop', async (e) => {
 })
 
 // Paste handler
-document.addEventListener('paste', async (e) => {
+document.addEventListener('paste', async e => {
   // Only handle if editor is focused
   if (!document.activeElement.closest('.cm-editor')) return
 
@@ -6445,51 +7483,80 @@ async function promptForApiKey() {
 
 // React-to-Mirror Converter (inline version for browser)
 const STYLE_TO_MIRROR = {
-  'padding': 'pad',
-  'paddingTop': 'pad top',
-  'paddingBottom': 'pad bottom',
-  'paddingLeft': 'pad left',
-  'paddingRight': 'pad right',
-  'margin': 'm',
-  'backgroundColor': 'bg',
-  'background': 'bg',
-  'color': 'col',
-  'borderRadius': 'rad',
-  'width': 'w',
-  'height': 'h',
-  'minWidth': 'minw',
-  'maxWidth': 'maxw',
-  'minHeight': 'minh',
-  'maxHeight': 'maxh',
-  'gap': 'gap',
-  'fontSize': 'font-size',
-  'fontWeight': 'weight',
-  'fontFamily': 'font',
-  'textAlign': 'text-align',
-  'display': '_display',
-  'flexDirection': '_flexDirection',
-  'alignItems': '_alignItems',
-  'justifyContent': '_justifyContent',
-  'cursor': 'cursor',
-  'opacity': 'opacity',
-  'border': 'bor',
-  'borderColor': 'boc',
-  'boxShadow': 'shadow',
+  padding: 'pad',
+  paddingTop: 'pad top',
+  paddingBottom: 'pad bottom',
+  paddingLeft: 'pad left',
+  paddingRight: 'pad right',
+  margin: 'm',
+  backgroundColor: 'bg',
+  background: 'bg',
+  color: 'col',
+  borderRadius: 'rad',
+  width: 'w',
+  height: 'h',
+  minWidth: 'minw',
+  maxWidth: 'maxw',
+  minHeight: 'minh',
+  maxHeight: 'maxh',
+  gap: 'gap',
+  fontSize: 'font-size',
+  fontWeight: 'weight',
+  fontFamily: 'font',
+  textAlign: 'text-align',
+  display: '_display',
+  flexDirection: '_flexDirection',
+  alignItems: '_alignItems',
+  justifyContent: '_justifyContent',
+  cursor: 'cursor',
+  opacity: 'opacity',
+  border: 'bor',
+  borderColor: 'boc',
+  boxShadow: 'shadow',
 }
 
 const TAG_TO_COMPONENT = {
-  'div': 'frame', 'span': 'text', 'button': 'button', 'input': 'input',
-  'textarea': 'textarea', 'img': 'image', 'a': 'link', 'nav': 'frame',
-  'header': 'frame', 'footer': 'frame', 'main': 'frame', 'section': 'frame',
-  'article': 'frame', 'aside': 'frame', 'h1': 'text', 'h2': 'text',
-  'h3': 'text', 'h4': 'text', 'p': 'text', 'label': 'text', 'select': 'frame',
+  div: 'frame',
+  span: 'text',
+  button: 'button',
+  input: 'input',
+  textarea: 'textarea',
+  img: 'image',
+  a: 'link',
+  nav: 'frame',
+  header: 'frame',
+  footer: 'frame',
+  main: 'frame',
+  section: 'frame',
+  article: 'frame',
+  aside: 'frame',
+  h1: 'text',
+  h2: 'text',
+  h3: 'text',
+  h4: 'text',
+  p: 'text',
+  label: 'text',
+  select: 'frame',
 }
 
 const TAG_TO_NAME = {
-  'div': 'Box', 'span': 'Text', 'button': 'Button', 'input': 'Input',
-  'nav': 'Nav', 'header': 'Header', 'footer': 'Footer', 'main': 'Main',
-  'section': 'Section', 'h1': 'Heading', 'h2': 'Heading', 'h3': 'Heading',
-  'p': 'Text', 'a': 'Link', 'img': 'Image', 'select': 'Select', 'option': 'Option',
+  div: 'Box',
+  span: 'Text',
+  button: 'Button',
+  input: 'Input',
+  nav: 'Nav',
+  header: 'Header',
+  footer: 'Footer',
+  main: 'Main',
+  section: 'Section',
+  h1: 'Heading',
+  h2: 'Heading',
+  h3: 'Heading',
+  p: 'Text',
+  a: 'Link',
+  img: 'Image',
+  select: 'Select',
+  option: 'Option',
 }
 
 function convertReactToMirror(reactCode) {
@@ -6497,12 +7564,19 @@ function convertReactToMirror(reactCode) {
 
   function parseStyleObject(styleStr) {
     const style = {}
-    const pairs = styleStr.split(',').map(s => s.trim()).filter(Boolean)
+    const pairs = styleStr
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
     for (const pair of pairs) {
       const colonIndex = pair.indexOf(':')
       if (colonIndex === -1) continue
       let key = pair.slice(0, colonIndex).trim().replace(/['\"]/g, '')
-      let value = pair.slice(colonIndex + 1).trim().replace(/['\"]/g, '').replace(/,\s*$/, '')
+      let value = pair
+        .slice(colonIndex + 1)
+        .trim()
+        .replace(/['\"]/g, '')
+        .replace(/,\s*$/, '')
       style[key] = value
     }
     return style
@@ -6522,12 +7596,17 @@ function convertReactToMirror(reactCode) {
         continue
       }
       if (mirrorKey === '_alignItems') {
-        const map = { 'center': 'ver-center', 'flex-start': 'top', 'flex-end': 'bottom' }
+        const map = { center: 'ver-center', 'flex-start': 'top', 'flex-end': 'bottom' }
         if (map[value]) props.push(map[value])
         continue
       }
       if (mirrorKey === '_justifyContent') {
-        const map = { 'center': 'hor-center', 'space-between': 'spread', 'flex-start': 'left', 'flex-end': 'right' }
+        const map = {
+          center: 'hor-center',
+          'space-between': 'spread',
+          'flex-start': 'left',
+          'flex-end': 'right',
+        }
         if (map[value]) props.push(map[value])
         continue
       }
@@ -6547,7 +7626,8 @@ function convertReactToMirror(reactCode) {
 
   function findMatchingBrace(str, openPos) {
     if (str[openPos] !== '{') return -1
-    let depth = 1, pos = openPos + 1
+    let depth = 1,
+      pos = openPos + 1
     while (pos < str.length && depth > 0) {
       const char = str[pos]
       if (char === '{') depth++
@@ -6617,7 +7697,9 @@ function convertReactToMirror(reactCode) {
     const element = { tag, style, children: [] }
 
     if (!isSelfClosing) {
-      const childrenMatch = jsx.match(new RegExp(`<${openTagMatch[1]}[^>]*>([\\s\\S]*)<\\/${openTagMatch[1]}>`, 'i'))
+      const childrenMatch = jsx.match(
+        new RegExp(`<${openTagMatch[1]}[^>]*>([\\s\\S]*)<\\/${openTagMatch[1]}>`, 'i')
+      )
       if (childrenMatch) {
         element.children = parseChildren(childrenMatch[1])
       }
@@ -6636,11 +7718,16 @@ function convertReactToMirror(reactCode) {
       return children
     }
 
-    let pos = 0, textStart = 0
+    let pos = 0,
+      textStart = 0
     while (pos < trimmed.length) {
       if (trimmed[pos] === '{') {
         const exprEnd = findMatchingBrace(trimmed, pos)
-        if (exprEnd > pos) { pos = exprEnd + 1; textStart = pos; continue }
+        if (exprEnd > pos) {
+          pos = exprEnd + 1
+          textStart = pos
+          continue
+        }
       }
 
       const openTagStart = trimmed.indexOf('<', pos)
@@ -6653,7 +7740,11 @@ function convertReactToMirror(reactCode) {
       const braceBeforeTag = trimmed.lastIndexOf('{', openTagStart)
       if (braceBeforeTag >= textStart) {
         const braceEnd = findMatchingBrace(trimmed, braceBeforeTag)
-        if (braceEnd > openTagStart) { pos = braceEnd + 1; textStart = pos; continue }
+        if (braceEnd > openTagStart) {
+          pos = braceEnd + 1
+          textStart = pos
+          continue
+        }
       }
 
       if (trimmed[openTagStart + 1] === '/') {
@@ -6668,7 +7759,10 @@ function convertReactToMirror(reactCode) {
       }
 
       const tagNameMatch = trimmed.slice(openTagStart).match(/^<(\w+)/)
-      if (!tagNameMatch) { pos = openTagStart + 1; continue }
+      if (!tagNameMatch) {
+        pos = openTagStart + 1
+        continue
+      }
 
       const tagName = tagNameMatch[1]
       const selfCloseMatch = trimmed.slice(openTagStart).match(new RegExp(`^<${tagName}[^>]*/>`))
@@ -6681,15 +7775,24 @@ function convertReactToMirror(reactCode) {
       }
 
       const closeTag = `</${tagName}>`
-      let depth = 1, searchPos = openTagStart + 1
+      let depth = 1,
+        searchPos = openTagStart + 1
       while (depth > 0 && searchPos < trimmed.length) {
         if (trimmed[searchPos] === '{') {
           const exprEnd = findMatchingBrace(trimmed, searchPos)
-          if (exprEnd > searchPos) { searchPos = exprEnd + 1; continue }
+          if (exprEnd > searchPos) {
+            searchPos = exprEnd + 1
+            continue
+          }
         }
         const nextClose = trimmed.indexOf(closeTag, searchPos)
-        if (nextClose === -1) { depth = 0; break }
-        const nextOpenSearch = trimmed.slice(searchPos).search(new RegExp(`<${tagName}(?:\\s|>|/>)`))
+        if (nextClose === -1) {
+          depth = 0
+          break
+        }
+        const nextOpenSearch = trimmed
+          .slice(searchPos)
+          .search(new RegExp(`<${tagName}(?:\\s|>|/>)`))
         if (nextOpenSearch !== -1 && searchPos + nextOpenSearch < nextClose) {
           const checkPos = searchPos + nextOpenSearch
           if (!trimmed.slice(checkPos).match(new RegExp(`^<${tagName}[^>]*/>`))) depth++
@@ -6714,7 +7817,8 @@ function convertReactToMirror(reactCode) {
 
   function generateElement(element, depth) {
     const indent = '  '.repeat(depth)
-    const name = TAG_TO_NAME[element.tag] || element.tag.charAt(0).toUpperCase() + element.tag.slice(1)
+    const name =
+      TAG_TO_NAME[element.tag] || element.tag.charAt(0).toUpperCase() + element.tag.slice(1)
     const parts = [name]
 
     if (element.style) {
@@ -6740,7 +7844,8 @@ function convertReactToMirror(reactCode) {
   }
 
   function collectComponentDefinitions(element) {
-    const name = TAG_TO_NAME[element.tag] || element.tag.charAt(0).toUpperCase() + element.tag.slice(1)
+    const name =
+      TAG_TO_NAME[element.tag] || element.tag.charAt(0).toUpperCase() + element.tag.slice(1)
     if (!componentDefinitions.has(name) && element.style) {
       const baseTag = TAG_TO_COMPONENT[element.tag] || 'frame'
       const props = styleToMirrorProps(element.style)

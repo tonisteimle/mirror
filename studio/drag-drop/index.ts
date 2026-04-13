@@ -140,3 +140,11 @@ export {
   type NativeDragAdapterConfig,
   type NativeComponentDragData,
 } from './system'
+
+// Test Harness (performance testing)
+export {
+  createTestHarness,
+  initTestHarness,
+  type DragTestResult,
+  type TestHarness,
+} from './test-harness'

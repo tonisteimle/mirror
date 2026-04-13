@@ -14,6 +14,7 @@ import type { ChildRect } from '../strategies/types'
 import type { LayoutRect } from '../../core/state'
 import type { DOMAdapter } from './dom-adapter'
 import { getDefaultDOMAdapter } from './dom-adapter'
+import { dragPerf } from './perf-logger'
 
 const DEFAULT_NODE_ID_ATTR = 'data-mirror-id'
 
@@ -42,16 +43,29 @@ export function clearTargetCache(): void {
  */
 export const LEAF_COMPONENTS = new Set([
   // Text elements
-  'text', 'muted', 'title', 'label',
-  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'text',
+  'muted',
+  'title',
+  'label',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
   // Interactive elements
-  'button', 'link',
+  'button',
+  'link',
   // Form elements
-  'input', 'textarea',
+  'input',
+  'textarea',
   // Media elements
-  'image', 'img', 'icon',
+  'image',
+  'img',
+  'icon',
   // Layout helpers
-  'divider', 'spacer',
+  'divider',
+  'spacer',
 ])
 
 /**
@@ -114,11 +128,13 @@ export function detectTarget(
     return target
   }
 
+  dragPerf.start('detectTarget:computeStyle', { nodeId })
   const style = domAdapter.getComputedStyle(element)
   const layoutType = detectLayoutType(element, style)
   const direction = detectDirection(style)
   const hasChildren = hasValidChildren(element, nodeIdAttr)
   const isPositioned = layoutType === 'positioned'
+  dragPerf.end('detectTarget:computeStyle')
 
   const target: DropTarget = {
     nodeId,
@@ -187,10 +203,16 @@ export function getChildRects(
 ): ChildRect[] {
   const children: ChildRect[] = []
   const containerNodeId = container.getAttribute(nodeIdAttr)
+  const childCount = container.children.length
 
   // Try to use layoutInfo if available (Phase 5 optimization)
   // Convert container-relative coords to viewport coords for cursor comparison
   if (layoutInfo && containerNodeId) {
+    dragPerf.start('getChildRects:layoutInfo', {
+      containerNodeId,
+      childCount,
+      layoutInfoSize: layoutInfo.size,
+    })
     // Get container's viewport position to convert relative coords to viewport
     const containerRect = domAdapter.getBoundingClientRect(container)
 
@@ -208,12 +230,14 @@ export function getChildRects(
         })
       }
     }
+    dragPerf.end('getChildRects:layoutInfo')
     if (children.length > 0) {
       return children
     }
   }
 
   // Fallback to DOM reads
+  dragPerf.start('getChildRects:DOM', { containerNodeId, childCount })
   // Note: Use Element to include both HTML and SVG elements
   for (const child of container.children) {
     if (!(child instanceof Element)) continue
@@ -232,6 +256,7 @@ export function getChildRects(
       },
     })
   }
+  dragPerf.end('getChildRects:DOM')
 
   return children
 }
@@ -251,7 +276,10 @@ export function getSiblingRects(
   layoutInfo?: Map<string, LayoutRect> | null,
   domAdapter: DOMAdapter = getDefaultDOMAdapter()
 ): { nodeId: string; rect: DOMRect | { x: number; y: number; width: number; height: number } }[] {
-  const siblings: { nodeId: string; rect: DOMRect | { x: number; y: number; width: number; height: number } }[] = []
+  const siblings: {
+    nodeId: string
+    rect: DOMRect | { x: number; y: number; width: number; height: number }
+  }[] = []
   const containerNodeId = container.getAttribute(nodeIdAttr)
 
   // Try to use layoutInfo if available (Phase 5 optimization)
@@ -354,10 +382,7 @@ export function detectDirection(style: CSSStyleDeclaration): Direction {
  * Check if element has valid children (with node IDs)
  * Note: Uses Element to include both HTML and SVG elements
  */
-export function hasValidChildren(
-  element: HTMLElement,
-  nodeIdAttr: string
-): boolean {
+export function hasValidChildren(element: HTMLElement, nodeIdAttr: string): boolean {
   for (const child of element.children) {
     if (!(child instanceof Element)) continue
     if (child.getAttribute(nodeIdAttr)) return true
@@ -372,10 +397,7 @@ export function isPositionedContainer(
   element: HTMLElement,
   stackedClass: string = 'stacked'
 ): boolean {
-  return (
-    element.classList.contains(stackedClass) ||
-    element.getAttribute('data-stacked') === 'true'
-  )
+  return element.classList.contains(stackedClass) || element.getAttribute('data-stacked') === 'true'
 }
 
 /**
@@ -395,7 +417,18 @@ export function getContainerRect(
   layoutInfo?: Map<string, LayoutRect> | null,
   nodeIdAttr: string = DEFAULT_NODE_ID_ATTR,
   domAdapter: DOMAdapter = getDefaultDOMAdapter()
-): DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number } {
+):
+  | DOMRect
+  | {
+      x: number
+      y: number
+      width: number
+      height: number
+      top: number
+      left: number
+      right: number
+      bottom: number
+    } {
   // Always use DOM read to get viewport coordinates
   // layoutInfo contains container-relative coords which would need complex conversion
   return domAdapter.getBoundingClientRect(element)
