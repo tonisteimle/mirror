@@ -251,7 +251,7 @@ function emitGetHelper(ctx: TokenEmitterContext): void {
     '// Check for aggregation pattern: collection.count, collection.sum(field), items.first.name'
   )
   ctx.emit(
-    'const aggMatch = name.match(/^(.+)\\.(count|sum|avg|min|max|first|last)(?:\\(([^)]+)\\))?(\\..+)?$/)'
+    'const aggMatch = name.match(/^(.+)\\.(count|sum|avg|min|max|first|last|unique)(?:\\(([^)]+)\\))?(\\..+)?$/)'
   )
   ctx.emit('if (aggMatch) {')
   ctx.indentIn()

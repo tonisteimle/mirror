@@ -1337,6 +1337,75 @@ export const SCHEMA: Record<string, PropertyDef> = {
     token: true,
   },
 
+  // Directional spacing shortcuts
+  'pad-x': {
+    name: 'pad-x',
+    aliases: ['px'],
+    category: 'spacing',
+    description: 'Horizontal padding (left + right)',
+    numeric: {
+      description: 'Horizontal padding in pixels',
+      unit: 'px',
+      css: n => [
+        { property: 'padding-left', value: `${n}px` },
+        { property: 'padding-right', value: `${n}px` },
+      ],
+      example: 'Box pad-x 16',
+    },
+    token: true,
+  },
+
+  'pad-y': {
+    name: 'pad-y',
+    aliases: ['py'],
+    category: 'spacing',
+    description: 'Vertical padding (top + bottom)',
+    numeric: {
+      description: 'Vertical padding in pixels',
+      unit: 'px',
+      css: n => [
+        { property: 'padding-top', value: `${n}px` },
+        { property: 'padding-bottom', value: `${n}px` },
+      ],
+      example: 'Box pad-y 16',
+    },
+    token: true,
+  },
+
+  'mar-x': {
+    name: 'mar-x',
+    aliases: ['mx'],
+    category: 'spacing',
+    description: 'Horizontal margin (left + right)',
+    numeric: {
+      description: 'Horizontal margin in pixels',
+      unit: 'px',
+      css: n => [
+        { property: 'margin-left', value: `${n}px` },
+        { property: 'margin-right', value: `${n}px` },
+      ],
+      example: 'Box mar-x 16',
+    },
+    token: true,
+  },
+
+  'mar-y': {
+    name: 'mar-y',
+    aliases: ['my'],
+    category: 'spacing',
+    description: 'Vertical margin (top + bottom)',
+    numeric: {
+      description: 'Vertical margin in pixels',
+      unit: 'px',
+      css: n => [
+        { property: 'margin-top', value: `${n}px` },
+        { property: 'margin-bottom', value: `${n}px` },
+      ],
+      example: 'Box mar-y 16',
+    },
+    token: true,
+  },
+
   // ---------------------------------------------------------------------------
   // COLOR
   // ---------------------------------------------------------------------------
@@ -1407,6 +1476,63 @@ export const SCHEMA: Record<string, PropertyDef> = {
       css: (dir, val) => [{ property: `border-${dir}`, value: val }],
     },
 
+    token: true,
+  },
+
+  // Directional border shortcuts
+  'border-top': {
+    name: 'border-top',
+    aliases: ['bor-t', 'bort'],
+    category: 'border',
+    description: 'Top border',
+    numeric: {
+      description: 'Top border width in pixels',
+      unit: 'px',
+      css: n => [{ property: 'border-top', value: `${n}px solid currentColor` }],
+      example: 'Box border-top 1',
+    },
+    token: true,
+  },
+
+  'border-bottom': {
+    name: 'border-bottom',
+    aliases: ['bor-b', 'borb'],
+    category: 'border',
+    description: 'Bottom border',
+    numeric: {
+      description: 'Bottom border width in pixels',
+      unit: 'px',
+      css: n => [{ property: 'border-bottom', value: `${n}px solid currentColor` }],
+      example: 'Box border-bottom 1',
+    },
+    token: true,
+  },
+
+  'border-left': {
+    name: 'border-left',
+    aliases: ['bor-l', 'borl'],
+    category: 'border',
+    description: 'Left border',
+    numeric: {
+      description: 'Left border width in pixels',
+      unit: 'px',
+      css: n => [{ property: 'border-left', value: `${n}px solid currentColor` }],
+      example: 'Box border-left 1',
+    },
+    token: true,
+  },
+
+  'border-right': {
+    name: 'border-right',
+    aliases: ['bor-r', 'borr'],
+    category: 'border',
+    description: 'Right border',
+    numeric: {
+      description: 'Right border width in pixels',
+      unit: 'px',
+      css: n => [{ property: 'border-right', value: `${n}px solid currentColor` }],
+      example: 'Box border-right 1',
+    },
     token: true,
   },
 
