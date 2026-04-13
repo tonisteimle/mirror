@@ -674,7 +674,9 @@ class DOMGenerator {
 
   private emitNode(node: IRNode, parentVar: string, isMainRoot = false): void {
     // Skip definitions - they are not rendered, only instances are
-    if (node.isDefinition) {
+    // Exception: Zag slot names (like CloseTrigger) should always be rendered
+    // even when marked as definitions (because they're slot instantiations, not component definitions)
+    if (node.isDefinition && node.name && !ZAG_SLOT_NAMES.has(node.name)) {
       return
     }
 

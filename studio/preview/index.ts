@@ -21,6 +21,7 @@ import { ContextMenu, createContextMenu } from './context-menu'
 import { OverlayManager, createOverlayManager } from '../visual/overlay-manager'
 import { ResizeManager, createResizeManager, type SizingMode } from '../visual/resize-manager'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
+import { DragPreview, createDragPreview } from './drag-preview'
 
 // Re-export renderer
 export {
@@ -135,6 +136,9 @@ export class PreviewController {
   // Slot Visibility System
   private slotVisibilityService: SlotVisibilityService | null = null
 
+  // Drag Preview (component ghost when dragging over canvas)
+  private dragPreview: DragPreview | null = null
+
   // Layout Service for unified layout cache access
   private layoutService: LayoutService | null = null
 
@@ -213,6 +217,17 @@ export class PreviewController {
     this.slotVisibilityService = createSlotVisibilityService({
       container: this.container,
     })
+
+    // Initialize Drag Preview (always enabled)
+    this.dragPreview = createDragPreview({
+      container: this.container,
+      renderComponent: _code => {
+        // For now, return null to use fallback (component name only)
+        // TODO: Implement actual rendering
+        return null
+      },
+    })
+    this.dragPreview.attach()
 
     // Subscribe to compile:completed for automatic refresh
     // This ensures handles and highlights stay in sync with DOM changes
@@ -387,6 +402,9 @@ export class PreviewController {
     this.overlayManager?.dispose()
     // Slot Visibility cleanup
     this.slotVisibilityService?.dispose()
+    // Drag Preview cleanup
+    this.dragPreview?.dispose()
+    this.dragPreview = null
     // Clear global LayoutService reference
     setLayoutService(null)
     this.layoutService = null

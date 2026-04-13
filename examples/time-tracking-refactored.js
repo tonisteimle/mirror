@@ -663,6 +663,48 @@ export function createUI(data = {}) {
   node_13.dataset.component = 'Text'
   node_12.appendChild(node_13)
 
+  // CloseTrigger
+  const node_14 = document.createElement('div')
+  _elements['node-14'] = node_14
+  node_14.dataset.mirrorId = 'node-14'
+  node_14.dataset.mirrorName = 'CloseTrigger'
+  Object.assign(node_14.style, {
+    display: 'flex',
+    'flex-direction': 'column',
+    'align-self': 'stretch',
+    'align-items': 'flex-start',
+  })
+  node_14.dataset.component = 'CloseTrigger'
+  node_14.dataset.slot = 'CloseTrigger'
+  // Icon
+  const node_15 = document.createElement('span')
+  _elements['node-15'] = node_15
+  node_15.dataset.mirrorId = 'node-15'
+  node_15.dataset.mirrorName = 'Icon'
+  node_15.setAttribute('data-icon-color', 'var(--muted-ic)')
+  node_15.setAttribute('data-icon-size', 'var(--icon-md-is)')
+  // Icon default styles
+  Object.assign(node_15.style, {
+    display: 'inline-flex',
+    'align-items': 'center',
+    'justify-content': 'center',
+    'flex-shrink': '0',
+    'line-height': '0',
+  })
+  // Load Lucide icon
+  _runtime.loadIcon(node_15, 'x')
+  Object.assign(node_15.style, {
+    width: '20px',
+    'flex-shrink': '0',
+    height: '20px',
+    'flex-shrink': '0',
+    cursor: 'pointer',
+  })
+  node_15.dataset.component = 'Icon'
+  node_14.appendChild(node_15)
+
+  node_12.appendChild(node_14)
+
   node_11.appendChild(node_12)
 
   // Frame
@@ -1197,6 +1239,43 @@ export function createUI(data = {}) {
   })
   node_33.dataset.layout = 'flex'
   node_33.dataset.component = 'Frame'
+  // CloseTrigger
+  const node_34 = document.createElement('div')
+  _elements['node-34'] = node_34
+  node_34.dataset.mirrorId = 'node-34'
+  node_34.dataset.mirrorName = 'CloseTrigger'
+  Object.assign(node_34.style, {
+    display: 'flex',
+    'flex-direction': 'column',
+    'align-self': 'stretch',
+    'align-items': 'flex-start',
+  })
+  node_34.dataset.component = 'CloseTrigger'
+  node_34.dataset.slot = 'CloseTrigger'
+  // BtnSecondary
+  const node_35 = document.createElement('button')
+  _elements['node-35'] = node_35
+  node_35.dataset.mirrorId = 'node-35'
+  node_35.dataset.mirrorName = 'BtnSecondary'
+  node_35.textContent = 'Abbrechen'
+  Object.assign(node_35.style, {
+    height: '36px',
+    'flex-shrink': '0',
+    padding: 'var(--space-sm-pad) var(--space-md-pad)',
+    'border-radius': 'var(--rad-md-rad)',
+    border: '0px solid currentColor',
+    cursor: 'pointer',
+    background: 'var(--muted-bg)',
+    color: 'var(--text-secondary-col)',
+    'font-size': 'var(--fs-md-fs)',
+    'font-weight': '500',
+    transition: 'background 150ms ease, color 150ms ease',
+  })
+  node_35.dataset.component = 'BtnSecondary'
+  node_34.appendChild(node_35)
+
+  node_33.appendChild(node_34)
+
   // BtnPrimary
   const node_36 = document.createElement('button')
   _elements['node-36'] = node_36
