@@ -600,6 +600,39 @@ export const actions = {
       return null
     }
 
+    if (deferred.type === 'lastChildOf') {
+      // Select child of parent by index (for palette drops)
+      const children = sourceMap.getChildren(deferred.parentNodeId)
+
+      if (children.length === 0) {
+        logState.warn(' No children found for parent:', deferred.parentNodeId)
+        return null
+      }
+
+      // Sort children by source position (line number) to match document order
+      const sortedChildren = children.sort((a, b) => a.position.line - b.position.line)
+
+      // Determine which child to select
+      let childIndex: number
+      if (deferred.insertionIndex !== undefined) {
+        // Select at specific index
+        childIndex = Math.min(deferred.insertionIndex, sortedChildren.length - 1)
+      } else {
+        // Select last child
+        childIndex = sortedChildren.length - 1
+      }
+
+      const child = sortedChildren[childIndex]
+      if (child && child.nodeId) {
+        logState.info(' Resolved lastChildOf selection:', child.nodeId, 'at index', childIndex)
+        actions.setSelection(child.nodeId, deferred.origin)
+        return child.nodeId
+      }
+
+      logState.warn(' Could not resolve lastChildOf selection')
+      return null
+    }
+
     // Line-based selection - find node at line
     const preludeLines = currentState.preludeOffset
     const resolvedLine = preludeLines + deferred.line

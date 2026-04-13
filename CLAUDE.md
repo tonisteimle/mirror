@@ -1232,15 +1232,233 @@ Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
     Status
 ```
 
+### Responsive Layout
+
+Klassische Media Queries reagieren auf die **Viewport-Größe** – das Browserfenster. Aber eine Card in einer schmalen Sidebar braucht ein anderes Layout als dieselbe Card im breiten Hauptbereich, obwohl der Viewport gleich groß ist.
+
+Size-States lösen dieses Problem: Komponenten passen sich an ihre **eigene Größe** an.
+
+#### Das Konzept
+
+Size-States funktionieren wie andere States (`hover:`, `on:`) – aber sie werden durch die Breite des Elements selbst aktiviert:
+
+```mirror
+Card: bg #1a1a1a, pad 16, rad 8, gap 12, ver
+  // compact: wird aktiv wenn Card schmaler als 400px
+  compact:
+    pad 12, gap 8
+
+Frame gap 16
+  Card w 500
+    Text "Normale Card", col white
+    Text "500px breit – kein Size-State aktiv", col #888, fs 12
+
+  Card w 300
+    Text "Kompakte Card", col white
+    Text "300px breit – compact: ist aktiv", col #888, fs 12
+```
+
+**Was passiert hier?**
+
+- Die Card definiert einen `compact:` State mit weniger Padding
+- Bei 500px Breite: kein Size-State aktiv → normales Layout
+- Bei 300px Breite: `compact:` aktiv (unter 400px) → reduziertes Padding
+- Die Card entscheidet selbst – unabhängig vom Viewport
+
+#### Eingebaute Size-States
+
+Mirror hat drei vordefinierte Size-States:
+
+| Size-State | Aktiv wenn                  | Default-Schwelle |
+| ---------- | --------------------------- | ---------------- |
+| `compact:` | Element ist schmal          | < 400px          |
+| `regular:` | Element hat mittlere Breite | 400px – 800px    |
+| `wide:`    | Element ist breit           | > 800px          |
+
+> **Hinweis:** **Wichtig:** Ohne aktiven Size-State gilt das normale Layout (die Properties außerhalb der States). Size-States _überschreiben_ einzelne Properties – alles andere bleibt erhalten.
+
+```mirror
+Card: bg #1a1a1a, rad 8, gap 12, ver
+  // Normales Layout (kein Size-State aktiv)
+  pad 16
+
+  // Schmal: kompakter
+  compact:
+    pad 12, gap 8
+
+  // Breit: mehr Platz, horizontal
+  wide:
+    pad 24, gap 16, hor
+
+Frame gap 16
+  Card w 300
+    Icon "box", ic #2271C1, is 24
+    Text "Compact (300px)", col white, fs 13
+
+  Card w 600
+    Icon "box", ic #10b981, is 24
+    Text "Regular (600px)", col white, fs 13
+
+  Card w 900
+    Icon "box", ic #f59e0b, is 24
+    Text "Wide (900px)", col white, fs 13
+```
+
+#### Kind-Komponenten in Size-States
+
+Size-States können auch Kind-Komponenten überschreiben. Die Syntax: Innerhalb des States definierst du die Kind-Komponente mit `:` neu:
+
+```mirror
+Panel: bg #1a1a1a, pad 20, rad 8, gap 8
+  // Kind-Komponenten mit Default-Styling
+  Title: col white, fs 16, weight 600
+  Desc: col #888, fs 14
+
+  compact:
+    pad 12
+    // Kind-Komponenten für compact überschreiben
+    Title: fs 13
+    Desc: fs 12
+
+  wide:
+    pad 32, gap 12
+    Title: fs 20
+    Desc: fs 15
+
+Frame gap 16
+  Panel w 280
+    Title "Kompakt"
+    Desc "Kleine Schrift, wenig Padding"
+
+  Panel w 600
+    Title "Regular"
+    Desc "Standard-Darstellung"
+
+  Panel w 950
+    Title "Breit"
+    Desc "Große Schrift, viel Padding"
+```
+
+**Was passiert hier?**
+
+- `Title:` und `Desc:` haben Default-Styles (fs 16, fs 14)
+- Im `compact:` State werden sie kleiner (fs 13, fs 12)
+- Im `wide:` State werden sie größer (fs 20, fs 15)
+- Nicht überschriebene Properties (wie `col`) bleiben erhalten
+
+#### Eigene Size-States definieren
+
+Die Defaults (400px, 800px) passen nicht für jeden Anwendungsfall. Du kannst sie überschreiben oder komplett eigene Size-States definieren:
+
+```mirror
+// Eingebaute Defaults überschreiben
+compact.max: 250
+wide.min: 500
+
+// Eigenen Size-State definieren
+tiny.max: 150
+
+Card: bg #1a1a1a, pad 16, rad 8, gap 8, ver
+  tiny:
+    pad 8
+    Text "Winzig!", col #ef4444, fs 10
+  compact:
+    Text "Kompakt", col #f59e0b, fs 12
+  wide:
+    hor, gap 16
+    Text "Breit genug für horizontal", col #10b981
+
+Frame gap 12
+  Card w 120
+    Icon "box", ic white, is 20
+  Card w 200
+    Icon "box", ic white, is 20
+  Card w 400
+    Icon "box", ic white, is 20
+  Card w 600
+    Icon "box", ic white, is 20
+```
+
+**Token-Syntax:**
+
+| Token                   | Bedeutung                          |
+| ----------------------- | ---------------------------------- |
+| `name.max: 400`         | State aktiv wenn Breite ≤ 400px    |
+| `name.min: 600`         | State aktiv wenn Breite ≥ 600px    |
+| `name.min` + `name.max` | State aktiv wenn Breite im Bereich |
+
+> **Hinweis:** **Bereiche definieren:** Für einen State wie `regular:` der nur in einem bestimmten Bereich aktiv ist, definierst du beide Grenzen: `regular.min: 400` `regular.max: 800` → State aktiv wenn 400px ≤ Breite ≤ 800px
+
+#### Praktisch: Responsive Navigation
+
+Eine Navigation die bei wenig Platz zu einer Icon-Leiste wird:
+
+```mirror
+NavBar: bg #1a1a1a, pad 12, rad 8, hor, gap 8, ver-center
+  NavItem: hor, gap 8, pad 8 12, rad 6, ver-center, cursor pointer
+    Label: col #ccc, fs 13
+    hover:
+      bg #333
+
+  // Unter 200px: nur Icons, vertikal gestapelt
+  compact.max: 200
+  compact:
+    ver, gap 4, pad 8
+    NavItem: pad 10, center
+      Label: hidden
+
+Frame gap 16
+  NavBar w 350
+    NavItem
+      Icon "home", ic #888, is 18
+      Label "Home"
+    NavItem
+      Icon "folder", ic #888, is 18
+      Label "Projekte"
+    NavItem
+      Icon "settings", ic #888, is 18
+      Label "Settings"
+
+  NavBar w 80
+    NavItem
+      Icon "home", ic #888, is 18
+      Label "Home"
+    NavItem
+      Icon "folder", ic #888, is 18
+      Label "Projekte"
+    NavItem
+      Icon "settings", ic #888, is 18
+      Label "Settings"
+```
+
+**Was passiert hier?**
+
+- NavBar definiert `compact.max: 200` – ein eigener Schwellenwert nur für diese Komponente
+- Bei 350px: Normal – horizontal mit Text
+- Bei 80px: `compact:` aktiv – vertikal, nur Icons (`Label: hidden`)
+- Dieselbe Komponente, unterschiedliches Layout je nach verfügbarem Platz
+
+#### Wann Size-States verwenden?
+
+| Situation                             | Lösung                   |
+| ------------------------------------- | ------------------------ |
+| Card soll sich an Container anpassen  | Size-States              |
+| Sidebar vs. Hauptbereich              | Size-States              |
+| Mobile vs. Desktop App-Layout         | Media Queries (Viewport) |
+| Komponente in verschiedenen Kontexten | Size-States              |
+
+> **Hinweis:** **Zusammenspiel mit anderen States:** Size-States können mit `hover:`, `on:` etc. kombiniert werden. Alle aktiven States werden zusammengeführt – spezifischere States überschreiben allgemeinere.
+
 ---
 
 ### Zusammenfassung
 
-| System      | Verwendung                            |
-| ----------- | ------------------------------------- |
-| **Flex**    | Fließende Layouts (Navigation, Cards) |
-| **Grid**    | Strukturierte Raster (Dashboards)     |
-| **Stacked** | Überlagerungen (Badges, Overlays)     |
+| System          | Verwendung                                 |
+| --------------- | ------------------------------------------ |
+| **Flex**        | Fließende Layouts (Navigation, Cards)      |
+| **Grid**        | Strukturierte Raster (Dashboards)          |
+| **Stacked**     | Überlagerungen (Badges, Overlays)          |
+| **Size-States** | Responsive Komponenten (Container Queries) |
 
 **Flex:**
 
@@ -1267,6 +1485,15 @@ Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
 - `x`, `y` – Position (wie Figma)
 - `w`, `h` – Größe
 - `z N` – Stapelreihenfolge
+
+**Size-States:**
+
+- `compact:` (<400px), `regular:` (400-800px), `wide:` (>800px)
+- `name.max: 400` – State aktiv wenn Breite ≤ 400px
+- `name.min: 800` – State aktiv wenn Breite ≥ 800px
+- Beide definieren für Bereiche: `name.min` + `name.max`
+- Kind-Komponenten überschreiben: `compact: Title: fs 12`
+- Reagiert auf Element-Größe, nicht Viewport
 
 ---
 
@@ -1358,6 +1585,32 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
 ```
 
 > **Hinweis:** **Praxis-Tipp:** Ein subtiler 1px-Border (`bor 1, boc #333`) auf dunklem Hintergrund gibt Elementen Tiefe, ohne aufdringlich zu wirken. Das ist ein häufig genutztes Pattern für Cards und Inputs.
+
+#### Gerichtete Borders
+
+Für einzelne Seiten gibt es Shortcuts:
+
+```mirror
+Frame gap 8, bg #0a0a0a, pad 16, rad 8
+  // Nur unten
+  Frame w 200, h 40, bg #1a1a1a, border-bottom 2, boc #2271C1, center
+    Text "border-bottom", col #888, fs 11
+
+  // Nur links
+  Frame w 200, h 40, bg #1a1a1a, bor-l 3, boc #10b981, center
+    Text "bor-l (Shortcut)", col #888, fs 11
+
+  // Oben und unten
+  Frame w 200, h 40, bg #1a1a1a, bort 1, borb 1, boc #f59e0b, center
+    Text "bort + borb", col #888, fs 11
+```
+
+| Property        | Alias           | Seite  |
+| --------------- | --------------- | ------ |
+| `border-top`    | `bor-t`, `bort` | Oben   |
+| `border-bottom` | `bor-b`, `borb` | Unten  |
+| `border-left`   | `bor-l`, `borl` | Links  |
+| `border-right`  | `bor-r`, `borr` | Rechts |
 
 ### Border Radius
 
@@ -1470,13 +1723,20 @@ Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
 
 ### Hover-Properties
 
-Für einfache Hover-Effekte ohne State-Block gibt es Inline-Properties:
+Für einfache Hover-Effekte ohne State-Block gibt es Inline-Properties. Diese sind kürzer als ein `hover:` State:
 
 ```mirror
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
-  Button "Hover mich", bg #333, col white, pad 10 20, rad 6, hover-bg #2271C1
-  Button "Scale", bg #333, col white, pad 10 20, rad 6, hover-scale 1.05
-  Button "Opacity", bg #2271C1, col white, pad 10 20, rad 6, hover-opacity 0.8
+  // Mit hover-bg und hover-col
+  Button "Hover mich", bg #333, col white, pad 10 20, rad 6, hover-bg #2271C1, hover-col white
+
+  // Mit hover-scale
+  Frame w 60, h 60, bg #2271C1, rad 8, center, cursor pointer, hover-scale 1.1
+    Text "Scale", col white, fs 10
+
+  // Mit hover-opacity
+  Frame w 60, h 60, bg #10b981, rad 8, center, cursor pointer, hover-opacity 0.7
+    Text "Opacity", col white, fs 10
 ```
 
 | Property             | Alias                    | Beschreibung               |
@@ -1484,12 +1744,12 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
 | `hover-bg`           | `hover-background`       | Hintergrundfarbe bei Hover |
 | `hover-col`          | `hover-color`, `hover-c` | Textfarbe bei Hover        |
 | `hover-opacity`      | `hover-opa`, `hover-o`   | Transparenz bei Hover      |
-| `hover-scale`        | -                        | Skalierung bei Hover       |
+| `hover-scale`        | –                        | Skalierung bei Hover       |
 | `hover-border`       | `hover-bor`              | Border-Breite bei Hover    |
 | `hover-border-color` | `hover-boc`              | Border-Farbe bei Hover     |
 | `hover-radius`       | `hover-rad`              | Border-Radius bei Hover    |
 
-> **Hinweis:** Für komplexere Hover-Effekte (mehrere Properties, Animationen) verwende den `hover:` State-Block.
+> **Hinweis:** **Wann was nutzen?** Hover-Properties sind ideal für einfache Farbwechsel oder kleine Transformationen. Für komplexere Hover-Effekte (mehrere Properties ändern, Kinder hinzufügen) nutze den `hover:` State-Block aus dem States-Kapitel.
 
 ### Praktisch: Button Varianten
 
@@ -1873,166 +2133,6 @@ Frame gap 8
 
 ---
 
-## Size-States (Responsive Komponenten)
-
-_Element-basierte Responsive Layouts mit CSS Container Queries_
-
-Size-States sind ein spezieller State-Typ, der auf die **Breite des Elements selbst** reagiert – nicht auf die Viewport-Breite wie Media Queries. Sie nutzen CSS Container Queries für native Browser-Unterstützung ohne JavaScript.
-
-### Das Konzept
-
-Während `hover:` oder `on:` auf Benutzer-Interaktionen reagieren, reagieren Size-States auf die **Größe des Elements**:
-
-```mirror
-Card: bg #1a1a1a, pad 16, rad 8
-  compact:              // Element < 400px breit
-    pad 8
-    fs 12
-  regular:              // Element 400-800px breit
-    pad 16
-  wide:                 // Element > 800px breit
-    pad 24
-    hor                 // Layout wechselt zu horizontal
-```
-
-**Warum Element-basiert?** Eine Card in einer schmalen Sidebar soll anders aussehen als dieselbe Card im Hauptbereich – unabhängig von der Bildschirmgröße.
-
-### Built-in Size-States
-
-Mirror bietet drei vordefinierte Size-States:
-
-| Size-State | Bedingung         | Typische Verwendung      |
-| ---------- | ----------------- | ------------------------ |
-| `compact:` | Element < 400px   | Schmale Sidebars, Mobile |
-| `regular:` | Element 400-800px | Standard-Layouts         |
-| `wide:`    | Element > 800px   | Breite Hauptbereiche     |
-
-```mirror
-Frame bg #1a1a1a, pad 16
-  compact:
-    pad 8
-    Text "Kompakt", col white
-  regular:
-    pad 16
-    Text "Normal", col white
-  wide:
-    pad 24
-    Text "Breit", col white
-```
-
-### Mit System-States kombinieren
-
-Size-States und System-States (hover, focus) arbeiten unabhängig voneinander:
-
-```mirror
-Card: bg #1a1a1a, pad 16, rad 8, cursor pointer
-  hover:
-    bg #252525
-  compact:
-    pad 8
-  wide:
-    pad 24
-    hor
-```
-
-Das Element reagiert auf Hover (interaktiv) **und** auf seine eigene Breite (responsiv) – beide Mechanismen greifen gleichzeitig.
-
-### Custom Size-States mit Tokens
-
-Du kannst eigene Size-States definieren oder die Default-Schwellenwerte überschreiben:
-
-```mirror
-// Eigenen Size-State definieren
-tiny.max: 200
-
-// Default-Schwellenwert überschreiben
-compact.max: 300
-wide.min: 1200
-
-Frame bg #1a1a1a
-  tiny:                 // Eigener Size-State: < 200px
-    pad 4
-    fs 10
-  compact:              // Überschrieben: < 300px (statt 400px)
-    pad 8
-  wide:                 // Überschrieben: > 1200px (statt 800px)
-    pad 32
-```
-
-| Token              | Beschreibung                  |
-| ------------------ | ----------------------------- |
-| `statename.max: N` | Maximale Breite für den State |
-| `statename.min: N` | Minimale Breite für den State |
-
-### Technische Umsetzung
-
-Mirror generiert **CSS Container Queries** – keine JavaScript-Größenüberwachung:
-
-```css
-/* Generierter CSS-Code */
-[data-mirror-id='el_1'] {
-  container-type: inline-size;
-}
-
-@container (max-width: 400px) {
-  [data-mirror-id='el_1'] {
-    padding: 8px;
-  }
-}
-
-@container (min-width: 800px) {
-  [data-mirror-id='el_1'] {
-    padding: 24px;
-  }
-}
-```
-
-**Vorteile:**
-
-- Browser-native, kein JavaScript-Overhead
-- Funktioniert mit verschachtelten Containern
-- ~92%+ Browser-Unterstützung
-
-### Praxisbeispiel: Responsive Card
-
-```mirror
-Card: bg #1a1a1a, rad 12, pad 20, gap 16
-  compact:
-    pad 12
-    gap 8
-    Title: fs 14
-  wide:
-    hor
-    pad 24
-    gap 24
-
-  Title: col white, fs 18, weight 600
-  Desc: col #888, fs 14
-
-Card
-  Title "Projekt Alpha"
-  Desc "Eine responsive Card, die sich an ihren Container anpasst."
-```
-
----
-
-### Zusammenfassung
-
-| Size-State | Schwellenwert     |
-| ---------- | ----------------- |
-| `compact:` | Element < 400px   |
-| `regular:` | Element 400-800px |
-| `wide:`    | Element > 800px   |
-
-| Token              | Beschreibung                |
-| ------------------ | --------------------------- |
-| `tiny.max: 200`    | Neuen Size-State erstellen  |
-| `compact.max: 300` | Schwellenwert überschreiben |
-
-**Unterschied zu System-States:** Size-States reagieren auf **Element-Breite** (CSS Container Queries), System-States auf **Benutzer-Interaktion** (CSS Pseudo-Classes).
-
----
-
 ## Animationen
 
 _Bewegung und Übergänge_
@@ -2309,32 +2409,29 @@ Wenn du eine Funktion als Property schreibst, wird sie automatisch bei **Klick**
 
 Mirror hat eingebaute Funktionen für die häufigsten UI-Patterns. Du musst sie nicht importieren – sie sind einfach da:
 
-| Kategorie                       | Funktion                           | Was sie tut                         |
-| ------------------------------- | ---------------------------------- | ----------------------------------- |
-| **State**                       | `toggle()`                         | State wechseln (an/aus oder cyclen) |
-| `exclusive()`                   | Nur diesen aktivieren              |                                     |
-| **Sichtbarkeit**                | `show(Element)`                    | Element sichtbar machen             |
-| `hide(Element)`                 | Element verstecken                 |                                     |
-| **Feedback**                    | `toast("Text")`                    | Toast-Benachrichtigung              |
-| **Input**                       | `focus(Element)`                   | Fokus setzen                        |
-| `clear(Element)`                | Eingabe löschen                    |                                     |
-| `setError(Element, "msg")`      | Fehler-State setzen                |                                     |
-| `clearError(Element)`           | Fehler-State entfernen             |                                     |
-| **Zähler**                      | `increment(token)`                 | Token +1                            |
-| `decrement(token)`              | Token -1                           |                                     |
-| `set(token, value)`             | Token auf Wert setzen              |                                     |
-| `reset(token)`                  | Auf Initialwert zurücksetzen       |                                     |
-| **Scroll**                      | `scrollTo(Element)`                | Zu Element scrollen                 |
-| `scrollToTop()`                 | Zum Seitenanfang                   |                                     |
-| `scrollToBottom()`              | Zum Seitenende                     |                                     |
-| **Clipboard**                   | `copy("Text")`                     | In Zwischenablage kopieren          |
-| **Navigation**                  | `navigate(View)`                   | Zu View wechseln                    |
-| `back()`                        | Browser zurück                     |                                     |
-| `forward()`                     | Browser vorwärts                   |                                     |
-| `openUrl("...")`                | URL öffnen (neuer Tab)             |                                     |
-| **CRUD**                        | `add(collection)`                  | Eintrag zur Sammlung hinzufügen     |
-| `add(collection, field: value)` | Mit Initialwerten hinzufügen       |                                     |
-| `remove(item)`                  | Eintrag entfernen (im `each` Loop) |                                     |
+| Kategorie                  | Funktion                     | Was sie tut                         |
+| -------------------------- | ---------------------------- | ----------------------------------- |
+| **State**                  | `toggle()`                   | State wechseln (an/aus oder cyclen) |
+| `exclusive()`              | Nur diesen aktivieren        |                                     |
+| **Sichtbarkeit**           | `show(Element)`              | Element sichtbar machen             |
+| `hide(Element)`            | Element verstecken           |                                     |
+| **Feedback**               | `toast("Text")`              | Toast-Benachrichtigung              |
+| **Input**                  | `focus(Element)`             | Fokus setzen                        |
+| `clear(Element)`           | Eingabe löschen              |                                     |
+| `setError(Element, "msg")` | Fehler-State setzen          |                                     |
+| `clearError(Element)`      | Fehler-State entfernen       |                                     |
+| **Zähler**                 | `increment(token)`           | Token +1                            |
+| `decrement(token)`         | Token -1                     |                                     |
+| `set(token, value)`        | Token auf Wert setzen        |                                     |
+| `reset(token)`             | Auf Initialwert zurücksetzen |                                     |
+| **Scroll**                 | `scrollTo(Element)`          | Zu Element scrollen                 |
+| `scrollToTop()`            | Zum Seitenanfang             |                                     |
+| `scrollToBottom()`         | Zum Seitenende               |                                     |
+| **Clipboard**              | `copy("Text")`               | In Zwischenablage kopieren          |
+| **Navigation**             | `navigate(View)`             | Zu View wechseln                    |
+| `back()`                   | Browser zurück               |                                     |
+| `forward()`                | Browser vorwärts             |                                     |
+| `openUrl("...")`           | URL öffnen (neuer Tab)       |                                     |
 
 ### Feedback: toast()
 
@@ -2519,68 +2616,6 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
 | `scrollToTop()`     | Zum Anfang scrollen           |
 | `scrollToBottom()`  | Zum Ende scrollen             |
 
-### CRUD: Sammlungen bearbeiten
-
-Für dynamische Listen – Items hinzufügen, bearbeiten und entfernen. Perfekt für Todo-Listen, Warenkörbe oder jede Art von bearbeitbarer Sammlung:
-
-```mirror
-todos:
-  task1:
-    text: "Erste Aufgabe"
-    done: false
-
-Frame gap 12, bg #0a0a0a, pad 16, rad 8
-  // Neues Item hinzufügen
-  Button "Neue Aufgabe", pad 10 20, bg #2271C1, col white, rad 6, add(todos, text: "Neue Aufgabe", done: false)
-
-  // Liste mit Bearbeiten und Löschen
-  each todo in $todos
-    Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 6
-      Checkbox "", checked todo.done
-      Text todo.text, col white, editable, grow
-      Button "×", pad 6 12, bg #ef4444, col white, rad 4, remove(todo)
-```
-
-**Was passiert hier?**
-
-- `add(todos, text: "...", done: false)` – fügt einen neuen Eintrag mit Initialwerten hinzu
-- `editable` – macht den Text direkt im UI bearbeitbar (Doppelklick zum Editieren)
-- `remove(todo)` – entfernt den Eintrag aus der Sammlung
-
-| Funktion                             | Beschreibung                              |
-| ------------------------------------ | ----------------------------------------- |
-| `add(collection)`                    | Leeren Eintrag zur Sammlung hinzufügen    |
-| `add(collection, field: value, ...)` | Eintrag mit Initialwerten hinzufügen      |
-| `remove(item)`                       | Eintrag entfernen (innerhalb `each` Loop) |
-
-| Property   | Beschreibung                   |
-| ---------- | ------------------------------ |
-| `editable` | Text inline bearbeitbar machen |
-
-> **Hinweis:** `remove(item)` funktioniert nur innerhalb eines `each` Loops – dort ist `item` die Loop-Variable, die auf den aktuellen Eintrag verweist.
-
-#### Praktisch: Einkaufsliste
-
-```mirror
-items:
-  milk:
-    name: "Milch"
-  bread:
-    name: "Brot"
-
-Frame gap 12, bg #1a1a1a, pad 20, rad 12, w 280
-  Text "Einkaufsliste", col white, fs 18, weight 600
-
-  each item in $items
-    Frame hor, gap 12, ver-center, pad 8, bg #252525, rad 6
-      Text item.name, col white, editable, grow
-      Button "×", pad 4 10, bg transparent, col #888, rad 4, remove(item)
-        hover:
-          col #ef4444
-
-  Button "Hinzufügen", pad 10 16, bg #333, col white, rad 6, w full, add(items, name: "Neuer Artikel")
-```
-
 ### Funktionen kombinieren
 
 Du kannst mehrere Funktionen bei einem Klick ausführen:
@@ -2704,14 +2739,6 @@ function absenden() {
 | `back()`         | Browser zurück   |
 | `forward()`      | Browser vorwärts |
 | `openUrl("...")` | URL öffnen       |
-
-#### CRUD (Sammlungen)
-
-| `add(collection)`               | Eintrag hinzufügen          |
-| ------------------------------- | --------------------------- |
-| `add(collection, field: value)` | Mit Initialwerten           |
-| `remove(item)`                  | Eintrag entfernen (im Loop) |
-| `editable`                      | Text inline bearbeitbar     |
 
 ---
 
@@ -2902,50 +2929,6 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 
 Jedes verschachtelte Objekt hat einen Namen und ist direkt adressierbar: `$method.steps.planning.title`
 
-### Aggregationsmethoden
-
-Sammlungen haben eingebaute Methoden für häufige Berechnungen:
-
-```mirror
-tasks:
-  t1:
-    title: "Design Review"
-    hours: 4
-  t2:
-    title: "Development"
-    hours: 8
-  t3:
-    title: "Testing"
-    hours: 2
-
-Frame gap 8, bg #1a1a1a, pad 16, rad 8
-  Text "Anzahl: $tasks.count Tasks", col white
-  Text "Erster: $tasks.first.title", col #888
-  Text "Letzter: $tasks.last.title", col #888
-```
-
-| Methode   | Beschreibung        | Beispiel             |
-| --------- | ------------------- | -------------------- |
-| `.count`  | Anzahl der Einträge | `$tasks.count`       |
-| `.first`  | Erster Eintrag      | `$tasks.first.title` |
-| `.last`   | Letzter Eintrag     | `$tasks.last.title`  |
-| `.unique` | Deduplizierte Werte | `$colors.unique`     |
-
-Beispiel mit einfacher Liste:
-
-```mirror
-colors:
-  red
-  blue
-  red
-  green
-  blue
-
-Frame gap 8, bg #1a1a1a, pad 16, rad 8
-  Text "Alle: $colors.count Farben", col white
-  Text "Einzigartig: $colors.unique", col #888
-```
-
 ### Externe Daten: .data-Dateien
 
 Für größere Datenmengen oder Wiederverwendung: Daten in `.data`-Dateien auslagern. **Die Syntax ist identisch** – nur in einer separaten Datei:
@@ -3045,6 +3028,51 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
     Text "Team:", col #666, fs 12
     each member in $projects.website.members
       Text "• $member.name", col #888, fs 13
+```
+
+### Aggregationsmethoden
+
+Sammlungen haben eingebaute Methoden für häufige Berechnungen:
+
+```mirror
+tasks:
+  t1:
+    title: "Design Review"
+    hours: 4
+  t2:
+    title: "Development"
+    hours: 8
+  t3:
+    title: "Testing"
+    hours: 2
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Anzahl: $tasks.count Tasks", col white
+  Text "Erster: $tasks.first.title", col #888
+  Text "Letzter: $tasks.last.title", col #888
+```
+
+| Methode   | Beschreibung        | Beispiel             |
+| --------- | ------------------- | -------------------- |
+| `.count`  | Anzahl der Einträge | `$tasks.count`       |
+| `.first`  | Erster Eintrag      | `$tasks.first.title` |
+| `.last`   | Letzter Eintrag     | `$tasks.last.title`  |
+| `.unique` | Deduplizierte Werte | `$colors.unique`     |
+
+#### Beispiel: Statistiken
+
+```mirror
+colors:
+  red
+  blue
+  red
+  green
+  blue
+  red
+
+Frame gap 8, bg #1a1a1a, pad 16, rad 8
+  Text "Alle: $colors.count Farben", col white
+  Text "Einzigartig: $colors.unique", col #888
 ```
 
 ### Praktisch: Produktliste
@@ -3658,16 +3686,14 @@ Select placeholder "Stadt wählen..."
     Option "Köln"
 ```
 
-`Option "Text"` reicht – der `value` wird automatisch vom Label übernommen. Bei Bedarf kannst du einen expliziten `value` setzen:
+`Option "Text"` reicht – der `value` wird automatisch vom Label übernommen. Mit `placeholder` zeigst du Text, wenn nichts ausgewählt ist. Das Dropdown öffnet bei Klick, ist mit Pfeiltasten navigierbar und schließt bei Auswahl oder Escape.
 
 ```mirror
-Select placeholder "Land wählen..."
-    Option "Deutschland", value "de"
-    Option "Österreich", value "at"
-    Option "Schweiz", value "ch"
+Select placeholder "Status wählen..."
+    Option "In Bearbeitung", value "in_progress"
+    Option "Abgeschlossen", value "done"
+    Option "Abgebrochen", value "cancelled"
 ```
-
-Mit `placeholder` zeigst du Text, wenn nichts ausgewählt ist. Das Dropdown öffnet bei Klick, ist mit Pfeiltasten navigierbar und schließt bei Auswahl oder Escape.
 
 ### DatePicker
 
@@ -3691,15 +3717,21 @@ Frame gap 12, w 280
   Text "Du suchst: $searchTerm", col #888
 ```
 
-`bind varName` ersetzt die alte Syntax `value $varName, bind varName`. Die vereinfachte Syntax funktioniert für `Input`, `Textarea` und `Select`:
+`bind varName` ersetzt die alte Syntax `value $varName, bind varName`. Tippe in das Feld – der Text darunter aktualisiert sich sofort.
+
+#### Mit Select
+
+Auch Select unterstützt `bind`:
 
 ```mirror
 city: ""
 
-Select bind city, placeholder "Stadt wählen..."
-  Option "Berlin"
-  Option "Hamburg"
-  Option "München"
+Frame gap 12, w 280
+  Select bind city, placeholder "Stadt wählen..."
+    Option "Berlin"
+    Option "Hamburg"
+    Option "München"
+  Text "Gewählt: $city", col #888
 ```
 
 ### Tastatursteuerung
@@ -4083,8 +4115,8 @@ tasks:
     title: "Testing"
     status: "todo"
 
-Table $tasks, gap 4, w full
-  Row: hor, gap 16, pad 12, bg #1a1a1a, rad 6, w full
+Table $tasks, bg #111, rad 12, w full
+  Row: hor, gap 16, pad 12 16, bor 0 0 1 0, boc #222, w full
     Text row.title, col white, w 140
     Text row.status, col #888
 ```
@@ -4112,8 +4144,8 @@ tasks:
     name: "Dev"
     status: "wip"
 
-Table $tasks, bg #111, pad 16, rad 12, gap 8
-  Row: hor, spread, pad 12, bg #1a1a1a, rad 6, w full
+Table $tasks, bg #111, pad 16, rad 12
+  Row: hor, spread, pad 12 16, bor 0 0 1 0, boc #222, w full
     Text row.name, col white
     Text row.status, col #888
 ```
@@ -4216,11 +4248,11 @@ products:
     price: 99
     users: 999
 
-Table $products, bg #0a0a0a, rad 16, pad 12, gap 2, w full
-  Header: bg #1a1a1a, pad 16, rad 8
+Table $products, bg #0a0a0a, rad 16, w full
+  Header: bg #1a1a1a, pad 16, rad 8 8 0 0
     Row "Plan", "Preis", "Users"
-  RowOdd: bg #151515, rad 6
-  RowEven: bg #111, rad 6
+  RowOdd: bg #151515
+  RowEven: bg #111
   Row: hor, pad 16, w full
     Text row.name, col white, weight 500, w 120
     Text "$" + row.price, col #10b981, w 80
@@ -4247,8 +4279,8 @@ tasks:
     done: true
 
 // Nur nicht erledigte Tasks
-Table $tasks where row.done == false, gap 4, w full
-  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+Table $tasks where row.done == false, bg #111, rad 12, w full
+  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
     Icon "circle", ic #f59e0b, is 16
     Text row.title, col white, grow
 ```
@@ -4271,8 +4303,8 @@ tasks:
     done: true
 
 // Nicht erledigt UND hohe Priorität
-Table $tasks where row.done == false and row.priority < 3, gap 4, w full
-  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+Table $tasks where row.done == false and row.priority < 3, bg #111, rad 12, w full
+  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
     Icon "alert-circle", ic #ef4444, is 16
     Text row.title, col white, grow
     Text "P" + row.priority, col #ef4444, fs 12, weight 600
@@ -4295,9 +4327,9 @@ tasks:
     priority: 2
 
 // Sortiert nach Priorität (aufsteigend)
-Table $tasks by priority, gap 4, w full
-  Row: hor, gap 12, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
-    Text row.priority, col #2271C1, fs 14, weight 600, w 24
+Table $tasks by priority, bg #111, rad 12, w full
+  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
+    Text row.priority, col #2563eb, fs 14, weight 600, w 24
     Text row.title, col white, grow
 ```
 
@@ -4316,8 +4348,8 @@ products:
     price: 19
 
 // Teuerste zuerst
-Table $products by price desc, gap 4, w full
-  Row: hor, spread, pad 12 16, bg #1a1a1a, rad 8, ver-center, w full
+Table $products by price desc, bg #111, rad 12, w full
+  Row: hor, spread, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
     Text row.name, col white, weight 500
     Text "€" + row.price, col #10b981, fs 14, weight 600
 ```
