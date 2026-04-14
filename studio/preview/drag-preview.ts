@@ -335,13 +335,19 @@ export class DragPreview {
   private handleDragLeave(e: DragEvent): void {
     // Only cancel if we actually left the container
     // (dragleave fires for child elements too)
-    if (!this.container.contains(e.relatedTarget as Node)) {
+    // Also check cursor position as relatedTarget can be null for some elements
+    const relatedInContainer = this.container.contains(e.relatedTarget as Node)
+    const cursorOverContainer = this.isCursorOverContainer(e)
+
+    if (!relatedInContainer && !cursorOverContainer) {
       if (this.isOverCanvas) {
         this.isOverCanvas = false
         document.body.classList.remove('drag-active')
         getDragController().cancel()
-        log.debug('DragLeave, drag cancelled')
+        log.warn('DragLeave: left container, drag cancelled')
       }
+    } else {
+      log.debug('DragLeave: still over container, ignoring')
     }
   }
 
