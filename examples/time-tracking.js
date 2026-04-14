@@ -13589,13 +13589,17 @@ const _runtime = {
     // Root must be position: relative for absolute positioning of content
     el.style.position = 'relative'
 
-    // Trigger styles
-    setDefault(trigger, 'padding', '8px 16px')
-    setDefault(trigger, 'backgroundColor', '#5BA8F5')
-    setDefault(trigger, 'color', '#fff')
-    setDefault(trigger, 'border', 'none')
-    setDefault(trigger, 'borderRadius', '6px')
-    setDefault(trigger, 'cursor', 'pointer')
+    // Trigger styles - only apply if trigger has no children (is the button itself)
+    // If trigger wraps a custom button, don't override its styles
+    const triggerHasChildren = trigger.children.length > 0
+    if (!triggerHasChildren) {
+      setDefault(trigger, 'padding', '8px 16px')
+      setDefault(trigger, 'backgroundColor', '#5BA8F5')
+      setDefault(trigger, 'color', '#fff')
+      setDefault(trigger, 'border', 'none')
+      setDefault(trigger, 'borderRadius', '6px')
+      setDefault(trigger, 'cursor', 'pointer')
+    }
 
     // Content styles
     setDefault(content, 'position', 'absolute')
@@ -13874,13 +13878,17 @@ const _runtime = {
       }
     }
 
-    // Trigger styles
-    setDefault(trigger, 'padding', '8px 16px')
-    setDefault(trigger, 'backgroundColor', '#5BA8F5')
-    setDefault(trigger, 'color', '#fff')
-    setDefault(trigger, 'border', 'none')
-    setDefault(trigger, 'borderRadius', '6px')
-    setDefault(trigger, 'cursor', 'pointer')
+    // Trigger styles - only apply if trigger has no children (is the button itself)
+    // If trigger wraps a custom button, don't override its styles
+    const triggerHasChildren = trigger.children.length > 0
+    if (!triggerHasChildren) {
+      setDefault(trigger, 'padding', '8px 16px')
+      setDefault(trigger, 'backgroundColor', '#5BA8F5')
+      setDefault(trigger, 'color', '#fff')
+      setDefault(trigger, 'border', 'none')
+      setDefault(trigger, 'borderRadius', '6px')
+      setDefault(trigger, 'cursor', 'pointer')
+    }
 
     // Backdrop styles
     if (backdrop) {

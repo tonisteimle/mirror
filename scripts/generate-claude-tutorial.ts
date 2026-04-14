@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 const TUTORIAL_DIR = join(__dirname, '../docs/tutorial')
-const CLAUDE_MD = join(__dirname, '../CLAUDE.md')
+const TUTORIAL_FULL_MD = join(__dirname, '../docs/MIRROR-TUTORIAL-FULL.md')
 
 // Tutorial files in order
 const TUTORIAL_FILES = [
@@ -202,43 +202,47 @@ function isInsidePlayground(content: string, index: number): boolean {
 }
 
 function cleanText(html: string): string {
-  return html
-    // Convert code tags
-    .replace(/<code>(.*?)<\/code>/g, '`$1`')
-    // Convert strong/b
-    .replace(/<(?:strong|b)>(.*?)<\/(?:strong|b)>/g, '**$1**')
-    // Convert em/i
-    .replace(/<(?:em|i)>(.*?)<\/(?:em|i)>/g, '*$1*')
-    // Convert links
-    .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, '$2')
-    // Remove other tags
-    .replace(/<[^>]+>/g, '')
-    // Clean up whitespace
-    .replace(/\s+/g, ' ')
-    // Decode HTML entities
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&rarr;/g, '→')
-    .replace(/&larr;/g, '←')
-    .trim()
+  return (
+    html
+      // Convert code tags
+      .replace(/<code>(.*?)<\/code>/g, '`$1`')
+      // Convert strong/b
+      .replace(/<(?:strong|b)>(.*?)<\/(?:strong|b)>/g, '**$1**')
+      // Convert em/i
+      .replace(/<(?:em|i)>(.*?)<\/(?:em|i)>/g, '*$1*')
+      // Convert links
+      .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, '$2')
+      // Remove other tags
+      .replace(/<[^>]+>/g, '')
+      // Clean up whitespace
+      .replace(/\s+/g, ' ')
+      // Decode HTML entities
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&rarr;/g, '→')
+      .replace(/&larr;/g, '←')
+      .trim()
+  )
 }
 
 function cleanCode(html: string): string {
-  return html
-    // Remove syntax highlighting spans
-    .replace(/<span[^>]*>(.*?)<\/span>/g, '$1')
-    // Remove other tags
-    .replace(/<[^>]+>/g, '')
-    // Decode HTML entities
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .trim()
+  return (
+    html
+      // Remove syntax highlighting spans
+      .replace(/<span[^>]*>(.*?)<\/span>/g, '$1')
+      // Remove other tags
+      .replace(/<[^>]+>/g, '')
+      // Decode HTML entities
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .trim()
+  )
 }
 
 function convertTable(html: string): string {
@@ -294,19 +298,16 @@ function convertList(html: string): string {
   return lines.join('\n')
 }
 
-// Markers in CLAUDE.md
-const START_MARKER = '<!-- GENERATED:TUTORIAL:START -->'
-const END_MARKER = '<!-- GENERATED:TUTORIAL:END -->'
-
 function main() {
   console.log('Generating tutorial from HTML files...\n')
 
   // Generate tutorial content
   const output: string[] = []
 
-  output.push('## Mirror DSL Tutorial')
+  output.push('# Mirror DSL Tutorial (Vollständige Referenz)')
   output.push('')
-  output.push('Das folgende Tutorial ist die vollständige Referenz für die Mirror DSL. Es wird automatisch aus den HTML-Tutorials generiert.')
+  output.push('> Diese Datei wird automatisch aus den HTML-Tutorials generiert.')
+  output.push('> Für die kompakte Version siehe CLAUDE.md')
   output.push('')
 
   for (const file of TUTORIAL_FILES) {
@@ -327,31 +328,11 @@ function main() {
 
   const tutorialContent = output.join('\n')
 
-  // Read CLAUDE.md
-  console.log('\nUpdating CLAUDE.md...')
-  const claudeMd = readFileSync(CLAUDE_MD, 'utf-8')
+  // Write to separate file
+  console.log(`\nWriting to ${TUTORIAL_FULL_MD}...`)
+  writeFileSync(TUTORIAL_FULL_MD, tutorialContent)
 
-  // Find markers
-  const startIndex = claudeMd.indexOf(START_MARKER)
-  const endIndex = claudeMd.indexOf(END_MARKER)
-
-  if (startIndex === -1 || endIndex === -1) {
-    console.error('Error: Markers not found in CLAUDE.md!')
-    console.error('Make sure CLAUDE.md contains:')
-    console.error(`  ${START_MARKER}`)
-    console.error(`  ${END_MARKER}`)
-    process.exit(1)
-  }
-
-  // Replace content between markers
-  const before = claudeMd.substring(0, startIndex + START_MARKER.length)
-  const after = claudeMd.substring(endIndex)
-
-  const newContent = before + '\n\n' + tutorialContent + '\n' + after
-
-  writeFileSync(CLAUDE_MD, newContent)
-
-  console.log(`\nDone! CLAUDE.md updated.`)
+  console.log(`\nDone! Tutorial written to docs/MIRROR-TUTORIAL-FULL.md`)
   console.log(`Tutorial length: ${tutorialContent.length} characters`)
 }
 
