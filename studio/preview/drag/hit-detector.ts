@@ -2,7 +2,7 @@
  * HitDetector - Finds the drop target container under cursor
  *
  * Uses elementFromPoint() and walks up the DOM to find
- * the nearest flex container with data-node-id.
+ * the nearest flex container with data-mirror-id.
  */
 
 import type { Point, HitResult, FlexLayout } from './types'
@@ -25,7 +25,7 @@ export class HitDetector {
     let current: Element | null = element
 
     while (current) {
-      const nodeId = current.getAttribute('data-node-id')
+      const nodeId = current.getAttribute('data-mirror-id')
 
       if (nodeId) {
         const style = getComputedStyle(current)

@@ -62,7 +62,27 @@ export function getCurrentDragData(): ComponentDragData | null {
 export function clearCurrentDragData(): void {
   currentDragData = null
   currentComponentItem = null
+  canvasDragNodeId = null
   log.debug('Drag data cleared')
+}
+
+// =============================================================================
+// Canvas Element Drag Data
+// =============================================================================
+// For dragging existing elements from the canvas
+
+/** Node ID of element being dragged from canvas */
+let canvasDragNodeId: string | null = null
+
+/** Set canvas drag data (called when dragging from preview) */
+export function setCanvasDragData(nodeId: string): void {
+  canvasDragNodeId = nodeId
+  log.debug('Canvas drag started:', nodeId)
+}
+
+/** Get canvas drag node ID */
+export function getCanvasDragNodeId(): string | null {
+  return canvasDragNodeId
 }
 
 // =============================================================================
@@ -85,6 +105,9 @@ export class DragPreview {
   private boundDrop: (e: DragEvent) => void
   private boundDragEnd: (e: DragEvent) => void
   private boundKeyDown: (e: KeyboardEvent) => void
+  private boundCanvasDragStart: (e: DragEvent) => void
+  private boundMakeElementsDraggable: () => void
+  private previewRenderedUnsub: (() => void) | null = null
 
   constructor(config: DragPreviewConfig) {
     this.container = config.container
@@ -94,6 +117,8 @@ export class DragPreview {
     this.boundDrop = this.handleDrop.bind(this)
     this.boundDragEnd = this.handleDragEnd.bind(this)
     this.boundKeyDown = this.handleKeyDown.bind(this)
+    this.boundCanvasDragStart = this.handleCanvasDragStart.bind(this)
+    this.boundMakeElementsDraggable = this.makeElementsDraggable.bind(this)
 
     // Setup DragController callbacks
     this.setupDragController()
@@ -131,6 +156,12 @@ export class DragPreview {
     document.addEventListener('dragend', this.boundDragEnd)
     // Escape key to cancel drag
     document.addEventListener('keydown', this.boundKeyDown)
+    // Canvas element drag start (delegated)
+    this.container.addEventListener('dragstart', this.boundCanvasDragStart)
+    // Make canvas elements draggable
+    this.makeElementsDraggable()
+    // Re-make elements draggable after preview updates
+    this.previewRenderedUnsub = events.on('preview:rendered', this.boundMakeElementsDraggable)
     log.info('Attached to document')
   }
 
@@ -140,9 +171,48 @@ export class DragPreview {
     document.removeEventListener('dragleave', this.boundDragLeave)
     document.removeEventListener('dragend', this.boundDragEnd)
     document.removeEventListener('keydown', this.boundKeyDown)
+    this.container.removeEventListener('dragstart', this.boundCanvasDragStart)
+    // Unsubscribe from preview:rendered
+    if (this.previewRenderedUnsub) {
+      this.previewRenderedUnsub()
+      this.previewRenderedUnsub = null
+    }
 
     getDragController().cancel()
     log.info('Detached')
+  }
+
+  /**
+   * Make all elements with data-mirror-id draggable
+   * Called on attach and can be called after preview updates
+   */
+  makeElementsDraggable(): void {
+    const elements = this.container.querySelectorAll('[data-mirror-id]')
+    for (const el of elements) {
+      if (el instanceof HTMLElement) {
+        el.draggable = true
+      }
+    }
+    log.debug(`Made ${elements.length} elements draggable`)
+  }
+
+  /**
+   * Handle dragstart on canvas elements
+   */
+  private handleCanvasDragStart(e: DragEvent): void {
+    const target = e.target as HTMLElement
+    const nodeId = target.getAttribute('data-mirror-id')
+
+    if (!nodeId || !e.dataTransfer) return
+
+    // Set drag data
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('application/mirror-canvas-element', nodeId)
+
+    // Store the node ID for later
+    setCanvasDragData(nodeId)
+
+    log.debug('Canvas element drag started:', nodeId)
   }
 
   /**
@@ -158,14 +228,19 @@ export class DragPreview {
   }
 
   private handleDragOver(e: DragEvent): void {
-    // Check for Mirror component drag
+    // Check for Mirror drag (palette component or canvas element)
     const types = e.dataTransfer?.types
-    const hasMirrorComponent =
-      types &&
-      (types.includes?.('application/mirror-component') ||
-        Array.from(types).includes('application/mirror-component'))
+    const typeArray = types ? Array.from(types) : []
 
-    if (!hasMirrorComponent) {
+    const hasPaletteComponent =
+      typeArray.includes('application/mirror-component') ||
+      types?.includes?.('application/mirror-component')
+
+    const hasCanvasElement =
+      typeArray.includes('application/mirror-canvas-element') ||
+      types?.includes?.('application/mirror-canvas-element')
+
+    if (!hasPaletteComponent && !hasCanvasElement) {
       return
     }
 
@@ -179,25 +254,41 @@ export class DragPreview {
 
     if (isOver) {
       e.preventDefault()
-      e.dataTransfer!.dropEffect = 'copy'
+      e.dataTransfer!.dropEffect = hasCanvasElement ? 'move' : 'copy'
 
       const controller = getDragController()
 
       // Start drag if just entered canvas
       if (!this.isOverCanvas) {
         this.isOverCanvas = true
-        const item = getCurrentComponentItem()
 
-        if (item) {
-          controller.startDrag(
-            {
-              type: 'palette',
-              componentName: item.name,
-              template: item.template,
-            },
-            this.container
-          )
-          log.debug('Drag started:', item.name)
+        if (hasCanvasElement) {
+          // Canvas element drag (move existing)
+          const nodeId = getCanvasDragNodeId()
+          if (nodeId) {
+            controller.startDrag(
+              {
+                type: 'canvas',
+                nodeId,
+              },
+              this.container
+            )
+            log.debug('Canvas element drag started:', nodeId)
+          }
+        } else {
+          // Palette component drag (insert new)
+          const item = getCurrentComponentItem()
+          if (item) {
+            controller.startDrag(
+              {
+                type: 'palette',
+                componentName: item.name,
+                template: item.template,
+              },
+              this.container
+            )
+            log.debug('Palette drag started:', item.name)
+          }
         }
       }
 

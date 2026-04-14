@@ -13,7 +13,7 @@ export class LayoutCache {
   private containerElement: HTMLElement | null = null
 
   /**
-   * Build the cache by traversing all elements with data-node-id
+   * Build the cache by traversing all elements with data-mirror-id
    * Call once at drag start
    */
   build(container: HTMLElement): void {
@@ -21,9 +21,9 @@ export class LayoutCache {
     this.containerElement = container
 
     // Collect all element rects
-    const elements = container.querySelectorAll('[data-node-id]')
+    const elements = container.querySelectorAll('[data-mirror-id]')
     for (const el of elements) {
-      const nodeId = el.getAttribute('data-node-id')
+      const nodeId = el.getAttribute('data-mirror-id')
       if (nodeId) {
         this.rects.set(nodeId, el.getBoundingClientRect())
       }
@@ -37,20 +37,20 @@ export class LayoutCache {
    * Group children by their parent container and sort by position
    */
   private buildChildrenMap(container: HTMLElement): void {
-    const elements = container.querySelectorAll('[data-node-id]')
+    const elements = container.querySelectorAll('[data-mirror-id]')
 
     for (const el of elements) {
-      const nodeId = el.getAttribute('data-node-id')
+      const nodeId = el.getAttribute('data-mirror-id')
       if (!nodeId) continue
 
       const rect = this.rects.get(nodeId)
       if (!rect) continue
 
-      // Find parent with data-node-id
-      const parent = el.parentElement?.closest('[data-node-id]')
+      // Find parent with data-mirror-id
+      const parent = el.parentElement?.closest('[data-mirror-id]')
       if (!parent) continue
 
-      const parentId = parent.getAttribute('data-node-id')
+      const parentId = parent.getAttribute('data-mirror-id')
       if (!parentId) continue
 
       // Add to parent's children list

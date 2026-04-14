@@ -5683,15 +5683,36 @@ function setupNotificationHandlers() {
   studio.events.on('drag:dropped', ({ source, target, dragData }) => {
     console.log(
       '[Drag v3] Dropped:',
-      source?.componentName,
+      source?.type === 'canvas' ? `move ${source.nodeId}` : source?.componentName,
       '→',
       target?.containerId,
       'at',
       target?.insertionIndex
     )
 
-    if (!dragData || !target) {
-      console.warn('[Drag v3] Missing dragData or target')
+    if (!target) {
+      console.warn('[Drag v3] Missing target')
+      return
+    }
+
+    // Handle canvas element move (type: 'canvas')
+    if (source?.type === 'canvas' && source.nodeId) {
+      const dropResult = {
+        source: {
+          type: 'element',
+          nodeId: source.nodeId,
+        },
+        targetNodeId: target.containerId,
+        placement: 'inside',
+        insertionIndex: target.insertionIndex,
+      }
+      handleStudioDrop(dropResult)
+      return
+    }
+
+    // Handle palette component insert (type: 'palette')
+    if (!dragData) {
+      console.warn('[Drag v3] Missing dragData for palette drop')
       return
     }
 
