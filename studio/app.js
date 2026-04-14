@@ -6729,12 +6729,31 @@ function applyDropChange(modResult, componentName = 'Component') {
 
   // Validate range
   const docLength = editor.state.doc.length
+  console.log(
+    '[applyDropChange] change:',
+    change.from,
+    '->',
+    change.to,
+    'preludeOffset:',
+    currentPreludeOffset,
+    'docLength:',
+    docLength,
+    'adjusted:',
+    adjustedChange.from,
+    '->',
+    adjustedChange.to
+  )
   if (
     adjustedChange.from < 0 ||
     adjustedChange.to > docLength ||
     adjustedChange.from > adjustedChange.to
   ) {
-    console.warn('Studio: Invalid drop range after offset adjustment')
+    console.warn('Studio: Invalid drop range after offset adjustment', {
+      original: { from: change.from, to: change.to },
+      preludeOffset: currentPreludeOffset,
+      adjusted: adjustedChange,
+      docLength,
+    })
     return
   }
 
