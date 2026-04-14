@@ -15,53 +15,56 @@ const INDICATOR_THICKNESS = 3
 export class Indicator {
   private element: HTMLDivElement | null = null
 
-  /**
-   * Ensure the indicator element exists
-   */
+  /** Ensure the indicator element exists */
   private ensureElement(): HTMLDivElement {
     if (this.element) return this.element
 
-    this.element = document.createElement('div')
-    this.element.id = INDICATOR_ID
+    this.element = this.createElement()
+    document.body.appendChild(this.element)
+    return this.element
+  }
 
-    Object.assign(this.element.style, {
+  /** Create the indicator DOM element */
+  private createElement(): HTMLDivElement {
+    const el = document.createElement('div')
+    el.id = INDICATOR_ID
+    this.applyStyles(el)
+    return el
+  }
+
+  /** Apply indicator styles */
+  private applyStyles(el: HTMLDivElement): void {
+    Object.assign(el.style, {
       position: 'fixed',
       pointerEvents: 'none',
       zIndex: '10000',
       background: INDICATOR_COLOR,
       borderRadius: '2px',
       display: 'none',
-      // Subtle glow for visibility
       boxShadow: `0 0 8px ${INDICATOR_GLOW}`,
-      // GPU acceleration
       willChange: 'left, top, width, height',
-      // No transition for immediate response
       transition: 'none',
     })
-
-    document.body.appendChild(this.element)
-    return this.element
   }
 
-  /**
-   * Show the indicator at the specified position
-   *
-   * @param position - Top-left position
-   * @param size - Width (horizontal) or height (vertical)
-   * @param orientation - Line direction
-   */
+  /** Show indicator at position */
   show(position: Point, size: number, orientation: 'horizontal' | 'vertical'): void {
     const el = this.ensureElement()
+    this.setPosition(el, position)
+    this.setSize(el, size, orientation)
+    el.style.display = 'block'
+  }
 
-    const width = orientation === 'horizontal' ? size : INDICATOR_THICKNESS
-    const height = orientation === 'vertical' ? size : INDICATOR_THICKNESS
-
-    // Batch style updates
+  /** Set position styles */
+  private setPosition(el: HTMLDivElement, position: Point): void {
     el.style.left = `${position.x}px`
     el.style.top = `${position.y}px`
-    el.style.width = `${width}px`
-    el.style.height = `${height}px`
-    el.style.display = 'block'
+  }
+
+  /** Set size based on orientation */
+  private setSize(el: HTMLDivElement, size: number, orientation: 'horizontal' | 'vertical'): void {
+    el.style.width = `${orientation === 'horizontal' ? size : INDICATOR_THICKNESS}px`
+    el.style.height = `${orientation === 'vertical' ? size : INDICATOR_THICKNESS}px`
   }
 
   /**

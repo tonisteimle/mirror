@@ -6,68 +6,86 @@
  */
 
 import type { ChildInfo } from './types'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('LayoutCache')
 
 export class LayoutCache {
   private rects = new Map<string, DOMRect>()
   private children = new Map<string, ChildInfo[]>()
   private containerElement: HTMLElement | null = null
 
-  /**
-   * Build the cache by traversing all elements with data-mirror-id
-   * Call once at drag start
-   */
+  /** Build the cache - call once at drag start */
   build(container: HTMLElement): void {
     this.invalidate()
     this.containerElement = container
+    this.cacheAllRects(container)
+    this.buildChildrenMap(container)
+    log.warn(
+      'Cache built:',
+      this.rects.size,
+      'rects,',
+      this.children.size,
+      'parent-child relationships'
+    )
+  }
 
-    // Collect all element rects
+  /** Cache rects for all elements with data-mirror-id */
+  private cacheAllRects(container: HTMLElement): void {
     const elements = container.querySelectorAll('[data-mirror-id]')
+    log.warn(
+      'Found',
+      elements.length,
+      'elements with data-mirror-id in container:',
+      container.id || container.className
+    )
     for (const el of elements) {
       const nodeId = el.getAttribute('data-mirror-id')
       if (nodeId) {
-        this.rects.set(nodeId, el.getBoundingClientRect())
+        const rect = el.getBoundingClientRect()
+        this.rects.set(nodeId, rect)
+        log.warn('Cached rect for', nodeId, ':', rect.x, rect.y, rect.width, rect.height)
       }
     }
-
-    // Build parent-child relationships
-    this.buildChildrenMap(container)
   }
 
-  /**
-   * Group children by their parent container and sort by position
-   */
+  /** Group children by parent and sort by position */
   private buildChildrenMap(container: HTMLElement): void {
     const elements = container.querySelectorAll('[data-mirror-id]')
+    for (const el of elements) this.addToParent(el)
+    this.sortAllChildren()
+  }
 
-    for (const el of elements) {
-      const nodeId = el.getAttribute('data-mirror-id')
-      if (!nodeId) continue
+  /** Add element to its parent's children list */
+  private addToParent(el: Element): void {
+    const nodeId = el.getAttribute('data-mirror-id')
+    const rect = nodeId ? this.rects.get(nodeId) : null
+    if (!nodeId || !rect) return
 
-      const rect = this.rects.get(nodeId)
-      if (!rect) continue
+    const parentId = this.getParentId(el)
+    if (!parentId) return
 
-      // Find parent with data-mirror-id
-      const parent = el.parentElement?.closest('[data-mirror-id]')
-      if (!parent) continue
+    if (!this.children.has(parentId)) this.children.set(parentId, [])
+    this.children.get(parentId)!.push({ nodeId, rect })
+  }
 
-      const parentId = parent.getAttribute('data-mirror-id')
-      if (!parentId) continue
+  /** Get data-mirror-id of nearest parent container */
+  private getParentId(el: Element): string | null {
+    const parent = el.parentElement?.closest('[data-mirror-id]')
+    return parent?.getAttribute('data-mirror-id') ?? null
+  }
 
-      // Add to parent's children list
-      if (!this.children.has(parentId)) {
-        this.children.set(parentId, [])
-      }
-      this.children.get(parentId)!.push({ nodeId, rect })
-    }
-
-    // Sort children by position (top-to-bottom, left-to-right)
+  /** Sort all children by position (top-to-bottom, left-to-right) */
+  private sortAllChildren(): void {
     for (const kids of this.children.values()) {
-      kids.sort((a, b) => {
-        const topDiff = a.rect.top - b.rect.top
-        if (Math.abs(topDiff) > 5) return topDiff
-        return a.rect.left - b.rect.left
-      })
+      kids.sort((a, b) => this.comparePositions(a.rect, b.rect))
     }
+  }
+
+  /** Compare two rects by position */
+  private comparePositions(a: DOMRect, b: DOMRect): number {
+    const topDiff = a.top - b.top
+    return Math.abs(topDiff) > 5 ? topDiff : a.left - b.left
   }
 
   /**

@@ -8,15 +8,7 @@
 import type { Point, ChildInfo, FlexLayout, InsertionResult } from './types'
 
 export class InsertionCalculator {
-  /**
-   * Calculate where to insert based on cursor position
-   *
-   * @param cursor - Current cursor position
-   * @param children - Cached child rects, sorted by position
-   * @param layout - Container's flex direction
-   * @param containerRect - Container's bounding rect
-   * @returns Insertion index and indicator position
-   */
+  /** Calculate where to insert based on cursor position */
   calculate(
     cursor: Point,
     children: ChildInfo[],
@@ -25,87 +17,64 @@ export class InsertionCalculator {
   ): InsertionResult {
     const isVertical = layout === 'flex-column'
 
-    // Empty container: insert at index 0, indicator at container start
     if (children.length === 0) {
-      return this.emptyContainerResult(containerRect, isVertical)
+      return this.buildResult(0, containerRect.x, containerRect.y, containerRect, isVertical)
     }
 
-    // Find insertion position among children
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i]
-      const result = this.checkChildPosition(cursor, child, i, containerRect, isVertical)
-      if (result) return result
+    const insertBefore = this.findInsertionIndex(cursor, children, isVertical)
+    if (insertBefore !== null) {
+      const child = children[insertBefore]
+      return this.buildResult(insertBefore, child.rect.x, child.rect.y, containerRect, isVertical)
     }
 
-    // Cursor is after all children: insert at end
-    return this.afterLastChildResult(children, containerRect, isVertical)
+    return this.resultAfterLast(children, containerRect, isVertical)
   }
 
-  /**
-   * Result for empty container
-   */
-  private emptyContainerResult(containerRect: DOMRect, isVertical: boolean): InsertionResult {
+  /** Find index to insert before, or null if after all */
+  private findInsertionIndex(
+    cursor: Point,
+    children: ChildInfo[],
+    isVertical: boolean
+  ): number | null {
+    const cursorPos = isVertical ? cursor.y : cursor.x
+
+    for (let i = 0; i < children.length; i++) {
+      const mid = this.getChildMidpoint(children[i], isVertical)
+      if (cursorPos < mid) return i
+    }
+    return null
+  }
+
+  /** Get midpoint of child on relevant axis */
+  private getChildMidpoint(child: ChildInfo, isVertical: boolean): number {
+    return isVertical ? child.rect.y + child.rect.height / 2 : child.rect.x + child.rect.width / 2
+  }
+
+  /** Build insertion result for given position */
+  private buildResult(
+    index: number,
+    x: number,
+    y: number,
+    containerRect: DOMRect,
+    isVertical: boolean
+  ): InsertionResult {
     return {
-      index: 0,
-      linePosition: {
-        x: containerRect.x,
-        y: containerRect.y,
-      },
+      index,
+      linePosition: isVertical ? { x: containerRect.x, y } : { x, y: containerRect.y },
       lineSize: isVertical ? containerRect.width : containerRect.height,
       orientation: isVertical ? 'horizontal' : 'vertical',
     }
   }
 
-  /**
-   * Check if cursor is before this child's midpoint
-   */
-  private checkChildPosition(
-    cursor: Point,
-    child: ChildInfo,
-    index: number,
-    containerRect: DOMRect,
-    isVertical: boolean
-  ): InsertionResult | null {
-    // Calculate midpoint of child
-    const mid = isVertical
-      ? child.rect.y + child.rect.height / 2
-      : child.rect.x + child.rect.width / 2
-
-    // Cursor position on the relevant axis
-    const cursorPos = isVertical ? cursor.y : cursor.x
-
-    // If cursor is before midpoint, insert before this child
-    if (cursorPos < mid) {
-      return {
-        index,
-        linePosition: isVertical
-          ? { x: containerRect.x, y: child.rect.y }
-          : { x: child.rect.x, y: containerRect.y },
-        lineSize: isVertical ? containerRect.width : containerRect.height,
-        orientation: isVertical ? 'horizontal' : 'vertical',
-      }
-    }
-
-    return null
-  }
-
-  /**
-   * Result for inserting after last child
-   */
-  private afterLastChildResult(
+  /** Result for inserting after last child */
+  private resultAfterLast(
     children: ChildInfo[],
     containerRect: DOMRect,
     isVertical: boolean
   ): InsertionResult {
     const last = children[children.length - 1]
-
-    return {
-      index: children.length,
-      linePosition: isVertical
-        ? { x: containerRect.x, y: last.rect.y + last.rect.height }
-        : { x: last.rect.x + last.rect.width, y: containerRect.y },
-      lineSize: isVertical ? containerRect.width : containerRect.height,
-      orientation: isVertical ? 'horizontal' : 'vertical',
-    }
+    const x = last.rect.x + last.rect.width
+    const y = last.rect.y + last.rect.height
+    return this.buildResult(children.length, x, y, containerRect, isVertical)
   }
 }

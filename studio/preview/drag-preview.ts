@@ -227,87 +227,100 @@ export class DragPreview {
     }
   }
 
-  private handleDragOver(e: DragEvent): void {
-    // Check for Mirror drag (palette component or canvas element)
+  /** Check if drag event contains Mirror drag types */
+  private getMirrorDragType(e: DragEvent): 'palette' | 'canvas' | null {
     const types = e.dataTransfer?.types
-    const typeArray = types ? Array.from(types) : []
+    if (!types) return null
 
-    const hasPaletteComponent =
-      typeArray.includes('application/mirror-component') ||
-      types?.includes?.('application/mirror-component')
+    const typeArray = Array.from(types)
+    if (typeArray.includes('application/mirror-canvas-element')) return 'canvas'
+    if (typeArray.includes('application/mirror-component')) return 'palette'
+    return null
+  }
 
-    const hasCanvasElement =
-      typeArray.includes('application/mirror-canvas-element') ||
-      types?.includes?.('application/mirror-canvas-element')
-
-    if (!hasPaletteComponent && !hasCanvasElement) {
-      return
-    }
-
-    // Check if cursor is over the preview container
+  /** Check if cursor is over the preview container */
+  private isCursorOverContainer(e: DragEvent): boolean {
     const rect = this.container.getBoundingClientRect()
-    const isOver =
+    return (
       e.clientX >= rect.left &&
       e.clientX <= rect.right &&
       e.clientY >= rect.top &&
       e.clientY <= rect.bottom
+    )
+  }
 
-    if (isOver) {
-      e.preventDefault()
-      e.dataTransfer!.dropEffect = hasCanvasElement ? 'move' : 'copy'
+  /** Start drag for canvas element (move existing) */
+  private startCanvasDrag(): void {
+    const nodeId = getCanvasDragNodeId()
+    if (!nodeId) return
 
-      const controller = getDragController()
+    getDragController().startDrag({ type: 'canvas', nodeId }, this.container)
+    log.debug('Canvas element drag started:', nodeId)
+  }
 
-      // Start drag if just entered canvas
-      if (!this.isOverCanvas) {
-        this.isOverCanvas = true
-
-        if (hasCanvasElement) {
-          // Canvas element drag (move existing)
-          const nodeId = getCanvasDragNodeId()
-          if (nodeId) {
-            controller.startDrag(
-              {
-                type: 'canvas',
-                nodeId,
-              },
-              this.container
-            )
-            log.debug('Canvas element drag started:', nodeId)
-          }
-        } else {
-          // Palette component drag (insert new)
-          const item = getCurrentComponentItem()
-          if (item) {
-            controller.startDrag(
-              {
-                type: 'palette',
-                componentName: item.name,
-                template: item.template,
-              },
-              this.container
-            )
-            log.debug('Palette drag started:', item.name)
-          }
-        }
-      }
-
-      // Throttle position updates with RAF for 60fps
-      if (!this.rafPending) {
-        this.rafPending = true
-        requestAnimationFrame(() => {
-          controller.updatePosition({ x: e.clientX, y: e.clientY })
-          this.rafPending = false
-        })
-      }
-    } else {
-      // Left the canvas area
-      if (this.isOverCanvas) {
-        this.isOverCanvas = false
-        getDragController().cancel()
-        log.debug('Left canvas, drag cancelled')
-      }
+  /** Start drag for palette component (insert new) */
+  private startPaletteDrag(): void {
+    const item = getCurrentComponentItem()
+    if (!item) {
+      log.warn('startPaletteDrag: No component item available')
+      return
     }
+
+    const source = { type: 'palette' as const, componentName: item.name, template: item.template }
+    log.warn(
+      'Starting palette drag:',
+      item.name,
+      'container:',
+      this.container.id || this.container.className
+    )
+    getDragController().startDrag(source, this.container)
+  }
+
+  /** Throttled position update via RAF */
+  private schedulePositionUpdate(e: DragEvent): void {
+    if (this.rafPending) return
+
+    this.rafPending = true
+    requestAnimationFrame(() => {
+      getDragController().updatePosition({ x: e.clientX, y: e.clientY })
+      this.rafPending = false
+    })
+  }
+
+  /** Handle drag leaving canvas area */
+  private handleLeaveCanvas(): void {
+    if (!this.isOverCanvas) return
+
+    this.isOverCanvas = false
+    getDragController().cancel()
+    log.debug('Left canvas, drag cancelled')
+  }
+
+  private handleDragOver(e: DragEvent): void {
+    const dragType = this.getMirrorDragType(e)
+    if (!dragType) {
+      // Log only once per drag to avoid spam
+      if (!this.isOverCanvas) {
+        log.warn('handleDragOver: Not a Mirror drag type, types:', e.dataTransfer?.types)
+      }
+      return
+    }
+
+    if (!this.isCursorOverContainer(e)) {
+      this.handleLeaveCanvas()
+      return
+    }
+
+    e.preventDefault()
+    e.dataTransfer!.dropEffect = dragType === 'canvas' ? 'move' : 'copy'
+
+    if (!this.isOverCanvas) {
+      this.isOverCanvas = true
+      log.warn('First entry over canvas, dragType:', dragType)
+      dragType === 'canvas' ? this.startCanvasDrag() : this.startPaletteDrag()
+    }
+
+    this.schedulePositionUpdate(e)
   }
 
   private handleDragLeave(e: DragEvent): void {
@@ -323,24 +336,13 @@ export class DragPreview {
   }
 
   private handleDrop(e: DragEvent): void {
-    // Check if drop is on our container
-    const rect = this.container.getBoundingClientRect()
-    const isOver =
-      e.clientX >= rect.left &&
-      e.clientX <= rect.right &&
-      e.clientY >= rect.top &&
-      e.clientY <= rect.bottom
-
-    if (!isOver) return
+    if (!this.isCursorOverContainer(e)) return
 
     e.preventDefault()
     e.stopPropagation()
-
     this.isOverCanvas = false
 
-    // Execute drop via controller (triggers onDrop callback)
     getDragController().drop()
-
     log.info('Drop executed')
   }
 

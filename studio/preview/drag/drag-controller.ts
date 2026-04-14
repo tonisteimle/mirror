@@ -49,79 +49,78 @@ export class DragController {
    * @param container - The preview container element
    */
   startDrag(source: DragSource, container: HTMLElement): void {
+    log.warn(
+      'startDrag called with source:',
+      source.type,
+      'componentName:',
+      (source as any).componentName
+    )
     this.state = 'dragging'
     this.source = source
     this.cache.build(container)
+    log.warn('Cache isEmpty:', this.cache.isEmpty())
   }
 
-  /**
-   * Update drag position - called on every mouse move
-   * Should be throttled with requestAnimationFrame by the caller
-   *
-   * Performance target: < 1ms per call
-   *
-   * @param cursor - Current cursor position
-   */
+  /** Update drag position - called on every mouse move */
   updatePosition(cursor: Point): void {
-    if (this.state !== 'dragging') return
-
-    const start = PERF_LOGGING ? performance.now() : 0
-
-    // 1. Find container under cursor
-    const hit = this.hitDetector.detect(cursor, this.cache)
-
-    if (!hit) {
-      this.indicator.hide()
-      this.lastTarget = null
+    if (this.state !== 'dragging') {
+      log.warn('updatePosition: Not dragging, state=', this.state)
       return
     }
 
-    // 2. Get children from cache
-    const children = this.cache.getChildren(hit.containerId)
-
-    // 3. Calculate insertion position
-    const insertion = this.calculator.calculate(cursor, children, hit.layout, hit.containerRect)
-
-    // 4. Show indicator
-    this.indicator.show(insertion.linePosition, insertion.lineSize, insertion.orientation)
-
-    // 5. Store target for drop
-    this.lastTarget = {
-      containerId: hit.containerId,
-      insertionIndex: insertion.index,
+    const hit = this.hitDetector.detect(cursor, this.cache)
+    if (!hit) {
+      log.warn('updatePosition: No hit detected at', cursor)
+      return this.clearTarget()
     }
 
-    if (PERF_LOGGING) {
-      const elapsed = performance.now() - start
-      if (elapsed > 1) {
-        log.warn(`updatePosition took ${elapsed.toFixed(2)}ms (target: <1ms)`)
-      }
-    }
+    log.warn('updatePosition: Hit!', hit.containerId, hit.layout)
+    const insertion = this.calculateInsertion(cursor, hit)
+    this.showIndicator(insertion)
+    this.storeTarget(hit.containerId, insertion.index)
   }
 
-  /**
-   * Complete the drag operation
-   * Triggers code modification via callback
-   */
+  /** Clear target and hide indicator */
+  private clearTarget(): void {
+    this.indicator.hide()
+    this.lastTarget = null
+  }
+
+  /** Calculate insertion position for hit */
+  private calculateInsertion(cursor: Point, hit: import('./types').HitResult) {
+    const children = this.cache.getChildren(hit.containerId)
+    return this.calculator.calculate(cursor, children, hit.layout, hit.containerRect)
+  }
+
+  /** Show indicator at insertion position */
+  private showIndicator(insertion: import('./types').InsertionResult): void {
+    this.indicator.show(insertion.linePosition, insertion.lineSize, insertion.orientation)
+  }
+
+  /** Store drop target */
+  private storeTarget(containerId: string, insertionIndex: number): void {
+    this.lastTarget = { containerId, insertionIndex }
+  }
+
+  /** Complete the drag operation */
   async drop(): Promise<void> {
-    if (!this.source || !this.lastTarget) {
-      this.reset()
-      return
-    }
+    if (!this.source || !this.lastTarget) return this.reset()
 
     const source = this.source
     const target = this.lastTarget
-
-    // Reset state immediately (before async operation)
     this.reset()
 
-    // Execute drop via callback
-    if (this.callbacks?.onDrop) {
-      try {
-        await this.callbacks.onDrop(source, target)
-      } catch (error) {
-        console.error('[DragController] Drop failed:', error)
-      }
+    await this.executeDropCallback(source, target)
+  }
+
+  /** Execute drop callback safely */
+  private async executeDropCallback(source: DragSource, target: DropTarget): Promise<void> {
+    if (!this.callbacks?.onDrop) return
+
+    try {
+      await this.callbacks.onDrop(source, target)
+    } catch (error) {
+      console.error('[DragController] Drop failed:', error)
     }
   }
 
