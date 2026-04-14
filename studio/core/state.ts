@@ -172,13 +172,6 @@ export const actions = {
     const hasQueuedSelection = currentState.queuedSelection !== null
     const hasDeferredSelection = currentState.deferredSelection !== null
 
-    console.log('[setCompileResult] Selection state:', {
-      hasPendingSelection,
-      hasQueuedSelection,
-      hasDeferredSelection,
-      pendingSelection: currentState.pendingSelection,
-    })
-
     // Validate multi-selection against new SourceMap
     const validMultiSelection = currentState.multiSelection.filter(
       id => result.sourceMap.getNodeById(id) !== null

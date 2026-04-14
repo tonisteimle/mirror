@@ -348,18 +348,15 @@ export class PreviewController {
 
   /** Re-apply visual selection after preview DOM refresh */
   refresh(): void {
-    // Ensure overlay is in DOM (may have been removed by innerHTML clear)
     this.overlayManager?.ensureOverlay()
-
-    if (this.selectedNodeId) {
-      this.highlightElement(this.selectedNodeId)
-      this.handleManager?.showHandles(this.selectedNodeId)
-      this.resizeManager?.refresh()
-    }
-    // Also restore multi-selection highlighting
+    this.refreshSelection()
     this.updateMultiSelectionHighlight()
-    // Refresh slot visibility (DOM may have been replaced)
     this.slotVisibilityService?.refresh()
+  }
+
+  /** Re-show selection highlight and handles for current selection */
+  private refreshSelection(): void {
+    if (this.selectedNodeId) this.showSelectionUI(this.selectedNodeId)
   }
 
   /** Dispose the controller */
@@ -421,26 +418,34 @@ export class PreviewController {
 
   select(nodeId: string | null): void {
     if (nodeId === this.selectedNodeId) return
-    if (this.selectedNodeId) this.removeHighlight(this.selectedNodeId)
+    this.clearCurrentSelection()
     this.selectedNodeId = nodeId
-    if (nodeId) {
-      this.highlightElement(nodeId)
-      this.handleManager?.showHandles(nodeId)
-      this.resizeManager?.showHandles(nodeId)
-    } else {
-      this.handleManager?.hideHandles()
-      this.resizeManager?.hideHandles()
-    }
+    nodeId ? this.showSelectionUI(nodeId) : this.hideAllHandles()
+    this.updateEditorFocusForSelection(nodeId)
+    this.notifySelectionChanged(nodeId)
+  }
+
+  private clearCurrentSelection(): void {
+    if (this.selectedNodeId) this.removeHighlight(this.selectedNodeId)
+  }
+
+  private showSelectionUI(nodeId: string): void {
+    this.highlightElement(nodeId)
+    this.handleManager?.showHandles(nodeId)
+    this.resizeManager?.showHandles(nodeId)
+  }
+
+  private hideAllHandles(): void {
+    this.handleManager?.hideHandles()
+    this.resizeManager?.hideHandles()
+  }
+
+  private updateEditorFocusForSelection(nodeId: string | null): void {
+    if (nodeId && state.get().editorHasFocus) actions.setEditorFocus(false)
+  }
+
+  private notifySelectionChanged(nodeId: string | null): void {
     const element = nodeId ? this.getElementByNodeId(nodeId) : null
-
-    // Set editor focus to false when selecting in preview
-    // This ensures the editor cursor will be set when syncing
-    if (nodeId && state.get().editorHasFocus) {
-      actions.setEditorFocus(false)
-    }
-
-    // Notify callbacks - SyncCoordinator will handle state update via handlePreviewClick
-    // No direct actions.setSelection here to maintain single point of sync
     for (const cb of this.selectionCallbacks) cb(nodeId, element)
   }
 
