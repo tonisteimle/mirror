@@ -23,7 +23,7 @@ export interface CompileResult {
   ir: IR
   sourceMap: SourceMap
   errors: ParseError[]
-  version: number  // Incremented on each compile
+  version: number // Incremented on each compile
   timestamp: number
 }
 
@@ -161,6 +161,8 @@ export interface StudioState {
   mode: 'mirror' | 'react'
   /** Character offset where current file starts in resolvedSource */
   preludeOffset: number
+  /** Line offset where current file starts in resolvedSource (for line-based operations) */
+  preludeLineOffset: number
   /** Pending selection to be resolved after compile completes (line-based) */
   pendingSelection: PendingSelection | null
   /** Queued selection when SourceMap not yet available (nodeId-based) */

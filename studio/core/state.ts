@@ -127,6 +127,7 @@ const initialState: StudioState = {
   panelSizes: loadedPanelSettings.sizes,
   mode: 'mirror',
   preludeOffset: 0,
+  preludeLineOffset: 0,
   pendingSelection: null,
   queuedSelection: null,
   deferredSelection: null,
@@ -493,13 +494,13 @@ export const actions = {
       return null
     }
 
-    // Calculate the line number in resolved source (prelude offset + current file line)
-    const preludeLines = currentState.preludeOffset
+    // Calculate the line number in resolved source (prelude line offset + current file line)
+    const preludeLines = currentState.preludeLineOffset
     const resolvedLine = preludeLines + pending.line
 
     logState.info(' Resolving pending selection:', {
       originalLine: pending.line,
-      preludeOffset: preludeLines,
+      preludeLineOffset: preludeLines,
       resolvedLine,
       componentName: pending.componentName,
     })
@@ -634,12 +635,12 @@ export const actions = {
     }
 
     // Line-based selection - find node at line
-    const preludeLines = currentState.preludeOffset
+    const preludeLines = currentState.preludeLineOffset
     const resolvedLine = preludeLines + deferred.line
 
     logState.info(' Resolving deferred line selection:', {
       originalLine: deferred.line,
-      preludeOffset: preludeLines,
+      preludeLineOffset: preludeLines,
       resolvedLine,
       componentName: deferred.componentName,
     })

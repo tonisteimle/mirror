@@ -198,10 +198,6 @@ export function executeDelete(): ActionResult {
   const multiSelection = state.get().multiSelection
   const selection = state.get().selection
 
-  // DEBUG
-  console.log('[executeDelete] multiSelection:', multiSelection)
-  console.log('[executeDelete] selection:', selection)
-
   // Collect nodes to delete
   const nodeIds =
     multiSelection.length > 0 ? multiSelection : selection?.nodeId ? [selection.nodeId] : []

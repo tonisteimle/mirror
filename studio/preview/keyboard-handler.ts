@@ -50,13 +50,9 @@ export class KeyboardHandler {
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
-    // DEBUG
-    console.log('[KeyboardHandler] keydown:', e.key, 'target:', (e.target as HTMLElement).tagName)
-
     // Skip if target is an input element
     const target = e.target as HTMLElement
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-      console.log('[KeyboardHandler] Skipping - input element')
       return
     }
 
@@ -83,7 +79,6 @@ export class KeyboardHandler {
 
     // Delete/Backspace = Delete selected element(s)
     if (e.key === 'Delete' || e.key === 'Backspace') {
-      console.log('[KeyboardHandler] Delete/Backspace detected')
       e.preventDefault()
       this.handleDelete()
       return

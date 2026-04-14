@@ -64,17 +64,12 @@ export function getCommandContext(): CommandContext {
  */
 function adjustChangeForEditor(change: CodeChange, ctx: CommandContext): CodeChange {
   const offset = ctx.getPreludeOffset()
-  // DEBUG
-  console.log('[adjustChangeForEditor] preludeOffset:', offset)
-  console.log('[adjustChangeForEditor] original change:', change)
   if (offset === 0) return change
-  const adjusted = {
+  return {
     from: change.from - offset,
     to: change.to - offset,
     insert: change.insert,
   }
-  console.log('[adjustChangeForEditor] adjusted change:', adjusted)
-  return adjusted
 }
 
 /**
@@ -88,10 +83,6 @@ function getSourceForModifier(
   if (!sourceMap) return null
   // Use resolved source so CodeModifier positions match SourceMap
   const source = ctx.getResolvedSource()
-  // DEBUG
-  console.log('[getSourceForModifier] resolvedSource length:', source.length)
-  console.log('[getSourceForModifier] editorSource length:', ctx.getSource().length)
-  console.log('[getSourceForModifier] preludeOffset:', ctx.getPreludeOffset())
   return { source, sourceMap }
 }
 

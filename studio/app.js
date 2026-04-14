@@ -3546,15 +3546,19 @@ function compile(code) {
       }
     }
 
-    // Update state with resolved source and prelude offset for Commands
-    // Note: preludeOffset in state is LINE count (for selection resolution)
-    // while currentPreludeOffset is CHARACTER count (for change position adjustment)
+    // Update state with resolved source and prelude offsets for Commands
+    // - preludeOffset: CHARACTER count (for change position adjustment)
+    // - preludeLineOffset: LINE count (for selection resolution)
     if (studio?.state) {
       const preludeLineCount =
         currentPreludeOffset > 0
           ? resolvedCode.substring(0, currentPreludeOffset).split('\n').length - 1
           : 0
-      studio.state.set({ resolvedSource: resolvedCode, preludeOffset: preludeLineCount })
+      studio.state.set({
+        resolvedSource: resolvedCode,
+        preludeOffset: currentPreludeOffset,
+        preludeLineOffset: preludeLineCount,
+      })
     }
 
     // Parse
