@@ -15970,6 +15970,310 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 5 1`] = `
               "properties": [
                 {
                   "name": "textContent",
+                  "value": "border-bottom",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "11px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "40px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-bottom",
+              "value": "2px solid currentColor",
+            },
+            {
+              "property": "border-color",
+              "value": "#2271C1",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "bor-l (Shortcut)",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "11px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "40px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-left",
+              "value": "3px solid currentColor",
+            },
+            {
+              "property": "border-color",
+              "value": "#10b981",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "bort + borb",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+                {
+                  "property": "font-size",
+                  "value": "11px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "40px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-top",
+              "value": "1px solid currentColor",
+            },
+            {
+              "property": "border-bottom",
+              "value": "1px solid currentColor",
+            },
+            {
+              "property": "border-color",
+              "value": "#f59e0b",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 05 - styling > Example 6 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
                   "value": "0",
                 },
               ],
@@ -16319,7 +16623,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 5 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 05 - styling > Example 6 1`] = `
+exports[`Tutorial IR Snapshots > 05 - styling > Example 7 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -16510,7 +16814,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 6 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 05 - styling > Example 7 1`] = `
+exports[`Tutorial IR Snapshots > 05 - styling > Example 8 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -16705,7 +17009,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 7 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 05 - styling > Example 8 1`] = `
+exports[`Tutorial IR Snapshots > 05 - styling > Example 9 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -16834,7 +17138,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 8 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 05 - styling > Example 9 1`] = `
+exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -17131,7 +17435,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 9 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
+exports[`Tutorial IR Snapshots > 05 - styling > Example 11 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -17514,7 +17818,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 05 - styling > Example 11 1`] = `
+exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -17901,7 +18205,295 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 11 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
+exports[`Tutorial IR Snapshots > 05 - styling > Example 13 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Hover mich",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "background",
+              "state": "hover",
+              "value": "#2271C1",
+            },
+            {
+              "property": "color",
+              "state": "hover",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Scale",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "10px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "width",
+              "value": "60px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "60px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#2271C1",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "transform",
+              "state": "hover",
+              "value": "scale(1.1)",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-6",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Opacity",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "10px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "width",
+              "value": "60px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "60px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#10b981",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "opacity",
+              "state": "hover",
+              "value": "0.7",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -18363,750 +18955,6 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
         {
           "property": "flex-direction",
           "value": "column",
-        },
-        {
-          "property": "align-self",
-          "value": "stretch",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "12px",
-        },
-        {
-          "property": "background",
-          "value": "#0a0a0a",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 05 - styling > Example 13 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-3",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Elevated",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "13px",
-                },
-                {
-                  "property": "font-weight",
-                  "value": "500",
-                },
-              ],
-              "tag": "span",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-4",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Mit Schatten",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "#888",
-                },
-                {
-                  "property": "font-size",
-                  "value": "11px",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "8px",
-            },
-            {
-              "property": "width",
-              "value": "120px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "background",
-              "value": "#1a1a1a",
-            },
-            {
-              "property": "padding",
-              "value": "16px",
-            },
-            {
-              "property": "border-radius",
-              "value": "12px",
-            },
-            {
-              "property": "box-shadow",
-              "value": "0 4px 6px rgba(0,0,0,0.1)",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-6",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Bordered",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "13px",
-                },
-                {
-                  "property": "font-weight",
-                  "value": "500",
-                },
-              ],
-              "tag": "span",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-7",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Mit Border",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "#888",
-                },
-                {
-                  "property": "font-size",
-                  "value": "11px",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-5",
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "8px",
-            },
-            {
-              "property": "width",
-              "value": "120px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "border",
-              "value": "1px solid currentColor",
-            },
-            {
-              "property": "border-color",
-              "value": "#333",
-            },
-            {
-              "property": "padding",
-              "value": "16px",
-            },
-            {
-              "property": "border-radius",
-              "value": "12px",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-9",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Gradient",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "13px",
-                },
-                {
-                  "property": "font-weight",
-                  "value": "500",
-                },
-              ],
-              "tag": "span",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-10",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Mit Verlauf",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "#888",
-                },
-                {
-                  "property": "font-size",
-                  "value": "11px",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-8",
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "8px",
-            },
-            {
-              "property": "width",
-              "value": "120px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "16px",
-            },
-            {
-              "property": "border-radius",
-              "value": "12px",
-            },
-            {
-              "property": "background",
-              "value": "linear-gradient(135deg, #1a1a2e, #16213e)",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "layoutType": "flex",
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "row",
-        },
-        {
-          "property": "align-self",
-          "value": "stretch",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-        {
-          "property": "gap",
-          "value": "12px",
-        },
-        {
-          "property": "background",
-          "value": "#0a0a0a",
-        },
-        {
-          "property": "padding",
-          "value": "16px",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-3",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Elevated",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "13px",
-                },
-                {
-                  "property": "font-weight",
-                  "value": "500",
-                },
-              ],
-              "tag": "span",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-4",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Mit Schatten",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "#888",
-                },
-                {
-                  "property": "font-size",
-                  "value": "11px",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "8px",
-            },
-            {
-              "property": "width",
-              "value": "120px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "background",
-              "value": "#1a1a1a",
-            },
-            {
-              "property": "padding",
-              "value": "16px",
-            },
-            {
-              "property": "border-radius",
-              "value": "12px",
-            },
-            {
-              "property": "box-shadow",
-              "value": "0 4px 6px rgba(0,0,0,0.1)",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-6",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Bordered",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "13px",
-                },
-                {
-                  "property": "font-weight",
-                  "value": "500",
-                },
-              ],
-              "tag": "span",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-7",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Mit Border",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "#888",
-                },
-                {
-                  "property": "font-size",
-                  "value": "11px",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-5",
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "8px",
-            },
-            {
-              "property": "width",
-              "value": "120px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "border",
-              "value": "1px solid currentColor",
-            },
-            {
-              "property": "border-color",
-              "value": "#333",
-            },
-            {
-              "property": "padding",
-              "value": "16px",
-            },
-            {
-              "property": "border-radius",
-              "value": "12px",
-            },
-          ],
-          "tag": "div",
-        },
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-9",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Gradient",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "13px",
-                },
-                {
-                  "property": "font-weight",
-                  "value": "500",
-                },
-              ],
-              "tag": "span",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-10",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Mit Verlauf",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "#888",
-                },
-                {
-                  "property": "font-size",
-                  "value": "11px",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-8",
-          "isDefinition": false,
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "column",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "8px",
-            },
-            {
-              "property": "width",
-              "value": "120px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "16px",
-            },
-            {
-              "property": "border-radius",
-              "value": "12px",
-            },
-            {
-              "property": "background",
-              "value": "linear-gradient(135deg, #1a1a2e, #16213e)",
-            },
-          ],
-          "tag": "div",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "layoutType": "flex",
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "row",
         },
         {
           "property": "align-self",
@@ -30287,6 +30135,246 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 10 1`] = `
       "children": [
         {
           "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Anzahl: $tasks.count Tasks",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Erster: $tasks.first.title",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Letzter: $tasks.last.title",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "t1": {
+          "hours": 4,
+          "title": "Design Review",
+        },
+        "t2": {
+          "hours": 8,
+          "title": "Development",
+        },
+        "t3": {
+          "hours": 2,
+          "title": "Testing",
+        },
+      },
+      "name": "tasks",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Alle: $colors.count Farben",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Einzigartig: $colors.unique",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "blue": "blue",
+        "green": "green",
+        "red": "red",
+      },
+      "name": "colors",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
           "each": {
             "collection": "$products",
             "id": "node-2",
@@ -30503,7 +30591,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 10 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -30554,7 +30642,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -30652,7 +30740,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -30843,7 +30931,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -30973,7 +31061,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -31077,7 +31165,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -31152,7 +31240,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -31210,7 +31298,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -31422,7 +31510,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -31697,7 +31785,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -31757,7 +31845,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -32011,7 +32099,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -32081,7 +32169,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -32272,514 +32360,6 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
       "name": "hasItems",
       "type": "font",
       "value": false,
-    },
-  ],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [
-            {
-              "children": [],
-              "events": [],
-              "id": "node-3",
-              "isDefinition": false,
-              "name": "Icon",
-              "primitive": "icon",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "loader",
-                },
-                {
-                  "name": "data-icon-color",
-                  "value": "#888",
-                },
-                {
-                  "name": "data-icon-size",
-                  "value": "18",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "width",
-                  "value": "20px",
-                },
-                {
-                  "property": "flex-shrink",
-                  "value": "0",
-                },
-                {
-                  "property": "height",
-                  "value": "20px",
-                },
-                {
-                  "property": "flex-shrink",
-                  "value": "0",
-                },
-                {
-                  "property": "color",
-                  "value": "#888",
-                },
-                {
-                  "property": "font-size",
-                  "value": "18px",
-                },
-                {
-                  "property": "width",
-                  "value": "18px",
-                },
-                {
-                  "property": "height",
-                  "value": "18px",
-                },
-              ],
-              "tag": "span",
-            },
-            {
-              "children": [],
-              "events": [],
-              "id": "node-4",
-              "isDefinition": false,
-              "name": "Text",
-              "primitive": "text",
-              "properties": [
-                {
-                  "name": "textContent",
-                  "value": "Lädt...",
-                },
-              ],
-              "styles": [
-                {
-                  "property": "color",
-                  "value": "#888",
-                },
-              ],
-              "tag": "span",
-            },
-          ],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "layoutType": "flex",
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "row",
-            },
-            {
-              "property": "align-self",
-              "value": "stretch",
-            },
-            {
-              "property": "align-items",
-              "value": "center",
-            },
-            {
-              "property": "gap",
-              "value": "8px",
-            },
-          ],
-          "tag": "div",
-          "visibleWhen": "loading",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-5",
-          "isDefinition": false,
-          "name": "Text",
-          "primitive": "text",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "$data",
-            },
-          ],
-          "styles": [
-            {
-              "property": "color",
-              "value": "white",
-            },
-          ],
-          "tag": "span",
-          "visibleWhen": "!loading",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "justify-content",
-          "value": "center",
-        },
-        {
-          "property": "align-items",
-          "value": "center",
-        },
-        {
-          "property": "background",
-          "value": "#1a1a1a",
-        },
-        {
-          "property": "padding",
-          "value": "20px",
-        },
-        {
-          "property": "border-radius",
-          "value": "12px",
-        },
-        {
-          "property": "width",
-          "value": "200px",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [
-    {
-      "name": "loading",
-      "type": "font",
-      "value": true,
-    },
-  ],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [
-        {
-          "children": [
-            {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-4",
-                  "isDefinition": false,
-                  "name": "Text",
-                  "primitive": "text",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "$user.avatar",
-                    },
-                  ],
-                  "styles": [],
-                  "tag": "span",
-                },
-              ],
-              "events": [],
-              "id": "node-3",
-              "isDefinition": false,
-              "name": "Frame",
-              "primitive": "frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "justify-content",
-                  "value": "center",
-                },
-                {
-                  "property": "align-items",
-                  "value": "center",
-                },
-                {
-                  "property": "width",
-                  "value": "36px",
-                },
-                {
-                  "property": "flex-shrink",
-                  "value": "0",
-                },
-                {
-                  "property": "height",
-                  "value": "36px",
-                },
-                {
-                  "property": "flex-shrink",
-                  "value": "0",
-                },
-                {
-                  "property": "border-radius",
-                  "value": "99px",
-                },
-                {
-                  "property": "background",
-                  "value": "#2271C1",
-                },
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "14px",
-                },
-              ],
-              "tag": "div",
-            },
-            {
-              "children": [
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-6",
-                  "isDefinition": false,
-                  "name": "Text",
-                  "primitive": "text",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "$user.name",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "color",
-                      "value": "white",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "14px",
-                    },
-                    {
-                      "property": "font-weight",
-                      "value": "500",
-                    },
-                  ],
-                  "tag": "span",
-                },
-                {
-                  "children": [],
-                  "events": [],
-                  "id": "node-7",
-                  "isDefinition": false,
-                  "name": "Text",
-                  "primitive": "text",
-                  "properties": [
-                    {
-                      "name": "textContent",
-                      "value": "Online",
-                    },
-                  ],
-                  "styles": [
-                    {
-                      "property": "color",
-                      "value": "#10b981",
-                    },
-                    {
-                      "property": "font-size",
-                      "value": "11px",
-                    },
-                  ],
-                  "tag": "span",
-                },
-              ],
-              "events": [],
-              "id": "node-5",
-              "isDefinition": false,
-              "name": "Frame",
-              "primitive": "frame",
-              "properties": [],
-              "styles": [
-                {
-                  "property": "display",
-                  "value": "flex",
-                },
-                {
-                  "property": "flex-direction",
-                  "value": "column",
-                },
-                {
-                  "property": "align-self",
-                  "value": "stretch",
-                },
-                {
-                  "property": "align-items",
-                  "value": "flex-start",
-                },
-                {
-                  "property": "gap",
-                  "value": "2px",
-                },
-              ],
-              "tag": "div",
-            },
-          ],
-          "events": [],
-          "id": "node-2",
-          "isDefinition": false,
-          "layoutType": "flex",
-          "name": "Frame",
-          "primitive": "frame",
-          "properties": [],
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "row",
-            },
-            {
-              "property": "align-self",
-              "value": "stretch",
-            },
-            {
-              "property": "align-items",
-              "value": "center",
-            },
-            {
-              "property": "gap",
-              "value": "10px",
-            },
-          ],
-          "tag": "div",
-          "visibleWhen": "$user.loggedIn",
-        },
-        {
-          "children": [],
-          "events": [],
-          "id": "node-8",
-          "isDefinition": false,
-          "name": "Button",
-          "primitive": "button",
-          "properties": [
-            {
-              "name": "textContent",
-              "value": "Anmelden",
-            },
-          ],
-          "styles": [
-            {
-              "property": "height",
-              "value": "36px",
-            },
-            {
-              "property": "flex-shrink",
-              "value": "0",
-            },
-            {
-              "property": "padding",
-              "value": "8px 16px",
-            },
-            {
-              "property": "border-radius",
-              "value": "6px",
-            },
-            {
-              "property": "border",
-              "value": "0px solid currentColor",
-            },
-            {
-              "property": "cursor",
-              "value": "pointer",
-            },
-            {
-              "property": "background",
-              "value": "#2271C1",
-            },
-            {
-              "property": "color",
-              "value": "white",
-            },
-          ],
-          "tag": "button",
-          "visibleWhen": "!$user.loggedIn",
-        },
-      ],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "layoutType": "flex",
-      "name": "Frame",
-      "primitive": "frame",
-      "properties": [],
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "row",
-        },
-        {
-          "property": "align-self",
-          "value": "stretch",
-        },
-        {
-          "property": "align-items",
-          "value": "center",
-        },
-        {
-          "property": "gap",
-          "value": "12px",
-        },
-        {
-          "property": "background",
-          "value": "#1a1a1a",
-        },
-        {
-          "property": "padding",
-          "value": "12px",
-        },
-        {
-          "property": "border-radius",
-          "value": "8px",
-        },
-      ],
-      "tag": "div",
-    },
-  ],
-  "tokens": [
-    {
-      "data": {
-        "avatar": "",
-        "loggedIn": true,
-        "name": "Max",
-      },
-      "name": "user",
     },
   ],
 }
@@ -35503,47 +35083,43 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
       "items": [
         {
           "label": "Berlin",
-          "loadFromFile": "berlin",
           "sourcePosition": {
             "column": 11,
             "endColumn": 5,
             "endLine": 3,
             "line": 2,
           },
-          "value": "berlin",
+          "value": "Berlin",
         },
         {
           "label": "Hamburg",
-          "loadFromFile": "hamburg",
           "sourcePosition": {
             "column": 11,
             "endColumn": 5,
             "endLine": 4,
             "line": 3,
           },
-          "value": "hamburg",
+          "value": "Hamburg",
         },
         {
           "label": "München",
-          "loadFromFile": "munich",
           "sourcePosition": {
             "column": 11,
             "endColumn": 5,
             "endLine": 5,
             "line": 4,
           },
-          "value": "munich",
+          "value": "München",
         },
         {
           "label": "Köln",
-          "loadFromFile": "cologne",
           "sourcePosition": {
             "column": 11,
-            "endColumn": 35,
+            "endColumn": 18,
             "endLine": 5,
             "line": 5,
           },
-          "value": "cologne",
+          "value": "Köln",
         },
       ],
       "machineConfig": {
@@ -35676,6 +35252,180 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
 `;
 
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "isZagComponent": true,
+      "items": [
+        {
+          "label": "In Bearbeitung",
+          "loadFromFile": "in_progress",
+          "sourcePosition": {
+            "column": 11,
+            "endColumn": 5,
+            "endLine": 3,
+            "line": 2,
+          },
+          "value": "in_progress",
+        },
+        {
+          "label": "Abgeschlossen",
+          "loadFromFile": "done",
+          "sourcePosition": {
+            "column": 11,
+            "endColumn": 5,
+            "endLine": 4,
+            "line": 3,
+          },
+          "value": "done",
+        },
+        {
+          "label": "Abgebrochen",
+          "loadFromFile": "cancelled",
+          "sourcePosition": {
+            "column": 11,
+            "endColumn": 44,
+            "endLine": 4,
+            "line": 4,
+          },
+          "value": "cancelled",
+        },
+      ],
+      "machineConfig": {
+        "id": "node-1",
+        "placeholder": "Status wählen...",
+      },
+      "name": "Select",
+      "primitive": "select",
+      "properties": [],
+      "slots": {
+        "ClearButton": {
+          "apiMethod": "getClearButtonProps",
+          "children": [],
+          "element": "div",
+          "name": "ClearButton",
+          "portal": false,
+          "styles": [],
+        },
+        "Content": {
+          "apiMethod": "getContentProps",
+          "children": [],
+          "element": "div",
+          "name": "Content",
+          "portal": true,
+          "styles": [],
+        },
+        "Empty": {
+          "apiMethod": "getEmptyProps",
+          "children": [],
+          "element": "div",
+          "name": "Empty",
+          "portal": false,
+          "styles": [],
+        },
+        "Group": {
+          "apiMethod": "getGroupProps",
+          "children": [],
+          "element": "div",
+          "name": "Group",
+          "portal": false,
+          "styles": [],
+        },
+        "GroupLabel": {
+          "apiMethod": "getGroupLabelProps",
+          "children": [],
+          "element": "div",
+          "name": "GroupLabel",
+          "portal": false,
+          "styles": [],
+        },
+        "Input": {
+          "apiMethod": "getInputProps",
+          "children": [],
+          "element": "div",
+          "name": "Input",
+          "portal": false,
+          "styles": [],
+        },
+        "Item": {
+          "apiMethod": "getItemProps",
+          "children": [],
+          "element": "div",
+          "name": "Item",
+          "portal": false,
+          "styles": [],
+        },
+        "ItemIndicator": {
+          "apiMethod": "getItemIndicatorProps",
+          "children": [],
+          "element": "div",
+          "name": "ItemIndicator",
+          "portal": false,
+          "styles": [],
+        },
+        "Pill": {
+          "apiMethod": "getPillProps",
+          "children": [],
+          "element": "div",
+          "name": "Pill",
+          "portal": false,
+          "styles": [],
+        },
+        "PillRemove": {
+          "apiMethod": "getPillRemoveProps",
+          "children": [],
+          "element": "div",
+          "name": "PillRemove",
+          "portal": false,
+          "styles": [],
+        },
+        "Trigger": {
+          "apiMethod": "getTriggerProps",
+          "children": [],
+          "element": "button",
+          "name": "Trigger",
+          "portal": false,
+          "styles": [],
+        },
+      },
+      "sourcePosition": {
+        "column": 7,
+        "endColumn": 7,
+        "endLine": 1,
+        "line": 1,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+      ],
+      "tag": "div",
+      "zagType": "select",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -35910,7 +35660,355 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "bind": "searchTerm",
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Input",
+          "primitive": "input",
+          "properties": [
+            {
+              "name": "placeholder",
+              "value": "Suchen...",
+            },
+          ],
+          "styles": [
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "padding",
+              "value": "0px 12px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+          ],
+          "tag": "input",
+          "valueBinding": "searchTerm",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Du suchst: $searchTerm",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "280px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "searchTerm",
+      "type": "font",
+      "value": "",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
+{
+  "animations": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "bind": "city",
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "isZagComponent": true,
+          "items": [
+            {
+              "label": "Berlin",
+              "sourcePosition": {
+                "column": 11,
+                "endColumn": 5,
+                "endLine": 6,
+                "line": 5,
+              },
+              "value": "Berlin",
+            },
+            {
+              "label": "Hamburg",
+              "sourcePosition": {
+                "column": 11,
+                "endColumn": 5,
+                "endLine": 7,
+                "line": 6,
+              },
+              "value": "Hamburg",
+            },
+            {
+              "label": "München",
+              "sourcePosition": {
+                "column": 11,
+                "endColumn": 21,
+                "endLine": 7,
+                "line": 7,
+              },
+              "value": "München",
+            },
+          ],
+          "machineConfig": {
+            "id": "node-2",
+            "placeholder": "Stadt wählen...",
+          },
+          "name": "Select",
+          "primitive": "select",
+          "properties": [],
+          "slots": {
+            "ClearButton": {
+              "apiMethod": "getClearButtonProps",
+              "children": [],
+              "element": "div",
+              "name": "ClearButton",
+              "portal": false,
+              "styles": [],
+            },
+            "Content": {
+              "apiMethod": "getContentProps",
+              "children": [],
+              "element": "div",
+              "name": "Content",
+              "portal": true,
+              "styles": [],
+            },
+            "Empty": {
+              "apiMethod": "getEmptyProps",
+              "children": [],
+              "element": "div",
+              "name": "Empty",
+              "portal": false,
+              "styles": [],
+            },
+            "Group": {
+              "apiMethod": "getGroupProps",
+              "children": [],
+              "element": "div",
+              "name": "Group",
+              "portal": false,
+              "styles": [],
+            },
+            "GroupLabel": {
+              "apiMethod": "getGroupLabelProps",
+              "children": [],
+              "element": "div",
+              "name": "GroupLabel",
+              "portal": false,
+              "styles": [],
+            },
+            "Input": {
+              "apiMethod": "getInputProps",
+              "children": [],
+              "element": "div",
+              "name": "Input",
+              "portal": false,
+              "styles": [],
+            },
+            "Item": {
+              "apiMethod": "getItemProps",
+              "children": [],
+              "element": "div",
+              "name": "Item",
+              "portal": false,
+              "styles": [],
+            },
+            "ItemIndicator": {
+              "apiMethod": "getItemIndicatorProps",
+              "children": [],
+              "element": "div",
+              "name": "ItemIndicator",
+              "portal": false,
+              "styles": [],
+            },
+            "Pill": {
+              "apiMethod": "getPillProps",
+              "children": [],
+              "element": "div",
+              "name": "Pill",
+              "portal": false,
+              "styles": [],
+            },
+            "PillRemove": {
+              "apiMethod": "getPillRemoveProps",
+              "children": [],
+              "element": "div",
+              "name": "PillRemove",
+              "portal": false,
+              "styles": [],
+            },
+            "Trigger": {
+              "apiMethod": "getTriggerProps",
+              "children": [],
+              "element": "button",
+              "name": "Trigger",
+              "portal": false,
+              "styles": [],
+            },
+          },
+          "sourcePosition": {
+            "column": 9,
+            "endColumn": 9,
+            "endLine": 4,
+            "line": 4,
+          },
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+          "zagType": "select",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Gewählt: $city",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "280px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "city",
+      "type": "font",
+      "value": "",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
 {
   "animations": [],
   "nodes": [
@@ -36143,401 +36241,6 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
         },
       ],
       "tag": "div",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "isZagComponent": true,
-      "items": [],
-      "machineConfig": {
-        "id": "node-1",
-      },
-      "name": "Checkbox",
-      "primitive": "checkbox",
-      "properties": [],
-      "slots": {
-        "Control": {
-          "apiMethod": "getControlProps",
-          "children": [],
-          "element": "div",
-          "name": "Control",
-          "portal": false,
-          "styles": [],
-        },
-        "HiddenInput": {
-          "apiMethod": "getHiddenInputProps",
-          "children": [],
-          "element": "div",
-          "name": "HiddenInput",
-          "portal": false,
-          "styles": [],
-        },
-        "Indicator": {
-          "apiMethod": "getIndicatorProps",
-          "children": [],
-          "element": "div",
-          "name": "Indicator",
-          "portal": false,
-          "styles": [],
-        },
-        "Label": {
-          "apiMethod": "getLabelProps",
-          "children": [],
-          "element": "div",
-          "name": "Label",
-          "portal": false,
-          "styles": [],
-        },
-        "Root": {
-          "apiMethod": "getRootProps",
-          "children": [],
-          "element": "div",
-          "name": "Root",
-          "portal": false,
-          "styles": [],
-        },
-      },
-      "sourcePosition": {
-        "column": 9,
-        "endColumn": 9,
-        "endLine": 2,
-        "line": 2,
-      },
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "align-self",
-          "value": "stretch",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-      ],
-      "tag": "div",
-      "zagType": "checkbox",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "isZagComponent": true,
-      "items": [],
-      "machineConfig": {
-        "id": "node-1",
-      },
-      "name": "Checkbox",
-      "primitive": "checkbox",
-      "properties": [],
-      "slots": {
-        "Control": {
-          "apiMethod": "getControlProps",
-          "children": [],
-          "element": "div",
-          "name": "Control",
-          "portal": false,
-          "sourcePosition": {
-            "column": 10,
-            "endColumn": 10,
-            "endLine": 4,
-            "line": 4,
-          },
-          "styles": [
-            {
-              "property": "width",
-              "value": "24px",
-            },
-            {
-              "property": "height",
-              "value": "24px",
-            },
-            {
-              "property": "border-radius",
-              "value": "6px",
-            },
-            {
-              "property": "background",
-              "value": "#333",
-            },
-          ],
-        },
-        "HiddenInput": {
-          "apiMethod": "getHiddenInputProps",
-          "children": [],
-          "element": "div",
-          "name": "HiddenInput",
-          "portal": false,
-          "styles": [],
-        },
-        "Indicator": {
-          "apiMethod": "getIndicatorProps",
-          "children": [],
-          "element": "div",
-          "name": "Indicator",
-          "portal": false,
-          "styles": [],
-        },
-        "Label": {
-          "apiMethod": "getLabelProps",
-          "children": [],
-          "element": "div",
-          "name": "Label",
-          "portal": false,
-          "sourcePosition": {
-            "column": 8,
-            "endColumn": 8,
-            "endLine": 5,
-            "line": 5,
-          },
-          "styles": [
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "font-size",
-              "value": "14px",
-            },
-          ],
-        },
-        "Root": {
-          "apiMethod": "getRootProps",
-          "children": [],
-          "element": "div",
-          "name": "Root",
-          "portal": false,
-          "sourcePosition": {
-            "column": 7,
-            "endColumn": 7,
-            "endLine": 3,
-            "line": 3,
-          },
-          "styles": [
-            {
-              "property": "display",
-              "value": "flex",
-            },
-            {
-              "property": "flex-direction",
-              "value": "row",
-            },
-            {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
-              "property": "align-items",
-              "value": "flex-start",
-            },
-            {
-              "property": "gap",
-              "value": "12px",
-            },
-            {
-              "property": "padding",
-              "value": "12px",
-            },
-            {
-              "property": "background",
-              "value": "#1a1a1a",
-            },
-            {
-              "property": "border-radius",
-              "value": "8px",
-            },
-          ],
-        },
-      },
-      "sourcePosition": {
-        "column": 9,
-        "endColumn": 9,
-        "endLine": 1,
-        "line": 1,
-      },
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "align-self",
-          "value": "stretch",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-      ],
-      "tag": "div",
-      "zagType": "checkbox",
-    },
-  ],
-  "tokens": [],
-}
-`;
-
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
-{
-  "animations": [],
-  "nodes": [
-    {
-      "children": [],
-      "events": [],
-      "id": "node-1",
-      "isDefinition": false,
-      "isZagComponent": true,
-      "items": [],
-      "machineConfig": {
-        "id": "node-1",
-      },
-      "name": "Switch",
-      "primitive": "switch",
-      "properties": [],
-      "slots": {
-        "Label": {
-          "apiMethod": "getLabelProps",
-          "children": [],
-          "element": "div",
-          "name": "Label",
-          "portal": false,
-          "sourcePosition": {
-            "column": 8,
-            "endColumn": 8,
-            "endLine": 5,
-            "line": 5,
-          },
-          "styles": [
-            {
-              "property": "color",
-              "value": "white",
-            },
-            {
-              "property": "font-size",
-              "value": "14px",
-            },
-          ],
-        },
-        "Thumb": {
-          "apiMethod": "getThumbProps",
-          "children": [],
-          "element": "div",
-          "name": "Thumb",
-          "portal": false,
-          "sourcePosition": {
-            "column": 8,
-            "endColumn": 8,
-            "endLine": 4,
-            "line": 4,
-          },
-          "styles": [
-            {
-              "property": "width",
-              "value": "24px",
-            },
-            {
-              "property": "height",
-              "value": "24px",
-            },
-            {
-              "property": "border-radius",
-              "value": "99px",
-            },
-            {
-              "property": "background",
-              "value": "white",
-            },
-          ],
-        },
-        "Track": {
-          "apiMethod": "getTrackProps",
-          "children": [],
-          "element": "div",
-          "name": "Track",
-          "portal": false,
-          "sourcePosition": {
-            "column": 8,
-            "endColumn": 8,
-            "endLine": 3,
-            "line": 3,
-          },
-          "styles": [
-            {
-              "property": "width",
-              "value": "52px",
-            },
-            {
-              "property": "height",
-              "value": "28px",
-            },
-            {
-              "property": "border-radius",
-              "value": "99px",
-            },
-            {
-              "property": "background",
-              "value": "#333",
-            },
-          ],
-        },
-      },
-      "sourcePosition": {
-        "column": 7,
-        "endColumn": 7,
-        "endLine": 1,
-        "line": 1,
-      },
-      "styles": [
-        {
-          "property": "display",
-          "value": "flex",
-        },
-        {
-          "property": "flex-direction",
-          "value": "column",
-        },
-        {
-          "property": "align-self",
-          "value": "stretch",
-        },
-        {
-          "property": "align-items",
-          "value": "flex-start",
-        },
-      ],
-      "tag": "div",
-      "zagType": "switch",
     },
   ],
   "tokens": [],

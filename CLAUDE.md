@@ -241,15 +241,21 @@ Frame hor, gap 12
 Frame w 200, h 100, center
   Text "Mittig"
 
-// Verteilen
+// Verteilen (space-between)
 Frame hor, spread, ver-center
   Text "Links"
   Text "Rechts"
 
 // 9 Positionen
-Frame w 200, h 200, tl   // top-left
-Frame w 200, h 200, br   // bottom-right
-Frame w 200, h 200, center
+Frame tl    // top-left
+Frame tc    // top-center
+Frame tr    // top-right
+Frame cl    // center-left
+Frame center
+Frame cr    // center-right
+Frame bl    // bottom-left
+Frame bc    // bottom-center
+Frame br    // bottom-right
 
 // Wrap bei Überlauf
 Frame hor, wrap, gap 8
@@ -266,17 +272,23 @@ Frame grid 12, gap 8, row-height 40
   Frame w 4, bg orange
   Frame w 4, bg purple
 
-// Grid mit Position
+// Grid mit expliziter Position
 Frame grid 12, gap 8
   Frame x 1, y 1, w 12, h 2, bg blue   // Header
   Frame x 1, y 3, w 3, h 4, bg gray    // Sidebar
   Frame x 4, y 3, w 9, h 4, bg white   // Content
 
-// Stacked (übereinander für Overlays)
+// Stacked (übereinander für Overlays, Badges)
 Frame stacked, w 100, h 100
   Image src "bg.jpg", w full, h full
   Frame x 10, y 70
     Text "Caption", col white
+
+// Badge auf Icon
+Frame stacked, w 40, h 40
+  Icon "bell", ic #888, is 24
+  Frame x 24, y -4, w 16, h 16, bg #ef4444, rad 99, center
+    Text "3", col white, fs 10
 ```
 
 ### Styling
@@ -286,15 +298,17 @@ Frame stacked, w 100, h 100
 Frame bg #2271C1                      // Hex
 Frame bg white, col black             // Named
 Frame bg rgba(0,0,0,0.5)              // Transparent
-Frame bg #2271C188                    // Hex mit Alpha
-Text col grad #2271C1 #7c3aed         // Gradient
-Frame bg grad-ver #f59e0b #ef4444     // Vertikal
-Frame bg grad 45 #10b981 #2271C1      // 45° Winkel
+Frame bg #2271C180                    // Hex mit Alpha (80 = 50%)
+Text col grad #2271C1 #7c3aed         // Gradient horizontal
+Frame bg grad-ver #f59e0b #ef4444     // Gradient vertikal
+Frame bg grad 45 #10b981 #2271C1      // Gradient 45°
 
 // Abstände
 Frame pad 16                          // Alle Seiten
 Frame pad 12 24                       // Vertikal Horizontal
-Frame pad-x 16                        // Nur horizontal
+Frame pad 8 16 12 16                  // Top Right Bottom Left
+Frame pad-x 16                        // Nur horizontal (px)
+Frame pad-y 12                        // Nur vertikal (py)
 Frame mar 8                           // Margin außen
 Frame gap 12                          // Zwischen Kindern
 
@@ -302,50 +316,61 @@ Frame gap 12                          // Zwischen Kindern
 Frame w 200, h 100                    // Pixel
 Frame w full                          // 100% des Parents
 Frame w hug                           // Shrink-to-fit
-Frame min-w 100, max-w 400            // Min/Max
+Frame minw 100, maxw 400              // Min/Max
+Frame grow                            // Flex grow
+Frame shrink                          // Flex shrink
 
 // Border & Radius
 Frame bor 1, boc #333                 // 1px Border
 Frame bor 2, boc #2271C1, rad 8       // Mit Radius
-Frame rad 99                          // Kreis
+Frame rad 99                          // Kreis (bei quadrat)
+Frame bor 0 0 1 0, boc #333           // Nur unten
 
 // Typo
-Text fs 24, weight bold
-Text fs 12, weight 300, italic
-Text font mono, uppercase
-Text truncate, w 100                  // Abschneiden
+Text fs 24, weight bold               // Größe und Gewicht
+Text fs 12, weight 300, italic        // Light italic
+Text font mono, uppercase             // Monospace, uppercase
+Text truncate, w 100                  // Abschneiden mit ...
+Text underline                        // Unterstrichen
+Text line 1.5                         // Line-height
 
 // Effekte
-Frame shadow sm                       // Klein
-Frame shadow md                       // Mittel
-Frame shadow lg                       // Groß
-Frame opacity 0.5
-Frame blur 4
-Frame backdrop-blur 8                 // Hintergrund-Blur
+Frame shadow sm                       // Schatten klein
+Frame shadow md                       // Schatten mittel
+Frame shadow lg                       // Schatten groß
+Frame opacity 0.5                     // Transparenz
+Frame blur 4                          // Element blur
+Frame backdrop-blur 8                 // Hintergrund blur
+
+// Sichtbarkeit
+Frame hidden                          // display: none
+Frame visible                         // display: flex
+Frame clip                            // overflow: hidden
+Frame scroll                          // overflow-y: auto
 ```
 
 ### Komponenten
 
 ```mirror
-// Definition mit :
+// Definition mit : (speichert Properties)
 Btn: pad 10 20, rad 6, bg #2271C1, col white, cursor pointer
 
-// Verwendung ohne :
+// Verwendung ohne : (wendet Properties an)
 Btn "Speichern"
 Btn "Abbrechen", bg #333              // Überschreiben
 
-// Von Primitive erben mit as
+// Von Primitive erben mit "as"
 PrimaryBtn as Button: bg #2271C1, col white, pad 12 24, rad 6
 DangerBtn as Button: bg #ef4444, col white, pad 12 24, rad 6
 GhostBtn as Button: bg transparent, col #888, pad 12 24, rad 6
 
-// Varianten
+// Varianten einer Basis-Komponente
 Btn: pad 10 20, rad 6, cursor pointer
 PrimaryBtn as Btn: bg #2271C1, col white
 DangerBtn as Btn: bg #ef4444, col white
 OutlineBtn as Btn: bor 1, boc #2271C1, col #2271C1
 
-// Mit Kind-Slots
+// Mit Kind-Slots (: in Definition, ohne : bei Verwendung)
 Card: bg #1a1a1a, pad 16, rad 8, gap 8
   Title: col white, fs 16, weight 500
   Desc: col #888, fs 14
@@ -353,45 +378,52 @@ Card: bg #1a1a1a, pad 16, rad 8, gap 8
 
 Card
   Title "Projekttitel"
-  Desc "Eine Beschreibung"
+  Desc "Eine Beschreibung des Projekts."
   Footer
-    Btn "Bearbeiten"
-    Btn "Löschen", bg #ef4444
+    PrimaryBtn "Bearbeiten"
+    DangerBtn "Löschen"
 
 // Layout Komponente
 AppShell: hor, h full
-  Sidebar: w 200, bg #1a1a1a, pad 16
-  Main: grow, pad 24
+  Sidebar: w 200, bg #1a1a1a, pad 16, gap 8
+  Main: grow, pad 24, bg #0a0a0a
 
 AppShell
   Sidebar
-    Text "Navigation"
+    Text "Navigation", col #888, fs 12, uppercase
+    Text "Dashboard", col white
+    Text "Settings", col white
   Main
-    Text "Content"
+    Text "Content", col white, fs 24
 ```
 
 ### Tokens
 
 ```mirror
-// Einzelne Werte (mit Suffix)
+// Einzelne Werte (mit Suffix für Property-Typ)
 primary.bg: #2271C1
 primary.col: white
+danger.bg: #ef4444
 card.bg: #1a1a1a
 card.rad: 8
 space.gap: 12
+space.pad: 16
 
-// Verwendung (mit $, ohne Suffix)
+// Verwendung (mit $, ohne Suffix - wird automatisch gemappt)
 Button bg $primary, col $primary
-Frame bg $card, rad $card, gap $space
+Frame bg $card, rad $card, gap $space, pad $space
+Button bg $danger, col white
 
-// Property Set (ohne Suffix = mehrere Properties)
+// Property Set (ohne Suffix = mehrere Properties gebündelt)
 cardstyle: bg #1a1a1a, pad 16, rad 8, gap 8
-btnstyle: pad 10 20, rad 6, cursor pointer
+btnbase: pad 10 20, rad 6, cursor pointer
+heading: fs 24, weight bold, col white
 
 Frame $cardstyle
-  Text "Card mit Property Set"
-  Button $btnstyle, bg #2271C1, col white
-    Text "Button"
+  Text "Titel", $heading
+  Text "Beschreibung", col #888
+  Button $btnbase, bg #2271C1, col white
+    Text "Aktion"
 ```
 
 ### States
@@ -408,14 +440,17 @@ Btn: bg #333, col white, pad 10 20, rad 6
   disabled:
     opacity 0.5, cursor not-allowed
 
-// Custom State mit toggle()
-LikeBtn: bg #333, col white, pad 12, rad 6, toggle()
-  Icon "heart", ic #888
+// Custom State mit toggle() - wechselt bei Klick
+LikeBtn: bg #333, col #888, pad 12 20, rad 6, hor, gap 8, toggle()
+  Icon "heart", ic #888, is 18
+  Text "Gefällt mir"
   on:
     bg #ef4444
-    Icon "heart", ic white, fill
+    col white
+    Icon "heart", ic white, is 18, fill
+    Text "Gefällt mir!"
 
-// State mit Transition
+// State mit Transition (smooth)
 Btn: bg #333, toggle()
   hover 0.15s:
     bg #444
@@ -423,73 +458,85 @@ Btn: bg #333, toggle()
     bg #2271C1
     anim bounce
 
-// Mehrere States (toggle cyclet durch)
-TaskStatus: toggle()
+// Mehrere States - toggle() cyclet durch alle
+TaskStatus: pad 8 16, rad 6, hor, gap 8, toggle()
   todo:
     bg #333
-    Icon "circle", ic #888
+    Icon "circle", ic #888, is 16
+    Text "To Do", col #888
   doing:
     bg #f59e0b
-    Icon "clock", ic white
+    Icon "clock", ic white, is 16
+    Text "In Progress", col white
   done:
     bg #10b981
-    Icon "check", ic white
+    Icon "check", ic white, is 16
+    Text "Done", col white
 
-// Exklusiv (nur einer in Gruppe aktiv)
-Tab: pad 12 20, col #888, exclusive()
+// Exklusiv - nur einer in Gruppe aktiv
+Tab: pad 12 20, col #888, cursor pointer, exclusive()
   selected:
-    col white, bor 0 0 2 0, boc #2271C1
+    col white
+    bor 0 0 2 0, boc #2271C1
 
-Frame hor
-  Tab "Home"
-  Tab "Settings", selected
+Frame hor, gap 0
+  Tab "Home", selected
+  Tab "Profile"
+  Tab "Settings"
 
-// Auf anderes Element reagieren
-Button name MenuBtn, toggle()
+// Cross-Element State - auf anderes Element reagieren
+Button name MenuBtn, pad 10 20, bg #333, col white, rad 6, toggle()
   open:
     bg #2271C1
-Frame hidden
+
+Frame bg #1a1a1a, pad 12, rad 8, gap 4, hidden
   MenuBtn.open:
     visible
-  Text "Menü Inhalt"
+  Text "Menü Item 1", col white
+  Text "Menü Item 2", col white
+
+// Instanz mit State starten
+Btn "Aktiv", on
+Tab "Home", selected
 
 // Animation Presets
-Frame anim pulse       // Pulsieren
-Frame anim bounce      // Hüpfen
-Frame anim shake       // Schütteln
-Frame anim spin        // Drehen
+Icon "loader", anim spin       // Lädt...
+Frame anim pulse               // Aufmerksamkeit
+Frame anim bounce              // Erfolg
+Frame anim shake               // Fehler
 ```
 
 ### Funktionen
 
 ```mirror
 // State wechseln
-Button toggle()
-Button exclusive()
+Button "Toggle", toggle()
+Button "Select", exclusive()
 
 // Sichtbarkeit
-Button show(Menu)
-Button hide(Menu)
+Button "Show", show(Menu)
+Button "Hide", hide(Menu)
 
 // Zähler
 count: 0
-Button increment(count)
-Button decrement(count)
-Button set(count, 10)
-Button reset(count)
-Text "Anzahl: $count"
+Frame hor, gap 12, ver-center
+  Button "-", decrement(count)
+  Text "$count", fs 24, w 40, center
+  Button "+", increment(count)
+
+Button set(count, 10)    // Auf Wert setzen
+Button reset(count)       // Auf 0 zurück
 
 // Feedback
 Button toast("Gespeichert!")
 Button toast("Fehler!", "error")
 Button toast("Achtung!", "warning")
-Button toast("Info", "info", "top")
+Button toast("Info", "info", "top-right")
 
 // Input Control
 Button focus(EmailField)
-Button blur(EmailField)
 Button clear(EmailField)
-Button setError(EmailField, "Ungültig")
+Button setError(EmailField, "Ungültige Email")
 Button clearError(EmailField)
 
 // Navigation
@@ -504,173 +551,237 @@ Button scrollToBottom()
 Button scrollTo(Section2)
 
 // Clipboard
-Button copy("Kopierter Text")
+Button copy("Text kopiert"), toast("Kopiert!", "success")
 
 // CRUD (in Listen)
-Button add(todos, text: "Neu", done: false)
+Button add(todos, text: "Neue Aufgabe", done: false)
 each todo in $todos
-  Button remove(todo)
+  Frame hor, gap 8
+    Text todo.text
+    Button "×", remove(todo)
 
-// Mehrere Funktionen
+// Mehrere Funktionen kombinieren
 Button toggle(), increment(count), toast("Liked!")
 ```
 
-### Daten
+### Daten & Bedingungen
 
 ```mirror
-// Variable
+// Variablen
 name: "Max"
 count: 42
+active: true
 Text "Hallo $name, du hast $count Punkte"
 
-// Objekt
+// Objekt (verschachtelt)
 user:
-  name: "Max"
+  name: "Max Mustermann"
   email: "max@example.com"
+  role: "Admin"
   active: true
-Text "$user.name ($user.email)"
-Text $user.active ? "Aktiv" : "Inaktiv"
 
-// Sammlung
+Frame gap 4
+  Text "$user.name", weight bold
+  Text "$user.email", col #888
+  Text "$user.role", col #2271C1
+
+// Sammlung (mehrere Einträge)
 users:
   max:
     name: "Max"
     role: "Admin"
   anna:
     name: "Anna"
-    role: "User"
+    role: "Designer"
+  tom:
+    name: "Tom"
+    role: "Developer"
 
-// Iteration
+// Iteration mit each
 each user in $users
-  Frame hor, gap 8
-    Text "$user.name"
+  Frame hor, gap 12, pad 12, bg #1a1a1a, rad 6
+    Text "$user.name", col white, weight 500
     Text "$user.role", col #888
 
 // Aggregation
 Text "Anzahl: $users.count"
 Text "Erster: $users.first.name"
+Text "Letzter: $users.last.name"
 
-// Bedingungen
+// Block Bedingungen
 if loggedIn
-  Text "Willkommen zurück"
+  Text "Willkommen zurück, $user.name"
+  Button "Logout"
 else
   Button "Login"
+  Button "Registrieren"
 
 if count > 0
   Text "$count Einträge"
+else
+  Text "Keine Einträge"
 
 if isAdmin && hasPermission
   Button "Admin Panel"
 
-// Inline Conditional
+// Inline Conditional (Ternary)
 Text done ? "Erledigt" : "Offen"
 Frame bg active ? #2271C1 : #333
-Icon done ? "check" : "circle"
+Icon done ? "check" : "circle", ic done ? #10b981 : #888
+Text count > 0 ? "$count Items" : "Leer"
 ```
 
-### Zag-Komponenten
+### Zag-Komponenten (fertige UI-Patterns)
 
 ```mirror
-// Dialog
+// Dialog (Modal)
 Dialog
-  Trigger: Button "Dialog öffnen"
+  Trigger: Button "Dialog öffnen", bg #2271C1, col white
   Backdrop: bg rgba(0,0,0,0.5)
-  Content: Frame pad 24, bg #1a1a1a, rad 12, gap 16
-    Text "Titel", fs 18, weight bold
-    Text "Dialog Inhalt hier"
+  Content: Frame pad 24, bg #1a1a1a, rad 12, gap 16, w 400
+    Text "Bestätigung", fs 18, weight bold, col white
+    Text "Möchtest du fortfahren?", col #888
     Frame hor, gap 8
-      CloseTrigger: Button "Abbrechen", bg #333
-      Button "OK", bg #2271C1
+      CloseTrigger: Button "Abbrechen", bg #333, col white, grow
+      Button "OK", bg #2271C1, col white, grow
 
 // Tooltip
 Tooltip positioning "bottom"
-  Trigger: Icon "info", ic #888
-  Content: Text "Hilfetext erscheint hier"
+  Trigger: Icon "info", ic #888, is 20
+  Content: Text "Hilfetext erscheint hier", fs 12
 
 // Tabs
 Tabs defaultValue "home"
   Tab "Home"
-    Text "Home Content"
+    Frame pad 16
+      Text "Home Content"
   Tab "Profile"
-    Text "Profile Content"
+    Frame pad 16
+      Text "Profile Content"
   Tab "Settings"
-    Text "Settings Content"
+    Frame pad 16
+      Text "Settings Content"
 
-// Select
+// Select (Dropdown)
 Select placeholder "Stadt wählen..."
   Option "Berlin"
   Option "Hamburg"
   Option "München"
+  Option "Köln"
 
 // Form Controls
 Checkbox "Newsletter abonnieren"
 Checkbox "AGB akzeptieren", checked
 Switch "Dark Mode"
 Switch "Notifications", checked
-Slider value 50, min 0, max 100
+Slider value 50, min 0, max 100, step 10
 
 // Radio Group
 RadioGroup value "monthly"
-  RadioItem "Monatlich", value "monthly"
-  RadioItem "Jährlich", value "yearly"
+  RadioItem "Monatlich - €9/Monat", value "monthly"
+  RadioItem "Jährlich - €99/Jahr", value "yearly"
+  RadioItem "Lifetime - €299", value "lifetime"
 
-// Input Binding
+// Date Picker
+DatePicker placeholder "Datum wählen"
+
+// Input mit Binding
 searchTerm: ""
 Input bind searchTerm, placeholder "Suchen..."
-Text "Suche: $searchTerm"
+Text "Suche: $searchTerm", col #888
 ```
 
 ### Tabellen
 
 ```mirror
-// Statisch
+// Statische Tabelle
 Table
   Header:
     Row "Name", "Status", "Aktion"
-  Row "Max", "Aktiv", "Edit"
-  Row "Anna", "Pending", "Edit"
+  Row "Max", "Aktiv", "Bearbeiten"
+  Row "Anna", "Pending", "Bearbeiten"
+  Row "Tom", "Inaktiv", "Bearbeiten"
 
-// Datengebunden
+// Datengebundene Tabelle
 tasks:
   t1:
     title: "Design Review"
     status: "done"
+    priority: 1
   t2:
     title: "Development"
     status: "progress"
+    priority: 2
+  t3:
+    title: "Testing"
+    status: "todo"
+    priority: 3
 
 Table $tasks, gap 4
-  Header: bg #222, pad 12
-    Row "Aufgabe", "Status"
-  Row: hor, spread, pad 12, bg #1a1a1a, rad 6
-    Text row.title, col white
-    Text row.status, col #888
+  Header: bg #222, pad 12, rad 6 6 0 0
+    Row "Aufgabe", "Status", "Priorität"
+  Row: hor, spread, pad 12, bg #1a1a1a, rad 6, ver-center
+    Text row.title, col white, grow
+    Text row.status, col #888, w 80
+    Text "P" + row.priority, col #f59e0b, w 40
 
 // Mit Filter und Sortierung
 Table $tasks where row.status != "done" by priority
+  Row: pad 12, bg #1a1a1a
+    Text row.title
 ```
 
 ### Charts
 
 ```mirror
+// Daten
 sales:
-  Jan: 100
-  Feb: 150
-  Mar: 200
-  Apr: 180
+  Jan: 120
+  Feb: 180
+  Mar: 240
+  Apr: 200
+  May: 280
+  Jun: 320
 
-Line $sales, w 300, h 150
-Bar $sales, w 300, h 150, colors #2271C1
-Pie $sales, w 200, h 200
-Donut $sales, w 200, h 200
-
-// Mit Subkomponenten
+// Chart-Typen
 Line $sales, w 400, h 200
-  Title: text "Umsatz 2024"
-  XAxis: label "Monat"
-  YAxis: label "€", min 0
+Bar $sales, w 400, h 200, colors #2271C1
+Pie $sales, w 250, h 250
+Donut $sales, w 250, h 250
+Area $sales, w 400, h 200
+
+// Mit Styling
+Line $sales, w 400, h 200, colors #2271C1
+  Title: text "Umsatz 2024", col white
+  XAxis: label "Monat", col #888
+  YAxis: label "€", min 0, col #888
   Grid: col #333
   Point: size 6, bg #2271C1
+  Line: width 2, tension 0.3
+```
+
+### Häufige Fehler
+
+```mirror
+// ❌ FALSCH                    ✅ RICHTIG
+Text "Hi" col white            Text "Hi", col white         // Komma vergessen
+Frame w 100px                  Frame w 100                  // Keine Einheiten
+Frame w "200"                  Frame w 200                  // Zahlen ohne Quotes
+
+Btn: "Text"                    Btn "Text"                   // Kein : bei Verwendung
+PrimaryBtn pad 12              PrimaryBtn: pad 12           // : bei Definition fehlt
+PrimaryBtn: Button pad 12      PrimaryBtn as Button: pad 12 // as fehlt
+
+$primary.bg: #2271C1           primary.bg: #2271C1          // Kein $ bei Definition
+bg $primary.bg                 bg $primary                  // Kein Suffix bei Verwendung
+bg primary                     bg $primary                  // $ fehlt
+
+hover                          hover:                       // : fehlt bei State
+toggle                         toggle()                     // () fehlt bei Funktion
+Btn "Text", on:                Btn "Text", on               // Kein : bei Instanz-State
+
+Icon check                     Icon "check"                 // Quotes fehlen
+Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is für Größe
 ```
 
 ### Quick Reference
@@ -679,69 +790,20 @@ Line $sales, w 400, h 200
 | --------------- | ---------------------------------------------------------------------- |
 | **Layout**      | `hor`, `ver`, `gap N`, `center`, `spread`, `wrap`, `grid N`, `stacked` |
 | **Position**    | `tl`, `tc`, `tr`, `cl`, `cr`, `bl`, `bc`, `br`, `x N`, `y N`           |
-| **Größe**       | `w N`, `h N`, `w full`, `w hug`, `grow`, `shrink`                      |
+| **Größe**       | `w N`, `h N`, `w full`, `w hug`, `grow`, `shrink`, `minw`, `maxw`      |
 | **Farbe**       | `bg #hex`, `col #hex`, `boc #hex`, `ic #hex`, `grad #a #b`             |
-| **Abstand**     | `pad N`, `pad V H`, `mar N`, `gap N`                                   |
+| **Abstand**     | `pad N`, `pad V H`, `mar N`, `gap N`, `pad-x`, `pad-y`                 |
 | **Border**      | `bor N`, `boc #hex`, `rad N`                                           |
-| **Typo**        | `fs N`, `weight bold/500`, `font mono/sans/serif`, `truncate`          |
+| **Typo**        | `fs N`, `weight bold/500`, `font mono`, `truncate`, `uppercase`        |
 | **Effekte**     | `shadow sm/md/lg`, `opacity N`, `blur N`, `cursor pointer`             |
+| **Sichtbar**    | `hidden`, `visible`, `clip`, `scroll`                                  |
 | **States**      | `hover:`, `focus:`, `active:`, `disabled:`, `on:`, `open:`             |
 | **Animation**   | `anim pulse/bounce/shake/spin`, `0.2s ease-out`                        |
-| **Komponenten** | `Name:` (Definition), `Name` (Verwendung), `as` (erben)                |
-| **Tokens**      | `name.bg: #hex` (Definition), `bg $name` (Verwendung)                  |
+| **Komponenten** | `Name:` Definition, `Name` Verwendung, `as` erben                      |
+| **Tokens**      | `name.bg: #hex` Definition, `bg $name` Verwendung                      |
+| **Daten**       | `name: value`, `$name`, `each x in $list`, `if cond`                   |
 
 <!-- GENERATED:TUTORIAL:END -->
-
-## Häufige Fehler
-
-### Syntax
-
-| Falsch                   | Richtig                   | Warum              |
-| ------------------------ | ------------------------- | ------------------ |
-| `Text "Hello" col white` | `Text "Hello", col white` | Komma nach String  |
-| `Frame w 100px`          | `Frame w 100`             | Keine Einheiten    |
-| `Frame w "200"`          | `Frame w 200`             | Zahlen ohne Quotes |
-
-### Komponenten
-
-| Falsch                      | Richtig                        | Warum                          |
-| --------------------------- | ------------------------------ | ------------------------------ |
-| `Btn: "Speichern"`          | `Btn "Speichern"`              | Kein `:` bei Verwendung        |
-| `PrimaryBtn pad 12`         | `PrimaryBtn: pad 12`           | `:` bei Definition             |
-| `PrimaryBtn: Button pad 12` | `PrimaryBtn as Button: pad 12` | `as` bei Primitive-Erweiterung |
-
-### Tokens
-
-| Falsch                 | Richtig               | Warum                      |
-| ---------------------- | --------------------- | -------------------------- |
-| `$primary.bg: #2563eb` | `primary.bg: #2563eb` | Kein `$` bei Definition    |
-| `bg $primary.bg`       | `bg $primary`         | Kein Suffix bei Verwendung |
-| `bg primary`           | `bg $primary`         | `$` bei Verwendung         |
-
-### States
-
-| Falsch               | Richtig          | Warum                 |
-| -------------------- | ---------------- | --------------------- |
-| `hover` (ohne `:`)   | `hover:`         | State braucht `:`     |
-| `toggle` (ohne `()`) | `toggle()`       | Funktion braucht `()` |
-| `Btn "Text", on:`    | `Btn "Text", on` | Kein `:` bei Instanz  |
-
-### Size-States
-
-| Falsch                      | Richtig                   | Warum                                      |
-| --------------------------- | ------------------------- | ------------------------------------------ |
-| `@media (max-width: 400px)` | `compact:`                | Size-States nutzen, nicht Media Queries    |
-| `compact.max 300`           | `compact.max: 300`        | Token-Syntax mit `:`                       |
-| `tiny: pad 4` (ohne Token)  | `tiny.max: 200` + `tiny:` | Custom Size-State braucht Token-Definition |
-
-### Icons
-
-| Falsch                     | Richtig                    | Warum                          |
-| -------------------------- | -------------------------- | ------------------------------ |
-| `Icon check`               | `Icon "check"`             | Name in Quotes                 |
-| `Icon "check", is #10b981` | `Icon "check", ic #10b981` | `ic` für Farbe, `is` für Größe |
-
----
 
 <!-- GENERATED:DSL-PROPERTIES:START -->
 
