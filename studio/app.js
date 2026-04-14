@@ -5803,15 +5803,13 @@ function applyDropChange(modResult, componentName = 'Component') {
     change: adjustedChange,
   })
 
-  // Set pending selection BEFORE compile
-  const insertLine = editor.state.doc.lineAt(adjustedChange.from)
-  if (insertLine) {
-    studioActions.setPendingSelection({
-      line: insertLine.number,
-      componentName: componentName,
-      origin: 'drag-drop',
-    })
-  }
+  // Set deferred selection using parent + index (more reliable than line numbers)
+  studioActions.setDeferredSelection({
+    type: 'lastChildOf',
+    parentNodeId: target.containerId,
+    insertionIndex: target.insertionIndex,
+    origin: 'drag-drop',
+  })
 
   // Compile and save
   const code = editor.state.doc.toString()

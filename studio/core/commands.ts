@@ -4,7 +4,11 @@
 
 import { state, actions } from './state'
 import type { SourceMap } from '../../compiler/ir/source-map'
-import { CodeModifier, type CodeChange, type AddChildOptions } from '../../compiler/studio/code-modifier'
+import {
+  CodeModifier,
+  type CodeChange,
+  type AddChildOptions,
+} from '../../compiler/studio/code-modifier'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('Commands')
@@ -72,7 +76,9 @@ function adjustChangeForEditor(change: CodeChange, ctx: CommandContext): CodeCha
  * Get source and modifier for commands.
  * Returns resolved source (with prelude) for CodeModifier to match SourceMap positions.
  */
-function getSourceForModifier(ctx: CommandContext): { source: string; sourceMap: SourceMap } | null {
+function getSourceForModifier(
+  ctx: CommandContext
+): { source: string; sourceMap: SourceMap } | null {
   const sourceMap = ctx.getSourceMap()
   if (!sourceMap) return null
   // Use resolved source so CodeModifier positions match SourceMap
@@ -178,10 +184,20 @@ export class InsertComponentCommand implements Command {
   private options: AddChildOptions
   private change: CodeChange | null = null
 
-  constructor(params: { parentId: string; component: string; position?: 'first' | 'last' | number; properties?: string; textContent?: string }) {
+  constructor(params: {
+    parentId: string
+    component: string
+    position?: 'first' | 'last' | number
+    properties?: string
+    textContent?: string
+  }) {
     this.parentId = params.parentId
     this.component = params.component
-    this.options = { position: params.position, properties: params.properties, textContent: params.textContent }
+    this.options = {
+      position: params.position,
+      properties: params.properties,
+      textContent: params.textContent,
+    }
     this.description = `Insert ${params.component}`
   }
 
@@ -260,9 +276,10 @@ export class DeleteNodeCommand implements Command {
     if (state.get().selection.nodeId === this.nodeId) {
       // Queue the fallback selection - will be resolved after compile
       // Priority: next sibling → previous sibling → parent
-      const fallbackId = this.fallbackInfo.nextSiblingId
-        || this.fallbackInfo.prevSiblingId
-        || this.fallbackInfo.parentId
+      const fallbackId =
+        this.fallbackInfo.nextSiblingId ||
+        this.fallbackInfo.prevSiblingId ||
+        this.fallbackInfo.parentId
 
       if (fallbackId) {
         // Queue selection to be resolved after compile
@@ -279,7 +296,11 @@ export class DeleteNodeCommand implements Command {
   undo(ctx: CommandContext): CommandResult {
     if (!this.change || !this.deletedContent) return { success: false, error: 'Cannot undo' }
     const offset = ctx.getPreludeOffset()
-    const undoChange: CodeChange = { from: this.change.from - offset, to: this.change.from - offset, insert: this.deletedContent }
+    const undoChange: CodeChange = {
+      from: this.change.from - offset,
+      to: this.change.from - offset,
+      insert: this.deletedContent,
+    }
     ctx.applyChange(undoChange)
 
     // Re-select the restored node after undo
@@ -299,7 +320,11 @@ export class MoveNodeCommand implements Command {
   private originalSource: string | null = null
   private change: CodeChange | null = null
 
-  constructor(params: { nodeId: string; targetId: string; position: 'before' | 'after' | 'inside' }) {
+  constructor(params: {
+    nodeId: string
+    targetId: string
+    position: 'before' | 'after' | 'inside'
+  }) {
     this.nodeId = params.nodeId
     this.targetId = params.targetId
     this.placement = params.position
@@ -319,14 +344,20 @@ export class MoveNodeCommand implements Command {
     this.change = result.change
     const editorChange = adjustChangeForEditor(result.change, ctx)
     ctx.applyChange(editorChange)
+    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'keyboard' } })
     return { success: true, change: editorChange }
   }
 
   undo(ctx: CommandContext): CommandResult {
     if (!this.originalSource) return { success: false, error: 'Cannot undo' }
     const currentSource = ctx.getSource()
-    const undoChange: CodeChange = { from: 0, to: currentSource.length, insert: this.originalSource }
+    const undoChange: CodeChange = {
+      from: 0,
+      to: currentSource.length,
+      insert: this.originalSource,
+    }
     ctx.applyChange(undoChange)
+    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'keyboard' } })
     return { success: true, change: undoChange }
   }
 }
@@ -477,6 +508,7 @@ export class MoveNodeWithLayoutCommand implements Command {
     }
 
     ctx.applyChange(editorChange)
+    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'drag-drop' } })
     return { success: true, change: editorChange }
   }
 
@@ -489,6 +521,7 @@ export class MoveNodeWithLayoutCommand implements Command {
       insert: this.originalSource,
     }
     ctx.applyChange(undoChange)
+    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'drag-drop' } })
     return { success: true, change: undoChange }
   }
 }
@@ -593,7 +626,11 @@ export class WrapNodesCommand implements Command {
   undo(ctx: CommandContext): CommandResult {
     if (!this.originalSource) return { success: false, error: 'Cannot undo' }
     const currentSource = ctx.getSource()
-    const undoChange: CodeChange = { from: 0, to: currentSource.length, insert: this.originalSource }
+    const undoChange: CodeChange = {
+      from: 0,
+      to: currentSource.length,
+      insert: this.originalSource,
+    }
     ctx.applyChange(undoChange)
     return { success: true, change: undoChange }
   }
@@ -636,7 +673,11 @@ export class UnwrapNodeCommand implements Command {
   undo(ctx: CommandContext): CommandResult {
     if (!this.originalSource) return { success: false, error: 'Cannot undo' }
     const currentSource = ctx.getSource()
-    const undoChange: CodeChange = { from: 0, to: currentSource.length, insert: this.originalSource }
+    const undoChange: CodeChange = {
+      from: 0,
+      to: currentSource.length,
+      insert: this.originalSource,
+    }
     ctx.applyChange(undoChange)
     return { success: true, change: undoChange }
   }
@@ -669,7 +710,8 @@ export class BatchCommand implements Command {
   undo(ctx: CommandContext): CommandResult {
     for (const command of [...this.executedCommands].reverse()) {
       const result = command.undo(ctx)
-      if (!result.success) return { success: false, error: `Batch undo failed at ${command.type}: ${result.error}` }
+      if (!result.success)
+        return { success: false, error: `Batch undo failed at ${command.type}: ${result.error}` }
     }
     this.executedCommands = []
     return { success: true }
@@ -867,7 +909,9 @@ export class SetTextContentCommand implements Command {
   constructor(params: { nodeId: string; text: string; description?: string }) {
     this.nodeId = params.nodeId
     this.newText = params.text
-    this.description = params.description || `Set text to "${params.text.substring(0, 20)}${params.text.length > 20 ? '...' : ''}"`
+    this.description =
+      params.description ||
+      `Set text to "${params.text.substring(0, 20)}${params.text.length > 20 ? '...' : ''}"`
   }
 
   execute(ctx: CommandContext): CommandResult {
@@ -904,24 +948,51 @@ export class SetTextContentCommand implements Command {
   }
 }
 
-export type CommandType = 'SET_PROPERTY' | 'REMOVE_PROPERTY' | 'INSERT_COMPONENT' | 'DELETE_NODE' | 'MOVE_NODE' | 'MOVE_NODE_WITH_LAYOUT' | 'UPDATE_SOURCE' | 'WRAP_NODES' | 'UNWRAP_NODE' | 'BATCH' | 'RESIZE' | 'SET_POSITION' | 'SET_TEXT_CONTENT'
+export type CommandType =
+  | 'SET_PROPERTY'
+  | 'REMOVE_PROPERTY'
+  | 'INSERT_COMPONENT'
+  | 'DELETE_NODE'
+  | 'MOVE_NODE'
+  | 'MOVE_NODE_WITH_LAYOUT'
+  | 'UPDATE_SOURCE'
+  | 'WRAP_NODES'
+  | 'UNWRAP_NODE'
+  | 'BATCH'
+  | 'RESIZE'
+  | 'SET_POSITION'
+  | 'SET_TEXT_CONTENT'
 
 export function createCommand(type: CommandType, params: Record<string, any>): Command {
   switch (type) {
-    case 'SET_PROPERTY': return new SetPropertyCommand(params as any)
-    case 'REMOVE_PROPERTY': return new RemovePropertyCommand(params as any)
-    case 'INSERT_COMPONENT': return new InsertComponentCommand(params as any)
-    case 'DELETE_NODE': return new DeleteNodeCommand(params as any)
-    case 'MOVE_NODE': return new MoveNodeCommand(params as any)
-    case 'MOVE_NODE_WITH_LAYOUT': return new MoveNodeWithLayoutCommand(params as any)
-    case 'UPDATE_SOURCE': return new UpdateSourceCommand(params as any)
-    case 'WRAP_NODES': return new WrapNodesCommand(params as any)
-    case 'UNWRAP_NODE': return new UnwrapNodeCommand(params as any)
-    case 'BATCH': return new BatchCommand(params as any)
-    case 'RESIZE': return new ResizeCommand(params as any)
-    case 'SET_POSITION': return new SetPositionCommand(params as any)
-    case 'SET_TEXT_CONTENT': return new SetTextContentCommand(params as any)
-    default: throw new Error(`Unknown command type: ${type}`)
+    case 'SET_PROPERTY':
+      return new SetPropertyCommand(params as any)
+    case 'REMOVE_PROPERTY':
+      return new RemovePropertyCommand(params as any)
+    case 'INSERT_COMPONENT':
+      return new InsertComponentCommand(params as any)
+    case 'DELETE_NODE':
+      return new DeleteNodeCommand(params as any)
+    case 'MOVE_NODE':
+      return new MoveNodeCommand(params as any)
+    case 'MOVE_NODE_WITH_LAYOUT':
+      return new MoveNodeWithLayoutCommand(params as any)
+    case 'UPDATE_SOURCE':
+      return new UpdateSourceCommand(params as any)
+    case 'WRAP_NODES':
+      return new WrapNodesCommand(params as any)
+    case 'UNWRAP_NODE':
+      return new UnwrapNodeCommand(params as any)
+    case 'BATCH':
+      return new BatchCommand(params as any)
+    case 'RESIZE':
+      return new ResizeCommand(params as any)
+    case 'SET_POSITION':
+      return new SetPositionCommand(params as any)
+    case 'SET_TEXT_CONTENT':
+      return new SetTextContentCommand(params as any)
+    default:
+      throw new Error(`Unknown command type: ${type}`)
   }
 }
 
