@@ -88,6 +88,10 @@ function getSourceForModifier(
   if (!sourceMap) return null
   // Use resolved source so CodeModifier positions match SourceMap
   const source = ctx.getResolvedSource()
+  // DEBUG
+  console.log('[getSourceForModifier] resolvedSource length:', source.length)
+  console.log('[getSourceForModifier] editorSource length:', ctx.getSource().length)
+  console.log('[getSourceForModifier] preludeOffset:', ctx.getPreludeOffset())
   return { source, sourceMap }
 }
 
