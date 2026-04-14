@@ -273,12 +273,7 @@ export class DragPreview {
     }
 
     const source = { type: 'palette' as const, componentName: item.name, template: item.template }
-    log.warn(
-      'Starting palette drag:',
-      item.name,
-      'container:',
-      this.container.id || this.container.className
-    )
+    log.info('Drag started:', item.name)
     getDragController().startDrag(source, this.container)
   }
 
@@ -306,10 +301,6 @@ export class DragPreview {
   private handleDragOver(e: DragEvent): void {
     const dragType = this.getMirrorDragType(e)
     if (!dragType) {
-      // Log only once per drag to avoid spam
-      if (!this.isOverCanvas) {
-        log.warn('handleDragOver: Not a Mirror drag type, types:', e.dataTransfer?.types)
-      }
       return
     }
 
@@ -325,7 +316,6 @@ export class DragPreview {
       this.isOverCanvas = true
       this.dropHandled = false // Reset flag for new drag
       document.body.classList.add('drag-active')
-      log.warn('First entry over canvas, dragType:', dragType)
       dragType === 'canvas' ? this.startCanvasDrag() : this.startPaletteDrag()
     }
 
@@ -344,32 +334,14 @@ export class DragPreview {
         this.isOverCanvas = false
         document.body.classList.remove('drag-active')
         getDragController().cancel()
-        log.warn('DragLeave: left container, drag cancelled')
       }
-    } else {
-      log.debug('DragLeave: still over container, ignoring')
     }
   }
 
   private handleDrop(e: DragEvent): void {
-    log.warn(
-      'handleDrop called, clientX:',
-      e.clientX,
-      'clientY:',
-      e.clientY,
-      'target:',
-      (e.target as HTMLElement)?.tagName
-    )
-
     // Check if this is a Mirror drag type
     const dragType = this.getMirrorDragType(e)
-    if (!dragType) {
-      log.warn('handleDrop: Not a Mirror drag type, ignoring')
-      return
-    }
-
-    if (!this.isCursorOverContainer(e)) {
-      log.warn('handleDrop: cursor not over container, ignoring')
+    if (!dragType || !this.isCursorOverContainer(e)) {
       return
     }
 
@@ -381,14 +353,11 @@ export class DragPreview {
     this.isOverCanvas = false
     document.body.classList.remove('drag-active')
 
-    log.warn('Calling getDragController().drop()')
+    log.info('Drop!')
     getDragController().drop()
-    log.warn('Drop executed successfully')
   }
 
   private handleDragEnd(_e: DragEvent): void {
-    log.warn('handleDragEnd called, dropHandled:', this.dropHandled)
-
     // Always cleanup on dragend
     this.isOverCanvas = false
     document.body.classList.remove('drag-active')
@@ -396,9 +365,7 @@ export class DragPreview {
     // Only cancel if drop wasn't already handled
     if (!this.dropHandled) {
       getDragController().cancel()
-      log.warn('DragEnd: cancelled (drop not handled)')
-    } else {
-      log.warn('DragEnd: skipping cancel (drop was handled)')
+      log.debug('Drag cancelled')
     }
 
     // Reset flag for next drag

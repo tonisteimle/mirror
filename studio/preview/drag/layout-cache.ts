@@ -21,30 +21,17 @@ export class LayoutCache {
     this.containerElement = container
     this.cacheAllRects(container)
     this.buildChildrenMap(container)
-    log.warn(
-      'Cache built:',
-      this.rects.size,
-      'rects,',
-      this.children.size,
-      'parent-child relationships'
-    )
+    log.info('Cache built:', this.rects.size, 'elements')
   }
 
   /** Cache rects for all elements with data-mirror-id */
   private cacheAllRects(container: HTMLElement): void {
     const elements = container.querySelectorAll('[data-mirror-id]')
-    log.warn(
-      'Found',
-      elements.length,
-      'elements with data-mirror-id in container:',
-      container.id || container.className
-    )
     for (const el of elements) {
       const nodeId = el.getAttribute('data-mirror-id')
       if (nodeId) {
         const rect = el.getBoundingClientRect()
         this.rects.set(nodeId, rect)
-        log.warn('Cached rect for', nodeId, ':', rect.x, rect.y, rect.width, rect.height)
       }
     }
   }

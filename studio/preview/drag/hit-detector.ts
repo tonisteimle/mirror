@@ -17,24 +17,13 @@ export class HitDetector {
   detect(cursor: Point, cache: LayoutCache): HitResult | null {
     const element = document.elementFromPoint(cursor.x, cursor.y)
     if (!element) {
-      log.warn('No element at cursor', cursor)
       return null
     }
 
-    log.warn(
-      'elementFromPoint returned:',
-      element.tagName,
-      element.className,
-      'mirror-id:',
-      element.getAttribute('data-mirror-id')
-    )
     const result = this.findValidContainer(element, cache)
+    // Debug logging only - use log.debug for frequent operations
     if (!result) {
-      log.warn(
-        'No valid container found starting from',
-        element.tagName,
-        element.getAttribute('data-mirror-id')
-      )
+      log.debug('No valid container at', cursor.x, cursor.y)
     }
     return result
   }
@@ -58,25 +47,11 @@ export class HitDetector {
 
     const style = getComputedStyle(el)
     const layout = this.detectLayout(style)
-    if (!layout) {
-      log.warn(
-        'No valid layout for',
-        nodeId,
-        '- display:',
-        style.display,
-        'position:',
-        style.position
-      )
-      return null
-    }
+    if (!layout) return null
 
     const rect = cache.getRect(nodeId)
-    if (!rect) {
-      log.warn('No rect in cache for', nodeId)
-      return null
-    }
+    if (!rect) return null
 
-    log.warn('Found valid container:', nodeId, 'layout:', layout)
     return { containerId: nodeId, layout, containerRect: rect }
   }
 

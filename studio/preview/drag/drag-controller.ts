@@ -33,6 +33,7 @@ export class DragController {
   private source: DragSource | null = null
   private lastTarget: DropTarget | null = null
   private callbacks: DragControllerCallbacks | null = null
+  private lastLoggedContainer: string | null = null // Track for reduced logging
 
   /**
    * Set callbacks for drag events
@@ -49,32 +50,38 @@ export class DragController {
    * @param container - The preview container element
    */
   startDrag(source: DragSource, container: HTMLElement): void {
-    log.warn(
-      'startDrag called with source:',
-      source.type,
-      'componentName:',
-      (source as any).componentName
-    )
     this.state = 'dragging'
     this.source = source
+    this.lastLoggedContainer = null
     this.cache.build(container)
-    log.warn('Cache isEmpty:', this.cache.isEmpty())
   }
 
   /** Update drag position - called on every mouse move */
   updatePosition(cursor: Point): void {
     if (this.state !== 'dragging') {
-      log.warn('updatePosition: Not dragging, state=', this.state)
+      // Only log once when drag ends
+      if (this.lastLoggedContainer !== null) {
+        log.debug('updatePosition: Not dragging, state=', this.state)
+        this.lastLoggedContainer = null
+      }
       return
     }
 
     const hit = this.hitDetector.detect(cursor, this.cache)
     if (!hit) {
-      log.warn('updatePosition: No hit detected at', cursor)
+      if (this.lastLoggedContainer !== null) {
+        log.debug('updatePosition: No hit')
+        this.lastLoggedContainer = null
+      }
       return this.clearTarget()
     }
 
-    log.warn('updatePosition: Hit!', hit.containerId, hit.layout)
+    // Only log when container changes
+    if (hit.containerId !== this.lastLoggedContainer) {
+      log.info('Target:', hit.containerId, 'layout:', hit.layout)
+      this.lastLoggedContainer = hit.containerId
+    }
+
     const insertion = this.calculateInsertion(cursor, hit)
     this.showIndicator(insertion)
     this.storeTarget(hit.containerId, insertion.index)
@@ -104,14 +111,14 @@ export class DragController {
 
   /** Complete the drag operation */
   async drop(): Promise<void> {
-    log.warn('drop() called, source:', this.source?.type, 'target:', this.lastTarget?.containerId)
     if (!this.source || !this.lastTarget) {
-      log.warn('drop() aborted: missing source or target')
+      log.warn('Drop aborted: missing source or target')
       return this.reset()
     }
 
     const source = this.source
     const target = this.lastTarget
+    log.info('Dropped:', (source as any).componentName || source.type, '→', target.containerId)
     this.reset()
 
     await this.executeDropCallback(source, target)
