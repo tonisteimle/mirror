@@ -14,7 +14,7 @@ import type { IRNode, IRStyle, SourcePosition } from '../types'
 export interface ParentLayoutContext {
   type: 'flex' | 'grid' | 'absolute' | null
   gridColumns?: number
-  flexDirection?: 'row' | 'column'  // For w full / h full: determines main vs cross axis
+  flexDirection?: 'row' | 'column' // For w full / h full: determines main vs cross axis
 }
 
 /**
@@ -25,16 +25,29 @@ export interface TransformerContext {
   generateId(): string
 
   /** Transform properties to IR styles */
-  transformProperties(properties: Property[], primitive?: string, parentLayoutContext?: ParentLayoutContext): IRStyle[]
+  transformProperties(
+    properties: Property[],
+    primitive?: string,
+    parentLayoutContext?: ParentLayoutContext
+  ): IRStyle[]
 
   /** Transform a child node (Instance, Text, or Slot) */
-  transformChild(child: Instance | Text | Slot, parentId?: string, parentLayoutContext?: ParentLayoutContext): IRNode
+  transformChild(
+    child: Instance | Text | Slot,
+    parentId?: string,
+    parentLayoutContext?: ParentLayoutContext
+  ): IRNode
 
   /** Include source map information */
   includeSourceMap: boolean
 
   /** Add node to source map */
-  addToSourceMap?(nodeId: string, name: string, sourcePosition: SourcePosition, options?: { isDefinition?: boolean }): void
+  addToSourceMap?(
+    nodeId: string,
+    name: string,
+    sourcePosition: SourcePosition,
+    options?: { isDefinition?: boolean; parentId?: string }
+  ): void
 
   /** Add property position to source map (for inline editing) */
   addPropertyPosition?(nodeId: string, propertyName: string, position: SourcePosition): void

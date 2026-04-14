@@ -1,19 +1,25 @@
 /**
- * Indicator - Visual insertion line
+ * Indicator - Visual insertion line and container highlight
  *
- * A single DOM element that gets repositioned.
+ * Shows both:
+ * 1. An insertion line where the element will be placed
+ * 2. A highlight around the target container
+ *
  * No create/destroy cycles, no transitions for max responsiveness.
  */
 
 import type { Point } from './types'
 
 const INDICATOR_ID = 'drag-insertion-indicator'
+const CONTAINER_HIGHLIGHT_ID = 'drag-container-highlight'
 const INDICATOR_COLOR = '#5BA8F5'
 const INDICATOR_GLOW = 'rgba(91, 168, 245, 0.4)'
 const INDICATOR_THICKNESS = 3
 
 export class Indicator {
   private element: HTMLDivElement | null = null
+  private containerHighlight: HTMLDivElement | null = null
+  private currentContainerId: string | null = null
 
   /** Ensure the indicator element exists */
   private ensureElement(): HTMLDivElement {
@@ -24,11 +30,38 @@ export class Indicator {
     return this.element
   }
 
+  /** Ensure the container highlight element exists */
+  private ensureContainerHighlight(): HTMLDivElement {
+    if (this.containerHighlight) return this.containerHighlight
+
+    this.containerHighlight = this.createContainerHighlight()
+    document.body.appendChild(this.containerHighlight)
+    return this.containerHighlight
+  }
+
   /** Create the indicator DOM element */
   private createElement(): HTMLDivElement {
     const el = document.createElement('div')
     el.id = INDICATOR_ID
     this.applyStyles(el)
+    return el
+  }
+
+  /** Create the container highlight DOM element */
+  private createContainerHighlight(): HTMLDivElement {
+    const el = document.createElement('div')
+    el.id = CONTAINER_HIGHLIGHT_ID
+    Object.assign(el.style, {
+      position: 'fixed',
+      pointerEvents: 'none',
+      zIndex: '9999',
+      border: `1px dashed ${INDICATOR_COLOR}`,
+      borderRadius: '4px',
+      display: 'none',
+      background: 'rgba(91, 168, 245, 0.08)',
+      willChange: 'left, top, width, height',
+      transition: 'all 0.15s ease-out',
+    })
     return el
   }
 
@@ -55,6 +88,20 @@ export class Indicator {
     el.style.display = 'block'
   }
 
+  /** Highlight the target container */
+  highlightContainer(containerId: string, rect: DOMRect): void {
+    // Skip if same container
+    if (this.currentContainerId === containerId) return
+    this.currentContainerId = containerId
+
+    const el = this.ensureContainerHighlight()
+    el.style.left = `${rect.x}px`
+    el.style.top = `${rect.y}px`
+    el.style.width = `${rect.width}px`
+    el.style.height = `${rect.height}px`
+    el.style.display = 'block'
+  }
+
   /** Set position styles */
   private setPosition(el: HTMLDivElement, position: Point): void {
     el.style.left = `${position.x}px`
@@ -68,12 +115,16 @@ export class Indicator {
   }
 
   /**
-   * Hide the indicator
+   * Hide the indicator and container highlight
    */
   hide(): void {
     if (this.element) {
       this.element.style.display = 'none'
     }
+    if (this.containerHighlight) {
+      this.containerHighlight.style.display = 'none'
+    }
+    this.currentContainerId = null
   }
 
   /**
@@ -92,5 +143,10 @@ export class Indicator {
       this.element.remove()
       this.element = null
     }
+    if (this.containerHighlight) {
+      this.containerHighlight.remove()
+      this.containerHighlight = null
+    }
+    this.currentContainerId = null
   }
 }

@@ -84,7 +84,13 @@ export class DragController {
 
     const insertion = this.calculateInsertion(cursor, hit)
     this.showIndicator(insertion)
+    this.highlightContainer(hit.containerId, hit.containerRect)
     this.storeTarget(hit.containerId, insertion.index)
+  }
+
+  /** Highlight the target container */
+  private highlightContainer(containerId: string, rect: DOMRect): void {
+    this.indicator.highlightContainer(containerId, rect)
   }
 
   /** Clear target and hide indicator */
@@ -95,7 +101,15 @@ export class DragController {
 
   /** Calculate insertion position for hit */
   private calculateInsertion(cursor: Point, hit: import('./types').HitResult) {
-    const children = this.cache.getChildren(hit.containerId)
+    let children = this.cache.getChildren(hit.containerId)
+
+    // Bei Canvas-Move: gezogenes Element aus children filtern
+    // Sonst wird der Index falsch berechnet, weil nach dem Entfernen
+    // des Elements alle folgenden Indizes um 1 nach oben rutschen
+    if (this.source?.type === 'canvas' && this.source.nodeId) {
+      children = children.filter(c => c.nodeId !== this.source!.nodeId)
+    }
+
     return this.calculator.calculate(cursor, children, hit.layout, hit.containerRect)
   }
 

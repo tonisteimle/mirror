@@ -564,10 +564,11 @@ class IRTransformer {
    */
   private transformZagComponent(
     zagNode: ZagNode,
-    parentLayoutContext?: ParentLayoutContext
+    parentLayoutContext?: ParentLayoutContext,
+    parentId?: string
   ): IRNode {
     const ctx = this.createTransformerContext()
-    return transformZagComponentExtracted(ctx, zagNode, parentLayoutContext)
+    return transformZagComponentExtracted(ctx, zagNode, parentLayoutContext, parentId)
   }
 
   /**
@@ -1427,7 +1428,7 @@ class IRTransformer {
     }
     // Handle ZagComponent children (e.g., Select: inside a Box)
     if (isZagComponent(child)) {
-      return this.transformZagComponent(child, parentLayoutContext)
+      return this.transformZagComponent(child, parentLayoutContext, parentId)
     }
     // Handle Table children (e.g., Table $tasks inside a Frame)
     if (isTable(child)) {

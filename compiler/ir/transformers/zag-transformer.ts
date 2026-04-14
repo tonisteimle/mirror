@@ -161,7 +161,8 @@ const MACHINE_CONFIG_PROPS = new Set([
 export function transformZagComponent(
   ctx: ZagTransformerContext,
   zagNode: ZagNode,
-  parentLayoutContext?: ParentLayoutContext
+  parentLayoutContext?: ParentLayoutContext,
+  parentId?: string
 ): IRNode {
   const nodeId = ctx.generateId()
 
@@ -237,7 +238,10 @@ export function transformZagComponent(
 
   // Add to source map
   if (ctx.includeSourceMap && sourcePosition && ctx.addToSourceMap) {
-    ctx.addToSourceMap(nodeId, zagNode.name || 'Select', sourcePosition, { isDefinition: false })
+    ctx.addToSourceMap(nodeId, zagNode.name || 'Select', sourcePosition, {
+      isDefinition: false,
+      parentId,
+    })
 
     // Add property positions for inline editing
     if (ctx.addPropertyPosition) {
