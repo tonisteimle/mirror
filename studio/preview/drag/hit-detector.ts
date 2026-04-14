@@ -2,7 +2,8 @@
  * HitDetector - Finds the drop target container under cursor
  *
  * Uses elementFromPoint() and walks up the DOM to find
- * the nearest flex container with data-mirror-id.
+ * the nearest valid container with data-mirror-id.
+ * Supports flex, grid, and stacked (position: relative) layouts.
  */
 
 import type { Point, HitResult, FlexLayout } from './types'
@@ -10,7 +11,7 @@ import type { LayoutCache } from './layout-cache'
 
 export class HitDetector {
   /**
-   * Find the flex container under the cursor
+   * Find the container under the cursor
    *
    * @param cursor - Current cursor position
    * @param cache - Layout cache with pre-computed rects
@@ -21,7 +22,7 @@ export class HitDetector {
     const element = document.elementFromPoint(cursor.x, cursor.y)
     if (!element) return null
 
-    // Walk up the DOM to find nearest flex container
+    // Walk up the DOM to find nearest valid container
     let current: Element | null = element
 
     while (current) {
@@ -29,15 +30,16 @@ export class HitDetector {
 
       if (nodeId) {
         const style = getComputedStyle(current)
+        const layout = this.detectLayout(style)
 
-        // Only accept flex containers
-        if (style.display === 'flex') {
+        // Accept flex, grid, or stacked containers
+        if (layout) {
           const rect = cache.getRect(nodeId)
 
           if (rect) {
             return {
               containerId: nodeId,
-              layout: this.getFlexLayout(style),
+              layout,
               containerRect: rect,
             }
           }
@@ -51,17 +53,30 @@ export class HitDetector {
   }
 
   /**
-   * Determine flex layout direction from computed style
+   * Detect the layout type from computed style
+   * Returns null if not a valid drop container
    */
-  private getFlexLayout(style: CSSStyleDeclaration): FlexLayout {
-    const direction = style.flexDirection
+  private detectLayout(style: CSSStyleDeclaration): FlexLayout | null {
+    // Flex layout
+    if (style.display === 'flex') {
+      const direction = style.flexDirection
+      if (direction === 'row' || direction === 'row-reverse') {
+        return 'flex-row'
+      }
+      return 'flex-column'
+    }
 
-    // row, row-reverse → flex-row
-    // column, column-reverse → flex-column
-    if (direction === 'row' || direction === 'row-reverse') {
+    // Grid layout - treat as flex-row for insertion purposes
+    if (style.display === 'grid') {
       return 'flex-row'
     }
 
-    return 'flex-column'
+    // Stacked layout (position: relative with no flex/grid)
+    // Mirror's stacked containers use position: relative
+    if (style.position === 'relative') {
+      return 'flex-column' // Default to column for stacked
+    }
+
+    return null
   }
 }
