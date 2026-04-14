@@ -5,11 +5,47 @@
 
 ## Zusammenfassung: Die 3 dringendsten Refactorings
 
-1. **`studio/app.js` aufteilen** - 8007 Zeilen, 104 Commits in 3 Monaten. Enthält alles: Editor, Compiler-Integration, Color Picker, Animation Picker, File Management, Drop Handling. Blockiert Feature-Entwicklung und verursacht Merge-Konflikte.
+1. **`studio/app.js` aufteilen** - 7046 Zeilen (nach Löschung Animation Picker), 104 Commits in 3 Monaten. Enthält noch: Editor, Compiler-Integration, Color Picker, File Management, Drop Handling. Blockiert Feature-Entwicklung und verursacht Merge-Konflikte.
 
 2. **`compile()` in `app.js` extrahieren** - 300 Zeilen, macht 6+ Dinge. Sollte zu einem klaren `CompileService` werden mit separaten Schritten.
 
 3. **`handleStudioDrop()` in `app.js` aufteilen** - 350 Zeilen, behandelt 5+ verschiedene Drop-Szenarien. Sollte Strategy Pattern verwenden.
+
+---
+
+## Clean Code Prinzipien
+
+**Diese Regeln gelten für jedes Refactoring:**
+
+| Regel                               | Beschreibung                                                          |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| **Funktionen < 10 Zeilen**          | Jede Funktion macht genau eine Sache. Wenn sie länger ist, aufteilen. |
+| **Single Responsibility**           | Eine Klasse/Modul hat einen Grund sich zu ändern.                     |
+| **Aussagekräftige Namen**           | `calculateInsertionIndex()` statt `calc()`                            |
+| **Keine Kommentare nötig**          | Code erklärt sich selbst durch gute Namen                             |
+| **Keine verschachtelten Callbacks** | Extrahiere in benannte Funktionen                                     |
+| **Max. 2 Parameter**                | Mehr? → Objekt-Parameter oder aufteilen                               |
+
+**Beispiel - So nicht:**
+
+```javascript
+function handleDrop(source, target, event, editor, state) {
+  // 50 Zeilen mit if/else...
+}
+```
+
+**Beispiel - So ja:**
+
+```javascript
+function handleDrop(context: DropContext): void {
+  const handler = this.findHandler(context.source)
+  handler.execute(context)
+}
+
+private findHandler(source: DropSource): DropHandler {
+  return this.handlers.find(h => h.canHandle(source))
+}
+```
 
 ---
 
@@ -27,32 +63,32 @@ Die neuen Drag-Controller-Dateien zeigen den Zielzustand:
 
 ## Priorisierte Refactoring-Liste
 
-| #   | Datei                              | Funktion/Bereich     | Zeilen | Problem                                                                                                            | Vorgeschlagene Lösung                                                                                                               | Priorität |
-| --- | ---------------------------------- | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| 1   | `studio/app.js`                    | Gesamtstruktur       | 8007   | Monolithische Datei mit 100+ Funktionen, 104 Commits in 3 Monaten, häufige Merge-Konflikte                         | Aufteilen in Module: `editor/`, `pickers/`, `file-ops/`, `compile/`                                                                 | **Hoch**  |
-| 2   | `studio/app.js`                    | `compile()`          | ~300   | Macht 6+ Dinge: Prelude-Handling, Parse, IR, Codegen, DOM-Update, Studio-Sync, Token-Preview, Component-Preview    | Extrahieren zu `CompileService` mit klaren Schritten: `prepareSource()`, `parseAndTransform()`, `renderPreview()`, `updateStudio()` | **Hoch**  |
-| 3   | `studio/app.js`                    | `handleStudioDrop()` | ~350   | Behandelt 5+ Szenarien: Element Move, Element Duplicate, Absolute Position, Palette Drop, Zag Components (4 Cases) | Strategy Pattern: `DropHandler` Interface mit `ElementMoveHandler`, `PaletteDropHandler`, `ZagDropHandler`                          | **Hoch**  |
-| 4   | `studio/app.js`                    | Color Picker         | ~800   | UI-Logik mit globalen Variablen, inline CSS-Strings, Event-Handler vermischt                                       | Extrahieren zu `pickers/color-picker/` mit eigener Klasse, Template-Datei, Event-Handling                                           | **Hoch**  |
-| 5   | `studio/app.js`                    | Animation Picker     | ~400   | Gleiche Probleme wie Color Picker                                                                                  | Extrahieren zu `pickers/animation-picker/`                                                                                          | Mittel    |
-| 6   | `compiler/parser/parser.ts`        | Gesamtstruktur       | 6024   | Sehr große Datei, aber bereits teilweise extrahiert (zag-parser.ts)                                                | Weitere Extraktion: `expression-parser.ts`, `property-parser.ts`, `instance-parser.ts`                                              | Mittel    |
-| 7   | `compiler/runtime/dom-runtime.ts`  | Gesamtstruktur       | 5103   | 50+ exportierte Funktionen in einer Datei, verschiedene Concerns gemischt                                          | Aufteilen: `state.ts`, `overlay.ts`, `scroll.ts`, `data-loading.ts`, `form-navigation.ts`                                           | Mittel    |
-| 8   | `compiler/backends/dom.ts`         | `generateDOM()`      | ~2000  | Eine riesige Funktion mit vielen if/else-Zweigen                                                                   | Visitor Pattern: `EmitContext` + `NodeVisitor` Interface, separate Emitter pro Node-Typ                                             | Mittel    |
-| 9   | `studio/desktop-files.js`          | Gesamtstruktur       | 1347   | Mix aus File-Ops, UI-Updates, Server-Kommunikation                                                                 | Aufteilen: `file-service.ts`, `file-tree-ui.ts`, `server-sync.ts`                                                                   | Mittel    |
-| 10  | `compiler/studio/code-modifier.ts` | Gesamtstruktur       | 2676   | Viele ähnliche Methoden für verschiedene Modifikationen                                                            | Refactoren zu Command Pattern mit kleineren, fokussierten Modifier-Klassen                                                          | Niedrig   |
+| #     | Datei                              | Funktion/Bereich     | Zeilen  | Problem                                                                                                            | Vorgeschlagene Lösung                                                                                                               | Priorität       |
+| ----- | ---------------------------------- | -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| 1     | `studio/app.js`                    | Gesamtstruktur       | 7046    | Monolithische Datei mit 100+ Funktionen, 104 Commits in 3 Monaten, häufige Merge-Konflikte                         | Aufteilen in Module: `editor/`, `pickers/`, `file-ops/`, `compile/`                                                                 | **Hoch**        |
+| 2     | `studio/app.js`                    | `compile()`          | ~300    | Macht 6+ Dinge: Prelude-Handling, Parse, IR, Codegen, DOM-Update, Studio-Sync, Token-Preview, Component-Preview    | Extrahieren zu `CompileService` mit klaren Schritten: `prepareSource()`, `parseAndTransform()`, `renderPreview()`, `updateStudio()` | **Hoch**        |
+| 3     | `studio/app.js`                    | `handleStudioDrop()` | ~350    | Behandelt 5+ Szenarien: Element Move, Element Duplicate, Absolute Position, Palette Drop, Zag Components (4 Cases) | Strategy Pattern: `DropHandler` Interface mit `ElementMoveHandler`, `PaletteDropHandler`, `ZagDropHandler`                          | **Hoch**        |
+| 4     | `studio/app.js`                    | Color Picker         | ~800    | UI-Logik mit globalen Variablen, inline CSS-Strings, Event-Handler vermischt                                       | Extrahieren zu `pickers/color-picker/` mit eigener Klasse, Template-Datei, Event-Handling                                           | **Hoch**        |
+| ~~5~~ | ~~`studio/app.js`~~                | ~~Animation Picker~~ | ~~961~~ | ~~Gleiche Probleme wie Color Picker~~                                                                              | ~~Gelöscht (2026-04-14)~~ - TypeScript-Version existiert: `studio/pickers/animation/`                                               | ✅ **Erledigt** |
+| 6     | `compiler/parser/parser.ts`        | Gesamtstruktur       | 6024    | Sehr große Datei, aber bereits teilweise extrahiert (zag-parser.ts)                                                | Weitere Extraktion: `expression-parser.ts`, `property-parser.ts`, `instance-parser.ts`                                              | Mittel          |
+| 7     | `compiler/runtime/dom-runtime.ts`  | Gesamtstruktur       | 5103    | 50+ exportierte Funktionen in einer Datei, verschiedene Concerns gemischt                                          | Aufteilen: `state.ts`, `overlay.ts`, `scroll.ts`, `data-loading.ts`, `form-navigation.ts`                                           | Mittel          |
+| 8     | `compiler/backends/dom.ts`         | `generateDOM()`      | ~2000   | Eine riesige Funktion mit vielen if/else-Zweigen                                                                   | Visitor Pattern: `EmitContext` + `NodeVisitor` Interface, separate Emitter pro Node-Typ                                             | Mittel          |
+| 9     | `studio/desktop-files.js`          | Gesamtstruktur       | 1347    | Mix aus File-Ops, UI-Updates, Server-Kommunikation                                                                 | Aufteilen: `file-service.ts`, `file-tree-ui.ts`, `server-sync.ts`                                                                   | Mittel          |
+| 10    | `compiler/studio/code-modifier.ts` | Gesamtstruktur       | 2676    | Viele ähnliche Methoden für verschiedene Modifikationen                                                            | Refactoren zu Command Pattern mit kleineren, fokussierten Modifier-Klassen                                                          | Niedrig         |
 
 ---
 
 ## Detailanalyse
 
-### 1. studio/app.js (8007 Zeilen)
+### 1. studio/app.js (7046 Zeilen)
 
 **Warum höchste Priorität:**
 
 - 104 Commits in 3 Monaten = täglich geändert
 - Jede Änderung birgt Risiko für unbeabsichtigte Seiteneffekte
-- Entwickler müssen 8000 Zeilen verstehen, um eine kleine Änderung zu machen
+- Entwickler müssen 7000 Zeilen verstehen, um eine kleine Änderung zu machen
 
-**Identifizierte Bereiche:**
+**Identifizierte Bereiche (Stand: 2026-04-14):**
 
 ```
 Zeilen   1-300:   Imports, Konstanten, File Extensions
@@ -60,14 +96,14 @@ Zeilen 300-500:   Mode Switching (Mirror/React)
 Zeilen 500-900:   File Operations (meist Legacy)
 Zeilen 900-1800:  Syntax Highlighting
 Zeilen 1800-2700: Color Picker
-Zeilen 2700-3600: Animation Picker
-Zeilen 3600-4400: Editor Setup
-Zeilen 4400-4800: compile()
-Zeilen 4800-5600: Token/Component Preview
-Zeilen 5600-5800: Notification Handlers
-Zeilen 5800-6400: Chat Panel, LLM Integration
-Zeilen 6400-6800: handleStudioDrop()
-Zeilen 6800-8000: Zag Helpers, Init, Misc
+Zeilen 2700-2715: Animation Picker GELÖSCHT - Verweis auf TypeScript-Version
+Zeilen 2715-3500: Editor Setup
+Zeilen 3500-3900: compile()
+Zeilen 3900-4700: Token/Component Preview
+Zeilen 4700-4900: Notification Handlers
+Zeilen 4900-5500: Chat Panel, LLM Integration
+Zeilen 5500-5900: handleStudioDrop()
+Zeilen 5900-7046: Zag Helpers, Init, Misc
 ```
 
 **Vorgeschlagene Modulstruktur:**
@@ -83,9 +119,10 @@ studio/
 │   ├── compile-service.ts  # Koordination
 │   ├── prelude-builder.ts  # Prelude-Handling
 │   └── preview-renderer.ts # DOM-Rendering
-├── pickers/
-│   ├── color/          # Color Picker Module
-│   └── animation/      # Animation Picker Module
+├── pickers/                # ✅ Bereits vorhanden
+│   ├── base/           # BasePicker, KeyboardNav (existiert)
+│   ├── color/          # Color Picker (existiert, aber app.js verwendet noch inline-Version)
+│   └── animation/      # ✅ Animation Picker (existiert, inline-Version gelöscht)
 ├── drop/
 │   ├── drop-service.ts     # Koordination
 │   ├── element-handler.ts  # Element Move/Duplicate
