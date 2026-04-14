@@ -98,6 +98,7 @@ export class DragPreview {
   private container: HTMLElement
   private isOverCanvas = false
   private rafPending = false
+  private dropHandled = false // Flag to prevent dragend from cancelling after drop
 
   // Bound handlers for cleanup
   private boundDragOver: (e: DragEvent) => void
@@ -154,6 +155,9 @@ export class DragPreview {
     document.addEventListener('drop', this.boundDrop)
     document.addEventListener('dragleave', this.boundDragLeave)
     document.addEventListener('dragend', this.boundDragEnd)
+    // ALSO add drop listener to container with capture phase to ensure we get it first
+    this.container.addEventListener('drop', this.boundDrop, true)
+    this.container.addEventListener('dragover', this.boundDragOver, true)
     // Escape key to cancel drag
     document.addEventListener('keydown', this.boundKeyDown)
     // Canvas element drag start (delegated)
@@ -162,7 +166,7 @@ export class DragPreview {
     this.makeElementsDraggable()
     // Re-make elements draggable after preview updates
     this.previewRenderedUnsub = events.on('preview:rendered', this.boundMakeElementsDraggable)
-    log.info('Attached to document')
+    log.info('Attached to document and container')
   }
 
   detach(): void {
@@ -172,6 +176,8 @@ export class DragPreview {
     document.removeEventListener('dragend', this.boundDragEnd)
     document.removeEventListener('keydown', this.boundKeyDown)
     this.container.removeEventListener('dragstart', this.boundCanvasDragStart)
+    this.container.removeEventListener('drop', this.boundDrop, true)
+    this.container.removeEventListener('dragover', this.boundDragOver, true)
     // Unsubscribe from preview:rendered
     if (this.previewRenderedUnsub) {
       this.previewRenderedUnsub()
@@ -317,6 +323,7 @@ export class DragPreview {
 
     if (!this.isOverCanvas) {
       this.isOverCanvas = true
+      this.dropHandled = false // Reset flag for new drag
       document.body.classList.add('drag-active')
       log.warn('First entry over canvas, dragType:', dragType)
       dragType === 'canvas' ? this.startCanvasDrag() : this.startPaletteDrag()
@@ -339,7 +346,22 @@ export class DragPreview {
   }
 
   private handleDrop(e: DragEvent): void {
-    log.warn('handleDrop called, clientX:', e.clientX, 'clientY:', e.clientY)
+    log.warn(
+      'handleDrop called, clientX:',
+      e.clientX,
+      'clientY:',
+      e.clientY,
+      'target:',
+      (e.target as HTMLElement)?.tagName
+    )
+
+    // Check if this is a Mirror drag type
+    const dragType = this.getMirrorDragType(e)
+    if (!dragType) {
+      log.warn('handleDrop: Not a Mirror drag type, ignoring')
+      return
+    }
+
     if (!this.isCursorOverContainer(e)) {
       log.warn('handleDrop: cursor not over container, ignoring')
       return
@@ -347,20 +369,35 @@ export class DragPreview {
 
     e.preventDefault()
     e.stopPropagation()
+
+    // Mark drop as handled BEFORE calling drop() to prevent dragend from cancelling
+    this.dropHandled = true
     this.isOverCanvas = false
     document.body.classList.remove('drag-active')
 
+    log.warn('Calling getDragController().drop()')
     getDragController().drop()
-    log.warn('Drop executed')
+    log.warn('Drop executed successfully')
   }
 
   private handleDragEnd(_e: DragEvent): void {
+    log.warn('handleDragEnd called, dropHandled:', this.dropHandled)
+
     // Always cleanup on dragend
     this.isOverCanvas = false
     document.body.classList.remove('drag-active')
-    getDragController().cancel()
+
+    // Only cancel if drop wasn't already handled
+    if (!this.dropHandled) {
+      getDragController().cancel()
+      log.warn('DragEnd: cancelled (drop not handled)')
+    } else {
+      log.warn('DragEnd: skipping cancel (drop was handled)')
+    }
+
+    // Reset flag for next drag
+    this.dropHandled = false
     clearCurrentDragData()
-    log.debug('DragEnd, cleanup')
   }
 
   dispose(): void {
