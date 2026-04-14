@@ -5613,6 +5613,64 @@ function initPreviewZoom() {
 function setupNotificationHandlers() {
   if (!studio?.events) return
 
+  // Handle drag:dropped from v3 DragController (must be before statusEl check!)
+  console.log('[App] Registering drag:dropped handler')
+  studio.events.on('drag:dropped', ({ source, target, dragData }) => {
+    console.log('[App] drag:dropped handler CALLED!')
+    console.log(
+      '[Drag v3] Dropped:',
+      source?.type === 'canvas' ? `move ${source.nodeId}` : source?.componentName,
+      '→',
+      target?.containerId,
+      'at',
+      target?.insertionIndex
+    )
+
+    if (!target) {
+      console.warn('[Drag v3] Missing target')
+      return
+    }
+
+    // Handle canvas element move (type: 'canvas')
+    if (source?.type === 'canvas' && source.nodeId) {
+      const dropResult = {
+        source: {
+          type: 'element',
+          nodeId: source.nodeId,
+        },
+        targetNodeId: target.containerId,
+        placement: 'inside',
+        insertionIndex: target.insertionIndex,
+      }
+      handleStudioDrop(dropResult)
+      return
+    }
+
+    // Handle palette component insert (type: 'palette')
+    if (!dragData) {
+      console.warn('[Drag v3] Missing dragData for palette drop')
+      return
+    }
+
+    // Convert v3 format to existing handleStudioDrop format
+    const dropResult = {
+      source: {
+        type: 'palette',
+        componentId: dragData.componentId,
+        componentName: dragData.componentName,
+        template: dragData.componentName,
+        properties: dragData.properties,
+        textContent: dragData.textContent,
+        children: dragData.children,
+      },
+      targetNodeId: target.containerId,
+      placement: 'inside', // v3 always inserts inside flex containers
+      insertionIndex: target.insertionIndex,
+    }
+
+    handleStudioDrop(dropResult)
+  })
+
   const statusEl = document.getElementById('status')
   if (!statusEl) return
 
@@ -5676,65 +5734,6 @@ function setupNotificationHandlers() {
       compile(code)
       debouncedSave(code)
     }
-  })
-
-  // Handle drag:dropped from v3 DragController
-  // This receives the drop target info and triggers code modification
-  console.log('[App] Registering drag:dropped handler, studio.events:', !!studio?.events)
-  studio.events.on('drag:dropped', ({ source, target, dragData }) => {
-    console.log('[App] drag:dropped handler CALLED!')
-    console.log(
-      '[Drag v3] Dropped:',
-      source?.type === 'canvas' ? `move ${source.nodeId}` : source?.componentName,
-      '→',
-      target?.containerId,
-      'at',
-      target?.insertionIndex
-    )
-
-    if (!target) {
-      console.warn('[Drag v3] Missing target')
-      return
-    }
-
-    // Handle canvas element move (type: 'canvas')
-    if (source?.type === 'canvas' && source.nodeId) {
-      const dropResult = {
-        source: {
-          type: 'element',
-          nodeId: source.nodeId,
-        },
-        targetNodeId: target.containerId,
-        placement: 'inside',
-        insertionIndex: target.insertionIndex,
-      }
-      handleStudioDrop(dropResult)
-      return
-    }
-
-    // Handle palette component insert (type: 'palette')
-    if (!dragData) {
-      console.warn('[Drag v3] Missing dragData for palette drop')
-      return
-    }
-
-    // Convert v3 format to existing handleStudioDrop format
-    const dropResult = {
-      source: {
-        type: 'palette',
-        componentId: dragData.componentId,
-        componentName: dragData.componentName,
-        template: dragData.componentName,
-        properties: dragData.properties,
-        textContent: dragData.textContent,
-        children: dragData.children,
-      },
-      targetNodeId: target.containerId,
-      placement: 'inside', // v3 always inserts inside flex containers
-      insertionIndex: target.insertionIndex,
-    }
-
-    handleStudioDrop(dropResult)
   })
 }
 
