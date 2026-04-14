@@ -12,12 +12,7 @@
  */
 
 import { state, actions, events, getLayoutService } from '../core'
-import {
-  executeGroup,
-  executeUngroup,
-  executeDuplicate,
-  executeDelete,
-} from './shared-actions'
+import { executeGroup, executeUngroup, executeDuplicate, executeDelete } from './shared-actions'
 import { SetPositionCommand } from '../core/commands'
 import type { CommandContext } from '../core/commands'
 import { isAbsoluteLayoutContainer } from '../../compiler/studio/utils/layout-detection'
@@ -55,9 +50,13 @@ export class KeyboardHandler {
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
+    // DEBUG
+    console.log('[KeyboardHandler] keydown:', e.key, 'target:', (e.target as HTMLElement).tagName)
+
     // Skip if target is an input element
     const target = e.target as HTMLElement
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      console.log('[KeyboardHandler] Skipping - input element')
       return
     }
 
@@ -84,6 +83,7 @@ export class KeyboardHandler {
 
     // Delete/Backspace = Delete selected element(s)
     if (e.key === 'Delete' || e.key === 'Backspace') {
+      console.log('[KeyboardHandler] Delete/Backspace detected')
       e.preventDefault()
       this.handleDelete()
       return
@@ -199,7 +199,9 @@ export class KeyboardHandler {
     }
 
     // Fallback to DOM reads
-    const element = this.container.querySelector(`[${this.nodeIdAttribute}="${nodeId}"]`) as HTMLElement | null
+    const element = this.container.querySelector(
+      `[${this.nodeIdAttribute}="${nodeId}"]`
+    ) as HTMLElement | null
     if (!element) return false
 
     const parent = element.parentElement
@@ -241,7 +243,9 @@ export class KeyboardHandler {
     }
 
     // Fallback to DOM reads
-    const element = this.container.querySelector(`[${this.nodeIdAttribute}="${nodeId}"]`) as HTMLElement | null
+    const element = this.container.querySelector(
+      `[${this.nodeIdAttribute}="${nodeId}"]`
+    ) as HTMLElement | null
     if (!element) return null
 
     // Priority 2: Try to read from data attributes (set by DSL)

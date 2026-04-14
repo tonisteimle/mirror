@@ -62,11 +62,13 @@ export function executeGroup(container: HTMLElement): ActionResult {
   }
 
   // Execute wrap command
-  const result = executor.execute(new WrapNodesCommand({
-    nodeIds: multiSelection,
-    wrapperName: 'Box',
-    wrapperProps,
-  }))
+  const result = executor.execute(
+    new WrapNodesCommand({
+      nodeIds: multiSelection,
+      wrapperName: 'Box',
+      wrapperProps,
+    })
+  )
 
   if (result.success) {
     actions.clearMultiSelection()
@@ -112,9 +114,11 @@ export function executeUngroup(): ActionResult {
   }
 
   // Execute unwrap command
-  const result = executor.execute(new UnwrapNodeCommand({
-    nodeId: selection.nodeId,
-  }))
+  const result = executor.execute(
+    new UnwrapNodeCommand({
+      nodeId: selection.nodeId,
+    })
+  )
 
   if (result.success) {
     return {
@@ -194,10 +198,13 @@ export function executeDelete(): ActionResult {
   const multiSelection = state.get().multiSelection
   const selection = state.get().selection
 
+  // DEBUG
+  console.log('[executeDelete] multiSelection:', multiSelection)
+  console.log('[executeDelete] selection:', selection)
+
   // Collect nodes to delete
-  const nodeIds = multiSelection.length > 0
-    ? multiSelection
-    : (selection?.nodeId ? [selection.nodeId] : [])
+  const nodeIds =
+    multiSelection.length > 0 ? multiSelection : selection?.nodeId ? [selection.nodeId] : []
 
   if (nodeIds.length === 0) {
     return { success: false, error: 'No element selected to delete' }
