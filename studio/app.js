@@ -4523,8 +4523,14 @@ function compile(code) {
     }
 
     // Update state with resolved source and prelude offset for Commands
+    // Note: preludeOffset in state is LINE count (for selection resolution)
+    // while currentPreludeOffset is CHARACTER count (for change position adjustment)
     if (studio?.state) {
-      studio.state.set({ resolvedSource: resolvedCode, preludeOffset: currentPreludeOffset })
+      const preludeLineCount =
+        currentPreludeOffset > 0
+          ? resolvedCode.substring(0, currentPreludeOffset).split('\n').length - 1
+          : 0
+      studio.state.set({ resolvedSource: resolvedCode, preludeOffset: preludeLineCount })
     }
 
     // Parse
@@ -5614,18 +5620,7 @@ function setupNotificationHandlers() {
   if (!studio?.events) return
 
   // Handle drag:dropped from v3 DragController (must be before statusEl check!)
-  console.log('[App] Registering drag:dropped handler')
   studio.events.on('drag:dropped', ({ source, target, dragData }) => {
-    console.log('[App] drag:dropped handler CALLED!')
-    console.log(
-      '[Drag v3] Dropped:',
-      source?.type === 'canvas' ? `move ${source.nodeId}` : source?.componentName,
-      '→',
-      target?.containerId,
-      'at',
-      target?.insertionIndex
-    )
-
     if (!target) {
       console.warn('[Drag v3] Missing target')
       return

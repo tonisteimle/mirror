@@ -305,10 +305,6 @@ export class EventBus {
       this.handlers.set(event, new Set())
     }
     this.handlers.get(event)!.add(handler)
-    // Debug: log drag:dropped handler registration
-    if (event === 'drag:dropped') {
-      log.info(`[drag:dropped] Handler registered, total: ${this.handlers.get(event)!.size}`)
-    }
     return () => this.handlers.get(event)?.delete(handler)
   }
 
@@ -345,10 +341,6 @@ export class EventBus {
 
     // Dispatch to handlers
     const handlers = this.handlers.get(event)
-    // Debug: log drag:dropped event dispatching
-    if (event === 'drag:dropped') {
-      log.info(`[drag:dropped] Dispatching to ${handlers?.size ?? 0} handlers`)
-    }
     handlers?.forEach(handler => {
       try {
         handler(currentPayload)
