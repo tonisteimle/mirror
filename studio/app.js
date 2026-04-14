@@ -6719,30 +6719,28 @@ async function handleStudioDrop(result) {
 // Helper to apply a code change from drop operation
 function applyDropChange(modResult, componentName = 'Component') {
   const change = modResult.change
+  const docLength = editor.state.doc.length
 
-  // Adjust change positions for prelude offset (merged source vs single file)
-  const adjustedChange = {
-    from: change.from - currentPreludeOffset,
-    to: change.to - currentPreludeOffset,
-    insert: change.insert,
+  // Handle case where CodeModifier returns full resolved source replacement
+  // (e.g., moveNode replaces entire source including prelude)
+  let adjustedChange
+  if (change.from === 0 && change.to > docLength && currentPreludeOffset > 0) {
+    // Extract only the current file portion from the insert text
+    adjustedChange = {
+      from: 0,
+      to: docLength,
+      insert: change.insert.substring(currentPreludeOffset),
+    }
+  } else {
+    // Standard adjustment for single-file changes
+    adjustedChange = {
+      from: change.from - currentPreludeOffset,
+      to: change.to - currentPreludeOffset,
+      insert: change.insert,
+    }
   }
 
   // Validate range
-  const docLength = editor.state.doc.length
-  console.log(
-    '[applyDropChange] change:',
-    change.from,
-    '->',
-    change.to,
-    'preludeOffset:',
-    currentPreludeOffset,
-    'docLength:',
-    docLength,
-    'adjusted:',
-    adjustedChange.from,
-    '->',
-    adjustedChange.to
-  )
   if (
     adjustedChange.from < 0 ||
     adjustedChange.to > docLength ||
