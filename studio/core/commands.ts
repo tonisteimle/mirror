@@ -64,12 +64,17 @@ export function getCommandContext(): CommandContext {
  */
 function adjustChangeForEditor(change: CodeChange, ctx: CommandContext): CodeChange {
   const offset = ctx.getPreludeOffset()
+  // DEBUG
+  console.log('[adjustChangeForEditor] preludeOffset:', offset)
+  console.log('[adjustChangeForEditor] original change:', change)
   if (offset === 0) return change
-  return {
+  const adjusted = {
     from: change.from - offset,
     to: change.to - offset,
     insert: change.insert,
   }
+  console.log('[adjustChangeForEditor] adjusted change:', adjusted)
+  return adjusted
 }
 
 /**
