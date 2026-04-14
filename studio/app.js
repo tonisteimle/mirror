@@ -5719,6 +5719,7 @@ function setupNotificationHandlers() {
     // Convert v3 format to existing handleStudioDrop format
     const dropResult = {
       source: {
+        type: 'palette',
         componentId: dragData.componentId,
         componentName: dragData.componentName,
         template: dragData.componentName,
