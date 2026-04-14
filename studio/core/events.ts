@@ -134,6 +134,20 @@ export interface StudioEvents {
     defaultProps?: string
   }
   'drop:component': { dragData: ComponentDragData; dropZone: DropZone }
+  /** Drag v3: Component dropped on canvas */
+  'drag:dropped': {
+    source: {
+      type: 'palette' | 'canvas'
+      componentName?: string
+      template?: string
+      nodeId?: string
+    }
+    target: {
+      containerId: string
+      insertionIndex: number
+    }
+    dragData: ComponentDragData | null
+  }
   /** Emitted when compilation is requested */
   'compile:requested': Record<string, never>
   /** Emitted when compilation starts */
@@ -291,6 +305,10 @@ export class EventBus {
       this.handlers.set(event, new Set())
     }
     this.handlers.get(event)!.add(handler)
+    // Debug: log drag:dropped handler registration
+    if (event === 'drag:dropped') {
+      log.info(`[drag:dropped] Handler registered, total: ${this.handlers.get(event)!.size}`)
+    }
     return () => this.handlers.get(event)?.delete(handler)
   }
 
@@ -326,7 +344,12 @@ export class EventBus {
     }
 
     // Dispatch to handlers
-    this.handlers.get(event)?.forEach(handler => {
+    const handlers = this.handlers.get(event)
+    // Debug: log drag:dropped event dispatching
+    if (event === 'drag:dropped') {
+      log.info(`[drag:dropped] Dispatching to ${handlers?.size ?? 0} handlers`)
+    }
+    handlers?.forEach(handler => {
       try {
         handler(currentPayload)
       } catch (e) {
