@@ -104,7 +104,11 @@ export class DragController {
 
   /** Complete the drag operation */
   async drop(): Promise<void> {
-    if (!this.source || !this.lastTarget) return this.reset()
+    log.warn('drop() called, source:', this.source?.type, 'target:', this.lastTarget?.containerId)
+    if (!this.source || !this.lastTarget) {
+      log.warn('drop() aborted: missing source or target')
+      return this.reset()
+    }
 
     const source = this.source
     const target = this.lastTarget

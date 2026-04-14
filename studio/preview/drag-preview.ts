@@ -339,7 +339,11 @@ export class DragPreview {
   }
 
   private handleDrop(e: DragEvent): void {
-    if (!this.isCursorOverContainer(e)) return
+    log.warn('handleDrop called, clientX:', e.clientX, 'clientY:', e.clientY)
+    if (!this.isCursorOverContainer(e)) {
+      log.warn('handleDrop: cursor not over container, ignoring')
+      return
+    }
 
     e.preventDefault()
     e.stopPropagation()
@@ -347,7 +351,7 @@ export class DragPreview {
     document.body.classList.remove('drag-active')
 
     getDragController().drop()
-    log.info('Drop executed')
+    log.warn('Drop executed')
   }
 
   private handleDragEnd(_e: DragEvent): void {
