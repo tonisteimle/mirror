@@ -49,8 +49,6 @@ import {
   createTriggerExtensions,
   setIconTriggerPrimitives,
   getIconTriggerPrimitives,
-  // Ghost Renderer for palette drag previews
-  getGhostRenderer,
   // Inline Prompt Extension (AI code generation)
   inlinePromptExtension,
   // Fixer Service (AI multi-file code generation)
@@ -63,7 +61,7 @@ import {
   generateComponentCodeFromDragData,
   // Property Panel
   PropertyPanel,
-} from './dist/index.js?v=126'
+} from './dist/index.js?v=130'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -5678,6 +5676,41 @@ function setupNotificationHandlers() {
       compile(code)
       debouncedSave(code)
     }
+  })
+
+  // Handle drag:dropped from v3 DragController
+  // This receives the drop target info and triggers code modification
+  studio.events.on('drag:dropped', ({ source, target, dragData }) => {
+    console.log(
+      '[Drag v3] Dropped:',
+      source?.componentName,
+      '→',
+      target?.containerId,
+      'at',
+      target?.insertionIndex
+    )
+
+    if (!dragData || !target) {
+      console.warn('[Drag v3] Missing dragData or target')
+      return
+    }
+
+    // Convert v3 format to existing handleStudioDrop format
+    const dropResult = {
+      source: {
+        componentId: dragData.componentId,
+        componentName: dragData.componentName,
+        template: dragData.componentName,
+        properties: dragData.properties,
+        textContent: dragData.textContent,
+        children: dragData.children,
+      },
+      targetNodeId: target.containerId,
+      placement: 'inside', // v3 always inserts inside flex containers
+      insertionIndex: target.insertionIndex,
+    }
+
+    handleStudioDrop(dropResult)
   })
 }
 

@@ -1,14 +1,22 @@
 /**
- * Drag Preview - Shows rendered component when dragging over canvas
+ * Drag Preview v3 - Fast, stable drag with insertion indicator
  *
- * Minimal implementation:
- * - Outside canvas: icon + text (native drag image)
- * - Inside canvas: show rendered component as ghost
+ * Uses the v3 architecture:
+ * - LayoutCache: O(1) rect lookups (built once per drag)
+ * - HitDetector: Find flex container under cursor
+ * - InsertionCalculator: Pure geometry for insertion position
+ * - Indicator: Single DOM element, repositioned
+ * - DragController: Orchestrates everything
+ *
+ * Performance:
+ * - Drag Move: ~0.5ms (no DOM reads, cached values)
+ * - Drop: Code modification via callback
  */
 
 import { createLogger } from '../../compiler/utils/logger'
-import { getGhostRenderer } from '../panels/components/ghost-renderer'
+import { events } from '../core'
 import type { ComponentItem } from '../panels/components/types'
+import { getDragController, type DragSource, type DropTarget } from './drag'
 
 const log = createLogger('DragPreview')
 
@@ -23,13 +31,19 @@ export interface ComponentDragData {
   componentName: string
   properties?: string
   textContent?: string
+  fromComponentPanel?: boolean
+  children?: string
 }
 
-/** Full component item for ghost rendering */
+/** Full component item for rendering */
 let currentComponentItem: ComponentItem | null = null
+
+/** Raw drag data for drop handling */
+let currentDragData: ComponentDragData | null = null
 
 /** Set current drag data (called by ComponentPanel on dragstart) */
 export function setCurrentDragData(data: ComponentDragData | null, item?: ComponentItem): void {
+  currentDragData = data
   currentComponentItem = item ?? null
   log.debug('Drag data set:', data?.componentName ?? 'null')
 }
@@ -39,11 +53,21 @@ export function getCurrentComponentItem(): ComponentItem | null {
   return currentComponentItem
 }
 
+/** Get current drag data */
+export function getCurrentDragData(): ComponentDragData | null {
+  return currentDragData
+}
+
 /** Clear current drag data (called on dragend) */
 export function clearCurrentDragData(): void {
+  currentDragData = null
   currentComponentItem = null
   log.debug('Drag data cleared')
 }
+
+// =============================================================================
+// DragPreview Class
+// =============================================================================
 
 export interface DragPreviewConfig {
   /** The preview/canvas container */
@@ -52,14 +76,15 @@ export interface DragPreviewConfig {
 
 export class DragPreview {
   private container: HTMLElement
-  private ghostElement: HTMLElement | null = null
   private isOverCanvas = false
-  private renderingInProgress = false
+  private rafPending = false
 
   // Bound handlers for cleanup
   private boundDragOver: (e: DragEvent) => void
   private boundDragLeave: (e: DragEvent) => void
   private boundDrop: (e: DragEvent) => void
+  private boundDragEnd: (e: DragEvent) => void
+  private boundKeyDown: (e: KeyboardEvent) => void
 
   constructor(config: DragPreviewConfig) {
     this.container = config.container
@@ -67,28 +92,73 @@ export class DragPreview {
     this.boundDragOver = this.handleDragOver.bind(this)
     this.boundDragLeave = this.handleDragLeave.bind(this)
     this.boundDrop = this.handleDrop.bind(this)
+    this.boundDragEnd = this.handleDragEnd.bind(this)
+    this.boundKeyDown = this.handleKeyDown.bind(this)
+
+    // Setup DragController callbacks
+    this.setupDragController()
+  }
+
+  private setupDragController(): void {
+    const controller = getDragController()
+
+    controller.setCallbacks({
+      onDrop: async (source: DragSource, target: DropTarget) => {
+        log.info(
+          'Drop:',
+          source.componentName,
+          '→',
+          target.containerId,
+          'at index',
+          target.insertionIndex
+        )
+
+        // Emit event for app.js to handle code modification
+        events.emit('drag:dropped', {
+          source,
+          target,
+          dragData: currentDragData,
+        })
+      },
+    })
   }
 
   attach(): void {
-    // Listen on document to catch all drag events, then check if over container
+    // Listen on document to catch all drag events
     document.addEventListener('dragover', this.boundDragOver)
     document.addEventListener('drop', this.boundDrop)
-    document.addEventListener('dragend', this.boundDragLeave)
+    document.addEventListener('dragleave', this.boundDragLeave)
+    document.addEventListener('dragend', this.boundDragEnd)
+    // Escape key to cancel drag
+    document.addEventListener('keydown', this.boundKeyDown)
     log.info('Attached to document')
   }
 
   detach(): void {
     document.removeEventListener('dragover', this.boundDragOver)
     document.removeEventListener('drop', this.boundDrop)
-    document.removeEventListener('dragend', this.boundDragLeave)
-    this.hideGhost()
+    document.removeEventListener('dragleave', this.boundDragLeave)
+    document.removeEventListener('dragend', this.boundDragEnd)
+    document.removeEventListener('keydown', this.boundKeyDown)
+
+    getDragController().cancel()
     log.info('Detached')
   }
 
-  // handleDragEnter is no longer used - we detect entry via handleDragOver
+  /**
+   * Handle Escape key to cancel drag
+   */
+  private handleKeyDown(e: KeyboardEvent): void {
+    if (e.key === 'Escape' && this.isOverCanvas) {
+      e.preventDefault()
+      this.isOverCanvas = false
+      getDragController().cancel()
+      log.debug('Drag cancelled via Escape')
+    }
+  }
 
   private handleDragOver(e: DragEvent): void {
-    // Check for Mirror component drag - types is a DOMStringList, use contains()
+    // Check for Mirror component drag
     const types = e.dataTransfer?.types
     const hasMirrorComponent =
       types &&
@@ -109,131 +179,91 @@ export class DragPreview {
 
     if (isOver) {
       e.preventDefault()
-      e.dataTransfer.dropEffect = 'copy'
+      e.dataTransfer!.dropEffect = 'copy'
 
-      // Show ghost if just entered
+      const controller = getDragController()
+
+      // Start drag if just entered canvas
       if (!this.isOverCanvas) {
         this.isOverCanvas = true
         const item = getCurrentComponentItem()
+
         if (item) {
-          this.showGhost(item, e.clientX, e.clientY)
+          controller.startDrag(
+            {
+              type: 'palette',
+              componentName: item.name,
+              template: item.template,
+            },
+            this.container
+          )
+          log.debug('Drag started:', item.name)
         }
-      } else {
-        // Update ghost position
-        this.updateGhostPosition(e.clientX, e.clientY)
+      }
+
+      // Throttle position updates with RAF for 60fps
+      if (!this.rafPending) {
+        this.rafPending = true
+        requestAnimationFrame(() => {
+          controller.updatePosition({ x: e.clientX, y: e.clientY })
+          this.rafPending = false
+        })
       }
     } else {
       // Left the canvas area
       if (this.isOverCanvas) {
         this.isOverCanvas = false
-        this.hideGhost()
+        getDragController().cancel()
+        log.debug('Left canvas, drag cancelled')
       }
     }
   }
 
-  private handleDragLeave(_e: DragEvent): void {
-    // Called on dragend - always hide and reset
-    this.isOverCanvas = false
-    this.hideGhost()
+  private handleDragLeave(e: DragEvent): void {
+    // Only cancel if we actually left the container
+    // (dragleave fires for child elements too)
+    if (!this.container.contains(e.relatedTarget as Node)) {
+      if (this.isOverCanvas) {
+        this.isOverCanvas = false
+        getDragController().cancel()
+        log.debug('DragLeave, drag cancelled')
+      }
+    }
   }
 
   private handleDrop(e: DragEvent): void {
+    // Check if drop is on our container
+    const rect = this.container.getBoundingClientRect()
+    const isOver =
+      e.clientX >= rect.left &&
+      e.clientX <= rect.right &&
+      e.clientY >= rect.top &&
+      e.clientY <= rect.bottom
+
+    if (!isOver) return
+
     e.preventDefault()
+    e.stopPropagation()
+
     this.isOverCanvas = false
-    this.hideGhost()
-    // No drop functionality yet - just clean up
-    log.info('Drop (no-op for now)')
+
+    // Execute drop via controller (triggers onDrop callback)
+    getDragController().drop()
+
+    log.info('Drop executed')
   }
 
-  private showGhost(item: ComponentItem, x: number, y: number): void {
-    // Prevent multiple concurrent renders
-    if (this.renderingInProgress) {
-      return
-    }
-    this.renderingInProgress = true
-
-    // Create ghost container if not exists
-    if (!this.ghostElement) {
-      this.ghostElement = document.createElement('div')
-      this.ghostElement.id = 'drag-preview-ghost'
-      document.body.appendChild(this.ghostElement)
-    }
-
-    // Apply base ghost styling
-    Object.assign(this.ghostElement.style, {
-      position: 'fixed',
-      pointerEvents: 'none',
-      zIndex: '10000',
-      opacity: '0.9',
-      transform: 'translate(-50%, -50%)',
-      transition: 'none',
-      background: 'transparent',
-      border: 'none',
-      borderRadius: '0',
-      padding: '0',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-    })
-
-    // Position immediately
-    this.updateGhostPosition(x, y)
-    this.ghostElement.style.display = 'block'
-
-    // Use GhostRenderer to render the component
-    const ghostRenderer = getGhostRenderer()
-    ghostRenderer
-      .render(item)
-      .then(result => {
-        // Check if still over canvas and ghost exists
-        if (!this.isOverCanvas || !this.ghostElement) {
-          this.renderingInProgress = false
-          return
-        }
-
-        // Clear and append rendered element
-        this.ghostElement.innerHTML = ''
-        this.ghostElement.appendChild(result.element)
-
-        log.debug('Ghost shown:', item.name)
-        this.renderingInProgress = false
-      })
-      .catch(err => {
-        log.warn('Ghost render failed:', err)
-        // Show fallback on error
-        if (this.ghostElement && this.isOverCanvas) {
-          this.ghostElement.textContent = item.name
-          Object.assign(this.ghostElement.style, {
-            background: '#1a1a1a',
-            border: '1px solid #333',
-            borderRadius: '6px',
-            padding: '10px 16px',
-            color: 'white',
-            fontSize: '14px',
-          })
-        }
-        this.renderingInProgress = false
-      })
-  }
-
-  private updateGhostPosition(x: number, y: number): void {
-    if (this.ghostElement) {
-      this.ghostElement.style.left = `${x}px`
-      this.ghostElement.style.top = `${y}px`
-    }
-  }
-
-  private hideGhost(): void {
-    if (this.ghostElement) {
-      this.ghostElement.style.display = 'none'
-    }
-    this.renderingInProgress = false
+  private handleDragEnd(_e: DragEvent): void {
+    // Always cleanup on dragend
+    this.isOverCanvas = false
+    getDragController().cancel()
+    clearCurrentDragData()
+    log.debug('DragEnd, cleanup')
   }
 
   dispose(): void {
     this.detach()
-    if (this.ghostElement) {
-      this.ghostElement.remove()
-      this.ghostElement = null
-    }
+    getDragController().destroy()
   }
 }
 

@@ -29,12 +29,7 @@ export {
 } from './tree'
 
 // File Panel
-export {
-  FilePanel,
-  createFilePanel,
-  type FilePanelConfig,
-  type FilePanelCallbacks,
-} from './files'
+export { FilePanel, createFilePanel, type FilePanelConfig, type FilePanelCallbacks } from './files'
 
 // Component Panel
 export {
@@ -43,10 +38,7 @@ export {
   getComponentIcon,
   BASIC_PRIMITIVES,
   BASIC_COMPONENTS,
-  LAYOUT_PRESETS,  // Backwards compatibility alias
-  GhostRenderer,
-  getGhostRenderer,
-  resetGhostRenderer,
+  LAYOUT_PRESETS, // Backwards compatibility alias
   type ComponentItem,
   type ComponentSection,
   type ComponentPanelConfig,

@@ -19,7 +19,6 @@ import type {
 import { getComponentIcon } from '../../icons'
 import { LAYOUT_SECTION, COMPONENTS_SECTION } from './layout-presets'
 import { parseComponentSections } from './section-parser'
-import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
 import { createLogger } from '../../../compiler/utils/logger'
 
@@ -80,7 +79,6 @@ export class ComponentPanel {
   private searchQuery: string = ''
   private panelElement: HTMLElement | null = null
   private abortController: AbortController | null = null
-  private ghostRenderer: GhostRenderer
 
   constructor(config: ComponentPanelConfig, callbacks: ComponentPanelCallbacks = {}) {
     this.container = config.container
@@ -92,7 +90,6 @@ export class ComponentPanel {
       getComFiles: config.getComFiles,
     }
     this.callbacks = callbacks
-    this.ghostRenderer = getGhostRenderer()
 
     this.buildSections()
     this.render()
@@ -196,30 +193,6 @@ export class ComponentPanel {
 
     this.panelElement.appendChild(sectionsContainer)
     this.container.appendChild(this.panelElement)
-
-    // Warm the cache in the background
-    this.warmGhostCache()
-  }
-
-  /**
-   * Pre-render ghosts for all components in the background
-   */
-  private warmGhostCache(): void {
-    // Collect all items from all sections
-    const allItems = this.sections.flatMap(section => section.items)
-
-    // Warm cache asynchronously (low priority)
-    // Use requestIdleCallback if available, otherwise setTimeout
-    const scheduleIdle =
-      typeof requestIdleCallback !== 'undefined'
-        ? requestIdleCallback
-        : (cb: () => void) => setTimeout(cb, 100)
-
-    scheduleIdle(() => {
-      this.ghostRenderer.warmCache(allItems).catch(err => {
-        log.warn('Ghost cache warming failed:', err)
-      })
-    })
   }
 
   /**
@@ -424,7 +397,6 @@ export class ComponentPanel {
     event.dataTransfer.effectAllowed = 'copy'
 
     // Store drag data globally for DragPreview (dataTransfer not readable in dragenter)
-    // Pass the full item so GhostRenderer can render it properly
     setCurrentDragData(
       {
         componentId: item.id,

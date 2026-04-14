@@ -7,7 +7,10 @@
 // Main exports
 export { ComponentPanel, createComponentPanel } from './component-panel'
 export { UserComponentsPanel, createUserComponentsPanel } from './user-components-panel'
-export type { UserComponentsPanelConfig, UserComponentsPanelCallbacks } from './user-components-panel'
+export type {
+  UserComponentsPanelConfig,
+  UserComponentsPanelCallbacks,
+} from './user-components-panel'
 
 // Types
 export type {
@@ -33,15 +36,7 @@ export {
   BASIC_PRIMITIVES as LAYOUT_PRESETS,
 } from './layout-presets'
 export { parseComponentSections, extractComponentInfo } from './section-parser'
-export {
-  COMPONENT_TEMPLATES,
-  getComponentTemplate,
-  getFileType,
-} from './component-templates'
-
-// Ghost rendering
-export { GhostRenderer, getGhostRenderer, resetGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
-export type { RenderedGhost } from './ghost-renderer'
+export { COMPONENT_TEMPLATES, getComponentTemplate, getFileType } from './component-templates'
 
 // Auto-add to .com files
 export { isComponentDefined, addComponentToComFile } from './component-auto-add'

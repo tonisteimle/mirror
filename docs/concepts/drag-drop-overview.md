@@ -37,37 +37,37 @@ Pragmatic   Native HTML5
 
 ### Komponenten
 
-| Komponente | Datei | Beschreibung |
-|------------|-------|--------------|
-| DragDropSystem | `studio/drag-drop/system/drag-drop-system.ts` | Hauptorchestrator (Legacy, 995 Zeilen) |
-| DragDropController | `studio/drag-drop/system/drag-drop-controller.ts` | Neue hexagonale Architektur (v2, nicht deployed) |
-| State Machine | `studio/drag-drop/system/state-machine.ts` | Pure State Machine (nicht genutzt) |
-| Ports | `studio/drag-drop/system/ports.ts` | Interface-Definitionen |
-| Target Detector | `studio/drag-drop/system/target-detector.ts` | DOM-Analyse |
-| Adapters | `studio/drag-drop/system/adapters/` | DOM/Mock/Native Adapters |
-| Visual System | `studio/drag-drop/visual/system.ts` | Linien, Ghost, Outline |
-| Code Executor | `studio/drag-drop/executor/code-executor.ts` | CodeModifier Integration |
-| Editor Drop Handler | `studio/editor/editor-drop-handler.ts` | CodeMirror Drop-Handler |
-| Ghost Renderer | `studio/panels/components/ghost-renderer.ts` | Drag-Vorschau |
+| Komponente          | Datei                                             | Beschreibung                                     |
+| ------------------- | ------------------------------------------------- | ------------------------------------------------ |
+| DragDropSystem      | `studio/drag-drop/system/drag-drop-system.ts`     | Hauptorchestrator (Legacy, 995 Zeilen)           |
+| DragDropController  | `studio/drag-drop/system/drag-drop-controller.ts` | Neue hexagonale Architektur (v2, nicht deployed) |
+| State Machine       | `studio/drag-drop/system/state-machine.ts`        | Pure State Machine (nicht genutzt)               |
+| Ports               | `studio/drag-drop/system/ports.ts`                | Interface-Definitionen                           |
+| Target Detector     | `studio/drag-drop/system/target-detector.ts`      | DOM-Analyse                                      |
+| Adapters            | `studio/drag-drop/system/adapters/`               | DOM/Mock/Native Adapters                         |
+| Visual System       | `studio/drag-drop/visual/system.ts`               | Linien, Ghost, Outline                           |
+| Code Executor       | `studio/drag-drop/executor/code-executor.ts`      | CodeModifier Integration                         |
+| Editor Drop Handler | `studio/editor/editor-drop-handler.ts`            | CodeMirror Drop-Handler                          |
+| Drag Preview        | `studio/preview/drag-preview.ts`                  | Einfacher Placeholder während Drag               |
 
 ## Drag Sources
 
-| Quelle | Typ | Datenstruktur |
-|--------|-----|---------------|
-| **ComponentPanel** - Primitives | `palette` | `{ type: 'palette', componentName, properties?, textContent?, children? }` |
-| **ComponentPanel** - Zag Components | `palette` | Wie oben + Template mit Slots |
-| **ComponentPanel** - Layout Presets | `palette` | Wie oben |
-| **Preview Canvas** - Elemente | `canvas` | `{ type: 'canvas', nodeId, element }` |
+| Quelle                              | Typ       | Datenstruktur                                                              |
+| ----------------------------------- | --------- | -------------------------------------------------------------------------- |
+| **ComponentPanel** - Primitives     | `palette` | `{ type: 'palette', componentName, properties?, textContent?, children? }` |
+| **ComponentPanel** - Zag Components | `palette` | Wie oben + Template mit Slots                                              |
+| **ComponentPanel** - Layout Presets | `palette` | Wie oben                                                                   |
+| **Preview Canvas** - Elemente       | `canvas`  | `{ type: 'canvas', nodeId, element }`                                      |
 
 ## Drop Targets
 
-| Ziel | Layout-Typ | Strategy | Ergebnis | Visualisierung |
-|------|-----------|----------|----------|----------------|
-| Flex Container (leer) | flex | `SimpleInside` | `placement: 'inside'` | Blaue gestrichelte Outline |
-| Flex Container (mit Kindern) | flex | `FlexWithChildren` | `placement: 'before'/'after'` | Insertion Line |
-| Positioned Container | positioned | `AbsolutePosition` | `placement: 'absolute'` + `{x, y}` | Lila Ghost |
-| Leaf-Elemente | none | `NonContainer` | `placement: 'before'/'after'` | Insertion Line |
-| CodeMirror Editor | - | - | Cursor Position | Drop Indicator |
+| Ziel                         | Layout-Typ | Strategy           | Ergebnis                           | Visualisierung             |
+| ---------------------------- | ---------- | ------------------ | ---------------------------------- | -------------------------- |
+| Flex Container (leer)        | flex       | `SimpleInside`     | `placement: 'inside'`              | Blaue gestrichelte Outline |
+| Flex Container (mit Kindern) | flex       | `FlexWithChildren` | `placement: 'before'/'after'`      | Insertion Line             |
+| Positioned Container         | positioned | `AbsolutePosition` | `placement: 'absolute'` + `{x, y}` | Lila Ghost                 |
+| Leaf-Elemente                | none       | `NonContainer`     | `placement: 'before'/'after'`      | Insertion Line             |
+| CodeMirror Editor            | -          | -                  | Cursor Position                    | Drop Indicator             |
 
 ## Strategien
 
@@ -80,6 +80,7 @@ studio/drag-drop/strategies/
 ```
 
 Jede Strategie implementiert:
+
 ```typescript
 interface DropStrategy {
   calculate(
@@ -119,6 +120,7 @@ private modeTransitionTimer: ReturnType<setTimeout> | null
 Drei verschiedene Handler-Systeme werden parallel verwendet:
 
 #### A) Pragmatic DnD Monitor
+
 ```typescript
 monitorForElements({
   onDragStart:   // source.element, source.data
@@ -130,18 +132,20 @@ monitorForElements({
 **Besonderheit**: `onDrag` wird aufgerufen, macht aber nichts. `updateDropIndicator` wird stattdessen im `dropTarget` Handler aufgerufen.
 
 #### B) Drop Target (Event Delegation)
+
 ```typescript
 dropTargetForElements({
-  element: container,  // Event Delegation auf Container
+  element: container, // Event Delegation auf Container
   canDrop,
-  onDragEnter,    // updateDropIndicator
-  onDrag,         // updateDropIndicator
-  onDragLeave,    // hideIndicator
-  onDrop          // (noop - wird vom Monitor behandelt)
+  onDragEnter, // updateDropIndicator
+  onDrag, // updateDropIndicator
+  onDragLeave, // hideIndicator
+  onDrop, // (noop - wird vom Monitor behandelt)
 })
 ```
 
 #### C) Native HTML5 Drag Events
+
 ```typescript
 container.addEventListener('dragover', handleDragOver)
 container.addEventListener('dragenter', handleDragEnter)
@@ -190,6 +194,7 @@ private updateDropIndicator(input: { clientX, clientY }): void {
 ```
 
 **Key Insights**:
+
 - `document.elementFromPoint()` wird bei JEDEM Move aufgerufen
 - layoutInfo Caching (Phase 5) spart DOM-Reads
 - Mode Transition Debounce (80ms) verhindert visuelles Flackern
@@ -229,10 +234,10 @@ private executeDrop(source: DragSource, result: DropResult): { success, error? }
 
 ```typescript
 // Reihenfolge ist kritisch - erste Match gewinnt!
-registry.register(new AbsolutePositionStrategy())  // 1. Positioned (stacked)
-registry.register(new FlexWithChildrenStrategy())  // 2. Flex mit Children
-registry.register(new SimpleInsideStrategy())      // 3. Leere Flex Container
-registry.register(new NonContainerStrategy())      // 4. Leaf elements
+registry.register(new AbsolutePositionStrategy()) // 1. Positioned (stacked)
+registry.register(new FlexWithChildrenStrategy()) // 2. Flex mit Children
+registry.register(new SimpleInsideStrategy()) // 3. Leere Flex Container
+registry.register(new NonContainerStrategy()) // 4. Leaf elements
 ```
 
 ### AbsolutePositionStrategy
@@ -367,9 +372,9 @@ getState(): {
 
 ```typescript
 export interface CodeExecutorDependencies {
-  getSource(): string              // Editor-Inhalt
-  getResolvedSource(): string      // Prelude + Editor
-  getPreludeOffset(): number       // Offset des Prelude
+  getSource(): string // Editor-Inhalt
+  getResolvedSource(): string // Prelude + Editor
+  getPreludeOffset(): number // Offset des Prelude
   getSourceMap(): SourceMap | null // Von letztem Compile
   applyChange(source: string): void
   recompile(): Promise<void>
@@ -428,17 +433,17 @@ type DragState = IdleState | DraggingState | OverTargetState | DroppedState
 
 // Events
 type DragEvent =
-  | { type: 'DRAG_START', source, cursor }
-  | { type: 'DRAG_MOVE', cursor }
+  | { type: 'DRAG_START'; source; cursor }
+  | { type: 'DRAG_MOVE'; cursor }
   | { type: 'DRAG_END' }
-  | { type: 'TARGET_FOUND', target, result }
+  | { type: 'TARGET_FOUND'; target; result }
   | { type: 'TARGET_LOST' }
   | { type: 'ALT_KEY_DOWN' | 'ALT_KEY_UP' }
 
 // Effects (für Orchestrator)
 type Effect =
   | { type: 'HIDE_VISUALS' }
-  | { type: 'EXECUTE_DROP', source, result }
+  | { type: 'EXECUTE_DROP'; source; result }
   | { type: 'NOTIFY_DRAG_START' | 'NOTIFY_DRAG_END' }
 ```
 
@@ -465,9 +470,9 @@ export interface DOMAdapter {
 }
 
 const defaultDOMAdapter: DOMAdapter = {
-  getComputedStyle: (el) => window.getComputedStyle(el),
+  getComputedStyle: el => window.getComputedStyle(el),
   elementFromPoint: (x, y) => document.elementFromPoint(x, y),
-  getBoundingClientRect: (el) => el.getBoundingClientRect(),
+  getBoundingClientRect: el => el.getBoundingClientRect(),
 }
 ```
 
@@ -490,7 +495,7 @@ export interface CodeExecutor {
 
 ```typescript
 // In updateDropIndicator:
-const layoutInfo = this.config.getLayoutInfo?.()  // Map<nodeId, LayoutRect>
+const layoutInfo = this.config.getLayoutInfo?.() // Map<nodeId, LayoutRect>
 
 // OHNE layoutInfo:
 const childRects = getChildRects(target.element, nodeIdAttr)
@@ -543,9 +548,19 @@ if (!this.modeTransitionTimer) {
 
 ```typescript
 const LEAF_COMPONENTS = new Set([
-  'text', 'muted', 'title', 'label',
-  'button', 'link', 'input', 'textarea',
-  'image', 'img', 'icon', 'divider', 'spacer',
+  'text',
+  'muted',
+  'title',
+  'label',
+  'button',
+  'link',
+  'input',
+  'textarea',
+  'image',
+  'img',
+  'icon',
+  'divider',
+  'spacer',
 ])
 ```
 
@@ -644,6 +659,7 @@ const LEAF_COMPONENTS = new Set([
 ## Events
 
 ### Pragmatic DnD (Canvas Elements)
+
 ```typescript
 draggable({ element, getInitialData })
 dropTargetForElements({ element, canDrop, onDragEnter, onDrag, onDragLeave, onDrop })
@@ -651,6 +667,7 @@ monitorForElements({ onDragStart, onDrag, onDrop })
 ```
 
 ### Native HTML5 (ComponentPanel)
+
 ```typescript
 dragover   → extractNativeDragSource() → state.source
 dragenter  → preventDefault()
@@ -659,6 +676,7 @@ drop       → JSON.parse(dataTransfer.getData('application/mirror-component'))
 ```
 
 ### Keyboard
+
 ```typescript
 keydown 'Alt'  → state.isAltKeyPressed = true  → duplicate statt move
 keyup 'Alt'    → state.isAltKeyPressed = false
@@ -668,21 +686,21 @@ keyup 'Alt'    → state.isAltKeyPressed = false
 
 ### Architektur
 
-| Problem | Status | Beschreibung |
-|---------|--------|--------------|
-| Monolith | ⚠️ | DragDropSystem ist 995 Zeilen, mischt alles zusammen |
-| v2 nicht deployed | ⚠️ | DragDropController, State Machine, Ports existieren aber werden nicht genutzt |
-| Redundante Implementierungen | ⚠️ | Legacy System + Native Adapter parallel |
-| Direkte DOM-Calls | ⚠️ | System nutzt Ports nicht konsequent |
+| Problem                      | Status | Beschreibung                                                                  |
+| ---------------------------- | ------ | ----------------------------------------------------------------------------- |
+| Monolith                     | ⚠️     | DragDropSystem ist 995 Zeilen, mischt alles zusammen                          |
+| v2 nicht deployed            | ⚠️     | DragDropController, State Machine, Ports existieren aber werden nicht genutzt |
+| Redundante Implementierungen | ⚠️     | Legacy System + Native Adapter parallel                                       |
+| Direkte DOM-Calls            | ⚠️     | System nutzt Ports nicht konsequent                                           |
 
 ### Funktional
 
-| Problem | Status | Beschreibung |
-|---------|--------|--------------|
-| Mode Debouncing | ✅ | 80ms Debounce für flex↔absolute Wechsel |
-| Double Execution | ✅ | Flag verhindert doppelte Ausführung |
-| Container Redirect | ⚠️ | 30px Threshold, edge-case anfällig |
-| Editor Drop Position | ⚠️ | Nutzt Cursor statt Maus-Koordinaten |
+| Problem              | Status | Beschreibung                            |
+| -------------------- | ------ | --------------------------------------- |
+| Mode Debouncing      | ✅     | 80ms Debounce für flex↔absolute Wechsel |
+| Double Execution     | ✅     | Flag verhindert doppelte Ausführung     |
+| Container Redirect   | ⚠️     | 30px Threshold, edge-case anfällig      |
+| Editor Drop Position | ⚠️     | Nutzt Cursor statt Maus-Koordinaten     |
 
 ## Neue Architektur (v2)
 
@@ -713,13 +731,16 @@ Die hexagonale Architektur ist vorbereitet aber nicht integriert:
 ```
 
 ### Vorteile v2
+
 - Pure State Machine, vollständig testbar
 - Adapters für DOM/Mock/Native
 - Klare Trennung von Concerns
 - Einfacher zu erweitern
 
 ### Migration
+
 Die Migration erfordert:
+
 1. DragDropController als Ersatz für DragDropSystem integrieren
 2. Alle DOM-Calls über Ports routen
 3. State Machine für Zustandsübergänge nutzen
@@ -747,11 +768,11 @@ tests/e2e/
 
 ### Test-Strategie
 
-| Ebene | Scope | Tools |
-|-------|-------|-------|
-| Unit | State Machine, Strategies | Vitest, Mock Adapters |
-| Integration | Controller + Adapters | Vitest, JSDOM |
-| E2E | Full Drag & Drop Flow | Playwright |
+| Ebene       | Scope                     | Tools                 |
+| ----------- | ------------------------- | --------------------- |
+| Unit        | State Machine, Strategies | Vitest, Mock Adapters |
+| Integration | Controller + Adapters     | Vitest, JSDOM         |
+| E2E         | Full Drag & Drop Flow     | Playwright            |
 
 ### Mock System
 
@@ -790,10 +811,7 @@ export class MockVisualAdapter implements VisualPort {
 // Strategy Test Pattern
 describe('FlexWithChildrenStrategy', () => {
   it('calculates insertion before first child', () => {
-    const childRects = [
-      mockRect(0, 0, 100, 50),
-      mockRect(0, 50, 100, 50)
-    ]
+    const childRects = [mockRect(0, 0, 100, 50), mockRect(0, 50, 100, 50)]
     const cursor = { x: 50, y: 10 }
 
     const result = strategy.calculate(cursor, target, source, childRects)
@@ -828,7 +846,7 @@ export class ComponentPanel {
   private setupDragHandlers(item: ComponentItem, element: HTMLElement): void {
     element.draggable = true
 
-    element.addEventListener('dragstart', (e) => {
+    element.addEventListener('dragstart', e => {
       // Drag-Daten setzen
       const dragData: ComponentDragData = {
         type: 'palette',
@@ -836,70 +854,56 @@ export class ComponentPanel {
         template: item.template,
         properties: item.properties,
         textContent: item.textContent,
-        children: item.children
+        children: item.children,
       }
 
-      e.dataTransfer?.setData(
-        'application/mirror-component',
-        JSON.stringify(dragData)
-      )
+      e.dataTransfer?.setData('application/mirror-component', JSON.stringify(dragData))
 
-      // Ghost-Vorschau aktivieren
-      this.ghostRenderer.show(item, e)
+      // Drag data global speichern (für DragPreview)
+      setCurrentDragData(dragData, item)
 
       // Event emittieren
       events.emit('component:drag-start', { item, event: e })
     })
 
-    element.addEventListener('dragend', (e) => {
-      this.ghostRenderer.hide()
+    element.addEventListener('dragend', e => {
+      clearCurrentDragData()
       events.emit('component:drag-end', { item, event: e })
     })
   }
 }
 ```
 
-### Ghost Renderer
+### Drag Preview
 
-Der GhostRenderer erstellt eine visuelle Vorschau während des Drags:
+> **Hinweis:** Der GhostRenderer wurde entfernt (April 2026). Da nur Flex-Container (nicht Stacked-Container) Drag & Drop unterstützen, wird kein gerendertes Komponenten-Preview mehr benötigt.
+
+Der DragPreview zeigt einen einfachen Placeholder mit dem Komponentennamen:
 
 ```typescript
-// studio/panels/components/ghost-renderer.ts
-export class GhostRenderer {
+// studio/preview/drag-preview.ts
+export class DragPreview {
   private ghostElement: HTMLElement | null = null
 
-  show(item: ComponentItem, event: DragEvent): void {
-    // Ghost-Element erstellen
-    this.ghostElement = document.createElement('div')
-    this.ghostElement.className = 'drag-ghost'
-    this.ghostElement.innerHTML = this.renderPreview(item)
-
-    // Größe aus Item oder Default
-    const size = item.defaultSize ?? { width: 100, height: 40 }
-    this.ghostElement.style.width = `${size.width}px`
-    this.ghostElement.style.height = `${size.height}px`
-
-    document.body.appendChild(this.ghostElement)
-
-    // Als Drag-Image setzen
-    event.dataTransfer?.setDragImage(
-      this.ghostElement,
-      size.width / 2,
-      size.height / 2
-    )
-  }
-
-  hide(): void {
-    this.ghostElement?.remove()
-    this.ghostElement = null
-  }
-
-  private renderPreview(item: ComponentItem): string {
-    // Vereinfachte Vorschau basierend auf Komponenten-Typ
-    if (item.icon) {
-      return `<span class="ghost-icon">${item.icon}</span>`
+  private showGhost(item: ComponentItem, x: number, y: number): void {
+    if (!this.ghostElement) {
+      this.ghostElement = document.createElement('div')
+      this.ghostElement.id = 'drag-preview-ghost'
+      document.body.appendChild(this.ghostElement)
     }
-    return `<span class="ghost-label">${item.name}</span>`
+
+    // Einfacher Placeholder statt gerenderter Komponente
+    Object.assign(this.ghostElement.style, {
+      position: 'fixed',
+      background: '#1a1a1a',
+      border: '1px solid #333',
+      borderRadius: '6px',
+      padding: '10px 16px',
+      color: 'white',
+      fontSize: '14px',
+    })
+
+    this.ghostElement.textContent = item.name
   }
 }
 ```
@@ -955,7 +959,7 @@ export class NativeDragAdapter {
         template: parsed.template,
         properties: parsed.properties,
         textContent: parsed.textContent,
-        children: parsed.children
+        children: parsed.children,
       }
     } catch {
       return null
@@ -975,7 +979,7 @@ export class NativeDragAdapter {
 └────────┬────────┘
          │ dragstart
          │ setData('application/mirror-component', JSON)
-         │ GhostRenderer.show()
+         │ setCurrentDragData()
          ▼
 ┌─────────────────┐
 │  Preview Canvas │
@@ -1046,26 +1050,26 @@ export class NativeDragAdapter {
 
 ### Stärken
 
-| Aspekt | Beschreibung |
-|--------|--------------|
-| ✅ Strategy Pattern | Saubere Trennung der Platzierungslogik |
-| ✅ Adapter Pattern | Abstraktion für Tests und Erweiterbarkeit |
-| ✅ Event Delegation | Effiziente Handler auf Container-Ebene |
-| ✅ Flexible Placements | before, after, inside, absolute (x/y) |
-| ✅ Visual Feedback | Linien, Outlines, Ghost Indicators |
-| ✅ Phase 5 Ready | layoutInfo Caching für Performance |
-| ✅ Test API | Vollständige programmatische Kontrolle |
+| Aspekt                 | Beschreibung                              |
+| ---------------------- | ----------------------------------------- |
+| ✅ Strategy Pattern    | Saubere Trennung der Platzierungslogik    |
+| ✅ Adapter Pattern     | Abstraktion für Tests und Erweiterbarkeit |
+| ✅ Event Delegation    | Effiziente Handler auf Container-Ebene    |
+| ✅ Flexible Placements | before, after, inside, absolute (x/y)     |
+| ✅ Visual Feedback     | Linien, Outlines, Ghost Indicators        |
+| ✅ Phase 5 Ready       | layoutInfo Caching für Performance        |
+| ✅ Test API            | Vollständige programmatische Kontrolle    |
 
 ### Schwächen
 
-| Problem | Status | Beschreibung |
-|---------|--------|--------------|
-| 995 Zeilen Monolith | ⚠️ | Zu viel Verantwortung in einer Klasse |
-| Ungenutzter State Machine | ⚠️ | Dead Code oder unfertige Refactorings |
-| Double-Execution Prevention | ⚠️ | Flag-basiert, fragil |
-| Hardcoded Leaf Components | ⚠️ | Dynamische Konfiguration wäre besser |
-| Mode Transition Debounce | ⚠️ | Könnte Timing-Issues haben |
-| Container Redirect | ⚠️ | 30px Threshold ist edge-case anfällig |
+| Problem                     | Status | Beschreibung                          |
+| --------------------------- | ------ | ------------------------------------- |
+| 995 Zeilen Monolith         | ⚠️     | Zu viel Verantwortung in einer Klasse |
+| Ungenutzter State Machine   | ⚠️     | Dead Code oder unfertige Refactorings |
+| Double-Execution Prevention | ⚠️     | Flag-basiert, fragil                  |
+| Hardcoded Leaf Components   | ⚠️     | Dynamische Konfiguration wäre besser  |
+| Mode Transition Debounce    | ⚠️     | Könnte Timing-Issues haben            |
+| Container Redirect          | ⚠️     | 30px Threshold ist edge-case anfällig |
 
 ### Verbesserungspotential
 

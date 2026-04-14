@@ -12,7 +12,6 @@ import type {
   ComponentDragData,
 } from './types'
 import { getComponentIcon } from '../../icons'
-import { GhostRenderer, getGhostRenderer, getDefaultSizeForItem } from './ghost-renderer'
 
 // =============================================================================
 // =============================================================================
@@ -86,13 +85,11 @@ export class UserComponentsPanel {
   private searchQuery: string = ''
   private panelElement: HTMLElement | null = null
   private abortController: AbortController | null = null
-  private ghostRenderer: GhostRenderer
 
   constructor(config: UserComponentsPanelConfig, callbacks: UserComponentsPanelCallbacks = {}) {
     this.container = config.container
     this.config = config
     this.callbacks = callbacks
-    this.ghostRenderer = getGhostRenderer()
 
     this.buildSections()
     this.render()
@@ -239,10 +236,14 @@ export class UserComponentsPanel {
     searchInput.className = 'user-components-panel-search-input'
     searchInput.value = this.searchQuery
 
-    searchInput.addEventListener('input', (e) => {
-      this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase()
-      this.updateVisibility()
-    }, { signal: this.abortController?.signal })
+    searchInput.addEventListener(
+      'input',
+      e => {
+        this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase()
+        this.updateVisibility()
+      },
+      { signal: this.abortController?.signal }
+    )
 
     searchContainer.appendChild(searchInput)
     return searchContainer
@@ -287,7 +288,9 @@ export class UserComponentsPanel {
 
     const toggle = document.createElement('span')
     toggle.className = 'user-components-panel-section-toggle'
-    toggle.innerHTML = section.isExpanded ? UserComponentsPanel.CHEVRON_DOWN : UserComponentsPanel.CHEVRON_RIGHT
+    toggle.innerHTML = section.isExpanded
+      ? UserComponentsPanel.CHEVRON_DOWN
+      : UserComponentsPanel.CHEVRON_RIGHT
 
     const nameSpan = document.createElement('span')
     nameSpan.className = 'user-components-panel-section-name'
@@ -301,11 +304,17 @@ export class UserComponentsPanel {
     header.appendChild(nameSpan)
     header.appendChild(countSpan)
 
-    header.addEventListener('click', () => {
-      section.isExpanded = !section.isExpanded
-      sectionEl.classList.toggle('collapsed', !section.isExpanded)
-      toggle.innerHTML = section.isExpanded ? UserComponentsPanel.CHEVRON_DOWN : UserComponentsPanel.CHEVRON_RIGHT
-    }, { signal: this.abortController?.signal })
+    header.addEventListener(
+      'click',
+      () => {
+        section.isExpanded = !section.isExpanded
+        sectionEl.classList.toggle('collapsed', !section.isExpanded)
+        toggle.innerHTML = section.isExpanded
+          ? UserComponentsPanel.CHEVRON_DOWN
+          : UserComponentsPanel.CHEVRON_RIGHT
+      },
+      { signal: this.abortController?.signal }
+    )
 
     sectionEl.appendChild(header)
 
@@ -356,18 +365,30 @@ export class UserComponentsPanel {
     const signal = this.abortController?.signal
 
     // Drag events
-    itemEl.addEventListener('dragstart', (e) => {
-      this.handleDragStart(item, e)
-    }, { signal })
+    itemEl.addEventListener(
+      'dragstart',
+      e => {
+        this.handleDragStart(item, e)
+      },
+      { signal }
+    )
 
-    itemEl.addEventListener('dragend', (e) => {
-      this.handleDragEnd(item, e)
-    }, { signal })
+    itemEl.addEventListener(
+      'dragend',
+      e => {
+        this.handleDragEnd(item, e)
+      },
+      { signal }
+    )
 
     // Click to insert
-    itemEl.addEventListener('click', () => {
-      this.callbacks.onClick?.(item)
-    }, { signal })
+    itemEl.addEventListener(
+      'click',
+      () => {
+        this.callbacks.onClick?.(item)
+      },
+      { signal }
+    )
 
     return itemEl
   }
@@ -445,15 +466,20 @@ export class UserComponentsPanel {
     const items = this.panelElement.querySelectorAll<HTMLElement>('.user-components-panel-item')
 
     for (const itemEl of items) {
-      const name = itemEl.querySelector('.user-components-panel-item-name')?.textContent?.toLowerCase() ?? ''
+      const name =
+        itemEl.querySelector('.user-components-panel-item-name')?.textContent?.toLowerCase() ?? ''
       const matches = !this.searchQuery || name.includes(this.searchQuery)
       itemEl.style.display = matches ? '' : 'none'
     }
 
     // Hide empty sections
-    const sections = this.panelElement.querySelectorAll<HTMLElement>('.user-components-panel-section')
+    const sections = this.panelElement.querySelectorAll<HTMLElement>(
+      '.user-components-panel-section'
+    )
     for (const sectionEl of sections) {
-      const visibleItems = sectionEl.querySelectorAll('.user-components-panel-item:not([style*="display: none"])')
+      const visibleItems = sectionEl.querySelectorAll(
+        '.user-components-panel-item:not([style*="display: none"])'
+      )
       sectionEl.style.display = visibleItems.length > 0 ? '' : 'none'
     }
   }
