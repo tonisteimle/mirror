@@ -5734,13 +5734,13 @@ async function handleStudioDrop(result) {
     return
   }
 
-  applyDropChange(modResult, componentName)
+  applyDropChange(modResult, componentName, { containerId: targetNodeId, insertionIndex })
 
   console.log('Studio: Component dropped', targetNodeId, placement, insertionIndex)
 }
 
 // Helper to apply a code change from drop operation
-function applyDropChange(modResult, componentName = 'Component') {
+function applyDropChange(modResult, componentName = 'Component', target = null) {
   const change = modResult.change
   const docLength = editor.state.doc.length
 
@@ -5808,12 +5808,14 @@ function applyDropChange(modResult, componentName = 'Component') {
   })
 
   // Set deferred selection using parent + index (more reliable than line numbers)
-  studioActions.setDeferredSelection({
-    type: 'lastChildOf',
-    parentNodeId: target.containerId,
-    insertionIndex: target.insertionIndex,
-    origin: 'drag-drop',
-  })
+  if (target && target.containerId !== undefined) {
+    studioActions.setDeferredSelection({
+      type: 'lastChildOf',
+      parentNodeId: target.containerId,
+      insertionIndex: target.insertionIndex,
+      origin: 'drag-drop',
+    })
+  }
 
   // Compile and save
   const code = editor.state.doc.toString()
