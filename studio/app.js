@@ -5680,7 +5680,9 @@ function setupNotificationHandlers() {
 
   // Handle drag:dropped from v3 DragController
   // This receives the drop target info and triggers code modification
+  console.log('[App] Registering drag:dropped handler, studio.events:', !!studio?.events)
   studio.events.on('drag:dropped', ({ source, target, dragData }) => {
+    console.log('[App] drag:dropped handler CALLED!')
     console.log(
       '[Drag v3] Dropped:',
       source?.type === 'canvas' ? `move ${source.nodeId}` : source?.componentName,
