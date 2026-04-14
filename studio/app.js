@@ -4530,6 +4530,10 @@ function compile(code) {
         currentPreludeOffset > 0
           ? resolvedCode.substring(0, currentPreludeOffset).split('\n').length - 1
           : 0
+      console.log('[Compile] Prelude offset:', {
+        charOffset: currentPreludeOffset,
+        lineCount: preludeLineCount,
+      })
       studio.state.set({ resolvedSource: resolvedCode, preludeOffset: preludeLineCount })
     }
 
@@ -6781,6 +6785,11 @@ function applyDropChange(modResult, componentName = 'Component') {
 
   // Set pending selection BEFORE compile
   const insertLine = editor.state.doc.lineAt(adjustedChange.from)
+  console.log('[Drop] Setting pending selection:', {
+    insertLineNumber: insertLine?.number,
+    componentName,
+    adjustedFrom: adjustedChange.from,
+  })
   if (insertLine) {
     studioActions.setPendingSelection({
       line: insertLine.number,
