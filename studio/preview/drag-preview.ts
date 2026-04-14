@@ -292,6 +292,7 @@ export class DragPreview {
     if (!this.isOverCanvas) return
 
     this.isOverCanvas = false
+    document.body.classList.remove('drag-active')
     getDragController().cancel()
     log.debug('Left canvas, drag cancelled')
   }
@@ -316,6 +317,7 @@ export class DragPreview {
 
     if (!this.isOverCanvas) {
       this.isOverCanvas = true
+      document.body.classList.add('drag-active')
       log.warn('First entry over canvas, dragType:', dragType)
       dragType === 'canvas' ? this.startCanvasDrag() : this.startPaletteDrag()
     }
@@ -329,6 +331,7 @@ export class DragPreview {
     if (!this.container.contains(e.relatedTarget as Node)) {
       if (this.isOverCanvas) {
         this.isOverCanvas = false
+        document.body.classList.remove('drag-active')
         getDragController().cancel()
         log.debug('DragLeave, drag cancelled')
       }
@@ -341,6 +344,7 @@ export class DragPreview {
     e.preventDefault()
     e.stopPropagation()
     this.isOverCanvas = false
+    document.body.classList.remove('drag-active')
 
     getDragController().drop()
     log.info('Drop executed')
@@ -349,6 +353,7 @@ export class DragPreview {
   private handleDragEnd(_e: DragEvent): void {
     // Always cleanup on dragend
     this.isOverCanvas = false
+    document.body.classList.remove('drag-active')
     getDragController().cancel()
     clearCurrentDragData()
     log.debug('DragEnd, cleanup')

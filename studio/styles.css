@@ -1082,6 +1082,12 @@
       background: var(--color-primary);
     }
 
+    /* Disable divider interaction during drag & drop */
+    body.drag-active .divider,
+    body.drag-active [data-scope="splitter"][data-part="resize-trigger"] {
+      pointer-events: none;
+    }
+
     /* Focus state for accessibility (keyboard navigation) */
     [data-scope="splitter"][data-part="resize-trigger"]:focus-visible::after {
       width: 2px;
