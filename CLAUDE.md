@@ -60,7 +60,8 @@ tests/                 # Test Suite
 └── studio/            # Studio Component Tests
 
 tools/                 # CLI Tools
-└── drag-test-runner.ts  # Browser Test Runner (CDP)
+├── test.ts            # Browser Test Runner Entry Point
+└── test-runner/       # Test Runner Implementation (CDP)
 
 docs/                  # Dokumentation
 ├── concepts/          # Feature-Konzepte (in Entwicklung)
@@ -85,7 +86,8 @@ dist/                  # Build Output
 | `compiler/studio/code-modifier.ts` | Code-Änderungen                      |
 | `compiler/schema/dsl.ts`           | DSL Schema (Single Source of Truth)  |
 | `compiler/validator/index.ts`      | Code Validator API                   |
-| `tools/drag-test-runner.ts`        | CDP Browser Test Runner              |
+| `tools/test.ts`                    | Browser Test Runner CLI              |
+| `tools/test-runner/`               | Test Runner Implementation (CDP)     |
 | `docs/DRAG-DROP-TESTING.md`        | Test Framework Dokumentation         |
 
 ## Commands
@@ -100,8 +102,8 @@ npm run studio         # Studio Server starten (localhost:5173)
 
 # Tests
 npm test               # Unit Tests (Vitest)
-npx tsx tools/drag-test-runner.ts           # Browser Tests (headless)
-npx tsx tools/drag-test-runner.ts --headed  # Browser Tests (sichtbar)
+npm run test:browser   # Browser Tests (alle)
+npm run test:browser -- --headed  # Browser Tests (sichtbar)
 
 # Sonstiges
 npm run validate       # Code validieren (z.B. npm run validate app.mirror)
@@ -1173,30 +1175,38 @@ Headless Browser-Tests via Chrome DevTools Protocol. Modularer, sauberer Code in
 npm run studio
 
 # Tests ausführen (Terminal 2)
-npx tsx tools/drag-test-runner.ts           # Drag Tests (default)
-npx tsx tools/drag-test-runner.ts --mirror  # Mirror Tests (~200 Tests)
-npx tsx tools/drag-test-runner.ts --all     # Alle Tests
-npx tsx tools/drag-test-runner.ts --category=layout  # Nur eine Kategorie
-npx tsx tools/drag-test-runner.ts --headed  # Mit sichtbarem Browser
+npm run test:browser              # Alle Browser Tests (default)
+npm run test:browser:drag         # Nur Drag Tests
+npm run test:browser:mirror       # Nur Mirror Tests
+npm run test:browser:headed       # Mit sichtbarem Browser
 
-# Mit Reports
-npx tsx tools/drag-test-runner.ts --all --junit=results.xml --html=report.html
-
-# Mit Retry und Screenshot
-npx tsx tools/drag-test-runner.ts --all --retries=2
+# Erweiterte Optionen (via npx)
+npx tsx tools/test.ts --category=layout       # Nur eine Kategorie
+npx tsx tools/test.ts --filter="token"        # Nach Name filtern
+npx tsx tools/test.ts --junit=results.xml     # JUnit Report
+npx tsx tools/test.ts --html=report.html      # HTML Report
+npx tsx tools/test.ts --retries=2             # Retry bei Failures
 ```
 
-**Test Selection:**
+**NPM Scripts:**
 
-| Option             | Beschreibung                    |
-| ------------------ | ------------------------------- |
-| `--drag`           | Nur Drag & Drop Tests (default) |
-| `--mirror`         | Mirror Test Suite (~200 Tests)  |
-| `--all`            | Drag + Mirror Tests             |
-| `--category=X`     | Einzelne Kategorie              |
-| `--filter=PATTERN` | Filter nach Name (Regex)        |
+| Script                        | Beschreibung                 |
+| ----------------------------- | ---------------------------- |
+| `npm run test:browser`        | Alle Browser Tests (default) |
+| `npm run test:browser:drag`   | Nur Drag & Drop Tests        |
+| `npm run test:browser:mirror` | Nur Mirror Tests             |
+| `npm run test:browser:headed` | Mit sichtbarem Browser       |
 
-**Kategorien:** primitives, layout, styling, zag, interactions, bidirectional, undoRedo, autocomplete, stackedDrag
+**CLI Optionen:**
+
+| Option             | Beschreibung             |
+| ------------------ | ------------------------ |
+| `--drag`           | Nur Drag & Drop Tests    |
+| `--mirror`         | Nur Mirror Tests         |
+| `--category=X`     | Einzelne Kategorie       |
+| `--filter=PATTERN` | Filter nach Name (Regex) |
+
+**Kategorien:** primitives, layout, styling, zag, interactions, bidirectional, undoRedo, autocomplete, stackedDrag, propertyPanel, charts
 
 **Execution:**
 

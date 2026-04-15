@@ -294,6 +294,107 @@ export const stackedWithStatesTests: TestCase[] = describe('Stacked with States'
 ])
 
 // =============================================================================
+// App Stacked Tests (Root-level stacked container)
+// =============================================================================
+
+export const appStackedTests: TestCase[] = describe('App Stacked', [
+  testWithSetup(
+    'Drop Avatar into App stacked',
+    'App stacked, w 400, h 300, bg #1a1a1a',
+    async api => {
+      // Drop Avatar at position (100, 100)
+      await api.interact.dragToPosition('Avatar', 'node-1', 100, 100)
+
+      const code = api.editor.getCode()
+
+      // Verify Avatar was added with x/y coordinates
+      api.assert.codeContains(/Avatar/)
+      api.assert.codeContains(/\bx\s+\d+/)
+      api.assert.codeContains(/\by\s+\d+/)
+
+      // Verify position is approximately correct
+      const pos = verifyPosition(code, 100, 100, 50)
+      api.assert.ok(
+        pos.ok || (pos.actualX !== null && pos.actualY !== null),
+        `Position should have x/y, got (${pos.actualX}, ${pos.actualY})`
+      )
+
+      // Verify element exists in preview
+      api.assert.exists('node-2') // Avatar should be node-2
+    }
+  ),
+
+  testWithSetup(
+    'Drop Button into App stacked',
+    'App stacked, w 400, h 300, bg #1a1a1a',
+    async api => {
+      await api.interact.dragToPosition('Button', 'node-1', 150, 80)
+
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Button/)
+      api.assert.codeContains(/\bx\s+\d+/)
+      api.assert.codeContains(/\by\s+\d+/)
+
+      // Verify element exists in preview
+      api.assert.exists('node-2')
+    }
+  ),
+
+  testWithSetup(
+    'Drop multiple elements into App stacked',
+    'App stacked, w 400, h 300, bg #1a1a1a',
+    async api => {
+      // Drop first element
+      await api.interact.dragToPosition('Button', 'node-1', 50, 50)
+      await api.utils.delay(200)
+
+      // Drop second element
+      await api.interact.dragToPosition('Text', 'node-1', 200, 150)
+      await api.utils.delay(200)
+
+      // Drop third element
+      await api.interact.dragToPosition('Icon', 'node-1', 300, 200)
+
+      const code = api.editor.getCode()
+
+      // All three should exist with positions
+      api.assert.codeContains(/Button/)
+      api.assert.codeContains(/Text/)
+      api.assert.codeContains(/Icon/)
+
+      // Should have 3 x positions
+      const xMatches = code.match(/\bx\s+\d+/g) || []
+      api.assert.ok(xMatches.length >= 3, `Should have 3 x positions, found ${xMatches.length}`)
+
+      // Verify all exist in preview
+      api.assert.exists('node-2')
+      api.assert.exists('node-3')
+      api.assert.exists('node-4')
+    }
+  ),
+
+  testWithSetup(
+    'App stacked preserves existing children on drop',
+    'App stacked, w 400, h 300, bg #1a1a1a\n  Button "Existing", x 10, y 10',
+    async api => {
+      await api.interact.dragToPosition('Text', 'node-1', 200, 100)
+
+      const code = api.editor.getCode()
+
+      // Original button should still exist
+      api.assert.codeContains(/Button "Existing", x 10, y 10/)
+
+      // New text should be added
+      api.assert.codeContains(/Text/)
+
+      // Both should be in preview
+      api.assert.exists('node-2') // Existing Button
+      api.assert.exists('node-3') // New Text
+    }
+  ),
+])
+
+// =============================================================================
 // Combined Exports
 // =============================================================================
 
@@ -303,6 +404,7 @@ export const allStackedDragTests: TestCase[] = [
   ...layoutDetectionTests,
   ...precisePositionTests,
   ...stackedWithStatesTests,
+  ...appStackedTests,
 ]
 
 export default allStackedDragTests

@@ -1,16 +1,13 @@
 #!/usr/bin/env npx tsx
 /**
- * Mirror Studio Test Runner
+ * @deprecated Use `npm run test:browser` or `npx tsx tools/test.ts` instead.
  *
- * This file is a compatibility wrapper. The actual implementation
- * is in the test-runner/ directory with clean, modular code.
- *
- * Usage:
- *   npx tsx tools/drag-test-runner.ts [options]
- *
- * For full documentation:
- *   npx tsx tools/drag-test-runner.ts --help
+ * This file is kept for backwards compatibility only.
  */
 
-// Re-export and run the new CLI
-import './test-runner/cli'
+console.log(
+  '\x1b[33m⚠️  Deprecation notice: Use "npm run test:browser" or "npx tsx tools/test.ts" instead.\x1b[0m\n'
+)
+
+// Dynamic import to ensure deprecation message shows first
+await import('./test-runner/cli.js')
