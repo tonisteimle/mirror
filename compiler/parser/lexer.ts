@@ -587,6 +587,27 @@ export class Lexer {
       value += this.advance() // s
     }
 
+    // Include viewport unit suffixes (vh, vw, vmin, vmax)
+    if (this.peek() === 'v') {
+      const next = this.peekNext()
+      if (next === 'h' || next === 'w') {
+        value += this.advance() // v
+        value += this.advance() // h or w
+      } else if (next === 'm') {
+        // Check for vmin or vmax
+        const afterNext = this.source[this.current + 2]
+        if (afterNext === 'i' || afterNext === 'a') {
+          const afterAfterNext = this.source[this.current + 3]
+          if ((afterNext === 'i' && afterAfterNext === 'n') || (afterNext === 'a' && afterAfterNext === 'x')) {
+            value += this.advance() // v
+            value += this.advance() // m
+            value += this.advance() // i or a
+            value += this.advance() // n or x
+          }
+        }
+      }
+    }
+
     // Include fraction notation for aspect ratios (e.g., 16/9, 4/3)
     if (this.peek() === '/' && this.isDigit(this.peekNext())) {
       value += this.advance() // /

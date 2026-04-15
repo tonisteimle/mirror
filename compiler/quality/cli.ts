@@ -207,6 +207,17 @@ function printStaticOnly(analysis: ReturnType<typeof analyzeStatic>): void {
     }
     console.log()
   }
+
+  if (analysis.misplacedSlots.length > 0) {
+    console.log(c('red', 'Misplaced Slots (slot styles not applied!):'))
+    for (const slot of analysis.misplacedSlots) {
+      console.log(
+        `  Line ${slot.line}: ${c('red', slot.slotName)} is inside ${c('yellow', slot.actualParent)}, but should be direct child of ${c('green', slot.expectedParent)}`
+      )
+      console.log(c('dim', `    → Slot styles from ${slot.definingComponent} will NOT be applied!`))
+    }
+    console.log()
+  }
 }
 
 // =============================================================================

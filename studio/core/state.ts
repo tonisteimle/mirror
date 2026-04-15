@@ -227,7 +227,28 @@ export const actions = {
       // Continue to check pendingSelection (don't return early)
     }
 
-    // Resolve deferred selection (unified API - preferred)
+    // Resolve pending selection FIRST (line-based, from drop operations)
+    // This takes priority over deferredSelection because it's more specific
+    // (targeting the exact line where code was inserted)
+    // IMPORTANT: Synchronous resolution to prevent race conditions (PREV-005)
+    if (hasPendingSelection) {
+      try {
+        const resolvedNodeId = actions.resolvePendingSelection()
+        if (resolvedNodeId) {
+          logState.info('Pending selection resolved after compile:', resolvedNodeId)
+          // Clear any deferred selection that might have been set during compile
+          if (hasDeferredSelection) {
+            state.set({ deferredSelection: null })
+          }
+        }
+      } catch (error) {
+        logState.error('Error resolving pending selection:', error)
+        events.emit('state:error', { error, context: 'pending selection resolution' })
+      }
+      return // Skip selection validation when we have pending selection
+    }
+
+    // Resolve deferred selection (unified API - for programmatic selections during compile)
     // IMPORTANT: Synchronous resolution to prevent race conditions with rapid compiles
     // Previously used Promise.resolve().then() which could lose selections (PREV-005)
     if (hasDeferredSelection) {
@@ -241,21 +262,6 @@ export const actions = {
         events.emit('state:error', { error, context: 'deferred selection resolution' })
       }
       return // Skip selection validation when we have deferred selection
-    }
-
-    // Resolve pending selection (line-based) - legacy API
-    // IMPORTANT: Synchronous resolution to prevent race conditions (PREV-005)
-    if (hasPendingSelection && !hasQueuedSelection) {
-      try {
-        const resolvedNodeId = actions.resolvePendingSelection()
-        if (resolvedNodeId) {
-          logState.info(' Pending selection resolved after compile:', resolvedNodeId)
-        }
-      } catch (error) {
-        logState.error(' Error resolving pending selection:', error)
-        events.emit('state:error', { error, context: 'pending selection resolution' })
-      }
-      return // Skip selection validation when we have pending selection
     }
 
     // Validate current selection against new SourceMap
@@ -489,7 +495,7 @@ export const actions = {
 
     const sourceMap = currentState.sourceMap
     if (!sourceMap) {
-      logState.warn(' Cannot resolve pending selection: no SourceMap')
+      logState.warn('Cannot resolve pending selection: no SourceMap')
       state.set({ pendingSelection: null })
       return null
     }
@@ -498,7 +504,7 @@ export const actions = {
     const preludeLines = currentState.preludeLineOffset
     const resolvedLine = preludeLines + pending.line
 
-    logState.info(' Resolving pending selection:', {
+    logState.info('Resolving pending selection:', {
       originalLine: pending.line,
       preludeLineOffset: preludeLines,
       resolvedLine,
@@ -512,26 +518,26 @@ export const actions = {
     const node = sourceMap.getNodeAtLine(resolvedLine)
 
     if (node && node.nodeId) {
-      logState.info(' Resolved pending selection to:', node.nodeId)
+      logState.info('Resolved pending selection to:', node.nodeId)
       // Set selection - SyncCoordinator will automatically handle sync via event
       actions.setSelection(node.nodeId, pending.origin)
       return node.nodeId
     }
 
     // Fallback: search by component name in nearby lines
-    logState.info(' Node not found at exact line, searching nearby...')
+    logState.info('Node not found at exact line, searching nearby...')
     for (let offset = -2; offset <= 2; offset++) {
       const searchLine = resolvedLine + offset
       const nearbyNode = sourceMap.getNodeAtLine(searchLine)
       if (nearbyNode && nearbyNode.componentName === pending.componentName) {
-        logState.info(' Found node by component name at line', searchLine, ':', nearbyNode.nodeId)
+        logState.info('Found node by component name at line', searchLine, ':', nearbyNode.nodeId)
         // Set selection - SyncCoordinator will automatically handle sync via event
         actions.setSelection(nearbyNode.nodeId, pending.origin)
         return nearbyNode.nodeId
       }
     }
 
-    logState.warn(' Could not resolve pending selection')
+    logState.warn('Could not resolve pending selection')
     return null
   },
 

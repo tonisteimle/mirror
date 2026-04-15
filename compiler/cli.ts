@@ -676,16 +676,24 @@ function main(): void {
 
       // Wrap in HTML document if output is .html
       if (options.output.endsWith('.html')) {
+        // Auto-invoke createUI and append to body for standalone HTML
+        const autoInvoke = `
+// Auto-initialize for standalone HTML
+const _ui = createUI()
+document.body.appendChild(_ui)
+`
         finalOutput = `<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mirror App</title>
+  <style>html, body { margin: 0; padding: 0; }</style>
 </head>
 <body>
 <script type="module">
 ${result.output}
+${autoInvoke}
 </script>
 </body>
 </html>`

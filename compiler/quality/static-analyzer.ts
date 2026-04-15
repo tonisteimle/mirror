@@ -17,6 +17,7 @@ import type {
   DefinedToken,
   DefinedComponent,
   UnwrappedPrimitive,
+  MisplacedSlot,
 } from './types'
 
 // =============================================================================
@@ -175,6 +176,10 @@ export class StaticAnalyzer {
   private primitiveToComponent: Map<string, string> = new Map()
   private unwrappedPrimitives: UnwrappedPrimitive[] = []
 
+  // Track which components define which slots (e.g., StatCard -> [Label, Value, Sub])
+  private componentSlots: Map<string, Set<string>> = new Map()
+  private misplacedSlots: MisplacedSlot[] = []
+
   private totalElements = 0
   private currentLine = 1
 
@@ -198,6 +203,11 @@ export class StaticAnalyzer {
       this.analyzeComponentDefinition(comp)
     }
 
+    // Detect misplaced slots (separate pass for clarity)
+    for (const instance of ast.instances) {
+      this.detectMisplacedSlots(instance as Instance, null, null)
+    }
+
     // Build result
     return this.buildResult(code)
   }
@@ -214,6 +224,8 @@ export class StaticAnalyzer {
     this.componentUsage.clear()
     this.primitiveToComponent.clear()
     this.unwrappedPrimitives = []
+    this.componentSlots.clear()
+    this.misplacedSlots = []
     this.totalElements = 0
     this.currentLine = 1
   }
@@ -269,6 +281,36 @@ export class StaticAnalyzer {
         if (!this.primitiveToComponent.has(basePrimitive)) {
           this.primitiveToComponent.set(basePrimitive, comp.name)
         }
+      }
+
+      // Collect slot definitions from component children
+      // Slots are child instances with isDefinition=true or end with ':'
+      // e.g., StatCard has children [Label:, Value:, Sub:]
+      const slots = new Set<string>()
+      for (const child of comp.children || []) {
+        if ((child as any).type === 'Instance') {
+          const childInstance = child as Instance
+          // Check if this is a slot definition (has isDefinition flag or component name suggests it)
+          if ((childInstance as any).isDefinition) {
+            slots.add(childInstance.component.replace(':', ''))
+          } else {
+            // Also check if child component name is PascalCase (likely a slot like Label, Value, Sub)
+            const childName = childInstance.component
+            if (childName && /^[A-Z][a-z]+$/.test(childName)) {
+              // Simple heuristic: PascalCase single words that aren't known primitives
+              const knownPrimitives = new Set([
+                'Frame', 'Text', 'Button', 'Input', 'Icon', 'Image', 'Link', 'Label',
+                'Divider', 'Spacer', 'Select', 'Checkbox', 'Switch', 'Slider'
+              ])
+              if (!knownPrimitives.has(childName)) {
+                slots.add(childName)
+              }
+            }
+          }
+        }
+      }
+      if (slots.size > 0) {
+        this.componentSlots.set(comp.name, slots)
       }
     }
   }
@@ -692,6 +734,81 @@ export class StaticAnalyzer {
     return `${compName} ${props}${instance.properties.length > 5 ? ', ...' : ''}`
   }
 
+  /**
+   * Detect slots used in wrong context (not direct child of defining component)
+   *
+   * Example problem:
+   *   StatCard
+   *     Label "Stunden Monat"    ← OK: direct child
+   *     Value "168.5"            ← OK: direct child
+   *     Frame hor                ← Frame is direct child
+   *       Sub "von 176h"         ← PROBLEM: Sub is child of Frame, not StatCard!
+   *
+   * @param instance - Current instance being analyzed
+   * @param slotDefiningComponent - Nearest ancestor that defines slots (e.g., "StatCard")
+   * @param immediateParent - The immediate parent component name (e.g., "Frame")
+   */
+  private detectMisplacedSlots(
+    instance: Instance,
+    slotDefiningComponent: string | null,
+    immediateParent: string | null
+  ): void {
+    const instanceType = (instance as any).type
+    const compName = instanceType === 'ZagComponent' ? (instance as any).name : instance.component
+    const line = instance.line
+
+    // Check if this instance is a slot that's in the wrong place
+    if (slotDefiningComponent && immediateParent) {
+      const definedSlots = this.componentSlots.get(slotDefiningComponent)
+      if (definedSlots && definedSlots.has(compName)) {
+        // This is a slot name! Check if it's in the right place
+        if (immediateParent !== slotDefiningComponent) {
+          // Misplaced slot! It should be direct child of slotDefiningComponent
+          this.misplacedSlots.push({
+            slotName: compName,
+            definingComponent: slotDefiningComponent,
+            actualParent: immediateParent,
+            expectedParent: slotDefiningComponent,
+            line,
+          })
+        }
+      }
+    }
+
+    // Determine new slot-defining component for children
+    // If this instance is a component that defines slots, it becomes the new context
+    let newSlotDefiningComponent = slotDefiningComponent
+    if (this.componentSlots.has(compName)) {
+      newSlotDefiningComponent = compName
+    }
+
+    // Recurse into children
+    for (const child of instance.children || []) {
+      if ((child as any).type === 'Instance' || (child as any).type === 'ZagComponent') {
+        this.detectMisplacedSlots(child as Instance, newSlotDefiningComponent, compName)
+      } else if ((child as any).type === 'Each') {
+        // For each loops, check children with current context
+        for (const eachChild of (child as any).children || []) {
+          if ((eachChild as any).type === 'Instance' || (eachChild as any).type === 'ZagComponent') {
+            this.detectMisplacedSlots(eachChild as Instance, newSlotDefiningComponent, compName)
+          }
+        }
+      } else if ((child as any).type === 'Conditional') {
+        // For conditionals, check both branches
+        for (const condChild of (child as any).consequent || []) {
+          if ((condChild as any).type === 'Instance' || (condChild as any).type === 'ZagComponent') {
+            this.detectMisplacedSlots(condChild as Instance, newSlotDefiningComponent, compName)
+          }
+        }
+        for (const condChild of (child as any).alternate || []) {
+          if ((condChild as any).type === 'Instance' || (condChild as any).type === 'ZagComponent') {
+            this.detectMisplacedSlots(condChild as Instance, newSlotDefiningComponent, compName)
+          }
+        }
+      }
+    }
+  }
+
   private buildResult(code: string): StaticAnalysis {
     const lines = code.split('\n').length
 
@@ -746,6 +863,7 @@ export class StaticAnalyzer {
       patterns,
       propertiesInLayout: this.propertiesInLayout,
       unwrappedPrimitives: this.unwrappedPrimitives,
+      misplacedSlots: this.misplacedSlots,
       definedTokens,
       definedComponents,
       totalLines: lines,

@@ -35,6 +35,7 @@ import type {
   LoopVarReference,
   Conditional as ASTConditional,
   ComputedExpression,
+  IconDefinition,
 } from '../parser/ast'
 import { logIR as log } from '../utils/logger'
 
@@ -460,7 +461,14 @@ class IRTransformer {
     // Transform animations
     const animations = this.ast.animations.map(anim => transformAnimation(anim))
 
-    return { nodes, tokens, animations }
+    // Transform custom icons
+    const icons = (this.ast.icons || []).map((icon: IconDefinition) => ({
+      name: icon.name,
+      path: icon.path,
+      viewBox: icon.viewBox || '0 0 24 24',
+    }))
+
+    return { nodes, tokens, animations, icons }
   }
 
   // Data and animation transformation functions (transformDataAttributes, transformDataValue,
@@ -601,35 +609,86 @@ class IRTransformer {
     const slots: Record<string, ZagSlotDef> = {}
     const items: ZagItem[] = []
 
+    // Helper to check if a child is a slot definition
+    const isSlotChild = (childInstance: Instance): boolean => {
+      const childName = childInstance.component || ''
+      return (
+        childInstance.isDefinition ||
+        (zagDef?.slots && zagDef.slots.includes(childName.replace(':', '')))
+      )
+    }
+
+    // Helper to extract slot from child instance
+    const extractSlot = (childInstance: Instance): { name: string; slot: ZagSlotDef } | null => {
+      const childName = childInstance.component || ''
+      if (!isSlotChild(childInstance)) return null
+
+      const slotName = childName.replace(':', '')
+      const srcPos = {
+        line: childInstance.line,
+        column: childInstance.column,
+        endLine: childInstance.line,
+        endColumn: childInstance.column,
+      }
+      return {
+        name: slotName,
+        slot: {
+          name: slotName,
+          properties: childInstance.properties,
+          states: [],
+          children: childInstance.children as (Instance | Slot | Text)[],
+          sourcePosition: srcPos,
+        },
+      }
+    }
+
+    // First, extract slots from resolvedComponent.children (base component's slot definitions)
+    // These define the base styling for slots like Trigger:, Content:
+    if (resolvedComponent?.children) {
+      for (const child of resolvedComponent.children) {
+        if (child.type === 'Instance') {
+          const extracted = extractSlot(child as Instance)
+          if (extracted) {
+            slots[extracted.name] = extracted.slot
+          }
+        }
+      }
+    }
+
+    // Then, extract slots and items from instance.children
+    // Instance slots override component slots (properties are merged)
     for (const child of instance.children) {
       if (child.type === 'Instance') {
         const childInstance = child as Instance
-        const childName = childInstance.name || ''
-        const srcPos = {
-          line: childInstance.line,
-          column: childInstance.column,
-          endLine: childInstance.line,
-          endColumn: childInstance.column,
-        }
-        // Check if child is a slot definition (ends with :) or known slot name
-        if (
-          childInstance.isDefinition ||
-          (zagDef?.slots && zagDef.slots.includes(childName.replace(':', '')))
-        ) {
-          const slotName = childName.replace(':', '')
-          slots[slotName] = {
-            name: slotName,
-            properties: childInstance.properties,
-            states: [],
-            children: childInstance.children as (Instance | Slot | Text)[],
-            sourcePosition: srcPos,
+        const extracted = extractSlot(childInstance)
+
+        if (extracted) {
+          // Merge with existing slot if present (instance properties override component)
+          const existingSlot = slots[extracted.name]
+          if (existingSlot) {
+            slots[extracted.name] = {
+              ...extracted.slot,
+              properties: mergeProperties(existingSlot.properties, extracted.slot.properties),
+              children: extracted.slot.children.length > 0
+                ? extracted.slot.children
+                : existingSlot.children,
+            }
+          } else {
+            slots[extracted.name] = extracted.slot
           }
         } else {
           // Treat as item - get text content from first Text child or name
+          const childName = childInstance.name || ''
           let label = childName
           const textChild = childInstance.children.find(c => c.type === 'Text') as Text | undefined
           if (textChild) {
             label = textChild.content
+          }
+          const srcPos = {
+            line: childInstance.line,
+            column: childInstance.column,
+            endLine: childInstance.line,
+            endColumn: childInstance.column,
           }
           items.push({
             value: childName,

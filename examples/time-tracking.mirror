@@ -71,6 +71,13 @@ col-hours.w: 60
 col-status.w: 32
 
 // =============================================================================
+// RESPONSIVE BREAKPOINTS
+// =============================================================================
+
+compact.max: 600
+wide.min: 900
+
+// =============================================================================
 // FILTER STATE
 // =============================================================================
 
@@ -157,9 +164,14 @@ PageSubtitle: Text col $text-secondary, fs $fs-md
 SectionLabel: Text col $text-muted, fs $fs-sm, uppercase, letter 0.5
 
 // Cards
-StatCard: Frame bg $card, pad $space-lg, rad $rad-lg, gap $gap-sm, w full, h full, cursor pointer
+StatCard: Frame bg $card, pad $space-lg, rad $rad-lg, gap $gap-sm, grow, shrink, minw 180, cursor pointer
+  compact:
+    pad $space-md
+    minw 140
   Label: col $text-muted, fs $fs-sm, uppercase, letter 0.5
   Value: col $text, fs $fs-2xl, weight 600
+    compact:
+      fs $fs-xl
   Sub: col $text-secondary, fs $fs-sm
   SubSuccess: col $success, fs $fs-sm
   hover 0.2s:
@@ -190,6 +202,9 @@ HeaderCell: Text col $text-muted, fs $fs-sm, uppercase
 
 // Original: pad 8 10 - $space-sm ist nur 6, daher explizit 8
 TableRow: Frame hor, pad 8 $space-md, bor 0 0 1 0, boc $border, gap $gap-md, ver-center, cursor pointer
+  compact:
+    gap $gap-sm
+    pad $space-sm
   hover 0.15s:
     bg $row-hover
 
@@ -197,6 +212,8 @@ TableRow: Frame hor, pad 8 $space-md, bor 0 0 1 0, boc $border, gap $gap-md, ver
 CellDate: Text col $text-secondary, fs $fs-md, w $col-date
 CellProject: Text col $text, fs $fs-md, w $col-project, weight 500
 CellClient: Text col $text-secondary, fs $fs-md, w $col-client
+  compact:
+    hidden
 CellTask: Text col $text, fs $fs-md, w $col-task, grow
 CellHours: Text col $text, fs $fs-md, w $col-hours, right, weight 500
 
@@ -204,147 +221,168 @@ CellHours: Text col $text, fs $fs-md, w $col-hours, right, weight 500
 // LAYOUT
 // =============================================================================
 
-Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
+// Viewport wrapper - fills screen, centers content
+Frame w full, minh 100vh, bg $bg, tc
+  // Content container - fixed width, centered by parent
+  Frame w 900, maxw full, pad $space-xl, gap $gap-2xl
+    compact:
+      pad $space-md
+      gap $gap-xl
 
-  // Header
-  Frame hor, ver-center, gap $gap-2xl
-    Frame gap $gap-xs
-      PageTitle "Zeiterfassung"
-      PageSubtitle "April 2026"
-    Spacer grow
-    Frame hor, gap $gap-md
-      BtnSecondary "Export"
+    // Header
+    Frame hor, ver-center, gap $gap-2xl, wrap
+      compact:
+        gap $gap-lg
+      Frame gap $gap-xs
+        PageTitle "Zeiterfassung"
+        PageSubtitle "April 2026"
+      Spacer grow
+      Frame hor, gap $gap-md
+        BtnSecondary "Export"
 
-      // Dialog for new entry
-      Dialog closeOnOutsideClick
-        Trigger:
-          BtnPrimary "Neuer Eintrag"
-        Content: Frame bg $card, pad $space-xl, rad $rad-lg, gap $gap-xl, w 360
-          // Dialog Header mit Close Button
-          Frame hor, spread, ver-center, borb 1, boc $border, pad 0 0 $gap-xl 0
-            Text "Neuer Zeiteintrag", col $text, fs 14, weight 600
-            CloseTrigger:
-              Icon "x", ic $muted, is $icon-md, cursor pointer
+        // Dialog for new entry
+        Dialog closeOnOutsideClick
+          Trigger:
+            BtnPrimary "Neuer Eintrag"
+          Backdrop: bg rgba(0,0,0,0.6)
+          Content: Frame bg $card, pad $space-xl, rad $rad-lg, gap $gap-xl, w 360, maxw 90vw
+            compact:
+              w full
+              pad $space-lg
+              gap $gap-lg
+            open 0.2s ease-out:
+              anim scale-in
+            // Dialog Header mit Close Button
+            Frame hor, spread, ver-center, borb 1, boc $border, pad 0 0 $gap-xl 0
+              Text "Neuer Zeiteintrag", col $text, fs 14, weight 600
+              CloseTrigger:
+                Icon "x", ic $muted, is $icon-md, cursor pointer
 
-          // Form Fields
-          Frame gap $gap-xl
-            // Date
-            FormField
-              Label "Datum"
-              FormInput bind newDate
+            // Form Fields
+            Frame gap $gap-xl
+              // Date
+              FormField
+                Label "Datum"
+                FormInput bind newDate
 
-            // Project Selection
-            FormField
-              Label "Projekt"
-              FormSelect placeholder "Projekt wählen...", bind newProject
-                Option "Website Relaunch"
-                Option "Mobile App"
-                Option "Intern"
-                Option "Support"
+              // Project Selection
+              FormField
+                Label "Projekt"
+                FormSelect placeholder "Projekt wählen...", bind newProject
+                  Option "Website Relaunch"
+                  Option "Mobile App"
+                  Option "Intern"
+                  Option "Support"
 
-            // Client Selection
-            FormField
-              Label "Kunde"
-              FormSelect placeholder "Kunde wählen...", bind newClient
-                Option "Müller AG"
-                Option "Schmidt GmbH"
-                Option "Weber & Co"
-                Option "—"
+              // Client Selection
+              FormField
+                Label "Kunde"
+                FormSelect placeholder "Kunde wählen...", bind newClient
+                  Option "Müller AG"
+                  Option "Schmidt GmbH"
+                  Option "Weber & Co"
+                  Option "—"
 
-            // Task
-            FormField
-              Label "Tätigkeit"
-              FormInput placeholder "Was wurde gemacht?", bind newTask
+              // Task
+              FormField
+                Label "Tätigkeit"
+                FormInput placeholder "Was wurde gemacht?", bind newTask
 
-            // Hours
-            FormField
-              Label "Stunden"
-              FormInput type "number", bind newHours, w 80
+              // Hours
+              FormField
+                Label "Stunden"
+                FormInput type "number", bind newHours, w 80
 
-            // Billable Checkbox
-            Checkbox "Verrechenbar", checked, bind newBillable
+              // Billable Checkbox
+              Checkbox "Verrechenbar", checked, bind newBillable
 
-          // Actions
-          Frame hor, gap $gap-lg, right, bort 1, boc $border, pad $gap-xl 0 0 0
-            CloseTrigger:
-              BtnSecondary "Abbrechen"
-            BtnPrimary "Speichern", add(entries, date: $newDate, project: $newProject, client: $newClient, task: $newTask, hours: $newHours, billable: $newBillable)
+            // Actions
+            Frame hor, gap $gap-lg, right, bort 1, boc $border, pad $gap-xl 0 0 0
+              CloseTrigger:
+                BtnSecondary "Abbrechen"
+              BtnPrimary "Speichern", add(entries, date: $newDate, project: $newProject, client: $newClient, task: $newTask, hours: $newHours, billable: $newBillable)
 
-  // Stats Row
-  Frame hor, gap $gap-xl, h 90
+    // Stats Row
+    Frame hor, gap $gap-xl, wrap
+      compact:
+        gap $gap-md
 
-    StatCard
-      Label "Stunden Monat"
-      Value "168.5"
-      Frame hor, gap $gap-sm, ver-center
-        Frame w 80, h 3, bg $muted, rad $rad-sm
-          Frame w 64, h 3, bg $accent, rad $rad-sm
-        Sub "von 176h"
+      StatCard
+        Label "Stunden Monat"
+        Value "168.5"
+        Frame hor, gap $gap-sm, ver-center
+          Frame w 80, h 3, bg $muted, rad $rad-sm
+            Frame w 64, h 3, bg $accent, rad $rad-sm
+          Text "von 176h", col $text-secondary, fs $fs-sm
 
-    StatCard
-      Label "Überstunden"
-      Value "+12.5"
-      Sub "kumuliert"
+      StatCard
+        Label "Überstunden"
+        Value "+12.5"
+        Sub "kumuliert"
 
-    StatCard
-      Label "Resturlaub"
-      Value "11"
-      Sub "von 18 Tagen"
+      StatCard
+        Label "Resturlaub"
+        Value "11"
+        Sub "von 18 Tagen"
 
-    StatCard
-      Label "Verrechenbar"
-      Value "89%"
-      Sub "Ziel: 85%"
+      StatCard
+        Label "Verrechenbar"
+        Value "89%"
+        Sub "Ziel: 85%"
 
-  // Filters - functional with Select and bind
-  Frame bg $card, pad $space-md, rad $rad-lg, hor, gap $gap-lg, ver-center
-    SectionLabel "Filter:", w 36
+    // Filters - functional with Select and bind
+    Frame bg $card, pad $space-md, rad $rad-lg, hor, gap $gap-lg, ver-center, wrap
+      compact:
+        gap $gap-md
+      SectionLabel "Filter:", w 36
 
-    FormSelect placeholder "Alle Projekte", w 150, bind filterProject
-      Option "Alle Projekte", value ""
-      Option "Website Relaunch", value "Website Relaunch"
-      Option "Mobile App", value "Mobile App"
-      Option "Intern", value "Intern"
-      Option "Support", value "Support"
+      FormSelect placeholder "Alle Projekte", w 150, bind filterProject, grow, shrink, minw 120
+        Option "Alle Projekte", value ""
+        Option "Website Relaunch", value "Website Relaunch"
+        Option "Mobile App", value "Mobile App"
+        Option "Intern", value "Intern"
+        Option "Support", value "Support"
 
-    FormSelect placeholder "Alle Kunden", w 140, bind filterClient
-      Option "Alle Kunden", value ""
-      Option "Müller AG", value "Müller AG"
-      Option "Schmidt GmbH", value "Schmidt GmbH"
-      Option "Weber & Co", value "Weber & Co"
+      FormSelect placeholder "Alle Kunden", w 140, bind filterClient, grow, shrink, minw 120
+        Option "Alle Kunden", value ""
+        Option "Müller AG", value "Müller AG"
+        Option "Schmidt GmbH", value "Schmidt GmbH"
+        Option "Weber & Co", value "Weber & Co"
 
-    Spacer grow
-    SearchInput, placeholder "Suchen...", w 180, bind searchQuery
+      Spacer grow
+      SearchInput, placeholder "Suchen...", w 180, bind searchQuery, grow, shrink, minw 120
 
-  // Table
-  Frame bg $card, rad $rad-lg, clip
-    TableHeader
-      HeaderCell "Datum", w $col-date
-      HeaderCell "Projekt", w $col-project
-      HeaderCell "Kunde", w $col-client
-      HeaderCell "Tätigkeit", w $col-task, grow
-      HeaderCell "Stunden", w $col-hours, right
-      Frame w $col-status, center
-        Icon "receipt", ic $text-muted, is $icon-sm
+    // Table
+    Frame bg $card, rad $rad-lg, clip
+      TableHeader
+        HeaderCell "Datum", w $col-date
+        HeaderCell "Projekt", w $col-project
+        HeaderCell "Kunde", w $col-client
+          compact:
+            hidden
+        HeaderCell "Tätigkeit", w $col-task, grow
+        HeaderCell "Stunden", w $col-hours, right
+        Frame w $col-status, center
+          Icon "receipt", ic $text-muted, is $icon-sm
 
-    Frame gap 0
-      // Filter: project, client, and search query
-      each entry in $entries where ($filterProject == "" || entry.project == $filterProject) && ($filterClient == "" || entry.client == $filterClient) && ($searchQuery == "" || entry.task.toLowerCase().includes($searchQuery.toLowerCase()) || entry.project.toLowerCase().includes($searchQuery.toLowerCase()))
-        TableRow
-          CellDate entry.date
-          CellProject entry.project
-          CellClient entry.client
-          CellTask entry.task
-          CellHours entry.hours + "h"
-          Frame w $col-status, center
-            if entry.billable
-              Icon "circle-check", ic $success, is $icon-md
-            else
-              Icon "minus", ic $text-muted, is $icon-md
+      Frame gap 0
+        // Filter: project, client, and search query
+        each entry in $entries where ($filterProject == "" || entry.project == $filterProject) && ($filterClient == "" || entry.client == $filterClient) && ($searchQuery == "" || entry.task.toLowerCase().includes($searchQuery.toLowerCase()) || entry.project.toLowerCase().includes($searchQuery.toLowerCase()))
+          TableRow
+            CellDate entry.date
+            CellProject entry.project
+            CellClient entry.client
+            CellTask entry.task
+            CellHours entry.hours + "h"
+            Frame w $col-status, center
+              if entry.billable
+                Icon "circle-check", ic $success, is $icon-md
+              else
+                Icon "minus", ic $text-muted, is $icon-md
 
-    // Footer
-    Frame hor, spread, ver-center, pad $space-md, bg $card-alt
-      Text "6 Einträge", col $text-muted, fs $fs-sm
-      Frame hor, gap $gap-md, ver-center
-        Text "Total:", col $text-secondary, fs $fs-md
-        Text "21.5h", col $text, fs $fs-lg, weight 600
+      // Footer
+      Frame hor, spread, ver-center, pad $space-md, bg $card-alt
+        Text "6 Einträge", col $text-muted, fs $fs-sm
+        Frame hor, gap $gap-md, ver-center
+          Text "Total:", col $text-secondary, fs $fs-md
+          Text "21.5h", col $text, fs $fs-lg, weight 600

@@ -46,6 +46,7 @@ export interface Program extends BaseNode {
   instances: (Instance | Slot | TableNode | Each | ConditionalNode | ZagNode)[]
   javascript?: JavaScriptBlock  // JavaScript code at end of file
   schema?: SchemaDefinition  // Schema definition for data collections
+  icons: IconDefinition[]  // Custom icon definitions
   errors: ParseError[]
 }
 
@@ -92,6 +93,26 @@ export type SchemaConstraint =
   | { kind: 'required' }
   | { kind: 'max'; value: number }
   | { kind: 'onDelete'; action: 'cascade' | 'nullify' | 'restrict' }
+
+// ============================================================================
+// Custom Icon Types
+// ============================================================================
+
+/**
+ * Custom icon definition
+ *
+ * Syntax:
+ * $icons:
+ *   hbox: "M3 3h18v18H3z M9 3v18"
+ *   vbox: "M3 3h18v18H3z M21 9H3"
+ */
+export interface IconDefinition {
+  name: string
+  path: string // SVG path data (d attribute)
+  viewBox?: string // default "0 0 24 24"
+  line: number
+  column: number
+}
 
 export interface JavaScriptBlock extends BaseNode {
   type: 'JavaScript'

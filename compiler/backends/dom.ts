@@ -305,6 +305,7 @@ class DOMGenerator {
   generate(): string {
     this.emitHeader()
     this.emitTokens()
+    this.emitCustomIcons()
     this.emitCreateUI()
     this.emitRuntime()
     this.emitAnimations()
@@ -315,6 +316,23 @@ class DOMGenerator {
     }
 
     return this.lines.join('\n')
+  }
+
+  /**
+   * Emit custom icon registrations
+   * Icons defined with $icons: are registered before UI creation
+   */
+  private emitCustomIcons(): void {
+    if (!this.ir.icons || this.ir.icons.length === 0) return
+
+    this.emit('')
+    this.emit('// Custom Icons')
+    for (const icon of this.ir.icons) {
+      const viewBox = icon.viewBox || '0 0 24 24'
+      // Escape any quotes in the path data
+      const escapedPath = icon.path.replace(/"/g, '\\"')
+      this.emit(`_runtime.registerIcon('${icon.name}', "${escapedPath}", '${viewBox}')`)
+    }
   }
 
   private emitAnimations(): void {

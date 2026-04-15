@@ -42,6 +42,7 @@ import type {
   SchemaField,
   SchemaType,
   SchemaConstraint,
+  IconDefinition,
   TableNode,
   TableColumnNode,
   TableSlotNode,
@@ -248,6 +249,7 @@ export class Parser {
       components: [],
       animations: [],
       instances: [],
+      icons: [],
       errors: [],
     }
 
@@ -379,6 +381,21 @@ export class Parser {
       ) {
         const schema = this.parseSchema()
         if (schema) program.schema = schema
+        continue
+      }
+
+      // Custom icons definition: $icons:
+      // Must be checked BEFORE data object since $icons is a special case
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('COLON') &&
+        this.peekAt(0)?.value === '$icons'
+      ) {
+        const icons = this.parseIconDefinitions()
+        if (icons.length > 0) {
+          if (!program.icons) program.icons = []
+          program.icons.push(...icons)
+        }
         continue
       }
 
@@ -866,6 +883,76 @@ export class Parser {
       constraints,
       line,
     }
+  }
+
+  /**
+   * Parse custom icon definitions
+   *
+   * Syntax:
+   *   $icons:
+   *     hbox: "M3 3h18v18H3z M9 3v18"
+   *     vbox: "M3 3h18v18H3z M21 9H3"
+   *     grid: "M3 3h8v8H3z M13 3h8v8h-8z"
+   */
+  private parseIconDefinitions(): IconDefinition[] {
+    const startToken = this.advance() // $icons
+    this.advance() // :
+
+    // Skip newlines if any, then expect INDENT
+    while (this.check('NEWLINE')) {
+      this.advance()
+    }
+    if (!this.check('INDENT')) {
+      return []
+    }
+    this.advance() // consume INDENT
+
+    // Skip the NEWLINE that often follows INDENT
+    if (this.check('NEWLINE')) {
+      this.advance()
+    }
+
+    const icons: IconDefinition[] = []
+
+    // Parse icon definitions until DEDENT
+    for (
+      let iter = 0;
+      !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
+      iter++
+    ) {
+      this.skipNewlines()
+      if (this.check('DEDENT') || this.isAtEnd()) break
+
+      // Check for icon definition: iconName: "path data"
+      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+        const nameToken = this.advance() // iconName
+        const line = nameToken.line
+        const column = nameToken.column
+        this.advance() // :
+
+        // Expect STRING with path data
+        if (this.check('STRING')) {
+          const pathToken = this.advance()
+          icons.push({
+            name: nameToken.value,
+            path: pathToken.value,
+            line,
+            column,
+          })
+        }
+        continue
+      }
+
+      // Unknown content - skip
+      this.advance()
+    }
+
+    // Consume DEDENT
+    if (this.check('DEDENT')) {
+      this.advance()
+    }
+
+    return icons
   }
 
   /**

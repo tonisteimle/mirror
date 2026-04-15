@@ -2,6 +2,7 @@
  * Icons Module
  *
  * Lucide icon loading with security sanitization.
+ * Also supports custom icon registry for user-defined icons.
  * Extracted from dom-runtime.ts for Clean Code.
  */
 
@@ -23,9 +24,37 @@ const FALLBACK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 2
 const iconCache = new Map<string, string>()
 const pendingRequests = new Map<string, Promise<string | null>>()
 
+/** Custom icon registry - stores SVG path data for user-defined icons */
+const customIconRegistry = new Map<string, { path: string; viewBox: string }>()
+
 // ============================================
 // PUBLIC API
 // ============================================
+
+/**
+ * Register a custom icon with SVG path data
+ *
+ * @param name - Icon name (used in Mirror code: Icon "myicon")
+ * @param pathData - SVG path data (d attribute content)
+ * @param viewBox - Optional viewBox (default: "0 0 24 24")
+ */
+export function registerIcon(name: string, pathData: string, viewBox: string = '0 0 24 24'): void {
+  customIconRegistry.set(name, { path: pathData, viewBox })
+}
+
+/**
+ * Check if an icon is registered as a custom icon
+ */
+export function hasCustomIcon(name: string): boolean {
+  return customIconRegistry.has(name)
+}
+
+/**
+ * Clear all custom icons (useful for testing)
+ */
+export function clearCustomIcons(): void {
+  customIconRegistry.clear()
+}
 
 export async function loadIcon(el: MirrorElement, iconName: string): Promise<void> {
   if (!el || !iconName) return
@@ -45,11 +74,34 @@ export function preloadIcons(iconNames: string[]): void {
 // ============================================
 
 async function getIconSvg(iconName: string): Promise<string> {
+  // Check custom icon registry first
+  const customIcon = customIconRegistry.get(iconName)
+  if (customIcon) {
+    return buildSvgFromPath(customIcon.path, customIcon.viewBox)
+  }
+
+  // Check cache
   const cached = iconCache.get(iconName)
   if (cached) return cached
 
+  // Fetch from Lucide CDN
   const fetched = await fetchIconWithDedup(iconName)
   return fetched ?? FALLBACK_ICON
+}
+
+/**
+ * Build a complete SVG element from path data
+ */
+function buildSvgFromPath(pathData: string, viewBox: string): string {
+  // Support multiple paths separated by newlines or pipes
+  const paths = pathData
+    .split(/[\n|]/)
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+    .map(p => `<path d="${p}"/>`)
+    .join('')
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`
 }
 
 async function fetchIconWithDedup(iconName: string): Promise<string | null> {

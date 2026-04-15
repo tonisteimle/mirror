@@ -190,6 +190,67 @@ __dragTest.snapshot(): Snapshot
 #### PaletteDragBuilder
 
 ```typescript
+#### Property Panel Kontrolle
+
+```typescript
+// Element-Properties lesen
+__dragTest.getElement(nodeId: string): ExtractedElementInfo | null
+__dragTest.getPropertyValue(nodeId: string, propName: string): string | null
+__dragTest.hasProperty(nodeId: string, propName: string): boolean
+__dragTest.getPropertiesMap(nodeId: string): Record<string, string>
+__dragTest.getPrimitiveType(nodeId: string): string | null  // "Frame", "Button", etc.
+__dragTest.isComponentInstance(nodeId: string): boolean
+__dragTest.isComponentDefinition(nodeId: string): boolean
+
+// Properties ändern (async, wartet auf Kompilierung)
+__dragTest.setProperty(nodeId: string, propName: string, value: string): Promise<PropertyModificationResult>
+__dragTest.removeProperty(nodeId: string, propName: string): Promise<PropertyModificationResult>
+__dragTest.toggleProperty(nodeId: string, propName: string, enabled: boolean): Promise<PropertyModificationResult>
+__dragTest.batchUpdateProperties(nodeId: string, changes: PropertyChange[]): Promise<PropertyModificationResult>
+
+// Tokens
+__dragTest.getColorTokens(): TokenInfo[]    // Alle Farb-Tokens (bg, col, boc, ic)
+__dragTest.getSpacingTokens(): TokenInfo[]  // Alle Spacing-Tokens (pad, gap, mar, rad)
+
+// Panel-Steuerung
+__dragTest.refreshPropertyPanel(): void
+__dragTest.getCurrentPanelElement(): ExtractedElementInfo | null
+__dragTest.selectAndInspect(nodeId: string): Promise<ExtractedElementInfo | null>
+```
+
+**Beispiele:**
+
+```javascript
+// Element inspizieren
+const element = __dragTest.getElement('node-1')
+console.log(element.nodeName)       // "Frame"
+console.log(element.allProperties)  // [{name: "bg", value: "#333", hasValue: true}, ...]
+
+// Einzelne Property lesen
+const bg = __dragTest.getPropertyValue('node-1', 'bg')  // "#333"
+
+// Alle Properties als Map
+const props = __dragTest.getPropertiesMap('node-1')
+// { bg: "#333", pad: "16", gap: "8" }
+
+// Property setzen (wartet auf Kompilierung)
+const result = await __dragTest.setProperty('node-1', 'bg', '#ff0000')
+if (result.success) {
+  console.log('Neuer Code:', result.newSource)
+}
+
+// Mehrere Properties auf einmal ändern
+await __dragTest.batchUpdateProperties('node-1', [
+  { name: 'bg', value: '#2271C1', action: 'set' },
+  { name: 'pad', value: '24', action: 'set' },
+  { name: 'shadow', value: '', action: 'remove' }
+])
+
+// Tokens auslesen
+const colors = __dragTest.getColorTokens()
+// [{name: "primary", type: "bg", value: "#2271C1", fullName: "primary.bg"}, ...]
+```
+
 __dragTest
   .fromPalette('Button')
   .toContainer('node-1') // Ziel-Container (Node-ID)
@@ -254,6 +315,60 @@ interface DragTestResult {
 ---
 
 ## Test-Kategorien
+#### Property Panel Types
+
+```typescript
+// Extrahierte Element-Info (aus getElement)
+interface ExtractedElementInfo {
+  nodeId: string
+  nodeName: string              // "Frame", "Button", "Text", etc.
+  componentName?: string        // Name wenn Komponenten-Instanz
+  isDefinition: boolean         // true wenn Komponenten-Definition
+  isTemplateInstance: boolean   // true wenn Komponenten-Instanz
+  categories: PropertyCategoryInfo[]
+  allProperties: ExtractedPropertyInfo[]
+}
+
+// Property-Kategorie (layout, sizing, spacing, etc.)
+interface PropertyCategoryInfo {
+  name: string    // "layout", "sizing", "spacing", "color", etc.
+  label: string   // "Layout", "Sizing", "Spacing", "Color", etc.
+  properties: ExtractedPropertyInfo[]
+}
+
+// Einzelne Property
+interface ExtractedPropertyInfo {
+  name: string       // "bg", "pad", "gap", etc.
+  value: string      // "#333", "16", "8", etc.
+  hasValue: boolean  // true wenn Property gesetzt ist
+  isToken?: boolean  // true wenn Token-Referenz
+  tokenRef?: string  // z.B. "primary" für $primary
+}
+
+// Änderungs-Ergebnis (von setProperty, removeProperty, etc.)
+interface PropertyModificationResult {
+  success: boolean
+  newSource?: string
+  change?: { from: number; to: number; insert: string }
+  error?: string
+}
+
+// Token-Info (von getColorTokens, getSpacingTokens)
+interface TokenInfo {
+  name: string      // "primary", "sm", etc.
+  type: string      // "bg", "col", "pad", "gap", etc.
+  value: string     // "#2271C1", "8", etc.
+  fullName: string  // "primary.bg", "sm.pad", etc.
+}
+
+// Änderungs-Aktion für batchUpdateProperties
+interface PropertyChange {
+  name: string
+  value: string
+  action: 'set' | 'remove' | 'toggle'
+}
+```
+
 
 ### 1. Palette Drop Tests (32 Tests)
 

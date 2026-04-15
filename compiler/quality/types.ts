@@ -76,6 +76,15 @@ export interface UnwrappedPrimitive {
   suggestedComponent: string // e.g., "FormSelect"
 }
 
+/** Slot used in wrong context (not direct child of defining component) */
+export interface MisplacedSlot {
+  slotName: string // e.g., "Sub"
+  definingComponent: string // e.g., "StatCard" (where Sub: is defined)
+  actualParent: string // e.g., "Frame" (the actual parent)
+  expectedParent: string // e.g., "StatCard" (where it should be)
+  line: number
+}
+
 export interface StaticAnalysis {
   // Raw data
   colors: ColorUsage[]
@@ -86,6 +95,7 @@ export interface StaticAnalysis {
 
   // Consistency issues
   unwrappedPrimitives: UnwrappedPrimitive[]
+  misplacedSlots: MisplacedSlot[]
 
   // Definitions
   definedTokens: DefinedToken[]

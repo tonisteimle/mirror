@@ -48,6 +48,8 @@ export function formatCSSValue(property: string, value: string): string {
   if (NEEDS_PX_PROPERTIES.has(property)) {
     // Handle multi-value properties (e.g., "8 16" → "8px 16px")
     return value.split(' ').map(v => {
+      // Only add px to pure integer values, not values with existing units
+      // (%, vh, vw, vmin, vmax, em, rem, etc.)
       if (/^\d+$/.test(v)) {
         return `${v}px`
       }

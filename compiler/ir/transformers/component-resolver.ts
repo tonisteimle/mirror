@@ -129,5 +129,34 @@ export function resolveComponent(
     states: mergeStates(resolvedParent.states, component.states),
     events: [...resolvedParent.events, ...component.events],
     children: [...resolvedParent.children, ...component.children],
+    // Merge slots for Zag components (child slots override parent)
+    slots: mergeSlots(resolvedParent.slots, component.slots),
   }
+}
+
+/**
+ * Merge parent and child slots (child overrides parent)
+ */
+function mergeSlots(
+  parentSlots: Record<string, any> | undefined,
+  childSlots: Record<string, any> | undefined
+): Record<string, any> | undefined {
+  if (!parentSlots && !childSlots) return undefined
+  if (!parentSlots) return childSlots
+  if (!childSlots) return parentSlots
+
+  const merged: Record<string, any> = { ...parentSlots }
+  for (const [slotName, childSlot] of Object.entries(childSlots)) {
+    if (merged[slotName]) {
+      // Merge slot properties (child overrides parent)
+      merged[slotName] = {
+        ...merged[slotName],
+        ...childSlot,
+        properties: mergeProperties(merged[slotName].properties || [], childSlot.properties || []),
+      }
+    } else {
+      merged[slotName] = childSlot
+    }
+  }
+  return merged
 }

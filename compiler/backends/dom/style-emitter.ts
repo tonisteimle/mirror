@@ -347,6 +347,9 @@ export function emitStyles(ctx: StyleEmitterContext): void {
   emitCustomTokens(ctx)
 
   // Base reset
+  ctx.emit('.mirror-root {')
+  ctx.emit("  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;")
+  ctx.emit('}')
   ctx.emit('.mirror-root * {')
   ctx.emit('  box-sizing: border-box;')
   ctx.emit('}')

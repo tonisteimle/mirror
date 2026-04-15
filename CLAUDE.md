@@ -57,8 +57,10 @@ studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 
 tests/                 # Test Suite
 ├── compiler/          # IR & Backend Tests
-├── studio/            # Studio Component Tests
-└── e2e/               # Playwright E2E Tests
+└── studio/            # Studio Component Tests
+
+tools/                 # CLI Tools
+└── drag-test-runner.ts  # Browser Test Runner (CDP)
 
 docs/                  # Dokumentation
 ├── concepts/          # Feature-Konzepte (in Entwicklung)
@@ -77,18 +79,31 @@ dist/                  # Build Output
 | `studio/modules/compiler/`         | Compiler Wrapper                     |
 | `studio/pickers/`                  | Color, Token, Icon, Animation Picker |
 | `studio/panels/`                   | Property, Tree, Files Panel          |
+| `studio/test-api/`                 | Browser Test Framework               |
 | `compiler/ir/index.ts`             | IR-Transformation, SourceMap         |
 | `compiler/backends/dom.ts`         | DOM Code-Generator                   |
 | `compiler/studio/code-modifier.ts` | Code-Änderungen                      |
 | `compiler/schema/dsl.ts`           | DSL Schema (Single Source of Truth)  |
 | `compiler/validator/index.ts`      | Code Validator API                   |
+| `tools/drag-test-runner.ts`        | CDP Browser Test Runner              |
+| `docs/DRAG-DROP-TESTING.md`        | Test Framework Dokumentation         |
 
 ## Commands
 
 ```bash
+# Build
 npm run build          # Compiler bauen
 npm run build:studio   # Studio Runtime bauen
-npm test               # Tests ausführen
+
+# Studio
+npm run studio         # Studio Server starten (localhost:5173)
+
+# Tests
+npm test               # Unit Tests (Vitest)
+npx tsx tools/drag-test-runner.ts           # Browser Tests (headless)
+npx tsx tools/drag-test-runner.ts --headed  # Browser Tests (sichtbar)
+
+# Sonstiges
 npm run validate       # Code validieren (z.B. npm run validate app.mirror)
 ./deploy.sh            # Production Deploy
 ```
@@ -425,6 +440,29 @@ Frame $cardstyle
   Button $btnbase, bg #2271C1, col white
     Text "Aktion"
 ```
+
+### Custom Icons
+
+```mirror
+// Icon-Registry definieren (SVG path data)
+$icons:
+  hbox: "M3 3h18v18H3z|M9 3v18|M15 3v18"
+  vbox: "M3 3h18v18H3z|M21 9H3|M21 15H3"
+  grid: "M3 3h8v8H3z|M13 3h8v8h-8z|M3 13h8v8H3z|M13 13h8v8h-8z"
+
+// Verwendung - wie normale Lucide Icons
+Icon "hbox", is 24, ic #888
+Icon "vbox", is 24, ic #2271C1
+Icon "grid", is 20
+
+// Custom Icons und Lucide Icons mischen
+Frame hor, gap 8
+  Icon "hbox", is 20           // Custom
+  Icon "check", is 20          // Lucide
+  Icon "grid", is 20           // Custom
+```
+
+**Hinweis:** Mehrere Pfade mit `|` trennen. ViewBox ist standardmäßig `0 0 24 24`.
 
 ### States
 
@@ -1094,6 +1132,97 @@ Tests in `tests/`:
 
 - `tests/compiler/` - IR, Backend, Layout, Zag-Komponenten
 - `tests/studio/` - Panels, Pickers, Editor, Sync
-- `tests/e2e/` - Playwright Browser-Tests
 
 Dokumentation: `tests/compiler/regeln.md` (bewiesene Regeln), `tests/compiler/strategie.md` (Teststrategie)
+
+### Unit Tests (Vitest)
+
+```bash
+npm test                    # Alle Unit Tests
+npm test -- --watch         # Watch Mode
+npm test -- parser          # Nur Parser Tests
+```
+
+### Browser Test Framework
+
+Eigenes Test-Framework für Studio-Tests direkt im Browser. Ersetzt Playwright.
+
+**Test-Kategorien (~225 Tests):**
+
+| Kategorie | Tests | Beschreibung |
+|-----------|-------|--------------|
+| Primitives | ~25 | Frame, Text, Button, Icon, etc. |
+| Layout | ~35 | hor, ver, gap, grid, stacked |
+| Styling | ~50 | bg, col, pad, rad, shadow |
+| Zag | ~30 | Dialog, Tabs, Select, Checkbox |
+| Interactions | ~30 | Click, Hover, Focus, Input |
+| Bidirectional | ~20 | Code ↔ Preview Sync |
+| Undo/Redo | ~15 | History Management |
+| Autocomplete | ~20 | Completions |
+| Drag & Drop | ~46 | Palette Drop, Canvas Move |
+
+### CLI Test Runner (CDP)
+
+Headless Browser-Tests via Chrome DevTools Protocol. Kein Playwright nötig.
+
+```bash
+# Studio Server starten (Terminal 1)
+npm run studio
+
+# Tests ausführen (Terminal 2)
+npx tsx tools/drag-test-runner.ts           # Headless
+npx tsx tools/drag-test-runner.ts --headed  # Mit sichtbarem Browser
+npx tsx tools/drag-test-runner.ts --real    # Echte Drag-Simulation
+
+# Gegen andere URL
+npx tsx tools/drag-test-runner.ts --url http://localhost:3000/studio/
+```
+
+**Output:**
+```
+🧪 Running Real Drag & Drop Tests...
+
+  ✅ Drop Button into empty Frame (467ms)
+  ✅ Drop Text into empty Frame (465ms)
+  ✅ Move element to first position (466ms)
+  ...
+
+Results: 40/46 passed (6 failed)
+```
+
+### Browser-Konsole APIs
+
+| API | Beschreibung |
+|-----|--------------|
+| `__mirrorTest` | Compiler-Tests, DOM-Inspektion, Assertions |
+| `__dragTest` | Drag & Drop Tests |
+
+**Quick Start:**
+
+```javascript
+// Element inspizieren
+__mirrorTest.inspect('node-1')
+// → { nodeId, tagName, styles, textContent, children, ... }
+
+// Assertions
+__mirrorTest.expect('node-1').hasText('Hello').hasBackground('#2271C1')
+
+// Tests ausführen
+const { testWithSetup } = __mirrorTest
+__mirrorTest.run([
+  testWithSetup('Button rendert', 'Button "Click", bg #2271C1', async (api) => {
+    api.assert.exists('node-1')
+    api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
+  })
+])
+
+// Drag & Drop Tests
+__dragTest.runDragTests()
+
+// Alle Tests
+__dragTest.runAllTests()
+```
+
+**Test-Suites:** `studio/test-api/suites/`
+
+**Dokumentation:** `docs/DRAG-DROP-TESTING.md`

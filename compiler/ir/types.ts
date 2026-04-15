@@ -24,10 +24,18 @@ export interface PropertySourceMap {
   position: SourcePosition
 }
 
+/** Custom icon definition for the registry */
+export interface IRIcon {
+  name: string
+  path: string // SVG path data
+  viewBox?: string // default "0 0 24 24"
+}
+
 export interface IR {
   nodes: IRNode[]
   tokens: IRToken[]
   animations: IRAnimation[]
+  icons: IRIcon[] // Custom icon definitions
 }
 
 export interface IREach {

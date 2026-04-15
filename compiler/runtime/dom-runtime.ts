@@ -3426,13 +3426,42 @@ const MAX_ICON_CACHE = 200
 /** Pending icon requests to avoid duplicate fetches */
 const pendingIconRequests = new Map<string, Promise<string | null>>()
 
+/** Custom icon registry - stores SVG path data for user-defined icons */
+const customIconRegistry = new Map<string, { path: string; viewBox: string }>()
+
 /**
  * Fallback icon SVG (simple square with X)
  */
 const FALLBACK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>`
 
 /**
- * Load Lucide icon from CDN with caching
+ * Register a custom icon with SVG path data
+ *
+ * @param name - Icon name (used in Mirror code: Icon "myicon")
+ * @param pathData - SVG path data (d attribute content)
+ * @param viewBox - Optional viewBox (default: "0 0 24 24")
+ */
+export function registerIcon(name: string, pathData: string, viewBox: string = '0 0 24 24'): void {
+  customIconRegistry.set(name, { path: pathData, viewBox })
+}
+
+/**
+ * Build a complete SVG element from path data
+ */
+function buildSvgFromPath(pathData: string, viewBox: string): string {
+  // Support multiple paths separated by newlines or pipes
+  const paths = pathData
+    .split(/[\n|]/)
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+    .map(p => `<path d="${p}"/>`)
+    .join('')
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`
+}
+
+/**
+ * Load icon - checks custom registry first, then Lucide CDN
  */
 export async function loadIcon(el: MirrorElement, iconName: string): Promise<void> {
   if (!el || !iconName) return
@@ -3442,9 +3471,20 @@ export async function loadIcon(el: MirrorElement, iconName: string): Promise<voi
   const strokeWidth = el.dataset.iconWeight || '2'
   const isFilled = el.dataset.iconFill === 'true'
 
-  // Check cache first
-  let svgText = iconCache.get(iconName)
+  let svgText: string | undefined
 
+  // Check custom icon registry first
+  const customIcon = customIconRegistry.get(iconName)
+  if (customIcon) {
+    svgText = buildSvgFromPath(customIcon.path, customIcon.viewBox)
+  }
+
+  // Check cache
+  if (!svgText) {
+    svgText = iconCache.get(iconName)
+  }
+
+  // Fetch from Lucide CDN
   if (!svgText) {
     // Check if there's already a pending request
     let pending = pendingIconRequests.get(iconName)
