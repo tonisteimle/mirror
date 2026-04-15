@@ -43,6 +43,9 @@ export function createApplierDeps(globals: AppGlobals): ApplierDependencies {
   return {
     editor: globals.editor as ApplierDependencies['editor'],
     preludeOffset: globals.currentPreludeOffset,
+    preludeLineOffset: globals.currentPreludeLineOffset ?? 0,
+    resolvedSource: globals.resolvedSource ?? '',
+    isWrappedWithApp: globals.isWrappedWithApp ?? false,
     executor: globals.executor as ApplierDependencies['executor'],
     events: globals.events as ApplierDependencies['events'],
     compile: globals.compile,
@@ -100,6 +103,9 @@ export interface AppGlobals {
   currentFile: string
   editor: unknown
   currentPreludeOffset: number
+  currentPreludeLineOffset?: number
+  resolvedSource?: string
+  isWrappedWithApp?: boolean
   executor: unknown
   events: unknown
   studio: { preview?: { hideDropZone: () => void }; events: unknown }

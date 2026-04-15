@@ -1750,6 +1750,9 @@ function getDropGlobals() {
     currentFile,
     editor,
     currentPreludeOffset,
+    currentPreludeLineOffset,
+    resolvedSource,
+    isWrappedWithApp,
     executor,
     events,
     studio,
@@ -1995,6 +1998,7 @@ function compile(code) {
       if (startsWithApp || hasRootComponentDefs) {
         // Don't wrap: code already has App wrapper OR contains component definitions
         // Component definitions at root level would become slot definitions if wrapped
+        isWrappedWithApp = false
         if (prelude) {
           const separator = '\n\n// === ' + currentFile + ' ===\n'
           resolvedCode = prelude + separator + code
@@ -2003,6 +2007,7 @@ function compile(code) {
       } else {
         // New mode: wrap user code in implicit App root
         // App is defined in components.com and can be styled there (padding, bg, etc.)
+        isWrappedWithApp = true
         const rootWrapper = 'App'
 
         // Indent user code to be children of the implicit root
@@ -2024,6 +2029,9 @@ function compile(code) {
       }
     }
 
+    // Update global variables for DropResultApplier
+    resolvedSource = resolvedCode
+
     // Update state with resolved source and prelude offsets for Commands
     // - preludeOffset: CHARACTER count (for change position adjustment)
     // - preludeLineOffset: LINE count (for selection resolution)
@@ -2033,6 +2041,8 @@ function compile(code) {
         currentPreludeOffset > 0
           ? resolvedCode.substring(0, currentPreludeOffset).split('\n').length - 1
           : 0
+      // Update global for DropResultApplier
+      currentPreludeLineOffset = preludeLineCount
       studio.state.set({
         resolvedSource: resolvedCode,
         preludeOffset: currentPreludeOffset,
@@ -2040,6 +2050,7 @@ function compile(code) {
       })
     } else if (studio?.state) {
       // In test mode, only update resolvedSource (which is just the code itself)
+      currentPreludeLineOffset = 0
       studio.state.set({ resolvedSource: resolvedCode })
     }
 
@@ -2273,6 +2284,9 @@ function getEditorHasFocus() {
   return studio?.state ? studio.state.get().editorHasFocus : true
 }
 let currentPreludeOffset = 0 // Character offset of prelude in merged source (for adjusting change positions)
+let currentPreludeLineOffset = 0 // Line offset of prelude (for indent correction)
+let resolvedSource = '' // Full resolved source (prelude + user code)
+let isWrappedWithApp = false // Whether user code was wrapped with App and indented
 let testModeActive = false // When true, normal compile() skips prelude offset updates
 
 // Global function to reset prelude offset for testing
@@ -2311,8 +2325,17 @@ if (typeof window !== 'undefined') {
     }
     // Set prelude offset to 0 BEFORE compile
     currentPreludeOffset = 0
+    currentPreludeLineOffset = 0
+    resolvedSource = code
+    isWrappedWithApp = false
     if (studio?.state?.set) {
-      studio.state.set({ preludeOffset: 0, preludeLineOffset: 0 })
+      studio.state.set({ preludeOffset: 0, preludeLineOffset: 0, resolvedSource: code })
+    }
+
+    // Update files object so getAllProjectSource() returns the test code
+    // This is necessary for PropertyPanel token extraction to work in tests
+    if (currentFile && files) {
+      files[currentFile] = code
     }
 
     try {
@@ -2362,6 +2385,11 @@ if (typeof window !== 'undefined') {
         studioPropertyExtractor = new MirrorLang.PropertyExtractor(ast, sourceMap)
       }
 
+      // Update PropertyPanel dependencies so it can extract tokens from new source
+      if (studio?.propertyPanel?.updateDependencies) {
+        studio.propertyPanel.updateDependencies(studioPropertyExtractor, studioCodeModifier)
+      }
+
       // Execute and render in preview
       const previewContainer = document.getElementById('preview')
       if (previewContainer) {
@@ -2395,6 +2423,11 @@ if (typeof window !== 'undefined') {
       return false
     }
   }
+
+  /**
+   * Expose getAllProjectSource for test API debugging
+   */
+  window.getAllProjectSource = getAllProjectSource
 
   /**
    * Expose CodeMirror commands for test API

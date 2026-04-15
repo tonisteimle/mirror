@@ -11,6 +11,12 @@ import type { Command, CommandContext, CommandResult } from '../core/commands'
 export interface ApplierDependencies {
   editor: CodeMirrorEditor
   preludeOffset: number
+  /** Number of prelude lines (for indent correction in wrapped code) */
+  preludeLineOffset: number
+  /** Full resolved source code (prelude + user code) */
+  resolvedSource: string
+  /** Whether user code was wrapped with App and indented */
+  isWrappedWithApp: boolean
   executor: CommandExecutor
   events: EventBus
   compile: (code: string) => void
@@ -122,11 +128,63 @@ export class DropResultApplier {
   }
 
   private adjustStandardChange(change: Change): Change {
+    // Calculate indent correction for wrapped code
+    // When code is wrapped with App, each user line gets 2 extra spaces
+    // The preludeOffset accounts for the first line's indent, but not subsequent lines
+    const indentCorrection = this.calculateIndentCorrection(change.from)
+
     return {
-      from: change.from - this.deps.preludeOffset,
-      to: change.to - this.deps.preludeOffset,
-      insert: change.insert,
+      from: change.from - this.deps.preludeOffset - indentCorrection,
+      to: change.to - this.deps.preludeOffset - indentCorrection,
+      insert: this.adjustInsertIndent(change.insert),
     }
+  }
+
+  /**
+   * Calculate the indent correction for a position in the full source.
+   * When code is wrapped with App, each line after the first gets 2 extra spaces.
+   */
+  private calculateIndentCorrection(fullPosition: number): number {
+    if (!this.deps.isWrappedWithApp || !this.deps.resolvedSource) {
+      return 0
+    }
+
+    // Find which line in the full source this position is on
+    const textBefore = this.deps.resolvedSource.substring(0, fullPosition)
+    const fullLineNumber = textBefore.split('\n').length
+
+    // Calculate user line (1-based)
+    const userLine = fullLineNumber - this.deps.preludeLineOffset
+
+    if (userLine <= 1) {
+      return 0 // First line indent is already in preludeOffset
+    }
+
+    // Each additional user line has 2 extra indent chars
+    return 2 * (userLine - 1)
+  }
+
+  /**
+   * Adjust the insert text to remove extra indentation from wrapped code.
+   */
+  private adjustInsertIndent(insert: string): string {
+    if (!this.deps.isWrappedWithApp) {
+      return insert
+    }
+
+    // Remove 2-space indent from each line of the insert
+    return insert
+      .split('\n')
+      .map((line, i) => {
+        // First line might be just newline, keep as-is
+        if (i === 0 && line === '') return line
+        // Remove 2-space indent if present
+        if (line.startsWith('  ')) {
+          return line.substring(2)
+        }
+        return line
+      })
+      .join('\n')
   }
 
   private isValidChange(change: Change): boolean {
