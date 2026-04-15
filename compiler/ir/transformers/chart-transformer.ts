@@ -32,14 +32,41 @@ export function transformChart(
 ): IRNode {
   const nodeId = ctx.generateId()
   const chartDef = getChartPrimitive(instance.component) || getChartPrimitive(primitive)
-  const chartType = chartDef?.chartType || 'line'
-  const chartDefaults = chartDef?.defaults || {}
 
-  // Merge properties
-  const properties = mergeProperties(
-    resolvedComponent?.properties || [],
-    instance.properties
-  )
+  // Merge properties first so we can check for explicit `type` property
+  const properties = mergeProperties(resolvedComponent?.properties || [], instance.properties)
+
+  // Check for explicit `type` property (for unified Chart primitive)
+  const explicitType = properties.find(p => p.name === 'type')?.values[0]
+
+  // Chart type resolution order:
+  // 1. Explicit `type` property (e.g., Chart type line)
+  // 2. Primitive name mapping (e.g., Line → 'line', Bar → 'bar')
+  // 3. Default to 'line'
+  let chartType: string
+  let chartDefaults: Record<string, unknown> = {}
+
+  if (explicitType) {
+    // Map explicit type to Chart.js type
+    const typeMap: Record<string, string> = {
+      line: 'line',
+      bar: 'bar',
+      pie: 'pie',
+      donut: 'doughnut',
+      area: 'line', // area is a line with fill
+      scatter: 'scatter',
+      radar: 'radar',
+    }
+    chartType = typeMap[String(explicitType).toLowerCase()] || 'line'
+
+    // Apply defaults for area type
+    if (String(explicitType).toLowerCase() === 'area') {
+      chartDefaults = { fill: true, tension: 0.3 }
+    }
+  } else {
+    chartType = chartDef?.chartType || 'line'
+    chartDefaults = chartDef?.defaults || {}
+  }
 
   // Extract chart-specific properties
   // Data binding can come from:
@@ -53,7 +80,12 @@ export function transformChart(
     dataBinding = String(textContentProp.values[0])
   } else if (propsetProp?.values[0]) {
     const val = propsetProp.values[0]
-    if (typeof val === 'object' && val !== null && 'kind' in val && (val as TokenReference).kind === 'token') {
+    if (
+      typeof val === 'object' &&
+      val !== null &&
+      'kind' in val &&
+      (val as TokenReference).kind === 'token'
+    ) {
       dataBinding = '$' + (val as TokenReference).name
     } else if (typeof val === 'string' && val.startsWith('$')) {
       dataBinding = val
@@ -91,9 +123,7 @@ export function transformChart(
   const styles = ctx.transformProperties(properties, 'frame', parentLayoutContext)
 
   // Build IRProperties for chart config
-  const irProperties: IRProperty[] = [
-    { name: 'chartType', value: chartType },
-  ]
+  const irProperties: IRProperty[] = [{ name: 'chartType', value: chartType }]
 
   if (dataBinding) {
     irProperties.push({ name: 'data', value: String(dataBinding) })
@@ -173,8 +203,14 @@ export function transformChart(
     styles,
     events: [],
     children: [],
-    sourcePosition: instance.line !== undefined
-      ? { line: instance.line, column: instance.column ?? 0, endLine: instance.line, endColumn: instance.column ?? 0 }
-      : undefined,
+    sourcePosition:
+      instance.line !== undefined
+        ? {
+            line: instance.line,
+            column: instance.column ?? 0,
+            endLine: instance.line,
+            endColumn: instance.column ?? 0,
+          }
+        : undefined,
   }
 }

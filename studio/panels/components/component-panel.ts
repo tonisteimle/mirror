@@ -21,6 +21,7 @@ import { LAYOUT_SECTION, COMPONENTS_SECTION } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
 import { createLogger } from '../../../compiler/utils/logger'
+import { isPrimitive } from '../../../compiler/schema'
 
 const log = createLogger('ComponentPanel')
 
@@ -68,16 +69,16 @@ function hasChildContent(lines: string[], startIndex: number): boolean {
   return false
 }
 
+// Names to exclude from My Components (built-in presets)
+const PRESET_NAMES = new Set(COMPONENTS_SECTION.map(c => c.name))
+
 /**
  * Parse component definitions from .com file content
  *
- * Only returns "real" components:
- * - Derived components with `as` keyword (e.g., PrimaryBtn as Button)
- * - Composite components with children
- *
- * Excludes:
+ * Returns user-defined components, excluding:
  * - Tokens (names containing `.` like primary.bg)
- * - Pure property sets without `as` and without children
+ * - Built-in primitives (Button, Text, Frame, etc.)
+ * - Built-in presets (Card, Badge, Avatar, etc.)
  */
 function parseComFile(content: string): ParsedComponent[] {
   const components: ParsedComponent[] = []
@@ -99,17 +100,20 @@ function parseComFile(content: string): ParsedComponent[] {
       // Skip tokens (names containing .)
       if (name.includes('.')) continue
 
+      // Skip built-in primitives to avoid duplicates in the panel
+      if (isPrimitive(name)) continue
+
+      // Skip built-in presets to avoid duplicates
+      if (PRESET_NAMES.has(name)) continue
+
       const hasChildren = hasChildContent(lines, i)
 
-      // Only include if it has `as` (derived) OR has children (composite)
-      if (basePrimitive || hasChildren) {
-        components.push({
-          name,
-          basePrimitive,
-          hasChildren,
-          line: i + 1,
-        })
-      }
+      components.push({
+        name,
+        basePrimitive,
+        hasChildren,
+        line: i + 1,
+      })
     }
   }
 
@@ -188,7 +192,7 @@ export class ComponentPanel {
           } else if (comp.hasChildren) {
             description = 'Composite component'
           } else {
-            description = `From ${file.name}`
+            description = 'Style preset'
           }
 
           userItems.push({

@@ -4,7 +4,12 @@
  * Renders padding and margin controls with token support.
  */
 
-import { BaseSection, type SectionDependencies, type SectionData, type EventHandlerMap } from '../base/section'
+import {
+  BaseSection,
+  type SectionDependencies,
+  type SectionData,
+  type EventHandlerMap,
+} from '../base/section'
 import type { SpacingToken } from '../types'
 
 /**
@@ -12,7 +17,10 @@ import type { SpacingToken } from '../types'
  */
 function parseSpacingValue(value: string): { t: string; r: string; b: string; l: string } {
   const parts = value.split(/\s+/).filter(Boolean)
-  let t = '', r = '', b = '', l = ''
+  let t = '',
+    r = '',
+    b = '',
+    l = ''
 
   if (parts.length === 1) {
     t = r = b = l = parts[0]
@@ -69,7 +77,8 @@ export class SpacingSection extends BaseSection {
 
     // Parse padding value
     const { t: tPad, r: rPad, b: bPad, l: lPad } = parseSpacingValue(padValue)
-    const vPad = tPad, hPad = rPad
+    const vPad = tPad,
+      hPad = rPad
 
     // Get tokens
     const tokens = data.spacingTokens?.filter(t => t.fullName.endsWith('.pad')) || []
@@ -123,16 +132,26 @@ export class SpacingSection extends BaseSection {
     `
   }
 
-  private renderTokenButtons(activeValue: string, direction: string, tokens: SpacingToken[]): string {
+  private renderTokenButtons(
+    activeValue: string,
+    direction: string,
+    tokens: SpacingToken[]
+  ): string {
     const isTokenRef = activeValue.startsWith('$')
 
-    return tokens.map(token => {
-      const tokenRef = `$${token.fullName}`
-      const isActive = isTokenRef
-        ? (activeValue === tokenRef)
-        : (activeValue === token.value)
-      return `<button class="token-btn ${isActive ? 'active' : ''}" data-pad-token="${token.value}" data-token-ref="${tokenRef}" data-pad-dir="${direction}" title="${tokenRef}: ${token.value}">${token.name}</button>`
-    }).join('')
+    return tokens
+      .map(token => {
+        const tokenRef = `$${token.fullName}`
+        const shortRef = `$${token.name}` // e.g., "$md" for "md.pad"
+        // Active if:
+        // - Value is token ref and matches full ref ($md.pad) or short ref ($md)
+        // - Value is literal and matches token value (16)
+        const isActive = isTokenRef
+          ? activeValue === tokenRef || activeValue === shortRef
+          : activeValue === token.value
+        return `<button class="token-btn ${isActive ? 'active' : ''}" data-pad-token="${token.value}" data-token-ref="${tokenRef}" data-pad-dir="${direction}" title="${tokenRef}: ${token.value}">${token.name}</button>`
+      })
+      .join('')
   }
 
   getHandlers(): EventHandlerMap {
@@ -145,17 +164,21 @@ export class SpacingSection extends BaseSection {
           if (value && dir) {
             this.deps.onPropertyChange('__PAD_TOKEN__', JSON.stringify({ value, dir }), 'token')
           }
-        }
+        },
       },
       'input[data-pad-dir]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           const dir = input.dataset.padDir
           if (dir) {
-            this.deps.onPropertyChange('__PAD_INPUT__', JSON.stringify({ value: input.value, dir }), 'input')
+            this.deps.onPropertyChange(
+              '__PAD_INPUT__',
+              JSON.stringify({ value: input.value, dir }),
+              'input'
+            )
           }
-        }
-      }
+        },
+      },
     }
   }
 }

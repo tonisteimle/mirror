@@ -100,6 +100,12 @@ import {
   edgeCaseTests,
   layoutDetectionTests,
 } from './stacked-drag-tests'
+import {
+  allPropertyPanelTests,
+  tokenDisplayTests,
+  tokenValueTests,
+  tokenInteractionTests,
+} from './property-panel-tests'
 
 import type { TestCase, TestSuiteResult } from '../types'
 
@@ -214,6 +220,14 @@ export {
   layoutDetectionTests,
 } from './stacked-drag-tests'
 
+// Property Panel
+export {
+  allPropertyPanelTests,
+  tokenDisplayTests,
+  tokenValueTests,
+  tokenInteractionTests,
+} from './property-panel-tests'
+
 // =============================================================================
 // Combined Exports
 // =============================================================================
@@ -231,6 +245,7 @@ export const allTests: TestCase[] = [
   ...allUndoRedoTests,
   ...allAutocompleteTests,
   ...allStackedDragTests,
+  ...allPropertyPanelTests,
 ]
 
 /**
@@ -255,6 +270,7 @@ export const testCounts = {
   undoRedo: allUndoRedoTests.length,
   autocomplete: allAutocompleteTests.length,
   stackedDrag: allStackedDragTests.length,
+  propertyPanel: allPropertyPanelTests.length,
   total:
     allPrimitivesTests.length +
     allLayoutTests.length +
@@ -264,7 +280,8 @@ export const testCounts = {
     allBidirectionalTests.length +
     allUndoRedoTests.length +
     allAutocompleteTests.length +
-    allStackedDragTests.length,
+    allStackedDragTests.length +
+    allPropertyPanelTests.length,
 }
 
 // =============================================================================
@@ -306,6 +323,7 @@ export type TestCategory =
   | 'undoRedo'
   | 'autocomplete'
   | 'stackedDrag'
+  | 'propertyPanel'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -323,6 +341,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     undoRedo: allUndoRedoTests,
     autocomplete: allAutocompleteTests,
     stackedDrag: allStackedDragTests,
+    propertyPanel: allPropertyPanelTests,
   }
 
   const names: Record<TestCategory, string> = {
@@ -335,6 +354,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     undoRedo: 'Undo/Redo',
     autocomplete: 'Autocomplete',
     stackedDrag: 'Stacked Drag & Drop',
+    propertyPanel: 'Property Panel',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
@@ -354,11 +374,12 @@ export function printTestSummary(): void {
   console.log(`   Undo/Redo:       ${testCounts.undoRedo} tests`)
   console.log(`   Autocomplete:    ${testCounts.autocomplete} tests`)
   console.log(`   Stacked Drag:    ${testCounts.stackedDrag} tests`)
+  console.log(`   Property Panel:  ${testCounts.propertyPanel} tests`)
   console.log(`   ──────────────────────`)
   console.log(`   Total:           ${testCounts.total} tests`)
   console.log('')
   console.log('Run with:')
   console.log('   import { runAllTests, runCategory } from "./suites"')
   console.log('   await runAllTests()')
-  console.log('   await runCategory("stackedDrag")')
+  console.log('   await runCategory("propertyPanel")')
 }

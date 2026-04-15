@@ -3,6 +3,7 @@
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -57,6 +58,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -259,6 +261,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -698,6 +701,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -934,6 +938,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -1191,6 +1196,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -1307,6 +1313,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -1826,6 +1833,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -2470,6 +2478,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -2966,6 +2975,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -3168,6 +3178,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -3370,6 +3381,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -3629,6 +3641,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -3786,6 +3799,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -3988,6 +4002,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -4210,6 +4225,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -4465,6 +4481,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -4817,6 +4834,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -5142,6 +5160,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 10 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -5373,6 +5392,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 10 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 11 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -5630,6 +5650,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 11 1`] = `
 exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -5918,6 +5939,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
 exports[`Tutorial IR Snapshots > 03 - tokens > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -6115,6 +6137,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 03 - tokens > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -6323,6 +6346,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 03 - tokens > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -6443,6 +6467,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 03 - tokens > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -6690,6 +6715,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 03 - tokens > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -6903,6 +6929,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 03 - tokens > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -7050,6 +7077,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -7356,6 +7384,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -7735,6 +7764,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -8027,6 +8057,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -8321,6 +8352,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -9179,6 +9211,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -9523,6 +9556,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -10002,6 +10036,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -10405,6 +10440,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -11032,6 +11068,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -11367,6 +11404,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -11892,6 +11930,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 11 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -12148,6 +12187,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 11 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 12 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -12694,6 +12734,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 12 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 13 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -13249,6 +13290,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 13 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 14 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -13823,6 +13865,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 14 1`] = `
 exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -14809,6 +14852,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -15252,6 +15296,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -15514,6 +15559,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -15650,6 +15696,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -15955,6 +16002,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -16259,6 +16307,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -16626,6 +16675,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -16817,6 +16867,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -17012,6 +17063,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -17141,6 +17193,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -17438,6 +17491,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 10 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 11 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -17821,6 +17875,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 11 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -18208,6 +18263,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 12 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 13 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -18496,6 +18552,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 13 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -18991,6 +19048,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
 exports[`Tutorial IR Snapshots > 05 - styling > Example 15 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -19363,6 +19421,7 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 15 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -19469,6 +19528,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -19546,6 +19606,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -19714,6 +19775,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -20404,6 +20466,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -20694,6 +20757,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -20940,6 +21004,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -21314,6 +21379,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "bind": "city",
@@ -21745,6 +21811,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -22039,6 +22106,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -22551,6 +22619,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
 exports[`Tutorial IR Snapshots > 06 - states > Example 11 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -22815,6 +22884,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 11 1`] = `
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -22978,6 +23048,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -23206,6 +23277,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -23593,6 +23665,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -23938,6 +24011,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -24171,6 +24245,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -24424,6 +24499,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -24741,6 +24817,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -24878,6 +24955,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -25206,6 +25284,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -25304,6 +25383,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -25618,6 +25698,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -26055,6 +26136,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -26303,6 +26385,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -26887,6 +26970,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -27165,6 +27249,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -27420,6 +27505,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -27795,6 +27881,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -28162,6 +28249,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -28545,6 +28633,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
 exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -28845,6 +28934,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -28966,6 +29056,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -29098,6 +29189,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -29205,6 +29297,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -29337,6 +29430,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -29469,6 +29563,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -29618,6 +29713,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -29762,6 +29858,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -29901,6 +29998,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -30130,6 +30228,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 10 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -30265,6 +30364,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 10 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -30370,6 +30470,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -30594,6 +30695,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -30645,6 +30747,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -30743,6 +30846,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -30934,6 +31038,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -31064,6 +31169,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -31168,6 +31274,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -31243,6 +31350,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -31301,6 +31409,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -31513,6 +31622,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -31788,6 +31898,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -31848,6 +31959,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -32102,6 +32214,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -32172,6 +32285,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -32368,6 +32482,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 26 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -32563,6 +32678,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 26 1`] = `
 exports[`Tutorial IR Snapshots > 09 - daten > Example 27 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -32876,6 +32992,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 27 1`] = `
 exports[`Tutorial IR Snapshots > 10 - seiten > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -33025,6 +33142,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 10 - seiten > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -33140,6 +33258,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 10 - seiten > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -33284,6 +33403,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -33793,6 +33913,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -33986,6 +34107,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -34122,6 +34244,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -34134,6 +34257,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 3 1`] = `
           "items": [],
           "machineConfig": {
             "id": "node-2",
+            "label": "Newsletter abonnieren",
           },
           "name": "Checkbox",
           "primitive": "checkbox",
@@ -34217,6 +34341,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 3 1`] = `
           "machineConfig": {
             "checked": true,
             "id": "node-3",
+            "label": "AGB akzeptieren",
           },
           "name": "Checkbox",
           "primitive": "checkbox",
@@ -34300,6 +34425,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 3 1`] = `
           "machineConfig": {
             "disabled": true,
             "id": "node-4",
+            "label": "Deaktiviert",
           },
           "name": "Checkbox",
           "primitive": "checkbox",
@@ -34412,6 +34538,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -34424,6 +34551,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
           "items": [],
           "machineConfig": {
             "id": "node-2",
+            "label": "Dark Mode",
           },
           "name": "Switch",
           "primitive": "switch",
@@ -34491,6 +34619,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
           "machineConfig": {
             "checked": true,
             "id": "node-3",
+            "label": "Benachrichtigungen",
           },
           "name": "Switch",
           "primitive": "switch",
@@ -34558,6 +34687,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
           "machineConfig": {
             "disabled": true,
             "id": "node-4",
+            "label": "Premium",
           },
           "name": "Switch",
           "primitive": "switch",
@@ -34654,6 +34784,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -34796,6 +34927,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -35073,6 +35205,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -35254,6 +35387,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -35428,6 +35562,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -35663,6 +35798,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -35779,6 +35915,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -36011,6 +36148,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -36250,6 +36388,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 13 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -36260,6 +36399,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 13 1`] = `
       "items": [],
       "machineConfig": {
         "id": "node-1",
+        "label": "Newsletter",
       },
       "name": "Checkbox",
       "primitive": "checkbox",
@@ -36341,6 +36481,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 13 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 14 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -36351,6 +36492,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 14 1`] = `
       "items": [],
       "machineConfig": {
         "id": "node-1",
+        "label": "Custom Checkbox",
       },
       "name": "Checkbox",
       "primitive": "checkbox",
@@ -36509,6 +36651,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 14 1`] = `
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 15 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -36519,6 +36662,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 15 1`] = `
       "items": [],
       "machineConfig": {
         "id": "node-1",
+        "label": "Dark Mode",
       },
       "name": "Switch",
       "primitive": "switch",
@@ -36645,6 +36789,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 15 1`] = `
 exports[`Tutorial IR Snapshots > 12 - navigation > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -36822,6 +36967,7 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 12 - navigation > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -37020,6 +37166,7 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 12 - navigation > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -37213,6 +37360,7 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 12 - navigation > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -37565,6 +37713,7 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 12 - navigation > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -37759,6 +37908,7 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 12 - navigation > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -38117,6 +38267,7 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 12 - navigation > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -38440,6 +38591,7 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -38685,6 +38837,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 13 - overlays > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -39042,6 +39195,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 13 - overlays > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -39268,6 +39422,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -39845,6 +40000,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -40567,6 +40723,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -40717,6 +40874,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -41337,6 +41495,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -41725,6 +41884,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -41898,6 +42058,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -42059,6 +42220,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -42398,6 +42560,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -42694,6 +42857,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -42927,6 +43091,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -43276,6 +43441,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -43482,6 +43648,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -43716,6 +43883,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 10 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -43902,6 +44070,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 10 1`] = `
 exports[`Tutorial IR Snapshots > 14 - tabellen > Example 11 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44085,6 +44254,7 @@ exports[`Tutorial IR Snapshots > 14 - tabellen > Example 11 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 1 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44159,6 +44329,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 1 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 2 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44232,6 +44403,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 2 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 3 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44297,6 +44469,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 3 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 4 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44362,6 +44535,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 4 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 5 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44426,6 +44600,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 5 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 6 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44499,6 +44674,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 6 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 7 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44563,6 +44739,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 7 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 8 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44660,6 +44837,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44735,6 +44913,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 9 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 10 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44812,6 +44991,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 10 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 11 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44880,6 +45060,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 11 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 12 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -44960,6 +45141,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 12 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 13 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -45039,6 +45221,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 13 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 14 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -45127,6 +45310,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 14 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 15 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -45197,6 +45381,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 15 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 16 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -45269,6 +45454,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 16 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 17 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -45347,6 +45533,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 17 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 18 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [],
@@ -45419,6 +45606,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 18 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 19 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -45551,6 +45739,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 19 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 20 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [
@@ -45767,6 +45956,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 20 1`] = `
 exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
 {
   "animations": [],
+  "icons": [],
   "nodes": [
     {
       "children": [

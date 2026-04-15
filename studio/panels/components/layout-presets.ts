@@ -59,23 +59,6 @@ export const LAYOUT_SECTION: ComponentItem[] = [
  */
 export const COMPONENTS_SECTION: ComponentItem[] = [
   {
-    id: 'comp-area-chart',
-    name: 'Area Chart',
-    category: 'Components',
-    template: 'Area',
-    properties: '$chartData, w 300, h 200',
-    icon: 'chart',
-    description: 'Filled area chart',
-    defaultSize: { width: 300, height: 200 },
-    dataBlock: {
-      name: 'chartData',
-      content: `Jan: 120
-Feb: 180
-Mar: 240
-Apr: 200`,
-    },
-  },
-  {
     id: 'preset-avatar',
     name: 'Avatar',
     category: 'Components',
@@ -96,23 +79,6 @@ Apr: 200`,
     defaultSize: { width: 60, height: 24 },
     mirTemplate: `Frame pad 4 8, bg #10b981, rad 99
   Text "Active", fs 11, col white, weight 500`,
-  },
-  {
-    id: 'comp-bar-chart',
-    name: 'Bar Chart',
-    category: 'Components',
-    template: 'Bar',
-    properties: '$chartData, w 300, h 200',
-    icon: 'chart',
-    description: 'Bar chart for comparisons',
-    defaultSize: { width: 300, height: 200 },
-    dataBlock: {
-      name: 'chartData',
-      content: `Jan: 120
-Feb: 180
-Mar: 240
-Apr: 200`,
-    },
   },
   {
     id: 'comp-button',
@@ -208,19 +174,20 @@ Apr: 200`,
     ],
   },
   {
-    id: 'comp-donut-chart',
-    name: 'Donut Chart',
+    id: 'comp-chart',
+    name: 'Chart',
     category: 'Components',
-    template: 'Donut',
-    properties: '$chartData, w 200, h 200',
+    template: 'Chart',
+    properties: 'type line, $chartData, w 300, h 200',
     icon: 'chart',
-    description: 'Donut chart with center hole',
-    defaultSize: { width: 200, height: 200 },
+    description: 'Chart (line, bar, pie, donut, area)',
+    defaultSize: { width: 300, height: 200 },
     dataBlock: {
       name: 'chartData',
-      content: `Sales: 45
-Marketing: 25
-Engineering: 30`,
+      content: `Jan: 120
+Feb: 180
+Mar: 240
+Apr: 200`,
     },
   },
   {
@@ -277,23 +244,6 @@ Engineering: 30`,
     defaultSize: { width: 200, height: 40 },
   },
   {
-    id: 'comp-line-chart',
-    name: 'Line Chart',
-    category: 'Components',
-    template: 'Line',
-    properties: '$chartData, w 300, h 200',
-    icon: 'chart',
-    description: 'Line chart for trends',
-    defaultSize: { width: 300, height: 200 },
-    dataBlock: {
-      name: 'chartData',
-      content: `Jan: 120
-Feb: 180
-Mar: 240
-Apr: 200`,
-    },
-  },
-  {
     id: 'preset-list-item',
     name: 'List Item',
     category: 'Components',
@@ -304,22 +254,6 @@ Apr: 200`,
     mirTemplate: `Frame hor, gap 12, pad 10 12, bg #27272a, rad 8, ver-center
   Icon "file", is 18, ic #71717a
   Text "List item text", fs 14, col #e4e4e7`,
-  },
-  {
-    id: 'comp-pie-chart',
-    name: 'Pie Chart',
-    category: 'Components',
-    template: 'Pie',
-    properties: '$chartData, w 200, h 200',
-    icon: 'chart',
-    description: 'Pie chart for proportions',
-    defaultSize: { width: 200, height: 200 },
-    dataBlock: {
-      name: 'chartData',
-      content: `Sales: 45
-Marketing: 25
-Engineering: 30`,
-    },
   },
   {
     id: 'comp-radio-group',

@@ -84,6 +84,15 @@ export interface ChartSlotPropertyDef {
 // ============================================================================
 
 export const CHART_PRIMITIVES: Record<string, ChartPrimitiveDef> = {
+  // Unified Chart primitive - use with `type` property
+  Chart: {
+    chartType: 'line', // default type
+    description:
+      'Chart component with configurable type (line, bar, pie, donut, area, scatter, radar)',
+    defaults: {},
+  },
+
+  // Legacy aliases - still supported for backwards compatibility
   Line: {
     chartType: 'line',
     description: 'Line chart for trends over time',
@@ -138,6 +147,14 @@ export const CHART_PRIMITIVES: Record<string, ChartPrimitiveDef> = {
 // ============================================================================
 
 export const CHART_PROPERTIES: ChartPropertyDef[] = [
+  // Chart type (for unified Chart primitive)
+  {
+    name: 'type',
+    description: 'Chart type: line, bar, pie, donut, area, scatter, radar',
+    type: 'string',
+    default: 'line',
+  },
+
   // Data binding
   {
     name: 'x',
@@ -222,10 +239,25 @@ export const CHART_SLOTS: Record<string, ChartSlotDef> = {
     description: 'X-axis configuration',
     supportedCharts: ['line', 'bar', 'scatter'],
     properties: [
-      { name: 'col', aliases: ['color'], type: 'color', chartJsPath: 'options.scales.x.ticks.color' },
+      {
+        name: 'col',
+        aliases: ['color'],
+        type: 'color',
+        chartJsPath: 'options.scales.x.ticks.color',
+      },
       { name: 'label', type: 'string', chartJsPath: 'options.scales.x.title.text' },
-      { name: 'label-col', aliases: ['label-color'], type: 'color', chartJsPath: 'options.scales.x.title.color' },
-      { name: 'fs', aliases: ['font-size'], type: 'number', chartJsPath: 'options.scales.x.ticks.font.size' },
+      {
+        name: 'label-col',
+        aliases: ['label-color'],
+        type: 'color',
+        chartJsPath: 'options.scales.x.title.color',
+      },
+      {
+        name: 'fs',
+        aliases: ['font-size'],
+        type: 'number',
+        chartJsPath: 'options.scales.x.ticks.font.size',
+      },
       { name: 'min', type: 'number', chartJsPath: 'options.scales.x.min' },
       { name: 'max', type: 'number', chartJsPath: 'options.scales.x.max' },
       { name: 'visible', type: 'boolean', chartJsPath: 'options.scales.x.display', default: true },
@@ -237,10 +269,25 @@ export const CHART_SLOTS: Record<string, ChartSlotDef> = {
     description: 'Y-axis configuration',
     supportedCharts: ['line', 'bar', 'scatter'],
     properties: [
-      { name: 'col', aliases: ['color'], type: 'color', chartJsPath: 'options.scales.y.ticks.color' },
+      {
+        name: 'col',
+        aliases: ['color'],
+        type: 'color',
+        chartJsPath: 'options.scales.y.ticks.color',
+      },
       { name: 'label', type: 'string', chartJsPath: 'options.scales.y.title.text' },
-      { name: 'label-col', aliases: ['label-color'], type: 'color', chartJsPath: 'options.scales.y.title.color' },
-      { name: 'fs', aliases: ['font-size'], type: 'number', chartJsPath: 'options.scales.y.ticks.font.size' },
+      {
+        name: 'label-col',
+        aliases: ['label-color'],
+        type: 'color',
+        chartJsPath: 'options.scales.y.title.color',
+      },
+      {
+        name: 'fs',
+        aliases: ['font-size'],
+        type: 'number',
+        chartJsPath: 'options.scales.y.ticks.font.size',
+      },
       { name: 'min', type: 'number', chartJsPath: 'options.scales.y.min' },
       { name: 'max', type: 'number', chartJsPath: 'options.scales.y.max' },
       { name: 'visible', type: 'boolean', chartJsPath: 'options.scales.y.display', default: true },
@@ -252,11 +299,26 @@ export const CHART_SLOTS: Record<string, ChartSlotDef> = {
     description: 'Grid lines configuration',
     supportedCharts: ['line', 'bar', 'scatter', 'radar'],
     properties: [
-      { name: 'col', aliases: ['color'], type: 'color', chartJsPath: 'options.scales.x.grid.color' },
-      { name: 'y-col', aliases: ['y-color'], type: 'color', chartJsPath: 'options.scales.y.grid.color' },
+      {
+        name: 'col',
+        aliases: ['color'],
+        type: 'color',
+        chartJsPath: 'options.scales.x.grid.color',
+      },
+      {
+        name: 'y-col',
+        aliases: ['y-color'],
+        type: 'color',
+        chartJsPath: 'options.scales.y.grid.color',
+      },
       { name: 'width', type: 'number', chartJsPath: 'options.scales.x.grid.lineWidth' },
       { name: 'dash', type: 'number', chartJsPath: 'options.scales.x.grid.borderDash' },
-      { name: 'visible', type: 'boolean', chartJsPath: 'options.scales.x.grid.display', default: true },
+      {
+        name: 'visible',
+        type: 'boolean',
+        chartJsPath: 'options.scales.x.grid.display',
+        default: true,
+      },
     ],
   },
 
@@ -265,11 +327,36 @@ export const CHART_SLOTS: Record<string, ChartSlotDef> = {
     description: 'Data point configuration',
     supportedCharts: ['line', 'scatter', 'radar'],
     properties: [
-      { name: 'size', aliases: ['radius'], type: 'number', chartJsPath: 'data.datasets[0].pointRadius' },
-      { name: 'bg', aliases: ['background'], type: 'color', chartJsPath: 'data.datasets[0].pointBackgroundColor' },
-      { name: 'boc', aliases: ['border-color'], type: 'color', chartJsPath: 'data.datasets[0].pointBorderColor' },
-      { name: 'bor', aliases: ['border'], type: 'number', chartJsPath: 'data.datasets[0].pointBorderWidth' },
-      { name: 'hover-size', aliases: ['hover-radius'], type: 'number', chartJsPath: 'data.datasets[0].pointHoverRadius' },
+      {
+        name: 'size',
+        aliases: ['radius'],
+        type: 'number',
+        chartJsPath: 'data.datasets[0].pointRadius',
+      },
+      {
+        name: 'bg',
+        aliases: ['background'],
+        type: 'color',
+        chartJsPath: 'data.datasets[0].pointBackgroundColor',
+      },
+      {
+        name: 'boc',
+        aliases: ['border-color'],
+        type: 'color',
+        chartJsPath: 'data.datasets[0].pointBorderColor',
+      },
+      {
+        name: 'bor',
+        aliases: ['border'],
+        type: 'number',
+        chartJsPath: 'data.datasets[0].pointBorderWidth',
+      },
+      {
+        name: 'hover-size',
+        aliases: ['hover-radius'],
+        type: 'number',
+        chartJsPath: 'data.datasets[0].pointHoverRadius',
+      },
       { name: 'style', type: 'string', chartJsPath: 'data.datasets[0].pointStyle' },
     ],
   },
@@ -278,11 +365,37 @@ export const CHART_SLOTS: Record<string, ChartSlotDef> = {
     name: 'Legend',
     description: 'Legend configuration',
     properties: [
-      { name: 'visible', type: 'boolean', chartJsPath: 'options.plugins.legend.display', default: false },
-      { name: 'pos', aliases: ['position'], type: 'position', chartJsPath: 'options.plugins.legend.position', default: 'top' },
-      { name: 'col', aliases: ['color'], type: 'color', chartJsPath: 'options.plugins.legend.labels.color' },
-      { name: 'fs', aliases: ['font-size'], type: 'number', chartJsPath: 'options.plugins.legend.labels.font.size' },
-      { name: 'pad', aliases: ['padding'], type: 'number', chartJsPath: 'options.plugins.legend.labels.padding' },
+      {
+        name: 'visible',
+        type: 'boolean',
+        chartJsPath: 'options.plugins.legend.display',
+        default: false,
+      },
+      {
+        name: 'pos',
+        aliases: ['position'],
+        type: 'position',
+        chartJsPath: 'options.plugins.legend.position',
+        default: 'top',
+      },
+      {
+        name: 'col',
+        aliases: ['color'],
+        type: 'color',
+        chartJsPath: 'options.plugins.legend.labels.color',
+      },
+      {
+        name: 'fs',
+        aliases: ['font-size'],
+        type: 'number',
+        chartJsPath: 'options.plugins.legend.labels.font.size',
+      },
+      {
+        name: 'pad',
+        aliases: ['padding'],
+        type: 'number',
+        chartJsPath: 'options.plugins.legend.labels.padding',
+      },
       { name: 'box-size', type: 'number', chartJsPath: 'options.plugins.legend.labels.boxWidth' },
     ],
   },
@@ -292,12 +405,38 @@ export const CHART_SLOTS: Record<string, ChartSlotDef> = {
     description: 'Chart title configuration',
     properties: [
       { name: 'text', type: 'string', chartJsPath: 'options.plugins.title.text' },
-      { name: 'col', aliases: ['color'], type: 'color', chartJsPath: 'options.plugins.title.color' },
-      { name: 'fs', aliases: ['font-size'], type: 'number', chartJsPath: 'options.plugins.title.font.size' },
+      {
+        name: 'col',
+        aliases: ['color'],
+        type: 'color',
+        chartJsPath: 'options.plugins.title.color',
+      },
+      {
+        name: 'fs',
+        aliases: ['font-size'],
+        type: 'number',
+        chartJsPath: 'options.plugins.title.font.size',
+      },
       { name: 'weight', type: 'string', chartJsPath: 'options.plugins.title.font.weight' },
-      { name: 'pos', aliases: ['position'], type: 'position', chartJsPath: 'options.plugins.title.position', default: 'top' },
-      { name: 'pad', aliases: ['padding'], type: 'number', chartJsPath: 'options.plugins.title.padding' },
-      { name: 'visible', type: 'boolean', chartJsPath: 'options.plugins.title.display', default: true },
+      {
+        name: 'pos',
+        aliases: ['position'],
+        type: 'position',
+        chartJsPath: 'options.plugins.title.position',
+        default: 'top',
+      },
+      {
+        name: 'pad',
+        aliases: ['padding'],
+        type: 'number',
+        chartJsPath: 'options.plugins.title.padding',
+      },
+      {
+        name: 'visible',
+        type: 'boolean',
+        chartJsPath: 'options.plugins.title.display',
+        default: true,
+      },
     ],
   },
 
@@ -305,14 +444,54 @@ export const CHART_SLOTS: Record<string, ChartSlotDef> = {
     name: 'Tooltip',
     description: 'Tooltip configuration',
     properties: [
-      { name: 'bg', aliases: ['background'], type: 'color', chartJsPath: 'options.plugins.tooltip.backgroundColor' },
-      { name: 'col', aliases: ['color'], type: 'color', chartJsPath: 'options.plugins.tooltip.bodyColor' },
-      { name: 'title-col', aliases: ['title-color'], type: 'color', chartJsPath: 'options.plugins.tooltip.titleColor' },
-      { name: 'rad', aliases: ['radius'], type: 'number', chartJsPath: 'options.plugins.tooltip.cornerRadius' },
-      { name: 'pad', aliases: ['padding'], type: 'number', chartJsPath: 'options.plugins.tooltip.padding' },
-      { name: 'boc', aliases: ['border-color'], type: 'color', chartJsPath: 'options.plugins.tooltip.borderColor' },
-      { name: 'bor', aliases: ['border'], type: 'number', chartJsPath: 'options.plugins.tooltip.borderWidth' },
-      { name: 'visible', type: 'boolean', chartJsPath: 'options.plugins.tooltip.enabled', default: true },
+      {
+        name: 'bg',
+        aliases: ['background'],
+        type: 'color',
+        chartJsPath: 'options.plugins.tooltip.backgroundColor',
+      },
+      {
+        name: 'col',
+        aliases: ['color'],
+        type: 'color',
+        chartJsPath: 'options.plugins.tooltip.bodyColor',
+      },
+      {
+        name: 'title-col',
+        aliases: ['title-color'],
+        type: 'color',
+        chartJsPath: 'options.plugins.tooltip.titleColor',
+      },
+      {
+        name: 'rad',
+        aliases: ['radius'],
+        type: 'number',
+        chartJsPath: 'options.plugins.tooltip.cornerRadius',
+      },
+      {
+        name: 'pad',
+        aliases: ['padding'],
+        type: 'number',
+        chartJsPath: 'options.plugins.tooltip.padding',
+      },
+      {
+        name: 'boc',
+        aliases: ['border-color'],
+        type: 'color',
+        chartJsPath: 'options.plugins.tooltip.borderColor',
+      },
+      {
+        name: 'bor',
+        aliases: ['border'],
+        type: 'number',
+        chartJsPath: 'options.plugins.tooltip.borderWidth',
+      },
+      {
+        name: 'visible',
+        type: 'boolean',
+        chartJsPath: 'options.plugins.tooltip.enabled',
+        default: true,
+      },
     ],
   },
 
@@ -333,9 +512,24 @@ export const CHART_SLOTS: Record<string, ChartSlotDef> = {
     description: 'Bar styling',
     supportedCharts: ['bar'],
     properties: [
-      { name: 'rad', aliases: ['radius'], type: 'number', chartJsPath: 'data.datasets[0].borderRadius' },
-      { name: 'bor', aliases: ['border'], type: 'number', chartJsPath: 'data.datasets[0].borderWidth' },
-      { name: 'boc', aliases: ['border-color'], type: 'color', chartJsPath: 'data.datasets[0].borderColor' },
+      {
+        name: 'rad',
+        aliases: ['radius'],
+        type: 'number',
+        chartJsPath: 'data.datasets[0].borderRadius',
+      },
+      {
+        name: 'bor',
+        aliases: ['border'],
+        type: 'number',
+        chartJsPath: 'data.datasets[0].borderWidth',
+      },
+      {
+        name: 'boc',
+        aliases: ['border-color'],
+        type: 'color',
+        chartJsPath: 'data.datasets[0].borderColor',
+      },
       { name: 'width', type: 'number', chartJsPath: 'data.datasets[0].barPercentage' },
     ],
   },
@@ -345,8 +539,18 @@ export const CHART_SLOTS: Record<string, ChartSlotDef> = {
     description: 'Arc styling (for Pie/Donut charts)',
     supportedCharts: ['pie', 'doughnut'],
     properties: [
-      { name: 'bor', aliases: ['border'], type: 'number', chartJsPath: 'data.datasets[0].borderWidth' },
-      { name: 'boc', aliases: ['border-color'], type: 'color', chartJsPath: 'data.datasets[0].borderColor' },
+      {
+        name: 'bor',
+        aliases: ['border'],
+        type: 'number',
+        chartJsPath: 'data.datasets[0].borderWidth',
+      },
+      {
+        name: 'boc',
+        aliases: ['border-color'],
+        type: 'color',
+        chartJsPath: 'data.datasets[0].borderColor',
+      },
       { name: 'offset', type: 'number', chartJsPath: 'data.datasets[0].offset' },
       { name: 'hover-offset', type: 'number', chartJsPath: 'data.datasets[0].hoverOffset' },
     ],
@@ -413,7 +617,10 @@ export function isSlotSupportedForChart(slotName: string, chartType: string): bo
 /**
  * Get slot property definition by name or alias.
  */
-export function getChartSlotProperty(slotName: string, propertyName: string): ChartSlotPropertyDef | undefined {
+export function getChartSlotProperty(
+  slotName: string,
+  propertyName: string
+): ChartSlotPropertyDef | undefined {
   const slot = CHART_SLOTS[slotName]
   if (!slot) return undefined
   return slot.properties.find(p => p.name === propertyName || p.aliases?.includes(propertyName))
