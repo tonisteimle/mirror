@@ -88,7 +88,37 @@ Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
 Card: bg $surface, pad $l, rad $m, gap $l
 
 Input: pad $m, bg $input, rad $s, bor 1, boc $border, col $text
-  focus boc $focus`
+  focus boc $focus`,
+
+  'data.data': `// Demo Daten für Charts
+
+sales:
+  Jan: 120
+  Feb: 180
+  Mar: 240
+  Apr: 200
+  May: 280
+  Jun: 320
+
+products:
+  Widget A: 450
+  Widget B: 320
+  Widget C: 180
+  Service X: 520
+
+categories:
+  Design: 35
+  Development: 45
+  Marketing: 20
+
+traffic:
+  Mon: 1200
+  Tue: 1450
+  Wed: 1380
+  Thu: 1520
+  Fri: 1100
+  Sat: 650
+  Sun: 480`,
 }
 
 // =============================================================================
@@ -162,7 +192,7 @@ async function browserLoadDemo(): Promise<void> {
 }
 
 async function browserImportProject(): Promise<boolean> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     // Hidden file input für Ordner-Upload
     const input = document.createElement('input')
     input.type = 'file'
@@ -187,8 +217,7 @@ async function browserImportProject(): Promise<boolean> {
         if (!isMirrorFile(file.name)) continue
 
         // Pfad relativ zum Projekt-Ordner
-        const relativePath = file.webkitRelativePath
-          .replace(rootFolder + '/', '')
+        const relativePath = file.webkitRelativePath.replace(rootFolder + '/', '')
 
         try {
           const content = await file.text()
@@ -199,7 +228,9 @@ async function browserImportProject(): Promise<boolean> {
       }
 
       if (Object.keys(projectFiles).length === 0) {
-        await MirrorDialog.alert('Keine Mirror-Dateien (.mir, .tok, .com) im Ordner gefunden.', { title: 'Import fehlgeschlagen' })
+        await MirrorDialog.alert('Keine Mirror-Dateien (.mir, .tok, .com) im Ordner gefunden.', {
+          title: 'Import fehlgeschlagen',
+        })
         resolve(false)
         return
       }
@@ -280,7 +311,17 @@ async function tauriExportProject(): Promise<void> {
 // =============================================================================
 
 function isMirrorFile(filename: string): boolean {
-  const extensions = ['.mir', '.mirror', '.tok', '.tokens', '.com', '.components']
+  const extensions = [
+    '.mir',
+    '.mirror',
+    '.tok',
+    '.tokens',
+    '.com',
+    '.components',
+    '.data',
+    '.yaml',
+    '.yml',
+  ]
   return extensions.some(ext => filename.endsWith(ext))
 }
 
@@ -337,5 +378,5 @@ export const projectActions = {
   new: newProject,
   demo: loadDemoProject,
   import: importProject,
-  export: exportProject
+  export: exportProject,
 }

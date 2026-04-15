@@ -4,8 +4,33 @@
  * Tests chart rendering with data.
  */
 
-import { testWithSetup, testSkip, describe, type TestCase } from '../test-runner'
+import { testWithSetup, test, describe, type TestCase } from '../test-runner'
 import type { TestAPI } from '../types'
+
+// =============================================================================
+// Project Data File Tests
+// =============================================================================
+
+export const dataFileTests: TestCase[] = describe('Data Files', [
+  test('data.data exists in default project', async (api: TestAPI) => {
+    // Check localStorage for project files
+    const stored = localStorage.getItem('mirror-files')
+    api.assert.ok(stored !== null, 'mirror-files should exist in localStorage')
+
+    const files = JSON.parse(stored!)
+    api.assert.ok('data.data' in files, 'data.data should exist in project files')
+    api.assert.ok(files['data.data'].includes('sales:'), 'data.data should contain sales data')
+    api.assert.ok(
+      files['data.data'].includes('products:'),
+      'data.data should contain products data'
+    )
+    api.assert.ok(
+      files['data.data'].includes('categories:'),
+      'data.data should contain categories data'
+    )
+    api.assert.ok(files['data.data'].includes('traffic:'), 'data.data should contain traffic data')
+  }),
+])
 
 // =============================================================================
 // Basic Chart Rendering
@@ -222,6 +247,7 @@ Chart type bar, $metrics, w 300, h 200`,
 // =============================================================================
 
 export const allChartTests: TestCase[] = [
+  ...dataFileTests,
   ...basicChartTests,
   ...chartStylingTests,
   ...chartLayoutTests,

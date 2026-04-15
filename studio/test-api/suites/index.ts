@@ -108,6 +108,7 @@ import {
 } from './property-panel-tests'
 import {
   allChartTests,
+  dataFileTests,
   basicChartTests,
   chartStylingTests,
   chartLayoutTests,
@@ -238,6 +239,7 @@ export {
 // Charts
 export {
   allChartTests,
+  dataFileTests,
   basicChartTests,
   chartStylingTests,
   chartLayoutTests,
