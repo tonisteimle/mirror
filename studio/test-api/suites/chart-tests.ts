@@ -6,29 +6,45 @@
 
 import { testWithSetup, test, describe, type TestCase } from '../test-runner'
 import type { TestAPI } from '../types'
+import { DEFAULT_PROJECT } from '../../storage'
 
 // =============================================================================
 // Project Data File Tests
 // =============================================================================
 
 export const dataFileTests: TestCase[] = describe('Data Files', [
-  test('data.data exists in default project', async (api: TestAPI) => {
-    // Check localStorage for project files
+  test('data.data exists in DEFAULT_PROJECT template', async (api: TestAPI) => {
+    // Test that the DEFAULT_PROJECT template includes data.data
+    api.assert.ok('data.data' in DEFAULT_PROJECT, 'data.data should exist in DEFAULT_PROJECT')
+    api.assert.ok(
+      DEFAULT_PROJECT['data.data'].includes('sales:'),
+      'data.data should contain sales data'
+    )
+    api.assert.ok(
+      DEFAULT_PROJECT['data.data'].includes('products:'),
+      'data.data should contain products data'
+    )
+    api.assert.ok(
+      DEFAULT_PROJECT['data.data'].includes('categories:'),
+      'data.data should contain categories data'
+    )
+    api.assert.ok(
+      DEFAULT_PROJECT['data.data'].includes('traffic:'),
+      'data.data should contain traffic data'
+    )
+  }),
+
+  test('new project creates data.data in localStorage', async (api: TestAPI) => {
+    // Simulate creating a new project by setting DEFAULT_PROJECT in localStorage
+    localStorage.setItem('mirror-files', JSON.stringify(DEFAULT_PROJECT))
+
+    // Verify it was saved correctly
     const stored = localStorage.getItem('mirror-files')
     api.assert.ok(stored !== null, 'mirror-files should exist in localStorage')
 
     const files = JSON.parse(stored!)
-    api.assert.ok('data.data' in files, 'data.data should exist in project files')
-    api.assert.ok(files['data.data'].includes('sales:'), 'data.data should contain sales data')
-    api.assert.ok(
-      files['data.data'].includes('products:'),
-      'data.data should contain products data'
-    )
-    api.assert.ok(
-      files['data.data'].includes('categories:'),
-      'data.data should contain categories data'
-    )
-    api.assert.ok(files['data.data'].includes('traffic:'), 'data.data should contain traffic data')
+    api.assert.ok('data.data' in files, 'data.data should exist after new project creation')
+    api.assert.ok(files['data.data'].includes('sales:'), 'saved data.data should contain sales')
   }),
 ])
 

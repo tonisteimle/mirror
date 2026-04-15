@@ -22,7 +22,8 @@ declare const MirrorDialog: {
 
 // Used for new projects - includes starter tokens, components, and layout
 // App is the root container (defined in components.com) with canvas background and spacing
-const DEFAULT_PROJECT: Record<string, string> = {
+// Exported for testing
+export const DEFAULT_PROJECT: Record<string, string> = {
   'index.mir': `App
   Title "Welcome to Mirror"
   TextMuted "Edit this code to get started"

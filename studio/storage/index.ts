@@ -50,14 +50,21 @@ export {
   TauriProvider,
   LocalStorageProvider,
   isTauri,
-  isLocalStorageAvailable
+  isLocalStorageAvailable,
 } from './providers'
 
 // User settings (recent icons, agent memory)
 export { getUserSettings, initUserSettings } from './user-settings'
 
 // Project actions (new, demo, import, export)
-export { projectActions, newProject, loadDemoProject, importProject, exportProject } from './project-actions'
+export {
+  projectActions,
+  newProject,
+  loadDemoProject,
+  importProject,
+  exportProject,
+  DEFAULT_PROJECT,
+} from './project-actions'
 
 export type {
   StorageProvider,
@@ -68,11 +75,7 @@ export type {
   StorageEventMap,
   ProviderType,
   MirrorFileType,
-  PreludeFile
+  PreludeFile,
 } from './types'
 
-export {
-  FILE_EXTENSIONS,
-  getFileType,
-  isMirrorFile
-} from './types'
+export { FILE_EXTENSIONS, getFileType, isMirrorFile } from './types'
