@@ -17,7 +17,7 @@ import type {
   ComponentChild,
 } from './types'
 import { getComponentIcon } from '../../icons'
-import { LAYOUT_SECTION, COMPONENTS_SECTION, PRESETS_SECTION } from './layout-presets'
+import { LAYOUT_SECTION, COMPONENTS_SECTION } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
 import { createLogger } from '../../../compiler/utils/logger'
@@ -31,11 +31,53 @@ const log = createLogger('ComponentPanel')
 interface ParsedComponent {
   name: string
   basePrimitive?: string
+  hasChildren: boolean
   line: number
 }
 
 /**
+ * Get indentation level of a line (number of leading spaces)
+ */
+function getIndent(line: string): number {
+  const match = line.match(/^(\s*)/)
+  return match ? match[1].length : 0
+}
+
+/**
+ * Check if a component definition has children (indented content below)
+ */
+function hasChildContent(lines: string[], startIndex: number): boolean {
+  const startIndent = getIndent(lines[startIndex])
+
+  for (let i = startIndex + 1; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    // Skip empty lines and comments
+    if (!trimmed || trimmed.startsWith('//')) continue
+
+    const indent = getIndent(line)
+
+    // If same or less indentation, this is a sibling or parent - no children
+    if (indent <= startIndent) return false
+
+    // If more indentation, this is a child
+    if (indent > startIndent) return true
+  }
+
+  return false
+}
+
+/**
  * Parse component definitions from .com file content
+ *
+ * Only returns "real" components:
+ * - Derived components with `as` keyword (e.g., PrimaryBtn as Button)
+ * - Composite components with children
+ *
+ * Excludes:
+ * - Tokens (names containing `.` like primary.bg)
+ * - Pure property sets without `as` and without children
  */
 function parseComFile(content: string): ParsedComponent[] {
   const components: ParsedComponent[] = []
@@ -51,11 +93,23 @@ function parseComFile(content: string): ParsedComponent[] {
     // Component definition: Name: or Name as Base:
     const match = trimmed.match(/^([A-Z][a-zA-Z0-9_-]*)(?:\s+as\s+([a-zA-Z][a-zA-Z0-9_-]*))?:/)
     if (match) {
-      components.push({
-        name: match[1],
-        basePrimitive: match[2],
-        line: i + 1,
-      })
+      const name = match[1]
+      const basePrimitive = match[2]
+
+      // Skip tokens (names containing .)
+      if (name.includes('.')) continue
+
+      const hasChildren = hasChildContent(lines, i)
+
+      // Only include if it has `as` (derived) OR has children (composite)
+      if (basePrimitive || hasChildren) {
+        components.push({
+          name,
+          basePrimitive,
+          hasChildren,
+          line: i + 1,
+        })
+      }
     }
   }
 
@@ -96,7 +150,7 @@ export class ComponentPanel {
   }
 
   /**
-   * Build sections: Layout, Components, Presets, and My Components
+   * Build sections: Layout, Components, and My Components
    */
   private buildSections(): void {
     this.sections = []
@@ -119,16 +173,7 @@ export class ComponentPanel {
       })
     }
 
-    // 3. Presets section (smart composites)
-    if (PRESETS_SECTION.length > 0) {
-      this.sections.push({
-        name: 'Presets',
-        items: [...PRESETS_SECTION],
-        isExpanded: true,
-      })
-    }
-
-    // 4. My Components section (user-defined from .com files)
+    // 3. My Components section (user-defined from .com files)
     if (this.config.getComFiles) {
       const comFiles = this.config.getComFiles()
       const userItems: ComponentItem[] = []
@@ -136,6 +181,16 @@ export class ComponentPanel {
       for (const file of comFiles) {
         const components = parseComFile(file.content)
         for (const comp of components) {
+          // Build description based on component type
+          let description: string
+          if (comp.basePrimitive) {
+            description = `Extends ${comp.basePrimitive}`
+          } else if (comp.hasChildren) {
+            description = 'Composite component'
+          } else {
+            description = `From ${file.name}`
+          }
+
           userItems.push({
             id: `user-${comp.name.toLowerCase()}`,
             name: comp.name,
@@ -143,9 +198,7 @@ export class ComponentPanel {
             template: comp.name,
             icon: 'custom',
             isUserDefined: true,
-            description: comp.basePrimitive
-              ? `${comp.name} (extends ${comp.basePrimitive})`
-              : `User component from ${file.name}`,
+            description,
           })
         }
       }
