@@ -178,17 +178,10 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     name: 'Chart',
     category: 'Components',
     template: 'Chart',
-    properties: 'type line, $chartData, w 300, h 200',
+    properties: 'type line, $sales, w 300, h 200',
     icon: 'chart',
     description: 'Chart (line, bar, pie, donut, area)',
     defaultSize: { width: 300, height: 200 },
-    dataBlock: {
-      name: 'chartData',
-      content: `Jan: 120
-Feb: 180
-Mar: 240
-Apr: 200`,
-    },
   },
   {
     id: 'comp-frame',

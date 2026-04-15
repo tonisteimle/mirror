@@ -5,7 +5,13 @@
  * Fallback wenn kein Tauri und kein Server verfügbar.
  */
 
-import type { StorageProvider, StorageProject, StorageItem, StorageFile, StorageFolder } from '../types'
+import type {
+  StorageProvider,
+  StorageProject,
+  StorageItem,
+  StorageFile,
+  StorageFolder,
+} from '../types'
 import { isMirrorFile } from '../types'
 
 // =============================================================================
@@ -80,7 +86,37 @@ Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
 Card: bg $surface, pad $l, rad $m, gap $l
 
 Input: pad $m, bg $input, rad $s, bor 1, boc $border, col $text
-  focus boc $focus`
+  focus boc $focus`,
+
+  'data.data': `// Demo Daten für Charts
+
+sales:
+  Jan: 120
+  Feb: 180
+  Mar: 240
+  Apr: 200
+  May: 280
+  Jun: 320
+
+products:
+  Widget A: 450
+  Widget B: 320
+  Widget C: 180
+  Service X: 520
+
+categories:
+  Design: 35
+  Development: 45
+  Marketing: 20
+
+traffic:
+  Mon: 1200
+  Tue: 1450
+  Wed: 1380
+  Thu: 1520
+  Fri: 1100
+  Sat: 650
+  Sun: 480`,
 }
 
 // =============================================================================
@@ -107,12 +143,14 @@ export class DemoProvider implements StorageProvider {
 
   async listProjects(): Promise<StorageProject[]> {
     // Demo hat nur ein implizites Projekt
-    return [{
-      id: 'demo',
-      name: 'Demo Project',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }]
+    return [
+      {
+        id: 'demo',
+        name: 'Demo Project',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
   }
 
   async createProject(_name: string): Promise<StorageProject> {
@@ -160,7 +198,7 @@ export class DemoProvider implements StorageProvider {
                 type: 'folder',
                 name: folderName,
                 path: currentPath,
-                children: []
+                children: [],
               }
               folders.set(currentPath, folder)
               parentChildren.push(folder)
@@ -177,7 +215,7 @@ export class DemoProvider implements StorageProvider {
         tree.push({
           type: 'file',
           name: fileName,
-          path: path
+          path: path,
         })
       } else {
         // Datei in Unterordner
@@ -192,7 +230,7 @@ export class DemoProvider implements StorageProvider {
               type: 'folder',
               name: folderName,
               path: currentPath,
-              children: []
+              children: [],
             }
             folders.set(currentPath, folder)
             parentChildren.push(folder)
@@ -204,7 +242,7 @@ export class DemoProvider implements StorageProvider {
         parentChildren.push({
           type: 'file',
           name: fileName,
-          path: path
+          path: path,
         })
       }
     }

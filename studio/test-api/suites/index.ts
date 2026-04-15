@@ -106,6 +106,13 @@ import {
   tokenValueTests,
   tokenInteractionTests,
 } from './property-panel-tests'
+import {
+  allChartTests,
+  basicChartTests,
+  chartStylingTests,
+  chartLayoutTests,
+  chartDataTests,
+} from './chart-tests'
 
 import type { TestCase, TestSuiteResult } from '../types'
 
@@ -228,6 +235,15 @@ export {
   tokenInteractionTests,
 } from './property-panel-tests'
 
+// Charts
+export {
+  allChartTests,
+  basicChartTests,
+  chartStylingTests,
+  chartLayoutTests,
+  chartDataTests,
+} from './chart-tests'
+
 // =============================================================================
 // Combined Exports
 // =============================================================================
@@ -246,6 +262,7 @@ export const allTests: TestCase[] = [
   ...allAutocompleteTests,
   ...allStackedDragTests,
   ...allPropertyPanelTests,
+  ...allChartTests,
 ]
 
 /**
@@ -271,6 +288,7 @@ export const testCounts = {
   autocomplete: allAutocompleteTests.length,
   stackedDrag: allStackedDragTests.length,
   propertyPanel: allPropertyPanelTests.length,
+  charts: allChartTests.length,
   total:
     allPrimitivesTests.length +
     allLayoutTests.length +
@@ -281,7 +299,8 @@ export const testCounts = {
     allUndoRedoTests.length +
     allAutocompleteTests.length +
     allStackedDragTests.length +
-    allPropertyPanelTests.length,
+    allPropertyPanelTests.length +
+    allChartTests.length,
 }
 
 // =============================================================================
@@ -324,6 +343,7 @@ export type TestCategory =
   | 'autocomplete'
   | 'stackedDrag'
   | 'propertyPanel'
+  | 'charts'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -342,6 +362,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     autocomplete: allAutocompleteTests,
     stackedDrag: allStackedDragTests,
     propertyPanel: allPropertyPanelTests,
+    charts: allChartTests,
   }
 
   const names: Record<TestCategory, string> = {
@@ -355,6 +376,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     autocomplete: 'Autocomplete',
     stackedDrag: 'Stacked Drag & Drop',
     propertyPanel: 'Property Panel',
+    charts: 'Charts',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
@@ -375,11 +397,12 @@ export function printTestSummary(): void {
   console.log(`   Autocomplete:    ${testCounts.autocomplete} tests`)
   console.log(`   Stacked Drag:    ${testCounts.stackedDrag} tests`)
   console.log(`   Property Panel:  ${testCounts.propertyPanel} tests`)
+  console.log(`   Charts:          ${testCounts.charts} tests`)
   console.log(`   ──────────────────────`)
   console.log(`   Total:           ${testCounts.total} tests`)
   console.log('')
   console.log('Run with:')
   console.log('   import { runAllTests, runCategory } from "./suites"')
   console.log('   await runAllTests()')
-  console.log('   await runCategory("propertyPanel")')
+  console.log('   await runCategory("charts")')
 }

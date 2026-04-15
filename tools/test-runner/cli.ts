@@ -71,18 +71,22 @@ function getArgValue(args: string[], flag: string): string | undefined {
 
 function printHelp(): void {
   console.log(`
-${bold('Mirror Studio Test Runner')}
+${bold('Mirror Browser Test Runner')}
+
+Runs browser-based tests for Mirror Studio using CDP (Chrome DevTools Protocol).
 
 ${bold('Usage:')}
-  npx tsx tools/test-runner/cli.ts [options]
+  npm run test:browser [-- options]
+  npx tsx tools/test.ts [options]
 
 ${bold('Test Selection:')}
-  --drag              Run drag & drop tests only (default)
-  --mirror            Run mirror tests (primitives, layout, styling, etc.)
-  --all               Run all tests
+  (no flags)          Run all browser tests (default)
+  --drag              Run drag & drop tests only
+  --mirror            Run mirror tests only (primitives, layout, styling, etc.)
   --category=NAME     Run specific category:
                         primitives, layout, styling, zag, interactions,
-                        bidirectional, undoRedo, autocomplete, stackedDrag
+                        bidirectional, undoRedo, autocomplete, stackedDrag,
+                        propertyPanel, charts
   --filter=PATTERN    Filter tests by name pattern (regex)
 
 ${bold('Browser Options:')}
@@ -104,14 +108,20 @@ ${bold('Output Options:')}
   --quiet             Reduce output
   --silent            No output except errors
 
+${bold('NPM Scripts:')}
+  npm run test:browser              All browser tests
+  npm run test:browser:drag         Drag & drop tests only
+  npm run test:browser:mirror       Mirror tests only
+  npm run test:browser:headed       All tests with visible browser
+
 ${bold('Examples:')}
-  npx tsx tools/test-runner/cli.ts                    # Drag tests only
-  npx tsx tools/test-runner/cli.ts --all              # All tests
-  npx tsx tools/test-runner/cli.ts --mirror           # Mirror tests only
-  npx tsx tools/test-runner/cli.ts --category=layout  # Layout tests only
-  npx tsx tools/test-runner/cli.ts --all --headed     # All with visible browser
-  npx tsx tools/test-runner/cli.ts --all --retries=2  # Retry failed tests 2x
-  npx tsx tools/test-runner/cli.ts --all --junit=results.xml --html=report.html
+  npx tsx tools/test.ts                       # All tests (default)
+  npx tsx tools/test.ts --drag                # Drag tests only
+  npx tsx tools/test.ts --mirror              # Mirror tests only
+  npx tsx tools/test.ts --category=layout     # Layout tests only
+  npx tsx tools/test.ts --headed              # With visible browser
+  npx tsx tools/test.ts --retries=2           # Retry failed tests
+  npx tsx tools/test.ts --junit=results.xml   # Generate JUnit report
 `)
 }
 
@@ -179,8 +189,11 @@ async function main(): Promise<void> {
     const suites: TestSuite[] = []
 
     // Determine which tests to run
-    const runDrag = args.all || args.drag || (!args.mirror && !args.category)
-    const runMirror = args.all || args.mirror || args.category
+    // Default: run all tests when no specific selection is made
+    const noSelection = !args.drag && !args.mirror && !args.category
+    const runAll = args.all || noSelection
+    const runDrag = runAll || args.drag
+    const runMirror = runAll || args.mirror || args.category
 
     if (runDrag && !args.category) {
       suites.push(await runner.runDragTests())
