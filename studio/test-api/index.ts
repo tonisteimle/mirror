@@ -383,6 +383,9 @@ export function setupMirrorTestAPI(): void {
 
   enableHoverSimulation()
 
+  // Also expose test suites for CDP access
+  setupTestSuites()
+
   console.log('🧪 Mirror Test Framework ready. Usage:')
   console.log('')
   console.log('  // Inspect elements')
@@ -397,12 +400,56 @@ export function setupMirrorTestAPI(): void {
   console.log('  __mirrorTest.expect("node-1").hasText("Hello").hasBackground("#2271C1")')
   console.log('')
   console.log('  // Run tests')
-  console.log('  const { testWithSetup } = __mirrorTest')
-  console.log('  __mirrorTest.run([')
-  console.log('    testWithSetup("Button renders", "Button \\"Click\\"", async (api) => {')
-  console.log('      api.assert.exists("node-1")')
-  console.log('    })')
-  console.log('  ])')
+  console.log('  __mirrorTestSuites.runAll()           // All ~200 tests')
+  console.log('  __mirrorTestSuites.runCategory("autocomplete")  // By category')
+  console.log('  __mirrorTestSuites.printSummary()     // Show test counts')
+}
+
+/**
+ * Setup test suites on window for CDP access
+ */
+async function setupTestSuites(): Promise<void> {
+  try {
+    // Dynamically import test suites
+    const suites = await import('./suites')
+
+    const suitesAPI = {
+      // Test counts
+      testCounts: suites.testCounts,
+
+      // Run all tests
+      runAll: () => suites.runAllTests(),
+
+      // Run by category
+      runCategory: (category: string) => suites.runCategory(category as any),
+
+      // Run quick tests
+      runQuick: () => suites.runQuickTests(),
+
+      // Print summary
+      printSummary: () => suites.printTestSummary(),
+
+      // Individual test arrays (for custom running)
+      tests: {
+        primitives: suites.allPrimitivesTests,
+        layout: suites.allLayoutTests,
+        styling: suites.allStylingTests,
+        zag: suites.allZagTests,
+        interactions: suites.allInteractionTests,
+        bidirectional: suites.allBidirectionalTests,
+        undoRedo: suites.allUndoRedoTests,
+        autocomplete: suites.allAutocompleteTests,
+        stackedDrag: suites.allStackedDragTests,
+        all: suites.allTests,
+      },
+    }
+
+    ;(window as any).__mirrorTestSuites = suitesAPI
+
+    console.log(`📊 Test suites loaded: ${suites.testCounts.total} tests available`)
+  } catch (e) {
+    console.warn('Failed to load test suites:', e)
+  }
 }
 
 /**

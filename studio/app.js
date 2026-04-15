@@ -18,12 +18,15 @@ import {
   redo,
   undoDepth,
   redoDepth,
+  isolateHistory,
 } from '@codemirror/commands'
 import {
   autocompletion,
   completionKeymap,
   startCompletion,
   closeCompletion,
+  completionStatus,
+  currentCompletions,
 } from '@codemirror/autocomplete'
 import { indentUnit } from '@codemirror/language'
 
@@ -1966,8 +1969,13 @@ function compile(code) {
     // For layout files, prepend all tokens and components
     // and wrap user code in an implicit full-screen root container
     let resolvedCode = code
-    currentPreludeOffset = 0 // Reset prelude offset
-    if (fileType === 'layout') {
+    // In test mode, skip prelude processing to keep preludeOffset at 0
+    if (testModeActive) {
+      console.log('[Test] Test mode active - skipping prelude, using code directly')
+      resolvedCode = code
+      // Don't reset currentPreludeOffset - keep it at 0 as set by __compileTestCode
+    } else if (fileType === 'layout') {
+      currentPreludeOffset = 0 // Reset prelude offset only in normal mode
       const prelude = getPreludeCode(currentFile)
 
       // Check if code already starts with "App" (legacy files)
@@ -2003,13 +2011,15 @@ function compile(code) {
           .map(line => (line ? '  ' + line : ''))
           .join('\n')
 
+        // +2 accounts for the 2-space indentation added to each line of user code
+        const indent = 2
         if (prelude) {
           const separator = '\n\n// === ' + currentFile + ' ===\n'
           resolvedCode = prelude + separator + rootWrapper + '\n' + indentedCode
-          currentPreludeOffset = prelude.length + separator.length + rootWrapper.length + 1
+          currentPreludeOffset = prelude.length + separator.length + rootWrapper.length + 1 + indent
         } else {
           resolvedCode = rootWrapper + '\n' + indentedCode
-          currentPreludeOffset = rootWrapper.length + 1
+          currentPreludeOffset = rootWrapper.length + 1 + indent
         }
       }
     }
@@ -2017,7 +2027,8 @@ function compile(code) {
     // Update state with resolved source and prelude offsets for Commands
     // - preludeOffset: CHARACTER count (for change position adjustment)
     // - preludeLineOffset: LINE count (for selection resolution)
-    if (studio?.state) {
+    // In test mode, skip prelude offset updates to preserve test-set values
+    if (studio?.state && !testModeActive) {
       const preludeLineCount =
         currentPreludeOffset > 0
           ? resolvedCode.substring(0, currentPreludeOffset).split('\n').length - 1
@@ -2027,6 +2038,9 @@ function compile(code) {
         preludeOffset: currentPreludeOffset,
         preludeLineOffset: preludeLineCount,
       })
+    } else if (studio?.state) {
+      // In test mode, only update resolvedSource (which is just the code itself)
+      studio.state.set({ resolvedSource: resolvedCode })
     }
 
     // Parse
@@ -2259,6 +2273,7 @@ function getEditorHasFocus() {
   return studio?.state ? studio.state.get().editorHasFocus : true
 }
 let currentPreludeOffset = 0 // Character offset of prelude in merged source (for adjusting change positions)
+let testModeActive = false // When true, normal compile() skips prelude offset updates
 
 // Global function to reset prelude offset for testing
 // When setting test code directly without going through file loading,
@@ -2276,6 +2291,11 @@ if (typeof window !== 'undefined') {
     }
   }
   window.__getPreludeOffset = () => currentPreludeOffset
+  window.__isTestMode = () => testModeActive
+  window.__exitTestMode = () => {
+    console.log('[Test] Exiting test mode')
+    testModeActive = false
+  }
 
   /**
    * Test Mode: Compile code directly without prelude
@@ -2283,6 +2303,8 @@ if (typeof window !== 'undefined') {
    */
   window.__compileTestCode = code => {
     console.log('[Test] Compiling test code without prelude, length:', code.length)
+    // Enable test mode to prevent normal compile from overwriting preludeOffset
+    testModeActive = true
     // Cancel any pending compile
     if (debouncedCompile?.cancel) {
       debouncedCompile.cancel()
@@ -2321,13 +2343,23 @@ if (typeof window !== 'undefined') {
         studioRobustModifier = MirrorLang.createRobustModifier(studioCodeModifier)
       }
 
-      // Update state
+      // Update state - IMPORTANT: include ast for PropertyExtractor
       if (studio?.state?.set) {
         studio.state.set({
+          ast,
           sourceMap,
+          source: code,
           preludeOffset: 0,
           preludeLineOffset: 0,
         })
+      }
+
+      // Update PropertyExtractor with new AST and SourceMap
+      if (studioPropertyExtractor) {
+        studioPropertyExtractor.updateAST(ast)
+        studioPropertyExtractor.updateSourceMap(sourceMap)
+      } else {
+        studioPropertyExtractor = new MirrorLang.PropertyExtractor(ast, sourceMap)
       }
 
       // Execute and render in preview
@@ -2362,6 +2394,46 @@ if (typeof window !== 'undefined') {
       console.error('[Test] Test code compile failed:', error)
       return false
     }
+  }
+
+  /**
+   * Expose CodeMirror commands for test API
+   * The test runner needs these but can't use dynamic require in bundled code
+   */
+  window.__codemirror = {
+    // Undo/Redo - also trigger recompile after history change
+    undo: () => {
+      undo(editor)
+      // Trigger recompile with new content
+      const code = editor.state.doc.toString()
+      window.__compileTestCode?.(code)
+    },
+    redo: () => {
+      redo(editor)
+      // Trigger recompile with new content
+      const code = editor.state.doc.toString()
+      window.__compileTestCode?.(code)
+    },
+    undoDepth: () => undoDepth(editor.state),
+    redoDepth: () => redoDepth(editor.state),
+    // Autocomplete
+    startCompletion: () => startCompletion(editor),
+    closeCompletion: () => closeCompletion(editor),
+    completionStatus: () => completionStatus(editor.state),
+    currentCompletions: () => currentCompletions(editor.state),
+    // Editor access
+    getEditor: () => editor,
+    getState: () => editor.state,
+    getDoc: () => editor.state.doc.toString(),
+    // Set code with history tracking (for undo tests)
+    // Uses isolateHistory to ensure each call creates a separate undo entry
+    setCodeWithHistory: code => {
+      const transaction = editor.state.update({
+        changes: { from: 0, to: editor.state.doc.length, insert: code },
+        annotations: [Transaction.userEvent.of('test.setCode'), isolateHistory.of('full')],
+      })
+      editor.dispatch(transaction)
+    },
   }
 }
 

@@ -217,27 +217,66 @@ export function emitDialogComponent(
     ctx.emit('')
   }
 
-  // CloseTrigger - only created if explicitly defined as slot (not auto-generated)
-  const closeSlot = node.slots['CloseTrigger']
-  if (closeSlot && closeSlot.children && closeSlot.children.length > 0) {
-    const closeVar = `${varName}_close`
-    ctx.emit(`// Close trigger (user-defined)`)
-    ctx.emit(`const ${closeVar} = document.createElement('div')`)
-    ctx.emit(`${closeVar}.dataset.slot = 'CloseTrigger'`)
-    emitSlotStyles(ctx, closeVar, closeSlot)
-    for (const child of closeSlot.children) {
-      ctx.emitNode(child, closeVar)
-    }
-    ctx.emit(`${contentVar}.appendChild(${closeVar})`)
-    ctx.emit('')
-  }
-
   // Emit Content slot children (children defined inside Content: in DSL)
   const contentSlotChildren = node.slots['Content']?.children || []
+  const hasCloseIconProp = node.machineConfig?.closeIcon === true
+
+  // Track the first child's var name - this is typically the user's styled Frame
+  let firstChildVarName: string | null = null
+
   if (contentSlotChildren.length > 0) {
-    for (const child of contentSlotChildren) {
-      ctx.emitNode(child as IRNode, contentVar)
+    for (let i = 0; i < contentSlotChildren.length; i++) {
+      const child = contentSlotChildren[i] as IRNode
+      ctx.emitNode(child, contentVar)
+      // Capture first child's variable name for closeIcon positioning
+      if (i === 0 && hasCloseIconProp) {
+        firstChildVarName = ctx.sanitizeVarName(child.id)
+      }
     }
+  }
+
+  // closeIcon prop: auto-generated X icon in top-right corner of the styled content
+  // We append to the first child (user's Frame) since that has the visual styling
+  if (hasCloseIconProp && firstChildVarName) {
+    const closeIconVar = `${varName}_closeIcon`
+    ctx.emit(`// Close icon (auto-generated via closeIcon prop)`)
+    ctx.emit(`${firstChildVarName}.style.position = 'relative'`)
+    ctx.emit(`const ${closeIconVar} = document.createElement('button')`)
+    ctx.emit(`${closeIconVar}.type = 'button'`)
+    ctx.emit(`${closeIconVar}.dataset.slot = 'CloseTrigger'`)
+    ctx.emit(`${closeIconVar}.setAttribute('aria-label', 'Close')`)
+    // Styling: positioned top-right, circular hover effect
+    ctx.emit(`Object.assign(${closeIconVar}.style, {`)
+    ctx.indentIn()
+    ctx.emit(`'position': 'absolute',`)
+    ctx.emit(`'top': '12px',`)
+    ctx.emit(`'right': '12px',`)
+    ctx.emit(`'width': '28px',`)
+    ctx.emit(`'height': '28px',`)
+    ctx.emit(`'display': 'flex',`)
+    ctx.emit(`'align-items': 'center',`)
+    ctx.emit(`'justify-content': 'center',`)
+    ctx.emit(`'border': 'none',`)
+    ctx.emit(`'background': 'transparent',`)
+    ctx.emit(`'border-radius': '4px',`)
+    ctx.emit(`'cursor': 'pointer',`)
+    ctx.emit(`'transition': 'background 0.15s',`)
+    ctx.emit(`'z-index': '1',`)
+    ctx.indentOut()
+    ctx.emit(`})`)
+    // Hover effect
+    ctx.emit(
+      `${closeIconVar}.onmouseenter = () => ${closeIconVar}.style.background = 'rgba(255,255,255,0.1)'`
+    )
+    ctx.emit(
+      `${closeIconVar}.onmouseleave = () => ${closeIconVar}.style.background = 'transparent'`
+    )
+    // X icon SVG (inline for immediate rendering)
+    ctx.emit(
+      `${closeIconVar}.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'`
+    )
+    ctx.emit(`${firstChildVarName}.appendChild(${closeIconVar})`)
+    ctx.emit('')
   }
 
   // Append to parent

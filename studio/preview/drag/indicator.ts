@@ -168,6 +168,15 @@ export class Indicator implements Reportable<IndicatorReport> {
     this.lastHighlightRect = rect
   }
 
+  /** Hide container highlight (for same-container moves) */
+  hideContainerHighlight(): void {
+    if (this.containerHighlight) {
+      this.containerHighlight.style.display = 'none'
+    }
+    this.currentContainerId = null
+    this.lastHighlightRect = null
+  }
+
   /** Set position styles */
   private setPosition(el: HTMLDivElement, position: Point): void {
     el.style.left = `${position.x}px`

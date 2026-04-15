@@ -45,7 +45,15 @@ import {
 } from '../schema/parser-helpers'
 
 /** Property value type - union of all possible values in Property.values */
-type PropertyValue = string | number | boolean | number[] | TokenReference | LoopVarReference | Conditional | ComputedExpression
+type PropertyValue =
+  | string
+  | number
+  | boolean
+  | number[]
+  | TokenReference
+  | LoopVarReference
+  | Conditional
+  | ComputedExpression
 
 // Shorthand aliases for cleaner code
 const U = ParserUtils
@@ -160,7 +168,25 @@ function parseZagInlineProperties(
   const zagPrimitive = getZagPrimitive(zagNode.name)
   const validProps = new Set(zagPrimitive?.props ?? [])
 
-  while (!U.check(ctx, 'NEWLINE') && !U.check(ctx, 'INDENT') && !U.check(ctx, 'DEDENT') && !U.check(ctx, 'COLON') && !U.isAtEnd(ctx)) {
+  // Handle leading STRING as label (e.g., Checkbox "Verrechenbar" → label: "Verrechenbar")
+  if (U.check(ctx, 'STRING') && validProps.has('label')) {
+    const token = U.advance(ctx)
+    zagNode.properties.push({
+      type: 'Property',
+      name: 'label',
+      values: [token.value],
+      line: token.line,
+      column: token.column,
+    })
+  }
+
+  while (
+    !U.check(ctx, 'NEWLINE') &&
+    !U.check(ctx, 'INDENT') &&
+    !U.check(ctx, 'DEDENT') &&
+    !U.check(ctx, 'COLON') &&
+    !U.isAtEnd(ctx)
+  ) {
     // Skip commas
     if (U.check(ctx, 'COMMA') || U.check(ctx, 'SEMICOLON')) {
       U.advance(ctx)
@@ -172,7 +198,12 @@ function parseZagInlineProperties(
       const propName = U.current(ctx).value
 
       // Boolean Zag properties (e.g., multiple, searchable, clearable, disabled)
-      if (validProps.has(propName) && !U.checkNext(ctx, 'STRING') && !U.checkNext(ctx, 'NUMBER') && !U.checkNext(ctx, 'LBRACKET')) {
+      if (
+        validProps.has(propName) &&
+        !U.checkNext(ctx, 'STRING') &&
+        !U.checkNext(ctx, 'NUMBER') &&
+        !U.checkNext(ctx, 'LBRACKET')
+      ) {
         const token = U.advance(ctx)
         zagNode.properties.push({
           type: 'Property',
@@ -190,7 +221,14 @@ function parseZagInlineProperties(
         const values: PropertyValue[] = []
 
         // Parse value(s) - stop at COLON (end of Select line), NEWLINE, INDENT, COMMA, SEMICOLON
-        while (!U.check(ctx, 'NEWLINE') && !U.check(ctx, 'INDENT') && !U.check(ctx, 'COMMA') && !U.check(ctx, 'SEMICOLON') && !U.check(ctx, 'COLON') && !U.isAtEnd(ctx)) {
+        while (
+          !U.check(ctx, 'NEWLINE') &&
+          !U.check(ctx, 'INDENT') &&
+          !U.check(ctx, 'COMMA') &&
+          !U.check(ctx, 'SEMICOLON') &&
+          !U.check(ctx, 'COLON') &&
+          !U.isAtEnd(ctx)
+        ) {
           if (U.check(ctx, 'STRING')) {
             values.push(U.advance(ctx).value)
           } else if (U.check(ctx, 'NUMBER')) {
@@ -248,10 +286,10 @@ function parseZagComponentBody(
       const zagDef = getZagPrimitive(zagNode.name)
       const validItemProps = new Set(zagDef?.itemProps || ['value', 'label'])
 
-      const isItemDefinition = nextToken && (
-        nextToken.type === 'STRING' ||
-        (nextToken.type === 'IDENTIFIER' && validItemProps.has(nextToken.value))
-      )
+      const isItemDefinition =
+        nextToken &&
+        (nextToken.type === 'STRING' ||
+          (nextToken.type === 'IDENTIFIER' && validItemProps.has(nextToken.value)))
 
       if (isItemDefinition) {
         const item = parseZagItem(ctx, zagNode.name, callbacks)
@@ -282,7 +320,12 @@ function parseZagComponentBody(
           U.advance(ctx) // slot name
           // Parse inline properties until we hit the colon or newline
           const properties: Property[] = []
-          while (!U.check(ctx, 'COLON') && !U.check(ctx, 'NEWLINE') && !U.check(ctx, 'INDENT') && !U.isAtEnd(ctx)) {
+          while (
+            !U.check(ctx, 'COLON') &&
+            !U.check(ctx, 'NEWLINE') &&
+            !U.check(ctx, 'INDENT') &&
+            !U.isAtEnd(ctx)
+          ) {
             if (U.check(ctx, 'COMMA')) {
               U.advance(ctx)
               continue
@@ -512,16 +555,24 @@ function parseZagSlotBody(
     }
 
     // Check for Item children - add to parent ZagNode's items
-    if (U.check(ctx, 'IDENTIFIER') && componentName && parentZagNode &&
-        isZagItemKeyword(componentName, U.current(ctx).value)) {
+    if (
+      U.check(ctx, 'IDENTIFIER') &&
+      componentName &&
+      parentZagNode &&
+      isZagItemKeyword(componentName, U.current(ctx).value)
+    ) {
       const item = parseZagItem(ctx, componentName, callbacks)
       if (item) parentZagNode.items.push(item)
       continue
     }
 
     // Check for Group children - add to parent ZagNode's items
-    if (U.check(ctx, 'IDENTIFIER') && componentName && parentZagNode &&
-        isZagGroupKeyword(componentName, U.current(ctx).value)) {
+    if (
+      U.check(ctx, 'IDENTIFIER') &&
+      componentName &&
+      parentZagNode &&
+      isZagGroupKeyword(componentName, U.current(ctx).value)
+    ) {
       const group = parseZagGroup(ctx, componentName, callbacks)
       if (group) parentZagNode.items.push(group)
       continue
@@ -572,10 +623,27 @@ function parseZagItem(
   }
 
   // Layout properties that can be on items
-  const layoutProps = ['ver', 'hor', 'vertical', 'horizontal', 'gap', 'pad', 'spread', 'center', 'g', 'p']
+  const layoutProps = [
+    'ver',
+    'hor',
+    'vertical',
+    'horizontal',
+    'gap',
+    'pad',
+    'spread',
+    'center',
+    'g',
+    'p',
+  ]
 
   // Parse item content
-  while (!U.check(ctx, 'NEWLINE') && !U.check(ctx, 'INDENT') && !U.check(ctx, 'DEDENT') && !U.check(ctx, 'COLON') && !U.isAtEnd(ctx)) {
+  while (
+    !U.check(ctx, 'NEWLINE') &&
+    !U.check(ctx, 'INDENT') &&
+    !U.check(ctx, 'DEDENT') &&
+    !U.check(ctx, 'COLON') &&
+    !U.isAtEnd(ctx)
+  ) {
     // Skip commas
     if (U.check(ctx, 'COMMA') || U.check(ctx, 'SEMICOLON')) {
       U.advance(ctx)
@@ -679,7 +747,11 @@ function parseZagItem(
 
     // navigate(ViewName) function call syntax - convert to shows property
     // This allows: NavItem "Dashboard", navigate(DashboardView)
-    if (U.check(ctx, 'IDENTIFIER') && U.current(ctx).value === 'navigate' && U.checkNext(ctx, 'LPAREN')) {
+    if (
+      U.check(ctx, 'IDENTIFIER') &&
+      U.current(ctx).value === 'navigate' &&
+      U.checkNext(ctx, 'LPAREN')
+    ) {
       U.advance(ctx) // consume 'navigate'
       U.advance(ctx) // consume '('
       if (U.check(ctx, 'IDENTIFIER')) {
@@ -705,7 +777,13 @@ function parseZagItem(
       }
       // If no values, treat as boolean flag (e.g., "ver" = true)
       if (values.length === 0) values.push(true)
-      item.properties.push({ type: 'Property', name: propName, values, line: propToken.line, column: propToken.column })
+      item.properties.push({
+        type: 'Property',
+        name: propName,
+        values,
+        line: propToken.line,
+        column: propToken.column,
+      })
       continue
     }
 
@@ -745,7 +823,12 @@ function parseZagItem(
     // Parse inline children on same line
     // Children are separated by commas followed by capitalized component names
     // e.g., "Box w 8, h 8, bg #fff, Text "label"" - commas between props don't separate children
-    while (!U.check(ctx, 'NEWLINE') && !U.check(ctx, 'INDENT') && !U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx)) {
+    while (
+      !U.check(ctx, 'NEWLINE') &&
+      !U.check(ctx, 'INDENT') &&
+      !U.check(ctx, 'DEDENT') &&
+      !U.isAtEnd(ctx)
+    ) {
       // Skip leading commas
       if (U.check(ctx, 'COMMA')) {
         U.advance(ctx)
@@ -772,7 +855,12 @@ function parseZagItem(
           }
 
           // Parse child's properties until we hit a comma followed by another component
-          while (!U.check(ctx, 'NEWLINE') && !U.check(ctx, 'INDENT') && !U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx)) {
+          while (
+            !U.check(ctx, 'NEWLINE') &&
+            !U.check(ctx, 'INDENT') &&
+            !U.check(ctx, 'DEDENT') &&
+            !U.isAtEnd(ctx)
+          ) {
             // Check for comma - if followed by capitalized identifier, it's a new child
             if (U.check(ctx, 'COMMA')) {
               const nextToken = ctx.tokens[ctx.pos + 1]
@@ -830,7 +918,11 @@ function parseZagItem(
   if (U.check(ctx, 'INDENT')) {
     U.advance(ctx)
     if (!item.children) item.children = []
-    for (let iter = 0; !U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx) && iter < MAX_ITERATIONS; iter++) {
+    for (
+      let iter = 0;
+      !U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx) && iter < MAX_ITERATIONS;
+      iter++
+    ) {
       callbacks.skipNewlines()
       if (U.check(ctx, 'DEDENT') || U.isAtEnd(ctx)) break
 
@@ -889,7 +981,12 @@ function parseZagGroup(
   }
 
   // Parse group properties (label)
-  while (!U.check(ctx, 'NEWLINE') && !U.check(ctx, 'INDENT') && !U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx)) {
+  while (
+    !U.check(ctx, 'NEWLINE') &&
+    !U.check(ctx, 'INDENT') &&
+    !U.check(ctx, 'DEDENT') &&
+    !U.isAtEnd(ctx)
+  ) {
     // Skip commas
     if (U.check(ctx, 'COMMA') || U.check(ctx, 'SEMICOLON')) {
       U.advance(ctx)
@@ -936,7 +1033,11 @@ function parseZagGroup(
   if (U.check(ctx, 'INDENT')) {
     U.advance(ctx) // consume INDENT
 
-    for (let iter = 0; !U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx) && iter < MAX_ITERATIONS; iter++) {
+    for (
+      let iter = 0;
+      !U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx) && iter < MAX_ITERATIONS;
+      iter++
+    ) {
       callbacks.skipNewlines()
       if (U.check(ctx, 'DEDENT') || U.isAtEnd(ctx)) break
 

@@ -138,7 +138,16 @@ export class DragController implements Reportable<ControllerReport> {
       // Absolute/stacked layout: position-based drop
       const absResult = this.calculateAbsolutePosition(cursor, hit)
       this.indicator.showGhost(absResult.ghostRect)
-      this.highlightContainer(hit.containerId, hit.containerRect)
+      // Only highlight container if dropping into a DIFFERENT container
+      // (moving within same stacked container doesn't need highlight)
+      const isSameContainer =
+        this.source?.type === 'canvas' &&
+        this.isElementInContainer(this.source.nodeId, hit.containerId)
+      if (!isSameContainer) {
+        this.highlightContainer(hit.containerId, hit.containerRect)
+      } else {
+        this.indicator.hideContainerHighlight()
+      }
       this.storeAbsoluteTarget(hit.containerId, absResult.position)
     } else {
       // Flex/grid layout: index-based drop
@@ -192,10 +201,18 @@ export class DragController implements Reportable<ControllerReport> {
   } {
     const size = this.getSourceSize()
 
-    // Position relative to container (element's top-left at cursor position)
-    // This is more intuitive for absolute positioning - "I click here, element appears here"
-    const x = Math.max(0, cursor.x - hit.containerRect.x)
-    const y = Math.max(0, cursor.y - hit.containerRect.y)
+    // Get grab offset (where user clicked on the element)
+    // For canvas moves, this keeps the element under the cursor where it was grabbed
+    // For palette drops, default to center of element (half size)
+    const grabOffset = this.source?.grabOffset ?? {
+      x: size.width / 2,
+      y: size.height / 2,
+    }
+
+    // Position relative to container, accounting for grab offset
+    // Element's top-left = cursor position - grab offset
+    const x = Math.max(0, cursor.x - hit.containerRect.x - grabOffset.x)
+    const y = Math.max(0, cursor.y - hit.containerRect.y - grabOffset.y)
 
     // Clamp to container bounds (ensure element stays within container)
     const maxX = Math.max(0, hit.containerRect.width - size.width)
@@ -240,6 +257,13 @@ export class DragController implements Reportable<ControllerReport> {
     const children = this.cache.getChildren(containerId)
     const insertionIndex = children.length
     this.lastTarget = { mode: 'absolute', containerId, position, insertionIndex }
+  }
+
+  /** Check if an element is a direct child of a container */
+  private isElementInContainer(nodeId: string | undefined, containerId: string): boolean {
+    if (!nodeId) return false
+    const children = this.cache.getChildren(containerId)
+    return children.some(child => child.nodeId === nodeId)
   }
 
   /** Complete the drag operation */

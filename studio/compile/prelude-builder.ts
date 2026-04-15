@@ -70,12 +70,14 @@ export class PreludeBuilder {
   private wrapWithAppRoot(code: string, prelude: string): PreludeResult {
     const indentedCode = this.indentCode(code)
     const rootWrapper = 'App'
+    const indent = 2 // Must match indentCode's indent
 
     if (!prelude) {
       const resolvedCode = rootWrapper + '\n' + indentedCode
       return {
         resolvedCode,
-        preludeOffset: rootWrapper.length + 1,
+        // +indent: account for the 2-space indentation added to user code
+        preludeOffset: rootWrapper.length + 1 + indent,
       }
     }
 
@@ -83,7 +85,8 @@ export class PreludeBuilder {
     const resolvedCode = prelude + separator + rootWrapper + '\n' + indentedCode
     return {
       resolvedCode,
-      preludeOffset: prelude.length + separator.length + rootWrapper.length + 1,
+      // +indent: account for the 2-space indentation added to user code
+      preludeOffset: prelude.length + separator.length + rootWrapper.length + 1 + indent,
     }
   }
 

@@ -35,6 +35,8 @@ export interface DragSource {
   componentName?: string
   template?: string
   nodeId?: string
+  /** Grab offset - where user clicked relative to element's top-left (for canvas moves) */
+  grabOffset?: Point
 }
 
 /** Discriminated union for drop targets */

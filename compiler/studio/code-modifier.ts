@@ -1141,17 +1141,19 @@ export class CodeModifier {
   ): string {
     let line = `${indent}${componentName}`
 
-    if (properties) {
-      line += ` ${properties}`
-    }
-
+    // Mirror DSL syntax: textContent comes BEFORE properties
+    // e.g., Button "Click me", bg #2271C1  or  Icon "star", is 24
     if (textContent) {
       // Add text content (with quotes if not already quoted)
       const quotedText = textContent.startsWith('"') ? textContent : `"${textContent}"`
-      if (properties) {
-        line += `, ${quotedText}`
+      line += ` ${quotedText}`
+    }
+
+    if (properties) {
+      if (textContent) {
+        line += `, ${properties}`
       } else {
-        line += ` ${quotedText}`
+        line += ` ${properties}`
       }
     }
 

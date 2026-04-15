@@ -41,13 +41,62 @@ class EditorAPIImpl implements EditorAPI {
   async setCode(code: string): Promise<void> {
     if (!this.editor) throw new Error('Editor not available')
 
-    const transaction = this.editor.state.update({
-      changes: { from: 0, to: this.editor.state.doc.length, insert: code },
-    })
-    this.editor.dispatch(transaction)
+    const cm = (window as any).__codemirror
+    const compileTestCode = (window as any).__compileTestCode
 
-    // Wait for compilation
-    await this.waitForCompile()
+    // Use setCodeWithHistory for proper undo tracking
+    if (cm?.setCodeWithHistory) {
+      cm.setCodeWithHistory(code)
+    } else {
+      // Fallback: standard approach
+      const transaction = this.editor.state.update({
+        changes: { from: 0, to: this.editor.state.doc.length, insert: code },
+      })
+      this.editor.dispatch(transaction)
+    }
+
+    // Compile directly if available (updates AST and SourceMap properly)
+    if (compileTestCode) {
+      compileTestCode(code)
+      // Small delay for DOM updates
+      await new Promise(resolve => setTimeout(resolve, 150))
+      return
+    }
+
+    // Wait for compilation with code verification
+    await this.waitForCompileWithCode(code)
+  }
+
+  private async waitForCompileWithCode(expectedCode: string, timeout = 2000): Promise<void> {
+    const startTime = Date.now()
+    return new Promise((resolve, reject) => {
+      const check = () => {
+        // Verify the editor has the expected code
+        const currentCode = this.editor?.state?.doc?.toString() ?? ''
+        if (!currentCode.includes(expectedCode.substring(0, 20))) {
+          if (Date.now() - startTime > timeout) {
+            reject(new Error('Code not set'))
+            return
+          }
+          setTimeout(check, 50)
+          return
+        }
+
+        // Check for compiled nodes
+        const preview = document.getElementById('preview')
+        const hasNodes = preview?.querySelectorAll('[data-mirror-id]').length ?? 0
+        if (hasNodes > 0) {
+          setTimeout(resolve, 100)
+          return
+        }
+        if (Date.now() - startTime > timeout) {
+          reject(new Error('Compile timeout'))
+          return
+        }
+        setTimeout(check, 50)
+      }
+      setTimeout(check, 150)
+    })
   }
 
   insertAt(code: string, line: number, indent = 0): void {
@@ -107,36 +156,37 @@ class EditorAPIImpl implements EditorAPI {
   }
 
   triggerAutocomplete(): void {
-    // Trigger autocomplete via command
-    const { startCompletion } = require('@codemirror/autocomplete')
-    if (this.editor && startCompletion) {
-      startCompletion(this.editor)
+    // Use window-exposed CodeMirror command (avoid dynamic require in bundled code)
+    const cm = (window as any).__codemirror
+    if (cm?.startCompletion) {
+      cm.startCompletion()
     }
   }
 
   getCompletions(): string[] {
-    // Get current completions from autocomplete state
-    const state = this.editor?.state
-    if (!state) return []
+    // Use window-exposed CodeMirror function (avoid dynamic require in bundled code)
+    const cm = (window as any).__codemirror
+    if (!cm?.currentCompletions) return []
 
-    // Access autocomplete state (implementation depends on setup)
-    const completionState = state.field((window as any).__completionState, false)
-    if (!completionState?.open) return []
+    const completions = cm.currentCompletions()
+    if (!completions || !Array.isArray(completions)) return []
 
-    return completionState.open.options.map((o: any) => o.label)
+    return completions.map((c: any) => c.label)
   }
 
   undo(): void {
-    const { undo } = require('@codemirror/commands')
-    if (this.editor && undo) {
-      undo(this.editor)
+    // Use window-exposed CodeMirror command (avoid dynamic require in bundled code)
+    const cm = (window as any).__codemirror
+    if (cm?.undo) {
+      cm.undo()
     }
   }
 
   redo(): void {
-    const { redo } = require('@codemirror/commands')
-    if (this.editor && redo) {
-      redo(this.editor)
+    // Use window-exposed CodeMirror command (avoid dynamic require in bundled code)
+    const cm = (window as any).__codemirror
+    if (cm?.redo) {
+      cm.redo()
     }
   }
 

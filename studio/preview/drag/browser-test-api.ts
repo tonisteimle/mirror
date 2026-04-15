@@ -495,25 +495,22 @@ export class BrowserTestRunner {
       this.hideVisualCursor()
     }
 
-    // Check if we have a valid target - if not, use simulateDrop as fallback
-    const state = controller.getTestState()
-    if (!state.target) {
-      // Hit detection failed (common in headless mode) - use simulateDrop
-      // Clamp position to container bounds
-      const targetEl = this.findElement(targetNodeId)
-      const clampedPosition = this.clampPositionToContainer(position, source, targetEl)
-      // Insert as last child (index 0 for new stacked containers)
-      const target: AbsoluteDropTarget = {
-        mode: 'absolute',
-        containerId: targetNodeId,
-        position: clampedPosition,
-        insertionIndex: 0,
-      }
-      await controller.simulateDrop(source, target)
-    } else {
-      // Normal drop path
-      await controller.drop()
+    // Always use simulateDrop with explicit position for tests
+    // This ensures deterministic behavior regardless of hit detection state
+    // (Hit detection may capture position from intermediate animation frames)
+    const targetEl = this.findElement(targetNodeId)
+    const clampedPosition = this.clampPositionToContainer(position, source, targetEl)
+
+    // For absolute/stacked containers, insert as last child (matching real behavior)
+    // Count existing children by looking for elements with data-mirror-id inside the target
+    const existingChildren = targetEl?.querySelectorAll('[data-mirror-id]').length ?? 0
+    const target: AbsoluteDropTarget = {
+      mode: 'absolute',
+      containerId: targetNodeId,
+      position: clampedPosition,
+      insertionIndex: existingChildren,
     }
+    await controller.simulateDrop(source, target)
   }
 
   /**
@@ -1547,22 +1544,49 @@ export class MirrorStudioControl {
    */
   getElement(nodeId: string): ExtractedElementInfo | null {
     const studio = (window as any).__mirrorStudio__
-    const extractor = studio?.modules?.compiler?.propertyExtractor
-    if (!extractor) return null
+    const studioState = studio?.state?.get()
 
+    if (!studioState?.ast || !studioState?.sourceMap) {
+      return null
+    }
+
+    // Create PropertyExtractor from current AST and SourceMap
+    // Note: The browser bundle uses 'MirrorLang' as the global name (see tsup.config.ts)
+    const PropertyExtractor = (window as any).MirrorLang?.PropertyExtractor
+    if (!PropertyExtractor) {
+      // Fallback: try to get from property panel
+      const panel = studio?.propertyPanel
+      if (panel?.getCurrentElement) {
+        const current = panel.getCurrentElement()
+        if (current?.nodeId === nodeId) {
+          return this.formatElement(current)
+        }
+      }
+      return null
+    }
+
+    const extractor = new PropertyExtractor(studioState.ast, studioState.sourceMap)
     const element = extractor.getProperties(nodeId)
     if (!element) return null
 
+    return this.formatElement(element)
+  }
+
+  /**
+   * Format an ExtractedElement to ExtractedElementInfo
+   */
+  private formatElement(element: any): ExtractedElementInfo {
     return {
       nodeId: element.nodeId,
-      nodeName: element.nodeName,
+      // nodeName is the component/primitive name (Frame, Button, etc.)
+      nodeName: element.componentName,
       componentName: element.componentName,
       isDefinition: element.isDefinition ?? false,
       isTemplateInstance: element.isTemplateInstance ?? false,
-      categories: element.categories.map((cat: any) => ({
+      categories: (element.categories || []).map((cat: any) => ({
         name: cat.name,
         label: cat.label,
-        properties: cat.properties.map((prop: any) => ({
+        properties: (cat.properties || []).map((prop: any) => ({
           name: prop.name,
           value: prop.value,
           hasValue: prop.hasValue,
@@ -1570,7 +1594,7 @@ export class MirrorStudioControl {
           tokenRef: prop.tokenRef,
         })),
       })),
-      allProperties: element.allProperties.map((prop: any) => ({
+      allProperties: (element.allProperties || []).map((prop: any) => ({
         name: prop.name,
         value: prop.value,
         hasValue: prop.hasValue,
@@ -2874,8 +2898,7 @@ export function setupBrowserDragTestAPI(): void {
     getElement: (nodeId: string) => studioControl.getElement(nodeId),
     getPropertyValue: (nodeId: string, propName: string) =>
       studioControl.getPropertyValue(nodeId, propName),
-    hasProperty: (nodeId: string, propName: string) =>
-      studioControl.hasProperty(nodeId, propName),
+    hasProperty: (nodeId: string, propName: string) => studioControl.hasProperty(nodeId, propName),
     getPropertiesMap: (nodeId: string) => studioControl.getPropertiesMap(nodeId),
     getPrimitiveType: (nodeId: string) => studioControl.getPrimitiveType(nodeId),
     isComponentInstance: (nodeId: string) => studioControl.isComponentInstance(nodeId),

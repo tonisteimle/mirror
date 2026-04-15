@@ -146,6 +146,7 @@ const MACHINE_CONFIG_PROPS = new Set([
   'fixedWeeks',
   'startOfWeek',
   'closeOnSelect',
+  'closeIcon',
   'inline',
   'icon',
   'mask',
@@ -294,6 +295,7 @@ function processMachineConfigProperty(
     case 'required':
     case 'fixedWeeks':
     case 'closeOnSelect':
+    case 'closeIcon':
     case 'inline':
     case 'mask':
     case 'otp':

@@ -353,31 +353,31 @@ export function createUI(data = {}) {
     color: var(--text-col) !important;
   }
   
-  [data-mirror-id^="node-39"]:hover {
+  [data-mirror-id^="node-38"]:hover {
     background: var(--card-hover-bg) !important;
   }
   
-  [data-mirror-id^="node-48"]:hover {
+  [data-mirror-id^="node-47"]:hover {
     background: var(--card-hover-bg) !important;
   }
   
-  [data-mirror-id^="node-53"]:hover {
+  [data-mirror-id^="node-52"]:hover {
     background: var(--card-hover-bg) !important;
   }
   
-  [data-mirror-id^="node-58"]:hover {
+  [data-mirror-id^="node-57"]:hover {
     background: var(--card-hover-bg) !important;
   }
   
-  [data-mirror-id^="node-68"]:hover {
+  [data-mirror-id^="node-67"]:hover {
     border-color: var(--border-hover-boc) !important;
   }
   
-  [data-mirror-id^="node-68"]:focus {
+  [data-mirror-id^="node-67"]:focus {
     border-color: $accent !important;
   }
   
-  [data-mirror-id^="node-80"]:hover {
+  [data-mirror-id^="node-79"]:hover {
     background: var(--row-hover-bg) !important;
   }
   
@@ -398,60 +398,60 @@ export function createUI(data = {}) {
   
   /* Size-state: compact */
   @container (max-width: 600px) {
+    [data-mirror-id^="node-37"] {
+      gap: var(--gap-md-gap) !important;
+    }
+  }
+  
+  /* Size-state: compact */
+  @container (max-width: 600px) {
     [data-mirror-id^="node-38"] {
+      padding: var(--space-md-pad) !important;
+      min-width: 140px !important;
+    }
+  }
+  
+  /* Size-state: compact */
+  @container (max-width: 600px) {
+    [data-mirror-id^="node-47"] {
+      padding: var(--space-md-pad) !important;
+      min-width: 140px !important;
+    }
+  }
+  
+  /* Size-state: compact */
+  @container (max-width: 600px) {
+    [data-mirror-id^="node-52"] {
+      padding: var(--space-md-pad) !important;
+      min-width: 140px !important;
+    }
+  }
+  
+  /* Size-state: compact */
+  @container (max-width: 600px) {
+    [data-mirror-id^="node-57"] {
+      padding: var(--space-md-pad) !important;
+      min-width: 140px !important;
+    }
+  }
+  
+  /* Size-state: compact */
+  @container (max-width: 600px) {
+    [data-mirror-id^="node-62"] {
       gap: var(--gap-md-gap) !important;
     }
   }
   
   /* Size-state: compact */
   @container (max-width: 600px) {
-    [data-mirror-id^="node-39"] {
-      padding: var(--space-md-pad) !important;
-      min-width: 140px !important;
-    }
-  }
-  
-  /* Size-state: compact */
-  @container (max-width: 600px) {
-    [data-mirror-id^="node-48"] {
-      padding: var(--space-md-pad) !important;
-      min-width: 140px !important;
-    }
-  }
-  
-  /* Size-state: compact */
-  @container (max-width: 600px) {
-    [data-mirror-id^="node-53"] {
-      padding: var(--space-md-pad) !important;
-      min-width: 140px !important;
-    }
-  }
-  
-  /* Size-state: compact */
-  @container (max-width: 600px) {
-    [data-mirror-id^="node-58"] {
-      padding: var(--space-md-pad) !important;
-      min-width: 140px !important;
-    }
-  }
-  
-  /* Size-state: compact */
-  @container (max-width: 600px) {
-    [data-mirror-id^="node-63"] {
-      gap: var(--gap-md-gap) !important;
-    }
-  }
-  
-  /* Size-state: compact */
-  @container (max-width: 600px) {
-    [data-mirror-id^="node-73"] {
+    [data-mirror-id^="node-72"] {
       display: none !important;
     }
   }
   
   /* Size-state: compact */
   @container (max-width: 600px) {
-    [data-mirror-id^="node-80"] {
+    [data-mirror-id^="node-79"] {
       gap: var(--gap-sm-gap) !important;
       padding: var(--space-sm-pad) !important;
     }
@@ -459,7 +459,7 @@ export function createUI(data = {}) {
   
   /* Size-state: compact */
   @container (max-width: 600px) {
-    [data-mirror-id^="node-83"] {
+    [data-mirror-id^="node-82"] {
       display: none !important;
     }
   }
@@ -619,7 +619,7 @@ export function createUI(data = {}) {
   node_10._zagConfig = {
     type: 'dialog',
     id: 'node-10',
-    machineConfig: {"id":"node-10"},
+    machineConfig: {"id":"node-10","closeIcon":true},
   }
   
   // Trigger
@@ -675,11 +675,11 @@ export function createUI(data = {}) {
     'display': 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
-    'gap': 'var(--gap-xl-gap)',
+    'gap': 'var(--gap-lg-gap)',
     'background': 'var(--card-bg)',
-    'padding': 'var(--space-xl-pad)',
+    'padding': 'var(--space-lg-pad)',
     'border-radius': 'var(--rad-lg-rad)',
-    'width': '360px',
+    'width': '400px',
     'max-width': '90vw',
   })
   node_12.style.containerType = 'inline-size'
@@ -689,202 +689,157 @@ export function createUI(data = {}) {
     },
   }
   node_12.dataset.component = 'Frame'
-  // Frame
-  const node_13 = document.createElement('div')
+  // Text
+  const node_13 = document.createElement('span')
   _elements['node-13'] = node_13
   node_13.dataset.mirrorId = 'node-13'
-  node_13.dataset.mirrorName = 'Frame'
+  node_13.dataset.mirrorName = 'Text'
+  node_13.textContent = "Neuer Zeiteintrag"
   Object.assign(node_13.style, {
-    'display': 'flex',
-    'flex-direction': 'row',
-    'align-self': 'stretch',
-    'justify-content': 'space-between',
-    'align-items': 'center',
-    'border-bottom': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-    'padding': '0px 0px var(--gap-xl-pad) 0px',
-  })
-  node_13.dataset.layout = 'flex'
-  node_13.dataset.component = 'Frame'
-  // Text
-  const node_14 = document.createElement('span')
-  _elements['node-14'] = node_14
-  node_14.dataset.mirrorId = 'node-14'
-  node_14.dataset.mirrorName = 'Text'
-  node_14.textContent = "Neuer Zeiteintrag"
-  Object.assign(node_14.style, {
     'color': 'var(--text-col)',
     'font-size': '14px',
     'font-weight': '600',
   })
-  node_14.dataset.component = 'Text'
-  node_13.appendChild(node_14)
+  node_13.dataset.component = 'Text'
+  node_12.appendChild(node_13)
   
-  // CloseTrigger
+  // Frame
+  const node_14 = document.createElement('div')
+  _elements['node-14'] = node_14
+  node_14.dataset.mirrorId = 'node-14'
+  node_14.dataset.mirrorName = 'Frame'
+  Object.assign(node_14.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'align-self': 'stretch',
+    'align-items': 'flex-start',
+    'gap': 'var(--gap-lg-gap)',
+  })
+  node_14.dataset.component = 'Frame'
+  // FormField
   const node_15 = document.createElement('div')
   _elements['node-15'] = node_15
   node_15.dataset.mirrorId = 'node-15'
-  node_15.dataset.mirrorName = 'CloseTrigger'
+  node_15.dataset.mirrorName = 'FormField'
   Object.assign(node_15.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
+    'gap': 'var(--gap-xs-gap)',
   })
-  node_15.dataset.component = 'CloseTrigger'
-  node_15.dataset.slot = 'CloseTrigger'
-  // Icon
-  const node_16 = document.createElement('span')
+  node_15.dataset.component = 'FormField'
+  // Label
+  const node_16 = document.createElement('label')
   _elements['node-16'] = node_16
   node_16.dataset.mirrorId = 'node-16'
-  node_16.dataset.mirrorName = 'Icon'
-  node_16.setAttribute('data-icon-color', "var(--muted-ic)")
-  node_16.setAttribute('data-icon-size', "var(--icon-md-is)")
-  // Icon default styles
+  node_16.dataset.mirrorName = 'Label'
+  node_16.textContent = "Datum"
   Object.assign(node_16.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
+    'color': 'var(--text-secondary-col)',
+    'font-size': 'var(--fs-sm-fs)',
   })
-  // Load Lucide icon
-  _runtime.loadIcon(node_16, "x")
-  Object.assign(node_16.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'cursor': 'pointer',
-  })
-  node_16.dataset.component = 'Icon'
+  node_16.dataset.component = 'Label'
+  node_16.dataset.slot = 'Label'
   node_15.appendChild(node_16)
   
-  node_13.appendChild(node_15)
-  
-  node_12.appendChild(node_13)
-  
-  // Frame
-  const node_17 = document.createElement('div')
+  // FormInput
+  const node_17 = document.createElement('input')
   _elements['node-17'] = node_17
   node_17.dataset.mirrorId = 'node-17'
-  node_17.dataset.mirrorName = 'Frame'
+  node_17.dataset.mirrorName = 'FormInput'
   Object.assign(node_17.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
+    'height': '36px',
+    'flex-shrink': '0',
+    'padding': 'var(--space-sm-pad) var(--space-md-pad)',
+    'border-radius': 'var(--rad-md-rad)',
+    'border': '1px solid currentColor',
+    'width': '100%',
     'align-self': 'stretch',
-    'align-items': 'flex-start',
-    'gap': 'var(--gap-xl-gap)',
+    'min-width': '0',
+    'background': 'var(--card-alt-bg)',
+    'border-color': 'var(--border-boc)',
+    'color': 'var(--text-col)',
+    'font-size': 'var(--fs-md-fs)',
+    'transition': 'border-color 150ms ease',
   })
-  node_17.dataset.component = 'Frame'
-  // FormField
+  node_17.dataset.bind = 'newDate'
+  node_17.dataset.component = 'FormInput'
+  // Two-way data binding: newDate
+  node_17.value = $get("newDate") ?? ""
+  node_17.addEventListener('input', (e) => {
+    $set("newDate", e.target.value)
+  })
+  _runtime.bindValue(node_17, "newDate")
+  node_15.appendChild(node_17)
+  
+  node_14.appendChild(node_15)
+  
+  // Frame
   const node_18 = document.createElement('div')
   _elements['node-18'] = node_18
   node_18.dataset.mirrorId = 'node-18'
-  node_18.dataset.mirrorName = 'FormField'
+  node_18.dataset.mirrorName = 'Frame'
   Object.assign(node_18.style, {
+    'display': 'flex',
+    'flex-direction': 'row',
+    'align-self': 'stretch',
+    'align-items': 'flex-start',
+    'gap': 'var(--gap-md-gap)',
+  })
+  node_18.style.containerType = 'inline-size'
+  node_18.dataset.layout = 'flex'
+  node_18.dataset.component = 'Frame'
+  // FormField
+  const node_19 = document.createElement('div')
+  _elements['node-19'] = node_19
+  node_19.dataset.mirrorId = 'node-19'
+  node_19.dataset.mirrorName = 'FormField'
+  Object.assign(node_19.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
     'gap': 'var(--gap-xs-gap)',
+    'flex-grow': '1',
   })
-  node_18.dataset.component = 'FormField'
+  node_19.dataset.component = 'FormField'
   // Label
-  const node_19 = document.createElement('label')
-  _elements['node-19'] = node_19
-  node_19.dataset.mirrorId = 'node-19'
-  node_19.dataset.mirrorName = 'Label'
-  node_19.textContent = "Datum"
-  Object.assign(node_19.style, {
+  const node_20 = document.createElement('label')
+  _elements['node-20'] = node_20
+  node_20.dataset.mirrorId = 'node-20'
+  node_20.dataset.mirrorName = 'Label'
+  node_20.textContent = "Projekt"
+  Object.assign(node_20.style, {
     'color': 'var(--text-secondary-col)',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_19.dataset.component = 'Label'
-  node_19.dataset.slot = 'Label'
-  node_18.appendChild(node_19)
+  node_20.dataset.component = 'Label'
+  node_20.dataset.slot = 'Label'
+  node_19.appendChild(node_20)
   
-  // FormInput
-  const node_20 = document.createElement('input')
-  _elements['node-20'] = node_20
-  node_20.dataset.mirrorId = 'node-20'
-  node_20.dataset.mirrorName = 'FormInput'
-  Object.assign(node_20.style, {
-    'height': '36px',
-    'flex-shrink': '0',
-    'padding': 'var(--space-sm-pad) var(--space-md-pad)',
-    'border-radius': 'var(--rad-md-rad)',
-    'border': '1px solid currentColor',
-    'width': '100%',
-    'align-self': 'stretch',
-    'min-width': '0',
-    'background': 'var(--card-alt-bg)',
-    'border-color': 'var(--border-boc)',
-    'color': 'var(--text-col)',
-    'font-size': 'var(--fs-md-fs)',
-    'transition': 'border-color 150ms ease',
-  })
-  node_20.dataset.bind = 'newDate'
-  node_20.dataset.component = 'FormInput'
-  // Two-way data binding: newDate
-  node_20.value = $get("newDate") ?? ""
-  node_20.addEventListener('input', (e) => {
-    $set("newDate", e.target.value)
-  })
-  _runtime.bindValue(node_20, "newDate")
-  node_18.appendChild(node_20)
-  
-  node_17.appendChild(node_18)
-  
-  // FormField
+  // Select Component: Select
   const node_21 = document.createElement('div')
   _elements['node-21'] = node_21
   node_21.dataset.mirrorId = 'node-21'
-  node_21.dataset.mirrorName = 'FormField'
-  Object.assign(node_21.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
-    'gap': 'var(--gap-xs-gap)',
-  })
-  node_21.dataset.component = 'FormField'
-  // Label
-  const node_22 = document.createElement('label')
-  _elements['node-22'] = node_22
-  node_22.dataset.mirrorId = 'node-22'
-  node_22.dataset.mirrorName = 'Label'
-  node_22.textContent = "Projekt"
-  Object.assign(node_22.style, {
-    'color': 'var(--text-secondary-col)',
-    'font-size': 'var(--fs-sm-fs)',
-  })
-  node_22.dataset.component = 'Label'
-  node_22.dataset.slot = 'Label'
-  node_21.appendChild(node_22)
-  
-  // Select Component: Select
-  const node_23 = document.createElement('div')
-  _elements['node-23'] = node_23
-  node_23.dataset.mirrorId = 'node-23'
-  node_23.dataset.zagComponent = 'select'
-  node_23.dataset.mirrorName = 'Select'
-  node_23._zagConfig = {
+  node_21.dataset.zagComponent = 'select'
+  node_21.dataset.mirrorName = 'Select'
+  node_21._zagConfig = {
     type: 'select',
-    id: 'node-23',
-    machineConfig: {"id":"node-23","placeholder":"Projekt wählen..."},
+    id: 'node-21',
+    machineConfig: {"id":"node-21","placeholder":"Projekt..."},
     items: [{"value":"","label":""},{"value":"","label":""},{"value":"","label":""},{"value":"","label":""}],
   }
   
   // Trigger
-  const node_23_trigger = document.createElement('button')
-  node_23_trigger.type = 'button'
-  node_23_trigger.dataset.slot = 'Trigger'
-  node_23_trigger.setAttribute('role', 'combobox')
-  node_23_trigger.setAttribute('aria-haspopup', 'listbox')
-  node_23_trigger.setAttribute('aria-expanded', 'false')
-  node_23_trigger.setAttribute('data-styled', 'true')
-  Object.assign(node_23_trigger.style, {
+  const node_21_trigger = document.createElement('button')
+  node_21_trigger.type = 'button'
+  node_21_trigger.dataset.slot = 'Trigger'
+  node_21_trigger.setAttribute('role', 'combobox')
+  node_21_trigger.setAttribute('aria-haspopup', 'listbox')
+  node_21_trigger.setAttribute('aria-expanded', 'false')
+  node_21_trigger.setAttribute('data-styled', 'true')
+  Object.assign(node_21_trigger.style, {
     'background': 'var(--card-alt-bg)',
     'border': '1px solid currentColor',
     'border-color': 'var(--border-boc)',
@@ -893,22 +848,22 @@ export function createUI(data = {}) {
     'border-radius': 'var(--rad-md-rad)',
     'font-size': 'var(--fs-md-fs)',
   })
-  const node_23_trigger_text = document.createElement('span')
-  node_23_trigger_text.dataset.slot = 'TriggerText'
-  node_23_trigger_text.textContent = 'Projekt wählen...'
-  node_23_trigger.appendChild(node_23_trigger_text)
-  const node_23_trigger_arrow = document.createElement('span')
-  node_23_trigger_arrow.dataset.slot = 'TriggerArrow'
-  node_23_trigger_arrow.dataset.icon = 'chevron-down'
-  node_23_trigger.appendChild(node_23_trigger_arrow)
-  node_23.appendChild(node_23_trigger)
+  const node_21_trigger_text = document.createElement('span')
+  node_21_trigger_text.dataset.slot = 'TriggerText'
+  node_21_trigger_text.textContent = 'Projekt...'
+  node_21_trigger.appendChild(node_21_trigger_text)
+  const node_21_trigger_arrow = document.createElement('span')
+  node_21_trigger_arrow.dataset.slot = 'TriggerArrow'
+  node_21_trigger_arrow.dataset.icon = 'chevron-down'
+  node_21_trigger.appendChild(node_21_trigger_arrow)
+  node_21.appendChild(node_21_trigger)
   
   // Content (dropdown)
-  const node_23_content = document.createElement('div')
-  node_23_content.dataset.slot = 'Content'
-  node_23_content.setAttribute('role', 'listbox')
-  node_23_content.setAttribute('data-styled', 'true')
-  Object.assign(node_23_content.style, {
+  const node_21_content = document.createElement('div')
+  node_21_content.dataset.slot = 'Content'
+  node_21_content.setAttribute('role', 'listbox')
+  node_21_content.setAttribute('data-styled', 'true')
+  Object.assign(node_21_content.style, {
     'background': 'var(--card-bg)',
     'border': '1px solid currentColor',
     'border-color': 'var(--border-boc)',
@@ -916,124 +871,125 @@ export function createUI(data = {}) {
   })
   
   // Item: 
-  const node_23_item0 = document.createElement('div')
-  node_23_item0.dataset.slot = 'Item'
-  node_23_item0.dataset.value = ''
-  node_23_item0.setAttribute('role', 'option')
-  node_23_item0.dataset.icon = 'check'
-  const node_23_item0_text = document.createElement('span')
-  node_23_item0_text.dataset.slot = 'ItemText'
-  node_23_item0_text.textContent = ''
-  node_23_item0.appendChild(node_23_item0_text)
-  const node_23_item0_indicator = document.createElement('span')
-  node_23_item0_indicator.dataset.slot = 'ItemIndicator'
-  node_23_item0.appendChild(node_23_item0_indicator)
-  node_23_content.appendChild(node_23_item0)
+  const node_21_item0 = document.createElement('div')
+  node_21_item0.dataset.slot = 'Item'
+  node_21_item0.dataset.value = ''
+  node_21_item0.setAttribute('role', 'option')
+  node_21_item0.dataset.icon = 'check'
+  const node_21_item0_text = document.createElement('span')
+  node_21_item0_text.dataset.slot = 'ItemText'
+  node_21_item0_text.textContent = ''
+  node_21_item0.appendChild(node_21_item0_text)
+  const node_21_item0_indicator = document.createElement('span')
+  node_21_item0_indicator.dataset.slot = 'ItemIndicator'
+  node_21_item0.appendChild(node_21_item0_indicator)
+  node_21_content.appendChild(node_21_item0)
   
   // Item: 
-  const node_23_item1 = document.createElement('div')
-  node_23_item1.dataset.slot = 'Item'
-  node_23_item1.dataset.value = ''
-  node_23_item1.setAttribute('role', 'option')
-  node_23_item1.dataset.icon = 'check'
-  const node_23_item1_text = document.createElement('span')
-  node_23_item1_text.dataset.slot = 'ItemText'
-  node_23_item1_text.textContent = ''
-  node_23_item1.appendChild(node_23_item1_text)
-  const node_23_item1_indicator = document.createElement('span')
-  node_23_item1_indicator.dataset.slot = 'ItemIndicator'
-  node_23_item1.appendChild(node_23_item1_indicator)
-  node_23_content.appendChild(node_23_item1)
+  const node_21_item1 = document.createElement('div')
+  node_21_item1.dataset.slot = 'Item'
+  node_21_item1.dataset.value = ''
+  node_21_item1.setAttribute('role', 'option')
+  node_21_item1.dataset.icon = 'check'
+  const node_21_item1_text = document.createElement('span')
+  node_21_item1_text.dataset.slot = 'ItemText'
+  node_21_item1_text.textContent = ''
+  node_21_item1.appendChild(node_21_item1_text)
+  const node_21_item1_indicator = document.createElement('span')
+  node_21_item1_indicator.dataset.slot = 'ItemIndicator'
+  node_21_item1.appendChild(node_21_item1_indicator)
+  node_21_content.appendChild(node_21_item1)
   
   // Item: 
-  const node_23_item2 = document.createElement('div')
-  node_23_item2.dataset.slot = 'Item'
-  node_23_item2.dataset.value = ''
-  node_23_item2.setAttribute('role', 'option')
-  node_23_item2.dataset.icon = 'check'
-  const node_23_item2_text = document.createElement('span')
-  node_23_item2_text.dataset.slot = 'ItemText'
-  node_23_item2_text.textContent = ''
-  node_23_item2.appendChild(node_23_item2_text)
-  const node_23_item2_indicator = document.createElement('span')
-  node_23_item2_indicator.dataset.slot = 'ItemIndicator'
-  node_23_item2.appendChild(node_23_item2_indicator)
-  node_23_content.appendChild(node_23_item2)
+  const node_21_item2 = document.createElement('div')
+  node_21_item2.dataset.slot = 'Item'
+  node_21_item2.dataset.value = ''
+  node_21_item2.setAttribute('role', 'option')
+  node_21_item2.dataset.icon = 'check'
+  const node_21_item2_text = document.createElement('span')
+  node_21_item2_text.dataset.slot = 'ItemText'
+  node_21_item2_text.textContent = ''
+  node_21_item2.appendChild(node_21_item2_text)
+  const node_21_item2_indicator = document.createElement('span')
+  node_21_item2_indicator.dataset.slot = 'ItemIndicator'
+  node_21_item2.appendChild(node_21_item2_indicator)
+  node_21_content.appendChild(node_21_item2)
   
   // Item: 
-  const node_23_item3 = document.createElement('div')
-  node_23_item3.dataset.slot = 'Item'
-  node_23_item3.dataset.value = ''
-  node_23_item3.setAttribute('role', 'option')
-  node_23_item3.dataset.icon = 'check'
-  const node_23_item3_text = document.createElement('span')
-  node_23_item3_text.dataset.slot = 'ItemText'
-  node_23_item3_text.textContent = ''
-  node_23_item3.appendChild(node_23_item3_text)
-  const node_23_item3_indicator = document.createElement('span')
-  node_23_item3_indicator.dataset.slot = 'ItemIndicator'
-  node_23_item3.appendChild(node_23_item3_indicator)
-  node_23_content.appendChild(node_23_item3)
+  const node_21_item3 = document.createElement('div')
+  node_21_item3.dataset.slot = 'Item'
+  node_21_item3.dataset.value = ''
+  node_21_item3.setAttribute('role', 'option')
+  node_21_item3.dataset.icon = 'check'
+  const node_21_item3_text = document.createElement('span')
+  node_21_item3_text.dataset.slot = 'ItemText'
+  node_21_item3_text.textContent = ''
+  node_21_item3.appendChild(node_21_item3_text)
+  const node_21_item3_indicator = document.createElement('span')
+  node_21_item3_indicator.dataset.slot = 'ItemIndicator'
+  node_21_item3.appendChild(node_21_item3_indicator)
+  node_21_content.appendChild(node_21_item3)
   
-  node_23.appendChild(node_23_content)
-  node_21.appendChild(node_23)
+  node_21.appendChild(node_21_content)
+  node_19.appendChild(node_21)
   
   // Initialize Select
   if (typeof _runtime !== 'undefined' && _runtime.initSelectComponent) {
-    _runtime.initSelectComponent(node_23)
+    _runtime.initSelectComponent(node_21)
   }
   
-  node_17.appendChild(node_21)
+  node_18.appendChild(node_19)
   
   // FormField
+  const node_22 = document.createElement('div')
+  _elements['node-22'] = node_22
+  node_22.dataset.mirrorId = 'node-22'
+  node_22.dataset.mirrorName = 'FormField'
+  Object.assign(node_22.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'align-self': 'stretch',
+    'align-items': 'flex-start',
+    'gap': 'var(--gap-xs-gap)',
+    'flex-grow': '1',
+  })
+  node_22.dataset.component = 'FormField'
+  // Label
+  const node_23 = document.createElement('label')
+  _elements['node-23'] = node_23
+  node_23.dataset.mirrorId = 'node-23'
+  node_23.dataset.mirrorName = 'Label'
+  node_23.textContent = "Kunde"
+  Object.assign(node_23.style, {
+    'color': 'var(--text-secondary-col)',
+    'font-size': 'var(--fs-sm-fs)',
+  })
+  node_23.dataset.component = 'Label'
+  node_23.dataset.slot = 'Label'
+  node_22.appendChild(node_23)
+  
+  // Select Component: Select
   const node_24 = document.createElement('div')
   _elements['node-24'] = node_24
   node_24.dataset.mirrorId = 'node-24'
-  node_24.dataset.mirrorName = 'FormField'
-  Object.assign(node_24.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
-    'gap': 'var(--gap-xs-gap)',
-  })
-  node_24.dataset.component = 'FormField'
-  // Label
-  const node_25 = document.createElement('label')
-  _elements['node-25'] = node_25
-  node_25.dataset.mirrorId = 'node-25'
-  node_25.dataset.mirrorName = 'Label'
-  node_25.textContent = "Kunde"
-  Object.assign(node_25.style, {
-    'color': 'var(--text-secondary-col)',
-    'font-size': 'var(--fs-sm-fs)',
-  })
-  node_25.dataset.component = 'Label'
-  node_25.dataset.slot = 'Label'
-  node_24.appendChild(node_25)
-  
-  // Select Component: Select
-  const node_26 = document.createElement('div')
-  _elements['node-26'] = node_26
-  node_26.dataset.mirrorId = 'node-26'
-  node_26.dataset.zagComponent = 'select'
-  node_26.dataset.mirrorName = 'Select'
-  node_26._zagConfig = {
+  node_24.dataset.zagComponent = 'select'
+  node_24.dataset.mirrorName = 'Select'
+  node_24._zagConfig = {
     type: 'select',
-    id: 'node-26',
-    machineConfig: {"id":"node-26","placeholder":"Kunde wählen..."},
+    id: 'node-24',
+    machineConfig: {"id":"node-24","placeholder":"Kunde..."},
     items: [{"value":"","label":""},{"value":"","label":""},{"value":"","label":""},{"value":"","label":""}],
   }
   
   // Trigger
-  const node_26_trigger = document.createElement('button')
-  node_26_trigger.type = 'button'
-  node_26_trigger.dataset.slot = 'Trigger'
-  node_26_trigger.setAttribute('role', 'combobox')
-  node_26_trigger.setAttribute('aria-haspopup', 'listbox')
-  node_26_trigger.setAttribute('aria-expanded', 'false')
-  node_26_trigger.setAttribute('data-styled', 'true')
-  Object.assign(node_26_trigger.style, {
+  const node_24_trigger = document.createElement('button')
+  node_24_trigger.type = 'button'
+  node_24_trigger.dataset.slot = 'Trigger'
+  node_24_trigger.setAttribute('role', 'combobox')
+  node_24_trigger.setAttribute('aria-haspopup', 'listbox')
+  node_24_trigger.setAttribute('aria-expanded', 'false')
+  node_24_trigger.setAttribute('data-styled', 'true')
+  Object.assign(node_24_trigger.style, {
     'background': 'var(--card-alt-bg)',
     'border': '1px solid currentColor',
     'border-color': 'var(--border-boc)',
@@ -1042,22 +998,22 @@ export function createUI(data = {}) {
     'border-radius': 'var(--rad-md-rad)',
     'font-size': 'var(--fs-md-fs)',
   })
-  const node_26_trigger_text = document.createElement('span')
-  node_26_trigger_text.dataset.slot = 'TriggerText'
-  node_26_trigger_text.textContent = 'Kunde wählen...'
-  node_26_trigger.appendChild(node_26_trigger_text)
-  const node_26_trigger_arrow = document.createElement('span')
-  node_26_trigger_arrow.dataset.slot = 'TriggerArrow'
-  node_26_trigger_arrow.dataset.icon = 'chevron-down'
-  node_26_trigger.appendChild(node_26_trigger_arrow)
-  node_26.appendChild(node_26_trigger)
+  const node_24_trigger_text = document.createElement('span')
+  node_24_trigger_text.dataset.slot = 'TriggerText'
+  node_24_trigger_text.textContent = 'Kunde...'
+  node_24_trigger.appendChild(node_24_trigger_text)
+  const node_24_trigger_arrow = document.createElement('span')
+  node_24_trigger_arrow.dataset.slot = 'TriggerArrow'
+  node_24_trigger_arrow.dataset.icon = 'chevron-down'
+  node_24_trigger.appendChild(node_24_trigger_arrow)
+  node_24.appendChild(node_24_trigger)
   
   // Content (dropdown)
-  const node_26_content = document.createElement('div')
-  node_26_content.dataset.slot = 'Content'
-  node_26_content.setAttribute('role', 'listbox')
-  node_26_content.setAttribute('data-styled', 'true')
-  Object.assign(node_26_content.style, {
+  const node_24_content = document.createElement('div')
+  node_24_content.dataset.slot = 'Content'
+  node_24_content.setAttribute('role', 'listbox')
+  node_24_content.setAttribute('data-styled', 'true')
+  Object.assign(node_24_content.style, {
     'background': 'var(--card-bg)',
     'border': '1px solid currentColor',
     'border-color': 'var(--border-boc)',
@@ -1065,109 +1021,111 @@ export function createUI(data = {}) {
   })
   
   // Item: 
-  const node_26_item0 = document.createElement('div')
-  node_26_item0.dataset.slot = 'Item'
-  node_26_item0.dataset.value = ''
-  node_26_item0.setAttribute('role', 'option')
-  node_26_item0.dataset.icon = 'check'
-  const node_26_item0_text = document.createElement('span')
-  node_26_item0_text.dataset.slot = 'ItemText'
-  node_26_item0_text.textContent = ''
-  node_26_item0.appendChild(node_26_item0_text)
-  const node_26_item0_indicator = document.createElement('span')
-  node_26_item0_indicator.dataset.slot = 'ItemIndicator'
-  node_26_item0.appendChild(node_26_item0_indicator)
-  node_26_content.appendChild(node_26_item0)
+  const node_24_item0 = document.createElement('div')
+  node_24_item0.dataset.slot = 'Item'
+  node_24_item0.dataset.value = ''
+  node_24_item0.setAttribute('role', 'option')
+  node_24_item0.dataset.icon = 'check'
+  const node_24_item0_text = document.createElement('span')
+  node_24_item0_text.dataset.slot = 'ItemText'
+  node_24_item0_text.textContent = ''
+  node_24_item0.appendChild(node_24_item0_text)
+  const node_24_item0_indicator = document.createElement('span')
+  node_24_item0_indicator.dataset.slot = 'ItemIndicator'
+  node_24_item0.appendChild(node_24_item0_indicator)
+  node_24_content.appendChild(node_24_item0)
   
   // Item: 
-  const node_26_item1 = document.createElement('div')
-  node_26_item1.dataset.slot = 'Item'
-  node_26_item1.dataset.value = ''
-  node_26_item1.setAttribute('role', 'option')
-  node_26_item1.dataset.icon = 'check'
-  const node_26_item1_text = document.createElement('span')
-  node_26_item1_text.dataset.slot = 'ItemText'
-  node_26_item1_text.textContent = ''
-  node_26_item1.appendChild(node_26_item1_text)
-  const node_26_item1_indicator = document.createElement('span')
-  node_26_item1_indicator.dataset.slot = 'ItemIndicator'
-  node_26_item1.appendChild(node_26_item1_indicator)
-  node_26_content.appendChild(node_26_item1)
+  const node_24_item1 = document.createElement('div')
+  node_24_item1.dataset.slot = 'Item'
+  node_24_item1.dataset.value = ''
+  node_24_item1.setAttribute('role', 'option')
+  node_24_item1.dataset.icon = 'check'
+  const node_24_item1_text = document.createElement('span')
+  node_24_item1_text.dataset.slot = 'ItemText'
+  node_24_item1_text.textContent = ''
+  node_24_item1.appendChild(node_24_item1_text)
+  const node_24_item1_indicator = document.createElement('span')
+  node_24_item1_indicator.dataset.slot = 'ItemIndicator'
+  node_24_item1.appendChild(node_24_item1_indicator)
+  node_24_content.appendChild(node_24_item1)
   
   // Item: 
-  const node_26_item2 = document.createElement('div')
-  node_26_item2.dataset.slot = 'Item'
-  node_26_item2.dataset.value = ''
-  node_26_item2.setAttribute('role', 'option')
-  node_26_item2.dataset.icon = 'check'
-  const node_26_item2_text = document.createElement('span')
-  node_26_item2_text.dataset.slot = 'ItemText'
-  node_26_item2_text.textContent = ''
-  node_26_item2.appendChild(node_26_item2_text)
-  const node_26_item2_indicator = document.createElement('span')
-  node_26_item2_indicator.dataset.slot = 'ItemIndicator'
-  node_26_item2.appendChild(node_26_item2_indicator)
-  node_26_content.appendChild(node_26_item2)
+  const node_24_item2 = document.createElement('div')
+  node_24_item2.dataset.slot = 'Item'
+  node_24_item2.dataset.value = ''
+  node_24_item2.setAttribute('role', 'option')
+  node_24_item2.dataset.icon = 'check'
+  const node_24_item2_text = document.createElement('span')
+  node_24_item2_text.dataset.slot = 'ItemText'
+  node_24_item2_text.textContent = ''
+  node_24_item2.appendChild(node_24_item2_text)
+  const node_24_item2_indicator = document.createElement('span')
+  node_24_item2_indicator.dataset.slot = 'ItemIndicator'
+  node_24_item2.appendChild(node_24_item2_indicator)
+  node_24_content.appendChild(node_24_item2)
   
   // Item: 
-  const node_26_item3 = document.createElement('div')
-  node_26_item3.dataset.slot = 'Item'
-  node_26_item3.dataset.value = ''
-  node_26_item3.setAttribute('role', 'option')
-  node_26_item3.dataset.icon = 'check'
-  const node_26_item3_text = document.createElement('span')
-  node_26_item3_text.dataset.slot = 'ItemText'
-  node_26_item3_text.textContent = ''
-  node_26_item3.appendChild(node_26_item3_text)
-  const node_26_item3_indicator = document.createElement('span')
-  node_26_item3_indicator.dataset.slot = 'ItemIndicator'
-  node_26_item3.appendChild(node_26_item3_indicator)
-  node_26_content.appendChild(node_26_item3)
+  const node_24_item3 = document.createElement('div')
+  node_24_item3.dataset.slot = 'Item'
+  node_24_item3.dataset.value = ''
+  node_24_item3.setAttribute('role', 'option')
+  node_24_item3.dataset.icon = 'check'
+  const node_24_item3_text = document.createElement('span')
+  node_24_item3_text.dataset.slot = 'ItemText'
+  node_24_item3_text.textContent = ''
+  node_24_item3.appendChild(node_24_item3_text)
+  const node_24_item3_indicator = document.createElement('span')
+  node_24_item3_indicator.dataset.slot = 'ItemIndicator'
+  node_24_item3.appendChild(node_24_item3_indicator)
+  node_24_content.appendChild(node_24_item3)
   
-  node_26.appendChild(node_26_content)
-  node_24.appendChild(node_26)
+  node_24.appendChild(node_24_content)
+  node_22.appendChild(node_24)
   
   // Initialize Select
   if (typeof _runtime !== 'undefined' && _runtime.initSelectComponent) {
-    _runtime.initSelectComponent(node_26)
+    _runtime.initSelectComponent(node_24)
   }
   
-  node_17.appendChild(node_24)
+  node_18.appendChild(node_22)
+  
+  node_14.appendChild(node_18)
   
   // FormField
-  const node_27 = document.createElement('div')
-  _elements['node-27'] = node_27
-  node_27.dataset.mirrorId = 'node-27'
-  node_27.dataset.mirrorName = 'FormField'
-  Object.assign(node_27.style, {
+  const node_25 = document.createElement('div')
+  _elements['node-25'] = node_25
+  node_25.dataset.mirrorId = 'node-25'
+  node_25.dataset.mirrorName = 'FormField'
+  Object.assign(node_25.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
     'gap': 'var(--gap-xs-gap)',
   })
-  node_27.dataset.component = 'FormField'
+  node_25.dataset.component = 'FormField'
   // Label
-  const node_28 = document.createElement('label')
-  _elements['node-28'] = node_28
-  node_28.dataset.mirrorId = 'node-28'
-  node_28.dataset.mirrorName = 'Label'
-  node_28.textContent = "Tätigkeit"
-  Object.assign(node_28.style, {
+  const node_26 = document.createElement('label')
+  _elements['node-26'] = node_26
+  node_26.dataset.mirrorId = 'node-26'
+  node_26.dataset.mirrorName = 'Label'
+  node_26.textContent = "Tätigkeit"
+  Object.assign(node_26.style, {
     'color': 'var(--text-secondary-col)',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_28.dataset.component = 'Label'
-  node_28.dataset.slot = 'Label'
-  node_27.appendChild(node_28)
+  node_26.dataset.component = 'Label'
+  node_26.dataset.slot = 'Label'
+  node_25.appendChild(node_26)
   
   // FormInput
-  const node_29 = document.createElement('input')
-  _elements['node-29'] = node_29
-  node_29.dataset.mirrorId = 'node-29'
-  node_29.dataset.mirrorName = 'FormInput'
-  node_29.setAttribute('placeholder', "Was wurde gemacht?")
-  Object.assign(node_29.style, {
+  const node_27 = document.createElement('input')
+  _elements['node-27'] = node_27
+  node_27.dataset.mirrorId = 'node-27'
+  node_27.dataset.mirrorName = 'FormInput'
+  node_27.setAttribute('placeholder', "Was wurde gemacht?")
+  Object.assign(node_27.style, {
     'height': '36px',
     'flex-shrink': '0',
     'padding': 'var(--space-sm-pad) var(--space-md-pad)',
@@ -1182,52 +1140,66 @@ export function createUI(data = {}) {
     'font-size': 'var(--fs-md-fs)',
     'transition': 'border-color 150ms ease',
   })
-  node_29.dataset.bind = 'newTask'
-  node_29.dataset.component = 'FormInput'
+  node_27.dataset.bind = 'newTask'
+  node_27.dataset.component = 'FormInput'
   // Two-way data binding: newTask
-  node_29.value = $get("newTask") ?? ""
-  node_29.addEventListener('input', (e) => {
+  node_27.value = $get("newTask") ?? ""
+  node_27.addEventListener('input', (e) => {
     $set("newTask", e.target.value)
   })
-  _runtime.bindValue(node_29, "newTask")
-  node_27.appendChild(node_29)
+  _runtime.bindValue(node_27, "newTask")
+  node_25.appendChild(node_27)
   
-  node_17.appendChild(node_27)
+  node_14.appendChild(node_25)
   
+  // Frame
+  const node_28 = document.createElement('div')
+  _elements['node-28'] = node_28
+  node_28.dataset.mirrorId = 'node-28'
+  node_28.dataset.mirrorName = 'Frame'
+  Object.assign(node_28.style, {
+    'display': 'flex',
+    'flex-direction': 'row',
+    'align-self': 'stretch',
+    'align-items': 'center',
+    'gap': 'var(--gap-lg-gap)',
+  })
+  node_28.dataset.layout = 'flex'
+  node_28.dataset.component = 'Frame'
   // FormField
-  const node_30 = document.createElement('div')
-  _elements['node-30'] = node_30
-  node_30.dataset.mirrorId = 'node-30'
-  node_30.dataset.mirrorName = 'FormField'
-  Object.assign(node_30.style, {
+  const node_29 = document.createElement('div')
+  _elements['node-29'] = node_29
+  node_29.dataset.mirrorId = 'node-29'
+  node_29.dataset.mirrorName = 'FormField'
+  Object.assign(node_29.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
     'gap': 'var(--gap-xs-gap)',
   })
-  node_30.dataset.component = 'FormField'
+  node_29.dataset.component = 'FormField'
   // Label
-  const node_31 = document.createElement('label')
-  _elements['node-31'] = node_31
-  node_31.dataset.mirrorId = 'node-31'
-  node_31.dataset.mirrorName = 'Label'
-  node_31.textContent = "Stunden"
-  Object.assign(node_31.style, {
+  const node_30 = document.createElement('label')
+  _elements['node-30'] = node_30
+  node_30.dataset.mirrorId = 'node-30'
+  node_30.dataset.mirrorName = 'Label'
+  node_30.textContent = "Stunden"
+  Object.assign(node_30.style, {
     'color': 'var(--text-secondary-col)',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_31.dataset.component = 'Label'
-  node_31.dataset.slot = 'Label'
-  node_30.appendChild(node_31)
+  node_30.dataset.component = 'Label'
+  node_30.dataset.slot = 'Label'
+  node_29.appendChild(node_30)
   
   // FormInput
-  const node_32 = document.createElement('input')
-  _elements['node-32'] = node_32
-  node_32.dataset.mirrorId = 'node-32'
-  node_32.dataset.mirrorName = 'FormInput'
-  node_32.setAttribute('type', "number")
-  Object.assign(node_32.style, {
+  const node_31 = document.createElement('input')
+  _elements['node-31'] = node_31
+  node_31.dataset.mirrorId = 'node-31'
+  node_31.dataset.mirrorName = 'FormInput'
+  node_31.setAttribute('type', "number")
+  Object.assign(node_31.style, {
     'height': '36px',
     'flex-shrink': '0',
     'padding': 'var(--space-sm-pad) var(--space-md-pad)',
@@ -1241,103 +1213,108 @@ export function createUI(data = {}) {
     'font-size': 'var(--fs-md-fs)',
     'transition': 'border-color 150ms ease',
   })
-  node_32.dataset.bind = 'newHours'
-  node_32.dataset.component = 'FormInput'
+  node_31.dataset.bind = 'newHours'
+  node_31.dataset.component = 'FormInput'
   // Two-way data binding: newHours
-  node_32.value = $get("newHours") ?? ""
-  node_32.addEventListener('input', (e) => {
+  node_31.value = $get("newHours") ?? ""
+  node_31.addEventListener('input', (e) => {
     $set("newHours", e.target.value)
   })
-  _runtime.bindValue(node_32, "newHours")
-  node_30.appendChild(node_32)
+  _runtime.bindValue(node_31, "newHours")
+  node_29.appendChild(node_31)
   
-  node_17.appendChild(node_30)
+  node_28.appendChild(node_29)
   
   // Checkbox Component
-  const node_33 = document.createElement('label')
-  _elements['node-33'] = node_33
-  node_33.dataset.mirrorId = 'node-33'
-  node_33.dataset.zagComponent = 'checkbox'
-  node_33.dataset.mirrorName = 'Checkbox'
-  node_33._zagConfig = {
+  const node_32 = document.createElement('label')
+  _elements['node-32'] = node_32
+  node_32.dataset.mirrorId = 'node-32'
+  node_32.dataset.zagComponent = 'checkbox'
+  node_32.dataset.mirrorName = 'Checkbox'
+  node_32._zagConfig = {
     type: 'checkbox',
-    id: 'node-33',
-    machineConfig: {"id":"node-33","checked":true},
+    id: 'node-32',
+    machineConfig: {"id":"node-32","label":"Verrechenbar","checked":true},
   }
   
   // HiddenInput (form submission)
-  const node_33_hiddenInput = document.createElement('input')
-  node_33_hiddenInput.type = 'checkbox'
-  node_33_hiddenInput.dataset.slot = 'HiddenInput'
-  node_33_hiddenInput.style.position = 'absolute'
-  node_33_hiddenInput.style.width = '1px'
-  node_33_hiddenInput.style.height = '1px'
-  node_33_hiddenInput.style.padding = '0'
-  node_33_hiddenInput.style.margin = '-1px'
-  node_33_hiddenInput.style.overflow = 'hidden'
-  node_33_hiddenInput.style.clip = 'rect(0, 0, 0, 0)'
-  node_33_hiddenInput.style.whiteSpace = 'nowrap'
-  node_33_hiddenInput.style.border = '0'
-  node_33.appendChild(node_33_hiddenInput)
+  const node_32_hiddenInput = document.createElement('input')
+  node_32_hiddenInput.type = 'checkbox'
+  node_32_hiddenInput.dataset.slot = 'HiddenInput'
+  node_32_hiddenInput.style.position = 'absolute'
+  node_32_hiddenInput.style.width = '1px'
+  node_32_hiddenInput.style.height = '1px'
+  node_32_hiddenInput.style.padding = '0'
+  node_32_hiddenInput.style.margin = '-1px'
+  node_32_hiddenInput.style.overflow = 'hidden'
+  node_32_hiddenInput.style.clip = 'rect(0, 0, 0, 0)'
+  node_32_hiddenInput.style.whiteSpace = 'nowrap'
+  node_32_hiddenInput.style.border = '0'
+  node_32.appendChild(node_32_hiddenInput)
   
   // Control (visual checkbox)
-  const node_33_control = document.createElement('div')
-  node_33_control.dataset.slot = 'Control'
-  node_33.appendChild(node_33_control)
+  const node_32_control = document.createElement('div')
+  node_32_control.dataset.slot = 'Control'
+  node_32.appendChild(node_32_control)
   
   // Indicator (checkmark)
-  const node_33_indicator = document.createElement('span')
-  node_33_indicator.dataset.slot = 'Indicator'
-  node_33_indicator.dataset.icon = 'check'
-  node_33_control.appendChild(node_33_indicator)
+  const node_32_indicator = document.createElement('span')
+  node_32_indicator.dataset.slot = 'Indicator'
+  node_32_indicator.dataset.icon = 'check'
+  node_32_control.appendChild(node_32_indicator)
   
-  node_17.appendChild(node_33)
+  // Label
+  const node_32_label = document.createElement('span')
+  node_32_label.dataset.slot = 'Label'
+  node_32_label.textContent = 'Verrechenbar'
+  node_32.appendChild(node_32_label)
+  
+  node_28.appendChild(node_32)
   
   // Initialize Checkbox
   if (typeof _runtime !== 'undefined' && _runtime.initCheckboxComponent) {
-    _runtime.initCheckboxComponent(node_33)
+    _runtime.initCheckboxComponent(node_32)
   }
   
-  node_12.appendChild(node_17)
+  node_14.appendChild(node_28)
+  
+  node_12.appendChild(node_14)
   
   // Frame
-  const node_34 = document.createElement('div')
-  _elements['node-34'] = node_34
-  node_34.dataset.mirrorId = 'node-34'
-  node_34.dataset.mirrorName = 'Frame'
-  Object.assign(node_34.style, {
+  const node_33 = document.createElement('div')
+  _elements['node-33'] = node_33
+  node_33.dataset.mirrorId = 'node-33'
+  node_33.dataset.mirrorName = 'Frame'
+  Object.assign(node_33.style, {
     'display': 'flex',
     'flex-direction': 'row',
     'align-self': 'stretch',
     'justify-content': 'flex-end',
     'align-items': 'flex-start',
-    'gap': 'var(--gap-lg-gap)',
-    'border-top': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-    'padding': 'var(--gap-xl-pad) 0px 0px 0px',
+    'gap': 'var(--gap-md-gap)',
   })
-  node_34.dataset.layout = 'flex'
-  node_34.dataset.component = 'Frame'
+  node_33.dataset.layout = 'flex'
+  node_33.dataset.component = 'Frame'
   // CloseTrigger
-  const node_35 = document.createElement('div')
-  _elements['node-35'] = node_35
-  node_35.dataset.mirrorId = 'node-35'
-  node_35.dataset.mirrorName = 'CloseTrigger'
-  Object.assign(node_35.style, {
+  const node_34 = document.createElement('div')
+  _elements['node-34'] = node_34
+  node_34.dataset.mirrorId = 'node-34'
+  node_34.dataset.mirrorName = 'CloseTrigger'
+  Object.assign(node_34.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
   })
-  node_35.dataset.component = 'CloseTrigger'
-  node_35.dataset.slot = 'CloseTrigger'
+  node_34.dataset.component = 'CloseTrigger'
+  node_34.dataset.slot = 'CloseTrigger'
   // BtnSecondary
-  const node_36 = document.createElement('button')
-  _elements['node-36'] = node_36
-  node_36.dataset.mirrorId = 'node-36'
-  node_36.dataset.mirrorName = 'BtnSecondary'
-  node_36.textContent = "Abbrechen"
-  Object.assign(node_36.style, {
+  const node_35 = document.createElement('button')
+  _elements['node-35'] = node_35
+  node_35.dataset.mirrorId = 'node-35'
+  node_35.dataset.mirrorName = 'BtnSecondary'
+  node_35.textContent = "Abbrechen"
+  Object.assign(node_35.style, {
     'height': '36px',
     'flex-shrink': '0',
     'padding': 'var(--space-sm-pad) var(--space-md-pad)',
@@ -1350,18 +1327,18 @@ export function createUI(data = {}) {
     'font-weight': '500',
     'transition': 'background 150ms ease, color 150ms ease',
   })
-  node_36.dataset.component = 'BtnSecondary'
-  node_35.appendChild(node_36)
-  
+  node_35.dataset.component = 'BtnSecondary'
   node_34.appendChild(node_35)
   
+  node_33.appendChild(node_34)
+  
   // BtnPrimary
-  const node_37 = document.createElement('button')
-  _elements['node-37'] = node_37
-  node_37.dataset.mirrorId = 'node-37'
-  node_37.dataset.mirrorName = 'BtnPrimary'
-  node_37.textContent = "Speichern"
-  Object.assign(node_37.style, {
+  const node_36 = document.createElement('button')
+  _elements['node-36'] = node_36
+  node_36.dataset.mirrorId = 'node-36'
+  node_36.dataset.mirrorName = 'BtnPrimary'
+  node_36.textContent = "Speichern"
+  Object.assign(node_36.style, {
     'height': '36px',
     'flex-shrink': '0',
     'padding': 'var(--space-sm-pad) var(--space-md-pad)',
@@ -1374,15 +1351,42 @@ export function createUI(data = {}) {
     'font-weight': '500',
     'transition': 'background 150ms ease',
   })
-  node_37.dataset.component = 'BtnPrimary'
-  node_37.addEventListener('click', (e) => {
+  node_36.dataset.component = 'BtnPrimary'
+  node_36.addEventListener('click', (e) => {
     _runtime.add('entries', { date: $get('newDate'), project: $get('newProject'), client: $get('newClient'), task: $get('newTask'), hours: $get('newHours'), billable: $get('newBillable') })
   })
-  node_34.appendChild(node_37)
+  node_33.appendChild(node_36)
   
-  node_12.appendChild(node_34)
+  node_12.appendChild(node_33)
   
   node_10_content.appendChild(node_12)
+  
+  // Close icon (auto-generated via closeIcon prop)
+  node_12.style.position = 'relative'
+  const node_10_closeIcon = document.createElement('button')
+  node_10_closeIcon.type = 'button'
+  node_10_closeIcon.dataset.slot = 'CloseTrigger'
+  node_10_closeIcon.setAttribute('aria-label', 'Close')
+  Object.assign(node_10_closeIcon.style, {
+    'position': 'absolute',
+    'top': '12px',
+    'right': '12px',
+    'width': '28px',
+    'height': '28px',
+    'display': 'flex',
+    'align-items': 'center',
+    'justify-content': 'center',
+    'border': 'none',
+    'background': 'transparent',
+    'border-radius': '4px',
+    'cursor': 'pointer',
+    'transition': 'background 0.15s',
+    'z-index': '1',
+  })
+  node_10_closeIcon.onmouseenter = () => node_10_closeIcon.style.background = 'rgba(255,255,255,0.1)'
+  node_10_closeIcon.onmouseleave = () => node_10_closeIcon.style.background = 'transparent'
+  node_10_closeIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+  node_12.appendChild(node_10_closeIcon)
   
   node_8.appendChild(node_10)
   
@@ -1396,11 +1400,11 @@ export function createUI(data = {}) {
   node_2.appendChild(node_3)
   
   // Frame
-  const node_38 = document.createElement('div')
-  _elements['node-38'] = node_38
-  node_38.dataset.mirrorId = 'node-38'
-  node_38.dataset.mirrorName = 'Frame'
-  Object.assign(node_38.style, {
+  const node_37 = document.createElement('div')
+  _elements['node-37'] = node_37
+  node_37.dataset.mirrorId = 'node-37'
+  node_37.dataset.mirrorName = 'Frame'
+  Object.assign(node_37.style, {
     'display': 'flex',
     'flex-direction': 'row',
     'align-self': 'stretch',
@@ -1408,15 +1412,15 @@ export function createUI(data = {}) {
     'flex-wrap': 'wrap',
     'gap': 'var(--gap-xl-gap)',
   })
-  node_38.style.containerType = 'inline-size'
-  node_38.dataset.layout = 'flex'
-  node_38.dataset.component = 'Frame'
+  node_37.style.containerType = 'inline-size'
+  node_37.dataset.layout = 'flex'
+  node_37.dataset.component = 'Frame'
   // StatCard
-  const node_39 = document.createElement('div')
-  _elements['node-39'] = node_39
-  node_39.dataset.mirrorId = 'node-39'
-  node_39.dataset.mirrorName = 'StatCard'
-  Object.assign(node_39.style, {
+  const node_38 = document.createElement('div')
+  _elements['node-38'] = node_38
+  node_38.dataset.mirrorId = 'node-38'
+  node_38.dataset.mirrorName = 'StatCard'
+  Object.assign(node_38.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1431,30 +1435,30 @@ export function createUI(data = {}) {
     'cursor': 'pointer',
     'transition': 'background 200ms ease',
   })
-  node_39.style.containerType = 'inline-size'
-  node_39.dataset.component = 'StatCard'
+  node_38.style.containerType = 'inline-size'
+  node_38.dataset.component = 'StatCard'
   // Label
-  const node_40 = document.createElement('label')
-  _elements['node-40'] = node_40
-  node_40.dataset.mirrorId = 'node-40'
-  node_40.dataset.mirrorName = 'Label'
-  node_40.textContent = "Stunden Monat"
-  Object.assign(node_40.style, {
+  const node_39 = document.createElement('label')
+  _elements['node-39'] = node_39
+  node_39.dataset.mirrorId = 'node-39'
+  node_39.dataset.mirrorName = 'Label'
+  node_39.textContent = "Stunden Monat"
+  Object.assign(node_39.style, {
     'color': 'var(--text-muted-col)',
     'font-size': 'var(--fs-sm-fs)',
     'text-transform': 'uppercase',
   })
-  node_40.dataset.component = 'Label'
-  node_40.dataset.slot = 'Label'
-  node_39.appendChild(node_40)
+  node_39.dataset.component = 'Label'
+  node_39.dataset.slot = 'Label'
+  node_38.appendChild(node_39)
   
   // Value
-  const node_41 = document.createElement('div')
-  _elements['node-41'] = node_41
-  node_41.dataset.mirrorId = 'node-41'
-  node_41.dataset.mirrorName = 'Value'
-  node_41.textContent = "168.5"
-  Object.assign(node_41.style, {
+  const node_40 = document.createElement('div')
+  _elements['node-40'] = node_40
+  node_40.dataset.mirrorId = 'node-40'
+  node_40.dataset.mirrorName = 'Value'
+  node_40.textContent = "168.5"
+  Object.assign(node_40.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1463,15 +1467,15 @@ export function createUI(data = {}) {
     'font-size': 'var(--fs-2xl-fs)',
     'font-weight': '600',
   })
-  node_41.dataset.component = 'Value'
-  node_39.appendChild(node_41)
+  node_40.dataset.component = 'Value'
+  node_38.appendChild(node_40)
   
   // Sub
-  const node_42 = document.createElement('div')
-  _elements['node-42'] = node_42
-  node_42.dataset.mirrorId = 'node-42'
-  node_42.dataset.mirrorName = 'Sub'
-  Object.assign(node_42.style, {
+  const node_41 = document.createElement('div')
+  _elements['node-41'] = node_41
+  node_41.dataset.mirrorId = 'node-41'
+  node_41.dataset.mirrorName = 'Sub'
+  Object.assign(node_41.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1479,15 +1483,15 @@ export function createUI(data = {}) {
     'color': 'var(--text-secondary-col)',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_42.dataset.component = 'Sub'
-  node_39.appendChild(node_42)
+  node_41.dataset.component = 'Sub'
+  node_38.appendChild(node_41)
   
   // SubSuccess
-  const node_43 = document.createElement('div')
-  _elements['node-43'] = node_43
-  node_43.dataset.mirrorId = 'node-43'
-  node_43.dataset.mirrorName = 'SubSuccess'
-  Object.assign(node_43.style, {
+  const node_42 = document.createElement('div')
+  _elements['node-42'] = node_42
+  node_42.dataset.mirrorId = 'node-42'
+  node_42.dataset.mirrorName = 'SubSuccess'
+  Object.assign(node_42.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1495,29 +1499,29 @@ export function createUI(data = {}) {
     'color': '$success',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_43.dataset.component = 'SubSuccess'
-  node_39.appendChild(node_43)
+  node_42.dataset.component = 'SubSuccess'
+  node_38.appendChild(node_42)
   
   // Frame
-  const node_44 = document.createElement('div')
-  _elements['node-44'] = node_44
-  node_44.dataset.mirrorId = 'node-44'
-  node_44.dataset.mirrorName = 'Frame'
-  Object.assign(node_44.style, {
+  const node_43 = document.createElement('div')
+  _elements['node-43'] = node_43
+  node_43.dataset.mirrorId = 'node-43'
+  node_43.dataset.mirrorName = 'Frame'
+  Object.assign(node_43.style, {
     'display': 'flex',
     'flex-direction': 'row',
     'align-self': 'stretch',
     'align-items': 'center',
     'gap': 'var(--gap-sm-gap)',
   })
-  node_44.dataset.layout = 'flex'
-  node_44.dataset.component = 'Frame'
+  node_43.dataset.layout = 'flex'
+  node_43.dataset.component = 'Frame'
   // Frame
-  const node_45 = document.createElement('div')
-  _elements['node-45'] = node_45
-  node_45.dataset.mirrorId = 'node-45'
-  node_45.dataset.mirrorName = 'Frame'
-  Object.assign(node_45.style, {
+  const node_44 = document.createElement('div')
+  _elements['node-44'] = node_44
+  node_44.dataset.mirrorId = 'node-44'
+  node_44.dataset.mirrorName = 'Frame'
+  Object.assign(node_44.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
@@ -1528,13 +1532,13 @@ export function createUI(data = {}) {
     'background': 'var(--muted-bg)',
     'border-radius': 'var(--rad-sm-rad)',
   })
-  node_45.dataset.component = 'Frame'
+  node_44.dataset.component = 'Frame'
   // Frame
-  const node_46 = document.createElement('div')
-  _elements['node-46'] = node_46
-  node_46.dataset.mirrorId = 'node-46'
-  node_46.dataset.mirrorName = 'Frame'
-  Object.assign(node_46.style, {
+  const node_45 = document.createElement('div')
+  _elements['node-45'] = node_45
+  node_45.dataset.mirrorId = 'node-45'
+  node_45.dataset.mirrorName = 'Frame'
+  Object.assign(node_45.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
@@ -1545,34 +1549,34 @@ export function createUI(data = {}) {
     'background': 'var(--accent-bg)',
     'border-radius': 'var(--rad-sm-rad)',
   })
-  node_46.dataset.component = 'Frame'
-  node_45.appendChild(node_46)
-  
+  node_45.dataset.component = 'Frame'
   node_44.appendChild(node_45)
   
+  node_43.appendChild(node_44)
+  
   // Text
-  const node_47 = document.createElement('span')
-  _elements['node-47'] = node_47
-  node_47.dataset.mirrorId = 'node-47'
-  node_47.dataset.mirrorName = 'Text'
-  node_47.textContent = "von 176h"
-  Object.assign(node_47.style, {
+  const node_46 = document.createElement('span')
+  _elements['node-46'] = node_46
+  node_46.dataset.mirrorId = 'node-46'
+  node_46.dataset.mirrorName = 'Text'
+  node_46.textContent = "von 176h"
+  Object.assign(node_46.style, {
     'color': 'var(--text-secondary-col)',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_47.dataset.component = 'Text'
-  node_44.appendChild(node_47)
+  node_46.dataset.component = 'Text'
+  node_43.appendChild(node_46)
   
-  node_39.appendChild(node_44)
+  node_38.appendChild(node_43)
   
-  node_38.appendChild(node_39)
+  node_37.appendChild(node_38)
   
   // StatCard
-  const node_48 = document.createElement('div')
-  _elements['node-48'] = node_48
-  node_48.dataset.mirrorId = 'node-48'
-  node_48.dataset.mirrorName = 'StatCard'
-  Object.assign(node_48.style, {
+  const node_47 = document.createElement('div')
+  _elements['node-47'] = node_47
+  node_47.dataset.mirrorId = 'node-47'
+  node_47.dataset.mirrorName = 'StatCard'
+  Object.assign(node_47.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1587,86 +1591,86 @@ export function createUI(data = {}) {
     'cursor': 'pointer',
     'transition': 'background 200ms ease',
   })
-  node_48.style.containerType = 'inline-size'
-  node_48.dataset.component = 'StatCard'
+  node_47.style.containerType = 'inline-size'
+  node_47.dataset.component = 'StatCard'
   // Label
-  const node_49 = document.createElement('label')
-  _elements['node-49'] = node_49
-  node_49.dataset.mirrorId = 'node-49'
-  node_49.dataset.mirrorName = 'Label'
-  node_49.textContent = "Überstunden"
-  Object.assign(node_49.style, {
+  const node_48 = document.createElement('label')
+  _elements['node-48'] = node_48
+  node_48.dataset.mirrorId = 'node-48'
+  node_48.dataset.mirrorName = 'Label'
+  node_48.textContent = "Überstunden"
+  Object.assign(node_48.style, {
     'color': 'var(--text-muted-col)',
     'font-size': 'var(--fs-sm-fs)',
     'text-transform': 'uppercase',
   })
-  node_49.dataset.component = 'Label'
-  node_49.dataset.slot = 'Label'
-  node_48.appendChild(node_49)
+  node_48.dataset.component = 'Label'
+  node_48.dataset.slot = 'Label'
+  node_47.appendChild(node_48)
   
   // Value
+  const node_49 = document.createElement('div')
+  _elements['node-49'] = node_49
+  node_49.dataset.mirrorId = 'node-49'
+  node_49.dataset.mirrorName = 'Value'
+  node_49.textContent = "+12.5"
+  Object.assign(node_49.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'align-self': 'stretch',
+    'align-items': 'flex-start',
+    'color': 'var(--text-col)',
+    'font-size': 'var(--fs-2xl-fs)',
+    'font-weight': '600',
+  })
+  node_49.dataset.component = 'Value'
+  node_47.appendChild(node_49)
+  
+  // Sub
   const node_50 = document.createElement('div')
   _elements['node-50'] = node_50
   node_50.dataset.mirrorId = 'node-50'
-  node_50.dataset.mirrorName = 'Value'
-  node_50.textContent = "+12.5"
+  node_50.dataset.mirrorName = 'Sub'
+  node_50.textContent = "kumuliert"
   Object.assign(node_50.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'color': 'var(--text-col)',
-    'font-size': 'var(--fs-2xl-fs)',
-    'font-weight': '600',
+    'color': 'var(--text-secondary-col)',
+    'font-size': 'var(--fs-sm-fs)',
   })
-  node_50.dataset.component = 'Value'
-  node_48.appendChild(node_50)
+  node_50.dataset.component = 'Sub'
+  node_47.appendChild(node_50)
   
-  // Sub
+  // SubSuccess
   const node_51 = document.createElement('div')
   _elements['node-51'] = node_51
   node_51.dataset.mirrorId = 'node-51'
-  node_51.dataset.mirrorName = 'Sub'
-  node_51.textContent = "kumuliert"
+  node_51.dataset.mirrorName = 'SubSuccess'
   Object.assign(node_51.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'color': 'var(--text-secondary-col)',
+    'color': '$success',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_51.dataset.component = 'Sub'
-  node_48.appendChild(node_51)
+  node_51.dataset.component = 'SubSuccess'
+  node_47.appendChild(node_51)
   
-  // SubSuccess
+  node_37.appendChild(node_47)
+  
+  // StatCard
   const node_52 = document.createElement('div')
   _elements['node-52'] = node_52
   node_52.dataset.mirrorId = 'node-52'
-  node_52.dataset.mirrorName = 'SubSuccess'
+  node_52.dataset.mirrorName = 'StatCard'
   Object.assign(node_52.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'color': '$success',
-    'font-size': 'var(--fs-sm-fs)',
-  })
-  node_52.dataset.component = 'SubSuccess'
-  node_48.appendChild(node_52)
-  
-  node_38.appendChild(node_48)
-  
-  // StatCard
-  const node_53 = document.createElement('div')
-  _elements['node-53'] = node_53
-  node_53.dataset.mirrorId = 'node-53'
-  node_53.dataset.mirrorName = 'StatCard'
-  Object.assign(node_53.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
     'gap': 'var(--gap-sm-gap)',
     'background': 'var(--card-bg)',
     'padding': 'var(--space-lg-pad)',
@@ -1677,64 +1681,64 @@ export function createUI(data = {}) {
     'cursor': 'pointer',
     'transition': 'background 200ms ease',
   })
-  node_53.style.containerType = 'inline-size'
-  node_53.dataset.component = 'StatCard'
+  node_52.style.containerType = 'inline-size'
+  node_52.dataset.component = 'StatCard'
   // Label
-  const node_54 = document.createElement('label')
-  _elements['node-54'] = node_54
-  node_54.dataset.mirrorId = 'node-54'
-  node_54.dataset.mirrorName = 'Label'
-  node_54.textContent = "Resturlaub"
-  Object.assign(node_54.style, {
+  const node_53 = document.createElement('label')
+  _elements['node-53'] = node_53
+  node_53.dataset.mirrorId = 'node-53'
+  node_53.dataset.mirrorName = 'Label'
+  node_53.textContent = "Resturlaub"
+  Object.assign(node_53.style, {
     'color': 'var(--text-muted-col)',
     'font-size': 'var(--fs-sm-fs)',
     'text-transform': 'uppercase',
   })
-  node_54.dataset.component = 'Label'
-  node_54.dataset.slot = 'Label'
-  node_53.appendChild(node_54)
+  node_53.dataset.component = 'Label'
+  node_53.dataset.slot = 'Label'
+  node_52.appendChild(node_53)
   
   // Value
+  const node_54 = document.createElement('div')
+  _elements['node-54'] = node_54
+  node_54.dataset.mirrorId = 'node-54'
+  node_54.dataset.mirrorName = 'Value'
+  node_54.textContent = "11"
+  Object.assign(node_54.style, {
+    'display': 'flex',
+    'flex-direction': 'column',
+    'align-self': 'stretch',
+    'align-items': 'flex-start',
+    'color': 'var(--text-col)',
+    'font-size': 'var(--fs-2xl-fs)',
+    'font-weight': '600',
+  })
+  node_54.dataset.component = 'Value'
+  node_52.appendChild(node_54)
+  
+  // Sub
   const node_55 = document.createElement('div')
   _elements['node-55'] = node_55
   node_55.dataset.mirrorId = 'node-55'
-  node_55.dataset.mirrorName = 'Value'
-  node_55.textContent = "11"
+  node_55.dataset.mirrorName = 'Sub'
+  node_55.textContent = "von 18 Tagen"
   Object.assign(node_55.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'color': 'var(--text-col)',
-    'font-size': 'var(--fs-2xl-fs)',
-    'font-weight': '600',
-  })
-  node_55.dataset.component = 'Value'
-  node_53.appendChild(node_55)
-  
-  // Sub
-  const node_56 = document.createElement('div')
-  _elements['node-56'] = node_56
-  node_56.dataset.mirrorId = 'node-56'
-  node_56.dataset.mirrorName = 'Sub'
-  node_56.textContent = "von 18 Tagen"
-  Object.assign(node_56.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
     'color': 'var(--text-secondary-col)',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_56.dataset.component = 'Sub'
-  node_53.appendChild(node_56)
+  node_55.dataset.component = 'Sub'
+  node_52.appendChild(node_55)
   
   // SubSuccess
-  const node_57 = document.createElement('div')
-  _elements['node-57'] = node_57
-  node_57.dataset.mirrorId = 'node-57'
-  node_57.dataset.mirrorName = 'SubSuccess'
-  Object.assign(node_57.style, {
+  const node_56 = document.createElement('div')
+  _elements['node-56'] = node_56
+  node_56.dataset.mirrorId = 'node-56'
+  node_56.dataset.mirrorName = 'SubSuccess'
+  Object.assign(node_56.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1742,17 +1746,17 @@ export function createUI(data = {}) {
     'color': '$success',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_57.dataset.component = 'SubSuccess'
-  node_53.appendChild(node_57)
+  node_56.dataset.component = 'SubSuccess'
+  node_52.appendChild(node_56)
   
-  node_38.appendChild(node_53)
+  node_37.appendChild(node_52)
   
   // StatCard
-  const node_58 = document.createElement('div')
-  _elements['node-58'] = node_58
-  node_58.dataset.mirrorId = 'node-58'
-  node_58.dataset.mirrorName = 'StatCard'
-  Object.assign(node_58.style, {
+  const node_57 = document.createElement('div')
+  _elements['node-57'] = node_57
+  node_57.dataset.mirrorId = 'node-57'
+  node_57.dataset.mirrorName = 'StatCard'
+  Object.assign(node_57.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1767,30 +1771,30 @@ export function createUI(data = {}) {
     'cursor': 'pointer',
     'transition': 'background 200ms ease',
   })
-  node_58.style.containerType = 'inline-size'
-  node_58.dataset.component = 'StatCard'
+  node_57.style.containerType = 'inline-size'
+  node_57.dataset.component = 'StatCard'
   // Label
-  const node_59 = document.createElement('label')
-  _elements['node-59'] = node_59
-  node_59.dataset.mirrorId = 'node-59'
-  node_59.dataset.mirrorName = 'Label'
-  node_59.textContent = "Verrechenbar"
-  Object.assign(node_59.style, {
+  const node_58 = document.createElement('label')
+  _elements['node-58'] = node_58
+  node_58.dataset.mirrorId = 'node-58'
+  node_58.dataset.mirrorName = 'Label'
+  node_58.textContent = "Verrechenbar"
+  Object.assign(node_58.style, {
     'color': 'var(--text-muted-col)',
     'font-size': 'var(--fs-sm-fs)',
     'text-transform': 'uppercase',
   })
-  node_59.dataset.component = 'Label'
-  node_59.dataset.slot = 'Label'
-  node_58.appendChild(node_59)
+  node_58.dataset.component = 'Label'
+  node_58.dataset.slot = 'Label'
+  node_57.appendChild(node_58)
   
   // Value
-  const node_60 = document.createElement('div')
-  _elements['node-60'] = node_60
-  node_60.dataset.mirrorId = 'node-60'
-  node_60.dataset.mirrorName = 'Value'
-  node_60.textContent = "89%"
-  Object.assign(node_60.style, {
+  const node_59 = document.createElement('div')
+  _elements['node-59'] = node_59
+  node_59.dataset.mirrorId = 'node-59'
+  node_59.dataset.mirrorName = 'Value'
+  node_59.textContent = "89%"
+  Object.assign(node_59.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1799,16 +1803,16 @@ export function createUI(data = {}) {
     'font-size': 'var(--fs-2xl-fs)',
     'font-weight': '600',
   })
-  node_60.dataset.component = 'Value'
-  node_58.appendChild(node_60)
+  node_59.dataset.component = 'Value'
+  node_57.appendChild(node_59)
   
   // Sub
-  const node_61 = document.createElement('div')
-  _elements['node-61'] = node_61
-  node_61.dataset.mirrorId = 'node-61'
-  node_61.dataset.mirrorName = 'Sub'
-  node_61.textContent = "Ziel: 85%"
-  Object.assign(node_61.style, {
+  const node_60 = document.createElement('div')
+  _elements['node-60'] = node_60
+  node_60.dataset.mirrorId = 'node-60'
+  node_60.dataset.mirrorName = 'Sub'
+  node_60.textContent = "Ziel: 85%"
+  Object.assign(node_60.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1816,15 +1820,15 @@ export function createUI(data = {}) {
     'color': 'var(--text-secondary-col)',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_61.dataset.component = 'Sub'
-  node_58.appendChild(node_61)
+  node_60.dataset.component = 'Sub'
+  node_57.appendChild(node_60)
   
   // SubSuccess
-  const node_62 = document.createElement('div')
-  _elements['node-62'] = node_62
-  node_62.dataset.mirrorId = 'node-62'
-  node_62.dataset.mirrorName = 'SubSuccess'
-  Object.assign(node_62.style, {
+  const node_61 = document.createElement('div')
+  _elements['node-61'] = node_61
+  node_61.dataset.mirrorId = 'node-61'
+  node_61.dataset.mirrorName = 'SubSuccess'
+  Object.assign(node_61.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -1832,19 +1836,19 @@ export function createUI(data = {}) {
     'color': '$success',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_62.dataset.component = 'SubSuccess'
-  node_58.appendChild(node_62)
+  node_61.dataset.component = 'SubSuccess'
+  node_57.appendChild(node_61)
   
-  node_38.appendChild(node_58)
+  node_37.appendChild(node_57)
   
-  node_2.appendChild(node_38)
+  node_2.appendChild(node_37)
   
   // Frame
-  const node_63 = document.createElement('div')
-  _elements['node-63'] = node_63
-  node_63.dataset.mirrorId = 'node-63'
-  node_63.dataset.mirrorName = 'Frame'
-  Object.assign(node_63.style, {
+  const node_62 = document.createElement('div')
+  _elements['node-62'] = node_62
+  node_62.dataset.mirrorId = 'node-62'
+  node_62.dataset.mirrorName = 'Frame'
+  Object.assign(node_62.style, {
     'display': 'flex',
     'flex-direction': 'row',
     'align-self': 'stretch',
@@ -1855,24 +1859,159 @@ export function createUI(data = {}) {
     'padding': 'var(--space-md-pad)',
     'border-radius': 'var(--rad-lg-rad)',
   })
-  node_63.style.containerType = 'inline-size'
-  node_63.dataset.layout = 'flex'
-  node_63.dataset.component = 'Frame'
+  node_62.style.containerType = 'inline-size'
+  node_62.dataset.layout = 'flex'
+  node_62.dataset.component = 'Frame'
   // SectionLabel
-  const node_64 = document.createElement('span')
-  _elements['node-64'] = node_64
-  node_64.dataset.mirrorId = 'node-64'
-  node_64.dataset.mirrorName = 'SectionLabel'
-  node_64.textContent = "Filter:"
-  Object.assign(node_64.style, {
+  const node_63 = document.createElement('span')
+  _elements['node-63'] = node_63
+  node_63.dataset.mirrorId = 'node-63'
+  node_63.dataset.mirrorName = 'SectionLabel'
+  node_63.textContent = "Filter:"
+  Object.assign(node_63.style, {
     'color': 'var(--text-muted-col)',
     'font-size': 'var(--fs-sm-fs)',
     'text-transform': 'uppercase',
     'width': '36px',
     'flex-shrink': '0',
   })
-  node_64.dataset.component = 'SectionLabel'
-  node_63.appendChild(node_64)
+  node_63.dataset.component = 'SectionLabel'
+  node_62.appendChild(node_63)
+  
+  // Select Component: Select
+  const node_64 = document.createElement('div')
+  _elements['node-64'] = node_64
+  node_64.dataset.mirrorId = 'node-64'
+  node_64.dataset.zagComponent = 'select'
+  node_64.dataset.mirrorName = 'Select'
+  node_64._zagConfig = {
+    type: 'select',
+    id: 'node-64',
+    machineConfig: {"id":"node-64","placeholder":"Alle Projekte"},
+    items: [{"value":"","label":""},{"value":"","label":""},{"value":"","label":""},{"value":"","label":""},{"value":"","label":""}],
+  }
+  
+  // Trigger
+  const node_64_trigger = document.createElement('button')
+  node_64_trigger.type = 'button'
+  node_64_trigger.dataset.slot = 'Trigger'
+  node_64_trigger.setAttribute('role', 'combobox')
+  node_64_trigger.setAttribute('aria-haspopup', 'listbox')
+  node_64_trigger.setAttribute('aria-expanded', 'false')
+  node_64_trigger.setAttribute('data-styled', 'true')
+  Object.assign(node_64_trigger.style, {
+    'background': 'var(--card-alt-bg)',
+    'border': '1px solid currentColor',
+    'border-color': 'var(--border-boc)',
+    'color': 'var(--text-col)',
+    'padding': 'var(--space-sm-pad) var(--space-md-pad)',
+    'border-radius': 'var(--rad-md-rad)',
+    'font-size': 'var(--fs-md-fs)',
+  })
+  const node_64_trigger_text = document.createElement('span')
+  node_64_trigger_text.dataset.slot = 'TriggerText'
+  node_64_trigger_text.textContent = 'Alle Projekte'
+  node_64_trigger.appendChild(node_64_trigger_text)
+  const node_64_trigger_arrow = document.createElement('span')
+  node_64_trigger_arrow.dataset.slot = 'TriggerArrow'
+  node_64_trigger_arrow.dataset.icon = 'chevron-down'
+  node_64_trigger.appendChild(node_64_trigger_arrow)
+  node_64.appendChild(node_64_trigger)
+  
+  // Content (dropdown)
+  const node_64_content = document.createElement('div')
+  node_64_content.dataset.slot = 'Content'
+  node_64_content.setAttribute('role', 'listbox')
+  node_64_content.setAttribute('data-styled', 'true')
+  Object.assign(node_64_content.style, {
+    'background': 'var(--card-bg)',
+    'border': '1px solid currentColor',
+    'border-color': 'var(--border-boc)',
+    'border-radius': 'var(--rad-md-rad)',
+  })
+  
+  // Item: 
+  const node_64_item0 = document.createElement('div')
+  node_64_item0.dataset.slot = 'Item'
+  node_64_item0.dataset.value = ''
+  node_64_item0.setAttribute('role', 'option')
+  node_64_item0.dataset.icon = 'check'
+  const node_64_item0_text = document.createElement('span')
+  node_64_item0_text.dataset.slot = 'ItemText'
+  node_64_item0_text.textContent = ''
+  node_64_item0.appendChild(node_64_item0_text)
+  const node_64_item0_indicator = document.createElement('span')
+  node_64_item0_indicator.dataset.slot = 'ItemIndicator'
+  node_64_item0.appendChild(node_64_item0_indicator)
+  node_64_content.appendChild(node_64_item0)
+  
+  // Item: 
+  const node_64_item1 = document.createElement('div')
+  node_64_item1.dataset.slot = 'Item'
+  node_64_item1.dataset.value = ''
+  node_64_item1.setAttribute('role', 'option')
+  node_64_item1.dataset.icon = 'check'
+  const node_64_item1_text = document.createElement('span')
+  node_64_item1_text.dataset.slot = 'ItemText'
+  node_64_item1_text.textContent = ''
+  node_64_item1.appendChild(node_64_item1_text)
+  const node_64_item1_indicator = document.createElement('span')
+  node_64_item1_indicator.dataset.slot = 'ItemIndicator'
+  node_64_item1.appendChild(node_64_item1_indicator)
+  node_64_content.appendChild(node_64_item1)
+  
+  // Item: 
+  const node_64_item2 = document.createElement('div')
+  node_64_item2.dataset.slot = 'Item'
+  node_64_item2.dataset.value = ''
+  node_64_item2.setAttribute('role', 'option')
+  node_64_item2.dataset.icon = 'check'
+  const node_64_item2_text = document.createElement('span')
+  node_64_item2_text.dataset.slot = 'ItemText'
+  node_64_item2_text.textContent = ''
+  node_64_item2.appendChild(node_64_item2_text)
+  const node_64_item2_indicator = document.createElement('span')
+  node_64_item2_indicator.dataset.slot = 'ItemIndicator'
+  node_64_item2.appendChild(node_64_item2_indicator)
+  node_64_content.appendChild(node_64_item2)
+  
+  // Item: 
+  const node_64_item3 = document.createElement('div')
+  node_64_item3.dataset.slot = 'Item'
+  node_64_item3.dataset.value = ''
+  node_64_item3.setAttribute('role', 'option')
+  node_64_item3.dataset.icon = 'check'
+  const node_64_item3_text = document.createElement('span')
+  node_64_item3_text.dataset.slot = 'ItemText'
+  node_64_item3_text.textContent = ''
+  node_64_item3.appendChild(node_64_item3_text)
+  const node_64_item3_indicator = document.createElement('span')
+  node_64_item3_indicator.dataset.slot = 'ItemIndicator'
+  node_64_item3.appendChild(node_64_item3_indicator)
+  node_64_content.appendChild(node_64_item3)
+  
+  // Item: 
+  const node_64_item4 = document.createElement('div')
+  node_64_item4.dataset.slot = 'Item'
+  node_64_item4.dataset.value = ''
+  node_64_item4.setAttribute('role', 'option')
+  node_64_item4.dataset.icon = 'check'
+  const node_64_item4_text = document.createElement('span')
+  node_64_item4_text.dataset.slot = 'ItemText'
+  node_64_item4_text.textContent = ''
+  node_64_item4.appendChild(node_64_item4_text)
+  const node_64_item4_indicator = document.createElement('span')
+  node_64_item4_indicator.dataset.slot = 'ItemIndicator'
+  node_64_item4.appendChild(node_64_item4_indicator)
+  node_64_content.appendChild(node_64_item4)
+  
+  node_64.appendChild(node_64_content)
+  node_62.appendChild(node_64)
+  
+  // Initialize Select
+  if (typeof _runtime !== 'undefined' && _runtime.initSelectComponent) {
+    _runtime.initSelectComponent(node_64)
+  }
   
   // Select Component: Select
   const node_65 = document.createElement('div')
@@ -1883,8 +2022,8 @@ export function createUI(data = {}) {
   node_65._zagConfig = {
     type: 'select',
     id: 'node-65',
-    machineConfig: {"id":"node-65","placeholder":"Alle Projekte"},
-    items: [{"value":"","label":""},{"value":"","label":""},{"value":"","label":""},{"value":"","label":""},{"value":"","label":""}],
+    machineConfig: {"id":"node-65","placeholder":"Alle Kunden"},
+    items: [{"value":"","label":""},{"value":"","label":""},{"value":"","label":""},{"value":"","label":""}],
   }
   
   // Trigger
@@ -1906,7 +2045,7 @@ export function createUI(data = {}) {
   })
   const node_65_trigger_text = document.createElement('span')
   node_65_trigger_text.dataset.slot = 'TriggerText'
-  node_65_trigger_text.textContent = 'Alle Projekte'
+  node_65_trigger_text.textContent = 'Alle Kunden'
   node_65_trigger.appendChild(node_65_trigger_text)
   const node_65_trigger_arrow = document.createElement('span')
   node_65_trigger_arrow.dataset.slot = 'TriggerArrow'
@@ -1986,155 +2125,20 @@ export function createUI(data = {}) {
   node_65_item3.appendChild(node_65_item3_indicator)
   node_65_content.appendChild(node_65_item3)
   
-  // Item: 
-  const node_65_item4 = document.createElement('div')
-  node_65_item4.dataset.slot = 'Item'
-  node_65_item4.dataset.value = ''
-  node_65_item4.setAttribute('role', 'option')
-  node_65_item4.dataset.icon = 'check'
-  const node_65_item4_text = document.createElement('span')
-  node_65_item4_text.dataset.slot = 'ItemText'
-  node_65_item4_text.textContent = ''
-  node_65_item4.appendChild(node_65_item4_text)
-  const node_65_item4_indicator = document.createElement('span')
-  node_65_item4_indicator.dataset.slot = 'ItemIndicator'
-  node_65_item4.appendChild(node_65_item4_indicator)
-  node_65_content.appendChild(node_65_item4)
-  
   node_65.appendChild(node_65_content)
-  node_63.appendChild(node_65)
+  node_62.appendChild(node_65)
   
   // Initialize Select
   if (typeof _runtime !== 'undefined' && _runtime.initSelectComponent) {
     _runtime.initSelectComponent(node_65)
   }
   
-  // Select Component: Select
+  // Spacer
   const node_66 = document.createElement('div')
   _elements['node-66'] = node_66
   node_66.dataset.mirrorId = 'node-66'
-  node_66.dataset.zagComponent = 'select'
-  node_66.dataset.mirrorName = 'Select'
-  node_66._zagConfig = {
-    type: 'select',
-    id: 'node-66',
-    machineConfig: {"id":"node-66","placeholder":"Alle Kunden"},
-    items: [{"value":"","label":""},{"value":"","label":""},{"value":"","label":""},{"value":"","label":""}],
-  }
-  
-  // Trigger
-  const node_66_trigger = document.createElement('button')
-  node_66_trigger.type = 'button'
-  node_66_trigger.dataset.slot = 'Trigger'
-  node_66_trigger.setAttribute('role', 'combobox')
-  node_66_trigger.setAttribute('aria-haspopup', 'listbox')
-  node_66_trigger.setAttribute('aria-expanded', 'false')
-  node_66_trigger.setAttribute('data-styled', 'true')
-  Object.assign(node_66_trigger.style, {
-    'background': 'var(--card-alt-bg)',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-    'color': 'var(--text-col)',
-    'padding': 'var(--space-sm-pad) var(--space-md-pad)',
-    'border-radius': 'var(--rad-md-rad)',
-    'font-size': 'var(--fs-md-fs)',
-  })
-  const node_66_trigger_text = document.createElement('span')
-  node_66_trigger_text.dataset.slot = 'TriggerText'
-  node_66_trigger_text.textContent = 'Alle Kunden'
-  node_66_trigger.appendChild(node_66_trigger_text)
-  const node_66_trigger_arrow = document.createElement('span')
-  node_66_trigger_arrow.dataset.slot = 'TriggerArrow'
-  node_66_trigger_arrow.dataset.icon = 'chevron-down'
-  node_66_trigger.appendChild(node_66_trigger_arrow)
-  node_66.appendChild(node_66_trigger)
-  
-  // Content (dropdown)
-  const node_66_content = document.createElement('div')
-  node_66_content.dataset.slot = 'Content'
-  node_66_content.setAttribute('role', 'listbox')
-  node_66_content.setAttribute('data-styled', 'true')
-  Object.assign(node_66_content.style, {
-    'background': 'var(--card-bg)',
-    'border': '1px solid currentColor',
-    'border-color': 'var(--border-boc)',
-    'border-radius': 'var(--rad-md-rad)',
-  })
-  
-  // Item: 
-  const node_66_item0 = document.createElement('div')
-  node_66_item0.dataset.slot = 'Item'
-  node_66_item0.dataset.value = ''
-  node_66_item0.setAttribute('role', 'option')
-  node_66_item0.dataset.icon = 'check'
-  const node_66_item0_text = document.createElement('span')
-  node_66_item0_text.dataset.slot = 'ItemText'
-  node_66_item0_text.textContent = ''
-  node_66_item0.appendChild(node_66_item0_text)
-  const node_66_item0_indicator = document.createElement('span')
-  node_66_item0_indicator.dataset.slot = 'ItemIndicator'
-  node_66_item0.appendChild(node_66_item0_indicator)
-  node_66_content.appendChild(node_66_item0)
-  
-  // Item: 
-  const node_66_item1 = document.createElement('div')
-  node_66_item1.dataset.slot = 'Item'
-  node_66_item1.dataset.value = ''
-  node_66_item1.setAttribute('role', 'option')
-  node_66_item1.dataset.icon = 'check'
-  const node_66_item1_text = document.createElement('span')
-  node_66_item1_text.dataset.slot = 'ItemText'
-  node_66_item1_text.textContent = ''
-  node_66_item1.appendChild(node_66_item1_text)
-  const node_66_item1_indicator = document.createElement('span')
-  node_66_item1_indicator.dataset.slot = 'ItemIndicator'
-  node_66_item1.appendChild(node_66_item1_indicator)
-  node_66_content.appendChild(node_66_item1)
-  
-  // Item: 
-  const node_66_item2 = document.createElement('div')
-  node_66_item2.dataset.slot = 'Item'
-  node_66_item2.dataset.value = ''
-  node_66_item2.setAttribute('role', 'option')
-  node_66_item2.dataset.icon = 'check'
-  const node_66_item2_text = document.createElement('span')
-  node_66_item2_text.dataset.slot = 'ItemText'
-  node_66_item2_text.textContent = ''
-  node_66_item2.appendChild(node_66_item2_text)
-  const node_66_item2_indicator = document.createElement('span')
-  node_66_item2_indicator.dataset.slot = 'ItemIndicator'
-  node_66_item2.appendChild(node_66_item2_indicator)
-  node_66_content.appendChild(node_66_item2)
-  
-  // Item: 
-  const node_66_item3 = document.createElement('div')
-  node_66_item3.dataset.slot = 'Item'
-  node_66_item3.dataset.value = ''
-  node_66_item3.setAttribute('role', 'option')
-  node_66_item3.dataset.icon = 'check'
-  const node_66_item3_text = document.createElement('span')
-  node_66_item3_text.dataset.slot = 'ItemText'
-  node_66_item3_text.textContent = ''
-  node_66_item3.appendChild(node_66_item3_text)
-  const node_66_item3_indicator = document.createElement('span')
-  node_66_item3_indicator.dataset.slot = 'ItemIndicator'
-  node_66_item3.appendChild(node_66_item3_indicator)
-  node_66_content.appendChild(node_66_item3)
-  
-  node_66.appendChild(node_66_content)
-  node_63.appendChild(node_66)
-  
-  // Initialize Select
-  if (typeof _runtime !== 'undefined' && _runtime.initSelectComponent) {
-    _runtime.initSelectComponent(node_66)
-  }
-  
-  // Spacer
-  const node_67 = document.createElement('div')
-  _elements['node-67'] = node_67
-  node_67.dataset.mirrorId = 'node-67'
-  node_67.dataset.mirrorName = 'Spacer'
-  Object.assign(node_67.style, {
+  node_66.dataset.mirrorName = 'Spacer'
+  Object.assign(node_66.style, {
     'flex': '1 1 0%',
     'min-width': '0',
     'height': '100%',
@@ -2142,16 +2146,16 @@ export function createUI(data = {}) {
     'min-height': '0',
     'flex-grow': '1',
   })
-  node_67.dataset.component = 'Spacer'
-  node_63.appendChild(node_67)
+  node_66.dataset.component = 'Spacer'
+  node_62.appendChild(node_66)
   
   // SearchInput
-  const node_68 = document.createElement('input')
-  _elements['node-68'] = node_68
-  node_68.dataset.mirrorId = 'node-68'
-  node_68.dataset.mirrorName = 'SearchInput'
-  node_68.setAttribute('placeholder', "Suchen...")
-  Object.assign(node_68.style, {
+  const node_67 = document.createElement('input')
+  _elements['node-67'] = node_67
+  node_67.dataset.mirrorId = 'node-67'
+  node_67.dataset.mirrorName = 'SearchInput'
+  node_67.setAttribute('placeholder', "Suchen...")
+  Object.assign(node_67.style, {
     'height': '32px',
     'flex-shrink': '0',
     'padding': '0px var(--space-md-pad)',
@@ -2168,24 +2172,24 @@ export function createUI(data = {}) {
     'min-width': '120px',
     'transition': 'border-color 150ms ease',
   })
-  node_68.dataset.bind = 'searchQuery'
-  node_68.dataset.component = 'SearchInput'
+  node_67.dataset.bind = 'searchQuery'
+  node_67.dataset.component = 'SearchInput'
   // Two-way data binding: searchQuery
-  node_68.value = $get("searchQuery") ?? ""
-  node_68.addEventListener('input', (e) => {
+  node_67.value = $get("searchQuery") ?? ""
+  node_67.addEventListener('input', (e) => {
     $set("searchQuery", e.target.value)
   })
-  _runtime.bindValue(node_68, "searchQuery")
-  node_63.appendChild(node_68)
+  _runtime.bindValue(node_67, "searchQuery")
+  node_62.appendChild(node_67)
   
-  node_2.appendChild(node_63)
+  node_2.appendChild(node_62)
   
   // Frame
-  const node_69 = document.createElement('div')
-  _elements['node-69'] = node_69
-  node_69.dataset.mirrorId = 'node-69'
-  node_69.dataset.mirrorName = 'Frame'
-  Object.assign(node_69.style, {
+  const node_68 = document.createElement('div')
+  _elements['node-68'] = node_68
+  node_68.dataset.mirrorId = 'node-68'
+  node_68.dataset.mirrorName = 'Frame'
+  Object.assign(node_68.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
@@ -2194,13 +2198,13 @@ export function createUI(data = {}) {
     'border-radius': 'var(--rad-lg-rad)',
     'overflow': 'hidden',
   })
-  node_69.dataset.component = 'Frame'
+  node_68.dataset.component = 'Frame'
   // TableHeader
-  const node_70 = document.createElement('div')
-  _elements['node-70'] = node_70
-  node_70.dataset.mirrorId = 'node-70'
-  node_70.dataset.mirrorName = 'TableHeader'
-  Object.assign(node_70.style, {
+  const node_69 = document.createElement('div')
+  _elements['node-69'] = node_69
+  node_69.dataset.mirrorId = 'node-69'
+  node_69.dataset.mirrorName = 'TableHeader'
+  Object.assign(node_69.style, {
     'display': 'flex',
     'flex-direction': 'row',
     'align-self': 'stretch',
@@ -2210,77 +2214,77 @@ export function createUI(data = {}) {
     'background': 'var(--card-alt-bg)',
     'border-radius': 'var(--rad-md-rad)',
   })
-  node_70.dataset.layout = 'flex'
-  node_70.dataset.component = 'TableHeader'
+  node_69.dataset.layout = 'flex'
+  node_69.dataset.component = 'TableHeader'
   // HeaderCell
-  const node_71 = document.createElement('span')
-  _elements['node-71'] = node_71
-  node_71.dataset.mirrorId = 'node-71'
-  node_71.dataset.mirrorName = 'HeaderCell'
-  node_71.textContent = "Datum"
-  Object.assign(node_71.style, {
+  const node_70 = document.createElement('span')
+  _elements['node-70'] = node_70
+  node_70.dataset.mirrorId = 'node-70'
+  node_70.dataset.mirrorName = 'HeaderCell'
+  node_70.textContent = "Datum"
+  Object.assign(node_70.style, {
     'color': 'var(--text-muted-col)',
     'font-size': 'var(--fs-sm-fs)',
     'text-transform': 'uppercase',
     'width': 'var(--col-date-w)',
   })
+  node_70.dataset.component = 'HeaderCell'
+  node_69.appendChild(node_70)
+  
+  // HeaderCell
+  const node_71 = document.createElement('span')
+  _elements['node-71'] = node_71
+  node_71.dataset.mirrorId = 'node-71'
+  node_71.dataset.mirrorName = 'HeaderCell'
+  node_71.textContent = "Projekt"
+  Object.assign(node_71.style, {
+    'color': 'var(--text-muted-col)',
+    'font-size': 'var(--fs-sm-fs)',
+    'text-transform': 'uppercase',
+    'width': 'var(--col-project-w)',
+  })
   node_71.dataset.component = 'HeaderCell'
-  node_70.appendChild(node_71)
+  node_69.appendChild(node_71)
   
   // HeaderCell
   const node_72 = document.createElement('span')
   _elements['node-72'] = node_72
   node_72.dataset.mirrorId = 'node-72'
   node_72.dataset.mirrorName = 'HeaderCell'
-  node_72.textContent = "Projekt"
+  node_72.textContent = "Kunde"
   Object.assign(node_72.style, {
     'color': 'var(--text-muted-col)',
     'font-size': 'var(--fs-sm-fs)',
     'text-transform': 'uppercase',
-    'width': 'var(--col-project-w)',
+    'width': 'var(--col-client-w)',
   })
+  node_72.style.containerType = 'inline-size'
   node_72.dataset.component = 'HeaderCell'
-  node_70.appendChild(node_72)
+  node_69.appendChild(node_72)
   
   // HeaderCell
   const node_73 = document.createElement('span')
   _elements['node-73'] = node_73
   node_73.dataset.mirrorId = 'node-73'
   node_73.dataset.mirrorName = 'HeaderCell'
-  node_73.textContent = "Kunde"
+  node_73.textContent = "Tätigkeit"
   Object.assign(node_73.style, {
-    'color': 'var(--text-muted-col)',
-    'font-size': 'var(--fs-sm-fs)',
-    'text-transform': 'uppercase',
-    'width': 'var(--col-client-w)',
-  })
-  node_73.style.containerType = 'inline-size'
-  node_73.dataset.component = 'HeaderCell'
-  node_70.appendChild(node_73)
-  
-  // HeaderCell
-  const node_74 = document.createElement('span')
-  _elements['node-74'] = node_74
-  node_74.dataset.mirrorId = 'node-74'
-  node_74.dataset.mirrorName = 'HeaderCell'
-  node_74.textContent = "Tätigkeit"
-  Object.assign(node_74.style, {
     'color': 'var(--text-muted-col)',
     'font-size': 'var(--fs-sm-fs)',
     'text-transform': 'uppercase',
     'width': 'var(--col-task-w)',
     'flex-grow': '1',
   })
-  node_74.dataset.component = 'HeaderCell'
-  node_70.appendChild(node_74)
+  node_73.dataset.component = 'HeaderCell'
+  node_69.appendChild(node_73)
   
   // HeaderCell
-  const node_75 = document.createElement('span')
-  _elements['node-75'] = node_75
-  node_75.dataset.mirrorId = 'node-75'
-  node_75.dataset.mirrorName = 'HeaderCell'
-  node_75.textContent = "Stunden"
-  Object.assign(node_75.style, {
+  const node_74 = document.createElement('span')
+  _elements['node-74'] = node_74
+  node_74.dataset.mirrorId = 'node-74'
+  node_74.dataset.mirrorName = 'HeaderCell'
+  node_74.textContent = "Stunden"
+  Object.assign(node_74.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-end',
@@ -2289,31 +2293,31 @@ export function createUI(data = {}) {
     'text-transform': 'uppercase',
     'width': 'var(--col-hours-w)',
   })
-  node_75.dataset.component = 'HeaderCell'
-  node_70.appendChild(node_75)
+  node_74.dataset.component = 'HeaderCell'
+  node_69.appendChild(node_74)
   
   // Frame
-  const node_76 = document.createElement('div')
-  _elements['node-76'] = node_76
-  node_76.dataset.mirrorId = 'node-76'
-  node_76.dataset.mirrorName = 'Frame'
-  Object.assign(node_76.style, {
+  const node_75 = document.createElement('div')
+  _elements['node-75'] = node_75
+  node_75.dataset.mirrorId = 'node-75'
+  node_75.dataset.mirrorName = 'Frame'
+  Object.assign(node_75.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
     'width': 'var(--col-status-w)',
   })
-  node_76.dataset.component = 'Frame'
+  node_75.dataset.component = 'Frame'
   // Icon
-  const node_77 = document.createElement('span')
-  _elements['node-77'] = node_77
-  node_77.dataset.mirrorId = 'node-77'
-  node_77.dataset.mirrorName = 'Icon'
-  node_77.setAttribute('data-icon-color', "var(--text-muted-ic)")
-  node_77.setAttribute('data-icon-size', "var(--icon-sm-is)")
+  const node_76 = document.createElement('span')
+  _elements['node-76'] = node_76
+  node_76.dataset.mirrorId = 'node-76'
+  node_76.dataset.mirrorName = 'Icon'
+  node_76.setAttribute('data-icon-color', "var(--text-muted-ic)")
+  node_76.setAttribute('data-icon-size', "var(--icon-sm-is)")
   // Icon default styles
-  Object.assign(node_77.style, {
+  Object.assign(node_76.style, {
     'display': 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
@@ -2321,40 +2325,40 @@ export function createUI(data = {}) {
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_77, "receipt")
-  Object.assign(node_77.style, {
+  _runtime.loadIcon(node_76, "receipt")
+  Object.assign(node_76.style, {
     'width': '20px',
     'flex-shrink': '0',
     'height': '20px',
     'flex-shrink': '0',
   })
-  node_77.dataset.component = 'Icon'
-  node_76.appendChild(node_77)
+  node_76.dataset.component = 'Icon'
+  node_75.appendChild(node_76)
   
-  node_70.appendChild(node_76)
+  node_69.appendChild(node_75)
   
-  node_69.appendChild(node_70)
+  node_68.appendChild(node_69)
   
   // Frame
-  const node_78 = document.createElement('div')
-  _elements['node-78'] = node_78
-  node_78.dataset.mirrorId = 'node-78'
-  node_78.dataset.mirrorName = 'Frame'
-  Object.assign(node_78.style, {
+  const node_77 = document.createElement('div')
+  _elements['node-77'] = node_77
+  node_77.dataset.mirrorId = 'node-77'
+  node_77.dataset.mirrorName = 'Frame'
+  Object.assign(node_77.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
     'gap': '0px',
   })
-  node_78.dataset.component = 'Frame'
+  node_77.dataset.component = 'Frame'
   // Each loop: entry in entries
-  const node_79_container = document.createElement('div')
-  node_79_container.dataset.eachContainer = 'node-79'
-  node_79_container.style.display = 'contents';
+  const node_78_container = document.createElement('div')
+  node_78_container.dataset.eachContainer = 'node-78'
+  node_78_container.style.display = 'contents';
   
-  _elements['node-79'] = node_79_container
-  node_79_container._eachConfig = {
+  _elements['node-78'] = node_78_container
+  node_78_container._eachConfig = {
     itemVar: 'entry',
     collection: 'entries',
     filterFn: (entry) => ($get("filterProject") == "" || entry.project == $get("filterProject")) && ($get("filterClient") == "" || entry.client == $get("filterClient")) && ($get("searchQuery") == "" || entry.task.toLowerCase ().includes ($get("searchQuery").toLowerCase ()) || entry.project.toLowerCase ().includes ($get("searchQuery").toLowerCase ())),
@@ -2362,11 +2366,11 @@ export function createUI(data = {}) {
       const itemContainer = document.createElement('div')
       itemContainer.dataset.eachItem = index
       itemContainer.style.display = 'contents';
-      const node_80_tpl = document.createElement('div')
-      node_80_tpl.dataset.mirrorId = 'node-80[' + index + ']'
-      node_80_tpl._loopItem = entry
-      node_80_tpl.dataset.mirrorName = 'TableRow'
-      Object.assign(node_80_tpl.style, {
+      const node_79_tpl = document.createElement('div')
+      node_79_tpl.dataset.mirrorId = 'node-79[' + index + ']'
+      node_79_tpl._loopItem = entry
+      node_79_tpl.dataset.mirrorName = 'TableRow'
+      Object.assign(node_79_tpl.style, {
         'display': 'flex',
         'flex-direction': 'row',
         'align-self': 'stretch',
@@ -2381,59 +2385,59 @@ export function createUI(data = {}) {
         'padding': 'var(--space-sm-pad)',
         'transition': 'background 150ms ease',
       })
-      const node_81_tpl = document.createElement('span')
-      node_81_tpl.dataset.mirrorId = 'node-81[' + index + ']'
-      node_81_tpl._loopItem = entry
-      node_81_tpl.dataset.mirrorName = 'CellDate'
-      node_81_tpl.textContent = entry.date
-      Object.assign(node_81_tpl.style, {
+      const node_80_tpl = document.createElement('span')
+      node_80_tpl.dataset.mirrorId = 'node-80[' + index + ']'
+      node_80_tpl._loopItem = entry
+      node_80_tpl.dataset.mirrorName = 'CellDate'
+      node_80_tpl.textContent = entry.date
+      Object.assign(node_80_tpl.style, {
         'color': 'var(--text-secondary-col)',
         'font-size': 'var(--fs-md-fs)',
         'width': 'var(--col-date-w)',
       })
-      node_80_tpl.appendChild(node_81_tpl)
-      const node_82_tpl = document.createElement('span')
-      node_82_tpl.dataset.mirrorId = 'node-82[' + index + ']'
-      node_82_tpl._loopItem = entry
-      node_82_tpl.dataset.mirrorName = 'CellProject'
-      node_82_tpl.textContent = entry.project
-      Object.assign(node_82_tpl.style, {
+      node_79_tpl.appendChild(node_80_tpl)
+      const node_81_tpl = document.createElement('span')
+      node_81_tpl.dataset.mirrorId = 'node-81[' + index + ']'
+      node_81_tpl._loopItem = entry
+      node_81_tpl.dataset.mirrorName = 'CellProject'
+      node_81_tpl.textContent = entry.project
+      Object.assign(node_81_tpl.style, {
         'color': 'var(--text-col)',
         'font-size': 'var(--fs-md-fs)',
         'width': 'var(--col-project-w)',
         'font-weight': '500',
       })
-      node_80_tpl.appendChild(node_82_tpl)
-      const node_83_tpl = document.createElement('span')
-      node_83_tpl.dataset.mirrorId = 'node-83[' + index + ']'
-      node_83_tpl._loopItem = entry
-      node_83_tpl.dataset.mirrorName = 'CellClient'
-      node_83_tpl.textContent = entry.client
-      Object.assign(node_83_tpl.style, {
+      node_79_tpl.appendChild(node_81_tpl)
+      const node_82_tpl = document.createElement('span')
+      node_82_tpl.dataset.mirrorId = 'node-82[' + index + ']'
+      node_82_tpl._loopItem = entry
+      node_82_tpl.dataset.mirrorName = 'CellClient'
+      node_82_tpl.textContent = entry.client
+      Object.assign(node_82_tpl.style, {
         'color': 'var(--text-secondary-col)',
         'font-size': 'var(--fs-md-fs)',
         'width': 'var(--col-client-w)',
         'display': 'none',
       })
-      node_80_tpl.appendChild(node_83_tpl)
-      const node_84_tpl = document.createElement('span')
-      node_84_tpl.dataset.mirrorId = 'node-84[' + index + ']'
-      node_84_tpl._loopItem = entry
-      node_84_tpl.dataset.mirrorName = 'CellTask'
-      node_84_tpl.textContent = entry.task
-      Object.assign(node_84_tpl.style, {
+      node_79_tpl.appendChild(node_82_tpl)
+      const node_83_tpl = document.createElement('span')
+      node_83_tpl.dataset.mirrorId = 'node-83[' + index + ']'
+      node_83_tpl._loopItem = entry
+      node_83_tpl.dataset.mirrorName = 'CellTask'
+      node_83_tpl.textContent = entry.task
+      Object.assign(node_83_tpl.style, {
         'color': 'var(--text-col)',
         'font-size': 'var(--fs-md-fs)',
         'width': 'var(--col-task-w)',
         'flex-grow': '1',
       })
-      node_80_tpl.appendChild(node_84_tpl)
-      const node_85_tpl = document.createElement('span')
-      node_85_tpl.dataset.mirrorId = 'node-85[' + index + ']'
-      node_85_tpl._loopItem = entry
-      node_85_tpl.dataset.mirrorName = 'CellHours'
-      node_85_tpl.textContent = entry.hours + "h"
-      Object.assign(node_85_tpl.style, {
+      node_79_tpl.appendChild(node_83_tpl)
+      const node_84_tpl = document.createElement('span')
+      node_84_tpl.dataset.mirrorId = 'node-84[' + index + ']'
+      node_84_tpl._loopItem = entry
+      node_84_tpl.dataset.mirrorName = 'CellHours'
+      node_84_tpl.textContent = entry.hours + "h"
+      Object.assign(node_84_tpl.style, {
         'display': 'flex',
         'flex-direction': 'column',
         'align-items': 'flex-end',
@@ -2442,12 +2446,12 @@ export function createUI(data = {}) {
         'width': 'var(--col-hours-w)',
         'font-weight': '500',
       })
-      node_80_tpl.appendChild(node_85_tpl)
-      const node_86_tpl = document.createElement('div')
-      node_86_tpl.dataset.mirrorId = 'node-86[' + index + ']'
-      node_86_tpl._loopItem = entry
-      node_86_tpl.dataset.mirrorName = 'Frame'
-      Object.assign(node_86_tpl.style, {
+      node_79_tpl.appendChild(node_84_tpl)
+      const node_85_tpl = document.createElement('div')
+      node_85_tpl.dataset.mirrorId = 'node-85[' + index + ']'
+      node_85_tpl._loopItem = entry
+      node_85_tpl.dataset.mirrorName = 'Frame'
+      Object.assign(node_85_tpl.style, {
         'display': 'flex',
         'flex-direction': 'column',
         'justify-content': 'center',
@@ -2455,12 +2459,32 @@ export function createUI(data = {}) {
         'width': 'var(--col-status-w)',
       })
       if (entry.billable) {
+        const node_86_tpl = document.createElement('span')
+        node_86_tpl.dataset.mirrorId = 'node-86[' + index + ']'
+        node_86_tpl._loopItem = entry
+        node_86_tpl.dataset.mirrorName = 'Icon'
+        node_86_tpl.textContent = "circle-check"
+        node_86_tpl.setAttribute('data-icon-color', "var(--success-ic)")
+        node_86_tpl.setAttribute('data-icon-size', "var(--icon-md-is)")
+        Object.assign(node_86_tpl.style, {
+          'width': '20px',
+          'flex-shrink': '0',
+          'height': '20px',
+          'flex-shrink': '0',
+        })
+        node_86_tpl.dataset.iconSize = 'var(--icon-md-is)'
+        node_86_tpl.dataset.iconColor = 'var(--success-ic)'
+        node_86_tpl.dataset.iconWeight = '2'
+        _runtime.loadIcon(node_86_tpl, 'circle-check')
+        node_85_tpl.appendChild(node_86_tpl)
+      }
+      if (!entry.billable) {
         const node_87_tpl = document.createElement('span')
         node_87_tpl.dataset.mirrorId = 'node-87[' + index + ']'
         node_87_tpl._loopItem = entry
         node_87_tpl.dataset.mirrorName = 'Icon'
-        node_87_tpl.textContent = "circle-check"
-        node_87_tpl.setAttribute('data-icon-color', "var(--success-ic)")
+        node_87_tpl.textContent = "minus"
+        node_87_tpl.setAttribute('data-icon-color', "var(--text-muted-ic)")
         node_87_tpl.setAttribute('data-icon-size', "var(--icon-md-is)")
         Object.assign(node_87_tpl.style, {
           'width': '20px',
@@ -2469,33 +2493,13 @@ export function createUI(data = {}) {
           'flex-shrink': '0',
         })
         node_87_tpl.dataset.iconSize = 'var(--icon-md-is)'
-        node_87_tpl.dataset.iconColor = 'var(--success-ic)'
+        node_87_tpl.dataset.iconColor = 'var(--text-muted-ic)'
         node_87_tpl.dataset.iconWeight = '2'
-        _runtime.loadIcon(node_87_tpl, 'circle-check')
-        node_86_tpl.appendChild(node_87_tpl)
+        _runtime.loadIcon(node_87_tpl, 'minus')
+        node_85_tpl.appendChild(node_87_tpl)
       }
-      if (!entry.billable) {
-        const node_88_tpl = document.createElement('span')
-        node_88_tpl.dataset.mirrorId = 'node-88[' + index + ']'
-        node_88_tpl._loopItem = entry
-        node_88_tpl.dataset.mirrorName = 'Icon'
-        node_88_tpl.textContent = "minus"
-        node_88_tpl.setAttribute('data-icon-color', "var(--text-muted-ic)")
-        node_88_tpl.setAttribute('data-icon-size', "var(--icon-md-is)")
-        Object.assign(node_88_tpl.style, {
-          'width': '20px',
-          'flex-shrink': '0',
-          'height': '20px',
-          'flex-shrink': '0',
-        })
-        node_88_tpl.dataset.iconSize = 'var(--icon-md-is)'
-        node_88_tpl.dataset.iconColor = 'var(--text-muted-ic)'
-        node_88_tpl.dataset.iconWeight = '2'
-        _runtime.loadIcon(node_88_tpl, 'minus')
-        node_86_tpl.appendChild(node_88_tpl)
-      }
-      node_80_tpl.appendChild(node_86_tpl)
-      itemContainer.appendChild(node_80_tpl)
+      node_79_tpl.appendChild(node_85_tpl)
+      itemContainer.appendChild(node_79_tpl)
       return itemContainer
     },
   }
@@ -2504,19 +2508,19 @@ export function createUI(data = {}) {
   const entriesData = (function(d) { if (Array.isArray(d)) return d; if (d && typeof d === 'object') { return Object.entries(d).map(([k, v]) => typeof v === 'object' && v !== null ? { _key: k, ...v } : v); } return []; })($get('entries'))
   let entriesFiltered = entriesData.filter(entry => ($get("filterProject") == "" || entry.project == $get("filterProject")) && ($get("filterClient") == "" || entry.client == $get("filterClient")) && ($get("searchQuery") == "" || entry.task.toLowerCase ().includes ($get("searchQuery").toLowerCase ()) || entry.project.toLowerCase ().includes ($get("searchQuery").toLowerCase ())))
   entriesFiltered.forEach((entry, index) => {
-    node_79_container.appendChild(node_79_container._eachConfig.renderItem(entry, index))
+    node_78_container.appendChild(node_78_container._eachConfig.renderItem(entry, index))
   })
   
-  node_78.appendChild(node_79_container)
+  node_77.appendChild(node_78_container)
   
-  node_69.appendChild(node_78)
+  node_68.appendChild(node_77)
   
   // Frame
-  const node_89 = document.createElement('div')
-  _elements['node-89'] = node_89
-  node_89.dataset.mirrorId = 'node-89'
-  node_89.dataset.mirrorName = 'Frame'
-  Object.assign(node_89.style, {
+  const node_88 = document.createElement('div')
+  _elements['node-88'] = node_88
+  node_88.dataset.mirrorId = 'node-88'
+  node_88.dataset.mirrorName = 'Frame'
+  Object.assign(node_88.style, {
     'display': 'flex',
     'flex-direction': 'row',
     'align-self': 'stretch',
@@ -2525,67 +2529,67 @@ export function createUI(data = {}) {
     'padding': 'var(--space-md-pad)',
     'background': 'var(--card-alt-bg)',
   })
-  node_89.dataset.layout = 'flex'
-  node_89.dataset.component = 'Frame'
+  node_88.dataset.layout = 'flex'
+  node_88.dataset.component = 'Frame'
   // Text
-  const node_90 = document.createElement('span')
-  _elements['node-90'] = node_90
-  node_90.dataset.mirrorId = 'node-90'
-  node_90.dataset.mirrorName = 'Text'
-  node_90.textContent = "6 Einträge"
-  Object.assign(node_90.style, {
+  const node_89 = document.createElement('span')
+  _elements['node-89'] = node_89
+  node_89.dataset.mirrorId = 'node-89'
+  node_89.dataset.mirrorName = 'Text'
+  node_89.textContent = "6 Einträge"
+  Object.assign(node_89.style, {
     'color': 'var(--text-muted-col)',
     'font-size': 'var(--fs-sm-fs)',
   })
-  node_90.dataset.component = 'Text'
-  node_89.appendChild(node_90)
+  node_89.dataset.component = 'Text'
+  node_88.appendChild(node_89)
   
   // Frame
-  const node_91 = document.createElement('div')
-  _elements['node-91'] = node_91
-  node_91.dataset.mirrorId = 'node-91'
-  node_91.dataset.mirrorName = 'Frame'
-  Object.assign(node_91.style, {
+  const node_90 = document.createElement('div')
+  _elements['node-90'] = node_90
+  node_90.dataset.mirrorId = 'node-90'
+  node_90.dataset.mirrorName = 'Frame'
+  Object.assign(node_90.style, {
     'display': 'flex',
     'flex-direction': 'row',
     'align-self': 'stretch',
     'align-items': 'center',
     'gap': 'var(--gap-md-gap)',
   })
-  node_91.dataset.layout = 'flex'
-  node_91.dataset.component = 'Frame'
+  node_90.dataset.layout = 'flex'
+  node_90.dataset.component = 'Frame'
+  // Text
+  const node_91 = document.createElement('span')
+  _elements['node-91'] = node_91
+  node_91.dataset.mirrorId = 'node-91'
+  node_91.dataset.mirrorName = 'Text'
+  node_91.textContent = "Total:"
+  Object.assign(node_91.style, {
+    'color': 'var(--text-secondary-col)',
+    'font-size': 'var(--fs-md-fs)',
+  })
+  node_91.dataset.component = 'Text'
+  node_90.appendChild(node_91)
+  
   // Text
   const node_92 = document.createElement('span')
   _elements['node-92'] = node_92
   node_92.dataset.mirrorId = 'node-92'
   node_92.dataset.mirrorName = 'Text'
-  node_92.textContent = "Total:"
+  node_92.textContent = "21.5h"
   Object.assign(node_92.style, {
-    'color': 'var(--text-secondary-col)',
-    'font-size': 'var(--fs-md-fs)',
-  })
-  node_92.dataset.component = 'Text'
-  node_91.appendChild(node_92)
-  
-  // Text
-  const node_93 = document.createElement('span')
-  _elements['node-93'] = node_93
-  node_93.dataset.mirrorId = 'node-93'
-  node_93.dataset.mirrorName = 'Text'
-  node_93.textContent = "21.5h"
-  Object.assign(node_93.style, {
     'color': 'var(--text-col)',
     'font-size': 'var(--fs-lg-fs)',
     'font-weight': '600',
   })
-  node_93.dataset.component = 'Text'
-  node_91.appendChild(node_93)
+  node_92.dataset.component = 'Text'
+  node_90.appendChild(node_92)
   
-  node_89.appendChild(node_91)
+  node_88.appendChild(node_90)
   
-  node_69.appendChild(node_89)
+  node_68.appendChild(node_88)
   
-  node_2.appendChild(node_69)
+  node_2.appendChild(node_68)
   
   node_1.appendChild(node_2)
   

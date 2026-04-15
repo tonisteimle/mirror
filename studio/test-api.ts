@@ -13,6 +13,7 @@ import { events, type StudioEvents } from './core/events'
 import { getTriggerManager } from './editor/trigger-manager'
 import { createLogger } from '../compiler/utils/logger'
 import { setupBrowserDragTestAPI } from './preview/drag/browser-test-api'
+import { setupMirrorTestAPI } from './test-api/index'
 
 const log = createLogger('TestAPI')
 
@@ -161,11 +162,21 @@ export function initStudioTestAPI(studio: StudioInstance, _dragDrop: unknown): v
   if (typeof window !== 'undefined') {
     window.__mirrorStudio__ = studio
     window.__STUDIO_TEST__ = createStudioTestAPI()
+
+    // Initialize Browser Drag Test API (window.__dragTest)
     try {
       setupBrowserDragTestAPI()
       log.info('Browser Drag Test API initialized at window.__dragTest')
     } catch (e) {
       log.warn('Failed to initialize Browser Drag Test API:', e)
+    }
+
+    // Initialize Mirror Test API (window.__mirrorTest, window.__mirrorTestSuites)
+    try {
+      setupMirrorTestAPI()
+      log.info('Mirror Test API initialized at window.__mirrorTest')
+    } catch (e) {
+      log.warn('Failed to initialize Mirror Test API:', e)
     }
   }
   log.info('Test API initialized')

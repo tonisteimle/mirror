@@ -241,7 +241,7 @@ Frame w full, minh 100vh, bg $bg, tc
         BtnSecondary "Export"
 
         // Dialog for new entry
-        Dialog closeOnOutsideClick
+        Dialog closeOnOutsideClick, closeIcon
           Trigger:
             BtnPrimary "Neuer Eintrag"
           Backdrop: bg rgba(0,0,0,0.6)
@@ -253,13 +253,7 @@ Frame w full, minh 100vh, bg $bg, tc
               anim scale-in
 
             // Header
-            Frame hor, spread, ver-center, mar 0 0 $gap-sm 0
-              Text "Neuer Zeiteintrag", col $text, fs 14, weight 600
-              CloseTrigger:
-                Frame w 28, h 28, center, rad $rad-md, cursor pointer
-                  hover 0.15s:
-                    bg $muted
-                  Icon "x", ic $text-secondary, is 16
+            Text "Neuer Zeiteintrag", col $text, fs 14, weight 600, mar 0 0 $gap-sm 0
 
             // Form
             Frame gap $gap-lg

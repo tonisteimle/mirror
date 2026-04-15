@@ -65,6 +65,7 @@ export function clearCurrentDragData(): void {
   currentDragData = null
   currentComponentItem = null
   canvasDragNodeId = null
+  canvasDragGrabOffset = null
   log.debug('Drag data cleared')
 }
 
@@ -76,10 +77,19 @@ export function clearCurrentDragData(): void {
 /** Node ID of element being dragged from canvas */
 let canvasDragNodeId: string | null = null
 
+/** Grab offset - where user clicked relative to element's top-left */
+let canvasDragGrabOffset: { x: number; y: number } | null = null
+
 /** Set canvas drag data (called when dragging from preview) */
-export function setCanvasDragData(nodeId: string): void {
+export function setCanvasDragData(nodeId: string, grabOffset?: { x: number; y: number }): void {
   canvasDragNodeId = nodeId
-  log.debug('Canvas drag started:', nodeId)
+  canvasDragGrabOffset = grabOffset ?? null
+  log.debug('Canvas drag started:', nodeId, 'grabOffset:', grabOffset)
+}
+
+/** Get grab offset for canvas drag */
+export function getCanvasDragGrabOffset(): { x: number; y: number } | null {
+  return canvasDragGrabOffset
 }
 
 /** Get canvas drag node ID */
@@ -207,14 +217,30 @@ export class DragPreview {
 
     if (!nodeId || !e.dataTransfer) return
 
+    // Calculate grab offset (where user clicked relative to element's top-left)
+    const rect = target.getBoundingClientRect()
+    const grabOffset = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    }
+
     // Set drag data
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('application/mirror-canvas-element', nodeId)
 
-    // Store the node ID for later
-    setCanvasDragData(nodeId)
+    // Store the node ID and grab offset for later
+    setCanvasDragData(nodeId, grabOffset)
 
-    log.debug('Canvas element drag started:', nodeId)
+    // Hide the default drag image (we'll use our own indicator)
+    const emptyImg = document.createElement('img')
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+    e.dataTransfer.setDragImage(emptyImg, 0, 0)
+
+    // Make the original element semi-transparent during drag
+    target.style.opacity = '0.3'
+    target.dataset.dragging = 'true'
+
+    log.debug('Canvas element drag started:', nodeId, 'grabOffset:', grabOffset)
   }
 
   /**
@@ -256,7 +282,8 @@ export class DragPreview {
     const nodeId = getCanvasDragNodeId()
     if (!nodeId) return
 
-    getDragController().startDrag({ type: 'canvas', nodeId }, this.container)
+    const grabOffset = getCanvasDragGrabOffset() ?? undefined
+    getDragController().startDrag({ type: 'canvas', nodeId, grabOffset }, this.container)
     log.debug('Canvas element drag started:', nodeId)
   }
 
@@ -357,6 +384,13 @@ export class DragPreview {
     // Always cleanup on dragend
     this.isOverCanvas = false
     document.body.classList.remove('drag-active')
+
+    // Restore opacity of dragged element
+    const draggingElement = this.container.querySelector('[data-dragging="true"]') as HTMLElement
+    if (draggingElement) {
+      draggingElement.style.opacity = ''
+      delete draggingElement.dataset.dragging
+    }
 
     // Only cancel if drop wasn't already handled
     if (!this.dropHandled) {

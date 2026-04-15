@@ -16,6 +16,7 @@ import {
   getZagEventsForComponent,
   getZagItemKeywords,
   generateKeywordCompletions,
+  generateIconNameCompletions,
 } from './schema-completions'
 
 export interface Completion {
@@ -41,26 +42,55 @@ export interface AutocompleteResult {
 }
 
 export type AutocompleteContext =
-  | 'element'      // At line start or indented - expects element/component
-  | 'property'     // After element name, comma - expects properties only
-  | 'value'        // After property name
-  | 'state'        // After "state "
-  | 'slot'         // Indented with capital letter (Zag slot)
-  | 'action'       // After event: (onclick:, onhover:, etc.)
-  | 'target'       // After action (show, hide, toggle, etc.)
-  | 'duration'     // After transition property
-  | 'easing'       // After transition duration
-  | 'zag-prop'     // Inside a Zag component
-  | 'zag-slot'     // Inside a Zag component, typing a slot
+  | 'element' // At line start or indented - expects element/component
+  | 'property' // After element name, comma - expects properties only
+  | 'value' // After property name
+  | 'state' // After "state "
+  | 'slot' // Indented with capital letter (Zag slot)
+  | 'action' // After event: (onclick:, onhover:, etc.)
+  | 'target' // After action (show, hide, toggle, etc.)
+  | 'duration' // After transition property
+  | 'easing' // After transition duration
+  | 'zag-prop' // Inside a Zag component
+  | 'zag-slot' // Inside a Zag component, typing a slot
+  | 'icon-name' // After Icon " - expects icon names
   | 'none'
 
 // Priority properties (common ones shown first)
 export const PRIORITY_PROPERTIES = new Set([
-  'bg', 'background', 'col', 'color', 'pad', 'padding', 'gap', 'g',
-  'rad', 'radius', 'bor', 'border', 'width', 'w', 'height', 'h',
-  'hor', 'horizontal', 'ver', 'vertical', 'center', 'cen',
-  'font-size', 'fs', 'weight', 'opacity', 'o', 'shadow',
-  'hover-bg', 'hover-col', 'cursor', 'hidden', 'visible'
+  'bg',
+  'background',
+  'col',
+  'color',
+  'pad',
+  'padding',
+  'gap',
+  'g',
+  'rad',
+  'radius',
+  'bor',
+  'border',
+  'width',
+  'w',
+  'height',
+  'h',
+  'hor',
+  'horizontal',
+  'ver',
+  'vertical',
+  'center',
+  'cen',
+  'font-size',
+  'fs',
+  'weight',
+  'opacity',
+  'o',
+  'shadow',
+  'hover-bg',
+  'hover-col',
+  'cursor',
+  'hidden',
+  'visible',
 ])
 
 // Re-export generated completions
@@ -69,6 +99,14 @@ export const ACTION_COMPLETIONS = SCHEMA_COMPLETIONS.actions
 export const TARGET_KEYWORDS = SCHEMA_COMPLETIONS.actionTargets
 export const MIRROR_PROPERTIES = SCHEMA_COMPLETIONS.properties
 export const PROPERTY_VALUES = SCHEMA_COMPLETIONS.propertyValues
+export const ICON_NAME_COMPLETIONS = SCHEMA_COMPLETIONS.iconNames
+
+// State names with colons (for element context in nested components)
+export const STATE_NAMES_WITH_COLON: Completion[] = SCHEMA_COMPLETIONS.states.map(s => ({
+  ...s,
+  label: `${s.label}:`,
+  detail: `${s.detail} (state block)`,
+}))
 
 // Duration values for transitions (from schema)
 export const DURATION_COMPLETIONS = SCHEMA_COMPLETIONS.durations
@@ -225,8 +263,19 @@ export class AutocompleteEngine {
   /**
    * Detect the context for autocomplete
    */
-  detectContext(lineText: string, cursorColumn: number, fullSource?: string, lineNumber?: number): AutocompleteContext {
+  detectContext(
+    lineText: string,
+    cursorColumn: number,
+    fullSource?: string,
+    lineNumber?: number
+  ): AutocompleteContext {
     const textBefore = lineText.slice(0, cursorColumn)
+
+    // After Icon " → icon names (inside quote or after opening quote)
+    // Matches: Icon " or Icon "arr (partially typed icon name)
+    if (textBefore.match(/\bIcon\s+"[\w-]*$/)) {
+      return 'icon-name'
+    }
 
     // After "state " → state names
     if (textBefore.match(/\bstate\s+$/)) {
@@ -234,9 +283,7 @@ export class AutocompleteEngine {
     }
 
     // After event + colon (onclick:, onhover:, etc.) → action context
-    const eventPattern = new RegExp(
-      `\\b(${EVENT_NAMES.join('|')})(\\s+\\w+)?:\\s*$`
-    )
+    const eventPattern = new RegExp(`\\b(${EVENT_NAMES.join('|')})(\\s+\\w+)?:\\s*$`)
     if (eventPattern.test(textBefore)) {
       return 'action'
     }
@@ -244,8 +291,8 @@ export class AutocompleteEngine {
     // After action in chain → target context
     const actionPattern = new RegExp(
       `\\b(${EVENT_NAMES.join('|')})(\\s+\\w+)?:\\s*` +
-      `(?:\\w+\\s+\\w+\\s*,\\s*)*` +
-      `(${ACTIONS_WITH_TARGET.join('|')})\\s+$`
+        `(?:\\w+\\s+\\w+\\s*,\\s*)*` +
+        `(${ACTIONS_WITH_TARGET.join('|')})\\s+$`
     )
     if (actionPattern.test(textBefore)) {
       return 'target'
@@ -292,9 +339,11 @@ export class AutocompleteEngine {
     }
 
     // Property context: after element name or comma (expects properties only)
-    if (textBefore.match(/,\s*$/) ||
-        textBefore.match(/^[A-Z]\w*\s+$/) ||
-        textBefore.match(/^\s+[A-Z]\w*\s+$/)) {
+    if (
+      textBefore.match(/,\s*$/) ||
+      textBefore.match(/^[A-Z]\w*\s+$/) ||
+      textBefore.match(/^\s+[A-Z]\w*\s+$/)
+    ) {
       return 'property'
     }
 
@@ -324,9 +373,30 @@ export class AutocompleteEngine {
     const from = cursorColumn - (wordMatch ? wordMatch[0].length : 0)
 
     // Get line number for context detection
-    const lineNumber = fullSource ? fullSource.slice(0, fullSource.indexOf(lineText)).split('\n').length - 1 : 0
+    const lineNumber = fullSource
+      ? fullSource.slice(0, fullSource.indexOf(lineText)).split('\n').length - 1
+      : 0
 
     const context = this.detectContext(lineText, from, fullSource, lineNumber)
+
+    // Icon name context (after Icon ")
+    if (context === 'icon-name') {
+      let completions = [...ICON_NAME_COMPLETIONS]
+      if (typed) {
+        completions = completions.filter(
+          c => c.label.toLowerCase().startsWith(typed) || c.label.toLowerCase().includes(typed)
+        )
+        // Sort: prefix matches first
+        completions.sort((a, b) => {
+          const aStarts = a.label.toLowerCase().startsWith(typed)
+          const bStarts = b.label.toLowerCase().startsWith(typed)
+          if (aStarts && !bStarts) return -1
+          if (!aStarts && bStarts) return 1
+          return a.label.localeCompare(b.label)
+        })
+      }
+      return { completions: completions.slice(0, 50), from, to: cursorColumn, context }
+    }
 
     // State context
     if (context === 'state') {
@@ -341,9 +411,7 @@ export class AutocompleteEngine {
     if (context === 'action') {
       let completions = [...ACTION_COMPLETIONS]
       if (typed) {
-        completions = completions.filter(c =>
-          c.label.toLowerCase().startsWith(typed)
-        )
+        completions = completions.filter(c => c.label.toLowerCase().startsWith(typed))
       }
       return { completions, from, to: cursorColumn, context }
     }
@@ -358,15 +426,13 @@ export class AutocompleteEngine {
         const elementCompletions: Completion[] = elementNames.map(name => ({
           label: name,
           detail: 'element',
-          type: 'component' as const
+          type: 'component' as const,
         }))
         completions = [...elementCompletions, ...completions]
       }
 
       if (typed) {
-        completions = completions.filter(c =>
-          c.label.toLowerCase().startsWith(typed)
-        )
+        completions = completions.filter(c => c.label.toLowerCase().startsWith(typed))
       }
       return { completions, from, to: cursorColumn, context }
     }
@@ -408,9 +474,7 @@ export class AutocompleteEngine {
     if (context === 'duration') {
       let completions = DURATION_COMPLETIONS
       if (typed) {
-        completions = completions.filter(c =>
-          c.label.startsWith(typed)
-        )
+        completions = completions.filter(c => c.label.startsWith(typed))
       }
       return { completions, from, to: cursorColumn, context }
     }
@@ -419,9 +483,7 @@ export class AutocompleteEngine {
     if (context === 'easing') {
       let completions = EASING_COMPLETIONS
       if (typed) {
-        completions = completions.filter(c =>
-          c.label.toLowerCase().startsWith(typed)
-        )
+        completions = completions.filter(c => c.label.toLowerCase().startsWith(typed))
       }
       return { completions, from, to: cursorColumn, context }
     }
@@ -444,6 +506,15 @@ export class AutocompleteEngine {
     // Element context: primitives, Zag components, and user-defined components
     if (context === 'element') {
       let completions = [...ELEMENT_COMPLETIONS]
+
+      // Check if we're indented (nested in a component)
+      const isIndented = lineText.match(/^\s+/)
+
+      // Add state completions with colons if nested in a component
+      if (isIndented) {
+        const stateCompletions = [...STATE_NAMES_WITH_COLON]
+        completions = [...stateCompletions, ...completions]
+      }
 
       // Add user-defined components from source
       if (fullSource) {
@@ -479,9 +550,8 @@ export class AutocompleteEngine {
       }
 
       if (typed) {
-        completions = completions.filter(c =>
-          c.label.toLowerCase().startsWith(typed) ||
-          c.label.toLowerCase().includes(typed)
+        completions = completions.filter(
+          c => c.label.toLowerCase().startsWith(typed) || c.label.toLowerCase().includes(typed)
         )
         // Sort: prefix matches first, then by boost
         completions.sort((a, b) => {
@@ -527,9 +597,8 @@ export class AutocompleteEngine {
       }
 
       if (typed) {
-        completions = completions.filter(c =>
-          c.label.toLowerCase().startsWith(typed) ||
-          c.label.toLowerCase().includes(typed)
+        completions = completions.filter(
+          c => c.label.toLowerCase().startsWith(typed) || c.label.toLowerCase().includes(typed)
         )
         // Sort: prefix matches first
         completions.sort((a, b) => {
@@ -572,9 +641,8 @@ export class AutocompleteEngine {
       }
 
       if (typed) {
-        completions = completions.filter(c =>
-          c.label.toLowerCase().startsWith(typed) ||
-          c.label.toLowerCase().includes(typed)
+        completions = completions.filter(
+          c => c.label.toLowerCase().startsWith(typed) || c.label.toLowerCase().includes(typed)
         )
       }
 
@@ -588,7 +656,9 @@ export class AutocompleteEngine {
    * Get completions for a specific property's values
    */
   getPropertyValues(propertyName: string): Completion[] {
-    return PROPERTY_VALUES[propertyName.toLowerCase()] || generatePropertyValueCompletions(propertyName)
+    return (
+      PROPERTY_VALUES[propertyName.toLowerCase()] || generatePropertyValueCompletions(propertyName)
+    )
   }
 
   /**
@@ -636,7 +706,7 @@ export class AutocompleteEngine {
       const elementCompletions: Completion[] = elementNames.map(name => ({
         label: name,
         detail: 'element',
-        type: 'component' as const
+        type: 'component' as const,
       }))
       return [...elementCompletions, ...completions]
     }

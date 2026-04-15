@@ -1130,8 +1130,11 @@ escape, enter, space, tab, backspace, delete, arrow-up, arrow-down, arrow-left, 
 
 Tests in `tests/`:
 
-- `tests/compiler/` - IR, Backend, Layout, Zag-Komponenten
-- `tests/studio/` - Panels, Pickers, Editor, Sync
+- `tests/compiler/` - IR, Backend, Layout, Zag-Komponenten (Vitest)
+- `tests/studio/` - Panels, Pickers, Editor, Sync (Vitest)
+- `studio/test-api/suites/` - Browser Tests (~225 Tests)
+
+**Wichtig:** Kein Playwright. Browser-Tests laufen über eigenen CDP Test Runner.
 
 Dokumentation: `tests/compiler/regeln.md` (bewiesene Regeln), `tests/compiler/strategie.md` (Teststrategie)
 
@@ -1149,36 +1152,89 @@ Eigenes Test-Framework für Studio-Tests direkt im Browser. Ersetzt Playwright.
 
 **Test-Kategorien (~225 Tests):**
 
-| Kategorie | Tests | Beschreibung |
-|-----------|-------|--------------|
-| Primitives | ~25 | Frame, Text, Button, Icon, etc. |
-| Layout | ~35 | hor, ver, gap, grid, stacked |
-| Styling | ~50 | bg, col, pad, rad, shadow |
-| Zag | ~30 | Dialog, Tabs, Select, Checkbox |
-| Interactions | ~30 | Click, Hover, Focus, Input |
-| Bidirectional | ~20 | Code ↔ Preview Sync |
-| Undo/Redo | ~15 | History Management |
-| Autocomplete | ~20 | Completions |
-| Drag & Drop | ~46 | Palette Drop, Canvas Move |
+| Kategorie     | Tests | Beschreibung                    |
+| ------------- | ----- | ------------------------------- |
+| Primitives    | ~25   | Frame, Text, Button, Icon, etc. |
+| Layout        | ~35   | hor, ver, gap, grid, stacked    |
+| Styling       | ~50   | bg, col, pad, rad, shadow       |
+| Zag           | ~30   | Dialog, Tabs, Select, Checkbox  |
+| Interactions  | ~30   | Click, Hover, Focus, Input      |
+| Bidirectional | ~20   | Code ↔ Preview Sync             |
+| Undo/Redo     | ~15   | History Management              |
+| Autocomplete  | ~20   | Completions                     |
+| Drag & Drop   | ~46   | Palette Drop, Canvas Move       |
 
 ### CLI Test Runner (CDP)
 
-Headless Browser-Tests via Chrome DevTools Protocol. Kein Playwright nötig.
+Headless Browser-Tests via Chrome DevTools Protocol. Modularer, sauberer Code in `tools/test-runner/`.
 
 ```bash
 # Studio Server starten (Terminal 1)
 npm run studio
 
 # Tests ausführen (Terminal 2)
-npx tsx tools/drag-test-runner.ts           # Headless
+npx tsx tools/drag-test-runner.ts           # Drag Tests (default)
+npx tsx tools/drag-test-runner.ts --mirror  # Mirror Tests (~200 Tests)
+npx tsx tools/drag-test-runner.ts --all     # Alle Tests
+npx tsx tools/drag-test-runner.ts --category=layout  # Nur eine Kategorie
 npx tsx tools/drag-test-runner.ts --headed  # Mit sichtbarem Browser
-npx tsx tools/drag-test-runner.ts --real    # Echte Drag-Simulation
 
-# Gegen andere URL
-npx tsx tools/drag-test-runner.ts --url http://localhost:3000/studio/
+# Mit Reports
+npx tsx tools/drag-test-runner.ts --all --junit=results.xml --html=report.html
+
+# Mit Retry und Screenshot
+npx tsx tools/drag-test-runner.ts --all --retries=2
+```
+
+**Test Selection:**
+
+| Option             | Beschreibung                    |
+| ------------------ | ------------------------------- |
+| `--drag`           | Nur Drag & Drop Tests (default) |
+| `--mirror`         | Mirror Test Suite (~200 Tests)  |
+| `--all`            | Drag + Mirror Tests             |
+| `--category=X`     | Einzelne Kategorie              |
+| `--filter=PATTERN` | Filter nach Name (Regex)        |
+
+**Kategorien:** primitives, layout, styling, zag, interactions, bidirectional, undoRedo, autocomplete, stackedDrag
+
+**Execution:**
+
+| Option         | Beschreibung              |
+| -------------- | ------------------------- |
+| `--headed`     | Browser sichtbar          |
+| `--bail`       | Bei erstem Fehler stoppen |
+| `--retries=N`  | N Retries bei Failure     |
+| `--timeout=MS` | Timeout pro Test          |
+
+**Reports:**
+
+| Option                 | Beschreibung                |
+| ---------------------- | --------------------------- |
+| `--junit=PATH`         | JUnit XML (CI-Integration)  |
+| `--html=PATH`          | HTML Report mit Screenshots |
+| `--screenshot-dir=DIR` | Screenshot-Verzeichnis      |
+| `--no-screenshot`      | Keine Screenshots           |
+
+**Architektur:** `tools/test-runner/`
+
+```
+tools/test-runner/
+├── types.ts           # Type Definitions
+├── chrome.ts          # Chrome Launcher
+├── cdp.ts             # CDP Client
+├── console-collector.ts
+├── screenshot.ts
+├── runner.ts          # Test Orchestration
+├── cli.ts             # CLI Entry Point
+└── reporters/
+    ├── console.ts     # Terminal Output
+    ├── junit.ts       # JUnit XML
+    └── html.ts        # HTML Report
 ```
 
 **Output:**
+
 ```
 🧪 Running Real Drag & Drop Tests...
 
@@ -1192,10 +1248,10 @@ Results: 40/46 passed (6 failed)
 
 ### Browser-Konsole APIs
 
-| API | Beschreibung |
-|-----|--------------|
+| API            | Beschreibung                               |
+| -------------- | ------------------------------------------ |
 | `__mirrorTest` | Compiler-Tests, DOM-Inspektion, Assertions |
-| `__dragTest` | Drag & Drop Tests |
+| `__dragTest`   | Drag & Drop Tests                          |
 
 **Quick Start:**
 
@@ -1210,10 +1266,10 @@ __mirrorTest.expect('node-1').hasText('Hello').hasBackground('#2271C1')
 // Tests ausführen
 const { testWithSetup } = __mirrorTest
 __mirrorTest.run([
-  testWithSetup('Button rendert', 'Button "Click", bg #2271C1', async (api) => {
+  testWithSetup('Button rendert', 'Button "Click", bg #2271C1', async api => {
     api.assert.exists('node-1')
     api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
-  })
+  }),
 ])
 
 // Drag & Drop Tests
