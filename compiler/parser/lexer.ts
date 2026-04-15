@@ -595,9 +595,9 @@ export class Lexer {
         value += this.advance() // h or w
       } else if (next === 'm') {
         // Check for vmin or vmax
-        const afterNext = this.source[this.current + 2]
+        const afterNext = this.source[this.pos + 2]
         if (afterNext === 'i' || afterNext === 'a') {
-          const afterAfterNext = this.source[this.current + 3]
+          const afterAfterNext = this.source[this.pos + 3]
           if ((afterNext === 'i' && afterAfterNext === 'n') || (afterNext === 'a' && afterAfterNext === 'x')) {
             value += this.advance() // v
             value += this.advance() // m
