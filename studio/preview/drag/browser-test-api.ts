@@ -2866,6 +2866,42 @@ export function setupBrowserDragTestAPI(): void {
     // Comprehensive drag test suite
     runDragTests: () => runComprehensiveDragTests(globalRunner!, studioControl),
 
+    // ==========================================================================
+    // Property Panel Control
+    // ==========================================================================
+
+    // Element inspection
+    getElement: (nodeId: string) => studioControl.getElement(nodeId),
+    getPropertyValue: (nodeId: string, propName: string) =>
+      studioControl.getPropertyValue(nodeId, propName),
+    hasProperty: (nodeId: string, propName: string) =>
+      studioControl.hasProperty(nodeId, propName),
+    getPropertiesMap: (nodeId: string) => studioControl.getPropertiesMap(nodeId),
+    getPrimitiveType: (nodeId: string) => studioControl.getPrimitiveType(nodeId),
+    isComponentInstance: (nodeId: string) => studioControl.isComponentInstance(nodeId),
+    isComponentDefinition: (nodeId: string) => studioControl.isComponentDefinition(nodeId),
+
+    // Property modification
+    setProperty: (nodeId: string, propName: string, value: string) =>
+      studioControl.setProperty(nodeId, propName, value),
+    removeProperty: (nodeId: string, propName: string) =>
+      studioControl.removeProperty(nodeId, propName),
+    toggleProperty: (nodeId: string, propName: string, enabled: boolean) =>
+      studioControl.toggleProperty(nodeId, propName, enabled),
+    batchUpdateProperties: (
+      nodeId: string,
+      changes: Array<{ name: string; value: string; action: 'set' | 'remove' | 'toggle' }>
+    ) => studioControl.batchUpdateProperties(nodeId, changes),
+
+    // Tokens
+    getColorTokens: () => studioControl.getColorTokens(),
+    getSpacingTokens: () => studioControl.getSpacingTokens(),
+
+    // Panel control
+    refreshPropertyPanel: () => studioControl.refreshPropertyPanel(),
+    getCurrentPanelElement: () => studioControl.getCurrentPanelElement(),
+    selectAndInspect: (nodeId: string) => studioControl.selectAndInspect(nodeId),
+
     // Internal references
     runner: globalRunner,
     studio: studioControl,
