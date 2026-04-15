@@ -157,13 +157,9 @@ export function emitTemplateEventListener(
   itemVar: string,
   emitTemplateAction: (action: IRAction, currentVar: string, itemVar: string) => void
 ): void {
-  const eventName = event.name
-
-  ctx.emit(`${varName}.addEventListener('${eventName}', (e) => {`)
+  ctx.emit(`${varName}.addEventListener('${event.name}', (e) => {`)
   ctx.indentIn()
-  for (const action of event.actions) {
-    emitTemplateAction(action, varName, itemVar)
-  }
+  event.actions.forEach(action => emitTemplateAction(action, varName, itemVar))
   ctx.indentOut()
   ctx.emit('})')
 }

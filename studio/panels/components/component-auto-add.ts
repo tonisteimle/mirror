@@ -21,18 +21,13 @@ const log = createLogger('ComponentAutoAdd')
  */
 export async function isComponentDefined(componentName: string): Promise<boolean> {
   const comFiles = await getComFiles()
-
   for (const filePath of comFiles) {
     try {
-      const content = await storage.readFile(filePath)
-      if (hasComponentDefinition(content, componentName)) {
-        return true
-      }
+      if (hasComponentDefinition(await storage.readFile(filePath), componentName)) return true
     } catch (err) {
       log.warn(`Failed to read ${filePath}:`, err)
     }
   }
-
   return false
 }
 
@@ -111,21 +106,13 @@ export async function addComponentToComFile(componentId: string): Promise<boolea
  * Get all .com files in the project
  */
 async function getComFiles(): Promise<string[]> {
-  const tree = storage.getTree()
-  const comFiles: string[] = []
-
-  const collect = (items: StorageItem[]) => {
-    for (const item of items) {
-      if (item.type === 'file' && item.name.endsWith('.com')) {
-        comFiles.push(item.path)
-      } else if (item.type === 'folder') {
-        collect(item.children)
-      }
-    }
-  }
-
-  collect(tree)
-  return comFiles
+  const collect = (items: StorageItem[]): string[] =>
+    items.flatMap(item => {
+      if (item.type === 'file' && item.name.endsWith('.com')) return [item.path]
+      if (item.type === 'folder') return collect(item.children)
+      return []
+    })
+  return collect(storage.getTree())
 }
 
 /**
@@ -150,9 +137,7 @@ async function getOrCreateComFile(): Promise<string> {
   }
 
   // Multiple files - prefer components.com
-  const componentsFile = comFiles.find(f =>
-    f === 'components.com' || f.endsWith('/components.com')
-  )
+  const componentsFile = comFiles.find(f => f === 'components.com' || f.endsWith('/components.com'))
 
   return componentsFile ?? comFiles[0]
 }

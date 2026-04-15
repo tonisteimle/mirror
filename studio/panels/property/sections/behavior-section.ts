@@ -7,7 +7,12 @@
  * - Text/number inputs
  */
 
-import { BaseSection, type SectionDependencies, type SectionData, type EventHandlerMap } from '../base/section'
+import {
+  BaseSection,
+  type SectionDependencies,
+  type SectionData,
+  type EventHandlerMap,
+} from '../base/section'
 
 /**
  * Properties to exclude from the Behavior UI
@@ -53,8 +58,12 @@ export class BehaviorSection extends BaseSection {
 
     // Separate by type
     const booleans = filteredProps.filter(p => p.type === 'boolean')
-    const selects = filteredProps.filter(p => p.type === 'select' && p.options && p.options.length > 0)
-    const others = filteredProps.filter(p => p.type !== 'boolean' && !(p.type === 'select' && p.options && p.options.length > 0))
+    const selects = filteredProps.filter(
+      p => p.type === 'select' && p.options && p.options.length > 0
+    )
+    const others = filteredProps.filter(
+      p => p.type !== 'boolean' && !(p.type === 'select' && p.options && p.options.length > 0)
+    )
 
     // Render each group
     const selectRows = this.renderSelectRows(selects)
@@ -74,31 +83,27 @@ export class BehaviorSection extends BaseSection {
   }
 
   private renderSelectRows(selects: BehaviorProperty[]): string {
-    return selects.map(prop => {
-      const options = (prop.options || []).map(opt =>
-        `<option value="${this.deps.escapeHtml(opt)}" ${prop.value === opt ? 'selected' : ''}>${this.deps.escapeHtml(opt)}</option>`
-      ).join('')
-      const label = prop.label || prop.name
-      return `
-        <div class="prop-row">
-          <span class="prop-label" title="${this.deps.escapeHtml(prop.description || '')}">${this.deps.escapeHtml(label)}</span>
-          <div class="prop-content">
-            <select class="prop-select" data-behavior-select="${prop.name}">
-              <option value="">-</option>
-              ${options}
-            </select>
-          </div>
-        </div>
-      `
-    }).join('')
+    return selects
+      .map(prop => {
+        const options = (prop.options || [])
+          .map(
+            opt =>
+              `<option value="${this.deps.escapeHtml(opt)}" ${prop.value === opt ? 'selected' : ''}>${this.deps.escapeHtml(opt)}</option>`
+          )
+          .join('')
+        const label = prop.label || prop.name
+        return `<div class="prop-row"><span class="prop-label" title="${this.deps.escapeHtml(prop.description || '')}">${this.deps.escapeHtml(label)}</span><div class="prop-content"><select class="prop-select" data-behavior-select="${prop.name}"><option value="">-</option>${options}</select></div></div>`
+      })
+      .join('')
   }
 
   private renderOtherRows(others: BehaviorProperty[]): string {
-    return others.map(prop => {
-      const label = prop.label || prop.name
-      const placeholder = prop.type === 'number' ? '0' : ''
-      const isWide = prop.type === 'text'
-      return `
+    return others
+      .map(prop => {
+        const label = prop.label || prop.name
+        const placeholder = prop.type === 'number' ? '0' : ''
+        const isWide = prop.type === 'text'
+        return `
         <div class="prop-row">
           <span class="prop-label" title="${this.deps.escapeHtml(prop.description || '')}">${this.deps.escapeHtml(label)}</span>
           <div class="prop-content">
@@ -106,26 +111,19 @@ export class BehaviorSection extends BaseSection {
           </div>
         </div>
       `
-    }).join('')
+      })
+      .join('')
   }
 
   private renderBooleanRows(booleans: BehaviorProperty[]): string {
-    return booleans.map(prop => {
-      const isActive = prop.value === 'true' || (prop.value === '' && prop.hasValue !== false)
-      const label = prop.label || prop.name
-      return `
-        <div class="prop-row">
-          <span class="prop-label" title="${this.deps.escapeHtml(prop.description || '')}">${this.deps.escapeHtml(label)}</span>
-          <div class="prop-content">
-            <button class="toggle-btn single ${isActive ? 'active' : ''}" data-behavior-toggle="${prop.name}" title="${this.deps.escapeHtml(prop.description || label)}">
-              <svg class="icon" viewBox="0 0 14 14">
-                ${isActive ? CHECK_ICON : ''}
-              </svg>
-            </button>
-          </div>
-        </div>
-      `
-    }).join('')
+    return booleans
+      .map(prop => {
+        const isActive = prop.value === 'true' || (prop.value === '' && prop.hasValue !== false)
+        const label = prop.label || prop.name
+        const desc = this.deps.escapeHtml(prop.description || '')
+        return `<div class="prop-row"><span class="prop-label" title="${desc}">${this.deps.escapeHtml(label)}</span><div class="prop-content"><button class="toggle-btn single ${isActive ? 'active' : ''}" data-behavior-toggle="${prop.name}" title="${this.deps.escapeHtml(prop.description || label)}"><svg class="icon" viewBox="0 0 14 14">${isActive ? CHECK_ICON : ''}</svg></button></div></div>`
+      })
+      .join('')
   }
 
   getHandlers(): EventHandlerMap {
@@ -137,7 +135,7 @@ export class BehaviorSection extends BaseSection {
           if (propName) {
             this.deps.onPropertyChange(propName, select.value, 'select')
           }
-        }
+        },
       },
       'input[data-behavior-input]': {
         input: (e: Event, target: HTMLElement) => {
@@ -146,7 +144,7 @@ export class BehaviorSection extends BaseSection {
           if (propName) {
             this.deps.onPropertyChange(propName, input.value, 'input')
           }
-        }
+        },
       },
       '.toggle-btn[data-behavior-toggle]': {
         click: (e: Event, target: HTMLElement) => {
@@ -154,8 +152,8 @@ export class BehaviorSection extends BaseSection {
           if (propName) {
             this.deps.onToggleProperty(propName, target.classList.contains('active'))
           }
-        }
-      }
+        },
+      },
     }
   }
 }

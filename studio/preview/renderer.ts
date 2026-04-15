@@ -46,18 +46,9 @@ export class PreviewRenderer {
   render(data: PreviewData): void {
     this.currentMode = data.mode
     this.clear()
-
-    switch (data.mode) {
-      case 'tokens':
-        if (data.ast) this.renderTokens(data.ast.tokens)
-        break
-      case 'component':
-        if (data.ast) this.renderComponents(data.ast.components)
-        break
-      case 'layout':
-        if (data.jsCode) this.renderLayout(data.jsCode, data.runtime)
-        break
-    }
+    if (data.mode === 'tokens' && data.ast) this.renderTokens(data.ast.tokens)
+    else if (data.mode === 'component' && data.ast) this.renderComponents(data.ast.components)
+    else if (data.mode === 'layout' && data.jsCode) this.renderLayout(data.jsCode, data.runtime)
   }
 
   clear(): void {
@@ -221,8 +212,7 @@ export class PreviewRenderer {
   }
 
   private isColor(value: string): boolean {
-    return /^#[0-9a-fA-F]{3,8}$/.test(value) ||
-           /^(rgb|hsl)a?\(/.test(value)
+    return /^#[0-9a-fA-F]{3,8}$/.test(value) || /^(rgb|hsl)a?\(/.test(value)
   }
 }
 

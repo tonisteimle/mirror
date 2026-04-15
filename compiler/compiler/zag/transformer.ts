@@ -5,8 +5,27 @@
  * code generation and runtime rendering.
  */
 
-import type { ZagNode, ZagSlotDef, ZagItem, Property, State, Event, Instance, Text, Slot } from '../../parser/ast'
-import type { IRZagNode, IRSlot, IRItem, IRStyle, IRNode, IREvent, IRAction, SourcePosition } from '../../ir/types'
+import type {
+  ZagNode,
+  ZagSlotDef,
+  ZagItem,
+  Property,
+  State,
+  Event,
+  Instance,
+  Text,
+  Slot,
+} from '../../parser/ast'
+import type {
+  IRZagNode,
+  IRSlot,
+  IRItem,
+  IRStyle,
+  IRNode,
+  IREvent,
+  IRAction,
+  SourcePosition,
+} from '../../ir/types'
 import { getSlotDefinition, getSlotApiMethod, getSlotElement, isPortaledSlot } from './slots'
 import { getZagMachineType } from './detector'
 import type { ZagMachineConfig, ZagCompileContext, ParsedSlot, ParsedItem, ASTChild } from './types'
@@ -19,10 +38,7 @@ import { logZagTransformer as log } from '../../utils/logger'
  * @param context Compilation context
  * @returns IR node for the Zag component
  */
-export function transformZagNode(
-  node: ZagNode,
-  context: ZagCompileContext
-): IRZagNode {
+export function transformZagNode(node: ZagNode, context: ZagCompileContext): IRZagNode {
   const nodeId = generateId(context)
   const machineType = getZagMachineType(node.name) ?? 'unknown'
 
@@ -52,13 +68,13 @@ export function transformZagNode(
   // Build the IRZagNode
   const irNode: IRZagNode = {
     id: nodeId,
-    tag: 'div',  // Zag components render as containers
+    tag: 'div', // Zag components render as containers
     primitive: node.name.toLowerCase(),
     name: node.name,
     properties: extractHTMLProperties(node.properties),
-    styles: [],  // Base styles (component-level)
+    styles: [], // Base styles (component-level)
     events,
-    children: [],  // Children are in slots
+    children: [], // Children are in slots
     isZagComponent: true,
     zagType: machineType,
     slots,
@@ -228,28 +244,28 @@ function propertyToCSS(prop: Property): IRStyle[] {
 
   // Map common property names to CSS
   const propertyMap: Record<string, string> = {
-    'bg': 'background',
-    'background': 'background',
-    'col': 'color',
-    'color': 'color',
-    'pad': 'padding',
-    'padding': 'padding',
-    'margin': 'margin',
-    'm': 'margin',
-    'rad': 'border-radius',
-    'radius': 'border-radius',
-    'bor': 'border',
-    'border': 'border',
-    'boc': 'border-color',
-    'w': 'width',
-    'width': 'width',
-    'h': 'height',
-    'height': 'height',
-    'gap': 'gap',
-    'fs': 'font-size',
+    bg: 'background',
+    background: 'background',
+    col: 'color',
+    color: 'color',
+    pad: 'padding',
+    padding: 'padding',
+    margin: 'margin',
+    m: 'margin',
+    rad: 'border-radius',
+    radius: 'border-radius',
+    bor: 'border',
+    border: 'border',
+    boc: 'border-color',
+    w: 'width',
+    width: 'width',
+    h: 'height',
+    height: 'height',
+    gap: 'gap',
+    fs: 'font-size',
     'font-size': 'font-size',
-    'opacity': 'opacity',
-    'opa': 'opacity',
+    opacity: 'opacity',
+    opa: 'opacity',
   }
 
   const cssProperty = propertyMap[name]
@@ -261,24 +277,23 @@ function propertyToCSS(prop: Property): IRStyle[] {
   return [{ property: cssProperty, value: formattedValue }]
 }
 
-/**
- * Format CSS value (add px units where needed)
- */
+const PX_PROPS = [
+  'padding',
+  'margin',
+  'width',
+  'height',
+  'gap',
+  'font-size',
+  'border-radius',
+  'border-width',
+]
+
 function formatCSSValue(property: string, value: string): string {
-  const needsPx = [
-    'padding', 'margin', 'width', 'height', 'gap',
-    'font-size', 'border-radius', 'border-width',
-  ]
-
-  if (needsPx.some(p => property.includes(p))) {
-    // Add px to numeric values
-    return value.split(' ').map(v => {
-      if (/^\d+$/.test(v)) return `${v}px`
-      return v
-    }).join(' ')
-  }
-
+  if (!PX_PROPS.some(p => property.includes(p))) return value
   return value
+    .split(' ')
+    .map(v => (/^\d+$/.test(v) ? `${v}px` : v))
+    .join(' ')
 }
 
 /**
@@ -302,16 +317,16 @@ function transformEvents(events: Event[]): IREvent[] {
  */
 function mapEventName(name: string): string {
   const eventMap: Record<string, string> = {
-    'onclick': 'click',
-    'onhover': 'mouseenter',
-    'onfocus': 'focus',
-    'onblur': 'blur',
-    'onchange': 'change',
-    'oninput': 'input',
-    'onkeydown': 'keydown',
-    'onkeyup': 'keyup',
-    'onopen': 'open',
-    'onclose': 'close',
+    onclick: 'click',
+    onhover: 'mouseenter',
+    onfocus: 'focus',
+    onblur: 'blur',
+    onchange: 'change',
+    oninput: 'input',
+    onkeydown: 'keydown',
+    onkeyup: 'keyup',
+    onopen: 'open',
+    onclose: 'close',
   }
   return eventMap[name] ?? name.replace(/^on/, '')
 }
@@ -359,7 +374,9 @@ function transformChildren(children: (Instance | Text)[], context: ZagCompileCon
 /**
  * Extract HTML properties from component properties
  */
-function extractHTMLProperties(properties: Property[]): Array<{ name: string; value: string | number | boolean }> {
+function extractHTMLProperties(
+  properties: Property[]
+): Array<{ name: string; value: string | number | boolean }> {
   const htmlProps: Array<{ name: string; value: string | number | boolean }> = []
 
   for (const prop of properties) {

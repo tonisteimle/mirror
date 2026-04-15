@@ -4,7 +4,13 @@
  * Chat interface for interacting with the AI assistant.
  */
 
-import { MirrorAgent, ClaudeCliAgent, isClaudeCliAvailable, type AgentEvent, type LLMCommand } from '../agent'
+import {
+  MirrorAgent,
+  ClaudeCliAgent,
+  isClaudeCliAvailable,
+  type AgentEvent,
+  type LLMCommand,
+} from '../agent'
 
 // ============================================
 // TYPES
@@ -68,30 +74,18 @@ export class ChatPanel {
     this.detectAgent()
   }
 
-  /**
-   * Detect which agent to use
-   */
   private async detectAgent(): Promise<void> {
     try {
-      // Prefer Claude CLI if available
-      if (this.claudeAgent) {
-        const available = await isClaudeCliAvailable()
-        if (available) {
-          this.useClaudeCli = true
-          this.updateAgentIndicator('Claude CLI', true)
-          return
-        }
-      }
-
-      // Fall back to OpenRouter
-      if (this.agent) {
+      if (this.claudeAgent && (await isClaudeCliAvailable())) {
+        this.useClaudeCli = true
+        this.updateAgentIndicator('Claude CLI', true)
+      } else if (this.agent) {
         this.useClaudeCli = false
         this.updateAgentIndicator('OpenRouter', true)
       } else {
         this.updateAgentIndicator('Kein Agent', false)
       }
-    } catch (error) {
-      // Fall back silently if detection fails
+    } catch {
       this.updateAgentIndicator('Kein Agent', false)
     }
   }
@@ -140,7 +134,6 @@ export class ChatPanel {
     this.inputElement = this.container.querySelector('.chat-input')!
     this.sendButton = this.container.querySelector('.chat-send')!
     this.agentIndicator = this.container.querySelector('.agent-indicator')!
-
   }
 
   private renderMessages(): void {
@@ -149,49 +142,51 @@ export class ChatPanel {
       return
     }
 
-    this.messagesContainer.innerHTML = this.messages
-      .map(msg => this.renderMessage(msg))
-      .join('')
+    this.messagesContainer.innerHTML = this.messages.map(msg => this.renderMessage(msg)).join('')
 
     // Scroll to bottom
     this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight
   }
 
   private renderMessage(message: ChatMessage): string {
-    const isUser = message.role === 'user'
-
-    return `
-      <div class="chat-message ${isUser ? 'user' : 'assistant'} ${message.status || ''}">
-        <div class="message-header">
-          <span class="message-role">${isUser ? 'You' : 'Mirror AI'}</span>
-          <span class="message-time">${this.formatTime(message.timestamp)}</span>
-        </div>
-        <div class="message-content">${this.formatContent(message.content)}</div>
-        ${message.toolCalls?.length ? this.renderToolCalls(message.toolCalls) : ''}
-        ${message.commands?.length ? this.renderCommands(message.commands) : ''}
-        ${message.status === 'streaming' ? '<div class="typing-indicator"><span></span><span></span><span></span></div>' : ''}
-      </div>
-    `
+    const isUser = message.role === 'user',
+      role = isUser ? 'You' : 'Mirror AI'
+    const extras = [
+      message.toolCalls?.length ? this.renderToolCalls(message.toolCalls) : '',
+      message.commands?.length ? this.renderCommands(message.commands) : '',
+      message.status === 'streaming'
+        ? '<div class="typing-indicator"><span></span><span></span><span></span></div>'
+        : '',
+    ].join('')
+    return `<div class="chat-message ${isUser ? 'user' : 'assistant'} ${message.status || ''}"><div class="message-header"><span class="message-role">${role}</span><span class="message-time">${this.formatTime(message.timestamp)}</span></div><div class="message-content">${this.formatContent(message.content)}</div>${extras}</div>`
   }
 
   private renderToolCalls(toolCalls: ToolCall[]): string {
     return `
       <div class="tool-calls">
-        ${toolCalls.map(tool => `
+        ${toolCalls
+          .map(
+            tool => `
           <div class="tool-call ${tool.status}">
             <div class="tool-header">
               <span class="tool-icon">${this.getToolIcon(tool.tool)}</span>
               <span class="tool-name">${tool.tool}</span>
               <span class="tool-status">${this.getStatusIcon(tool.status)}</span>
             </div>
-            ${tool.result ? `
+            ${
+              tool.result
+                ? `
               <details class="tool-details">
                 <summary>Result</summary>
                 <pre>${JSON.stringify(tool.result, null, 2)}</pre>
               </details>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
     `
   }
@@ -213,7 +208,7 @@ export class ChatPanel {
     this.sendButton.addEventListener('click', () => this.sendMessage())
 
     // Input handling
-    this.inputElement.addEventListener('keydown', (e) => {
+    this.inputElement.addEventListener('keydown', e => {
       // Cmd/Ctrl+Enter to send
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
@@ -257,7 +252,7 @@ export class ChatPanel {
       role: 'user',
       content: messageText,
       timestamp: new Date(),
-      status: 'done'
+      status: 'done',
     }
     this.messages.push(userMessage)
 
@@ -269,7 +264,7 @@ export class ChatPanel {
       toolCalls: [],
       commands: [],
       timestamp: new Date(),
-      status: 'streaming'
+      status: 'streaming',
     }
     this.messages.push(assistantMessage)
     this.renderMessages()
@@ -280,9 +275,10 @@ export class ChatPanel {
 
     try {
       // Choose agent
-      const agentRunner = this.useClaudeCli && this.claudeAgent
-        ? this.claudeAgent.run(messageText)
-        : this.agent?.run(messageText)
+      const agentRunner =
+        this.useClaudeCli && this.claudeAgent
+          ? this.claudeAgent.run(messageText)
+          : this.agent?.run(messageText)
 
       if (!agentRunner) {
         throw new Error('Kein Agent verfügbar')
@@ -321,7 +317,7 @@ export class ChatPanel {
           id: this.generateId(),
           tool: event.tool || '',
           input: event.input,
-          status: 'running'
+          status: 'running',
         })
         this.renderMessages()
         break
@@ -372,7 +368,7 @@ export class ChatPanel {
       role: 'assistant',
       content,
       timestamp: new Date(),
-      status: 'done'
+      status: 'done',
     })
     this.renderMessages()
   }
@@ -393,17 +389,19 @@ export class ChatPanel {
     // Escape HTML first to prevent XSS
     const escaped = this.escapeHtml(content)
 
-    return escaped
-      // Code blocks
-      .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="$1">$2</code></pre>')
-      // Inline code
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // Bold
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      // Italic
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-      // Line breaks
-      .replace(/\n/g, '<br>')
+    return (
+      escaped
+        // Code blocks
+        .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="$1">$2</code></pre>')
+        // Inline code
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // Bold
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        // Line breaks
+        .replace(/\n/g, '<br>')
+    )
   }
 
   private escapeHtml(text: string): string {
@@ -412,7 +410,7 @@ export class ChatPanel {
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
-      "'": '&#039;'
+      "'": '&#039;',
     }
     return text.replace(/[&<>"']/g, char => map[char])
   }
@@ -420,7 +418,7 @@ export class ChatPanel {
   private formatTime(date: Date): string {
     return date.toLocaleTimeString('de-DE', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   }
 
@@ -448,7 +446,7 @@ export class ChatPanel {
       generate_component: '🎨',
       apply_pattern: '🧩',
       extract_component: '📤',
-      generate_similar: '✨'
+      generate_similar: '✨',
     }
     return icons[tool] || '🔧'
   }
@@ -458,7 +456,7 @@ export class ChatPanel {
       pending: '⏳',
       running: '⚡',
       done: '✓',
-      error: '✗'
+      error: '✗',
     }
     return icons[status] || ''
   }

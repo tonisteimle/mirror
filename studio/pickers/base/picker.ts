@@ -26,7 +26,11 @@ export abstract class BasePicker {
   private boundHandleKeyDown: (e: KeyboardEvent) => void
   private closeReason: 'select' | 'escape' | 'click-outside' | 'unknown' = 'unknown'
 
-  constructor(config: Partial<PickerConfig>, callbacks: PickerCallbacks, pickerType: PickerType = 'unknown') {
+  constructor(
+    config: Partial<PickerConfig>,
+    callbacks: PickerCallbacks,
+    pickerType: PickerType = 'unknown'
+  ) {
     this.config = { ...DEFAULT_CONFIG, ...config }
     this.callbacks = callbacks
     this.pickerId = `picker-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -238,14 +242,7 @@ export abstract class BasePicker {
       this.hide()
       return
     }
-
-    // Delegate to keyboard nav if available
-    if (this.keyboardNav) {
-      const handled = this.keyboardNav.handleKeyDown(event)
-      if (handled) {
-        event.stopPropagation()
-      }
-    }
+    if (this.keyboardNav && this.keyboardNav.handleKeyDown(event)) event.stopPropagation()
   }
 
   protected selectValue(value: string): void {

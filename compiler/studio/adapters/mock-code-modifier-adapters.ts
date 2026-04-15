@@ -56,9 +56,7 @@ export function createMockSourceMapPort(config: MockSourceMapPortConfig = {}): M
 
     getChildren(parentId: string): NodeMapping[] {
       const childIds = childrenMap.get(parentId) ?? []
-      return childIds
-        .map(id => nodes.get(id))
-        .filter((n): n is NodeMapping => n !== undefined)
+      return childIds.map(id => nodes.get(id)).filter((n): n is NodeMapping => n !== undefined)
     },
 
     isDescendantOf(targetId: string, ancestorId: string): boolean {
@@ -142,39 +140,43 @@ export interface MockLineParserPort extends LineParserPort {
   setAlias(name: string, canonical: string): void
   reset(): void
   // Internal helper for rebuilding lines
-  buildLine(indent: string, elementName: string, textContent: string | null, properties: ParsedProperty[]): string
+  buildLine(
+    indent: string,
+    elementName: string,
+    textContent: string | null,
+    properties: ParsedProperty[]
+  ): string
 }
 
-export function createMockLineParserPort(config: MockLineParserPortConfig = {}): MockLineParserPort {
-  const aliases = new Map<string, string>(config.aliases ?? [
-    // Default common aliases
-    ['bg', 'background'],
-    ['col', 'color'],
-    ['pad', 'padding'],
-    ['mar', 'margin'],
-    ['rad', 'radius'],
-    ['bor', 'border'],
-    ['boc', 'border-color'],
-    ['fs', 'font-size'],
-    ['w', 'width'],
-    ['h', 'height'],
-    ['hor', 'horizontal'],
-    ['ver', 'vertical'],
-  ])
+export function createMockLineParserPort(
+  config: MockLineParserPortConfig = {}
+): MockLineParserPort {
+  const aliases = new Map<string, string>(
+    config.aliases ?? [
+      // Default common aliases
+      ['bg', 'background'],
+      ['col', 'color'],
+      ['pad', 'padding'],
+      ['mar', 'margin'],
+      ['rad', 'radius'],
+      ['bor', 'border'],
+      ['boc', 'border-color'],
+      ['fs', 'font-size'],
+      ['w', 'width'],
+      ['h', 'height'],
+      ['hor', 'horizontal'],
+      ['ver', 'vertical'],
+    ]
+  )
 
-  // Helper to parse a simple property
   const parseSimpleProperty = (prop: string, startIndex: number): ParsedProperty | null => {
     const trimmed = prop.trim()
     if (!trimmed) return null
-
     const parts = trimmed.split(/\s+/)
-    const name = parts[0]
-    const value = parts.slice(1).join(' ')
-
     return {
-      name,
-      value,
-      rawName: name,
+      name: parts[0],
+      value: parts.slice(1).join(' '),
+      rawName: parts[0],
       start: startIndex,
       end: startIndex + prop.length,
     }
@@ -221,7 +223,8 @@ export function createMockLineParserPort(config: MockLineParserPortConfig = {}):
       }
 
       const propParts = remaining.split(',')
-      let currentPos = indent.length + elementName.length + (textContent ? textContent.length + 3 : 0)
+      let currentPos =
+        indent.length + elementName.length + (textContent ? textContent.length + 3 : 0)
 
       for (const part of propParts) {
         const trimmed = part.trim()
@@ -256,26 +259,20 @@ export function createMockLineParserPort(config: MockLineParserPortConfig = {}):
 
     findProperty(parsedLine: ParsedLine, propName: string): ParsedProperty | null {
       const canonical = aliases.get(propName) ?? propName
-      return parsedLine.properties.find(p => {
-        const pCanonical = aliases.get(p.name) ?? p.name
-        return pCanonical === canonical
-      }) ?? null
+      return (
+        parsedLine.properties.find(p => {
+          const pCanonical = aliases.get(p.name) ?? p.name
+          return pCanonical === canonical
+        }) ?? null
+      )
     },
 
     updateProperty(parsedLine: ParsedLine, propName: string, newValue: string): string {
-      const { indent, elementName, textContent, properties, originalLine } = parsedLine
-
-      // Find and update the property
+      const { indent, elementName, textContent, properties } = parsedLine
       const canonical = aliases.get(propName) ?? propName
-      const updatedProps = properties.map(p => {
-        const pCanonical = aliases.get(p.name) ?? p.name
-        if (pCanonical === canonical) {
-          return { ...p, value: newValue }
-        }
-        return p
-      })
-
-      // Rebuild line
+      const updatedProps = properties.map(p =>
+        (aliases.get(p.name) ?? p.name) === canonical ? { ...p, value: newValue } : p
+      )
       return this.buildLine(indent, elementName, textContent, updatedProps)
     },
 
@@ -318,7 +315,12 @@ export function createMockLineParserPort(config: MockLineParserPortConfig = {}):
     },
 
     // Helper method to rebuild a line
-    buildLine(indent: string, elementName: string, textContent: string | null, properties: ParsedProperty[]): string {
+    buildLine(
+      indent: string,
+      elementName: string,
+      textContent: string | null,
+      properties: ParsedProperty[]
+    ): string {
       let line = indent + elementName
 
       if (textContent !== null) {
@@ -326,12 +328,14 @@ export function createMockLineParserPort(config: MockLineParserPortConfig = {}):
       }
 
       if (properties.length > 0) {
-        const propStr = properties.map(p => {
-          if (p.value) {
-            return `${p.name} ${p.value}`
-          }
-          return p.name
-        }).join(', ')
+        const propStr = properties
+          .map(p => {
+            if (p.value) {
+              return `${p.name} ${p.value}`
+            }
+            return p.name
+          })
+          .join(', ')
 
         if (textContent !== null || elementName.endsWith(':')) {
           line += `, ${propStr}`
@@ -383,12 +387,14 @@ export function createMockTemplatePort(): MockTemplatePort {
       if (minIndent === Infinity) minIndent = 0
 
       // Re-indent all lines
-      return lines.map(line => {
-        if (!line.trim()) return ''
-        const currentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
-        const relativeIndent = currentIndent - minIndent
-        return targetIndent + ' '.repeat(relativeIndent) + line.trim()
-      }).join('\n')
+      return lines
+        .map(line => {
+          if (!line.trim()) return ''
+          const currentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
+          const relativeIndent = currentIndent - minIndent
+          return targetIndent + ' '.repeat(relativeIndent) + line.trim()
+        })
+        .join('\n')
     },
 
     reset(): void {
@@ -527,35 +533,26 @@ export function createNodeMapping(
   column = 1,
   endLine?: number
 ): NodeMapping {
-  return {
-    nodeId,
-    componentName,
-    position: {
-      line,
-      column,
-      endLine: endLine ?? line,
-    },
-  }
+  return { nodeId, componentName, position: { line, column, endLine: endLine ?? line } }
 }
 
 /**
  * Create a test fixture with source code and matching node mappings
  */
-export function createTestFixture(source: string, nodeSpecs: Array<{
-  nodeId: string
-  componentName: string
-  line: number
-  parentId?: string
-}>): MockCodeModifierPorts {
+export function createTestFixture(
+  source: string,
+  nodeSpecs: Array<{
+    nodeId: string
+    componentName: string
+    line: number
+    parentId?: string
+  }>
+): MockCodeModifierPorts {
   const nodes = new Map<string, NodeMapping>()
   const children = new Map<string, string[]>()
 
   for (const spec of nodeSpecs) {
-    nodes.set(spec.nodeId, createNodeMapping(
-      spec.nodeId,
-      spec.componentName,
-      spec.line
-    ))
+    nodes.set(spec.nodeId, createNodeMapping(spec.nodeId, spec.componentName, spec.line))
 
     if (spec.parentId) {
       const existing = children.get(spec.parentId) ?? []

@@ -53,7 +53,6 @@ export function createStudioTestAPI(): StudioTestAPI {
         unsubscribe()
         reject(new Error(`Timeout waiting for event: ${event}`))
       }, timeout)
-
       const unsubscribe = events.on(event, payload => {
         clearTimeout(timeoutId)
         unsubscribe()
@@ -159,13 +158,33 @@ export function getStudioTestAPI(): StudioTestAPI {
  * Call this during app initialization (only in test/dev environments)
  *
  * @param _studio - Studio instance (optional, for future use)
+ * @param _editor - CodeMirror editor instance (optional, for drag test API)
  */
-export function initStudioTestAPI(_studio?: unknown): void {
+export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
   const api = getStudioTestAPI()
 
   // Register on window for Playwright access
   if (typeof window !== 'undefined') {
     ;(window as Window & { __STUDIO_TEST__?: StudioTestAPI }).__STUDIO_TEST__ = api
+  }
+
+  // Initialize drag test API (available at window.__testDragDrop)
+  try {
+    const { setupGlobalDragTestAPI } = require('../preview/drag/test-api/global')
+    setupGlobalDragTestAPI(_editor)
+    log.info('Drag Test API initialized at window.__testDragDrop')
+  } catch (e) {
+    log.warn('Failed to initialize Drag Test API:', e)
+  }
+
+  // Initialize browser drag test API (available at window.__dragTest)
+  // This API uses real DOM events for visual testing
+  try {
+    const { setupBrowserDragTestAPI } = require('../preview/drag/browser-test-api')
+    setupBrowserDragTestAPI()
+    log.info('Browser Drag Test API initialized at window.__dragTest')
+  } catch (e) {
+    log.warn('Failed to initialize Browser Drag Test API:', e)
   }
 
   log.info('Test API initialized')

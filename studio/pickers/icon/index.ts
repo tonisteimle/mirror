@@ -80,14 +80,16 @@ export class IconPicker extends BasePicker {
       const data = await res.json()
 
       // Convert Lucide format to IconDefinition
-      const lucideIcons: IconDefinition[] = Object.entries(data.icons).map(([name, icon]: [string, any]) => ({
-        name,
-        path: '', // Will be loaded lazily
-        category: 'lucide',
-        tags: [name.replace(/-/g, ' ')],
-        viewBox: '0 0 24 24',
-        body: icon.body // Store the SVG body for later
-      }))
+      const lucideIcons: IconDefinition[] = Object.entries(data.icons).map(
+        ([name, icon]: [string, any]) => ({
+          name,
+          path: '', // Will be loaded lazily
+          category: 'lucide',
+          tags: [name.replace(/-/g, ' ')],
+          viewBox: '0 0 24 24',
+          body: icon.body, // Store the SVG body for later
+        })
+      )
 
       // Store bodies for lazy loading
       for (const [name, icon] of Object.entries(data.icons) as [string, any][]) {
@@ -301,20 +303,11 @@ export class IconPicker extends BasePicker {
   }
 
   getValue(): string {
-    // Return the currently selected icon name
     const index = this.getSelectedIndex()
-
-    // Treat whitespace-only search queries as empty
-    const hasRealSearchQuery = this.searchQuery && this.searchQuery.trim().length > 0
-
-    // Use filteredIcons, but fall back to built-in ICONS if empty (regardless of loading state)
-    let iconsToUse = this.filteredIcons
-    if (iconsToUse.length === 0 && !hasRealSearchQuery) {
-      iconsToUse = ICONS
-    }
-
-    const icon = iconsToUse[index]
-    return icon?.name ?? ''
+    const hasRealSearchQuery = this.searchQuery?.trim().length > 0
+    const iconsToUse =
+      this.filteredIcons.length === 0 && !hasRealSearchQuery ? ICONS : this.filteredIcons
+    return iconsToUse[index]?.name ?? ''
   }
 
   setValue(value: string): void {
@@ -331,9 +324,10 @@ export class IconPicker extends BasePicker {
       this.filteredIcons = this.icons
     } else {
       const q = trimmedQuery.toLowerCase()
-      this.filteredIcons = this.icons.filter(icon =>
-        icon.name.toLowerCase().includes(q) ||
-        icon.tags.some(tag => tag.toLowerCase().includes(q))
+      this.filteredIcons = this.icons.filter(
+        icon =>
+          icon.name.toLowerCase().includes(q) ||
+          icon.tags.some(tag => tag.toLowerCase().includes(q))
       )
     }
 
@@ -342,9 +336,7 @@ export class IconPicker extends BasePicker {
 
   clearSearch(): void {
     this.searchQuery = ''
-    this.filteredIcons = this.activeCategory
-      ? getIconsByCategory(this.activeCategory)
-      : this.icons
+    this.filteredIcons = this.activeCategory ? getIconsByCategory(this.activeCategory) : this.icons
     if (this.searchInput) {
       this.searchInput.value = ''
     }
@@ -448,7 +440,7 @@ export class IconPicker extends BasePicker {
       up: 'ArrowUp',
       down: 'ArrowDown',
       left: 'ArrowLeft',
-      right: 'ArrowRight'
+      right: 'ArrowRight',
     }
 
     const event = new KeyboardEvent('keydown', { key: keyMap[direction] })
@@ -470,7 +462,7 @@ export class IconPicker extends BasePicker {
 
     // Keyboard handler for when user manually clicks search input
     // Note: Normally editor keeps focus and TriggerManager handles keys
-    this.searchInput.addEventListener('keydown', (e) => {
+    this.searchInput.addEventListener('keydown', e => {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
         this.keyboardNav?.moveDown()
@@ -592,7 +584,7 @@ export class IconPicker extends BasePicker {
         orientation: 'grid',
         columns: this.columns,
         wrap: true,
-        onSelect: (item) => {
+        onSelect: item => {
           const iconName = item.getAttribute('data-icon')
           if (iconName) {
             this.addToRecent(iconName)
@@ -609,18 +601,10 @@ export class IconPicker extends BasePicker {
 
   protected handleKeyDown(event: KeyboardEvent): void {
     if (event.target === this.searchInput) {
-      if (event.key === 'Escape') {
-        super.handleKeyDown(event)
-      }
+      if (event.key === 'Escape') super.handleKeyDown(event)
       return
     }
-
-    if (this.keyboardNav) {
-      if (this.keyboardNav.handleKeyDown(event)) {
-        return
-      }
-    }
-
+    if (this.keyboardNav?.handleKeyDown(event)) return
     super.handleKeyDown(event)
   }
 }
@@ -628,10 +612,7 @@ export class IconPicker extends BasePicker {
 /**
  * Factory function
  */
-export function createIconPicker(
-  config: IconPickerConfig,
-  callbacks: PickerCallbacks
-): IconPicker {
+export function createIconPicker(config: IconPickerConfig, callbacks: PickerCallbacks): IconPicker {
   return new IconPicker(config, callbacks)
 }
 
@@ -641,24 +622,20 @@ export function createIconPicker(
 let globalIconPicker: IconPicker | null = null
 
 export function getGlobalIconPicker(): IconPicker {
-  if (!globalIconPicker) {
-    globalIconPicker = new IconPicker(
-      {
-        useLucide: true,
-        columns: 12,
-        iconSize: 24,
-        // TriggerManager handles keyboard navigation and click-outside
-        externalKeyboardHandling: true,
-        closeOnClickOutside: false,
-      },
-      { onSelect: () => {} }
-    )
-  }
-  return globalIconPicker
+  return (globalIconPicker ??= new IconPicker(
+    {
+      useLucide: true,
+      columns: 12,
+      iconSize: 24,
+      externalKeyboardHandling: true,
+      closeOnClickOutside: false,
+    },
+    { onSelect: () => {} }
+  ))
 }
 
 export function setGlobalIconPickerCallback(onSelect: (value: string) => void): void {
   if (globalIconPicker) {
-    (globalIconPicker as any).callbacks.onSelect = onSelect
+    ;(globalIconPicker as any).callbacks.onSelect = onSelect
   }
 }

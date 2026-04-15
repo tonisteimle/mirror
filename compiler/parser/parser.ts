@@ -162,6 +162,82 @@ export class Parser {
     })
   }
 
+  /**
+   * Create a Text instance from a string token.
+   */
+  private createTextChild(token: Token): Instance {
+    return {
+      type: 'Instance',
+      component: 'Text',
+      name: null,
+      properties: [
+        {
+          type: 'Property',
+          name: 'content',
+          values: [token.value],
+          line: token.line,
+          column: token.column,
+        },
+      ],
+      children: [],
+      states: [],
+      events: [],
+      line: token.line,
+      column: token.column,
+    }
+  }
+
+  /**
+   * Parse the body of a state block (properties, children, child overrides).
+   * Handles: string → Text child, uppercase → child/override, lowercase → property.
+   */
+  private parseStateBlockBody(state: State): void {
+    while (!this.check('DEDENT') && !this.isAtEnd()) {
+      this.skipNewlines()
+      if (this.check('DEDENT')) break
+
+      // String content → Text child
+      if (this.check('STRING')) {
+        if (!state.children) state.children = []
+        state.children.push(this.createTextChild(this.advance()))
+        continue
+      }
+
+      if (this.check('IDENTIFIER')) {
+        const name = this.current().value
+        if (this.isUppercase(name)) {
+          // Uppercase: child override or new child
+          if (this.checkNext('COLON')) {
+            const override = this.parseStateChildOverride()
+            if (override) state.childOverrides.push(override)
+          } else if (isPrimitive(name)) {
+            const child = this.parseStateChildInstance()
+            if (child) {
+              if (!state.children) state.children = []
+              state.children.push(child)
+            }
+          } else if (this.checkNext('STRING')) {
+            const child = this.parseStateChildInstance()
+            if (child) {
+              if (!state.children) state.children = []
+              state.children.push(child)
+            }
+          } else {
+            const override = this.parseStateChildOverride()
+            if (override) state.childOverrides.push(override)
+          }
+        } else {
+          // Lowercase: property
+          const prop = this.parseProperty()
+          if (prop) state.properties.push(prop)
+        }
+      } else {
+        this.advance()
+      }
+    }
+    if (this.check('DEDENT')) this.advance()
+  }
+
   parse(): AST {
     const program: Program = {
       type: 'Program',
@@ -477,15 +553,10 @@ export class Parser {
    */
   private parseTokenValue(token: Token): string | number | boolean {
     if (token.type === 'NUMBER') {
-      // Check if it's a hex color (starts with #)
-      if (token.value.startsWith('#')) {
-        return token.value // Keep colors as strings
-      }
-      // Parse as number
+      if (token.value.startsWith('#')) return token.value
       const num = parseFloat(token.value)
       return isNaN(num) ? token.value : num
     }
-    // Handle boolean identifiers
     if (token.type === 'IDENTIFIER' && (token.value === 'true' || token.value === 'false')) {
       return token.value === 'true'
     }
@@ -629,12 +700,11 @@ export class Parser {
 
   // Legacy syntax: name: type = value (backwards compatible)
   private parseLegacyTokenDefinition(section?: string): TokenDefinition | null {
-    const name = this.advance() // identifier
-    this.advance() // :
-    const tokenType = this.advance() // type
-    this.advance() // =
-    const value = this.advance() // value
-
+    const name = this.advance()
+    this.advance() // identifier, :
+    const tokenType = this.advance()
+    this.advance() // type, =
+    const value = this.advance()
     return {
       type: 'Token',
       name: name.value,
@@ -2809,28 +2879,8 @@ export class Parser {
 
             // Handle string content as Text child
             if (this.check('STRING')) {
-              const str = this.advance()
-              const textChild: Instance = {
-                type: 'Instance',
-                component: 'Text',
-                name: null,
-                properties: [
-                  {
-                    type: 'Property',
-                    name: 'content',
-                    values: [str.value],
-                    line: str.line,
-                    column: str.column,
-                  },
-                ],
-                children: [],
-                states: [],
-                events: [],
-                line: str.line,
-                column: str.column,
-              }
               if (!state.children) state.children = []
-              state.children.push(textChild)
+              state.children.push(this.createTextChild(this.advance()))
               continue
             }
 
@@ -2905,28 +2955,8 @@ export class Parser {
 
               // Handle string content as Text child
               if (this.check('STRING')) {
-                const str = this.advance()
-                const textChild: Instance = {
-                  type: 'Instance',
-                  component: 'Text',
-                  name: null,
-                  properties: [
-                    {
-                      type: 'Property',
-                      name: 'content',
-                      values: [str.value],
-                      line: str.line,
-                      column: str.column,
-                    },
-                  ],
-                  children: [],
-                  states: [],
-                  events: [],
-                  line: str.line,
-                  column: str.column,
-                }
                 if (!state.children) state.children = []
-                state.children.push(textChild)
+                state.children.push(this.createTextChild(this.advance()))
                 continue
               }
 
@@ -2999,28 +3029,8 @@ export class Parser {
 
                 // Handle string content as Text child
                 if (this.check('STRING')) {
-                  const str = this.advance()
-                  const textChild: Instance = {
-                    type: 'Instance',
-                    component: 'Text',
-                    name: null,
-                    properties: [
-                      {
-                        type: 'Property',
-                        name: 'content',
-                        values: [str.value],
-                        line: str.line,
-                        column: str.column,
-                      },
-                    ],
-                    children: [],
-                    states: [],
-                    events: [],
-                    line: str.line,
-                    column: str.column,
-                  }
                   if (!state.children) state.children = []
-                  state.children.push(textChild)
+                  state.children.push(this.createTextChild(this.advance()))
                   continue
                 }
 
@@ -3328,27 +3338,7 @@ export class Parser {
 
       // String content as Text child (for component definitions)
       if (this.check('STRING')) {
-        const str = this.advance()
-        const textChild: Instance = {
-          type: 'Instance',
-          component: 'Text',
-          name: null,
-          properties: [
-            {
-              type: 'Property',
-              name: 'content',
-              values: [str.value],
-              line: str.line,
-              column: str.column,
-            },
-          ],
-          children: [],
-          states: [],
-          events: [],
-          line: str.line,
-          column: str.column,
-        }
-        component.children.push(textChild)
+        component.children.push(this.createTextChild(this.advance()))
         continue
       }
 
@@ -3749,28 +3739,8 @@ export class Parser {
                 }
               } else if (this.check('STRING')) {
                 // Handle string content as Text child
-                const str = this.advance()
-                const textChild: Instance = {
-                  type: 'Instance',
-                  component: 'Text',
-                  name: null,
-                  properties: [
-                    {
-                      type: 'Property',
-                      name: 'content',
-                      values: [str.value],
-                      line: str.line,
-                      column: str.column,
-                    },
-                  ],
-                  children: [],
-                  states: [],
-                  events: [],
-                  line: str.line,
-                  column: str.column,
-                }
                 if (!state.children) state.children = []
-                state.children.push(textChild)
+                state.children.push(this.createTextChild(this.advance()))
               } else {
                 // Skip any other tokens to prevent infinite loops
                 this.advance()
@@ -4727,20 +4697,15 @@ export class Parser {
    * Returns false for property starters, boolean properties, states, keys, and events.
    */
   private isImplicitOnclickCandidate(name: string): boolean {
-    // Known actions are always candidates
     if (ACTION_NAMES.has(name)) return true
-    // Exclude known property starters
-    if (PROPERTY_STARTERS.has(name)) return false
-    // Exclude boolean properties
-    if (ALL_BOOLEAN_PROPERTIES.has(name)) return false
-    // Exclude state names
-    if (STATE_NAMES.has(name)) return false
-    // Exclude keyboard keys
-    if (KEYBOARD_KEYS.has(name)) return false
-    // Exclude event names
-    if (EVENT_NAMES.has(name)) return false
-    // Custom function names are allowed
-    return true
+    const excludeSets = [
+      PROPERTY_STARTERS,
+      ALL_BOOLEAN_PROPERTIES,
+      STATE_NAMES,
+      KEYBOARD_KEYS,
+      EVENT_NAMES,
+    ]
+    return !excludeSets.some(set => set.has(name))
   }
 
   /**
@@ -5971,27 +5936,7 @@ export class Parser {
 
         // String as Text child
         if (this.check('STRING')) {
-          const str = this.advance()
-          const textChild: Instance = {
-            type: 'Instance',
-            component: 'Text',
-            name: null,
-            properties: [
-              {
-                type: 'Property',
-                name: 'content',
-                values: [str.value],
-                line: str.line,
-                column: str.column,
-              },
-            ],
-            children: [],
-            states: [],
-            events: [],
-            line: str.line,
-            column: str.column,
-          }
-          instance.children.push(textChild)
+          instance.children.push(this.createTextChild(this.advance()))
           continue
         }
 

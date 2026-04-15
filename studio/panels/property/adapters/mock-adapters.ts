@@ -5,7 +5,12 @@
  * Ermöglichen vollständige Testbarkeit ohne DOM, ohne globalen State.
  */
 
-import type { ExtractedElement, ExtractedProperty, PropertyCategory, ModificationResult } from '../../../shared/compiler-types'
+import type {
+  ExtractedElement,
+  ExtractedProperty,
+  PropertyCategory,
+  ModificationResult,
+} from '../../../shared/compiler-types'
 import type {
   SelectionPort,
   PropertyExtractionPort,
@@ -18,7 +23,7 @@ import type {
   SpacingToken,
   ColorToken,
   PropertyChange,
-  Rect
+  Rect,
 } from '../ports'
 
 // ============================================
@@ -39,7 +44,7 @@ export interface MockSelectionPort extends SelectionPort {
 export function createMockSelectionPort(initialSelection: string | null = null): MockSelectionPort {
   const state: MockSelectionPortState = {
     currentSelection: initialSelection,
-    selectionHistory: [initialSelection]
+    selectionHistory: [initialSelection],
   }
 
   const listeners = new Set<(nodeId: string | null, previousNodeId: string | null) => void>()
@@ -70,7 +75,7 @@ export function createMockSelectionPort(initialSelection: string | null = null):
 
     _simulateSelect(nodeId) {
       this.select(nodeId)
-    }
+    },
   }
 }
 
@@ -95,7 +100,7 @@ export function createMockExtractionPort(): MockExtractionPort {
   const state: MockExtractionPortState = {
     elements: new Map(),
     definitions: new Map(),
-    getCalls: []
+    getCalls: [],
   }
 
   return {
@@ -122,7 +127,7 @@ export function createMockExtractionPort(): MockExtractionPort {
       state.elements.clear()
       state.definitions.clear()
       state.getCalls.length = 0
-    }
+    },
   }
 }
 
@@ -154,14 +159,14 @@ export function createMockModificationPort(): MockModificationPort {
   const state: MockModificationPortState = {
     modifications: [],
     shouldFail: false,
-    lastResult: null
+    lastResult: null,
   }
 
   const createResult = (success: boolean): ModificationResult => ({
     success,
     newSource: success ? 'modified source' : '',
     change: { from: 0, to: 0, insert: '' },
-    error: success ? undefined : 'Mock error'
+    error: success ? undefined : 'Mock error',
   })
 
   return {
@@ -207,7 +212,7 @@ export function createMockModificationPort(): MockModificationPort {
       state.modifications.length = 0
       state.shouldFail = false
       state.lastResult = null
-    }
+    },
   }
 }
 
@@ -235,7 +240,7 @@ export function createMockTokenPort(): MockTokenPort {
     spacingTokens: new Map(),
     colorTokens: [],
     tokenValues: new Map(),
-    cacheInvalidated: false
+    cacheInvalidated: false,
   }
 
   return {
@@ -274,7 +279,7 @@ export function createMockTokenPort(): MockTokenPort {
       state.colorTokens.length = 0
       state.tokenValues.clear()
       state.cacheInvalidated = false
-    }
+    },
   }
 }
 
@@ -300,7 +305,7 @@ export function createMockLayoutPort(): MockLayoutPort {
   const state: MockLayoutPortState = {
     positionedContainers: new Set(),
     parentLayoutTypes: new Map(),
-    elementRects: new Map()
+    elementRects: new Map(),
   }
 
   return {
@@ -338,7 +343,7 @@ export function createMockLayoutPort(): MockLayoutPort {
       state.positionedContainers.clear()
       state.parentLayoutTypes.clear()
       state.elementRects.clear()
-    }
+    },
   }
 }
 
@@ -367,7 +372,7 @@ export function createMockEventPort(): MockEventPort {
     isCompiling: false,
     selectionInvalidatedHandlers: new Set(),
     compileCompletedHandlers: new Set(),
-    definitionSelectedHandlers: new Set()
+    definitionSelectedHandlers: new Set(),
   }
 
   return {
@@ -413,7 +418,7 @@ export function createMockEventPort(): MockEventPort {
       state.selectionInvalidatedHandlers.clear()
       state.compileCompletedHandlers.clear()
       state.definitionSelectedHandlers.clear()
-    }
+    },
   }
 }
 
@@ -437,7 +442,7 @@ export function createMockPorts(): MockPropertyPanelPorts {
     modification: createMockModificationPort(),
     tokens: createMockTokenPort(),
     layout: createMockLayoutPort(),
-    events: createMockEventPort()
+    events: createMockEventPort(),
   }
 }
 
@@ -464,7 +469,7 @@ export function createMockElement(
     categories: groupPropertiesByCategory(properties),
     interactions: options.interactions ?? [],
     events: options.events ?? [],
-    ...options
+    ...options,
   }
 }
 
@@ -486,7 +491,7 @@ export function createMockProperty(
     line: options.line ?? 0,
     column: options.column ?? 0,
     isToken: options.isToken ?? false,
-    ...options
+    ...options,
   }
 }
 
@@ -499,26 +504,22 @@ const CATEGORY_LABELS: Record<string, string> = {
   spacing: 'Spacing',
   typography: 'Typography',
   behavior: 'Behavior',
-  other: 'Other'
+  other: 'Other',
 }
 
 /**
  * Groups properties into categories for ExtractedElement.
  */
 function groupPropertiesByCategory(properties: ExtractedProperty[]): PropertyCategory[] {
-  const categoryMap = new Map<string, ExtractedProperty[]>()
-
-  for (const prop of properties) {
+  const categoryMap = properties.reduce((map, prop) => {
     const category = prop.category ?? 'other'
-    if (!categoryMap.has(category)) {
-      categoryMap.set(category, [])
-    }
-    categoryMap.get(category)!.push(prop)
-  }
-
+    if (!map.has(category)) map.set(category, [])
+    map.get(category)!.push(prop)
+    return map
+  }, new Map<string, ExtractedProperty[]>())
   return Array.from(categoryMap.entries()).map(([name, props]) => ({
     name,
     label: CATEGORY_LABELS[name] ?? name,
-    properties: props
+    properties: props,
   }))
 }

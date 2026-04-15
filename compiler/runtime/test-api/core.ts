@@ -4,12 +4,7 @@
  * Element access, state machine, and event simulation.
  */
 
-import type {
-  MirrorElement,
-  RuntimeFunctions,
-  CoreTestAPI,
-  StateMachineInfo,
-} from './types'
+import type { MirrorElement, RuntimeFunctions, CoreTestAPI, StateMachineInfo } from './types'
 
 /**
  * Create the Core Test API
@@ -29,21 +24,10 @@ export function createCoreAPI(runtime: RuntimeFunctions): CoreTestAPI {
     },
 
     findByName(name: string): MirrorElement | null {
-      // Try data-mirror-name first (current compiler output)
-      let el = document.querySelector(`[data-mirror-name="${name}"]`) as MirrorElement | null
-      if (el) return el
-
-      // Try data-instance-name (explicit name property)
-      el = document.querySelector(`[data-instance-name="${name}"]`) as MirrorElement | null
-      if (el) return el
-
-      // Try data-component-name (component definition name)
-      el = document.querySelector(`[data-component-name="${name}"]`) as MirrorElement | null
-      if (el) return el
-
-      // Try name attribute
-      el = document.querySelector(`[name="${name}"]`) as MirrorElement | null
-      return el
+      return (document.querySelector(`[data-mirror-name="${name}"]`) ||
+        document.querySelector(`[data-instance-name="${name}"]`) ||
+        document.querySelector(`[data-component-name="${name}"]`) ||
+        document.querySelector(`[name="${name}"]`)) as MirrorElement | null
     },
 
     // ----------------------------------------
@@ -98,7 +82,10 @@ export function createCoreAPI(runtime: RuntimeFunctions): CoreTestAPI {
     // Event Simulation
     // ----------------------------------------
 
-    trigger(el: MirrorElement, event: 'click' | 'hover' | 'focus' | 'blur' | 'change' | 'input'): void {
+    trigger(
+      el: MirrorElement,
+      event: 'click' | 'hover' | 'focus' | 'blur' | 'change' | 'input'
+    ): void {
       if (!el) return
 
       switch (event) {
@@ -130,31 +117,33 @@ export function createCoreAPI(runtime: RuntimeFunctions): CoreTestAPI {
 
       // Map common key names
       const keyMap: Record<string, string> = {
-        'enter': 'Enter',
-        'escape': 'Escape',
-        'esc': 'Escape',
-        'space': ' ',
-        'tab': 'Tab',
-        'backspace': 'Backspace',
-        'delete': 'Delete',
+        enter: 'Enter',
+        escape: 'Escape',
+        esc: 'Escape',
+        space: ' ',
+        tab: 'Tab',
+        backspace: 'Backspace',
+        delete: 'Delete',
         'arrow-up': 'ArrowUp',
         'arrow-down': 'ArrowDown',
         'arrow-left': 'ArrowLeft',
         'arrow-right': 'ArrowRight',
-        'up': 'ArrowUp',
-        'down': 'ArrowDown',
-        'left': 'ArrowLeft',
-        'right': 'ArrowRight',
+        up: 'ArrowUp',
+        down: 'ArrowDown',
+        left: 'ArrowLeft',
+        right: 'ArrowRight',
       }
 
       const normalizedKey = keyMap[key.toLowerCase()] || key
 
-      el.dispatchEvent(new KeyboardEvent(eventType, {
-        key: normalizedKey,
-        code: normalizedKey,
-        bubbles: true,
-        cancelable: true,
-      }))
+      el.dispatchEvent(
+        new KeyboardEvent(eventType, {
+          key: normalizedKey,
+          code: normalizedKey,
+          bubbles: true,
+          cancelable: true,
+        })
+      )
     },
 
     // ----------------------------------------
@@ -169,7 +158,8 @@ export function createCoreAPI(runtime: RuntimeFunctions): CoreTestAPI {
     exclusive(el: MirrorElement, state?: string): void {
       if (!el) return
       // Determine target state
-      const targetState = state ||
+      const targetState =
+        state ||
         (el._stateMachine
           ? Object.keys(el._stateMachine.states).find(s => s !== 'default')
           : 'active') ||
@@ -198,7 +188,6 @@ export function createCoreAPI(runtime: RuntimeFunctions): CoreTestAPI {
 
     getStateMachineInfo(el: MirrorElement): StateMachineInfo | null {
       if (!el?._stateMachine) return null
-
       const sm = el._stateMachine
       return {
         current: sm.current,

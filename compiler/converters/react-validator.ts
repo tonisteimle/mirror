@@ -99,18 +99,16 @@ export function validateReactCode(code: string): ValidationResult {
       // Check for forbidden hooks
       CallExpression(path: NodePath<t.CallExpression>) {
         const callee = path.node.callee
-        if (t.isIdentifier(callee)) {
-          if (FORBIDDEN_HOOKS.includes(callee.name)) {
-            errors.push({
-              rule: 'no-side-effect-hooks',
-              message: `Hook "${callee.name}" ist nicht erlaubt. Nur useState für einfache Zustände.`,
-              line: path.node.loc?.start.line,
-              column: path.node.loc?.start.column,
-              suggestion:
-                'Entferne den Hook. Für Hover-States nutze useState mit onMouseEnter/onMouseLeave.',
-              severity: 'error',
-            })
-          }
+        if (t.isIdentifier(callee) && FORBIDDEN_HOOKS.includes(callee.name)) {
+          errors.push({
+            rule: 'no-side-effect-hooks',
+            severity: 'error',
+            message: `Hook "${callee.name}" ist nicht erlaubt. Nur useState für einfache Zustände.`,
+            line: path.node.loc?.start.line,
+            column: path.node.loc?.start.column,
+            suggestion:
+              'Entferne den Hook. Für Hover-States nutze useState mit onMouseEnter/onMouseLeave.',
+          })
         }
       },
 
@@ -301,33 +299,23 @@ export function validateReactCode(code: string): ValidationResult {
 // Format Errors for LLM
 // ============================================================================
 
+function formatIssue(issue: ValidationIssue): string {
+  let msg = `- ${issue.message}`
+  if (issue.line) msg += ` (Zeile ${issue.line})`
+  if (issue.suggestion) msg += `\n  → ${issue.suggestion}`
+  return msg
+}
+
 export function formatValidationErrors(result: ValidationResult): string {
   if (result.valid && result.warnings.length === 0) return ''
-
-  const lines: string[] = []
-
-  if (result.errors.length > 0) {
-    lines.push('FEHLER (müssen behoben werden):\n')
-    for (const error of result.errors) {
-      let msg = `- ${error.message}`
-      if (error.line) msg += ` (Zeile ${error.line})`
-      if (error.suggestion) msg += `\n  → ${error.suggestion}`
-      lines.push(msg)
-    }
-  }
-
-  if (result.warnings.length > 0) {
-    if (lines.length > 0) lines.push('')
-    lines.push('WARNUNGEN (sollten behoben werden):\n')
-    for (const warning of result.warnings) {
-      let msg = `- ${warning.message}`
-      if (warning.line) msg += ` (Zeile ${warning.line})`
-      if (warning.suggestion) msg += `\n  → ${warning.suggestion}`
-      lines.push(msg)
-    }
-  }
-
-  return lines.join('\n')
+  const sections: string[] = []
+  if (result.errors.length > 0)
+    sections.push('FEHLER (müssen behoben werden):\n' + result.errors.map(formatIssue).join('\n'))
+  if (result.warnings.length > 0)
+    sections.push(
+      'WARNUNGEN (sollten behoben werden):\n' + result.warnings.map(formatIssue).join('\n')
+    )
+  return sections.join('\n\n')
 }
 
 // ============================================================================

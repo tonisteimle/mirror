@@ -136,7 +136,10 @@ export class Validator {
       }
       this.definedComponents.add(component.name)
       // Track definition location for unused warnings
-      this.componentDefinitions.set(component.name, { line: component.line, column: component.column })
+      this.componentDefinitions.set(component.name, {
+        line: component.line,
+        column: component.column,
+      })
     }
 
     // Second pass: track extends relationships (need all names first)
@@ -182,19 +185,20 @@ export class Validator {
   // ==========================================================================
 
   private validateToken(token: TokenDefinition): void {
-    // Validate token value based on inferred type
-    if (token.tokenType === 'color') {
-      if (typeof token.value === 'string' && token.value.startsWith('#')) {
-        const hexRegex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
-        if (!hexRegex.test(token.value)) {
-          this.addError(
-            ERROR_CODES.INVALID_COLOR,
-            `Invalid color value "${token.value}". Use #RGB, #RGBA, #RRGGBB, or #RRGGBBAA`,
-            token.line,
-            token.column
-          )
-        }
-      }
+    if (
+      token.tokenType !== 'color' ||
+      typeof token.value !== 'string' ||
+      !token.value.startsWith('#')
+    )
+      return
+    const hexRegex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
+    if (!hexRegex.test(token.value)) {
+      this.addError(
+        ERROR_CODES.INVALID_COLOR,
+        `Invalid color value "${token.value}". Use #RGB, #RGBA, #RRGGBB, or #RRGGBBAA`,
+        token.line,
+        token.column
+      )
     }
   }
 
@@ -203,8 +207,8 @@ export class Validator {
     if (component.primitive) {
       const primLower = component.primitive.toLowerCase()
       // Check both direct primitives and aliases
-      const isValidPrimitive = this.rules.validPrimitives.has(primLower) ||
-                               this.rules.primitiveAliases.has(primLower)
+      const isValidPrimitive =
+        this.rules.validPrimitives.has(primLower) || this.rules.primitiveAliases.has(primLower)
       if (!isValidPrimitive) {
         const suggestion = suggestSimilar(component.primitive, this.rules.validPrimitives)
         this.addError(
@@ -220,15 +224,21 @@ export class Validator {
     // Check extends
     if (component.extends) {
       const extendsLower = component.extends.toLowerCase()
-      const isKnownPrimitive = this.rules.validPrimitives.has(extendsLower) ||
-                               this.rules.primitiveAliases.has(extendsLower)
+      const isKnownPrimitive =
+        this.rules.validPrimitives.has(extendsLower) ||
+        this.rules.primitiveAliases.has(extendsLower)
       if (!this.definedComponents.has(component.extends) && !isKnownPrimitive) {
         this.trackUsedComponent(component.extends, component.line, component.column)
       }
     }
 
     // Validate property set (layout conflicts, duplicates, required, ranges)
-    this.validatePropertySet(component.properties, component.primitive || component.name, component.line, component.column)
+    this.validatePropertySet(
+      component.properties,
+      component.primitive || component.name,
+      component.line,
+      component.column
+    )
 
     // Validate individual properties
     for (const prop of component.properties) {
@@ -276,7 +286,12 @@ export class Validator {
     }
 
     // Validate property set (layout conflicts, duplicates, required, ranges)
-    this.validatePropertySet(instance.properties, instance.component, instance.line, instance.column)
+    this.validatePropertySet(
+      instance.properties,
+      instance.component,
+      instance.line,
+      instance.column
+    )
 
     // Validate individual properties
     for (const prop of instance.properties) {
@@ -293,8 +308,7 @@ export class Validator {
         // Check if child is inline state (e.g., "state hover bg #333")
         else if (child.component === 'state') {
           this.validateStateAsInstance(child)
-        }
-        else {
+        } else {
           this.validateInstance(child)
         }
       }
@@ -390,20 +404,10 @@ export class Validator {
    * These are parsed as instances but should be treated as state definitions.
    */
   private validateStateBlock(instance: Instance): void {
-    const stateName = instance.component.toLowerCase()
-
-    // Validate properties within the state block
-    for (const prop of instance.properties) {
-      this.validateProperty(prop)
-    }
-
-    // Children in state blocks are actually properties parsed as instances
-    // e.g., "hover\n  bg #333" → hover instance with child "bg" instance
-    for (const child of instance.children) {
-      if (child.type === 'Instance') {
-        this.validatePropertyAsInstance(child)
-      }
-    }
+    instance.properties.forEach(prop => this.validateProperty(prop))
+    instance.children
+      .filter(c => c.type === 'Instance')
+      .forEach(c => this.validatePropertyAsInstance(c as Instance))
   }
 
   /**
@@ -474,24 +478,21 @@ export class Validator {
     }
 
     // Extract actual values (handle TokenReference objects)
-    const values = prop.values.map(v => {
-      if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'token') {
-        return '$' + (v as TokenReference).name
-      }
-      return v
-    }).filter(v => typeof v !== 'object') as (string | number | boolean)[]
+    const values = prop.values
+      .map(v => {
+        if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'token') {
+          return '$' + (v as TokenReference).name
+        }
+        return v
+      })
+      .filter(v => typeof v !== 'object') as (string | number | boolean)[]
 
     // Validate values
     const validator = this.rules.propertyValueValidators.get(propDef.name)
     if (validator) {
       const result = validator(values)
       for (const err of result.errors) {
-        this.addError(
-          ERROR_CODES.INVALID_VALUE,
-          err,
-          prop.line,
-          prop.column
-        )
+        this.addError(ERROR_CODES.INVALID_VALUE, err, prop.line, prop.column)
       }
     }
 
@@ -616,13 +617,9 @@ export class Validator {
   }
 
   private validateTokenReference(tokenRef: string, line: number, column: number): void {
-    // Extract token name: $accent.bg → primary or primary.bg
-    const name = tokenRef.slice(1) // Remove $
-    const rootName = name.split('.')[0]
-
-    // Track that this token is used
+    const name = tokenRef.slice(1),
+      rootName = name.split('.')[0]
     this.usedTokens.add(rootName)
-
     if (!this.definedTokens.has(rootName) && !this.definedTokens.has(name)) {
       this.addWarning(
         ERROR_CODES.UNDEFINED_TOKEN,
@@ -634,9 +631,7 @@ export class Validator {
   }
 
   private validateState(state: State): void {
-    // Check if state name is valid
     if (!this.rules.validStates.has(state.name)) {
-      // Custom states are allowed, but warn
       this.addWarning(
         ERROR_CODES.UNKNOWN_STATE,
         `State "${state.name}" is not a known state. Consider using: ${[...this.rules.validStates].slice(0, 5).join(', ')}...`,
@@ -644,11 +639,7 @@ export class Validator {
         state.column
       )
     }
-
-    // Validate properties within state
-    for (const prop of state.properties) {
-      this.validateProperty(prop)
-    }
+    state.properties.forEach(prop => this.validateProperty(prop))
   }
 
   private validateEvent(event: Event): void {
@@ -821,7 +812,12 @@ export class Validator {
   /**
    * Validate a set of properties for conflicts and duplicates.
    */
-  private validatePropertySet(properties: Property[], componentName: string, line: number, column: number): void {
+  private validatePropertySet(
+    properties: Property[],
+    componentName: string,
+    line: number,
+    column: number
+  ): void {
     this.checkLayoutConflicts(properties, line, column)
     this.checkDuplicateProperties(properties)
     this.checkRequiredProperties(componentName, properties, line, column)
@@ -912,7 +908,12 @@ export class Validator {
   /**
    * Check that required properties are present
    */
-  private checkRequiredProperties(componentName: string, properties: Property[], line: number, column: number): void {
+  private checkRequiredProperties(
+    componentName: string,
+    properties: Property[],
+    line: number,
+    column: number
+  ): void {
     const compLower = componentName.toLowerCase()
     const required = REQUIRED_PROPERTIES[compLower]
 
@@ -983,14 +984,7 @@ export class Validator {
     column: number,
     suggestion?: string
   ): void {
-    this.errors.push({
-      severity: 'error',
-      code,
-      message,
-      line,
-      column,
-      suggestion,
-    })
+    this.errors.push({ severity: 'error', code, message, line, column, suggestion })
   }
 
   private addWarning(
@@ -1000,13 +994,6 @@ export class Validator {
     column: number,
     suggestion?: string
   ): void {
-    this.warnings.push({
-      severity: 'warning',
-      code,
-      message,
-      line,
-      column,
-      suggestion,
-    })
+    this.warnings.push({ severity: 'warning', code, message, line, column, suggestion })
   }
 }

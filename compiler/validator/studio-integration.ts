@@ -124,37 +124,26 @@ export interface CodeMirrorDiagnostic {
   }>
 }
 
-/**
- * Convert validation errors to CodeMirror diagnostics.
- */
+function lineColToOffset(lines: string[], line: number, col: number): number {
+  let offset = 0
+  for (let i = 0; i < line - 1 && i < lines.length; i++) offset += lines[i].length + 1
+  return offset + Math.max(0, col - 1)
+}
+
+function getTokenEndOffset(line: string, col: number, from: number): number {
+  const rest = line.slice(col - 1)
+  const match = rest.match(/^\S+/)
+  return from + (match ? match[0].length : 1)
+}
+
 export function toCodeMirrorDiagnostics(
   result: ValidationResult,
   source: string
 ): CodeMirrorDiagnostic[] {
   const lines = source.split('\n')
-  const diagnostics: CodeMirrorDiagnostic[] = []
-
-  const convertError = (err: ValidationError): CodeMirrorDiagnostic | null => {
-    // Calculate character offset from line/column
-    let from = 0
-    for (let i = 0; i < err.line - 1 && i < lines.length; i++) {
-      from += lines[i].length + 1 // +1 for newline
-    }
-    from += Math.max(0, err.column - 1)
-
-    // Calculate end position (end of word or line)
-    const line = lines[err.line - 1] || ''
-    let to = from
-
-    // Try to find the end of the problematic token
-    const restOfLine = line.slice(err.column - 1)
-    const match = restOfLine.match(/^\S+/)
-    if (match) {
-      to = from + match[0].length
-    } else {
-      to = from + 1
-    }
-
+  const convert = (err: ValidationError): CodeMirrorDiagnostic => {
+    const from = lineColToOffset(lines, err.line, err.column)
+    const to = getTokenEndOffset(lines[err.line - 1] || '', err.column, from)
     return {
       from,
       to,
@@ -162,18 +151,7 @@ export function toCodeMirrorDiagnostics(
       message: err.suggestion ? `${err.message}\n${err.suggestion}` : err.message,
     }
   }
-
-  for (const err of result.errors) {
-    const diag = convertError(err)
-    if (diag) diagnostics.push(diag)
-  }
-
-  for (const warn of result.warnings) {
-    const diag = convertError(warn)
-    if (diag) diagnostics.push(diag)
-  }
-
-  return diagnostics
+  return [...result.errors.map(convert), ...result.warnings.map(convert)]
 }
 
 // ============================================================================
@@ -240,38 +218,22 @@ export interface StatusBarInfo {
   icon: string
 }
 
-/**
- * Get status bar information from validation result.
- */
+const plural = (n: number, word: string) => `${n} ${word}${n !== 1 ? 's' : ''}`
+
 export function toStatusBarInfo(result: ValidationResult): StatusBarInfo {
-  const errorCount = result.errorCount
-  const warningCount = result.warningCount
-
-  let text: string
-  let icon: string
-
-  if (errorCount === 0 && warningCount === 0) {
-    text = 'No problems'
+  const { errorCount, warningCount } = result
+  const hasErrors = errorCount > 0,
+    hasWarnings = warningCount > 0
+  let text = 'No problems',
     icon = '✓'
-  } else if (errorCount > 0) {
-    text = `${errorCount} error${errorCount !== 1 ? 's' : ''}`
-    if (warningCount > 0) {
-      text += `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}`
-    }
+  if (hasErrors) {
+    text = plural(errorCount, 'error') + (hasWarnings ? `, ${plural(warningCount, 'warning')}` : '')
     icon = '✗'
-  } else {
-    text = `${warningCount} warning${warningCount !== 1 ? 's' : ''}`
+  } else if (hasWarnings) {
+    text = plural(warningCount, 'warning')
     icon = '⚠'
   }
-
-  return {
-    hasErrors: errorCount > 0,
-    hasWarnings: warningCount > 0,
-    errorCount,
-    warningCount,
-    text,
-    icon,
-  }
+  return { hasErrors, hasWarnings, errorCount, warningCount, text, icon }
 }
 
 // ============================================================================
@@ -291,10 +253,7 @@ export interface QuickFix {
 /**
  * Generate quick fixes for validation errors.
  */
-export function getQuickFixes(
-  error: ValidationError,
-  source: string
-): QuickFix[] {
+export function getQuickFixes(error: ValidationError, source: string): QuickFix[] {
   const fixes: QuickFix[] = []
   const lines = source.split('\n')
 

@@ -14,6 +14,16 @@ import type { AST } from '../parser/ast'
 import { toIR } from '../ir'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional } from '../ir/types'
 
+const TAG_TO_TYPE: Record<string, string> = {
+  div: 'Box',
+  span: 'Text',
+  button: 'Button',
+  input: 'Input',
+  textarea: 'Textarea',
+  img: 'Image',
+  a: 'Link',
+}
+
 /**
  * Generate M() framework calls from Mirror AST
  *
@@ -96,7 +106,7 @@ class FrameworkGenerator {
       this.emit('export const ui = ' + this.nodeToM(this.ir.nodes[0]))
     } else if (this.ir.nodes.length > 1) {
       // Multiple root nodes - wrap in Box
-      this.emit('export const ui = M(\'Box\', [')
+      this.emit("export const ui = M('Box', [")
       this.indent++
       for (let i = 0; i < this.ir.nodes.length; i++) {
         const comma = i < this.ir.nodes.length - 1 ? ',' : ''
@@ -105,7 +115,7 @@ class FrameworkGenerator {
       this.indent--
       this.emit('])')
     } else {
-      this.emit('export const ui = M(\'Box\')')
+      this.emit("export const ui = M('Box')")
     }
 
     this.emit('')
@@ -209,32 +219,10 @@ class FrameworkGenerator {
     return `M.if('${cond.condition}', ${thenStr})`
   }
 
-  /**
-   * Get the Mirror type name for a node
-   */
   private getNodeType(node: IRNode): string {
-    // Use component name if available, otherwise map tag to type
-    if (node.name && node.name !== node.tag) {
-      return node.name
-    }
-
-    // Map HTML tags back to Mirror primitives
-    const tagToType: Record<string, string> = {
-      div: 'Box',
-      span: 'Text',
-      button: 'Button',
-      input: 'Input',
-      textarea: 'Textarea',
-      img: 'Image',
-      a: 'Link',
-    }
-
-    // Check if it's an icon (by primitive type)
-    if (node.primitive === 'icon') {
-      return 'Icon'
-    }
-
-    return tagToType[node.tag] || node.name || 'Box'
+    if (node.name && node.name !== node.tag) return node.name
+    if (node.primitive === 'icon') return 'Icon'
+    return TAG_TO_TYPE[node.tag] || node.name || 'Box'
   }
 
   /**
@@ -288,7 +276,12 @@ class FrameworkGenerator {
     // Add HTML properties (except textContent which is handled as content)
     for (const prop of node.properties) {
       if (prop.name !== 'textContent') {
-        if (prop.name === 'placeholder' || prop.name === 'href' || prop.name === 'src' || prop.name === 'type') {
+        if (
+          prop.name === 'placeholder' ||
+          prop.name === 'href' ||
+          prop.name === 'src' ||
+          prop.name === 'type'
+        ) {
           props[prop.name] = prop.value
         } else if (prop.name === 'hidden' || prop.name === 'disabled') {
           props[prop.name] = true
@@ -314,7 +307,9 @@ class FrameworkGenerator {
     const stateStyles = styles.filter(s => s.state)
 
     // Check for flex: 1 1 0% pattern (used for w full / h full)
-    const hasFlexFull = baseStyles.some(s => s.property === 'flex' && (s.value === '1 1 0%' || s.value === '1'))
+    const hasFlexFull = baseStyles.some(
+      s => s.property === 'flex' && (s.value === '1 1 0%' || s.value === '1')
+    )
     const hasMinWidth0 = baseStyles.some(s => s.property === 'min-width' && s.value === '0')
     const hasMinHeight0 = baseStyles.some(s => s.property === 'min-height' && s.value === '0')
 
@@ -330,8 +325,18 @@ class FrameworkGenerator {
     // Convert base styles to props
     for (const style of baseStyles) {
       // Skip flex and min-width/min-height that were handled above
-      if (hasFlexFull && hasMinWidth0 && (style.property === 'flex' || style.property === 'min-width')) continue
-      if (hasFlexFull && hasMinHeight0 && (style.property === 'flex' || style.property === 'min-height')) continue
+      if (
+        hasFlexFull &&
+        hasMinWidth0 &&
+        (style.property === 'flex' || style.property === 'min-width')
+      )
+        continue
+      if (
+        hasFlexFull &&
+        hasMinHeight0 &&
+        (style.property === 'flex' || style.property === 'min-height')
+      )
+        continue
 
       const mirrorProp = this.cssPropToMirrorProp(style.property, style.value)
       if (mirrorProp) {
@@ -360,13 +365,17 @@ class FrameworkGenerator {
   /**
    * Map CSS property/value back to Mirror property
    */
-  private cssPropToMirrorProp(prop: string, value: string): { name: string; value: string | number | boolean } | null {
+  private cssPropToMirrorProp(
+    prop: string,
+    value: string
+  ): { name: string; value: string | number | boolean } | null {
     // Layout
     if (prop === 'display' && value === 'flex') return null // Implicit
     if (prop === 'flex-direction' && value === 'row') return { name: 'hor', value: true }
     if (prop === 'flex-direction' && value === 'column') return null // Default
     if (prop === 'gap') return { name: 'gap', value: this.parsePxValue(value) }
-    if (prop === 'justify-content' && value === 'space-between') return { name: 'spread', value: true }
+    if (prop === 'justify-content' && value === 'space-between')
+      return { name: 'spread', value: true }
     if (prop === 'flex-wrap' && value === 'wrap') return { name: 'wrap', value: true }
 
     // Alignment
@@ -407,8 +416,13 @@ class FrameworkGenerator {
     if (prop === 'font-weight') {
       // Convert numeric weights back to keywords for readability
       const weightKeywords: Record<string, string> = {
-        '100': 'thin', '300': 'light', '400': 'normal',
-        '500': 'medium', '600': 'semibold', '700': 'bold', '900': 'black'
+        '100': 'thin',
+        '300': 'light',
+        '400': 'normal',
+        '500': 'medium',
+        '600': 'semibold',
+        '700': 'bold',
+        '900': 'black',
       }
       return { name: 'weight', value: weightKeywords[value] || value }
     }
@@ -416,9 +430,12 @@ class FrameworkGenerator {
     if (prop === 'font-family') return { name: 'font', value: value }
     if (prop === 'text-align') return { name: 'text-align', value: value }
     if (prop === 'font-style' && value === 'italic') return { name: 'italic', value: true }
-    if (prop === 'text-decoration' && value === 'underline') return { name: 'underline', value: true }
-    if (prop === 'text-transform' && value === 'uppercase') return { name: 'uppercase', value: true }
-    if (prop === 'text-transform' && value === 'lowercase') return { name: 'lowercase', value: true }
+    if (prop === 'text-decoration' && value === 'underline')
+      return { name: 'underline', value: true }
+    if (prop === 'text-transform' && value === 'uppercase')
+      return { name: 'uppercase', value: true }
+    if (prop === 'text-transform' && value === 'lowercase')
+      return { name: 'lowercase', value: true }
 
     // Visual
     if (prop === 'opacity') return { name: 'opacity', value: parseFloat(value) }
@@ -506,7 +523,7 @@ class FrameworkGenerator {
       } else if (typeof value === 'number') {
         parts.push(`${key}: ${value}`)
       } else if (Array.isArray(value)) {
-        const arrayStr = value.map(v => typeof v === 'string' ? `'${v}'` : v).join(', ')
+        const arrayStr = value.map(v => (typeof v === 'string' ? `'${v}'` : v)).join(', ')
         parts.push(`${key}: [${arrayStr}]`)
       } else {
         parts.push(`${key}: ${JSON.stringify(value)}`)
@@ -520,20 +537,12 @@ class FrameworkGenerator {
    * Convert states object to string
    */
   private statesToString(states: Record<string, Record<string, any>>): string {
-    const parts: string[] = []
-
-    for (const [stateName, stateProps] of Object.entries(states)) {
-      const propParts: string[] = []
-      for (const [key, value] of Object.entries(stateProps)) {
-        if (typeof value === 'string') {
-          propParts.push(`${key}: '${value}'`)
-        } else {
-          propParts.push(`${key}: ${value}`)
-        }
-      }
-      parts.push(`${stateName}: { ${propParts.join(', ')} }`)
-    }
-
+    const parts = Object.entries(states).map(([stateName, stateProps]) => {
+      const propParts = Object.entries(stateProps).map(([key, value]) =>
+        typeof value === 'string' ? `${key}: '${value}'` : `${key}: ${value}`
+      )
+      return `${stateName}: { ${propParts.join(', ')} }`
+    })
     return `{ ${parts.join(', ')} }`
   }
 
@@ -558,6 +567,9 @@ class FrameworkGenerator {
 
   private indentLines(text: string): string {
     const indent = '  '.repeat(this.indent + 1)
-    return text.split('\n').map(line => indent + line).join('\n')
+    return text
+      .split('\n')
+      .map(line => indent + line)
+      .join('\n')
   }
 }

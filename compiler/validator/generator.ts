@@ -19,10 +19,31 @@ const GRADIENT_KEYWORDS = new Set(['grad', 'grad-ver'])
 
 // Named colors (CSS basic + common)
 const NAMED_COLORS = new Set([
-  'transparent', 'currentcolor', 'inherit',
-  'black', 'white', 'red', 'green', 'blue', 'yellow', 'orange', 'purple',
-  'cyan', 'magenta', 'gray', 'grey', 'pink', 'brown', 'navy', 'teal',
-  'lime', 'aqua', 'maroon', 'olive', 'silver', 'fuchsia',
+  'transparent',
+  'currentcolor',
+  'inherit',
+  'black',
+  'white',
+  'red',
+  'green',
+  'blue',
+  'yellow',
+  'orange',
+  'purple',
+  'cyan',
+  'magenta',
+  'gray',
+  'grey',
+  'pink',
+  'brown',
+  'navy',
+  'teal',
+  'lime',
+  'aqua',
+  'maroon',
+  'olive',
+  'silver',
+  'fuchsia',
 ])
 
 export function isValidColor(value: string): boolean {
@@ -67,18 +88,10 @@ export function isValidColorValue(value: string | number): boolean {
  */
 function buildPrimitiveAliasMap(): Map<string, string> {
   const map = new Map<string, string>()
-
   for (const [name, def] of Object.entries(DSL.primitives)) {
-    const lowerName = name.toLowerCase()
-    map.set(lowerName, name)
-
-    if (def.aliases) {
-      for (const alias of def.aliases) {
-        map.set(alias.toLowerCase(), name)
-      }
-    }
+    map.set(name.toLowerCase(), name)
+    def.aliases?.forEach(alias => map.set(alias.toLowerCase(), name))
   }
-
   return map
 }
 
@@ -160,7 +173,7 @@ function createValidatorForProperty(prop: PropertyDef): ValueValidator {
               if (!prop.numeric && !prop.color) {
                 errors.push(
                   `Invalid value "${val}" for "${prop.name}". ` +
-                  `Valid keywords: ${validKeywords.join(', ')}`
+                    `Valid keywords: ${validKeywords.join(', ')}`
                 )
               }
             }
@@ -180,9 +193,7 @@ function createValidatorForProperty(prop: PropertyDef): ValueValidator {
             // Not a number, color, or token - might be a keyword
             const validKeywords = Object.keys(prop.keywords || {}).filter(k => k !== '_standalone')
             if (!validKeywords.includes(val) && !prop.directional?.directions.includes(val)) {
-              errors.push(
-                `Invalid numeric value "${val}" for "${prop.name}"`
-              )
+              errors.push(`Invalid numeric value "${val}" for "${prop.name}"`)
             }
           }
         }
@@ -195,14 +206,14 @@ function createValidatorForProperty(prop: PropertyDef): ValueValidator {
             // Invalid hex format
             errors.push(
               `Invalid hex color "${val}" for "${prop.name}". ` +
-              `Use #RGB, #RGBA, #RRGGBB, or #RRGGBBAA format`
+                `Use #RGB, #RGBA, #RRGGBB, or #RRGGBBAA format`
             )
           } else {
             // Invalid color value (not a recognized color, gradient, or function)
             errors.push(
               `Invalid color "${val}" for "${prop.name}". ` +
-              `Use hex (#RGB, #RRGGBB), named colors (white, black), ` +
-              `gradients (grad #a #b), or rgba(r,g,b,a)`
+                `Use hex (#RGB, #RRGGBB), named colors (white, black), ` +
+                `gradients (grad #a #b), or rgba(r,g,b,a)`
             )
           }
         }
@@ -247,9 +258,7 @@ export function generateValidationRules(): ValidationRules {
 
   cachedRules = {
     // Primitives
-    validPrimitives: new Set(
-      Object.keys(DSL.primitives).map(p => p.toLowerCase())
-    ),
+    validPrimitives: new Set(Object.keys(DSL.primitives).map(p => p.toLowerCase())),
     primitiveAliases: buildPrimitiveAliasMap(),
 
     // Properties

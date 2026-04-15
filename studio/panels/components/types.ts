@@ -102,6 +102,16 @@ export interface ComponentChild {
 }
 
 /**
+ * Data block for components that need accompanying data (e.g., charts)
+ */
+export interface ComponentDataBlock {
+  /** Variable name (e.g., "chartData") */
+  name: string
+  /** Data content (e.g., "Jan: 120\n  Feb: 180") */
+  content: string
+}
+
+/**
  * Represents a component that can be dragged from the panel
  */
 export interface ComponentItem {
@@ -131,6 +141,8 @@ export interface ComponentItem {
   mirTemplate?: string
   /** Code template for .com files (full, with all slots and styling) */
   comTemplate?: string
+  /** Data block for charts and data-driven components */
+  dataBlock?: ComponentDataBlock
 }
 
 /**
@@ -193,4 +205,8 @@ export interface ComponentDragData {
   children?: ComponentChild[]
   /** Default size for drag preview */
   defaultSize?: { width: number; height: number }
+  /** Multi-line template for presets/composites */
+  mirTemplate?: string
+  /** Data block for charts and data-driven components */
+  dataBlock?: ComponentDataBlock
 }

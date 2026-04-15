@@ -18,9 +18,9 @@ export interface NodeMapping {
   position: SourcePosition
   properties: Map<string, SourcePosition>
   isDefinition: boolean
-  isEachTemplate?: boolean      // Template inside each loop
-  isConditional?: boolean       // Inside conditional branch
-  parentId?: string             // Parent node ID for hierarchy
+  isEachTemplate?: boolean // Template inside each loop
+  isConditional?: boolean // Inside conditional branch
+  parentId?: string // Parent node ID for hierarchy
 }
 
 /**
@@ -91,8 +91,7 @@ export class SourceMap {
    * Get nodes by component name
    */
   getNodesByComponent(componentName: string): NodeMapping[] {
-    return Array.from(this.nodes.values())
-      .filter(n => n.componentName === componentName)
+    return Array.from(this.nodes.values()).filter(n => n.componentName === componentName)
   }
 
   /**
@@ -119,8 +118,7 @@ export class SourceMap {
    * Get children of a node
    */
   getChildren(parentId: string): NodeMapping[] {
-    return Array.from(this.nodes.values())
-      .filter(n => n.parentId === parentId)
+    return Array.from(this.nodes.values()).filter(n => n.parentId === parentId)
   }
 
   /**
@@ -133,9 +131,7 @@ export class SourceMap {
 
     const parentId = node.parentId
     // If no parent, siblings are other root nodes
-    const siblings = parentId
-      ? this.getChildren(parentId)
-      : this.getRootNodes()
+    const siblings = parentId ? this.getChildren(parentId) : this.getRootNodes()
 
     // Exclude self and sort by line number
     return siblings
@@ -183,20 +179,16 @@ export class SourceMap {
    */
   isDescendantOf(targetId: string, ancestorId: string): boolean {
     if (targetId === ancestorId) return false
-
     let currentId: string | undefined = targetId
     const visited = new Set<string>() // Prevent infinite loops
-
     while (currentId) {
       if (visited.has(currentId)) return false
       visited.add(currentId)
-
       const node = this.getNodeById(currentId)
       if (!node?.parentId) return false
       if (node.parentId === ancestorId) return true
       currentId = node.parentId
     }
-
     return false
   }
 
@@ -275,8 +267,7 @@ export class SourceMap {
    * Useful for finding exact matches when cursor is on component line
    */
   getNodesStartingAtLine(line: number): NodeMapping[] {
-    return Array.from(this.nodes.values())
-      .filter(n => n.position.line === line && !n.isDefinition)
+    return Array.from(this.nodes.values()).filter(n => n.position.line === line && !n.isDefinition)
   }
 
   /**
@@ -284,8 +275,7 @@ export class SourceMap {
    * Returns non-definition nodes that have no parentId
    */
   getRootNodes(): NodeMapping[] {
-    return Array.from(this.nodes.values())
-      .filter(n => !n.parentId && !n.isDefinition)
+    return Array.from(this.nodes.values()).filter(n => !n.parentId && !n.isDefinition)
   }
 
   /**
@@ -397,9 +387,7 @@ export function calculateSourcePosition(
   // Calculate end position based on content
   const lines = content.split('\n')
   const endLine = line + lines.length - 1
-  const endColumn = lines.length === 1
-    ? column + content.length
-    : lines[lines.length - 1].length
+  const endColumn = lines.length === 1 ? column + content.length : lines[lines.length - 1].length
 
   return {
     line,

@@ -12,6 +12,7 @@
 
 import type { Point, HitResult, FlexLayout } from './types'
 import type { LayoutCache } from './layout-cache'
+import type { HitReport, EscapeZoneReport, Reportable } from './reporter/types'
 import { createLogger } from '../../../compiler/utils/logger'
 
 const log = createLogger('HitDetector')
@@ -19,43 +20,71 @@ const log = createLogger('HitDetector')
 /** Pixels from container edge to trigger parent selection */
 const ESCAPE_ZONE_SIZE = 24
 
-export class HitDetector {
-  /** Find the container under the cursor */
+export class HitDetector implements Reportable<HitReport> {
+  // Last detection state for reporting
+  private lastCursor: Point = { x: 0, y: 0 }
+  private lastElementAtPoint: string | null = null
+  private lastResult: HitResult | null = null
+  private lastEscapeZone: EscapeZoneReport = {
+    detected: false,
+    childEnd: null,
+    containerEnd: null,
+    cursorPos: null,
+    usedParent: false,
+    parentId: null,
+  }
+
+  private resetDetectionState(cursor: Point): void {
+    this.lastCursor = cursor
+    this.lastEscapeZone = {
+      detected: false,
+      childEnd: null,
+      containerEnd: null,
+      cursorPos: null,
+      usedParent: false,
+      parentId: null,
+    }
+  }
+
   detect(cursor: Point, cache: LayoutCache): HitResult | null {
+    this.resetDetectionState(cursor)
     const element = document.elementFromPoint(cursor.x, cursor.y)
     if (!element) {
+      this.lastElementAtPoint = null
+      this.lastResult = null
       return null
     }
-
+    this.lastElementAtPoint = element.getAttribute('data-mirror-id')
     const result = this.findValidContainer(element, cache, cursor)
-    // Debug logging only - use log.debug for frequent operations
-    if (!result) {
-      log.debug('No valid container at', cursor.x, cursor.y)
-    }
+    this.lastResult = result
+    if (!result) log.debug('No valid container at', cursor.x, cursor.y)
     return result
   }
 
-  /** Walk up DOM to find nearest valid container */
+  private tryEscapeToParent(
+    element: Element,
+    cache: LayoutCache,
+    cursor: Point,
+    result: HitResult
+  ): HitResult | null {
+    if (!this.isInEscapeZone(cursor, result, cache)) return null
+    const parentResult = this.findParentContainer(element, cache)
+    if (!parentResult) return null
+    log.debug('Escape zone: using parent', parentResult.containerId)
+    this.lastEscapeZone.usedParent = true
+    this.lastEscapeZone.parentId = parentResult.containerId
+    return parentResult
+  }
+
   private findValidContainer(
     element: Element,
     cache: LayoutCache,
     cursor: Point
   ): HitResult | null {
     let current: Element | null = element
-
     while (current) {
       const result = this.tryBuildHitResult(current, cache)
-      if (result) {
-        // Check if cursor is in escape zone - if so, try parent instead
-        if (this.isInEscapeZone(cursor, result, cache)) {
-          const parentResult = this.findParentContainer(current, cache)
-          if (parentResult) {
-            log.debug('Escape zone: using parent', parentResult.containerId)
-            return parentResult
-          }
-        }
-        return result
-      }
+      if (result) return this.tryEscapeToParent(current, cache, cursor, result) || result
       current = current.parentElement
     }
     return null
@@ -97,7 +126,15 @@ export class HitDetector {
     const isBelowChildren = cursorPos > childEnd
     const isNearContainerEdge = containerEnd - cursorPos < ESCAPE_ZONE_SIZE
 
-    return isBelowChildren && isNearContainerEdge
+    const detected = isBelowChildren && isNearContainerEdge
+
+    // Record escape zone details for reporting
+    this.lastEscapeZone.detected = detected
+    this.lastEscapeZone.childEnd = childEnd
+    this.lastEscapeZone.containerEnd = containerEnd
+    this.lastEscapeZone.cursorPos = cursorPos
+
+    return detected
   }
 
   /** Try to build HitResult for element */
@@ -127,5 +164,17 @@ export class HitDetector {
   private getFlexDirection(style: CSSStyleDeclaration): FlexLayout {
     const dir = style.flexDirection
     return dir === 'row' || dir === 'row-reverse' ? 'flex-row' : 'flex-column'
+  }
+
+  /** Report current state for debugging */
+  report(): HitReport {
+    return {
+      cursor: { ...this.lastCursor },
+      elementAtPoint: this.lastElementAtPoint,
+      containerId: this.lastResult?.containerId ?? null,
+      layout: this.lastResult?.layout ?? null,
+      containerRect: this.lastResult?.containerRect ?? null,
+      escapeZone: { ...this.lastEscapeZone },
+    }
   }
 }

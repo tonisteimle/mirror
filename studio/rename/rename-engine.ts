@@ -103,26 +103,18 @@ export class RenameEngine {
     symbolName: string,
     symbolType: SymbolType
   ): SymbolLocation[] {
-    const locations: SymbolLocation[] = []
-    const lines = source.split('\n')
-
-    if (symbolType === 'component') {
+    const locations: SymbolLocation[] = [],
+      lines = source.split('\n')
+    if (symbolType === 'component')
       this.findComponentReferences(lines, filename, symbolName, locations)
-    } else {
-      this.findTokenReferences(lines, filename, symbolName, locations)
-    }
-
+    else this.findTokenReferences(lines, filename, symbolName, locations)
     return locations
   }
 
   /**
    * Find all references across all files
    */
-  findAllReferences(
-    files: FileInfo[],
-    symbolName: string,
-    symbolType: SymbolType
-  ): RenameResult {
+  findAllReferences(files: FileInfo[], symbolName: string, symbolType: SymbolType): RenameResult {
     const locations: SymbolLocation[] = []
 
     for (const file of files) {
@@ -153,11 +145,7 @@ export class RenameEngine {
    *
    * Applies changes in reverse order (bottom to top) to preserve positions
    */
-  applyRename(
-    source: string,
-    locations: SymbolLocation[],
-    newName: string
-  ): string {
+  applyRename(source: string, locations: SymbolLocation[], newName: string): string {
     // Sort locations in reverse order (bottom-right to top-left)
     const sortedLocations = [...locations].sort((a, b) => {
       if (a.line !== b.line) return b.line - a.line
@@ -312,7 +300,10 @@ export class RenameEngine {
     locations: SymbolLocation[]
   ): void {
     // Pattern for component definition: `Name:` or `Name as Base:`
-    const defPattern = new RegExp(`^(\\s*)${this.escapeRegex(componentName)}\\s*(?:as\\s+[A-Z][a-zA-Z0-9_]*\\s*)?:`, 'm')
+    const defPattern = new RegExp(
+      `^(\\s*)${this.escapeRegex(componentName)}\\s*(?:as\\s+[A-Z][a-zA-Z0-9_]*\\s*)?:`,
+      'm'
+    )
 
     // Pattern for inheritance base: `SomeName as Name:`
     const inheritPattern = new RegExp(`as\\s+${this.escapeRegex(componentName)}\\s*:`)
@@ -341,7 +332,9 @@ export class RenameEngine {
       }
 
       // Check for definition with inheritance: `Name as Base:`
-      const defWithInheritMatch = line.match(new RegExp(`^(\\s*)(${this.escapeRegex(componentName)})\\s+as\\s+`))
+      const defWithInheritMatch = line.match(
+        new RegExp(`^(\\s*)(${this.escapeRegex(componentName)})\\s+as\\s+`)
+      )
       if (defWithInheritMatch) {
         const col = defWithInheritMatch[1].length + 1
         locations.push({
@@ -378,10 +371,12 @@ export class RenameEngine {
 
         // Check boundaries - must be a word boundary
         const before = idx > 0 ? line[idx - 1] : ' '
-        const after = idx + componentName.length < line.length ? line[idx + componentName.length] : ' '
+        const after =
+          idx + componentName.length < line.length ? line[idx + componentName.length] : ' '
 
         const isWordBoundaryBefore = /[\s,(\[]/.test(before) || idx === 0 || before === '='
-        const isWordBoundaryAfter = /[\s,)\]:"]/.test(after) || idx + componentName.length === line.length
+        const isWordBoundaryAfter =
+          /[\s,)\]:"]/.test(after) || idx + componentName.length === line.length
 
         // Not a definition (followed by colon with optional whitespace)
         const restOfLine = line.substring(idx + componentName.length)
@@ -492,7 +487,7 @@ export class RenameEngine {
 
         // Check what's before - must be start of line or whitespace (not $ which is legacy)
         const before = idx > 0 ? line[idx - 1] : '\n'
-        if (before !== '$' && /^[\s\n]/.test(before) || idx === 0) {
+        if ((before !== '$' && /^[\s\n]/.test(before)) || idx === 0) {
           const after = line.substring(idx + nameWithoutDollar.length)
           const defMatch = after.match(/^(\.[a-zA-Z_][a-zA-Z0-9_-]*)\s*:/)
           if (defMatch) {

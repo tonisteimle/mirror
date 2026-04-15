@@ -321,19 +321,15 @@ export class PreviewController {
   }
 
   attach(): void {
-    // Detach first to prevent duplicate listeners if attach() called multiple times
     this.detach()
-
     if (this.config.enableSelection) {
       this.container.addEventListener('click', this.boundHandleClick)
-      // Double-click for inline text editing
       this.container.addEventListener('dblclick', this.boundHandleDoubleClick)
     }
     if (this.config.enableHover) {
       this.container.addEventListener('mouseover', this.boundHandleMouseOver)
       this.container.addEventListener('mouseout', this.boundHandleMouseOut)
     }
-    // Start observing slot visibility
     this.slotVisibilityService?.attach()
   }
 
@@ -641,20 +637,13 @@ export class PreviewController {
    * Handle double-click for inline text editing
    */
   private handleDoubleClick(e: MouseEvent): void {
-    // In play mode, disable inline editing
-    if (state.get().playMode) {
-      return
-    }
-
-    const target = e.target as HTMLElement
-    const nodeElement = target.closest(`[${this.config.nodeIdAttribute}]`) as HTMLElement | null
+    if (state.get().playMode) return
+    const nodeElement = (e.target as HTMLElement).closest(
+      `[${this.config.nodeIdAttribute}]`
+    ) as HTMLElement | null
     if (!nodeElement) return
-
     const nodeId = nodeElement.getAttribute(this.config.nodeIdAttribute)
-    if (!nodeId) return
-
-    // Emit event for InlineEditController to handle
-    events.emit('preview:element-dblclicked', { nodeId, element: nodeElement })
+    if (nodeId) events.emit('preview:element-dblclicked', { nodeId, element: nodeElement })
   }
 
   /**

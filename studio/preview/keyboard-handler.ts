@@ -129,20 +129,11 @@ export class KeyboardHandler {
    * If no parent exists, clears selection
    */
   private selectParent(nodeId: string): void {
-    const sourceMap = state.get().sourceMap
-    if (!sourceMap) return
-
-    const node = sourceMap.getNodeById(nodeId)
+    const node = state.get().sourceMap?.getNodeById(nodeId)
     if (!node) return
-
-    if (node.parentId) {
-      // Navigate to parent
-      actions.setSelection(node.parentId, 'keyboard')
+    actions.setSelection(node.parentId ?? null, 'keyboard')
+    if (node.parentId)
       events.emit('notification:info', { message: 'Selected parent element', duration: 1500 })
-    } else {
-      // No parent - at root level, clear selection
-      actions.setSelection(null, 'keyboard')
-    }
   }
 
   /**

@@ -85,7 +85,6 @@ export function extractAllTokens(files: Record<string, string>): TokenDefinition
   return parseTokensFromFiles(files)
 }
 
-
 /**
  * Get token types allowed for a property
  */
@@ -97,9 +96,7 @@ function getTypesForProperty(property: string): ('color' | 'spacing')[] {
 /**
  * Create the token trigger configuration
  */
-export function createTokenTriggerConfig(
-  getFiles: () => Record<string, string>
-): TriggerConfig {
+export function createTokenTriggerConfig(getFiles: () => Record<string, string>): TriggerConfig {
   // Store the current property context for filtering
   let currentProperty: string | undefined
 
@@ -137,10 +134,12 @@ export function createTokenTriggerConfig(
           showPreview: true,
           groupByCategory: true,
           searchable: false, // We handle filtering via live filter
-          context: currentProperty ? {
-            property: currentProperty,
-            allowedTypes: getTypesForProperty(currentProperty),
-          } : undefined,
+          context: currentProperty
+            ? {
+                property: currentProperty,
+                allowedTypes: getTypesForProperty(currentProperty),
+              }
+            : undefined,
         },
         {
           onSelect: () => {}, // Will be overridden
@@ -159,19 +158,9 @@ export function createTokenTriggerConfig(
     },
     priority: 90,
     shouldActivate: (update: ViewUpdate, insertedText: string, context: TriggerContext) => {
-      // Don't trigger at line start (new token definition)
-      const isLineStart = /^\s*$/.test(context.textBefore)
-      if (isLineStart) return false
-
-      // Check if context matches and extract property for filtering
+      if (/^\s*$/.test(context.textBefore)) return false
       const match = context.textBefore.match(TOKEN_CONTEXT_PATTERN)
-      if (match) {
-        currentProperty = match[1] // Capture the property name for filtering
-      } else {
-        currentProperty = undefined // No property context - show all tokens
-      }
-
-      // Always activate $ trigger (except at line start)
+      currentProperty = match ? match[1] : undefined
       return true
     },
     shouldClose: (update: ViewUpdate, insertedText: string, context: TriggerContext) => {

@@ -122,10 +122,15 @@ export function createCompiler(initialOptions: Partial<CompileOptions> = {}): Co
 
       // Check for parse errors
       if (ast && ast.errors && ast.errors.length > 0) {
-        errors.push(...ast.errors.map((e: ParseError) => ({
-          ...e,
-          line: preludeOffset > 0 ? adjustLineNumber(e.line, countPreludeLines(source.slice(0, preludeOffset))) : e.line,
-        })))
+        errors.push(
+          ...ast.errors.map((e: ParseError) => ({
+            ...e,
+            line:
+              preludeOffset > 0
+                ? adjustLineNumber(e.line, countPreludeLines(source.slice(0, preludeOffset)))
+                : e.line,
+          }))
+        )
       }
 
       // Transform to IR
@@ -162,7 +167,6 @@ export function createCompiler(initialOptions: Partial<CompileOptions> = {}): Co
         }
       }
       timing.generate = performance.now() - startGenerate
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       errors.push({
@@ -214,20 +218,13 @@ export function createCompiler(initialOptions: Partial<CompileOptions> = {}): Co
     },
 
     compileWithPrelude(source: string, prelude: PreludeResult): CompilationResult {
-      const combinedSource = prelude.prelude
-        ? `${prelude.prelude}\n${source}`
-        : source
-
+      const combinedSource = prelude.prelude ? `${prelude.prelude}\n${source}` : source
       emit('compile:start', { source: combinedSource })
-
       const result = doCompile(combinedSource, prelude.offset)
-
-      if (result.success) {
-        emit('compile:complete', result)
-      } else {
-        emit('compile:error', { errors: result.errors })
-      }
-
+      emit(
+        result.success ? 'compile:complete' : 'compile:error',
+        result.success ? result : { errors: result.errors }
+      )
       return result
     },
 

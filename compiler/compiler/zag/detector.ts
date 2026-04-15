@@ -38,19 +38,8 @@ export function getZagMachineType(name: string): string | undefined {
  */
 export function detectPrimitiveType(primitive: string | undefined | null): string | undefined {
   if (!primitive) return undefined
-
-  // Check exact match first (PascalCase)
-  if (ZAG_PRIMITIVES[primitive]) {
-    return ZAG_PRIMITIVES[primitive].machine
-  }
-
-  // Check with capitalized first letter
   const capitalized = primitive.charAt(0).toUpperCase() + primitive.slice(1)
-  if (ZAG_PRIMITIVES[capitalized]) {
-    return ZAG_PRIMITIVES[capitalized].machine
-  }
-
-  return undefined
+  return ZAG_PRIMITIVES[primitive]?.machine ?? ZAG_PRIMITIVES[capitalized]?.machine
 }
 
 /**

@@ -550,10 +550,7 @@ M.if = function (
     props: {},
     children: thenBranch,
     slots: {},
-    _if: {
-      condition,
-      else: elseBranch,
-    },
+    _if: { condition, else: elseBranch },
   }
 }
 
@@ -592,11 +589,8 @@ const SHADOW_MAP: Record<string, string> = {
 M.render = function (node: MirrorNode, container: HTMLElement = document.body): MirrorUI {
   const root = renderNode(node)
   container.appendChild(root)
-
-  // Collect named elements
   const named = new Map<string, HTMLElement>()
   collectNamed(root, named)
-
   return {
     root,
     get: (name: string) => named.get(name) || null,
@@ -993,18 +987,13 @@ function normalizeActions(actions: Action | Action[]): string[] {
 function attachEvent(el: HTMLElement, eventName: string, actions: string[]): void {
   if (eventName === 'click-outside') {
     const handler = (e: Event) => {
-      if (!el.contains(e.target as Node)) {
-        executeActions(el, actions)
-      }
+      if (!el.contains(e.target as Node)) executeActions(el, actions)
     }
     document.addEventListener('click', handler)
     ;(el as MirrorElement)._clickOutsideHandler = handler
     return
   }
-
-  el.addEventListener(eventName, () => {
-    executeActions(el, actions)
-  })
+  el.addEventListener(eventName, () => executeActions(el, actions))
 }
 
 function attachKeyEvent(
@@ -1303,17 +1292,14 @@ const runtime = {
   applyState(el: HTMLElement, state: string) {
     const mirrorEl = el as MirrorElement
     if (!mirrorEl._stateStyles?.[state]) return
-
-    // Store base first time
     if (!mirrorEl._baseStyles) {
       mirrorEl._baseStyles = {}
-      const props = Object.keys(mirrorEl._stateStyles[state])
-      for (const p of props) {
-        mirrorEl._baseStyles[p] =
-          (el.style as CSSStyleDeclaration & Record<string, string>)[p] || ''
-      }
+      Object.keys(mirrorEl._stateStyles[state]).forEach(
+        p =>
+          (mirrorEl._baseStyles![p] =
+            (el.style as CSSStyleDeclaration & Record<string, string>)[p] || '')
+      )
     }
-
     Object.assign(el.style, mirrorEl._stateStyles[state])
   },
 
@@ -2061,21 +2047,19 @@ const SPECIAL_PROPERTIES = new Set([
  * Parse inline CSS style string into properties
  */
 function parseStyleString(styleStr: string): Record<string, string> {
-  const result: Record<string, string> = {}
-  const rules = styleStr
+  return styleStr
     .split(';')
     .map(s => s.trim())
     .filter(Boolean)
-
-  for (const rule of rules) {
-    const colonIdx = rule.indexOf(':')
-    if (colonIdx === -1) continue
-    const prop = rule.slice(0, colonIdx).trim()
-    const val = rule.slice(colonIdx + 1).trim()
-    result[prop] = val
-  }
-
-  return result
+    .reduce(
+      (result, rule) => {
+        const colonIdx = rule.indexOf(':')
+        if (colonIdx !== -1)
+          result[rule.slice(0, colonIdx).trim()] = rule.slice(colonIdx + 1).trim()
+        return result
+      },
+      {} as Record<string, string>
+    )
 }
 
 /**

@@ -667,13 +667,12 @@ class IRTransformer {
     primitive: string,
     parentLayoutContext?: ParentLayoutContext
   ): IRNode {
-    const ctx = this.createTransformerContext()
     return transformChartExtracted(
-      ctx,
+      this.createTransformerContext(),
       instance,
       resolvedComponent,
       primitive,
-      (base, override) => mergeProperties(base, override),
+      mergeProperties,
       parentLayoutContext
     )
   }

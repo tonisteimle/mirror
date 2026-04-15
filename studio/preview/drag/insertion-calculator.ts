@@ -6,8 +6,14 @@
  */
 
 import type { Point, ChildInfo, FlexLayout, InsertionResult } from './types'
+import type { InsertionReport, MidpointComparison, Reportable } from './reporter/types'
 
-export class InsertionCalculator {
+export class InsertionCalculator implements Reportable<InsertionReport | null> {
+  // Last calculation state for reporting
+  private lastResult: InsertionResult | null = null
+  private lastChildren: ChildInfo[] = []
+  private lastMidpoints: MidpointComparison[] = []
+
   /** Calculate where to insert based on cursor position */
   calculate(
     cursor: Point,
@@ -15,19 +21,33 @@ export class InsertionCalculator {
     layout: FlexLayout,
     containerRect: DOMRect
   ): InsertionResult {
+    // Reset for new calculation
+    this.lastChildren = children
+    this.lastMidpoints = []
     const isVertical = layout === 'flex-column'
 
+    let result: InsertionResult
+
     if (children.length === 0) {
-      return this.buildResult(0, containerRect.x, containerRect.y, containerRect, isVertical)
+      result = this.buildResult(0, containerRect.x, containerRect.y, containerRect, isVertical)
+    } else {
+      const insertBefore = this.findInsertionIndex(cursor, children, isVertical)
+      if (insertBefore !== null) {
+        const child = children[insertBefore]
+        result = this.buildResult(
+          insertBefore,
+          child.rect.x,
+          child.rect.y,
+          containerRect,
+          isVertical
+        )
+      } else {
+        result = this.resultAfterLast(children, containerRect, isVertical)
+      }
     }
 
-    const insertBefore = this.findInsertionIndex(cursor, children, isVertical)
-    if (insertBefore !== null) {
-      const child = children[insertBefore]
-      return this.buildResult(insertBefore, child.rect.x, child.rect.y, containerRect, isVertical)
-    }
-
-    return this.resultAfterLast(children, containerRect, isVertical)
+    this.lastResult = result
+    return result
   }
 
   /** Find index to insert before, or null if after all */
@@ -40,6 +60,16 @@ export class InsertionCalculator {
 
     for (let i = 0; i < children.length; i++) {
       const mid = this.getChildMidpoint(children[i], isVertical)
+      const comparison = cursorPos < mid ? 'before' : 'after'
+
+      // Track midpoint comparison for reporting
+      this.lastMidpoints.push({
+        nodeId: children[i].nodeId,
+        midpoint: mid,
+        cursorPos,
+        comparison,
+      })
+
       if (cursorPos < mid) return i
     }
     return null
@@ -76,5 +106,28 @@ export class InsertionCalculator {
     const x = last.rect.x + last.rect.width
     const y = last.rect.y + last.rect.height
     return this.buildResult(children.length, x, y, containerRect, isVertical)
+  }
+
+  /** Report current state for debugging */
+  report(): InsertionReport | null {
+    if (!this.lastResult) return null
+
+    const { index } = this.lastResult
+    const children = this.lastChildren
+
+    // Determine insertBefore/insertAfter nodeIds
+    const insertBefore = index < children.length ? children[index].nodeId : null
+    const insertAfter = index > 0 ? children[index - 1].nodeId : null
+
+    return {
+      index: this.lastResult.index,
+      linePosition: { ...this.lastResult.linePosition },
+      lineSize: this.lastResult.lineSize,
+      orientation: this.lastResult.orientation,
+      childCount: children.length,
+      insertBefore,
+      insertAfter,
+      cursorMidpoints: [...this.lastMidpoints],
+    }
   }
 }

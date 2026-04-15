@@ -10,7 +10,14 @@
  * - ZAG_PRIMITIVES from src/schema/zag-primitives.ts
  */
 
-import { DSL, SCHEMA, ZAG_PRIMITIVES, COMPOUND_PRIMITIVES, CHART_PRIMITIVES, type PropertyDef } from '../../compiler/schema/dsl'
+import {
+  DSL,
+  SCHEMA,
+  ZAG_PRIMITIVES,
+  COMPOUND_PRIMITIVES,
+  CHART_PRIMITIVES,
+  type PropertyDef,
+} from '../../compiler/schema/dsl'
 import type { Completion } from './index'
 
 // ============================================================================
@@ -89,20 +96,14 @@ export function getZagSlotCompletions(componentName: string): Completion[] {
  * Get all Zag slot completions (prefixed with component name)
  */
 export function generateAllZagSlotCompletions(): Completion[] {
-  const completions: Completion[] = []
-
-  for (const [name, def] of Object.entries(ZAG_PRIMITIVES)) {
-    for (const slot of def.slots) {
-      completions.push({
-        label: `${name}${slot}`,
-        detail: `Slot of ${name}`,
-        type: 'component',
-        boost: 6,
-      })
-    }
-  }
-
-  return completions
+  return Object.entries(ZAG_PRIMITIVES).flatMap(([name, def]) =>
+    def.slots.map(slot => ({
+      label: `${name}${slot}`,
+      detail: `Slot of ${name}`,
+      type: 'component',
+      boost: 6,
+    }))
+  )
 }
 
 /**
@@ -415,7 +416,17 @@ export function generateActionTargetCompletions(): Completion[] {
   }
 
   // Add common targets
-  const commonTargets = ['self', 'next', 'prev', 'first', 'last', 'all', 'none', 'highlighted', 'selected']
+  const commonTargets = [
+    'self',
+    'next',
+    'prev',
+    'first',
+    'last',
+    'all',
+    'none',
+    'highlighted',
+    'selected',
+  ]
   for (const target of commonTargets) {
     targets.add(target)
   }
@@ -514,9 +525,12 @@ export function generateKeywordCompletions(): Completion[] {
  */
 export function getActionsWithTarget(): string[] {
   return Object.entries(DSL.actions)
-    .filter(([_, def]) => def.targets ||
-      // Actions that commonly take element targets
-      ['show', 'hide', 'toggle', 'open', 'close', 'select', 'focus', 'page'].includes(_))
+    .filter(
+      ([_, def]) =>
+        def.targets ||
+        // Actions that commonly take element targets
+        ['show', 'hide', 'toggle', 'open', 'close', 'select', 'focus', 'page'].includes(_)
+    )
     .map(([name]) => name)
 }
 

@@ -148,15 +148,12 @@ export class RemovePropertyCommand implements Command {
   execute(ctx: CommandContext): CommandResult {
     const data = getSourceForModifier(ctx)
     if (!data) return { success: false, error: 'No source map' }
-
     const node = data.sourceMap.getNodeById(this.nodeId)
     if (!node) return { success: false, error: `Node not found: ${this.nodeId}` }
     this.oldLine = data.source.split('\n')[node.position.line - 1]
-
     const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.removeProperty(this.nodeId, this.property)
     if (!result.success) return { success: false, error: result.error }
-
     this.change = result.change
     const editorChange = adjustChangeForEditor(result.change, ctx)
     ctx.applyChange(editorChange)
@@ -302,11 +299,7 @@ export class DeleteNodeCommand implements Command {
       insert: this.deletedContent,
     }
     ctx.applyChange(undoChange)
-
-    // Re-select the restored node after undo
-    // Queue selection to be resolved after compile
     state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'keyboard' } })
-
     return { success: true, change: undoChange }
   }
 }
@@ -334,13 +327,13 @@ export class MoveNodeCommand implements Command {
   execute(ctx: CommandContext): CommandResult {
     const data = getSourceForModifier(ctx)
     if (!data) return { success: false, error: 'No source map' }
-
-    // Store original editor source for undo (without prelude)
     this.originalSource = ctx.getSource()
-    const modifier = new CodeModifier(data.source, data.sourceMap)
-    const result = modifier.moveNode(this.nodeId, this.targetId, this.placement)
+    const result = new CodeModifier(data.source, data.sourceMap).moveNode(
+      this.nodeId,
+      this.targetId,
+      this.placement
+    )
     if (!result.success) return { success: false, error: result.error }
-
     this.change = result.change
     const editorChange = adjustChangeForEditor(result.change, ctx)
     ctx.applyChange(editorChange)

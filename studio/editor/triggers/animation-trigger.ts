@@ -62,9 +62,7 @@ export function parseAnimationFromLine(lineText: string): AnimationData | null {
     name,
     easing: 'ease-out',
     duration: 0.3,
-    tracks: [
-      { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
-    ],
+    tracks: [{ property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 }],
   }
 
   // Parse properties if present
@@ -195,31 +193,21 @@ export function createAnimationTriggerConfig(): TriggerConfig {
 /**
  * Insert animation DSL into the editor
  */
-function insertAnimation(
-  dsl: string,
-  context: TriggerContext,
-  view: EditorView
-): void {
+function insertAnimation(dsl: string, context: TriggerContext, view: EditorView): void {
   const from = context.replaceRange?.from ?? context.line.from
   const to = context.replaceRange?.to ?? context.line.to
-
   view.dispatch({
     changes: { from, to, insert: dsl },
     selection: { anchor: from + dsl.length },
     annotations: Transaction.userEvent.of('input.animation'),
   })
-
   view.focus()
 }
 
 /**
  * Show the animation picker for a specific line
  */
-export function showAnimationPicker(
-  lineText: string,
-  lineStart: number,
-  view: EditorView
-): void {
+export function showAnimationPicker(lineText: string, lineStart: number, view: EditorView): void {
   const manager = getTriggerManager()
   const coords = view.coordsAtPos(lineStart)
   if (!coords) return
@@ -229,22 +217,13 @@ export function showAnimationPicker(
     name: 'FadeUp',
     easing: 'ease-out',
     duration: 0.3,
-    tracks: [
-      { property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 },
-    ],
+    tracks: [{ property: 'opacity', startTime: 0, endTime: 0.3, fromValue: 0, toValue: 1 }],
   }
 
-  manager.showPicker(
-    ANIMATION_TRIGGER_ID,
-    coords.left,
-    coords.bottom + 4,
-    lineStart,
-    view,
-    {
-      replaceRange: { from: lineStart, to: lineStart + lineText.length },
-      existingValue: lineText,
-    }
-  )
+  manager.showPicker(ANIMATION_TRIGGER_ID, coords.left, coords.bottom + 4, lineStart, view, {
+    replaceRange: { from: lineStart, to: lineStart + lineText.length },
+    existingValue: lineText,
+  })
 }
 
 /**

@@ -61,7 +61,48 @@ import {
   generateComponentCodeFromDragData,
   // Property Panel
   PropertyPanel,
-} from './dist/index.js?v=130'
+  // Preview Renderers (Clean Code modules)
+  TokenRenderer,
+  ComponentRenderer,
+  // Drop Service (Clean Code module)
+  handleStudioDropNew,
+  // Zag Helpers (Clean Code module)
+  isZagComponent as isZagComponentModule,
+  findExistingZagDefinition as findExistingZagDefinitionModule,
+  generateZagComponentName as generateZagComponentNameModule,
+  generateZagDefinitionCode as generateZagDefinitionCodeModule,
+  generateZagInstanceCode as generateZagInstanceCodeModule,
+  addZagDefinitionToCode as addZagDefinitionToCodeModule,
+  findOrCreateComponentsFile as findOrCreateComponentsFileModule,
+  addZagDefinitionToComponentsFile as addZagDefinitionToComponentsFileModule,
+  // File Types (Clean Code module)
+  FILE_TYPES as FILE_TYPES_MODULE,
+  detectFileType as detectFileTypeModule,
+  getFileIcon as getFileIconModule,
+  getFileTypeColor as getFileTypeColorModule,
+  getFileTemplate,
+  getFileExtension,
+  // React Converter (Clean Code module)
+  convertReactToMirror as convertReactToMirrorModule,
+  buildReactSystemPrompt as buildReactSystemPromptModule,
+  STYLE_TO_MIRROR,
+  TAG_TO_COMPONENT,
+  TAG_TO_NAME,
+  // YAML Parser (Clean Code module)
+  parseYAML as parseYAMLModule,
+  parseYAMLValue as parseYAMLValueModule,
+  collectYAMLData as collectYAMLDataModule,
+  generateYAMLDataInjection as generateYAMLDataInjectionModule,
+  // Color Picker Utilities (Clean Code module)
+  hsvToRgb as hsvToRgbModule,
+  rgbToHsv as rgbToHsvModule,
+  hexToRgb as hexToRgbModule,
+  rgbToHex as rgbToHexModule,
+  hexToHsv as hexToHsvModule,
+  hsvToHex as hsvToHexModule,
+  // Full Color Picker (Clean Code module)
+  createFullColorPicker,
+} from './dist/index.js?v=137'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -131,162 +172,27 @@ const fileTypes = {} // Stores explicit file types: { 'filename.mirror': 'compon
 let currentFile = 'index.mir'
 
 // ============================================
-// YAML Parser for Auto-Loading
+// YAML Parser (use Clean Code module)
 // ============================================
 
-/**
- * Simple YAML parser for data files
- * Supports: strings, numbers, booleans, arrays, objects
- */
+function getYAMLDeps() {
+  return { getFiles: () => window.desktopFiles?.getFiles?.() || files }
+}
+
 function parseYAML(text) {
-  const lines = text.split('\n')
-  const result = {}
-  let currentArray = null
-  let currentKey = ''
-  let currentIndent = 0
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-
-    // Skip empty lines and comments
-    if (!trimmed || trimmed.startsWith('#')) continue
-
-    // Array item
-    if (trimmed.startsWith('- ')) {
-      const value = trimmed.slice(2).trim()
-
-      // Object in array: - key: value
-      if (value.includes(': ')) {
-        const obj = {}
-        // Parse inline object properties
-        const parts = value.split(', ')
-        for (const part of parts) {
-          const colonIdx = part.indexOf(': ')
-          if (colonIdx > 0) {
-            const k = part.slice(0, colonIdx).trim()
-            const v = parseYAMLValue(part.slice(colonIdx + 2).trim())
-            obj[k] = v
-          }
-        }
-
-        if (!currentArray) {
-          currentArray = []
-          if (currentKey) result[currentKey] = currentArray
-        }
-        currentArray.push(obj)
-      } else {
-        // Simple array item
-        if (!currentArray) {
-          currentArray = []
-          if (currentKey) result[currentKey] = currentArray
-        }
-        currentArray.push(parseYAMLValue(value))
-      }
-      continue
-    }
-
-    // Key-value pair
-    const colonIdx = trimmed.indexOf(':')
-    if (colonIdx > 0) {
-      const key = trimmed.slice(0, colonIdx).trim()
-      const value = trimmed.slice(colonIdx + 1).trim()
-
-      const indent = line.length - line.trimStart().length
-
-      if (indent === 0) {
-        // Top-level key
-        currentKey = key
-        currentArray = null
-        currentIndent = indent
-
-        if (value) {
-          result[key] = parseYAMLValue(value)
-        }
-      } else if (indent > currentIndent && currentArray) {
-        // Nested property in array object
-        const lastItem = currentArray[currentArray.length - 1]
-        if (typeof lastItem === 'object' && lastItem !== null) {
-          lastItem[key] = parseYAMLValue(value)
-        }
-      }
-    }
-  }
-
-  // If entire file is just an array
-  if (currentArray && Object.keys(result).length === 0) {
-    return currentArray
-  }
-
-  return result
+  return parseYAMLModule(text)
 }
 
-/**
- * Parse a YAML value (string, number, boolean, null)
- */
 function parseYAMLValue(value) {
-  // Remove quotes
-  if (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  ) {
-    return value.slice(1, -1)
-  }
-
-  // Boolean
-  if (value === 'true') return true
-  if (value === 'false') return false
-
-  // Null
-  if (value === 'null' || value === '~') return null
-
-  // Number
-  const num = Number(value)
-  if (!isNaN(num) && value !== '') return num
-
-  return value
+  return parseYAMLValueModule(value)
 }
 
-/**
- * Collect all YAML data files and parse them
- * Returns an object with filename (without extension) as keys
- */
 function collectYAMLData() {
-  const allFiles = window.desktopFiles?.getFiles?.() || files
-  const yamlData = {}
-
-  for (const filename of Object.keys(allFiles)) {
-    const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase()
-    if (ext === '.yaml' || ext === '.yml') {
-      const content = allFiles[filename]
-      if (content && content.trim()) {
-        // Use filename without extension as the data key
-        const name = filename.replace(/\.ya?ml$/i, '').replace(/^.*[\/\\]/, '')
-        try {
-          yamlData[name] = parseYAML(content)
-          console.log(`[YAML] Loaded ${name}:`, yamlData[name])
-        } catch (e) {
-          console.warn(`[YAML] Failed to parse ${filename}:`, e)
-        }
-      }
-    }
-  }
-
-  return yamlData
+  return collectYAMLDataModule(getYAMLDeps())
 }
 
-/**
- * Generate JavaScript code to inject YAML data into __mirrorData
- */
 function generateYAMLDataInjection() {
-  const yamlData = collectYAMLData()
-  if (Object.keys(yamlData).length === 0) return ''
-
-  // Generate assignment statements to merge into __mirrorData
-  let code = '\n// Auto-loaded YAML data\n'
-  for (const [name, data] of Object.entries(yamlData)) {
-    code += `__mirrorData["${name}"] = ${JSON.stringify(data)};\n`
-  }
-  return code
+  return generateYAMLDataInjectionModule(getYAMLDeps())
 }
 
 // ============================================
@@ -507,235 +413,19 @@ async function renameFile(oldPath, newPath) {
 // ===========================================
 // FILE TYPES - Single Source of Truth
 // ===========================================
-const FILE_TYPES = {
-  layout: {
-    label: 'Layout',
-    placeholder: 'home',
-    color: '#5BA8F5',
-    extension: '.mir',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="18" height="18" rx="2"/>
-      <path d="M3 9h18"/>
-      <path d="M9 21V9"/>
-    </svg>`,
-    template: name => `// ${name} Layout
-// UI Layout Seite
+// File Types (use Clean Code module)
+const FILE_TYPES = FILE_TYPES_MODULE
 
-Box pad 24, gap 16, bg #0a0a0f
-  Text "${name}", font-size 24, weight bold
-  Text "Layout content here..."
-`,
-    detect: content => {
-      // Default type - only if nothing else matches
-      return false
-    },
-  },
-  component: {
-    label: 'Components',
-    placeholder: 'buttons',
-    color: '#8B5CF6',
-    extension: '.com',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="7" height="7" rx="1"/>
-      <rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/>
-      <rect x="14" y="14" width="7" height="7" rx="1"/>
-    </svg>`,
-    template: name => `// ${name} Components
-// Komponenten-Definitionen
-
-// Button Komponente
-Button: pad 12 24, bg #5BA8F5, rad 8, cursor pointer
-  state hover bg #2271C1
-
-// Card Komponente
-Card: pad 16, bg #1a1a23, rad 8
-  Title:
-  Content:
-`,
-    detect: lines => {
-      // Component definitions: Name: (uppercase, ends with colon)
-      let hasDefinitions = false
-      let hasInstances = false
-      for (const line of lines) {
-        if (/^[A-Z][a-zA-Z0-9]*\s*(as\s+[a-zA-Z]+\s*)?:/.test(line)) {
-          hasDefinitions = true
-        } else if (/^[A-Z][a-zA-Z0-9]*(\s|$)/.test(line) && !line.includes(':')) {
-          hasInstances = true
-        }
-      }
-      return hasDefinitions && !hasInstances
-    },
-  },
-  tokens: {
-    label: 'Tokens',
-    placeholder: 'theme',
-    color: '#F59E0B',
-    extension: '.tok',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="7" r="4"/>
-      <circle cx="7" cy="15" r="4"/>
-      <circle cx="17" cy="15" r="4"/>
-    </svg>`,
-    template: name => `// ${name} Design Tokens
-// Farben, Abstände und Typografie
-
-// Farb-Palette
-grey-900.bg: #18181B
-grey-800.bg: #27272A
-grey-700.bg: #3F3F46
-
-// Background Colors
-accent.bg: #5BA8F5
-surface.bg: #27272A
-canvas.bg: #18181B
-
-// Text Colors
-text.col: #ffffff
-muted.col: #a1a1aa
-
-// Spacing (s=4, m=8, l=16)
-s.pad: 4
-m.pad: 8
-l.pad: 16
-s.gap: 4
-m.gap: 8
-l.gap: 16
-
-// Radius (s=4, m=8, l=12)
-s.rad: 4
-m.rad: 8
-l.rad: 12
-`,
-    detect: lines => {
-      // Token definitions: $name: value or lowercase: value
-      // BUT only if there are NO component instances (those make it a layout)
-      let hasTokens = false
-      let hasInstances = false
-      for (const line of lines) {
-        if (/^\$?[a-z][a-zA-Z0-9.-]*:\s*(#[0-9A-Fa-f]+|\d+|"[^"]*"|\$)/.test(line)) {
-          hasTokens = true
-        }
-        // Check for component instances (PascalCase without colon = instance)
-        if (/^[A-Z][a-zA-Z0-9]*(\s|$)/.test(line) && !line.includes(':')) {
-          hasInstances = true
-        }
-      }
-      // Only tokens file if has tokens but NO instances
-      return hasTokens && !hasInstances
-    },
-  },
-  data: {
-    label: 'Data',
-    placeholder: 'users',
-    color: '#22C55E',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <ellipse cx="12" cy="5" rx="9" ry="3"/>
-      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-      <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
-    </svg>`,
-    template: name => `// ${name} Data
-// Daten und Collections
-
-$users:
-  - id 1, name "Max", role "admin"
-  - id 2, name "Anna", role "user"
-  - id 3, name "Tom", role "user"
-
-$tasks:
-  - id 1, title "Task 1", done false
-  - id 2, title "Task 2", done true
-`,
-    detect: lines => {
-      // Data: $name: followed by - items
-      for (const line of lines) {
-        if (/^\s*-\s+\w+/.test(line)) {
-          return true
-        }
-      }
-      return false
-    },
-  },
-  javascript: {
-    label: 'JavaScript',
-    placeholder: 'utils',
-    color: '#EC4899',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M16 18l6-6-6-6"/>
-      <path d="M8 6l-6 6 6 6"/>
-    </svg>`,
-    template: name => `// ${name} JavaScript
-// Custom JavaScript Code
-
-javascript
-  function handle${name.replace(/[^a-zA-Z]/g, '')}() {
-console.log('${name} loaded')
-  }
-
-  // Export für Mirror
-  window.${name.replace(/[^a-zA-Z]/g, '')} = {
-init: handle${name.replace(/[^a-zA-Z]/g, '')}
-  }
-end
-`,
-    detect: (lines, content) => {
-      return content.includes('javascript') && content.includes('end')
-    },
-  },
-}
-
-// Detect file type from content
 function detectFileType(nameOrContent, content) {
-  // Support both old (content only) and new (name, content) signatures
-  let filename = ''
-  let code = nameOrContent
-
-  if (content !== undefined) {
-    filename = nameOrContent
-    code = content
-  }
-
-  // Check filename patterns first
-  if (filename) {
-    const lower = filename.toLowerCase()
-    if (lower.includes('token')) return 'tokens'
-    if (lower.includes('component')) return 'component' // Always singular
-  }
-
-  if (!code || !code.trim()) return 'layout'
-
-  const lines = code
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l && !l.startsWith('//') && !l.startsWith('import'))
-
-  if (lines.length === 0) return 'layout'
-
-  // Check each type's detect function (order matters: more specific first)
-  const checkOrder = ['javascript', 'data', 'tokens', 'component']
-  for (const type of checkOrder) {
-    if (FILE_TYPES[type].detect(lines, code)) {
-      return type // Always return singular form ('component', not 'components')
-    }
-  }
-
-  return 'layout'
+  return detectFileTypeModule(nameOrContent, content)
 }
 
-// Get icon SVG for file (with color)
 function getFileIcon(filename, withColor = true) {
-  const type = getFileType(filename)
-  const fileType = FILE_TYPES[type] || FILE_TYPES.layout
-  if (withColor) {
-    return fileType.icon.replace('stroke="currentColor"', `stroke="${fileType.color}"`)
-  }
-  return fileType.icon
+  return getFileIconModule(filename, getFileType, withColor)
 }
 
-// Get file type color
 function getFileTypeColor(filename) {
-  const type = getFileType(filename)
-  return (FILE_TYPES[type] || FILE_TYPES.layout).color
+  return getFileTypeColorModule(filename, getFileType)
 }
 
 // Legacy create file/folder functions - desktop app uses native menu + desktop-files.js
@@ -965,1288 +655,18 @@ const mirrorHighlight = ViewPlugin.fromClass(
 // Autocomplete - using modular engine from studio/autocomplete/
 // mirrorCompletions is imported from ./dist/index.js
 
-// ==========================================
-// Color Picker Setup (before editor)
-// ==========================================
+// =============================================================================
+// Color Picker (Clean Code Module - FullColorPicker)
+// =============================================================================
 
-// Open Color - cleaner palette with single gray scale
-const OPEN_COLORS = [
-  {
-    name: 'gray',
-    shades: [
-      '#f8f9fa',
-      '#f1f3f5',
-      '#e9ecef',
-      '#dee2e6',
-      '#ced4da',
-      '#adb5bd',
-      '#868e96',
-      '#495057',
-      '#343a40',
-      '#212529',
-    ],
-  },
-  {
-    name: 'red',
-    shades: [
-      '#fff5f5',
-      '#ffe3e3',
-      '#ffc9c9',
-      '#ffa8a8',
-      '#ff8787',
-      '#ff6b6b',
-      '#fa5252',
-      '#f03e3e',
-      '#e03131',
-      '#c92a2a',
-    ],
-  },
-  {
-    name: 'pink',
-    shades: [
-      '#fff0f6',
-      '#ffdeeb',
-      '#fcc2d7',
-      '#faa2c1',
-      '#f783ac',
-      '#f06595',
-      '#e64980',
-      '#d6336c',
-      '#c2255c',
-      '#a61e4d',
-    ],
-  },
-  {
-    name: 'grape',
-    shades: [
-      '#f8f0fc',
-      '#f3d9fa',
-      '#eebefa',
-      '#e599f7',
-      '#da77f2',
-      '#cc5de8',
-      '#be4bdb',
-      '#ae3ec9',
-      '#9c36b5',
-      '#862e9c',
-    ],
-  },
-  {
-    name: 'violet',
-    shades: [
-      '#f3f0ff',
-      '#e5dbff',
-      '#d0bfff',
-      '#b197fc',
-      '#9775fa',
-      '#845ef7',
-      '#7950f2',
-      '#7048e8',
-      '#6741d9',
-      '#5f3dc4',
-    ],
-  },
-  {
-    name: 'indigo',
-    shades: [
-      '#edf2ff',
-      '#dbe4ff',
-      '#bac8ff',
-      '#91a7ff',
-      '#748ffc',
-      '#5c7cfa',
-      '#4c6ef5',
-      '#4263eb',
-      '#3b5bdb',
-      '#364fc7',
-    ],
-  },
-  {
-    name: 'blue',
-    shades: [
-      '#e7f5ff',
-      '#d0ebff',
-      '#a5d8ff',
-      '#74c0fc',
-      '#4dabf7',
-      '#339af0',
-      '#228be6',
-      '#1c7ed6',
-      '#1971c2',
-      '#1864ab',
-    ],
-  },
-  {
-    name: 'cyan',
-    shades: [
-      '#e3fafc',
-      '#c5f6fa',
-      '#99e9f2',
-      '#66d9e8',
-      '#3bc9db',
-      '#22b8cf',
-      '#15aabf',
-      '#1098ad',
-      '#0c8599',
-      '#0b7285',
-    ],
-  },
-  {
-    name: 'teal',
-    shades: [
-      '#e6fcf5',
-      '#c3fae8',
-      '#96f2d7',
-      '#63e6be',
-      '#38d9a9',
-      '#20c997',
-      '#12b886',
-      '#0ca678',
-      '#099268',
-      '#087f5b',
-    ],
-  },
-  {
-    name: 'green',
-    shades: [
-      '#ebfbee',
-      '#d3f9d8',
-      '#b2f2bb',
-      '#8ce99a',
-      '#69db7c',
-      '#51cf66',
-      '#40c057',
-      '#37b24d',
-      '#2f9e44',
-      '#2b8a3e',
-    ],
-  },
-  {
-    name: 'lime',
-    shades: [
-      '#f4fce3',
-      '#e9fac8',
-      '#d8f5a2',
-      '#c0eb75',
-      '#a9e34b',
-      '#94d82d',
-      '#82c91e',
-      '#74b816',
-      '#66a80f',
-      '#5c940d',
-    ],
-  },
-  {
-    name: 'yellow',
-    shades: [
-      '#fff9db',
-      '#fff3bf',
-      '#ffec99',
-      '#ffe066',
-      '#ffd43b',
-      '#fcc419',
-      '#fab005',
-      '#f59f00',
-      '#f08c00',
-      '#e67700',
-    ],
-  },
-  {
-    name: 'orange',
-    shades: [
-      '#fff4e6',
-      '#ffe8cc',
-      '#ffd8a8',
-      '#ffc078',
-      '#ffa94d',
-      '#ff922b',
-      '#fd7e14',
-      '#f76707',
-      '#e8590c',
-      '#d9480f',
-    ],
-  },
-]
-
-// Tailwind CSS v3 Colors
-const TAILWIND_COLORS = [
-  {
-    name: 'slate',
-    shades: [
-      '#f8fafc',
-      '#f1f5f9',
-      '#e2e8f0',
-      '#cbd5e1',
-      '#94a3b8',
-      '#64748b',
-      '#475569',
-      '#334155',
-      '#1e293b',
-      '#0f172a',
-    ],
-  },
-  {
-    name: 'gray',
-    shades: [
-      '#f9fafb',
-      '#f3f4f6',
-      '#e5e7eb',
-      '#d1d5db',
-      '#9ca3af',
-      '#6b7280',
-      '#4b5563',
-      '#374151',
-      '#1f2937',
-      '#111827',
-    ],
-  },
-  {
-    name: 'zinc',
-    shades: [
-      '#fafafa',
-      '#f4f4f5',
-      '#e4e4e7',
-      '#d4d4d8',
-      '#a1a1aa',
-      '#71717a',
-      '#52525b',
-      '#3f3f46',
-      '#27272a',
-      '#18181b',
-    ],
-  },
-  {
-    name: 'red',
-    shades: [
-      '#fef2f2',
-      '#fee2e2',
-      '#fecaca',
-      '#fca5a5',
-      '#f87171',
-      '#ef4444',
-      '#dc2626',
-      '#b91c1c',
-      '#991b1b',
-      '#7f1d1d',
-    ],
-  },
-  {
-    name: 'orange',
-    shades: [
-      '#fff7ed',
-      '#ffedd5',
-      '#fed7aa',
-      '#fdba74',
-      '#fb923c',
-      '#f97316',
-      '#ea580c',
-      '#c2410c',
-      '#9a3412',
-      '#7c2d12',
-    ],
-  },
-  {
-    name: 'amber',
-    shades: [
-      '#fffbeb',
-      '#fef3c7',
-      '#fde68a',
-      '#fcd34d',
-      '#fbbf24',
-      '#f59e0b',
-      '#d97706',
-      '#b45309',
-      '#92400e',
-      '#78350f',
-    ],
-  },
-  {
-    name: 'yellow',
-    shades: [
-      '#fefce8',
-      '#fef9c3',
-      '#fef08a',
-      '#fde047',
-      '#facc15',
-      '#eab308',
-      '#ca8a04',
-      '#a16207',
-      '#854d0e',
-      '#713f12',
-    ],
-  },
-  {
-    name: 'lime',
-    shades: [
-      '#f7fee7',
-      '#ecfccb',
-      '#d9f99d',
-      '#bef264',
-      '#a3e635',
-      '#84cc16',
-      '#65a30d',
-      '#4d7c0f',
-      '#3f6212',
-      '#365314',
-    ],
-  },
-  {
-    name: 'green',
-    shades: [
-      '#f0fdf4',
-      '#dcfce7',
-      '#bbf7d0',
-      '#86efac',
-      '#4ade80',
-      '#22c55e',
-      '#16a34a',
-      '#15803d',
-      '#166534',
-      '#14532d',
-    ],
-  },
-  {
-    name: 'emerald',
-    shades: [
-      '#ecfdf5',
-      '#d1fae5',
-      '#a7f3d0',
-      '#6ee7b7',
-      '#34d399',
-      '#10b981',
-      '#059669',
-      '#047857',
-      '#065f46',
-      '#064e3b',
-    ],
-  },
-  {
-    name: 'teal',
-    shades: [
-      '#f0fdfa',
-      '#ccfbf1',
-      '#99f6e4',
-      '#5eead4',
-      '#2dd4bf',
-      '#14b8a6',
-      '#0d9488',
-      '#0f766e',
-      '#115e59',
-      '#134e4a',
-    ],
-  },
-  {
-    name: 'cyan',
-    shades: [
-      '#ecfeff',
-      '#cffafe',
-      '#a5f3fc',
-      '#67e8f9',
-      '#22d3ee',
-      '#06b6d4',
-      '#0891b2',
-      '#0e7490',
-      '#155e75',
-      '#164e63',
-    ],
-  },
-  {
-    name: 'sky',
-    shades: [
-      '#f0f9ff',
-      '#e0f2fe',
-      '#bae6fd',
-      '#7dd3fc',
-      '#38bdf8',
-      '#0ea5e9',
-      '#0284c7',
-      '#0369a1',
-      '#075985',
-      '#0c4a6e',
-    ],
-  },
-  {
-    name: 'blue',
-    shades: [
-      '#eff6ff',
-      '#dbeafe',
-      '#bfdbfe',
-      '#93c5fd',
-      '#60a5fa',
-      '#5BA8F5',
-      '#2271C1',
-      '#1d4ed8',
-      '#1e40af',
-      '#1e3a8a',
-    ],
-  },
-  {
-    name: 'indigo',
-    shades: [
-      '#eef2ff',
-      '#e0e7ff',
-      '#c7d2fe',
-      '#a5b4fc',
-      '#818cf8',
-      '#6366f1',
-      '#4f46e5',
-      '#4338ca',
-      '#3730a3',
-      '#312e81',
-    ],
-  },
-  {
-    name: 'violet',
-    shades: [
-      '#f5f3ff',
-      '#ede9fe',
-      '#ddd6fe',
-      '#c4b5fd',
-      '#a78bfa',
-      '#8b5cf6',
-      '#7c3aed',
-      '#6d28d9',
-      '#5b21b6',
-      '#4c1d95',
-    ],
-  },
-  {
-    name: 'purple',
-    shades: [
-      '#faf5ff',
-      '#f3e8ff',
-      '#e9d5ff',
-      '#d8b4fe',
-      '#c084fc',
-      '#a855f7',
-      '#9333ea',
-      '#7e22ce',
-      '#6b21a8',
-      '#581c87',
-    ],
-  },
-  {
-    name: 'fuchsia',
-    shades: [
-      '#fdf4ff',
-      '#fae8ff',
-      '#f5d0fe',
-      '#f0abfc',
-      '#e879f9',
-      '#d946ef',
-      '#c026d3',
-      '#a21caf',
-      '#86198f',
-      '#701a75',
-    ],
-  },
-  {
-    name: 'pink',
-    shades: [
-      '#fdf2f8',
-      '#fce7f3',
-      '#fbcfe8',
-      '#f9a8d4',
-      '#f472b6',
-      '#ec4899',
-      '#db2777',
-      '#be185d',
-      '#9d174d',
-      '#831843',
-    ],
-  },
-  {
-    name: 'rose',
-    shades: [
-      '#fff1f2',
-      '#ffe4e6',
-      '#fecdd3',
-      '#fda4af',
-      '#fb7185',
-      '#f43f5e',
-      '#e11d48',
-      '#be123c',
-      '#9f1239',
-      '#881337',
-    ],
-  },
-]
-
-// Material Design Colors
-const MATERIAL_COLORS = [
-  {
-    name: 'red',
-    shades: [
-      '#ffebee',
-      '#ffcdd2',
-      '#ef9a9a',
-      '#e57373',
-      '#ef5350',
-      '#f44336',
-      '#e53935',
-      '#d32f2f',
-      '#c62828',
-      '#b71c1c',
-    ],
-  },
-  {
-    name: 'pink',
-    shades: [
-      '#fce4ec',
-      '#f8bbd0',
-      '#f48fb1',
-      '#f06292',
-      '#ec407a',
-      '#e91e63',
-      '#d81b60',
-      '#c2185b',
-      '#ad1457',
-      '#880e4f',
-    ],
-  },
-  {
-    name: 'purple',
-    shades: [
-      '#f3e5f5',
-      '#e1bee7',
-      '#ce93d8',
-      '#ba68c8',
-      '#ab47bc',
-      '#9c27b0',
-      '#8e24aa',
-      '#7b1fa2',
-      '#6a1b9a',
-      '#4a148c',
-    ],
-  },
-  {
-    name: 'deepPurple',
-    shades: [
-      '#ede7f6',
-      '#d1c4e9',
-      '#b39ddb',
-      '#9575cd',
-      '#7e57c2',
-      '#673ab7',
-      '#5e35b1',
-      '#512da8',
-      '#4527a0',
-      '#311b92',
-    ],
-  },
-  {
-    name: 'indigo',
-    shades: [
-      '#e8eaf6',
-      '#c5cae9',
-      '#9fa8da',
-      '#7986cb',
-      '#5c6bc0',
-      '#3f51b5',
-      '#3949ab',
-      '#303f9f',
-      '#283593',
-      '#1a237e',
-    ],
-  },
-  {
-    name: 'blue',
-    shades: [
-      '#e3f2fd',
-      '#bbdefb',
-      '#90caf9',
-      '#64b5f6',
-      '#42a5f5',
-      '#2196f3',
-      '#1e88e5',
-      '#1976d2',
-      '#1565c0',
-      '#0d47a1',
-    ],
-  },
-  {
-    name: 'lightBlue',
-    shades: [
-      '#e1f5fe',
-      '#b3e5fc',
-      '#81d4fa',
-      '#4fc3f7',
-      '#29b6f6',
-      '#03a9f4',
-      '#039be5',
-      '#0288d1',
-      '#0277bd',
-      '#01579b',
-    ],
-  },
-  {
-    name: 'cyan',
-    shades: [
-      '#e0f7fa',
-      '#b2ebf2',
-      '#80deea',
-      '#4dd0e1',
-      '#26c6da',
-      '#00bcd4',
-      '#00acc1',
-      '#0097a7',
-      '#00838f',
-      '#006064',
-    ],
-  },
-  {
-    name: 'teal',
-    shades: [
-      '#e0f2f1',
-      '#b2dfdb',
-      '#80cbc4',
-      '#4db6ac',
-      '#26a69a',
-      '#009688',
-      '#00897b',
-      '#00796b',
-      '#00695c',
-      '#004d40',
-    ],
-  },
-  {
-    name: 'green',
-    shades: [
-      '#e8f5e9',
-      '#c8e6c9',
-      '#a5d6a7',
-      '#81c784',
-      '#66bb6a',
-      '#4caf50',
-      '#43a047',
-      '#388e3c',
-      '#2e7d32',
-      '#1b5e20',
-    ],
-  },
-  {
-    name: 'lightGreen',
-    shades: [
-      '#f1f8e9',
-      '#dcedc8',
-      '#c5e1a5',
-      '#aed581',
-      '#9ccc65',
-      '#8bc34a',
-      '#7cb342',
-      '#689f38',
-      '#558b2f',
-      '#33691e',
-    ],
-  },
-  {
-    name: 'lime',
-    shades: [
-      '#f9fbe7',
-      '#f0f4c3',
-      '#e6ee9c',
-      '#dce775',
-      '#d4e157',
-      '#cddc39',
-      '#c0ca33',
-      '#afb42b',
-      '#9e9d24',
-      '#827717',
-    ],
-  },
-  {
-    name: 'yellow',
-    shades: [
-      '#fffde7',
-      '#fff9c4',
-      '#fff59d',
-      '#fff176',
-      '#ffee58',
-      '#ffeb3b',
-      '#fdd835',
-      '#fbc02d',
-      '#f9a825',
-      '#f57f17',
-    ],
-  },
-  {
-    name: 'amber',
-    shades: [
-      '#fff8e1',
-      '#ffecb3',
-      '#ffe082',
-      '#ffd54f',
-      '#ffca28',
-      '#ffc107',
-      '#ffb300',
-      '#ffa000',
-      '#ff8f00',
-      '#ff6f00',
-    ],
-  },
-  {
-    name: 'orange',
-    shades: [
-      '#fff3e0',
-      '#ffe0b2',
-      '#ffcc80',
-      '#ffb74d',
-      '#ffa726',
-      '#ff9800',
-      '#fb8c00',
-      '#f57c00',
-      '#ef6c00',
-      '#e65100',
-    ],
-  },
-  {
-    name: 'deepOrange',
-    shades: [
-      '#fbe9e7',
-      '#ffccbc',
-      '#ffab91',
-      '#ff8a65',
-      '#ff7043',
-      '#ff5722',
-      '#f4511e',
-      '#e64a19',
-      '#d84315',
-      '#bf360c',
-    ],
-  },
-  {
-    name: 'brown',
-    shades: [
-      '#efebe9',
-      '#d7ccc8',
-      '#bcaaa4',
-      '#a1887f',
-      '#8d6e63',
-      '#795548',
-      '#6d4c41',
-      '#5d4037',
-      '#4e342e',
-      '#3e2723',
-    ],
-  },
-  {
-    name: 'grey',
-    shades: [
-      '#fafafa',
-      '#f5f5f5',
-      '#eeeeee',
-      '#e0e0e0',
-      '#bdbdbd',
-      '#9e9e9e',
-      '#757575',
-      '#616161',
-      '#424242',
-      '#212121',
-    ],
-  },
-  {
-    name: 'blueGrey',
-    shades: [
-      '#eceff1',
-      '#cfd8dc',
-      '#b0bec5',
-      '#90a4ae',
-      '#78909c',
-      '#607d8b',
-      '#546e7a',
-      '#455a64',
-      '#37474f',
-      '#263238',
-    ],
-  },
-]
-
-const colorPicker = document.getElementById('color-picker')
-const colorPickerGrid = document.getElementById('color-picker-grid')
-const colorPickerTailwindGrid = document.getElementById('color-picker-tailwind-grid')
-const colorPickerMaterialGrid = document.getElementById('color-picker-material-grid')
-const colorPickerTokenGrid = document.getElementById('color-picker-token-grid')
-const colorPreview = document.getElementById('color-preview')
-const colorHex = document.getElementById('color-hex')
+// State for editor integration (kept here, not in module)
 let colorPickerVisible = false
 let colorPickerInsertPos = null
-let colorPickerReplaceRange = null // { from, to } for replacing existing colors
-let colorPickerProperty = null // Current property type (bg, col, etc.)
-let colorPickerCallback = null // Callback for property panel mode
-
-// Hash trigger state (for typing # to open color picker)
+let colorPickerReplaceRange = null
+let colorPickerProperty = null
+let colorPickerCallback = null
 let hashTriggerActive = false
 let hashTriggerStartPos = null
-let selectedSwatchIndex = 0
-let colorSwatchElements = []
-const SWATCH_COLUMNS = 13 // Number of color columns in grid (Open Color)
-const SWATCH_ROWS = 10 // Number of shades per color
-
-// Color picker tab state
-let currentColorTab = 'custom' // 'custom', 'tailwind', 'open', 'material'
-
-// Custom color picker state (HSV)
-let customColorState = {
-  h: 220, // Hue (0-360)
-  s: 100, // Saturation (0-100)
-  v: 100, // Value/Brightness (0-100)
-  a: 1, // Alpha (0-1)
-}
-
-// Build the color grid
-function buildColorGrid() {
-  colorPickerGrid.innerHTML = ''
-  colorSwatchElements = []
-  let swatchIndex = 0
-  OPEN_COLORS.forEach((scale, colIndex) => {
-    const col = document.createElement('div')
-    col.className = 'color-picker-column'
-    scale.shades.forEach((hex, rowIndex) => {
-      const btn = document.createElement('button')
-      btn.className = 'color-swatch'
-      btn.style.backgroundColor = hex
-      btn.dataset.color = hex
-      btn.dataset.index = swatchIndex
-      btn.dataset.col = colIndex
-      btn.dataset.row = rowIndex
-      colorSwatchElements.push(btn)
-      btn.addEventListener('mouseenter', () => {
-        colorPreview.style.backgroundColor = hex
-        colorHex.textContent = hex.toUpperCase()
-        if (hashTriggerActive) {
-          selectedSwatchIndex = parseInt(btn.dataset.index)
-          updateSelectedSwatch()
-        }
-      })
-      btn.addEventListener('click', e => {
-        e.preventDefault()
-        selectColor(hex.toUpperCase())
-      })
-      col.appendChild(btn)
-      swatchIndex++
-    })
-    colorPickerGrid.appendChild(col)
-  })
-}
-buildColorGrid()
-
-// Build Tailwind color grid
-function buildTailwindColorGrid() {
-  colorPickerTailwindGrid.innerHTML = ''
-  TAILWIND_COLORS.forEach(scale => {
-    const col = document.createElement('div')
-    col.className = 'color-picker-column'
-    scale.shades.forEach(hex => {
-      const btn = document.createElement('button')
-      btn.className = 'color-swatch'
-      btn.style.backgroundColor = hex
-      btn.dataset.color = hex
-      btn.addEventListener('mouseenter', () => {
-        colorPreview.style.backgroundColor = hex
-        colorHex.textContent = hex.toUpperCase()
-      })
-      btn.addEventListener('click', e => {
-        e.preventDefault()
-        selectColor(hex.toUpperCase())
-      })
-      col.appendChild(btn)
-    })
-    colorPickerTailwindGrid.appendChild(col)
-  })
-}
-buildTailwindColorGrid()
-
-// Build Material color grid
-function buildMaterialColorGrid() {
-  colorPickerMaterialGrid.innerHTML = ''
-  MATERIAL_COLORS.forEach(scale => {
-    const col = document.createElement('div')
-    col.className = 'color-picker-column'
-    scale.shades.forEach(hex => {
-      const btn = document.createElement('button')
-      btn.className = 'color-swatch'
-      btn.style.backgroundColor = hex
-      btn.dataset.color = hex
-      btn.addEventListener('mouseenter', () => {
-        colorPreview.style.backgroundColor = hex
-        colorHex.textContent = hex.toUpperCase()
-      })
-      btn.addEventListener('click', e => {
-        e.preventDefault()
-        selectColor(hex.toUpperCase())
-      })
-      col.appendChild(btn)
-    })
-    colorPickerMaterialGrid.appendChild(col)
-  })
-}
-buildMaterialColorGrid()
-
-// Tab switching
-function initColorPickerTabs() {
-  const tabs = colorPicker.querySelectorAll('.color-picker-tab')
-  const contents = colorPicker.querySelectorAll('.color-picker-content')
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const tabName = tab.dataset.tab
-      currentColorTab = tabName
-
-      // Update tab active state
-      tabs.forEach(t => t.classList.remove('active'))
-      tab.classList.add('active')
-
-      // Update content visibility
-      contents.forEach(c => c.classList.remove('active'))
-      const content = document.getElementById(`color-picker-${tabName}`)
-      if (content) content.classList.add('active')
-
-      // Initialize custom picker canvas if needed
-      if (tabName === 'custom') {
-        drawColorArea()
-        updateHueSlider()
-        updateAlphaSlider()
-      }
-    })
-  })
-}
-initColorPickerTabs()
-
-// ==========================================
-// Custom Color Picker (Figma-style)
-// ==========================================
-
-const colorPickerArea = document.getElementById('color-picker-area')
-const colorPickerHue = document.getElementById('color-picker-hue')
-const colorPickerHueThumb = document.getElementById('color-picker-hue-thumb')
-const colorPickerAlpha = document.getElementById('color-picker-alpha')
-const colorPickerAlphaThumb = document.getElementById('color-picker-alpha-thumb')
-const colorPickerHexInput = document.getElementById('color-picker-hex-input')
-const colorPickerOpacityInput = document.getElementById('color-picker-opacity-input')
-const colorPickerEyedropper = document.getElementById('color-picker-eyedropper')
-
-let colorAreaDragging = false
-let hueDragging = false
-let alphaDragging = false
-
-// HSV to RGB conversion
-function hsvToRgb(h, s, v) {
-  s /= 100
-  v /= 100
-  const c = v * s
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
-  const m = v - c
-  let r, g, b
-  if (h < 60) {
-    r = c
-    g = x
-    b = 0
-  } else if (h < 120) {
-    r = x
-    g = c
-    b = 0
-  } else if (h < 180) {
-    r = 0
-    g = c
-    b = x
-  } else if (h < 240) {
-    r = 0
-    g = x
-    b = c
-  } else if (h < 300) {
-    r = x
-    g = 0
-    b = c
-  } else {
-    r = c
-    g = 0
-    b = x
-  }
-  return {
-    r: Math.round((r + m) * 255),
-    g: Math.round((g + m) * 255),
-    b: Math.round((b + m) * 255),
-  }
-}
-
-// RGB to Hex
-function rgbToHex(r, g, b) {
-  return (
-    '#' +
-    [r, g, b]
-      .map(x => x.toString(16).padStart(2, '0'))
-      .join('')
-      .toUpperCase()
-  )
-}
-
-// Hex to RGB
-function hexToRgb(hex) {
-  hex = hex.replace('#', '')
-  if (hex.length === 3) {
-    hex = hex
-      .split('')
-      .map(c => c + c)
-      .join('')
-  }
-  return {
-    r: parseInt(hex.slice(0, 2), 16),
-    g: parseInt(hex.slice(2, 4), 16),
-    b: parseInt(hex.slice(4, 6), 16),
-  }
-}
-
-// RGB to HSV
-function rgbToHsv(r, g, b) {
-  r /= 255
-  g /= 255
-  b /= 255
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  const d = max - min
-  let h = 0
-  const s = max === 0 ? 0 : d / max
-  const v = max
-  if (max !== min) {
-    switch (max) {
-      case r:
-        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
-        break
-      case g:
-        h = ((b - r) / d + 2) / 6
-        break
-      case b:
-        h = ((r - g) / d + 4) / 6
-        break
-    }
-  }
-  return { h: h * 360, s: s * 100, v: v * 100 }
-}
-
-// Get current color as hex
-function getCurrentColorHex() {
-  const rgb = hsvToRgb(customColorState.h, customColorState.s, customColorState.v)
-  return rgbToHex(rgb.r, rgb.g, rgb.b)
-}
-
-// Draw the color area (saturation/brightness)
-function drawColorArea() {
-  if (!colorPickerArea) return
-  const ctx = colorPickerArea.getContext('2d')
-  const width = colorPickerArea.width
-  const height = colorPickerArea.height
-
-  // Clear
-  ctx.clearRect(0, 0, width, height)
-
-  // Base hue color
-  const hueRgb = hsvToRgb(customColorState.h, 100, 100)
-  ctx.fillStyle = `rgb(${hueRgb.r}, ${hueRgb.g}, ${hueRgb.b})`
-  ctx.fillRect(0, 0, width, height)
-
-  // White gradient (left to right)
-  const whiteGrad = ctx.createLinearGradient(0, 0, width, 0)
-  whiteGrad.addColorStop(0, 'rgba(255, 255, 255, 1)')
-  whiteGrad.addColorStop(1, 'rgba(255, 255, 255, 0)')
-  ctx.fillStyle = whiteGrad
-  ctx.fillRect(0, 0, width, height)
-
-  // Black gradient (top to bottom)
-  const blackGrad = ctx.createLinearGradient(0, 0, 0, height)
-  blackGrad.addColorStop(0, 'rgba(0, 0, 0, 0)')
-  blackGrad.addColorStop(1, 'rgba(0, 0, 0, 1)')
-  ctx.fillStyle = blackGrad
-  ctx.fillRect(0, 0, width, height)
-
-  // Draw cursor
-  const cursorX = (customColorState.s / 100) * width
-  const cursorY = (1 - customColorState.v / 100) * height
-  ctx.beginPath()
-  ctx.arc(cursorX, cursorY, 6, 0, Math.PI * 2)
-  ctx.strokeStyle = 'white'
-  ctx.lineWidth = 2
-  ctx.stroke()
-  ctx.beginPath()
-  ctx.arc(cursorX, cursorY, 7, 0, Math.PI * 2)
-  ctx.strokeStyle = 'rgba(0,0,0,0.3)'
-  ctx.lineWidth = 1
-  ctx.stroke()
-}
-
-// Update hue slider thumb position
-function updateHueSlider() {
-  if (!colorPickerHueThumb) return
-  const percent = (customColorState.h / 360) * 100
-  colorPickerHueThumb.style.left = `${percent}%`
-}
-
-// Update alpha slider
-function updateAlphaSlider() {
-  if (!colorPickerAlpha || !colorPickerAlphaThumb) return
-  const hex = getCurrentColorHex()
-  colorPickerAlpha.style.backgroundImage = `
-    linear-gradient(to right, transparent, ${hex}),
-    repeating-conic-gradient(#404040 0% 25%, #606060 0% 50%)
-  `
-  colorPickerAlphaThumb.style.left = `${customColorState.a * 100}%`
-}
-
-// Update all color displays
-function updateColorDisplays() {
-  const hex = getCurrentColorHex()
-  colorPreview.style.backgroundColor = hex
-  colorHex.textContent = hex
-  if (colorPickerHexInput) {
-    colorPickerHexInput.value = hex.replace('#', '')
-  }
-  if (colorPickerOpacityInput) {
-    colorPickerOpacityInput.value = Math.round(customColorState.a * 100) + '%'
-  }
-  updateAlphaSlider()
-}
-
-// Color area mouse events
-if (colorPickerArea) {
-  colorPickerArea.addEventListener('mousedown', e => {
-    colorAreaDragging = true
-    handleColorAreaMove(e)
-  })
-}
-
-function handleColorAreaMove(e) {
-  if (!colorPickerArea) return
-  const rect = colorPickerArea.getBoundingClientRect()
-  const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
-  const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height))
-  customColorState.s = (x / rect.width) * 100
-  customColorState.v = (1 - y / rect.height) * 100
-  drawColorArea()
-  updateColorDisplays()
-}
-
-// Hue slider mouse events
-if (colorPickerHue) {
-  colorPickerHue.addEventListener('mousedown', e => {
-    hueDragging = true
-    handleHueMove(e)
-  })
-}
-
-function handleHueMove(e) {
-  if (!colorPickerHue) return
-  const rect = colorPickerHue.getBoundingClientRect()
-  const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
-  customColorState.h = (x / rect.width) * 360
-  updateHueSlider()
-  drawColorArea()
-  updateColorDisplays()
-}
-
-// Alpha slider mouse events
-if (colorPickerAlpha) {
-  colorPickerAlpha.addEventListener('mousedown', e => {
-    alphaDragging = true
-    handleAlphaMove(e)
-  })
-}
-
-function handleAlphaMove(e) {
-  if (!colorPickerAlpha) return
-  const rect = colorPickerAlpha.getBoundingClientRect()
-  const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
-  customColorState.a = x / rect.width
-  updateAlphaSlider()
-  updateColorDisplays()
-}
-
-// Global mouse move/up for sliders
-document.addEventListener('mousemove', e => {
-  if (colorAreaDragging) handleColorAreaMove(e)
-  if (hueDragging) handleHueMove(e)
-  if (alphaDragging) handleAlphaMove(e)
-})
-
-document.addEventListener('mouseup', () => {
-  colorAreaDragging = false
-  hueDragging = false
-  alphaDragging = false
-})
-
-// Hex input
-if (colorPickerHexInput) {
-  colorPickerHexInput.addEventListener('input', e => {
-    let hex = e.target.value.replace('#', '')
-    if (hex.length === 6 && /^[0-9A-Fa-f]+$/.test(hex)) {
-      const rgb = hexToRgb(hex)
-      const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b)
-      customColorState.h = hsv.h
-      customColorState.s = hsv.s
-      customColorState.v = hsv.v
-      drawColorArea()
-      updateHueSlider()
-      updateColorDisplays()
-    }
-  })
-
-  colorPickerHexInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      // Use current color from state (not input value) to ensure sync
-      const hex = getCurrentColorHex()
-      selectColor(hex)
-    }
-  })
-}
-
-// Opacity input
-if (colorPickerOpacityInput) {
-  colorPickerOpacityInput.addEventListener('input', e => {
-    let val = parseInt(e.target.value.replace('%', ''))
-    if (!isNaN(val)) {
-      customColorState.a = Math.max(0, Math.min(100, val)) / 100
-      updateAlphaSlider()
-    }
-  })
-}
-
-// Eyedropper (if supported)
-if (colorPickerEyedropper && 'EyeDropper' in window) {
-  colorPickerEyedropper.addEventListener('click', async () => {
-    try {
-      const eyeDropper = new EyeDropper()
-      const result = await eyeDropper.open()
-      const rgb = hexToRgb(result.sRGBHex)
-      const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b)
-      customColorState.h = hsv.h
-      customColorState.s = hsv.s
-      customColorState.v = hsv.v
-      drawColorArea()
-      updateHueSlider()
-      updateColorDisplays()
-    } catch (e) {
-      // User cancelled or error
-    }
-  })
-} else if (colorPickerEyedropper) {
-  colorPickerEyedropper.style.display = 'none'
-}
-
-// Set color from hex (used when opening picker with existing color)
-function setCustomColorFromHex(hex) {
-  if (!hex) return
-  const rgb = hexToRgb(hex)
-  const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b)
-  customColorState.h = hsv.h
-  customColorState.s = hsv.s
-  customColorState.v = hsv.v
-  drawColorArea()
-  updateHueSlider()
-  updateColorDisplays()
-}
-
-// ==========================================
-// Token Colors for Color Picker
-// ==========================================
 
 // Property → token suffix mapping for filtering
 const COLOR_PROPERTY_SUFFIXES = {
@@ -2262,6 +682,26 @@ const COLOR_PROPERTY_SUFFIXES = {
   ic: '.col',
   'icon-color': '.col',
 }
+
+// Initialize FullColorPicker with callbacks
+const fullColorPicker = createFullColorPicker({
+  onSelect: hex => selectColor(hex),
+  onPreview: hex => {
+    // Preview callback - update preview display
+  },
+  onClose: () => {
+    colorPickerVisible = false
+  },
+})
+
+// Render the color picker into the container (generates HTML)
+fullColorPicker.render('color-picker')
+
+// DOM element references (from generated HTML)
+const colorPicker = document.getElementById('color-picker')
+const colorPickerTokenGrid = document.getElementById('color-picker-token-grid')
+const colorPreview = document.getElementById('color-preview')
+const colorHex = document.getElementById('color-hex')
 
 // Extract color tokens from files
 function extractColorTokens() {
@@ -2404,6 +844,7 @@ function showColorPicker(
   property = null,
   callback = null
 ) {
+  // Store editor integration state
   colorPickerInsertPos = insertPos
   colorPickerReplaceRange = replaceRange
   hashTriggerActive = isHashTrigger
@@ -2411,122 +852,57 @@ function showColorPicker(
   colorPickerProperty = property
   colorPickerCallback = callback || null
 
-  // Smart positioning: check if picker fits below, otherwise show above
-  const pickerHeight = 400 // Approximate height of color picker
-  const pickerWidth = 260 // Approximate width of color picker
+  // Smart positioning
+  const pickerHeight = 400
+  const pickerWidth = 260
   const viewportHeight = window.innerHeight
   const viewportWidth = window.innerWidth
   const margin = 8
 
-  // Calculate final position
   let finalX = x
   let finalY = y
 
-  // Check vertical: if not enough space below, position above
   if (y + pickerHeight > viewportHeight - margin) {
-    // Position above the trigger (subtract picker height and some offset for the trigger element)
     finalY = Math.max(margin, y - pickerHeight - 36)
   }
-
-  // Check horizontal: if not enough space to the right, position to the left of the trigger
   if (x + pickerWidth > viewportWidth - margin) {
-    // Position picker to the left of the trigger point
     finalX = Math.max(margin, x - pickerWidth - 8)
   }
 
-  colorPicker.style.left = finalX + 'px'
-  colorPicker.style.top = finalY + 'px'
-  colorPicker.classList.add('visible')
-  colorPickerVisible = true
+  // Show color picker using FullColorPicker module
   const displayColor = initialColor || '#5BA8F5'
-  colorPreview.style.backgroundColor = displayColor
-  colorHex.textContent = displayColor.toUpperCase()
-
-  // Initialize custom color picker with current color
-  if (displayColor) {
-    setCustomColorFromHex(displayColor)
-  }
+  fullColorPicker.setColor(displayColor)
+  fullColorPicker.show(finalX, finalY, displayColor)
+  colorPickerVisible = true
 
   // Build token colors for this property
   buildTokenColors(property)
 
-  // Reset and show selection for hash trigger mode
-  if (isHashTrigger) {
-    // Start selection at blue-500 (#5BA8F5) which is column 4 (blue), row 5 (500)
-    selectedSwatchIndex = 4 * SWATCH_ROWS + 5
-    updateSelectedSwatch()
-  } else {
-    // Clear selection for non-hash mode
-    colorSwatchElements.forEach(el => el.classList.remove('selected'))
-  }
-
-  // Initialize custom tab canvas if active
-  if (currentColorTab === 'custom') {
-    drawColorArea()
-    updateHueSlider()
-    updateAlphaSlider()
-  }
-
-  // Focus hex input when opened from property panel (callback mode)
-  // This ensures keyboard input goes to the picker, not the editor
-  if (callback && colorPickerHexInput && currentColorTab === 'custom') {
-    setTimeout(() => {
-      colorPickerHexInput.focus()
-      colorPickerHexInput.select()
-    }, 50)
+  // Focus hex input for callback mode
+  if (callback) {
+    const hexInput = document.getElementById('color-picker-hex-input')
+    if (hexInput) {
+      setTimeout(() => {
+        hexInput.focus()
+        hexInput.select()
+      }, 50)
+    }
   }
 }
 
 function hideColorPicker() {
-  colorPicker.classList.remove('visible')
+  fullColorPicker.hide()
   colorPickerVisible = false
   colorPickerInsertPos = null
   colorPickerReplaceRange = null
   colorPickerCallback = null
   hashTriggerActive = false
   hashTriggerStartPos = null
-  colorSwatchElements.forEach(el => el.classList.remove('selected'))
 }
 
-// Update selected swatch highlight
-function updateSelectedSwatch() {
-  colorSwatchElements.forEach((el, i) => {
-    el.classList.toggle('selected', i === selectedSwatchIndex)
-  })
-
-  const selected = colorSwatchElements[selectedSwatchIndex]
-  if (selected) {
-    const hex = selected.dataset.color
-    colorPreview.style.backgroundColor = hex
-    colorHex.textContent = hex.toUpperCase()
-  }
-}
-
-// Navigate through swatches with arrow keys
+// Navigate through swatches (delegates to FullColorPicker)
 function navigateSwatches(direction) {
-  const currentCol = Math.floor(selectedSwatchIndex / SWATCH_ROWS)
-  const currentRow = selectedSwatchIndex % SWATCH_ROWS
-
-  let newCol = currentCol
-  let newRow = currentRow
-
-  switch (direction) {
-    case 'left':
-      newCol = Math.max(0, currentCol - 1)
-      break
-    case 'right':
-      newCol = Math.min(SWATCH_COLUMNS - 1, currentCol + 1)
-      break
-    case 'up':
-      newRow = Math.max(0, currentRow - 1)
-      break
-    case 'down':
-      newRow = Math.min(SWATCH_ROWS - 1, currentRow + 1)
-      break
-  }
-
-  selectedSwatchIndex = newCol * SWATCH_ROWS + newRow
-  updateSelectedSwatch()
+  fullColorPicker.navigate(direction)
 }
 
 /**
@@ -2636,7 +1012,7 @@ document.addEventListener(
   e => {
     if (!colorPickerVisible) return
 
-    // Escape: close picker (except in hash trigger mode which has its own handler)
+    // Escape: close picker
     if (e.key === 'Escape' && !hashTriggerActive) {
       e.preventDefault()
       e.stopPropagation()
@@ -2645,35 +1021,19 @@ document.addEventListener(
       return
     }
 
-    // Enter: select current color
+    // Enter: select current color from FullColorPicker
     if (e.key === 'Enter') {
       e.preventDefault()
       e.stopPropagation()
-
-      let colorToSelect = null
-
-      // On custom tab, use the custom color state
-      if (currentColorTab === 'custom') {
-        colorToSelect = getCurrentColorHex()
-      } else {
-        // On swatch tabs, use the selected swatch
-        const selected = colorSwatchElements[selectedSwatchIndex]
-        if (selected) {
-          colorToSelect = selected.dataset.color
-        }
-      }
-
+      const colorToSelect = fullColorPicker.getColor()
       if (colorToSelect) {
         selectColor(colorToSelect.toUpperCase())
       }
       return
     }
 
-    // Arrow keys: navigate swatches (only on swatch tabs)
-    if (
-      currentColorTab !== 'custom' &&
-      ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)
-    ) {
+    // Arrow keys: navigate swatches
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       e.preventDefault()
       e.stopPropagation()
       const direction = e.key.replace('Arrow', '').toLowerCase()
@@ -3298,6 +1658,114 @@ const status = document.getElementById('status')
 const tabs = document.querySelectorAll('.tab')
 const tabContents = document.querySelectorAll('.tab-content')
 
+// Preview Renderers (Clean Code modules) - lazy initialized
+let tokenRenderer = null
+let componentRenderer = null
+
+function getTokenRenderer() {
+  if (!tokenRenderer) {
+    tokenRenderer = new TokenRenderer({
+      preview,
+      getAllProjectSource,
+    })
+  }
+  return tokenRenderer
+}
+
+function getComponentRenderer() {
+  if (!componentRenderer) {
+    componentRenderer = new ComponentRenderer({
+      preview,
+      MirrorLang: window.MirrorLang,
+      getTokensSource,
+      getCurrentFileSource: () => files[currentFile] || '',
+    })
+  }
+  return componentRenderer
+}
+
+// Drop globals builder for Clean Code drop service
+function getZoomScale() {
+  const zoomLevel = ZOOM_LEVELS[currentZoomIndex] ?? 100
+  return zoomLevel / 100
+}
+
+// Zag dependencies builder for Clean Code module
+function getZagDeps() {
+  return {
+    getAst: () => studio.state?.ast,
+    getCurrentFile: () => currentFile,
+    getFiles: () => window.desktopFiles?.getFiles?.() || files,
+    parseCode: code => MirrorLang.parse(code),
+    isMirrorFile,
+    isComponentsFile,
+    getEditor: () => editor,
+    emitNotification: (type, message) => {
+      studio.events.emit(`notification:${type}`, { message, duration: 2000 })
+    },
+    updateFileList,
+  }
+}
+
+// Zag wrapper functions (use Clean Code module with dependencies)
+function isZagComponent(children) {
+  return isZagComponentModule(children)
+}
+
+function findExistingZagDefinition(zagComponentName) {
+  return findExistingZagDefinitionModule(zagComponentName, getZagDeps())
+}
+
+function generateZagComponentName(zagComponentName) {
+  return generateZagComponentNameModule(zagComponentName, getZagDeps())
+}
+
+function generateZagDefinitionCode(definitionName, zagComponentName, children) {
+  return generateZagDefinitionCodeModule(definitionName, zagComponentName, children)
+}
+
+function generateZagInstanceCode(instanceName, properties, children, indent = '') {
+  return generateZagInstanceCodeModule(instanceName, properties, children, indent)
+}
+
+function addZagDefinitionToCode(definitionCode) {
+  return addZagDefinitionToCodeModule(definitionCode, getZagDeps())
+}
+
+async function findOrCreateComponentsFile() {
+  return findOrCreateComponentsFileModule(getZagDeps())
+}
+
+async function addZagDefinitionToComponentsFile(definitionCode, filePath) {
+  return addZagDefinitionToComponentsFileModule(definitionCode, filePath, getZagDeps())
+}
+
+function getDropGlobals() {
+  return {
+    studioCodeModifier,
+    studioRobustModifier,
+    currentFile,
+    editor,
+    currentPreludeOffset,
+    executor,
+    events,
+    studio,
+    studioActions,
+    compile,
+    debouncedSave,
+    getZoomScale,
+    isComponentsFile,
+    findExistingZagDefinition,
+    generateZagComponentName,
+    generateZagDefinitionCode,
+    generateZagInstanceCode,
+    addZagDefinitionToCode,
+    findOrCreateComponentsFile,
+    addZagDefinitionToComponentsFile,
+    isZagComponent,
+  }
+}
+
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
     const targetId = tab.dataset.tab
@@ -3454,7 +1922,7 @@ function compile(code) {
     return
   }
 
-  // Update files with current code so renderComponentState can access it
+  // Update files with current code so ComponentRenderer can access it
   files[currentFile] = code
 
   if (!code.trim()) {
@@ -3600,12 +2068,12 @@ function compile(code) {
     // Render based on file type
     if (fileType === 'tokens') {
       preview.className = 'tokens-preview'
-      renderTokensPreview(ast)
+      getTokenRenderer().render(ast)
       // Update studio module with AST, IR and source map for tokens too
       updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
     } else if (fileType === 'component') {
       preview.className = 'components-preview'
-      renderComponentsPreview(ast)
+      getComponentRenderer().render(ast)
       // Update studio module with AST, IR and source map for component definitions
       updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
     } else {
@@ -3754,392 +2222,10 @@ function compile(code) {
   }
 }
 
-// Render Tokens Preview
-function renderTokensPreview(ast) {
-  const tokens = ast.tokens || []
-  if (tokens.length === 0) {
-    preview.innerHTML = '<div style="color: #71717a; padding: 20px;">Keine Tokens definiert</div>'
-    return
-  }
-
-  // Build token lookup map for resolution
-  const tokenMap = new Map()
-  for (const t of tokens) {
-    tokenMap.set(t.name, t.value)
-  }
-
-  // Helper to check if a token is a color (by name or resolved value)
-  const isColorToken = t => {
-    // Check by name suffix
-    if (t.name.includes('.bg') || t.name.includes('.col') || t.name.includes('.color')) {
-      return true
-    }
-    // Check by value
-    const resolved = resolveTokenValueWithMap(t.value, tokenMap)
-    return isDirectColorValue(resolved)
-  }
-
-  // Helper to infer token display type
-  const inferTokenType = t => {
-    if (isColorToken(t)) return 'color'
-    if (
-      t.name.includes('.pad') ||
-      t.name.includes('.gap') ||
-      t.name.includes('.margin') ||
-      t.name.includes('.rad')
-    )
-      return 'spacing'
-    return 'other'
-  }
-
-  let html = ''
-
-  // Check if any tokens have sections defined
-  const hasSections = tokens.some(t => t.section)
-
-  if (hasSections) {
-    // Group by sections (preserve order from source)
-    const sections = new Map()
-    const noSection = []
-
-    for (const t of tokens) {
-      if (t.section) {
-        if (!sections.has(t.section)) {
-          sections.set(t.section, [])
-        }
-        sections.get(t.section).push(t)
-      } else {
-        noSection.push(t)
-      }
-    }
-
-    // Render sections in order
-    for (const [sectionName, sectionTokens] of sections) {
-      html += renderTokenSection(sectionName, sectionTokens, 'mixed', tokenMap, inferTokenType)
-    }
-
-    // Render unsectioned tokens at the end
-    if (noSection.length > 0) {
-      html += renderTokenSection('Weitere', noSection, 'mixed', tokenMap, inferTokenType)
-    }
-  } else {
-    // Fallback: group by automatic categories
-    const colorTokens = tokens.filter(t => isColorToken(t))
-    const spacingTokens = tokens.filter(
-      t => t.name.includes('.pad') || t.name.includes('.gap') || t.name.includes('.margin')
-    )
-    const radiusTokens = tokens.filter(t => t.name.includes('.rad'))
-    const otherTokens = tokens.filter(
-      t =>
-        !isColorToken(t) &&
-        !t.name.includes('.pad') &&
-        !t.name.includes('.gap') &&
-        !t.name.includes('.margin') &&
-        !t.name.includes('.rad')
-    )
-
-    if (colorTokens.length > 0) {
-      html += renderTokenSection('Farben', colorTokens, 'color', tokenMap)
-    }
-    if (spacingTokens.length > 0) {
-      html += renderTokenSection('Abstände', spacingTokens, 'spacing', tokenMap)
-    }
-    if (radiusTokens.length > 0) {
-      html += renderTokenSection('Radien', radiusTokens, 'spacing', tokenMap)
-    }
-    if (otherTokens.length > 0) {
-      html += renderTokenSection('Weitere', otherTokens, 'other', tokenMap)
-    }
-  }
-
-  preview.innerHTML = html
-}
-
-function renderTokenSection(title, tokens, type, tokenMap, inferTokenType = null) {
-  let rows = ''
-  for (const token of tokens) {
-    const resolvedValue = resolveTokenValueWithMap(token.value, tokenMap)
-    let visualCell = ''
-
-    // For mixed sections, infer type per token
-    const tokenType = type === 'mixed' && inferTokenType ? inferTokenType(token) : type
-
-    if (tokenType === 'color') {
-      visualCell = `<div class="tokens-preview-swatch" style="background: ${resolvedValue}"></div>`
-    } else if (tokenType === 'spacing') {
-      const size = parseInt(resolvedValue) || 8
-      visualCell = `<div class="tokens-preview-spacing" style="width: ${Math.min(size, 48)}px; height: ${Math.min(size, 24)}px;"></div>`
-    }
-
-    // Determine value type class for syntax highlighting
-    const valueTypeClass = getValueTypeClass(token.value)
-
-    rows += `
-      <tr class="tokens-preview-row">
-        <td class="tokens-preview-cell" style="width: 48px;">${visualCell}</td>
-        <td class="tokens-preview-cell"><span class="tokens-preview-name">${token.name}</span></td>
-        <td class="tokens-preview-cell"><span class="tokens-preview-value ${valueTypeClass}">${token.value}</span></td>
-      </tr>
-    `
-  }
-
-  return `
-    <div class="tokens-preview-section">
-      <div class="tokens-preview-section-header">${title}</div>
-      <table class="tokens-preview-table">${rows}</table>
-    </div>
-  `
-}
-
-function isColorValue(value) {
-  if (typeof value !== 'string') return false
-  return (
-    value.startsWith('#') ||
-    value.startsWith('rgb') ||
-    value.startsWith('hsl') ||
-    value.startsWith('$')
-  )
-}
-
-// Check if value is a direct color (hex, rgb, hsl) - not a token reference
-function isDirectColorValue(value) {
-  if (typeof value !== 'string') return false
-  return value.startsWith('#') || value.startsWith('rgb') || value.startsWith('hsl')
-}
-
-// Determine CSS class for value type (matches editor syntax highlighting)
-function getValueTypeClass(value) {
-  if (typeof value !== 'string') return ''
-  if (value.startsWith('#')) return 'hex'
-  if (value.startsWith('$')) return 'token-ref'
-  if (/^\d/.test(value)) return 'number'
-  return ''
-}
-
-// Resolve token value using the token map (recursive, with cycle detection)
-function resolveTokenValueWithMap(value, tokenMap, visited = new Set()) {
-  if (typeof value !== 'string') return value
-  if (!value.startsWith('$')) return value
-
-  // Cycle detection
-  if (visited.has(value)) return value
-  visited.add(value)
-
-  // Look up in token map
-  const resolved = tokenMap.get(value)
-  if (resolved) {
-    return resolveTokenValueWithMap(resolved, tokenMap, visited)
-  }
-
-  // Fallback: try regex on source
-  return resolveTokenValue(value)
-}
-
-function resolveTokenValue(value) {
-  if (typeof value !== 'string') return value
-  if (!value.startsWith('$')) return value
-  // Simple token resolution - look up in all files
-  const allSource = getAllProjectSource()
-  const tokenName = value
-  // Escape special regex characters in token name
-  const escapedName = tokenName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const regex = new RegExp(`^${escapedName}:\\s*([^\\n]+)`, 'm')
-  const match = allSource.match(regex)
-  if (match) {
-    return resolveTokenValue(match[1].trim())
-  }
-  return value
-}
-
-// Known behavior states
-const BEHAVIOR_STATES = [
-  'hover',
-  'active',
-  'focus',
-  'disabled',
-  'selected',
-  'highlighted',
-  'expanded',
-  'collapsed',
-  'on',
-  'off',
-  'valid',
-  'invalid',
-]
-
-// Render Components Preview
-function renderComponentsPreview(ast) {
-  const components = ast.components || []
-  if (components.length === 0) {
-    preview.innerHTML = `
-      <div style="color: #71717a; padding: 32px; text-align: center;">
-        <p style="font-size: 16px; margin-bottom: 8px;">Keine Komponenten definiert</p>
-        <p style="font-size: 13px; opacity: 0.7;">
-          Komponenten definieren mit:<br>
-          <code style="background: #18181b; padding: 2px 6px; border-radius: 4px;">Button: pad 12, bg #5BA8F5</code>
-        </p>
-      </div>
-    `
-    return
-  }
-
-  // Extract sections from source code (--- Name --- syntax)
-  const sections = extractComponentSections(ast, components)
-
-  let html = ''
-  for (const section of sections) {
-    if (section.components.length === 0) continue
-
-    // Only show section header if name is not empty
-    const headerHtml = section.name
-      ? `<div class="components-preview-section-header">${section.name}</div>`
-      : ''
-
-    html += `
-      <div class="components-preview-section">
-        ${headerHtml}
-        <div class="components-preview-list">
-          ${section.components.map(comp => renderComponentWithStates(comp, ast)).join('')}
-        </div>
-      </div>
-    `
-  }
-
-  // Set HTML first, then render components
-  preview.innerHTML = html
-
-  // Now render all components (DOM elements exist now)
-  for (const section of sections) {
-    for (const comp of section.components) {
-      const states = getComponentStates(comp)
-      for (const stateName of states) {
-        renderComponentState(comp, stateName, ast)
-      }
-    }
-  }
-}
-
-function extractComponentSections(ast, components) {
-  // Get current file source to find section headers
-  const sourceCode = files[currentFile] || ''
-  const lines = sourceCode.split('\n')
-
-  // Extract section headers with their line numbers
-  const sectionHeaders = []
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
-    const match = line.match(/^---\s*(.+?)\s*---$/)
-    if (match) {
-      sectionHeaders.push({
-        name: match[1],
-        lineStart: i + 1, // 1-based line number
-        lineEnd: lines.length,
-      })
-      // Update previous section's end line
-      if (sectionHeaders.length > 1) {
-        sectionHeaders[sectionHeaders.length - 2].lineEnd = i - 1
-      }
-    }
-  }
-
-  // If no sections defined, return all components without section header
-  if (sectionHeaders.length === 0) {
-    return [{ name: '', components }]
-  }
-
-  // Group components by section based on line numbers
-  const sections = sectionHeaders.map(h => ({
-    name: h.name,
-    components: [],
-    lineStart: h.lineStart,
-    lineEnd: h.lineEnd,
-  }))
-  const unsortedComponents = []
-
-  for (const comp of components) {
-    // Skip components that match section header names
-    if (sectionHeaders.some(h => h.name === comp.name)) continue
-
-    const compLine = comp.line || 0
-    let found = false
-
-    for (const section of sections) {
-      if (compLine >= section.lineStart && compLine <= section.lineEnd) {
-        section.components.push(comp)
-        found = true
-        break
-      }
-    }
-
-    if (!found) {
-      unsortedComponents.push(comp)
-    }
-  }
-
-  // Add unsorted components to first section or create default section (no header)
-  if (unsortedComponents.length > 0) {
-    if (sections.length > 0) {
-      sections[0].components = [...unsortedComponents, ...sections[0].components]
-    } else {
-      sections.unshift({ name: '', components: unsortedComponents })
-    }
-  }
-
-  // Filter out empty sections
-  return sections.filter(s => s.components.length > 0)
-}
-
-function getComponentStates(comp) {
-  const states = new Set()
-
-  // Collect states from the component
-  if (comp.states) {
-    for (const state of comp.states) {
-      if (BEHAVIOR_STATES.includes(state.name)) {
-        states.add(state.name)
-      }
-    }
-  }
-
-  // Also collect from children
-  const collectFromChildren = children => {
-    for (const child of children || []) {
-      if (child.states) {
-        for (const state of child.states) {
-          if (BEHAVIOR_STATES.includes(state.name)) {
-            states.add(state.name)
-          }
-        }
-      }
-      if (child.children) {
-        collectFromChildren(child.children)
-      }
-    }
-  }
-  collectFromChildren(comp.children || [])
-
-  return ['default', ...Array.from(states)]
-}
-
-function renderComponentWithStates(comp, ast) {
-  const states = getComponentStates(comp)
-
-  let rows = ''
-  for (let i = 0; i < states.length; i++) {
-    const stateName = states[i]
-    const showName = i === 0 ? comp.name : ''
-
-    rows += `
-      <div class="components-preview-row">
-        <div class="components-preview-name">${showName}</div>
-        <div class="components-preview-state">${stateName}</div>
-        <div class="components-preview-render" id="comp-render-${comp.name}-${stateName}"></div>
-      </div>
-    `
-  }
-
-  return `<div class="components-preview-component">${rows}</div>`
-}
+// Token and Component preview rendering has been moved to Clean Code modules:
+// - TokenRenderer in studio/compile/token-renderer.ts
+// - ComponentRenderer in studio/compile/component-renderer.ts
+// Access via getTokenRenderer() and getComponentRenderer()
 
 function getTokensSource() {
   // Only get tokens and data files (not layouts or components)
@@ -4151,147 +2237,6 @@ function getTokensSource() {
     }
   }
   return tokensSource
-}
-
-// Inject component preview CSS variables (refreshes when tokens change)
-let lastTokensHash = ''
-
-function injectComponentPreviewStyles(force = false) {
-  // Get tokens and create CSS variables
-  const tokensSource = getTokensSource()
-
-  // Calculate simple hash to detect changes
-  const tokensHash = tokensSource.length + ':' + tokensSource.slice(0, 100)
-
-  // Skip if unchanged (unless forced)
-  if (!force && tokensHash === lastTokensHash) return
-  lastTokensHash = tokensHash
-
-  if (!tokensSource.trim()) return
-
-  try {
-    const ast = MirrorLang.parse(tokensSource)
-    if (!ast.tokens || ast.tokens.length === 0) return
-
-    // Build token map for resolving references
-    const tokenMap = new Map()
-    for (const t of ast.tokens) {
-      tokenMap.set(t.name, t.value)
-    }
-
-    // Resolve token references (e.g., $surface.bg: $grey-800)
-    const resolveValue = value => {
-      if (typeof value === 'string' && value.startsWith('$')) {
-        const resolved = tokenMap.get(value)
-        if (resolved) return resolveValue(resolved)
-      }
-      return value
-    }
-
-    // Token suffixes that need px units when numeric
-    const pxSuffixes = [
-      '-pad',
-      '-gap',
-      '-rad',
-      '-fs',
-      '-w',
-      '-h',
-      '-minw',
-      '-maxw',
-      '-minh',
-      '-maxh',
-      '-bor',
-    ]
-
-    // Check if a CSS var name needs px unit
-    const needsPxUnit = varName => {
-      return pxSuffixes.some(suffix => varName.endsWith(suffix))
-    }
-
-    let cssVars = ':root {\n'
-    for (const token of ast.tokens) {
-      // Strip $ prefix and convert dots to hyphens
-      const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name).replace(
-        /\./g,
-        '-'
-      )
-      let resolvedValue = resolveValue(token.value)
-
-      // Add px unit for numeric spacing/sizing values
-      if (typeof resolvedValue === 'number' && needsPxUnit(cssVarName)) {
-        resolvedValue = `${resolvedValue}px`
-      }
-
-      cssVars += `  --${cssVarName}: ${resolvedValue};\n`
-    }
-    cssVars += '}\n'
-
-    // Remove old style element if exists
-    const oldStyle = document.getElementById('component-preview-tokens')
-    if (oldStyle) oldStyle.remove()
-
-    const style = document.createElement('style')
-    style.id = 'component-preview-tokens'
-    style.textContent = cssVars
-    document.head.appendChild(style)
-  } catch (e) {
-    console.warn('Failed to inject component preview styles:', e)
-  }
-}
-
-function renderComponentState(comp, stateName, ast) {
-  const container = document.getElementById(`comp-render-${comp.name}-${stateName}`)
-  if (!container) return
-
-  // Clear previous content
-  container.innerHTML = ''
-
-  // Ensure CSS variables are injected
-  injectComponentPreviewStyles()
-
-  try {
-    // Get only tokens (not layouts)
-    const tokensSource = getTokensSource()
-
-    // Get the current component file source (for component definitions)
-    const currentFileSource = files[currentFile] || ''
-
-    // Build code: tokens + component file + instance
-    let code = tokensSource + '\n' + currentFileSource + '\n' + comp.name
-
-    const miniAst = MirrorLang.parse(code)
-    const jsCode = MirrorLang.generateDOM(miniAst).replace(
-      'export function createUI',
-      'function createUI'
-    )
-
-    const fn = new Function(jsCode + '\nreturn createUI ? createUI() : null;')
-    const ui = fn()
-
-    // DOM backend returns element directly, not { root: element }
-    const rootEl = ui?.root || (ui instanceof Element ? ui : null)
-    if (rootEl) {
-      // Find and extract just the component we want (last child should be our instance)
-      const allChildren = rootEl.children
-      if (allChildren.length > 0) {
-        const targetElement = allChildren[allChildren.length - 1]
-
-        // For non-default states, add the state class
-        if (stateName !== 'default') {
-          targetElement.classList.add(`state-${stateName}`)
-          targetElement.setAttribute('data-state', stateName)
-        }
-
-        // Wrap in artificial parent for w full / h full support
-        const wrapper = document.createElement('div')
-        wrapper.className = 'components-preview-wrapper'
-        wrapper.appendChild(targetElement.cloneNode(true))
-        container.appendChild(wrapper)
-      }
-    }
-  } catch (e) {
-    container.innerHTML = `<span style="color: #52525b; font-size: 11px;">Error: ${e.message}</span>`
-  }
 }
 
 // ============================================
@@ -4314,6 +2259,111 @@ function getEditorHasFocus() {
   return studio?.state ? studio.state.get().editorHasFocus : true
 }
 let currentPreludeOffset = 0 // Character offset of prelude in merged source (for adjusting change positions)
+
+// Global function to reset prelude offset for testing
+// When setting test code directly without going through file loading,
+// the prelude offset needs to be reset to 0
+if (typeof window !== 'undefined') {
+  window.__setPreludeOffset = offset => {
+    console.log('[Test] Setting prelude offset:', offset, '(was:', currentPreludeOffset, ')')
+    // Cancel any pending debounced compile first, so it doesn't reset our offset
+    if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
+      debouncedCompile.cancel()
+    }
+    currentPreludeOffset = offset
+    if (studio?.state?.set) {
+      studio.state.set({ preludeOffset: offset, preludeLineOffset: 0 })
+    }
+  }
+  window.__getPreludeOffset = () => currentPreludeOffset
+
+  /**
+   * Test Mode: Compile code directly without prelude
+   * This ensures sourceMap positions match the actual editor content
+   */
+  window.__compileTestCode = code => {
+    console.log('[Test] Compiling test code without prelude, length:', code.length)
+    // Cancel any pending compile
+    if (debouncedCompile?.cancel) {
+      debouncedCompile.cancel()
+    }
+    // Set prelude offset to 0 BEFORE compile
+    currentPreludeOffset = 0
+    if (studio?.state?.set) {
+      studio.state.set({ preludeOffset: 0, preludeLineOffset: 0 })
+    }
+
+    try {
+      // Parse
+      const ast = MirrorLang.parse(code)
+      if (ast.errors && ast.errors.length > 0) {
+        const errorMsg = ast.errors.map(e => `Line ${e.line}: ${e.message}`).join('\n')
+        throw new Error(errorMsg)
+      }
+
+      // Build IR with sourceMap
+      const irResult = MirrorLang.toIR(ast, true)
+      const sourceMap = irResult.sourceMap
+
+      // Generate DOM code
+      const jsCode = MirrorLang.generateDOM(ast)
+
+      // Update codeModifier with the new source and sourceMap
+      if (studioCodeModifier) {
+        studioCodeModifier.updateSource(code)
+        studioCodeModifier.updateSourceMap(sourceMap)
+      } else {
+        studioCodeModifier = new MirrorLang.CodeModifier(code, sourceMap)
+      }
+
+      // Update robust modifier
+      if (MirrorLang.createRobustModifier) {
+        studioRobustModifier = MirrorLang.createRobustModifier(studioCodeModifier)
+      }
+
+      // Update state
+      if (studio?.state?.set) {
+        studio.state.set({
+          sourceMap,
+          preludeOffset: 0,
+          preludeLineOffset: 0,
+        })
+      }
+
+      // Execute and render in preview
+      const previewContainer = document.getElementById('preview')
+      if (previewContainer) {
+        previewContainer.innerHTML = ''
+        // Execute the generated code (same logic as main compile)
+        const hasAutoInit = jsCode.includes('// Auto-initialization')
+        let execCode = jsCode
+          .replace('export function createUI', 'function createUI')
+          .replace('document.body.appendChild(_ui.root)', '')
+
+        let ui
+        if (hasAutoInit) {
+          const fn = new Function(execCode + '\nreturn _ui;')
+          ui = fn()
+        } else {
+          const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
+          ui = fn()
+        }
+
+        // DOM backend may return element directly, not { root: element }
+        const rootEl = ui?.root || (ui instanceof Element ? ui : null)
+        if (rootEl) {
+          previewContainer.appendChild(rootEl)
+        }
+      }
+
+      console.log('[Test] Test code compiled successfully')
+      return true
+    } catch (error) {
+      console.error('[Test] Test code compile failed:', error)
+      return false
+    }
+  }
+}
 
 /**
  * Ensure codeModifier is in sync with the current editor content.
@@ -4665,7 +2715,7 @@ function setupNotificationHandlers() {
         placement: 'inside',
         insertionIndex: target.insertionIndex,
       }
-      handleStudioDrop(dropResult)
+      handleStudioDropNew(dropResult, getDropGlobals())
       return
     }
 
@@ -4675,7 +2725,7 @@ function setupNotificationHandlers() {
       return
     }
 
-    // Convert v3 format to existing handleStudioDrop format
+    // Convert v3 format to DropResult format
     const dropResult = {
       source: {
         type: 'palette',
@@ -4685,13 +2735,17 @@ function setupNotificationHandlers() {
         properties: dragData.properties,
         textContent: dragData.textContent,
         children: dragData.children,
+        mirTemplate: dragData.mirTemplate,
+        dataBlock: dragData.dataBlock,
       },
       targetNodeId: target.containerId,
       placement: 'inside', // v3 always inserts inside flex containers
       insertionIndex: target.insertionIndex,
     }
 
-    handleStudioDrop(dropResult)
+    handleStudioDropNew(dropResult, getDropGlobals()).catch(err => {
+      console.error('[Drag v3] handleStudioDropNew failed:', err)
+    })
   })
 
   const statusEl = document.getElementById('status')
@@ -5026,802 +3080,11 @@ function handleStudioCodeChange(result) {
   debouncedSave(code)
 }
 
-// ============================================
-// Zag Component Drop Handler
-// ============================================
-
-/**
- * Check if a component is a Zag component (has slot children)
- * @param {Array} children - Component children array
- * @returns {boolean}
- */
-function isZagComponent(children) {
-  if (!children || children.length === 0) return false
-  return children.some(child => child.isSlot === true)
-}
-
-/**
- * Get the slots from component children
- * @param {Array} children - Component children array
- * @returns {Array}
- */
-function getZagSlots(children) {
-  return children.filter(child => child.isSlot === true)
-}
-
-/**
- * Get the items from component children (non-slot children or items inside slots)
- * @param {Array} children - Component children array
- * @returns {Array}
- */
-function getZagItems(children) {
-  const items = []
-  for (const child of children) {
-    if (child.isItem) {
-      items.push(child)
-    } else if (child.isSlot && child.children) {
-      // Look for items inside slots (e.g., Content: > Item)
-      items.push(...child.children.filter(c => c.isItem))
-    }
-  }
-  return items
-}
-
-/**
- * Check if a Zag component definition exists in the current AST
- * @param {string} zagComponentName - The Zag component name (e.g., 'Select')
- * @returns {{ exists: boolean, definitionName?: string }}
- */
-function findExistingZagDefinition(zagComponentName) {
-  // First check current file's AST
-  const ast = studio.state?.ast
-  if (ast?.components) {
-    for (const comp of ast.components) {
-      // Check if this component is defined as this Zag type
-      // e.g., "MySelect as Select:" or extends Select
-      if (comp.primitive === zagComponentName || comp.extends === zagComponentName) {
-        return { exists: true, definitionName: comp.name, sourceFile: currentFile }
-      }
-    }
-  }
-
-  // Search ALL project files for the definition
-  const allFiles = window.desktopFiles?.getFiles?.() || files
-  for (const [filename, content] of Object.entries(allFiles)) {
-    // Skip current file (already checked above)
-    if (filename === currentFile) continue
-    // Only check Mirror files
-    if (!isMirrorFile(filename)) continue
-    if (!content || !content.trim()) continue
-
-    try {
-      const fileAst = MirrorLang.parse(content)
-      if (fileAst?.components) {
-        for (const comp of fileAst.components) {
-          if (comp.primitive === zagComponentName || comp.extends === zagComponentName) {
-            return { exists: true, definitionName: comp.name, sourceFile: filename }
-          }
-        }
-      }
-    } catch (e) {
-      // Skip files that fail to parse
-    }
-  }
-
-  return { exists: false }
-}
-
-/**
- * Generate a unique component name for the Zag definition
- * Searches ALL project files to ensure uniqueness
- * @param {string} zagComponentName - The base Zag component name
- * @returns {string}
- */
-function generateZagComponentName(zagComponentName) {
-  // Collect all existing component names from all files
-  const existingNames = new Set()
-
-  // Current file
-  const ast = studio.state?.ast
-  if (ast?.components) {
-    for (const comp of ast.components) {
-      existingNames.add(comp.name)
-    }
-  }
-
-  // All other files
-  const allFiles = window.desktopFiles?.getFiles?.() || files
-  for (const [filename, content] of Object.entries(allFiles)) {
-    if (filename === currentFile) continue
-    if (!isMirrorFile(filename)) continue
-    if (!content || !content.trim()) continue
-
-    try {
-      const fileAst = MirrorLang.parse(content)
-      if (fileAst?.components) {
-        for (const comp of fileAst.components) {
-          existingNames.add(comp.name)
-        }
-      }
-    } catch (e) {
-      // Skip files that fail to parse
-    }
-  }
-
-  // Start with the Zag component name itself (e.g., "Select")
-  if (!existingNames.has(zagComponentName)) {
-    return zagComponentName
-  }
-
-  // Try prefixes
-  const prefixes = ['My', 'Custom', 'App', 'Project']
-  for (const prefix of prefixes) {
-    const name = `${prefix}${zagComponentName}`
-    if (!existingNames.has(name)) {
-      return name
-    }
-  }
-
-  // Fall back to numbered suffix with safety limit
-  let counter = 2
-  const MAX_COUNTER = 1000
-  while (existingNames.has(`${zagComponentName}${counter}`) && counter < MAX_COUNTER) {
-    counter++
-  }
-  return `${zagComponentName}${counter}`
-}
-
-/**
- * Find an existing .com file or create a new components.com file
- * @returns {Promise<string|null>} Path to the components file, or null if creation failed
- */
-async function findOrCreateComponentsFile() {
-  // Get all files
-  const allFiles = window.desktopFiles?.getFiles?.() || files
-
-  // Look for existing .com files
-  const comFiles = Object.keys(allFiles).filter(f => isComponentsFile(f))
-
-  if (comFiles.length > 0) {
-    // Prefer 'components.com' or the first .com file
-    const preferred = comFiles.find(f => f.includes('components')) || comFiles[0]
-    return preferred
-  }
-
-  // No .com file exists - create one
-  // Get current directory from currentFile
-  if (!currentFile) {
-    console.warn('[Zag] No current file, cannot determine directory for components.com')
-    return null
-  }
-
-  const dir = currentFile.substring(0, currentFile.lastIndexOf('/') + 1)
-  const newFilePath = dir + 'components.com'
-  const initialContent = '// Component definitions\n'
-
-  if (window.TauriBridge?.isTauri?.()) {
-    try {
-      await window.TauriBridge.fs.writeFile(newFilePath, initialContent)
-      // Update in-memory cache immediately
-      if (window.desktopFiles?.getFiles) {
-        window.desktopFiles.getFiles()[newFilePath] = initialContent
-      }
-      // Refresh file list
-      window.desktopFiles?.loadFolder?.(dir.slice(0, -1))
-      console.log('[Zag] Created new components file:', newFilePath)
-      return newFilePath
-    } catch (err) {
-      console.error('[Zag] Failed to create components.com:', err)
-      studio.events.emit('notification:error', {
-        message: 'Konnte components.com nicht erstellen',
-        duration: 3000,
-      })
-      return null
-    }
-  } else {
-    // Browser mode
-    files[newFilePath] = initialContent
-    updateFileList()
-    console.log('[Zag] Created new components file (browser mode):', newFilePath)
-    return newFilePath
-  }
-}
-
-/**
- * Add a Zag definition to a components file
- * @param {string} definitionCode - The definition code to add
- * @param {string} filePath - Path to the components file
- * @returns {Promise<boolean>} True if successful
- */
-async function addZagDefinitionToComponentsFile(definitionCode, filePath) {
-  const allFiles = window.desktopFiles?.getFiles?.() || files
-  let content = allFiles[filePath] || ''
-
-  // Append definition to file
-  content = content.trim()
-    ? content.trimEnd() + '\n\n' + definitionCode + '\n'
-    : definitionCode + '\n'
-
-  if (window.TauriBridge?.isTauri?.()) {
-    try {
-      await window.TauriBridge.fs.writeFile(filePath, content)
-      // Update in-memory cache immediately
-      if (window.desktopFiles?.getFiles) {
-        window.desktopFiles.getFiles()[filePath] = content
-      }
-      console.log('[Zag] Added definition to:', filePath)
-      studio.events.emit('notification:success', {
-        message: `Definition wurde zu ${filePath.split('/').pop()} hinzugefügt`,
-        duration: 2000,
-      })
-      return true
-    } catch (err) {
-      console.error('[Zag] Failed to write to components file:', err)
-      studio.events.emit('notification:error', {
-        message: `Konnte nicht zu ${filePath.split('/').pop()} speichern`,
-        duration: 3000,
-      })
-      return false
-    }
-  } else {
-    // Browser mode
-    files[filePath] = content
-    console.log('[Zag] Added definition to (browser mode):', filePath)
-    studio.events.emit('notification:success', {
-      message: `Definition wurde zu ${filePath.split('/').pop()} hinzugefügt`,
-      duration: 2000,
-    })
-    return true
-  }
-}
-
-/**
- * Generate the component definition code for a Zag component
- * Creates the definition with slots and their styling
- *
- * @param {string} definitionName - Name for the component definition
- * @param {string} zagComponentName - The Zag component type (e.g., 'Select')
- * @param {Array} children - Component children with slots
- * @returns {string}
- */
-function generateZagDefinitionCode(definitionName, zagComponentName, children) {
-  const lines = []
-
-  // Component definition header
-  lines.push(`${definitionName} as ${zagComponentName}:`)
-
-  // Add slot definitions (only slots, not items)
-  const slots = getZagSlots(children)
-  for (const slot of slots) {
-    lines.push(`  ${slot.template}:`)
-
-    // Add slot properties
-    if (slot.properties) {
-      lines.push(`    ${slot.properties}`)
-    }
-
-    // Add nested children (if any, but NOT items)
-    if (slot.children) {
-      for (const nested of slot.children) {
-        if (!nested.isItem) {
-          // Regular component inside slot
-          let nestedLine = `    ${nested.template}`
-          if (nested.properties) {
-            nestedLine += ` ${nested.properties}`
-          }
-          if (nested.textContent) {
-            nestedLine += ` "${nested.textContent}"`
-          }
-          lines.push(nestedLine)
-        }
-      }
-    }
-  }
-
-  return lines.join('\n')
-}
-
-/**
- * Generate the instance code for a Zag component
- * Creates just the instance with items (no slot definitions)
- *
- * @param {string} instanceName - Name of the component to instantiate
- * @param {string|undefined} properties - Properties string
- * @param {Array} children - Component children
- * @param {string} indent - Base indentation
- * @returns {string}
- */
-function generateZagInstanceCode(instanceName, properties, children, indent = '') {
-  const lines = []
-
-  // Instance line
-  let instanceLine = `${indent}${instanceName}`
-  if (properties) {
-    instanceLine += ` ${properties}`
-  }
-  lines.push(instanceLine)
-
-  // Add items (only items, no slots)
-  const items = getZagItems(children)
-  for (const item of items) {
-    let itemLine = `${indent}  ${item.template}`
-    if (item.properties) {
-      itemLine += ` ${item.properties}`
-    }
-    if (item.textContent) {
-      itemLine += ` "${item.textContent}"`
-    }
-    lines.push(itemLine)
-  }
-
-  return lines.join('\n')
-}
-
-/**
- * Add a Zag component definition to the code
- * Inserts the definition at the end of the component definitions section
- *
- * @param {string} definitionCode - The component definition code
- * @returns {boolean} - Whether the operation succeeded
- */
-function addZagDefinitionToCode(definitionCode) {
-  const currentSource = editor.state.doc.toString()
-
-  // Find where to insert the definition
-  // Strategy: Insert after the last component definition or at the start if none exist
-  const ast = studio.state?.ast
-  let insertPosition = 0
-
-  if (ast && ast.components && ast.components.length > 0) {
-    // Find the end of the last component definition
-    const lastComponent = ast.components[ast.components.length - 1]
-    // Get the line after the last component ends
-    const lines = currentSource.split('\n')
-    let endLine = lastComponent.line
-
-    // Find the actual end by looking for the next non-indented line or end of file
-    for (let i = lastComponent.line; i < lines.length; i++) {
-      const line = lines[i]
-      // If we hit an empty line or a line that's not indented (new top-level item), stop
-      if (
-        line.trim() === '' ||
-        (line.length > 0 && !line.startsWith(' ') && !line.startsWith('\t'))
-      ) {
-        endLine = i
-        break
-      }
-      endLine = i + 1
-    }
-
-    // Calculate character position
-    insertPosition = lines.slice(0, endLine).join('\n').length
-  } else if (ast && ast.tokens && ast.tokens.length > 0) {
-    // Insert after tokens section
-    const lastToken = ast.tokens[ast.tokens.length - 1]
-    const lines = currentSource.split('\n')
-    insertPosition = lines.slice(0, lastToken.line).join('\n').length
-  }
-
-  // Insert with blank line before
-  const insertText = '\n\n' + definitionCode
-
-  // Apply the change via CodeMirror
-  const change = {
-    from: insertPosition,
-    to: insertPosition,
-    insert: insertText,
-  }
-
-  editor.dispatch({
-    changes: change,
-    annotations: Transaction.userEvent.of('input.drop'),
-  })
-
-  // Record for undo
-  const inverseChange = {
-    from: insertPosition,
-    to: insertPosition + insertText.length,
-    insert: '',
-  }
-
-  const command = new RecordedChangeCommand({
-    change: change,
-    inverseChange: inverseChange,
-    description: 'Add component definition',
-  })
-  executor.execute(command)
-
-  // Emit event
-  events.emit('source:changed', {
-    source: editor.state.doc.toString(),
-    origin: 'zag-definition',
-    change: change,
-  })
-
-  return true
-}
-
-// Handle drag-drop from DragDropService (uses DropResultInfo format)
-async function handleStudioDrop(result) {
-  const previewContainer = document.getElementById('preview')
-
-  // Hide drop zone visualization
-  studio.preview?.hideDropZone()
-
-  // Remove drop target highlight
-  previewContainer.querySelectorAll('.studio-drop-target').forEach(el => {
-    el.classList.remove('studio-drop-target')
-  })
-
-  // Ensure we have CodeModifier
-  if (!studioCodeModifier) {
-    console.warn('Studio: CodeModifier not available')
-    return
-  }
-
-  // DropResultInfo format:
-  // { source, targetNodeId, placement, insertionIndex?, absolutePosition?, alignment?, isDuplicate, delta }
-  const {
-    source,
-    targetNodeId,
-    placement,
-    insertionIndex,
-    absolutePosition,
-    alignment,
-    isDuplicate,
-  } = result
-
-  let modResult = null
-  let componentName = ''
-
-  if (source.type === 'element') {
-    // Moving/duplicating an existing element
-    componentName = 'Element'
-
-    if (isDuplicate) {
-      // Duplicate: copy node to target location (Alt-drag)
-      modResult = studioCodeModifier.duplicateNode(source.nodeId, targetNodeId, placement)
-      componentName = 'Duplicate'
-    } else if (placement === 'absolute' && absolutePosition) {
-      // Update x/y atomically using RobustModifier
-      // This ensures both properties are updated in a single operation
-      // with proper offset handling and validation
-      if (studioRobustModifier) {
-        modResult = studioRobustModifier.updatePosition(
-          source.nodeId,
-          absolutePosition.x,
-          absolutePosition.y
-        )
-      } else {
-        // Fallback to sequential updates (less robust)
-        const resultX = studioCodeModifier.updateProperty(
-          source.nodeId,
-          'x',
-          String(Math.round(absolutePosition.x))
-        )
-        if (resultX.success) {
-          const resultY = studioCodeModifier.updateProperty(
-            source.nodeId,
-            'y',
-            String(Math.round(absolutePosition.y))
-          )
-          modResult = resultY.success
-            ? {
-                success: true,
-                newSource: resultY.newSource,
-                change: {
-                  from: resultX.change.from,
-                  to: resultX.change.to,
-                  insert: resultY.change.insert,
-                },
-              }
-            : resultY
-        } else {
-          modResult = resultX
-        }
-      }
-    } else {
-      // Move to new parent/position
-      modResult = studioCodeModifier.moveNode(
-        source.nodeId,
-        targetNodeId,
-        placement,
-        insertionIndex
-      )
-    }
-  } else if (source.type === 'palette') {
-    // Adding new component from palette
-    componentName = source.componentName || 'Component'
-
-    // Build properties string
-    let properties = source.properties || ''
-
-    // Add x/y for absolute positioning
-    if (placement === 'absolute' && absolutePosition) {
-      // Convert to coordinates relative to target parent (not preview container)
-      let relX = absolutePosition.x
-      let relY = absolutePosition.y
-
-      const previewContainer = document.getElementById('preview')
-      const targetElement = previewContainer?.querySelector(`[data-mirror-id="${targetNodeId}"]`)
-      if (targetElement && previewContainer) {
-        const parentRect = targetElement.getBoundingClientRect()
-        const previewRect = previewContainer.getBoundingClientRect()
-        // absolutePosition is relative to preview, convert to relative to parent
-        relX = absolutePosition.x - (parentRect.left - previewRect.left)
-        relY = absolutePosition.y - (parentRect.top - previewRect.top)
-      } else if (!targetElement) {
-        // Log warning when target element not found - coordinates won't be transformed
-        console.warn(
-          `[Drop] Target element not found for id "${targetNodeId}", using untransformed coordinates`
-        )
-      }
-
-      // Adjust for zoom scale - getBoundingClientRect returns zoomed values
-      // but x/y properties need unzoomed coordinates
-      const zoomLevel = ZOOM_LEVELS[currentZoomIndex] ?? 100
-      const zoomScale = zoomLevel / 100
-      if (zoomScale && zoomScale !== 1) {
-        relX = relX / zoomScale
-        relY = relY / zoomScale
-      }
-
-      const posProps = `x ${Math.round(relX)}, y ${Math.round(relY)}`
-      properties = properties ? `${properties}, ${posProps}` : posProps
-    }
-
-    // ============================================
-    // ZAG COMPONENT HANDLING - 4 CASES
-    // ============================================
-    // Case 1: Component exists + .com file → Show info message (nothing to do)
-    // Case 2: Component doesn't exist + .com file → Create definition only (no instance)
-    // Case 3: Component exists + .mir file → Create instance only
-    // Case 4: Component doesn't exist + .mir file → Create definition in .com + instance in .mir
-    if (isZagComponent(source.children)) {
-      console.log('[Drop] Zag component detected:', componentName)
-
-      // Determine if dropping into a .com (components) file
-      const droppingIntoComponentsFile = isComponentsFile(currentFile)
-      console.log(
-        '[Drop] File type:',
-        droppingIntoComponentsFile ? '.com' : '.mir',
-        'File:',
-        currentFile
-      )
-
-      // Check if definition exists (searches all project files)
-      const existingDef = findExistingZagDefinition(componentName)
-      console.log('[Drop] Existing definition:', existingDef)
-
-      if (droppingIntoComponentsFile) {
-        // === DROPPING INTO .COM FILE ===
-        if (existingDef.exists) {
-          // Case 1: Component exists + .com file → Show info message
-          console.log('[Drop] Case 1: Component already defined:', existingDef.definitionName)
-          studio.events.emit('notification:info', {
-            message: `${existingDef.definitionName} ist bereits definiert`,
-            duration: 2000,
-          })
-          return // Nothing to do
-        } else {
-          // Case 2: Component doesn't exist + .com file → Create definition only
-          const definitionName = generateZagComponentName(componentName)
-          console.log('[Drop] Case 2: Creating definition only:', definitionName)
-
-          const definitionCode = generateZagDefinitionCode(
-            definitionName,
-            componentName,
-            source.children
-          )
-
-          // Add definition to current .com file
-          addZagDefinitionToCode(definitionCode)
-
-          // Recompile
-          const updatedCode = editor.state.doc.toString()
-          compile(updatedCode)
-
-          studio.events.emit('notification:success', {
-            message: `${definitionName} wurde erstellt`,
-            duration: 2000,
-          })
-          return // No instance needed in .com files
-        }
-      } else {
-        // === DROPPING INTO .MIR FILE ===
-        let instanceComponentName = componentName
-
-        if (existingDef.exists && existingDef.definitionName) {
-          // Case 3: Component exists + .mir file → Create instance only
-          console.log('[Drop] Case 3: Using existing definition:', existingDef.definitionName)
-          instanceComponentName = existingDef.definitionName
-        } else {
-          // Case 4: Component doesn't exist + .mir file → Create definition in .com + instance here
-          const definitionName = generateZagComponentName(componentName)
-          console.log('[Drop] Case 4: Creating definition in .com file:', definitionName)
-
-          const definitionCode = generateZagDefinitionCode(
-            definitionName,
-            componentName,
-            source.children
-          )
-
-          // Find or create components file
-          try {
-            const componentsFile = await findOrCreateComponentsFile()
-            if (componentsFile) {
-              // Add definition to components file
-              const success = await addZagDefinitionToComponentsFile(definitionCode, componentsFile)
-              if (!success) {
-                console.error('[Drop] Failed to add definition to components file')
-                studio.events.emit('notification:error', {
-                  message: 'Konnte Definition nicht erstellen',
-                  duration: 3000,
-                })
-                return // Abort on failure
-              }
-              console.log('[Drop] Added definition to:', componentsFile)
-            } else {
-              // Fallback: add to current file
-              console.log('[Drop] No components file, adding to current file')
-              addZagDefinitionToCode(definitionCode)
-              const updatedCode = editor.state.doc.toString()
-              compile(updatedCode)
-            }
-          } catch (err) {
-            console.error('[Drop] Error creating definition:', err)
-            studio.events.emit('notification:error', {
-              message: 'Fehler beim Erstellen der Definition',
-              duration: 3000,
-            })
-            return
-          }
-
-          instanceComponentName = definitionName
-        }
-
-        // Generate instance code with just items (no slots)
-        const instanceCode = generateZagInstanceCode(
-          instanceComponentName,
-          properties,
-          source.children
-        )
-
-        // Use addChildWithTemplate for multi-line Zag instances
-        modResult = studioCodeModifier.addChildWithTemplate(targetNodeId, instanceCode, {
-          position: insertionIndex !== undefined ? insertionIndex : 'last',
-        })
-      }
-    } else {
-      // Regular component (not Zag) - use standard addChild
-      modResult = studioCodeModifier.addChild(targetNodeId, componentName, {
-        position: insertionIndex !== undefined ? insertionIndex : 'last',
-        properties: properties || undefined,
-        textContent: source.textContent || undefined,
-      })
-    }
-
-    // Handle alignment for empty containers (set align on parent)
-    if (modResult.success && alignment && alignment.zone) {
-      // Map alignment zone to Mirror align property
-      // Zones: top-left, top-center, top-right, center-left, center, center-right, bottom-left, bottom-center, bottom-right
-      const alignMap = {
-        'top-left': 'top',
-        'top-center': 'top',
-        'top-right': 'top',
-        'center-left': 'left',
-        center: 'center',
-        'center-right': 'right',
-        'bottom-left': 'bottom',
-        'bottom-center': 'bottom',
-        'bottom-right': 'bottom',
-      }
-      const alignValue = alignMap[alignment.zone]
-      if (alignValue) {
-        // Apply alignment to parent after the child was added
-        // Note: This creates a second change that needs to be applied
-        const alignResult = studioCodeModifier.updateProperty(targetNodeId, 'align', alignValue)
-        if (alignResult.success) {
-          // Chain the alignment change
-          applyDropChange(alignResult, 'Alignment')
-        }
-      }
-    }
-  }
-
-  if (!modResult || !modResult.success) {
-    console.warn('Studio: Drop modification failed:', modResult?.error)
-    return
-  }
-
-  applyDropChange(modResult, componentName, { containerId: targetNodeId, insertionIndex })
-
-  console.log('Studio: Component dropped', targetNodeId, placement, insertionIndex)
-}
-
-// Helper to apply a code change from drop operation
-function applyDropChange(modResult, componentName = 'Component', target = null) {
-  const change = modResult.change
-  const docLength = editor.state.doc.length
-
-  // Handle case where CodeModifier returns full resolved source replacement
-  // (e.g., moveNode replaces entire source including prelude)
-  let adjustedChange
-  if (change.from === 0 && change.to > docLength && currentPreludeOffset > 0) {
-    // Extract only the current file portion from the insert text
-    adjustedChange = {
-      from: 0,
-      to: docLength,
-      insert: change.insert.substring(currentPreludeOffset),
-    }
-  } else {
-    // Standard adjustment for single-file changes
-    adjustedChange = {
-      from: change.from - currentPreludeOffset,
-      to: change.to - currentPreludeOffset,
-      insert: change.insert,
-    }
-  }
-
-  // Validate range
-  if (
-    adjustedChange.from < 0 ||
-    adjustedChange.to > docLength ||
-    adjustedChange.from > adjustedChange.to
-  ) {
-    console.warn('Studio: Invalid drop range after offset adjustment', {
-      original: { from: change.from, to: change.to },
-      preludeOffset: currentPreludeOffset,
-      adjusted: adjustedChange,
-      docLength,
-    })
-    return
-  }
-
-  // Calculate inverse change for undo
-  const currentSource = editor.state.doc.toString()
-  const inverseChange = {
-    from: adjustedChange.from,
-    to: adjustedChange.from + adjustedChange.insert.length,
-    insert: currentSource.substring(adjustedChange.from, adjustedChange.to),
-  }
-
-  // Apply the change to CodeMirror
-  editor.dispatch({
-    changes: adjustedChange,
-    annotations: Transaction.userEvent.of('input.drop'),
-  })
-
-  // Record the change in CommandExecutor for undo/redo
-  const command = new RecordedChangeCommand({
-    change: adjustedChange,
-    inverseChange: inverseChange,
-    description: 'Drop component',
-  })
-  executor.execute(command)
-
-  // Emit event for tracking
-  events.emit('source:changed', {
-    source: editor.state.doc.toString(),
-    origin: 'drag-drop',
-    change: adjustedChange,
-  })
-
-  // Set deferred selection using parent + index (more reliable than line numbers)
-  if (target && target.containerId !== undefined) {
-    studioActions.setDeferredSelection({
-      type: 'lastChildOf',
-      parentNodeId: target.containerId,
-      insertionIndex: target.insertionIndex,
-      origin: 'drag-drop',
-    })
-  }
-
-  // Compile and save
-  const code = editor.state.doc.toString()
-  compile(code)
-  debouncedSave(code)
-}
+// Zag helpers moved to Clean Code module: studio/zag/
+// Wrapper functions are defined above (near getDropGlobals)
+
+// Drop handling moved to Clean Code module: studio/drop/
+// Uses handleStudioDropNew() from studio/drop/app-adapter.ts
 
 // NOTE: Delete/Backspace is handled by KeyboardHandler in preview/keyboard-handler.ts
 // via executeDelete() in shared-actions.ts - no duplicate handler needed here
@@ -6490,468 +3753,13 @@ async function promptForApiKey() {
 }
 
 // ==========================================================================
-// LLM Integration - React to Mirror Workflow
+// LLM Integration - React to Mirror Workflow (use Clean Code module)
 // ==========================================================================
 
-// React-to-Mirror Converter (inline version for browser)
-const STYLE_TO_MIRROR = {
-  padding: 'pad',
-  paddingTop: 'pad top',
-  paddingBottom: 'pad bottom',
-  paddingLeft: 'pad left',
-  paddingRight: 'pad right',
-  margin: 'm',
-  backgroundColor: 'bg',
-  background: 'bg',
-  color: 'col',
-  borderRadius: 'rad',
-  width: 'w',
-  height: 'h',
-  minWidth: 'minw',
-  maxWidth: 'maxw',
-  minHeight: 'minh',
-  maxHeight: 'maxh',
-  gap: 'gap',
-  fontSize: 'font-size',
-  fontWeight: 'weight',
-  fontFamily: 'font',
-  textAlign: 'text-align',
-  display: '_display',
-  flexDirection: '_flexDirection',
-  alignItems: '_alignItems',
-  justifyContent: '_justifyContent',
-  cursor: 'cursor',
-  opacity: 'opacity',
-  border: 'bor',
-  borderColor: 'boc',
-  boxShadow: 'shadow',
-}
-
-const TAG_TO_COMPONENT = {
-  div: 'frame',
-  span: 'text',
-  button: 'button',
-  input: 'input',
-  textarea: 'textarea',
-  img: 'image',
-  a: 'link',
-  nav: 'frame',
-  header: 'frame',
-  footer: 'frame',
-  main: 'frame',
-  section: 'frame',
-  article: 'frame',
-  aside: 'frame',
-  h1: 'text',
-  h2: 'text',
-  h3: 'text',
-  h4: 'text',
-  p: 'text',
-  label: 'text',
-  select: 'frame',
-}
-
-const TAG_TO_NAME = {
-  div: 'Box',
-  span: 'Text',
-  button: 'Button',
-  input: 'Input',
-  nav: 'Nav',
-  header: 'Header',
-  footer: 'Footer',
-  main: 'Main',
-  section: 'Section',
-  h1: 'Heading',
-  h2: 'Heading',
-  h3: 'Heading',
-  p: 'Text',
-  a: 'Link',
-  img: 'Image',
-  select: 'Select',
-  option: 'Option',
-}
-
 function convertReactToMirror(reactCode) {
-  const componentDefinitions = new Map()
-
-  function parseStyleObject(styleStr) {
-    const style = {}
-    const pairs = styleStr
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-    for (const pair of pairs) {
-      const colonIndex = pair.indexOf(':')
-      if (colonIndex === -1) continue
-      let key = pair.slice(0, colonIndex).trim().replace(/['\"]/g, '')
-      let value = pair
-        .slice(colonIndex + 1)
-        .trim()
-        .replace(/['\"]/g, '')
-        .replace(/,\s*$/, '')
-      style[key] = value
-    }
-    return style
-  }
-
-  function styleToMirrorProps(style) {
-    const props = []
-    let layout = 'ver'
-
-    for (const [key, value] of Object.entries(style)) {
-      const mirrorKey = STYLE_TO_MIRROR[key]
-      if (!mirrorKey) continue
-
-      if (mirrorKey === '_display' && value === 'flex') continue
-      if (mirrorKey === '_flexDirection') {
-        layout = value === 'row' ? 'hor' : 'ver'
-        continue
-      }
-      if (mirrorKey === '_alignItems') {
-        const map = { center: 'ver-center', 'flex-start': 'top', 'flex-end': 'bottom' }
-        if (map[value]) props.push(map[value])
-        continue
-      }
-      if (mirrorKey === '_justifyContent') {
-        const map = {
-          center: 'hor-center',
-          'space-between': 'spread',
-          'flex-start': 'left',
-          'flex-end': 'right',
-        }
-        if (map[value]) props.push(map[value])
-        continue
-      }
-
-      let mirrorValue = String(value).replace(/px/g, '').trim()
-      if (mirrorValue.startsWith('var(--')) {
-        const tokenName = mirrorValue.match(/var\(--([^\)]+)\)/)?.[1]
-        mirrorValue = tokenName ? `$${tokenName}` : mirrorValue
-      }
-
-      props.push(`${mirrorKey} ${mirrorValue}`)
-    }
-
-    if (layout === 'hor') props.unshift('hor')
-    return props
-  }
-
-  function findMatchingBrace(str, openPos) {
-    if (str[openPos] !== '{') return -1
-    let depth = 1,
-      pos = openPos + 1
-    while (pos < str.length && depth > 0) {
-      const char = str[pos]
-      if (char === '{') depth++
-      else if (char === '}') depth--
-      if (char === '"' || char === "'" || char === '`') {
-        const quote = char
-        pos++
-        while (pos < str.length && str[pos] !== quote) {
-          if (str[pos] === '\\') pos++
-          pos++
-        }
-      }
-      pos++
-    }
-    return depth === 0 ? pos - 1 : -1
-  }
-
-  function extractReturnJSX(code) {
-    const returnIndex = code.indexOf('return')
-    if (returnIndex === -1) return code
-    let pos = returnIndex + 6
-    while (pos < code.length && code[pos] !== '(' && code[pos] !== '<') pos++
-    if (code[pos] === '<') {
-      const jsxStart = pos
-      const tag = code.slice(pos).match(/^<(\w+)/)?.[1]
-      if (tag) {
-        const closeTag = `</${tag}>`
-        const closeIndex = code.lastIndexOf(closeTag)
-        if (closeIndex > jsxStart) return code.slice(jsxStart, closeIndex + closeTag.length).trim()
-      }
-      return code.slice(pos).trim()
-    }
-    if (code[pos] !== '(') return code
-    const openParen = pos
-    let depth = 1
-    pos++
-    while (pos < code.length && depth > 0) {
-      const char = code[pos]
-      if (char === '"' || char === "'" || char === '`') {
-        const quote = char
-        pos++
-        while (pos < code.length && code[pos] !== quote) {
-          if (code[pos] === '\\') pos++
-          pos++
-        }
-      } else if (char === '(') depth++
-      else if (char === ')') depth--
-      pos++
-    }
-    return code.slice(openParen + 1, pos - 1).trim()
-  }
-
-  function parseJSXElement(jsx) {
-    if (!jsx || !jsx.startsWith('<')) return null
-    const openTagMatch = jsx.match(/^<(\w+)([^>]*?)(?:\/>|>)/)
-    if (!openTagMatch) return null
-
-    const tag = openTagMatch[1].toLowerCase()
-    const propsStr = openTagMatch[2]
-    const isSelfClosing = jsx.includes('/>')
-
-    // Parse style
-    let style = null
-    const styleMatch = propsStr.match(/style=\{\{([^}]+)\}\}/)
-    if (styleMatch) style = parseStyleObject(styleMatch[1])
-
-    const element = { tag, style, children: [] }
-
-    if (!isSelfClosing) {
-      const childrenMatch = jsx.match(
-        new RegExp(`<${openTagMatch[1]}[^>]*>([\\s\\S]*)<\\/${openTagMatch[1]}>`, 'i')
-      )
-      if (childrenMatch) {
-        element.children = parseChildren(childrenMatch[1])
-      }
-    }
-
-    return element
-  }
-
-  function parseChildren(content) {
-    const children = []
-    const trimmed = content.trim()
-    if (!trimmed) return children
-
-    if (!trimmed.includes('<')) {
-      if (trimmed && !trimmed.startsWith('{')) children.push(trimmed)
-      return children
-    }
-
-    let pos = 0,
-      textStart = 0
-    while (pos < trimmed.length) {
-      if (trimmed[pos] === '{') {
-        const exprEnd = findMatchingBrace(trimmed, pos)
-        if (exprEnd > pos) {
-          pos = exprEnd + 1
-          textStart = pos
-          continue
-        }
-      }
-
-      const openTagStart = trimmed.indexOf('<', pos)
-      if (openTagStart === -1) {
-        const text = trimmed.slice(textStart).trim()
-        if (text && !text.startsWith('{') && !text.startsWith('</')) children.push(text)
-        break
-      }
-
-      const braceBeforeTag = trimmed.lastIndexOf('{', openTagStart)
-      if (braceBeforeTag >= textStart) {
-        const braceEnd = findMatchingBrace(trimmed, braceBeforeTag)
-        if (braceEnd > openTagStart) {
-          pos = braceEnd + 1
-          textStart = pos
-          continue
-        }
-      }
-
-      if (trimmed[openTagStart + 1] === '/') {
-        pos = trimmed.indexOf('>', openTagStart) + 1
-        textStart = pos
-        continue
-      }
-
-      if (openTagStart > textStart) {
-        const text = trimmed.slice(textStart, openTagStart).trim()
-        if (text && !text.startsWith('{') && !text.startsWith('</')) children.push(text)
-      }
-
-      const tagNameMatch = trimmed.slice(openTagStart).match(/^<(\w+)/)
-      if (!tagNameMatch) {
-        pos = openTagStart + 1
-        continue
-      }
-
-      const tagName = tagNameMatch[1]
-      const selfCloseMatch = trimmed.slice(openTagStart).match(new RegExp(`^<${tagName}[^>]*/>`))
-      if (selfCloseMatch) {
-        const element = parseJSXElement(selfCloseMatch[0])
-        if (element) children.push(element)
-        pos = openTagStart + selfCloseMatch[0].length
-        textStart = pos
-        continue
-      }
-
-      const closeTag = `</${tagName}>`
-      let depth = 1,
-        searchPos = openTagStart + 1
-      while (depth > 0 && searchPos < trimmed.length) {
-        if (trimmed[searchPos] === '{') {
-          const exprEnd = findMatchingBrace(trimmed, searchPos)
-          if (exprEnd > searchPos) {
-            searchPos = exprEnd + 1
-            continue
-          }
-        }
-        const nextClose = trimmed.indexOf(closeTag, searchPos)
-        if (nextClose === -1) {
-          depth = 0
-          break
-        }
-        const nextOpenSearch = trimmed
-          .slice(searchPos)
-          .search(new RegExp(`<${tagName}(?:\\s|>|/>)`))
-        if (nextOpenSearch !== -1 && searchPos + nextOpenSearch < nextClose) {
-          const checkPos = searchPos + nextOpenSearch
-          if (!trimmed.slice(checkPos).match(new RegExp(`^<${tagName}[^>]*/>`))) depth++
-          searchPos = checkPos + 1
-        } else {
-          depth--
-          if (depth === 0) {
-            const fullElement = trimmed.slice(openTagStart, nextClose + closeTag.length)
-            const element = parseJSXElement(fullElement)
-            if (element) children.push(element)
-            pos = nextClose + closeTag.length
-            textStart = pos
-          } else {
-            searchPos = nextClose + closeTag.length
-          }
-        }
-      }
-      if (depth !== 0) pos = openTagStart + 1
-    }
-    return children
-  }
-
-  function generateElement(element, depth) {
-    const indent = '  '.repeat(depth)
-    const name =
-      TAG_TO_NAME[element.tag] || element.tag.charAt(0).toUpperCase() + element.tag.slice(1)
-    const parts = [name]
-
-    if (element.style) {
-      const props = styleToMirrorProps(element.style)
-      if (depth > 0 || !componentDefinitions.has(name)) {
-        if (props.length > 0) parts.push(props.join(', '))
-      }
-    }
-
-    const textChildren = element.children.filter(c => typeof c === 'string')
-    if (textChildren.length > 0) {
-      const text = textChildren.join(' ').trim()
-      if (text && !text.startsWith('{')) parts.push(`"${text}"`)
-    }
-
-    let line = indent + parts.join(' ')
-    const elementChildren = element.children.filter(c => typeof c !== 'string')
-    if (elementChildren.length > 0) {
-      const childLines = elementChildren.map(child => generateElement(child, depth + 1))
-      line += '\n' + childLines.join('\n')
-    }
-    return line
-  }
-
-  function collectComponentDefinitions(element) {
-    const name =
-      TAG_TO_NAME[element.tag] || element.tag.charAt(0).toUpperCase() + element.tag.slice(1)
-    if (!componentDefinitions.has(name) && element.style) {
-      const baseTag = TAG_TO_COMPONENT[element.tag] || 'frame'
-      const props = styleToMirrorProps(element.style)
-      if (props.length > 0) {
-        componentDefinitions.set(name, `${name} as ${baseTag}:\n  ${props.join(', ')}`)
-      }
-    }
-    for (const child of element.children) {
-      if (typeof child !== 'string') collectComponentDefinitions(child)
-    }
-  }
-
-  try {
-    const jsx = extractReturnJSX(reactCode)
-    const rootElement = parseJSXElement(jsx.trim())
-    if (!rootElement) return { mirror: '', errors: ['Failed to parse JSX'] }
-
-    componentDefinitions.clear()
-    collectComponentDefinitions(rootElement)
-
-    const lines = []
-    for (const [name, def] of componentDefinitions) {
-      lines.push(def)
-      lines.push('')
-    }
-    lines.push(generateElement(rootElement, 0))
-
-    return { mirror: lines.join('\n').trim(), errors: [] }
-  } catch (error) {
-    return { mirror: '', errors: [error.message] }
-  }
+  return convertReactToMirrorModule(reactCode)
 }
 
-// Build React generation system prompt
 function buildReactSystemPrompt(context) {
-  let prompt = `You are a UI developer. Generate React/JSX code for the requested UI.
-
-IMPORTANT RULES:
-1. Return ONLY JSX code inside a functional component
-2. Use inline styles with camelCase properties
-3. Use semantic HTML elements (div, button, span, nav, header, etc.)
-4. Keep the code clean and minimal
-5. Do NOT include imports or exports
-6. Do NOT include explanations - just the code
-
-EXAMPLE OUTPUT:
-\`\`\`jsx
-function Component() {
-  return (
-<div style={{ padding: '16px', backgroundColor: '#1A1A23', borderRadius: '8px' }}>
-  <span style={{ color: '#E4E4E7' }}>Hello World</span>
-</div>
-  )
-}
-\`\`\`
-
-STYLE GUIDELINES:
-- Use hex colors (e.g., '#5BA8F5')
-- Use pixel values for spacing (e.g., '16px', '12px 24px')
-- Common properties: padding, backgroundColor, color, borderRadius, display, flexDirection, gap, alignItems, justifyContent`
-
-  // Add tokens as CSS variables
-  if (context.tokens.length > 0) {
-    prompt += '\n\nAVAILABLE DESIGN TOKENS (use as CSS variables):\n'
-    for (const token of context.tokens.slice(0, 20)) {
-      prompt += `- var(--${token.name}): ${token.value}\n`
-    }
-  }
-
-  // Add existing components for style consistency
-  if (context.components.length > 0) {
-    prompt += '\n\nEXISTING COMPONENTS (for style consistency):\n'
-    for (const comp of context.components.slice(0, 10)) {
-      prompt += `- ${comp.name}: ${comp.properties.slice(0, 5).join(', ')}\n`
-    }
-  }
-
-  // Add editor context
-  if (context.editor) {
-    const ctx = context.editor
-    if (ctx.selectedNodeName) {
-      prompt += `\n\nEDITOR CONTEXT:\nSelected element: "${ctx.selectedNodeName}"`
-      if (ctx.ancestors && ctx.ancestors.length > 0) {
-        prompt += `\nLocation: ${ctx.ancestors.join(' → ')} → ${ctx.selectedNodeName}`
-      }
-    }
-    if (ctx.insideComponent) {
-      prompt += `\nCursor is inside: "${ctx.insideComponent}"`
-    }
-    if (ctx.surroundingCode) {
-      prompt += `\n\nSurrounding code context:\n${ctx.surroundingCode.before}\n--- CURSOR ---\n${ctx.surroundingCode.after}`
-    }
-    prompt += `\n\nIMPORTANT: When user says "here", "this", "add X", they refer to the current position/selection.`
-  }
-
-  return prompt
+  return buildReactSystemPromptModule(context)
 }

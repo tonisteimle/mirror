@@ -1,0 +1,25 @@
+{
+  "name": "@mirror/playwright-pool",
+  "version": "0.1.0",
+  "description": "Multi-session Playwright MCP Server - allows multiple Claude Code sessions to use browsers simultaneously",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "playwright-pool": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "playwright": "^1.48.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

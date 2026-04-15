@@ -57,9 +57,7 @@ export interface CreateAutocompletePortsConfig {
 // EditorContextPort Implementation
 // ============================================
 
-export function createEditorContextPort(
-  config: CreateEditorContextPortConfig
-): EditorContextPort {
+export function createEditorContextPort(config: CreateEditorContextPortConfig): EditorContextPort {
   const { view } = config
 
   function getSource(): string {
@@ -160,21 +158,14 @@ export function createSourceMapContextPort(
   }
 
   function getAvailableTokens(): string[] {
-    if (getTokens) {
-      return getTokens()
-    }
+    if (getTokens) return getTokens()
     // Default: extract from source (token definitions like "name.bg: #color")
     const source = getSource()
-    const tokens: string[] = []
+    const tokens = new Set<string>()
     const tokenPattern = /^([a-zA-Z][\w-]*)\.(bg|col|pad|mar|gap|rad|boc|fs|ic|is):/gm
     let match
-    while ((match = tokenPattern.exec(source)) !== null) {
-      const tokenName = match[1]
-      if (!tokens.includes(tokenName)) {
-        tokens.push(tokenName)
-      }
-    }
-    return tokens
+    while ((match = tokenPattern.exec(source)) !== null) tokens.add(match[1])
+    return [...tokens]
   }
 
   function getUserDefinedComponents(): string[] {
@@ -199,9 +190,7 @@ export function createSourceMapContextPort(
 // CompletionUIPort Implementation
 // ============================================
 
-export function createCompletionUIPort(
-  config: CreateCompletionUIPortConfig
-): CompletionUIPort {
+export function createCompletionUIPort(config: CreateCompletionUIPortConfig): CompletionUIPort {
   const { view, onShow, onHide } = config
   let currentResult: AutocompleteResult | null = null
   let isVisible = false
@@ -263,9 +252,7 @@ export function createCompletionUIPort(
 // Combined Ports Factory
 // ============================================
 
-export function createAutocompletePorts(
-  config: CreateAutocompletePortsConfig
-): AutocompletePorts {
+export function createAutocompletePorts(config: CreateAutocompletePortsConfig): AutocompletePorts {
   const { view, getTokens, onShow, onHide } = config
 
   const editor = createEditorContextPort({ view })

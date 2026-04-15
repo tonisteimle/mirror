@@ -371,28 +371,21 @@ export class EventBus {
  * Logs all events to console (can be filtered by pattern)
  */
 export function createLoggerMiddleware(
-  options: {
-    filter?: RegExp | ((event: string) => boolean)
-    collapsed?: boolean
-  } = {}
+  options: { filter?: RegExp | ((event: string) => boolean); collapsed?: boolean } = {}
 ): EventMiddleware {
   const { filter, collapsed = true } = options
-
   return (event, payload, meta) => {
     const shouldLog = filter
       ? typeof filter === 'function'
         ? filter(event)
         : filter.test(event)
       : true
-
     if (shouldLog) {
-      const logFn = collapsed ? console.groupCollapsed : console.group
-      logFn(`[Event] ${event}`)
+      ;(collapsed ? console.groupCollapsed : console.group)(`[Event] ${event}`)
       console.log('Payload:', payload)
       console.log('Meta:', meta)
       console.groupEnd()
     }
-
     return { payload, meta }
   }
 }

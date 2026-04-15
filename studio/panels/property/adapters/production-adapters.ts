@@ -5,7 +5,12 @@
  * Verbinden das Property Panel mit dem echten System.
  */
 
-import type { PropertyExtractor, ExtractedElement, CodeModifier, ModificationResult } from '../../../shared/compiler-types'
+import type {
+  PropertyExtractor,
+  ExtractedElement,
+  CodeModifier,
+  ModificationResult,
+} from '../../../shared/compiler-types'
 import { isAbsoluteLayoutContainer, createLogger } from '../../../shared/compiler-types'
 import { events, state } from '../../../core'
 import { TokenCache } from '../utils/tokens'
@@ -21,7 +26,7 @@ import type {
   SpacingToken,
   ColorToken,
   PropertyChange,
-  Rect
+  Rect,
 } from '../ports'
 
 const log = createLogger('SelectionAdapter')
@@ -48,7 +53,7 @@ export function createSelectionAdapter(selectionProvider: SelectionProvider): Se
 
   return {
     subscribe(listener) {
-      return selectionProvider.subscribe((nodeId) => {
+      return selectionProvider.subscribe(nodeId => {
         const prev = previousSelection
         previousSelection = nodeId
         listener(nodeId, prev)
@@ -68,7 +73,7 @@ export function createSelectionAdapter(selectionProvider: SelectionProvider): Se
     clearSelection() {
       // Selection is typically managed externally
       log.warn('Direct clear not supported - use SelectionManager')
-    }
+    },
   }
 }
 
@@ -76,7 +81,9 @@ export function createSelectionAdapter(selectionProvider: SelectionProvider): Se
 // Property Extraction Adapter
 // ============================================
 
-export function createExtractionAdapter(propertyExtractor: PropertyExtractor): PropertyExtractionPort {
+export function createExtractionAdapter(
+  propertyExtractor: PropertyExtractor
+): PropertyExtractionPort {
   return {
     getProperties(nodeId) {
       return propertyExtractor.getProperties(nodeId)
@@ -84,7 +91,7 @@ export function createExtractionAdapter(propertyExtractor: PropertyExtractor): P
 
     getPropertiesForDefinition(componentName) {
       return propertyExtractor.getPropertiesForComponentDefinition(componentName)
-    }
+    },
   }
 }
 
@@ -135,7 +142,7 @@ export function createModificationAdapter(
       let lastResult: ModificationResult = {
         success: false,
         newSource: '',
-        change: { from: 0, to: 0, insert: '' }
+        change: { from: 0, to: 0, insert: '' },
       }
 
       for (const change of changes) {
@@ -163,7 +170,7 @@ export function createModificationAdapter(
 
       onCodeChange(lastResult)
       return lastResult
-    }
+    },
   }
 }
 
@@ -195,7 +202,7 @@ export function createTokenAdapter(options: TokenAdapterOptions): TokenPort {
 
     invalidateCache() {
       tokenCache.invalidate()
-    }
+    },
   }
 }
 
@@ -233,19 +240,11 @@ export function createLayoutAdapter(options: LayoutAdapterOptions = {}): LayoutD
 
     getParentLayoutType(nodeId) {
       const element = getElementByNodeId(nodeId)
-      if (!element) return 'none'
-
-      const parent = element.parentElement
-      if (!parent) return 'none'
-
-      const style = window.getComputedStyle(parent)
-      const display = style.display
-
+      if (!element?.parentElement) return 'none'
+      const display = window.getComputedStyle(element.parentElement).display
       if (display === 'grid') return 'grid'
       if (display === 'flex') return 'flex'
-      if (isAbsoluteLayoutContainer(parent)) return 'positioned'
-
-      return 'none'
+      return isAbsoluteLayoutContainer(element.parentElement) ? 'positioned' : 'none'
     },
 
     getElementRect(nodeId) {
@@ -257,9 +256,9 @@ export function createLayoutAdapter(options: LayoutAdapterOptions = {}): LayoutD
         x: rect.x,
         y: rect.y,
         width: rect.width,
-        height: rect.height
+        height: rect.height,
       }
-    }
+    },
   }
 }
 
@@ -289,7 +288,7 @@ export function createEventAdapter(): PanelEventPort {
 
     isCompiling() {
       return state.get().compiling
-    }
+    },
   }
 }
 
@@ -320,14 +319,10 @@ export function createProductionPorts(config: ProductionPortsConfig): PropertyPa
     selection: createSelectionAdapter(config.selectionProvider),
     extraction: createExtractionAdapter(config.propertyExtractor),
     modification: createModificationAdapter(config.codeModifier, {
-      onCodeChange: config.onCodeChange
+      onCodeChange: config.onCodeChange,
     }),
-    tokens: createTokenAdapter({
-      getAllSource: config.getAllSource
-    }),
-    layout: createLayoutAdapter({
-      previewContainerId: config.previewContainerId
-    }),
-    events: createEventAdapter()
+    tokens: createTokenAdapter({ getAllSource: config.getAllSource }),
+    layout: createLayoutAdapter({ previewContainerId: config.previewContainerId }),
+    events: createEventAdapter(),
   }
 }

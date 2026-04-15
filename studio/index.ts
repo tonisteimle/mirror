@@ -50,6 +50,21 @@ export * from './ui'
 // Rename (IDE-style F2 rename symbol)
 export * from './rename'
 
+// Drop (drag-drop handling with Strategy Pattern)
+export * from './drop'
+
+// Zag (Zag component helpers)
+export * from './zag'
+
+// File Types (file type definitions and detection)
+export * from './file-types'
+
+// React Converter (React/JSX to Mirror DSL)
+export * from './react-converter'
+
+// YAML Parser (data file parsing)
+export * from './yaml-parser'
+
 // Bootstrap
 export {
   studio,

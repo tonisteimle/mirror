@@ -78,6 +78,7 @@
     "@playwright/test": "^1.58.2",
     "@types/babel__traverse": "^7.28.0",
     "@types/node": "^25.5.2",
+    "@types/ws": "^8.18.1",
     "esbuild": "^0.27.3",
     "eslint": "^10.2.0",
     "globals": "^17.5.0",
@@ -89,7 +90,8 @@
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
     "typescript-eslint": "^8.58.1",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.4",
+    "ws": "^8.20.0"
   },
   "keywords": [
     "mirror",

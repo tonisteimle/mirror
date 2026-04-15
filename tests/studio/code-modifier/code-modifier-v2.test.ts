@@ -14,10 +14,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import {
-  CodeModifierV2,
-  createCodeModifierV2,
-} from '../../../compiler/studio/code-modifier-v2'
+import { CodeModifierV2, createCodeModifierV2 } from '../../../compiler/studio/code-modifier-v2'
 import {
   createMockCodeModifierPorts,
   createNodeMapping,
@@ -227,6 +224,23 @@ describe('CodeModifierV2 (Hexagonal)', () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toContain('Parent node not found')
+    })
+
+    it('should add child at position 0 (before first child)', () => {
+      // Position 0 means "before first child" - this is the bug fix test
+      const result = modifier.addChild('frame-1', 'Icon', {
+        position: 0,
+        textContent: 'star',
+      })
+
+      expect(result.success).toBe(true)
+      // Icon should appear before Text "Hello" (the first existing child)
+      const lines = result.newSource.split('\n')
+      const iconIndex = lines.findIndex(l => l.includes('Icon'))
+      const textIndex = lines.findIndex(l => l.includes('Text'))
+      expect(iconIndex).toBeLessThan(textIndex)
+      // Icon should be on its own line (not on same line as Text)
+      expect(lines[iconIndex]).not.toContain('Text')
     })
   })
 

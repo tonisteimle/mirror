@@ -23,7 +23,7 @@ import { M } from './mirror-runtime'
  */
 export const card = M('Box', { bg: '#1a1a23', pad: 16, rad: 8 }, [
   M('Text', 'Welcome', { weight: 'bold' }),
-  M('Text', 'Description', { col: '#888' })
+  M('Text', 'Description', { col: '#888' }),
 ])
 
 // Die Struktur ist identisch:
@@ -51,8 +51,8 @@ export const button = M('Button', 'Click me', {
   rad: 6,
   cursor: 'pointer',
   states: {
-    hover: { bg: '#2271C1' }
-  }
+    hover: { bg: '#2271C1' },
+  },
 })
 
 // =============================================================================
@@ -84,44 +84,61 @@ export const button = M('Button', 'Click me', {
  *
  * JAVASCRIPT:
  */
-export const dropdown = M('Box', {
-  state: 'closed',
-  'onkeydown escape': 'close',
-  'onkeydown arrow-down': 'highlight next',
-  'onkeydown arrow-up': 'highlight prev',
-  'onkeydown enter': ['select highlighted', 'close']
-}, [
-  // Trigger
-  M('Box', {
-    hor: true,
-    gap: 8,
-    cursor: 'pointer',
-    onclick: 'toggle'
-  }, [
-    M('Text', 'Select option'),
-    M('Icon', 'chevron-down')
-  ]),
+export const dropdown = M(
+  'Box',
+  {
+    state: 'closed',
+    'onkeydown escape': 'close',
+    'onkeydown arrow-down': 'highlight next',
+    'onkeydown arrow-up': 'highlight prev',
+    'onkeydown enter': ['select highlighted', 'close'],
+  },
+  [
+    // Trigger
+    M(
+      'Box',
+      {
+        hor: true,
+        gap: 8,
+        cursor: 'pointer',
+        onclick: 'toggle',
+      },
+      [M('Text', 'Select option'), M('Icon', 'chevron-down')]
+    ),
 
-  // Menu
-  M('Box', {
-    hidden: true,
-    'visible-when': 'open'
-  }, [
-    M('Box', {
-      pad: 8,
-      cursor: 'pointer',
-      onclick: ['select', 'close'],
-      states: { highlighted: { bg: '#333' } }
-    }, [M('Text', 'Option 1')]),
+    // Menu
+    M(
+      'Box',
+      {
+        hidden: true,
+        'visible-when': 'open',
+      },
+      [
+        M(
+          'Box',
+          {
+            pad: 8,
+            cursor: 'pointer',
+            onclick: ['select', 'close'],
+            states: { highlighted: { bg: '#333' } },
+          },
+          [M('Text', 'Option 1')]
+        ),
 
-    M('Box', {
-      pad: 8,
-      cursor: 'pointer',
-      onclick: ['select', 'close'],
-      states: { highlighted: { bg: '#333' } }
-    }, [M('Text', 'Option 2')])
-  ])
-])
+        M(
+          'Box',
+          {
+            pad: 8,
+            cursor: 'pointer',
+            onclick: ['select', 'close'],
+            states: { highlighted: { bg: '#333' } },
+          },
+          [M('Text', 'Option 2')]
+        ),
+      ]
+    ),
+  ]
+)
 
 // =============================================================================
 // COMPONENT DEFINITION & VERWENDUNG
@@ -143,23 +160,18 @@ export const dropdown = M('Box', {
  */
 
 // Definition
-M.define('Card', { bg: '#1a1a23', pad: 16, rad: 8 })
-  .slots('Title', 'Content')
-  .build()
+M.define('Card', { bg: '#1a1a23', pad: 16, rad: 8 }).slots('Title', 'Content').build()
 
 // Verwendung - Slots als Props mit Großbuchstaben
 export const cardWithSlots = M('Card', {
   Title: 'Welcome',
-  Content: 'Description here'
+  Content: 'Description here',
 })
 
 // Oder mit komplexem Slot-Inhalt:
 export const cardWithComplexSlots = M('Card', {
   Title: M('Text', 'Welcome', { weight: 'bold', 'font-size': 18 }),
-  Content: M('Box', { gap: 8 }, [
-    M('Text', 'Line 1'),
-    M('Text', 'Line 2', { col: '#888' })
-  ])
+  Content: M('Box', { gap: 8 }, [M('Text', 'Line 1'), M('Text', 'Line 2', { col: '#888' })]),
 })
 
 // =============================================================================
@@ -190,31 +202,33 @@ export const cardWithComplexSlots = M('Card', {
  */
 export const navigation = M('Box', { hor: true, w: 'full', h: 'full' }, [
   M('Nav', { ver: true, gap: 4, bg: '#1a1a23', pad: 8, w: 200 }, [
-    M('Box', {
-      pad: 8,
-      cursor: 'pointer',
-      route: 'Home',
-      onclick: 'navigate Home',
-      states: { selected: { bg: '#333' } }
-    }, [
-      M('Icon', 'home'),
-      M('Text', 'Home')
-    ]),
-    M('Box', {
-      pad: 8,
-      cursor: 'pointer',
-      route: 'Settings',
-      onclick: 'navigate Settings',
-      states: { selected: { bg: '#333' } }
-    }, [
-      M('Icon', 'settings'),
-      M('Text', 'Settings')
-    ])
+    M(
+      'Box',
+      {
+        pad: 8,
+        cursor: 'pointer',
+        route: 'Home',
+        onclick: 'navigate Home',
+        states: { selected: { bg: '#333' } },
+      },
+      [M('Icon', 'home'), M('Text', 'Home')]
+    ),
+    M(
+      'Box',
+      {
+        pad: 8,
+        cursor: 'pointer',
+        route: 'Settings',
+        onclick: 'navigate Settings',
+        states: { selected: { bg: '#333' } },
+      },
+      [M('Icon', 'settings'), M('Text', 'Settings')]
+    ),
   ]),
   M('Box', { w: 'full', pad: 16 }, [
     M('Box', { named: 'Home' }, [M('Text', 'Home content')]),
-    M('Box', { named: 'Settings', hidden: true }, [M('Text', 'Settings content')])
-  ])
+    M('Box', { named: 'Settings', hidden: true }, [M('Text', 'Settings content')]),
+  ]),
 ])
 
 // =============================================================================
@@ -241,20 +255,20 @@ export const form = M('Box', { ver: true, gap: 16 }, [
     placeholder: 'Email',
     states: {
       invalid: { bor: [1, '#EF4444'] },
-      valid: { bor: [1, '#22C55E'] }
-    }
+      valid: { bor: [1, '#22C55E'] },
+    },
   }),
   M('Input', {
     named: 'Password',
     type: 'password',
-    placeholder: 'Password'
+    placeholder: 'Password',
   }),
   M('Button', 'Submit', {
     bg: '#5BA8F5',
     col: 'white',
     pad: 12,
-    onclick: 'call submitForm'
-  })
+    onclick: 'call submitForm',
+  }),
 ])
 
 // =============================================================================
@@ -277,7 +291,7 @@ export const iconGrid = M('Box', { grid: 4, gap: 8 }, [
   M('Icon', 'home', { is: 24 }),
   M('Icon', 'settings', { is: 24 }),
   M('Icon', 'user', { is: 24 }),
-  M('Icon', 'search', { is: 24 })
+  M('Icon', 'search', { is: 24 }),
 ])
 
 // =============================================================================
@@ -290,17 +304,10 @@ export const iconGrid = M('Box', { grid: 4, gap: 8 }, [
 export function demonstrateReverseTranslation() {
   const element = M('Box', { bg: '#1a1a23', pad: 16, rad: 8 }, [
     M('Text', 'Hello', { weight: 'bold' }),
-    M('Text', 'World', { col: '#888' })
+    M('Text', 'World', { col: '#888' }),
   ])
-
   const mirrorCode = M.toMirror(element)
-
-  console.log(mirrorCode)
-  // Output:
-  // Box bg #1a1a23, pad 16, rad 8
-  //   Text "Hello", weight bold
-  //   Text "World", col #888
-
+  console.log(mirrorCode) // Box bg #1a1a23, pad 16, rad 8 | Text "Hello", weight bold | Text "World", col #888
   return mirrorCode
 }
 

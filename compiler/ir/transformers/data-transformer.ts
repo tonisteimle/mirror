@@ -125,19 +125,19 @@ export function transformAnimationKeyframe(kf: AnimationKeyframe): IRAnimationKe
 export function transformAnimationProperty(prop: AnimationKeyframeProperty): IRAnimationProperty {
   // Map Mirror property names to CSS properties
   const propertyMap: Record<string, string> = {
-    'opacity': 'opacity',
+    opacity: 'opacity',
     'y-offset': 'transform',
     'x-offset': 'transform',
-    'scale': 'transform',
-    'rotate': 'transform',
-    'background': 'background',
-    'bg': 'background',
-    'color': 'color',
-    'col': 'color',
-    'width': 'width',
-    'height': 'height',
+    scale: 'transform',
+    rotate: 'transform',
+    background: 'background',
+    bg: 'background',
+    color: 'color',
+    col: 'color',
+    width: 'width',
+    height: 'height',
     'border-radius': 'border-radius',
-    'rad': 'border-radius',
+    rad: 'border-radius',
   }
 
   const cssProperty = propertyMap[prop.name] || prop.name
@@ -152,7 +152,10 @@ export function transformAnimationProperty(prop: AnimationKeyframeProperty): IRA
     cssValue = `scale(${prop.value})`
   } else if (prop.name === 'rotate') {
     cssValue = `rotate(${prop.value}deg)`
-  } else if (['width', 'height', 'border-radius', 'rad'].includes(prop.name) && typeof prop.value === 'number') {
+  } else if (
+    ['width', 'height', 'border-radius', 'rad'].includes(prop.name) &&
+    typeof prop.value === 'number'
+  ) {
     cssValue = `${prop.value}px`
   }
 
@@ -168,46 +171,20 @@ export function transformAnimationProperty(prop: AnimationKeyframeProperty): IRA
 // State Conversion
 // =============================================================================
 
-/**
- * Convert AST StateDependency to IR IRStateDependency.
- * Handles recursive 'next' dependencies (e.g., "A.open && B.active").
- */
 export function convertStateDependency(dep: StateDependency): IRStateDependency {
-  const result: IRStateDependency = {
+  return {
     target: dep.target,
     state: dep.state,
+    ...(dep.condition && { condition: dep.condition }),
+    ...(dep.next && { next: convertStateDependency(dep.next) }),
   }
-
-  if (dep.condition) {
-    result.condition = dep.condition
-  }
-
-  if (dep.next) {
-    result.next = convertStateDependency(dep.next)
-  }
-
-  return result
 }
 
-/**
- * Convert AST StateAnimation to IR IRStateAnimation.
- * Used for enter/exit animations on state transitions.
- */
 export function convertStateAnimation(anim: StateAnimation): IRStateAnimation {
-  const result: IRStateAnimation = {}
-
-  if (anim.preset) {
-    result.preset = anim.preset
+  return {
+    ...(anim.preset && { preset: anim.preset }),
+    ...(anim.duration !== undefined && { duration: anim.duration }),
+    ...(anim.easing && { easing: anim.easing }),
+    ...(anim.delay !== undefined && { delay: anim.delay }),
   }
-  if (anim.duration !== undefined) {
-    result.duration = anim.duration
-  }
-  if (anim.easing) {
-    result.easing = anim.easing
-  }
-  if (anim.delay !== undefined) {
-    result.delay = anim.delay
-  }
-
-  return result
 }

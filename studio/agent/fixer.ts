@@ -17,9 +17,13 @@ import type {
   FixerChange,
   ProjectContext,
   FileInfo,
-  AgentEvent
+  AgentEvent,
 } from './types'
-import { ContextCollector, extractProjectContext, createContextCollector } from './context-collector'
+import {
+  ContextCollector,
+  extractProjectContext,
+  createContextCollector,
+} from './context-collector'
 import { CodeApplicator, createCodeApplicator } from './code-applicator'
 import { buildFixerSystemPrompt, buildFixerPrompt } from './prompts/fixer-system'
 import { logAgent } from '../../compiler/utils/logger'
@@ -28,14 +32,14 @@ import { logAgent } from '../../compiler/utils/logger'
 // CONSTANTS
 // ============================================
 
-const AGENT_TIMEOUT_MS = 60000  // 60 seconds
-const MAX_CHANGES_PER_RESPONSE = 50  // Prevent excessive changes from LLM
-const MAX_OUTPUT_BUFFER_SIZE = 100  // Prevent memory issues from fast events
-const MAX_CONTENT_SIZE = 500000  // 500KB max response size
+const AGENT_TIMEOUT_MS = 60000 // 60 seconds
+const MAX_CHANGES_PER_RESPONSE = 50 // Prevent excessive changes from LLM
+const MAX_OUTPUT_BUFFER_SIZE = 100 // Prevent memory issues from fast events
+const MAX_CONTENT_SIZE = 500000 // 500KB max response size
 
 // FIX #8: Valid actions as const for type safety
 const VALID_ACTIONS = ['create', 'insert', 'append', 'replace'] as const
-type ValidAction = typeof VALID_ACTIONS[number]
+type ValidAction = (typeof VALID_ACTIONS)[number]
 
 // FIX #18: Type-safe window augmentation
 declare global {
@@ -69,7 +73,12 @@ interface TauriBridge {
   isTauri: () => boolean
   agent: {
     checkClaudeCli: () => Promise<boolean>
-    runAgent: (prompt: string, agentType: string, projectPath: string, sessionId?: string | null) => Promise<{
+    runAgent: (
+      prompt: string,
+      agentType: string,
+      projectPath: string,
+      sessionId?: string | null
+    ) => Promise<{
       session_id: string
       success: boolean
       output: string
@@ -96,7 +105,7 @@ export class FixerService {
   private contextCollector: ContextCollector
   private codeApplicator: CodeApplicator
   private sessionId: string | null = null
-  private isProcessing: boolean = false  // FIX #3: Track processing state
+  private isProcessing: boolean = false // FIX #3: Track processing state
 
   constructor(config: FixerConfig) {
     this.config = config
@@ -107,7 +116,7 @@ export class FixerService {
       getCurrentFile: config.getCurrentFile,
       getEditorContent: config.getEditorContent,
       getCursor: config.getCursor,
-      getSelection: config.getSelection
+      getSelection: config.getSelection,
     })
 
     // Initialize code applicator
@@ -118,7 +127,7 @@ export class FixerService {
       getCurrentFile: config.getCurrentFile,
       updateEditor: config.updateEditor,
       refreshFileTree: config.refreshFileTree,
-      switchToFile: config.switchToFile
+      switchToFile: config.switchToFile,
     })
   }
 
@@ -194,7 +203,7 @@ export class FixerService {
       let pendingPromise: Promise<AgentOutput | null> | null = null
       // Note: resolveNext is declared outside try block for cleanup
 
-      unlistenFn = await bridge.agent.onAgentOutput((output) => {
+      unlistenFn = await bridge.agent.onAgentOutput(output => {
         if (resolveNext) {
           resolveNext(output)
           resolveNext = null
@@ -217,14 +226,10 @@ export class FixerService {
         if (pendingPromise) {
           return pendingPromise
         }
-        pendingPromise = new Promise((resolve) => {
+        pendingPromise = new Promise(resolve => {
           resolveNext = resolve
           const currentTimeoutId = setTimeout(() => {
-            // Always clear this timeout reference
-            if (timeoutId === currentTimeoutId) {
-              timeoutId = null
-            }
-            // Only resolve if we're still the active resolver
+            if (timeoutId === currentTimeoutId) timeoutId = null
             if (resolveNext === resolve) {
               resolveNext = null
               pendingPromise = null
@@ -241,20 +246,17 @@ export class FixerService {
 
       // FIX #3: Wrap promise to prevent unhandled rejection during streaming
       let resultError: Error | null = null
-      const resultPromise = bridge.agent.runAgent(
-        fullPrompt,
-        'fixer',
-        '',
-        this.sessionId
-      ).catch((e: Error) => {
-        resultError = e
-        return {
-          session_id: this.sessionId || '',
-          success: false,
-          output: '',
-          error: e.message
-        }
-      })
+      const resultPromise = bridge.agent
+        .runAgent(fullPrompt, 'fixer', '', this.sessionId)
+        .catch((e: Error) => {
+          resultError = e
+          return {
+            session_id: this.sessionId || '',
+            success: false,
+            output: '',
+            error: e.message,
+          }
+        })
 
       // Process streaming
       while (!isComplete) {
@@ -268,8 +270,8 @@ export class FixerService {
 
         if (!output) {
           yield { type: 'error', error: 'Timeout: Keine Antwort vom Agent' }
-          yield { type: 'done' }  // Yield done here to prevent double-yield
-          return  // Exit generator completely
+          yield { type: 'done' } // Yield done here to prevent double-yield
+          return // Exit generator completely
         }
 
         if (output.is_complete) {
@@ -280,7 +282,10 @@ export class FixerService {
 
           if (parseResult.success && parseResult.response) {
             const response = parseResult.response
-            yield { type: 'text', content: response.explanation || 'Änderungen werden angewendet...' }
+            yield {
+              type: 'text',
+              content: response.explanation || 'Änderungen werden angewendet...',
+            }
 
             // Apply changes
             const result = await this.codeApplicator.apply(response, context)
@@ -288,7 +293,7 @@ export class FixerService {
             if (result.success) {
               yield {
                 type: 'text',
-                content: this.formatResult(result.filesChanged, result.filesCreated)
+                content: this.formatResult(result.filesChanged, result.filesCreated),
               }
 
               // Add to history AFTER yield to ensure consistency
@@ -336,7 +341,6 @@ export class FixerService {
       }
 
       yield { type: 'done' }
-
     } finally {
       // FIX #3: Always cleanup
       this.isProcessing = false
@@ -347,7 +351,7 @@ export class FixerService {
 
       // Resolve any pending promise to prevent memory leaks
       if (resolveNext) {
-        (resolveNext as (value: AgentOutput | null) => void)(null)
+        ;(resolveNext as (value: AgentOutput | null) => void)(null)
         resolveNext = null
       }
 
@@ -382,12 +386,7 @@ export class FixerService {
       const userPrompt = buildFixerPrompt(context, projectContext)
       const fullPrompt = `${systemPrompt}\n\n---\n\n${userPrompt}`
 
-      const result = await bridge.agent.runAgent(
-        fullPrompt,
-        'fixer',
-        '',
-        this.sessionId
-      )
+      const result = await bridge.agent.runAgent(fullPrompt, 'fixer', '', this.sessionId)
 
       this.sessionId = result.session_id
 
@@ -416,7 +415,11 @@ export class FixerService {
    * Parse JSON response from Claude
    * FIX #8: Better error messages
    */
-  private parseResponse(text: string): { success: boolean; response?: FixerResponse; error?: string } {
+  private parseResponse(text: string): {
+    success: boolean
+    response?: FixerResponse
+    error?: string
+  } {
     if (!text || text.trim().length === 0) {
       return { success: false, error: 'Leere Antwort erhalten' }
     }
@@ -447,18 +450,18 @@ export class FixerService {
             }
             return {
               success: false,
-              error: 'JSON gefunden, aber "changes" Array fehlt'
+              error: 'JSON gefunden, aber "changes" Array fehlt',
             }
           } catch (e) {
             return {
               success: false,
-              error: `JSON-Parsing fehlgeschlagen: ${e instanceof Error ? e.message : 'Ungültiges Format'}`
+              error: `JSON-Parsing fehlgeschlagen: ${e instanceof Error ? e.message : 'Ungültiges Format'}`,
             }
           }
         }
         return {
           success: false,
-          error: 'Kein JSON in der Antwort gefunden. Antwort-Länge: ' + text.length
+          error: 'Kein JSON in der Antwort gefunden. Antwort-Länge: ' + text.length,
         }
       }
 
@@ -487,129 +490,86 @@ export class FixerService {
         }
         return {
           success: false,
-          error: 'JSON-Struktur ungültig: "changes" muss ein Array sein'
+          error: 'JSON-Struktur ungültig: "changes" muss ein Array sein',
         }
       } catch (e) {
         return {
           success: false,
-          error: `JSON-Parsing fehlgeschlagen: ${e instanceof Error ? e.message : 'Ungültiges Format'}`
+          error: `JSON-Parsing fehlgeschlagen: ${e instanceof Error ? e.message : 'Ungültiges Format'}`,
         }
       }
-
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : String(e)
       logAgent.error('Fixer parse error:', {
         error: errorMsg,
         textLength: text.length,
-        textPreview: text.substring(0, 200)
+        textPreview: text.substring(0, 200),
       })
       return {
         success: false,
-        error: `Parsing-Fehler: ${errorMsg}`
+        error: `Parsing-Fehler: ${errorMsg}`,
       }
     }
   }
 
-  /**
-   * Validate FixerResponse structure
-   * FIX #8: Stricter type validation (no mutation)
-   */
+  private isValidChange(change: unknown): boolean {
+    if (typeof change !== 'object' || change === null) return false
+    const c = change as Record<string, unknown>
+    return (
+      typeof c.file === 'string' &&
+      typeof c.code === 'string' &&
+      typeof c.action === 'string' &&
+      VALID_ACTIONS.includes(c.action as ValidAction)
+    )
+  }
+
   private isValidFixerResponse(obj: unknown): obj is FixerResponse {
-    if (typeof obj !== 'object' || obj === null) {
-      return false
-    }
+    if (typeof obj !== 'object' || obj === null) return false
     const response = obj as Record<string, unknown>
-    if (!Array.isArray(response.changes)) {
-      return false
-    }
-    // Just validate, don't mutate (cloning happens in cloneResponse)
-    const changesToValidate = response.changes.slice(0, MAX_CHANGES_PER_RESPONSE)
-    for (const change of changesToValidate) {
-      if (typeof change !== 'object' || change === null) {
-        return false
-      }
-      const c = change as Record<string, unknown>
-      if (typeof c.file !== 'string' || typeof c.code !== 'string') {
-        return false
-      }
-      // FIX #8: Use typed const array for action validation
-      if (typeof c.action !== 'string' || !VALID_ACTIONS.includes(c.action as ValidAction)) {
-        return false
-      }
-    }
-    return true
+    if (!Array.isArray(response.changes)) return false
+    return response.changes.slice(0, MAX_CHANGES_PER_RESPONSE).every(c => this.isValidChange(c))
   }
 
-  /**
-   * Find the start of a JSON object containing the given index
-   * FIX: Scans forward from beginning to properly track string state
-   */
+  private scanJson(
+    text: string,
+    start: number,
+    end: number,
+    onChar: (c: string, i: number, inStr: boolean) => void
+  ) {
+    let inString = false,
+      escapeNext = false
+    for (let i = start; i < end && i < text.length; i++) {
+      const c = text[i]
+      if (escapeNext) {
+        escapeNext = false
+        continue
+      }
+      if (c === '\\') {
+        escapeNext = true
+        continue
+      }
+      if (c === '"') inString = !inString
+      onChar(c, i, inString)
+    }
+  }
+
   private findJsonStart(text: string, targetIndex: number): number {
-    let inString = false
-    let escapeNext = false
-    let lastOpenBrace = -1
-
-    // Scan forward to properly track string state
-    for (let i = 0; i <= targetIndex && i < text.length; i++) {
-      const char = text[i]
-
-      if (escapeNext) {
-        escapeNext = false
-        continue
-      }
-
-      if (char === '\\') {
-        escapeNext = true
-        continue
-      }
-
-      if (char === '"') {
-        inString = !inString
-      } else if (!inString && char === '{') {
-        lastOpenBrace = i
-      }
-    }
-
-    return lastOpenBrace
+    let lastBrace = -1
+    this.scanJson(text, 0, targetIndex + 1, (c, i, inStr) => {
+      if (!inStr && c === '{') lastBrace = i
+    })
+    return lastBrace
   }
 
-  /**
-   * Find the end of a JSON object (forwards from given index)
-   * String-aware: ignores brackets inside JSON strings
-   */
   private findJsonEnd(text: string, startIndex: number): number {
-    let braceCount = 0
-    let inString = false
-    let escapeNext = false
-
-    for (let i = startIndex; i < text.length; i++) {
-      const char = text[i]
-
-      if (escapeNext) {
-        escapeNext = false
-        continue
-      }
-
-      if (char === '\\') {
-        escapeNext = true
-        continue
-      }
-
-      if (char === '"') {
-        inString = !inString
-      } else if (!inString) {
-        if (char === '{') {
-          braceCount++
-        } else if (char === '}') {
-          braceCount--
-          if (braceCount === 0) {
-            return i + 1
-          }
-        }
-      }
-    }
-
-    return -1
+    let count = 0,
+      result = -1
+    this.scanJson(text, startIndex, text.length, (c, i, inStr) => {
+      if (inStr || result !== -1) return
+      if (c === '{') count++
+      else if (c === '}' && --count === 0) result = i + 1
+    })
+    return result
   }
 
   /**
@@ -619,11 +579,13 @@ export class FixerService {
   private cloneResponse(response: FixerResponse): FixerResponse {
     const limitedChanges = response.changes.slice(0, MAX_CHANGES_PER_RESPONSE)
     if (response.changes.length > MAX_CHANGES_PER_RESPONSE) {
-      logAgent.warn(`Fixer response has ${response.changes.length} changes, limiting to ${MAX_CHANGES_PER_RESPONSE}`)
+      logAgent.warn(
+        `Fixer response has ${response.changes.length} changes, limiting to ${MAX_CHANGES_PER_RESPONSE}`
+      )
     }
     return {
       ...response,
-      changes: limitedChanges.map(change => ({ ...change }))
+      changes: limitedChanges.map(change => ({ ...change })),
     }
   }
 

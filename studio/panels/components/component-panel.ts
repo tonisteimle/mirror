@@ -17,7 +17,7 @@ import type {
   ComponentChild,
 } from './types'
 import { getComponentIcon } from '../../icons'
-import { LAYOUT_SECTION, COMPONENTS_SECTION } from './layout-presets'
+import { LAYOUT_SECTION, COMPONENTS_SECTION, PRESETS_SECTION } from './layout-presets'
 import { parseComponentSections } from './section-parser'
 import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
 import { createLogger } from '../../../compiler/utils/logger'
@@ -96,7 +96,7 @@ export class ComponentPanel {
   }
 
   /**
-   * Build sections: Layout, Components, and My Components
+   * Build sections: Layout, Components, Presets, and My Components
    */
   private buildSections(): void {
     this.sections = []
@@ -119,7 +119,16 @@ export class ComponentPanel {
       })
     }
 
-    // 3. My Components section (user-defined from .com files)
+    // 3. Presets section (smart composites)
+    if (PRESETS_SECTION.length > 0) {
+      this.sections.push({
+        name: 'Presets',
+        items: [...PRESETS_SECTION],
+        isExpanded: true,
+      })
+    }
+
+    // 4. My Components section (user-defined from .com files)
     if (this.config.getComFiles) {
       const comFiles = this.config.getComFiles()
       const userItems: ComponentItem[] = []
@@ -388,6 +397,8 @@ export class ComponentPanel {
       textContent: item.textContent,
       fromComponentPanel: true,
       children: item.children,
+      mirTemplate: item.mirTemplate,
+      dataBlock: item.dataBlock,
     }
 
     event.dataTransfer.setData('application/mirror-component', JSON.stringify(dragData))

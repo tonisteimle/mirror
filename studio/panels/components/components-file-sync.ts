@@ -34,7 +34,7 @@ interface ParsedComponent {
   startLine: number
   endLine: number
   code: string
-  isImport: boolean  // from @zag/xxx
+  isImport: boolean // from @zag/xxx
   importSource?: string
 }
 
@@ -95,7 +95,9 @@ export class ComponentsFileSync {
       if (trimmed.startsWith('//')) continue
 
       // Component definition: Name as Base: or Name:
-      const componentDefMatch = trimmed.match(/^([A-Z][a-zA-Z0-9-]*)(?:\s+as\s+([A-Z][a-zA-Z0-9-]*))?:$/)
+      const componentDefMatch = trimmed.match(
+        /^([A-Z][a-zA-Z0-9-]*)(?:\s+as\s+([A-Z][a-zA-Z0-9-]*))?:$/
+      )
       if (componentDefMatch) {
         if (currentComponent) {
           currentComponent.endLine = i - 1
@@ -182,11 +184,7 @@ export class ComponentsFileSync {
    * Create a ComponentItem from a parsed component
    */
   private createComponentItem(comp: ParsedComponent): ComponentItem {
-    // Try to find matching built-in component for icon
-    const builtIn = BASIC_COMPONENTS.find(
-      c => c.template.toLowerCase() === comp.name.toLowerCase()
-    )
-
+    const builtIn = BASIC_COMPONENTS.find(c => c.template.toLowerCase() === comp.name.toLowerCase())
     return {
       id: `user-${comp.name.toLowerCase()}`,
       name: comp.name,
@@ -215,9 +213,7 @@ export class ComponentsFileSync {
     // Find the matching Zag component if no code provided
     let componentCode = code
     if (!componentCode) {
-      const zagComponent = BASIC_COMPONENTS.find(
-        c => c.template === name || c.name === name
-      )
+      const zagComponent = BASIC_COMPONENTS.find(c => c.template === name || c.name === name)
       if (zagComponent) {
         // Generate import statement for Zag components
         const zagName = zagComponent.template.toLowerCase()
@@ -298,9 +294,7 @@ export class ComponentsFileSync {
    * Get all component names
    */
   getComponentNames(): string[] {
-    return this.cachedParsedSections.flatMap(section =>
-      section.components.map(comp => comp.name)
-    )
+    return this.cachedParsedSections.flatMap(section => section.components.map(comp => comp.name))
   }
 
   /**
@@ -314,8 +308,6 @@ export class ComponentsFileSync {
 /**
  * Create a ComponentsFileSync instance
  */
-export function createComponentsFileSync(
-  config: ComponentsFileSyncConfig
-): ComponentsFileSync {
+export function createComponentsFileSync(config: ComponentsFileSyncConfig): ComponentsFileSync {
   return new ComponentsFileSync(config)
 }

@@ -8,6 +8,9 @@
 
 import type { ComponentItem } from './types'
 
+// Re-export presets section
+export { PRESETS_SECTION } from './preset-components'
+
 /**
  * LAYOUT - Container layouts
  */
@@ -63,20 +66,34 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     name: 'Area Chart',
     category: 'Components',
     template: 'Area',
-    properties: '$data, w 300, h 200',
+    properties: '$chartData, w 300, h 200',
     icon: 'chart',
     description: 'Filled area chart',
     defaultSize: { width: 300, height: 200 },
+    dataBlock: {
+      name: 'chartData',
+      content: `Jan: 120
+Feb: 180
+Mar: 240
+Apr: 200`,
+    },
   },
   {
     id: 'comp-bar-chart',
     name: 'Bar Chart',
     category: 'Components',
     template: 'Bar',
-    properties: '$data, w 300, h 200',
+    properties: '$chartData, w 300, h 200',
     icon: 'chart',
     description: 'Bar chart for comparisons',
     defaultSize: { width: 300, height: 200 },
+    dataBlock: {
+      name: 'chartData',
+      content: `Jan: 120
+Feb: 180
+Mar: 240
+Apr: 200`,
+    },
   },
   {
     id: 'comp-button',
@@ -84,6 +101,7 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     category: 'Components',
     template: 'Button',
     textContent: 'Button',
+    properties: 'pad 12 24, bg #5BA8F5, col white, rad 6',
     icon: 'button',
     description: 'Clickable button',
     defaultSize: { width: 100, height: 40 },
@@ -125,11 +143,23 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     description: 'Modal dialog',
     defaultSize: { width: 400, height: 300 },
     children: [
-      { template: 'Trigger', isSlot: true, children: [
-        { template: 'Button', properties: 'pad 12 24, bg #5BA8F5, col #fff, rad 6', textContent: 'Open' },
-      ]},
+      {
+        template: 'Trigger',
+        isSlot: true,
+        children: [
+          {
+            template: 'Button',
+            properties: 'pad 12 24, bg #5BA8F5, col #fff, rad 6',
+            textContent: 'Open',
+          },
+        ],
+      },
       { template: 'Backdrop', isSlot: true, properties: 'bg #00000080' },
-      { template: 'Content', isSlot: true, properties: 'w 400, bg #1e1e2e, rad 12, pad 24, shadow lg' },
+      {
+        template: 'Content',
+        isSlot: true,
+        properties: 'w 400, bg #1e1e2e, rad 12, pad 24, shadow lg',
+      },
     ],
   },
   {
@@ -137,16 +167,23 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     name: 'Donut Chart',
     category: 'Components',
     template: 'Donut',
-    properties: '$data, w 200, h 200',
+    properties: '$chartData, w 200, h 200',
     icon: 'chart',
     description: 'Donut chart with center hole',
     defaultSize: { width: 200, height: 200 },
+    dataBlock: {
+      name: 'chartData',
+      content: `Sales: 45
+Marketing: 25
+Engineering: 30`,
+    },
   },
   {
     id: 'comp-frame',
     name: 'Frame',
     category: 'Components',
     template: 'Frame',
+    properties: 'w 100, h 100, bg #27272a, rad 8',
     icon: 'box',
     description: 'Container element',
     defaultSize: { width: 100, height: 100 },
@@ -156,7 +193,7 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     name: 'Icon',
     category: 'Components',
     template: 'Icon',
-    properties: 'star',
+    properties: '"star", is 20, ic #a1a1aa',
     icon: 'icon',
     description: 'Icon element',
     defaultSize: { width: 24, height: 24 },
@@ -176,7 +213,8 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     name: 'Input',
     category: 'Components',
     template: 'Input',
-    properties: 'placeholder "Enter text..."',
+    properties:
+      'w 200, pad 12, bg #1e1e2e, rad 6, bor 1, boc #444, col #e4e4e7, placeholder "Enter text..."',
     icon: 'input',
     description: 'Text input field',
     defaultSize: { width: 200, height: 40 },
@@ -186,20 +224,33 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     name: 'Line Chart',
     category: 'Components',
     template: 'Line',
-    properties: '$data, w 300, h 200',
+    properties: '$chartData, w 300, h 200',
     icon: 'chart',
     description: 'Line chart for trends',
     defaultSize: { width: 300, height: 200 },
+    dataBlock: {
+      name: 'chartData',
+      content: `Jan: 120
+Feb: 180
+Mar: 240
+Apr: 200`,
+    },
   },
   {
     id: 'comp-pie-chart',
     name: 'Pie Chart',
     category: 'Components',
     template: 'Pie',
-    properties: '$data, w 200, h 200',
+    properties: '$chartData, w 200, h 200',
     icon: 'chart',
     description: 'Pie chart for proportions',
     defaultSize: { width: 200, height: 200 },
+    dataBlock: {
+      name: 'chartData',
+      content: `Sales: 45
+Marketing: 25
+Engineering: 30`,
+    },
   },
   {
     id: 'comp-radio-group',
@@ -288,9 +339,11 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     description: 'Data table',
     defaultSize: { width: 400, height: 200 },
     children: [
-      { template: 'Header', isSlot: true, children: [
-        { template: 'Row', textContent: 'Name", "Status", "Actions' },
-      ]},
+      {
+        template: 'Header',
+        isSlot: true,
+        children: [{ template: 'Row', textContent: 'Name", "Status", "Actions' }],
+      },
       { template: 'Row', textContent: 'Item 1", "Active", "Edit' },
       { template: 'Row', textContent: 'Item 2", "Pending", "Edit' },
     ],
@@ -323,6 +376,7 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     category: 'Components',
     template: 'Text',
     textContent: 'Text',
+    properties: 'fs 14, col #e4e4e7',
     icon: 'text',
     description: 'Text element',
     defaultSize: { width: 80, height: 24 },
@@ -332,7 +386,8 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     name: 'Textarea',
     category: 'Components',
     template: 'Textarea',
-    properties: 'placeholder "Enter text..."',
+    properties:
+      'w 200, h 80, pad 12, bg #1e1e2e, rad 6, bor 1, boc #444, col #e4e4e7, placeholder "Enter text..."',
     icon: 'input',
     description: 'Multi-line text input',
     defaultSize: { width: 200, height: 80 },
@@ -346,12 +401,17 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     description: 'Hover tooltip',
     defaultSize: { width: 150, height: 40 },
     children: [
-      { template: 'Trigger', isSlot: true, children: [
-        { template: 'Button', textContent: 'Hover me' },
-      ]},
-      { template: 'Content', isSlot: true, properties: 'pad 8 12, bg #333, col #fff, rad 4, fs 12', children: [
-        { template: 'Text', textContent: 'Tooltip text' },
-      ]},
+      {
+        template: 'Trigger',
+        isSlot: true,
+        children: [{ template: 'Button', textContent: 'Hover me' }],
+      },
+      {
+        template: 'Content',
+        isSlot: true,
+        properties: 'pad 8 12, bg #333, col #fff, rad 4, fs 12',
+        children: [{ template: 'Text', textContent: 'Tooltip text' }],
+      },
     ],
   },
 ]

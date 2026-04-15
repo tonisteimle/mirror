@@ -585,8 +585,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   studio.drawManager = drawManagerResult.drawManager
   eventUnsubscribes.push(drawManagerResult.dispose)
 
-  // Initialize test API (without drag-drop for now)
-  initStudioTestAPI(studio, null)
+  // Initialize test API (includes drag-drop test API at window.__testDragDrop)
+  initStudioTestAPI(studio, config.editor)
 
   // ============================================
   // Component Event Handlers

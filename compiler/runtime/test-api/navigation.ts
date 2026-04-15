@@ -152,7 +152,9 @@ export function createNavigationAPI(runtime: RuntimeFunctions): NavigationTestAP
       let container = document.querySelector('[data-page-container]') as MirrorElement | null
       if (container) return container
 
-      container = document.querySelector('[data-instance-name="PageContent"]') as MirrorElement | null
+      container = document.querySelector(
+        '[data-instance-name="PageContent"]'
+      ) as MirrorElement | null
       if (container) return container
 
       container = document.querySelector('[data-instance-name="Content"]') as MirrorElement | null
@@ -224,7 +226,9 @@ export function createNavigationAPI(runtime: RuntimeFunctions): NavigationTestAP
         return null
       }
 
-      const views = searchContainer.querySelectorAll('[data-component]') as NodeListOf<MirrorElement>
+      const views = searchContainer.querySelectorAll(
+        '[data-component]'
+      ) as NodeListOf<MirrorElement>
       for (const view of views) {
         if (this.isViewVisible(view)) {
           return view
@@ -262,23 +266,12 @@ export function createNavigationAPI(runtime: RuntimeFunctions): NavigationTestAP
      */
     async waitForNavigation(pageName: string, timeout: number = 1000): Promise<boolean> {
       const startTime = Date.now()
-      const interval = 16 // ~60fps
-
       return new Promise(resolve => {
         const check = () => {
-          if (this.getCurrentPage() === pageName) {
-            resolve(true)
-            return
-          }
-
-          if (Date.now() - startTime >= timeout) {
-            resolve(false)
-            return
-          }
-
-          setTimeout(check, interval)
+          if (this.getCurrentPage() === pageName) return resolve(true)
+          if (Date.now() - startTime >= timeout) return resolve(false)
+          setTimeout(check, 16)
         }
-
         check()
       })
     },
@@ -288,23 +281,12 @@ export function createNavigationAPI(runtime: RuntimeFunctions): NavigationTestAP
      */
     async waitForViewChange(view: MirrorElement, timeout: number = 1000): Promise<boolean> {
       if (!view) return false
-
       const startTime = Date.now()
-      const interval = 16
-
       return new Promise(resolve => {
         const check = () => {
-          if (this.isViewVisible(view)) {
-            resolve(true)
-            return
-          }
-
-          if (Date.now() - startTime >= timeout) {
-            resolve(false)
-            return
-          }
-
-          setTimeout(check, interval)
+          if (this.isViewVisible(view)) return resolve(true)
+          if (Date.now() - startTime >= timeout) return resolve(false)
+          setTimeout(check, 16)
         }
 
         check()

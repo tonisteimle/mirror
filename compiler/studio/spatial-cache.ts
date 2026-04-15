@@ -44,11 +44,9 @@ export class SpatialCache {
    */
   rebuild(elements: HTMLElement[]): void {
     this.items = []
-
     for (const el of elements) {
       const nodeId = el.dataset.mirrorId
       if (!nodeId) continue
-
       const rect = el.getBoundingClientRect()
       this.items.push({
         minX: rect.left,
@@ -96,11 +94,12 @@ export class SpatialCache {
     const searchMaxX = x + radius
     const searchMaxY = y + radius
 
-    return this.items.filter(item =>
-      item.maxX >= searchMinX &&
-      item.minX <= searchMaxX &&
-      item.maxY >= searchMinY &&
-      item.minY <= searchMaxY
+    return this.items.filter(
+      item =>
+        item.maxX >= searchMinX &&
+        item.minX <= searchMaxX &&
+        item.maxY >= searchMinY &&
+        item.minY <= searchMaxY
     )
   }
 
@@ -112,11 +111,8 @@ export class SpatialCache {
    * @returns Items whose bounding boxes contain the point
    */
   findAtPoint(x: number, y: number): SpatialItem[] {
-    return this.items.filter(item =>
-      x >= item.minX &&
-      x <= item.maxX &&
-      y >= item.minY &&
-      y <= item.maxY
+    return this.items.filter(
+      item => x >= item.minX && x <= item.maxX && y >= item.minY && y <= item.maxY
     )
   }
 
@@ -130,11 +126,8 @@ export class SpatialCache {
    * @returns Items whose bounding boxes intersect the rectangle
    */
   findInRect(minX: number, minY: number, maxX: number, maxY: number): SpatialItem[] {
-    return this.items.filter(item =>
-      item.maxX >= minX &&
-      item.minX <= maxX &&
-      item.maxY >= minY &&
-      item.minY <= maxY
+    return this.items.filter(
+      item => item.maxX >= minX && item.minX <= maxX && item.maxY >= minY && item.minY <= maxY
     )
   }
 

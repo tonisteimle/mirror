@@ -363,21 +363,12 @@ function generateMirrorProperties(props: Map<string, string | number | boolean>)
   return parts.join(', ')
 }
 
-function generateMirrorCode(node: MirrorNode, indent: number = 0): string {
-  const indentStr = '  '.repeat(indent)
+function generateMirrorCode(node: MirrorNode, indent = 0): string {
   const props = generateMirrorProperties(new Map(node.properties))
-
-  let line = `${indentStr}${node.name}`
+  let line = '  '.repeat(indent) + node.name
   if (props) line += ` ${props}`
   if (node.textContent) line += ` "${node.textContent}"`
-
-  const lines = [line]
-
-  for (const child of node.children) {
-    lines.push(generateMirrorCode(child, indent + 1))
-  }
-
-  return lines.join('\n')
+  return [line, ...node.children.map(c => generateMirrorCode(c, indent + 1))].join('\n')
 }
 
 function generateTokens(tokens: Map<string, string>): string {
@@ -422,16 +413,12 @@ export function convertReactToMirror(reactCode: string): ConversionResult {
             const arg = returnPath.node.argument
             if (t.isJSXElement(arg)) {
               const node = parseJSXElement(arg, tokens)
-              node.name = name // Use function name
+              node.name = name
               instances.push(node)
             } else if (t.isJSXFragment(arg)) {
-              // Handle fragments - take first child
-              for (const child of arg.children) {
-                if (t.isJSXElement(child)) {
-                  const node = parseJSXElement(child, tokens)
-                  instances.push(node)
-                }
-              }
+              arg.children
+                .filter(t.isJSXElement)
+                .forEach(c => instances.push(parseJSXElement(c, tokens)))
             }
           },
         })

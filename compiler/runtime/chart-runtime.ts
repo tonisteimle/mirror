@@ -70,11 +70,7 @@ let chartJsPromise: Promise<void> | null = null
 
 function loadChartJs(): Promise<void> {
   if (chartJsPromise) return chartJsPromise
-
-  if (typeof Chart !== 'undefined') {
-    return Promise.resolve()
-  }
-
+  if (typeof Chart !== 'undefined') return Promise.resolve()
   chartJsPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
@@ -82,7 +78,6 @@ function loadChartJs(): Promise<void> {
     script.onerror = () => reject(new Error('Failed to load Chart.js'))
     document.head.appendChild(script)
   })
-
   return chartJsPromise
 }
 

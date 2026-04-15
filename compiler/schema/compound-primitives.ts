@@ -56,9 +56,9 @@ export const COMPOUND_PRIMITIVES: Record<string, CompoundPrimitiveDef> = {
   Table: {
     slots: ['Column', 'Header', 'Row', 'Footer', 'Group'],
     props: [
-      'select',      // select() or select(multi) - enables row selection
-      'pageSize',    // Pagination: number of rows per page
-      'infinite',    // Infinite scroll mode
+      'select', // select() or select(multi) - enables row selection
+      'pageSize', // Pagination: number of rows per page
+      'infinite', // Infinite scroll mode
     ],
     description: 'Data-driven table with auto-generated columns from data schema',
     defaultStyles: {
@@ -196,18 +196,10 @@ export function getCompoundSlotDef(
 export function isCompoundSlot(primitiveName: string, slotName: string): boolean {
   const primitive = COMPOUND_PRIMITIVES[primitiveName]
   if (!primitive) return false
-
-  // Check direct slots
   if (primitive.slots.includes(slotName)) return true
-
-  // Check nested slots
-  if (primitive.nestedSlots) {
-    for (const nestedSlots of Object.values(primitive.nestedSlots)) {
-      if (nestedSlots.includes(slotName)) return true
-    }
-  }
-
-  return false
+  return primitive.nestedSlots
+    ? Object.values(primitive.nestedSlots).some(slots => slots.includes(slotName))
+    : false
 }
 
 /**

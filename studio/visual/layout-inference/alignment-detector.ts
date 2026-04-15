@@ -100,9 +100,7 @@ export class AlignmentDetector {
         if (used.has(sorted[j].nodeId)) continue
 
         // Check if aligned with any element in the group
-        const isAligned = group.some(member =>
-          this.areHorizontallyAligned(member, sorted[j])
-        )
+        const isAligned = group.some(member => this.areHorizontallyAligned(member, sorted[j]))
 
         if (isAligned) {
           group.push(sorted[j])
@@ -149,20 +147,9 @@ export class AlignmentDetector {
    */
   private inferGap(elements: ElementBounds[]): number {
     if (elements.length < 2) return 0
-
-    // Elements should already be sorted by X position
-    const gaps: number[] = []
-
-    for (let i = 0; i < elements.length - 1; i++) {
-      const gap = elements[i + 1].rect.left - elements[i].rect.right
-      gaps.push(gap)
-    }
-
-    // Calculate average gap
+    const gaps = elements.slice(0, -1).map((el, i) => elements[i + 1].rect.left - el.rect.right)
     const avgGap = gaps.reduce((sum, g) => sum + g, 0) / gaps.length
-
-    // Round to 4px grid
-    return Math.round(avgGap / 4) * 4
+    return Math.round(avgGap / 4) * 4 // Round to 4px grid
   }
 
   /**

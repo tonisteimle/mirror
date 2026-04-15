@@ -35,9 +35,9 @@ export interface Rect {
 }
 
 export interface Modifiers {
-  shift: boolean   // Constrain to square
-  alt: boolean     // Draw from center
-  meta: boolean    // Disable snapping (Cmd/Ctrl)
+  shift: boolean // Constrain to square
+  alt: boolean // Draw from center
+  meta: boolean // Disable snapping (Cmd/Ctrl)
 }
 
 export interface DrawState {
@@ -83,7 +83,9 @@ export class DrawManager {
   private mode: DrawMode = 'idle'
   private componentToDraw: ComponentItem | null = null
   private drawState: DrawState | null = null
-  private config: Required<Omit<DrawManagerConfig, 'sourceMap' | 'getCodeModifier' | 'getLayoutInfo'>> & {
+  private config: Required<
+    Omit<DrawManagerConfig, 'sourceMap' | 'getCodeModifier' | 'getLayoutInfo'>
+  > & {
     sourceMap: () => SourceMap | null
     getCodeModifier: () => CodeModifier
     getLayoutInfo: () => Map<string, LayoutRect> | null
@@ -307,12 +309,8 @@ export class DrawManager {
    */
   private handleMouseMove(e: MouseEvent): void {
     if (this.mode !== 'drawing' || !this.drawState || this.isDisposed) return
-
-    // RAF throttle
-    if (this.rafId !== null) return
-
+    if (this.rafId !== null) return // RAF throttle
     this.rafId = requestAnimationFrame(() => {
-      // Guard against disposal during RAF queue
       if (this.isDisposed || !this.drawState) {
         this.rafId = null
         return
@@ -381,7 +379,13 @@ export class DrawManager {
   /**
    * Update drawing
    */
-  private updateDrawing(clientX: number, clientY: number, shift: boolean, alt: boolean, meta: boolean): void {
+  private updateDrawing(
+    clientX: number,
+    clientY: number,
+    shift: boolean,
+    alt: boolean,
+    meta: boolean
+  ): void {
     if (!this.drawState) return
 
     const { containerRect, scale, startPoint, containerElement } = this.drawState
@@ -441,15 +445,11 @@ export class DrawManager {
     // Insert component
     try {
       const codeModifier = this.config.getCodeModifier()
-      const result = codeModifier.addChild(
-        containerNodeId,
-        component.template,
-        {
-          properties,
-          textContent: component.textContent,
-          position: 'last',
-        }
-      )
+      const result = codeModifier.addChild(containerNodeId, component.template, {
+        properties,
+        textContent: component.textContent,
+        position: 'last',
+      })
 
       if (result.success) {
         log.info(' Component created successfully')
@@ -543,8 +543,36 @@ export class DrawManager {
   /**
    * Get siblings of container for snapping
    */
-  private getSiblings(containerElement: HTMLElement): Map<string, DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }> {
-    const siblings = new Map<string, DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }>()
+  private getSiblings(
+    containerElement: HTMLElement
+  ): Map<
+    string,
+    | DOMRect
+    | {
+        x: number
+        y: number
+        width: number
+        height: number
+        top: number
+        left: number
+        right: number
+        bottom: number
+      }
+  > {
+    const siblings = new Map<
+      string,
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        }
+    >()
     const containerNodeId = containerElement.dataset.mirrorId
 
     // Try to use layoutInfo if available (Phase 5 optimization)
@@ -625,19 +653,12 @@ export class DrawManager {
    * Cleanup drawing state
    */
   private cleanup(): void {
-    // Cancel RAF
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId)
       this.rafId = null
     }
-
-    // Hide renderer
     this.renderer.hide()
-
-    // Hide guides
     this.guideRenderer.clear()
-
-    // Clear state
     this.drawState = null
   }
 }

@@ -80,7 +80,7 @@ export class TriggerController {
     this.cleanupFns.push(cleanupPickerClosed)
 
     // Listen for picker selection
-    const cleanupSelect = this.ports.picker.onSelect((value) => {
+    const cleanupSelect = this.ports.picker.onSelect(value => {
       this.handlePickerSelect(value)
     })
     this.cleanupFns.push(cleanupSelect)
@@ -161,7 +161,14 @@ export class TriggerController {
         return this.checkCharTrigger(config, trigger, insertedText, line, textBefore, cursorOffset)
 
       case 'component':
-        return this.checkComponentTrigger(config, trigger, insertedText, line, textBefore, cursorOffset)
+        return this.checkComponentTrigger(
+          config,
+          trigger,
+          insertedText,
+          line,
+          textBefore,
+          cursorOffset
+        )
 
       case 'regex':
         return this.checkRegexTrigger(config, trigger, line, cursorOffset)
@@ -194,11 +201,7 @@ export class TriggerController {
     }
 
     // Check detection port
-    const detection = this.ports.detection.checkCharTrigger(
-      trigger.char,
-      textBefore,
-      line
-    )
+    const detection = this.ports.detection.checkCharTrigger(trigger.char, textBefore, line)
 
     if (!detection.matches) {
       return { activated: false }
@@ -332,10 +335,7 @@ export class TriggerController {
   // Activation
   // ============================================
 
-  private activate(
-    triggerId: string,
-    context: TriggerContext
-  ): TriggerActivationResult {
+  private activate(triggerId: string, context: TriggerContext): TriggerActivationResult {
     // Get screen position for picker
     const screenPos = this.ports.editor.getCursorScreenPosition()
 
@@ -353,19 +353,9 @@ export class TriggerController {
 
   private deactivate(): void {
     const triggerId = this.ports.state.getActiveTriggerId()
-
-    // Hide picker
     this.ports.picker.hide()
-
-    // Update state
     this.ports.state.deactivate()
-
-    // Emit event
-    if (triggerId) {
-      this.ports.events.emitDeactivated(triggerId)
-    }
-
-    // Focus editor
+    if (triggerId) this.ports.events.emitDeactivated(triggerId)
     this.ports.editor.focus()
   }
 
@@ -491,18 +481,11 @@ export class TriggerController {
 
   private handleBackspace(): boolean {
     const context = this.ports.state.getActiveContext()
-    if (!context) {
-      return false
-    }
-
-    const cursor = this.ports.editor.getCursorPosition()
-
-    // If cursor would move before trigger start, cancel
-    if (cursor.offset <= context.startPos) {
+    if (!context) return false
+    if (this.ports.editor.getCursorPosition().offset <= context.startPos) {
       this.cancel()
       return true
     }
-
     return false
   }
 
@@ -559,11 +542,7 @@ export class TriggerController {
     return { success: true, value }
   }
 
-  private applySelection(
-    value: string,
-    config: TriggerConfig,
-    context: TriggerContext
-  ): void {
+  private applySelection(value: string, config: TriggerConfig, context: TriggerContext): void {
     // Emit value selected event
     this.ports.events.emitValueSelected(config.id, value)
 
@@ -675,8 +654,6 @@ export class TriggerController {
 // Factory Function
 // ============================================
 
-export function createTriggerController(
-  config: TriggerControllerConfig
-): TriggerController {
+export function createTriggerController(config: TriggerControllerConfig): TriggerController {
   return new TriggerController(config)
 }

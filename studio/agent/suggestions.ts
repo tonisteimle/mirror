@@ -84,19 +84,11 @@ export class SuggestionEngine {
    */
   getInlineSuggestions(context: SuggestionContext, prefix: string): Suggestion[] {
     const suggestions: Suggestion[] = []
-
-    // Property suggestions based on element type
-    if (context.selectedElement) {
-      suggestions.push(...this.getPropertySuggestions(
-        context.selectedElement.type,
-        prefix,
-        context
-      ))
-    }
-
-    // Value suggestions based on preferences
+    if (context.selectedElement)
+      suggestions.push(
+        ...this.getPropertySuggestions(context.selectedElement.type, prefix, context)
+      )
     suggestions.push(...this.getValueSuggestions(prefix))
-
     return suggestions.slice(0, 5)
   }
 
@@ -119,9 +111,9 @@ export class SuggestionEngine {
         description: `Found ${hardcodedColors.length} hardcoded colors. Extract them as tokens for consistency.`,
         action: {
           type: 'prompt',
-          prompt: 'Extract all hardcoded colors as design tokens'
+          prompt: 'Extract all hardcoded colors as design tokens',
         },
-        category: 'consistency'
+        category: 'consistency',
       })
     }
 
@@ -136,9 +128,9 @@ export class SuggestionEngine {
         description: `Using ${spacingValues.unique} different spacing values. Consider using a consistent scale (4, 8, 16, 24, 32).`,
         action: {
           type: 'prompt',
-          prompt: 'Standardize all spacing to use values from the scale: 4, 8, 16, 24, 32'
+          prompt: 'Standardize all spacing to use values from the scale: 4, 8, 16, 24, 32',
         },
-        category: 'consistency'
+        category: 'consistency',
       })
     }
 
@@ -153,9 +145,9 @@ export class SuggestionEngine {
         description: `Found ${a11yIssues.length} potential accessibility issue(s): ${a11yIssues[0]}`,
         action: {
           type: 'prompt',
-          prompt: 'Find and fix accessibility issues in this code'
+          prompt: 'Find and fix accessibility issues in this code',
         },
-        category: 'accessibility'
+        category: 'accessibility',
       })
     }
 
@@ -174,9 +166,9 @@ export class SuggestionEngine {
             description: `${unusedTokens.length} defined tokens are not used. Consider using them for consistency.`,
             action: {
               type: 'prompt',
-              prompt: 'Replace hardcoded values with available tokens where appropriate'
+              prompt: 'Replace hardcoded values with available tokens where appropriate',
             },
-            category: 'consistency'
+            category: 'consistency',
           })
         }
       }
@@ -193,9 +185,9 @@ export class SuggestionEngine {
         description: `Code has ${maxNesting} levels of nesting. Consider extracting components.`,
         action: {
           type: 'prompt',
-          prompt: 'Refactor deeply nested elements into separate components'
+          prompt: 'Refactor deeply nested elements into separate components',
         },
-        category: 'structure'
+        category: 'structure',
       })
     }
 
@@ -223,8 +215,8 @@ export class SuggestionEngine {
         description: 'Add background color and padding for a polished look.',
         action: {
           type: 'prompt',
-          prompt: `Style the selected Button with appropriate colors and padding`
-        }
+          prompt: `Style the selected Button with appropriate colors and padding`,
+        },
       })
     }
 
@@ -238,13 +230,18 @@ export class SuggestionEngine {
         description: 'Images should have explicit dimensions to prevent layout shift.',
         action: {
           type: 'prompt',
-          prompt: 'Set appropriate width and height for the selected Image'
-        }
+          prompt: 'Set appropriate width and height for the selected Image',
+        },
       })
     }
 
     // Container without layout
-    if ((type === 'Box' || type === 'Frame') && !properties['hor'] && !properties['ver'] && !properties['grid']) {
+    if (
+      (type === 'Box' || type === 'Frame') &&
+      !properties['hor'] &&
+      !properties['ver'] &&
+      !properties['grid']
+    ) {
       suggestions.push({
         id: 'add-layout',
         type: 'improvement',
@@ -256,9 +253,9 @@ export class SuggestionEngine {
           command: {
             type: 'SET_PROPERTY',
             property: 'ver',
-            value: 'true'
-          }
-        }
+            value: 'true',
+          },
+        },
       })
     }
 
@@ -293,9 +290,9 @@ export class SuggestionEngine {
             description: `Previously successful (${pattern.successCount} times)`,
             action: {
               type: pattern.action.type,
-              params: pattern.action.params
+              params: pattern.action.params,
             },
-            confidence: this.memory.getPatternSuccessRate(pattern.trigger)
+            confidence: this.memory.getPatternSuccessRate(pattern.trigger),
           })
         }
       }
@@ -317,9 +314,9 @@ export class SuggestionEngine {
             command: {
               type: 'SET_PROPERTY',
               property: 'bg',
-              value: colorPref
-            }
-          }
+              value: colorPref,
+            },
+          },
         })
       }
     }
@@ -341,7 +338,7 @@ export class SuggestionEngine {
       priority: 'low',
       title: 'Validate code',
       description: 'Check for syntax errors and issues.',
-      action: { type: 'tool', params: { tool: 'validate' } }
+      action: { type: 'tool', params: { tool: 'validate' } },
     })
 
     // Context-specific quick actions
@@ -352,7 +349,7 @@ export class SuggestionEngine {
         priority: 'medium',
         title: 'Improve element',
         description: `Suggest improvements for this ${context.selectedElement.type}.`,
-        action: { type: 'prompt', prompt: `Improve the selected ${context.selectedElement.type}` }
+        action: { type: 'prompt', prompt: `Improve the selected ${context.selectedElement.type}` },
       })
 
       actions.push({
@@ -363,8 +360,8 @@ export class SuggestionEngine {
         description: 'Create a copy of the selected element.',
         action: {
           type: 'tool',
-          params: { tool: 'duplicate_element', selector: `@${context.selectedElement.line}` }
-        }
+          params: { tool: 'duplicate_element', selector: `@${context.selectedElement.line}` },
+        },
       })
     }
 
@@ -389,7 +386,7 @@ export class SuggestionEngine {
       Text: ['fs', 'weight', 'col', 'line', 'truncate'],
       Image: ['w', 'h', 'rad', 'shadow', 'alt'],
       Input: ['pad', 'bor', 'boc', 'rad', 'type', 'placeholder'],
-      Link: ['col', 'href', 'underline']
+      Link: ['col', 'href', 'underline'],
     }
 
     const props = typeProperties[elementType] || typeProperties['Box']
@@ -404,8 +401,8 @@ export class SuggestionEngine {
           description: this.getPropertyDescription(prop),
           action: {
             type: 'insert',
-            params: { text: prop }
-          }
+            params: { text: prop },
+          },
         })
       }
     }
@@ -428,9 +425,9 @@ export class SuggestionEngine {
           description: `Preferred ${pref.category} value`,
           action: {
             type: 'insert',
-            params: { text: pref.value }
+            params: { text: pref.value },
           },
-          confidence: pref.confidence
+          confidence: pref.confidence,
         })
       }
     }
@@ -448,20 +445,9 @@ export class SuggestionEngine {
   }
 
   private findSpacingValues(code: string): { values: number[]; unique: number } {
-    const values: number[] = []
     const patterns = [/gap\s+(\d+)/g, /pad\s+(\d+)/g, /margin\s+(\d+)/g]
-
-    for (const pattern of patterns) {
-      let match
-      while ((match = pattern.exec(code)) !== null) {
-        values.push(parseInt(match[1]))
-      }
-    }
-
-    return {
-      values,
-      unique: new Set(values).size
-    }
+    const values = patterns.flatMap(p => [...code.matchAll(p)].map(m => parseInt(m[1])))
+    return { values, unique: new Set(values).size }
   }
 
   private findAccessibilityIssues(code: string): string[] {
@@ -523,7 +509,7 @@ export class SuggestionEngine {
       line: 'Line height',
       bor: 'Border width (px)',
       boc: 'Border color',
-      truncate: 'Truncate with ellipsis'
+      truncate: 'Truncate with ellipsis',
     }
     return descriptions[prop] || ''
   }

@@ -65,52 +65,50 @@ export class CommandExecutor {
     }
   }
 
-  undo(): CommandResult {
-    const entry = this.undoStack.pop()
-    if (!entry) return { success: false, error: 'Nothing to undo' }
+  private runHistoryOp(
+    from: HistoryEntry[],
+    to: HistoryEntry[],
+    action: (e: HistoryEntry, ctx: CommandContext) => CommandResult,
+    event: string,
+    emptyError: string
+  ): CommandResult {
+    const entry = from.pop()
+    if (!entry) return { success: false, error: emptyError }
     if (this.executing) {
-      this.undoStack.push(entry)
+      from.push(entry)
       return { success: false, error: 'Execution already in progress' }
     }
-
     this.executing = true
     try {
-      const ctx = this.getContext()
-      const result = entry.command.undo(ctx)
+      const result = action(entry, this.getContext())
       if (result.success) {
-        this.redoStack.push(entry)
-        if (this.emitEvents) events.emit('command:undone', { command: entry.command })
-      } else {
-        this.undoStack.push(entry)
-      }
+        to.push(entry)
+        if (this.emitEvents) events.emit(event, { command: entry.command })
+      } else from.push(entry)
       return result
     } finally {
       this.executing = false
     }
   }
 
-  redo(): CommandResult {
-    const entry = this.redoStack.pop()
-    if (!entry) return { success: false, error: 'Nothing to redo' }
-    if (this.executing) {
-      this.redoStack.push(entry)
-      return { success: false, error: 'Execution already in progress' }
-    }
+  undo(): CommandResult {
+    return this.runHistoryOp(
+      this.undoStack,
+      this.redoStack,
+      (e, ctx) => e.command.undo(ctx),
+      'command:undone',
+      'Nothing to undo'
+    )
+  }
 
-    this.executing = true
-    try {
-      const ctx = this.getContext()
-      const result = entry.command.execute(ctx)
-      if (result.success) {
-        this.undoStack.push(entry)
-        if (this.emitEvents) events.emit('command:redone', { command: entry.command })
-      } else {
-        this.redoStack.push(entry)
-      }
-      return result
-    } finally {
-      this.executing = false
-    }
+  redo(): CommandResult {
+    return this.runHistoryOp(
+      this.redoStack,
+      this.undoStack,
+      (e, ctx) => e.command.execute(ctx),
+      'command:redone',
+      'Nothing to redo'
+    )
   }
 
   canUndo(): boolean {

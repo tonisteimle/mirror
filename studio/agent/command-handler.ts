@@ -90,7 +90,8 @@ export class AgentCommandHandler {
 
     // Find tokens file
     const files = this.config.getFiles()
-    const tokensFile = files.find(f => f.type === 'tokens') || files.find(f => f.name.includes('token'))
+    const tokensFile =
+      files.find(f => f.type === 'tokens') || files.find(f => f.name.includes('token'))
 
     const tokenLine = `$${normalizedName}: ${tokenValue}`
 
@@ -101,7 +102,7 @@ export class AgentCommandHandler {
       return {
         success: true,
         message: `Added token $${tokenName} to ${tokensFile.name}`,
-        targetFile: tokensFile.name
+        targetFile: tokensFile.name,
       }
     } else {
       // Add to current file at top (before first component)
@@ -112,7 +113,7 @@ export class AgentCommandHandler {
       return {
         success: true,
         message: `Adding token $${tokenName} to current file`,
-        change: { from: insertPos, to: insertPos, insert: tokenLine + '\n' }
+        change: { from: insertPos, to: insertPos, insert: tokenLine + '\n' },
       }
     }
   }
@@ -129,7 +130,8 @@ export class AgentCommandHandler {
 
     // Find components file
     const files = this.config.getFiles()
-    const componentsFile = files.find(f => f.type === 'component') || files.find(f => f.name.includes('component'))
+    const componentsFile =
+      files.find(f => f.type === 'component') || files.find(f => f.name.includes('component'))
 
     if (componentsFile) {
       // Add to existing components file
@@ -138,7 +140,7 @@ export class AgentCommandHandler {
       return {
         success: true,
         message: `Added component ${componentName} to ${componentsFile.name}`,
-        targetFile: componentsFile.name
+        targetFile: componentsFile.name,
       }
     } else {
       // Add to current file before first instance
@@ -149,7 +151,7 @@ export class AgentCommandHandler {
       return {
         success: true,
         message: `Adding component ${componentName} to current file`,
-        change: { from: insertPos, to: insertPos, insert: '\n' + componentDefinition + '\n' }
+        change: { from: insertPos, to: insertPos, insert: '\n' + componentDefinition + '\n' },
       }
     }
   }
@@ -178,7 +180,7 @@ export class AgentCommandHandler {
     return {
       success: true,
       message: `Adding ${component} instance`,
-      change: { from: insertPos, to: insertPos, insert: '\n' + instanceLine }
+      change: { from: insertPos, to: insertPos, insert: '\n' + instanceLine },
     }
   }
 
@@ -188,19 +190,12 @@ export class AgentCommandHandler {
 
   private handleSetProperty(command: LLMCommand): AgentCommandResult {
     const { nodeId, property, value } = command
-
-    if (!nodeId || !property || value === undefined) {
+    if (!nodeId || !property || value === undefined)
       return { success: false, error: 'Missing nodeId, property, or value' }
-    }
-
     if (this.config.executePropertyCommand) {
       this.config.executePropertyCommand(nodeId, property, String(value))
-      return {
-        success: true,
-        message: `Set ${property} = ${value} on ${nodeId}`
-      }
+      return { success: true, message: `Set ${property} = ${value} on ${nodeId}` }
     }
-
     return { success: false, error: 'Property command executor not configured' }
   }
 
@@ -218,7 +213,7 @@ export class AgentCommandHandler {
     return {
       success: true,
       message: `Updating source (${from}-${to})`,
-      change: { from, to, insert }
+      change: { from, to, insert },
     }
   }
 
@@ -241,7 +236,7 @@ export class AgentCommandHandler {
     return {
       success: true,
       message: 'Replacing entire file content',
-      change: { from: 0, to: currentCode.length, insert: code }
+      change: { from: 0, to: currentCode.length, insert: code },
     }
   }
 
@@ -287,7 +282,7 @@ export class AgentCommandHandler {
             j++
           }
           insertIndex = j
-          needsLeadingNewline = true  // Add blank line before new component
+          needsLeadingNewline = true // Add blank line before new component
           break
         }
       }
@@ -310,7 +305,12 @@ export class AgentCommandHandler {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim()
       // Insert after comments and existing tokens (legacy with $ or new syntax name.suffix:)
-      if (line.startsWith('//') || line.startsWith('$') || line === '' || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(line)) {
+      if (
+        line.startsWith('//') ||
+        line.startsWith('$') ||
+        line === '' ||
+        /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(line)
+      ) {
         pos += lines[i].length + 1
         continue
       }

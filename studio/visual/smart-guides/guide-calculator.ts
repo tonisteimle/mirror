@@ -22,9 +22,44 @@ export class GuideCalculator {
    * Accepts DOMRect or layoutInfo-compatible rect objects
    */
   calculate(
-    movingRect: DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number },
-    siblings: Map<string, DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }>,
-    containerRect: DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }
+    movingRect:
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        },
+    siblings: Map<
+      string,
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        }
+    >,
+    containerRect:
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        }
   ): SnapResult {
     const settings = smartGuidesSettings.get()
     if (!settings.enabled) {
@@ -108,8 +143,32 @@ export class GuideCalculator {
    * Collect all edges from siblings and container
    */
   private collectEdges(
-    siblings: Map<string, DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }>,
-    container: DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number }
+    siblings: Map<
+      string,
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        }
+    >,
+    container:
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        }
   ): {
     vertical: AlignmentEdge[]
     horizontal: AlignmentEdge[]
@@ -158,8 +217,30 @@ export class GuideCalculator {
    */
   private createVerticalGuide(
     position: number,
-    movingRect: DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number },
-    containerRect: DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number },
+    movingRect:
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        },
+    containerRect:
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        },
     edge: AlignmentEdge
   ): Guide {
     const movingTop = movingRect.top - containerRect.top
@@ -180,13 +261,34 @@ export class GuideCalculator {
    */
   private createHorizontalGuide(
     position: number,
-    movingRect: DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number },
-    containerRect: DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number },
+    movingRect:
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        },
+    containerRect:
+      | DOMRect
+      | {
+          x: number
+          y: number
+          width: number
+          height: number
+          top: number
+          left: number
+          right: number
+          bottom: number
+        },
     edge: AlignmentEdge
   ): Guide {
-    const movingLeft = movingRect.left - containerRect.left
-    const movingRight = movingRect.right - containerRect.left
-
+    const movingLeft = movingRect.left - containerRect.left,
+      movingRight = movingRect.right - containerRect.left
     return {
       axis: 'horizontal',
       position,

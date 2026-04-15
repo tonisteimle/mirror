@@ -12,6 +12,7 @@ import type { StudioInstance } from './bootstrap'
 import { events, type StudioEvents } from './core/events'
 import { getTriggerManager } from './editor/trigger-manager'
 import { createLogger } from '../compiler/utils/logger'
+import { setupBrowserDragTestAPI } from './preview/drag/browser-test-api'
 
 const log = createLogger('TestAPI')
 
@@ -60,7 +61,6 @@ function waitForEvent<K extends keyof StudioEvents>(
       unsubscribe()
       reject(new Error(`Timeout waiting for event: ${event}`))
     }, timeout)
-
     const unsubscribe = events.on(event, payload => {
       clearTimeout(timeoutId)
       unsubscribe()
@@ -161,8 +161,13 @@ export function initStudioTestAPI(studio: StudioInstance, _dragDrop: unknown): v
   if (typeof window !== 'undefined') {
     window.__mirrorStudio__ = studio
     window.__STUDIO_TEST__ = createStudioTestAPI()
+    try {
+      setupBrowserDragTestAPI()
+      log.info('Browser Drag Test API initialized at window.__dragTest')
+    } catch (e) {
+      log.warn('Failed to initialize Browser Drag Test API:', e)
+    }
   }
-
   log.info('Test API initialized')
 }
 

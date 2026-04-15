@@ -36,11 +36,7 @@ export interface StudioContext {
  * Create a new studio context with optional initial state
  */
 export function createStudioContext(config?: Partial<StudioState>): StudioContext {
-  // Apply initial config to state if provided
-  if (config) {
-    state.set(config)
-  }
-
+  if (config) state.set(config)
   return {
     state,
     events,

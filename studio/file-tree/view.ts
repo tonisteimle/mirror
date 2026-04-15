@@ -27,14 +27,14 @@ const ICONS = {
   chevron: `<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`,
   layout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>`,
   tokens: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/></svg>`,
-  component: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`
+  component: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`,
 }
 
 const FILE_ICONS: Record<string, string> = {
   layout: ICONS.layout,
   tokens: ICONS.tokens,
   component: ICONS.component,
-  unknown: ICONS.layout
+  unknown: ICONS.layout,
 }
 
 // =============================================================================
@@ -132,13 +132,15 @@ export class FileTreeView {
 
   private renderItems(items: StorageItem[], depth: number = 1): string {
     const sorted = sortTreeItems(items)
-    return sorted.map(item => {
-      if (item.type === 'folder') {
-        return this.renderFolder(item as StorageFolder, depth)
-      } else {
-        return this.renderFile(item, depth)
-      }
-    }).join('')
+    return sorted
+      .map(item => {
+        if (item.type === 'folder') {
+          return this.renderFolder(item as StorageFolder, depth)
+        } else {
+          return this.renderFile(item, depth)
+        }
+      })
+      .join('')
   }
 
   private renderFolder(folder: StorageFolder, depth: number): string {
@@ -164,19 +166,11 @@ export class FileTreeView {
   private renderFile(file: StorageItem, depth: number): string {
     const fileType = getFileType(file.name)
     const isActive = this.controller.currentFile === file.path
-    const escapedName = escapeHtml(file.name)
-    const escapedPath = escapeAttr(file.path)
     const icon = FILE_ICONS[fileType.type] || FILE_ICONS.unknown
-
-    return `
-      <div class="file-tree-file ${isActive ? 'active' : ''}"
-           data-path="${escapedPath}"
-           draggable="true"
-           style="padding-left: ${16 + depth * 12}px">
+    return `<div class="file-tree-file ${isActive ? 'active' : ''}" data-path="${escapeAttr(file.path)}" draggable="true" style="padding-left: ${16 + depth * 12}px">
         <span class="file-icon" style="color: ${fileType.color}">${icon}</span>
-        <span>${escapedName}</span>
-      </div>
-    `
+        <span>${escapeHtml(file.name)}</span>
+      </div>`
   }
 
   // ===========================================================================
@@ -188,17 +182,19 @@ export class FileTreeView {
 
     // File clicks
     this.container.querySelectorAll('.file-tree-file').forEach(el => {
-      el.addEventListener('click', (e) => {
+      el.addEventListener('click', e => {
         if ((e.target as HTMLElement).closest('.file-tree-rename-input')) return
         const path = (el as HTMLElement).dataset.path
         if (path) this.controller.selectFile(path)
       })
-      el.addEventListener('contextmenu', (e) => this.showContextMenu(e as MouseEvent, el as HTMLElement))
+      el.addEventListener('contextmenu', e =>
+        this.showContextMenu(e as MouseEvent, el as HTMLElement)
+      )
     })
 
     // Folder toggle
     this.container.querySelectorAll('.file-tree-folder-header').forEach(el => {
-      el.addEventListener('click', (e) => {
+      el.addEventListener('click', e => {
         if ((e.target as HTMLElement).closest('.file-tree-rename-input')) return
         const folder = (el as HTMLElement).closest('.file-tree-folder') as HTMLElement
         const path = folder?.dataset.path
@@ -206,14 +202,14 @@ export class FileTreeView {
           this.controller.toggleFolder(path)
         }
       })
-      el.addEventListener('contextmenu', (e) => {
+      el.addEventListener('contextmenu', e => {
         const folder = (el as HTMLElement).closest('.file-tree-folder') as HTMLElement
         this.showContextMenu(e as MouseEvent, folder)
       })
     })
 
     // Empty area context menu
-    this.container.addEventListener('contextmenu', (e) => {
+    this.container.addEventListener('contextmenu', e => {
       const target = e.target as HTMLElement
       if (target === this.container || target.classList.contains('file-tree-items')) {
         this.showContextMenu(e as MouseEvent, null)
@@ -231,7 +227,7 @@ export class FileTreeView {
       const element = el as HTMLElement
       if (element.dataset.root === 'true') return
 
-      element.addEventListener('dragstart', (e) => {
+      element.addEventListener('dragstart', e => {
         this.draggedItem = element.dataset.path || null
         element.classList.add('dragging')
         if (e.dataTransfer) {
@@ -243,14 +239,16 @@ export class FileTreeView {
       element.addEventListener('dragend', () => {
         element.classList.remove('dragging')
         this.draggedItem = null
-        this.container?.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'))
+        this.container
+          ?.querySelectorAll('.drag-over')
+          .forEach(el => el.classList.remove('drag-over'))
       })
     })
 
     this.container.querySelectorAll('.file-tree-folder').forEach(folder => {
       const folderEl = folder as HTMLElement
 
-      folderEl.addEventListener('dragover', (e) => {
+      folderEl.addEventListener('dragover', e => {
         e.preventDefault()
         if (this.draggedItem && this.draggedItem !== folderEl.dataset.path) {
           if (!this.draggedItem.startsWith(folderEl.dataset.path + '/')) {
@@ -260,13 +258,13 @@ export class FileTreeView {
         }
       })
 
-      folderEl.addEventListener('dragleave', (e) => {
+      folderEl.addEventListener('dragleave', e => {
         if (!folderEl.contains(e.relatedTarget as Node)) {
           folderEl.classList.remove('drag-over')
         }
       })
 
-      folderEl.addEventListener('drop', async (e) => {
+      folderEl.addEventListener('drop', async e => {
         e.preventDefault()
         e.stopPropagation()
         folderEl.classList.remove('drag-over')
@@ -332,7 +330,7 @@ export class FileTreeView {
 
     // Action handlers
     menu.querySelectorAll('.context-menu-item').forEach(item => {
-      item.addEventListener('click', (e) => {
+      item.addEventListener('click', e => {
         e.stopPropagation()
         const action = (item as HTMLElement).dataset.action
         if (action) this.handleContextAction(action)
@@ -349,11 +347,11 @@ export class FileTreeView {
 
   private getActionLabel(action: string): string {
     const labels: Record<string, string> = {
-      'rename': 'Rename',
-      'duplicate': 'Duplicate',
-      'delete': 'Delete',
+      rename: 'Rename',
+      duplicate: 'Duplicate',
+      delete: 'Delete',
       'new-file': 'New File',
-      'new-folder': 'New Folder'
+      'new-folder': 'New Folder',
     }
     return labels[action] || action
   }
@@ -422,25 +420,23 @@ export class FileTreeView {
       input.select()
     }
 
+    const revertToSpan = () => {
+      const span = document.createElement('span')
+      span.textContent = oldName
+      input.replaceWith(span)
+    }
     const finishRename = async () => {
       const newName = input.value.trim()
-      if (newName && newName !== oldName) {
-        const success = await this.controller.renameItem(path, newName)
-        if (!success) {
-          // Revert on failure
-          const span = document.createElement('span')
-          span.textContent = oldName
-          input.replaceWith(span)
-        }
-      } else {
-        const span = document.createElement('span')
-        span.textContent = oldName
-        input.replaceWith(span)
+      if (!newName || newName === oldName) {
+        revertToSpan()
+        return
       }
+      const success = await this.controller.renameItem(path, newName)
+      if (!success) revertToSpan()
     }
 
     input.addEventListener('blur', finishRename)
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault()
         input.blur()
@@ -456,7 +452,9 @@ export class FileTreeView {
     // Find container
     let container: HTMLElement | null = null
     if (parentPath && parentPath !== '.') {
-      const parentFolder = this.container?.querySelector(`[data-path="${parentPath}"]`) as HTMLElement
+      const parentFolder = this.container?.querySelector(
+        `[data-path="${parentPath}"]`
+      ) as HTMLElement
       if (parentFolder) {
         this.controller.expandFolder(parentPath)
         parentFolder.classList.add('expanded')
@@ -465,7 +463,8 @@ export class FileTreeView {
     }
 
     if (!container) {
-      container = this.container?.querySelector('[data-root="true"] .file-tree-folder-children') || null
+      container =
+        this.container?.querySelector('[data-root="true"] .file-tree-folder-children') || null
     }
 
     if (!container) return
@@ -531,7 +530,7 @@ export class FileTreeView {
     }
 
     input.addEventListener('blur', finishCreate)
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault()
         finishCreate()

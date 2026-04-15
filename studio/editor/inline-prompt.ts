@@ -12,13 +12,7 @@
  *   → Code replaces the prompt
  */
 
-import {
-  EditorView,
-  Decoration,
-  DecorationSet,
-  WidgetType,
-  keymap
-} from '@codemirror/view'
+import { EditorView, Decoration, DecorationSet, WidgetType, keymap } from '@codemirror/view'
 import { StateField, StateEffect } from '@codemirror/state'
 import type { FixerResponse } from '../agent/types'
 import { createLogger } from '../../compiler/utils/logger'
@@ -42,12 +36,12 @@ export type PromptStatus = 'idle' | 'pending' | 'success' | 'error'
 
 export interface InlinePromptState {
   status: PromptStatus
-  line: number           // Line where prompt was entered
-  prompt: string         // The prompt text (without /)
-  message: string        // Status message to display
+  line: number // Line where prompt was entered
+  prompt: string // The prompt text (without /)
+  message: string // Status message to display
   response?: FixerResponse
-  timeoutId?: number     // For cleanup
-  abortController?: AbortController  // For cancelling async operations
+  timeoutId?: number // For cleanup
+  abortController?: AbortController // For cancelling async operations
 }
 
 export interface InlinePromptConfig {
@@ -151,7 +145,11 @@ const promptStateField = StateField.define<InlinePromptState | null>({
       }
       if (effect.is(updatePromptStatus) && state) {
         // Clear old timeout if new one is provided
-        if (effect.value.timeoutId && state.timeoutId && effect.value.timeoutId !== state.timeoutId) {
+        if (
+          effect.value.timeoutId &&
+          state.timeoutId &&
+          effect.value.timeoutId !== state.timeoutId
+        ) {
           window.clearTimeout(state.timeoutId)
         }
         return {
@@ -159,12 +157,12 @@ const promptStateField = StateField.define<InlinePromptState | null>({
           status: effect.value.status,
           message: effect.value.message,
           response: effect.value.response,
-          timeoutId: effect.value.timeoutId ?? state.timeoutId
+          timeoutId: effect.value.timeoutId ?? state.timeoutId,
         }
       }
     }
     return state
-  }
+  },
 })
 
 // ============================================
@@ -194,7 +192,7 @@ const promptDecorations = StateField.define<DecorationSet>({
       const widget = Decoration.widget({
         widget: new StatusWidget(state.status, state.message),
         side: 1, // After the line
-        block: true
+        block: true,
       })
 
       return Decoration.set([widget.range(line.to)])
@@ -203,7 +201,7 @@ const promptDecorations = StateField.define<DecorationSet>({
     }
   },
 
-  provide: f => EditorView.decorations.from(f)
+  provide: f => EditorView.decorations.from(f),
 })
 
 // ============================================
@@ -215,7 +213,7 @@ const promptDecorations = StateField.define<DecorationSet>({
  */
 function isPromptLine(line: string): boolean {
   const trimmed = line.trimStart()
-  return trimmed.startsWith('/') && !trimmed.startsWith('//')  // Exclude comments
+  return trimmed.startsWith('/') && !trimmed.startsWith('//') // Exclude comments
 }
 
 /**
@@ -230,19 +228,11 @@ function extractPrompt(line: string): string {
  * Validate prompt text
  */
 function validatePrompt(prompt: string): { valid: boolean; error?: string } {
-  if (!prompt || prompt.length === 0) {
-    return { valid: false, error: 'Prompt ist leer' }
-  }
-
-  if (prompt.length > MAX_PROMPT_LENGTH) {
+  if (!prompt || prompt.length === 0) return { valid: false, error: 'Prompt ist leer' }
+  if (prompt.length > MAX_PROMPT_LENGTH)
     return { valid: false, error: `Prompt zu lang (max ${MAX_PROMPT_LENGTH} Zeichen)` }
-  }
-
-  // Check for printable characters only (allow unicode for German umlauts etc.)
-  if (!/^[\p{L}\p{N}\p{P}\p{S}\s]+$/u.test(prompt)) {
+  if (!/^[\p{L}\p{N}\p{P}\p{S}\s]+$/u.test(prompt))
     return { valid: false, error: 'Prompt enthält ungültige Zeichen' }
-  }
-
   return { valid: true }
 }
 
@@ -304,8 +294,8 @@ function createPromptKeymap(config: InlinePromptConfig) {
                 line: line.number,
                 prompt: prompt || '',
                 message: validation.error,
-                timeoutId: errorTimeoutId
-              })
+                timeoutId: errorTimeoutId,
+              }),
             })
             return true
           }
@@ -322,35 +312,34 @@ function createPromptKeymap(config: InlinePromptConfig) {
             line: line.number,
             prompt,
             message: 'Generiere Code...',
-            abortController
-          })
+            abortController,
+          }),
         })
 
         // Call the submit handler with abort signal
-        handlePromptSubmit(view, config, prompt, line.number, getIndent(lineText), abortController.signal)
+        handlePromptSubmit(
+          view,
+          config,
+          prompt,
+          line.number,
+          getIndent(lineText),
+          abortController.signal
+        )
 
         return true // Handled
-      }
+      },
     },
     {
       key: 'Escape',
       run(view) {
         const promptState = view.state.field(promptStateField)
-        if (promptState && promptState.status !== 'idle') {
-          // FIX #2: Cleanup timeout when cancelling
-          if (promptState.timeoutId) {
-            window.clearTimeout(promptState.timeoutId)
-          }
-          // Cancel current prompt
-          view.dispatch({
-            effects: setPromptState.of(null)
-          })
-          config.onCancel?.()
-          return true
-        }
-        return false
-      }
-    }
+        if (!promptState || promptState.status === 'idle') return false
+        if (promptState.timeoutId) window.clearTimeout(promptState.timeoutId)
+        view.dispatch({ effects: setPromptState.of(null) })
+        config.onCancel?.()
+        return true
+      },
+    },
   ])
 }
 
@@ -368,7 +357,7 @@ function isViewValid(view: EditorView): boolean {
       return false
     }
     // Check if state is still accessible
-    view.state.doc.length  // Will throw if destroyed
+    view.state.doc.length // Will throw if destroyed
     return true
   } catch {
     return false
@@ -418,8 +407,8 @@ async function handlePromptSubmit(
       view.dispatch({
         effects: updatePromptStatus.of({
           status: 'error',
-          message: 'Keine Antwort erhalten'
-        })
+          message: 'Keine Antwort erhalten',
+        }),
       })
       return
     }
@@ -438,10 +427,9 @@ async function handlePromptSubmit(
         status: 'success',
         message,
         response,
-        timeoutId
-      })
+        timeoutId,
+      }),
     })
-
   } catch (error: unknown) {
     // FIX #2: Don't show error if operation was cancelled
     if (signal.aborted) {
@@ -464,8 +452,8 @@ async function handlePromptSubmit(
       effects: updatePromptStatus.of({
         status: 'error',
         message: errorMessage,
-        timeoutId: errorTimeoutId
-      })
+        timeoutId: errorTimeoutId,
+      }),
     })
   }
 }
@@ -494,8 +482,8 @@ function replacePromptWithCode(
 
   // Find the code change for the current file
   // (other file changes are handled by the CodeApplicator)
-  const currentFileChange = response.changes.find(c =>
-    c.action === 'insert' && c.position?.line === lineNumber
+  const currentFileChange = response.changes.find(
+    c => c.action === 'insert' && c.position?.line === lineNumber
   )
 
   try {
@@ -504,7 +492,7 @@ function replacePromptWithCode(
     if (lineNumber < 1 || lineNumber > lineCount) {
       log.warn(' Line no longer exists:', lineNumber)
       view.dispatch({
-        effects: setPromptState.of(null)
+        effects: setPromptState.of(null),
       })
       return
     }
@@ -515,7 +503,7 @@ function replacePromptWithCode(
     if (!isPromptLine(line.text)) {
       log.warn(' Line is no longer a prompt:', line.text)
       view.dispatch({
-        effects: setPromptState.of(null)
+        effects: setPromptState.of(null),
       })
       return
     }
@@ -535,9 +523,9 @@ function replacePromptWithCode(
         changes: {
           from: line.from,
           to: line.to,
-          insert: indentedCode
+          insert: indentedCode,
         },
-        effects: setPromptState.of(null)
+        effects: setPromptState.of(null),
       })
     } else {
       // No insert for current file, just remove the prompt line
@@ -546,16 +534,16 @@ function replacePromptWithCode(
         changes: {
           from: line.from,
           to,
-          insert: ''
+          insert: '',
         },
-        effects: setPromptState.of(null)
+        effects: setPromptState.of(null),
       })
     }
   } catch (error) {
     log.error(' Error replacing code:', error)
     // Clear state on error
     view.dispatch({
-      effects: setPromptState.of(null)
+      effects: setPromptState.of(null),
     })
   }
 }
@@ -568,11 +556,7 @@ function replacePromptWithCode(
  * Create the inline prompt extension
  */
 export function inlinePromptExtension(config: InlinePromptConfig) {
-  return [
-    promptStateField,
-    promptDecorations,
-    createPromptKeymap(config)
-  ]
+  return [promptStateField, promptDecorations, createPromptKeymap(config)]
 }
 
 // ============================================

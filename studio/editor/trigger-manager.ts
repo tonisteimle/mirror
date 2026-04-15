@@ -54,20 +54,14 @@ export class EditorTriggerManager {
     // Listen for picker:closed events to sync state when picker closes itself
     // (e.g., via Escape key handled by the picker directly)
     this.pickerClosedUnsubscribe = events.on('picker:closed', () => {
-      if (this.state.isOpen) {
-        const triggerId = this.state.triggerId
-        const view = this.currentView
-        this.state = createDefaultState()
-        this.currentView = null
-        this.teardownClickOutside()
-        if (triggerId) {
-          events.emit('trigger:deactivated', { triggerId })
-        }
-        // Return focus to editor
-        if (view) {
-          view.focus()
-        }
-      }
+      if (!this.state.isOpen) return
+      const triggerId = this.state.triggerId
+      const view = this.currentView
+      this.state = createDefaultState()
+      this.currentView = null
+      this.teardownClickOutside()
+      if (triggerId) events.emit('trigger:deactivated', { triggerId })
+      if (view) view.focus()
     })
   }
 
@@ -320,7 +314,7 @@ export class EditorTriggerManager {
       if (items[index]) {
         selectedValue = items[index].name
         if ('addToRecent' in picker) {
-          (picker as any).addToRecent(selectedValue)
+          ;(picker as any).addToRecent(selectedValue)
         }
       }
     }
@@ -342,17 +336,14 @@ export class EditorTriggerManager {
    */
   cancelTrigger(view: EditorView, removeTypedText: boolean = false): void {
     if (!this.state.isOpen || !this.state.context) return
-
     if (removeTypedText && this.state.startPos !== null) {
       const cursorPos = view.state.selection.main.head
-      if (cursorPos > this.state.startPos) {
+      if (cursorPos > this.state.startPos)
         view.dispatch({
           changes: { from: this.state.startPos, to: cursorPos, insert: '' },
           selection: { anchor: this.state.startPos },
         })
-      }
     }
-
     this.hidePicker()
     view.focus()
   }
@@ -432,67 +423,69 @@ export class EditorTriggerManager {
   private createKeyboardHandler(): Extension[] {
     // Use domEventHandlers for key interception (more reliable than keymap for our use case)
     // domEventHandlers fire before keymap bindings
-    const keyHandler = Prec.highest(EditorView.domEventHandlers({
-      keydown: (event: KeyboardEvent, view: EditorView) => {
-        const key = event.key
+    const keyHandler = Prec.highest(
+      EditorView.domEventHandlers({
+        keydown: (event: KeyboardEvent, view: EditorView) => {
+          const key = event.key
 
-        // Only handle keys when picker is open
-        if (!this.state.isOpen) return false
+          // Only handle keys when picker is open
+          if (!this.state.isOpen) return false
 
-        const config = this.triggers.get(this.state.triggerId!)
-        const keyboard = config?.keyboard ?? { orientation: 'vertical' }
+          const config = this.triggers.get(this.state.triggerId!)
+          const keyboard = config?.keyboard ?? { orientation: 'vertical' }
 
-        switch (key) {
-          case 'Enter':
-            event.preventDefault()
-            this.selectCurrent(view)
-            return true
-
-          case 'Escape':
-            event.preventDefault()
-            const trigger = config?.trigger
-            const removeText = trigger?.type === 'char'
-            this.cancelTrigger(view, removeText)
-            return true
-
-          case 'ArrowDown':
-            event.preventDefault()
-            this.navigatePicker('down')
-            return true
-
-          case 'ArrowUp':
-            event.preventDefault()
-            this.navigatePicker('up')
-            return true
-
-          case 'ArrowRight':
-            if (keyboard.orientation === 'grid') {
+          switch (key) {
+            case 'Enter':
               event.preventDefault()
-              this.navigatePicker('right')
+              this.selectCurrent(view)
               return true
-            }
-            return false
 
-          case 'ArrowLeft':
-            if (keyboard.orientation === 'grid') {
+            case 'Escape':
               event.preventDefault()
-              this.navigatePicker('left')
+              const trigger = config?.trigger
+              const removeText = trigger?.type === 'char'
+              this.cancelTrigger(view, removeText)
               return true
-            }
-            return false
 
-          case 'Backspace': {
-            const cursorPos = view.state.selection.main.head
-            if (this.state.startPos !== null && cursorPos <= this.state.startPos) {
-              this.hidePicker()
+            case 'ArrowDown':
+              event.preventDefault()
+              this.navigatePicker('down')
+              return true
+
+            case 'ArrowUp':
+              event.preventDefault()
+              this.navigatePicker('up')
+              return true
+
+            case 'ArrowRight':
+              if (keyboard.orientation === 'grid') {
+                event.preventDefault()
+                this.navigatePicker('right')
+                return true
+              }
+              return false
+
+            case 'ArrowLeft':
+              if (keyboard.orientation === 'grid') {
+                event.preventDefault()
+                this.navigatePicker('left')
+                return true
+              }
+              return false
+
+            case 'Backspace': {
+              const cursorPos = view.state.selection.main.head
+              if (this.state.startPos !== null && cursorPos <= this.state.startPos) {
+                this.hidePicker()
+              }
+              return false // Let editor handle backspace
             }
-            return false // Let editor handle backspace
           }
-        }
 
-        return false
-      },
-    }))
+          return false
+        },
+      })
+    )
 
     return [keyHandler]
   }
@@ -541,7 +534,12 @@ export class EditorTriggerManager {
   // Trigger Detection
   // ============================================
 
-  private checkTriggers(update: ViewUpdate, insertedText: string, fromB: number, toB: number): void {
+  private checkTriggers(
+    update: ViewUpdate,
+    insertedText: string,
+    fromB: number,
+    toB: number
+  ): void {
     const view = update.view
     const line = view.state.doc.lineAt(fromB)
     const textBefore = line.text.slice(0, fromB - line.from)
@@ -610,7 +608,11 @@ export class EditorTriggerManager {
     }
   }
 
-  private checkCharTrigger(trigger: CharTrigger, insertedText: string, textBefore: string): boolean {
+  private checkCharTrigger(
+    trigger: CharTrigger,
+    insertedText: string,
+    textBefore: string
+  ): boolean {
     if (insertedText !== trigger.char) return false
 
     if (trigger.contextPattern) {
@@ -653,7 +655,10 @@ export class EditorTriggerManager {
     return false
   }
 
-  private extractPropertyFromContext(textBefore: string, contextPattern?: RegExp): string | undefined {
+  private extractPropertyFromContext(
+    textBefore: string,
+    contextPattern?: RegExp
+  ): string | undefined {
     if (contextPattern) {
       const match = textBefore.match(contextPattern)
       return match?.[1]
@@ -699,7 +704,10 @@ export class EditorTriggerManager {
       // For char triggers, skip the trigger character (e.g., $ for tokens)
       const triggerOffset = config.trigger.type === 'char' ? 1 : 0
       const line = update.view.state.doc.lineAt(toB)
-      const filterText = line.text.slice(this.state.startPos - line.from + triggerOffset, toB - line.from)
+      const filterText = line.text.slice(
+        this.state.startPos - line.from + triggerOffset,
+        toB - line.from
+      )
       this.filterPicker(filterText)
       return
     }
@@ -720,7 +728,10 @@ export class EditorTriggerManager {
     const line = update.view.state.doc.lineAt(toB)
     // For char triggers, skip the trigger character (e.g., $ for tokens)
     const triggerOffset = config.trigger.type === 'char' ? 1 : 0
-    const filterText = line.text.slice(this.state.startPos - line.from + triggerOffset, toB - line.from)
+    const filterText = line.text.slice(
+      this.state.startPos - line.from + triggerOffset,
+      toB - line.from
+    )
     this.filterPicker(filterText)
   }
 

@@ -6,10 +6,12 @@
  */
 
 import type { Point, DragSource, DropTarget } from './types'
+import type { ControllerReport, Reportable } from './reporter/types'
 import { LayoutCache } from './layout-cache'
 import { HitDetector } from './hit-detector'
 import { InsertionCalculator } from './insertion-calculator'
 import { Indicator } from './indicator'
+import { DragReporter } from './reporter/drag-reporter'
 import { createLogger } from '../../../compiler/utils/logger'
 
 const log = createLogger('DragController')
@@ -23,11 +25,12 @@ export interface DragControllerCallbacks {
   onDrop: (source: DragSource, target: DropTarget) => Promise<void>
 }
 
-export class DragController {
+export class DragController implements Reportable<ControllerReport> {
   private cache = new LayoutCache()
   private hitDetector = new HitDetector()
   private calculator = new InsertionCalculator()
   private indicator = new Indicator()
+  private reporter: DragReporter | null = null
 
   private state: DragState = 'idle'
   private source: DragSource | null = null
@@ -43,6 +46,28 @@ export class DragController {
   }
 
   /**
+   * Set the reporter instance for debugging
+   */
+  setReporter(reporter: DragReporter): void {
+    this.reporter = reporter
+    // Register all components with the reporter
+    reporter.registerComponents({
+      hitDetector: this.hitDetector,
+      insertionCalculator: this.calculator,
+      indicator: this.indicator,
+      cache: this.cache,
+      controller: this,
+    })
+  }
+
+  /**
+   * Get the current reporter (if any)
+   */
+  getReporter(): DragReporter | null {
+    return this.reporter
+  }
+
+  /**
    * Start a drag operation
    * Builds the layout cache for fast lookups
    *
@@ -54,6 +79,9 @@ export class DragController {
     this.source = source
     this.lastLoggedContainer = null
     this.cache.build(container)
+
+    // Start reporter session
+    this.reporter?.startSession(source)
   }
 
   /** Update drag position - called on every mouse move */
@@ -86,6 +114,9 @@ export class DragController {
     this.showIndicator(insertion)
     this.highlightContainer(hit.containerId, hit.containerRect)
     this.storeTarget(hit.containerId, insertion.index)
+
+    // Capture frame for reporting
+    this.reporter?.captureFrame(cursor)
   }
 
   /** Highlight the target container */
@@ -127,13 +158,13 @@ export class DragController {
   async drop(): Promise<void> {
     if (!this.source || !this.lastTarget) {
       log.warn('Drop aborted: missing source or target')
-      return this.reset()
+      return this.reset(false)
     }
 
     const source = this.source
     const target = this.lastTarget
     log.info('Dropped:', (source as any).componentName || source.type, '→', target.containerId)
-    this.reset()
+    this.reset(true)
 
     await this.executeDropCallback(source, target)
   }
@@ -153,7 +184,7 @@ export class DragController {
    * Cancel the current drag operation
    */
   cancel(): void {
-    this.reset()
+    this.reset(false)
   }
 
   /**
@@ -177,10 +208,80 @@ export class DragController {
     return this.lastTarget
   }
 
+  // =============================================================================
+  // Test API - For programmatic testing without real DOM events
+  // =============================================================================
+
+  /**
+   * Simulate a complete drop operation for testing purposes.
+   * Bypasses normal drag validation and directly executes the drop callback.
+   *
+   * @param source - The drag source (palette or canvas element)
+   * @param target - The drop target (container and insertion index)
+   * @returns Promise that resolves when drop callback completes
+   *
+   * @example
+   * ```typescript
+   * const controller = getDragController()
+   * await controller.simulateDrop(
+   *   { type: 'palette', componentName: 'Button', template: 'Button' },
+   *   { containerId: 'node-1', insertionIndex: 0 }
+   * )
+   * ```
+   */
+  async simulateDrop(source: DragSource, target: DropTarget): Promise<void> {
+    // Temporarily set state for reporter and any listeners
+    this.source = source
+    this.lastTarget = target
+    this.state = 'dragging'
+
+    log.info(
+      '[Test] Simulated drop:',
+      (source as any).componentName || source.nodeId,
+      '→',
+      target.containerId
+    )
+
+    // Execute the drop callback
+    await this.executeDropCallback(source, target)
+
+    // Reset state
+    this.reset(true)
+  }
+
+  /**
+   * Set source directly for testing (allows building up state incrementally)
+   */
+  setTestSource(source: DragSource): void {
+    this.source = source
+    this.state = 'dragging'
+  }
+
+  /**
+   * Set target directly for testing (allows building up state incrementally)
+   */
+  setTestTarget(target: DropTarget): void {
+    this.lastTarget = target
+  }
+
+  /**
+   * Get internal state for test assertions
+   */
+  getTestState(): { state: DragState; source: DragSource | null; target: DropTarget | null } {
+    return {
+      state: this.state,
+      source: this.source,
+      target: this.lastTarget,
+    }
+  }
+
   /**
    * Reset all state
    */
-  private reset(): void {
+  private reset(completed: boolean = false): void {
+    // End reporter session before clearing state
+    this.reporter?.endSession(this.lastTarget, completed)
+
     this.state = 'idle'
     this.source = null
     this.lastTarget = null
@@ -189,10 +290,21 @@ export class DragController {
   }
 
   /**
+   * Report current state for debugging
+   */
+  report(): ControllerReport {
+    return {
+      state: this.state,
+      source: this.source,
+      target: this.lastTarget,
+    }
+  }
+
+  /**
    * Cleanup - call on unmount
    */
   destroy(): void {
-    this.reset()
+    this.reset(false)
     this.indicator.destroy()
   }
 }
@@ -217,5 +329,77 @@ export function resetDragController(): void {
   if (dragControllerInstance) {
     dragControllerInstance.destroy()
     dragControllerInstance = null
+  }
+}
+
+/**
+ * Enable drag reporting from the browser console
+ *
+ * Usage in browser console:
+ *   window.__enableDragReporting()           // Console logging (normal)
+ *   window.__enableDragReporting('verbose')  // Console logging (verbose)
+ *   window.__enableDragReporting('recording') // Enable recording for JSON export
+ *   window.__disableDragReporting()          // Disable
+ *   window.__getDragRecordings()             // Get recorded sessions
+ *   window.__downloadDragRecordings()        // Download all recordings
+ */
+export function setupGlobalDragReporting(): void {
+  // Avoid re-defining if already set up
+  if ((globalThis as any).__enableDragReporting) return
+
+  const { ConsoleAdapter } = require('./reporter/adapters/console-adapter')
+  const { RecordingAdapter } = require('./reporter/adapters/recording-adapter')
+  const { getDragReporter } = require('./reporter/drag-reporter')
+
+  let recordingAdapter: InstanceType<typeof RecordingAdapter> | null = null
+
+  ;(globalThis as any).__enableDragReporting = (
+    mode: 'minimal' | 'normal' | 'verbose' | 'recording' = 'normal'
+  ) => {
+    const controller = getDragController()
+    const reporter = getDragReporter()
+
+    // Set up reporter if not already connected
+    if (!controller.getReporter()) {
+      controller.setReporter(reporter)
+    }
+
+    // Clear existing adapters
+    reporter.clearAdapters()
+
+    if (mode === 'recording') {
+      recordingAdapter = new RecordingAdapter()
+      reporter.addAdapter(recordingAdapter)
+      reporter.addAdapter(new ConsoleAdapter({ level: 'minimal' }))
+      console.log('[DragReporting] Recording enabled. Use __getDragRecordings() to access.')
+    } else {
+      reporter.addAdapter(new ConsoleAdapter({ level: mode }))
+      console.log(`[DragReporting] Console logging enabled (${mode})`)
+    }
+
+    reporter.enable()
+  }
+  ;(globalThis as any).__disableDragReporting = () => {
+    const reporter = getDragReporter()
+    reporter.disable()
+    console.log('[DragReporting] Disabled')
+  }
+  ;(globalThis as any).__getDragRecordings = () => {
+    if (!recordingAdapter) {
+      console.log(
+        '[DragReporting] No recording adapter. Call __enableDragReporting("recording") first.'
+      )
+      return null
+    }
+    return recordingAdapter.getRecordings()
+  }
+  ;(globalThis as any).__downloadDragRecordings = () => {
+    if (!recordingAdapter) {
+      console.log(
+        '[DragReporting] No recording adapter. Call __enableDragReporting("recording") first.'
+      )
+      return
+    }
+    recordingAdapter.downloadAll()
   }
 }

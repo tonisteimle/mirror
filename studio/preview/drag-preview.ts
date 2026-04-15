@@ -33,6 +33,8 @@ export interface ComponentDragData {
   textContent?: string
   fromComponentPanel?: boolean
   children?: string
+  mirTemplate?: string
+  dataBlock?: { name: string; content: string }
 }
 
 /** Full component item for rendering */
@@ -138,13 +140,7 @@ export class DragPreview {
           'at index',
           target.insertionIndex
         )
-
-        // Emit event for app.js to handle code modification
-        events.emit('drag:dropped', {
-          source,
-          target,
-          dragData: currentDragData,
-        })
+        events.emit('drag:dropped', { source, target, dragData: currentDragData })
       },
     })
   }

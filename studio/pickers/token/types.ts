@@ -5,16 +5,16 @@
 export type TokenType = 'color' | 'spacing' | 'size' | 'font' | 'other'
 
 export interface TokenDefinition {
-  name: string           // e.g., "$accent.bg"
-  value: string          // e.g., "#007bff"
+  name: string // e.g., "$accent.bg"
+  value: string // e.g., "#007bff"
   type: TokenType
-  category?: string      // e.g., "primary", "secondary"
+  category?: string // e.g., "primary", "secondary"
   description?: string
 }
 
 export interface TokenContext {
-  property: string       // Current property being edited (bg, pad, col, etc.)
-  nodeType?: string      // Component type
+  property: string // Current property being edited (bg, pad, col, etc.)
+  nodeType?: string // Component type
   allowedTypes: TokenType[]
 }
 
@@ -148,20 +148,17 @@ export function parseTokens(source: string): TokenDefinition[] {
  * Returns unique tokens (deduped by name)
  */
 export function parseTokensFromFiles(files: Record<string, string>): TokenDefinition[] {
-  const allTokens: TokenDefinition[] = []
-  const seen = new Set<string>()
-
-  for (const [filename, content] of Object.entries(files)) {
+  const allTokens: TokenDefinition[] = [],
+    seen = new Set<string>()
+  for (const [, content] of Object.entries(files)) {
     if (!content) continue
-    const tokens = parseTokens(content)
-    for (const token of tokens) {
+    for (const token of parseTokens(content)) {
       if (!seen.has(token.name)) {
         seen.add(token.name)
         allTokens.push(token)
       }
     }
   }
-
   return allTokens
 }
 
@@ -176,7 +173,10 @@ export function filterTokensBySuffix(tokens: TokenDefinition[], suffix: string):
 /**
  * Filter tokens by type
  */
-export function filterTokensByType(tokens: TokenDefinition[], types: TokenType[]): TokenDefinition[] {
+export function filterTokensByType(
+  tokens: TokenDefinition[],
+  types: TokenType[]
+): TokenDefinition[] {
   if (!types || types.length === 0) return tokens
   return tokens.filter(t => types.includes(t.type))
 }
@@ -187,9 +187,10 @@ export function filterTokensByType(tokens: TokenDefinition[], types: TokenType[]
 export function filterTokensBySearch(tokens: TokenDefinition[], query: string): TokenDefinition[] {
   if (!query) return tokens
   const lowerQuery = query.toLowerCase()
-  return tokens.filter(t =>
-    t.name.toLowerCase().includes(lowerQuery) ||
-    t.value.toLowerCase().includes(lowerQuery) ||
-    (t.category && t.category.toLowerCase().includes(lowerQuery))
+  return tokens.filter(
+    t =>
+      t.name.toLowerCase().includes(lowerQuery) ||
+      t.value.toLowerCase().includes(lowerQuery) ||
+      (t.category && t.category.toLowerCase().includes(lowerQuery))
   )
 }

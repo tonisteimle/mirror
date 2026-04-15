@@ -1052,18 +1052,11 @@ export class CodeModifier {
    * Re-indent a block of code to a new indentation level
    */
   private reindentBlock(block: string, oldIndent: string, newIndent: string): string {
-    const lines = block.split('\n')
-    return lines
+    return block
+      .split('\n')
       .map((line, index) => {
-        if (index === 0) {
-          // First line: replace old indent with new
-          return newIndent + line.substring(oldIndent.length)
-        }
-        // Other lines: adjust relative indentation
-        if (line.startsWith(oldIndent)) {
-          const extraIndent = line.substring(oldIndent.length)
-          return newIndent + extraIndent
-        }
+        if (index === 0) return newIndent + line.substring(oldIndent.length)
+        if (line.startsWith(oldIndent)) return newIndent + line.substring(oldIndent.length)
         return line
       })
       .join('\n')
@@ -1095,7 +1088,8 @@ export class CodeModifier {
       }
     }
 
-    if (position === 'first') {
+    // Handle position 0 as 'first'
+    if (position === 'first' || position === 0) {
       // Insert before first child
       const firstChild = sortedChildren[0]
       const charOffset = this.getCharacterOffset(firstChild.position.line, 1)
@@ -1109,14 +1103,16 @@ export class CodeModifier {
     if (position === 'last' || typeof position === 'number') {
       // Find the target child to insert after
       let targetIndex = sortedChildren.length - 1
-      // Validate position: must be finite and non-negative
-      if (typeof position === 'number' && Number.isFinite(position) && position >= 0) {
+      // Validate position: must be finite and positive (0 is handled above as 'first')
+      if (typeof position === 'number' && Number.isFinite(position) && position > 0) {
+        // position 1 = after first child (targetIndex 0)
+        // position 2 = after second child (targetIndex 1)
         targetIndex = Math.min(position - 1, sortedChildren.length - 1)
-        targetIndex = Math.max(0, targetIndex)
       }
 
       const targetChild = sortedChildren[targetIndex]
-      const targetEndLine = targetChild.position.endLine
+      // Use getBlockEndLine to find the actual end of the child including all its children
+      const targetEndLine = this.getBlockEndLine(targetChild.position.line)
       const lineContent = this.lines[targetEndLine - 1]
 
       return {
@@ -2308,20 +2304,10 @@ export class CodeModifier {
    */
   private rebuildLineWithText(parsedLine: ParsedLine, newText: string): string {
     let line = parsedLine.indent + parsedLine.componentPart
-
-    // Add text content
-    if (newText) {
-      line += ` "${newText}"`
-    }
-
-    // Add properties
+    if (newText) line += ` "${newText}"`
     if (parsedLine.properties.length > 0) {
-      const propsStr = parsedLine.properties
-        .map(p => (p.isBoolean ? p.name : `${p.name} ${p.value}`))
-        .join(', ')
-      line += `, ${propsStr}`
+      line += `, ${parsedLine.properties.map(p => (p.isBoolean ? p.name : `${p.name} ${p.value}`)).join(', ')}`
     }
-
     return line
   }
 
@@ -2343,16 +2329,11 @@ export class CodeModifier {
     target?: string,
     key?: string
   ): string {
-    let result = eventName
-    if (key) {
-      result += ` ${key}`
-    }
-    if (target) {
-      result += ` ${actionName}(${target})`
-    } else {
-      result += ` ${actionName}()`
-    }
-    return result
+    return (
+      eventName +
+      (key ? ` ${key}` : '') +
+      (target ? ` ${actionName}(${target})` : ` ${actionName}()`)
+    )
   }
 
   /**

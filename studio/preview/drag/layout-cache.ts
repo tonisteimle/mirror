@@ -6,11 +6,12 @@
  */
 
 import type { ChildInfo } from './types'
+import type { CacheReport, Reportable } from './reporter/types'
 import { createLogger } from '../../../compiler/utils/logger'
 
 const log = createLogger('LayoutCache')
 
-export class LayoutCache {
+export class LayoutCache implements Reportable<CacheReport> {
   private rects = new Map<string, DOMRect>()
   private children = new Map<string, ChildInfo[]>()
   private containerElement: HTMLElement | null = null
@@ -111,5 +112,15 @@ export class LayoutCache {
     this.rects.clear()
     this.children.clear()
     this.containerElement = null
+  }
+
+  /** Report current state for debugging */
+  report(): CacheReport {
+    return {
+      elementCount: this.rects.size,
+      containerCount: this.children.size,
+      isEmpty: this.rects.size === 0,
+      containerElement: this.containerElement?.getAttribute('data-mirror-id') ?? null,
+    }
   }
 }

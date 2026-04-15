@@ -35,8 +35,32 @@ export {
   OPEN_COLOR_PALETTE,
   TAILWIND_PALETTE,
   MATERIAL_PALETTE,
+  // HSV color space functions
+  hsvToRgb,
+  rgbToHsv,
+  hexToRgb,
+  rgbToHex,
+  hexToHsv,
+  hsvToHex,
 } from './palette'
-export type { ColorPalette }
+export type { ColorPalette, RGB, HSV } from './palette'
+
+// Canvas-based HSV color picker
+export {
+  CanvasColorPicker,
+  createCanvasColorPicker,
+  type CanvasPickerState,
+  type CanvasPickerCallbacks,
+  type CanvasPickerElements,
+} from './canvas-picker'
+
+// Full Color Picker (dynamically generates HTML)
+export {
+  FullColorPicker,
+  getFullColorPicker,
+  createFullColorPicker,
+  type FullColorPickerConfig,
+} from './full-picker'
 
 export interface ColorPickerConfig extends Partial<PickerConfig> {
   initialColor?: string
@@ -153,10 +177,10 @@ export class ColorPicker extends BasePicker {
 
   addToRecent(color: string): void {
     const normalized = color.toUpperCase()
-    this.recentColors = [
-      normalized,
-      ...this.recentColors.filter(c => c !== normalized),
-    ].slice(0, this.maxRecentColors)
+    this.recentColors = [normalized, ...this.recentColors.filter(c => c !== normalized)].slice(
+      0,
+      this.maxRecentColors
+    )
   }
 
   /**
@@ -342,7 +366,7 @@ export class ColorPicker extends BasePicker {
       }
     })
 
-    this.customInput.addEventListener('keydown', (e) => {
+    this.customInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault()
         const parsed = parseColor(this.customInput!.value)
@@ -431,7 +455,7 @@ export class ColorPicker extends BasePicker {
         orientation: 'grid',
         columns: 10, // Adjust based on grid
         wrap: true,
-        onSelect: (item) => {
+        onSelect: item => {
           const color = item.getAttribute('data-color')
           if (color) {
             this.currentColor = color

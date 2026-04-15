@@ -18,23 +18,23 @@ export type TokenType =
   | 'DOT'
   | 'EQUALS'
   | 'QUESTION'
-  | 'AT'           // @
-  | 'LPAREN'       // (
-  | 'RPAREN'       // )
-  | 'LBRACKET'     // [
-  | 'RBRACKET'     // ]
-  | 'LBRACE'       // {
-  | 'RBRACE'       // }
-  | 'GT'           // >
-  | 'LT'           // <
-  | 'GTE'          // >=
-  | 'LTE'          // <=
-  | 'NOT_EQUAL'    // !=
+  | 'AT' // @
+  | 'LPAREN' // (
+  | 'RPAREN' // )
+  | 'LBRACKET' // [
+  | 'RBRACKET' // ]
+  | 'LBRACE' // {
+  | 'RBRACE' // }
+  | 'GT' // >
+  | 'LT' // <
+  | 'GTE' // >=
+  | 'LTE' // <=
+  | 'NOT_EQUAL' // !=
   | 'STRICT_EQUAL' // ===
   | 'STRICT_NOT_EQUAL' // !==
-  | 'AND_AND'      // &&
-  | 'OR_OR'        // ||
-  | 'BANG'         // !
+  | 'AND_AND' // &&
+  | 'OR_OR' // ||
+  | 'BANG' // !
   | 'AS'
   | 'EXTENDS'
   | 'NAMED'
@@ -54,20 +54,20 @@ export type TokenType =
   | 'NOT'
   | 'THEN'
   | 'SELECTION'
-  | 'BIND'          // bind varName (track active exclusive() child content)
+  | 'BIND' // bind varName (track active exclusive() child content)
   | 'ROUTE'
   | 'WITH'
-  | 'ANIMATION'    // animation keyword for animation definitions
-  | 'USE'           // use filename (imports components from another file)
+  | 'ANIMATION' // animation keyword for animation definitions
+  | 'USE' // use filename (imports components from another file)
   | 'SLASH'
-  | 'PLUS'         // + (addition/concatenation)
-  | 'MINUS'        // - (subtraction)
-  | 'STAR'         // * (multiplication)
+  | 'PLUS' // + (addition/concatenation)
+  | 'MINUS' // - (subtraction)
+  | 'STAR' // * (multiplication)
   | 'NEWLINE'
   | 'INDENT'
   | 'DEDENT'
   | 'EOF'
-  | 'SECTION'      // --- Name ---
+  | 'SECTION' // --- Name ---
   | 'COMMENT'
 
 export interface Token {
@@ -137,21 +137,25 @@ export class Lexer {
 
     // Emit remaining DEDENTs
     // Stop at initialIndent level (don't emit DEDENT for initial file indentation)
-    while (this.indentStack.length > 1 &&
-           this.indentStack[this.indentStack.length - 1] > this.initialIndent) {
+    while (
+      this.indentStack.length > 1 &&
+      this.indentStack[this.indentStack.length - 1] > this.initialIndent
+    ) {
       this.indentStack.pop()
       this.addToken('DEDENT', '')
     }
     // Pop the initial indent level without emitting DEDENT
-    if (this.indentStack.length > 1 &&
-        this.indentStack[this.indentStack.length - 1] === this.initialIndent) {
+    if (
+      this.indentStack.length > 1 &&
+      this.indentStack[this.indentStack.length - 1] === this.initialIndent
+    ) {
       this.indentStack.pop()
     }
 
     this.addToken('EOF', '')
     return {
       tokens: this.tokens,
-      errors: this.errors
+      errors: this.errors,
     }
   }
 
@@ -160,7 +164,7 @@ export class Lexer {
       message,
       line: this.line,
       column: this.column,
-      hint
+      hint,
     })
   }
 
@@ -205,7 +209,7 @@ export class Lexer {
     }
 
     // Numbers (including leading decimal like .5)
-    if (this.isDigit(this.peek()) || (this.peek() === '#')) {
+    if (this.isDigit(this.peek()) || this.peek() === '#') {
       this.scanNumber()
       return
     }
@@ -230,18 +234,54 @@ export class Lexer {
 
     // Single and multi-character operators
     switch (this.peek()) {
-      case ':': this.addToken('COLON', ':'); this.advance(); break
-      case ',': this.addToken('COMMA', ','); this.advance(); break
-      case ';': this.addToken('SEMICOLON', ';'); this.advance(); break
-      case '.': this.addToken('DOT', '.'); this.advance(); break
-      case '?': this.addToken('QUESTION', '?'); this.advance(); break
-      case '@': this.addToken('AT', '@'); this.advance(); break
-      case '(': this.addToken('LPAREN', '('); this.advance(); break
-      case ')': this.addToken('RPAREN', ')'); this.advance(); break
-      case '[': this.addToken('LBRACKET', '['); this.advance(); break
-      case ']': this.addToken('RBRACKET', ']'); this.advance(); break
-      case '{': this.addToken('LBRACE', '{'); this.advance(); break
-      case '}': this.addToken('RBRACE', '}'); this.advance(); break
+      case ':':
+        this.addToken('COLON', ':')
+        this.advance()
+        break
+      case ',':
+        this.addToken('COMMA', ',')
+        this.advance()
+        break
+      case ';':
+        this.addToken('SEMICOLON', ';')
+        this.advance()
+        break
+      case '.':
+        this.addToken('DOT', '.')
+        this.advance()
+        break
+      case '?':
+        this.addToken('QUESTION', '?')
+        this.advance()
+        break
+      case '@':
+        this.addToken('AT', '@')
+        this.advance()
+        break
+      case '(':
+        this.addToken('LPAREN', '(')
+        this.advance()
+        break
+      case ')':
+        this.addToken('RPAREN', ')')
+        this.advance()
+        break
+      case '[':
+        this.addToken('LBRACKET', '[')
+        this.advance()
+        break
+      case ']':
+        this.addToken('RBRACKET', ']')
+        this.advance()
+        break
+      case '{':
+        this.addToken('LBRACE', '{')
+        this.advance()
+        break
+      case '}':
+        this.addToken('RBRACE', '}')
+        this.advance()
+        break
       case '=':
         this.advance()
         if (this.peek() === '=' && this.peekNext() === '=') {
@@ -250,7 +290,7 @@ export class Lexer {
           this.addToken('STRICT_EQUAL', '===')
         } else if (this.peek() === '=') {
           this.advance()
-          this.addToken('EQUALS', '==')  // == as single token
+          this.addToken('EQUALS', '==') // == as single token
         } else {
           this.addToken('EQUALS', '=')
         }
@@ -419,7 +459,10 @@ export class Lexer {
         this.addToken('INDENT', '')
       }
     } else if (indent < currentIndent) {
-      while (this.indentStack.length > 1 && this.indentStack[this.indentStack.length - 1] > indent) {
+      while (
+        this.indentStack.length > 1 &&
+        this.indentStack[this.indentStack.length - 1] > indent
+      ) {
         this.indentStack.pop()
         this.addToken('DEDENT', '')
       }
@@ -461,7 +504,7 @@ export class Lexer {
         message: `Unclosed string starting at line ${startLine}, column ${startColumn}`,
         line: startLine,
         column: startColumn,
-        hint: `Add a closing ${quote} to complete the string`
+        hint: `Add a closing ${quote} to complete the string`,
       })
       // Still emit the token with what we have
       this.addToken('STRING', value)
@@ -557,37 +600,22 @@ export class Lexer {
 
   private scanNegativeNumber(): void {
     let value = this.advance() // consume -
-
-    // Regular number after the minus
-    while (this.isDigit(this.peek())) {
-      value += this.advance()
-    }
-
+    while (this.isDigit(this.peek())) value += this.advance()
     if (this.peek() === '.' && this.isDigit(this.peekNext())) {
-      value += this.advance() // .
-      while (this.isDigit(this.peek())) {
-        value += this.advance()
-      }
+      value += this.advance()
+      while (this.isDigit(this.peek())) value += this.advance()
     }
-
     this.addToken('NUMBER', value)
   }
 
   private scanLeadingDecimal(): void {
-    // .5 → parse as 0.5
     this.advance() // consume .
     let value = '0.'
-
-    while (this.isDigit(this.peek())) {
-      value += this.advance()
-    }
-
-    // Warn about leading decimal
+    while (this.isDigit(this.peek())) value += this.advance()
     this.addError(
       `Leading decimal ".${value.slice(2)}" - consider using "${value}"`,
       `Add a leading zero for clarity`
     )
-
     this.addToken('NUMBER', value)
   }
 

@@ -72,9 +72,9 @@ export class ZagTreeView {
         type: 'folder',
         children: this.config.nodes,
       },
-      nodeToValue: (node) => node.id,
-      nodeToString: (node) => node.label,
-      nodeToChildren: (node) => node.children || [],
+      nodeToValue: node => node.id,
+      nodeToString: node => node.label,
+      nodeToChildren: node => node.children || [],
     })
 
     this.service = treeView.machine({
@@ -83,12 +83,12 @@ export class ZagTreeView {
       selectionMode: this.config.selectionMode || 'single',
       defaultExpandedValue: this.config.expandedIds || [],
       defaultSelectedValue: this.config.selectedIds || [],
-      onSelectionChange: (details) => {
+      onSelectionChange: details => {
         if (details.selectedNodes.length > 0 && this.callbacks.onSelect) {
           this.callbacks.onSelect(details.selectedNodes[0])
         }
       },
-      onExpandedChange: (details) => {
+      onExpandedChange: details => {
         if (this.callbacks.onExpand) {
           this.callbacks.onExpand(details.expandedValue)
         }
@@ -108,19 +108,12 @@ export class ZagTreeView {
    */
   setNodes(nodes: FileNode[]): void {
     if (!this.service) return
-
     const collection = treeView.collection<FileNode>({
-      rootNode: {
-        id: 'root',
-        label: 'Root',
-        type: 'folder',
-        children: nodes,
-      },
-      nodeToValue: (node) => node.id,
-      nodeToString: (node) => node.label,
-      nodeToChildren: (node) => node.children || [],
+      rootNode: { id: 'root', label: 'Root', type: 'folder', children: nodes },
+      nodeToValue: node => node.id,
+      nodeToString: node => node.label,
+      nodeToChildren: node => node.children || [],
     })
-
     this.service.send({ type: 'COLLECTION.SET', value: collection })
   }
 
@@ -266,7 +259,7 @@ export class ZagTreeView {
       content.appendChild(text)
 
       // Context menu
-      content.addEventListener('contextmenu', (e) => {
+      content.addEventListener('contextmenu', e => {
         e.preventDefault()
         this.callbacks.onContextMenu?.(node, { x: e.clientX, y: e.clientY })
       })
@@ -323,7 +316,7 @@ export class ZagTreeView {
     content.appendChild(text)
 
     // Context menu
-    content.addEventListener('contextmenu', (e) => {
+    content.addEventListener('contextmenu', e => {
       e.preventDefault()
       this.callbacks.onContextMenu?.(node, { x: e.clientX, y: e.clientY })
     })
@@ -363,20 +356,21 @@ export class ZagTreeView {
    * Get icon SVG based on type
    */
   private getIcon(type: string, expanded: boolean): string {
-    switch (type) {
-      case 'folder':
-        return expanded
-          ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 4a2 2 0 012-2h5l2 2h9a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/></svg>'
-          : '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>'
-      case 'tokens':
-        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4m11-11h-4M5 12H1m16.95-6.95l-2.83 2.83M9.88 14.12l-2.83 2.83m0-9.9l2.83 2.83m4.24 4.24l2.83 2.83"/></svg>'
-      case 'component':
-        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18m6-18v18"/></svg>'
-      case 'layout':
-        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>'
-      default:
-        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>'
+    const icons: Record<string, string> = {
+      folder: expanded
+        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 4a2 2 0 012-2h5l2 2h9a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/></svg>'
+        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>',
+      tokens:
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4m11-11h-4M5 12H1m16.95-6.95l-2.83 2.83M9.88 14.12l-2.83 2.83m0-9.9l2.83 2.83m4.24 4.24l2.83 2.83"/></svg>',
+      component:
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18m6-18v18"/></svg>',
+      layout:
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>',
     }
+    return (
+      icons[type] ||
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>'
+    )
   }
 
   /**

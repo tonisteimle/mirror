@@ -9,6 +9,7 @@
  */
 
 import type { Point } from './types'
+import type { IndicatorReport, Reportable } from './reporter/types'
 
 const INDICATOR_ID = 'drag-insertion-indicator'
 const CONTAINER_HIGHLIGHT_ID = 'drag-container-highlight'
@@ -16,10 +17,14 @@ const INDICATOR_COLOR = '#5BA8F5'
 const INDICATOR_GLOW = 'rgba(91, 168, 245, 0.4)'
 const INDICATOR_THICKNESS = 3
 
-export class Indicator {
+export class Indicator implements Reportable<IndicatorReport> {
   private element: HTMLDivElement | null = null
   private containerHighlight: HTMLDivElement | null = null
   private currentContainerId: string | null = null
+
+  // Last state for reporting
+  private lastLinePosition: Point | null = null
+  private lastHighlightRect: DOMRect | null = null
 
   /** Ensure the indicator element exists */
   private ensureElement(): HTMLDivElement {
@@ -86,6 +91,9 @@ export class Indicator {
     this.setPosition(el, position)
     this.setSize(el, size, orientation)
     el.style.display = 'block'
+
+    // Store for reporting
+    this.lastLinePosition = { ...position }
   }
 
   /** Highlight the target container */
@@ -100,6 +108,9 @@ export class Indicator {
     el.style.width = `${rect.width}px`
     el.style.height = `${rect.height}px`
     el.style.display = 'block'
+
+    // Store for reporting
+    this.lastHighlightRect = rect
   }
 
   /** Set position styles */
@@ -125,6 +136,8 @@ export class Indicator {
       this.containerHighlight.style.display = 'none'
     }
     this.currentContainerId = null
+    this.lastLinePosition = null
+    this.lastHighlightRect = null
   }
 
   /**
@@ -148,5 +161,21 @@ export class Indicator {
       this.containerHighlight = null
     }
     this.currentContainerId = null
+    this.lastLinePosition = null
+    this.lastHighlightRect = null
+  }
+
+  /** Report current state for debugging */
+  report(): IndicatorReport {
+    const lineVisible = this.element?.style.display === 'block'
+    const highlightVisible = this.containerHighlight?.style.display === 'block'
+
+    return {
+      lineVisible,
+      linePosition: this.lastLinePosition ? { ...this.lastLinePosition } : null,
+      highlightVisible,
+      highlightedContainerId: this.currentContainerId,
+      highlightRect: this.lastHighlightRect,
+    }
   }
 }

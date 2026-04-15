@@ -41,7 +41,7 @@ export class LayoutInferenceManager {
     // Create indicator with convert callback
     this.indicator = createInferenceIndicator({
       container: config.container,
-      onConvert: (group) => this.handleConvert(group),
+      onConvert: group => this.handleConvert(group),
     })
 
     // Create converter
@@ -99,19 +99,13 @@ export class LayoutInferenceManager {
    */
   detect(): void {
     if (!this.isEnabled) return
-
-    // Ensure indicator overlay is in DOM
     this.indicator.ensureOverlay()
-
     const result = this.detector.detect()
     this.currentGroups = result.groups
-
     if (result.groups.length > 0) {
       this.indicator.showGroups(result.groups)
       events.emit('layout-inference:detected', { groups: result.groups })
-    } else {
-      this.indicator.hideAll()
-    }
+    } else this.indicator.hideAll()
   }
 
   /**

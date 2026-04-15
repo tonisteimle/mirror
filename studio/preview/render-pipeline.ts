@@ -99,14 +99,7 @@ export class RenderPipeline {
    * and layout is stable before measuring.
    */
   scheduleLayoutExtraction(): void {
-    // Cancel any pending extraction
-    if (this.pendingExtraction !== null) {
-      cancelAnimationFrame(this.pendingExtraction)
-    }
-
-    // Use double-RAF to ensure layout is truly stable
-    // First RAF: browser has received our changes
-    // Second RAF: browser has painted
+    if (this.pendingExtraction !== null) cancelAnimationFrame(this.pendingExtraction)
     this.pendingExtraction = requestAnimationFrame(() => {
       this.pendingExtraction = requestAnimationFrame(() => {
         this.extractLayout()
@@ -131,7 +124,7 @@ export class RenderPipeline {
    * Returns a promise that resolves when extraction is complete.
    */
   async extractLayoutAsync(): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
       this.nextFrame(() => {
         this.extractLayout()
         resolve()
@@ -183,7 +176,7 @@ export function createRenderPipeline(config: RenderPipelineConfig): RenderPipeli
  * Use this when you need to ensure layout is stable before reading.
  */
 export function nextFrame(): Promise<void> {
-  return new Promise<void>((resolve) => {
+  return new Promise<void>(resolve => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         resolve()
@@ -196,7 +189,7 @@ export function nextFrame(): Promise<void> {
  * Utility: Wait for a specific number of milliseconds
  */
 export function delay(ms: number): Promise<void> {
-  return new Promise<void>((resolve) => {
+  return new Promise<void>(resolve => {
     setTimeout(resolve, ms)
   })
 }

@@ -27,7 +27,7 @@ export interface ZagComponentConfig {
 export abstract class ZagComponent<
   TContext extends Record<string, unknown>,
   TState extends StateMachine.State<TContext, StateMachine.StateSchema>,
-  TApi
+  TApi,
 > {
   protected container: HTMLElement
   protected classPrefix: string
@@ -60,10 +60,7 @@ export abstract class ZagComponent<
    * Create the API from current state
    * Override in subclass
    */
-  protected abstract createApi(
-    state: TState,
-    send: Machine<TContext, TState>['send']
-  ): TApi
+  protected abstract createApi(state: TState, send: Machine<TContext, TState>['send']): TApi
 
   /**
    * Render the component
@@ -77,7 +74,7 @@ export abstract class ZagComponent<
   private subscribe(): void {
     if (!this.service) return
 
-    this.unsubscribe = this.service.subscribe((state) => {
+    this.unsubscribe = this.service.subscribe(state => {
       this.api = this.createApi(state, this.service!.send)
       this.render(this.api)
     })
@@ -117,31 +114,28 @@ export abstract class ZagComponent<
     attrs?: Record<string, string>
   ): HTMLElementTagNameMap[K] {
     const el = document.createElement(tag)
-    if (className) {
-      el.className = `${this.classPrefix}-${className}`
-    }
-    if (attrs) {
-      for (const [key, value] of Object.entries(attrs)) {
-        el.setAttribute(key, value)
-      }
-    }
+    if (className) el.className = `${this.classPrefix}-${className}`
+    if (attrs) Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value))
     return el
   }
 
   /**
    * Helper: Spread Zag props onto element
    */
-  protected spreadProps(
-    el: HTMLElement,
-    props: Record<string, unknown>
-  ): void {
+  protected spreadProps(el: HTMLElement, props: Record<string, unknown>): void {
     for (const [key, value] of Object.entries(props)) {
       if (key === 'style' && typeof value === 'object') {
         Object.assign(el.style, value)
       } else if (key.startsWith('on') && typeof value === 'function') {
         const event = key.slice(2).toLowerCase()
         el.addEventListener(event, value as EventListener)
-      } else if (key.startsWith('data-') || key.startsWith('aria-') || key === 'role' || key === 'id' || key === 'tabindex') {
+      } else if (
+        key.startsWith('data-') ||
+        key.startsWith('aria-') ||
+        key === 'role' ||
+        key === 'id' ||
+        key === 'tabindex'
+      ) {
         el.setAttribute(key, String(value))
       } else if (typeof value === 'boolean') {
         if (value) {

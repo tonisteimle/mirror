@@ -5,7 +5,18 @@
  * Supports both real nodeIds and line-based selectors (line-N format).
  */
 
-import { state, executor, SetPropertyCommand, RemovePropertyCommand, InsertComponentCommand, DeleteNodeCommand, MoveNodeCommand, UpdateSourceCommand, BatchCommand, type Command } from '../core'
+import {
+  state,
+  executor,
+  SetPropertyCommand,
+  RemovePropertyCommand,
+  InsertComponentCommand,
+  DeleteNodeCommand,
+  MoveNodeCommand,
+  UpdateSourceCommand,
+  BatchCommand,
+  type Command,
+} from '../core'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('LLMBridge')
@@ -36,18 +47,11 @@ export interface LLMResponse {
 export class LLMBridge {
   executeResponse(response: LLMResponse): { success: boolean; error?: string } {
     if (response.error) return { success: false, error: response.error }
-
-    const commands: Command[] = []
-    for (const payload of response.commands) {
-      const command = this.createCommand(payload)
-      if (command) commands.push(command)
-    }
-
-    if (commands.length > 1) {
-      executor.execute(new BatchCommand({ commands }))
-    } else if (commands.length === 1) {
-      executor.execute(commands[0])
-    }
+    const commands = response.commands
+      .map(p => this.createCommand(p))
+      .filter((c): c is Command => c !== null)
+    if (commands.length > 1) executor.execute(new BatchCommand({ commands }))
+    else if (commands.length === 1) executor.execute(commands[0])
     return { success: true }
   }
 
@@ -101,13 +105,22 @@ export class LLMBridge {
     switch (payload.type) {
       case 'SET_PROPERTY':
         if (!nodeId) return null
-        return new SetPropertyCommand({ nodeId, property: payload.property!, value: String(payload.value) })
+        return new SetPropertyCommand({
+          nodeId,
+          property: payload.property!,
+          value: String(payload.value),
+        })
       case 'REMOVE_PROPERTY':
         if (!nodeId) return null
         return new RemovePropertyCommand({ nodeId, property: payload.property! })
       case 'INSERT_COMPONENT':
         if (!parentId) return null
-        return new InsertComponentCommand({ parentId, component: payload.component!, position: payload.position, properties: payload.properties })
+        return new InsertComponentCommand({
+          parentId,
+          component: payload.component!,
+          position: payload.position,
+          properties: payload.properties,
+        })
       case 'DELETE_NODE':
         if (!nodeId) return null
         return new DeleteNodeCommand({ nodeId })
@@ -115,9 +128,15 @@ export class LLMBridge {
         if (!nodeId || !targetId) return null
         return new MoveNodeCommand({ nodeId, targetId, position: payload.placement || 'inside' })
       case 'UPDATE_SOURCE':
-        return new UpdateSourceCommand({ from: payload.from!, to: payload.to!, insert: payload.insert! })
+        return new UpdateSourceCommand({
+          from: payload.from!,
+          to: payload.to!,
+          insert: payload.insert!,
+        })
       case 'BATCH':
-        const cmds = (payload.commands || []).map(c => this.createCommand(c)).filter((c): c is Command => c !== null)
+        const cmds = (payload.commands || [])
+          .map(c => this.createCommand(c))
+          .filter((c): c is Command => c !== null)
         return new BatchCommand({ commands: cmds })
       default:
         return null

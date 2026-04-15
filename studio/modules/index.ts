@@ -22,3 +22,11 @@ export {
   type CompilerEvents,
   type Warning,
 } from './compiler'
+
+// Preview Renderers (for token/component previews)
+export {
+  TokenRenderer,
+  ComponentRenderer,
+  type TokenRenderDeps,
+  type ComponentRenderDeps,
+} from '../compile'

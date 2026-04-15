@@ -35,35 +35,26 @@ Returns the generated code to be inserted.`,
     name: {
       type: 'string',
       description: 'Component name (e.g., "card", "navbar", "form")',
-      required: true
+      required: true,
     },
     description: {
       type: 'string',
       description: 'Description of what the component should contain',
-      required: true
+      required: true,
     },
     tokens: {
       type: 'boolean',
       description: 'Use tokens instead of hardcoded values (default: true)',
-      required: false
-    }
+      required: false,
+    },
   },
   execute: async ({ name, description, tokens = true }, ctx: ToolContext): Promise<ToolResult> => {
-    // Get available tokens for smart generation
-    const availableTokens = ctx.getTokens()
-
-    // Generate based on common patterns
-    const code = generateFromDescription(name, description, tokens ? availableTokens : {})
-
+    const code = generateFromDescription(name, description, tokens ? ctx.getTokens() : {})
     return {
       success: true,
-      data: {
-        name,
-        code,
-        instruction: 'Use add_child or update_source to insert this code'
-      }
+      data: { name, code, instruction: 'Use add_child or update_source to insert this code' },
     }
-  }
+  },
 }
 
 // ============================================
@@ -87,36 +78,27 @@ Available patterns:
       type: 'string',
       description: 'Pattern name',
       required: true,
-      enum: ['card', 'list', 'grid', 'form', 'navbar', 'modal', 'tabs']
+      enum: ['card', 'list', 'grid', 'form', 'navbar', 'modal', 'tabs'],
     },
     selector: {
       type: 'string',
       description: 'Where to insert (selector) or omit for cursor position',
-      required: false
+      required: false,
     },
     options: {
       type: 'object',
       description: 'Pattern-specific options (e.g., { columns: 3 } for grid)',
-      required: false
-    }
+      required: false,
+    },
   },
   execute: async ({ pattern, selector, options }, ctx: ToolContext): Promise<ToolResult> => {
-    const tokens = ctx.getTokens()
-    const code = generatePattern(pattern, options || {}, tokens)
-
-    if (!code) {
-      return { success: false, error: `Unknown pattern: ${pattern}` }
-    }
-
+    const code = generatePattern(pattern, options || {}, ctx.getTokens())
+    if (!code) return { success: false, error: `Unknown pattern: ${pattern}` }
     return {
       success: true,
-      data: {
-        pattern,
-        code,
-        instruction: 'Use add_child or update_source to insert this code'
-      }
+      data: { pattern, code, instruction: 'Use add_child or update_source to insert this code' },
     }
-  }
+  },
 }
 
 // ============================================
@@ -132,13 +114,13 @@ Creates a named component that can be instantiated multiple times.`,
     selector: {
       type: 'string',
       description: 'Element to extract',
-      required: true
+      required: true,
     },
     name: {
       type: 'string',
       description: 'Name for the new component',
-      required: true
-    }
+      required: true,
+    },
   },
   execute: async ({ selector, name }, ctx: ToolContext): Promise<ToolResult> => {
     const code = ctx.getCode()
@@ -165,10 +147,11 @@ Creates a named component that can be instantiated multiple times.`,
         componentDefinition: componentDef,
         usage,
         originalLines: element.line + '-' + element.endLine,
-        instruction: 'Add the component definition at the top, then replace the original with the usage'
-      }
+        instruction:
+          'Add the component definition at the top, then replace the original with the usage',
+      },
     }
-  }
+  },
 }
 
 // ============================================
@@ -184,13 +167,13 @@ Useful for creating consistent elements based on an example.`,
     selector: {
       type: 'string',
       description: 'Element to base the new one on',
-      required: true
+      required: true,
     },
     changes: {
       type: 'object',
       description: 'Properties to change (e.g., { text: "New Text", bg: "#ff0000" })',
-      required: false
-    }
+      required: false,
+    },
   },
   execute: async ({ selector, changes }, ctx: ToolContext): Promise<ToolResult> => {
     const code = ctx.getCode()
@@ -235,10 +218,10 @@ Useful for creating consistent elements based on an example.`,
       data: {
         basedOn: element.type,
         code: newCode,
-        instruction: 'Use add_child or update_source to insert this code'
-      }
+        instruction: 'Use add_child or update_source to insert this code',
+      },
     }
-  }
+  },
 }
 
 // ============================================
@@ -310,50 +293,74 @@ function getElementAtLine(lines: string[], lineNum: number): ElementInfo | null 
   return { type, line: lineNum, endLine, properties: {}, code: trimmed }
 }
 
-function generateFromDescription(name: string, description: string, tokens: Record<string, string>): string {
+function generateFromDescription(
+  name: string,
+  description: string,
+  tokens: Record<string, string>
+): string {
   const lower = description.toLowerCase()
 
   // Card pattern
-  if (lower.includes('card') || lower.includes('image') && lower.includes('title')) {
-    return generatePattern('card', {
-      hasImage: lower.includes('image'),
-      hasButton: lower.includes('button') || lower.includes('action'),
-      hasDescription: lower.includes('description')
-    }, tokens)
+  if (lower.includes('card') || (lower.includes('image') && lower.includes('title'))) {
+    return generatePattern(
+      'card',
+      {
+        hasImage: lower.includes('image'),
+        hasButton: lower.includes('button') || lower.includes('action'),
+        hasDescription: lower.includes('description'),
+      },
+      tokens
+    )
   }
 
   // Form pattern
-  if (lower.includes('form') || lower.includes('input') && lower.includes('label')) {
-    return generatePattern('form', {
-      fields: extractFieldNames(description)
-    }, tokens)
+  if (lower.includes('form') || (lower.includes('input') && lower.includes('label'))) {
+    return generatePattern(
+      'form',
+      {
+        fields: extractFieldNames(description),
+      },
+      tokens
+    )
   }
 
   // List pattern
   if (lower.includes('list') || lower.includes('items')) {
-    return generatePattern('list', {
-      itemCount: 3
-    }, tokens)
+    return generatePattern(
+      'list',
+      {
+        itemCount: 3,
+      },
+      tokens
+    )
   }
 
   // Grid pattern
   if (lower.includes('grid')) {
     const colMatch = description.match(/(\d+)\s*col/i)
-    return generatePattern('grid', {
-      columns: colMatch ? parseInt(colMatch[1]) : 3
-    }, tokens)
+    return generatePattern(
+      'grid',
+      {
+        columns: colMatch ? parseInt(colMatch[1]) : 3,
+      },
+      tokens
+    )
   }
 
   // Navbar pattern
-  if (lower.includes('nav') || lower.includes('header') && lower.includes('menu')) {
+  if (lower.includes('nav') || (lower.includes('header') && lower.includes('menu'))) {
     return generatePattern('navbar', {}, tokens)
   }
 
   // Modal pattern
   if (lower.includes('modal') || lower.includes('dialog') || lower.includes('popup')) {
-    return generatePattern('modal', {
-      hasForm: lower.includes('form')
-    }, tokens)
+    return generatePattern(
+      'modal',
+      {
+        hasForm: lower.includes('form'),
+      },
+      tokens
+    )
   }
 
   // Default: basic box
@@ -374,7 +381,11 @@ function extractFieldNames(description: string): string[] {
   return fields.length > 0 ? fields : ['email', 'password']
 }
 
-function generatePattern(pattern: string, options: PatternOptions, tokens: Record<string, string>): string {
+function generatePattern(
+  pattern: string,
+  options: PatternOptions,
+  tokens: Record<string, string>
+): string {
   const bg = tokens['$bg'] || tokens['$surface.bg'] || tokens['$card.bg'] || '#fff'
   const primary = tokens['$primary'] || tokens['$accent.bg'] || tokens['$primary.bg'] || '#007bff'
   const text = tokens['$text'] || tokens['$text.col'] || tokens['$col'] || '#333'
@@ -382,14 +393,26 @@ function generatePattern(pattern: string, options: PatternOptions, tokens: Recor
 
   switch (pattern) {
     case 'card':
-      return `Box ver pad 16 bg ${bg} rad 8 shadow sm${options.hasImage ? `
-  Image w full h 160 rad 4` : ''}
+      return `Box ver pad 16 bg ${bg} rad 8 shadow sm${
+        options.hasImage
+          ? `
+  Image w full h 160 rad 4`
+          : ''
+      }
   Box ver gap 8${options.hasImage ? ' pad-top 12' : ''}
-    Text "Title" fs 18 weight bold col ${text}${options.hasDescription ? `
-    Text "Description text goes here" col ${muted} line 1.5` : ''}${options.hasButton ? `
+    Text "Title" fs 18 weight bold col ${text}${
+      options.hasDescription
+        ? `
+    Text "Description text goes here" col ${muted} line 1.5`
+        : ''
+    }${
+      options.hasButton
+        ? `
   Box hor gap 8 pad-top 12
     Button bg ${primary} col white pad 8 12 rad 4
-      Text "Action"` : ''}`
+      Text "Action"`
+        : ''
+    }`
 
     case 'list':
       const itemCount = options.itemCount || 3
@@ -447,16 +470,20 @@ function generatePattern(pattern: string, options: PatternOptions, tokens: Recor
       H3 "Dialog Title"
       Button onclick hide modal
         Icon "close"
-    Text "Dialog content goes here." pad-top 16${options.hasForm ? `
+    Text "Dialog content goes here." pad-top 16${
+      options.hasForm
+        ? `
     Box ver gap 12 pad-top 16
       Input pad 12 bor 1 boc #ddd rad 4
       Button bg ${primary} col white pad 12 rad 4 w full
-        Text "Confirm"` : `
+        Text "Confirm"`
+        : `
     Box hor gap 8 pad-top 24
       Button pad 12 bor 1 boc #ddd rad 4 grow onclick hide modal
         Text "Cancel"
       Button bg ${primary} col white pad 12 rad 4 grow
-        Text "Confirm"`}`
+        Text "Confirm"`
+    }`
 
     case 'tabs':
       return `Box ver
@@ -483,5 +510,5 @@ export const generateTools: Tool[] = [
   generateComponentTool,
   applyPatternTool,
   extractComponentTool,
-  generateSimilarTool
+  generateSimilarTool,
 ]

@@ -133,7 +133,7 @@ export class RobustModifier {
       const combinedChange: CodeChange = {
         from: firstChangeFrom,
         to: firstChangeTo,
-        insert: accumulatedInsert
+        insert: accumulatedInsert,
       }
 
       // Validate result
@@ -153,7 +153,7 @@ export class RobustModifier {
         success: true,
         newSource,
         change: combinedChange,
-        warnings: warnings.length > 0 ? warnings : undefined
+        warnings: warnings.length > 0 ? warnings : undefined,
       }
     } catch (error) {
       // Rollback on any error
@@ -180,21 +180,21 @@ export class RobustModifier {
    * Special method for position updates that ensures both coordinates
    * are updated together with proper offset handling.
    */
-  updatePosition(
-    nodeId: string,
-    x: number,
-    y: number,
-    options: RobustOptions = {}
-  ): RobustResult {
-    return this.batchUpdate(nodeId, [
-      { property: 'x', value: String(Math.round(x)) },
-      { property: 'y', value: String(Math.round(y)) }
-    ], options)
+  updatePosition(nodeId: string, x: number, y: number, options: RobustOptions = {}): RobustResult {
+    return this.batchUpdate(
+      nodeId,
+      [
+        { property: 'x', value: String(Math.round(x)) },
+        { property: 'y', value: String(Math.round(y)) },
+      ],
+      options
+    )
   }
 
-  /**
-   * Update size (width and height) atomically
-   */
+  private formatDimension(val: number | string | undefined): string | undefined {
+    return val !== undefined ? (typeof val === 'number' ? String(Math.round(val)) : val) : undefined
+  }
+
   updateSize(
     nodeId: string,
     width: number | string,
@@ -202,55 +202,25 @@ export class RobustModifier {
     options: RobustOptions = {}
   ): RobustResult {
     const updates: PropertyUpdate[] = []
-
-    if (width !== undefined) {
-      updates.push({
-        property: 'w',
-        value: typeof width === 'number' ? String(Math.round(width)) : width
-      })
-    }
-
-    if (height !== undefined) {
-      updates.push({
-        property: 'h',
-        value: typeof height === 'number' ? String(Math.round(height)) : height
-      })
-    }
-
+    const w = this.formatDimension(width)
+    const h = this.formatDimension(height)
+    if (w) updates.push({ property: 'w', value: w })
+    if (h) updates.push({ property: 'h', value: h })
     return this.batchUpdate(nodeId, updates, options)
   }
 
-  /**
-   * Update bounds (x, y, width, height) atomically
-   *
-   * Used for resize operations that change both position and size.
-   */
   updateBounds(
     nodeId: string,
     bounds: { x?: number; y?: number; width?: number | string; height?: number | string },
     options: RobustOptions = {}
   ): RobustResult {
     const updates: PropertyUpdate[] = []
-
-    if (bounds.x !== undefined) {
-      updates.push({ property: 'x', value: String(Math.round(bounds.x)) })
-    }
-    if (bounds.y !== undefined) {
-      updates.push({ property: 'y', value: String(Math.round(bounds.y)) })
-    }
-    if (bounds.width !== undefined) {
-      updates.push({
-        property: 'w',
-        value: typeof bounds.width === 'number' ? String(Math.round(bounds.width)) : bounds.width
-      })
-    }
-    if (bounds.height !== undefined) {
-      updates.push({
-        property: 'h',
-        value: typeof bounds.height === 'number' ? String(Math.round(bounds.height)) : bounds.height
-      })
-    }
-
+    if (bounds.x !== undefined) updates.push({ property: 'x', value: String(Math.round(bounds.x)) })
+    if (bounds.y !== undefined) updates.push({ property: 'y', value: String(Math.round(bounds.y)) })
+    const w = this.formatDimension(bounds.width),
+      h = this.formatDimension(bounds.height)
+    if (w) updates.push({ property: 'w', value: w })
+    if (h) updates.push({ property: 'h', value: h })
     return this.batchUpdate(nodeId, updates, options)
   }
 
@@ -282,7 +252,10 @@ export class RobustModifier {
             const stillExists = findPropertyInLine(parsed, property)
             if (stillExists) {
               this.codeModifier.updateSource(originalSource)
-              return this.errorResult('Property removal validation failed - property still exists', true)
+              return this.errorResult(
+                'Property removal validation failed - property still exists',
+                true
+              )
             }
           }
         }
@@ -291,7 +264,7 @@ export class RobustModifier {
       return {
         success: true,
         newSource: this.codeModifier.getSource(),
-        change: result.change
+        change: result.change,
       }
     } catch (error) {
       this.codeModifier.updateSource(originalSource)
@@ -378,7 +351,7 @@ export class RobustModifier {
 
       return {
         valid: true,
-        warnings: warnings.length > 0 ? warnings : undefined
+        warnings: warnings.length > 0 ? warnings : undefined,
       }
     } catch (error) {
       return { valid: false, error: `Validation error: ${error}` }
@@ -395,7 +368,7 @@ export class RobustModifier {
       newSource: this.codeModifier.getSource(),
       change: { from: 0, to: 0, insert: '' },
       error,
-      rolledBack
+      rolledBack,
     }
   }
 }
@@ -451,9 +424,12 @@ export class DebouncedModifier {
     }
 
     // Set new timer
-    this.timers.set(nodeId, setTimeout(() => {
-      this.flush(nodeId)
-    }, this.debounceMs))
+    this.timers.set(
+      nodeId,
+      setTimeout(() => {
+        this.flush(nodeId)
+      }, this.debounceMs)
+    )
   }
 
   /**

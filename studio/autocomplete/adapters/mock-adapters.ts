@@ -117,20 +117,10 @@ export function createMockEditorContextPort(
 
     getLine(lineNumber: number): LineInfo | null {
       const lines = getLines()
-      if (lineNumber < 1 || lineNumber > lines.length) {
-        return null
-      }
+      if (lineNumber < 1 || lineNumber > lines.length) return null
       const text = lines[lineNumber - 1]
-      let from = 0
-      for (let i = 0; i < lineNumber - 1; i++) {
-        from += lines[i].length + 1
-      }
-      return {
-        number: lineNumber,
-        text,
-        from,
-        to: from + text.length,
-      }
+      const from = lines.slice(0, lineNumber - 1).reduce((sum, l) => sum + l.length + 1, 0)
+      return { number: lineNumber, text, from, to: from + text.length }
     },
 
     getCurrentLine(): LineInfo | null {
@@ -433,8 +423,7 @@ export function createAutocompleteTestFixture(): AutocompleteTestFixture {
 
       if (cursor.line <= lines.length) {
         const lineText = lines[cursor.line - 1]
-        const newLineText =
-          lineText.slice(0, cursor.column) + text + lineText.slice(cursor.column)
+        const newLineText = lineText.slice(0, cursor.column) + text + lineText.slice(cursor.column)
         lines[cursor.line - 1] = newLineText
 
         ports.editor.setSource(lines.join('\n'))

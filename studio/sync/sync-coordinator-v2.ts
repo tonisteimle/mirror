@@ -78,10 +78,7 @@ export class SyncCoordinator {
   /** Line offset service for editor ↔ SourceMap translation */
   readonly lineOffset: LineOffsetService
 
-  constructor(
-    ports: ExtendedSyncPorts,
-    config: SyncCoordinatorConfig = {}
-  ) {
+  constructor(ports: ExtendedSyncPorts, config: SyncCoordinatorConfig = {}) {
     this.ports = ports
     this.config = {
       cursorDebounce: 50,
@@ -101,19 +98,12 @@ export class SyncCoordinator {
    */
   subscribe(): void {
     if (this.cleanupFns.length > 0) return // Already subscribed
-
     const cleanup = this.ports.eventBus.onSelectionChanged(({ nodeId, origin }) => {
-      if (this.config.debug) {
-        logSync.debug(' selection:changed event', { nodeId, origin })
-      }
+      if (this.config.debug) logSync.debug(' selection:changed event', { nodeId, origin })
       this.doSync(nodeId, origin)
     })
-
     this.cleanupFns.push(cleanup)
-
-    if (this.config.debug) {
-      logSync.debug(' Subscribed to selection:changed')
-    }
+    if (this.config.debug) logSync.debug(' Subscribed to selection:changed')
   }
 
   /**
@@ -160,7 +150,7 @@ export class SyncCoordinator {
 
     // Update the SourceMap port if it supports setSourceMap
     if (this.ports.sourceMap && 'setSourceMap' in this.ports.sourceMap) {
-      (this.ports.sourceMap as SourceMapPortWithSetter).setSourceMap(sourceMap as any)
+      ;(this.ports.sourceMap as SourceMapPortWithSetter).setSourceMap(sourceMap as any)
     }
   }
 

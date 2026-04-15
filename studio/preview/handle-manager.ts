@@ -34,16 +34,16 @@ export interface HandleManagerConfig {
 const LAYOUT = {
   HANDLE_SIZE,
   HANDLE_SIZE_SMALL,
-  MIN_ELEMENT_SIZE: SMALL_ELEMENT_THRESHOLD,  // Below this, use small handles
+  MIN_ELEMENT_SIZE: SMALL_ELEMENT_THRESHOLD, // Below this, use small handles
   Z_INDEX: 10000,
   Z_INDEX_INDICATOR: 10001,
 }
 
 // Type-based colors for better visual feedback (Feature 2)
 const HANDLE_COLORS: Record<HandleType, string> = {
-  padding: '#5BA8F5',   // Blue - padding
-  gap: '#10B981',       // Green - gap
-  radius: '#F59E0B',    // Orange - radius
+  padding: '#5BA8F5', // Blue - padding
+  gap: '#10B981', // Green - gap
+  radius: '#F59E0B', // Orange - radius
 }
 
 // Legacy snap points - now configurable via handleSnapSettings (Feature 3)
@@ -161,7 +161,8 @@ export class HandleManager {
       radius = parseInt(style.borderRadius || '0', 10)
       gap = parseInt(style.gap || '0', 10)
       flexDirection = style.flexDirection || 'column'
-      isContainer = (style.display === 'flex' || style.display === 'grid') && element.children.length > 0
+      isContainer =
+        (style.display === 'flex' || style.display === 'grid') && element.children.length > 0
     }
 
     // Padding handles (4 sides)
@@ -270,7 +271,13 @@ export class HandleManager {
           direction: isHorizontal ? 'e' : 's',
           property: 'gap',
           currentValue: gap,
-          element: this.createHandleElement(gapX!, gapY!, isHorizontal ? 'e' : 's', 'gap', elementSize),
+          element: this.createHandleElement(
+            gapX!,
+            gapY!,
+            isHorizontal ? 'e' : 's',
+            'gap',
+            elementSize
+          ),
         })
       }
     }
@@ -293,7 +300,8 @@ export class HandleManager {
     const isGap = type === 'gap'
 
     // Use smaller handles for small elements
-    const useSmallHandle = elementSize &&
+    const useSmallHandle =
+      elementSize &&
       (elementSize.width < LAYOUT.MIN_ELEMENT_SIZE || elementSize.height < LAYOUT.MIN_ELEMENT_SIZE)
     const size = useSmallHandle ? LAYOUT.HANDLE_SIZE_SMALL : LAYOUT.HANDLE_SIZE
 
@@ -383,10 +391,7 @@ export class HandleManager {
 
   private onMouseMove(e: MouseEvent): void {
     if (!this.activeHandle || !this.startDragPosition) return
-
-    // RAF throttling: batch mouse events to animation frames for smooth 60fps
     this.pendingMouseEvent = e
-
     if (this.rafId === null) {
       this.rafId = requestAnimationFrame(() => {
         this.rafId = null
@@ -469,12 +474,18 @@ export class HandleManager {
     const dy = e.clientY - this.startDragPosition.y
 
     switch (direction) {
-      case 'n': return -dy
-      case 's': return dy
-      case 'e': return dx
-      case 'w': return -dx
-      case 'ne': return (dx - dy) / 2  // Diagonal for radius
-      default: return 0
+      case 'n':
+        return -dy
+      case 's':
+        return dy
+      case 'e':
+        return dx
+      case 'w':
+        return -dx
+      case 'ne':
+        return (dx - dy) / 2 // Diagonal for radius
+      default:
+        return 0
     }
   }
 
@@ -545,7 +556,7 @@ export class HandleManager {
       this.valueIndicator.className = 'handle-value-indicator'
       Object.assign(this.valueIndicator.style, {
         position: 'fixed',
-        display: 'none',  // Start hidden
+        display: 'none', // Start hidden
         background: '#1F2937',
         color: 'white',
         padding: '4px 8px',

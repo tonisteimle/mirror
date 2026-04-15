@@ -76,14 +76,14 @@ export class EditorController {
 
     // Content change handler
     this.cleanupFns.push(
-      this.ports.editor.onContentChange((content) => {
+      this.ports.editor.onContentChange(content => {
         this.handleContentChange(content)
       })
     )
 
     // Cursor move handler
     this.cleanupFns.push(
-      this.ports.editor.onCursorMove((position) => {
+      this.ports.editor.onCursorMove(position => {
         this.handleCursorMove(position)
       })
     )
@@ -204,20 +204,14 @@ export class EditorController {
     // Restore cursor position if enabled
     if (this.config.restoreCursorAfterChange !== false) {
       this.ports.timer.requestFrame(() => {
-        // Abort if another setContent() was called
         if (this.contentVersion !== capturedVersion) return
-
         const lineCount = this.ports.editor.getLineCount()
         if (currentCursor.line <= lineCount) {
           const lineInfo = this.ports.editor.getLine(currentCursor.line)
-          if (lineInfo) {
-            // Clamp column to line length
-            const maxCol = lineInfo.to - lineInfo.from
-            const newCol = Math.min(currentCursor.column - 1, maxCol)
-            const newOffset = lineInfo.from + newCol
-
-            this.ports.editor.setCursorOffset(newOffset)
-          }
+          if (lineInfo)
+            this.ports.editor.setCursorOffset(
+              lineInfo.from + Math.min(currentCursor.column - 1, lineInfo.to - lineInfo.from)
+            )
         }
       })
     }

@@ -833,17 +833,9 @@ export const actions = {
   invalidateLayoutInfo(
     reason: 'scroll' | 'zoom' | 'resize' | 'transform' | 'manual' = 'manual'
   ): void {
-    const currentState = state.get()
-    // Only invalidate if there's actually cached data
-    if (currentState.layoutInfo.size === 0) {
-      return
-    }
-
+    if (state.get().layoutInfo.size === 0) return
     logState.info(' Invalidating layoutInfo:', reason)
-    state.set({
-      layoutInfo: new Map(),
-      // Don't reset version - just clear the cache
-    })
+    state.set({ layoutInfo: new Map() })
     events.emit('layout:invalidated', { reason })
   },
 

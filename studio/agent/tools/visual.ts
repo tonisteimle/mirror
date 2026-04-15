@@ -66,8 +66,8 @@ Returns base64 image data that can be analyzed.`,
     selector: {
       type: 'string',
       description: 'Element selector to screenshot, or omit for full preview',
-      required: false
-    }
+      required: false,
+    },
   },
   execute: async ({ selector }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
@@ -97,7 +97,7 @@ Returns base64 image data that can be analyzed.`,
         x: bounds.x - previewBounds.x,
         y: bounds.y - previewBounds.y,
         width: bounds.width,
-        height: bounds.height
+        height: bounds.height,
       }
 
       // For now, return element info instead of actual screenshot
@@ -110,13 +110,13 @@ Returns base64 image data that can be analyzed.`,
           bounds: relativeBounds,
           computedStyles: getRelevantStyles(targetElement),
           childCount: targetElement.children.length,
-          instruction: 'Use these bounds and styles to analyze the layout'
-        }
+          instruction: 'Use these bounds and styles to analyze the layout',
+        },
       }
     } catch (error: unknown) {
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
-  }
+  },
 }
 
 // ============================================
@@ -132,8 +132,8 @@ Returns width, height, position, and visibility information.`,
     selector: {
       type: 'string',
       description: 'Element selector to measure',
-      required: true
-    }
+      required: true,
+    },
   },
   execute: async ({ selector }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
@@ -153,14 +153,16 @@ Returns width, height, position, and visibility information.`,
     const styles = window.getComputedStyle(element)
 
     // Check if visible
-    const visible = bounds.width > 0 &&
+    const visible =
+      bounds.width > 0 &&
       bounds.height > 0 &&
       styles.display !== 'none' &&
       styles.visibility !== 'hidden' &&
       parseFloat(styles.opacity) > 0
 
     // Check overflow
-    const isInViewport = bounds.top < previewBounds.bottom &&
+    const isInViewport =
+      bounds.top < previewBounds.bottom &&
       bounds.bottom > previewBounds.top &&
       bounds.left < previewBounds.right &&
       bounds.right > previewBounds.left
@@ -177,10 +179,10 @@ Returns width, height, position, and visibility information.`,
         inViewport: isInViewport,
         overflow: styles.overflow,
         display: styles.display,
-        position: styles.position
-      }
+        position: styles.position,
+      },
     }
-  }
+  },
 }
 
 // ============================================
@@ -196,8 +198,8 @@ Analyzes gaps between children and reports inconsistencies.`,
     selector: {
       type: 'string',
       description: 'Parent element selector (or omit for root)',
-      required: false
-    }
+      required: false,
+    },
   },
   execute: async ({ selector }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
@@ -207,9 +209,7 @@ Analyzes gaps between children and reports inconsistencies.`,
       return { success: false, error: 'Preview not available' }
     }
 
-    const parent = selector
-      ? findElementInPreview(preview, selector)
-      : preview.firstElementChild
+    const parent = selector ? findElementInPreview(preview, selector) : preview.firstElementChild
 
     if (!parent) {
       return { success: false, error: `Element not found: ${selector}` }
@@ -219,13 +219,14 @@ Analyzes gaps between children and reports inconsistencies.`,
     if (children.length < 2) {
       return {
         success: true,
-        data: { message: 'Not enough children to check spacing', childCount: children.length }
+        data: { message: 'Not enough children to check spacing', childCount: children.length },
       }
     }
 
     // Determine layout direction
     const parentStyles = window.getComputedStyle(parent)
-    const isHorizontal = parentStyles.flexDirection === 'row' ||
+    const isHorizontal =
+      parentStyles.flexDirection === 'row' ||
       parentStyles.display === 'inline-flex' ||
       (parentStyles.display === 'grid' && parentStyles.gridAutoFlow !== 'row')
 
@@ -241,7 +242,7 @@ Analyzes gaps between children and reports inconsistencies.`,
 
       gaps.push({
         between: [i - 1, i],
-        gap: Math.round(gap)
+        gap: Math.round(gap),
       })
     }
 
@@ -254,8 +255,7 @@ Analyzes gaps between children and reports inconsistencies.`,
     for (const { gap } of gaps) {
       gapCounts[gap] = (gapCounts[gap] || 0) + 1
     }
-    const suggestedGap = Object.entries(gapCounts)
-      .sort((a, b) => b[1] - a[1])[0]?.[0]
+    const suggestedGap = Object.entries(gapCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
 
     return {
       success: true,
@@ -268,10 +268,10 @@ Analyzes gaps between children and reports inconsistencies.`,
         suggestedGap: suggestedGap ? parseInt(suggestedGap) : null,
         suggestion: inconsistent
           ? `Spacing is inconsistent (${uniqueGaps.join(', ')}px). Consider using gap ${suggestedGap}px.`
-          : `Spacing is consistent at ${uniqueGaps[0]}px.`
-      }
+          : `Spacing is consistent at ${uniqueGaps[0]}px.`,
+      },
     }
-  }
+  },
 }
 
 // ============================================
@@ -287,8 +287,8 @@ Detects whether elements are aligned (left, center, right, top, bottom).`,
     selector: {
       type: 'string',
       description: 'Parent element selector',
-      required: false
-    }
+      required: false,
+    },
   },
   execute: async ({ selector }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
@@ -298,9 +298,7 @@ Detects whether elements are aligned (left, center, right, top, bottom).`,
       return { success: false, error: 'Preview not available' }
     }
 
-    const parent = selector
-      ? findElementInPreview(preview, selector)
-      : preview.firstElementChild
+    const parent = selector ? findElementInPreview(preview, selector) : preview.firstElementChild
 
     if (!parent) {
       return { success: false, error: `Element not found: ${selector}` }
@@ -312,7 +310,7 @@ Detects whether elements are aligned (left, center, right, top, bottom).`,
     if (children.length === 0) {
       return {
         success: true,
-        data: { message: 'No children to check alignment' }
+        data: { message: 'No children to check alignment' },
       }
     }
 
@@ -342,13 +340,21 @@ Detects whether elements are aligned (left, center, right, top, bottom).`,
       return arr.every(v => Math.abs(v - first) <= tolerance)
     }
 
-    const horizontalAlignment = isAllSame(lefts) ? 'left' :
-      isAllSame(rights) ? 'right' :
-        isAllSame(centers) ? 'center' : 'mixed'
+    const horizontalAlignment = isAllSame(lefts)
+      ? 'left'
+      : isAllSame(rights)
+        ? 'right'
+        : isAllSame(centers)
+          ? 'center'
+          : 'mixed'
 
-    const verticalAlignment = isAllSame(tops) ? 'top' :
-      isAllSame(bottoms) ? 'bottom' :
-        isAllSame(vCenters) ? 'center' : 'mixed'
+    const verticalAlignment = isAllSame(tops)
+      ? 'top'
+      : isAllSame(bottoms)
+        ? 'bottom'
+        : isAllSame(vCenters)
+          ? 'center'
+          : 'mixed'
 
     return {
       success: true,
@@ -358,20 +364,21 @@ Detects whether elements are aligned (left, center, right, top, bottom).`,
           alignment: horizontalAlignment,
           lefts,
           rights,
-          centers
+          centers,
         },
         vertical: {
           alignment: verticalAlignment,
           tops,
           bottoms,
-          centers: vCenters
+          centers: vCenters,
         },
-        suggestion: horizontalAlignment === 'mixed' || verticalAlignment === 'mixed'
-          ? 'Elements are not consistently aligned. Consider using center or explicit alignment.'
-          : `Elements are aligned: horizontal=${horizontalAlignment}, vertical=${verticalAlignment}`
-      }
+        suggestion:
+          horizontalAlignment === 'mixed' || verticalAlignment === 'mixed'
+            ? 'Elements are not consistently aligned. Consider using center or explicit alignment.'
+            : `Elements are aligned: horizontal=${horizontalAlignment}, vertical=${verticalAlignment}`,
+      },
     }
-  }
+  },
 }
 
 // ============================================
@@ -387,13 +394,13 @@ Useful for debugging visual issues.`,
     selector: {
       type: 'string',
       description: 'Element selector',
-      required: true
+      required: true,
     },
     properties: {
       type: 'array',
       description: 'Specific properties to get (or omit for common ones)',
-      required: false
-    }
+      required: false,
+    },
   },
   execute: async ({ selector, properties }, ctx: ToolContext): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
@@ -411,12 +418,30 @@ Useful for debugging visual issues.`,
     const styles = window.getComputedStyle(element)
 
     const defaultProps = [
-      'display', 'flexDirection', 'alignItems', 'justifyContent',
-      'gap', 'padding', 'margin', 'width', 'height',
-      'backgroundColor', 'color', 'border', 'borderRadius',
-      'fontSize', 'fontWeight', 'lineHeight',
-      'position', 'top', 'right', 'bottom', 'left',
-      'overflow', 'opacity', 'visibility'
+      'display',
+      'flexDirection',
+      'alignItems',
+      'justifyContent',
+      'gap',
+      'padding',
+      'margin',
+      'width',
+      'height',
+      'backgroundColor',
+      'color',
+      'border',
+      'borderRadius',
+      'fontSize',
+      'fontWeight',
+      'lineHeight',
+      'position',
+      'top',
+      'right',
+      'bottom',
+      'left',
+      'overflow',
+      'opacity',
+      'visibility',
     ]
 
     const propsToGet = properties || defaultProps
@@ -430,10 +455,10 @@ Useful for debugging visual issues.`,
       success: true,
       data: {
         selector,
-        styles: result
-      }
+        styles: result,
+      },
     }
-  }
+  },
 }
 
 // ============================================
@@ -474,34 +499,33 @@ Checks for:
 
     // Check for elements outside viewport
     for (const { el, bounds } of elementBounds) {
-      if (bounds.right < previewBounds.left ||
+      if (
+        bounds.right < previewBounds.left ||
         bounds.left > previewBounds.right ||
         bounds.bottom < previewBounds.top ||
-        bounds.top > previewBounds.bottom) {
+        bounds.top > previewBounds.bottom
+      ) {
         issues.push({
           type: 'outside_viewport',
           element: getElementIdentifier(el),
-          message: 'Element is outside the visible area'
+          message: 'Element is outside the visible area',
         })
       }
     }
 
     // Check for text overflow
     elements.forEach(el => {
-      if (el instanceof HTMLElement) {
-        if (el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight) {
-          const styles = window.getComputedStyle(el)
-          if (styles.overflow !== 'scroll' && styles.overflow !== 'auto') {
-            issues.push({
-              type: 'text_overflow',
-              element: getElementIdentifier(el),
-              message: 'Content overflows the element',
-              scrollWidth: el.scrollWidth,
-              clientWidth: el.clientWidth
-            })
-          }
-        }
-      }
+      if (!(el instanceof HTMLElement)) return
+      if (el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight) return
+      const styles = window.getComputedStyle(el)
+      if (styles.overflow === 'scroll' || styles.overflow === 'auto') return
+      issues.push({
+        type: 'text_overflow',
+        element: getElementIdentifier(el),
+        message: 'Content overflows the element',
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+      })
     })
 
     // Check for overlapping siblings (simple check)
@@ -514,17 +538,20 @@ Checks for:
         if (a.el.contains(b.el) || b.el.contains(a.el)) continue
 
         // Check for overlap
-        if (!(a.bounds.right < b.bounds.left ||
-          a.bounds.left > b.bounds.right ||
-          a.bounds.bottom < b.bounds.top ||
-          a.bounds.top > b.bounds.bottom)) {
-
+        if (
+          !(
+            a.bounds.right < b.bounds.left ||
+            a.bounds.left > b.bounds.right ||
+            a.bounds.bottom < b.bounds.top ||
+            a.bounds.top > b.bounds.bottom
+          )
+        ) {
           // Check if they're siblings
           if (a.el.parentElement === b.el.parentElement) {
             issues.push({
               type: 'overlap',
               elements: [getElementIdentifier(a.el), getElementIdentifier(b.el)],
-              message: 'Sibling elements are overlapping'
+              message: 'Sibling elements are overlapping',
             })
           }
         }
@@ -536,12 +563,13 @@ Checks for:
       data: {
         issueCount: issues.length,
         issues: issues.slice(0, 10),
-        summary: issues.length === 0
-          ? 'No visual issues detected'
-          : `Found ${issues.length} potential issue(s)`
-      }
+        summary:
+          issues.length === 0
+            ? 'No visual issues detected'
+            : `Found ${issues.length} potential issue(s)`,
+      },
     }
-  }
+  },
 }
 
 // ============================================
@@ -557,20 +585,23 @@ Useful when discussing specific elements.`,
     selector: {
       type: 'string',
       description: 'Element selector to highlight',
-      required: true
+      required: true,
     },
     color: {
       type: 'string',
       description: 'Highlight color (default: blue)',
-      required: false
+      required: false,
     },
     duration: {
       type: 'number',
       description: 'Duration in ms (default: 2000, 0 for permanent)',
-      required: false
-    }
+      required: false,
+    },
   },
-  execute: async ({ selector, color = '#5BA8F5', duration = 2000 }, ctx: ToolContext): Promise<ToolResult> => {
+  execute: async (
+    { selector, color = '#5BA8F5', duration = 2000 },
+    ctx: ToolContext
+  ): Promise<ToolResult> => {
     const visualCtx = ctx as VisualToolContext
 
     if (visualCtx.highlightElement) {
@@ -587,8 +618,8 @@ Useful when discussing specific elements.`,
         data: {
           highlighted: selector,
           color,
-          duration
-        }
+          duration,
+        },
       }
     }
 
@@ -621,10 +652,10 @@ Useful when discussing specific elements.`,
       data: {
         highlighted: selector,
         color,
-        duration
-      }
+        duration,
+      },
     }
-  }
+  },
 }
 
 // ============================================
@@ -641,8 +672,7 @@ function findElementInPreview(preview: HTMLElement, selector: string): HTMLEleme
   // #id - Named element
   if (selector.startsWith('#')) {
     const id = selector.slice(1)
-    return preview.querySelector(`[data-name="${id}"]`) ||
-      preview.querySelector(`#${id}`)
+    return preview.querySelector(`[data-name="${id}"]`) || preview.querySelector(`#${id}`)
   }
 
   // Type selector (first matching)
@@ -650,7 +680,7 @@ function findElementInPreview(preview: HTMLElement, selector: string): HTMLEleme
     const [type, indexStr] = selector.split(':')
     const index = indexStr ? parseInt(indexStr) - 1 : 0
     const elements = preview.querySelectorAll(`[data-component="${type}"]`)
-    return elements[index] as HTMLElement || null
+    return (elements[index] as HTMLElement) || null
   }
 
   // CSS selector fallback
@@ -658,19 +688,19 @@ function findElementInPreview(preview: HTMLElement, selector: string): HTMLEleme
 }
 
 function getRelevantStyles(element: HTMLElement): Record<string, string> {
-  const styles = window.getComputedStyle(element)
+  const s = window.getComputedStyle(element)
   return {
-    display: styles.display,
-    flexDirection: styles.flexDirection,
-    alignItems: styles.alignItems,
-    justifyContent: styles.justifyContent,
-    gap: styles.gap,
-    padding: styles.padding,
-    backgroundColor: styles.backgroundColor,
-    color: styles.color,
-    borderRadius: styles.borderRadius,
-    width: styles.width,
-    height: styles.height
+    display: s.display,
+    flexDirection: s.flexDirection,
+    alignItems: s.alignItems,
+    justifyContent: s.justifyContent,
+    gap: s.gap,
+    padding: s.padding,
+    backgroundColor: s.backgroundColor,
+    color: s.color,
+    borderRadius: s.borderRadius,
+    width: s.width,
+    height: s.height,
   }
 }
 
@@ -701,5 +731,5 @@ export const visualTools: Tool[] = [
   checkAlignmentTool,
   getComputedStylesTool,
   findVisualIssuesTool,
-  highlightElementTool
+  highlightElementTool,
 ]

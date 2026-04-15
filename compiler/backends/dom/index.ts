@@ -46,10 +46,7 @@ export {
 } from './state-machine-emitter'
 
 // Loop Emitter
-export {
-  emitEachLoop,
-  emitConditional,
-} from './loop-emitter'
+export { emitEachLoop, emitConditional } from './loop-emitter'
 
 // Event Emitter
 export {
@@ -69,3 +66,68 @@ export {
   type TokenEmitterContext,
   type TokenEmitterData,
 } from './token-emitter'
+
+// Node Emitter
+export {
+  emitElementCreation,
+  emitProperties,
+  emitIconSetup,
+  emitSlotSetup,
+  emitBaseStyles,
+  emitContainerType,
+  emitLayoutType,
+  emitStateStyles,
+  emitVisibleWhen,
+  emitSelectionBinding,
+  emitBindAttribute,
+  emitComponentAttributes,
+  emitRouteAttribute,
+  emitKeyboardNav,
+  emitValueBinding,
+  emitAbsolutePositioning,
+  emitAbsContainerMarker,
+  emitAppendToParent,
+  type NodeEmitterContext,
+} from './node-emitter'
+
+// Chart Emitter
+export { emitChartSetup, type ChartEmitterContext } from './chart-emitter'
+
+// API Emitter
+export {
+  collectNamedNodes,
+  emitPublicAPI,
+  emitInitialization,
+  emitAutoMount,
+  type APIEmitterContext,
+} from './api-emitter'
+
+// Animation Emitter
+export { emitAnimations, type AnimationEmitterContext } from './animation-emitter'
+
+// Style Emitter
+export { emitStyles, type StyleEmitterContext } from './style-emitter'
+
+// Value Resolver
+export {
+  escapeString,
+  escapeTemplateString,
+  resolveLoopVarMarkers,
+  resolveExpressionVariables,
+  resolveContentValue,
+  resolveConditionVariables,
+  resolveLoopCondition,
+} from './value-resolver'
+
+// Template Emitter
+export {
+  emitConditionalTemplateNode,
+  emitEachTemplateNode,
+  emitEachTemplateNodeContent,
+  emitNestedEachLoop,
+  resolveTemplateValue,
+  resolveTemplateStyleValue,
+  resolveConditionalExpression,
+  emitTemplateAction,
+  type TemplateEmitterContext,
+} from './template-emitter'

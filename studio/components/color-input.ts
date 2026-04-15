@@ -61,7 +61,7 @@ export class ColorInput implements ComponentInstance {
     // Input events
     this.input.addEventListener('input', () => this.handleInput())
     this.input.addEventListener('change', () => this.handleChange())
-    this.input.addEventListener('keydown', (e) => this.handleKeyDown(e))
+    this.input.addEventListener('keydown', e => this.handleKeyDown(e))
     this.input.addEventListener('focus', () => this.input.select())
 
     this.element.appendChild(this.input)
@@ -93,7 +93,6 @@ export class ColorInput implements ComponentInstance {
 
   private handleChange(): void {
     const value = this.input.value.trim()
-
     if (this.isValidColor(value)) {
       this.currentValue = value.toUpperCase()
       this.input.value = this.currentValue
@@ -104,9 +103,8 @@ export class ColorInput implements ComponentInstance {
       this.preview.style.backgroundColor = 'transparent'
       this.config.onChange('')
     } else {
-      // Revert to previous valid value
       this.input.value = this.currentValue
-    }
+    } // Revert to previous valid value
   }
 
   private handleKeyDown(e: KeyboardEvent): void {

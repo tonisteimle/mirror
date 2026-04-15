@@ -80,10 +80,25 @@ export function determineLayoutType(properties: Property[]): LayoutType | undefi
  * Directions recognized for directional properties.
  */
 const DIRECTIONS = new Set([
-  'left', 'right', 'top', 'bottom', 'down',
-  'l', 'r', 't', 'b', 'x', 'y',
-  'horizontal', 'vertical', 'hor', 'ver',
-  'tl', 'tr', 'bl', 'br',
+  'left',
+  'right',
+  'top',
+  'bottom',
+  'down',
+  'l',
+  'r',
+  't',
+  'b',
+  'x',
+  'y',
+  'horizontal',
+  'vertical',
+  'hor',
+  'ver',
+  'tl',
+  'tr',
+  'bl',
+  'br',
 ])
 
 /**
@@ -91,39 +106,21 @@ const DIRECTIONS = new Set([
  */
 const DIRECTIONAL_PROPS = new Set(['padding', 'margin', 'radius', 'border'])
 
-/**
- * Get unique key for a property, considering directional variants.
- *
- * For directional properties (pad, margin, rad, bor), the key includes direction.
- * This allows multiple directional values to coexist:
- * - pad left 10 → key: "padding:left"
- * - pad right 20 → key: "padding:right"
- * - pad 10 → key: "padding" (overwrites all directional pads)
- */
-function getPropertyKey(prop: Property): string {
-  // Normalize alias to canonical name (e.g., 'bg' -> 'background')
-  // This ensures that 'bg #f00 background #00f' treats them as the same property
-  const name = getCanonicalPropertyName(prop.name)
-  const values = prop.values
-
-  if (DIRECTIONAL_PROPS.has(name) && values.length >= 2) {
-    const firstVal = String(values[0]).toLowerCase()
-    if (DIRECTIONS.has(firstVal)) {
-      // Include all direction tokens in the key
-      const dirs: string[] = []
-      for (const v of values) {
-        const val = String(v).toLowerCase()
-        if (DIRECTIONS.has(val)) {
-          dirs.push(val)
-        } else {
-          break
-        }
-      }
-      return `${name}:${dirs.join(':')}`
-    }
+function extractDirectionPrefix(values: (string | number | boolean)[]): string {
+  const dirs: string[] = []
+  for (const v of values) {
+    const val = String(v).toLowerCase()
+    if (!DIRECTIONS.has(val)) break
+    dirs.push(val)
   }
+  return dirs.length > 0 ? `:${dirs.join(':')}` : ''
+}
 
-  return name
+function getPropertyKey(prop: Property): string {
+  const name = getCanonicalPropertyName(prop.name)
+  if (!DIRECTIONAL_PROPS.has(name) || prop.values.length < 2) return name
+  const first = String(prop.values[0]).toLowerCase()
+  return DIRECTIONS.has(first) ? name + extractDirectionPrefix(prop.values) : name
 }
 
 /**
@@ -171,12 +168,21 @@ export function extractValueBinding(properties: Property[]): string | undefined 
   const firstValue = valueProp.values[0]
 
   // Check for explicit token reference object
-  if (typeof firstValue === 'object' && firstValue !== null && 'kind' in firstValue && firstValue.kind === 'token') {
+  if (
+    typeof firstValue === 'object' &&
+    firstValue !== null &&
+    'kind' in firstValue &&
+    firstValue.kind === 'token'
+  ) {
     return (firstValue as { kind: 'token'; name: string }).name
   }
 
   // Check for string starting with $ (e.g., "$user.name")
-  if (typeof firstValue === 'string' && firstValue.startsWith('$') && /^\$[a-zA-Z_]/.test(firstValue)) {
+  if (
+    typeof firstValue === 'string' &&
+    firstValue.startsWith('$') &&
+    /^\$[a-zA-Z_]/.test(firstValue)
+  ) {
     return firstValue.slice(1) // Remove $ prefix
   }
 

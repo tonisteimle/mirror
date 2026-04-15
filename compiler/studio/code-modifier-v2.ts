@@ -781,7 +781,8 @@ export class CodeModifierV2 {
       }
     }
 
-    if (position === 'first') {
+    // Handle position 0 as 'first' (before first child)
+    if (position === 'first' || position === 0) {
       const firstChild = sortedChildren[0]
       const charOffset = this.ports.document.getCharacterOffset(firstChild.position.line, 1) - 1
       return {
@@ -792,9 +793,11 @@ export class CodeModifierV2 {
 
     // Default to 'last' or numeric position
     let targetIndex = sortedChildren.length - 1
-    if (typeof position === 'number' && Number.isFinite(position) && position >= 0) {
+    // position > 0 (0 is handled above as 'first')
+    if (typeof position === 'number' && Number.isFinite(position) && position > 0) {
+      // position 1 = after first child (targetIndex 0)
+      // position 2 = after second child (targetIndex 1)
       targetIndex = Math.min(position - 1, sortedChildren.length - 1)
-      targetIndex = Math.max(0, targetIndex)
     }
 
     const targetChild = sortedChildren[targetIndex]

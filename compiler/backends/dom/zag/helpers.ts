@@ -7,29 +7,20 @@
 import type { IRZagNode, IRSlot } from '../../../ir/types'
 import type { ZagEmitterContext } from '../zag-emitter-context'
 
-/**
- * Emit styles for a slot element
- */
 export function emitSlotStyles(
   ctx: ZagEmitterContext,
   varName: string,
   slot: IRSlot | undefined
 ): void {
-  if (slot?.styles && slot.styles.length > 0) {
-    ctx.emit(`${varName}.setAttribute('data-styled', 'true')`)
-    ctx.emit(`Object.assign(${varName}.style, {`)
-    ctx.indentIn()
-    for (const style of slot.styles) {
-      ctx.emit(`'${style.property}': '${style.value}',`)
-    }
-    ctx.indentOut()
-    ctx.emit('})')
-  }
+  if (!slot?.styles?.length) return
+  ctx.emit(`${varName}.setAttribute('data-styled', 'true')`)
+  ctx.emit(`Object.assign(${varName}.style, {`)
+  ctx.indentIn()
+  slot.styles.forEach(s => ctx.emit(`'${s.property}': '${s.value}',`))
+  ctx.indentOut()
+  ctx.emit('})')
 }
 
-/**
- * Emit the common component header
- */
 export function emitComponentHeader(
   ctx: ZagEmitterContext,
   node: IRZagNode,
@@ -42,9 +33,7 @@ export function emitComponentHeader(
   ctx.emit(`_elements['${node.id}'] = ${varName}`)
   ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
   ctx.emit(`${varName}.dataset.zagComponent = '${zagType}'`)
-  if (node.name) {
-    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-  }
+  if (node.name) ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
 }
 
 /**

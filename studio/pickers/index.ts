@@ -40,9 +40,29 @@ export {
   OPEN_COLOR_PALETTE,
   TAILWIND_PALETTE,
   MATERIAL_PALETTE,
+  // HSV Color functions
+  hsvToRgb,
+  rgbToHsv,
+  hexToRgb,
+  rgbToHex,
+  hexToHsv,
+  hsvToHex,
+  // Canvas Color Picker
+  CanvasColorPicker,
+  createCanvasColorPicker,
+  // Full Color Picker (generates all HTML dynamically)
+  FullColorPicker,
+  getFullColorPicker,
+  createFullColorPicker,
   type ColorPickerConfig,
   type ColorPickerCallbacks,
   type ColorPalette,
+  type RGB,
+  type HSV,
+  type CanvasPickerState,
+  type CanvasPickerCallbacks,
+  type CanvasPickerElements,
+  type FullColorPickerConfig,
 } from './color'
 
 // Token Picker

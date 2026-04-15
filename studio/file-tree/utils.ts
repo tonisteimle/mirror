@@ -21,18 +21,18 @@ export const FILE_TYPES: Record<string, FileTypeInfo> = {
   layout: {
     type: 'layout',
     extensions: ['.mir', '.mirror'],
-    color: '#5BA8F5'
+    color: '#5BA8F5',
   },
   tokens: {
     type: 'tokens',
     extensions: ['.tok', '.tokens'],
-    color: '#F59E0B'
+    color: '#F59E0B',
   },
   component: {
     type: 'component',
     extensions: ['.com', '.components'],
-    color: '#8B5CF6'
-  }
+    color: '#8B5CF6',
+  },
 }
 
 /**
@@ -82,7 +82,10 @@ export function validateFilename(name: string): ValidationResult {
     return { valid: false, error: 'Name cannot start with .' }
   }
   if (!/^[a-zA-Z0-9_.-]+$/.test(name)) {
-    return { valid: false, error: 'Name can only contain letters, numbers, hyphens, and underscores' }
+    return {
+      valid: false,
+      error: 'Name can only contain letters, numbers, hyphens, and underscores',
+    }
   }
   return { valid: true }
 }
@@ -124,21 +127,13 @@ export function findFirstFile(tree: StorageItem[]): string | null {
  * Collect all file paths from tree
  */
 export function collectFilePaths(tree: StorageItem[]): string[] {
-  const paths: string[] = []
-
-  function traverse(items: StorageItem[]) {
-    for (const item of items) {
-      if (item.type === 'file') {
-        paths.push(item.path)
-      } else if (item.type === 'folder') {
-        const folder = item as StorageFolder
-        traverse(folder.children || [])
-      }
-    }
-  }
-
-  traverse(tree)
-  return paths
+  const traverse = (items: StorageItem[]): string[] =>
+    items.flatMap(item => {
+      if (item.type === 'file') return [item.path]
+      if (item.type === 'folder') return traverse((item as StorageFolder).children || [])
+      return []
+    })
+  return traverse(tree)
 }
 
 /**
@@ -266,10 +261,7 @@ export function sortTreeItems(items: StorageItem[]): StorageItem[] {
 /**
  * Generate unique copy name
  */
-export function generateCopyName(
-  originalPath: string,
-  existingPaths: Set<string>
-): string {
+export function generateCopyName(originalPath: string, existingPaths: Set<string>): string {
   const name = getFileName(originalPath)
   const ext = getExtension(name)
   const baseName = getBaseName(name)

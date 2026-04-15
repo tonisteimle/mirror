@@ -7,6 +7,7 @@
  * - InsertionCalculator: Pure geometry for insertion position
  * - Indicator: Single DOM element, repositioned
  * - DragController: Orchestrates everything
+ * - DragReporter: Optional debugging/recording system
  *
  * Performance:
  * - Drag Move: ~0.5ms (no DOM reads, cached values)
@@ -31,5 +32,26 @@ export { HitDetector } from './hit-detector'
 export { Indicator } from './indicator'
 
 // Controller
-export { DragController, getDragController, resetDragController } from './drag-controller'
+export {
+  DragController,
+  getDragController,
+  resetDragController,
+  setupGlobalDragReporting,
+} from './drag-controller'
 export type { DragControllerCallbacks } from './drag-controller'
+
+// Reporter (re-export for convenience)
+export * from './reporter'
+
+// Test API (re-export for convenience)
+export * from './test-api'
+
+// Browser Test API (for real browser testing)
+export {
+  BrowserTestRunner,
+  setupBrowserDragTestAPI,
+  runAllTests as runBrowserTests,
+  type BrowserTestResult,
+  type AnimationConfig,
+  type TestCase,
+} from './browser-test-api'

@@ -85,7 +85,10 @@ export function parseDataFile(source: string, filename: string): DataFile {
   function flushFunction() {
     if (currentFunction) {
       // Remove trailing empty lines from body
-      while (functionBodyLines.length > 0 && functionBodyLines[functionBodyLines.length - 1].trim() === '') {
+      while (
+        functionBodyLines.length > 0 &&
+        functionBodyLines[functionBodyLines.length - 1].trim() === ''
+      ) {
         functionBodyLines.pop()
       }
       currentFunction.rawBody = functionBodyLines.join('\n')
@@ -120,7 +123,10 @@ export function parseDataFile(source: string, filename: string): DataFile {
     if (funcMatch) {
       flushEntry()
       flushFunction()
-      const params = funcMatch[3].split(',').map(p => p.trim()).filter(p => p)
+      const params = funcMatch[3]
+        .split(',')
+        .map(p => p.trim())
+        .filter(p => p)
       currentFunction = {
         namespace: funcMatch[1],
         name: funcMatch[2],
@@ -244,7 +250,7 @@ export function parseDataFile(source: string, filename: string): DataFile {
     if (simpleItemMatch && currentEntry && inAttributeSection) {
       currentEntry.attributes.push({
         key: trimmed,
-        value: trimmed,  // key IS the value for simple list items
+        value: trimmed, // key IS the value for simple list items
         line: lineNum,
       })
       continue
@@ -293,33 +299,13 @@ function parseReference(value: string): DataReference | null {
   return null
 }
 
-/**
- * Parse multiple data references like "$users.toni, $users.anna"
- */
 function parseReferences(raw: string): DataValue {
   const parts = raw.split(',').map(s => s.trim())
-
-  // Check if all parts are valid references
-  const refs: DataReference[] = []
-  for (const part of parts) {
-    const ref = parseReference(part)
-    if (!ref) {
-      // Not all parts are references, return as string
-      return raw
-    }
-    refs.push(ref)
-  }
-
-  // Single reference
-  if (refs.length === 1) {
-    return refs[0]
-  }
-
-  // Multiple references
-  return {
-    kind: 'referenceArray',
-    references: refs,
-  }
+  const refs = parts.map(parseReference)
+  if (refs.some(r => !r)) return raw
+  const validRefs = refs as DataReference[]
+  if (validRefs.length === 1) return validRefs[0]
+  return { kind: 'referenceArray', references: validRefs }
 }
 
 /**
@@ -366,9 +352,7 @@ function parseValue(raw: string): DataValue {
  * @param files - Array of {name, source} objects
  * @returns Array of parsed DataFiles
  */
-export function parseDataFiles(
-  files: Array<{ name: string; source: string }>
-): DataFile[] {
+export function parseDataFiles(files: Array<{ name: string; source: string }>): DataFile[] {
   return files.map(file => {
     // Extract filename without extension
     const filename = file.name.replace(/\.data$/, '')
@@ -381,7 +365,9 @@ export function parseDataFiles(
  *
  * Structure: { filename: { entryName: { attr1, attr2, block1, block2 } } }
  */
-export function mergeDataFiles(files: DataFile[]): Record<string, Record<string, Record<string, DataValue | string>>> {
+export function mergeDataFiles(
+  files: DataFile[]
+): Record<string, Record<string, Record<string, DataValue | string>>> {
   const result: Record<string, Record<string, Record<string, DataValue | string>>> = {}
 
   for (const file of files) {
@@ -414,7 +400,9 @@ export function mergeDataFiles(files: DataFile[]): Record<string, Record<string,
 /**
  * Serialize merged data for JavaScript output
  */
-export function serializeDataForJS(data: Record<string, Record<string, Record<string, DataValue | string>>>): string {
+export function serializeDataForJS(
+  data: Record<string, Record<string, Record<string, DataValue | string>>>
+): string {
   const lines: string[] = []
 
   for (const [filename, entries] of Object.entries(data)) {

@@ -8,7 +8,15 @@
  * - All available properties (from schema)
  */
 
-import type { AST, ComponentDefinition, Instance, Property, ZagNode, Event, Action } from '../parser/ast'
+import type {
+  AST,
+  ComponentDefinition,
+  Instance,
+  Property,
+  ZagNode,
+  Event,
+  Action,
+} from '../parser/ast'
 import type { SourceMap, NodeMapping } from '../ir/source-map'
 import {
   properties as allPropertyDefinitions,
@@ -46,14 +54,14 @@ export interface ExtractedProperty {
   column: number
   isToken: boolean
   tokenName?: string
-  hasValue: boolean           // Whether the property has a value set
-  description?: string        // Property description from schema
-  options?: string[]          // For select/enum properties
-  category?: string           // Override category (e.g., 'behavior' for Zag props)
-  label?: string              // Human-readable label (e.g., "Close on Select")
-  min?: number                // For number validation/slider
-  max?: number                // For number validation/slider
-  step?: number               // For slider step
+  hasValue: boolean // Whether the property has a value set
+  description?: string // Property description from schema
+  options?: string[] // For select/enum properties
+  category?: string // Override category (e.g., 'behavior' for Zag props)
+  label?: string // Human-readable label (e.g., "Close on Select")
+  min?: number // For number validation/slider
+  max?: number // For number validation/slider
+  step?: number // For slider step
 }
 
 /**
@@ -79,10 +87,10 @@ export interface ExtractedInteraction {
  * Extracted action within an event
  */
 export interface ExtractedAction {
-  name: string                // 'toggle', 'show', 'hide', 'navigate', etc.
-  target?: string             // target element name
+  name: string // 'toggle', 'show', 'hide', 'navigate', etc.
+  target?: string // target element name
   arguments?: string[]
-  isFunctionCall: boolean     // true for toggle(), false for legacy syntax
+  isFunctionCall: boolean // true for toggle(), false for legacy syntax
   line: number
   column: number
 }
@@ -91,8 +99,8 @@ export interface ExtractedAction {
  * Extracted event with its actions
  */
 export interface ExtractedEvent {
-  name: string                // 'onclick', 'onhover', 'onkeydown', etc.
-  key?: string                // for keyboard events (e.g., 'enter', 'escape')
+  name: string // 'onclick', 'onhover', 'onkeydown', etc.
+  key?: string // for keyboard events (e.g., 'enter', 'escape')
   actions: ExtractedAction[]
   line: number
   column: number
@@ -106,8 +114,8 @@ export interface ExtractedElement {
   componentName: string
   instanceName?: string
   isDefinition: boolean
-  isTemplateInstance: boolean  // Element from each loop
-  templateId?: string          // Original template ID if isTemplateInstance
+  isTemplateInstance: boolean // Element from each loop
+  templateId?: string // Original template ID if isTemplateInstance
   categories: PropertyCategory[]
   allProperties: ExtractedProperty[]
   /** If true, shows all available properties (not just set ones) */
@@ -338,8 +346,30 @@ const COMPONENT_CATEGORIES: Record<string, string[]> = {
   icon: ['icon', 'color', 'sizing', 'spacing', 'visual', 'hover'],
 
   // Box/Frame: full layout capabilities
-  box: ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'visual', 'scroll', 'hover'],
-  frame: ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'visual', 'scroll', 'hover'],
+  box: [
+    'layout',
+    'position',
+    'alignment',
+    'sizing',
+    'spacing',
+    'color',
+    'border',
+    'visual',
+    'scroll',
+    'hover',
+  ],
+  frame: [
+    'layout',
+    'position',
+    'alignment',
+    'sizing',
+    'spacing',
+    'color',
+    'border',
+    'visual',
+    'scroll',
+    'hover',
+  ],
 
   // Slot: placeholder, sizing and spacing
   slot: ['sizing', 'spacing', 'color', 'border', 'visual'],
@@ -355,7 +385,20 @@ const COMPONENT_CATEGORIES: Record<string, string[]> = {
   img: ['sizing', 'spacing', 'border', 'visual', 'hover'],
 
   // Default: show all
-  default: ['layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'typography', 'icon', 'visual', 'scroll', 'hover'],
+  default: [
+    'layout',
+    'position',
+    'alignment',
+    'sizing',
+    'spacing',
+    'color',
+    'border',
+    'typography',
+    'icon',
+    'visual',
+    'scroll',
+    'hover',
+  ],
 }
 
 /**
@@ -551,8 +594,8 @@ export class PropertyExtractor {
 
     // Also track aliases
     for (const prop of existingProps) {
-      const def = allPropertyDefinitions.find(d =>
-        d.name === prop.name || d.aliases.includes(prop.name)
+      const def = allPropertyDefinitions.find(
+        d => d.name === prop.name || d.aliases.includes(prop.name)
       )
       if (def) {
         existingNames.add(def.name)
@@ -588,15 +631,24 @@ export class PropertyExtractor {
    */
   private schemaTypeToPropertyType(type: string): PropertyType {
     switch (type) {
-      case 'color': return 'color'
-      case 'number': return 'number'
-      case 'size': return 'size'
-      case 'spacing': return 'spacing'
-      case 'boolean': return 'boolean'
-      case 'string': return 'text'
-      case 'enum': return 'select'
-      case 'border': return 'number'
-      default: return 'unknown'
+      case 'color':
+        return 'color'
+      case 'number':
+        return 'number'
+      case 'size':
+        return 'size'
+      case 'spacing':
+        return 'spacing'
+      case 'boolean':
+        return 'boolean'
+      case 'string':
+        return 'text'
+      case 'enum':
+        return 'select'
+      case 'border':
+        return 'number'
+      default:
+        return 'unknown'
     }
   }
 
@@ -610,8 +662,8 @@ export class PropertyExtractor {
       // Use prop.category if set, otherwise look up in schema
       let category = prop.category
       if (!category) {
-        const schemaProp = allPropertyDefinitions.find(d =>
-          d.name === prop.name || d.aliases.includes(prop.name)
+        const schemaProp = allPropertyDefinitions.find(
+          d => d.name === prop.name || d.aliases.includes(prop.name)
         )
         category = schemaProp?.category || 'other'
       }
@@ -638,7 +690,10 @@ export class PropertyExtractor {
 
         categories.push({
           name: catName,
-          label: CATEGORY_LABELS[catName] || (categoryLabels as Record<string, string>)[catName] || catName,
+          label:
+            CATEGORY_LABELS[catName] ||
+            (categoryLabels as Record<string, string>)[catName] ||
+            catName,
           properties: props,
         })
       }
@@ -688,7 +743,10 @@ export class PropertyExtractor {
   /**
    * Recursively find an instance or ZagNode matching the mapping
    */
-  private findInInstance(inst: Instance | ZagNode | any, mapping: NodeMapping): Instance | ZagNode | null {
+  private findInInstance(
+    inst: Instance | ZagNode | any,
+    mapping: NodeMapping
+  ): Instance | ZagNode | null {
     // Check if this is a ZagComponent at top level
     if (inst.type === 'ZagComponent') {
       if (inst.line === mapping.position.line && inst.column === mapping.position.column) {
@@ -796,8 +854,8 @@ export class PropertyExtractor {
     }
 
     // Get description and options from schema
-    const schemaProp = allPropertyDefinitions.find(d =>
-      d.name === prop.name || d.aliases.includes(prop.name)
+    const schemaProp = allPropertyDefinitions.find(
+      d => d.name === prop.name || d.aliases.includes(prop.name)
     )
 
     return {
@@ -839,7 +897,20 @@ export class PropertyExtractor {
 
     // Convert to array with labels (behavior FIRST for Zag components)
     const categories: PropertyCategory[] = []
-    const order = [BEHAVIOR_CATEGORY, 'layout', 'position', 'alignment', 'sizing', 'spacing', 'color', 'border', 'typography', 'visual', 'hover', 'other']
+    const order = [
+      BEHAVIOR_CATEGORY,
+      'layout',
+      'position',
+      'alignment',
+      'sizing',
+      'spacing',
+      'color',
+      'border',
+      'typography',
+      'visual',
+      'hover',
+      'other',
+    ]
 
     for (const name of order) {
       const props = categoryMap.get(name)
@@ -880,11 +951,7 @@ export class PropertyExtractor {
     componentName: string,
     astNode: Instance | ZagNode
   ): ExtractedProperty[] {
-    return this.extractZagBehaviorPropsGeneric(
-      componentName,
-      astNode.properties,
-      'instance'
-    )
+    return this.extractZagBehaviorPropsGeneric(componentName, astNode.properties, 'instance')
   }
 
   /**
@@ -894,11 +961,7 @@ export class PropertyExtractor {
     componentName: string,
     componentDef: ComponentDefinition
   ): ExtractedProperty[] {
-    return this.extractZagBehaviorPropsGeneric(
-      componentName,
-      componentDef.properties,
-      'component'
-    )
+    return this.extractZagBehaviorPropsGeneric(componentName, componentDef.properties, 'component')
   }
 
   /**
@@ -971,12 +1034,13 @@ export class PropertyExtractor {
 
     // Select-specific rules
     if (componentName === 'Select' || componentName === 'Combobox' || componentName === 'Listbox') {
-      const isMultiple = currentValues.get('multiple') === true || currentValues.get('multiple') === 'true'
+      const isMultiple =
+        currentValues.get('multiple') === true || currentValues.get('multiple') === 'true'
 
       if (isMultiple) {
         // When multiple is true, these don't apply
-        hidden.add('closeOnSelect')  // Dropdown should stay open for multiple selection
-        hidden.add('deselectable')   // Always deselectable in multiple mode
+        hidden.add('closeOnSelect') // Dropdown should stay open for multiple selection
+        hidden.add('deselectable') // Always deselectable in multiple mode
       }
 
       // open vs defaultOpen: show only one
@@ -984,18 +1048,19 @@ export class PropertyExtractor {
       const hasDefaultOpen = currentValues.has('defaultOpen')
 
       if (hasOpen) {
-        hidden.add('defaultOpen')  // Controlled mode - defaultOpen irrelevant
+        hidden.add('defaultOpen') // Controlled mode - defaultOpen irrelevant
       } else if (hasDefaultOpen) {
-        hidden.add('open')  // Uncontrolled mode - open would override
+        hidden.add('open') // Uncontrolled mode - open would override
       }
     }
 
     // Accordion-specific rules
     if (componentName === 'Accordion') {
-      const isMultiple = currentValues.get('multiple') === true || currentValues.get('multiple') === 'true'
+      const isMultiple =
+        currentValues.get('multiple') === true || currentValues.get('multiple') === 'true'
 
       if (isMultiple) {
-        hidden.add('collapsible')  // Always collapsible in multiple mode
+        hidden.add('collapsible') // Always collapsible in multiple mode
       }
     }
 
@@ -1025,7 +1090,7 @@ export class PropertyExtractor {
     const interactionNames = new Set(['toggle', 'exclusive', 'select'])
 
     // Check events for interaction function calls
-    const events = 'events' in node ? (node.events || []) : []
+    const events = 'events' in node ? node.events || [] : []
     for (const event of events) {
       for (const action of event.actions) {
         if (action.isFunctionCall && interactionNames.has(action.name)) {
@@ -1064,11 +1129,12 @@ export class PropertyExtractor {
    * Extract events from an AST node
    */
   private extractEvents(node: Instance | ComponentDefinition): ExtractedEvent[] {
-    const events: Event[] = 'events' in node ? (node.events || []) : []
-
+    const events: Event[] = 'events' in node ? node.events || [] : []
     return events.map(event => ({
       name: event.name,
       key: event.key,
+      line: event.line,
+      column: event.column,
       actions: event.actions.map(action => ({
         name: action.name,
         target: action.target,
@@ -1077,8 +1143,6 @@ export class PropertyExtractor {
         line: action.line,
         column: action.column,
       })),
-      line: event.line,
-      column: event.column,
     }))
   }
 

@@ -174,18 +174,11 @@ export function quickValidate(code: string, options?: ValidationOptions): Valida
  * })
  * ```
  */
-export function quickExpectStyle(
-  code: string,
-  property: string,
-  expectedValue: string
-): void {
+export function quickExpectStyle(code: string, property: string, expectedValue: string): void {
   const ctx = renderMirror(code)
   try {
-    // Find the first element with styles
     const firstNode = ctx.ir.nodes[0]
-    if (!firstNode) {
-      expect.fail('No elements in rendered code')
-    }
+    if (!firstNode) expect.fail('No elements in rendered code')
     expectStyle(ctx, firstNode.id, property, expectedValue)
   } finally {
     ctx.cleanup()
@@ -207,10 +200,7 @@ export function quickExpectStyle(
  * })
  * ```
  */
-export function quickExpectStyles(
-  code: string,
-  expectedStyles: Record<string, string>
-): void {
+export function quickExpectStyles(code: string, expectedStyles: Record<string, string>): void {
   const ctx = renderMirror(code)
   try {
     const firstNode = ctx.ir.nodes[0]
@@ -244,14 +234,11 @@ export function logElementStyles(ctx: RenderContext, nodeId: string): void {
     console.log(`Element not found: ${nodeId}`)
     return
   }
-
   console.log(`\nElement: ${nodeId}${result.componentName ? ` (${result.componentName})` : ''}`)
   console.log('Expected styles (from IR):')
-  for (const [prop, value] of Object.entries(result.expectedStyles)) {
+  Object.entries(result.expectedStyles).forEach(([prop, value]) =>
     console.log(`  ${prop}: ${value}`)
-  }
+  )
   console.log('Actual styles (from DOM):')
-  for (const [prop, value] of Object.entries(result.actualStyles)) {
-    console.log(`  ${prop}: ${value}`)
-  }
+  Object.entries(result.actualStyles).forEach(([prop, value]) => console.log(`  ${prop}: ${value}`))
 }

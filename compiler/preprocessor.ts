@@ -76,10 +76,7 @@ export function combineProjectFilesWithData(
  * @param readFile - Function to read file contents by path
  * @returns Combined code from all files in correct order
  */
-export function combineProjectFiles(
-  listFiles: ListFilesFn,
-  readFile: ReadFileFn
-): string {
+export function combineProjectFiles(listFiles: ListFilesFn, readFile: ReadFileFn): string {
   const sections: string[] = []
 
   for (const dir of DIRECTORY_ORDER) {
@@ -107,19 +104,6 @@ export function combineProjectFiles(
  * @param readFile - Function to read file contents
  * @returns Combined code
  */
-export function combineFiles(
-  files: string[],
-  readFile: ReadFileFn
-): string {
-  const sections: string[] = []
-
-  for (const file of files) {
-    const content = readFile(file)
-    if (content) {
-      sections.push(content)
-      sections.push('') // Empty line between files
-    }
-  }
-
-  return sections.join('\n')
+export function combineFiles(files: string[], readFile: ReadFileFn): string {
+  return files.map(readFile).filter(Boolean).join('\n\n')
 }

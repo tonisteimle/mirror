@@ -4,7 +4,7 @@
  * Shared types for all Test API modules.
  */
 
-import type { MirrorElement, OverlayPosition, PositionOptions } from '../dom-runtime'
+import type { MirrorElement, OverlayPosition, PositionOptions } from '../types'
 
 // Re-export types for convenience
 export type { MirrorElement, OverlayPosition, PositionOptions }
@@ -34,11 +34,32 @@ export interface RuntimeFunctions {
   unhighlight?: (el: MirrorElement) => void
 
   // Overlays & Positioning
-  showAt?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, position?: OverlayPosition, options?: PositionOptions) => void
-  showBelow?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, offset?: number) => void
-  showAbove?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, offset?: number) => void
-  showLeft?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, offset?: number) => void
-  showRight?: (element: MirrorElement | string | null, trigger?: MirrorElement | null, offset?: number) => void
+  showAt?: (
+    element: MirrorElement | string | null,
+    trigger?: MirrorElement | null,
+    position?: OverlayPosition,
+    options?: PositionOptions
+  ) => void
+  showBelow?: (
+    element: MirrorElement | string | null,
+    trigger?: MirrorElement | null,
+    offset?: number
+  ) => void
+  showAbove?: (
+    element: MirrorElement | string | null,
+    trigger?: MirrorElement | null,
+    offset?: number
+  ) => void
+  showLeft?: (
+    element: MirrorElement | string | null,
+    trigger?: MirrorElement | null,
+    offset?: number
+  ) => void
+  showRight?: (
+    element: MirrorElement | string | null,
+    trigger?: MirrorElement | null,
+    offset?: number
+  ) => void
   showModal?: (element: MirrorElement | string | null, backdrop?: boolean) => void
   dismiss?: (element: MirrorElement | string | null) => void
 

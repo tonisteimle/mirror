@@ -28,7 +28,6 @@ import type {
 } from '../ir/types'
 import { isIRZagNode, isIRTable } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
-import { generateTheme, isThemeToken } from '../schema/theme-generator'
 import type { DataFile } from '../parser/data-types'
 import { dispatchZagEmitter } from './dom/zag-emitters'
 import type { ZagEmitterContext } from './dom/zag-emitter-context'
@@ -57,7 +56,42 @@ import {
 import type { EventEmitterContext } from './dom/event-emitter'
 import { emitTokens as emitTokensExtracted } from './dom/token-emitter'
 import type { TokenEmitterContext } from './dom/token-emitter'
-import { getSizeStateThresholds, SIZE_STATES } from '../schema/parser-helpers'
+
+// New extracted modules
+import { emitAnimations as emitAnimationsExtracted } from './dom/animation-emitter'
+import type { AnimationEmitterContext } from './dom/animation-emitter'
+import {
+  emitElementCreation,
+  emitProperties,
+  emitIconSetup,
+  emitSlotSetup,
+  emitBaseStyles,
+  emitContainerType,
+  emitLayoutType,
+  emitStateStyles,
+  emitVisibleWhen,
+  emitSelectionBinding,
+  emitBindAttribute,
+  emitComponentAttributes,
+  emitRouteAttribute,
+  emitKeyboardNav,
+  emitValueBinding,
+  emitAbsolutePositioning,
+  emitAbsContainerMarker,
+  emitAppendToParent,
+} from './dom/node-emitter'
+import type { NodeEmitterContext } from './dom/node-emitter'
+import {
+  collectNamedNodes as collectNamedNodesExtracted,
+  emitPublicAPI as emitPublicAPIExtracted,
+  emitInitialization as emitInitializationExtracted,
+  emitAutoMount as emitAutoMountExtracted,
+} from './dom/api-emitter'
+import type { APIEmitterContext } from './dom/api-emitter'
+import { emitChartSetup } from './dom/chart-emitter'
+import type { ChartEmitterContext } from './dom/chart-emitter'
+import { emitStyles as emitStylesExtracted } from './dom/style-emitter'
+import type { StyleEmitterContext } from './dom/style-emitter'
 
 // Re-export types for external consumers
 export type { GenerateDOMOptions } from './dom/types'
@@ -284,48 +318,20 @@ class DOMGenerator {
   }
 
   private emitAnimations(): void {
-    if (this.ir.animations.length === 0) return
-
-    this.emit('// Register animations')
-    for (const animation of this.ir.animations) {
-      this.emitAnimationRegistration(animation)
-    }
-    this.emit('')
+    const ctx = this.createAnimationEmitterContext()
+    emitAnimationsExtracted(ctx, this.ir.animations)
   }
 
-  private emitAnimationRegistration(animation: IRAnimation): void {
-    this.emit(`_runtime.registerAnimation({`)
-    this.indent++
-    this.emit(`name: "${animation.name}",`)
-    this.emit(`easing: "${animation.easing}",`)
-    if (animation.duration) {
-      this.emit(`duration: ${animation.duration},`)
+  private createAnimationEmitterContext(): AnimationEmitterContext {
+    return {
+      emit: (line: string) => this.emit(line),
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
     }
-    if (animation.roles && animation.roles.length > 0) {
-      this.emit(`roles: ${JSON.stringify(animation.roles)},`)
-    }
-    this.emit(`keyframes: [`)
-    this.indent++
-    for (const keyframe of animation.keyframes) {
-      this.emit(`{`)
-      this.indent++
-      this.emit(`time: ${keyframe.time},`)
-      this.emit(`properties: [`)
-      this.indent++
-      for (const prop of keyframe.properties) {
-        this.emit(
-          `{ property: "${prop.property}", value: "${prop.value}"${prop.target ? `, target: "${prop.target}"` : ''} },`
-        )
-      }
-      this.indent--
-      this.emit(`],`)
-      this.indent--
-      this.emit(`},`)
-    }
-    this.indent--
-    this.emit(`],`)
-    this.indent--
-    this.emit(`})`)
   }
 
   private emit(line: string): void {
@@ -367,274 +373,6 @@ class DOMGenerator {
     })
   }
 
-  private emitStyles(): void {
-    this.emit('// Inject CSS styles')
-    this.emit("const _style = document.createElement('style')")
-    this.emit('_style.textContent = `')
-
-    // Generate theme tokens from user-defined tokens
-    // These are CSS custom properties used by Zag components
-    const themeTokens = this.astTokens.filter(t => {
-      const name = t.name.startsWith('$') ? t.name.slice(1) : t.name
-      return isThemeToken(name)
-    })
-
-    if (themeTokens.length > 0) {
-      const theme = generateTheme(themeTokens)
-      // Emit the generated theme CSS (contains :root { ... })
-      this.emitRaw(theme.css)
-      this.emit('')
-    }
-
-    // Emit user-defined CSS variables (non-theme tokens)
-    // Only simple tokens (with value) become CSS variables - data objects are skipped
-    const customTokens = this.ir.tokens.filter(t => {
-      if (t.value === undefined) return false // Skip data objects
-      const name = t.name.startsWith('$') ? t.name.slice(1) : t.name
-      return !isThemeToken(name)
-    })
-
-    if (customTokens.length > 0) {
-      this.emit('/* User Tokens */')
-      this.emit(':host, :root {')
-      this.indent++
-      for (const token of customTokens) {
-        // Skip tokens without value (data objects)
-        if (token.value === undefined) continue
-        // Resolve token-to-token references (e.g., $primary.bg: $blue → #2271C1)
-        let value = this.resolveTokenValueWithContext(token.value, token.name)
-        // Strip $ prefix and convert dots to hyphens for valid CSS variable name
-        const cssVarName = (token.name.startsWith('$') ? token.name.slice(1) : token.name).replace(
-          /\./g,
-          '-'
-        )
-
-        // Add px unit for numeric spacing/sizing tokens
-        // Including: pad, gap, rad, margin, size, fs (font-size), w (width), h (height), is (icon-size)
-        const needsPx = /\.(pad|gap|rad|radius|margin|size|fs|w|h|is)$/.test(token.name)
-        if (needsPx && typeof value === 'number') {
-          value = `${value}px`
-        } else if (needsPx && typeof value === 'string' && /^\d+$/.test(value)) {
-          value = `${value}px`
-        }
-
-        this.emit(`--${cssVarName}: ${value};`)
-      }
-      this.indent--
-      this.emit('}')
-      this.emit('')
-    }
-
-    // Base reset
-    this.emit('.mirror-root * {')
-    this.emit('  box-sizing: border-box;')
-    this.emit('}')
-
-    // Animation keyframes for presets (pulse, bounce, shake, spin, etc.)
-    this.emitAnimationKeyframes()
-
-    // Emit CSS for system states (hover, focus, active, disabled)
-    this.emitSystemStateCSS()
-
-    // Emit CSS @container queries for size-states (compact, regular, wide)
-    this.emitSizeStateCSS()
-
-    this.emit('`')
-    this.emit('_root.appendChild(_style)')
-    this.emit('')
-  }
-
-  private emitAnimationKeyframes(): void {
-    // Animation keyframes for built-in presets
-    // These match the animation names used in IR (compiler/ir/index.ts)
-    this.emit('')
-    this.emit('/* Animation Keyframes */')
-
-    // fade-in / fade-out
-    this.emit('@keyframes mirror-fade-in { from { opacity: 0; } to { opacity: 1; } }')
-    this.emit('@keyframes mirror-fade-out { from { opacity: 1; } to { opacity: 0; } }')
-
-    // slide-in / slide-out (default: from left)
-    this.emit(
-      '@keyframes mirror-slide-in { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }'
-    )
-    this.emit(
-      '@keyframes mirror-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-20px); opacity: 0; } }'
-    )
-
-    // scale-in / scale-out
-    this.emit(
-      '@keyframes mirror-scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }'
-    )
-    this.emit(
-      '@keyframes mirror-scale-out { from { transform: scale(1); opacity: 1; } to { transform: scale(0.9); opacity: 0; } }'
-    )
-
-    // bounce (attention-grabbing, loops)
-    this.emit(
-      '@keyframes mirror-bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }'
-    )
-
-    // pulse (attention-grabbing, loops)
-    this.emit(
-      '@keyframes mirror-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }'
-    )
-
-    // shake (error feedback)
-    this.emit(
-      '@keyframes mirror-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }'
-    )
-
-    // spin (loading indicator, loops)
-    this.emit(
-      '@keyframes mirror-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }'
-    )
-  }
-
-  private emitSystemStateCSS(): void {
-    // Collect all system states from nodes
-    const systemStates = ['hover', 'focus', 'active', 'disabled']
-
-    for (const node of this.ir.nodes) {
-      this.emitNodeStateCSS(node, systemStates)
-    }
-  }
-
-  private emitNodeStateCSS(node: IRNode, systemStates: string[]): void {
-    const stateStyles = node.styles.filter(s => s.state && systemStates.includes(s.state))
-
-    if (stateStyles.length > 0) {
-      const byState = this.groupByState(stateStyles)
-
-      for (const [state, styles] of Object.entries(byState)) {
-        const pseudoClass = state === 'disabled' ? '[disabled]' : `:${state}`
-        this.emit('')
-        // Use prefix selector (^=) to match both static nodes (node-55) and loop nodes (node-55[0], node-55[1], etc.)
-        this.emit(`[data-mirror-id^="${node.id}"]${pseudoClass} {`)
-        this.indent++
-        for (const style of styles) {
-          this.emit(`${style.property}: ${style.value} !important;`)
-        }
-        this.indent--
-        this.emit('}')
-      }
-    }
-
-    // Recurse into children
-    for (const child of node.children) {
-      this.emitNodeStateCSS(child, systemStates)
-    }
-
-    // Also process template nodes inside each loops
-    if (node.each?.template) {
-      for (const templateNode of node.each.template) {
-        this.emitNodeStateCSS(templateNode, systemStates)
-      }
-    }
-  }
-
-  /**
-   * Emit CSS @container queries for size-states (compact, regular, wide)
-   *
-   * Size-states use CSS Container Queries, which respond to the element's own width
-   * (not the viewport). This enables truly component-scoped responsive behavior.
-   */
-  private emitSizeStateCSS(): void {
-    for (const node of this.ir.nodes) {
-      this.emitNodeSizeStateCSS(node)
-    }
-  }
-
-  private emitNodeSizeStateCSS(node: IRNode): void {
-    // Collect size-state styles for this node
-    const sizeStateStyles = node.styles.filter(s => s.sizeState)
-
-    if (sizeStateStyles.length > 0) {
-      const bySizeState = this.groupBySizeState(sizeStateStyles)
-
-      for (const [sizeState, styles] of Object.entries(bySizeState)) {
-        const query = this.buildContainerQuery(sizeState)
-        if (!query) continue // Skip if we couldn't build a query
-
-        this.emit('')
-        this.emit(`/* Size-state: ${sizeState} */`)
-        this.emit(`@container ${query} {`)
-        this.indent++
-        // Use prefix selector (^=) to match both static nodes and loop nodes
-        this.emit(`[data-mirror-id^="${node.id}"] {`)
-        this.indent++
-        for (const style of styles) {
-          this.emit(`${style.property}: ${style.value} !important;`)
-        }
-        this.indent--
-        this.emit('}')
-        this.indent--
-        this.emit('}')
-      }
-    }
-
-    // Recurse into children
-    for (const child of node.children) {
-      this.emitNodeSizeStateCSS(child)
-    }
-
-    // Also process template nodes inside each loops
-    if (node.each?.template) {
-      for (const templateNode of node.each.template) {
-        this.emitNodeSizeStateCSS(templateNode)
-      }
-    }
-  }
-
-  /**
-   * Build a CSS container query condition for a size-state
-   *
-   * @param sizeState The size-state name (compact, regular, wide, or custom)
-   * @returns CSS query string like "(max-width: 400px)" or "(min-width: 400px) and (max-width: 800px)"
-   */
-  private buildContainerQuery(sizeState: string): string | null {
-    // Get thresholds - either from built-in defaults or custom tokens
-    const thresholds = this.getResolvedSizeStateThresholds(sizeState)
-    if (!thresholds.min && !thresholds.max) return null
-
-    const parts: string[] = []
-    if (thresholds.min !== undefined) {
-      parts.push(`(min-width: ${thresholds.min}px)`)
-    }
-    if (thresholds.max !== undefined) {
-      parts.push(`(max-width: ${thresholds.max}px)`)
-    }
-
-    return parts.join(' and ')
-  }
-
-  /**
-   * Get the resolved thresholds for a size-state, considering custom token overrides
-   */
-  private getResolvedSizeStateThresholds(sizeState: string): { min?: number; max?: number } {
-    // First check for custom token overrides (e.g., "compact.max: 300")
-    const customMin = this.tokenMap.get(`${sizeState}.min`)
-    const customMax = this.tokenMap.get(`${sizeState}.max`)
-
-    // Get built-in defaults
-    const defaults = getSizeStateThresholds(sizeState)
-
-    return {
-      min: typeof customMin === 'number' ? customMin : defaults?.min,
-      max: typeof customMax === 'number' ? customMax : defaults?.max,
-    }
-  }
-
-  private groupBySizeState(styles: IRStyle[]): Record<string, IRStyle[]> {
-    const result: Record<string, IRStyle[]> = {}
-    for (const style of styles) {
-      const sizeState = style.sizeState || 'default'
-      if (!result[sizeState]) result[sizeState] = []
-      result[sizeState].push(style)
-    }
-    return result
-  }
-
   private emitCreateUI(): void {
     this.emit('export function createUI(data = {}) {')
     this.indent++
@@ -652,7 +390,7 @@ class DOMGenerator {
     this.emit('')
 
     // Inject CSS (variables + system state styles)
-    this.emitStyles()
+    emitStylesExtracted(this.createStyleEmitterContext())
 
     // Generate each node (first node is the main root)
     let isFirstNode = true
@@ -710,222 +448,41 @@ class DOMGenerator {
     }
 
     const varName = this.sanitizeVarName(node.id)
+    const nodeCtx = this.createNodeEmitterContext()
 
-    this.emit(`// ${node.name || node.tag}`)
-    this.emit(`const ${varName} = document.createElement('${node.tag}')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    // Mark main root element (cannot be moved via drag-drop)
-    if (isMainRoot) {
-      this.emit(`${varName}.dataset.mirrorRoot = 'true'`)
-    }
-    // Component name for breadcrumb navigation
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
+    // Create element and register it
+    emitElementCreation(nodeCtx, node, varName, isMainRoot)
 
-    // Instance name for external access and state references
-    if (node.instanceName) {
-      this.emit(`_elements['${node.instanceName}'] = ${varName}`)
-      // Set data-mirror-name for watchStates to find this element by name
-      this.emit(`${varName}.dataset.mirrorName = '${node.instanceName}'`)
-    }
-
-    // Detect if this is an icon or slot element (based on primitive type)
-    const isIcon = node.primitive === 'icon'
-    const isSlot = node.primitive === 'slot'
-    let iconName: string | null = null
-
-    // Set HTML properties
-    for (const prop of node.properties) {
-      if (prop.name === 'textContent') {
-        // For icons, store the name for loading instead of setting textContent
-        if (isIcon && typeof prop.value === 'string') {
-          iconName = prop.value
-        } else if (isSlot) {
-          // Skip textContent for slots - we create a label element instead below
-        } else {
-          // Handle $-variables: $name → $get('name')
-          const value = this.resolveContentValue(prop.value)
-          this.emit(`${varName}.textContent = ${value}`)
-
-          // Register text binding for reactive updates if value contains $get()
-          // Extract binding paths from $get("path") calls
-          const getMatches = value.match(/\$get\("([^"]+)"\)/g)
-          if (getMatches) {
-            // Store the expression template for re-evaluation
-            // Note: value is already valid JavaScript (either $get("...") or a template literal)
-            // so we don't need to escape it further
-            this.emit(`${varName}._textTemplate = () => ${value}`)
-
-            for (const match of getMatches) {
-              const pathMatch = match.match(/\$get\("([^"]+)"\)/)
-              if (pathMatch) {
-                const bindingPath = pathMatch[1]
-                this.emit(`_runtime.bindText(${varName}, "${bindingPath}")`)
-              }
-            }
-          }
-        }
-      } else if (prop.name === 'disabled' || prop.name === 'hidden') {
-        this.emit(`${varName}.${prop.name} = ${prop.value}`)
-      } else {
-        const value =
-          typeof prop.value === 'string' ? `"${this.escapeString(String(prop.value))}"` : prop.value
-        this.emit(`${varName}.setAttribute('${prop.name}', ${value})`)
-      }
-    }
+    // Set HTML properties (returns icon/slot info for further processing)
+    const { isIcon, iconName, isSlot } = emitProperties(nodeCtx, node, varName)
 
     // Load icon from CDN if this is an icon element
     if (isIcon && iconName) {
-      this.emit(`// Icon default styles`)
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      this.emit(`'display': 'inline-flex',`)
-      this.emit(`'align-items': 'center',`)
-      this.emit(`'justify-content': 'center',`)
-      this.emit(`'flex-shrink': '0',`)
-      this.emit(`'line-height': '0',`)
-      this.indent--
-      this.emit(`})`)
-      this.emit(`// Load Lucide icon`)
-      this.emit(`_runtime.loadIcon(${varName}, "${this.escapeString(iconName)}")`)
+      emitIconSetup(nodeCtx, varName, iconName)
     }
 
     // Handle Slot primitive - visual placeholder for drag & drop
     if (isSlot) {
-      // Get slot label from textContent property
-      const labelProp = node.properties.find(p => p.name === 'textContent')
-      const slotLabel = labelProp ? String(labelProp.value) : 'Slot'
-
-      this.emit(`// Slot placeholder`)
-      this.emit(`${varName}.dataset.mirrorSlot = 'true'`)
-      this.emit(`${varName}.dataset.slot = "${this.escapeString(slotLabel)}"`)
-      this.emit(`${varName}.dataset.slotLabel = "${this.escapeString(slotLabel)}"`)
-      this.emit(`${varName}.classList.add('mirror-slot')`)
-
-      // Create label element
-      this.emit(`const ${varName}_label = document.createElement('span')`)
-      this.emit(`${varName}_label.className = 'mirror-slot-label'`)
-      this.emit(`${varName}_label.textContent = "${this.escapeString(slotLabel)}"`)
-      this.emit(`${varName}.appendChild(${varName}_label)`)
+      emitSlotSetup(nodeCtx, node, varName)
     }
 
     // Handle Chart primitive - create Chart.js chart
-    const isChart = node.primitive === 'chart'
-    if (isChart) {
-      this.emit(`// Chart initialization`)
-      this.emit(`${varName}.dataset.mirrorChart = 'true'`)
-
-      // Extract chart config from properties
-      const chartType = node.properties.find(p => p.name === 'chartType')?.value || 'line'
-      const dataBinding = node.properties.find(p => p.name === 'data')?.value
-      const xField = node.properties.find(p => p.name === 'xField')?.value
-      const yField = node.properties.find(p => p.name === 'yField')?.value
-      const colors = node.properties.find(p => p.name === 'colors')?.value
-      const title = node.properties.find(p => p.name === 'title')?.value
-      const legend = node.properties.find(p => p.name === 'legend')?.value
-      const stacked = node.properties.find(p => p.name === 'stacked')?.value
-      const fill = node.properties.find(p => p.name === 'fill')?.value
-      const tension = node.properties.find(p => p.name === 'tension')?.value
-      const grid = node.properties.find(p => p.name === 'grid')?.value
-      const axes = node.properties.find(p => p.name === 'axes')?.value
-
-      // Build chart config object
-      this.emit(`const ${varName}_config = {`)
-      this.indent++
-      this.emit(`type: '${chartType}',`)
-
-      // Resolve data - either from $variable or inline
-      if (dataBinding && String(dataBinding).startsWith('$')) {
-        const dataPath = String(dataBinding).slice(1) // Remove $
-        this.emit(`data: $get('${dataPath}'),`)
-      } else if (dataBinding) {
-        this.emit(`data: ${JSON.stringify(dataBinding)},`)
-      } else {
-        this.emit(`data: [],`)
-      }
-
-      if (xField) this.emit(`xField: '${xField}',`)
-      if (yField) this.emit(`yField: '${yField}',`)
-      if (colors) this.emit(`colors: ${JSON.stringify(String(colors).split(','))},`)
-      if (title) this.emit(`title: '${this.escapeString(String(title))}',`)
-      if (legend !== undefined) this.emit(`legend: ${legend},`)
-      if (stacked !== undefined) this.emit(`stacked: ${stacked},`)
-      if (fill !== undefined) this.emit(`fill: ${fill},`)
-      if (tension !== undefined) this.emit(`tension: ${tension},`)
-      if (grid !== undefined) this.emit(`grid: ${grid},`)
-      if (axes !== undefined) this.emit(`axes: ${axes},`)
-
-      // Add chart slots configuration
-      const chartSlots = node.properties.find(p => p.name === 'chartSlots')?.value
-      if (chartSlots) {
-        this.emit(`slots: ${chartSlots},`)
-      }
-
-      this.indent--
-      this.emit(`}`)
-
-      // Call runtime to create the chart
-      this.emit(`_runtime.createChart(${varName}, ${varName}_config)`)
-    }
+    emitChartSetup(this.createChartEmitterContext(), node, varName)
 
     // Apply base styles (excluding state-specific and size-state styles)
-    const baseStyles = node.styles.filter(s => !s.state && !s.sizeState)
-    if (baseStyles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of baseStyles) {
-        this.emit(`'${style.property}': '${style.value}',`)
-      }
-      this.indent--
-      this.emit('})')
-    }
+    const baseStyles = emitBaseStyles(nodeCtx, node, varName)
 
     // Set container-type for size-states (CSS Container Queries)
-    // This enables @container queries to respond to this element's size
-    if (node.needsContainer) {
-      this.emit(`${varName}.style.containerType = 'inline-size'`)
-    }
+    emitContainerType(nodeCtx, node, varName)
 
     // Set data-layout for drop strategy detection
-    // This is the primary way to identify layout type in the DOM
-    if (node.layoutType) {
-      this.emit(`${varName}.dataset.layout = '${node.layoutType}'`)
-    }
+    emitLayoutType(nodeCtx, node, varName)
 
     // Mark abs containers (fallback for older IR or when layoutType not set)
-    // We detect this by checking if the element has position: relative but NOT flex/grid display
-    // (flex containers also need position: relative for stacked layouts, so we need to be careful)
-    const hasPositionRelative = baseStyles.some(
-      s => s.property === 'position' && s.value === 'relative'
-    )
-    const hasFlexDisplay = baseStyles.some(
-      s => s.property === 'display' && (s.value === 'flex' || s.value === 'grid')
-    )
-    if (hasPositionRelative && !hasFlexDisplay && !node.layoutType) {
-      this.emit(`${varName}.dataset.mirrorAbs = 'true'`)
-    }
+    emitAbsContainerMarker(nodeCtx, node, varName, baseStyles)
 
     // Store state styles for runtime (excluding CSS-handled system states)
-    const cssStates = new Set(['hover', 'focus', 'active', 'disabled'])
-    const behaviorStyles = node.styles.filter(s => s.state && !cssStates.has(s.state))
-    if (behaviorStyles.length > 0) {
-      this.emit(`${varName}._stateStyles = {`)
-      this.indent++
-      const byState = this.groupByState(behaviorStyles)
-      for (const [state, styles] of Object.entries(byState)) {
-        this.emit(`'${state}': {`)
-        this.indent++
-        for (const style of styles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('},')
-      }
-      this.indent--
-      this.emit('}')
-    }
+    emitStateStyles(nodeCtx, node, varName)
 
     // State machine configuration (interaction model)
     // Note: stateMachine handling includes initialState support
@@ -944,59 +501,22 @@ class DOMGenerator {
     }
 
     // Visible when state condition
-    if (node.visibleWhen) {
-      this.emit(`${varName}._visibleWhen = '${node.visibleWhen}'`)
-      this.emit(`// Initially hidden until condition is met`)
-      this.emit(`${varName}.style.display = 'none'`)
-
-      // If the condition references data (contains $), register visibility binding
-      // so it gets re-evaluated when that data changes
-      const dataMatches = node.visibleWhen.match(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g)
-      if (dataMatches) {
-        for (const match of dataMatches) {
-          const path = match.slice(1) // Remove $ prefix
-          // Use the base path (e.g., "selectedAddress" not "selectedAddress.name")
-          const basePath = path.split('.')[0]
-          this.emit(`_runtime.bindVisibility(${varName}, '${basePath}')`)
-        }
-      }
-    }
+    emitVisibleWhen(nodeCtx, node, varName)
 
     // Selection binding - for exclusive() to update a variable with selected content
-    if (node.selection) {
-      const selectionVar = node.selection.startsWith('$') ? node.selection.slice(1) : node.selection
-      this.emit(`${varName}._selectionBinding = '${selectionVar}'`)
-      // Set data-selection so runtime can find this container when exclusive() fires
-      this.emit(`${varName}.dataset.selection = '${selectionVar}'`)
-    }
+    emitSelectionBinding(nodeCtx, node, varName)
 
     // Bind - track active exclusive() child content in a variable
-    if (node.bind) {
-      const bindVar = node.bind.startsWith('$') ? node.bind.slice(1) : node.bind
-      // Set data-bind so runtime can find this container when exclusive() fires
-      this.emit(`${varName}.dataset.bind = '${bindVar}'`)
-    }
+    emitBindAttribute(nodeCtx, node, varName)
 
     // Component name (for navigation targets)
-    if (node.name) {
-      this.emit(`${varName}.dataset.component = '${node.name}'`)
-      // Also set data-slot for known Zag slot names (e.g., CloseTrigger inside Dialog)
-      // This allows the runtime to find these elements via [data-slot="CloseTrigger"]
-      if (ZAG_SLOT_NAMES.has(node.name)) {
-        this.emit(`${varName}.dataset.slot = '${node.name}'`)
-      }
-    }
+    emitComponentAttributes(nodeCtx, node, varName, ZAG_SLOT_NAMES)
 
     // Route (for navigation)
-    if (node.route) {
-      this.emit(`${varName}.dataset.route = '${node.route}'`)
-    }
+    emitRouteAttribute(nodeCtx, node, varName)
 
     // Keyboard navigation for form containers
-    if (node.keyboardNav) {
-      this.emit(`// Enable keyboard navigation (Enter to next, Escape to blur)`)
-      this.emit(`_runtime.setupKeyboardNav(${varName})`)
-    }
+    emitKeyboardNav(nodeCtx, node, varName)
 
     // Add event listeners
     // Check if there are keyboard events and make element focusable
@@ -1017,20 +537,7 @@ class DOMGenerator {
     }
 
     // Two-way data binding for input elements
-    if (node.valueBinding) {
-      const bindingPath = node.valueBinding
-      this.emit(`// Two-way data binding: ${bindingPath}`)
-      // Set initial value from data
-      this.emit(`${varName}.value = $get("${bindingPath}") ?? ""`)
-      // Add input event listener for updates
-      this.emit(`${varName}.addEventListener('input', (e) => {`)
-      this.indent++
-      this.emit(`$set("${bindingPath}", e.target.value)`)
-      this.indent--
-      this.emit(`})`)
-      // Register binding for reactive updates
-      this.emit(`_runtime.bindValue(${varName}, "${bindingPath}")`)
-    }
+    emitValueBinding(nodeCtx, node, varName)
 
     // Recursively emit children
     // BUT: Skip default children if the node starts in a non-default state that has its own children
@@ -1049,26 +556,10 @@ class DOMGenerator {
     }
 
     // Auto-set parent to relative if this element is absolute positioned
-    // Only if parent doesn't already have position/layout set
-    const hasPositionAbsolute = baseStyles.some(
-      s => s.property === 'position' && s.value === 'absolute'
-    )
-    if (hasPositionAbsolute && parentVar !== '_root') {
-      this.emit(`// Auto-set parent to relative for absolute child`)
-      this.emit(
-        `if (${parentVar}.style.position !== 'relative' && ${parentVar}.style.position !== 'absolute' && ${parentVar}.style.position !== 'fixed') {`
-      )
-      this.indent++
-      this.emit(`${parentVar}.style.position = 'relative'`)
-      // Only set mirrorAbs if parent doesn't have explicit data-layout
-      this.emit(`if (!${parentVar}.dataset.layout) ${parentVar}.dataset.mirrorAbs = 'true'`)
-      this.indent--
-      this.emit(`}`)
-    }
+    emitAbsolutePositioning(nodeCtx, baseStyles, varName, parentVar)
 
     // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
+    emitAppendToParent(nodeCtx, varName, parentVar)
   }
 
   // emitEachLoop: migrated to compiler/backends/dom/loop-emitter.ts
@@ -1939,80 +1430,75 @@ class DOMGenerator {
   }
 
   private emitPublicAPI(): void {
-    this.emit('// Attach API methods directly to _root for intuitive usage')
-    this.emit('// createUI() returns the DOM node directly, with API methods attached')
-    this.emit('')
-
-    // Generate accessors for named instances
+    const ctx = this.createAPIEmitterContext()
     const namedNodes = this.collectNamedNodes(this.ir.nodes)
-    for (const node of namedNodes) {
-      this.emit(`Object.defineProperty(_root, '${node.instanceName}', {`)
-      this.indent++
-      this.emit(`get() { return _runtime.wrap(_elements['${node.instanceName}']) },`)
-      this.emit('enumerable: true')
-      this.indent--
-      this.emit('})')
+    emitPublicAPIExtracted(ctx, namedNodes)
+  }
+
+  private createAPIEmitterContext(): APIEmitterContext {
+    return {
+      emit: (line: string) => this.emit(line),
+      emitRaw: (line: string) => this.emitRaw(line),
+      getIndent: () => this.indent,
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
     }
+  }
 
-    this.emit('')
-    this.emit('// State management')
-    this.emit('_root.setState = function(key, value) {')
-    this.indent++
-    this.emit('_state[key] = value')
-    this.emit('this.update()')
-    this.indent--
-    this.emit('}')
-    this.emit('')
+  private createChartEmitterContext(): ChartEmitterContext {
+    return {
+      emit: (line: string) => this.emit(line),
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
+      escapeString: str => this.escapeString(str),
+    }
+  }
 
-    this.emit('_root.getState = function(key) {')
-    this.indent++
-    this.emit('return _state[key]')
-    this.indent--
-    this.emit('}')
-    this.emit('')
+  private createNodeEmitterContext(): NodeEmitterContext {
+    return {
+      emit: (line: string) => this.emit(line),
+      getIndent: () => this.indent,
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
+      sanitizeVarName: (id: string) => this.sanitizeVarName(id),
+      escapeString: str => this.escapeString(str),
+      resolveContentValue: value => this.resolveContentValue(value),
+    }
+  }
 
-    this.emit('_root.update = function() {')
-    this.indent++
-    this.emit('// Re-render each loops based on state changes')
-    this.emit("for (const el of _root.querySelectorAll('[data-each-container]')) {")
-    this.indent++
-    this.emit('if (el._eachConfig) {')
-    this.indent++
-    this.emit('const { collection, renderItem, filterFn } = el._eachConfig')
-    this.emit('const items = _state[collection] || []')
-    this.emit('const filtered = filterFn ? items.filter(filterFn) : items')
-    this.emit('el.innerHTML = ""')
-    this.emit('filtered.forEach((item, index) => el.appendChild(renderItem(item, index)))')
-    this.indent--
-    this.emit('}')
-    this.indent--
-    this.emit('}')
-    this.emit('')
-    this.emit('// Re-render conditionals based on state changes')
-    this.emit("for (const el of _root.querySelectorAll('[data-conditional-id]')) {")
-    this.indent++
-    this.emit('if (el._conditionalConfig) {')
-    this.indent++
-    this.emit('const { condition, renderThen, renderElse } = el._conditionalConfig')
-    this.emit('el.innerHTML = ""')
-    this.emit('if (condition()) {')
-    this.indent++
-    this.emit('el.appendChild(renderThen())')
-    this.indent--
-    this.emit('} else if (renderElse) {')
-    this.indent++
-    this.emit('el.appendChild(renderElse())')
-    this.indent--
-    this.emit('}')
-    this.indent--
-    this.emit('}')
-    this.indent--
-    this.emit('}')
-    this.indent--
-    this.emit('}')
-
-    this.emit('')
-    this.emit('return _root')
+  private createStyleEmitterContext(): StyleEmitterContext {
+    return {
+      emit: (line: string) => this.emit(line),
+      emitRaw: (line: string) => this.emitRaw(line),
+      getIndent: () => this.indent,
+      setIndent: (level: number) => {
+        this.indent = level
+      },
+      indentIn: () => {
+        this.indent++
+      },
+      indentOut: () => {
+        this.indent--
+      },
+      resolveTokenValueWithContext: (value, targetName) =>
+        this.resolveTokenValueWithContext(value, targetName),
+      getTokenMap: () => this.tokenMap,
+      getIRTokens: () => this.ir.tokens,
+      getIRNodes: () => this.ir.nodes,
+      getASTTokens: () => this.astTokens,
+    }
   }
 
   private emitRuntime(): void {
@@ -2347,12 +1833,8 @@ class DOMGenerator {
     return mapKeyName(key)
   }
 
-  /**
-   * Emit state machine configuration and event listeners
-   * Delegates to extracted state-machine-emitter.ts
-   */
-  private emitStateMachine(varName: string, node: IRNode): void {
-    const ctx: StateMachineEmitterContext = {
+  private createStateMachineContext(): StateMachineEmitterContext {
+    return {
       emit: (line: string) => this.emit(line),
       indentIn: () => {
         this.indent++
@@ -2361,32 +1843,18 @@ class DOMGenerator {
         this.indent--
       },
       escapeString: (str: string) => this.escapeString(str),
-      addDeferredWhenWatcher: (watcher: DeferredWhenWatcher) => {
-        this.deferredWhenWatchers.push(watcher)
+      addDeferredWhenWatcher: (w: DeferredWhenWatcher) => {
+        this.deferredWhenWatchers.push(w)
       },
     }
-    emitStateMachineExtracted(ctx, varName, node)
   }
 
-  /**
-   * Emit all deferred when watchers after DOM is fully built
-   * Delegates to extracted state-machine-emitter.ts
-   */
+  private emitStateMachine(varName: string, node: IRNode): void {
+    emitStateMachineExtracted(this.createStateMachineContext(), varName, node)
+  }
+
   private emitDeferredWhenWatchersMethod(): void {
-    const ctx: StateMachineEmitterContext = {
-      emit: (line: string) => this.emit(line),
-      indentIn: () => {
-        this.indent++
-      },
-      indentOut: () => {
-        this.indent--
-      },
-      escapeString: (str: string) => this.escapeString(str),
-      addDeferredWhenWatcher: (watcher: DeferredWhenWatcher) => {
-        this.deferredWhenWatchers.push(watcher)
-      },
-    }
-    emitDeferredWhenWatchers(ctx, this.deferredWhenWatchers)
+    emitDeferredWhenWatchers(this.createStateMachineContext(), this.deferredWhenWatchers)
   }
 
   private groupByState(styles: IRStyle[]): Record<string, IRStyle[]> {
@@ -2400,54 +1868,12 @@ class DOMGenerator {
   }
 
   private collectNamedNodes(nodes: IRNode[]): IRNode[] {
-    const result: IRNode[] = []
-    for (const node of nodes) {
-      if (node.instanceName) {
-        result.push(node)
-      }
-      result.push(...this.collectNamedNodes(node.children))
-    }
-    return result
+    return collectNamedNodesExtracted(nodes)
   }
 
   private emitInitialization(): void {
+    const ctx = this.createAPIEmitterContext()
     const namedNodes = this.collectNamedNodes(this.ir.nodes)
-
-    this.emit('// ============================================')
-    this.emit('// Auto-initialization (Mirror + JavaScript)')
-    this.emit('// ============================================')
-    this.emit('')
-
-    // Create UI instance
-    this.emit('const _ui = createUI()')
-    this.emit('')
-
-    // Expose named instances as global variables
-    if (namedNodes.length > 0) {
-      this.emit('// Named instance proxies')
-      for (const node of namedNodes) {
-        this.emit(`const ${node.instanceName} = _ui.${node.instanceName}`)
-      }
-      this.emit('')
-    }
-
-    // Global update function
-    this.emit('// Global update function')
-    this.emit('function update() { _ui.update() }')
-    this.emit('')
-
-    // User JavaScript
-    this.emit('// User JavaScript')
-    if (this.javascript) {
-      // Emit the JavaScript code as-is, preserving formatting
-      for (const line of this.javascript.code.split('\n')) {
-        this.emitRaw(line)
-      }
-    }
-    this.emit('')
-
-    // Auto-mount to body
-    this.emit('// Mount to document')
-    this.emit('document.body.appendChild(_ui.root)')
+    emitInitializationExtracted(ctx, namedNodes, this.javascript)
   }
 }

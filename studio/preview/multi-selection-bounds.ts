@@ -71,7 +71,7 @@ export function calculateBoundingBoxFromDOM(
   const container = containerElement || document.body
   const containerRect = container.getBoundingClientRect()
 
-  return calculateBoundingBox(nodeIds, (nodeId) => {
+  return calculateBoundingBox(nodeIds, nodeId => {
     const element = container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return null
 
@@ -92,7 +92,10 @@ export function calculateBoundingBoxFromDOM(
 export function calculateRelativePositions(
   boundingBox: BoundingBox
 ): Map<string, { relX: number; relY: number; relWidth: number; relHeight: number }> {
-  const relative = new Map<string, { relX: number; relY: number; relWidth: number; relHeight: number }>()
+  const relative = new Map<
+    string,
+    { relX: number; relY: number; relWidth: number; relHeight: number }
+  >()
 
   if (boundingBox.width === 0 || boundingBox.height === 0) {
     // Degenerate case: all nodes at same position
@@ -122,16 +125,12 @@ export function calculateMovedPositions(
   deltaX: number,
   deltaY: number
 ): Map<string, { x: number; y: number }> {
-  const newPositions = new Map<string, { x: number; y: number }>()
-
-  for (const [nodeId, rect] of boundingBox.rects) {
-    newPositions.set(nodeId, {
-      x: Math.round(rect.x + deltaX),
-      y: Math.round(rect.y + deltaY),
-    })
-  }
-
-  return newPositions
+  return new Map(
+    [...boundingBox.rects].map(([nodeId, rect]) => [
+      nodeId,
+      { x: Math.round(rect.x + deltaX), y: Math.round(rect.y + deltaY) },
+    ])
+  )
 }
 
 /**

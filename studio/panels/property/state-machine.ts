@@ -172,7 +172,7 @@ function handleSelect(state: PanelState, nodeId: string | null): TransitionResul
   if (nodeId === null) {
     return {
       state: { type: 'empty' },
-      effects: [{ type: 'RENDER', state: { type: 'empty' } }]
+      effects: [{ type: 'RENDER', state: { type: 'empty' } }],
     }
   }
 
@@ -185,9 +185,7 @@ function handleSelect(state: PanelState, nodeId: string | null): TransitionResul
   // which will produce the final RENDER effect
   return {
     state: newState,
-    effects: [
-      { type: 'LOAD_ELEMENT', nodeId }
-    ]
+    effects: [{ type: 'LOAD_ELEMENT', nodeId }],
   }
 }
 
@@ -205,12 +203,12 @@ function handleElementLoaded(
     type: 'showing',
     element,
     expandedSections: getDefaultExpandedSections(),
-    isInPositionedContainer
+    isInPositionedContainer,
   }
 
   return {
     state: newState,
-    effects: [{ type: 'RENDER', state: newState }]
+    effects: [{ type: 'RENDER', state: newState }],
   }
 }
 
@@ -224,7 +222,7 @@ function handleElementNotFound(state: PanelState, nodeId: string): TransitionRes
 
   return {
     state: newState,
-    effects: [{ type: 'RENDER', state: newState }]
+    effects: [{ type: 'RENDER', state: newState }],
   }
 }
 
@@ -239,8 +237,8 @@ function handlePropertyChange(state: PanelState, name: string, value: string): T
     state, // State bleibt gleich, wird nach Compile neu geladen
     effects: [
       { type: 'APPLY_CHANGE', nodeId: state.element.nodeId, change },
-      { type: 'NOTIFY_CHANGE', nodeId: state.element.nodeId, change }
-    ]
+      { type: 'NOTIFY_CHANGE', nodeId: state.element.nodeId, change },
+    ],
   }
 }
 
@@ -255,8 +253,8 @@ function handlePropertyRemove(state: PanelState, name: string): TransitionResult
     state,
     effects: [
       { type: 'APPLY_CHANGE', nodeId: state.element.nodeId, change },
-      { type: 'NOTIFY_CHANGE', nodeId: state.element.nodeId, change }
-    ]
+      { type: 'NOTIFY_CHANGE', nodeId: state.element.nodeId, change },
+    ],
   }
 }
 
@@ -271,8 +269,8 @@ function handlePropertyToggle(state: PanelState, name: string, enabled: boolean)
     state,
     effects: [
       { type: 'APPLY_CHANGE', nodeId: state.element.nodeId, change },
-      { type: 'NOTIFY_CHANGE', nodeId: state.element.nodeId, change }
-    ]
+      { type: 'NOTIFY_CHANGE', nodeId: state.element.nodeId, change },
+    ],
   }
 }
 
@@ -290,12 +288,12 @@ function handleSectionToggle(state: PanelState, sectionName: string): Transition
 
   const newState: ShowingState = {
     ...state,
-    expandedSections: newExpanded
+    expandedSections: newExpanded,
   }
 
   return {
     state: newState,
-    effects: [{ type: 'RENDER', state: newState }]
+    effects: [{ type: 'RENDER', state: newState }],
   }
 }
 
@@ -305,7 +303,7 @@ function handleCompileStart(state: PanelState): TransitionResult {
     const newState: PendingUpdateState = {
       type: 'pending-update',
       pendingNodeId: state.element.nodeId,
-      previousElement: state.element
+      previousElement: state.element,
     }
     return { state: newState, effects: [] }
   }
@@ -315,7 +313,7 @@ function handleCompileStart(state: PanelState): TransitionResult {
     const newState: PendingUpdateState = {
       type: 'pending-update',
       pendingNodeId: state.nodeId,
-      previousElement: null
+      previousElement: null,
     }
     return { state: newState, effects: [] }
   }
@@ -324,21 +322,9 @@ function handleCompileStart(state: PanelState): TransitionResult {
 }
 
 function handleCompileEnd(state: PanelState): TransitionResult {
-  // Nur relevant bei pending-update
-  if (state.type !== 'pending-update') {
-    return { state, effects: [] }
-  }
-
-  // Zurück zu loading, lade Element neu
-  const newState: LoadingState = {
-    type: 'loading',
-    nodeId: state.pendingNodeId
-  }
-
-  return {
-    state: newState,
-    effects: [{ type: 'LOAD_ELEMENT', nodeId: state.pendingNodeId }]
-  }
+  if (state.type !== 'pending-update') return { state, effects: [] }
+  const newState: LoadingState = { type: 'loading', nodeId: state.pendingNodeId }
+  return { state: newState, effects: [{ type: 'LOAD_ELEMENT', nodeId: state.pendingNodeId }] }
 }
 
 function handleSelectionInvalidated(state: PanelState, nodeId: string): TransitionResult {
@@ -347,7 +333,7 @@ function handleSelectionInvalidated(state: PanelState, nodeId: string): Transiti
     const newState: NotFoundState = { type: 'not-found', nodeId }
     return {
       state: newState,
-      effects: [{ type: 'RENDER', state: newState }]
+      effects: [{ type: 'RENDER', state: newState }],
     }
   }
 
@@ -355,7 +341,7 @@ function handleSelectionInvalidated(state: PanelState, nodeId: string): Transiti
     const newState: NotFoundState = { type: 'not-found', nodeId }
     return {
       state: newState,
-      effects: [{ type: 'RENDER', state: newState }]
+      effects: [{ type: 'RENDER', state: newState }],
     }
   }
 
@@ -365,15 +351,13 @@ function handleSelectionInvalidated(state: PanelState, nodeId: string): Transiti
 function handleDefinitionSelected(state: PanelState, componentName: string): TransitionResult {
   const newState: LoadingState = {
     type: 'loading',
-    nodeId: `def:${componentName}` // Marker für Definition
+    nodeId: `def:${componentName}`, // Marker für Definition
   }
 
   // Don't render 'loading' state - LOAD_DEFINITION is synchronous
   return {
     state: newState,
-    effects: [
-      { type: 'LOAD_DEFINITION', componentName }
-    ]
+    effects: [{ type: 'LOAD_DEFINITION', componentName }],
   }
 }
 
@@ -383,15 +367,7 @@ function handleDefinitionSelected(state: PanelState, componentName: string): Tra
 
 function getDefaultExpandedSections(): Set<string> {
   // Alle Sections standardmäßig expanded
-  return new Set([
-    'behavior',
-    'layout',
-    'sizing',
-    'spacing',
-    'border',
-    'color',
-    'typography'
-  ])
+  return new Set(['behavior', 'layout', 'sizing', 'spacing', 'border', 'color', 'typography'])
 }
 
 // ============================================

@@ -18,7 +18,7 @@ import {
   createColorSection,
   createTypographySection,
   createBehaviorSection,
-  createVisualSection
+  createVisualSection,
 } from './sections'
 import type { BaseSection, SectionData, EventHandlerMap, SectionDependencies } from './base/section'
 import { createLogger } from '../../../compiler/utils/logger'
@@ -57,8 +57,8 @@ export class PropertyPanelView {
     // Create controller with render callback
     this.controller = createPropertyPanelController(ports, {
       debounceTime: options.debounceTime,
-      onStateChange: (state) => this.render(state),
-      onPropertyChange: (nodeId, change) => this.handlePropertyApplied(nodeId, change)
+      onStateChange: state => this.render(state),
+      onPropertyChange: (nodeId, change) => this.handlePropertyApplied(nodeId, change),
     })
 
     // Create sections with shared dependencies
@@ -126,7 +126,7 @@ export class PropertyPanelView {
       },
       onToggleProperty: (propName, currentValue) => {
         this.controller.toggleProperty(propName, !currentValue)
-      }
+      },
     }
   }
 
@@ -208,13 +208,19 @@ export class PropertyPanelView {
   }
 
   private renderElement(element: ExtractedElement, isInPositionedContainer: boolean): void {
-    const categoriesHtml = this.renderCategories(element.categories, element, isInPositionedContainer)
+    const categoriesHtml = this.renderCategories(
+      element.categories,
+      element,
+      isInPositionedContainer
+    )
 
     this.container.innerHTML = `
       <div class="pp-header">
         <span class="pp-title">Properties</span>
       </div>
-      ${element.isTemplateInstance ? `
+      ${
+        element.isTemplateInstance
+          ? `
         <div class="pp-template-notice">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
             <circle cx="12" cy="12" r="10"></circle>
@@ -223,7 +229,9 @@ export class PropertyPanelView {
           </svg>
           <span>Template instance - changes apply to all items</span>
         </div>
-      ` : ''}
+      `
+          : ''
+      }
       <div class="pp-content">
         ${categoriesHtml}
       </div>
@@ -248,12 +256,12 @@ export class PropertyPanelView {
       currentElement: {
         nodeId: element.nodeId,
         componentName: element.componentName,
-        isDefinition: element.isDefinition
+        isDefinition: element.isDefinition,
       },
       allProperties: element.allProperties,
-      getSpacingTokens: (propType) => this.ports.tokens.getSpacingTokens(propType),
+      getSpacingTokens: propType => this.ports.tokens.getSpacingTokens(propType),
       getColorTokens: () => this.ports.tokens.getColorTokens(),
-      resolveTokenValue: (ref) => this.ports.tokens.resolveTokenValue(ref)
+      resolveTokenValue: ref => this.ports.tokens.resolveTokenValue(ref),
     }
 
     // Find categories for section rendering
@@ -288,7 +296,7 @@ export class PropertyPanelView {
           ...sectionData,
           category: sizingCat,
           // Pass positioning context
-          spacingTokens: isInPositionedContainer ? [] : undefined
+          spacingTokens: isInPositionedContainer ? [] : undefined,
         })
       }
     }
@@ -418,19 +426,8 @@ export class PropertyPanelView {
   }
 
   private handleLayoutModeChange(mode: string): void {
-    // Layout modes are mutually exclusive
-    // When one is set, others should be removed
-    const layoutModes = ['hor', 'ver', 'horizontal', 'vertical', 'grid', 'stacked']
-    const nodeId = this.controller.getCurrentNodeId()
-    if (!nodeId) return
-
-    // Map to short form
-    const shortMode = mode === 'horizontal' ? 'hor'
-                    : mode === 'vertical' ? 'ver'
-                    : mode
-
-    // For simplicity, just set the new mode
-    // The code modifier should handle removing conflicting modes
+    if (!this.controller.getCurrentNodeId()) return
+    const shortMode = mode === 'horizontal' ? 'hor' : mode === 'vertical' ? 'ver' : mode
     this.controller.changeProperty(shortMode, '')
   }
 
@@ -464,17 +461,25 @@ export class PropertyPanelView {
       // Would need to set multiple properties
       // For now, just set center if middle-center
       if (vertical) {
-        const vProp = vertical === 'top' ? 'top'
-                    : vertical === 'bottom' ? 'bottom'
-                    : vertical === 'middle' ? 'ver-center'
-                    : null
+        const vProp =
+          vertical === 'top'
+            ? 'top'
+            : vertical === 'bottom'
+              ? 'bottom'
+              : vertical === 'middle'
+                ? 'ver-center'
+                : null
         if (vProp) this.controller.changeProperty(vProp, '')
       }
       if (horizontal) {
-        const hProp = horizontal === 'left' ? 'left'
-                    : horizontal === 'right' ? 'right'
-                    : horizontal === 'center' ? 'hor-center'
-                    : null
+        const hProp =
+          horizontal === 'left'
+            ? 'left'
+            : horizontal === 'right'
+              ? 'right'
+              : horizontal === 'center'
+                ? 'hor-center'
+                : null
         if (hProp) this.controller.changeProperty(hProp, '')
       }
     }

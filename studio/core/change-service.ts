@@ -65,19 +65,11 @@ export class ChangeService {
    */
   async apply(intent: ChangeIntent): Promise<ChangeResult> {
     const result = runPipeline(intent, this.pipeline)
-
     if (!result.success) {
       log.error(`Pipeline failed at step "${result.failedStep}": ${result.error}`)
-      return {
-        success: false,
-        error: result.error,
-      }
+      return { success: false, error: result.error }
     }
-
-    return {
-      success: true,
-      newNodeId: result.context.modificationResult?.newNodeId,
-    }
+    return { success: true, newNodeId: result.context.modificationResult?.newNodeId }
   }
 
   /**

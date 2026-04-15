@@ -123,7 +123,11 @@ export class CoordinateTransformer {
    * This is the main entry point for coordinate transformation.
    * Handles scale, RTL, snapping, and clamping in one place.
    */
-  clientToContainer(clientX: number, clientY: number, options: TransformOptions = {}): TransformResult {
+  clientToContainer(
+    clientX: number,
+    clientY: number,
+    options: TransformOptions = {}
+  ): TransformResult {
     const { scale, isRTL } = this.layout
 
     // Step 1: Convert to container-relative coordinates, accounting for scale
@@ -196,15 +200,9 @@ export class CoordinateTransformer {
     mainContainerRect: DOMRect
   ): Point {
     const { scale } = this.layout
-
-    // Calculate offset of target container within main container
     const offsetX = (targetContainerRect.left - mainContainerRect.left) / scale
     const offsetY = (targetContainerRect.top - mainContainerRect.top) / scale
-
-    return {
-      x: offsetX + position.x,
-      y: offsetY + position.y,
-    }
+    return { x: offsetX + position.x, y: offsetY + position.y }
   }
 
   /**
@@ -332,12 +330,7 @@ export class CoordinateTransformer {
     const screenPos = this.containerToScreen(position)
     const { scale } = this.layout
 
-    return new DOMRect(
-      screenPos.x,
-      screenPos.y,
-      size.width * scale,
-      size.height * scale
-    )
+    return new DOMRect(screenPos.x, screenPos.y, size.width * scale, size.height * scale)
   }
 
   // ============================================================================
@@ -350,11 +343,7 @@ export class CoordinateTransformer {
    *
    * Bug 5 fix: Prevents elements from being positioned outside container
    */
-  clampToContainerBounds(
-    position: Point,
-    elementSize: Size,
-    padding: number = 0
-  ): Point {
+  clampToContainerBounds(position: Point, elementSize: Size, padding: number = 0): Point {
     const maxX = Math.max(0, this.containerWidth - elementSize.width - padding)
     const maxY = Math.max(0, this.containerHeight - elementSize.height - padding)
 

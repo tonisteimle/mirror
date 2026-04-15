@@ -113,10 +113,8 @@ export class SlotVisibilityService {
    */
   private scheduleUpdate(): void {
     if (this.pendingUpdate !== null) return
-
     this.pendingUpdate = requestAnimationFrame(() => {
       this.pendingUpdate = null
-      // Process all pending slots in one batch
       for (const slot of this.pendingSlots) {
         try {
           this.updateSlotState(slot)

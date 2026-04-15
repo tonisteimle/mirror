@@ -112,11 +112,7 @@ export function createMockTriggerStatePort(
       return state.context ? { ...state.context } : null
     },
 
-    activate(
-      triggerId: string,
-      startPos: number,
-      context: TriggerContext
-    ): void {
+    activate(triggerId: string, startPos: number, context: TriggerContext): void {
       state = {
         isOpen: true,
         startPos,
@@ -210,17 +206,10 @@ export function createMockEditorTriggerPort(
     const lines = getLines()
     let remaining = offset
     for (let i = 0; i < lines.length; i++) {
-      if (remaining <= lines[i].length) {
-        return { line: i + 1, column: remaining, offset }
-      }
-      remaining -= lines[i].length + 1 // +1 for newline
+      if (remaining <= lines[i].length) return { line: i + 1, column: remaining, offset }
+      remaining -= lines[i].length + 1
     }
-    // At end of document
-    return {
-      line: lines.length,
-      column: lines[lines.length - 1]?.length ?? 0,
-      offset,
-    }
+    return { line: lines.length, column: lines[lines.length - 1]?.length ?? 0, offset }
   }
 
   function positionToOffset(line: number, column: number): number {
@@ -290,20 +279,10 @@ export function createMockEditorTriggerPort(
 
     getLine(lineNumber: number): LineInfo | null {
       const lines = getLines()
-      if (lineNumber < 1 || lineNumber > lines.length) {
-        return null
-      }
+      if (lineNumber < 1 || lineNumber > lines.length) return null
       const text = lines[lineNumber - 1]
-      let from = 0
-      for (let i = 0; i < lineNumber - 1; i++) {
-        from += lines[i].length + 1
-      }
-      return {
-        number: lineNumber,
-        text,
-        from,
-        to: from + text.length,
-      }
+      const from = lines.slice(0, lineNumber - 1).reduce((sum, l) => sum + l.length + 1, 0)
+      return { number: lineNumber, text, from, to: from + text.length }
     },
 
     getText(from: number, to: number): string {
@@ -424,9 +403,7 @@ export interface MockPickerPort extends PickerPort {
   reset(): void
 }
 
-export function createMockPickerPort(
-  config: MockPickerConfig = {}
-): MockPickerPort {
+export function createMockPickerPort(config: MockPickerConfig = {}): MockPickerPort {
   let values = [...(config.values ?? ['value1', 'value2', 'value3'])]
   let filteredValues = [...values]
   let selectedIndex = config.selectedIndex ?? 0
@@ -521,9 +498,7 @@ export function createMockPickerPort(
         filteredValues = [...values]
       } else {
         const lower = text.toLowerCase()
-        filteredValues = values.filter(v =>
-          v.toLowerCase().includes(lower)
-        )
+        filteredValues = values.filter(v => v.toLowerCase().includes(lower))
       }
       selectedIndex = 0
     },
@@ -632,16 +607,8 @@ export function createMockTriggerDetectionPort(): MockTriggerDetectionPort {
       textBefore: string,
       line: LineInfo
     ): { matches: boolean; property?: string } {
-      if (customCharResult) {
-        return customCharResult
-      }
-
-      // Default implementation
-      const property = this.extractProperty(textBefore)
-      return {
-        matches: true,
-        property: property ?? undefined,
-      }
+      if (customCharResult) return customCharResult
+      return { matches: true, property: this.extractProperty(textBefore) ?? undefined }
     },
 
     checkComponentTrigger(
@@ -840,9 +807,7 @@ export function createMockTriggerRegistry(): TriggerRegistry {
     },
 
     getAll(): TriggerConfig[] {
-      return Array.from(triggers.values()).sort(
-        (a, b) => (b.priority ?? 0) - (a.priority ?? 0)
-      )
+      return Array.from(triggers.values()).sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
     },
 
     getByType(type: TriggerDefinition['type']): TriggerConfig[] {

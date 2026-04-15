@@ -672,7 +672,26 @@ function main(): void {
 
     // Output
     if (options.output) {
-      writeFile(options.output, result.output!)
+      let finalOutput = result.output!
+
+      // Wrap in HTML document if output is .html
+      if (options.output.endsWith('.html')) {
+        finalOutput = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mirror App</title>
+</head>
+<body>
+<script type="module">
+${result.output}
+</script>
+</body>
+</html>`
+      }
+
+      writeFile(options.output, finalOutput)
       console.error(
         c(`✓ Compiled successfully`, 'green') +
           c(` → ${options.output}`, 'dim') +

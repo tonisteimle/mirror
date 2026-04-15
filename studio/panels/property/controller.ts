@@ -23,7 +23,7 @@ import {
   isShowing,
   isPendingUpdate,
   getCurrentElement,
-  getCurrentNodeId
+  getCurrentNodeId,
 } from './state-machine'
 
 // ============================================
@@ -65,7 +65,7 @@ export class PropertyPanelController {
     this.options = {
       debounceTime: options.debounceTime ?? 300,
       onStateChange: options.onStateChange ?? (() => {}),
-      onPropertyChange: options.onPropertyChange ?? (() => {})
+      onPropertyChange: options.onPropertyChange ?? (() => {}),
     }
     this.state = createInitialState()
   }
@@ -91,7 +91,7 @@ export class PropertyPanelController {
 
     // Subscribe to selection invalidation
     this.cleanups.push(
-      this.ports.events.onSelectionInvalidated((nodeId) => {
+      this.ports.events.onSelectionInvalidated(nodeId => {
         this.dispatch({ type: 'SELECTION_INVALIDATED', nodeId })
       })
     )
@@ -105,7 +105,7 @@ export class PropertyPanelController {
 
     // Subscribe to definition selection
     this.cleanups.push(
-      this.ports.events.onDefinitionSelected((componentName) => {
+      this.ports.events.onDefinitionSelected(componentName => {
         this.dispatch({ type: 'DEFINITION_SELECTED', componentName })
       })
     )
@@ -124,18 +124,11 @@ export class PropertyPanelController {
    */
   dispose(): void {
     if (this.disposed) return
-
     this.disposed = true
-
-    // Clear all debounce timers
     this.debounceTimers.forEach(timer => clearTimeout(timer))
     this.debounceTimers.clear()
-
-    // Run all cleanup functions
     this.cleanups.forEach(cleanup => cleanup())
     this.cleanups.length = 0
-
-    // Invalidate token cache
     this.ports.tokens.invalidateCache()
   }
 
@@ -183,10 +176,7 @@ export class PropertyPanelController {
    * Debounced to prevent spam during fast typing.
    */
   changeProperty(name: string, value: string): void {
-    this.debouncedDispatch(
-      `prop:${name}`,
-      { type: 'PROPERTY_CHANGE', name, value }
-    )
+    this.debouncedDispatch(`prop:${name}`, { type: 'PROPERTY_CHANGE', name, value })
   }
 
   /**
@@ -237,7 +227,7 @@ export class PropertyPanelController {
         this.state = {
           type: 'pending-update',
           pendingNodeId: nodeId,
-          previousElement: getCurrentElement(this.state)
+          previousElement: getCurrentElement(this.state),
         }
       }
       return
@@ -324,18 +314,14 @@ export class PropertyPanelController {
    */
   private loadElement(nodeId: string): void {
     const element = this.ports.extraction.getProperties(nodeId)
-
     if (!element) {
       this.dispatch({ type: 'ELEMENT_NOT_FOUND', nodeId })
       return
     }
-
-    const isInPositionedContainer = this.ports.layout.isInPositionedContainer(nodeId)
-
     this.dispatch({
       type: 'ELEMENT_LOADED',
       element,
-      isInPositionedContainer
+      isInPositionedContainer: this.ports.layout.isInPositionedContainer(nodeId),
     })
   }
 
@@ -353,7 +339,7 @@ export class PropertyPanelController {
     this.dispatch({
       type: 'ELEMENT_LOADED',
       element,
-      isInPositionedContainer: false
+      isInPositionedContainer: false,
     })
   }
 

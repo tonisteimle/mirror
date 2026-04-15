@@ -3,7 +3,13 @@
  */
 
 import { BasePicker, type PickerConfig, type PickerCallbacks } from '../base'
-import type { ActionPickerValue, ActionPickerConfig, ActionPickerCallbacks, EventOption, ActionOption } from './types'
+import type {
+  ActionPickerValue,
+  ActionPickerConfig,
+  ActionPickerCallbacks,
+  EventOption,
+  ActionOption,
+} from './types'
 
 export type { ActionPickerValue, ActionPickerConfig, ActionPickerCallbacks }
 
@@ -61,9 +67,18 @@ const ACTIONS: ActionOption[] = [
 
 // Keyboard keys for key events
 const KEYBOARD_KEYS = [
-  'enter', 'escape', 'space', 'tab', 'backspace', 'delete',
-  'arrow-up', 'arrow-down', 'arrow-left', 'arrow-right',
-  'home', 'end'
+  'enter',
+  'escape',
+  'space',
+  'tab',
+  'backspace',
+  'delete',
+  'arrow-up',
+  'arrow-down',
+  'arrow-left',
+  'arrow-right',
+  'home',
+  'end',
 ]
 
 export class ActionPicker extends BasePicker {
@@ -72,12 +87,15 @@ export class ActionPicker extends BasePicker {
   private onSelectCallback: ((value: ActionPickerValue) => void) | undefined
   private onCancelCallback: (() => void) | undefined
 
-  constructor(config: ActionPickerConfig & Partial<PickerConfig>, callbacks: ActionPickerCallbacks & PickerCallbacks) {
+  constructor(
+    config: ActionPickerConfig & Partial<PickerConfig>,
+    callbacks: ActionPickerCallbacks & PickerCallbacks
+  ) {
     super(config, callbacks, 'action')
 
     this.currentValue = config.initialValue || {
       event: 'onclick',
-      action: 'toggle'
+      action: 'toggle',
     }
     this.availableElements = config.availableElements || []
     this.onSelectCallback = callbacks.onSelect
@@ -207,30 +225,33 @@ export class ActionPicker extends BasePicker {
     select.setAttribute('data-field', 'action')
 
     // Group actions
-    const interactionActions = ACTIONS.filter(a => ['toggle', 'exclusive', 'select'].includes(a.name))
+    const interactionActions = ACTIONS.filter(a =>
+      ['toggle', 'exclusive', 'select'].includes(a.name)
+    )
     const visibilityActions = ACTIONS.filter(a => ['show', 'hide'].includes(a.name))
-    const overlayActions = ACTIONS.filter(a => ['showBelow', 'showAbove', 'showModal', 'dismiss'].includes(a.name))
+    const overlayActions = ACTIONS.filter(a =>
+      ['showBelow', 'showAbove', 'showModal', 'dismiss'].includes(a.name)
+    )
     const navigationActions = ACTIONS.filter(a => ['navigate', 'navigateToPage'].includes(a.name))
-    const otherActions = ACTIONS.filter(a =>
-      !interactionActions.includes(a) &&
-      !visibilityActions.includes(a) &&
-      !overlayActions.includes(a) &&
-      !navigationActions.includes(a)
+    const otherActions = ACTIONS.filter(
+      a =>
+        !interactionActions.includes(a) &&
+        !visibilityActions.includes(a) &&
+        !overlayActions.includes(a) &&
+        !navigationActions.includes(a)
     )
 
     const addGroup = (groupLabel: string, actions: ActionOption[]) => {
       if (actions.length === 0) return
       const optgroup = document.createElement('optgroup')
       optgroup.label = groupLabel
-      actions.forEach(action => {
-        const option = document.createElement('option')
-        option.value = action.name
-        option.textContent = action.name + (action.requiresTarget ? '(...)' : '()')
-        option.title = action.description
-        if (action.name === this.currentValue.action) {
-          option.selected = true
-        }
-        optgroup.appendChild(option)
+      actions.forEach(a => {
+        const o = document.createElement('option')
+        o.value = a.name
+        o.textContent = a.name + (a.requiresTarget ? '(...)' : '()')
+        o.title = a.description
+        o.selected = a.name === this.currentValue.action
+        optgroup.appendChild(o)
       })
       select.appendChild(optgroup)
     }

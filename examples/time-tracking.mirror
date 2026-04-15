@@ -16,22 +16,17 @@ muted-hover.bg: #333333
 accent.bg: #3b82f6
 accent-hover.bg: #2563eb
 success.bg: #10b981
-warning.bg: #f59e0b
-danger.bg: #ef4444
 
 // Colors - Text
 text.col: #f5f5f5
 text-secondary.col: #a3a3a3
 text-muted.col: #525252
-accent.col: #3b82f6
-success.col: #10b981
-warning.col: #f59e0b
-danger.col: #ef4444
+white.col: white
 
 // Colors - Icons
 text-muted.ic: #525252
-success.ic: #10b981
 muted.ic: #666666
+success.ic: #10b981
 
 // Colors - Border
 border.boc: #2a2a2a
@@ -147,7 +142,7 @@ entries:
 // =============================================================================
 
 // Buttons
-BtnPrimary as Button: bg $accent, col white, pad $space-sm $space-md, rad $rad-md, fs $fs-md, weight 500, cursor pointer
+BtnPrimary as Button: bg $accent, col $white, pad $space-sm $space-md, rad $rad-md, fs $fs-md, weight 500, cursor pointer
   hover 0.15s:
     bg $accent-hover
 
@@ -171,12 +166,6 @@ StatCard: Frame bg $card, pad $space-lg, rad $rad-lg, gap $gap-sm, w full, h ful
     bg $card-hover
 
 // Form Elements
-SelectField: Frame bg $card-alt, bor 1, boc $border, pad 0 10, rad 4, h 32, hor, spread, ver-center, cursor pointer
-  Label: col $text, fs $fs-md
-  hover 0.15s:
-    boc $border-hover
-    bg $card
-
 SearchInput: Input bg $card-alt, bor 1, boc $border, col $text, pad 0 $space-md, rad $rad-md, fs $fs-md, h 32
   hover 0.15s:
     boc $border-hover
@@ -191,7 +180,7 @@ FormInput: Input bg $card-alt, bor 1, boc $border, col $text, pad $space-sm $spa
   focus 0.15s:
     boc $accent
 
-FormSelect: Select w full
+FormSelect as Select: w full
   Trigger: bg $card-alt, bor 1, boc $border, col $text, pad $space-sm $space-md, rad $rad-md, fs $fs-md
   Content: bg $card, bor 1, boc $border, rad $rad-md
 
@@ -247,7 +236,7 @@ Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
             // Project Selection
             FormField
               Label "Projekt"
-              Select placeholder "Projekt wählen...", w full, bind newProject
+              FormSelect placeholder "Projekt wählen...", bind newProject
                 Option "Website Relaunch"
                 Option "Mobile App"
                 Option "Intern"
@@ -256,7 +245,7 @@ Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
             // Client Selection
             FormField
               Label "Kunde"
-              Select placeholder "Kunde wählen...", w full, bind newClient
+              FormSelect placeholder "Kunde wählen...", bind newClient
                 Option "Müller AG"
                 Option "Schmidt GmbH"
                 Option "Weber & Co"
@@ -311,14 +300,14 @@ Frame w 900, bg $bg, pad $space-xl, gap $gap-2xl, mar 0 auto
   Frame bg $card, pad $space-md, rad $rad-lg, hor, gap $gap-lg, ver-center
     SectionLabel "Filter:", w 36
 
-    Select placeholder "Alle Projekte", w 150, bind filterProject
+    FormSelect placeholder "Alle Projekte", w 150, bind filterProject
       Option "Alle Projekte", value ""
       Option "Website Relaunch", value "Website Relaunch"
       Option "Mobile App", value "Mobile App"
       Option "Intern", value "Intern"
       Option "Support", value "Support"
 
-    Select placeholder "Alle Kunden", w 140, bind filterClient
+    FormSelect placeholder "Alle Kunden", w 140, bind filterClient
       Option "Alle Kunden", value ""
       Option "Müller AG", value "Müller AG"
       Option "Schmidt GmbH", value "Schmidt GmbH"

@@ -235,25 +235,35 @@ export function initCleanupObserver(): void {
  */
 let _insideFrameCallback = false
 
-/**
- * Execute a function inside a frame callback, or immediately if already in one.
- * This ensures all related state changes happen in the same frame.
- */
 function batchInFrame(fn: () => void): void {
   if (_insideFrameCallback) {
-    // Already inside a frame - execute immediately
     fn()
-  } else {
-    // Schedule for next frame
-    requestAnimationFrame(() => {
-      _insideFrameCallback = true
-      try {
-        fn()
-      } finally {
-        _insideFrameCallback = false
-      }
-    })
+    return
   }
+  requestAnimationFrame(() => {
+    _insideFrameCallback = true
+    try {
+      fn()
+    } finally {
+      _insideFrameCallback = false
+    }
+  })
+}
+
+// ============================================
+// ELEMENT RESOLUTION
+// ============================================
+
+/**
+ * Resolve an element by name string or return the element directly.
+ * @param element Element or name string (data-mirror-name attribute)
+ */
+function resolveElementByName(element: MirrorElement | string | null): MirrorElement | null {
+  if (!element) return null
+  if (typeof element === 'string') {
+    return document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
+  }
+  return element
 }
 
 // ============================================
@@ -284,23 +294,11 @@ const VERT_ALIGN_MAP: Record<string, string> = {
  * Convert alignment value to CSS and apply to element
  */
 export function alignToCSS(el: HTMLElement, prop: string, value: string): void {
-  const dir = el.style.flexDirection || 'column'
-  const isRow = dir === 'row'
+  const isRow = (el.style.flexDirection || 'column') === 'row'
   const cssVal = ALIGN_MAP[value] || value
-
-  if (prop === 'align' || prop === 'hor-align') {
-    if (isRow) {
-      el.style.justifyContent = cssVal
-    } else {
-      el.style.alignItems = cssVal
-    }
-  } else if (prop === 'ver-align') {
-    if (isRow) {
-      el.style.alignItems = cssVal
-    } else {
-      el.style.justifyContent = cssVal
-    }
-  }
+  const isHor = prop === 'align' || prop === 'hor-align'
+  // In row: hor→justify, ver→align. In column: hor→align, ver→justify
+  el.style[isHor === isRow ? 'justifyContent' : 'alignItems'] = cssVal
 }
 
 /**
@@ -495,33 +493,30 @@ export function wrap(el: MirrorElement | null): ElementWrapper | null {
 // VISIBILITY & TOGGLE
 // ============================================
 
+const STATE_PAIRS: Record<string, string> = {
+  closed: 'open',
+  open: 'closed',
+  collapsed: 'expanded',
+  expanded: 'collapsed',
+}
+
 /**
  * Toggle element visibility or state
- * Uses stateMachineToggle for elements with state machines,
- * falls back to simple visibility toggle otherwise.
  */
 export function toggle(el: MirrorElement | null): void {
   if (!el) return
-
-  // If element has a state machine, use proper state machine toggle
   if (el._stateMachine) {
     stateMachineToggle(el)
     return
   }
-
-  // Fallback for elements without state machine
   const currentState = el.dataset.state || el._initialState
-
-  if (currentState === 'closed' || currentState === 'open') {
-    const newState = currentState === 'closed' ? 'open' : 'closed'
+  const newState = STATE_PAIRS[currentState as string]
+  if (newState) {
     setState(el, newState)
-  } else if (currentState === 'collapsed' || currentState === 'expanded') {
-    const newState = currentState === 'collapsed' ? 'expanded' : 'collapsed'
-    setState(el, newState)
-  } else {
-    el.hidden = !el.hidden
-    applyState(el, el.hidden ? 'off' : 'on')
+    return
   }
+  el.hidden = !el.hidden
+  applyState(el, el.hidden ? 'off' : 'on')
 }
 
 /**
@@ -558,25 +553,16 @@ export function hide(el: MirrorElement | null): void {
  */
 export function close(el: MirrorElement | null): void {
   if (!el) return
-
-  const initialState = el._initialState
-  if (
-    initialState === 'closed' ||
-    initialState === 'open' ||
-    el.dataset.state === 'open' ||
-    el.dataset.state === 'closed'
-  ) {
+  const states = [el._initialState, el.dataset.state]
+  if (states.some(s => s === 'open' || s === 'closed')) {
     setState(el, 'closed')
-  } else if (
-    initialState === 'expanded' ||
-    initialState === 'collapsed' ||
-    el.dataset.state === 'expanded' ||
-    el.dataset.state === 'collapsed'
-  ) {
-    setState(el, 'collapsed')
-  } else {
-    hide(el)
+    return
   }
+  if (states.some(s => s === 'expanded' || s === 'collapsed')) {
+    setState(el, 'collapsed')
+    return
+  }
+  hide(el)
 }
 
 // ============================================
@@ -730,15 +716,8 @@ export function showAt(
   position: OverlayPosition = 'below',
   options?: PositionOptions
 ): void {
-  // Resolve element by name if string
-  const el =
-    typeof element === 'string'
-      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
-      : element
-
+  const el = resolveElementByName(element)
   if (!el) return
-
-  // Get trigger from current event if not provided
   const triggerEl = trigger || (window.event?.target as MirrorElement) || null
   if (!triggerEl && position !== 'center') {
     console.warn('showAt: No trigger element provided and no event context')
@@ -836,12 +815,7 @@ export function showRight(
  * Show element as centered modal with optional backdrop
  */
 export function showModal(element: MirrorElement | string | null, backdrop: boolean = true): void {
-  // Resolve element by name if string
-  const el =
-    typeof element === 'string'
-      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
-      : element
-
+  const el = resolveElementByName(element)
   if (!el) return
 
   // Create backdrop if requested
@@ -954,12 +928,7 @@ export function showModal(element: MirrorElement | string | null, backdrop: bool
  * Cleans up positioning, backdrop, and event handlers
  */
 export function dismiss(element: MirrorElement | string | null): void {
-  // Resolve element by name if string
-  const el =
-    typeof element === 'string'
-      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
-      : element
-
+  const el = resolveElementByName(element)
   if (!el) return
 
   // Hide the element
@@ -1245,21 +1214,10 @@ export interface ScrollToOptions {
  * @param options Scroll options: { behavior?, block?, inline? }
  */
 export function scrollTo(element: MirrorElement | string | null, options?: ScrollToOptions): void {
-  // Resolve element by name if string
-  const el =
-    typeof element === 'string'
-      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
-      : element
-
+  const el = resolveElementByName(element)
   if (!el) return
-
   const { behavior = 'smooth', block = 'start', inline = 'nearest' } = options || {}
-
-  el.scrollIntoView({
-    behavior,
-    block,
-    inline,
-  })
+  el.scrollIntoView({ behavior, block, inline })
 }
 
 /**
@@ -1275,19 +1233,9 @@ export function scrollBy(
   y: number = 0,
   behavior: 'smooth' | 'instant' = 'smooth'
 ): void {
-  // Resolve element by name if string
-  const el =
-    typeof container === 'string'
-      ? (document.querySelector(`[data-mirror-name="${container}"]`) as MirrorElement)
-      : container
-
+  const el = resolveElementByName(container)
   if (!el) return
-
-  el.scrollBy({
-    left: x,
-    top: y,
-    behavior,
-  })
+  el.scrollBy({ left: x, top: y, behavior })
 }
 
 /**
@@ -1300,20 +1248,11 @@ export function scrollToTop(
   behavior: 'smooth' | 'instant' = 'smooth'
 ): void {
   if (!element) {
-    // Scroll page to top
     window.scrollTo({ top: 0, behavior })
     return
   }
-
-  // Resolve element by name if string
-  const el =
-    typeof element === 'string'
-      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
-      : element
-
-  if (!el) return
-
-  el.scrollTo({ top: 0, behavior })
+  const el = resolveElementByName(element)
+  if (el) el.scrollTo({ top: 0, behavior })
 }
 
 /**
@@ -1326,20 +1265,11 @@ export function scrollToBottom(
   behavior: 'smooth' | 'instant' = 'smooth'
 ): void {
   if (!element) {
-    // Scroll page to bottom
     window.scrollTo({ top: document.body.scrollHeight, behavior })
     return
   }
-
-  // Resolve element by name if string
-  const el =
-    typeof element === 'string'
-      ? (document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement)
-      : element
-
-  if (!el) return
-
-  el.scrollTo({ top: el.scrollHeight, behavior })
+  const el = resolveElementByName(element)
+  if (el) el.scrollTo({ top: el.scrollHeight, behavior })
 }
 
 // ============================================
@@ -1490,19 +1420,14 @@ function getMirrorData(): Record<string, unknown> {
  */
 function sanitizeFilename(name: string): string | null {
   if (!name || typeof name !== 'string') return null
-
-  // Reject path traversal
   if (name.includes('..') || name.includes('/') || name.includes('\\')) {
     console.warn('[Security] Path traversal in filename blocked:', name)
     return null
   }
-
-  // Only allow safe characters
   if (!/^[a-zA-Z0-9_\-]+\.[a-zA-Z0-9]+$/.test(name)) {
     console.warn('[Security] Invalid filename characters:', name)
     return null
   }
-
   return name
 }
 
@@ -1559,16 +1484,11 @@ export async function loadMirrorData(basePath = '/data/', manifest?: string[]): 
     await loadYAMLFiles(manifest, basePath)
     return
   }
-
-  // Try to load a manifest file that lists available YAML files
   try {
     const response = await fetch(basePath + 'manifest.json')
-    if (response.ok) {
-      const files = (await response.json()) as string[]
-      await loadYAMLFiles(files, basePath)
-    }
+    if (response.ok) await loadYAMLFiles((await response.json()) as string[], basePath)
   } catch {
-    // No manifest available - that's OK for simple projects
+    /* No manifest available */
   }
 }
 
@@ -1615,21 +1535,20 @@ export function set(tokenName: string, value: unknown): void {
  * @param tokenName Token name (with or without $)
  * @param options Options: { min?, max?, step? }
  */
-export function increment(tokenName: string, options?: CounterOptions): void {
+function adjustCounter(tokenName: string, delta: number, options?: CounterOptions): void {
   const name = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
   const state = getMirrorState()
   const { min, max, step = 1 } = options || {}
-
   const current = typeof state[name] === 'number' ? (state[name] as number) : 0
-  let newValue = current + step
-
-  // Apply max constraint
-  if (max !== undefined && newValue > max) {
-    newValue = max
-  }
-
+  let newValue = current + delta * step
+  if (max !== undefined && newValue > max) newValue = max
+  if (min !== undefined && newValue < min) newValue = min
   state[name] = newValue
   updateBoundTokenElements(name, newValue)
+}
+
+export function increment(tokenName: string, options?: CounterOptions): void {
+  adjustCounter(tokenName, 1, options)
 }
 
 /**
@@ -1638,20 +1557,7 @@ export function increment(tokenName: string, options?: CounterOptions): void {
  * @param options Options: { min?, max?, step? }
  */
 export function decrement(tokenName: string, options?: CounterOptions): void {
-  const name = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
-  const state = getMirrorState()
-  const { min, max, step = 1 } = options || {}
-
-  const current = typeof state[name] === 'number' ? (state[name] as number) : 0
-  let newValue = current - step
-
-  // Apply min constraint
-  if (min !== undefined && newValue < min) {
-    newValue = min
-  }
-
-  state[name] = newValue
-  updateBoundTokenElements(name, newValue)
+  adjustCounter(tokenName, -1, options)
 }
 
 /**
@@ -1750,39 +1656,39 @@ export function add(collectionName: string, values?: Record<string, unknown>): s
   return key
 }
 
-/**
- * Remove an entry from a collection
- * Can be called with an item object that has _key property (from each loop)
- */
+function findCollectionByKey(key: string): { name: string; col: Record<string, unknown> } | null {
+  const data = getMirrorData()
+  for (const [name, val] of Object.entries(data)) {
+    if (
+      val &&
+      typeof val === 'object' &&
+      !Array.isArray(val) &&
+      (val as Record<string, unknown>)[key]
+    ) {
+      return { name, col: val as Record<string, unknown> }
+    }
+  }
+  return null
+}
+
 export function remove(itemOrKey: unknown): void {
   if (!itemOrKey) {
     console.warn('[Mirror] remove() called with null/undefined')
     return
   }
-
-  if (typeof itemOrKey === 'object') {
-    const item = itemOrKey as Record<string, unknown>
-    if (typeof item._key !== 'string') {
-      console.warn('[Mirror] remove() called with item without _key')
-      return
-    }
-
-    const entryKey = item._key
-    const data = getMirrorData()
-
-    // Find the collection containing this item
-    for (const [collectionName, collectionData] of Object.entries(data)) {
-      if (collectionData && typeof collectionData === 'object' && !Array.isArray(collectionData)) {
-        const col = collectionData as Record<string, unknown>
-        if (col[entryKey]) {
-          delete col[entryKey]
-          refreshEachLoops(collectionName)
-          return
-        }
-      }
-    }
-    console.warn(`[Mirror] remove() could not find item with key "${entryKey}"`)
+  if (typeof itemOrKey !== 'object') return
+  const item = itemOrKey as Record<string, unknown>
+  if (typeof item._key !== 'string') {
+    console.warn('[Mirror] remove() called with item without _key')
+    return
   }
+  const found = findCollectionByKey(item._key)
+  if (!found) {
+    console.warn(`[Mirror] remove() could not find item with key "${item._key}"`)
+    return
+  }
+  delete found.col[item._key]
+  refreshEachLoops(found.name)
 }
 
 /**
@@ -2163,23 +2069,16 @@ const _activeToasts = new Map<
  * Dismiss a specific toast by ID, or the most recent toast if no ID provided
  */
 export function dismissToast(toastId?: number): void {
-  if (toastId !== undefined) {
-    const toast = _activeToasts.get(toastId)
-    if (toast) {
-      clearTimeout(toast.dismissTimeout)
-      clearTimeout(toast.fadeTimeout)
-      toast.element.remove()
-      _activeToasts.delete(toastId)
-    }
-  } else {
-    // Dismiss all toasts
-    for (const [id, toast] of _activeToasts) {
-      clearTimeout(toast.dismissTimeout)
-      clearTimeout(toast.fadeTimeout)
-      toast.element.remove()
-      _activeToasts.delete(id)
-    }
+  const dismiss = (id: number) => {
+    const t = _activeToasts.get(id)
+    if (!t) return
+    clearTimeout(t.dismissTimeout)
+    clearTimeout(t.fadeTimeout)
+    t.element.remove()
+    _activeToasts.delete(id)
   }
+  if (toastId !== undefined) dismiss(toastId)
+  else _activeToasts.forEach((_, id) => dismiss(id))
 }
 
 /**
@@ -2446,30 +2345,14 @@ export function setError(el: MirrorElement | null, message?: string): void {
 
 /**
  * Clear error state from an element
- * @param el - The element to clear errors from
  */
 export function clearError(el: MirrorElement | null): void {
   if (!el) return
-
-  // Remove invalid state
   delete el.dataset.invalid
   removeState(el, 'invalid')
-
-  // Clear custom validity
-  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-    el.setCustomValidity('')
-  }
-
-  // Hide error message
-  const errorId = el.dataset.errorId
-  if (errorId) {
-    const errorEl = document.getElementById(errorId)
-    if (errorEl) {
-      errorEl.style.display = 'none'
-    }
-  }
-
-  // Clear accessibility attributes
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) el.setCustomValidity('')
+  const errorEl = el.dataset.errorId ? document.getElementById(el.dataset.errorId) : null
+  if (errorEl) errorEl.style.display = 'none'
   el.removeAttribute('aria-describedby')
   el.removeAttribute('aria-invalid')
 }
@@ -2761,32 +2644,18 @@ export function toggleState(el: MirrorElement | null, state1: string, state2?: s
 
 /**
  * Toggle: 1 state = binary (default ↔ state), 2+ states = cycle
- * @param el The element with state machine
- * @param stateOrder Optional explicit state order
  */
 export function stateMachineToggle(el: MirrorElement | null, stateOrder?: string[]): void {
   if (!el?._stateMachine) return
-
   const sm = el._stateMachine
-
-  // Get custom states (exclude 'default' and CSS pseudo-states like hover, focus, active, disabled)
   const cssStates = ['default', 'hover', 'focus', 'active', 'disabled']
   const order = stateOrder || Object.keys(sm.states).filter(s => !cssStates.includes(s))
   if (order.length === 0) return
-
   if (order.length === 1) {
-    // Binary toggle: default ↔ single state
-    const targetState = order[0]
-    if (sm.current === targetState) {
-      transitionTo(el, 'default')
-    } else {
-      transitionTo(el, targetState)
-    }
+    transitionTo(el, sm.current === order[0] ? 'default' : order[0])
   } else {
-    // Cycle through multiple states
-    const currentIndex = order.indexOf(sm.current)
-    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % order.length
-    transitionTo(el, order[nextIndex])
+    const idx = order.indexOf(sm.current)
+    transitionTo(el, order[idx === -1 ? 0 : (idx + 1) % order.length])
   }
 }
 
@@ -3272,12 +3141,9 @@ export function navigate(targetName: string, clickedElement: MirrorElement | nul
  */
 export function updateNavSelection(clickedElement: MirrorElement | null): void {
   if (!clickedElement) return
-
   const nav = clickedElement.closest('nav')
   if (!nav) return
-
   const navItems = nav.querySelectorAll('[data-route]') as NodeListOf<MirrorElement>
-
   navItems.forEach(item => {
     if (item === clickedElement) {
       item.dataset.selected = 'true'
@@ -3501,16 +3367,12 @@ export function getPageContainer(): HTMLElement | null {
  */
 export function updateSelectionBinding(el: MirrorElement): void {
   if (!el) return
-
   let parent = el.parentElement as MirrorElement | null
-
   while (parent) {
     if (parent._selectionBinding) {
-      const value = el.textContent?.trim() || ''
-      const varName = parent._selectionBinding
-      const mirrorState = ((window as { _mirrorState?: Record<string, string> })._mirrorState ||=
-        {})
-      mirrorState[varName] = value
+      const value = el.textContent?.trim() || '',
+        varName = parent._selectionBinding
+      ;((window as { _mirrorState?: Record<string, string> })._mirrorState ||= {})[varName] = value
       updateBoundElements(varName, value)
       return
     }
@@ -3902,19 +3764,14 @@ function sanitizeCSSValue(val: string): string | null {
  */
 function sanitizeIconName(name: string): string | null {
   if (!name || typeof name !== 'string') return null
-
-  // Lucide icons use lowercase letters, numbers, and hyphens only
   if (!/^[a-z0-9\-]+$/.test(name)) {
     console.warn('[Security] Invalid icon name rejected:', name)
     return null
   }
-
-  // Max length to prevent abuse
   if (name.length > 50) {
     console.warn('[Security] Icon name too long:', name)
     return null
   }
-
   return name
 }
 
@@ -4235,37 +4092,26 @@ export function getAnimation(name: string) {
   return _animations.get(name)
 }
 
-/**
- * Convert Mirror keyframes to Web Animations API format
- */
+const PROP_TO_TRANSFORM: Record<string, (v: string) => string> = {
+  'y-offset': v => `translateY(${v}px)`,
+  'x-offset': v => `translateX(${v}px)`,
+  scale: v => `scale(${v})`,
+  rotate: v => `rotate(${v}deg)`,
+}
+
 function convertKeyframes(
   keyframes: { time: number; properties: { property: string; value: string }[] }[],
   duration: number
 ): Keyframe[] {
-  const result: Keyframe[] = []
-
-  for (const kf of keyframes) {
+  return keyframes.map(kf => {
     const frame: Keyframe = { offset: kf.time / duration }
-
-    for (const prop of kf.properties) {
-      // Map Mirror properties to CSS
-      if (prop.property === 'opacity') {
-        frame.opacity = prop.value
-      } else if (prop.property === 'y-offset') {
-        frame.transform = `translateY(${prop.value}px)`
-      } else if (prop.property === 'x-offset') {
-        frame.transform = `translateX(${prop.value}px)`
-      } else if (prop.property === 'scale') {
-        frame.transform = `scale(${prop.value})`
-      } else if (prop.property === 'rotate') {
-        frame.transform = `rotate(${prop.value}deg)`
-      }
+    for (const p of kf.properties) {
+      if (p.property === 'opacity') frame.opacity = p.value
+      else if (PROP_TO_TRANSFORM[p.property])
+        frame.transform = PROP_TO_TRANSFORM[p.property](p.value)
     }
-
-    result.push(frame)
-  }
-
-  return result
+    return frame
+  })
 }
 
 /**
@@ -4700,11 +4546,7 @@ let chartJsPromise: Promise<void> | null = null
  */
 function loadChartJs(): Promise<void> {
   if (chartJsPromise) return chartJsPromise
-
-  if (typeof window.Chart !== 'undefined') {
-    return Promise.resolve()
-  }
-
+  if (typeof window.Chart !== 'undefined') return Promise.resolve()
   chartJsPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
@@ -4712,7 +4554,6 @@ function loadChartJs(): Promise<void> {
     script.onerror = () => reject(new Error('Failed to load Chart.js'))
     document.head.appendChild(script)
   })
-
   return chartJsPromise
 }
 
@@ -4940,10 +4781,8 @@ export function updateChart(
 ): void {
   const canvas = element.querySelector('canvas') as HTMLCanvasElement
   if (!canvas) return
-
   const chartInstance = window.Chart?.getChart?.(canvas)
   if (!chartInstance) return
-
   const { labels, values } = parseChartData(data, chartInstance.config.type, xField, yField)
   chartInstance.data.labels = labels
   chartInstance.data.datasets[0].data = values

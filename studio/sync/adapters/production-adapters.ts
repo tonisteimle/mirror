@@ -45,18 +45,13 @@ export function createEventBusPort(): EventBusPort {
 
 export function createStateStorePort(): StateStorePort {
   return {
-    getSelection(): { nodeId: string | null; origin: SelectionOrigin } {
-      const selection = state.get().selection
-      return { nodeId: selection.nodeId, origin: selection.origin as SelectionOrigin }
+    getSelection: () => {
+      const s = state.get().selection
+      return { nodeId: s.nodeId, origin: s.origin as SelectionOrigin }
     },
-
-    setSelection(nodeId: string | null, origin: SelectionOrigin): void {
-      actions.setSelection(nodeId, origin)
-    },
-
-    setBreadcrumb(breadcrumb: BreadcrumbItem[]): void {
-      actions.setBreadcrumb(breadcrumb)
-    },
+    setSelection: (nodeId: string | null, origin: SelectionOrigin) =>
+      actions.setSelection(nodeId, origin),
+    setBreadcrumb: (breadcrumb: BreadcrumbItem[]) => actions.setBreadcrumb(breadcrumb),
   }
 }
 
@@ -111,7 +106,10 @@ export function createDOMQueryPort(config: DOMQueryPortConfig = {}): DOMQueryPor
         }
 
         // Stop at preview boundary
-        if (current.id === previewSelector.replace('#', '') || current.classList.contains(boundaryClass)) {
+        if (
+          current.id === previewSelector.replace('#', '') ||
+          current.classList.contains(boundaryClass)
+        ) {
           break
         }
 
@@ -230,7 +228,9 @@ export interface ProductionSyncPorts extends SyncPorts {
   sourceMap: SourceMapPortWithSetter
 }
 
-export function createProductionSyncPorts(config: ProductionSyncPortsConfig = {}): ProductionSyncPorts {
+export function createProductionSyncPorts(
+  config: ProductionSyncPortsConfig = {}
+): ProductionSyncPorts {
   return {
     eventBus: createEventBusPort(),
     stateStore: createStateStorePort(),

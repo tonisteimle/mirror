@@ -13,7 +13,7 @@ import type {
   Instance,
   ComponentDefinition,
   Property,
-  TokenDefinition
+  TokenDefinition,
 } from '../parser/ast'
 
 export interface ReactExportOptions {
@@ -26,10 +26,7 @@ export interface ReactExportOptions {
 /**
  * Generate React component code from Mirror AST
  */
-export function generateReact(
-  ast: AST,
-  options: ReactExportOptions = {}
-): string {
+export function generateReact(ast: AST, options: ReactExportOptions = {}): string {
   const program = ast as Program
   const lines: string[] = []
   const { includeTokens = true } = options
@@ -97,9 +94,7 @@ function generateJSX(
 
   // Generate style object
   const style = generateStyles(allProps, tokens)
-  const styleStr = Object.keys(style).length > 0
-    ? ` style={${formatStyleObject(style)}}`
-    : ''
+  const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : ''
 
   // Determine HTML tag based on component type
   const tag = getHtmlTag(instance.component, compDef)
@@ -168,19 +163,13 @@ function getHtmlTag(componentName: string, compDef?: ComponentDefinition): strin
 function getTextContent(instance: Instance, properties: Property[]): string | null {
   // Check for content property
   for (const prop of properties) {
-    if (prop.name === 'content' && prop.values.length > 0) {
-      const val = prop.values[0]
-      if (typeof val === 'string') return val
-    }
+    if (prop.name === 'content' && prop.values.length > 0 && typeof prop.values[0] === 'string')
+      return prop.values[0]
   }
-
   // Check for text child
   for (const child of instance.children) {
-    if (child.type === 'Text') {
-      return child.content
-    }
+    if (child.type === 'Text') return child.content
   }
-
   return null
 }
 
@@ -216,7 +205,10 @@ function generateStyles(
 
   // Helper to resolve token references
   // Converts booleans to 0/1 for CSS compatibility
-  const resolveFromMap = (result: string | number | boolean | undefined, fallback: string): string | number => {
+  const resolveFromMap = (
+    result: string | number | boolean | undefined,
+    fallback: string
+  ): string | number => {
     if (result === undefined) return fallback
     if (typeof result === 'boolean') return result ? 1 : 0
     return result
@@ -226,7 +218,10 @@ function generateStyles(
     if (typeof value === 'object' && value !== null && 'name' in value) {
       const tokenName = (value as { name: string }).name
       const cleanName = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
-      return resolveFromMap(tokenMap.get(cleanName) ?? tokenMap.get('$' + cleanName), `$${cleanName}`)
+      return resolveFromMap(
+        tokenMap.get(cleanName) ?? tokenMap.get('$' + cleanName),
+        `$${cleanName}`
+      )
     }
     // Handle string token references
     if (typeof value === 'string' && value.startsWith('$')) {

@@ -417,12 +417,8 @@ export class ResizeManager {
   }
 
   private onMouseMove(e: MouseEvent): void {
-    // Skip if no active resize
     if (!this.activeResize && !this.activeMultiResize) return
-
-    // RAF throttling: batch mouse events to animation frames for smooth 60fps
-    this.pendingMouseEvent = e
-
+    this.pendingMouseEvent = e // RAF throttling: batch mouse events to animation frames for smooth 60fps
     if (this.rafId === null) {
       this.rafId = requestAnimationFrame(() => {
         this.rafId = null
@@ -914,19 +910,13 @@ export class ResizeManager {
     siblings.forEach(sibling => {
       const siblingId = sibling.getAttribute('data-mirror-id')
       if (siblingId === excludeId) return
-
-      // Try to get sibling layout from service
       const siblingLayout = layoutService?.getLayout(siblingId!)
       const siblingWidth =
         siblingLayout?.width ?? (sibling as HTMLElement).getBoundingClientRect().width
       const siblingHeight =
         siblingLayout?.height ?? (sibling as HTMLElement).getBoundingClientRect().height
-
-      if (isHorizontal) {
-        availableWidth -= siblingWidth + gap
-      } else {
-        availableHeight -= siblingHeight + gap
-      }
+      if (isHorizontal) availableWidth -= siblingWidth + gap
+      else availableHeight -= siblingHeight + gap
     })
 
     return {
