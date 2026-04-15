@@ -20,6 +20,8 @@ interface CLIArgs {
   url: string
   filter?: string
   category?: string
+  test?: string // Single test by exact name
+  list: boolean // List available tests
   all: boolean
   mirror: boolean
   drag: boolean
@@ -44,6 +46,8 @@ function parseArgs(): CLIArgs {
     url: getArgValue(args, '--url') || defaultConfig.url,
     filter: getArgValue(args, '--filter'),
     category: getArgValue(args, '--category'),
+    test: getArgValue(args, '--test'),
+    list: args.includes('--list'),
     all: args.includes('--all'),
     mirror: args.includes('--mirror'),
     drag: args.includes('--drag'),
@@ -81,13 +85,15 @@ ${bold('Usage:')}
 
 ${bold('Test Selection:')}
   (no flags)          Run all browser tests (default)
-  --drag              Run drag & drop tests only
-  --mirror            Run mirror tests only (primitives, layout, styling, etc.)
+  --test="NAME"       Run a single test by exact name
+  --filter=PATTERN    Filter tests by name pattern (regex)
   --category=NAME     Run specific category:
                         primitives, layout, styling, zag, interactions,
                         bidirectional, undoRedo, autocomplete, stackedDrag,
                         propertyPanel, charts
-  --filter=PATTERN    Filter tests by name pattern (regex)
+  --drag              Run drag & drop tests only
+  --mirror            Run mirror tests only
+  --list              List all available tests
 
 ${bold('Browser Options:')}
   --headed            Run with visible browser window
@@ -108,20 +114,13 @@ ${bold('Output Options:')}
   --quiet             Reduce output
   --silent            No output except errors
 
-${bold('NPM Scripts:')}
-  npm run test:browser              All browser tests
-  npm run test:browser:drag         Drag & drop tests only
-  npm run test:browser:mirror       Mirror tests only
-  npm run test:browser:headed       All tests with visible browser
-
 ${bold('Examples:')}
-  npx tsx tools/test.ts                       # All tests (default)
-  npx tsx tools/test.ts --drag                # Drag tests only
-  npx tsx tools/test.ts --mirror              # Mirror tests only
-  npx tsx tools/test.ts --category=layout     # Layout tests only
-  npx tsx tools/test.ts --headed              # With visible browser
-  npx tsx tools/test.ts --retries=2           # Retry failed tests
-  npx tsx tools/test.ts --junit=results.xml   # Generate JUnit report
+  npx tsx tools/test.ts --list                                # List all tests
+  npx tsx tools/test.ts --test="Drop Avatar into App stacked" # Run single test
+  npx tsx tools/test.ts --test="Drop Avatar" --headed         # Single test, visible
+  npx tsx tools/test.ts --category=stackedDrag                # Stacked drag tests
+  npx tsx tools/test.ts --filter="App stacked"                # Filter by pattern
+  npx tsx tools/test.ts --headed                              # All with visible browser
 `)
 }
 
