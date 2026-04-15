@@ -145,6 +145,10 @@ export interface StudioEvents {
     target: {
       containerId: string
       insertionIndex: number
+      /** For absolute/stacked containers: position mode */
+      mode?: 'flex' | 'absolute'
+      /** For absolute/stacked containers: drop position */
+      position?: { x: number; y: number }
     }
     dragData: ComponentDragData | null
   }

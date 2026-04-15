@@ -2712,8 +2712,11 @@ function setupNotificationHandlers() {
           nodeId: source.nodeId,
         },
         targetNodeId: target.containerId,
-        placement: 'inside',
+        // Use 'absolute' placement for stacked containers with position
+        placement: target.mode === 'absolute' && target.position ? 'absolute' : 'inside',
         insertionIndex: target.insertionIndex,
+        // Include position for absolute/stacked drops
+        absolutePosition: target.position || undefined,
       }
       handleStudioDropNew(dropResult, getDropGlobals())
       return
@@ -2739,8 +2742,11 @@ function setupNotificationHandlers() {
         dataBlock: dragData.dataBlock,
       },
       targetNodeId: target.containerId,
-      placement: 'inside', // v3 always inserts inside flex containers
+      // Use 'absolute' placement for stacked containers with position
+      placement: target.mode === 'absolute' && target.position ? 'absolute' : 'inside',
       insertionIndex: target.insertionIndex,
+      // Include position for absolute/stacked drops
+      absolutePosition: target.position || undefined,
     }
 
     handleStudioDropNew(dropResult, getDropGlobals()).catch(err => {

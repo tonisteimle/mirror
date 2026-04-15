@@ -5,7 +5,7 @@
  * Components implement Reportable<T> to provide their state.
  */
 
-import type { Point, FlexLayout, DragSource, DropTarget } from '../types'
+import type { Point, FlexLayout, LayoutType, DragSource, DropTarget } from '../types'
 
 // Re-export Point for convenience
 export type { Point }
@@ -36,7 +36,7 @@ export interface HitReport {
   cursor: Point
   elementAtPoint: string | null
   containerId: string | null
-  layout: FlexLayout | null
+  layout: LayoutType | null
   containerRect: DOMRect | null
   escapeZone: EscapeZoneReport
 }
@@ -71,6 +71,8 @@ export interface InsertionReport {
 export interface IndicatorReport {
   lineVisible: boolean
   linePosition: Point | null
+  ghostVisible: boolean
+  ghostRect: DOMRect | null
   highlightVisible: boolean
   highlightedContainerId: string | null
   highlightRect: DOMRect | null

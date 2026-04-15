@@ -48,6 +48,16 @@ export class PaletteDropHandler extends BaseDropHandler {
     context: DropContext
   ): { x: number; y: number } {
     const { x, y } = result.absolutePosition!
+
+    // When placement is 'absolute', the position is already relative to the container
+    // (as calculated by the drag controller). Only adjust for zoom and clamp negatives.
+    if (result.placement === 'absolute') {
+      const adjusted = this.adjustForZoom(x, y, context.zoomScale)
+      // Clamp to non-negative values (Mirror doesn't support negative positions)
+      return { x: Math.max(0, adjusted.x), y: Math.max(0, adjusted.y) }
+    }
+
+    // Legacy path: position is in screen coordinates, convert to relative
     const adjusted = this.adjustForParent(x, y, result.targetNodeId, context)
     return this.adjustForZoom(adjusted.x, adjusted.y, context.zoomScale)
   }

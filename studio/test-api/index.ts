@@ -1,15 +1,36 @@
 /**
  * Studio Test API
  *
- * Event-based API for testing Studio interactions without timeouts.
- * Provides methods to wait for picker/trigger state changes.
+ * Comprehensive testing framework for Mirror Studio.
+ * Provides:
+ * - Event-based waiting for picker/trigger state changes
+ * - DOM inspection and assertions
+ * - User interaction simulation
+ * - Test execution framework
+ *
+ * Usage in browser console:
+ *   __mirrorTest.inspect('node-1')
+ *   __mirrorTest.expect('node-1').hasText('Hello')
+ *   __mirrorTest.run(tests)
  */
 
 import { events, type StudioEvents } from '../core/events'
 import { getTriggerManager } from '../editor/trigger-manager'
 import { createLogger } from '../../compiler/utils/logger'
+import { PreviewInspector } from './inspector'
+import { Assertions, AssertionCollector, ElementAssert } from './assertions'
+import { Interactions, enableHoverSimulation } from './interactions'
+import { TestRunner, test, testWithSetup, testOnly, testSkip, describe } from './test-runner'
+import type { TestCase, TestSuiteResult, ElementInfo } from './types'
 
 const log = createLogger('TestAPI')
+
+// Re-export for external use
+export * from './types'
+export { PreviewInspector } from './inspector'
+export { Assertions, AssertionCollector, ElementAssert } from './assertions'
+export { Interactions } from './interactions'
+export { TestRunner, test, testWithSetup, testOnly, testSkip, describe } from './test-runner'
 
 export interface StudioTestAPI {
   /** Wait for any picker to open */
@@ -187,7 +208,201 @@ export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
     log.warn('Failed to initialize Browser Drag Test API:', e)
   }
 
+  // Initialize comprehensive Mirror test API (available at window.__mirrorTest)
+  try {
+    setupMirrorTestAPI()
+    log.info('Mirror Test API initialized at window.__mirrorTest')
+  } catch (e) {
+    log.warn('Failed to initialize Mirror Test API:', e)
+  }
+
   log.info('Test API initialized')
+}
+
+// =============================================================================
+// Mirror Test API (Comprehensive Testing Framework)
+// =============================================================================
+
+export interface MirrorTestAPI {
+  // Quick inspection
+  inspect: (nodeId: string) => ElementInfo | null
+  getNodeIds: () => string[]
+  findByText: (text: string) => ElementInfo | null
+
+  // Quick interactions
+  click: (nodeId: string) => Promise<void>
+  hover: (nodeId: string) => Promise<void>
+  type: (nodeId: string, text: string) => Promise<void>
+  select: (nodeId: string) => void
+
+  // Editor control
+  getCode: () => string
+  setCode: (code: string) => Promise<void>
+
+  // Quick assertions (chainable)
+  expect: (nodeId: string) => ElementAssert
+
+  // Test running
+  run: (tests: TestCase[], name?: string) => Promise<TestSuiteResult>
+  runOne: (test: TestCase) => Promise<void>
+
+  // Test definition helpers
+  test: typeof test
+  testWithSetup: typeof testWithSetup
+  testOnly: typeof testOnly
+  testSkip: typeof testSkip
+  describe: typeof describe
+
+  // Full APIs
+  preview: PreviewInspector
+  interact: Interactions
+  runner: TestRunner
+
+  // Utilities
+  delay: (ms: number) => Promise<void>
+  waitForCompile: () => Promise<void>
+  snapshot: () => { code: string; nodeIds: string[]; selection: string | null }
+}
+
+/**
+ * Create the comprehensive Mirror test API
+ */
+function createMirrorTestAPI(): MirrorTestAPI {
+  const inspector = new PreviewInspector()
+  const interactions = new Interactions()
+  const runner = new TestRunner({ verbose: true })
+  const collector = new AssertionCollector(false)
+
+  const getCode = (): string => {
+    const editor = (window as any).editor
+    return editor?.state?.doc?.toString() ?? ''
+  }
+
+  const setCode = async (code: string): Promise<void> => {
+    const editor = (window as any).editor
+    if (!editor) throw new Error('Editor not available')
+
+    const transaction = editor.state.update({
+      changes: { from: 0, to: editor.state.doc.length, insert: code },
+    })
+    editor.dispatch(transaction)
+
+    await waitForCompile()
+  }
+
+  const waitForCompile = async (timeout = 2000): Promise<void> => {
+    const startTime = Date.now()
+    return new Promise((resolve, reject) => {
+      const check = () => {
+        const preview = document.getElementById('preview')
+        const hasNodes = preview?.querySelectorAll('[data-mirror-id]').length ?? 0
+        if (hasNodes > 0) {
+          setTimeout(resolve, 100)
+          return
+        }
+        if (Date.now() - startTime > timeout) {
+          reject(new Error('Compile timeout'))
+          return
+        }
+        setTimeout(check, 50)
+      }
+      setTimeout(check, 150)
+    })
+  }
+
+  const delay = (ms: number): Promise<void> => {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  const snapshot = () => {
+    const studio = (window as any).__mirrorStudio__
+    return {
+      code: getCode(),
+      nodeIds: inspector.getNodeIds(),
+      selection: studio?.state?.get()?.selection?.nodeId ?? null,
+    }
+  }
+
+  return {
+    // Quick inspection
+    inspect: nodeId => inspector.inspect(nodeId),
+    getNodeIds: () => inspector.getNodeIds(),
+    findByText: text => inspector.findByText(text),
+
+    // Quick interactions
+    click: nodeId => interactions.click(nodeId),
+    hover: nodeId => interactions.hover(nodeId),
+    type: (nodeId, text) => interactions.type(nodeId, text),
+    select: nodeId => interactions.select(nodeId),
+
+    // Editor control
+    getCode,
+    setCode,
+
+    // Quick assertions
+    expect: nodeId => new ElementAssert(inspector, collector, nodeId),
+
+    // Test running
+    run: (tests, name = 'Mirror Tests') => runner.runSuite(name, tests),
+    runOne: async testCase => {
+      const result = await runner.runTest(testCase)
+      if (result.passed) {
+        console.log(`✅ ${testCase.name} PASSED`)
+      } else {
+        console.log(`❌ ${testCase.name} FAILED: ${result.error}`)
+      }
+    },
+
+    // Test definition helpers
+    test,
+    testWithSetup,
+    testOnly,
+    testSkip,
+    describe,
+
+    // Full APIs
+    preview: inspector,
+    interact: interactions,
+    runner,
+
+    // Utilities
+    delay,
+    waitForCompile,
+    snapshot,
+  }
+}
+
+/**
+ * Setup global Mirror test API
+ */
+export function setupMirrorTestAPI(): void {
+  if ((window as any).__mirrorTest) return
+
+  const api = createMirrorTestAPI()
+  ;(window as any).__mirrorTest = api
+
+  enableHoverSimulation()
+
+  console.log('🧪 Mirror Test Framework ready. Usage:')
+  console.log('')
+  console.log('  // Inspect elements')
+  console.log('  __mirrorTest.inspect("node-1")')
+  console.log('  __mirrorTest.getNodeIds()')
+  console.log('')
+  console.log('  // Interactions')
+  console.log('  __mirrorTest.click("node-1")')
+  console.log('  __mirrorTest.hover("node-2")')
+  console.log('')
+  console.log('  // Assertions')
+  console.log('  __mirrorTest.expect("node-1").hasText("Hello").hasBackground("#2271C1")')
+  console.log('')
+  console.log('  // Run tests')
+  console.log('  const { testWithSetup } = __mirrorTest')
+  console.log('  __mirrorTest.run([')
+  console.log('    testWithSetup("Button renders", "Button \\"Click\\"", async (api) => {')
+  console.log('      api.assert.exists("node-1")')
+  console.log('    })')
+  console.log('  ])')
 }
 
 /**

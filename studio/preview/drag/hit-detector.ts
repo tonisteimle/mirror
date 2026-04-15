@@ -10,7 +10,7 @@
  * This allows dragging elements out of nested containers.
  */
 
-import type { Point, HitResult, FlexLayout } from './types'
+import type { Point, HitResult, FlexLayout, LayoutType } from './types'
 import type { LayoutCache } from './layout-cache'
 import type { HitReport, EscapeZoneReport, Reportable } from './reporter/types'
 import { createLogger } from '../../../compiler/utils/logger'
@@ -103,6 +103,9 @@ export class HitDetector implements Reportable<HitReport> {
 
   /** Check if cursor is in escape zone (near bottom edge, below children) */
   private isInEscapeZone(cursor: Point, hit: HitResult, cache: LayoutCache): boolean {
+    // Escape zone doesn't apply to absolute layouts (no linear ordering)
+    if (hit.layout === 'absolute') return false
+
     const children = cache.getChildren(hit.containerId)
     if (children.length === 0) return false
 
@@ -143,7 +146,7 @@ export class HitDetector implements Reportable<HitReport> {
     if (!nodeId) return null
 
     const style = getComputedStyle(el)
-    const layout = this.detectLayout(style)
+    const layout = this.detectLayout(el, style)
     if (!layout) return null
 
     const rect = cache.getRect(nodeId)
@@ -153,11 +156,35 @@ export class HitDetector implements Reportable<HitReport> {
   }
 
   /** Detect layout type from computed style */
-  private detectLayout(style: CSSStyleDeclaration): FlexLayout | null {
+  private detectLayout(el: Element, style: CSSStyleDeclaration): LayoutType | null {
+    // Check data-layout attribute (set by IR for stacked containers)
+    const dataLayout = (el as HTMLElement).dataset?.layout
+    if (dataLayout === 'absolute' || dataLayout === 'stacked') {
+      return 'absolute'
+    }
+
+    // Check if container has absolute children (stacked layout indicator)
+    if (style.position === 'relative' && this.hasAbsoluteChildren(el)) {
+      return 'absolute'
+    }
+
+    // Standard flex detection
     if (style.display === 'flex') return this.getFlexDirection(style)
     if (style.display === 'grid') return 'flex-row'
+
+    // Fallback: position relative without absolute children = flex-column
     if (style.position === 'relative') return 'flex-column'
+
     return null
+  }
+
+  /** Check if element has any absolute-positioned children */
+  private hasAbsoluteChildren(el: Element): boolean {
+    for (const child of el.children) {
+      const pos = getComputedStyle(child).position
+      if (pos === 'absolute') return true
+    }
+    return false
   }
 
   /** Get flex direction as layout type */

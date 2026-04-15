@@ -17,7 +17,7 @@ import {
   setCanvasDragData,
   type ComponentDragData,
 } from '../drag-preview'
-import type { DragSource, DropTarget, Point } from './types'
+import type { DragSource, DropTarget, FlexDropTarget, AbsoluteDropTarget, Point } from './types'
 
 // =============================================================================
 // Types
@@ -264,6 +264,47 @@ export class BrowserTestRunner {
   }
 
   /**
+   * Clamp position to container bounds
+   */
+  private clampPositionToContainer(
+    position: Point,
+    source: DragSource,
+    containerEl: HTMLElement | null
+  ): Point {
+    if (!containerEl) return position
+
+    const containerRect = containerEl.getBoundingClientRect()
+    const componentSize = this.getComponentSize(source)
+
+    // Calculate bounds
+    const maxX = Math.max(0, containerRect.width - componentSize.width)
+    const maxY = Math.max(0, containerRect.height - componentSize.height)
+
+    return {
+      x: Math.round(Math.max(0, Math.min(position.x, maxX))),
+      y: Math.round(Math.max(0, Math.min(position.y, maxY))),
+    }
+  }
+
+  /**
+   * Get component size for clamping calculations
+   */
+  private getComponentSize(source: DragSource): { width: number; height: number } {
+    const DEFAULT_SIZES: Record<string, { width: number; height: number }> = {
+      Button: { width: 100, height: 40 },
+      Text: { width: 80, height: 24 },
+      Icon: { width: 24, height: 24 },
+      Input: { width: 200, height: 40 },
+      Frame: { width: 200, height: 100 },
+      Image: { width: 100, height: 100 },
+      Divider: { width: 100, height: 2 },
+      Spacer: { width: 16, height: 16 },
+    }
+    const name = source.componentName ?? 'Frame'
+    return DEFAULT_SIZES[name] ?? { width: 100, height: 40 }
+  }
+
+  /**
    * Get simulated palette position (top-left area)
    */
   private getPalettePosition(): Point {
@@ -333,7 +374,141 @@ export class BrowserTestRunner {
     const state = controller.getTestState()
     if (!state.target) {
       // Hit detection failed (common in headless mode) - use simulateDrop
-      const target: DropTarget = { containerId: targetNodeId, insertionIndex }
+      const target: FlexDropTarget = { mode: 'flex', containerId: targetNodeId, insertionIndex }
+      await controller.simulateDrop(source, target)
+    } else {
+      // Normal drop path
+      await controller.drop()
+    }
+  }
+
+  /**
+   * Execute a palette drop into an absolute/stacked container
+   */
+  async executePaletteDropAbsolute(params: {
+    componentName: string
+    targetNodeId: string
+    position: Point
+    template?: string
+    properties?: string
+    textContent?: string
+  }): Promise<BrowserTestResult> {
+    const startTime = performance.now()
+    const codeBefore = this.getCode()
+    const description = `Drop ${params.componentName} into ${params.targetNodeId} at (${params.position.x}, ${params.position.y})`
+
+    try {
+      // 1. Find target element in DOM
+      const targetEl = this.findElement(params.targetNodeId)
+      if (!targetEl) {
+        return this.errorResult(
+          description,
+          `Target element ${params.targetNodeId} not found`,
+          startTime
+        )
+      }
+
+      // 2. Set drag data (as ComponentPanel would)
+      const dragData: ComponentDragData = {
+        componentName: params.componentName,
+        properties: params.properties,
+        textContent: params.textContent,
+        mirTemplate: params.template,
+      }
+      setCurrentDragData(dragData)
+
+      // 3. Calculate drop position (absolute coordinates)
+      const targetRect = targetEl.getBoundingClientRect()
+      const dropPos: Point = {
+        x: targetRect.left + params.position.x,
+        y: targetRect.top + params.position.y,
+      }
+
+      // 4. Create drag source
+      const source: DragSource = {
+        type: 'palette',
+        componentName: params.componentName,
+      }
+
+      // 5. Execute animated drag to absolute position
+      await this.executeAnimatedDragAbsolute(source, dropPos, params.targetNodeId, params.position)
+
+      // 6. Cleanup
+      clearCurrentDragData()
+
+      // 7. Wait for code update
+      await this.waitForCodeChange(codeBefore)
+
+      return {
+        success: true,
+        description,
+        duration: performance.now() - startTime,
+        codeBefore,
+        codeAfter: this.getCode(),
+      }
+    } catch (error) {
+      clearCurrentDragData()
+      return this.errorResult(description, String(error), startTime, codeBefore)
+    }
+  }
+
+  /**
+   * Execute animated drag for absolute positioning
+   */
+  private async executeAnimatedDragAbsolute(
+    source: DragSource,
+    endPos: Point,
+    targetNodeId: string,
+    position: Point
+  ): Promise<void> {
+    const controller = getDragController()
+    const { steps, stepDelay, showCursor } = this.animationConfig
+    const startPos = this.getPalettePosition()
+
+    // Show visual cursor
+    if (showCursor) {
+      this.showVisualCursor(startPos)
+    }
+
+    // Start the drag
+    controller.startDrag(source, this.previewContainer!)
+
+    // Animate movement
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps
+      const currentPos: Point = {
+        x: startPos.x + (endPos.x - startPos.x) * t,
+        y: startPos.y + (endPos.y - startPos.y) * t,
+      }
+
+      controller.updatePosition(currentPos)
+
+      if (showCursor) {
+        this.moveVisualCursor(currentPos)
+      }
+
+      await this.delay(stepDelay)
+    }
+
+    // Hide cursor
+    if (showCursor) {
+      this.hideVisualCursor()
+    }
+
+    // Check if we have a valid target - if not, use simulateDrop as fallback
+    const state = controller.getTestState()
+    if (!state.target) {
+      // Hit detection failed (common in headless mode) - use simulateDrop
+      // Clamp position to container bounds
+      const targetEl = this.findElement(targetNodeId)
+      const clampedPosition = this.clampPositionToContainer(position, source, targetEl)
+      // Insert as last child (index 0 for new stacked containers)
+      const target: AbsoluteDropTarget = {
+        mode: 'absolute',
+        containerId: targetNodeId,
+        position: clampedPosition,
+        insertionIndex: 0,
+      }
       await controller.simulateDrop(source, target)
     } else {
       // Normal drop path
@@ -429,6 +604,7 @@ class PaletteDragBuilder {
   private componentName: string
   private targetId: string = ''
   private index: number = 0
+  private position?: Point
   private template?: string
   private properties?: string
   private text?: string
@@ -460,6 +636,13 @@ class PaletteDragBuilder {
 
   atIndex(index: number): this {
     this.index = index
+    this.position = undefined // Clear position if index is set
+    return this
+  }
+
+  /** Set absolute position for stacked/absolute containers */
+  atPosition(x: number, y: number): this {
+    this.position = { x, y }
     return this
   }
 
@@ -473,6 +656,19 @@ class PaletteDragBuilder {
       }
     }
 
+    // Use absolute positioning if position is set
+    if (this.position) {
+      return this.runner.executePaletteDropAbsolute({
+        componentName: this.componentName,
+        targetNodeId: this.targetId,
+        position: this.position,
+        template: this.template,
+        properties: this.properties,
+        textContent: this.text,
+      })
+    }
+
+    // Default to index-based positioning
     return this.runner.executePaletteDrop({
       componentName: this.componentName,
       targetNodeId: this.targetId,
@@ -975,6 +1171,159 @@ export class MirrorStudioControl {
   }
 
   /**
+   * Verify that x/y position in code matches expected range
+   * Finds the LAST x/y occurrence (newly added element)
+   */
+  verifyPositionInCode(params: {
+    codeAfter: string
+    expectedX: number
+    expectedY: number
+    tolerance?: number
+  }): { match: boolean; actualX: number | null; actualY: number | null; message: string } {
+    const tolerance = params.tolerance ?? 20
+
+    // Match ALL x and y properties, use the LAST one (newly added element)
+    const xMatches = [...params.codeAfter.matchAll(/\bx\s+(\d+)/gi)]
+    const yMatches = [...params.codeAfter.matchAll(/\by\s+(\d+)/gi)]
+
+    const lastXMatch = xMatches.length > 0 ? xMatches[xMatches.length - 1] : null
+    const lastYMatch = yMatches.length > 0 ? yMatches[yMatches.length - 1] : null
+
+    const actualX = lastXMatch ? parseInt(lastXMatch[1], 10) : null
+    const actualY = lastYMatch ? parseInt(lastYMatch[1], 10) : null
+
+    const xOk = actualX !== null && Math.abs(actualX - params.expectedX) <= tolerance
+    const yOk = actualY !== null && Math.abs(actualY - params.expectedY) <= tolerance
+
+    const match = xOk && yOk
+
+    let message: string
+    if (match) {
+      message = `Position OK: x=${actualX} (expected ~${params.expectedX}), y=${actualY} (expected ~${params.expectedY})`
+    } else if (actualX === null || actualY === null) {
+      message = `Position NOT found in code. Found: x=${actualX}, y=${actualY}`
+    } else {
+      message = `Position mismatch: x=${actualX} (expected ${params.expectedX}±${tolerance}), y=${actualY} (expected ${params.expectedY}±${tolerance})`
+    }
+
+    return { match, actualX, actualY, message }
+  }
+
+  /**
+   * Execute a real drag operation for stacked/absolute positioning
+   */
+  async executeRealStackedDrag(params: {
+    componentName: string
+    targetNodeId: string
+    position: Point
+    expectedXRange: [number, number]
+    expectedYRange: [number, number]
+  }): Promise<{
+    success: boolean
+    codeBefore: string
+    codeAfter: string
+    positionVerification: {
+      match: boolean
+      actualX: number | null
+      actualY: number | null
+      message: string
+    }
+    selectionAfter: string | null
+    error?: string
+    debugInfo: {
+      preludeOffset: number
+      nodeCount: number
+      targetFound: boolean
+    }
+  }> {
+    const codeBefore = this.getCode()
+    const preludeOffset = this.getPreludeOffset()
+    const nodeIds = this.getNodeIds()
+    const targetFound = nodeIds.includes(params.targetNodeId)
+
+    const debugInfo = {
+      preludeOffset,
+      nodeCount: nodeIds.length,
+      targetFound,
+    }
+
+    if (!targetFound) {
+      return {
+        success: false,
+        codeBefore,
+        codeAfter: codeBefore,
+        positionVerification: {
+          match: false,
+          actualX: null,
+          actualY: null,
+          message: `Target ${params.targetNodeId} not found`,
+        },
+        selectionAfter: null,
+        error: `Target node ${params.targetNodeId} not found. Available: ${nodeIds.join(', ')}`,
+        debugInfo,
+      }
+    }
+
+    try {
+      // Use the BrowserTestRunner for the drag operation
+      const runner = globalRunner!
+      const result = await runner.executePaletteDropAbsolute({
+        componentName: params.componentName,
+        targetNodeId: params.targetNodeId,
+        position: params.position,
+      })
+
+      const codeAfter = this.getCode()
+
+      // Calculate expected center from range
+      const expectedX = (params.expectedXRange[0] + params.expectedXRange[1]) / 2
+      const expectedY = (params.expectedYRange[0] + params.expectedYRange[1]) / 2
+      const toleranceX = (params.expectedXRange[1] - params.expectedXRange[0]) / 2
+      const toleranceY = (params.expectedYRange[1] - params.expectedYRange[0]) / 2
+      const tolerance = Math.max(toleranceX, toleranceY)
+
+      const positionVerification = this.verifyPositionInCode({
+        codeAfter,
+        expectedX,
+        expectedY,
+        tolerance,
+      })
+
+      // Get selection after drop
+      const selectionAfter = this.getSelection()
+
+      return {
+        success: result.success && positionVerification.match,
+        codeBefore,
+        codeAfter,
+        positionVerification,
+        selectionAfter,
+        error: result.success
+          ? positionVerification.match
+            ? undefined
+            : positionVerification.message
+          : result.error,
+        debugInfo,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        codeBefore,
+        codeAfter: this.getCode(),
+        positionVerification: {
+          match: false,
+          actualX: null,
+          actualY: null,
+          message: String(error),
+        },
+        selectionAfter: null,
+        error: String(error),
+        debugInfo,
+      }
+    }
+  }
+
+  /**
    * Execute a real drag operation and verify the result
    */
   async executeRealDrag(params: {
@@ -987,6 +1336,7 @@ export class MirrorStudioControl {
     codeBefore: string
     codeAfter: string
     verification: { match: boolean; diff: string; message: string }
+    selectionAfter: string | null
     error?: string
     debugInfo: {
       preludeOffset: number
@@ -1015,6 +1365,7 @@ export class MirrorStudioControl {
           diff: '',
           message: `Target ${params.targetNodeId} not found`,
         },
+        selectionAfter: null,
         error: `Target node ${params.targetNodeId} not found. Available: ${nodeIds.join(', ')}`,
         debugInfo,
       }
@@ -1037,11 +1388,15 @@ export class MirrorStudioControl {
         expectedPattern: params.expectedPattern,
       })
 
+      // Get selection after drop
+      const selectionAfter = this.getSelection()
+
       return {
         success: result.success && verification.match,
         codeBefore,
         codeAfter,
         verification,
+        selectionAfter,
         error: result.success
           ? verification.match
             ? undefined
@@ -1055,6 +1410,7 @@ export class MirrorStudioControl {
         codeBefore,
         codeAfter: this.getCode(),
         verification: { match: false, diff: '', message: String(error) },
+        selectionAfter: null,
         error: String(error),
         debugInfo,
       }
@@ -1074,6 +1430,7 @@ export class MirrorStudioControl {
     codeBefore: string
     codeAfter: string
     verification: { match: boolean; diff: string; message: string }
+    selectionAfter: string | null
     error?: string
     debugInfo: {
       preludeOffset: number
@@ -1105,6 +1462,7 @@ export class MirrorStudioControl {
           diff: '',
           message: `Source ${params.sourceNodeId} not found`,
         },
+        selectionAfter: null,
         error: `Source node ${params.sourceNodeId} not found. Available: ${nodeIds.join(', ')}`,
         debugInfo,
       }
@@ -1120,6 +1478,7 @@ export class MirrorStudioControl {
           diff: '',
           message: `Target ${params.targetNodeId} not found`,
         },
+        selectionAfter: null,
         error: `Target node ${params.targetNodeId} not found. Available: ${nodeIds.join(', ')}`,
         debugInfo,
       }
@@ -1141,11 +1500,15 @@ export class MirrorStudioControl {
         expectedPattern: params.expectedPattern,
       })
 
+      // Get selection after move
+      const selectionAfter = this.getSelection()
+
       return {
         success: result.success && verification.match,
         codeBefore,
         codeAfter,
         verification,
+        selectionAfter,
         error: result.success
           ? verification.match
             ? undefined
@@ -1159,11 +1522,460 @@ export class MirrorStudioControl {
         codeBefore,
         codeAfter: this.getCode(),
         verification: { match: false, diff: '', message: String(error) },
+        selectionAfter: null,
         error: String(error),
         debugInfo,
       }
     }
   }
+
+  // ===========================================================================
+  // Property Panel Control
+  // ===========================================================================
+
+  /**
+   * Get the property panel instance
+   */
+  private getPropertyPanel(): any {
+    const studio = (window as any).__mirrorStudio__
+    return studio?.propertyPanel ?? null
+  }
+
+  /**
+   * Get extracted element for a node ID
+   * Returns all properties, categories, and metadata
+   */
+  getElement(nodeId: string): ExtractedElementInfo | null {
+    const studio = (window as any).__mirrorStudio__
+    const extractor = studio?.modules?.compiler?.propertyExtractor
+    if (!extractor) return null
+
+    const element = extractor.getProperties(nodeId)
+    if (!element) return null
+
+    return {
+      nodeId: element.nodeId,
+      nodeName: element.nodeName,
+      componentName: element.componentName,
+      isDefinition: element.isDefinition ?? false,
+      isTemplateInstance: element.isTemplateInstance ?? false,
+      categories: element.categories.map((cat: any) => ({
+        name: cat.name,
+        label: cat.label,
+        properties: cat.properties.map((prop: any) => ({
+          name: prop.name,
+          value: prop.value,
+          hasValue: prop.hasValue,
+          isToken: prop.isToken,
+          tokenRef: prop.tokenRef,
+        })),
+      })),
+      allProperties: element.allProperties.map((prop: any) => ({
+        name: prop.name,
+        value: prop.value,
+        hasValue: prop.hasValue,
+        isToken: prop.isToken,
+        tokenRef: prop.tokenRef,
+      })),
+    }
+  }
+
+  /**
+   * Get a specific property value for a node
+   */
+  getPropertyValue(nodeId: string, propertyName: string): string | null {
+    const element = this.getElement(nodeId)
+    if (!element) return null
+
+    const prop = element.allProperties.find(p => p.name === propertyName)
+    return prop?.hasValue ? prop.value : null
+  }
+
+  /**
+   * Check if a property is set on a node
+   */
+  hasProperty(nodeId: string, propertyName: string): boolean {
+    const element = this.getElement(nodeId)
+    if (!element) return false
+
+    const prop = element.allProperties.find(p => p.name === propertyName)
+    return prop?.hasValue ?? false
+  }
+
+  /**
+   * Set a property value on a node
+   * Returns modification result with success status and new source
+   */
+  async setProperty(
+    nodeId: string,
+    propertyName: string,
+    value: string
+  ): Promise<PropertyModificationResult> {
+    const studio = (window as any).__mirrorStudio__
+    const modifier = studio?.modules?.compiler?.codeModifier
+    const state = studio?.state
+
+    if (!modifier || !state) {
+      return { success: false, error: 'CodeModifier not available' }
+    }
+
+    try {
+      const result = modifier.setProperty(nodeId, propertyName, value)
+
+      if (result.success && result.newSource) {
+        // Update state and trigger compile
+        state.set({ source: result.newSource })
+        studio.events?.emit('source:changed', { source: result.newSource, origin: 'test' })
+        studio.events?.emit('compile:requested', {})
+
+        // Wait for compile
+        await this.waitForCompile()
+
+        return {
+          success: true,
+          newSource: result.newSource,
+          change: result.change,
+        }
+      }
+
+      return { success: false, error: result.error || 'Unknown error' }
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  }
+
+  /**
+   * Remove a property from a node
+   */
+  async removeProperty(nodeId: string, propertyName: string): Promise<PropertyModificationResult> {
+    const studio = (window as any).__mirrorStudio__
+    const modifier = studio?.modules?.compiler?.codeModifier
+    const state = studio?.state
+
+    if (!modifier || !state) {
+      return { success: false, error: 'CodeModifier not available' }
+    }
+
+    try {
+      const result = modifier.removeProperty(nodeId, propertyName)
+
+      if (result.success && result.newSource) {
+        state.set({ source: result.newSource })
+        studio.events?.emit('source:changed', { source: result.newSource, origin: 'test' })
+        studio.events?.emit('compile:requested', {})
+
+        await this.waitForCompile()
+
+        return {
+          success: true,
+          newSource: result.newSource,
+          change: result.change,
+        }
+      }
+
+      return { success: false, error: result.error || 'Unknown error' }
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  }
+
+  /**
+   * Toggle a boolean property (add or remove)
+   */
+  async toggleProperty(
+    nodeId: string,
+    propertyName: string,
+    enabled: boolean
+  ): Promise<PropertyModificationResult> {
+    const studio = (window as any).__mirrorStudio__
+    const modifier = studio?.modules?.compiler?.codeModifier
+    const state = studio?.state
+
+    if (!modifier || !state) {
+      return { success: false, error: 'CodeModifier not available' }
+    }
+
+    try {
+      const result = modifier.toggleProperty(nodeId, propertyName, enabled)
+
+      if (result.success && result.newSource) {
+        state.set({ source: result.newSource })
+        studio.events?.emit('source:changed', { source: result.newSource, origin: 'test' })
+        studio.events?.emit('compile:requested', {})
+
+        await this.waitForCompile()
+
+        return {
+          success: true,
+          newSource: result.newSource,
+          change: result.change,
+        }
+      }
+
+      return { success: false, error: result.error || 'Unknown error' }
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  }
+
+  /**
+   * Apply multiple property changes at once
+   */
+  async batchUpdateProperties(
+    nodeId: string,
+    changes: Array<{ name: string; value: string; action: 'set' | 'remove' | 'toggle' }>
+  ): Promise<PropertyModificationResult> {
+    const studio = (window as any).__mirrorStudio__
+    const modifier = studio?.modules?.compiler?.codeModifier
+    const state = studio?.state
+
+    if (!modifier || !state) {
+      return { success: false, error: 'CodeModifier not available' }
+    }
+
+    try {
+      // Apply changes sequentially to ensure proper source updates
+      let currentSource = state.get().source
+      let lastChange: any = null
+
+      for (const change of changes) {
+        // Re-get modifier with updated source
+        let result
+        if (change.action === 'set') {
+          result = modifier.setProperty(nodeId, change.name, change.value)
+        } else if (change.action === 'remove') {
+          result = modifier.removeProperty(nodeId, change.name)
+        } else {
+          result = modifier.toggleProperty(nodeId, change.name, change.value === 'true')
+        }
+
+        if (!result.success) {
+          return {
+            success: false,
+            error: result.error || `Failed to apply ${change.action} on ${change.name}`,
+          }
+        }
+
+        if (result.newSource) {
+          currentSource = result.newSource
+          lastChange = result.change
+          // Update state for next change
+          state.set({ source: currentSource })
+        }
+      }
+
+      // Trigger compile after all changes
+      studio.events?.emit('source:changed', { source: currentSource, origin: 'test' })
+      studio.events?.emit('compile:requested', {})
+      await this.waitForCompile()
+
+      return {
+        success: true,
+        newSource: currentSource,
+        change: lastChange,
+      }
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  }
+
+  /**
+   * Get available color tokens
+   */
+  getColorTokens(): TokenInfo[] {
+    const studio = (window as any).__mirrorStudio__
+    const state = studio?.state?.get()
+    if (!state?.source) return []
+
+    // Simple token extraction from source
+    const tokens: TokenInfo[] = []
+    const lines = state.source.split('\n')
+
+    for (const line of lines) {
+      // Match: name.bg: #color or name.col: #color
+      const match = line.match(/^(\w+)\.(bg|col|boc|ic):\s*(#[a-fA-F0-9]{3,8}|rgba?\([^)]+\))/)
+      if (match) {
+        tokens.push({
+          name: match[1],
+          type: match[2] as 'bg' | 'col' | 'boc' | 'ic',
+          value: match[3],
+          fullName: `${match[1]}.${match[2]}`,
+        })
+      }
+    }
+
+    return tokens
+  }
+
+  /**
+   * Get available spacing tokens
+   */
+  getSpacingTokens(): TokenInfo[] {
+    const studio = (window as any).__mirrorStudio__
+    const state = studio?.state?.get()
+    if (!state?.source) return []
+
+    const tokens: TokenInfo[] = []
+    const lines = state.source.split('\n')
+
+    for (const line of lines) {
+      // Match: name.pad: 12 or name.gap: 8, etc.
+      const match = line.match(/^(\w+)\.(pad|gap|mar|rad):\s*(\d+)/)
+      if (match) {
+        tokens.push({
+          name: match[1],
+          type: match[2] as 'pad' | 'gap' | 'mar' | 'rad',
+          value: match[3],
+          fullName: `${match[1]}.${match[2]}`,
+        })
+      }
+    }
+
+    return tokens
+  }
+
+  /**
+   * Refresh the property panel
+   */
+  refreshPropertyPanel(): void {
+    const panel = this.getPropertyPanel()
+    if (panel?.refresh) {
+      panel.refresh()
+    }
+  }
+
+  /**
+   * Get the currently displayed element in the property panel
+   */
+  getCurrentPanelElement(): ExtractedElementInfo | null {
+    const panel = this.getPropertyPanel()
+    if (!panel) return null
+
+    const element = panel.getCurrentElement?.()
+    if (!element) return null
+
+    return {
+      nodeId: element.nodeId,
+      nodeName: element.nodeName,
+      componentName: element.componentName,
+      isDefinition: element.isDefinition ?? false,
+      isTemplateInstance: element.isTemplateInstance ?? false,
+      categories:
+        element.categories?.map((cat: any) => ({
+          name: cat.name,
+          label: cat.label,
+          properties:
+            cat.properties?.map((prop: any) => ({
+              name: prop.name,
+              value: prop.value,
+              hasValue: prop.hasValue,
+              isToken: prop.isToken,
+              tokenRef: prop.tokenRef,
+            })) ?? [],
+        })) ?? [],
+      allProperties:
+        element.allProperties?.map((prop: any) => ({
+          name: prop.name,
+          value: prop.value,
+          hasValue: prop.hasValue,
+          isToken: prop.isToken,
+          tokenRef: prop.tokenRef,
+        })) ?? [],
+    }
+  }
+
+  /**
+   * Select an element and wait for the property panel to update
+   */
+  async selectAndInspect(nodeId: string): Promise<ExtractedElementInfo | null> {
+    this.selectNode(nodeId)
+    await new Promise(resolve => setTimeout(resolve, 100))
+    this.refreshPropertyPanel()
+    await new Promise(resolve => setTimeout(resolve, 50))
+    return this.getElement(nodeId)
+  }
+
+  /**
+   * Get all properties as a simple key-value map
+   */
+  getPropertiesMap(nodeId: string): Record<string, string> {
+    const element = this.getElement(nodeId)
+    if (!element) return {}
+
+    const map: Record<string, string> = {}
+    for (const prop of element.allProperties) {
+      if (prop.hasValue) {
+        map[prop.name] = prop.value
+      }
+    }
+    return map
+  }
+
+  /**
+   * Get element's primitive type (Frame, Button, Text, etc.)
+   */
+  getPrimitiveType(nodeId: string): string | null {
+    const element = this.getElement(nodeId)
+    return element?.nodeName ?? null
+  }
+
+  /**
+   * Check if element is a component instance
+   */
+  isComponentInstance(nodeId: string): boolean {
+    const element = this.getElement(nodeId)
+    return element?.isTemplateInstance ?? false
+  }
+
+  /**
+   * Check if element is a component definition
+   */
+  isComponentDefinition(nodeId: string): boolean {
+    const element = this.getElement(nodeId)
+    return element?.isDefinition ?? false
+  }
+}
+
+// =============================================================================
+// Property Panel Types
+// =============================================================================
+
+export interface ExtractedPropertyInfo {
+  name: string
+  value: string
+  hasValue: boolean
+  isToken?: boolean
+  tokenRef?: string
+}
+
+export interface PropertyCategoryInfo {
+  name: string
+  label: string
+  properties: ExtractedPropertyInfo[]
+}
+
+export interface ExtractedElementInfo {
+  nodeId: string
+  nodeName: string
+  componentName?: string
+  isDefinition: boolean
+  isTemplateInstance: boolean
+  categories: PropertyCategoryInfo[]
+  allProperties: ExtractedPropertyInfo[]
+}
+
+export interface PropertyModificationResult {
+  success: boolean
+  newSource?: string
+  change?: { from: number; to: number; insert: string }
+  error?: string
+}
+
+export interface TokenInfo {
+  name: string
+  type: string
+  value: string
+  fullName: string
 }
 
 // =============================================================================
@@ -1475,6 +2287,71 @@ const DRAG_TEST_CASES: DragTestCase[] = [
 ]
 
 // =============================================================================
+// Stacked/Absolute Position Test Cases
+// =============================================================================
+
+interface StackedDragTestCase {
+  name: string
+  setup: string
+  drag: {
+    componentName: string
+    targetNodeId: string
+    position: Point
+  }
+  expected: {
+    xRange: [number, number] // Min/Max for tolerance
+    yRange: [number, number]
+    description: string
+  }
+}
+
+const STACKED_DRAG_TEST_CASES: StackedDragTestCase[] = [
+  // =============================================================================
+  // Palette → Stacked Container
+  // =============================================================================
+  {
+    name: 'Drop Button into empty stacked Frame',
+    setup: 'Frame stacked, w 400, h 300, bg #1a1a1a',
+    drag: { componentName: 'Button', targetNodeId: 'node-1', position: { x: 100, y: 50 } },
+    expected: { xRange: [90, 110], yRange: [40, 60], description: 'Button at ~100,50' },
+  },
+  {
+    name: 'Drop Icon into stacked with existing elements',
+    setup: 'Frame stacked, w 400, h 300, bg #1a1a1a\n  Button "A", x 10, y 10',
+    drag: { componentName: 'Icon', targetNodeId: 'node-1', position: { x: 200, y: 150 } },
+    expected: { xRange: [190, 210], yRange: [140, 160], description: 'Icon at ~200,150' },
+  },
+  {
+    name: 'Drop Text at top-left of stacked',
+    setup: 'Frame stacked, w 300, h 200, bg #1a1a1a',
+    drag: { componentName: 'Text', targetNodeId: 'node-1', position: { x: 20, y: 20 } },
+    expected: { xRange: [10, 30], yRange: [10, 30], description: 'Text at ~20,20' },
+  },
+  {
+    name: 'Drop Input into stacked center',
+    setup: 'Frame stacked, w 400, h 300, bg #1a1a1a',
+    drag: { componentName: 'Input', targetNodeId: 'node-1', position: { x: 200, y: 150 } },
+    expected: { xRange: [100, 200], yRange: [130, 170], description: 'Input centered' },
+  },
+
+  // =============================================================================
+  // Edge Cases
+  // =============================================================================
+  {
+    name: 'Drop at container edge (clamp to bounds)',
+    setup: 'Frame stacked, w 200, h 200, bg #1a1a1a',
+    drag: { componentName: 'Button', targetNodeId: 'node-1', position: { x: -50, y: -50 } },
+    expected: { xRange: [0, 10], yRange: [0, 10], description: 'Clamped to 0,0' },
+  },
+  {
+    name: 'Drop at far right edge',
+    setup: 'Frame stacked, w 300, h 200, bg #1a1a1a',
+    drag: { componentName: 'Button', targetNodeId: 'node-1', position: { x: 280, y: 100 } },
+    expected: { xRange: [180, 220], yRange: [80, 120], description: 'Near right edge' },
+  },
+]
+
+// =============================================================================
 // Canvas Move Test Cases (moving existing elements)
 // =============================================================================
 
@@ -1587,6 +2464,8 @@ interface DragTestResult {
   codeBefore: string
   codeAfter: string
   verification: { match: boolean; diff: string; message: string }
+  selectionAfter: string | null
+  selectionVerification: { correct: boolean; expected: string | null; actual: string | null }
   debugInfo: {
     preludeOffset: number
     nodeCount: number
@@ -1634,12 +2513,25 @@ async function runComprehensiveDragTests(
 
       const duration = performance.now() - start
 
+      // Selection verification: after drop, something should be selected
+      const selectionCorrect = result.selectionAfter !== null
+      const selectionVerification = {
+        correct: selectionCorrect,
+        expected: 'any (new element)',
+        actual: result.selectionAfter,
+      }
+
+      // Test passes if code change is correct AND selection exists
+      const testPassed = result.success && selectionCorrect
+
       const testResult: DragTestResult = {
         name: testCase.name,
-        passed: result.success,
+        passed: testPassed,
         codeBefore: result.codeBefore,
         codeAfter: result.codeAfter,
         verification: result.verification,
+        selectionAfter: result.selectionAfter,
+        selectionVerification,
         debugInfo: result.debugInfo,
         error: result.error,
         duration,
@@ -1647,17 +2539,24 @@ async function runComprehensiveDragTests(
 
       results.push(testResult)
 
-      if (result.success) {
+      if (testPassed) {
         passed++
         console.log(`  ✅ PASSED (${duration.toFixed(0)}ms)`)
         console.log(`     ${testCase.expected.description}`)
+        console.log(`     Selection: ${result.selectionAfter}`)
       } else {
         failed++
-        console.log(`  ❌ FAILED: ${result.error || 'Unknown error'}`)
-        console.log(
-          `     Debug: prelude=${result.debugInfo.preludeOffset}, nodes=${result.debugInfo.nodeCount}`
-        )
-        console.log(`     Diff:\n${result.verification.diff}`)
+        if (!result.success) {
+          console.log(`  ❌ FAILED: ${result.error || 'Unknown error'}`)
+          console.log(
+            `     Debug: prelude=${result.debugInfo.preludeOffset}, nodes=${result.debugInfo.nodeCount}`
+          )
+          console.log(`     Diff:\n${result.verification.diff}`)
+        } else if (!selectionCorrect) {
+          console.log(`  ❌ FAILED: No selection after drop`)
+          console.log(`     Expected: Element should be selected after drop`)
+          console.log(`     Actual: ${result.selectionAfter ?? 'null'}`)
+        }
       }
     } catch (error) {
       failed++
@@ -1670,6 +2569,8 @@ async function runComprehensiveDragTests(
         codeBefore: testCase.setup,
         codeAfter: studioControl.getCode(),
         verification: { match: false, diff: '', message: String(error) },
+        selectionAfter: null,
+        selectionVerification: { correct: false, expected: null, actual: null },
         debugInfo: { preludeOffset: 0, nodeCount: 0, targetFound: false },
         error: String(error),
         duration,
@@ -1700,12 +2601,25 @@ async function runComprehensiveDragTests(
 
       const duration = performance.now() - start
 
+      // Selection verification: after move, moved element should be selected
+      const selectionCorrect = result.selectionAfter !== null
+      const selectionVerification = {
+        correct: selectionCorrect,
+        expected: 'any (moved element)',
+        actual: result.selectionAfter,
+      }
+
+      // Test passes if code change is correct AND selection exists
+      const testPassed = result.success && selectionCorrect
+
       const testResult: DragTestResult = {
         name: testCase.name,
-        passed: result.success,
+        passed: testPassed,
         codeBefore: result.codeBefore,
         codeAfter: result.codeAfter,
         verification: result.verification,
+        selectionAfter: result.selectionAfter,
+        selectionVerification,
         debugInfo: { ...result.debugInfo, targetFound: result.debugInfo.targetFound },
         error: result.error,
         duration,
@@ -1713,17 +2627,24 @@ async function runComprehensiveDragTests(
 
       results.push(testResult)
 
-      if (result.success) {
+      if (testPassed) {
         passed++
         console.log(`  ✅ PASSED (${duration.toFixed(0)}ms)`)
         console.log(`     ${testCase.expected.description}`)
+        console.log(`     Selection: ${result.selectionAfter}`)
       } else {
         failed++
-        console.log(`  ❌ FAILED: ${result.error || 'Unknown error'}`)
-        console.log(
-          `     Debug: prelude=${result.debugInfo.preludeOffset}, nodes=${result.debugInfo.nodeCount}`
-        )
-        console.log(`     Diff:\n${result.verification.diff}`)
+        if (!result.success) {
+          console.log(`  ❌ FAILED: ${result.error || 'Unknown error'}`)
+          console.log(
+            `     Debug: prelude=${result.debugInfo.preludeOffset}, nodes=${result.debugInfo.nodeCount}`
+          )
+          console.log(`     Diff:\n${result.verification.diff}`)
+        } else if (!selectionCorrect) {
+          console.log(`  ❌ FAILED: No selection after move`)
+          console.log(`     Expected: Moved element should be selected`)
+          console.log(`     Actual: ${result.selectionAfter ?? 'null'}`)
+        }
       }
     } catch (error) {
       failed++
@@ -1736,6 +2657,8 @@ async function runComprehensiveDragTests(
         codeBefore: testCase.setup,
         codeAfter: studioControl.getCode(),
         verification: { match: false, diff: '', message: String(error) },
+        selectionAfter: null,
+        selectionVerification: { correct: false, expected: null, actual: null },
         debugInfo: { preludeOffset: 0, nodeCount: 0, targetFound: false },
         error: String(error),
         duration,
@@ -1743,7 +2666,104 @@ async function runComprehensiveDragTests(
     }
   }
 
-  const totalTests = DRAG_TEST_CASES.length + CANVAS_MOVE_TEST_CASES.length
+  // =============================================================================
+  // Part 3: Stacked/Absolute Position Tests
+  // =============================================================================
+  console.log('\n\n📍 Stacked/Absolute Position Tests')
+
+  for (const testCase of STACKED_DRAG_TEST_CASES) {
+    const start = performance.now()
+    console.log(`\n📋 ${testCase.name}`)
+
+    try {
+      // Setup - use setTestCode which resets prelude offset after compile
+      await studioControl.setTestCode(testCase.setup)
+
+      // Execute stacked drag
+      const result = await studioControl.executeRealStackedDrag({
+        componentName: testCase.drag.componentName,
+        targetNodeId: testCase.drag.targetNodeId,
+        position: testCase.drag.position,
+        expectedXRange: testCase.expected.xRange,
+        expectedYRange: testCase.expected.yRange,
+      })
+
+      const duration = performance.now() - start
+
+      // Selection verification: after drop, something should be selected
+      const selectionCorrect = result.selectionAfter !== null
+      const selectionVerification = {
+        correct: selectionCorrect,
+        expected: 'any (new element)',
+        actual: result.selectionAfter,
+      }
+
+      // Test passes if position is correct AND selection exists
+      const testPassed = result.success && selectionCorrect
+
+      const testResult: DragTestResult = {
+        name: testCase.name,
+        passed: testPassed,
+        codeBefore: result.codeBefore,
+        codeAfter: result.codeAfter,
+        verification: {
+          match: result.positionVerification.match,
+          diff: `x=${result.positionVerification.actualX}, y=${result.positionVerification.actualY}`,
+          message: result.positionVerification.message,
+        },
+        selectionAfter: result.selectionAfter,
+        selectionVerification,
+        debugInfo: result.debugInfo,
+        error: result.error,
+        duration,
+      }
+
+      results.push(testResult)
+
+      if (testPassed) {
+        passed++
+        console.log(`  ✅ PASSED (${duration.toFixed(0)}ms)`)
+        console.log(`     ${testCase.expected.description}`)
+        console.log(
+          `     Position: x=${result.positionVerification.actualX}, y=${result.positionVerification.actualY}`
+        )
+        console.log(`     Selection: ${result.selectionAfter}`)
+      } else {
+        failed++
+        if (!result.success) {
+          console.log(`  ❌ FAILED: ${result.error || 'Unknown error'}`)
+          console.log(
+            `     Debug: prelude=${result.debugInfo.preludeOffset}, nodes=${result.debugInfo.nodeCount}`
+          )
+          console.log(`     ${result.positionVerification.message}`)
+        } else if (!selectionCorrect) {
+          console.log(`  ❌ FAILED: No selection after drop`)
+          console.log(`     Expected: Element should be selected after drop`)
+          console.log(`     Actual: ${result.selectionAfter ?? 'null'}`)
+        }
+      }
+    } catch (error) {
+      failed++
+      const duration = performance.now() - start
+      console.log(`  ❌ ERROR: ${error}`)
+
+      results.push({
+        name: testCase.name,
+        passed: false,
+        codeBefore: testCase.setup,
+        codeAfter: studioControl.getCode(),
+        verification: { match: false, diff: '', message: String(error) },
+        selectionAfter: null,
+        selectionVerification: { correct: false, expected: null, actual: null },
+        debugInfo: { preludeOffset: 0, nodeCount: 0, targetFound: false },
+        error: String(error),
+        duration,
+      })
+    }
+  }
+
+  const totalTests =
+    DRAG_TEST_CASES.length + CANVAS_MOVE_TEST_CASES.length + STACKED_DRAG_TEST_CASES.length
   const summary = `Results: ${passed}/${totalTests} passed (${failed} failed)`
   console.log(`\n${summary}`)
   console.groupEnd()
@@ -1823,11 +2843,24 @@ export function setupBrowserDragTestAPI(): void {
       insertionIndex: number
       expectedPattern: string
     }) => studioControl.executeRealCanvasMove(params),
+    executeRealStackedDrag: (params: {
+      componentName: string
+      targetNodeId: string
+      position: Point
+      expectedXRange: [number, number]
+      expectedYRange: [number, number]
+    }) => studioControl.executeRealStackedDrag(params),
     verifyCodeChange: (params: {
       codeBefore: string
       codeAfter: string
       expectedPattern: string | RegExp
     }) => studioControl.verifyCodeChange(params),
+    verifyPositionInCode: (params: {
+      codeAfter: string
+      expectedX: number
+      expectedY: number
+      tolerance?: number
+    }) => studioControl.verifyPositionInCode(params),
     getPreludeOffset: () => studioControl.getPreludeOffset(),
 
     // Comprehensive drag test suite
@@ -1843,7 +2876,7 @@ export function setupBrowserDragTestAPI(): void {
   console.log('🪞 Mirror Studio Test API ready. Usage:')
   console.log('')
   console.log('  // 🧪 Run All Drag Tests')
-  console.log('  __dragTest.runDragTests()  // Comprehensive test suite with verification')
+  console.log('  __dragTest.runDragTests()  // Comprehensive test suite (flex + stacked)')
   console.log('')
   console.log('  // Single Drag Test with Verification')
   console.log('  __dragTest.executeRealDrag({')
@@ -1851,6 +2884,18 @@ export function setupBrowserDragTestAPI(): void {
   console.log('    targetNodeId: "node-1",')
   console.log('    insertionIndex: 0,')
   console.log('    expectedPattern: "Button"')
+  console.log('  })')
+  console.log('')
+  console.log('  // Stacked/Absolute Position Drag')
+  console.log(
+    '  __dragTest.fromPalette("Button").toContainer("node-1").atPosition(100, 50).execute()'
+  )
+  console.log('  __dragTest.executeRealStackedDrag({')
+  console.log('    componentName: "Button",')
+  console.log('    targetNodeId: "node-1",')
+  console.log('    position: { x: 100, y: 50 },')
+  console.log('    expectedXRange: [90, 110],')
+  console.log('    expectedYRange: [40, 60]')
   console.log('  })')
   console.log('')
   console.log('  // Drag & Drop (Manual)')

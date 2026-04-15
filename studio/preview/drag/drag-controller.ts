@@ -5,7 +5,14 @@
  * Manages drag state and delegates to CodeExecutor on drop.
  */
 
-import type { Point, DragSource, DropTarget } from './types'
+import type {
+  Point,
+  DragSource,
+  DropTarget,
+  FlexDropTarget,
+  AbsoluteDropTarget,
+  HitResult,
+} from './types'
 import type { ControllerReport, Reportable } from './reporter/types'
 import { LayoutCache } from './layout-cache'
 import { HitDetector } from './hit-detector'
@@ -20,6 +27,22 @@ type DragState = 'idle' | 'dragging'
 
 // Performance tracking (debug only)
 const PERF_LOGGING = false
+
+/** Default sizes for palette components when dropping into absolute containers */
+const DEFAULT_COMPONENT_SIZES: Record<string, { width: number; height: number }> = {
+  Button: { width: 100, height: 40 },
+  Text: { width: 80, height: 24 },
+  Icon: { width: 24, height: 24 },
+  Input: { width: 200, height: 40 },
+  Textarea: { width: 200, height: 100 },
+  Frame: { width: 200, height: 100 },
+  Image: { width: 100, height: 100 },
+  Checkbox: { width: 120, height: 24 },
+  Switch: { width: 50, height: 24 },
+  Slider: { width: 200, height: 24 },
+  Divider: { width: 100, height: 2 },
+  Spacer: { width: 50, height: 20 },
+}
 
 export interface DragControllerCallbacks {
   onDrop: (source: DragSource, target: DropTarget) => Promise<void>
@@ -110,10 +133,20 @@ export class DragController implements Reportable<ControllerReport> {
       this.lastLoggedContainer = hit.containerId
     }
 
-    const insertion = this.calculateInsertion(cursor, hit)
-    this.showIndicator(insertion)
-    this.highlightContainer(hit.containerId, hit.containerRect)
-    this.storeTarget(hit.containerId, insertion.index)
+    // Branch based on layout type
+    if (hit.layout === 'absolute') {
+      // Absolute/stacked layout: position-based drop
+      const absResult = this.calculateAbsolutePosition(cursor, hit)
+      this.indicator.showGhost(absResult.ghostRect)
+      this.highlightContainer(hit.containerId, hit.containerRect)
+      this.storeAbsoluteTarget(hit.containerId, absResult.position)
+    } else {
+      // Flex/grid layout: index-based drop
+      const insertion = this.calculateInsertion(cursor, hit)
+      this.showIndicator(insertion)
+      this.highlightContainer(hit.containerId, hit.containerRect)
+      this.storeFlexTarget(hit.containerId, insertion.index)
+    }
 
     // Capture frame for reporting
     this.reporter?.captureFrame(cursor)
@@ -149,9 +182,64 @@ export class DragController implements Reportable<ControllerReport> {
     this.indicator.show(insertion.linePosition, insertion.lineSize, insertion.orientation)
   }
 
-  /** Store drop target */
-  private storeTarget(containerId: string, insertionIndex: number): void {
-    this.lastTarget = { containerId, insertionIndex }
+  /** Calculate absolute position for stacked/absolute layouts */
+  private calculateAbsolutePosition(
+    cursor: Point,
+    hit: HitResult
+  ): {
+    position: Point
+    ghostRect: DOMRect
+  } {
+    const size = this.getSourceSize()
+
+    // Position relative to container (element's top-left at cursor position)
+    // This is more intuitive for absolute positioning - "I click here, element appears here"
+    const x = Math.max(0, cursor.x - hit.containerRect.x)
+    const y = Math.max(0, cursor.y - hit.containerRect.y)
+
+    // Clamp to container bounds (ensure element stays within container)
+    const maxX = Math.max(0, hit.containerRect.width - size.width)
+    const maxY = Math.max(0, hit.containerRect.height - size.height)
+    const clampedX = Math.min(x, maxX)
+    const clampedY = Math.min(y, maxY)
+
+    return {
+      position: { x: Math.round(clampedX), y: Math.round(clampedY) },
+      ghostRect: new DOMRect(
+        hit.containerRect.x + clampedX,
+        hit.containerRect.y + clampedY,
+        size.width,
+        size.height
+      ),
+    }
+  }
+
+  /** Get size of the dragged element */
+  private getSourceSize(): { width: number; height: number } {
+    // Canvas-Move: Get real element size
+    if (this.source?.type === 'canvas' && this.source.nodeId) {
+      const rect = this.cache.getRect(this.source.nodeId)
+      if (rect) {
+        return { width: rect.width, height: rect.height }
+      }
+    }
+
+    // Palette: Use default component size
+    const componentName = (this.source as any)?.componentName ?? 'Frame'
+    return DEFAULT_COMPONENT_SIZES[componentName] ?? { width: 100, height: 40 }
+  }
+
+  /** Store flex drop target */
+  private storeFlexTarget(containerId: string, insertionIndex: number): void {
+    this.lastTarget = { mode: 'flex', containerId, insertionIndex }
+  }
+
+  /** Store absolute drop target */
+  private storeAbsoluteTarget(containerId: string, position: Point): void {
+    // For absolute containers, insert as last child
+    const children = this.cache.getChildren(containerId)
+    const insertionIndex = children.length
+    this.lastTarget = { mode: 'absolute', containerId, position, insertionIndex }
   }
 
   /** Complete the drag operation */
@@ -217,15 +305,21 @@ export class DragController implements Reportable<ControllerReport> {
    * Bypasses normal drag validation and directly executes the drop callback.
    *
    * @param source - The drag source (palette or canvas element)
-   * @param target - The drop target (container and insertion index)
+   * @param target - The drop target (container and insertion index, or position for absolute)
    * @returns Promise that resolves when drop callback completes
    *
    * @example
    * ```typescript
    * const controller = getDragController()
+   * // Flex drop (index-based)
    * await controller.simulateDrop(
    *   { type: 'palette', componentName: 'Button', template: 'Button' },
-   *   { containerId: 'node-1', insertionIndex: 0 }
+   *   { mode: 'flex', containerId: 'node-1', insertionIndex: 0 }
+   * )
+   * // Absolute drop (position-based)
+   * await controller.simulateDrop(
+   *   { type: 'palette', componentName: 'Button', template: 'Button' },
+   *   { mode: 'absolute', containerId: 'node-1', position: { x: 100, y: 50 } }
    * )
    * ```
    */
@@ -235,11 +329,17 @@ export class DragController implements Reportable<ControllerReport> {
     this.lastTarget = target
     this.state = 'dragging'
 
+    const targetDesc =
+      target.mode === 'absolute'
+        ? `(${target.position.x}, ${target.position.y})`
+        : `index ${target.insertionIndex}`
+
     log.info(
       '[Test] Simulated drop:',
       (source as any).componentName || source.nodeId,
       '→',
-      target.containerId
+      target.containerId,
+      targetDesc
     )
 
     // Execute the drop callback
@@ -247,6 +347,28 @@ export class DragController implements Reportable<ControllerReport> {
 
     // Reset state
     this.reset(true)
+  }
+
+  /**
+   * Simulate a flex drop (backwards-compatible helper)
+   */
+  async simulateFlexDrop(
+    source: DragSource,
+    containerId: string,
+    insertionIndex: number
+  ): Promise<void> {
+    return this.simulateDrop(source, { mode: 'flex', containerId, insertionIndex })
+  }
+
+  /**
+   * Simulate an absolute drop (position-based)
+   */
+  async simulateAbsoluteDrop(
+    source: DragSource,
+    containerId: string,
+    position: Point
+  ): Promise<void> {
+    return this.simulateDrop(source, { mode: 'absolute', containerId, position })
   }
 
   /**

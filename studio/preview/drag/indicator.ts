@@ -13,18 +13,23 @@ import type { IndicatorReport, Reportable } from './reporter/types'
 
 const INDICATOR_ID = 'drag-insertion-indicator'
 const CONTAINER_HIGHLIGHT_ID = 'drag-container-highlight'
+const GHOST_INDICATOR_ID = 'drag-ghost-indicator'
 const INDICATOR_COLOR = '#5BA8F5'
 const INDICATOR_GLOW = 'rgba(91, 168, 245, 0.4)'
+const GHOST_COLOR = 'rgba(139, 92, 246, 0.15)'
+const GHOST_BORDER = 'rgba(139, 92, 246, 0.6)'
 const INDICATOR_THICKNESS = 3
 
 export class Indicator implements Reportable<IndicatorReport> {
   private element: HTMLDivElement | null = null
   private containerHighlight: HTMLDivElement | null = null
+  private ghostElement: HTMLDivElement | null = null
   private currentContainerId: string | null = null
 
   // Last state for reporting
   private lastLinePosition: Point | null = null
   private lastHighlightRect: DOMRect | null = null
+  private lastGhostRect: DOMRect | null = null
 
   /** Ensure the indicator element exists */
   private ensureElement(): HTMLDivElement {
@@ -92,8 +97,58 @@ export class Indicator implements Reportable<IndicatorReport> {
     this.setSize(el, size, orientation)
     el.style.display = 'block'
 
+    // Hide ghost when showing line indicator
+    this.hideGhost()
+
     // Store for reporting
     this.lastLinePosition = { ...position }
+  }
+
+  /** Show ghost indicator for absolute positioning */
+  showGhost(rect: DOMRect): void {
+    const el = this.ensureGhostElement()
+    el.style.left = `${rect.x}px`
+    el.style.top = `${rect.y}px`
+    el.style.width = `${rect.width}px`
+    el.style.height = `${rect.height}px`
+    el.style.display = 'block'
+
+    // Hide line indicator when showing ghost
+    if (this.element) {
+      this.element.style.display = 'none'
+    }
+
+    // Store for reporting
+    this.lastGhostRect = rect
+    this.lastLinePosition = null
+  }
+
+  /** Hide ghost indicator */
+  hideGhost(): void {
+    if (this.ghostElement) {
+      this.ghostElement.style.display = 'none'
+    }
+    this.lastGhostRect = null
+  }
+
+  /** Ensure the ghost element exists */
+  private ensureGhostElement(): HTMLDivElement {
+    if (this.ghostElement) return this.ghostElement
+
+    this.ghostElement = document.createElement('div')
+    this.ghostElement.id = GHOST_INDICATOR_ID
+    Object.assign(this.ghostElement.style, {
+      position: 'fixed',
+      pointerEvents: 'none',
+      zIndex: '10000',
+      background: GHOST_COLOR,
+      border: `2px dashed ${GHOST_BORDER}`,
+      borderRadius: '4px',
+      display: 'none',
+      willChange: 'left, top, width, height',
+    })
+    document.body.appendChild(this.ghostElement)
+    return this.ghostElement
   }
 
   /** Highlight the target container */
@@ -135,6 +190,7 @@ export class Indicator implements Reportable<IndicatorReport> {
     if (this.containerHighlight) {
       this.containerHighlight.style.display = 'none'
     }
+    this.hideGhost()
     this.currentContainerId = null
     this.lastLinePosition = null
     this.lastHighlightRect = null
@@ -160,19 +216,27 @@ export class Indicator implements Reportable<IndicatorReport> {
       this.containerHighlight.remove()
       this.containerHighlight = null
     }
+    if (this.ghostElement) {
+      this.ghostElement.remove()
+      this.ghostElement = null
+    }
     this.currentContainerId = null
     this.lastLinePosition = null
     this.lastHighlightRect = null
+    this.lastGhostRect = null
   }
 
   /** Report current state for debugging */
   report(): IndicatorReport {
     const lineVisible = this.element?.style.display === 'block'
+    const ghostVisible = this.ghostElement?.style.display === 'block'
     const highlightVisible = this.containerHighlight?.style.display === 'block'
 
     return {
       lineVisible,
       linePosition: this.lastLinePosition ? { ...this.lastLinePosition } : null,
+      ghostVisible: ghostVisible ?? false,
+      ghostRect: this.lastGhostRect,
       highlightVisible,
       highlightedContainerId: this.currentContainerId,
       highlightRect: this.lastHighlightRect,

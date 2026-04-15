@@ -14,9 +14,12 @@ export interface ChildInfo {
 
 export type FlexLayout = 'flex-row' | 'flex-column'
 
+/** Layout type including absolute/stacked positioning */
+export type LayoutType = 'flex-row' | 'flex-column' | 'absolute'
+
 export interface HitResult {
   containerId: string
-  layout: FlexLayout
+  layout: LayoutType
   containerRect: DOMRect
 }
 
@@ -34,7 +37,21 @@ export interface DragSource {
   nodeId?: string
 }
 
-export interface DropTarget {
+/** Discriminated union for drop targets */
+export type DropTarget = FlexDropTarget | AbsoluteDropTarget
+
+/** Drop target for flex/grid layouts (index-based) */
+export interface FlexDropTarget {
+  mode: 'flex'
   containerId: string
+  insertionIndex: number
+}
+
+/** Drop target for absolute/stacked layouts (position-based) */
+export interface AbsoluteDropTarget {
+  mode: 'absolute'
+  containerId: string
+  position: Point
+  /** Insertion index (typically 'last' for stacked) */
   insertionIndex: number
 }
