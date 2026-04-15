@@ -186,6 +186,114 @@ export const layoutDetectionTests: TestCase[] = describe('Layout Detection', [
 ])
 
 // =============================================================================
+// Precise Position Tests
+// =============================================================================
+
+export const precisePositionTests: TestCase[] = describe('Precise Position Verification', [
+  testWithSetup(
+    'Drop at exact center position',
+    'Frame stacked, w 400, h 400, bg #1a1a1a',
+    async api => {
+      // Drop at exact center (200, 200) - accounting for component size ~50x20
+      await api.interact.dragToPosition('Button', 'node-1', 200, 200)
+
+      const code = api.editor.getCode()
+      const pos = verifyPosition(code, 200, 200, 60) // 60px tolerance for component centering
+      api.assert.ok(pos.ok, `Position should be ~(200, 200), got (${pos.actualX}, ${pos.actualY})`)
+    }
+  ),
+
+  testWithSetup(
+    'Drop at bottom-right corner',
+    'Frame stacked, w 300, h 200, bg #1a1a1a',
+    async api => {
+      // Drop near bottom-right, but within bounds
+      await api.interact.dragToPosition('Text', 'node-1', 250, 160)
+
+      const code = api.editor.getCode()
+      const pos = verifyPosition(code, 250, 160, 80)
+      api.assert.ok(
+        pos.actualX !== null && pos.actualX >= 150,
+        `X should be >= 150 (right side), got ${pos.actualX}`
+      )
+      api.assert.ok(
+        pos.actualY !== null && pos.actualY >= 100,
+        `Y should be >= 100 (bottom half), got ${pos.actualY}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Sequential drops maintain separate positions',
+    'Frame stacked, w 400, h 300, bg #1a1a1a',
+    async api => {
+      // Drop three elements at different positions
+      await api.interact.dragToPosition('Button', 'node-1', 50, 50)
+      await api.utils.delay(200)
+      await api.interact.dragToPosition('Text', 'node-1', 200, 100)
+      await api.utils.delay(200)
+      await api.interact.dragToPosition('Icon', 'node-1', 350, 250)
+
+      const code = api.editor.getCode()
+
+      // Count x positions - should have 3
+      const xMatches = code.match(/\bx\s+\d+/g) || []
+      const yMatches = code.match(/\by\s+\d+/g) || []
+
+      api.assert.ok(xMatches.length >= 3, `Should have 3 x positions, found ${xMatches.length}`)
+      api.assert.ok(yMatches.length >= 3, `Should have 3 y positions, found ${yMatches.length}`)
+
+      // Verify all three components exist
+      api.assert.codeContains(/Button/)
+      api.assert.codeContains(/Text/)
+      api.assert.codeContains(/Icon/)
+    }
+  ),
+])
+
+// =============================================================================
+// Stacked Container with States Tests
+// =============================================================================
+
+export const stackedWithStatesTests: TestCase[] = describe('Stacked with States', [
+  testWithSetup(
+    'Drop into stacked Frame with hover state',
+    `Frame stacked, w 300, h 200, bg #1a1a1a
+  hover:
+    bg #333`,
+    async api => {
+      // This tests the bug fix - container has state blocks but no children
+      await api.interact.dragToPosition('Button', 'node-1', 100, 80)
+
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Button/)
+      api.assert.codeContains(/\bx\s+\d+/)
+      api.assert.codeContains(/\by\s+\d+/)
+      // State block should still exist
+      api.assert.codeContains(/hover:/)
+    }
+  ),
+
+  testWithSetup(
+    'Drop into stacked Frame with multiple states',
+    `Frame stacked, w 300, h 200, bg #1a1a1a
+  hover:
+    bg #333
+  active:
+    scale 0.95`,
+    async api => {
+      await api.interact.dragToPosition('Text', 'node-1', 150, 100)
+
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Text/)
+      // Both state blocks should still exist
+      api.assert.codeContains(/hover:/)
+      api.assert.codeContains(/active:/)
+    }
+  ),
+])
+
+// =============================================================================
 // Combined Exports
 // =============================================================================
 
@@ -193,6 +301,8 @@ export const allStackedDragTests: TestCase[] = [
   ...basicStackedTests,
   ...edgeCaseTests,
   ...layoutDetectionTests,
+  ...precisePositionTests,
+  ...stackedWithStatesTests,
 ]
 
 export default allStackedDragTests

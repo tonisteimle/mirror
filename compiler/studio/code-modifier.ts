@@ -1079,8 +1079,9 @@ export class CodeModifier {
     const sortedChildren = [...children].sort((a, b) => a.position.line - b.position.line)
 
     if (sortedChildren.length === 0) {
-      // No children yet - insert after parent line
-      const parentEndLine = parentMapping.position.line
+      // No children yet - insert after parent BLOCK (not just line)
+      // Parent block may include state blocks, comments, etc.
+      const parentEndLine = this.getBlockEndLine(parentMapping.position.line)
       const lineContent = this.lines[parentEndLine - 1]
       return {
         charOffset: this.getCharacterOffset(parentEndLine, lineContent.length + 1),
@@ -1121,8 +1122,8 @@ export class CodeModifier {
       }
     }
 
-    // Fallback: after parent
-    const parentEndLine = parentMapping.position.line
+    // Fallback: after parent BLOCK
+    const parentEndLine = this.getBlockEndLine(parentMapping.position.line)
     const lineContent = this.lines[parentEndLine - 1]
     return {
       charOffset: this.getCharacterOffset(parentEndLine, lineContent.length + 1),
