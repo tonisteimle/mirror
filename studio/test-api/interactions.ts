@@ -5,7 +5,7 @@
  * keyboard input, and drag operations.
  */
 
-import type { InteractionAPI } from './types'
+import type { InteractionAPI, KeyModifiers } from './types'
 
 // =============================================================================
 // Interaction Implementation
@@ -136,17 +136,150 @@ export class Interactions implements InteractionAPI {
   // ===========================================================================
 
   /**
+   * Store original inline styles for unhover restoration
+   */
+  private hoverOriginalStyles = new WeakMap<HTMLElement, string>()
+
+  /**
+   * Find and apply CSS :hover rules for an element
+   */
+  private applyHoverStyles(element: HTMLElement): void {
+    // Store original inline style for later restoration
+    this.hoverOriginalStyles.set(element, element.getAttribute('style') || '')
+
+    // Collect all :hover styles that match this element
+    const hoverStyles: Record<string, string> = {}
+
+    // First, search through document.styleSheets
+    for (const sheet of Array.from(document.styleSheets)) {
+      try {
+        const rules = sheet.cssRules || sheet.rules
+        if (!rules) continue
+
+        for (const rule of Array.from(rules)) {
+          if (rule instanceof CSSStyleRule && rule.selectorText?.includes(':hover')) {
+            this.extractHoverStylesFromRule(rule, element, hoverStyles)
+          }
+        }
+      } catch {
+        // Cross-origin stylesheet, skip
+      }
+    }
+
+    // Also search through inline <style> elements in the preview
+    // (these might not be in document.styleSheets yet due to timing)
+    const preview = document.getElementById('preview')
+    if (preview) {
+      const styleElements = preview.querySelectorAll('style')
+      for (const styleEl of styleElements) {
+        this.extractHoverStylesFromStyleElement(styleEl, element, hoverStyles)
+      }
+    }
+
+    // Apply collected hover styles
+    for (const [prop, value] of Object.entries(hoverStyles)) {
+      element.style.setProperty(prop, value, 'important')
+    }
+  }
+
+  /**
+   * Extract hover styles from a CSS rule
+   */
+  private extractHoverStylesFromRule(
+    rule: CSSStyleRule,
+    element: HTMLElement,
+    hoverStyles: Record<string, string>
+  ): void {
+    // Create a selector without :hover to test if it matches
+    const baseSelector = rule.selectorText
+      .replace(/:hover/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    try {
+      if (baseSelector && element.matches(baseSelector)) {
+        // Extract styles from this rule
+        for (let i = 0; i < rule.style.length; i++) {
+          const prop = rule.style[i]
+          const value = rule.style.getPropertyValue(prop)
+          if (value) {
+            hoverStyles[prop] = value
+          }
+        }
+      }
+    } catch {
+      // Invalid selector, skip
+    }
+  }
+
+  /**
+   * Extract hover styles by parsing a <style> element's text content
+   */
+  private extractHoverStylesFromStyleElement(
+    styleEl: HTMLStyleElement,
+    element: HTMLElement,
+    hoverStyles: Record<string, string>
+  ): void {
+    const css = styleEl.textContent || ''
+
+    // Parse hover rules with regex - find selector:hover { ... }
+    // Pattern: [data-mirror-id^="node-X"]:hover { property: value !important; }
+    const hoverRuleRegex = /\[data-mirror-id\^?="([^"]+)"\]:hover\s*\{([^}]+)\}/g
+    let match
+
+    while ((match = hoverRuleRegex.exec(css)) !== null) {
+      const nodeIdPattern = match[1]
+      const styleBlock = match[2]
+
+      // Check if element matches this pattern
+      const mirrorId = element.getAttribute('data-mirror-id')
+      if (mirrorId && mirrorId.startsWith(nodeIdPattern)) {
+        // Parse the style block
+        const styleDecls = styleBlock.split(';').filter(s => s.trim())
+        for (const decl of styleDecls) {
+          const colonIdx = decl.indexOf(':')
+          if (colonIdx > 0) {
+            const prop = decl.substring(0, colonIdx).trim()
+            let value = decl.substring(colonIdx + 1).trim()
+            // Remove !important suffix for setProperty call
+            value = value.replace(/\s*!important\s*$/, '')
+            if (prop && value) {
+              hoverStyles[prop] = value
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Remove applied hover styles and restore original
+   */
+  private removeHoverStyles(element: HTMLElement): void {
+    const originalStyle = this.hoverOriginalStyles.get(element)
+    if (originalStyle !== undefined) {
+      element.setAttribute('style', originalStyle)
+      this.hoverOriginalStyles.delete(element)
+    }
+  }
+
+  /**
    * Hover over element
+   * Simulates CSS :hover by finding and applying matching :hover rules
    */
   async hover(nodeId: string): Promise<void> {
     const element = this.findElement(nodeId)
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
+    // Dispatch mouse events for JavaScript handlers
     this.dispatchMouseEvent(element, 'mouseenter')
     this.dispatchMouseEvent(element, 'mouseover')
 
-    // Add hover class for CSS :hover simulation
+    // Add hover class for any class-based hover handling
     element.classList.add('__test-hover')
+
+    // Apply CSS :hover styles directly
+    this.applyHoverStyles(element)
 
     await this.delay(50)
   }
@@ -158,10 +291,15 @@ export class Interactions implements InteractionAPI {
     const element = this.findElement(nodeId)
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
+    // Dispatch mouse events
     this.dispatchMouseEvent(element, 'mouseleave')
     this.dispatchMouseEvent(element, 'mouseout')
 
+    // Remove hover class
     element.classList.remove('__test-hover')
+
+    // Restore original styles
+    this.removeHoverStyles(element)
 
     await this.delay(50)
   }
@@ -202,8 +340,22 @@ export class Interactions implements InteractionAPI {
    * Type text into input element
    */
   async type(nodeId: string, text: string): Promise<void> {
-    const element = this.findElement(nodeId) as HTMLInputElement | HTMLTextAreaElement
-    if (!element) throw new Error(`Element ${nodeId} not found`)
+    const containerElement = this.findElement(nodeId)
+    if (!containerElement) throw new Error(`Element ${nodeId} not found`)
+
+    // Find the actual input element (might be the element itself or a child)
+    let element: HTMLInputElement | HTMLTextAreaElement
+    const tagName = containerElement.tagName.toLowerCase()
+    if (tagName === 'input' || tagName === 'textarea') {
+      element = containerElement as HTMLInputElement | HTMLTextAreaElement
+    } else {
+      const inputChild = containerElement.querySelector('input, textarea') as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | null
+      if (!inputChild) throw new Error(`No input/textarea found in ${nodeId}`)
+      element = inputChild
+    }
 
     // Focus first
     element.focus()
@@ -242,8 +394,22 @@ export class Interactions implements InteractionAPI {
    * Clear input element
    */
   async clear(nodeId: string): Promise<void> {
-    const element = this.findElement(nodeId) as HTMLInputElement | HTMLTextAreaElement
-    if (!element) throw new Error(`Element ${nodeId} not found`)
+    const containerElement = this.findElement(nodeId)
+    if (!containerElement) throw new Error(`Element ${nodeId} not found`)
+
+    // Find the actual input element (might be the element itself or a child)
+    let element: HTMLInputElement | HTMLTextAreaElement
+    const tagName = containerElement.tagName.toLowerCase()
+    if (tagName === 'input' || tagName === 'textarea') {
+      element = containerElement as HTMLInputElement | HTMLTextAreaElement
+    } else {
+      const inputChild = containerElement.querySelector('input, textarea') as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | null
+      if (!inputChild) throw new Error(`No input/textarea found in ${nodeId}`)
+      element = inputChild
+    }
 
     element.focus()
     element.value = ''
@@ -258,34 +424,131 @@ export class Interactions implements InteractionAPI {
   // ===========================================================================
 
   /**
-   * Press a key
+   * Press a key with optional modifiers
    */
-  async pressKey(key: string): Promise<void> {
+  async pressKey(key: string, modifiers?: KeyModifiers): Promise<void> {
     const activeElement = document.activeElement || document.body
+    const opts = this.buildModifiers(modifiers)
 
-    this.dispatchKeyboardEvent(activeElement as HTMLElement, 'keydown', key)
-    this.dispatchKeyboardEvent(activeElement as HTMLElement, 'keypress', key)
-    this.dispatchKeyboardEvent(activeElement as HTMLElement, 'keyup', key)
+    this.dispatchKeyboardEvent(activeElement as HTMLElement, 'keydown', key, opts)
+    // keypress is deprecated for non-printable keys
+    if (key.length === 1) {
+      this.dispatchKeyboardEvent(activeElement as HTMLElement, 'keypress', key, opts)
+    }
+    this.dispatchKeyboardEvent(activeElement as HTMLElement, 'keyup', key, opts)
 
     await this.delay(50)
+  }
+
+  /**
+   * Press a key on specific element
+   */
+  async pressKeyOn(nodeId: string, key: string, modifiers?: KeyModifiers): Promise<void> {
+    const element = this.findElement(nodeId)
+    if (!element) throw new Error(`Element ${nodeId} not found`)
+
+    const opts = this.buildModifiers(modifiers)
+
+    this.dispatchKeyboardEvent(element, 'keydown', key, opts)
+    if (key.length === 1) {
+      this.dispatchKeyboardEvent(element, 'keypress', key, opts)
+    }
+    this.dispatchKeyboardEvent(element, 'keyup', key, opts)
+
+    await this.delay(50)
+  }
+
+  /**
+   * Press a sequence of keys
+   */
+  async pressSequence(keys: string[], delayBetween = 50): Promise<void> {
+    for (const key of keys) {
+      await this.pressKey(key)
+      if (delayBetween > 0) {
+        await this.delay(delayBetween)
+      }
+    }
+  }
+
+  /**
+   * Type text character by character (with optional delay)
+   */
+  async typeText(text: string, delayPerChar = 20): Promise<void> {
+    const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement
+
+    for (const char of text) {
+      this.dispatchKeyboardEvent(activeElement, 'keydown', char)
+      this.dispatchKeyboardEvent(activeElement, 'keypress', char)
+
+      // Update value if it's an input
+      if (activeElement && 'value' in activeElement) {
+        activeElement.value = (activeElement.value || '') + char
+        activeElement.dispatchEvent(
+          new InputEvent('input', {
+            bubbles: true,
+            cancelable: true,
+            data: char,
+            inputType: 'insertText',
+          })
+        )
+      }
+
+      this.dispatchKeyboardEvent(activeElement, 'keyup', char)
+
+      if (delayPerChar > 0) {
+        await this.delay(delayPerChar)
+      }
+    }
+  }
+
+  /**
+   * Build keyboard event options from modifiers
+   */
+  private buildModifiers(modifiers?: KeyModifiers): Partial<KeyboardEventInit> {
+    if (!modifiers) return {}
+
+    return {
+      ctrlKey: modifiers.ctrl ?? false,
+      shiftKey: modifiers.shift ?? false,
+      altKey: modifiers.alt ?? false,
+      metaKey: modifiers.meta ?? false,
+    }
   }
 
   // ===========================================================================
   // Selection
   // ===========================================================================
 
+  private get studio(): any {
+    return (window as any).__mirrorStudio__
+  }
+
   /**
    * Select element in preview (triggers studio selection)
    */
   select(nodeId: string): void {
+    // Try actions.setSelection first
     if (this.studioActions?.setSelection) {
       this.studioActions.setSelection(nodeId, 'preview')
-    } else {
-      // Fallback: click the element
-      const element = this.findElement(nodeId)
-      if (element) {
-        element.click()
-      }
+      return
+    }
+
+    // Try sync.setSelection
+    if (this.studio?.sync?.setSelection) {
+      this.studio.sync.setSelection(nodeId, 'preview')
+      return
+    }
+
+    // Try direct state update
+    if (this.studio?.state?.set) {
+      this.studio.state.set({ selection: { nodeId, origin: 'preview' } })
+      return
+    }
+
+    // Fallback: click the element
+    const element = this.findElement(nodeId)
+    if (element) {
+      element.click()
     }
   }
 
@@ -293,8 +556,27 @@ export class Interactions implements InteractionAPI {
    * Clear current selection
    */
   clearSelection(): void {
+    // Try actions.setSelection first
     if (this.studioActions?.setSelection) {
       this.studioActions.setSelection(null, 'preview')
+      return
+    }
+
+    // Try sync.clearSelection
+    if (this.studio?.sync?.clearSelection) {
+      this.studio.sync.clearSelection('preview')
+      return
+    }
+
+    // Try actions.clearSelection
+    if (this.studioActions?.clearSelection) {
+      this.studioActions.clearSelection('preview')
+      return
+    }
+
+    // Try direct state update
+    if (this.studio?.state?.set) {
+      this.studio.state.set({ selection: { nodeId: null, origin: 'preview' } })
     }
   }
 

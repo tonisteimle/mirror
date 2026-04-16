@@ -150,6 +150,38 @@ export class PropertyPanel {
   }
 
   /**
+   * Change a property value.
+   * Used by Test API for programmatic property changes.
+   */
+  changeProperty(name: string, value: string): void {
+    this.view.getController().changeProperty(name, value)
+  }
+
+  /**
+   * Remove a property.
+   * Used by Test API for programmatic property removal.
+   */
+  removeProperty(name: string): void {
+    this.view.getController().removeProperty(name)
+  }
+
+  /**
+   * Toggle a boolean property.
+   * Used by Test API for programmatic property toggling.
+   */
+  toggleProperty(name: string, enabled: boolean): void {
+    this.view.getController().toggleProperty(name, enabled)
+  }
+
+  /**
+   * Toggle a section's expanded state.
+   * Used by Test API.
+   */
+  toggleSection(sectionName: string): void {
+    this.view.getController().toggleSection(sectionName)
+  }
+
+  /**
    * Update dependencies after a recompile.
    * Called by bootstrap when AST/SourceMap change.
    */

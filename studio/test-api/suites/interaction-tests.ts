@@ -52,7 +52,7 @@ export const hoverTests: TestCase[] = describe('Hover States', [
 
       // Hover over element
       await api.interact.hover('node-1')
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
 
       // Unhover
       await api.interact.unhover('node-1')
@@ -129,9 +129,9 @@ export const inputTests: TestCase[] = describe('Input Interactions', [
 
     await api.interact.type('node-1', 'Hello World')
 
-    // Check if value was entered
-    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLInputElement
-    api.assert.ok(element?.value === 'Hello World', 'Input should have typed value')
+    // Check if value was entered via Zag API
+    const value = api.zag.getValue('node-1')
+    api.assert.ok(value === 'Hello World', `Input should have typed value, got "${value}"`)
   }),
 
   testWithSetup('Can clear input', 'Input placeholder "Clear me"', async (api: TestAPI) => {
@@ -140,11 +140,16 @@ export const inputTests: TestCase[] = describe('Input Interactions', [
     // Type something first
     await api.interact.type('node-1', 'Some text')
 
+    // Verify value was set
+    let value = api.zag.getValue('node-1')
+    api.assert.ok(value === 'Some text', 'Input should have text before clear')
+
     // Clear it
     await api.interact.clear('node-1')
 
-    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLInputElement
-    api.assert.ok(element?.value === '', 'Input should be empty after clear')
+    // Verify value is cleared via Zag API
+    value = api.zag.getValue('node-1')
+    api.assert.ok(value === '', `Input should be empty after clear, got "${value}"`)
   }),
 
   testWithSetup(
@@ -155,8 +160,9 @@ export const inputTests: TestCase[] = describe('Input Interactions', [
 
       await api.interact.type('node-1', 'Multi\nline\ntext')
 
-      const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLTextAreaElement
-      api.assert.ok(element?.value.includes('Multi'), 'Textarea should have typed value')
+      // Check value via Zag API
+      const value = api.zag.getValue('node-1') as string
+      api.assert.ok(value?.includes('Multi'), `Textarea should have typed value, got "${value}"`)
     }
   ),
 ])
@@ -202,18 +208,34 @@ export const keyboardTests: TestCase[] = describe('Keyboard Events', [
 
 export const selectionTests: TestCase[] = describe('Selection', [
   testWithSetup(
-    'Can select element',
+    'Can select element via Studio API',
     'Frame gap 8\n  Button "Select me"\n  Text "Other"',
     async (api: TestAPI) => {
       api.assert.exists('node-1')
       api.assert.exists('node-2')
 
-      // Select the button
+      // Select the button using Studio API
+      await api.studio.setSelection('node-2')
+
+      // Check selection via Studio API
+      const selection = api.studio.getSelection()
+      api.assert.ok(selection === 'node-2', `Button should be selected, got "${selection}"`)
+    }
+  ),
+
+  testWithSetup(
+    'Can select element via interact API',
+    'Frame gap 8\n  Button "Select me"\n  Text "Other"',
+    async (api: TestAPI) => {
+      api.assert.exists('node-1')
+      api.assert.exists('node-2')
+
+      // Select using interact (simulates user click)
       api.interact.select('node-2')
-      await api.utils.delay(50)
+      await api.utils.waitForIdle()
 
       // Check selection
-      const selection = api.state.getSelection()
+      const selection = api.studio.getSelection()
       api.assert.ok(selection === 'node-2', 'Button should be selected')
     }
   ),
@@ -221,15 +243,42 @@ export const selectionTests: TestCase[] = describe('Selection', [
   testWithSetup('Can clear selection', 'Frame\n  Button "Test"', async (api: TestAPI) => {
     api.assert.exists('node-1')
 
-    // Select then clear
-    api.interact.select('node-2')
-    await api.utils.delay(50)
-    api.interact.clearSelection()
-    await api.utils.delay(50)
+    // Select then clear using Studio API
+    await api.studio.setSelection('node-2')
+    api.assert.ok(api.studio.getSelection() === 'node-2', 'Should be selected')
 
-    const selection = api.state.getSelection()
+    api.studio.clearSelection()
+    await api.utils.waitForIdle()
+
+    const selection = api.studio.getSelection()
     api.assert.ok(selection === null, 'Selection should be cleared')
   }),
+
+  testWithSetup(
+    'Wait for selection helper',
+    'Frame gap 8\n  Button "A"\n  Button "B"',
+    async (api: TestAPI) => {
+      api.assert.exists('node-1')
+
+      // Clear any existing selection first
+      api.studio.clearSelection()
+      await api.utils.waitForIdle()
+
+      // Verify selection is cleared
+      const initialSelection = api.state.getSelection()
+      api.assert.ok(
+        initialSelection === null,
+        `Selection should be cleared initially, got: ${initialSelection}`
+      )
+
+      // Set selection in background
+      setTimeout(() => api.studio.setSelection('node-2'), 100)
+
+      // Wait for selection to appear
+      const selected = await api.studio.waitForSelection(1000)
+      api.assert.ok(selected === 'node-2', `Expected node-2, got "${selected}"`)
+    }
+  ),
 ])
 
 // =============================================================================
@@ -248,7 +297,7 @@ export const dragDropTests: TestCase[] = describe('Drag & Drop', [
       await api.interact.dragFromPalette('Button', 'node-1', 0)
 
       // Frame should now have 1 child
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
       // Note: This depends on drag system working correctly
     }
   ),
@@ -294,12 +343,12 @@ export const combinedTests: TestCase[] = describe('Combined Interactions', [
 
       // Select first button
       api.interact.select('node-2')
-      await api.utils.delay(50)
+      await api.utils.waitForIdle()
       api.assert.isSelected('node-2')
 
       // Click second button (should change selection)
       api.interact.select('node-3')
-      await api.utils.delay(50)
+      await api.utils.waitForIdle()
       api.assert.isSelected('node-3')
     }
   ),

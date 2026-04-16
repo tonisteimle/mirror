@@ -101,7 +101,7 @@ export const selectionSyncTests: TestCase[] = describe('Selection Sync', [
 
       // Select element
       api.interact.select('node-2')
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
 
       // Check selection state
       api.assert.isSelected('node-2')
@@ -113,7 +113,7 @@ export const selectionSyncTests: TestCase[] = describe('Selection Sync', [
     'Frame\n  Button "Click"',
     async (api: TestAPI) => {
       api.interact.select('node-2')
-      await api.utils.delay(50)
+      await api.utils.waitForIdle()
       api.assert.isSelected('node-2')
 
       // Minor code change that preserves structure
@@ -128,11 +128,11 @@ export const selectionSyncTests: TestCase[] = describe('Selection Sync', [
 
   testWithSetup('Clear selection works', 'Frame\n  Button "Test"', async (api: TestAPI) => {
     api.interact.select('node-2')
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
     api.assert.isSelected('node-2')
 
     api.interact.clearSelection()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
 
     const selection = api.state.getSelection()
     api.assert.ok(selection === null, 'Selection should be cleared')
@@ -295,7 +295,7 @@ export const errorRecoveryTests: TestCase[] = describe('Error Recovery', [
 
     // Set invalid code
     await api.editor.setCode('Text "Unclosed')
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     // Should not crash, might show error or keep old state
   }),
@@ -303,7 +303,7 @@ export const errorRecoveryTests: TestCase[] = describe('Error Recovery', [
   test('Recovery after fixing syntax error', async (api: TestAPI) => {
     // Start invalid
     await api.editor.setCode('Frame (\n  invalid')
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     // Fix the error
     await api.editor.setCode('Frame\n  Text "Fixed"')
