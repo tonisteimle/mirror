@@ -255,6 +255,21 @@ import {
   inputBindingTests,
 } from './data-binding-tests'
 
+// Actions
+import {
+  allActionTests,
+  visibilityActionTests,
+  counterActionTests,
+  scrollActionTests,
+  toastActionTests,
+  formActionTests,
+  navigationActionTests,
+  clipboardActionTests,
+  overlayActionTests,
+  crudActionTests,
+  combinedActionTests,
+} from './action-tests'
+
 // =============================================================================
 // Direct Imports (not yet migrated to directories)
 // =============================================================================
@@ -508,6 +523,21 @@ export {
   inputBindingTests,
 }
 
+// Action Tests
+export {
+  allActionTests,
+  visibilityActionTests,
+  counterActionTests,
+  scrollActionTests,
+  toastActionTests,
+  formActionTests,
+  navigationActionTests,
+  clipboardActionTests,
+  overlayActionTests,
+  crudActionTests,
+  combinedActionTests,
+}
+
 // Layout Verification Tests (visual/position-based)
 export {
   allLayoutVerificationTests,
@@ -555,6 +585,7 @@ export const allTests: TestCase[] = [
   ...allTransformTests,
   ...allGradientTests,
   ...allDataBindingTests,
+  ...allActionTests,
   ...allStressTests,
 ]
 
@@ -595,6 +626,7 @@ export const testCounts = {
   transforms: allTransformTests.length,
   gradients: allGradientTests.length,
   dataBinding: allDataBindingTests.length,
+  actions: allActionTests.length,
   stress: allStressTests.length,
   total:
     allPrimitivesTests.length +
@@ -617,6 +649,7 @@ export const testCounts = {
     allTransformTests.length +
     allGradientTests.length +
     allDataBindingTests.length +
+    allActionTests.length +
     allStressTests.length,
 }
 
@@ -668,6 +701,8 @@ export type TestCategory =
   | 'animations'
   | 'transforms'
   | 'gradients'
+  | 'dataBinding'
+  | 'actions'
   | 'stress'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
@@ -695,6 +730,8 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     animations: allAnimationTests,
     transforms: allTransformTests,
     gradients: allGradientTests,
+    dataBinding: allDataBindingTests,
+    actions: allActionTests,
     stress: allStressTests,
   }
 
@@ -717,6 +754,8 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     animations: 'Animations',
     transforms: 'Transforms',
     gradients: 'Gradients',
+    dataBinding: 'Data Binding',
+    actions: 'Actions',
     stress: 'Stress Tests',
   }
 
@@ -746,6 +785,8 @@ export function printTestSummary(): void {
   console.log(`   Animations:         ${testCounts.animations} tests`)
   console.log(`   Transforms:         ${testCounts.transforms} tests`)
   console.log(`   Gradients:          ${testCounts.gradients} tests`)
+  console.log(`   Data Binding:       ${testCounts.dataBinding} tests`)
+  console.log(`   Actions:            ${testCounts.actions} tests`)
   console.log(`   Stress:             ${testCounts.stress} tests`)
   console.log(`   ──────────────────────────`)
   console.log(`   Total:              ${testCounts.total} tests`)
