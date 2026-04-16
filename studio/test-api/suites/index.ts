@@ -270,6 +270,57 @@ import {
   combinedActionTests,
 } from './action-tests'
 
+// Components
+import {
+  allComponentTests,
+  basicComponentTests,
+  propertyOverrideTests,
+  inheritanceTests,
+  variantTests,
+  nestedSlotTests,
+  layoutComponentTests,
+  multiLevelInheritanceTests,
+  componentStateTests,
+  complexComponentTests,
+} from './component-tests'
+
+// Tables
+import {
+  allTableTests,
+  staticTableTests,
+  dataBoundTableTests,
+  tableLayoutTests,
+  tableStylingTests,
+  tableActionTests,
+  tableFilterTests,
+  complexTableTests,
+} from './table-tests'
+
+// Events
+import {
+  allEventTests,
+  clickEventTests,
+  hoverEventTests,
+  focusEventTests,
+  inputEventTests,
+  keyboardEventTests,
+  viewEventTests,
+  combinedEventTests,
+  eventEdgeCaseTests,
+} from './event-tests'
+
+// Responsive
+import {
+  allResponsiveTests,
+  basicResponsiveTests,
+  responsiveLayoutTests,
+  responsiveStylingTests,
+  responsiveVisibilityTests,
+  customThresholdTests,
+  responsiveComponentTests,
+  complexResponsiveTests,
+} from './responsive-tests'
+
 // =============================================================================
 // Direct Imports (not yet migrated to directories)
 // =============================================================================
@@ -538,6 +589,57 @@ export {
   combinedActionTests,
 }
 
+// Component Tests
+export {
+  allComponentTests,
+  basicComponentTests,
+  propertyOverrideTests,
+  inheritanceTests,
+  variantTests,
+  nestedSlotTests,
+  layoutComponentTests,
+  multiLevelInheritanceTests,
+  componentStateTests,
+  complexComponentTests,
+}
+
+// Table Tests
+export {
+  allTableTests,
+  staticTableTests,
+  dataBoundTableTests,
+  tableLayoutTests,
+  tableStylingTests,
+  tableActionTests,
+  tableFilterTests,
+  complexTableTests,
+}
+
+// Event Tests
+export {
+  allEventTests,
+  clickEventTests,
+  hoverEventTests,
+  focusEventTests,
+  inputEventTests,
+  keyboardEventTests,
+  viewEventTests,
+  combinedEventTests,
+  eventEdgeCaseTests,
+}
+
+// Responsive Tests
+export {
+  allResponsiveTests,
+  basicResponsiveTests,
+  responsiveLayoutTests,
+  responsiveStylingTests,
+  responsiveVisibilityTests,
+  customThresholdTests,
+  responsiveComponentTests,
+  complexResponsiveTests,
+}
+
 // Layout Verification Tests (visual/position-based)
 export {
   allLayoutVerificationTests,
@@ -586,6 +688,10 @@ export const allTests: TestCase[] = [
   ...allGradientTests,
   ...allDataBindingTests,
   ...allActionTests,
+  ...allComponentTests,
+  ...allTableTests,
+  ...allEventTests,
+  ...allResponsiveTests,
   ...allStressTests,
 ]
 
@@ -627,6 +733,10 @@ export const testCounts = {
   gradients: allGradientTests.length,
   dataBinding: allDataBindingTests.length,
   actions: allActionTests.length,
+  components: allComponentTests.length,
+  tables: allTableTests.length,
+  events: allEventTests.length,
+  responsive: allResponsiveTests.length,
   stress: allStressTests.length,
   total:
     allPrimitivesTests.length +
@@ -650,6 +760,10 @@ export const testCounts = {
     allGradientTests.length +
     allDataBindingTests.length +
     allActionTests.length +
+    allComponentTests.length +
+    allTableTests.length +
+    allEventTests.length +
+    allResponsiveTests.length +
     allStressTests.length,
 }
 
@@ -703,6 +817,10 @@ export type TestCategory =
   | 'gradients'
   | 'dataBinding'
   | 'actions'
+  | 'components'
+  | 'tables'
+  | 'events'
+  | 'responsive'
   | 'stress'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
@@ -732,6 +850,10 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     gradients: allGradientTests,
     dataBinding: allDataBindingTests,
     actions: allActionTests,
+    components: allComponentTests,
+    tables: allTableTests,
+    events: allEventTests,
+    responsive: allResponsiveTests,
     stress: allStressTests,
   }
 
@@ -756,6 +878,10 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     gradients: 'Gradients',
     dataBinding: 'Data Binding',
     actions: 'Actions',
+    components: 'Components',
+    tables: 'Tables',
+    events: 'Events',
+    responsive: 'Responsive',
     stress: 'Stress Tests',
   }
 
@@ -787,6 +913,10 @@ export function printTestSummary(): void {
   console.log(`   Gradients:          ${testCounts.gradients} tests`)
   console.log(`   Data Binding:       ${testCounts.dataBinding} tests`)
   console.log(`   Actions:            ${testCounts.actions} tests`)
+  console.log(`   Components:         ${testCounts.components} tests`)
+  console.log(`   Tables:             ${testCounts.tables} tests`)
+  console.log(`   Events:             ${testCounts.events} tests`)
+  console.log(`   Responsive:         ${testCounts.responsive} tests`)
   console.log(`   Stress:             ${testCounts.stress} tests`)
   console.log(`   ──────────────────────────`)
   console.log(`   Total:              ${testCounts.total} tests`)
