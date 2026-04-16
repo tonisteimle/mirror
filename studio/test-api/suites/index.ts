@@ -12,13 +12,19 @@
  *   __mirrorTest.run(allPrimitivesTests, 'Primitives')
  */
 
-// Import all test suites
+// =============================================================================
+// Imports from New Directory Structure
+// =============================================================================
+
+// Primitives (fully migrated)
 import {
   allPrimitivesTests,
   basicPrimitives,
   semanticPrimitives,
   headingPrimitives,
-} from './primitives-tests'
+} from './primitives'
+
+// Layout (fully migrated)
 import {
   allLayoutTests,
   directionTests,
@@ -31,7 +37,9 @@ import {
   gridTests,
   nestingTests,
   complexLayoutTests,
-} from './layout-tests'
+} from './layout'
+
+// Styling (fully migrated)
 import {
   allStylingTests,
   colorTests,
@@ -40,8 +48,11 @@ import {
   borderTests,
   typographyTests,
   effectTests,
-} from './styling-tests'
-import { allCompilerTests, primitiveTests, layoutTests, stylingTests } from './compiler-tests'
+  visibilityTests,
+  combinedTests as stylingCombinedTests,
+} from './styling'
+
+// Zag (fully migrated)
 import {
   allZagTests,
   checkboxTests,
@@ -53,8 +64,15 @@ import {
   tooltipTests,
   tabsTests,
   datePickerTests,
+  sidenavTests,
   zagInLayoutTests,
-} from './zag-tests'
+} from './zag'
+
+// =============================================================================
+// Imports from Legacy Files (via proxy index files)
+// =============================================================================
+
+// Interactions
 import {
   allInteractionTests,
   clickTests,
@@ -65,17 +83,21 @@ import {
   keyboardTests,
   selectionTests,
   dragDropTests,
-  combinedTests,
-} from './interaction-tests'
+  combinedTests as interactionCombinedTests,
+} from './interactions'
+
+// Bidirectional
 import {
   allBidirectionalTests,
   codeToPreviewTests,
   selectionSyncTests,
   sourceMapTests,
-  propertyPanelTests,
+  propertyPanelTests as bidirectionalPanelTests,
   complexSyncTests,
   errorRecoveryTests,
-} from './bidirectional-tests'
+} from './bidirectional'
+
+// Undo/Redo
 import {
   allUndoRedoTests,
   basicUndoTests,
@@ -83,7 +105,9 @@ import {
   undoEditTypesTests,
   undoWithSelectionTests,
   undoEdgeCasesTests,
-} from './undo-redo-tests'
+} from './undo-redo'
+
+// Autocomplete
 import {
   allAutocompleteTests,
   primitiveCompletionTests,
@@ -93,14 +117,23 @@ import {
   tokenCompletionTests,
   stateCompletionTests,
   componentCompletionTests,
-} from './autocomplete-tests'
+} from './autocomplete'
+
+// Property Panel
+import {
+  allPropertyPanelTests,
+  tokenDisplayTests,
+  tokenValueTests,
+  tokenInteractionTests,
+  projectTokenTests,
+} from './property-panel'
+
+// Drag & Drop
 import {
   allStackedDragTests,
   basicStackedTests,
   edgeCaseTests,
   layoutDetectionTests,
-} from './stacked-drag-tests'
-import {
   allFlexReorderTests,
   buttonReorderVerticalTests,
   buttonReorderHorizontalTests,
@@ -115,13 +148,17 @@ import {
   nestedContainerReorderTests,
   reorderEdgeCaseTests,
   sequentialReorderTests,
-} from './flex-reorder-tests'
+} from './drag'
+
+// Workflow
 import {
-  allPropertyPanelTests,
-  tokenDisplayTests,
-  tokenValueTests,
-  tokenInteractionTests,
-} from './property-panel-tests'
+  allWorkflowTests,
+  projectWithCodeTests,
+  projectWithDragDropTests,
+  applicationTests,
+} from './workflow'
+
+// Charts
 import {
   allChartTests,
   dataFileTests,
@@ -129,7 +166,115 @@ import {
   chartStylingTests,
   chartLayoutTests,
   chartDataTests,
-} from './chart-tests'
+} from './charts'
+
+// States (fully migrated)
+import {
+  allStateTests,
+  allToggleTests,
+  toggleBasicTests,
+  toggleMultipleStatesTests,
+  toggleContentChangeTests,
+  allExclusiveTests,
+  exclusiveBasicTests,
+  exclusiveInitialStateTests,
+  exclusiveMultipleGroupsTests,
+  allHoverStateTests,
+  hoverBasicTests,
+  hoverTransitionTests,
+  hoverNestedTests,
+  allCrossElementTests,
+  crossElementShowHideTests,
+  crossElementMultipleTargetsTests,
+  crossElementComplexTests,
+  quickStateTests,
+} from './states'
+
+// Animations (fully migrated)
+import {
+  allAnimationTests,
+  allPresetAnimationTests,
+  spinAnimationTests,
+  pulseAnimationTests,
+  bounceAnimationTests,
+  shakeAnimationTests,
+  fadeAnimationTests,
+  slideAnimationTests,
+  scaleAnimationTests,
+  allStateAnimationTests,
+  toggleAnimationTests,
+  hoverAnimationTests,
+  entryExitAnimationTests,
+  quickAnimationTests,
+} from './animations'
+
+// Transforms (fully migrated)
+import {
+  allTransformTests,
+  allRotateTests,
+  rotateBasicTests,
+  rotateWithOtherTransformsTests,
+  rotateInteractiveTests,
+  rotateAnglesTests,
+  allScaleTests,
+  scaleBasicTests,
+  scaleInteractiveTests,
+  scaleEdgeCasesTests,
+  scaleWithOtherPropertiesTests,
+  allTranslateTests,
+  positionBasicTests,
+  stackedPositionTests,
+  zIndexTests,
+  translateOffsetTests,
+  quickTransformTests,
+} from './transforms'
+
+// Gradients (fully migrated)
+import {
+  allGradientTests,
+  horizontalGradientTests,
+  verticalGradientTests,
+  angledGradientTests,
+  gradientTextTests,
+  gradientWithEffectsTests,
+  quickGradientTests,
+} from './gradients'
+
+// Stress Tests (aggressive edge case testing)
+import { stressTests } from './stress'
+import { raceConditionTests } from './stress/race-conditions.test'
+import { codeModifierTests } from './stress/code-modifier.test'
+
+// Data Binding
+import {
+  allDataBindingTests,
+  variableTests,
+  collectionTests,
+  conditionalTests,
+  tokenTests,
+  inputBindingTests,
+} from './data-binding-tests'
+
+// =============================================================================
+// Direct Imports (not yet migrated to directories)
+// =============================================================================
+
+import { allCompilerTests, primitiveTests, layoutTests, stylingTests } from './compiler-tests'
+import {
+  allLayoutVerificationTests,
+  directionVerificationTests,
+  sizeVerificationTests,
+  gapVerificationTests,
+  alignmentVerificationTests,
+  complexLayoutVerificationTests,
+} from './layout-verification-tests'
+import {
+  allTestSystemTests,
+  fixturesTests,
+  isolationTests,
+  keyboardTests as testSystemKeyboardTests,
+  waitHelperTests,
+} from './test-system-tests'
 
 import type { TestCase, TestSuiteResult } from '../types'
 
@@ -138,12 +283,7 @@ import type { TestCase, TestSuiteResult } from '../types'
 // =============================================================================
 
 // Primitives
-export {
-  allPrimitivesTests,
-  basicPrimitives,
-  semanticPrimitives,
-  headingPrimitives,
-} from './primitives-tests'
+export { allPrimitivesTests, basicPrimitives, semanticPrimitives, headingPrimitives }
 
 // Layout
 export {
@@ -158,7 +298,7 @@ export {
   gridTests,
   nestingTests,
   complexLayoutTests,
-} from './layout-tests'
+}
 
 // Styling
 export {
@@ -169,10 +309,12 @@ export {
   borderTests,
   typographyTests,
   effectTests,
-} from './styling-tests'
+  visibilityTests,
+  stylingCombinedTests as combinedTests,
+}
 
 // Compiler (original)
-export { allCompilerTests, primitiveTests, layoutTests, stylingTests } from './compiler-tests'
+export { allCompilerTests, primitiveTests, layoutTests, stylingTests }
 
 // Zag Components
 export {
@@ -186,8 +328,9 @@ export {
   tooltipTests,
   tabsTests,
   datePickerTests,
+  sidenavTests,
   zagInLayoutTests,
-} from './zag-tests'
+}
 
 // Interactions
 export {
@@ -200,8 +343,8 @@ export {
   keyboardTests,
   selectionTests,
   dragDropTests,
-  combinedTests,
-} from './interaction-tests'
+  interactionCombinedTests,
+}
 
 // Bidirectional Editing
 export {
@@ -209,10 +352,10 @@ export {
   codeToPreviewTests,
   selectionSyncTests,
   sourceMapTests,
-  propertyPanelTests,
+  bidirectionalPanelTests as propertyPanelTests,
   complexSyncTests,
   errorRecoveryTests,
-} from './bidirectional-tests'
+}
 
 // Undo/Redo
 export {
@@ -222,7 +365,7 @@ export {
   undoEditTypesTests,
   undoWithSelectionTests,
   undoEdgeCasesTests,
-} from './undo-redo-tests'
+}
 
 // Autocomplete
 export {
@@ -234,15 +377,10 @@ export {
   tokenCompletionTests,
   stateCompletionTests,
   componentCompletionTests,
-} from './autocomplete-tests'
+}
 
 // Stacked Drag & Drop
-export {
-  allStackedDragTests,
-  basicStackedTests,
-  edgeCaseTests,
-  layoutDetectionTests,
-} from './stacked-drag-tests'
+export { allStackedDragTests, basicStackedTests, edgeCaseTests, layoutDetectionTests }
 
 // Flex Reorder Tests
 export {
@@ -260,7 +398,7 @@ export {
   nestedContainerReorderTests,
   reorderEdgeCaseTests,
   sequentialReorderTests,
-} from './flex-reorder-tests'
+}
 
 // Property Panel
 export {
@@ -268,7 +406,8 @@ export {
   tokenDisplayTests,
   tokenValueTests,
   tokenInteractionTests,
-} from './property-panel-tests'
+  projectTokenTests,
+}
 
 // Charts
 export {
@@ -278,7 +417,115 @@ export {
   chartStylingTests,
   chartLayoutTests,
   chartDataTests,
-} from './chart-tests'
+}
+
+// Workflow Tests
+export { allWorkflowTests, projectWithCodeTests, projectWithDragDropTests, applicationTests }
+
+// States
+export {
+  allStateTests,
+  allToggleTests,
+  toggleBasicTests,
+  toggleMultipleStatesTests,
+  toggleContentChangeTests,
+  allExclusiveTests,
+  exclusiveBasicTests,
+  exclusiveInitialStateTests,
+  exclusiveMultipleGroupsTests,
+  allHoverStateTests,
+  hoverBasicTests,
+  hoverTransitionTests,
+  hoverNestedTests,
+  allCrossElementTests,
+  crossElementShowHideTests,
+  crossElementMultipleTargetsTests,
+  crossElementComplexTests,
+  quickStateTests,
+}
+
+// Animations
+export {
+  allAnimationTests,
+  allPresetAnimationTests,
+  spinAnimationTests,
+  pulseAnimationTests,
+  bounceAnimationTests,
+  shakeAnimationTests,
+  fadeAnimationTests,
+  slideAnimationTests,
+  scaleAnimationTests,
+  allStateAnimationTests,
+  toggleAnimationTests,
+  hoverAnimationTests,
+  entryExitAnimationTests,
+  quickAnimationTests,
+}
+
+// Transforms
+export {
+  allTransformTests,
+  allRotateTests,
+  rotateBasicTests,
+  rotateWithOtherTransformsTests,
+  rotateInteractiveTests,
+  rotateAnglesTests,
+  allScaleTests,
+  scaleBasicTests,
+  scaleInteractiveTests,
+  scaleEdgeCasesTests,
+  scaleWithOtherPropertiesTests,
+  allTranslateTests,
+  positionBasicTests,
+  stackedPositionTests,
+  zIndexTests,
+  translateOffsetTests,
+  quickTransformTests,
+}
+
+// Gradients
+export {
+  allGradientTests,
+  horizontalGradientTests,
+  verticalGradientTests,
+  angledGradientTests,
+  gradientTextTests,
+  gradientWithEffectsTests,
+  quickGradientTests,
+}
+
+// Stress Tests (aggressive edge case testing)
+export const allStressTests = [...stressTests, ...raceConditionTests, ...codeModifierTests]
+export { stressTests, raceConditionTests, codeModifierTests }
+
+// Data Binding Tests
+export {
+  allDataBindingTests,
+  variableTests,
+  collectionTests,
+  conditionalTests,
+  tokenTests,
+  inputBindingTests,
+}
+
+// Layout Verification Tests (visual/position-based)
+export {
+  allLayoutVerificationTests,
+  directionVerificationTests,
+  sizeVerificationTests,
+  gapVerificationTests,
+  alignmentVerificationTests,
+  complexLayoutVerificationTests,
+}
+
+// Test System Tests (meta tests for the test framework itself)
+export {
+  allTestSystemTests,
+  fixturesTests,
+  isolationTests,
+  testSystemKeyboardTests,
+  waitHelperTests,
+}
 
 // =============================================================================
 // Combined Exports
@@ -300,6 +547,15 @@ export const allTests: TestCase[] = [
   ...allFlexReorderTests,
   ...allPropertyPanelTests,
   ...allChartTests,
+  ...allWorkflowTests,
+  ...allLayoutVerificationTests,
+  ...allTestSystemTests,
+  ...allStateTests,
+  ...allAnimationTests,
+  ...allTransformTests,
+  ...allGradientTests,
+  ...allDataBindingTests,
+  ...allStressTests,
 ]
 
 /**
@@ -309,6 +565,10 @@ export const quickTests: TestCase[] = [
   ...basicPrimitives.slice(0, 5),
   ...directionTests.slice(0, 3),
   ...colorTests.slice(0, 3),
+  ...quickStateTests,
+  ...quickAnimationTests,
+  ...quickTransformTests,
+  ...quickGradientTests,
 ]
 
 /**
@@ -327,6 +587,15 @@ export const testCounts = {
   flexReorder: allFlexReorderTests.length,
   propertyPanel: allPropertyPanelTests.length,
   charts: allChartTests.length,
+  workflow: allWorkflowTests.length,
+  layoutVerification: allLayoutVerificationTests.length,
+  testSystem: allTestSystemTests.length,
+  states: allStateTests.length,
+  animations: allAnimationTests.length,
+  transforms: allTransformTests.length,
+  gradients: allGradientTests.length,
+  dataBinding: allDataBindingTests.length,
+  stress: allStressTests.length,
   total:
     allPrimitivesTests.length +
     allLayoutTests.length +
@@ -339,7 +608,16 @@ export const testCounts = {
     allStackedDragTests.length +
     allFlexReorderTests.length +
     allPropertyPanelTests.length +
-    allChartTests.length,
+    allChartTests.length +
+    allWorkflowTests.length +
+    allLayoutVerificationTests.length +
+    allTestSystemTests.length +
+    allStateTests.length +
+    allAnimationTests.length +
+    allTransformTests.length +
+    allGradientTests.length +
+    allDataBindingTests.length +
+    allStressTests.length,
 }
 
 // =============================================================================
@@ -384,6 +662,13 @@ export type TestCategory =
   | 'flexReorder'
   | 'propertyPanel'
   | 'charts'
+  | 'workflow'
+  | 'layoutVerification'
+  | 'states'
+  | 'animations'
+  | 'transforms'
+  | 'gradients'
+  | 'stress'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -404,6 +689,13 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     flexReorder: allFlexReorderTests,
     propertyPanel: allPropertyPanelTests,
     charts: allChartTests,
+    workflow: allWorkflowTests,
+    layoutVerification: allLayoutVerificationTests,
+    states: allStateTests,
+    animations: allAnimationTests,
+    transforms: allTransformTests,
+    gradients: allGradientTests,
+    stress: allStressTests,
   }
 
   const names: Record<TestCategory, string> = {
@@ -419,6 +711,13 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     flexReorder: 'Flex Reorder',
     propertyPanel: 'Property Panel',
     charts: 'Charts',
+    workflow: 'Workflow',
+    layoutVerification: 'Layout Verification',
+    states: 'States',
+    animations: 'Animations',
+    transforms: 'Transforms',
+    gradients: 'Gradients',
+    stress: 'Stress Tests',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
@@ -429,25 +728,32 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
  */
 export function printTestSummary(): void {
   console.log('📊 Mirror Test Suites:')
-  console.log(`   Primitives:      ${testCounts.primitives} tests`)
-  console.log(`   Layout:          ${testCounts.layout} tests`)
-  console.log(`   Styling:         ${testCounts.styling} tests`)
-  console.log(`   Zag:             ${testCounts.zag} tests`)
-  console.log(`   Interactions:    ${testCounts.interactions} tests`)
-  console.log(`   Bidirectional:   ${testCounts.bidirectional} tests`)
-  console.log(`   Undo/Redo:       ${testCounts.undoRedo} tests`)
-  console.log(`   Autocomplete:    ${testCounts.autocomplete} tests`)
-  console.log(`   Stacked Drag:    ${testCounts.stackedDrag} tests`)
-  console.log(`   Flex Reorder:    ${testCounts.flexReorder} tests`)
-  console.log(`   Property Panel:  ${testCounts.propertyPanel} tests`)
-  console.log(`   Charts:          ${testCounts.charts} tests`)
-  console.log(`   ──────────────────────`)
-  console.log(`   Total:           ${testCounts.total} tests`)
+  console.log(`   Primitives:         ${testCounts.primitives} tests`)
+  console.log(`   Layout:             ${testCounts.layout} tests`)
+  console.log(`   Layout Verify:      ${testCounts.layoutVerification} tests`)
+  console.log(`   Styling:            ${testCounts.styling} tests`)
+  console.log(`   Zag:                ${testCounts.zag} tests`)
+  console.log(`   Interactions:       ${testCounts.interactions} tests`)
+  console.log(`   Bidirectional:      ${testCounts.bidirectional} tests`)
+  console.log(`   Undo/Redo:          ${testCounts.undoRedo} tests`)
+  console.log(`   Autocomplete:       ${testCounts.autocomplete} tests`)
+  console.log(`   Stacked Drag:       ${testCounts.stackedDrag} tests`)
+  console.log(`   Flex Reorder:       ${testCounts.flexReorder} tests`)
+  console.log(`   Property Panel:     ${testCounts.propertyPanel} tests`)
+  console.log(`   Charts:             ${testCounts.charts} tests`)
+  console.log(`   Workflow:           ${testCounts.workflow} tests`)
+  console.log(`   States:             ${testCounts.states} tests`)
+  console.log(`   Animations:         ${testCounts.animations} tests`)
+  console.log(`   Transforms:         ${testCounts.transforms} tests`)
+  console.log(`   Gradients:          ${testCounts.gradients} tests`)
+  console.log(`   Stress:             ${testCounts.stress} tests`)
+  console.log(`   ──────────────────────────`)
+  console.log(`   Total:              ${testCounts.total} tests`)
   console.log('')
   console.log('Run with:')
   console.log('   import { runAllTests, runCategory } from "./suites"')
   console.log('   await runAllTests()')
-  console.log('   await runCategory("flexReorder")')
+  console.log('   await runCategory("states")')
 }
 
 /**
