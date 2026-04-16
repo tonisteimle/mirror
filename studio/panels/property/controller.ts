@@ -84,7 +84,7 @@ export class PropertyPanelController {
 
     // Subscribe to selection changes
     this.cleanups.push(
-      this.ports.selection.subscribe((nodeId, previousNodeId) => {
+      this.ports.selection.subscribe(nodeId => {
         this.handleSelect(nodeId)
       })
     )
@@ -99,6 +99,8 @@ export class PropertyPanelController {
     // Subscribe to compile completion
     this.cleanups.push(
       this.ports.events.onCompileCompleted(() => {
+        // Invalidate token cache so new tokens are picked up
+        this.ports.tokens.invalidateCache()
         this.dispatch({ type: 'COMPILE_END' })
       })
     )

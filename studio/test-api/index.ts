@@ -423,6 +423,9 @@ async function setupTestSuites(): Promise<void> {
       // Run by category
       runCategory: (category: string) => suites.runCategory(category as any),
 
+      // Run a single test by name
+      runSingleTest: (testName: string) => suites.runSingleTest(testName),
+
       // Run quick tests
       runQuick: () => suites.runQuickTests(),
 
@@ -440,6 +443,9 @@ async function setupTestSuites(): Promise<void> {
         undoRedo: suites.allUndoRedoTests,
         autocomplete: suites.allAutocompleteTests,
         stackedDrag: suites.allStackedDragTests,
+        flexReorder: suites.allFlexReorderTests,
+        propertyPanel: suites.allPropertyPanelTests,
+        charts: suites.allChartTests,
         all: suites.allTests,
       },
     }

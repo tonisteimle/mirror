@@ -370,16 +370,11 @@ export class BrowserTestRunner {
       this.hideVisualCursor()
     }
 
-    // Check if we have a valid target - if not, use simulateDrop as fallback
-    const state = controller.getTestState()
-    if (!state.target) {
-      // Hit detection failed (common in headless mode) - use simulateDrop
-      const target: FlexDropTarget = { mode: 'flex', containerId: targetNodeId, insertionIndex }
-      await controller.simulateDrop(source, target)
-    } else {
-      // Normal drop path
-      await controller.drop()
-    }
+    // ALWAYS use simulateDrop with explicit target for tests
+    // Hit detection can find wrong targets (e.g., child instead of container)
+    // when coordinates don't perfectly align with visual elements
+    const target: FlexDropTarget = { mode: 'flex', containerId: targetNodeId, insertionIndex }
+    await controller.simulateDrop(source, target)
   }
 
   /**

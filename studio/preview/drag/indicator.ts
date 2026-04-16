@@ -16,8 +16,8 @@ const CONTAINER_HIGHLIGHT_ID = 'drag-container-highlight'
 const GHOST_INDICATOR_ID = 'drag-ghost-indicator'
 const INDICATOR_COLOR = '#5BA8F5'
 const INDICATOR_GLOW = 'rgba(91, 168, 245, 0.4)'
-const GHOST_COLOR = 'rgba(139, 92, 246, 0.15)'
-const GHOST_BORDER = 'rgba(139, 92, 246, 0.6)'
+const GHOST_COLOR = 'rgba(139, 92, 246, 0.08)'
+const GHOST_BORDER = 'rgba(139, 92, 246, 0.4)'
 const INDICATOR_THICKNESS = 3
 
 export class Indicator implements Reportable<IndicatorReport> {
@@ -105,13 +105,21 @@ export class Indicator implements Reportable<IndicatorReport> {
   }
 
   /** Show ghost indicator for absolute positioning */
-  showGhost(rect: DOMRect): void {
+  showGhost(rect: DOMRect, sourceElement?: HTMLElement): void {
     const el = this.ensureGhostElement()
     el.style.left = `${rect.x}px`
     el.style.top = `${rect.y}px`
     el.style.width = `${rect.width}px`
     el.style.height = `${rect.height}px`
     el.style.display = 'block'
+
+    // If source element provided, show a clone of it inside the ghost
+    if (sourceElement) {
+      this.updateGhostContent(el, sourceElement)
+    } else {
+      // Clear any previous content for palette drops
+      el.innerHTML = ''
+    }
 
     // Hide line indicator when showing ghost
     if (this.element) {
@@ -123,10 +131,48 @@ export class Indicator implements Reportable<IndicatorReport> {
     this.lastLinePosition = null
   }
 
+  /** Update ghost content with a clone of the source element */
+  private updateGhostContent(ghost: HTMLDivElement, sourceElement: HTMLElement): void {
+    // Only update if content changed (avoid flicker)
+    const sourceId = sourceElement.getAttribute('data-mirror-id')
+    if (ghost.dataset.sourceId === sourceId) return
+    ghost.dataset.sourceId = sourceId || ''
+
+    // Clone the element
+    const clone = sourceElement.cloneNode(true) as HTMLElement
+
+    // Reset positioning on clone (it will be positioned by the ghost container)
+    clone.style.position = 'static'
+    clone.style.left = ''
+    clone.style.top = ''
+    clone.style.transform = ''
+    clone.style.opacity = '0.85'
+    clone.style.pointerEvents = 'none'
+
+    // Remove drag-related attributes
+    clone.removeAttribute('draggable')
+    delete clone.dataset.dragging
+    delete clone.dataset.mirrorId
+
+    // Clear and add the clone
+    ghost.innerHTML = ''
+    ghost.appendChild(clone)
+
+    // Adjust ghost styling when showing content
+    ghost.style.background = 'transparent'
+    ghost.style.border = `2px solid ${GHOST_BORDER}`
+    ghost.style.overflow = 'hidden'
+  }
+
   /** Hide ghost indicator */
   hideGhost(): void {
     if (this.ghostElement) {
       this.ghostElement.style.display = 'none'
+      this.ghostElement.innerHTML = ''
+      delete this.ghostElement.dataset.sourceId
+      // Reset to default ghost styling
+      this.ghostElement.style.background = GHOST_COLOR
+      this.ghostElement.style.border = `2px dashed ${GHOST_BORDER}`
     }
     this.lastGhostRect = null
   }

@@ -791,9 +791,15 @@ export class CodeModifier {
     // Calculate target indentation
     let targetIndent: string
     if (placement === 'inside') {
-      // Child of target: one level deeper
-      const targetLine = this.lines[targetMapping.position.line - 1]
-      targetIndent = this.getLineIndent(targetLine) + '  '
+      // Check if source is already a child of target (same-container reorder)
+      if (sourceMapping.parentId === targetId) {
+        // Same container - keep the same indentation
+        targetIndent = sourceIndent
+      } else {
+        // Different container - child of target: one level deeper
+        const targetLine = this.lines[targetMapping.position.line - 1]
+        targetIndent = this.getLineIndent(targetLine) + '  '
+      }
     } else {
       // Sibling: same level as target
       const targetLine = this.lines[targetMapping.position.line - 1]

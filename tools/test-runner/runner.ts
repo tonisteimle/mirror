@@ -17,6 +17,7 @@ import { launchChrome } from './chrome'
 import { connectCDP, getPageTarget } from './cdp'
 import { ConsoleCollector } from './console-collector'
 import { ScreenshotCapture } from './screenshot'
+import { FileExplorer } from './file-explorer'
 
 // =============================================================================
 // Test Runner
@@ -58,6 +59,13 @@ export class TestRunner {
 
     await this.enableCDPDomains()
     this.console.attach(this.cdp)
+
+    // Print [TEST] messages in real-time for debugging
+    this.console.onMessage(msg => {
+      if (msg.text.includes('[TEST]')) {
+        console.log(`  ${msg.text}`)
+      }
+    })
 
     if (this.config.screenshotOnFailure) {
       this.screenshot = new ScreenshotCapture(this.cdp, this.config.screenshotDir)
@@ -265,6 +273,26 @@ export class TestRunner {
    */
   async runDragTests(): Promise<TestSuite> {
     return this.runBrowserSuite(`__dragTest.runDragTests()`, 'Drag & Drop Tests')
+  }
+
+  /**
+   * Run a single test by exact name
+   */
+  async runSingleTestByName(testName: string): Promise<TestSuite> {
+    const suiteName = `Single Test: ${testName}`
+    // Escape quotes in test name for JavaScript
+    const escapedName = testName.replace(/'/g, "\\'").replace(/"/g, '\\"')
+    const command = `__mirrorTestSuites.runSingleTest('${escapedName}')`
+
+    return this.runBrowserSuite(command, suiteName)
+  }
+
+  /**
+   * Get a FileExplorer for inspecting project files
+   */
+  getFileExplorer(): FileExplorer {
+    if (!this.cdp) throw new Error('Not started')
+    return new FileExplorer(this.cdp)
   }
 
   /**

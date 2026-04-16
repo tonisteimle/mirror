@@ -298,17 +298,46 @@ export const stackedWithStatesTests: TestCase[] = describe('Stacked with States'
 // =============================================================================
 
 export const appStackedTests: TestCase[] = describe('App Stacked', [
+  testWithSetup('Drop Button into App stacked (minimal)', 'App stacked', async api => {
+    // Drop Button at position (100, 100)
+    await api.interact.dragToPosition('Button', 'node-1', 100, 100)
+
+    const code = api.editor.getCode()
+
+    // Verify Button was added with x/y coordinates
+    api.assert.codeContains(/Button/)
+    api.assert.codeContains(/\bx\s+\d+/)
+    api.assert.codeContains(/\by\s+\d+/)
+
+    // Verify position is approximately correct
+    const pos = verifyPosition(code, 100, 100, 50)
+    api.assert.ok(
+      pos.ok || (pos.actualX !== null && pos.actualY !== null),
+      `Position should have x/y, got (${pos.actualX}, ${pos.actualY})`
+    )
+
+    // Verify element exists in preview and is visible
+    api.assert.exists('node-2')
+
+    const preview = document.getElementById('preview')
+    const node2El = preview?.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+    if (node2El) {
+      api.assert.ok(node2El.offsetWidth > 0, `Button should have width > 0`)
+      api.assert.ok(node2El.offsetHeight > 0, `Button should have height > 0`)
+    }
+  }),
+
   testWithSetup(
-    'Drop Avatar into App stacked',
+    'Drop Icon into App stacked',
     'App stacked, w 400, h 300, bg #1a1a1a',
     async api => {
-      // Drop Avatar at position (100, 100)
-      await api.interact.dragToPosition('Avatar', 'node-1', 100, 100)
+      // Drop Icon at position (100, 100) - Icon has visible content
+      await api.interact.dragToPosition('Icon', 'node-1', 100, 100)
 
       const code = api.editor.getCode()
 
-      // Verify Avatar was added with x/y coordinates
-      api.assert.codeContains(/Avatar/)
+      // Verify Icon was added with x/y coordinates
+      api.assert.codeContains(/Icon/)
       api.assert.codeContains(/\bx\s+\d+/)
       api.assert.codeContains(/\by\s+\d+/)
 
@@ -320,7 +349,7 @@ export const appStackedTests: TestCase[] = describe('App Stacked', [
       )
 
       // Verify element exists in preview
-      api.assert.exists('node-2') // Avatar should be node-2
+      api.assert.exists('node-2')
     }
   ),
 

@@ -2016,15 +2016,16 @@ function compile(code) {
           .map(line => (line ? '  ' + line : ''))
           .join('\n')
 
-        // +2 accounts for the 2-space indentation added to each line of user code
-        const indent = 2
+        // Note: We do NOT add indent to currentPreludeOffset because CodeModifier
+        // returns line-start positions (including indent). The indent is stripped
+        // separately in handleStudioCodeChange when applying changes to the editor.
         if (prelude) {
           const separator = '\n\n// === ' + currentFile + ' ===\n'
           resolvedCode = prelude + separator + rootWrapper + '\n' + indentedCode
-          currentPreludeOffset = prelude.length + separator.length + rootWrapper.length + 1 + indent
+          currentPreludeOffset = prelude.length + separator.length + rootWrapper.length + 1
         } else {
           resolvedCode = rootWrapper + '\n' + indentedCode
-          currentPreludeOffset = rootWrapper.length + 1 + indent
+          currentPreludeOffset = rootWrapper.length + 1
         }
       }
     }
@@ -2859,6 +2860,22 @@ function setupNotificationHandlers() {
     })
   })
 
+  // Immediate compile when requested (bypasses 300ms debounce for drag-drop operations)
+  // This significantly improves perceived performance after drops
+  // NOTE: Registered here before statusEl check so it's always available
+  studio.events.on('compile:requested', () => {
+    // Cancel pending debounce to avoid duplicate compiles
+    if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
+      debouncedCompile.cancel()
+    }
+    // Compile immediately with current editor content
+    const code = editor?.state?.doc?.toString()
+    if (code !== undefined) {
+      compile(code)
+      debouncedSave(code)
+    }
+  })
+
   const statusEl = document.getElementById('status')
   if (!statusEl) return
 
@@ -2907,21 +2924,6 @@ function setupNotificationHandlers() {
 
   studio.events.on('notification:error', ({ message, duration }) => {
     showNotification(message, 'error', duration ?? 5000)
-  })
-
-  // Immediate compile when requested (bypasses 300ms debounce for drag-drop operations)
-  // This significantly improves perceived performance after drops
-  studio.events.on('compile:requested', () => {
-    // Cancel pending debounce to avoid duplicate compiles
-    if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
-      debouncedCompile.cancel()
-    }
-    // Compile immediately with current editor content
-    const code = editor?.state?.doc?.toString()
-    if (code !== undefined) {
-      compile(code)
-      debouncedSave(code)
-    }
   })
 }
 
@@ -3128,10 +3130,26 @@ function handleStudioCodeChange(result) {
   // Adjust change positions for prelude offset
   // The CodeModifier operates on the merged source (prelude + current file),
   // but the editor only contains the current file
-  const adjustedChange = {
+  let adjustedChange = {
     from: result.change.from - currentPreludeOffset,
     to: result.change.to - currentPreludeOffset,
     insert: result.change.insert,
+  }
+
+  // When user code is wrapped with App, each line in the resolved source
+  // has a 2-space indent prefix that doesn't exist in the editor.
+  // We need to:
+  // 1. Remove the indent prefix from the insert text
+  // 2. Adjust 'to' position since the resolved line is 2 chars longer
+  // Note: Empty lines have no indent, so we only adjust when indent is present.
+  if (isWrappedWithApp) {
+    const appIndent = 2
+    // Remove indent prefix from insert if present (non-empty lines have 2-space indent)
+    if (adjustedChange.insert.startsWith('  ')) {
+      adjustedChange.insert = adjustedChange.insert.substring(appIndent)
+      // Adjust 'to' since resolved line length includes the indent we just stripped
+      adjustedChange.to = adjustedChange.to - appIndent
+    }
   }
 
   // Validate adjusted change range before applying (prevents RangeError crashes)

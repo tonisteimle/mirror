@@ -322,9 +322,19 @@ function handleCompileStart(state: PanelState): TransitionResult {
 }
 
 function handleCompileEnd(state: PanelState): TransitionResult {
-  if (state.type !== 'pending-update') return { state, effects: [] }
-  const newState: LoadingState = { type: 'loading', nodeId: state.pendingNodeId }
-  return { state: newState, effects: [{ type: 'LOAD_ELEMENT', nodeId: state.pendingNodeId }] }
+  // Handle pending updates first
+  if (state.type === 'pending-update') {
+    const newState: LoadingState = { type: 'loading', nodeId: state.pendingNodeId }
+    return { state: newState, effects: [{ type: 'LOAD_ELEMENT', nodeId: state.pendingNodeId }] }
+  }
+
+  // If showing an element, reload it to pick up fresh tokens and properties
+  if (state.type === 'showing') {
+    const newState: LoadingState = { type: 'loading', nodeId: state.element.nodeId }
+    return { state: newState, effects: [{ type: 'LOAD_ELEMENT', nodeId: state.element.nodeId }] }
+  }
+
+  return { state, effects: [] }
 }
 
 function handleSelectionInvalidated(state: PanelState, nodeId: string): TransitionResult {

@@ -12,7 +12,11 @@ import type {
   ModificationResult,
 } from '../../../compiler'
 import type { PropertyPanelPorts } from './ports'
-import { createProductionPorts, type SelectionProvider, type ProductionPortsConfig } from './adapters/production-adapters'
+import {
+  createProductionPorts,
+  type SelectionProvider,
+  type ProductionPortsConfig,
+} from './adapters/production-adapters'
 import { PropertyPanelView, createPropertyPanelView } from './view'
 import { state, events } from '../../core'
 
@@ -74,7 +78,7 @@ export class PropertyPanel {
       selectionProvider: selectionManager,
       propertyExtractor,
       codeModifier,
-      onCodeChange: (result) => {
+      onCodeChange: result => {
         // Call the provided callback
         onCodeChange(result)
 
@@ -85,16 +89,16 @@ export class PropertyPanel {
           events.emit('compile:requested', {})
         } else if (!result.success) {
           events.emit('notification:error', {
-            message: result.error || 'Failed to update property'
+            message: result.error || 'Failed to update property',
           })
         }
       },
-      getAllSource: options.getAllSource ?? (() => state.get().source)
+      getAllSource: options.getAllSource ?? (() => state.get().source),
     })
 
     // Create view
     this.view = createPropertyPanelView(container, this.ports, {
-      debounceTime: options.debounceTime
+      debounceTime: options.debounceTime,
     })
 
     // Auto-attach for backwards compatibility with legacy PropertyPanel
@@ -149,10 +153,7 @@ export class PropertyPanel {
    * Update dependencies after a recompile.
    * Called by bootstrap when AST/SourceMap change.
    */
-  updateDependencies(
-    propertyExtractor: PropertyExtractor,
-    codeModifier: CodeModifier
-  ): void {
+  updateDependencies(propertyExtractor: PropertyExtractor, codeModifier: CodeModifier): void {
     this.propertyExtractor = propertyExtractor
     this.codeModifier = codeModifier
 
@@ -164,7 +165,7 @@ export class PropertyPanel {
       selectionProvider: this.selectionManager,
       propertyExtractor,
       codeModifier,
-      onCodeChange: (result) => {
+      onCodeChange: result => {
         this.onCodeChange(result)
         if (result.success && result.newSource) {
           state.set({ source: result.newSource })
@@ -172,18 +173,23 @@ export class PropertyPanel {
           events.emit('compile:requested', {})
         } else if (!result.success) {
           events.emit('notification:error', {
-            message: result.error || 'Failed to update property'
+            message: result.error || 'Failed to update property',
           })
         }
       },
-      getAllSource: this.options.getAllSource ?? (() => state.get().source)
+      getAllSource: this.options.getAllSource ?? (() => state.get().source),
     })
 
     // Recreate view with new ports
     this.view = createPropertyPanelView(this.container, this.ports, {
-      debounceTime: this.options.debounceTime
+      debounceTime: this.options.debounceTime,
     })
     this.view.init()
+
+    // Invalidate token cache to ensure fresh tokens are extracted
+    // This is needed because compile:completed fires BEFORE updateDependencies
+    // creates the new ports, so the new cache misses that event
+    this.ports.tokens.invalidateCache()
   }
 
   /**

@@ -101,6 +101,22 @@ import {
   layoutDetectionTests,
 } from './stacked-drag-tests'
 import {
+  allFlexReorderTests,
+  buttonReorderVerticalTests,
+  buttonReorderHorizontalTests,
+  textReorderTests,
+  iconReorderTests,
+  inputReorderTests,
+  imageReorderTests,
+  dividerSpacerReorderTests,
+  linkTextareaReorderTests,
+  mixedComponentReorderTests,
+  zagComponentReorderTests,
+  nestedContainerReorderTests,
+  reorderEdgeCaseTests,
+  sequentialReorderTests,
+} from './flex-reorder-tests'
+import {
   allPropertyPanelTests,
   tokenDisplayTests,
   tokenValueTests,
@@ -228,6 +244,24 @@ export {
   layoutDetectionTests,
 } from './stacked-drag-tests'
 
+// Flex Reorder Tests
+export {
+  allFlexReorderTests,
+  buttonReorderVerticalTests,
+  buttonReorderHorizontalTests,
+  textReorderTests,
+  iconReorderTests,
+  inputReorderTests,
+  imageReorderTests,
+  dividerSpacerReorderTests,
+  linkTextareaReorderTests,
+  mixedComponentReorderTests,
+  zagComponentReorderTests,
+  nestedContainerReorderTests,
+  reorderEdgeCaseTests,
+  sequentialReorderTests,
+} from './flex-reorder-tests'
+
 // Property Panel
 export {
   allPropertyPanelTests,
@@ -263,6 +297,7 @@ export const allTests: TestCase[] = [
   ...allUndoRedoTests,
   ...allAutocompleteTests,
   ...allStackedDragTests,
+  ...allFlexReorderTests,
   ...allPropertyPanelTests,
   ...allChartTests,
 ]
@@ -289,6 +324,7 @@ export const testCounts = {
   undoRedo: allUndoRedoTests.length,
   autocomplete: allAutocompleteTests.length,
   stackedDrag: allStackedDragTests.length,
+  flexReorder: allFlexReorderTests.length,
   propertyPanel: allPropertyPanelTests.length,
   charts: allChartTests.length,
   total:
@@ -301,6 +337,7 @@ export const testCounts = {
     allUndoRedoTests.length +
     allAutocompleteTests.length +
     allStackedDragTests.length +
+    allFlexReorderTests.length +
     allPropertyPanelTests.length +
     allChartTests.length,
 }
@@ -344,6 +381,7 @@ export type TestCategory =
   | 'undoRedo'
   | 'autocomplete'
   | 'stackedDrag'
+  | 'flexReorder'
   | 'propertyPanel'
   | 'charts'
 
@@ -363,6 +401,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     undoRedo: allUndoRedoTests,
     autocomplete: allAutocompleteTests,
     stackedDrag: allStackedDragTests,
+    flexReorder: allFlexReorderTests,
     propertyPanel: allPropertyPanelTests,
     charts: allChartTests,
   }
@@ -377,6 +416,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     undoRedo: 'Undo/Redo',
     autocomplete: 'Autocomplete',
     stackedDrag: 'Stacked Drag & Drop',
+    flexReorder: 'Flex Reorder',
     propertyPanel: 'Property Panel',
     charts: 'Charts',
   }
@@ -398,6 +438,7 @@ export function printTestSummary(): void {
   console.log(`   Undo/Redo:       ${testCounts.undoRedo} tests`)
   console.log(`   Autocomplete:    ${testCounts.autocomplete} tests`)
   console.log(`   Stacked Drag:    ${testCounts.stackedDrag} tests`)
+  console.log(`   Flex Reorder:    ${testCounts.flexReorder} tests`)
   console.log(`   Property Panel:  ${testCounts.propertyPanel} tests`)
   console.log(`   Charts:          ${testCounts.charts} tests`)
   console.log(`   ──────────────────────`)
@@ -406,5 +447,38 @@ export function printTestSummary(): void {
   console.log('Run with:')
   console.log('   import { runAllTests, runCategory } from "./suites"')
   console.log('   await runAllTests()')
-  console.log('   await runCategory("charts")')
+  console.log('   await runCategory("flexReorder")')
+}
+
+/**
+ * Run a single test by name
+ */
+export async function runSingleTest(testName: string): Promise<TestSuiteResult> {
+  const api = (window as any).__mirrorTest
+  if (!api) {
+    throw new Error('Mirror Test API not available')
+  }
+
+  // Find the test by name (case-insensitive partial match)
+  const test = allTests.find(
+    t => t.name.toLowerCase().includes(testName.toLowerCase()) || t.name === testName
+  )
+
+  if (!test) {
+    console.error(`❌ Test not found: "${testName}"`)
+    console.log('Available tests containing that pattern:')
+    const matches = allTests.filter(t => t.name.toLowerCase().includes(testName.toLowerCase()))
+    if (matches.length > 0) {
+      matches.slice(0, 10).forEach(t => console.log(`   - ${t.name}`))
+      if (matches.length > 10) {
+        console.log(`   ... and ${matches.length - 10} more`)
+      }
+    } else {
+      console.log('   (no matches)')
+    }
+    return { passed: 0, failed: 1, results: [{ name: testName, passed: false, duration: 0 }] }
+  }
+
+  console.log(`🎯 Running: ${test.name}`)
+  return api.run([test], `Single Test: ${test.name}`)
 }

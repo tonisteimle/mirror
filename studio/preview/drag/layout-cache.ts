@@ -13,6 +13,7 @@ const log = createLogger('LayoutCache')
 
 export class LayoutCache implements Reportable<CacheReport> {
   private rects = new Map<string, DOMRect>()
+  private elements = new Map<string, HTMLElement>()
   private children = new Map<string, ChildInfo[]>()
   private containerElement: HTMLElement | null = null
 
@@ -25,14 +26,15 @@ export class LayoutCache implements Reportable<CacheReport> {
     log.info('Cache built:', this.rects.size, 'elements')
   }
 
-  /** Cache rects for all elements with data-mirror-id */
+  /** Cache rects and elements for all elements with data-mirror-id */
   private cacheAllRects(container: HTMLElement): void {
     const elements = container.querySelectorAll('[data-mirror-id]')
     for (const el of elements) {
       const nodeId = el.getAttribute('data-mirror-id')
-      if (nodeId) {
+      if (nodeId && el instanceof HTMLElement) {
         const rect = el.getBoundingClientRect()
         this.rects.set(nodeId, rect)
+        this.elements.set(nodeId, el)
       }
     }
   }
@@ -84,6 +86,13 @@ export class LayoutCache implements Reportable<CacheReport> {
   }
 
   /**
+   * Get cached element for a node - O(1)
+   */
+  getElement(nodeId: string): HTMLElement | null {
+    return this.elements.get(nodeId) ?? null
+  }
+
+  /**
    * Get children of a container, sorted by position - O(1)
    */
   getChildren(containerId: string): ChildInfo[] {
@@ -110,6 +119,7 @@ export class LayoutCache implements Reportable<CacheReport> {
    */
   invalidate(): void {
     this.rects.clear()
+    this.elements.clear()
     this.children.clear()
     this.containerElement = null
   }

@@ -137,7 +137,11 @@ export class DragController implements Reportable<ControllerReport> {
     if (hit.layout === 'absolute') {
       // Absolute/stacked layout: position-based drop
       const absResult = this.calculateAbsolutePosition(cursor, hit)
-      this.indicator.showGhost(absResult.ghostRect)
+
+      // For canvas moves, show the actual element content in the ghost
+      const sourceElement = this.getSourceElement()
+      this.indicator.showGhost(absResult.ghostRect, sourceElement)
+
       // Only highlight container if dropping into a DIFFERENT container
       // (moving within same stacked container doesn't need highlight)
       const isSameContainer =
@@ -244,6 +248,14 @@ export class DragController implements Reportable<ControllerReport> {
     // Palette: Use default component size
     const componentName = (this.source as any)?.componentName ?? 'Frame'
     return DEFAULT_COMPONENT_SIZES[componentName] ?? { width: 100, height: 40 }
+  }
+
+  /** Get the source DOM element for canvas moves */
+  private getSourceElement(): HTMLElement | undefined {
+    if (this.source?.type === 'canvas' && this.source.nodeId) {
+      return this.cache.getElement(this.source.nodeId) ?? undefined
+    }
+    return undefined
   }
 
   /** Store flex drop target */
