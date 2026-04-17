@@ -38,9 +38,9 @@ export interface PrimitiveDefinition {
  * to allow proper theming with CSS custom properties.
  */
 const SIZES = {
-  controlHeight: 36,    // Unified height for inputs, buttons
-  radius: 6,            // Border radius
-  iconSize: 20,         // Icon size
+  controlHeight: 36, // Unified height for inputs, buttons
+  radius: 6, // Border radius
+  iconSize: 20, // Icon size
   // Note: font size is inherited from App, not set per-primitive
 }
 
@@ -78,6 +78,7 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
   button: {
     tag: 'button',
     defaults: [
+      { name: 'w', values: ['hug'] },
       { name: 'h', values: [SIZES.controlHeight] },
       { name: 'pad', values: [0, 16] },
       { name: 'rad', values: [SIZES.radius] },
@@ -126,9 +127,19 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
   label: {
     tag: 'label',
     defaults: [
+      { name: 'w', values: ['hug'] },
       // font inherited from parent (App)
     ],
     description: 'Form label element',
+  },
+
+  link: {
+    tag: 'a',
+    defaults: [
+      { name: 'w', values: ['hug'] },
+      { name: 'cursor', values: ['pointer'] },
+    ],
+    description: 'Anchor link element',
   },
 
   // Media primitives
@@ -188,6 +199,43 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
       { name: 'h', values: ['full'] },
     ],
     description: 'Flexible spacer element',
+  },
+
+  // Headings - should hug content width
+  h1: {
+    tag: 'h1',
+    defaults: [{ name: 'w', values: ['hug'] }],
+    description: 'Heading level 1',
+  },
+
+  h2: {
+    tag: 'h2',
+    defaults: [{ name: 'w', values: ['hug'] }],
+    description: 'Heading level 2',
+  },
+
+  h3: {
+    tag: 'h3',
+    defaults: [{ name: 'w', values: ['hug'] }],
+    description: 'Heading level 3',
+  },
+
+  h4: {
+    tag: 'h4',
+    defaults: [{ name: 'w', values: ['hug'] }],
+    description: 'Heading level 4',
+  },
+
+  h5: {
+    tag: 'h5',
+    defaults: [{ name: 'w', values: ['hug'] }],
+    description: 'Heading level 5',
+  },
+
+  h6: {
+    tag: 'h6',
+    defaults: [{ name: 'w', values: ['hug'] }],
+    description: 'Heading level 6',
   },
 }
 

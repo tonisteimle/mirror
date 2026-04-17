@@ -20,6 +20,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 1 1`] = `
       ],
       "styles": [
         {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
           "property": "height",
           "value": "36px",
         },
@@ -122,6 +126,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 2 1`] = `
             },
           ],
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -772,6 +780,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 4 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -820,6 +832,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 4 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -2393,6 +2409,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
           "properties": [],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -2809,6 +2829,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
               "properties": [],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -2857,6 +2881,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -2994,6 +3022,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
           ],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -3043,6 +3075,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
           ],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -3091,6 +3127,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
             },
           ],
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -3713,6 +3753,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 4 1`] = `
             },
           ],
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -5275,6 +5319,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 10 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -8375,6 +8423,10 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "color",
                       "value": "#888",
                     },
@@ -8453,6 +8505,10 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "color",
                       "value": "#888",
                     },
@@ -8530,6 +8586,10 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
                     },
                   ],
                   "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
                     {
                       "property": "color",
                       "value": "#888",
@@ -8643,6 +8703,10 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "color",
                       "value": "#888",
                     },
@@ -8721,6 +8785,10 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "color",
                       "value": "#888",
                     },
@@ -8798,6 +8866,10 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
                     },
                   ],
                   "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
                     {
                       "property": "color",
                       "value": "#888",
@@ -8911,6 +8983,10 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "color",
                       "value": "#888",
                     },
@@ -8989,6 +9065,10 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "color",
                       "value": "#888",
                     },
@@ -9066,6 +9146,10 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 4 1`] = `
                     },
                   ],
                   "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
                     {
                       "property": "color",
                       "value": "#888",
@@ -13943,7 +14027,12 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
                       "value": "Home",
                     },
                   ],
-                  "styles": [],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                  ],
                   "tag": "label",
                 },
               ],
@@ -14090,7 +14179,12 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
                       "value": "Projekte",
                     },
                   ],
-                  "styles": [],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                  ],
                   "tag": "label",
                 },
               ],
@@ -14217,7 +14311,12 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
                       "value": "Settings",
                     },
                   ],
-                  "styles": [],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                  ],
                   "tag": "label",
                 },
               ],
@@ -14415,7 +14514,12 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
                       "value": "Home",
                     },
                   ],
-                  "styles": [],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                  ],
                   "tag": "label",
                 },
               ],
@@ -14562,7 +14666,12 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
                       "value": "Projekte",
                     },
                   ],
-                  "styles": [],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                  ],
                   "tag": "label",
                 },
               ],
@@ -14689,7 +14798,12 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
                       "value": "Settings",
                     },
                   ],
-                  "styles": [],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                  ],
                   "tag": "label",
                 },
               ],
@@ -18282,6 +18396,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 13 1`] = `
           ],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -18573,6 +18691,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -18622,6 +18744,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -18670,6 +18796,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -18754,6 +18884,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -18802,6 +18936,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -18886,6 +19024,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -18930,6 +19072,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -19784,7 +19930,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-5",
+              "id": "node-3",
               "isDefinition": false,
               "name": "Icon",
               "primitive": "icon",
@@ -19841,7 +19987,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-6",
+              "id": "node-4",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -19868,7 +20014,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
               "name": "click",
             },
           ],
-          "id": "node-4",
+          "id": "node-2",
           "isDefinition": false,
           "layoutType": "flex",
           "name": "FavBtn",
@@ -19882,7 +20028,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "node-5",
+                    "id": "node-3",
                     "isDefinition": false,
                     "name": "Icon",
                     "primitive": "icon",
@@ -19939,7 +20085,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "node-6",
+                    "id": "node-4",
                     "isDefinition": false,
                     "name": "Text",
                     "primitive": "text",
@@ -19972,7 +20118,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "state-child-1",
+                    "id": "state-child-0",
                     "name": "Icon",
                     "primitive": "icon",
                     "properties": [
@@ -20008,7 +20154,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "state-child-2",
+                    "id": "state-child-1",
                     "name": "Text",
                     "primitive": "text",
                     "properties": [
@@ -20038,7 +20184,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             "transitions": [
               {
                 "modifier": "toggle",
-                "to": "hover",
+                "to": "on",
                 "trigger": "onclick",
               },
             ],
@@ -20107,7 +20253,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-10",
+              "id": "node-6",
               "isDefinition": false,
               "name": "Icon",
               "primitive": "icon",
@@ -20164,7 +20310,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-11",
+              "id": "node-7",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -20191,7 +20337,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
               "name": "click",
             },
           ],
-          "id": "node-9",
+          "id": "node-5",
           "initialState": "on",
           "isDefinition": false,
           "layoutType": "flex",
@@ -20206,7 +20352,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "node-10",
+                    "id": "node-6",
                     "isDefinition": false,
                     "name": "Icon",
                     "primitive": "icon",
@@ -20263,7 +20409,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "node-11",
+                    "id": "node-7",
                     "isDefinition": false,
                     "name": "Text",
                     "primitive": "text",
@@ -20296,7 +20442,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "state-child-6",
+                    "id": "state-child-2",
                     "name": "Icon",
                     "primitive": "icon",
                     "properties": [
@@ -20332,7 +20478,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "state-child-7",
+                    "id": "state-child-3",
                     "name": "Text",
                     "primitive": "text",
                     "properties": [
@@ -20362,7 +20508,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
             "transitions": [
               {
                 "modifier": "toggle",
-                "to": "hover",
+                "to": "on",
                 "trigger": "onclick",
               },
             ],
@@ -20473,7 +20619,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
         {
           "children": [],
           "events": [],
-          "id": "node-4",
+          "id": "node-2",
           "isDefinition": false,
           "name": "Text",
           "primitive": "text",
@@ -20489,7 +20635,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
         {
           "children": [],
           "events": [],
-          "id": "node-5",
+          "id": "node-3",
           "isDefinition": false,
           "name": "Icon",
           "primitive": "icon",
@@ -20553,7 +20699,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
           "name": "click",
         },
       ],
-      "id": "node-3",
+      "id": "node-1",
       "isDefinition": false,
       "layoutType": "flex",
       "name": "ExpandBtn",
@@ -20567,7 +20713,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
               {
                 "children": [],
                 "events": [],
-                "id": "node-4",
+                "id": "node-2",
                 "isDefinition": false,
                 "name": "Text",
                 "primitive": "text",
@@ -20583,7 +20729,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
               {
                 "children": [],
                 "events": [],
-                "id": "node-5",
+                "id": "node-3",
                 "isDefinition": false,
                 "name": "Icon",
                 "primitive": "icon",
@@ -20774,7 +20920,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
           "name": "click",
         },
       ],
-      "id": "node-4",
+      "id": "node-1",
       "isDefinition": false,
       "layoutType": "flex",
       "name": "StatusBtn",
@@ -21470,7 +21616,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
             "transitions": [
               {
                 "modifier": "exclusive",
-                "to": "hover",
+                "to": "on",
                 "trigger": "onclick",
               },
             ],
@@ -21591,7 +21737,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
             "transitions": [
               {
                 "modifier": "exclusive",
-                "to": "hover",
+                "to": "on",
                 "trigger": "onclick",
               },
             ],
@@ -21712,7 +21858,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 8 1`] = `
             "transitions": [
               {
                 "modifier": "exclusive",
-                "to": "hover",
+                "to": "on",
                 "trigger": "onclick",
               },
             ],
@@ -21873,6 +22019,10 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
             ],
           },
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -22115,7 +22265,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-8",
+              "id": "node-3",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -22140,7 +22290,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-9",
+              "id": "node-4",
               "isDefinition": false,
               "name": "Icon",
               "primitive": "icon",
@@ -22196,7 +22346,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
             },
           ],
           "events": [],
-          "id": "node-7",
+          "id": "node-2",
           "isDefinition": false,
           "layoutType": "flex",
           "name": "Frame",
@@ -22252,7 +22402,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
           "name": "click",
         },
       ],
-      "id": "node-6",
+      "id": "node-1",
       "isDefinition": false,
       "name": "Panel",
       "primitive": "Frame",
@@ -22267,7 +22417,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "node-8",
+                    "id": "node-3",
                     "isDefinition": false,
                     "name": "Text",
                     "primitive": "text",
@@ -22292,7 +22442,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "node-9",
+                    "id": "node-4",
                     "isDefinition": false,
                     "name": "Icon",
                     "primitive": "icon",
@@ -22348,7 +22498,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 10 1`] = `
                   },
                 ],
                 "events": [],
-                "id": "node-7",
+                "id": "node-2",
                 "isDefinition": false,
                 "layoutType": "flex",
                 "name": "Frame",
@@ -23672,7 +23822,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
         {
           "children": [],
           "events": [],
-          "id": "node-4",
+          "id": "node-2",
           "isDefinition": false,
           "name": "Icon",
           "primitive": "icon",
@@ -23729,7 +23879,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
         {
           "children": [],
           "events": [],
-          "id": "node-5",
+          "id": "node-3",
           "isDefinition": false,
           "name": "Text",
           "primitive": "text",
@@ -23756,7 +23906,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
           "name": "click",
         },
       ],
-      "id": "node-3",
+      "id": "node-1",
       "isDefinition": false,
       "layoutType": "flex",
       "name": "LikeBtn",
@@ -23770,7 +23920,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
               {
                 "children": [],
                 "events": [],
-                "id": "node-4",
+                "id": "node-2",
                 "isDefinition": false,
                 "name": "Icon",
                 "primitive": "icon",
@@ -23827,7 +23977,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
               {
                 "children": [],
                 "events": [],
-                "id": "node-5",
+                "id": "node-3",
                 "isDefinition": false,
                 "name": "Text",
                 "primitive": "text",
@@ -23930,7 +24080,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
         "transitions": [
           {
             "modifier": "toggle",
-            "to": "hover",
+            "to": "on",
             "trigger": "onclick",
           },
         ],
@@ -24018,7 +24168,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
         {
           "children": [],
           "events": [],
-          "id": "node-3",
+          "id": "node-2",
           "isDefinition": false,
           "name": "Frame",
           "primitive": "frame",
@@ -24081,7 +24231,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
           "name": "click",
         },
       ],
-      "id": "node-2",
+      "id": "node-1",
       "isDefinition": false,
       "name": "Toggle",
       "primitive": "Frame",
@@ -24094,7 +24244,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
               {
                 "children": [],
                 "events": [],
-                "id": "node-3",
+                "id": "node-2",
                 "isDefinition": false,
                 "name": "Frame",
                 "primitive": "frame",
@@ -24264,7 +24414,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
               "name": "click",
             },
           ],
-          "id": "node-3",
+          "id": "node-2",
           "instanceName": "Btn",
           "isDefinition": false,
           "name": "Button",
@@ -24288,7 +24438,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "state-child-1",
+                    "id": "state-child-0",
                     "name": "Text",
                     "primitive": "text",
                     "properties": [
@@ -24315,6 +24465,10 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
             ],
           },
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -24355,7 +24509,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-5",
+              "id": "node-4",
               "isDefinition": true,
               "name": "Btn",
               "primitive": "btn",
@@ -24387,7 +24541,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-6",
+              "id": "node-5",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -24407,7 +24561,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
             },
           ],
           "events": [],
-          "id": "node-4",
+          "id": "node-3",
           "isDefinition": false,
           "name": "Frame",
           "primitive": "frame",
@@ -24557,6 +24711,10 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
             ],
           },
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -24962,7 +25120,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
         {
           "children": [],
           "events": [],
-          "id": "node-4",
+          "id": "node-2",
           "isDefinition": false,
           "name": "Icon",
           "primitive": "icon",
@@ -25015,7 +25173,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
         {
           "children": [],
           "events": [],
-          "id": "node-5",
+          "id": "node-3",
           "isDefinition": false,
           "name": "Text",
           "primitive": "text",
@@ -25042,7 +25200,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
           "name": "click",
         },
       ],
-      "id": "node-3",
+      "id": "node-1",
       "isDefinition": false,
       "layoutType": "flex",
       "name": "SaveBtn",
@@ -25056,7 +25214,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
               {
                 "children": [],
                 "events": [],
-                "id": "node-4",
+                "id": "node-2",
                 "isDefinition": false,
                 "name": "Icon",
                 "primitive": "icon",
@@ -25109,7 +25267,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
               {
                 "children": [],
                 "events": [],
-                "id": "node-5",
+                "id": "node-3",
                 "isDefinition": false,
                 "name": "Text",
                 "primitive": "text",
@@ -25208,7 +25366,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
         "transitions": [
           {
             "modifier": "toggle",
-            "to": "hover",
+            "to": "saved",
             "trigger": "onclick",
           },
         ],
@@ -25340,6 +25498,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
       },
       "styles": [
         {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
           "property": "height",
           "value": "36px",
         },
@@ -25416,6 +25578,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
           ],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -25479,6 +25645,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
             },
           ],
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -25544,6 +25714,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
           ],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -25607,6 +25781,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
             },
           ],
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -25798,6 +25976,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "height",
                       "value": "36px",
                     },
@@ -25860,6 +26042,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
                     },
                   ],
                   "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
                     {
                       "property": "height",
                       "value": "36px",
@@ -25925,6 +26111,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "height",
                       "value": "36px",
                     },
@@ -25987,6 +26177,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
                     },
                   ],
                   "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
                     {
                       "property": "height",
                       "value": "36px",
@@ -26169,6 +26363,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
           ],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -26288,6 +26486,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
             },
           ],
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -26653,6 +26855,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "height",
                       "value": "36px",
                     },
@@ -26768,6 +26974,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
                     },
                   ],
                   "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
                     {
                       "property": "height",
                       "value": "36px",
@@ -27121,6 +27331,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -27282,6 +27496,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
           ],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -27371,6 +27589,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -27538,6 +27760,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -27598,6 +27824,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -27784,16 +28014,16 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
               "property": "align-items",
               "value": "flex-start",
             },
             {
               "property": "gap",
               "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
             },
             {
               "property": "height",
@@ -27911,6 +28141,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
             },
           ],
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -28160,6 +28394,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
           ],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -28258,7 +28496,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-4",
+              "id": "node-3",
               "isDefinition": false,
               "name": "Icon",
               "primitive": "icon",
@@ -28315,7 +28553,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
             {
               "children": [],
               "events": [],
-              "id": "node-5",
+              "id": "node-4",
               "isDefinition": false,
               "name": "Text",
               "primitive": "text",
@@ -28359,7 +28597,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
               "name": "click",
             },
           ],
-          "id": "node-3",
+          "id": "node-2",
           "instanceName": "LikeBtn",
           "isDefinition": false,
           "layoutType": "flex",
@@ -28383,7 +28621,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "node-4",
+                    "id": "node-3",
                     "isDefinition": false,
                     "name": "Icon",
                     "primitive": "icon",
@@ -28440,7 +28678,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "node-5",
+                    "id": "node-4",
                     "isDefinition": false,
                     "name": "Text",
                     "primitive": "text",
@@ -28463,7 +28701,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
                   {
                     "children": [],
                     "events": [],
-                    "id": "state-child-1",
+                    "id": "state-child-0",
                     "name": "Icon",
                     "primitive": "icon",
                     "properties": [
@@ -28525,16 +28763,16 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
               "value": "row",
             },
             {
-              "property": "width",
-              "value": "fit-content",
-            },
-            {
               "property": "align-items",
               "value": "flex-start",
             },
             {
               "property": "gap",
               "value": "8px",
+            },
+            {
+              "property": "width",
+              "value": "fit-content",
             },
             {
               "property": "height",
@@ -28756,6 +28994,18 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "100%",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "min-width",
+                  "value": "0",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -28786,18 +29036,6 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
                 {
                   "property": "color",
                   "value": "white",
-                },
-                {
-                  "property": "width",
-                  "value": "100%",
-                },
-                {
-                  "property": "align-self",
-                  "value": "stretch",
-                },
-                {
-                  "property": "min-width",
-                  "value": "0",
                 },
                 {
                   "property": "background",
@@ -30769,6 +31007,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
             ],
             "styles": [
               {
+                "property": "width",
+                "value": "fit-content",
+              },
+              {
                 "property": "height",
                 "value": "36px",
               },
@@ -30945,6 +31187,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
             },
           ],
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -31296,6 +31542,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
               },
             ],
             "styles": [
+              {
+                "property": "width",
+                "value": "fit-content",
+              },
               {
                 "property": "height",
                 "value": "36px",
@@ -31915,6 +32165,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
       ],
       "styles": [
         {
+          "property": "width",
+          "value": "fit-content",
+        },
+        {
           "property": "height",
           "value": "36px",
         },
@@ -32230,6 +32484,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
         },
       ],
       "styles": [
+        {
+          "property": "width",
+          "value": "fit-content",
+        },
         {
           "property": "height",
           "value": "36px",
@@ -32895,6 +33153,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 27 1`] = `
             },
           ],
           "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
             {
               "property": "height",
               "value": "36px",
@@ -36302,6 +36564,10 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
           ],
           "styles": [
             {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
               "property": "height",
               "value": "36px",
             },
@@ -38767,6 +39033,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -39125,6 +39395,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 2 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -39351,6 +39625,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 3 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -39690,6 +39968,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                           ],
                           "styles": [
                             {
+                              "property": "width",
+                              "value": "fit-content",
+                            },
+                            {
                               "property": "height",
                               "value": "36px",
                             },
@@ -39761,6 +40043,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                         },
                       ],
                       "styles": [
+                        {
+                          "property": "width",
+                          "value": "fit-content",
+                        },
                         {
                           "property": "height",
                           "value": "36px",
@@ -39925,6 +40211,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -40191,7 +40481,12 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                               "value": "Project Name",
                             },
                           ],
-                          "styles": [],
+                          "styles": [
+                            {
+                              "property": "width",
+                              "value": "fit-content",
+                            },
+                          ],
                           "tag": "label",
                         },
                         {
@@ -40286,7 +40581,12 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                               "value": "Description",
                             },
                           ],
-                          "styles": [],
+                          "styles": [
+                            {
+                              "property": "width",
+                              "value": "fit-content",
+                            },
+                          ],
                           "tag": "label",
                         },
                         {
@@ -40417,6 +40717,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                           ],
                           "styles": [
                             {
+                              "property": "width",
+                              "value": "fit-content",
+                            },
+                            {
                               "property": "height",
                               "value": "36px",
                             },
@@ -40488,6 +40792,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                         },
                       ],
                       "styles": [
+                        {
+                          "property": "width",
+                          "value": "fit-content",
+                        },
                         {
                           "property": "height",
                           "value": "36px",
@@ -40653,6 +40961,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
               ],
               "styles": [
                 {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
                   "property": "height",
                   "value": "36px",
                 },
@@ -40803,6 +41115,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
                 },
               ],
               "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
                 {
                   "property": "height",
                   "value": "36px",
@@ -45979,6 +46295,10 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                   ],
                   "styles": [
                     {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
                       "property": "color",
                       "value": "#888",
                     },
@@ -46150,6 +46470,10 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                     },
                   ],
                   "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
                     {
                       "property": "color",
                       "value": "#888",
