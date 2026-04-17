@@ -5,7 +5,14 @@
  */
 
 import { state, actions, executor, events } from '../core'
-import { WrapNodesCommand, UnwrapNodeCommand, DeleteNodeCommand } from '../core/commands'
+import {
+  WrapNodesCommand,
+  UnwrapNodeCommand,
+  DeleteNodeCommand,
+  SetPropertyCommand,
+  RemovePropertyCommand,
+  BatchCommand,
+} from '../core/commands'
 
 export interface ActionResult {
   success: boolean
@@ -261,4 +268,63 @@ export function canUngroup(): boolean {
 
   const children = sourceMap.getChildren(selection.nodeId)
   return children.length > 0
+}
+
+/**
+ * Set layout direction for selected element
+ *
+ * @param direction - 'horizontal' or 'vertical'
+ * @returns ActionResult with success/failure info
+ */
+export function executeSetLayoutDirection(direction: 'horizontal' | 'vertical'): ActionResult {
+  const selection = state.get().selection
+  if (!selection?.nodeId) {
+    return { success: false, error: 'No element selected' }
+  }
+
+  const sourceMap = state.get().sourceMap
+  if (!sourceMap) {
+    return { success: false, error: 'No source map available' }
+  }
+
+  const node = sourceMap.getNodeById(selection.nodeId)
+  if (!node) {
+    return { success: false, error: 'Selected node not found' }
+  }
+
+  // Layout mode properties to remove
+  const layoutProps = ['hor', 'horizontal', 'ver', 'vertical', 'grid', 'stacked']
+  const propToAdd = direction === 'horizontal' ? 'hor' : 'ver'
+
+  // Build batch of commands: remove all layout props, then add the new one
+  const commands: (SetPropertyCommand | RemovePropertyCommand)[] = []
+
+  // Remove existing layout properties
+  for (const prop of layoutProps) {
+    commands.push(
+      new RemovePropertyCommand({
+        nodeId: selection.nodeId,
+        property: prop,
+      })
+    )
+  }
+
+  // Add the new direction property (empty value = standalone flag)
+  commands.push(
+    new SetPropertyCommand({
+      nodeId: selection.nodeId,
+      property: propToAdd,
+      value: '',
+    })
+  )
+
+  // Execute as batch
+  const result = executor.execute(new BatchCommand({ commands }))
+
+  if (result.success) {
+    const label = direction === 'horizontal' ? 'Horizontal' : 'Vertical'
+    return { success: true, message: `Layout: ${label}` }
+  }
+
+  return { success: false, error: result.error || 'Failed to set layout direction' }
 }

@@ -2,6 +2,8 @@
  * KeyboardHandler - Keyboard shortcuts for preview interactions
  *
  * Shortcuts:
+ * - H: Set horizontal layout
+ * - V: Set vertical layout
  * - Cmd/Ctrl+G: Group selected elements (wrap in Box)
  * - Shift+Cmd/Ctrl+G: Ungroup selected element (unwrap container)
  * - Cmd/Ctrl+D: Duplicate selected element
@@ -12,7 +14,13 @@
  */
 
 import { state, actions, events, getLayoutService } from '../core'
-import { executeGroup, executeUngroup, executeDuplicate, executeDelete } from './shared-actions'
+import {
+  executeGroup,
+  executeUngroup,
+  executeDuplicate,
+  executeDelete,
+  executeSetLayoutDirection,
+} from './shared-actions'
 import { SetPositionCommand } from '../core/commands'
 import type { CommandContext } from '../core/commands'
 import { isAbsoluteLayoutContainer } from '../../compiler/studio/utils/layout-detection'
@@ -82,6 +90,26 @@ export class KeyboardHandler {
       e.preventDefault()
       this.handleDelete()
       return
+    }
+
+    // H = Set horizontal layout (no modifiers)
+    if (e.key === 'h' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const nodeId = state.get().selection?.nodeId
+      if (nodeId) {
+        e.preventDefault()
+        this.handleSetLayoutDirection('horizontal')
+        return
+      }
+    }
+
+    // V = Set vertical layout (no modifiers)
+    if (e.key === 'v' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const nodeId = state.get().selection?.nodeId
+      if (nodeId) {
+        e.preventDefault()
+        this.handleSetLayoutDirection('vertical')
+        return
+      }
     }
 
     // Arrow keys = Move selected element (if in absolute container)
@@ -381,6 +409,16 @@ export class KeyboardHandler {
 
     if (result.success) {
       events.emit('notification:success', { message: result.message! })
+    } else {
+      events.emit('notification:warning', { message: result.error! })
+    }
+  }
+
+  private handleSetLayoutDirection(direction: 'horizontal' | 'vertical'): void {
+    const result = executeSetLayoutDirection(direction)
+
+    if (result.success) {
+      events.emit('notification:success', { message: result.message!, duration: 1500 })
     } else {
       events.emit('notification:warning', { message: result.error! })
     }
