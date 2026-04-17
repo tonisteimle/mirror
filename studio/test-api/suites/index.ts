@@ -345,6 +345,20 @@ import {
   complexScenarioTests,
 } from './sync-tests'
 
+// Property Robustness (various property formats)
+import {
+  allPropertyRobustnessTests,
+  commaFormatTests,
+  autoSeparationTests,
+  multiValueTests,
+  aliasTests,
+  orderTests,
+  mixedFormatTests,
+  edgeCaseTests as propertyEdgeCaseTests,
+  sequentialModTests,
+  previewSyncTests,
+} from './property-robustness-tests'
+
 // =============================================================================
 // Direct Imports (not yet migrated to directories)
 // =============================================================================
@@ -689,6 +703,20 @@ export {
   complexScenarioTests,
 }
 
+// Property Robustness Tests
+export {
+  allPropertyRobustnessTests,
+  commaFormatTests,
+  autoSeparationTests,
+  multiValueTests,
+  aliasTests,
+  orderTests,
+  mixedFormatTests,
+  propertyEdgeCaseTests,
+  sequentialModTests,
+  previewSyncTests,
+}
+
 // Layout Verification Tests (visual/position-based)
 export {
   allLayoutVerificationTests,
@@ -742,6 +770,7 @@ export const allTests: TestCase[] = [
   ...allEventTests,
   ...allResponsiveTests,
   ...allSyncTests,
+  ...allPropertyRobustnessTests,
   ...allStressTests,
   ...allProjectTests,
 ]
@@ -789,6 +818,7 @@ export const testCounts = {
   events: allEventTests.length,
   responsive: allResponsiveTests.length,
   sync: allSyncTests.length,
+  propertyRobustness: allPropertyRobustnessTests.length,
   stress: allStressTests.length,
   project: allProjectTests.length,
   total:
@@ -818,6 +848,7 @@ export const testCounts = {
     allEventTests.length +
     allResponsiveTests.length +
     allSyncTests.length +
+    allPropertyRobustnessTests.length +
     allStressTests.length +
     allProjectTests.length,
 }
@@ -877,6 +908,7 @@ export type TestCategory =
   | 'events'
   | 'responsive'
   | 'sync'
+  | 'propertyRobustness'
   | 'stress'
   | 'project'
 
@@ -912,6 +944,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     events: allEventTests,
     responsive: allResponsiveTests,
     sync: allSyncTests,
+    propertyRobustness: allPropertyRobustnessTests,
     stress: allStressTests,
     project: allProjectTests,
   }
@@ -942,6 +975,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     events: 'Events',
     responsive: 'Responsive',
     sync: 'Sync',
+    propertyRobustness: 'Property Robustness',
     stress: 'Stress Tests',
     project: 'Multi-File Project',
   }
@@ -979,6 +1013,7 @@ export function printTestSummary(): void {
   console.log(`   Events:             ${testCounts.events} tests`)
   console.log(`   Responsive:         ${testCounts.responsive} tests`)
   console.log(`   Sync:               ${testCounts.sync} tests`)
+  console.log(`   Property Robust:    ${testCounts.propertyRobustness} tests`)
   console.log(`   Stress:             ${testCounts.stress} tests`)
   console.log(`   Project:            ${testCounts.project} tests`)
   console.log(`   ──────────────────────────`)
