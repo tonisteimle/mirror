@@ -32,7 +32,7 @@ export interface ComponentDragData {
   properties?: string
   textContent?: string
   fromComponentPanel?: boolean
-  children?: string
+  children?: unknown[] // ComponentChild[] from component panel
   mirTemplate?: string
   dataBlock?: { name: string; content: string }
 }

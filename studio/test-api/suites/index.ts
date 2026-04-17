@@ -360,6 +360,17 @@ import {
   complexScenarioTests,
 } from './sync-tests'
 
+// Play Mode
+import {
+  allPlayModeTests,
+  playModeActivationTests,
+  playModeVisualTests,
+  playModeResetTests,
+  playModeDeviceTests,
+  playModeIntegrationTests,
+  quickPlayModeTests,
+} from './playmode'
+
 // Property Robustness (various property formats)
 import {
   allPropertyRobustnessTests,
@@ -740,6 +751,17 @@ export {
   complexScenarioTests,
 }
 
+// Play Mode Tests
+export {
+  allPlayModeTests,
+  playModeActivationTests,
+  playModeVisualTests,
+  playModeResetTests,
+  playModeDeviceTests,
+  playModeIntegrationTests,
+  quickPlayModeTests,
+}
+
 // Property Robustness Tests
 export {
   allPropertyRobustnessTests,
@@ -814,6 +836,7 @@ export const allTests: TestCase[] = [
   ...allStressTests,
   ...allProjectTests,
   ...allCompilerVerificationTests,
+  ...allPlayModeTests,
 ]
 
 /**
@@ -827,6 +850,7 @@ export const quickTests: TestCase[] = [
   ...quickAnimationTests,
   ...quickTransformTests,
   ...quickGradientTests,
+  ...quickPlayModeTests,
 ]
 
 /**
@@ -863,6 +887,7 @@ export const testCounts = {
   stress: allStressTests.length,
   project: allProjectTests.length,
   compilerVerification: allCompilerVerificationTests.length,
+  playMode: allPlayModeTests.length,
   total:
     allPrimitivesTests.length +
     allLayoutTests.length +
@@ -893,7 +918,8 @@ export const testCounts = {
     allPropertyRobustnessTests.length +
     allStressTests.length +
     allProjectTests.length +
-    allCompilerVerificationTests.length,
+    allCompilerVerificationTests.length +
+    allPlayModeTests.length,
 }
 
 // =============================================================================
@@ -956,6 +982,7 @@ export type TestCategory =
   | 'project'
   | 'compilerVerification'
   | 'uiBuilder'
+  | 'playMode'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -994,6 +1021,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     project: allProjectTests,
     compilerVerification: allCompilerVerificationTests,
     uiBuilder: allUIBuilderTests,
+    playMode: allPlayModeTests,
   }
 
   const names: Record<TestCategory, string> = {
@@ -1027,6 +1055,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     project: 'Multi-File Project',
     compilerVerification: 'Compiler Verification',
     uiBuilder: 'UI Builder',
+    playMode: 'Play Mode',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
@@ -1066,6 +1095,7 @@ export function printTestSummary(): void {
   console.log(`   Stress:             ${testCounts.stress} tests`)
   console.log(`   Project:            ${testCounts.project} tests`)
   console.log(`   Compiler Verify:    ${testCounts.compilerVerification} tests`)
+  console.log(`   Play Mode:          ${testCounts.playMode} tests`)
   console.log(`   ──────────────────────────`)
   console.log(`   Total:              ${testCounts.total} tests`)
   console.log('')

@@ -527,8 +527,12 @@ function emitValueAction(ctx: EventEmitterContext, fnName: string, action: IRAct
         for (let i = 1; i < action.args.length; i++) {
           const arg = action.args[i]
           if (arg.includes(':')) {
+            // Handle key:value format like step:5, min:0, max:100
             const [key, val] = arg.split(':')
             opts.push(`${key}: ${val}`)
+          } else if (!isNaN(Number(arg))) {
+            // Handle plain number as step value: increment(count, 5)
+            opts.push(`step: ${arg}`)
           }
         }
       }

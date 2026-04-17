@@ -19,6 +19,13 @@ const STYLE_PROPERTIES: (keyof ComputedStyles)[] = [
   'justifyContent',
   'alignItems',
   'gap',
+  // Positioning
+  'position',
+  'left',
+  'top',
+  'right',
+  'bottom',
+  'zIndex',
   // Size
   'width',
   'height',
@@ -39,11 +46,22 @@ const STYLE_PROPERTIES: (keyof ComputedStyles)[] = [
   'marginLeft',
   // Colors
   'backgroundColor',
+  'background',
+  'backgroundImage',
   'color',
   'borderColor',
   // Border
   'borderWidth',
+  'borderTopWidth',
+  'borderRightWidth',
+  'borderBottomWidth',
+  'borderLeftWidth',
   'borderRadius',
+  'borderTopLeftRadius',
+  'borderTopRightRadius',
+  'borderBottomRightRadius',
+  'borderBottomLeftRadius',
+  'borderStyle',
   // Typography
   'fontSize',
   'fontWeight',
@@ -52,10 +70,22 @@ const STYLE_PROPERTIES: (keyof ComputedStyles)[] = [
   'textAlign',
   'textDecoration',
   'textTransform',
+  // Flex
+  'flex',
+  'flexGrow',
+  'flexShrink',
   // Effects
   'opacity',
   'boxShadow',
   'transform',
+  'filter',
+  'backdropFilter',
+  'transition',
+  'animation',
+  // Text overflow
+  'textOverflow',
+  'whiteSpace',
+  'lineHeight',
   // Visibility
   'visibility',
   'overflow',
@@ -369,4 +399,49 @@ export function parseSize(size: string): number {
  */
 export function colorsMatch(color1: string, color2: string): boolean {
   return normalizeColor(color1) === normalizeColor(color2)
+}
+
+/**
+ * Parse rgb/rgba color string to components
+ */
+function parseRgbColor(color: string): { r: number; g: number; b: number; a: number } | null {
+  const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
+  if (rgbMatch) {
+    return {
+      r: parseInt(rgbMatch[1], 10),
+      g: parseInt(rgbMatch[2], 10),
+      b: parseInt(rgbMatch[3], 10),
+      a: rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1,
+    }
+  }
+  return null
+}
+
+/**
+ * Compare two colors with tolerance for minor rendering differences
+ * Useful for hover states where browser rounding can cause slight variations
+ */
+export function colorsMatchWithTolerance(
+  color1: string,
+  color2: string,
+  tolerance: number = 5
+): boolean {
+  // First try exact match
+  const normalized1 = normalizeColor(color1)
+  const normalized2 = normalizeColor(color2)
+  if (normalized1 === normalized2) return true
+
+  // Parse both colors
+  const parsed1 = parseRgbColor(normalized1)
+  const parsed2 = parseRgbColor(normalized2)
+
+  if (!parsed1 || !parsed2) return false
+
+  // Check if within tolerance
+  return (
+    Math.abs(parsed1.r - parsed2.r) <= tolerance &&
+    Math.abs(parsed1.g - parsed2.g) <= tolerance &&
+    Math.abs(parsed1.b - parsed2.b) <= tolerance &&
+    Math.abs(parsed1.a - parsed2.a) <= 0.1
+  )
 }

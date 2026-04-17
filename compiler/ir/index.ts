@@ -282,6 +282,7 @@ class IRTransformer {
   private tokenSet: Set<string> = new Set()
   private propertySetMap: Map<string, Property[]> = new Map() // Property sets (tokens with multiple properties)
   private nodeIdCounter = 0
+  private stateChildCounter = 0 // Separate counter for state children to avoid shifting main node IDs
   private includeSourceMap: boolean
   private sourceMapBuilder: SourceMapBuilder
   private warnings: IRWarning[] = []
@@ -669,9 +670,10 @@ class IRTransformer {
             slots[extracted.name] = {
               ...extracted.slot,
               properties: mergeProperties(existingSlot.properties, extracted.slot.properties),
-              children: extracted.slot.children.length > 0
-                ? extracted.slot.children
-                : existingSlot.children,
+              children:
+                extracted.slot.children.length > 0
+                  ? extracted.slot.children
+                  : existingSlot.children,
             }
           } else {
             slots[extracted.name] = extracted.slot
@@ -1844,7 +1846,7 @@ class IRTransformer {
    */
   private transformStateChild(instance: Instance): IRNode | null {
     const ctx: StateChildContext = {
-      generateNodeId: () => `state-child-${this.nodeIdCounter++}`,
+      generateNodeId: () => `state-child-${this.stateChildCounter++}`,
       transformProperties: (props, prim) => this.transformProperties(props, prim),
     }
     return transformStateChildExtracted(instance, ctx)

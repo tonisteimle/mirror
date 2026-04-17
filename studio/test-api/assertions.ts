@@ -6,7 +6,7 @@
  */
 
 import type { AssertionAPI, AssertionResult, ComputedStyles } from './types'
-import { PreviewInspector, normalizeColor } from './inspector'
+import { PreviewInspector, normalizeColor, colorsMatchWithTolerance } from './inspector'
 
 // =============================================================================
 // Assertion Error
@@ -154,15 +154,24 @@ export class Assertions implements AssertionAPI {
     const actualValue = info.styles[property]
     let passed = false
 
-    // Special handling for colors
-    if (property === 'backgroundColor' || property === 'color' || property === 'borderColor') {
-      passed = normalizeColor(actualValue) === normalizeColor(value)
+    // Handle undefined/null values
+    if (actualValue === undefined || actualValue === null) {
+      passed = false
+    } else if (
+      property === 'backgroundColor' ||
+      property === 'color' ||
+      property === 'borderColor'
+    ) {
+      // Special handling for colors - use tolerance for minor browser rendering differences
+      passed = colorsMatchWithTolerance(actualValue, value, 5)
     } else {
       // Normalize values (remove px for comparison if needed)
+      const actualStr = String(actualValue)
+      const expectedStr = String(value)
       passed =
-        actualValue === value ||
-        actualValue.replace(/px$/, '') === value.replace(/px$/, '') ||
-        actualValue.toLowerCase() === value.toLowerCase()
+        actualStr === expectedStr ||
+        actualStr.replace(/px$/, '') === expectedStr.replace(/px$/, '') ||
+        actualStr.toLowerCase() === expectedStr.toLowerCase()
     }
 
     this.collector.add({

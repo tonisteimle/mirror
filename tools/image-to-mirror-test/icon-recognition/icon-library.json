@@ -1,0 +1,762 @@
+[
+  {
+    "name": "chevron-up",
+    "inkDensity": 0.45054945054945056,
+    "aspectRatio": 1.8571428571428572,
+    "centerOfMassX": 0.4807692307692308,
+    "centerOfMassY": 0.48170731707317077,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 0.17142857142857143,
+    "edgeRatio": 0.25609756097560976
+  },
+  {
+    "name": "chevron-down",
+    "inkDensity": 0.45054945054945056,
+    "aspectRatio": 1.8571428571428572,
+    "centerOfMassX": 0.4807692307692308,
+    "centerOfMassY": 0.44686411149825783,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 0.17142857142857143,
+    "edgeRatio": 0.25609756097560976
+  },
+  {
+    "name": "arrow-left",
+    "inkDensity": 0.31354166666666666,
+    "aspectRatio": 1.0666666666666667,
+    "centerOfMassX": 0.3753114617940199,
+    "centerOfMassY": 0.4819490586932448,
+    "horizontalSymmetry": 0.33185840707964603,
+    "verticalSymmetry": 0.9933774834437086,
+    "edgeRatio": 0.3388704318936877
+  },
+  {
+    "name": "arrow-right",
+    "inkDensity": 0.31354166666666666,
+    "aspectRatio": 1.0666666666666667,
+    "centerOfMassX": 0.59343853820598,
+    "centerOfMassY": 0.4847176079734219,
+    "horizontalSymmetry": 0.33185840707964603,
+    "verticalSymmetry": 0.9933774834437086,
+    "edgeRatio": 0.3388704318936877
+  },
+  {
+    "name": "arrow-up",
+    "inkDensity": 0.31354166666666666,
+    "aspectRatio": 0.9375,
+    "centerOfMassX": 0.4847176079734219,
+    "centerOfMassY": 0.3753114617940199,
+    "horizontalSymmetry": 0.9933774834437086,
+    "verticalSymmetry": 0.33185840707964603,
+    "edgeRatio": 0.3388704318936877
+  },
+  {
+    "name": "arrow-down",
+    "inkDensity": 0.31354166666666666,
+    "aspectRatio": 0.9375,
+    "centerOfMassX": 0.4819490586932448,
+    "centerOfMassY": 0.59343853820598,
+    "horizontalSymmetry": 0.9933774834437086,
+    "verticalSymmetry": 0.33185840707964603,
+    "edgeRatio": 0.3388704318936877
+  },
+  {
+    "name": "check",
+    "inkDensity": 0.27328431372549017,
+    "aspectRatio": 1.4166666666666667,
+    "centerOfMassX": 0.48390925877077295,
+    "centerOfMassY": 0.5446562032884903,
+    "horizontalSymmetry": 0.05687203791469194,
+    "verticalSymmetry": 0.07211538461538461,
+    "edgeRatio": 0.273542600896861
+  },
+  {
+    "name": "plus",
+    "inkDensity": 0.2265625,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.484375,
+    "centerOfMassY": 0.484375,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.4827586206896552
+  },
+  {
+    "name": "search",
+    "inkDensity": 0.27875,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.47752242152466373,
+    "centerOfMassY": 0.47752242152466373,
+    "horizontalSymmetry": 0.22865013774104684,
+    "verticalSymmetry": 0.22865013774104684,
+    "edgeRatio": 0.4147982062780269
+  },
+  {
+    "name": "settings",
+    "inkDensity": 0.4244047619047619,
+    "aspectRatio": 0.9523809523809523,
+    "centerOfMassX": 0.4868513323983169,
+    "centerOfMassY": 0.48821211514058643,
+    "horizontalSymmetry": 0.9427792915531336,
+    "verticalSymmetry": 0.9427792915531336,
+    "edgeRatio": 0.40392706872370265
+  },
+  {
+    "name": "edit",
+    "inkDensity": 0.45975056689342403,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4813575245141213,
+    "centerOfMassY": 0.49489166813457813,
+    "horizontalSymmetry": 0.3630252100840336,
+    "verticalSymmetry": 0.36073825503355705,
+    "edgeRatio": 0.32922318125770655
+  },
+  {
+    "name": "trash",
+    "inkDensity": 0.3386363636363636,
+    "aspectRatio": 0.9090909090909091,
+    "centerOfMassX": 0.4875,
+    "centerOfMassY": 0.4685021354484442,
+    "horizontalSymmetry": 0.9866666666666667,
+    "verticalSymmetry": 0.4258373205741627,
+    "edgeRatio": 0.40604026845637586
+  },
+  {
+    "name": "copy",
+    "inkDensity": 0.34607438016528924,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.474898236092266,
+    "centerOfMassY": 0.475,
+    "horizontalSymmetry": 0.3188976377952756,
+    "verticalSymmetry": 0.3188976377952756,
+    "edgeRatio": 0.35074626865671643
+  },
+  {
+    "name": "save",
+    "inkDensity": 0.516875,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4683796856106409,
+    "centerOfMassY": 0.5023881499395405,
+    "horizontalSymmetry": 0.7746781115879828,
+    "verticalSymmetry": 0.5009074410163339,
+    "edgeRatio": 0.32769044740024184
+  },
+  {
+    "name": "download",
+    "inkDensity": 0.29625,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.48781645569620247,
+    "centerOfMassY": 0.6416666666666667,
+    "horizontalSymmetry": 0.9832635983263598,
+    "verticalSymmetry": 0.17326732673267325,
+    "edgeRatio": 0.32489451476793246
+  },
+  {
+    "name": "upload",
+    "inkDensity": 0.29625,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4875,
+    "centerOfMassY": 0.564029535864979,
+    "horizontalSymmetry": 0.9832635983263598,
+    "verticalSymmetry": 0.13942307692307693,
+    "edgeRatio": 0.3206751054852321
+  },
+  {
+    "name": "refresh-cw",
+    "inkDensity": 0.37,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4875,
+    "centerOfMassY": 0.4875,
+    "horizontalSymmetry": 0.517948717948718,
+    "verticalSymmetry": 0.517948717948718,
+    "edgeRatio": 0.33783783783783783
+  },
+  {
+    "name": "external-link",
+    "inkDensity": 0.358125,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.48446771378708553,
+    "centerOfMassY": 0.49066317626527056,
+    "horizontalSymmetry": 0.22698072805139186,
+    "verticalSymmetry": 0.22698072805139186,
+    "edgeRatio": 0.3333333333333333
+  },
+  {
+    "name": "user",
+    "inkDensity": 0.3189102564102564,
+    "aspectRatio": 0.8205128205128205,
+    "centerOfMassX": 0.4838253768844221,
+    "centerOfMassY": 0.48969204999355753,
+    "horizontalSymmetry": 0.9800995024875622,
+    "verticalSymmetry": 0.1168091168091168,
+    "edgeRatio": 0.40954773869346733
+  },
+  {
+    "name": "users",
+    "inkDensity": 0.3344988344988345,
+    "aspectRatio": 1.1282051282051282,
+    "centerOfMassX": 0.4919623059866962,
+    "centerOfMassY": 0.4810149200393103,
+    "horizontalSymmetry": 0.585635359116022,
+    "verticalSymmetry": 0.15040650406504066,
+    "edgeRatio": 0.4250871080139373
+  },
+  {
+    "name": "log-in",
+    "inkDensity": 0.29625,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.6416666666666667,
+    "centerOfMassY": 0.4871835443037975,
+    "horizontalSymmetry": 0.17326732673267325,
+    "verticalSymmetry": 0.9832635983263598,
+    "edgeRatio": 0.32489451476793246
+  },
+  {
+    "name": "log-out",
+    "inkDensity": 0.29625,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4109704641350211,
+    "centerOfMassY": 0.4875,
+    "horizontalSymmetry": 0.13942307692307693,
+    "verticalSymmetry": 0.9832635983263598,
+    "edgeRatio": 0.3206751054852321
+  },
+  {
+    "name": "lock",
+    "inkDensity": 0.35113636363636364,
+    "aspectRatio": 0.9090909090909091,
+    "centerOfMassX": 0.48697411003236246,
+    "centerOfMassY": 0.5392394822006472,
+    "horizontalSymmetry": 0.9871382636655949,
+    "verticalSymmetry": 0.12979890310786105,
+    "edgeRatio": 0.35436893203883496
+  },
+  {
+    "name": "unlock",
+    "inkDensity": 0.33579545454545456,
+    "aspectRatio": 0.9090909090909091,
+    "centerOfMassX": 0.4762267343485617,
+    "centerOfMassY": 0.5498384863867097,
+    "horizontalSymmetry": 0.9003215434083601,
+    "verticalSymmetry": 0.1343570057581574,
+    "edgeRatio": 0.3587140439932318
+  },
+  {
+    "name": "key",
+    "inkDensity": 0.26688815060908083,
+    "aspectRatio": 1.0238095238095237,
+    "centerOfMassX": 0.49522339090996814,
+    "centerOfMassY": 0.5142758348152539,
+    "horizontalSymmetry": 0.11455847255369929,
+    "verticalSymmetry": 0.07589285714285714,
+    "edgeRatio": 0.36721991701244816
+  },
+  {
+    "name": "mail",
+    "inkDensity": 0.4621212121212121,
+    "aspectRatio": 1.2222222222222223,
+    "centerOfMassX": 0.48754967709885744,
+    "centerOfMassY": 0.4650121432908318,
+    "horizontalSymmetry": 0.9783783783783784,
+    "verticalSymmetry": 0.6750572082379863,
+    "edgeRatio": 0.2855191256830601
+  },
+  {
+    "name": "message-circle",
+    "inkDensity": 0.2944214876033058,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4588118022328549,
+    "centerOfMassY": 0.5167065390749601,
+    "horizontalSymmetry": 0.6764705882352942,
+    "verticalSymmetry": 0.6715542521994134,
+    "edgeRatio": 0.3701754385964912
+  },
+  {
+    "name": "phone",
+    "inkDensity": 0.29958677685950413,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.44051724137931036,
+    "centerOfMassY": 0.5434952978056427,
+    "horizontalSymmetry": 0.09848484848484848,
+    "verticalSymmetry": 0.09022556390977443,
+    "edgeRatio": 0.3724137931034483
+  },
+  {
+    "name": "bell",
+    "inkDensity": 0.2948863636363636,
+    "aspectRatio": 0.9090909090909091,
+    "centerOfMassX": 0.4848747591522158,
+    "centerOfMassY": 0.48673147661586963,
+    "horizontalSymmetry": 0.9438202247191011,
+    "verticalSymmetry": 0.2536231884057971,
+    "edgeRatio": 0.4123314065510597
+  },
+  {
+    "name": "send",
+    "inkDensity": 0.3218816067653277,
+    "aspectRatio": 1.0232558139534884,
+    "centerOfMassX": 0.572884012539185,
+    "centerOfMassY": 0.4139458509947684,
+    "horizontalSymmetry": 0.17341040462427745,
+    "verticalSymmetry": 0.1693227091633466,
+    "edgeRatio": 0.3727422003284072
+  },
+  {
+    "name": "image",
+    "inkDensity": 0.51,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4815563725490196,
+    "centerOfMassY": 0.4976102941176471,
+    "horizontalSymmetry": 0.5844660194174758,
+    "verticalSymmetry": 0.6824742268041237,
+    "edgeRatio": 0.2818627450980392
+  },
+  {
+    "name": "camera",
+    "inkDensity": 0.43308080808080807,
+    "aspectRatio": 1.2222222222222223,
+    "centerOfMassX": 0.4891664457990989,
+    "centerOfMassY": 0.5307337220602526,
+    "horizontalSymmetry": 0.9826589595375722,
+    "verticalSymmetry": 0.3530571992110454,
+    "edgeRatio": 0.3323615160349854
+  },
+  {
+    "name": "video",
+    "inkDensity": 0.450487012987013,
+    "aspectRatio": 1.5714285714285714,
+    "centerOfMassX": 0.5098689598689599,
+    "centerOfMassY": 0.4831402831402832,
+    "horizontalSymmetry": 0.3875,
+    "verticalSymmetry": 0.9680851063829787,
+    "edgeRatio": 0.3027027027027027
+  },
+  {
+    "name": "music",
+    "inkDensity": 0.3625,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.5573706896551724,
+    "centerOfMassY": 0.5112068965517241,
+    "horizontalSymmetry": 0.20582120582120583,
+    "verticalSymmetry": 0.2719298245614035,
+    "edgeRatio": 0.3724137931034483
+  },
+  {
+    "name": "play",
+    "inkDensity": 0.31666666666666665,
+    "aspectRatio": 0.9,
+    "centerOfMassX": 0.3813352826510721,
+    "centerOfMassY": 0.4800438596491228,
+    "horizontalSymmetry": 0.14285714285714285,
+    "verticalSymmetry": 0.9322033898305084,
+    "edgeRatio": 0.34210526315789475
+  },
+  {
+    "name": "pause",
+    "inkDensity": 0.55625,
+    "aspectRatio": 0.8,
+    "centerOfMassX": 0.484375,
+    "centerOfMassY": 0.4875,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.34269662921348315
+  },
+  {
+    "name": "volume-2",
+    "inkDensity": 0.36493506493506495,
+    "aspectRatio": 1.2571428571428571,
+    "centerOfMassX": 0.4763021675833064,
+    "centerOfMassY": 0.4976105744789019,
+    "horizontalSymmetry": 0.17819706498951782,
+    "verticalSymmetry": 0.82,
+    "edgeRatio": 0.3914590747330961
+  },
+  {
+    "name": "file",
+    "inkDensity": 0.39015151515151514,
+    "aspectRatio": 0.8181818181818182,
+    "centerOfMassX": 0.4959097446961525,
+    "centerOfMassY": 0.47039570461900565,
+    "horizontalSymmetry": 0.5725190839694656,
+    "verticalSymmetry": 0.5725190839694656,
+    "edgeRatio": 0.2750809061488673
+  },
+  {
+    "name": "folder",
+    "inkDensity": 0.33373205741626794,
+    "aspectRatio": 1.1578947368421053,
+    "centerOfMassX": 0.4668051482567611,
+    "centerOfMassY": 0.5189115261271459,
+    "horizontalSymmetry": 0.576271186440678,
+    "verticalSymmetry": 0.44559585492227977,
+    "edgeRatio": 0.3010752688172043
+  },
+  {
+    "name": "file-text",
+    "inkDensity": 0.5037878787878788,
+    "aspectRatio": 0.8181818181818182,
+    "centerOfMassX": 0.4878515733778892,
+    "centerOfMassY": 0.49569947596263386,
+    "horizontalSymmetry": 0.6453608247422681,
+    "verticalSymmetry": 0.4482758620689655,
+    "edgeRatio": 0.3333333333333333
+  },
+  {
+    "name": "clipboard",
+    "inkDensity": 0.39141414141414144,
+    "aspectRatio": 0.8181818181818182,
+    "centerOfMassX": 0.4861111111111111,
+    "centerOfMassY": 0.468108504398827,
+    "horizontalSymmetry": 0.9871794871794872,
+    "verticalSymmetry": 0.4975845410628019,
+    "edgeRatio": 0.29838709677419356
+  },
+  {
+    "name": "check-circle",
+    "inkDensity": 0.3440082644628099,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.5043338793338793,
+    "centerOfMassY": 0.48119710619710615,
+    "horizontalSymmetry": 0.665,
+    "verticalSymmetry": 0.5819477434679335,
+    "edgeRatio": 0.3633633633633634
+  },
+  {
+    "name": "x-circle",
+    "inkDensity": 0.3305785123966942,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.48863636363636365,
+    "centerOfMassY": 0.48863636363636365,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.39375
+  },
+  {
+    "name": "alert-circle",
+    "inkDensity": 0.29132231404958675,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.48863636363636365,
+    "centerOfMassY": 0.48541263700838166,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 0.9315068493150684,
+    "edgeRatio": 0.40425531914893614
+  },
+  {
+    "name": "alert-triangle",
+    "inkDensity": 0.325,
+    "aspectRatio": 1.1,
+    "centerOfMassX": 0.48204068658614113,
+    "centerOfMassY": 0.585402097902098,
+    "horizontalSymmetry": 0.9455782312925171,
+    "verticalSymmetry": 0.144,
+    "edgeRatio": 0.36363636363636365
+  },
+  {
+    "name": "info",
+    "inkDensity": 0.29132231404958675,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.48863636363636365,
+    "centerOfMassY": 0.49186009026434563,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 0.9315068493150684,
+    "edgeRatio": 0.40425531914893614
+  },
+  {
+    "name": "help-circle",
+    "inkDensity": 0.33264462809917356,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4935064935064935,
+    "centerOfMassY": 0.47063805759457933,
+    "horizontalSymmetry": 0.8885630498533724,
+    "verticalSymmetry": 0.75,
+    "edgeRatio": 0.40062111801242234
+  },
+  {
+    "name": "circle",
+    "inkDensity": 0.26239669421487605,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.48863636363636365,
+    "centerOfMassY": 0.48863636363636365,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.3858267716535433
+  },
+  {
+    "name": "square",
+    "inkDensity": 0.3475,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4875,
+    "centerOfMassY": 0.4875,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.2517985611510791
+  },
+  {
+    "name": "heart",
+    "inkDensity": 0.3020334928229665,
+    "aspectRatio": 1.1578947368421053,
+    "centerOfMassX": 0.4896489648964897,
+    "centerOfMassY": 0.41490359562272017,
+    "horizontalSymmetry": 0.9573643410852714,
+    "verticalSymmetry": 0.1297539149888143,
+    "edgeRatio": 0.3405940594059406
+  },
+  {
+    "name": "star",
+    "inkDensity": 0.3116883116883117,
+    "aspectRatio": 1.0476190476190477,
+    "centerOfMassX": 0.4918718434343434,
+    "centerOfMassY": 0.5354662698412698,
+    "horizontalSymmetry": 0.9328859060402684,
+    "verticalSymmetry": 0.20250521920668058,
+    "edgeRatio": 0.3854166666666667
+  },
+  {
+    "name": "flag",
+    "inkDensity": 0.3333333333333333,
+    "aspectRatio": 0.8372093023255814,
+    "centerOfMassX": 0.4382536606373815,
+    "centerOfMassY": 0.41089778258518117,
+    "horizontalSymmetry": 0.4373259052924791,
+    "verticalSymmetry": 0.2512315270935961,
+    "edgeRatio": 0.3313953488372093
+  },
+  {
+    "name": "bookmark",
+    "inkDensity": 0.4015625,
+    "aspectRatio": 0.8,
+    "centerOfMassX": 0.485590953307393,
+    "centerOfMassY": 0.4932392996108949,
+    "horizontalSymmetry": 0.9769230769230769,
+    "verticalSymmetry": 0.5670731707317073,
+    "edgeRatio": 0.28599221789883267
+  },
+  {
+    "name": "calendar",
+    "inkDensity": 0.42045454545454547,
+    "aspectRatio": 0.9090909090909091,
+    "centerOfMassX": 0.4875,
+    "centerOfMassY": 0.47954545454545455,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 0.28027681660899656,
+    "edgeRatio": 0.32972972972972975
+  },
+  {
+    "name": "clock",
+    "inkDensity": 0.3135330578512397,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.49636812939943087,
+    "centerOfMassY": 0.479107383555489,
+    "horizontalSymmetry": 0.8792569659442725,
+    "verticalSymmetry": 0.7748538011695907,
+    "edgeRatio": 0.400329489291598
+  },
+  {
+    "name": "map-pin",
+    "inkDensity": 0.4043927648578811,
+    "aspectRatio": 0.8372093023255814,
+    "centerOfMassX": 0.4899716009939652,
+    "centerOfMassY": 0.4535255219555687,
+    "horizontalSymmetry": 0.95625,
+    "verticalSymmetry": 0.26195426195426197,
+    "edgeRatio": 0.3753993610223642
+  },
+  {
+    "name": "link",
+    "inkDensity": 0.2947845804988662,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4880952380952381,
+    "centerOfMassY": 0.4880952380952381,
+    "horizontalSymmetry": 0.13043478260869565,
+    "verticalSymmetry": 0.13043478260869565,
+    "edgeRatio": 0.36923076923076925
+  },
+  {
+    "name": "eye",
+    "inkDensity": 0.44047619047619047,
+    "aspectRatio": 1.3125,
+    "centerOfMassX": 0.4880952380952381,
+    "centerOfMassY": 0.484375,
+    "horizontalSymmetry": 0.9602649006622517,
+    "verticalSymmetry": 0.9602649006622517,
+    "edgeRatio": 0.36824324324324326
+  },
+  {
+    "name": "eye-off",
+    "inkDensity": 0.33419421487603307,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.47671069270760147,
+    "centerOfMassY": 0.5006322888857665,
+    "horizontalSymmetry": 0.4771689497716895,
+    "verticalSymmetry": 0.4805491990846682,
+    "edgeRatio": 0.40030911901081917
+  },
+  {
+    "name": "list",
+    "inkDensity": 0.3,
+    "aspectRatio": 1.25,
+    "centerOfMassX": 0.55859375,
+    "centerOfMassY": 0.484375,
+    "horizontalSymmetry": 0.6410256410256411,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.3958333333333333
+  },
+  {
+    "name": "sidebar",
+    "inkDensity": 0.4275,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4594298245614035,
+    "centerOfMassY": 0.4875,
+    "horizontalSymmetry": 0.6847290640394089,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.28654970760233917
+  },
+  {
+    "name": "minimize",
+    "inkDensity": 0.22714681440443213,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4868421052631579,
+    "centerOfMassY": 0.4868421052631579,
+    "horizontalSymmetry": 0.9759036144578314,
+    "verticalSymmetry": 0.9759036144578314,
+    "edgeRatio": 0.47560975609756095
+  },
+  {
+    "name": "sun",
+    "inkDensity": 0.22107438016528927,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.48863636363636365,
+    "centerOfMassY": 0.48863636363636365,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.5046728971962616
+  },
+  {
+    "name": "moon",
+    "inkDensity": 0.3192307692307692,
+    "aspectRatio": 1.0256410256410255,
+    "centerOfMassX": 0.44924698795180723,
+    "centerOfMassY": 0.517505921120379,
+    "horizontalSymmetry": 0.3949579831932773,
+    "verticalSymmetry": 0.37283236994219654,
+    "edgeRatio": 0.37349397590361444
+  },
+  {
+    "name": "cloud",
+    "inkDensity": 0.328125,
+    "aspectRatio": 1.375,
+    "centerOfMassX": 0.47102518693427786,
+    "centerOfMassY": 0.5318587662337663,
+    "horizontalSymmetry": 0.32,
+    "verticalSymmetry": 0.38738738738738737,
+    "edgeRatio": 0.3484848484848485
+  },
+  {
+    "name": "zap",
+    "inkDensity": 0.32045454545454544,
+    "aspectRatio": 0.9090909090909091,
+    "centerOfMassX": 0.4875,
+    "centerOfMassY": 0.48863636363636365,
+    "horizontalSymmetry": 0.36231884057971014,
+    "verticalSymmetry": 0.36231884057971014,
+    "edgeRatio": 0.3546099290780142
+  },
+  {
+    "name": "wifi",
+    "inkDensity": 0.29211229946524064,
+    "aspectRatio": 1.2941176470588236,
+    "centerOfMassX": 0.4965154982317454,
+    "centerOfMassY": 0.34398976982097185,
+    "horizontalSymmetry": 0.9166666666666666,
+    "verticalSymmetry": 0.20385674931129477,
+    "edgeRatio": 0.43249427917620137
+  },
+  {
+    "name": "bluetooth",
+    "inkDensity": 0.5357142857142857,
+    "aspectRatio": 0.5238095238095238,
+    "centerOfMassX": 0.5239669421487604,
+    "centerOfMassY": 0.4875420875420875,
+    "horizontalSymmetry": 0.6836734693877551,
+    "verticalSymmetry": 0.9959677419354839,
+    "edgeRatio": 0.27070707070707073
+  },
+  {
+    "name": "battery",
+    "inkDensity": 0.38311688311688313,
+    "aspectRatio": 1.5714285714285714,
+    "centerOfMassX": 0.4485747303543914,
+    "centerOfMassY": 0.48214285714285715,
+    "horizontalSymmetry": 0.43902439024390244,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.3050847457627119
+  },
+  {
+    "name": "cpu",
+    "inkDensity": 0.4669421487603306,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.48863636363636365,
+    "centerOfMassY": 0.48863636363636365,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.4424778761061947
+  },
+  {
+    "name": "database",
+    "inkDensity": 0.4772727272727273,
+    "aspectRatio": 0.9090909090909091,
+    "centerOfMassX": 0.48517857142857146,
+    "centerOfMassY": 0.47299783549783553,
+    "horizontalSymmetry": 0.9534883720930233,
+    "verticalSymmetry": 0.5671641791044776,
+    "edgeRatio": 0.3404761904761905
+  },
+  {
+    "name": "server",
+    "inkDensity": 0.45454545454545453,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.481198347107438,
+    "centerOfMassY": 0.48863636363636365,
+    "horizontalSymmetry": 0.9469026548672567,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.34545454545454546
+  },
+  {
+    "name": "code",
+    "inkDensity": 0.30952380952380953,
+    "aspectRatio": 1.6153846153846154,
+    "centerOfMassX": 0.4880952380952381,
+    "centerOfMassY": 0.4807692307692308,
+    "horizontalSymmetry": 0.9882352941176471,
+    "verticalSymmetry": 0.9882352941176471,
+    "edgeRatio": 0.28402366863905326
+  },
+  {
+    "name": "terminal",
+    "inkDensity": 0.22580645161290322,
+    "aspectRatio": 1.1290322580645162,
+    "centerOfMassX": 0.3418075801749271,
+    "centerOfMassY": 0.567083607636603,
+    "horizontalSymmetry": 0.02553191489361702,
+    "verticalSymmetry": 0.11737089201877934,
+    "edgeRatio": 0.2979591836734694
+  },
+  {
+    "name": "git-branch",
+    "inkDensity": 0.303125,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.41319587628865984,
+    "centerOfMassY": 0.4184536082474227,
+    "horizontalSymmetry": 0.14386792452830188,
+    "verticalSymmetry": 0.1630695443645084,
+    "edgeRatio": 0.3752577319587629
+  },
+  {
+    "name": "github",
+    "inkDensity": 0.43,
+    "aspectRatio": 1,
+    "centerOfMassX": 0.4875,
+    "centerOfMassY": 0.4875,
+    "horizontalSymmetry": 1,
+    "verticalSymmetry": 1,
+    "edgeRatio": 0.28488372093023256
+  }
+]

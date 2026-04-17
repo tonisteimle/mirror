@@ -64,7 +64,7 @@ Chart type line, $sales, w 300, h 200`,
     async (api: TestAPI) => {
       api.assert.exists('node-1')
       // Chart should render - wait for Chart.js to load
-      await api.utils.delay(500)
+      await api.utils.waitForIdle() // Wait for Chart.js rendering
       // Check that node exists and is a container
       const info = api.preview.inspect('node-1')
       api.assert.ok(info !== null, 'Chart container should exist')
@@ -81,7 +81,7 @@ Chart type line, $sales, w 300, h 200`,
 Chart type line, $data, w 200, h 150`,
     async (api: TestAPI) => {
       api.assert.exists('node-1')
-      await api.utils.delay(300)
+      await api.utils.waitForIdle()
     }
   ),
 
@@ -96,7 +96,7 @@ Chart type line, $data, w 200, h 150`,
 Chart type bar, $data, w 200, h 150`,
     async (api: TestAPI) => {
       api.assert.exists('node-1')
-      await api.utils.delay(300)
+      await api.utils.waitForIdle()
     }
   ),
 
@@ -110,7 +110,7 @@ Chart type bar, $data, w 200, h 150`,
 Chart type pie, $categories, w 200, h 200`,
     async (api: TestAPI) => {
       api.assert.exists('node-1')
-      await api.utils.delay(300)
+      await api.utils.waitForIdle()
     }
   ),
 
@@ -124,7 +124,7 @@ Chart type pie, $categories, w 200, h 200`,
 Chart type donut, $data, w 200, h 200`,
     async (api: TestAPI) => {
       api.assert.exists('node-1')
-      await api.utils.delay(300)
+      await api.utils.waitForIdle()
     }
   ),
 
@@ -140,7 +140,7 @@ Chart type donut, $data, w 200, h 200`,
 Chart type area, $traffic, w 250, h 150`,
     async (api: TestAPI) => {
       api.assert.exists('node-1')
-      await api.utils.delay(300)
+      await api.utils.waitForIdle()
     }
   ),
 ])
@@ -159,7 +159,7 @@ export const chartStylingTests: TestCase[] = describe('Chart Styling', [
 Chart type bar, $data, w 200, h 150, colors #ef4444`,
     async (api: TestAPI) => {
       api.assert.exists('node-1')
-      await api.utils.delay(300)
+      await api.utils.waitForIdle()
     }
   ),
 
@@ -197,7 +197,7 @@ Frame pad 16, bg #1a1a1a, rad 8
       api.assert.exists('node-1') // Frame
       api.assert.exists('node-2') // Text
       api.assert.exists('node-3') // Chart
-      await api.utils.delay(300)
+      await api.utils.waitForIdle()
     }
   ),
 
@@ -218,7 +218,7 @@ Frame hor, gap 16
       api.assert.exists('node-1') // Frame
       api.assert.exists('node-2') // Chart 1
       api.assert.exists('node-3') // Chart 2
-      await api.utils.delay(500)
+      await api.utils.waitForIdle() // Wait for Chart.js rendering
     }
   ),
 ])
@@ -239,7 +239,7 @@ export const chartDataTests: TestCase[] = describe('Chart Data Formats', [
 Chart type line, $revenue, w 300, h 200`,
     async (api: TestAPI) => {
       api.assert.exists('node-1')
-      await api.utils.delay(300)
+      await api.utils.waitForIdle()
     }
   ),
 
@@ -253,7 +253,7 @@ Chart type line, $revenue, w 300, h 200`,
 Chart type bar, $metrics, w 300, h 200`,
     async (api: TestAPI) => {
       api.assert.exists('node-1')
-      await api.utils.delay(300)
+      await api.utils.waitForIdle()
     }
   ),
 ])

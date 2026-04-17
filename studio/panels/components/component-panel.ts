@@ -465,12 +465,16 @@ export class ComponentPanel {
     event.dataTransfer.effectAllowed = 'copy'
 
     // Store drag data globally for DragPreview (dataTransfer not readable in dragenter)
+    // IMPORTANT: Must include children, mirTemplate, dataBlock for Zag components like Dialog
     setCurrentDragData(
       {
         componentId: item.id,
         componentName: item.template,
         properties: item.properties,
         textContent: item.textContent,
+        children: item.children,
+        mirTemplate: item.mirTemplate,
+        dataBlock: item.dataBlock,
       },
       item
     )

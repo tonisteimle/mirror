@@ -21,6 +21,29 @@ import { PreviewInspector } from './inspector'
 import { Assertions, AssertionCollector, ElementAssert } from './assertions'
 import { Interactions, enableHoverSimulation } from './interactions'
 import { TestRunner, test, testWithSetup, testOnly, testSkip, describe } from './test-runner'
+import {
+  layoutAssertions,
+  getLayoutInfo,
+  assertDirection,
+  assertSize,
+  assertAlignment,
+  assertGap,
+  assertLayout,
+  type LayoutInfo,
+  type LayoutExpectation,
+  type AssertionResult,
+  type Direction,
+  type Alignment,
+} from './layout-assertions'
+import {
+  DOMBridge,
+  createDOMBridge,
+  type DOMExpectation,
+  type TreeExpectation,
+  type VerifyResult,
+} from './dom-bridge'
+import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
+import { createStudioAPI } from './studio-api'
 import type { TestCase, TestSuiteResult, ElementInfo } from './types'
 
 const log = createLogger('TestAPI')
@@ -31,6 +54,38 @@ export { PreviewInspector } from './inspector'
 export { Assertions, AssertionCollector, ElementAssert } from './assertions'
 export { Interactions } from './interactions'
 export { TestRunner, test, testWithSetup, testOnly, testSkip, describe } from './test-runner'
+export {
+  layoutAssertions,
+  getLayoutInfo,
+  assertDirection,
+  assertSize,
+  assertAlignment,
+  assertGap,
+  assertLayout,
+  type LayoutInfo,
+  type LayoutExpectation,
+  type AssertionResult as LayoutAssertionResult,
+  type Direction,
+  type Alignment,
+} from './layout-assertions'
+export {
+  DOMBridge,
+  createDOMBridge,
+  type DOMExpectation,
+  type TreeExpectation,
+  type VerifyResult,
+} from './dom-bridge'
+export { PanelAPIImpl, createPanelAPI } from './panel-api'
+export { ZagAPIImpl, createZagAPI } from './zag-api'
+export { StudioAPIImpl, createStudioAPI } from './studio-api'
+export {
+  FixturesAPIImpl,
+  createFixturesAPI,
+  getFixtures,
+  type Fixture,
+  type FixtureSpec,
+  type FixturesAPI,
+} from './fixtures'
 
 export interface StudioTestAPI {
   /** Wait for any picker to open */
@@ -242,6 +297,38 @@ export interface MirrorTestAPI {
   // Quick assertions (chainable)
   expect: (nodeId: string) => ElementAssert
 
+  // Layout assertions (for verifying rendered positions)
+  layout: {
+    getInfo: (nodeId: string) => LayoutInfo | null
+    assertDirection: (info: LayoutInfo, expected: Direction) => AssertionResult
+    assertSize: (
+      info: LayoutInfo,
+      dimension: 'width' | 'height',
+      expected: number | 'hug' | 'full',
+      parentInfo?: LayoutInfo
+    ) => AssertionResult
+    assertAlignment: (
+      info: LayoutInfo,
+      expected: { main?: Alignment; cross?: Alignment }
+    ) => AssertionResult
+    assertGap: (info: LayoutInfo, expected: number) => AssertionResult
+    assertLayout: (nodeId: string, expectations: LayoutExpectation) => AssertionResult[]
+  }
+
+  // DOM Bridge - declarative DOM validation using Mirror DSL properties
+  dom: {
+    /** Verify element matches expectations, returns result */
+    verify: (nodeId: string, expect: DOMExpectation) => VerifyResult
+    /** Verify element matches expectations, throws on failure */
+    expect: (nodeId: string, expect: DOMExpectation) => void
+    /** Verify multiple elements */
+    verifyAll: (expectations: Record<string, DOMExpectation>) => VerifyResult[]
+    /** Verify a tree structure */
+    verifyTree: (rootId: string, tree: TreeExpectation) => VerifyResult[]
+    /** Get the bridge instance for advanced use */
+    bridge: DOMBridge
+  }
+
   // Test running
   run: (tests: TestCase[], name?: string) => Promise<TestSuiteResult>
   runOne: (test: TestCase) => Promise<void>
@@ -258,10 +345,49 @@ export interface MirrorTestAPI {
   interact: Interactions
   runner: TestRunner
 
+  // Fixtures
+  fixtures: {
+    /** List all available fixtures */
+    list: () => string[]
+    /** Load fixture into editor */
+    load: (name: string) => Promise<void>
+    /** Load code directly */
+    loadCode: (code: string) => Promise<void>
+    /** Get fixture by name */
+    get: (name: string) => Fixture | undefined
+    /** Get fixtures by category */
+    getByCategory: (category: string) => Fixture[]
+    /** Register custom fixture */
+    register: (fixture: Fixture) => void
+  }
+
   // Utilities
   delay: (ms: number) => Promise<void>
   waitForCompile: () => Promise<void>
+  waitForElement: (nodeId: string, timeout?: number) => Promise<HTMLElement>
+  waitForIdle: () => Promise<void>
   snapshot: () => { code: string; nodeIds: string[]; selection: string | null }
+
+  // Test isolation
+  reset: () => Promise<void>
+
+  // Filter API (convenience methods for running subsets of tests)
+  /** Run tests matching a pattern (case-insensitive) */
+  filter: (pattern: string) => Promise<TestSuiteResult>
+  /** Run all tests in a category */
+  category: (category: string) => Promise<TestSuiteResult>
+  /** Run a single test by exact or partial name match */
+  only: (testName: string) => Promise<TestSuiteResult>
+  /** List all available tests, optionally filtered by category */
+  list: (category?: string) => void
+
+  // Debug Mode
+  /** Run a single test in debug mode with step-by-step execution */
+  debug: (testName: string) => Promise<void>
+  /** Continue to next step in debug mode */
+  step: () => void
+  /** Abort debug mode */
+  abort: () => void
 }
 
 /**
@@ -272,6 +398,12 @@ function createMirrorTestAPI(): MirrorTestAPI {
   const interactions = new Interactions()
   const runner = new TestRunner({ verbose: true })
   const collector = new AssertionCollector(false)
+  const fixturesApi = createFixturesAPI()
+  const studioApi = createStudioAPI()
+
+  // Debug mode state
+  let debugResolver: (() => void) | null = null
+  let debugAborted = false
 
   const getCode = (): string => {
     const editor = (window as any).editor
@@ -342,6 +474,28 @@ function createMirrorTestAPI(): MirrorTestAPI {
     // Quick assertions
     expect: nodeId => new ElementAssert(inspector, collector, nodeId),
 
+    // Layout assertions
+    layout: {
+      getInfo: getLayoutInfo,
+      assertDirection,
+      assertSize,
+      assertAlignment,
+      assertGap,
+      assertLayout,
+    },
+
+    // DOM Bridge
+    dom: (() => {
+      const bridge = createDOMBridge(inspector)
+      return {
+        verify: (nodeId: string, expect: DOMExpectation) => bridge.verify(nodeId, expect),
+        expect: (nodeId: string, expect: DOMExpectation) => bridge.expect(nodeId, expect),
+        verifyAll: (expectations: Record<string, DOMExpectation>) => bridge.verifyAll(expectations),
+        verifyTree: (rootId: string, tree: TreeExpectation) => bridge.verifyTree(rootId, tree),
+        bridge,
+      }
+    })(),
+
     // Test running
     run: (tests, name = 'Mirror Tests') => runner.runSuite(name, tests),
     runOne: async testCase => {
@@ -365,10 +519,216 @@ function createMirrorTestAPI(): MirrorTestAPI {
     interact: interactions,
     runner,
 
+    // Fixtures
+    fixtures: {
+      list: () => fixturesApi.list(),
+      load: name => fixturesApi.load(name),
+      loadCode: code => fixturesApi.loadCode(code),
+      get: name => fixturesApi.get(name),
+      getByCategory: category => fixturesApi.getByCategory(category),
+      register: fixture => fixturesApi.register(fixture),
+    },
+
     // Utilities
     delay,
     waitForCompile,
+    waitForElement: async (nodeId: string, timeout = 2000): Promise<HTMLElement> => {
+      const startTime = Date.now()
+      while (Date.now() - startTime < timeout) {
+        const preview = document.getElementById('preview')
+        const element = preview?.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+        if (element) return element
+        await delay(50)
+      }
+      throw new Error(`Element ${nodeId} not found within ${timeout}ms`)
+    },
+    waitForIdle: async (): Promise<void> => {
+      // Wait for requestAnimationFrame to complete
+      await new Promise<void>(resolve => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve())
+        })
+      })
+      await Promise.resolve()
+      await delay(50)
+    },
     snapshot,
+
+    // Test isolation
+    reset: () => studioApi.reset(),
+
+    // Filter API
+    filter: async (pattern: string) => {
+      const suites = (window as any).__mirrorTestSuites
+      if (!suites?.tests?.all) {
+        console.error('Test suites not loaded. Ensure setupTestSuites() has completed.')
+        return { passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
+      }
+      const regex = new RegExp(pattern, 'i')
+      const filtered = suites.tests.all.filter((t: TestCase) => regex.test(t.name))
+      console.log(`Found ${filtered.length} tests matching "${pattern}"`)
+      return runner.runSuite(`Tests matching "${pattern}"`, filtered)
+    },
+
+    category: async (categoryName: string) => {
+      const suites = (window as any).__mirrorTestSuites
+      if (!suites?.tests) {
+        console.error('Test suites not loaded. Ensure setupTestSuites() has completed.')
+        return { passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
+      }
+      const tests = suites.tests[categoryName]
+      if (!tests) {
+        const available = Object.keys(suites.tests).filter(k => k !== 'all')
+        console.error(`Unknown category: "${categoryName}". Available: ${available.join(', ')}`)
+        return { passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
+      }
+      console.log(`Running ${tests.length} tests in category "${categoryName}"`)
+      return runner.runSuite(`${categoryName} Tests`, tests)
+    },
+
+    only: async (testName: string) => {
+      const suites = (window as any).__mirrorTestSuites
+      if (!suites?.tests?.all) {
+        console.error('Test suites not loaded.')
+        return { passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
+      }
+      const test = suites.tests.all.find(
+        (t: TestCase) =>
+          t.name === testName || t.name.toLowerCase().includes(testName.toLowerCase())
+      )
+      if (!test) {
+        console.error(`Test not found: "${testName}"`)
+        // Show suggestions
+        const matches = suites.tests.all
+          .filter((t: TestCase) => t.name.toLowerCase().includes(testName.toLowerCase()))
+          .slice(0, 5)
+        if (matches.length > 0) {
+          console.log('Did you mean:')
+          matches.forEach((t: TestCase) => console.log(`  - ${t.name}`))
+        }
+        return { passed: 0, failed: 1, skipped: 0, duration: 0, results: [] }
+      }
+      return runner.runSuite(`Single Test: ${test.name}`, [test])
+    },
+
+    list: (categoryName?: string) => {
+      const suites = (window as any).__mirrorTestSuites
+      if (!suites?.tests) {
+        console.error('Test suites not loaded.')
+        return
+      }
+
+      if (categoryName) {
+        const tests = suites.tests[categoryName]
+        if (!tests) {
+          const available = Object.keys(suites.tests).filter(k => k !== 'all')
+          console.error(`Unknown category: "${categoryName}". Available: ${available.join(', ')}`)
+          return
+        }
+        console.log(`\n${categoryName} Tests (${tests.length}):`)
+        tests.forEach((t: TestCase, i: number) => console.log(`  ${i + 1}. ${t.name}`))
+      } else {
+        // List all categories with counts
+        console.log('\nAvailable Test Categories:')
+        const categories = Object.keys(suites.tests).filter(k => k !== 'all')
+        categories.forEach(cat => {
+          console.log(`  ${cat}: ${suites.tests[cat].length} tests`)
+        })
+        console.log(`\nTotal: ${suites.tests.all.length} tests`)
+        console.log('\nUsage:')
+        console.log('  __mirrorTest.list("layout")       // List tests in category')
+        console.log('  __mirrorTest.category("layout")   // Run category')
+        console.log('  __mirrorTest.filter("Button")     // Run matching tests')
+        console.log('  __mirrorTest.only("Frame hor")    // Run single test')
+      }
+    },
+
+    // Debug Mode
+    debug: async (testName: string) => {
+      const suites = (window as any).__mirrorTestSuites
+      if (!suites?.tests?.all) {
+        console.error('Test suites not loaded.')
+        return
+      }
+
+      const test = suites.tests.all.find(
+        (t: TestCase) =>
+          t.name === testName || t.name.toLowerCase().includes(testName.toLowerCase())
+      )
+      if (!test) {
+        console.error(`Test not found: "${testName}"`)
+        return
+      }
+
+      debugAborted = false
+      console.log(`\n🐛 DEBUG MODE: ${test.name}`)
+      console.log('━'.repeat(50))
+      console.log('Controls:')
+      console.log('  __mirrorTest.step()  - Continue to next step')
+      console.log('  __mirrorTest.abort() - Abort test')
+      console.log('  Press Enter in console to continue')
+      console.log('━'.repeat(50))
+
+      // Create debug runner with step-by-step execution
+      const debugRunner = new TestRunner({ verbose: true, timeout: 600000 }) // 10 min timeout for debug
+
+      // Wrap the test to add debug pauses
+      const debugTest: TestCase = {
+        ...test,
+        run: async api => {
+          // Setup pause
+          if (test.setup) {
+            console.log('\n📝 Setup: Loading code...')
+            await api.editor.setCode(test.setup)
+            console.log('   Code loaded. Continue with __mirrorTest.step() or Enter')
+            await waitForDebugStep()
+            if (debugAborted) throw new Error('Debug aborted')
+          }
+
+          // Run test with debug wrapper
+          console.log('\n▶️  Running test...')
+          await test.run(api)
+          console.log('\n✅ Test completed')
+        },
+      }
+
+      async function waitForDebugStep(): Promise<void> {
+        return new Promise(resolve => {
+          debugResolver = resolve
+        })
+      }
+
+      try {
+        await debugRunner.runTest(debugTest)
+      } catch (e) {
+        if (debugAborted) {
+          console.log('\n⚠️  Debug aborted')
+        } else {
+          console.error('\n❌ Test failed:', e)
+        }
+      } finally {
+        debugResolver = null
+      }
+    },
+
+    step: () => {
+      if (debugResolver) {
+        console.log('   → Continuing...')
+        debugResolver()
+        debugResolver = null
+      } else {
+        console.log('Not in debug mode')
+      }
+    },
+
+    abort: () => {
+      debugAborted = true
+      if (debugResolver) {
+        debugResolver()
+        debugResolver = null
+      }
+      console.log('🛑 Aborting debug...')
+    },
   }
 }
 
@@ -388,21 +748,22 @@ export function setupMirrorTestAPI(): void {
 
   console.log('🧪 Mirror Test Framework ready. Usage:')
   console.log('')
-  console.log('  // Inspect elements')
+  console.log('  // Filter & Run Tests')
+  console.log('  __mirrorTest.filter("Button")         // Run tests matching pattern')
+  console.log('  __mirrorTest.category("zag")          // Run all Zag tests')
+  console.log('  __mirrorTest.only("Checkbox toggle")  // Run single test')
+  console.log('  __mirrorTest.list()                   // List all categories')
+  console.log('  __mirrorTest.list("drag")             // List tests in category')
+  console.log('')
+  console.log('  // Debug Mode')
+  console.log('  __mirrorTest.debug("Checkbox")        // Step-by-step debug')
+  console.log('  __mirrorTest.step()                   // Continue to next step')
+  console.log('  __mirrorTest.abort()                  // Abort debug')
+  console.log('')
+  console.log('  // Inspect & Interact')
   console.log('  __mirrorTest.inspect("node-1")')
-  console.log('  __mirrorTest.getNodeIds()')
-  console.log('')
-  console.log('  // Interactions')
   console.log('  __mirrorTest.click("node-1")')
-  console.log('  __mirrorTest.hover("node-2")')
-  console.log('')
-  console.log('  // Assertions')
-  console.log('  __mirrorTest.expect("node-1").hasText("Hello").hasBackground("#2271C1")')
-  console.log('')
-  console.log('  // Run tests')
-  console.log('  __mirrorTestSuites.runAll()           // All ~200 tests')
-  console.log('  __mirrorTestSuites.runCategory("autocomplete")  // By category')
-  console.log('  __mirrorTestSuites.printSummary()     // Show test counts')
+  console.log('  __mirrorTest.expect("node-1").hasText("Hello")')
 }
 
 /**
@@ -436,6 +797,7 @@ async function setupTestSuites(): Promise<void> {
       tests: {
         primitives: suites.allPrimitivesTests,
         layout: suites.allLayoutTests,
+        layoutVerification: suites.allLayoutVerificationTests,
         styling: suites.allStylingTests,
         zag: suites.allZagTests,
         interactions: suites.allInteractionTests,
@@ -446,6 +808,9 @@ async function setupTestSuites(): Promise<void> {
         flexReorder: suites.allFlexReorderTests,
         propertyPanel: suites.allPropertyPanelTests,
         charts: suites.allChartTests,
+        workflow: suites.allWorkflowTests,
+        stress: suites.allStressTests,
+        playMode: suites.allPlayModeTests,
         all: suites.allTests,
       },
     }

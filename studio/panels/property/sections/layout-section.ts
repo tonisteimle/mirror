@@ -5,7 +5,12 @@
  * gap tokens and input, wrap toggle, and 3x3 alignment grid.
  */
 
-import { BaseSection, type SectionDependencies, type SectionData, type EventHandlerMap } from '../base/section'
+import {
+  BaseSection,
+  type SectionDependencies,
+  type SectionData,
+  type EventHandlerMap,
+} from '../base/section'
 import type { SpacingToken } from '../types'
 import { getLayoutIcon } from '../../../icons'
 
@@ -57,19 +62,33 @@ export class LayoutSection extends BaseSection {
 
     // Find wrap property
     const wrapProp = props.find(p => p.name === 'wrap')
-    const wrapActive = !!(wrapProp && (wrapProp.value === 'true' || (wrapProp.value === '' && wrapProp.hasValue !== false)))
+    const wrapActive = !!(
+      wrapProp &&
+      (wrapProp.value === 'true' || (wrapProp.value === '' && wrapProp.hasValue !== false))
+    )
 
     // Get dynamic gap tokens
     const gapTokens = data.getSpacingTokens?.('gap') || []
     const gapTokensHtml = this.renderGapTokens(gapValue, gapTokens)
 
+    // Resolve token value for display
+    const isGapToken = gapValue.startsWith('$')
+    let gapDisplayValue = gapValue
+    let gapInputClass = 'prop-input'
+    if (isGapToken && data.resolveTokenValue) {
+      const resolved = data.resolveTokenValue(gapValue)
+      if (resolved) {
+        gapDisplayValue = resolved
+        gapInputClass = 'prop-input token-resolved'
+      }
+    }
+
     // Render alignment grid
     const alignmentRow = alignmentCat ? this.renderAlignmentRow(alignmentCat) : ''
 
     // Wrap row (only for hor/ver modes)
-    const wrapRow = (activeMode === 'horizontal' || activeMode === 'vertical')
-      ? this.renderWrapRow(wrapActive)
-      : ''
+    const wrapRow =
+      activeMode === 'horizontal' || activeMode === 'vertical' ? this.renderWrapRow(wrapActive) : ''
 
     return `
       <div class="section">
@@ -98,7 +117,7 @@ export class LayoutSection extends BaseSection {
             <span class="prop-label">Gap</span>
             <div class="prop-content">
               ${gapTokensHtml ? `<div class="token-group">${gapTokensHtml}</div>` : ''}
-              <input type="text" class="prop-input" autocomplete="off" value="${this.deps.escapeHtml(gapValue)}" data-prop="gap" placeholder="0">
+              <input type="text" class="${gapInputClass}" autocomplete="off" value="${this.deps.escapeHtml(gapDisplayValue)}" data-prop="gap" data-token-ref="${isGapToken ? this.deps.escapeHtml(gapValue) : ''}" placeholder="0">
             </div>
           </div>
           ${wrapRow}
@@ -111,13 +130,13 @@ export class LayoutSection extends BaseSection {
   private renderGapTokens(gapValue: string, tokens: SpacingToken[]): string {
     const isGapTokenRef = gapValue.startsWith('$')
 
-    return tokens.map(token => {
-      const tokenRef = `$${token.fullName}`
-      const active = isGapTokenRef
-        ? (gapValue === tokenRef)
-        : (gapValue === token.value)
-      return `<button class="token-btn ${active ? 'active' : ''}" data-gap-token="${token.value}" data-token-ref="${tokenRef}" title="${tokenRef}: ${token.value}">${token.name}</button>`
-    }).join('')
+    return tokens
+      .map(token => {
+        const tokenRef = `$${token.fullName}`
+        const active = isGapTokenRef ? gapValue === tokenRef : gapValue === token.value
+        return `<button class="token-btn ${active ? 'active' : ''}" data-gap-token="${token.value}" data-token-ref="${tokenRef}" title="${tokenRef}: ${token.value}">${token.name}</button>`
+      })
+      .join('')
   }
 
   private renderWrapRow(wrapActive: boolean): string {
@@ -134,7 +153,9 @@ export class LayoutSection extends BaseSection {
       </div>`
   }
 
-  private renderAlignmentRow(alignmentCat: { properties: Array<{ name: string; value: string; hasValue?: boolean }> }): string {
+  private renderAlignmentRow(alignmentCat: {
+    properties: Array<{ name: string; value: string; hasValue?: boolean }>
+  }): string {
     const alignProps = alignmentCat.properties
 
     const isAlignActive = (name: string) => {
@@ -142,8 +163,20 @@ export class LayoutSection extends BaseSection {
       return prop && (prop.value === 'true' || (prop.value === '' && prop.hasValue !== false))
     }
 
-    const vAlign = isAlignActive('top') ? 'top' : isAlignActive('bottom') ? 'bottom' : isAlignActive('ver-center') ? 'middle' : null
-    const hAlign = isAlignActive('left') ? 'left' : isAlignActive('right') ? 'right' : isAlignActive('hor-center') ? 'center' : null
+    const vAlign = isAlignActive('top')
+      ? 'top'
+      : isAlignActive('bottom')
+        ? 'bottom'
+        : isAlignActive('ver-center')
+          ? 'middle'
+          : null
+    const hAlign = isAlignActive('left')
+      ? 'left'
+      : isAlignActive('right')
+        ? 'right'
+        : isAlignActive('hor-center')
+          ? 'center'
+          : null
     const isCenter = isAlignActive('center')
 
     const cells = [
@@ -154,23 +187,29 @@ export class LayoutSection extends BaseSection {
 
     const getCellActive = (v: string, h: string): boolean => {
       if (v === 'middle' && h === 'center' && isCenter) return true
-      const vMatch = (v === 'top' && vAlign === 'top') ||
-                     (v === 'middle' && vAlign === 'middle') ||
-                     (v === 'bottom' && vAlign === 'bottom')
-      const hMatch = (h === 'left' && hAlign === 'left') ||
-                     (h === 'center' && hAlign === 'center') ||
-                     (h === 'right' && hAlign === 'right')
+      const vMatch =
+        (v === 'top' && vAlign === 'top') ||
+        (v === 'middle' && vAlign === 'middle') ||
+        (v === 'bottom' && vAlign === 'bottom')
+      const hMatch =
+        (h === 'left' && hAlign === 'left') ||
+        (h === 'center' && hAlign === 'center') ||
+        (h === 'right' && hAlign === 'right')
       return vMatch && hMatch
     }
 
-    const gridHtml = cells.map((row, vIdx) => {
-      const vName = ['top', 'middle', 'bottom'][vIdx]
-      return row.map((cell, hIdx) => {
-        const hName = ['left', 'center', 'right'][hIdx]
-        const active = getCellActive(vName, hName)
-        return `<button class="align-cell ${active ? 'active' : ''}" data-align="${cell}" title="${cell.replace('-', ' ')}"></button>`
-      }).join('')
-    }).join('')
+    const gridHtml = cells
+      .map((row, vIdx) => {
+        const vName = ['top', 'middle', 'bottom'][vIdx]
+        return row
+          .map((cell, hIdx) => {
+            const hName = ['left', 'center', 'right'][hIdx]
+            const active = getCellActive(vName, hName)
+            return `<button class="align-cell ${active ? 'active' : ''}" data-align="${cell}" title="${cell.replace('-', ' ')}"></button>`
+          })
+          .join('')
+      })
+      .join('')
 
     return `
       <div class="prop-row">
@@ -191,7 +230,7 @@ export class LayoutSection extends BaseSection {
           if (layout) {
             this.deps.onPropertyChange('__LAYOUT_MODE__', layout, 'toggle')
           }
-        }
+        },
       },
       '.token-btn[data-gap-token]': {
         click: (e: Event, target: HTMLElement) => {
@@ -200,19 +239,19 @@ export class LayoutSection extends BaseSection {
           if (value) {
             this.deps.onPropertyChange('gap', value, 'token')
           }
-        }
+        },
       },
       'input[data-prop="gap"]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           this.deps.onPropertyChange('gap', input.value, 'input')
-        }
+        },
       },
       '.toggle-btn[data-wrap]': {
         click: (e: Event, target: HTMLElement) => {
           const wrapAction = target.dataset.wrap
           this.deps.onToggleProperty('wrap', wrapAction === 'off')
-        }
+        },
       },
       '.align-cell[data-align]': {
         click: (e: Event, target: HTMLElement) => {
@@ -220,8 +259,8 @@ export class LayoutSection extends BaseSection {
           if (align) {
             this.deps.onPropertyChange('__ALIGN__', align, 'toggle')
           }
-        }
-      }
+        },
+      },
     }
   }
 }

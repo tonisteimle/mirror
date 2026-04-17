@@ -27,6 +27,7 @@ dist-ssr
 playwright-report
 test-results
 test-build*/
+test-output/
 
 # Local data
 local-data/

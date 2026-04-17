@@ -95,9 +95,10 @@ ${bold('Test Selection:')}
   --test="NAME"       Run a single test by exact name
   --filter=PATTERN    Filter tests by name pattern (regex)
   --category=NAME     Run specific category:
-                        primitives, layout, styling, zag, interactions,
-                        bidirectional, undoRedo, autocomplete, stackedDrag,
-                        flexReorder, propertyPanel, charts
+                        primitives, layout, layoutVerification, styling, zag,
+                        interactions, bidirectional, undoRedo, autocomplete,
+                        stackedDrag, flexReorder, propertyPanel, charts, workflow,
+                        states, animations, transforms, gradients
   --drag              Run drag & drop tests only
   --mirror            Run mirror tests only
   --list              List all available tests
@@ -133,6 +134,12 @@ ${bold('Examples:')}
   npx tsx tools/test.ts --test="Drop Avatar" --headed         # Single test, visible
   npx tsx tools/test.ts --category=stackedDrag                # Stacked drag tests
   npx tsx tools/test.ts --category=flexReorder                # Flex reorder tests
+  npx tsx tools/test.ts --category=layoutVerification         # Layout position tests
+  npx tsx tools/test.ts --category=workflow                   # Workflow tests
+  npx tsx tools/test.ts --category=states                     # State (toggle, hover) tests
+  npx tsx tools/test.ts --category=animations                 # Animation preset tests
+  npx tsx tools/test.ts --category=transforms                 # Transform (rotate, scale) tests
+  npx tsx tools/test.ts --category=gradients                  # Gradient background tests
   npx tsx tools/test.ts --filter="App stacked"                # Filter by pattern
   npx tsx tools/test.ts --headed                              # All with visible browser
   npx tsx tools/test.ts --explore                             # Show file structure
@@ -370,20 +377,24 @@ muted.col: #a1a1aa
       console.log(`🎯 Running single test: "${args.test}"\n`)
       const suite = await runner.runSingleTestByName(args.test)
       suites.push(suite)
+    } else if (args.category) {
+      // If --category is specified, run ONLY that category (no drag tests)
+      console.log(`📁 Running category: ${args.category}\n`)
+      suites.push(await runner.runMirrorTests(args.category))
     } else {
       // Determine which tests to run
       // Default: run all tests when no specific selection is made
-      const noSelection = !args.drag && !args.mirror && !args.category
+      const noSelection = !args.drag && !args.mirror
       const runAll = args.all || noSelection
       const runDrag = runAll || args.drag
-      const runMirror = runAll || args.mirror || args.category
+      const runMirror = runAll || args.mirror
 
-      if (runDrag && !args.category) {
+      if (runDrag) {
         suites.push(await runner.runDragTests())
       }
 
       if (runMirror) {
-        suites.push(await runner.runMirrorTests(args.category))
+        suites.push(await runner.runMirrorTests())
       }
     }
 

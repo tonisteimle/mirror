@@ -88,7 +88,8 @@ dist/                  # Build Output
 | `compiler/validator/index.ts`      | Code Validator API                   |
 | `tools/test.ts`                    | Browser Test Runner CLI              |
 | `tools/test-runner/`               | Test Runner Implementation (CDP)     |
-| `docs/DRAG-DROP-TESTING.md`        | Test Framework Dokumentation         |
+| `docs/TEST-FRAMEWORK.md`           | **Test Framework Dokumentation**     |
+| `docs/DRAG-DROP-TESTING.md`        | Drag & Drop Testing (Legacy)         |
 
 ## Commands
 
@@ -1152,19 +1153,23 @@ npm test -- parser          # Nur Parser Tests
 
 Eigenes Test-Framework für Studio-Tests direkt im Browser. Ersetzt Playwright.
 
-**Test-Kategorien (~225 Tests):**
+**Test-Kategorien (~325 Tests):**
 
-| Kategorie     | Tests | Beschreibung                    |
-| ------------- | ----- | ------------------------------- |
-| Primitives    | ~25   | Frame, Text, Button, Icon, etc. |
-| Layout        | ~35   | hor, ver, gap, grid, stacked    |
-| Styling       | ~50   | bg, col, pad, rad, shadow       |
-| Zag           | ~30   | Dialog, Tabs, Select, Checkbox  |
-| Interactions  | ~30   | Click, Hover, Focus, Input      |
-| Bidirectional | ~20   | Code ↔ Preview Sync             |
-| Undo/Redo     | ~15   | History Management              |
-| Autocomplete  | ~20   | Completions                     |
-| Drag & Drop   | ~46   | Palette Drop, Canvas Move       |
+| Kategorie     | Tests | Beschreibung                        |
+| ------------- | ----- | ----------------------------------- |
+| Primitives    | ~25   | Frame, Text, Button, Icon, etc.     |
+| Layout        | ~35   | hor, ver, gap, grid, stacked        |
+| Styling       | ~50   | bg, col, pad, rad, shadow           |
+| Zag           | ~30   | Dialog, Tabs, Select, Checkbox      |
+| Interactions  | ~30   | Click, Hover, Focus, Input          |
+| Bidirectional | ~20   | Code ↔ Preview Sync                 |
+| Undo/Redo     | ~15   | History Management                  |
+| Autocomplete  | ~20   | Completions                         |
+| Drag & Drop   | ~46   | Palette Drop, Canvas Move           |
+| States        | ~50   | toggle(), exclusive(), hover, cross |
+| Animations    | ~30   | spin, pulse, bounce, fade, slide    |
+| Transforms    | ~30   | rotate, scale, translate, z-index   |
+| Gradients     | ~15   | grad, grad-ver, text gradients      |
 
 ### CLI Test Runner (CDP)
 
@@ -1206,7 +1211,7 @@ npx tsx tools/test.ts --retries=2             # Retry bei Failures
 | `--category=X`     | Einzelne Kategorie       |
 | `--filter=PATTERN` | Filter nach Name (Regex) |
 
-**Kategorien:** primitives, layout, styling, zag, interactions, bidirectional, undoRedo, autocomplete, stackedDrag, propertyPanel, charts
+**Kategorien:** primitives, layout, styling, zag, interactions, bidirectional, undoRedo, autocomplete, stackedDrag, propertyPanel, charts, states, animations, transforms, gradients
 
 **Execution:**
 
@@ -1266,6 +1271,17 @@ Results: 40/46 passed (6 failed)
 **Quick Start:**
 
 ```javascript
+// Filter & Run Tests
+__mirrorTest.filter('Button') // Tests mit "Button" im Namen
+__mirrorTest.category('zag') // Alle Zag-Tests
+__mirrorTest.only('Checkbox toggle') // Einzelner Test
+__mirrorTest.list() // Kategorien auflisten
+
+// Debug Mode
+__mirrorTest.debug('Checkbox toggle') // Step-by-Step Debug
+__mirrorTest.step() // Weiter zum nächsten Schritt
+__mirrorTest.abort() // Debug abbrechen
+
 // Element inspizieren
 __mirrorTest.inspect('node-1')
 // → { nodeId, tagName, styles, textContent, children, ... }
@@ -1273,22 +1289,10 @@ __mirrorTest.inspect('node-1')
 // Assertions
 __mirrorTest.expect('node-1').hasText('Hello').hasBackground('#2271C1')
 
-// Tests ausführen
-const { testWithSetup } = __mirrorTest
-__mirrorTest.run([
-  testWithSetup('Button rendert', 'Button "Click", bg #2271C1', async api => {
-    api.assert.exists('node-1')
-    api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
-  }),
-])
-
 // Drag & Drop Tests
 __dragTest.runDragTests()
-
-// Alle Tests
-__dragTest.runAllTests()
 ```
 
 **Test-Suites:** `studio/test-api/suites/`
 
-**Dokumentation:** `docs/DRAG-DROP-TESTING.md`
+**Dokumentation:** `docs/TEST-FRAMEWORK.md` (vollständige API-Referenz, Best Practices, Troubleshooting)

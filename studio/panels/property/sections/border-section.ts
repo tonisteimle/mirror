@@ -4,7 +4,12 @@
  * Renders radius and border controls with token support.
  */
 
-import { BaseSection, type SectionDependencies, type SectionData, type EventHandlerMap } from '../base/section'
+import {
+  BaseSection,
+  type SectionDependencies,
+  type SectionData,
+  type EventHandlerMap,
+} from '../base/section'
 import type { SpacingToken } from '../types'
 
 /**
@@ -43,7 +48,7 @@ export class BorderSection extends BaseSection {
     // Border color display
     const borderColorIsToken = borderColor.startsWith('$')
     const borderColorSwatch = borderColorIsToken
-      ? (data.resolveTokenValue?.(borderColor) || borderColor)
+      ? data.resolveTokenValue?.(borderColor) || borderColor
       : borderColor
 
     // Get radius tokens
@@ -55,20 +60,35 @@ export class BorderSection extends BaseSection {
     `
   }
 
-  private renderRadiusSection(radiusValue: string, isOverride: boolean, tokens: SpacingToken[]): string {
+  private renderRadiusSection(
+    radiusValue: string,
+    isOverride: boolean,
+    tokens: SpacingToken[]
+  ): string {
     const isTokenRef = radiusValue.startsWith('$')
+
+    // Resolve token value for display
+    let radiusDisplayValue = radiusValue
+    let radiusInputClass = 'prop-input'
+    if (isTokenRef && this.data?.resolveTokenValue) {
+      const resolved = this.data.resolveTokenValue(radiusValue)
+      if (resolved) {
+        radiusDisplayValue = resolved
+        radiusInputClass = 'prop-input token-resolved'
+      }
+    }
 
     // Token buttons including 0 preset
     const tokenButtons = [
       { label: '0', value: '0', tokenRef: '' },
-      ...tokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
-    ].map(token => {
-      const isActive = isTokenRef
-        ? (radiusValue === token.tokenRef)
-        : (radiusValue === token.value)
-      const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
-      return `<button class="token-btn ${isActive ? 'active' : ''}" data-radius="${token.value}" data-token-ref="${token.tokenRef}" title="${title}">${token.label}</button>`
-    }).join('')
+      ...tokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` })),
+    ]
+      .map(token => {
+        const isActive = isTokenRef ? radiusValue === token.tokenRef : radiusValue === token.value
+        const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
+        return `<button class="token-btn ${isActive ? 'active' : ''}" data-radius="${token.value}" data-token-ref="${token.tokenRef}" title="${title}">${token.label}</button>`
+      })
+      .join('')
 
     // Full radius button (999)
     const fullRadiusActive = radiusValue === '999'
@@ -95,15 +115,15 @@ export class BorderSection extends BaseSection {
                 ${tokenButtons}
                 ${fullRadiusBtn}
               </div>
-              <input type="text" class="prop-input" autocomplete="off" value="${this.deps.escapeHtml(radiusValue)}" data-prop="radius" placeholder="0">
+              <input type="text" class="${radiusInputClass}" autocomplete="off" value="${this.deps.escapeHtml(radiusDisplayValue)}" data-prop="radius" data-token-ref="${isTokenRef ? this.deps.escapeHtml(radiusValue) : ''}" placeholder="0">
             </div>
           </div>
           <div class="prop-row expanded-row" data-expand-group="radius">
             <div class="corner-radius-grid">
-              ${this.renderCornerInput('TL', 'tl', radiusValue)}
-              ${this.renderCornerInput('TR', 'tr', radiusValue)}
-              ${this.renderCornerInput('BL', 'bl', radiusValue)}
-              ${this.renderCornerInput('BR', 'br', radiusValue)}
+              ${this.renderCornerInput('TL', 'tl', radiusDisplayValue, isTokenRef)}
+              ${this.renderCornerInput('TR', 'tr', radiusDisplayValue, isTokenRef)}
+              ${this.renderCornerInput('BL', 'bl', radiusDisplayValue, isTokenRef)}
+              ${this.renderCornerInput('BR', 'br', radiusDisplayValue, isTokenRef)}
             </div>
           </div>
         </div>
@@ -111,28 +131,43 @@ export class BorderSection extends BaseSection {
     `
   }
 
-  private renderCornerInput(label: string, corner: string, value: string): string {
-    const title = {
-      'TL': 'Top Left',
-      'TR': 'Top Right',
-      'BL': 'Bottom Left',
-      'BR': 'Bottom Right'
-    }[label] || label
+  private renderCornerInput(
+    label: string,
+    corner: string,
+    value: string,
+    isTokenRef: boolean = false
+  ): string {
+    const title =
+      {
+        TL: 'Top Left',
+        TR: 'Top Right',
+        BL: 'Bottom Left',
+        BR: 'Bottom Right',
+      }[label] || label
+
+    const inputClass = isTokenRef ? 'prop-input token-resolved' : 'prop-input'
 
     return `
       <div class="corner-input">
         <span class="corner-label" title="${title}">${label}</span>
-        <input type="text" class="prop-input" autocomplete="off" value="${this.deps.escapeHtml(value)}" data-radius-corner="${corner}" placeholder="0">
+        <input type="text" class="${inputClass}" autocomplete="off" value="${this.deps.escapeHtml(value)}" data-radius-corner="${corner}" placeholder="0">
       </div>
     `
   }
 
-  private renderBorderSection(borderWidth: string, borderColor: string, borderColorSwatch: string, isOverride: boolean): string {
+  private renderBorderSection(
+    borderWidth: string,
+    borderColor: string,
+    borderColorSwatch: string,
+    isOverride: boolean
+  ): string {
     const borderWidths = ['0', '1', '2']
-    const widthToggles = borderWidths.map(w => {
-      const isActive = borderWidth === w
-      return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" title="${w}px">${w}</button>`
-    }).join('')
+    const widthToggles = borderWidths
+      .map(w => {
+        const isActive = borderWidth === w
+        return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" title="${w}px">${w}</button>`
+      })
+      .join('')
 
     const colorTrigger = `
       <div class="pp-color-trigger pp-color-trigger-compact" data-border-color-prop="bor" data-border-width="${borderWidth}" data-current-value="${this.deps.escapeHtml(borderColor)}">
@@ -170,12 +205,20 @@ export class BorderSection extends BaseSection {
     `
   }
 
-  private renderBorderSideRow(label: string, side: string, borderWidth: string, borderColor: string, borderColorSwatch: string): string {
+  private renderBorderSideRow(
+    label: string,
+    side: string,
+    borderWidth: string,
+    borderColor: string,
+    borderColorSwatch: string
+  ): string {
     const borderWidths = ['0', '1', '2']
-    const widthToggles = borderWidths.map(w => {
-      const isActive = borderWidth === w
-      return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" title="${w}px">${w}</button>`
-    }).join('')
+    const widthToggles = borderWidths
+      .map(w => {
+        const isActive = borderWidth === w
+        return `<button class="toggle-btn ${isActive ? 'active' : ''}" data-border-width="${w}" title="${w}px">${w}</button>`
+      })
+      .join('')
 
     return `
       <div class="prop-row expanded-row side-detail" data-expand-group="border">
@@ -199,22 +242,26 @@ export class BorderSection extends BaseSection {
           if (value) {
             this.deps.onPropertyChange('radius', value, 'token')
           }
-        }
+        },
       },
       'input[data-prop="radius"]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           this.deps.onPropertyChange('radius', input.value, 'input')
-        }
+        },
       },
       'input[data-radius-corner]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           const corner = input.dataset.radiusCorner
           if (corner) {
-            this.deps.onPropertyChange('__RADIUS_CORNER__', JSON.stringify({ corner, value: input.value }), 'input')
+            this.deps.onPropertyChange(
+              '__RADIUS_CORNER__',
+              JSON.stringify({ corner, value: input.value }),
+              'input'
+            )
           }
-        }
+        },
       },
       '.toggle-btn[data-border-width]': {
         click: (e: Event, target: HTMLElement) => {
@@ -222,7 +269,7 @@ export class BorderSection extends BaseSection {
           if (width) {
             this.deps.onPropertyChange('__BORDER_WIDTH__', width, 'toggle')
           }
-        }
+        },
       },
       '[data-border-color-prop]': {
         click: (e: Event, target: HTMLElement) => {
@@ -230,10 +277,14 @@ export class BorderSection extends BaseSection {
           const currentValue = target.dataset.currentValue || ''
           const borderWidth = target.dataset.borderWidth || '1'
           if (prop) {
-            this.deps.onPropertyChange('__BORDER_COLOR_PICKER__', JSON.stringify({ property: prop, currentValue, borderWidth }), 'toggle')
+            this.deps.onPropertyChange(
+              '__BORDER_COLOR_PICKER__',
+              JSON.stringify({ property: prop, currentValue, borderWidth }),
+              'toggle'
+            )
           }
-        }
-      }
+        },
+      },
     }
   }
 }

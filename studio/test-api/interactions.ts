@@ -16,8 +16,12 @@ export class Interactions implements InteractionAPI {
     return document.getElementById('preview')
   }
 
+  private get studio(): any {
+    return (window as any).__mirrorStudio__
+  }
+
   private get studioActions(): any {
-    return (window as any).__mirrorStudio__?.actions
+    return this.studio?.actions
   }
 
   /**
@@ -519,10 +523,6 @@ export class Interactions implements InteractionAPI {
   // Selection
   // ===========================================================================
 
-  private get studio(): any {
-    return (window as any).__mirrorStudio__
-  }
-
   /**
    * Select element in preview (triggers studio selection)
    */
@@ -556,9 +556,9 @@ export class Interactions implements InteractionAPI {
    * Clear current selection
    */
   clearSelection(): void {
-    // Try actions.setSelection first
-    if (this.studioActions?.setSelection) {
-      this.studioActions.setSelection(null, 'preview')
+    // Use actions.clearSelection first (handles deduplication correctly)
+    if (this.studioActions?.clearSelection) {
+      this.studioActions.clearSelection('preview')
       return
     }
 
@@ -568,15 +568,17 @@ export class Interactions implements InteractionAPI {
       return
     }
 
-    // Try actions.clearSelection
-    if (this.studioActions?.clearSelection) {
-      this.studioActions.clearSelection('preview')
+    // Try actions.setSelection with null
+    if (this.studioActions?.setSelection) {
+      this.studioActions.setSelection(null, 'preview')
       return
     }
 
-    // Try direct state update
+    // Try direct state update and emit event
     if (this.studio?.state?.set) {
       this.studio.state.set({ selection: { nodeId: null, origin: 'preview' } })
+      // Also emit the event manually since direct state.set doesn't
+      this.studio?.events?.emit?.('selection:changed', { nodeId: null, origin: 'preview' })
     }
   }
 

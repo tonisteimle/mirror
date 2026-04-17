@@ -1606,9 +1606,9 @@ export function createUI(data = {}) {
   Object.assign(node_66.style, {
     'display': 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
     'align-items': 'center',
     'gap': '8px',
+    'width': 'fit-content',
     'height': '36px',
     'flex-shrink': '0',
     'padding': '12px 16px',
@@ -1671,9 +1671,9 @@ export function createUI(data = {}) {
   Object.assign(node_69.style, {
     'display': 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
     'align-items': 'center',
     'gap': '8px',
+    'width': 'fit-content',
     'height': '36px',
     'flex-shrink': '0',
     'padding': '12px 16px',
@@ -1787,6 +1787,9 @@ export function createUI(data = {}) {
   node_75.dataset.mirrorId = 'node-75'
   node_75.dataset.mirrorName = 'Label'
   node_75.textContent = "Bettenbelegung"
+  Object.assign(node_75.style, {
+    'width': 'fit-content',
+  })
   node_75.dataset.component = 'Label'
   node_75.dataset.slot = 'Label'
   node_74.appendChild(node_75)
@@ -1892,6 +1895,7 @@ export function createUI(data = {}) {
   node_81.dataset.mirrorId = 'node-81'
   node_81.dataset.mirrorName = 'Label'
   Object.assign(node_81.style, {
+    'width': 'fit-content',
     'color': 'var(--text-secondary)',
     'font-size': '13px',
     'font-weight': '500',
@@ -1979,6 +1983,9 @@ export function createUI(data = {}) {
   node_86.dataset.mirrorId = 'node-86'
   node_86.dataset.mirrorName = 'Label'
   node_86.textContent = "Ø Wartezeit"
+  Object.assign(node_86.style, {
+    'width': 'fit-content',
+  })
   node_86.dataset.component = 'Label'
   node_86.dataset.slot = 'Label'
   node_85.appendChild(node_86)
@@ -2128,6 +2135,7 @@ export function createUI(data = {}) {
   node_94.dataset.mirrorId = 'node-94'
   node_94.dataset.mirrorName = 'Label'
   Object.assign(node_94.style, {
+    'width': 'fit-content',
     'color': 'var(--text-secondary)',
     'font-size': '13px',
     'font-weight': '500',
@@ -2221,6 +2229,9 @@ export function createUI(data = {}) {
   node_100.dataset.mirrorId = 'node-100'
   node_100.dataset.mirrorName = 'Label'
   node_100.textContent = "Patienten aktuell"
+  Object.assign(node_100.style, {
+    'width': 'fit-content',
+  })
   node_100.dataset.component = 'Label'
   node_100.dataset.slot = 'Label'
   node_99.appendChild(node_100)
@@ -2300,6 +2311,7 @@ export function createUI(data = {}) {
   node_104.dataset.mirrorId = 'node-104'
   node_104.dataset.mirrorName = 'Label'
   Object.assign(node_104.style, {
+    'width': 'fit-content',
     'color': 'var(--text-secondary)',
     'font-size': '13px',
     'font-weight': '500',
@@ -2592,6 +2604,9 @@ export function createUI(data = {}) {
   node_120.dataset.mirrorId = 'node-120'
   node_120.dataset.mirrorName = 'Label'
   node_120.textContent = "Kritische Fälle"
+  Object.assign(node_120.style, {
+    'width': 'fit-content',
+  })
   node_120.dataset.component = 'Label'
   node_120.dataset.slot = 'Label'
   node_119.appendChild(node_120)
@@ -2705,6 +2720,7 @@ export function createUI(data = {}) {
   node_127.dataset.mirrorId = 'node-127'
   node_127.dataset.mirrorName = 'Label'
   Object.assign(node_127.style, {
+    'width': 'fit-content',
     'color': 'var(--text-secondary)',
     'font-size': '13px',
     'font-weight': '500',
@@ -3444,9 +3460,9 @@ export function createUI(data = {}) {
   Object.assign(node_169.style, {
     'display': 'flex',
     'flex-direction': 'row',
-    'width': 'fit-content',
     'align-items': 'center',
     'gap': '8px',
+    'width': 'fit-content',
     'height': '36px',
     'flex-shrink': '0',
     'padding': '12px 16px',
@@ -7898,9 +7914,9 @@ const _runtime = {
   stateMachineToggle(el, stateOrder) {
     if (!el?._stateMachine) return
     const sm = el._stateMachine
-    // Get custom states (exclude 'default' and CSS pseudo-states like hover, focus, disabled)
-    // Note: 'active' is NOT excluded because it's commonly used as a custom toggle state
-    const cssStates = ['default', 'hover', 'focus', 'disabled']
+    // Get custom states (exclude 'default' and CSS pseudo-states)
+    // CSS pseudo-states are browser-triggered, not toggle targets
+    const cssStates = ['default', 'hover', 'focus', 'active', 'disabled']
     const order = stateOrder || Object.keys(sm.states).filter(s => !cssStates.includes(s))
     if (order.length === 0) return
 

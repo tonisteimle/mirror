@@ -121,12 +121,25 @@ export class SpacingSection extends BaseSection {
     const tokenButtons = hasTokens ? this.renderTokenButtons(value, direction, tokens) : ''
     const tokenGroup = hasTokens ? `<div class="token-group">${tokenButtons}</div>` : ''
 
+    // Check if value is a token reference and resolve it
+    const isTokenRef = value.startsWith('$')
+    let displayValue = value
+    let inputClass = 'prop-input'
+
+    if (isTokenRef && this.data?.resolveTokenValue) {
+      const resolved = this.data.resolveTokenValue(value)
+      if (resolved) {
+        displayValue = resolved
+        inputClass = 'prop-input token-resolved' // Muted style for resolved token values
+      }
+    }
+
     return `
       <div class="prop-row ${rowClass}${isOverride ? ' override' : ''}" data-expand-group="spacing">
         <span class="prop-label">${label}</span>
         <div class="prop-content">
           ${tokenGroup}
-          <input type="text" class="prop-input" autocomplete="off" value="${this.deps.escapeHtml(value)}" data-pad-dir="${direction}" placeholder="0">
+          <input type="text" class="${inputClass}" autocomplete="off" value="${this.deps.escapeHtml(displayValue)}" data-pad-dir="${direction}" data-token-ref="${isTokenRef ? this.deps.escapeHtml(value) : ''}" placeholder="0">
         </div>
       </div>
     `

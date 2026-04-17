@@ -234,7 +234,7 @@ export const imageTextButtonTests: TestCase[] = describe('Image + Text + Button 
     async api => {
       // Move Text to first
       await api.interact.moveElement('node-4', 'node-1', 0)
-      await api.utils.delay(50)
+      await api.utils.waitForIdle()
 
       const code = api.editor.getCode()
       const textPos = findComponentPos(code, 'Text')
@@ -660,12 +660,12 @@ export const sequentialMixedTests: TestCase[] = describe('Sequential Mixed Reord
     async api => {
       // First move: Icon to first
       await api.interact.moveElement('node-3', 'node-1', 0)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
 
       // After first move, order is: Icon, Button, Text
       // Now move Text to first
       await api.interact.moveElement('node-4', 'node-1', 0)
-      await api.utils.delay(50)
+      await api.utils.waitForIdle()
 
       const code = api.editor.getCode()
       const textPos = findComponentPos(code, 'Text')
@@ -683,11 +683,11 @@ export const sequentialMixedTests: TestCase[] = describe('Sequential Mixed Reord
     async api => {
       // Move Button to last position
       await api.interact.moveElement('node-3', 'node-1', 2)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
 
       // Now move Text to last position
       await api.interact.moveElement('node-2', 'node-1', 2)
-      await api.utils.delay(50)
+      await api.utils.waitForIdle()
 
       const code = api.editor.getCode()
       const iconPos = findComponentPos(code, 'Icon')

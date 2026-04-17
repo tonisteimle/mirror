@@ -7,11 +7,7 @@
  * Extracted from ir/index.ts for modularity.
  */
 
-import type {
-  State,
-  Instance,
-  Property,
-} from '../../parser/ast'
+import type { State, Instance, Property } from '../../parser/ast'
 import type {
   IRStateMachine,
   IRStateDefinition,
@@ -22,6 +18,21 @@ import type {
 } from '../types'
 import { SYSTEM_STATES } from '../../schema/parser-helpers'
 import { convertStateAnimation, convertStateDependency } from './data-transformer'
+
+/**
+ * CSS pseudo-class states that should NEVER be toggle targets.
+ * These are browser-triggered states, not user-triggered toggle states.
+ * Even if they have styles defined (e.g., "hover: bg #red"), they should not
+ * be used as toggle() or exclusive() targets.
+ */
+const CSS_PSEUDO_STATES = new Set([
+  'hover',
+  'focus',
+  'active',
+  'disabled',
+  'focus-within',
+  'focus-visible',
+])
 
 /**
  * Context interface for state machine transformation.
@@ -54,20 +65,19 @@ export function buildStateMachine(
   // 1. States NOT in SYSTEM_STATES (like "on", "open", "loading"), OR
   // 2. States in SYSTEM_STATES but used as custom states (have properties defined)
   //    e.g., "active: bg #2271C1" is a custom state, not CSS :active pseudo-class
-  const customStates = states.filter(s =>
-    !SYSTEM_STATES.has(s.name) ||
-    (s.properties && s.properties.length > 0)
+  const customStates = states.filter(
+    s => !SYSTEM_STATES.has(s.name) || (s.properties && s.properties.length > 0)
   )
 
   // Check if any event has a state machine function (toggle, exclusive)
-  const hasStateMachineEvents = events?.some(e =>
-    e.actions?.some(a => a.isBuiltinStateFunction)
-  ) ?? false
+  const hasStateMachineEvents =
+    events?.some(e => e.actions?.some(a => a.isBuiltinStateFunction)) ?? false
 
   // Build state machine if:
   // 1. There are interactive states (with triggers), OR
-  // 2. There are custom states AND state machine events
-  if (interactiveStates.length === 0 && !(customStates.length > 0 && hasStateMachineEvents)) {
+  // 2. There are state machine events (like toggle()) - these create implicit states
+  // Note: toggle() without explicit states creates an implicit 'on' state
+  if (interactiveStates.length === 0 && !hasStateMachineEvents) {
     return undefined
   }
 
@@ -199,14 +209,14 @@ export function buildStateMachine(
     for (const event of events) {
       for (const action of event.actions) {
         if (action.isBuiltinStateFunction) {
-          // Determine the target state
+          // Determine the target state for toggle/exclusive
           // Use the first custom state, fallback to 'on'
-          // A "custom" state is either:
-          // 1. Not a system state (like "on", "open", "loading"), OR
-          // 2. A system state that has styles defined (making it a custom toggle target)
-          //    e.g., "active: bg #2271C1" is used as a custom state, not CSS :active
+          // IMPORTANT: Exclude CSS pseudo-states (hover, focus, active, disabled)
+          // even if they have styles defined - these are browser-triggered, not toggle targets
           const customStateNames = Object.keys(stateDefinitions).filter(s => {
             if (s === 'default') return false
+            // Never use CSS pseudo-states as toggle targets
+            if (CSS_PSEUDO_STATES.has(s)) return false
             const def = stateDefinitions[s]
             // Include if not a system state, or if it has styles defined
             return !SYSTEM_STATES.has(s) || (def.styles && def.styles.length > 0)
@@ -224,7 +234,7 @@ export function buildStateMachine(
           // Create the transition
           const transition: IRStateTransition = {
             to: targetState,
-            trigger: `on${event.name}`,  // e.g., 'onclick' for click event
+            trigger: `on${event.name}`, // e.g., 'onclick' for click event
             modifier,
           }
 
@@ -239,10 +249,11 @@ export function buildStateMachine(
           }
 
           // Check if this transition already exists (avoid duplicates)
-          const exists = transitions.some(t =>
-            t.trigger === transition.trigger &&
-            t.to === transition.to &&
-            t.modifier === transition.modifier
+          const exists = transitions.some(
+            t =>
+              t.trigger === transition.trigger &&
+              t.to === transition.to &&
+              t.modifier === transition.modifier
           )
 
           if (!exists) {
@@ -273,7 +284,9 @@ export function buildStateMachine(
   // This does NOT apply when interactive states only have 'when' dependencies
   const statesWithExplicitTriggers = states.filter(s => s.trigger && !SYSTEM_STATES.has(s.name))
   if (!initial && statesWithExplicitTriggers.length > 0) {
-    const statesWithoutTriggers = states.filter(s => !s.trigger && !s.when && !SYSTEM_STATES.has(s.name))
+    const statesWithoutTriggers = states.filter(
+      s => !s.trigger && !s.when && !SYSTEM_STATES.has(s.name)
+    )
     if (statesWithoutTriggers.length > 0) {
       initial = statesWithoutTriggers[0].name
     }
@@ -295,15 +308,15 @@ export function buildStateMachine(
     // Check if any custom state has a trigger attached
     // If none do, transitions are controlled by events (cycle(), toggle(), etc.)
     // and initial state should be 'default'
-    const anyStateHasTrigger = states.some(s =>
-      !SYSTEM_STATES.has(s.name) && !syntheticStateNames.has(s.name) && s.trigger
+    const anyStateHasTrigger = states.some(
+      s => !SYSTEM_STATES.has(s.name) && !syntheticStateNames.has(s.name) && s.trigger
     )
 
     if (customStateNames.length >= 2 && anyStateHasTrigger) {
       // Multi-state with triggers: start in first defined state (cycle behavior)
       // Use states array to preserve definition order
-      const firstCustomState = states.find(s =>
-        !SYSTEM_STATES.has(s.name) && !syntheticStateNames.has(s.name)
+      const firstCustomState = states.find(
+        s => !SYSTEM_STATES.has(s.name) && !syntheticStateNames.has(s.name)
       )
       initial = firstCustomState?.name || customStateNames[0]
     } else {

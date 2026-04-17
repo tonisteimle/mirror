@@ -135,7 +135,7 @@ export const edgeCaseTests: TestCase[] = describe('Stacked Edge Cases', [
     async api => {
       // Drop first element
       await api.interact.dragToPosition('Button', 'node-1', 50, 50)
-      await api.utils.delay(200)
+      await api.utils.waitForIdle()
 
       // Drop second element
       await api.interact.dragToPosition('Text', 'node-1', 200, 100)
@@ -229,9 +229,9 @@ export const precisePositionTests: TestCase[] = describe('Precise Position Verif
     async api => {
       // Drop three elements at different positions
       await api.interact.dragToPosition('Button', 'node-1', 50, 50)
-      await api.utils.delay(200)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Text', 'node-1', 200, 100)
-      await api.utils.delay(200)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Icon', 'node-1', 350, 250)
 
       const code = api.editor.getCode()
@@ -375,11 +375,11 @@ export const appStackedTests: TestCase[] = describe('App Stacked', [
     async api => {
       // Drop first element
       await api.interact.dragToPosition('Button', 'node-1', 50, 50)
-      await api.utils.delay(200)
+      await api.utils.waitForIdle()
 
       // Drop second element
       await api.interact.dragToPosition('Text', 'node-1', 200, 150)
-      await api.utils.delay(200)
+      await api.utils.waitForIdle()
 
       // Drop third element
       await api.interact.dragToPosition('Icon', 'node-1', 300, 200)
@@ -461,7 +461,7 @@ export const inputTextareaButtonTests: TestCase[] = describe('Input + Textarea +
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Input', 'node-1', 50, 30)
-      await api.utils.delay(200)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Textarea', 'node-1', 50, 100)
 
       const code = api.editor.getCode()
@@ -478,9 +478,9 @@ export const inputTextareaButtonTests: TestCase[] = describe('Input + Textarea +
     'Frame stacked, w 400, h 350, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Input', 'node-1', 50, 30)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Textarea', 'node-1', 50, 80)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Button', 'node-1', 50, 200)
 
       const code = api.editor.getCode()
@@ -524,7 +524,7 @@ export const linkImageIconTests: TestCase[] = describe('Link + Image + Icon Stac
     'Frame stacked, w 300, h 250, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Image', 'node-1', 50, 30)
-      await api.utils.delay(200)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Icon', 'node-1', 220, 40)
 
       const code = api.editor.getCode()
@@ -541,9 +541,9 @@ export const linkImageIconTests: TestCase[] = describe('Link + Image + Icon Stac
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Image', 'node-1', 30, 30)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Image', 'node-1', 200, 30)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Link', 'node-1', 100, 200)
 
       const code = api.editor.getCode()
@@ -591,9 +591,9 @@ export const dividerSpacerStackedTests: TestCase[] = describe('Divider + Spacer 
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Text', 'node-1', 50, 30)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Divider', 'node-1', 50, 80)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Text', 'node-1', 50, 120)
 
       const code = api.editor.getCode()
@@ -645,9 +645,9 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Switch', 'node-1', 50, 30)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Switch', 'node-1', 50, 80)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Switch', 'node-1', 50, 130)
 
       const code = api.editor.getCode()
@@ -667,9 +667,9 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
     'Frame stacked, w 400, h 350, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Checkbox', 'node-1', 50, 30)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Slider', 'node-1', 50, 100)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Button', 'node-1', 50, 200)
 
       const code = api.editor.getCode()
@@ -695,11 +695,11 @@ export const complexStackedMixedTests: TestCase[] = describe(
       'Frame stacked, w 500, h 400, bg #1a1a1a',
       async api => {
         await api.interact.dragToPosition('Icon', 'node-1', 30, 30)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Text', 'node-1', 70, 35)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Input', 'node-1', 200, 30)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Button', 'node-1', 400, 30)
 
         const code = api.editor.getCode()
@@ -718,11 +718,11 @@ export const complexStackedMixedTests: TestCase[] = describe(
       'Frame stacked, w 400, h 350, bg #1a1a1a',
       async api => {
         await api.interact.dragToPosition('Image', 'node-1', 30, 30)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Icon', 'node-1', 300, 40)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Text', 'node-1', 30, 220)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Link', 'node-1', 30, 270)
 
         const code = api.editor.getCode()
@@ -738,13 +738,13 @@ export const complexStackedMixedTests: TestCase[] = describe(
       'Frame stacked, w 400, h 400, bg #1a1a1a',
       async api => {
         await api.interact.dragToPosition('Text', 'node-1', 30, 30)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Switch', 'node-1', 30, 70)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Checkbox', 'node-1', 30, 130)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Slider', 'node-1', 30, 200)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Button', 'node-1', 30, 300)
 
         const code = api.editor.getCode()
@@ -764,13 +764,13 @@ export const complexStackedMixedTests: TestCase[] = describe(
       'Frame stacked, w 400, h 400, bg #1a1a1a',
       async api => {
         await api.interact.dragToPosition('Input', 'node-1', 50, 30)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Input', 'node-1', 50, 80)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Textarea', 'node-1', 50, 130)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Button', 'node-1', 50, 280)
-        await api.utils.delay(150)
+        await api.utils.waitForIdle()
         await api.interact.dragToPosition('Icon', 'node-1', 300, 285)
 
         const code = api.editor.getCode()
@@ -798,16 +798,16 @@ export const positionPrecisionMixedTests: TestCase[] = describe('Position Precis
     async api => {
       // Row 1
       await api.interact.dragToPosition('Icon', 'node-1', 50, 50)
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Icon', 'node-1', 175, 50)
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Icon', 'node-1', 300, 50)
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
       // Row 2
       await api.interact.dragToPosition('Icon', 'node-1', 50, 175)
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Icon', 'node-1', 175, 175)
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Icon', 'node-1', 300, 175)
 
       const code = api.editor.getCode()
@@ -818,11 +818,11 @@ export const positionPrecisionMixedTests: TestCase[] = describe('Position Precis
 
   testWithSetup('Diagonal: Button trail', 'Frame stacked, w 400, h 400, bg #1a1a1a', async api => {
     await api.interact.dragToPosition('Button', 'node-1', 50, 50)
-    await api.utils.delay(100)
+    await api.utils.waitForIdle()
     await api.interact.dragToPosition('Button', 'node-1', 150, 150)
-    await api.utils.delay(100)
+    await api.utils.waitForIdle()
     await api.interact.dragToPosition('Button', 'node-1', 250, 250)
-    await api.utils.delay(100)
+    await api.utils.waitForIdle()
     await api.interact.dragToPosition('Button', 'node-1', 350, 350)
 
     const code = api.editor.getCode()
@@ -842,13 +842,13 @@ export const positionPrecisionMixedTests: TestCase[] = describe('Position Precis
     async api => {
       // Top-left
       await api.interact.dragToPosition('Icon', 'node-1', 20, 20)
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
       // Top-right
       await api.interact.dragToPosition('Button', 'node-1', 330, 20)
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
       // Bottom-left
       await api.interact.dragToPosition('Text', 'node-1', 20, 250)
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
       // Bottom-right
       await api.interact.dragToPosition('Link', 'node-1', 330, 250)
 
@@ -951,7 +951,7 @@ export const appStackedMixedTests: TestCase[] = describe('App Stacked Mixed Comp
     'App stacked, w 500, h 400, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Icon', 'node-1', 30, 30)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Text', 'node-1', 70, 35)
 
       const code = api.editor.getCode()
@@ -968,9 +968,9 @@ export const appStackedMixedTests: TestCase[] = describe('App Stacked Mixed Comp
     'App stacked, w 500, h 400, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Input', 'node-1', 50, 50)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Textarea', 'node-1', 50, 100)
-      await api.utils.delay(150)
+      await api.utils.waitForIdle()
       await api.interact.dragToPosition('Button', 'node-1', 50, 250)
 
       const code = api.editor.getCode()
@@ -982,9 +982,9 @@ export const appStackedMixedTests: TestCase[] = describe('App Stacked Mixed Comp
 
   testWithSetup('App stacked: Zag controls', 'App stacked, w 400, h 350, bg #1a1a1a', async api => {
     await api.interact.dragToPosition('Checkbox', 'node-1', 50, 50)
-    await api.utils.delay(150)
+    await api.utils.waitForIdle()
     await api.interact.dragToPosition('Switch', 'node-1', 50, 100)
-    await api.utils.delay(150)
+    await api.utils.waitForIdle()
     await api.interact.dragToPosition('Slider', 'node-1', 50, 160)
 
     const code = api.editor.getCode()

@@ -1,0 +1,500 @@
+// =============================================================================
+// Flex Layout Combinations Test
+// =============================================================================
+// Dieses File testet alle wichtigen Flex-Kombinationen mit:
+// - Richtung (hor, ver)
+// - Alignment (center, spread, tl, tc, tr, cl, cr, bl, bc, br)
+// - Sizing (full, hug, fixed)
+// - Nesting (Kinder mit eigenen Layouts)
+// - grow, shrink
+// =============================================================================
+
+// Tokens für konsistente Darstellung
+test.bg: #0a0a0a
+demo.bg: #1e293b
+child.bg: #3b82f6
+child2.bg: #10b981
+child3.bg: #f59e0b
+label.col: #94a3b8
+
+// Container für alle Tests
+Frame bg $test, pad 24, gap 32, scroll, h full
+  Text "Flex Layout Combinations", fs 24, weight bold, col white
+
+  // ===========================================================================
+  // SECTION 1: Basic Direction
+  // ===========================================================================
+  Text "1. BASIC DIRECTION", fs 16, weight bold, col #5BA8F5, mar 16 0 0 0
+
+  // --- Test 1.1: Horizontal ---
+  Frame gap 8
+    Text "1.1 hor - Kinder nebeneinander", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 8, h 60
+      Frame bg $child, pad 8, rad 4
+        Text "A", col white
+      Frame bg $child2, pad 8, rad 4
+        Text "B", col white
+      Frame bg $child3, pad 8, rad 4
+        Text "C", col white
+
+  // --- Test 1.2: Vertical (default) ---
+  Frame gap 8
+    Text "1.2 ver (default) - Kinder untereinander", col $label, fs 12
+    Frame bg $demo, pad 16, ver, gap 8, w 200
+      Frame bg $child, pad 8, rad 4
+        Text "A", col white
+      Frame bg $child2, pad 8, rad 4
+        Text "B", col white
+      Frame bg $child3, pad 8, rad 4
+        Text "C", col white
+
+  // ===========================================================================
+  // SECTION 2: Width Sizing in Horizontal Layout
+  // ===========================================================================
+  Text "2. WIDTH SIZING (hor container)", fs 16, weight bold, col #5BA8F5, mar 16 0 0 0
+
+  // --- Test 2.1: All children w hug ---
+  Frame gap 8
+    Text "2.1 Alle Kinder w hug - schrumpfen auf Inhalt", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 8, w 400, h 60
+      Frame bg $child, pad 8, rad 4, w hug
+        Text "Hug", col white
+      Frame bg $child2, pad 8, rad 4, w hug
+        Text "Hug", col white
+      Frame bg $child3, pad 8, rad 4, w hug
+        Text "Hug", col white
+
+  // --- Test 2.2: All children w full ---
+  Frame gap 8
+    Text "2.2 Alle Kinder w full - teilen sich den Platz gleichmäßig", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 8, w 400, h 60
+      Frame bg $child, pad 8, rad 4, w full
+        Text "Full", col white
+      Frame bg $child2, pad 8, rad 4, w full
+        Text "Full", col white
+      Frame bg $child3, pad 8, rad 4, w full
+        Text "Full", col white
+
+  // --- Test 2.3: Fixed width children ---
+  Frame gap 8
+    Text "2.3 Fixe Breiten (80, 120, 60) - exakte Pixel", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 8, w 400, h 60
+      Frame bg $child, pad 8, rad 4, w 80
+        Text "80px", col white
+      Frame bg $child2, pad 8, rad 4, w 120
+        Text "120px", col white
+      Frame bg $child3, pad 8, rad 4, w 60
+        Text "60px", col white
+
+  // --- Test 2.4: Mixed sizing ---
+  Frame gap 8
+    Text "2.4 Mix: fixed (80) + full + hug - full füllt Rest", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 8, w 400, h 60
+      Frame bg $child, pad 8, rad 4, w 80
+        Text "80px", col white
+      Frame bg $child2, pad 8, rad 4, w full
+        Text "Full (füllt Rest)", col white
+      Frame bg $child3, pad 8, rad 4, w hug
+        Text "Hug", col white
+
+  // --- Test 2.5: grow ---
+  Frame gap 8
+    Text "2.5 grow - erstes Kind wächst, andere hug", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 8, w 400, h 60
+      Frame bg $child, pad 8, rad 4, grow
+        Text "Grow", col white
+      Frame bg $child2, pad 8, rad 4
+        Text "Normal", col white
+      Frame bg $child3, pad 8, rad 4
+        Text "Normal", col white
+
+  // ===========================================================================
+  // SECTION 3: Height Sizing in Vertical Layout
+  // ===========================================================================
+  Text "3. HEIGHT SIZING (ver container)", fs 16, weight bold, col #5BA8F5, mar 16 0 0 0
+
+  Frame hor, gap 16
+
+    // --- Test 3.1: All children h hug ---
+    Frame gap 8
+      Text "3.1 h hug", col $label, fs 12
+      Frame bg $demo, pad 16, ver, gap 8, w 120, h 200
+        Frame bg $child, pad 8, rad 4, h hug
+          Text "Hug", col white
+        Frame bg $child2, pad 8, rad 4, h hug
+          Text "Hug", col white
+        Frame bg $child3, pad 8, rad 4, h hug
+          Text "Hug", col white
+
+    // --- Test 3.2: All children h full ---
+    Frame gap 8
+      Text "3.2 h full", col $label, fs 12
+      Frame bg $demo, pad 16, ver, gap 8, w 120, h 200
+        Frame bg $child, pad 8, rad 4, h full
+          Text "Full", col white
+        Frame bg $child2, pad 8, rad 4, h full
+          Text "Full", col white
+        Frame bg $child3, pad 8, rad 4, h full
+          Text "Full", col white
+
+    // --- Test 3.3: Fixed heights ---
+    Frame gap 8
+      Text "3.3 fixed h", col $label, fs 12
+      Frame bg $demo, pad 16, ver, gap 8, w 120, h 200
+        Frame bg $child, pad 8, rad 4, h 40
+          Text "40px", col white
+        Frame bg $child2, pad 8, rad 4, h 60
+          Text "60px", col white
+        Frame bg $child3, pad 8, rad 4, h 30
+          Text "30px", col white
+
+    // --- Test 3.4: grow in vertical ---
+    Frame gap 8
+      Text "3.4 grow", col $label, fs 12
+      Frame bg $demo, pad 16, ver, gap 8, w 120, h 200
+        Frame bg $child, pad 8, rad 4, grow
+          Text "Grow", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "Hug", col white
+        Frame bg $child3, pad 8, rad 4
+          Text "Hug", col white
+
+  // ===========================================================================
+  // SECTION 4: Alignment in Horizontal Layout
+  // ===========================================================================
+  Text "4. ALIGNMENT (hor container)", fs 16, weight bold, col #5BA8F5, mar 16 0 0 0
+
+  Frame hor, gap 16, wrap
+
+    // --- Test 4.1: center ---
+    Frame gap 8
+      Text "4.1 center", col $label, fs 12
+      Frame bg $demo, pad 16, hor, gap 8, w 200, h 100, center
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 4.2: spread ---
+    Frame gap 8
+      Text "4.2 spread", col $label, fs 12
+      Frame bg $demo, pad 16, hor, gap 8, w 200, h 100, spread
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 4.3: tl (top-left) ---
+    Frame gap 8
+      Text "4.3 tl", col $label, fs 12
+      Frame bg $demo, pad 16, hor, gap 8, w 200, h 100, tl
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 4.4: tr (top-right) ---
+    Frame gap 8
+      Text "4.4 tr", col $label, fs 12
+      Frame bg $demo, pad 16, hor, gap 8, w 200, h 100, tr
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 4.5: bl (bottom-left) ---
+    Frame gap 8
+      Text "4.5 bl", col $label, fs 12
+      Frame bg $demo, pad 16, hor, gap 8, w 200, h 100, bl
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 4.6: br (bottom-right) ---
+    Frame gap 8
+      Text "4.6 br", col $label, fs 12
+      Frame bg $demo, pad 16, hor, gap 8, w 200, h 100, br
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 4.7: spread + ver-center ---
+    Frame gap 8
+      Text "4.7 spread, ver-center", col $label, fs 12
+      Frame bg $demo, pad 16, hor, gap 8, w 200, h 100, spread, ver-center
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+  // ===========================================================================
+  // SECTION 5: Alignment in Vertical Layout
+  // ===========================================================================
+  Text "5. ALIGNMENT (ver container)", fs 16, weight bold, col #5BA8F5, mar 16 0 0 0
+
+  Frame hor, gap 16, wrap
+
+    // --- Test 5.1: center ---
+    Frame gap 8
+      Text "5.1 center", col $label, fs 12
+      Frame bg $demo, pad 16, ver, gap 8, w 120, h 150, center
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 5.2: spread ---
+    Frame gap 8
+      Text "5.2 spread", col $label, fs 12
+      Frame bg $demo, pad 16, ver, gap 8, w 120, h 150, spread
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 5.3: tl ---
+    Frame gap 8
+      Text "5.3 tl", col $label, fs 12
+      Frame bg $demo, pad 16, ver, gap 8, w 120, h 150, tl
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 5.4: br ---
+    Frame gap 8
+      Text "5.4 br", col $label, fs 12
+      Frame bg $demo, pad 16, ver, gap 8, w 120, h 150, br
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+    // --- Test 5.5: spread + hor-center ---
+    Frame gap 8
+      Text "5.5 spread, hor-center", col $label, fs 12
+      Frame bg $demo, pad 16, ver, gap 8, w 120, h 150, spread, hor-center
+        Frame bg $child, pad 8, rad 4
+          Text "A", col white
+        Frame bg $child2, pad 8, rad 4
+          Text "B", col white
+
+  // ===========================================================================
+  // SECTION 6: Nested Layouts
+  // ===========================================================================
+  Text "6. NESTED LAYOUTS", fs 16, weight bold, col #5BA8F5, mar 16 0 0 0
+
+  // --- Test 6.1: hor > ver children ---
+  Frame gap 8
+    Text "6.1 hor Container mit ver Kindern", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 16, h 150
+      Frame bg $child, pad 8, rad 4, ver, gap 4, w 100
+        Text "Col 1", col white, weight bold
+        Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+          Text "A", col white
+        Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+          Text "B", col white
+      Frame bg $child2, pad 8, rad 4, ver, gap 4, w 100
+        Text "Col 2", col white, weight bold
+        Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+          Text "C", col white
+        Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+          Text "D", col white
+      Frame bg $child3, pad 8, rad 4, ver, gap 4, w 100
+        Text "Col 3", col white, weight bold
+        Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+          Text "E", col white
+        Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+          Text "F", col white
+
+  // --- Test 6.2: ver > hor children ---
+  Frame gap 8
+    Text "6.2 ver Container mit hor Kindern", col $label, fs 12
+    Frame bg $demo, pad 16, ver, gap 8, w 300
+      Frame bg $child, pad 8, rad 4, hor, gap 8, spread
+        Text "Row 1", col white
+        Frame hor, gap 4
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "A", col white
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "B", col white
+      Frame bg $child2, pad 8, rad 4, hor, gap 8, spread
+        Text "Row 2", col white
+        Frame hor, gap 4
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "C", col white
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "D", col white
+
+  // --- Test 6.3: Deep nesting (3 levels) ---
+  Frame gap 8
+    Text "6.3 3-Level Nesting: hor > ver > hor", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 16
+      Frame bg $child, pad 12, rad 4, ver, gap 8, w full
+        Text "Level 1 (ver)", col white, fs 10
+        Frame bg rgba(255,255,255,0.15), pad 8, rad 4, hor, gap 8
+          Text "L2", col white, fs 10
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "A", col white
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "B", col white
+        Frame bg rgba(255,255,255,0.15), pad 8, rad 4, hor, gap 8
+          Text "L2", col white, fs 10
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "C", col white
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "D", col white
+      Frame bg $child2, pad 12, rad 4, ver, gap 8, w full
+        Text "Level 1 (ver)", col white, fs 10
+        Frame bg rgba(255,255,255,0.15), pad 8, rad 4, hor, gap 8
+          Text "L2", col white, fs 10
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "E", col white
+          Frame bg rgba(255,255,255,0.2), pad 4, rad 2
+            Text "F", col white
+
+  // ===========================================================================
+  // SECTION 7: Full vs Hug Container
+  // ===========================================================================
+  Text "7. CONTAINER SIZING", fs 16, weight bold, col #5BA8F5, mar 16 0 0 0
+
+  // --- Test 7.1: Container w hug ---
+  Frame gap 8
+    Text "7.1 Container w hug - schrumpft auf Kinder", col $label, fs 12
+    Frame bg $demo, pad 16
+      Frame bg $child, pad 8, rad 4, hor, gap 8, w hug
+        Text "A", col white
+        Text "B", col white
+        Text "C", col white
+
+  // --- Test 7.2: Container w full ---
+  Frame gap 8
+    Text "7.2 Container w full - nimmt gesamte Breite", col $label, fs 12
+    Frame bg $demo, pad 16
+      Frame bg $child, pad 8, rad 4, hor, gap 8, w full
+        Text "A", col white
+        Text "B", col white
+        Text "C", col white
+
+  // --- Test 7.3: Container w full, children w full ---
+  Frame gap 8
+    Text "7.3 Container w full, Kinder w full - gleichmäßig verteilt", col $label, fs 12
+    Frame bg $demo, pad 16
+      Frame bg $child, pad 8, rad 4, hor, gap 8, w full
+        Frame bg rgba(255,255,255,0.2), pad 8, rad 2, w full, center
+          Text "1/3", col white
+        Frame bg rgba(255,255,255,0.2), pad 8, rad 2, w full, center
+          Text "1/3", col white
+        Frame bg rgba(255,255,255,0.2), pad 8, rad 2, w full, center
+          Text "1/3", col white
+
+  // ===========================================================================
+  // SECTION 8: Complex Real-World Layouts
+  // ===========================================================================
+  Text "8. REAL-WORLD PATTERNS", fs 16, weight bold, col #5BA8F5, mar 16 0 0 0
+
+  // --- Test 8.1: Header pattern ---
+  Frame gap 8
+    Text "8.1 Header: Logo links, Nav mitte, Actions rechts", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 16, spread, ver-center, h 60
+      Frame bg $child, pad 8, rad 4
+        Text "Logo", col white
+      Frame hor, gap 16
+        Text "Home", col #888
+        Text "About", col #888
+        Text "Contact", col #888
+      Frame hor, gap 8
+        Frame bg $child2, pad 8 16, rad 4
+          Text "Login", col white
+        Frame bg $child3, pad 8 16, rad 4
+          Text "Sign Up", col white
+
+  // --- Test 8.2: Sidebar layout ---
+  Frame gap 8
+    Text "8.2 Sidebar + Content (fixed + grow)", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 16, h 200
+      Frame bg $child, pad 12, rad 4, w 150, ver, gap 8
+        Text "Sidebar", col white, weight bold
+        Text "Menu 1", col rgba(255,255,255,0.7)
+        Text "Menu 2", col rgba(255,255,255,0.7)
+        Text "Menu 3", col rgba(255,255,255,0.7)
+      Frame bg $child2, pad 12, rad 4, grow, ver, gap 8
+        Text "Content Area", col white, weight bold
+        Text "This area uses grow to fill remaining space", col rgba(255,255,255,0.7)
+
+  // --- Test 8.3: Card grid ---
+  Frame gap 8
+    Text "8.3 Card Grid (hor, wrap, w full Kinder)", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 16, wrap
+      Frame bg $child, pad 16, rad 8, w 150, ver, gap 8
+        Text "Card 1", col white, weight bold
+        Text "Content", col rgba(255,255,255,0.7)
+      Frame bg $child2, pad 16, rad 8, w 150, ver, gap 8
+        Text "Card 2", col white, weight bold
+        Text "Content", col rgba(255,255,255,0.7)
+      Frame bg $child3, pad 16, rad 8, w 150, ver, gap 8
+        Text "Card 3", col white, weight bold
+        Text "Content", col rgba(255,255,255,0.7)
+      Frame bg $child, pad 16, rad 8, w 150, ver, gap 8
+        Text "Card 4", col white, weight bold
+        Text "Content", col rgba(255,255,255,0.7)
+
+  // --- Test 8.4: Form layout ---
+  Frame gap 8
+    Text "8.4 Form: Labels + Inputs (ver mit hor Rows)", col $label, fs 12
+    Frame bg $demo, pad 16, ver, gap 12, w 350
+      Frame hor, gap 12, ver-center
+        Text "Name:", col #888, w 80
+        Frame bg #333, pad 8, rad 4, grow
+          Text "Input field", col #666
+      Frame hor, gap 12, ver-center
+        Text "Email:", col #888, w 80
+        Frame bg #333, pad 8, rad 4, grow
+          Text "Input field", col #666
+      Frame hor, gap 12, ver-center
+        Text "Message:", col #888, w 80
+        Frame bg #333, pad 8, rad 4, grow, h 60
+          Text "Textarea", col #666
+      Frame hor, gap 8, tr
+        Frame bg $child, pad 8 16, rad 4
+          Text "Cancel", col white
+        Frame bg $child2, pad 8 16, rad 4
+          Text "Submit", col white
+
+  // ===========================================================================
+  // SECTION 9: Edge Cases
+  // ===========================================================================
+  Text "9. EDGE CASES", fs 16, weight bold, col #5BA8F5, mar 16 0 0 0
+
+  // --- Test 9.1: Single child ---
+  Frame gap 8
+    Text "9.1 Einzelnes Kind mit center", col $label, fs 12
+    Frame bg $demo, pad 16, w 200, h 100, center
+      Frame bg $child, pad 8, rad 4
+        Text "Centered", col white
+
+  // --- Test 9.2: Empty container ---
+  Frame gap 8
+    Text "9.2 Leerer Container (nur padding)", col $label, fs 12
+    Frame bg $demo, pad 16, w 200, h 60
+
+  // --- Test 9.3: Very long content ---
+  Frame gap 8
+    Text "9.3 Überlanger Text mit truncate", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 8, w 300
+      Frame bg $child, pad 8, rad 4, w full
+        Text "Dies ist ein sehr langer Text der abgeschnitten werden sollte", col white, truncate
+
+  // --- Test 9.4: minw/maxw ---
+  Frame gap 8
+    Text "9.4 minw 100, maxw 200 (Container ist 400)", col $label, fs 12
+    Frame bg $demo, pad 16, hor, gap 8, w 400
+      Frame bg $child, pad 8, rad 4, minw 100, maxw 200, grow
+        Text "Constrained", col white
+      Frame bg $child2, pad 8, rad 4, grow
+        Text "Normal grow", col white
+
+  // Footer
+  Frame h 100

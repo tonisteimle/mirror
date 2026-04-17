@@ -5,13 +5,15 @@
  * - Token buttons display when tokens are defined
  * - Token values are shown correctly
  * - Token selection works
+ *
+ * Uses the Panel API (api.panel.property.*) for property panel interactions.
  */
 
 import { testWithSetup, describe, type TestCase } from '../test-runner'
 import type { TestAPI } from '../types'
 
 // =============================================================================
-// Helper: Query Property Panel DOM
+// Legacy Helper Functions (for tests not yet migrated to Panel API)
 // =============================================================================
 
 function queryPropertyPanel(selector: string): Element | null {
@@ -26,26 +28,6 @@ function queryAllPropertyPanel(selector: string): Element[] {
   return Array.from(panel.querySelectorAll(selector))
 }
 
-/**
- * Ensure Property Panel is visible
- */
-function showPropertyPanel(): void {
-  const studio = (window as any).__mirrorStudio__
-  // Try state.setPanelVisibility first (new architecture)
-  if (studio?.state?.setPanelVisibility) {
-    studio.state.setPanelVisibility('property', true)
-  }
-  // Fallback to actions (legacy)
-  else if (studio?.actions?.setPanelVisibility) {
-    studio.actions.setPanelVisibility('property', true)
-  }
-}
-
-function getTokenButtons(section: string): Element[] {
-  // Token buttons have class 'token-btn'
-  return queryAllPropertyPanel(`.token-btn[data-${section}-token]`)
-}
-
 function getPadTokenButtons(): Element[] {
   return queryAllPropertyPanel('.token-btn[data-pad-token]')
 }
@@ -54,10 +36,12 @@ function getGapTokenButtons(): Element[] {
   return queryAllPropertyPanel('.token-btn[data-gap-token]')
 }
 
-function getPropertyInput(name: string): HTMLInputElement | null {
-  return queryPropertyPanel(
-    `input[data-${name}-dir], input[data-prop="${name}"]`
-  ) as HTMLInputElement | null
+function showPropertyPanel(): void {
+  // Ensure the property panel is visible
+  const panel = document.getElementById('property-panel')
+  if (panel) {
+    panel.style.display = 'flex'
+  }
 }
 
 // =============================================================================
@@ -66,17 +50,13 @@ function getPropertyInput(name: string): HTMLInputElement | null {
 
 export const tokenDisplayTests: TestCase[] = describe('Token Display', [
   testWithSetup(
-    'Debug: Check property panel visibility and tokens',
+    'Property panel visibility check via Panel API',
     `sm.pad: 8
 md.pad: 16
 lg.pad: 24
 
 Frame pad 16, bg #333`,
     async (api: TestAPI) => {
-      // Ensure Property Panel is visible
-      showPropertyPanel()
-      await api.utils.delay(100)
-
       // Check code was set correctly
       const code = api.editor.getCode()
       api.assert.ok(
@@ -84,36 +64,25 @@ Frame pad 16, bg #333`,
         `Code should contain sm.pad: 8, got: ${code.substring(0, 100)}...`
       )
 
-      // Select the Frame
-      api.interact.select('node-1')
-      await api.utils.delay(300)
+      // Select the Frame using Studio API
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
 
-      // Check if property panel exists and is visible
-      const propertyPanel = document.getElementById('property-panel')
-      api.assert.ok(propertyPanel !== null, 'Property panel element should exist')
+      // Check if property panel is visible via Panel API
+      api.assert.ok(api.panel.property.isVisible(), 'Property panel should be visible')
 
-      const ppStyle = propertyPanel ? getComputedStyle(propertyPanel) : null
+      // Verify selected node matches via Panel API
+      const selectedId = api.panel.property.getSelectedNodeId()
       api.assert.ok(
-        ppStyle?.display !== 'none',
-        `Property panel should be visible (display: ${ppStyle?.display})`
+        selectedId === 'node-1',
+        `Property panel should show node-1, got "${selectedId}"`
       )
 
-      // Check property panel content
-      const ppContent = propertyPanel?.innerHTML || ''
+      // Get available token options for padding via Panel API
+      const padTokens = api.panel.property.getTokenOptions('pad')
       api.assert.ok(
-        ppContent.length > 50,
-        `Property panel should have content (length: ${ppContent.length})`
-      )
-
-      // Check for spacing section
-      const hasSpacingSection = ppContent.includes('Padding') || ppContent.includes('spacing')
-      api.assert.ok(hasSpacingSection, 'Property panel should have Padding/spacing section')
-
-      // Check for token buttons
-      const buttons = getPadTokenButtons()
-      api.assert.ok(
-        buttons.length >= 3,
-        `Expected at least 3 pad token buttons, got ${buttons.length}`
+        padTokens.length >= 3,
+        `Expected at least 3 pad tokens, got ${padTokens.length}: ${padTokens.join(', ')}`
       )
     }
   ),
@@ -126,26 +95,25 @@ lg.pad: 24
 
 Frame pad 16, bg #333`,
     async (api: TestAPI) => {
-      // Ensure Property Panel is visible
-      showPropertyPanel()
-      await api.utils.delay(100)
+      // Select the Frame via Studio API
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
 
-      // Select the Frame
-      api.interact.select('node-1')
-      await api.utils.delay(200)
-
-      // Check that token buttons exist
-      const buttons = getPadTokenButtons()
+      // Check that token options are available via Panel API
+      const padTokens = api.panel.property.getTokenOptions('pad')
       api.assert.ok(
-        buttons.length >= 3,
-        `Expected at least 3 pad token buttons, got ${buttons.length}`
+        padTokens.length >= 3,
+        `Expected at least 3 pad tokens, got ${padTokens.length}`
       )
 
-      // Check button labels
-      const labels = buttons.map(b => b.textContent?.trim())
-      api.assert.ok(labels.includes('sm') || labels.includes('SM'), 'Should have sm token button')
-      api.assert.ok(labels.includes('md') || labels.includes('MD'), 'Should have md token button')
-      api.assert.ok(labels.includes('lg') || labels.includes('LG'), 'Should have lg token button')
+      // Check token names
+      const hasSmToken = padTokens.some(t => t.toLowerCase().includes('sm'))
+      const hasMdToken = padTokens.some(t => t.toLowerCase().includes('md'))
+      const hasLgToken = padTokens.some(t => t.toLowerCase().includes('lg'))
+
+      api.assert.ok(hasSmToken, `Should have sm token, got: ${padTokens.join(', ')}`)
+      api.assert.ok(hasMdToken, `Should have md token, got: ${padTokens.join(', ')}`)
+      api.assert.ok(hasLgToken, `Should have lg token, got: ${padTokens.join(', ')}`)
     }
   ),
 
@@ -159,44 +127,36 @@ Frame gap 8, bg #333
   Text "A"
   Text "B"`,
     async (api: TestAPI) => {
-      showPropertyPanel()
-      await api.utils.delay(100)
+      // Select the Frame via Studio API
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
 
-      api.interact.select('node-1')
-      await api.utils.delay(200)
-
-      const buttons = getGapTokenButtons()
+      // Check gap tokens via Panel API
+      const gapTokens = api.panel.property.getTokenOptions('gap')
       api.assert.ok(
-        buttons.length >= 3,
-        `Expected at least 3 gap token buttons, got ${buttons.length}`
+        gapTokens.length >= 3,
+        `Expected at least 3 gap tokens, got ${gapTokens.length}`
       )
     }
   ),
 
   testWithSetup(
-    'Active token button is highlighted',
+    'Token value shown in property panel',
     `sm.pad: 8
 md.pad: 16
 
 Frame pad $md, bg #333`,
     async (api: TestAPI) => {
-      showPropertyPanel()
-      await api.utils.delay(100)
+      // Select the Frame via Studio API
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
 
-      api.interact.select('node-1')
-      await api.utils.delay(200)
-
-      const buttons = getPadTokenButtons()
-      const activeButtons = buttons.filter(b => b.classList.contains('active'))
-      api.assert.ok(activeButtons.length >= 1, 'Should have at least one active token button')
-
-      // The md button should be active
-      const mdButton = buttons.find(
-        b =>
-          b.textContent?.trim().toLowerCase() === 'md' ||
-          (b as HTMLElement).dataset.tokenRef === '$md.pad'
+      // Get the pad property value via Panel API
+      const padValue = api.panel.property.getPropertyValue('pad')
+      api.assert.ok(
+        padValue?.includes('md') || padValue === '16' || padValue === '$md',
+        `Pad value should reference md token, got "${padValue}"`
       )
-      api.assert.ok(mdButton?.classList.contains('active'), 'md token button should be active')
     }
   ),
 
@@ -204,16 +164,15 @@ Frame pad $md, bg #333`,
     'No token buttons without token definitions',
     `Frame pad 16, bg #333`,
     async (api: TestAPI) => {
-      showPropertyPanel()
-      await api.utils.delay(100)
+      // Select the Frame via Studio API
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
 
-      api.interact.select('node-1')
-      await api.utils.delay(200)
-
-      const buttons = getPadTokenButtons()
+      // Check pad tokens via Panel API - should be empty
+      const padTokens = api.panel.property.getTokenOptions('pad')
       api.assert.ok(
-        buttons.length === 0,
-        `Expected no pad token buttons without token definitions, got ${buttons.length}`
+        padTokens.length === 0,
+        `Expected no pad tokens without definitions, got ${padTokens.length}`
       )
     }
   ),
@@ -225,76 +184,56 @@ Frame pad $md, bg #333`,
 
 export const tokenValueTests: TestCase[] = describe('Token Values', [
   testWithSetup(
-    'Token reference shown in input when used',
+    'Token reference shown via Panel API',
     `sm.pad: 8
 
 Frame pad $sm, bg #333`,
     async (api: TestAPI) => {
-      showPropertyPanel()
-      await api.utils.delay(100)
+      // Select the Frame via Studio API
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
 
-      api.interact.select('node-1')
-      await api.utils.delay(200)
-
-      // Check that the input shows the token reference or resolved value
-      const inputs = queryAllPropertyPanel('input[data-pad-dir]') as HTMLInputElement[]
-      const hasTokenValue = inputs.some(
-        input => input.value === '$sm' || input.value === '$sm.pad' || input.value === '8'
-      )
-      api.assert.ok(hasTokenValue, 'Input should show token reference or value')
-    }
-  ),
-
-  testWithSetup(
-    'Color token shown in color picker',
-    `primary.bg: #2271C1
-
-Frame bg $primary, w 100, h 100`,
-    async (api: TestAPI) => {
-      showPropertyPanel()
-      await api.utils.delay(100)
-
-      api.interact.select('node-1')
-      await api.utils.delay(200)
-
-      // Check color display shows token reference
-      const colorValue = queryPropertyPanel('.pp-color-value')
-      api.assert.ok(colorValue !== null, 'Color value element should exist')
-
-      const text = colorValue?.textContent?.trim()
+      // Get property value via Panel API
+      const padValue = api.panel.property.getPropertyValue('pad')
       api.assert.ok(
-        text === '$primary' || text === '$primary.bg' || text?.includes('primary'),
-        `Color should show token reference, got "${text}"`
+        padValue === '$sm' || padValue === '$sm.pad' || padValue === '8',
+        `Pad should show token reference or value, got "${padValue}"`
       )
     }
   ),
 
   testWithSetup(
-    'Color swatch shows resolved token color',
+    'Color token shown via Panel API',
     `primary.bg: #2271C1
 
 Frame bg $primary, w 100, h 100`,
     async (api: TestAPI) => {
-      showPropertyPanel()
-      await api.utils.delay(100)
+      // Select the Frame via Studio API
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
 
-      api.interact.select('node-1')
-      await api.utils.delay(200)
-
-      // Check color swatch exists
-      const swatch = queryPropertyPanel('.pp-color-swatch') as HTMLElement
-      api.assert.ok(swatch !== null, 'Color swatch should exist')
-
-      // Check if swatch has any background set (inline style or computed)
-      const bgStyle = swatch?.style.background || swatch?.style.backgroundColor
-      const computedBg = swatch ? getComputedStyle(swatch).backgroundColor : ''
-
-      // The swatch should show the resolved color - either inline or via CSS
-      // For token values, this might show the resolved color or the preview might handle it
-      const hasColor = bgStyle?.length > 0 || (computedBg && computedBg !== 'rgba(0, 0, 0, 0)')
+      // Get bg property value via Panel API
+      const bgValue = api.panel.property.getPropertyValue('bg')
       api.assert.ok(
-        hasColor || true, // Mark as pass for now - color token resolution is advanced feature
-        `Swatch exists (background: "${bgStyle || computedBg}")`
+        bgValue?.includes('primary') || bgValue === '#2271C1',
+        `Background should show token reference, got "${bgValue}"`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Get all properties via Panel API',
+    `Frame pad 16, bg #333, gap 8, rad 4`,
+    async (api: TestAPI) => {
+      // Select the Frame via Studio API
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
+
+      // Get all properties via Panel API
+      const allProps = api.panel.property.getAllProperties()
+      api.assert.ok(
+        Object.keys(allProps).length > 0,
+        `Should have properties, got: ${JSON.stringify(allProps)}`
       )
     }
   ),
@@ -306,39 +245,482 @@ Frame bg $primary, w 100, h 100`,
 
 export const tokenInteractionTests: TestCase[] = describe('Token Interaction', [
   testWithSetup(
-    'Clicking token button updates code',
+    'Clicking token via Panel API updates code',
     `sm.pad: 8
 md.pad: 16
 
 Frame pad 20, bg #333`,
     async (api: TestAPI) => {
+      // Select the Frame via Studio API
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
+
+      // Click the sm token via Panel API
+      const success = await api.panel.property.clickToken('pad', 'sm')
+      api.assert.ok(success, 'Token click should succeed')
+
+      await api.utils.waitForIdle()
+
+      // Check code was updated
+      const code = api.editor.getCode()
+      api.assert.ok(
+        code.includes('pad $sm') || code.includes('pad 8'),
+        `Code should be updated with token reference or value, got: ${code.substring(code.indexOf('Frame'), code.indexOf('Frame') + 50)}`
+      )
+    }
+  ),
+
+  testWithSetup('Set property via Panel API', `Frame pad 16, bg #333`, async (api: TestAPI) => {
+    // Select the Frame via Studio API
+    await api.studio.setSelection('node-1')
+    await api.utils.waitForIdle()
+
+    // Wait for property panel to be ready
+    await api.utils.delay(200)
+
+    // Verify panel is showing the selected element
+    const selectedId = api.panel.property.getSelectedNodeId()
+    api.assert.ok(selectedId === 'node-1', `Panel should show node-1, got "${selectedId}"`)
+
+    // Set padding via Panel API
+    const success = await api.panel.property.setProperty('pad', '24')
+    api.assert.ok(success, 'setProperty should succeed')
+
+    // Wait for debounce (300ms) + compile cycle + buffer
+    await api.utils.delay(800)
+    await api.utils.waitForCompile()
+
+    // Check code was updated
+    const code = api.editor.getCode()
+    api.assert.ok(code.includes('pad 24'), `Code should contain pad 24, got: ${code}`)
+  }),
+])
+
+// =============================================================================
+// Project Token Tests - Full tokens.tok scenario
+// =============================================================================
+
+/**
+ * Full tokens.tok content as provided by the user.
+ * Tests that all token types appear correctly in the property panel.
+ */
+const FULL_TOKENS_TOK = `// Theme Tokens
+
+// Typography (max 3)
+s.fs: 12
+m.fs: 14
+l.fs: 18
+
+// Colors (max 3 per type)
+accent.bg: #5BA8F5
+surface.bg: #27272a
+canvas.bg: #18181b
+text.col: #ffffff
+muted.col: #a1a1aa
+border.boc: #333333
+
+// Spacing (max 3)
+s.pad: 4
+m.pad: 8
+l.pad: 16
+
+s.gap: 4
+m.gap: 8
+l.gap: 16
+
+// Radius (max 3)
+s.rad: 4
+m.rad: 8
+l.rad: 12`
+
+function getRadiusTokenButtons(): Element[] {
+  return queryAllPropertyPanel('.token-btn[data-radius]')
+}
+
+function getColorTrigger(prop: string): Element | null {
+  return queryPropertyPanel(`[data-color-prop="${prop}"], [data-border-color-prop="${prop}"]`)
+}
+
+function getColorValue(prop: string): string | null {
+  const trigger = queryPropertyPanel(`[data-color-prop="${prop}"]`)
+  const valueEl = trigger?.querySelector('.pp-color-value')
+  return valueEl?.textContent?.trim() || null
+}
+
+export const projectTokenTests: TestCase[] = describe('Project Tokens', [
+  testWithSetup(
+    'Property panel shows visible token buttons for padding',
+    `${FULL_TOKENS_TOK}
+
+Button "Click me", pad 16, bg #2271C1, col white`,
+    async (api: TestAPI) => {
       showPropertyPanel()
-      await api.utils.delay(100)
+      await api.utils.waitForIdle()
 
+      // Select the Button using Studio API for reliable selection
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
+      await api.utils.delay(200) // Wait for panel to update
+
+      // 1. Verify property panel is visible via Panel API
+      api.assert.ok(api.panel.property.isVisible(), 'Property panel should be visible')
+
+      // 2. Check selected node
+      const selectedId = api.panel.property.getSelectedNodeId()
+      api.assert.ok(selectedId === 'node-1', `Panel should show node-1, got "${selectedId}"`)
+
+      // 3. Verify tokens are available via Panel API (more reliable than DOM queries)
+      const padTokens = api.panel.property.getTokenOptions('pad')
+      api.assert.ok(
+        padTokens.length >= 3,
+        `Expected 3+ pad tokens via API, got ${padTokens.length}: ${padTokens.join(', ')}`
+      )
+
+      // 4. Check token names - tokens are named s, m, l in FULL_TOKENS_TOK
+      const hasS = padTokens.some(t => t.toLowerCase() === 's')
+      const hasM = padTokens.some(t => t.toLowerCase() === 'm')
+      const hasL = padTokens.some(t => t.toLowerCase() === 'l')
+      api.assert.ok(hasS, `Should have "s" token. Found: ${padTokens.join(', ')}`)
+      api.assert.ok(hasM, `Should have "m" token. Found: ${padTokens.join(', ')}`)
+      api.assert.ok(hasL, `Should have "l" token. Found: ${padTokens.join(', ')}`)
+    }
+  ),
+
+  testWithSetup(
+    'Padding tokens from tokens.tok appear for Button',
+    `${FULL_TOKENS_TOK}
+
+Button "Click me", pad 16, bg #2271C1, col white`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
+
+      // Select the Button (node-1)
       api.interact.select('node-1')
-      await api.utils.delay(200)
+      await api.utils.waitForIdle()
 
-      // Find and click the sm token button
+      // Check that padding token buttons exist
       const buttons = getPadTokenButtons()
-      const smButton = buttons.find(
+      api.assert.ok(
+        buttons.length >= 3,
+        `Expected at least 3 pad token buttons (s, m, l), got ${buttons.length}`
+      )
+
+      // Check button labels contain s, m, l
+      const labels = buttons.map(b => b.textContent?.trim().toLowerCase())
+      api.assert.ok(
+        labels.some(l => l === 's'),
+        'Should have "s" token button'
+      )
+      api.assert.ok(
+        labels.some(l => l === 'm'),
+        'Should have "m" token button'
+      )
+      api.assert.ok(
+        labels.some(l => l === 'l'),
+        'Should have "l" token button'
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Gap tokens from tokens.tok appear for Frame',
+    `${FULL_TOKENS_TOK}
+
+Frame gap 8, pad 16, bg #27272a
+  Button "A"
+  Button "B"`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
+
+      // Select the Frame (node-1)
+      api.interact.select('node-1')
+      await api.utils.waitForIdle()
+
+      // Check that gap token buttons exist
+      const buttons = getGapTokenButtons()
+      api.assert.ok(
+        buttons.length >= 3,
+        `Expected at least 3 gap token buttons (s, m, l), got ${buttons.length}`
+      )
+
+      // Check button labels
+      const labels = buttons.map(b => b.textContent?.trim().toLowerCase())
+      api.assert.ok(
+        labels.some(l => l === 's'),
+        'Should have "s" gap token button'
+      )
+      api.assert.ok(
+        labels.some(l => l === 'm'),
+        'Should have "m" gap token button'
+      )
+      api.assert.ok(
+        labels.some(l => l === 'l'),
+        'Should have "l" gap token button'
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Radius tokens from tokens.tok appear in Border section',
+    `${FULL_TOKENS_TOK}
+
+Frame rad 8, pad 16, bg #27272a
+  Text "Content"`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
+
+      // Select the Frame (node-1)
+      api.interact.select('node-1')
+      await api.utils.waitForIdle()
+
+      // Check that radius token buttons exist
+      const buttons = getRadiusTokenButtons()
+      api.assert.ok(
+        buttons.length >= 3,
+        `Expected at least 3 radius token buttons (s, m, l), got ${buttons.length}`
+      )
+
+      // Check button labels - should have s, m, l (plus 0 preset and possibly circle)
+      const labels = buttons.map(b => b.textContent?.trim().toLowerCase())
+      api.assert.ok(
+        labels.some(l => l === 's'),
+        'Should have "s" radius token button'
+      )
+      api.assert.ok(
+        labels.some(l => l === 'm'),
+        'Should have "m" radius token button'
+      )
+      api.assert.ok(
+        labels.some(l => l === 'l'),
+        'Should have "l" radius token button'
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Color token reference shown when using $accent',
+    `${FULL_TOKENS_TOK}
+
+Button "Primary", bg $accent, col $text, pad 12 24, rad 8`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
+
+      // Select the Button (node-1)
+      api.interact.select('node-1')
+      await api.utils.waitForIdle()
+
+      // Check color value display shows token reference
+      const bgColorValue = getColorValue('bg')
+      api.assert.ok(
+        bgColorValue?.includes('accent') || bgColorValue?.includes('$accent'),
+        `Background color should show $accent token reference, got "${bgColorValue}"`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Active padding token is highlighted when using $m.pad',
+    `${FULL_TOKENS_TOK}
+
+Button "Test", pad $m.pad, bg #333`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
+
+      // Select the Button (node-1)
+      api.interact.select('node-1')
+      await api.utils.waitForIdle()
+
+      // Check that m token button is active
+      const buttons = getPadTokenButtons()
+      const activeButtons = buttons.filter(b => b.classList.contains('active'))
+      api.assert.ok(activeButtons.length >= 1, 'Should have at least one active token button')
+
+      // Find the m button
+      const mButton = buttons.find(
         b =>
-          b.textContent?.trim().toLowerCase() === 'sm' ||
-          (b as HTMLElement).dataset.padToken === '8'
-      ) as HTMLElement
+          b.textContent?.trim().toLowerCase() === 'm' ||
+          (b as HTMLElement).dataset.tokenRef?.includes('m.pad')
+      )
+      api.assert.ok(mButton?.classList.contains('active'), 'm token button should be active')
+    }
+  ),
 
-      api.assert.ok(smButton !== null, 'Should find sm token button')
+  testWithSetup(
+    'Clicking padding token updates code with token reference',
+    `${FULL_TOKENS_TOK}
 
-      if (smButton) {
-        smButton.click()
-        await api.utils.delay(300)
+Button "Test", pad 20, bg #333`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
 
-        // Check code was updated
-        const code = api.editor.getCode()
-        api.assert.ok(
-          code.includes('pad $sm') || code.includes('pad 8'),
-          'Code should be updated with token reference or value'
-        )
-      }
+      // Select the Button using Studio API for reliable selection
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
+      await api.utils.delay(200) // Wait for panel to update
+
+      // Verify tokens are available
+      const padTokens = api.panel.property.getTokenOptions('pad')
+      api.assert.ok(padTokens.length >= 3, `Expected 3+ pad tokens, got ${padTokens.length}`)
+
+      // Click the l token via Panel API (value 16 in FULL_TOKENS_TOK)
+      const success = await api.panel.property.clickToken('pad', 'l')
+      api.assert.ok(success, 'Token click should succeed')
+
+      // Wait for debounce + compile
+      await api.utils.delay(800)
+      await api.utils.waitForCompile()
+
+      // Check code was updated with token reference or value
+      const code = api.editor.getCode()
+      api.assert.ok(
+        code.includes('pad $l') || code.includes('pad 16'),
+        `Code should contain token reference or value, got: ${code.substring(code.indexOf('Button'), code.indexOf('Button') + 50)}...`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'All spacing tokens visible after switching elements',
+    `${FULL_TOKENS_TOK}
+
+Frame pad 16, gap 8, bg #18181b
+  Button "First", pad 8
+  Button "Second", pad 16`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
+
+      // Select first button
+      api.interact.select('node-2')
+      await api.utils.waitForIdle()
+
+      let buttons = getPadTokenButtons()
+      api.assert.ok(
+        buttons.length >= 3,
+        `First button: Expected 3+ pad tokens, got ${buttons.length}`
+      )
+
+      // Select second button
+      api.interact.select('node-3')
+      await api.utils.waitForIdle()
+
+      buttons = getPadTokenButtons()
+      api.assert.ok(
+        buttons.length >= 3,
+        `Second button: Expected 3+ pad tokens, got ${buttons.length}`
+      )
+
+      // Select Frame to check gap tokens
+      api.interact.select('node-1')
+      await api.utils.waitForIdle()
+
+      const gapButtons = getGapTokenButtons()
+      api.assert.ok(
+        gapButtons.length >= 3,
+        `Frame: Expected 3+ gap tokens, got ${gapButtons.length}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Custom value shows in white and deselects tokens',
+    `${FULL_TOKENS_TOK}
+
+Button "Test", pad 20, bg #333`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
+
+      // Select the Button
+      api.interact.select('node-1')
+      await api.utils.waitForIdle()
+
+      // 1. Check that padding input shows value 20 (not a token)
+      const padInput = queryPropertyPanel('input[data-pad-dir="h"]') as HTMLInputElement
+      api.assert.ok(padInput !== null, 'Padding input should exist')
+      api.assert.equals(padInput?.value, '20', 'Input should show custom value "20"')
+
+      // 2. Check input does NOT have token-resolved class (should be white, not muted)
+      api.assert.ok(
+        !padInput?.classList.contains('token-resolved'),
+        'Custom value should NOT have token-resolved class (should be white)'
+      )
+
+      // 3. Check that no token button is active (20 is not a token value)
+      const buttons = getPadTokenButtons()
+      const activeButtons = buttons.filter(b => b.classList.contains('active'))
+      api.assert.equals(
+        activeButtons.length,
+        0,
+        `No token should be active for custom value. Active: ${activeButtons.map(b => b.textContent).join(', ')}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Token value shows in muted color',
+    `${FULL_TOKENS_TOK}
+
+Button "Test", pad $m.pad, bg #333`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
+
+      // Select the Button
+      api.interact.select('node-1')
+      await api.utils.waitForIdle()
+
+      // 1. Check that padding input shows resolved value "8" (from $m token)
+      const padInput = queryPropertyPanel('input[data-pad-dir="h"]') as HTMLInputElement
+      api.assert.ok(padInput !== null, 'Padding input should exist')
+      api.assert.equals(padInput?.value, '8', 'Input should show resolved token value "8"')
+
+      // 2. Check input HAS token-resolved class (should be muted)
+      api.assert.ok(
+        padInput?.classList.contains('token-resolved'),
+        'Token value SHOULD have token-resolved class (should be muted)'
+      )
+
+      // 3. Check that m token button is active
+      const buttons = getPadTokenButtons()
+      const mButton = buttons.find(b => b.textContent?.trim().toLowerCase() === 'm')
+      api.assert.ok(mButton?.classList.contains('active'), 'm token button should be active')
+    }
+  ),
+
+  testWithSetup(
+    'Color section shows token reference for bg',
+    `${FULL_TOKENS_TOK}
+
+Button "Accent", bg $accent.bg, col white, pad 12 24`,
+    async (api: TestAPI) => {
+      showPropertyPanel()
+      await api.utils.waitForIdle()
+
+      // Select the Button
+      api.interact.select('node-1')
+      await api.utils.waitForIdle()
+
+      // Find color trigger for background
+      const bgTrigger = queryPropertyPanel('[data-color-prop="bg"]')
+      api.assert.ok(bgTrigger !== null, 'Background color trigger should exist')
+
+      // Check that the trigger has the current value stored
+      const currentValue = (bgTrigger as HTMLElement)?.dataset.currentValue
+      api.assert.ok(
+        currentValue?.includes('accent'),
+        `Color trigger should store token reference, got "${currentValue}"`
+      )
+
+      // Check swatch exists (even if empty for token values)
+      const swatch = bgTrigger?.querySelector('.pp-color-swatch')
+      api.assert.ok(swatch !== null, 'Color swatch element should exist')
     }
   ),
 ])
@@ -351,4 +733,5 @@ export const allPropertyPanelTests: TestCase[] = [
   ...tokenDisplayTests,
   ...tokenValueTests,
   ...tokenInteractionTests,
+  ...projectTokenTests,
 ]

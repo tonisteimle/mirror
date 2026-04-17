@@ -6,6 +6,8 @@
  * - Multi-step undo
  * - Undo after various edit types
  * - Redo after undo
+ *
+ * Uses the Studio History API (api.studio.history.*) for state verification.
  */
 
 import { test, describe, type TestCase } from '../test-runner'
@@ -27,6 +29,9 @@ export const basicUndoTests: TestCase[] = describe('Basic Undo', [
     await api.utils.waitForCompile()
     api.assert.hasText('node-1', 'Changed')
 
+    // Verify undo is available via History API
+    api.assert.ok(api.studio.history.canUndo(), 'Should be able to undo')
+
     // Undo
     api.editor.undo()
     await api.utils.waitForCompile()
@@ -34,29 +39,38 @@ export const basicUndoTests: TestCase[] = describe('Basic Undo', [
     // Should be back to original
     const code = api.editor.getCode()
     api.assert.contains(code, 'Original')
+
+    // Verify redo is now available
+    api.assert.ok(api.studio.history.canRedo(), 'Should be able to redo after undo')
   }),
 
   test('Multiple undos work sequentially', async (api: TestAPI) => {
     await api.editor.setCode('Text "Step1"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
     await api.editor.setCode('Text "Step2"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
     await api.editor.setCode('Text "Step3"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
+
+    // Verify undo stack has entries
+    api.assert.ok(api.studio.history.canUndo(), 'Should have undo history')
 
     // Undo twice
     api.editor.undo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
     api.editor.undo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
 
     const code = api.editor.getCode()
     api.assert.contains(code, 'Step1')
   }),
 
   test('Undo does nothing when at beginning', async (api: TestAPI) => {
+    // Clear history first
+    api.studio.history.clear()
+
     await api.editor.setCode('Text "Only"')
     await api.utils.waitForCompile()
 
@@ -66,7 +80,7 @@ export const basicUndoTests: TestCase[] = describe('Basic Undo', [
     api.editor.undo()
     api.editor.undo()
     api.editor.undo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
 
     // Code should still exist (can't undo to empty)
     const codeAfter = api.editor.getCode()
@@ -81,40 +95,49 @@ export const basicUndoTests: TestCase[] = describe('Basic Undo', [
 export const basicRedoTests: TestCase[] = describe('Basic Redo', [
   test('Redo restores undone change', async (api: TestAPI) => {
     await api.editor.setCode('Text "Before"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
     await api.editor.setCode('Text "After"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
     // Undo
     api.editor.undo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
     api.assert.contains(api.editor.getCode(), 'Before')
+
+    // Verify redo is available via History API
+    api.assert.ok(api.studio.history.canRedo(), 'Should be able to redo')
 
     // Redo
     api.editor.redo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
     api.assert.contains(api.editor.getCode(), 'After')
+
+    // Redo stack should be empty now
+    api.assert.ok(!api.studio.history.canRedo(), 'Should not be able to redo after redoing')
   }),
 
   test('Multiple redos work sequentially', async (api: TestAPI) => {
     await api.editor.setCode('Text "A"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
     await api.editor.setCode('Text "B"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
     await api.editor.setCode('Text "C"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
     // Undo all
     api.editor.undo()
     api.editor.undo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
     api.assert.contains(api.editor.getCode(), 'A')
+
+    // Verify redo is available
+    api.assert.ok(api.studio.history.canRedo(), 'Should have redo available after undos')
 
     // Redo all
     api.editor.redo()
     api.editor.redo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
     api.assert.contains(api.editor.getCode(), 'C')
   }),
 
@@ -124,10 +147,13 @@ export const basicRedoTests: TestCase[] = describe('Basic Redo', [
 
     const codeBefore = api.editor.getCode()
 
+    // Verify no redo available via History API
+    api.assert.ok(!api.studio.history.canRedo(), 'Should not have redo available initially')
+
     // Try to redo when nothing to redo
     api.editor.redo()
     api.editor.redo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
 
     const codeAfter = api.editor.getCode()
     api.assert.equals(codeBefore, codeAfter)
@@ -135,22 +161,28 @@ export const basicRedoTests: TestCase[] = describe('Basic Redo', [
 
   test('New edit clears redo stack', async (api: TestAPI) => {
     await api.editor.setCode('Text "A"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
     await api.editor.setCode('Text "B"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
     // Undo
     api.editor.undo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
     api.assert.contains(api.editor.getCode(), 'A')
+
+    // Verify redo stack exists
+    api.assert.ok(api.studio.history.canRedo(), 'Should have redo available after undo')
 
     // Make new edit instead of redo
     await api.editor.setCode('Text "C"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
-    // Try to redo - should do nothing, redo stack cleared
+    // Verify redo stack is cleared
+    api.assert.ok(!api.studio.history.canRedo(), 'Redo should be cleared after new edit')
+
+    // Try to redo - should do nothing
     api.editor.redo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
     api.assert.contains(api.editor.getCode(), 'C')
   }),
 ])
@@ -239,7 +271,7 @@ export const undoWithSelectionTests: TestCase[] = describe('Undo with Selection'
     await api.utils.waitForCompile()
 
     api.interact.select('node-2')
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
     api.assert.isSelected('node-2')
 
     // Change something else
@@ -261,16 +293,16 @@ export const undoWithSelectionTests: TestCase[] = describe('Undo with Selection'
 export const undoEdgeCasesTests: TestCase[] = describe('Undo Edge Cases', [
   test('Rapid undo/redo cycles', async (api: TestAPI) => {
     await api.editor.setCode('Text "Start"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
     await api.editor.setCode('Text "End"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
     // Rapid cycling
     for (let i = 0; i < 5; i++) {
       api.editor.undo()
-      await api.utils.delay(20)
+      await api.utils.waitForIdle()
       api.editor.redo()
-      await api.utils.delay(20)
+      await api.utils.waitForIdle()
     }
 
     // Should end up at "End"
@@ -279,14 +311,14 @@ export const undoEdgeCasesTests: TestCase[] = describe('Undo Edge Cases', [
 
   test('Undo after whitespace-only change', async (api: TestAPI) => {
     await api.editor.setCode('Text "Test"')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
     // Add whitespace
     await api.editor.setCode('Text "Test"\n\n')
-    await api.utils.delay(100)
+    await api.utils.waitForCompile()
 
     api.editor.undo()
-    await api.utils.delay(50)
+    await api.utils.waitForIdle()
 
     // Should undo whitespace
     const code = api.editor.getCode()

@@ -1523,9 +1523,9 @@ const _runtime = {
   stateMachineToggle(el, stateOrder) {
     if (!el?._stateMachine) return
     const sm = el._stateMachine
-    // Get custom states (exclude 'default' and CSS pseudo-states like hover, focus, disabled)
-    // Note: 'active' is NOT excluded because it's commonly used as a custom toggle state
-    const cssStates = ['default', 'hover', 'focus', 'disabled']
+    // Get custom states (exclude 'default' and CSS pseudo-states)
+    // CSS pseudo-states are browser-triggered, not toggle targets
+    const cssStates = ['default', 'hover', 'focus', 'active', 'disabled']
     const order = stateOrder || Object.keys(sm.states).filter(s => !cssStates.includes(s))
     if (order.length === 0) return
 

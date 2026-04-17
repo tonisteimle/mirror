@@ -129,6 +129,10 @@ export class BrowserTestRunner {
       }
 
       // 2. Set drag data (as ComponentPanel would)
+      // NOTE: Children are NOT included here because the ZagComponentHandler requires
+      // runtime dependencies (updateFileList, etc.) that aren't available in the test environment.
+      // This means drag tests for complex Zag components (Dialog, Tabs with children)
+      // won't generate the full component structure. See CLAUDE.md for known limitations.
       const dragData: ComponentDragData = {
         componentName: params.componentName,
         properties: params.properties,
@@ -404,6 +408,7 @@ export class BrowserTestRunner {
       }
 
       // 2. Set drag data (as ComponentPanel would)
+      // NOTE: Children are NOT included - see comment in executePaletteDrop
       const dragData: ComponentDragData = {
         componentName: params.componentName,
         properties: params.properties,

@@ -20,7 +20,7 @@ export const primitiveCompletionTests: TestCase[] = describe('Primitive Completi
     await api.editor.setCode('')
     api.editor.setCursor(1, 0)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     api.assert.ok(completions.length > 0, 'Should show completions')
@@ -34,7 +34,7 @@ export const primitiveCompletionTests: TestCase[] = describe('Primitive Completi
     await api.editor.setCode('Frame\n  ')
     api.editor.setCursor(2, 2)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     api.assert.ok(completions.length > 0, 'Should show completions for nested element')
@@ -44,7 +44,7 @@ export const primitiveCompletionTests: TestCase[] = describe('Primitive Completi
     await api.editor.setCode('Bu')
     api.editor.setCursor(1, 2)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const allStartWithBu = completions.every(c => c.toLowerCase().startsWith('bu'))
@@ -61,7 +61,7 @@ export const propertyCompletionTests: TestCase[] = describe('Property Completion
     await api.editor.setCode('Frame ')
     api.editor.setCursor(1, 6)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasProperties = completions.some(c => ['bg', 'pad', 'gap', 'hor', 'center'].includes(c))
@@ -72,7 +72,7 @@ export const propertyCompletionTests: TestCase[] = describe('Property Completion
     await api.editor.setCode('Frame bg #333, ')
     api.editor.setCursor(1, 15)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     api.assert.ok(completions.length > 0, 'Should show more properties after comma')
@@ -82,7 +82,7 @@ export const propertyCompletionTests: TestCase[] = describe('Property Completion
     await api.editor.setCode('Frame ')
     api.editor.setCursor(1, 6)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const layoutProps = ['hor', 'ver', 'gap', 'center', 'spread', 'wrap', 'grid', 'stacked']
@@ -95,7 +95,7 @@ export const propertyCompletionTests: TestCase[] = describe('Property Completion
     await api.editor.setCode('Icon "check", ')
     api.editor.setCursor(1, 14)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasIconProps = completions.some(c => ['ic', 'is', 'fill'].includes(c))
@@ -107,7 +107,7 @@ export const propertyCompletionTests: TestCase[] = describe('Property Completion
     await api.editor.setCode('Input ')
     api.editor.setCursor(1, 6)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasInputProps = completions.some(c =>
@@ -126,7 +126,7 @@ export const valueCompletionTests: TestCase[] = describe('Value Completions', [
     await api.editor.setCode('Frame w ')
     api.editor.setCursor(1, 8)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasSizeValues = completions.some(c => ['full', 'hug'].includes(c))
@@ -137,7 +137,7 @@ export const valueCompletionTests: TestCase[] = describe('Value Completions', [
     await api.editor.setCode('Frame ')
     api.editor.setCursor(1, 6)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const alignments = ['tl', 'tc', 'tr', 'cl', 'center', 'cr', 'bl', 'bc', 'br']
@@ -149,7 +149,7 @@ export const valueCompletionTests: TestCase[] = describe('Value Completions', [
     await api.editor.setCode('Text "Hi", weight ')
     api.editor.setCursor(1, 18)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasWeights = completions.some(c => ['bold', 'normal', 'light', 'semibold'].includes(c))
@@ -160,7 +160,7 @@ export const valueCompletionTests: TestCase[] = describe('Value Completions', [
     await api.editor.setCode('Frame cursor ')
     api.editor.setCursor(1, 13)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasCursors = completions.some(c => ['pointer', 'grab', 'move', 'text'].includes(c))
@@ -171,7 +171,7 @@ export const valueCompletionTests: TestCase[] = describe('Value Completions', [
     await api.editor.setCode('Frame shadow ')
     api.editor.setCursor(1, 13)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasShadows = completions.some(c => ['sm', 'md', 'lg'].includes(c))
@@ -182,7 +182,7 @@ export const valueCompletionTests: TestCase[] = describe('Value Completions', [
     await api.editor.setCode('Frame anim ')
     api.editor.setCursor(1, 11)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasAnimations = completions.some(c =>
@@ -201,7 +201,7 @@ export const iconCompletionTests: TestCase[] = describe('Icon Completions', [
     await api.editor.setCode('Icon "')
     api.editor.setCursor(1, 6)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasIcons = completions.some(c =>
@@ -214,7 +214,7 @@ export const iconCompletionTests: TestCase[] = describe('Icon Completions', [
     await api.editor.setCode('Icon "arr')
     api.editor.setCursor(1, 9)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const allArrow = completions.every(c => c.startsWith('arrow'))
@@ -232,7 +232,7 @@ export const tokenCompletionTests: TestCase[] = describe('Token Completions', [
     await api.editor.setCode('primary.bg: #2271C1\nFrame bg $')
     api.editor.setCursor(2, 10)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     // Should show defined tokens
@@ -250,7 +250,7 @@ export const stateCompletionTests: TestCase[] = describe('State Completions', [
     await api.editor.setCode('Button "Test"\n  ')
     api.editor.setCursor(2, 2)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     // Check for states with or without colon (completion might not include colon)
@@ -280,7 +280,7 @@ export const componentCompletionTests: TestCase[] = describe('Component Completi
     await api.editor.setCode('Btn: bg #333, pad 12\n\n')
     api.editor.setCursor(3, 0)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasCustomComponent = completions.includes('Btn')
@@ -291,7 +291,7 @@ export const componentCompletionTests: TestCase[] = describe('Component Completi
     await api.editor.setCode('')
     api.editor.setCursor(1, 0)
     api.editor.triggerAutocomplete()
-    await api.utils.delay(200)
+    await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
     const hasZag = completions.some(c =>

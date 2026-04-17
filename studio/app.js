@@ -2367,8 +2367,22 @@ if (typeof window !== 'undefined') {
         studioRobustModifier = MirrorLang.createRobustModifier(studioCodeModifier)
       }
 
-      // Update state - IMPORTANT: include ast for PropertyExtractor
-      if (studio?.state?.set) {
+      // Update state using setCompileResult for proper selection validation
+      // This ensures selection is cleared when the selected node no longer exists
+      if (studio?.actions?.setCompileResult) {
+        studio.state.set({
+          source: code,
+          preludeOffset: 0,
+          preludeLineOffset: 0,
+        })
+        studio.actions.setCompileResult({
+          ast,
+          ir: irResult,
+          sourceMap,
+          errors: [],
+        })
+      } else if (studio?.state?.set) {
+        // Fallback for older API
         studio.state.set({
           ast,
           sourceMap,
@@ -2683,19 +2697,68 @@ function initStudio() {
 // Play Mode (Component Testing)
 // ============================================
 
+// Device presets for simulation
+// mode: 'fixed' = exact size (centered), 'max' = only max-width/height (panel controls size)
+const DEVICE_PRESETS = {
+  'iPhone SE': { width: 375, height: 667, mode: 'fixed' },
+  'iPhone 14': { width: 390, height: 844, mode: 'fixed' },
+  'iPhone 14 Pro Max': { width: 430, height: 932, mode: 'fixed' },
+  'iPad Mini': { width: 768, height: 1024, mode: 'fixed' },
+  'iPad Pro': { width: 1024, height: 1366, mode: 'max' },
+  Desktop: { width: 1440, height: 900, mode: 'max' },
+}
+
 function initPlayMode() {
   const playBtn = document.getElementById('play-btn')
   const previewPanel = document.querySelector('.preview-panel')
+  const resetBtn = document.getElementById('play-reset-btn')
+  const deviceSelect = document.getElementById('device-select')
+  const preview = document.getElementById('preview')
 
   if (!playBtn || !previewPanel) {
     console.warn('Play mode: Missing elements')
     return
   }
 
-  // Handle button click
+  // Handle play button click
   playBtn.addEventListener('click', () => {
     studioActions.togglePlayMode()
   })
+
+  // Handle reset button click - recompile to reset states
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      console.log('Play mode: Resetting states via recompile')
+      // Get current code from editor and recompile
+      const editor = window.editor
+      if (editor) {
+        const code = editor.state.doc.toString()
+        compile(code)
+      }
+    })
+  }
+
+  // Handle device selector change
+  if (deviceSelect && preview) {
+    deviceSelect.addEventListener('change', e => {
+      const preset = DEVICE_PRESETS[e.target.value]
+      if (preset) {
+        preview.style.setProperty('--device-width', preset.width + 'px')
+        preview.style.setProperty('--device-height', preset.height + 'px')
+        // Use 'device-mode' for fixed size, 'device-mode-max' for max-only
+        preview.classList.remove('device-mode', 'device-mode-max')
+        preview.classList.add(preset.mode === 'max' ? 'device-mode-max' : 'device-mode')
+        console.log(
+          `Play mode: Device set to ${e.target.value} (${preset.width}×${preset.height}, ${preset.mode})`
+        )
+      } else {
+        preview.classList.remove('device-mode', 'device-mode-max')
+        preview.style.removeProperty('--device-width')
+        preview.style.removeProperty('--device-height')
+        console.log('Play mode: Device set to Responsive')
+      }
+    })
+  }
 
   // Listen for play mode changes
   if (studio?.events) {
@@ -2709,6 +2772,14 @@ function initPlayMode() {
       // Clear selection when entering play mode
       if (active) {
         studioActions.setSelection(null, 'preview')
+      }
+
+      // Reset device selector when exiting play mode
+      if (!active && deviceSelect && preview) {
+        deviceSelect.value = ''
+        preview.classList.remove('device-mode', 'device-mode-max')
+        preview.style.removeProperty('--device-width')
+        preview.style.removeProperty('--device-height')
       }
     })
   }

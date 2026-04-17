@@ -36,38 +36,29 @@ const DEFAULT_PROJECT: Record<string, string> = {
 
   'tokens.tok': `// Theme Tokens
 
-// Typography
-font: Inter, system-ui, -apple-system, sans-serif
-
+// Typography (max 3)
 s.fs: 12
 m.fs: 14
 l.fs: 18
-xl.fs: 24
-xxl.fs: 32
 
-// Colors (Brand: #5BA8F5 light, #2271C1 dark)
+// Colors (max 3 per type)
 accent.bg: #5BA8F5
-accent-dark.bg: #2271C1
 surface.bg: #27272a
 canvas.bg: #18181b
-input.bg: #1f1f1f
 text.col: #ffffff
 muted.col: #a1a1aa
 border.boc: #333333
-focus.boc: #5BA8F5
 
-// Spacing
+// Spacing (max 3)
 s.pad: 4
 m.pad: 8
 l.pad: 16
-xl.pad: 32
 
 s.gap: 4
 m.gap: 8
 l.gap: 16
-xl.gap: 32
 
-// Radius
+// Radius (max 3)
 s.rad: 4
 m.rad: 8
 l.rad: 12`,
@@ -76,17 +67,17 @@ l.rad: 12`,
 
 App: w full, h full, bg $canvas, pad $l, gap $l
 
-Title: fs $xl, weight bold, col $text
+Title: fs $l, weight bold, col $text
 
 TextMuted: fs $m, col $muted
 
 Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
-  hover bg $accent-dark
+  hover bg #2271C1
 
 Card: bg $surface, pad $l, rad $m, gap $l
 
-Input: pad $m, bg $input, rad $s, bor 1, boc $border, col $text
-  focus boc $focus`,
+Input: pad $m, bg $surface, rad $s, bor 1, boc $border, col $text
+  focus boc $accent`,
 
   'data.data': `// Demo Daten für Charts
 

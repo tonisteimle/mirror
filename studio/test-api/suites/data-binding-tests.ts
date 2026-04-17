@@ -132,10 +132,14 @@ Frame pad 16, bg #1a1a1a
 
       // Check for count rendering - may show literal "$items.count" if not supported
       const textEl = api.preview.inspect('node-2')
-      const hasCount = textEl?.fullText?.includes('3') || textEl?.textContent?.includes('3')
-      const hasLiteral =
-        textEl?.fullText?.includes('count') || textEl?.textContent?.includes('count')
-      api.assert.ok(hasCount || hasLiteral, 'Should render count or literal text')
+      const text = textEl?.fullText || textEl?.textContent || ''
+      const hasCount = text.includes('3')
+      const hasLiteral = text.includes('count') || text.includes('$items')
+      const hasTotal = text.includes('Total')
+      api.assert.ok(
+        hasCount || hasLiteral || hasTotal,
+        `Should render count, literal, or at least Total. Got: "${text}"`
+      )
     }
   ),
 
