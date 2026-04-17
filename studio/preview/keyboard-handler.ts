@@ -4,6 +4,7 @@
  * Shortcuts:
  * - H: Set horizontal layout
  * - V: Set vertical layout
+ * - F: Set full dimension (analyzes shape: wider→w full, taller→h full, press again for both)
  * - Cmd/Ctrl+G: Group selected elements (wrap in Box)
  * - Shift+Cmd/Ctrl+G: Ungroup selected element (unwrap container)
  * - Cmd/Ctrl+D: Duplicate selected element
@@ -20,6 +21,7 @@ import {
   executeDuplicate,
   executeDelete,
   executeSetLayoutDirection,
+  executeSetFullDimension,
 } from './shared-actions'
 import { SetPositionCommand } from '../core/commands'
 import type { CommandContext } from '../core/commands'
@@ -108,6 +110,16 @@ export class KeyboardHandler {
       if (nodeId) {
         e.preventDefault()
         this.handleSetLayoutDirection('vertical')
+        return
+      }
+    }
+
+    // F = Set full dimension (based on element shape)
+    if (e.key === 'f' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const nodeId = state.get().selection?.nodeId
+      if (nodeId) {
+        e.preventDefault()
+        this.handleSetFullDimension()
         return
       }
     }
@@ -416,6 +428,16 @@ export class KeyboardHandler {
 
   private handleSetLayoutDirection(direction: 'horizontal' | 'vertical'): void {
     const result = executeSetLayoutDirection(direction)
+
+    if (result.success) {
+      events.emit('notification:success', { message: result.message!, duration: 1500 })
+    } else {
+      events.emit('notification:warning', { message: result.error! })
+    }
+  }
+
+  private handleSetFullDimension(): void {
+    const result = executeSetFullDimension(this.container)
 
     if (result.success) {
       events.emit('notification:success', { message: result.message!, duration: 1500 })

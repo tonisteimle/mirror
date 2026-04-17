@@ -328,3 +328,89 @@ export function executeSetLayoutDirection(direction: 'horizontal' | 'vertical'):
 
   return { success: false, error: result.error || 'Failed to set layout direction' }
 }
+
+/**
+ * Set full dimension based on element shape
+ *
+ * Logic:
+ * - If neither w nor h is full: analyze shape, set dominant dimension to full
+ * - If one is full: set the other to full too
+ *
+ * @param container - The preview container element (for measuring)
+ * @returns ActionResult with success/failure info
+ */
+export function executeSetFullDimension(container: HTMLElement): ActionResult {
+  const selection = state.get().selection
+  if (!selection?.nodeId) {
+    return { success: false, error: 'No element selected' }
+  }
+
+  const sourceMap = state.get().sourceMap
+  if (!sourceMap) {
+    return { success: false, error: 'No source map available' }
+  }
+
+  const node = sourceMap.getNodeById(selection.nodeId)
+  if (!node) {
+    return { success: false, error: 'Selected node not found' }
+  }
+
+  // Find the element in DOM to measure dimensions
+  const element = container.querySelector(`[data-mirror-id="${selection.nodeId}"]`) as HTMLElement
+  if (!element) {
+    return { success: false, error: 'Element not found in preview' }
+  }
+
+  // Get current dimensions
+  const rect = element.getBoundingClientRect()
+  const width = rect.width
+  const height = rect.height
+
+  // Check current w/h properties from source
+  const source = state.get().source
+  const lines = source.split('\n')
+  const line = lines[node.position.line - 1] || ''
+
+  const hasWidthFull = /\bw\s+full\b/.test(line) || /\bwidth\s+full\b/.test(line)
+  const hasHeightFull = /\bh\s+full\b/.test(line) || /\bheight\s+full\b/.test(line)
+
+  let propToSet: 'w' | 'h'
+  let message: string
+
+  if (!hasWidthFull && !hasHeightFull) {
+    // Neither is full - analyze shape
+    if (width >= height) {
+      propToSet = 'w'
+      message = 'Width: full'
+    } else {
+      propToSet = 'h'
+      message = 'Height: full'
+    }
+  } else if (hasWidthFull && !hasHeightFull) {
+    // Width is full, set height
+    propToSet = 'h'
+    message = 'Height: full'
+  } else if (!hasWidthFull && hasHeightFull) {
+    // Height is full, set width
+    propToSet = 'w'
+    message = 'Width: full'
+  } else {
+    // Both are full already
+    return { success: true, message: 'Already full size' }
+  }
+
+  // Execute the property change
+  const result = executor.execute(
+    new SetPropertyCommand({
+      nodeId: selection.nodeId,
+      property: propToSet,
+      value: 'full',
+    })
+  )
+
+  if (result.success) {
+    return { success: true, message }
+  }
+
+  return { success: false, error: result.error || 'Failed to set dimension' }
+}
