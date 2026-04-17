@@ -137,7 +137,7 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     template: 'DatePicker',
     icon: 'datePicker',
     description: 'Calendar date picker',
-    defaultSize: { width: 280, height: 300 },
+    defaultSize: { width: 200, height: 44 },
     children: [
       { template: 'Control', isSlot: true },
       { template: 'Input', isSlot: true },
@@ -152,7 +152,7 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     template: 'Dialog',
     icon: 'dialog',
     description: 'Modal dialog',
-    defaultSize: { width: 400, height: 300 },
+    defaultSize: { width: 120, height: 44 },
     children: [
       {
         template: 'Trigger',
@@ -304,7 +304,7 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     template: 'SideNav',
     icon: 'sidebar',
     description: 'Sidebar navigation',
-    defaultSize: { width: 220, height: 300 },
+    defaultSize: { width: 220, height: 200 },
     children: [
       { template: 'NavItem', isItem: true, textContent: 'Dashboard', properties: 'icon "home"' },
       { template: 'NavItem', isItem: true, textContent: 'Projects', properties: 'icon "folder"' },
@@ -375,7 +375,7 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     template: 'Tabs',
     icon: 'tabs',
     description: 'Tabbed navigation',
-    defaultSize: { width: 300, height: 200 },
+    defaultSize: { width: 300, height: 150 },
     children: [
       {
         template: 'List',
