@@ -408,27 +408,29 @@ export class StudioAPIImpl implements StudioAPI {
   }
 
   clearSelection(): void {
-    // Try sync.clearSelection first
-    if (this.studio?.sync?.clearSelection) {
-      this.studio.sync.clearSelection('test')
-      return
-    }
-
-    // Try actions.setSelection
-    if (this.actions?.setSelection) {
-      this.actions.setSelection(null, 'test')
-      return
-    }
-
-    // Try actions.clearSelection
+    // First try actions.clearSelection (handles deduplication correctly)
     if (this.actions?.clearSelection) {
       this.actions.clearSelection('test')
       return
     }
 
-    // Try direct state update
+    // Try sync.clearSelection
+    if (this.studio?.sync?.clearSelection) {
+      this.studio.sync.clearSelection('test')
+      return
+    }
+
+    // Try actions.setSelection with null
+    if (this.actions?.setSelection) {
+      this.actions.setSelection(null, 'test')
+      return
+    }
+
+    // Try direct state update and emit event
     if (this.state?.set) {
       this.state.set({ selection: { nodeId: null, origin: 'test' } })
+      // Emit event manually since direct state.set doesn't
+      this.studio?.events?.emit?.('selection:changed', { nodeId: null, origin: 'test' })
     }
   }
 

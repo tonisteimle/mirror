@@ -1750,6 +1750,626 @@ const level20Tests = describe('Level 20: Profile Page', [
 ])
 
 // =============================================================================
+// Level 21: E-Commerce Product Page
+// =============================================================================
+
+const level21Tests = describe('Level 21: E-Commerce Product Page', [
+  // Product page header with breadcrumb + search
+  testWithSetup(
+    'Build e-commerce header with search',
+    `Frame hor, spread, pad 16, bg #111, ver-center`,
+    async (api: TestAPI) => {
+      // Logo
+      await api.interact.dragFromPalette('Text', 'node-1', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-2')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('fs', '20')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('weight', 'bold')
+      await api.utils.delay(50)
+
+      // Search bar
+      await api.interact.dragFromPalette('Frame', 'node-1', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-3')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('bg', '#222')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('rad', '8')
+      await api.utils.delay(50)
+
+      await api.interact.dragFromPalette('Icon', 'node-3', 0)
+      await api.utils.delay(50)
+      await api.interact.dragFromPalette('Input', 'node-3', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-5')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('grow', '')
+      await api.utils.delay(50)
+
+      // Cart icon
+      await api.interact.dragFromPalette('Icon', 'node-1', 2)
+      await api.utils.delay(150)
+
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('spread'), 'CODE: Spread layout')
+      api.assert.ok(code.includes('grow'), 'CODE: Growing input')
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Icon') >= 2, 'CODE: Icons')
+      api.assert.ok(analysis.countElements('Input') >= 1, 'CODE: Search input')
+    }
+  ),
+
+  // Product grid (2x2)
+  testWithSetup('Build product grid 2x2', `Frame wrap, gap 16, hor`, async (api: TestAPI) => {
+    // Create 4 product cards
+    for (let i = 0; i < 4; i++) {
+      await api.interact.dragFromPalette('Frame', 'node-1', i)
+      await api.utils.delay(40)
+      const cardId = `node-${i + 2}`
+      await api.interact.click(cardId)
+      await api.utils.delay(30)
+      await api.panel.property.setProperty('w', '200')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('bg', '#1a1a1a')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('rad', '8')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('gap', '8')
+      await api.utils.delay(40)
+
+      // Image placeholder
+      await api.interact.dragFromPalette('Frame', cardId, 0)
+      await api.utils.delay(40)
+      // Title
+      await api.interact.dragFromPalette('Text', cardId, 1)
+      await api.utils.delay(40)
+    }
+    await api.utils.delay(150)
+
+    const code = api.editor.getCode()
+    api.assert.ok(code.includes('wrap'), 'CODE: Wrap layout')
+    api.assert.ok(code.includes('w 200'), 'CODE: Card width')
+    const analysis = analyzeCode(code)
+    api.assert.ok(analysis.countElements('Frame') >= 9, 'CODE: Container + 4 cards + images')
+  }),
+])
+
+// =============================================================================
+// Level 22: Social Media Feed
+// =============================================================================
+
+const level22Tests = describe('Level 22: Social Media Feed', [
+  // Post with author, content, actions
+  testWithSetup(
+    'Build social post with author and actions',
+    `Frame gap 12, pad 16, bg #1a1a1a, rad 12`,
+    async (api: TestAPI) => {
+      // Author row
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-2')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('ver-center', '')
+      await api.utils.delay(50)
+
+      // Avatar
+      await api.interact.dragFromPalette('Frame', 'node-2', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-3')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('w', '40')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('h', '40')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('rad', '99')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('bg', '#333')
+      await api.utils.delay(50)
+
+      // Author info
+      await api.interact.dragFromPalette('Frame', 'node-2', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-4')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('gap', '2')
+      await api.utils.delay(50)
+
+      await api.interact.dragFromPalette('Text', 'node-4', 0)
+      await api.utils.delay(40)
+      await api.interact.dragFromPalette('Text', 'node-4', 1)
+      await api.utils.delay(50)
+
+      // Post content
+      await api.interact.dragFromPalette('Text', 'node-1', 1)
+      await api.utils.delay(50)
+
+      // Action bar
+      await api.interact.dragFromPalette('Frame', 'node-1', 2)
+      await api.utils.delay(50)
+      await api.interact.click('node-8')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('gap', '24')
+      await api.utils.delay(50)
+
+      // Like, Comment, Share icons
+      await api.interact.dragFromPalette('Icon', 'node-8', 0)
+      await api.utils.delay(40)
+      await api.interact.dragFromPalette('Icon', 'node-8', 1)
+      await api.utils.delay(40)
+      await api.interact.dragFromPalette('Icon', 'node-8', 2)
+      await api.utils.delay(150)
+
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('rad 99'), 'CODE: Round avatar')
+      api.assert.ok(code.includes('gap 24'), 'CODE: Action spacing')
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Icon') >= 3, 'CODE: Action icons')
+      api.assert.ok(analysis.countElements('Text') >= 3, 'CODE: Author + time + content')
+    }
+  ),
+
+  // Comment with reply
+  testWithSetup(
+    'Build comment with reply button',
+    `Frame gap 8, pad 12, bg #111, rad 8`,
+    async (api: TestAPI) => {
+      // Comment header
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-2')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('gap', '8')
+      await api.utils.delay(50)
+
+      // Mini avatar
+      await api.interact.dragFromPalette('Frame', 'node-2', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-3')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('w', '24')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('h', '24')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('rad', '99')
+      await api.utils.delay(50)
+
+      // Name
+      await api.interact.dragFromPalette('Text', 'node-2', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-4')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('weight', 'bold')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('fs', '13')
+      await api.utils.delay(50)
+
+      // Comment text
+      await api.interact.dragFromPalette('Text', 'node-1', 1)
+      await api.utils.delay(50)
+
+      // Reply link
+      await api.interact.dragFromPalette('Text', 'node-1', 2)
+      await api.utils.delay(50)
+      await api.interact.click('node-6')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('col', '#888')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('fs', '12')
+      await api.utils.delay(150)
+
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('w 24'), 'CODE: Mini avatar')
+      api.assert.ok(code.includes('fs 13'), 'CODE: Small name')
+      api.assert.ok(code.includes('col #888'), 'CODE: Muted reply')
+    }
+  ),
+])
+
+// =============================================================================
+// Level 23: Admin Dashboard
+// =============================================================================
+
+const level23Tests = describe('Level 23: Admin Dashboard', [
+  // Sidebar navigation
+  testWithSetup(
+    'Build admin sidebar nav',
+    `Frame w 240, h full, bg #0a0a0a, pad 16, gap 8`,
+    async (api: TestAPI) => {
+      // Logo area
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-2')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('pad', '0 0 16 0')
+      await api.utils.delay(50)
+
+      await api.interact.dragFromPalette('Icon', 'node-2', 0)
+      await api.utils.delay(40)
+      await api.interact.dragFromPalette('Text', 'node-2', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-4')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('weight', 'bold')
+      await api.utils.delay(50)
+
+      // Divider
+      await api.interact.dragFromPalette('Divider', 'node-1', 1)
+      await api.utils.delay(50)
+
+      // Nav items (3)
+      for (let i = 0; i < 3; i++) {
+        await api.interact.dragFromPalette('Frame', 'node-1', i + 2)
+        await api.utils.delay(40)
+        const itemId = `node-${i + 6}`
+        await api.interact.click(itemId)
+        await api.utils.delay(30)
+        await api.panel.property.setProperty('hor', '')
+        await api.utils.delay(40)
+        await api.panel.property.setProperty('gap', '12')
+        await api.utils.delay(40)
+        await api.panel.property.setProperty('pad', '10 12')
+        await api.utils.delay(40)
+        await api.panel.property.setProperty('rad', '6')
+        await api.utils.delay(40)
+
+        await api.interact.dragFromPalette('Icon', itemId, 0)
+        await api.utils.delay(40)
+        await api.interact.dragFromPalette('Text', itemId, 1)
+        await api.utils.delay(40)
+      }
+      await api.utils.delay(150)
+
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('w 240'), 'CODE: Sidebar width')
+      api.assert.ok(code.includes('pad 10 12'), 'CODE: Nav item padding')
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Divider') >= 1, 'CODE: Divider')
+      api.assert.ok(analysis.countElements('Icon') >= 4, 'CODE: Logo + nav icons')
+    }
+  ),
+
+  // Data table header
+  testWithSetup(
+    'Build data table header',
+    `Frame hor, pad 12, bg #1a1a1a, rad 8 8 0 0`,
+    async (api: TestAPI) => {
+      // Checkbox column
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-2')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('w', '40')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('center', '')
+      await api.utils.delay(50)
+
+      await api.interact.dragFromPalette('Frame', 'node-2', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-3')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('w', '18')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('h', '18')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('bor', '2')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('rad', '4')
+      await api.utils.delay(50)
+
+      // Name column
+      await api.interact.dragFromPalette('Text', 'node-1', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-4')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('grow', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('weight', 'bold')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('fs', '12')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('uppercase', '')
+      await api.utils.delay(50)
+
+      // Status column
+      await api.interact.dragFromPalette('Text', 'node-1', 2)
+      await api.utils.delay(50)
+      await api.interact.click('node-5')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('w', '100')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('uppercase', '')
+      await api.utils.delay(50)
+
+      // Actions column
+      await api.interact.dragFromPalette('Text', 'node-1', 3)
+      await api.utils.delay(50)
+      await api.interact.click('node-6')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('w', '80')
+      await api.utils.delay(150)
+
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('uppercase'), 'CODE: Uppercase headers')
+      api.assert.ok(code.includes('bor 2'), 'CODE: Checkbox border')
+      api.assert.ok(code.includes('grow'), 'CODE: Growing name column')
+    }
+  ),
+])
+
+// =============================================================================
+// Level 24: Settings Page
+// =============================================================================
+
+const level24Tests = describe('Level 24: Settings Page', [
+  // Settings section with toggles
+  testWithSetup(
+    'Build settings section with toggles',
+    `Frame gap 16, pad 24, bg #1a1a1a, rad 12`,
+    async (api: TestAPI) => {
+      // Section header
+      await api.interact.dragFromPalette('Text', 'node-1', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-2')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('fs', '18')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('weight', 'bold')
+      await api.utils.delay(50)
+
+      // Divider
+      await api.interact.dragFromPalette('Divider', 'node-1', 1)
+      await api.utils.delay(50)
+
+      // Setting row 1
+      await api.interact.dragFromPalette('Frame', 'node-1', 2)
+      await api.utils.delay(50)
+      await api.interact.click('node-4')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('spread', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('pad', '12 0')
+      await api.utils.delay(50)
+
+      // Label text
+      await api.interact.dragFromPalette('Text', 'node-4', 0)
+      await api.utils.delay(50)
+      // Toggle placeholder
+      await api.interact.dragFromPalette('Frame', 'node-4', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-6')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('w', '40')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('h', '24')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('bg', '#333')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('rad', '12')
+      await api.utils.delay(150)
+
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('fs 18'), 'CODE: Section header size')
+      api.assert.ok(code.includes('spread'), 'CODE: Spread row')
+      api.assert.ok(code.includes('rad 12'), 'CODE: Toggle radius')
+    }
+  ),
+
+  // Account info card
+  testWithSetup(
+    'Build account info card',
+    `Frame gap 16, pad 20, bg #1a1a1a, rad 12`,
+    async (api: TestAPI) => {
+      // Header with avatar
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-2')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('gap', '16')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('ver-center', '')
+      await api.utils.delay(50)
+
+      // Avatar
+      await api.interact.dragFromPalette('Image', 'node-2', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-3')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('w', '64')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('h', '64')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('rad', '99')
+      await api.utils.delay(50)
+
+      // Name + email
+      await api.interact.dragFromPalette('Frame', 'node-2', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-4')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('gap', '4')
+      await api.utils.delay(50)
+
+      await api.interact.dragFromPalette('Text', 'node-4', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-5')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('fs', '18')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('weight', 'bold')
+      await api.utils.delay(50)
+
+      await api.interact.dragFromPalette('Text', 'node-4', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-6')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('col', '#888')
+      await api.utils.delay(50)
+
+      // Divider
+      await api.interact.dragFromPalette('Divider', 'node-1', 1)
+      await api.utils.delay(50)
+
+      // Edit button
+      await api.interact.dragFromPalette('Button', 'node-1', 2)
+      await api.utils.delay(150)
+
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('w 64'), 'CODE: Avatar size')
+      api.assert.ok(code.includes('rad 99'), 'CODE: Round avatar')
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Divider') >= 1, 'CODE: Divider')
+      api.assert.ok(analysis.countElements('Button') >= 1, 'CODE: Edit button')
+    }
+  ),
+])
+
+// =============================================================================
+// Level 25: Landing Page
+// =============================================================================
+
+const level25Tests = describe('Level 25: Landing Page', [
+  // Hero section
+  testWithSetup(
+    'Build landing page hero section',
+    `Frame center, gap 24, pad 64 24, bg #0a0a0a`,
+    async (api: TestAPI) => {
+      // Badge
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-2')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('pad', '6 12')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('bg', '#222')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('rad', '99')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('gap', '8')
+      await api.utils.delay(50)
+
+      await api.interact.dragFromPalette('Icon', 'node-2', 0)
+      await api.utils.delay(40)
+      await api.interact.dragFromPalette('Text', 'node-2', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-4')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('fs', '12')
+      await api.utils.delay(50)
+
+      // Headline
+      await api.interact.dragFromPalette('Text', 'node-1', 1)
+      await api.utils.delay(50)
+      await api.interact.click('node-5')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('fs', '48')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('weight', 'bold')
+      await api.utils.delay(50)
+
+      // Subheadline
+      await api.interact.dragFromPalette('Text', 'node-1', 2)
+      await api.utils.delay(50)
+      await api.interact.click('node-6')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('col', '#888')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('fs', '18')
+      await api.utils.delay(50)
+
+      // CTA buttons
+      await api.interact.dragFromPalette('Frame', 'node-1', 3)
+      await api.utils.delay(50)
+      await api.interact.click('node-7')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(50)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(50)
+
+      await api.interact.dragFromPalette('Button', 'node-7', 0)
+      await api.utils.delay(50)
+      await api.interact.click('node-8')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('bg', '#2271C1')
+      await api.utils.delay(50)
+
+      await api.interact.dragFromPalette('Button', 'node-7', 1)
+      await api.utils.delay(150)
+
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('fs 48'), 'CODE: Large headline')
+      api.assert.ok(code.includes('pad 64 24'), 'CODE: Hero padding')
+      api.assert.ok(code.includes('rad 99'), 'CODE: Pill badge')
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Button') >= 2, 'CODE: CTA buttons')
+    }
+  ),
+
+  // Feature cards row
+  testWithSetup('Build feature cards row', `Frame hor, gap 24, pad 24`, async (api: TestAPI) => {
+    // 3 feature cards
+    for (let i = 0; i < 3; i++) {
+      await api.interact.dragFromPalette('Frame', 'node-1', i)
+      await api.utils.delay(40)
+      const cardId = `node-${i + 2}`
+      await api.interact.click(cardId)
+      await api.utils.delay(30)
+      await api.panel.property.setProperty('grow', '')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('pad', '24')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('bg', '#1a1a1a')
+      await api.utils.delay(40)
+      await api.panel.property.setProperty('rad', '12')
+      await api.utils.delay(40)
+
+      // Icon
+      await api.interact.dragFromPalette('Icon', cardId, 0)
+      await api.utils.delay(40)
+      // Title
+      await api.interact.dragFromPalette('Text', cardId, 1)
+      await api.utils.delay(40)
+      // Description
+      await api.interact.dragFromPalette('Text', cardId, 2)
+      await api.utils.delay(40)
+    }
+    await api.utils.delay(150)
+
+    const code = api.editor.getCode()
+    api.assert.ok(code.includes('grow'), 'CODE: Growing cards')
+    api.assert.ok(code.includes('pad 24'), 'CODE: Card padding')
+    api.assert.ok(code.includes('rad 12'), 'CODE: Card radius')
+    const analysis = analyzeCode(code)
+    api.assert.ok(analysis.countElements('Icon') >= 3, 'CODE: Feature icons')
+    api.assert.ok(analysis.countElements('Text') >= 6, 'CODE: Titles + descriptions')
+  }),
+])
+
+// =============================================================================
 // Export All
 // =============================================================================
 
@@ -1774,4 +2394,9 @@ export const allUIBuilderTests: TestCase[] = [
   ...level18Tests,
   ...level19Tests,
   ...level20Tests,
+  ...level21Tests,
+  ...level22Tests,
+  ...level23Tests,
+  ...level24Tests,
+  ...level25Tests,
 ]

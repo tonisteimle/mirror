@@ -13,13 +13,22 @@ import type {
   EditorAPI,
   StateAPI,
   UtilsAPI,
+  DOMAPI,
+  PanelAPI,
+  ZagAPI,
+  StudioAPI,
 } from './types'
 
 // Re-export types for convenience
-export type { TestCase, TestResult, TestSuiteResult, TestAPI } from './types'
+export type { TestCase, TestResult, TestSuiteResult, TestSuite, TestAPI } from './types'
 import { PreviewInspector } from './inspector'
 import { Assertions, AssertionCollector } from './assertions'
 import { Interactions } from './interactions'
+import { createDOMBridge } from './dom-bridge'
+import { createPanelAPI } from './panel-api'
+import { createZagAPI } from './zag-api'
+import { createStudioAPI } from './studio-api'
+import { createFixturesAPI } from './fixtures'
 
 // =============================================================================
 // Editor API Implementation
@@ -274,6 +283,10 @@ class StateAPIImpl implements StateAPI {
 class UtilsAPIImpl implements UtilsAPI {
   private inspector = new PreviewInspector()
 
+  private get previewContainer(): HTMLElement | null {
+    return document.getElementById('preview')
+  }
+
   async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
@@ -305,6 +318,120 @@ class UtilsAPIImpl implements UtilsAPI {
       await this.delay(50)
     }
     throw new Error('Condition not met within timeout')
+  }
+
+  async waitForElement(nodeId: string, timeout = 2000): Promise<HTMLElement> {
+    const startTime = Date.now()
+
+    while (Date.now() - startTime < timeout) {
+      const element = this.previewContainer?.querySelector(
+        `[data-mirror-id="${nodeId}"]`
+      ) as HTMLElement | null
+
+      if (element) return element
+      await this.delay(50)
+    }
+
+    throw new Error(`Element ${nodeId} not found within ${timeout}ms`)
+  }
+
+  async waitForStyle(
+    nodeId: string,
+    property: string,
+    expectedValue: string,
+    timeout = 2000
+  ): Promise<void> {
+    const startTime = Date.now()
+
+    while (Date.now() - startTime < timeout) {
+      const element = this.previewContainer?.querySelector(
+        `[data-mirror-id="${nodeId}"]`
+      ) as HTMLElement | null
+
+      if (element) {
+        const style = window.getComputedStyle(element)
+        const actualValue = style.getPropertyValue(property) || (style as any)[property]
+
+        if (actualValue === expectedValue) return
+      }
+
+      await this.delay(50)
+    }
+
+    throw new Error(`Style ${property} did not become "${expectedValue}" within ${timeout}ms`)
+  }
+
+  async waitForCount(selector: string, count: number, timeout = 2000): Promise<void> {
+    const startTime = Date.now()
+
+    while (Date.now() - startTime < timeout) {
+      const elements = this.previewContainer?.querySelectorAll(selector)
+      if (elements && elements.length === count) return
+      await this.delay(50)
+    }
+
+    const actual = this.previewContainer?.querySelectorAll(selector).length ?? 0
+    throw new Error(`Expected ${count} elements matching "${selector}", found ${actual}`)
+  }
+
+  async waitForAnimation(nodeId?: string, timeout = 2000): Promise<void> {
+    // Get all elements or specific element
+    const elements = nodeId
+      ? [this.previewContainer?.querySelector(`[data-mirror-id="${nodeId}"]`)]
+      : Array.from(this.previewContainer?.querySelectorAll('*') ?? [])
+
+    // Check each element for running animations/transitions
+    const checkAnimations = (): boolean => {
+      for (const el of elements) {
+        if (!el) continue
+
+        // Check for CSS animations
+        const animations = (el as HTMLElement).getAnimations?.()
+        if (animations && animations.length > 0) {
+          const running = animations.some(
+            a => a.playState === 'running' || a.playState === 'pending'
+          )
+          if (running) return false
+        }
+
+        // Check for transitions (via transitionDuration)
+        const style = window.getComputedStyle(el as Element)
+        const duration = style.transitionDuration
+        if (duration && duration !== '0s') {
+          // Transition might be in progress - we can't easily detect this
+          // so we'll do a conservative delay
+        }
+      }
+      return true
+    }
+
+    const startTime = Date.now()
+    while (Date.now() - startTime < timeout) {
+      if (checkAnimations()) {
+        // Extra buffer for transition completion
+        await this.delay(100)
+        return
+      }
+      await this.delay(50)
+    }
+
+    // Timeout is not an error for animations - they might just be long
+    this.log(`Animation wait timed out after ${timeout}ms`)
+  }
+
+  async waitForIdle(timeout = 2000): Promise<void> {
+    // Wait for requestAnimationFrame to complete
+    await new Promise<void>(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve())
+      })
+    })
+
+    // Wait for any microtasks
+    await Promise.resolve()
+
+    // Buffer for async operations to settle (Zag state machines, history updates, etc.)
+    await this.delay(100)
   }
 
   log(message: string): void {
@@ -352,7 +479,7 @@ export class TestRunner {
   constructor(options: TestRunnerOptions = {}) {
     this.options = {
       bail: false,
-      timeout: 10000,
+      timeout: 30000, // 30 seconds for complex UI tests
       runOnly: false,
       verbose: true,
       ...options,
@@ -375,13 +502,33 @@ export class TestRunner {
       () => this.stateApi.getSelection()
     )
 
+    // Create DOM Bridge for declarative validation
+    const domBridge = createDOMBridge(this.inspector)
+    const domApi: DOMAPI = {
+      expect: (nodeId, expectations) => domBridge.expect(nodeId, expectations),
+      verify: (nodeId, expectations) => domBridge.verify(nodeId, expectations),
+      verifyAll: expectations => domBridge.verifyAll(expectations),
+      verifyTree: (rootId, tree) => domBridge.verifyTree(rootId, tree),
+    }
+
+    // Create Panel, Zag, Studio, and Fixtures APIs
+    const panelApi = createPanelAPI()
+    const zagApi = createZagAPI()
+    const studioApi = createStudioAPI()
+    const fixturesApi = createFixturesAPI()
+
     return {
       editor: this.editorApi,
       preview: this.inspector,
       interact: this.interactions,
       assert: assertions,
+      dom: domApi,
       state: this.stateApi,
       utils: this.utilsApi,
+      panel: panelApi,
+      zag: zagApi,
+      studio: studioApi,
+      fixtures: fixturesApi,
     }
   }
 
