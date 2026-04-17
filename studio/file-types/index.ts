@@ -182,10 +182,27 @@ function detectTokens(lines: string[]): boolean {
 }
 
 function detectData(lines: string[]): boolean {
+  // Check for list items (- item)
   for (const line of lines) {
     if (/^\s*-\s+\w+/.test(line)) return true
   }
-  return false
+
+  // Check for YAML-like nested data (key: value pairs with child keys)
+  // Example: sales:\n  Jan: 120
+  let hasParentKey = false
+  let hasChildKey = false
+  for (const line of lines) {
+    // Parent key: word followed by colon, but NOT component definition (no as, no properties)
+    if (/^[a-z][a-z0-9_-]*:\s*$/.test(line)) {
+      hasParentKey = true
+    }
+    // Child key-value: indented word followed by colon and value
+    if (/^\s{2,}[A-Za-z][a-zA-Z0-9_-]*:\s*\d+/.test(line)) {
+      hasChildKey = true
+    }
+  }
+
+  return hasParentKey && hasChildKey
 }
 
 function detectJavaScript(_lines: string[], content?: string): boolean {
@@ -260,6 +277,7 @@ export function detectFileType(nameOrContent: string, content?: string): FileTyp
     const lower = filename.toLowerCase()
     if (lower.includes('token')) return 'tokens'
     if (lower.includes('component')) return 'component'
+    if (lower.endsWith('.data') || lower.includes('data.')) return 'data'
   }
 
   if (!code?.trim()) return 'layout'

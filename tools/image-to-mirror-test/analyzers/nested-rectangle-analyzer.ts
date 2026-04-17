@@ -183,10 +183,13 @@ async function detectTexts(
 
     // Filter out false positives:
     // - Single punctuation characters are likely noise from borders/edges
-    // - Very short non-word text is likely noise
+    // - Very short non-word text is likely noise (but keep currency, percentages, etc.)
     const isNoise =
       detectedText.length === 1 && /[|\\\/\-_=+*#@\[\]{}()<>,.;:'"!?]/.test(detectedText)
-    const isShortNonWord = detectedText.length <= 2 && !/^[a-zA-Z]{2,}|[0-9]+$/.test(detectedText)
+
+    // Allow: letters, numbers, currency ($€£), percentages (%), prices ($12,450), times, etc.
+    const isValidShortText = /^[$€£%+\-]?[a-zA-Z0-9]/.test(detectedText)
+    const isShortNonWord = detectedText.length <= 2 && !isValidShortText
 
     if (isNoise || isShortNonWord) {
       if (debug) {
@@ -680,7 +683,7 @@ function findPotentialIconRegions(
 /**
  * Find content segments between gaps
  * Returns array of [start, end] positions
- * Minimum gap size of 4px to avoid false segmentation
+ * Minimum gap size of 8px to avoid false segmentation from anti-aliasing
  */
 function findContentSegments(gaps: number[], start: number, end: number): [number, number][] {
   if (gaps.length === 0) return [[start, end]]
@@ -692,6 +695,9 @@ function findContentSegments(gaps: number[], start: number, end: number): [numbe
   const segments: [number, number][] = []
   let inContent = false
   let contentStart = start
+
+  // Minimum gap size to be considered a real separator (not anti-aliasing)
+  const MIN_GAP_SIZE = 8
 
   for (let x = start; x < end; x++) {
     const isGap = gapSet.has(x)
@@ -707,7 +713,7 @@ function findContentSegments(gaps: number[], start: number, end: number): [numbe
       for (let gx = x; gx < end && gapSet.has(gx); gx++) {
         gapLength++
       }
-      if (gapLength >= 4) {
+      if (gapLength >= MIN_GAP_SIZE) {
         // Significant gap - end current segment
         segments.push([contentStart, x])
         inContent = false
@@ -1337,12 +1343,14 @@ function findAllRectanglesInRegion(
   if (!overallBounds) return { bounds: rectangles }
 
   // Scan for vertical gaps (columns that are all background)
+  // Use higher tolerance (15) to handle anti-aliasing at edges
+  const GAP_TOLERANCE = 15
   const verticalGaps: number[] = []
   for (let x = overallBounds.x; x < overallBounds.x + overallBounds.width; x++) {
     let isGap = true
     for (let y = overallBounds.y; y < overallBounds.y + overallBounds.height; y++) {
       const pixel = getPixelAt(data, imageWidth, x, y)
-      if (!pixelsEqual(pixel, bgColor, 5)) {
+      if (!pixelsEqual(pixel, bgColor, GAP_TOLERANCE)) {
         isGap = false
         break
       }
@@ -1356,7 +1364,7 @@ function findAllRectanglesInRegion(
     let isGap = true
     for (let x = overallBounds.x; x < overallBounds.x + overallBounds.width; x++) {
       const pixel = getPixelAt(data, imageWidth, x, y)
-      if (!pixelsEqual(pixel, bgColor, 5)) {
+      if (!pixelsEqual(pixel, bgColor, GAP_TOLERANCE)) {
         isGap = false
         break
       }
@@ -1428,23 +1436,14 @@ function findAllRectanglesInRegion(
   // TEXT HEURISTIC: If we found many small rectangles with tiny gaps,
   // it's probably anti-aliased text, not real UI elements.
   // In this case, treat the whole region as a single element (will be text-detected later)
-  if (rectangles.length >= 3 && layout && layout.gap <= 3) {
-    // Count how many rectangles are "small" (likely text fragments)
-    const smallRects = rectangles.filter(r => r.width < 30 && r.height < 30)
-    const smallRatio = smallRects.length / rectangles.length
+  // Be CONSERVATIVE - only apply if ALL rectangles are very small (< 20px)
+  if (rectangles.length >= 5 && layout && layout.gap <= 2) {
+    // Count how many rectangles are "very small" (likely text character fragments)
+    const verySmallRects = rectangles.filter(r => r.width < 20 && r.height < 20)
+    const smallRatio = verySmallRects.length / rectangles.length
 
-    // If most rectangles (>= 50%) are small text fragments, treat as text
-    if (smallRatio >= 0.5) {
-      return { bounds: [overallBounds], isTextRegion: true }
-    }
-
-    // Also check: if we have many tiny gaps (1-3px), it's likely text even if some rects are larger
-    const avgWidth = rectangles.reduce((sum, r) => sum + r.width, 0) / rectangles.length
-    const avgHeight = rectangles.reduce((sum, r) => sum + r.height, 0) / rectangles.length
-    const avgSize = (avgWidth + avgHeight) / 2
-
-    // Relaxed threshold: avgSize < 30 (was 25) for many small gap scenarios
-    if (avgSize < 30 && layout.gap <= 2) {
+    // Only treat as text if almost all rectangles (>= 80%) are very small
+    if (smallRatio >= 0.8) {
       return { bounds: [overallBounds], isTextRegion: true }
     }
   }
@@ -1868,7 +1867,7 @@ async function findNestedRectangles(
     if (childrenResult.isTextRegion && childrenResult.bounds.length === 1) {
       const textBound = childrenResult.bounds[0]
       const leafTexts = await detectTexts(buffer, textBound, color, data, imageWidth)
-      rect.texts = leafTexts.filter(t => t.confidence >= 60)
+      rect.texts = leafTexts.filter(t => t.confidence >= 50)
       // Calculate padding from the text region
       const padding = calculatePadding(bounds, [textBound])
       if (padding) {
@@ -1905,7 +1904,7 @@ async function findNestedRectangles(
         }
         // Try to detect text in this small region
         const texts = await detectTexts(buffer, childBound, childColor, data, imageWidth)
-        childRect.texts = texts.filter(t => t.confidence >= 60)
+        childRect.texts = texts.filter(t => t.confidence >= 50)
       } else {
         // Recursively process larger children
         childRect = await findNestedRectangles(
@@ -1958,20 +1957,19 @@ async function findNestedRectangles(
       }
     }
 
-    // Detect text and icons in leaf nodes (no rectangle children)
-    if (rect.children.length === 0) {
-      const leafTexts = await detectTexts(buffer, bounds, color, data, imageWidth)
-      rect.texts = leafTexts.filter(t => t.confidence >= 60)
+    // Detect text - run OCR on ALL regions, not just leaf nodes
+    // Text can exist alongside children (e.g., a card with title text and nested content)
+    const allTexts = await detectTexts(buffer, bounds, color, data, imageWidth)
+    rect.texts = allTexts.filter(t => t.confidence >= 50)
 
-      // If no text found, check for icons
-      if (rect.texts.length === 0) {
-        rect.icons = detectIcons(data, imageWidth, bounds, color)
-      }
+    // If no text found and no children, check for icons
+    if (rect.texts.length === 0 && rect.children.length === 0) {
+      rect.icons = detectIcons(data, imageWidth, bounds, color)
     }
   } else {
     // Small rectangle - might contain text or icons
     const smallTexts = await detectTexts(buffer, bounds, color, data, imageWidth)
-    rect.texts = smallTexts.filter(t => t.confidence >= 60)
+    rect.texts = smallTexts.filter(t => t.confidence >= 50)
 
     // If no text found, check for icons
     if (rect.texts.length === 0) {

@@ -1300,7 +1300,12 @@ function parsePixelCodeToStructure(
         parent.children.push(element)
       }
 
-      stack.push({ element, indent })
+      // Only push to stack if this element can have children
+      // Text, Icon, Button with content are leaf nodes - don't push them
+      const isLeafElement = ['Text', 'Icon'].includes(element.type || '')
+      if (!isLeafElement) {
+        stack.push({ element, indent })
+      }
     }
   }
 
@@ -1493,6 +1498,47 @@ function normalizeChildrenFontSizes(children: MergedElement[], ctx?: PipelineCon
 function generateMirrorCode(element: MergedElement, indent = 0): string {
   const prefix = '  '.repeat(indent)
   const props: string[] = []
+
+  // SPECIAL CASE: If this is a leaf element (Text, Icon) but has children,
+  // we need to output a Frame wrapper first, then the leaf element as sibling
+  const isLeafType = ['Text', 'Icon'].includes(element.type || '')
+  const hasChildren = element.children && element.children.length > 0
+
+  if (isLeafType && hasChildren) {
+    // Output Frame wrapper with children, then Text/Icon as last child
+    const lines: string[] = []
+
+    // Frame with any container properties from the element
+    const frameProps: string[] = []
+    if (element.backgroundColor) frameProps.push(`bg ${element.backgroundColor}`)
+    if (element.gap) frameProps.push(`gap ${element.gap}`)
+    if (element.layout === 'horizontal') frameProps.push('hor')
+
+    const frameLine =
+      frameProps.length > 0 ? `${prefix}Frame ${frameProps.join(', ')}` : `${prefix}Frame`
+    lines.push(frameLine)
+
+    // Output children first
+    for (const child of element.children!) {
+      lines.push(generateMirrorCode(child, indent + 1))
+    }
+
+    // Output the text/icon element as last child
+    const leafProps: string[] = []
+    if (element.type === 'Text' && element.text) leafProps.push(`"${element.text}"`)
+    if (element.type === 'Icon' && element.iconName) leafProps.push(`"${element.iconName}"`)
+    if (element.color)
+      leafProps.push(element.color === '#ffffff' ? 'col white' : `col ${element.color}`)
+    if (element.fontSize && element.type === 'Text') leafProps.push(`fs ${element.fontSize}`)
+    if (element.fontWeight && element.type === 'Text')
+      leafProps.push(`weight ${element.fontWeight}`)
+
+    const leafPrefix = '  '.repeat(indent + 1)
+    const primitive = element.type === 'Text' ? 'Text' : 'Icon'
+    lines.push(`${leafPrefix}${primitive} ${leafProps.join(', ')}`)
+
+    return lines.join('\n')
+  }
 
   // Determine primitive using component patterns
   const primitive = getPrimitiveForType(element.type as ComponentType)
