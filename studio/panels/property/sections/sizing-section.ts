@@ -4,7 +4,12 @@
  * Renders width and height controls with hug/full toggles and numeric inputs.
  */
 
-import { BaseSection, type SectionDependencies, type SectionData, type EventHandlerMap } from '../base/section'
+import {
+  BaseSection,
+  type SectionDependencies,
+  type SectionData,
+  type EventHandlerMap,
+} from '../base/section'
 
 /**
  * Sizing icons
@@ -44,6 +49,30 @@ export class SizingSection extends BaseSection {
     const heightIsHug = heightValue === 'hug'
     const heightIsFull = heightValue === 'full'
 
+    // Resolve token values for display
+    const widthIsToken = widthValue.startsWith('$')
+    const heightIsToken = heightValue.startsWith('$')
+
+    let widthDisplayValue = widthValue
+    let widthInputClass = 'prop-input'
+    if (widthIsToken && data.resolveTokenValue) {
+      const resolved = data.resolveTokenValue(widthValue)
+      if (resolved) {
+        widthDisplayValue = resolved
+        widthInputClass = 'prop-input token-resolved'
+      }
+    }
+
+    let heightDisplayValue = heightValue
+    let heightInputClass = 'prop-input'
+    if (heightIsToken && data.resolveTokenValue) {
+      const resolved = data.resolveTokenValue(heightValue)
+      if (resolved) {
+        heightDisplayValue = resolved
+        heightInputClass = 'prop-input token-resolved'
+      }
+    }
+
     return `
       <div class="section">
         <div class="section-label">Size</div>
@@ -63,7 +92,7 @@ export class SizingSection extends BaseSection {
                   </svg>
                 </button>
               </div>
-              <input type="text" class="prop-input" autocomplete="off" value="${this.deps.escapeHtml(widthValue)}" data-prop="width" placeholder="auto">
+              <input type="text" class="${widthInputClass}" autocomplete="off" value="${this.deps.escapeHtml(widthDisplayValue)}" data-prop="width" data-token-ref="${widthIsToken ? this.deps.escapeHtml(widthValue) : ''}" placeholder="auto">
             </div>
           </div>
           <div class="prop-row">
@@ -81,7 +110,7 @@ export class SizingSection extends BaseSection {
                   </svg>
                 </button>
               </div>
-              <input type="text" class="prop-input" autocomplete="off" value="${this.deps.escapeHtml(heightValue)}" data-prop="height" placeholder="auto">
+              <input type="text" class="${heightInputClass}" autocomplete="off" value="${this.deps.escapeHtml(heightDisplayValue)}" data-prop="height" data-token-ref="${heightIsToken ? this.deps.escapeHtml(heightValue) : ''}" placeholder="auto">
             </div>
           </div>
         </div>
@@ -99,20 +128,20 @@ export class SizingSection extends BaseSection {
             const [prop, value] = mode.split('-')
             this.deps.onPropertyChange(prop, value, 'toggle')
           }
-        }
+        },
       },
       'input[data-prop="width"]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           this.deps.onPropertyChange('width', input.value, 'input')
-        }
+        },
       },
       'input[data-prop="height"]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           this.deps.onPropertyChange('height', input.value, 'input')
-        }
-      }
+        },
+      },
     }
   }
 }
