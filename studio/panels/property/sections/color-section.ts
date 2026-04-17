@@ -4,7 +4,12 @@
  * Renders color picker triggers for background and text color.
  */
 
-import { BaseSection, type SectionDependencies, type SectionData, type EventHandlerMap } from '../base/section'
+import {
+  BaseSection,
+  type SectionDependencies,
+  type SectionData,
+  type EventHandlerMap,
+} from '../base/section'
 
 /**
  * Color Section class
@@ -19,8 +24,12 @@ export class ColorSection extends BaseSection {
 
     // Get color values from allProperties
     const allProps = data.allProperties || []
-    const bgProp = allProps.find((p: { name: string }) => p.name === 'background' || p.name === 'bg')
-    const colProp = allProps.find((p: { name: string }) => p.name === 'color' || p.name === 'col' || p.name === 'c')
+    const bgProp = allProps.find(
+      (p: { name: string }) => p.name === 'background' || p.name === 'bg'
+    )
+    const colProp = allProps.find(
+      (p: { name: string }) => p.name === 'color' || p.name === 'col' || p.name === 'c'
+    )
     const bgValue = bgProp?.value || ''
     const colValue = colProp?.value || ''
 
@@ -29,16 +38,18 @@ export class ColorSection extends BaseSection {
     const colIsOverride = colProp?.source === 'instance'
 
     // Format display values
-    const bgDisplay = bgValue.startsWith('$') ? bgValue : (bgValue || 'none')
-    const colDisplay = colValue.startsWith('$') ? colValue : (colValue || 'none')
+    const bgDisplay = bgValue.startsWith('$') ? bgValue : bgValue || 'none'
+    const colDisplay = colValue.startsWith('$') ? colValue : colValue || 'none'
 
     // Check if value is a token
     const bgIsToken = bgValue.startsWith('$')
     const colIsToken = colValue.startsWith('$')
 
     // Resolve tokens for swatch display
-    const bgSwatchColor = bgIsToken ? (data.resolveTokenValue?.(bgValue) || bgValue) : bgValue
-    const colSwatchColor = colIsToken ? (data.resolveTokenValue?.(colValue) || colValue) : colValue
+    const bgSwatchColor = bgIsToken ? data.resolveTokenValue?.(bgValue, 'bg') || bgValue : bgValue
+    const colSwatchColor = colIsToken
+      ? data.resolveTokenValue?.(colValue, 'col') || colValue
+      : colValue
 
     return `
       <div class="section">
@@ -80,10 +91,14 @@ export class ColorSection extends BaseSection {
           const prop = target.dataset.colorProp
           const currentValue = target.dataset.currentValue || ''
           if (prop) {
-            this.deps.onPropertyChange('__COLOR_PICKER__', JSON.stringify({ property: prop, currentValue }), 'toggle')
+            this.deps.onPropertyChange(
+              '__COLOR_PICKER__',
+              JSON.stringify({ property: prop, currentValue }),
+              'toggle'
+            )
           }
-        }
-      }
+        },
+      },
     }
   }
 }

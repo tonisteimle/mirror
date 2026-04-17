@@ -112,7 +112,8 @@ export class TypographySection extends BaseSection {
     let fontSizeDisplayValue = fontSizeValue
     let fontSizeInputClass = 'pp-fontsize-input'
     if (fontSizeIsToken && data.resolveTokenValue) {
-      const resolved = data.resolveTokenValue(fontSizeValue)
+      // Pass 'fs' as property type for short references like "$s" → "$s.fs"
+      const resolved = data.resolveTokenValue(fontSizeValue, 'fs')
       if (resolved) {
         fontSizeDisplayValue = resolved
         fontSizeInputClass = 'pp-fontsize-input token-resolved'

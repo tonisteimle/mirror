@@ -48,7 +48,7 @@ export class BorderSection extends BaseSection {
     // Border color display
     const borderColorIsToken = borderColor.startsWith('$')
     const borderColorSwatch = borderColorIsToken
-      ? data.resolveTokenValue?.(borderColor) || borderColor
+      ? data.resolveTokenValue?.(borderColor, 'boc') || borderColor
       : borderColor
 
     // Get radius tokens
@@ -71,7 +71,8 @@ export class BorderSection extends BaseSection {
     let radiusDisplayValue = radiusValue
     let radiusInputClass = 'prop-input'
     if (isTokenRef && this.data?.resolveTokenValue) {
-      const resolved = this.data.resolveTokenValue(radiusValue)
+      // Pass 'rad' as property type for short references like "$s" → "$s.rad"
+      const resolved = this.data.resolveTokenValue(radiusValue, 'rad')
       if (resolved) {
         radiusDisplayValue = resolved // Show pixel value in input
         radiusInputClass = 'prop-input token-resolved'

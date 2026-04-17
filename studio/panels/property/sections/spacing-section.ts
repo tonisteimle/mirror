@@ -127,7 +127,8 @@ export class SpacingSection extends BaseSection {
     let inputClass = 'prop-input'
 
     if (isTokenRef && this.data?.resolveTokenValue) {
-      const resolved = this.data.resolveTokenValue(value)
+      // Pass 'pad' as property type for short references like "$s" → "$s.pad"
+      const resolved = this.data.resolveTokenValue(value, 'pad')
       if (resolved) {
         // Show resolved pixel value in input, token button shows which is active
         displayValue = resolved

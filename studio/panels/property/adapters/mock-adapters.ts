@@ -254,8 +254,19 @@ export function createMockTokenPort(): MockTokenPort {
       return state.colorTokens
     },
 
-    resolveTokenValue(tokenRef) {
-      return state.tokenValues.get(tokenRef) ?? null
+    resolveTokenValue(tokenRef, propType) {
+      // First try exact match
+      const exact = state.tokenValues.get(tokenRef)
+      if (exact) return exact
+
+      // Try with propType suffix if short reference
+      if (propType && !tokenRef.includes('.')) {
+        const normalizedRef = tokenRef.startsWith('$') ? tokenRef : `$${tokenRef}`
+        const fullRef = `${normalizedRef.slice(1)}.${propType}`
+        return state.tokenValues.get(`$${fullRef}`) ?? null
+      }
+
+      return null
     },
 
     invalidateCache() {

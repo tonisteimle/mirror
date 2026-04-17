@@ -56,7 +56,8 @@ export class SizingSection extends BaseSection {
     let widthDisplayValue = widthValue
     let widthInputClass = 'prop-input'
     if (widthIsToken && data.resolveTokenValue) {
-      const resolved = data.resolveTokenValue(widthValue)
+      // Pass 'w' as property type for short references like "$s" → "$s.w"
+      const resolved = data.resolveTokenValue(widthValue, 'w')
       if (resolved) {
         widthDisplayValue = resolved
         widthInputClass = 'prop-input token-resolved'
@@ -66,7 +67,8 @@ export class SizingSection extends BaseSection {
     let heightDisplayValue = heightValue
     let heightInputClass = 'prop-input'
     if (heightIsToken && data.resolveTokenValue) {
-      const resolved = data.resolveTokenValue(heightValue)
+      // Pass 'h' as property type for short references like "$s" → "$s.h"
+      const resolved = data.resolveTokenValue(heightValue, 'h')
       if (resolved) {
         heightDisplayValue = resolved
         heightInputClass = 'prop-input token-resolved'

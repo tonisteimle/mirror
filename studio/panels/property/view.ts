@@ -267,7 +267,7 @@ export class PropertyPanelView {
       allProperties: element.allProperties,
       getSpacingTokens: propType => this.ports.tokens.getSpacingTokens(propType),
       getColorTokens: () => this.ports.tokens.getColorTokens(),
-      resolveTokenValue: ref => this.ports.tokens.resolveTokenValue(ref),
+      resolveTokenValue: (ref, propType) => this.ports.tokens.resolveTokenValue(ref, propType),
     }
 
     // Find categories for section rendering

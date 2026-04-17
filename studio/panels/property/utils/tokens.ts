@@ -19,7 +19,7 @@ export class TokenCache {
     let hash = 0
     for (let i = 0; i < source.length; i++) {
       const char = source.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
+      hash = (hash << 5) - hash + char
       hash = hash & hash // Convert to 32bit integer
     }
     return hash.toString(36)
@@ -37,10 +37,7 @@ export class TokenCache {
   /**
    * Get spacing tokens for a property type
    */
-  getSpacingTokens(
-    propType: string,
-    getSource: () => string
-  ): SpacingToken[] {
+  getSpacingTokens(propType: string, getSource: () => string): SpacingToken[] {
     const source = getSource()
     const hash = this.hashSource(source)
 
@@ -72,7 +69,7 @@ export class TokenCache {
         tokenMap.set(name, {
           name,
           fullName: `${name}.${propType}`,
-          value: match[2]
+          value: match[2],
         })
       }
     }
@@ -99,7 +96,7 @@ export class TokenCache {
     while ((match = tokenRegex.exec(source)) !== null) {
       tokenMap.set(match[1], {
         name: match[1],
-        value: match[2]
+        value: match[2],
       })
     }
 
@@ -111,16 +108,32 @@ export class TokenCache {
 
   /**
    * Resolve token value
+   * @param tokenRef - Token reference like "$s" or "$s.pad"
+   * @param getSource - Function to get source code
+   * @param propType - Optional property type hint (e.g., "pad", "gap") for short references
    */
-  resolveTokenValue(tokenRef: string, getSource: () => string): string | null {
+  resolveTokenValue(tokenRef: string, getSource: () => string, propType?: string): string | null {
     const normalizedRef = tokenRef.startsWith('$') ? tokenRef.slice(1) : tokenRef
     const parts = normalizedRef.split('.')
-    if (parts.length < 2) return null
 
-    const propType = parts[parts.length - 1]
-    const tokens = this.getSpacingTokens(propType, getSource)
-    const token = tokens.find(t => t.fullName === normalizedRef)
-    return token?.value || null
+    // If full reference like "s.pad", use that
+    if (parts.length >= 2) {
+      const propTypeSuffix = parts[parts.length - 1]
+      const tokens = this.getSpacingTokens(propTypeSuffix, getSource)
+      const token = tokens.find(t => t.fullName === normalizedRef)
+      return token?.value || null
+    }
+
+    // Short reference like "s" - need propType hint
+    if (parts.length === 1 && propType) {
+      const tokenName = parts[0]
+      const fullName = `${tokenName}.${propType}`
+      const tokens = this.getSpacingTokens(propType, getSource)
+      const token = tokens.find(t => t.fullName === fullName || t.name === tokenName)
+      return token?.value || null
+    }
+
+    return null
   }
 
   /**
@@ -155,34 +168,34 @@ export class TokenCache {
  * Map property name to token suffix
  */
 export const TOKEN_SUFFIX_MAP: Record<string, string> = {
-  'pad': 'pad',
-  'padding': 'pad',
-  'p': 'pad',
-  'gap': 'gap',
-  'g': 'gap',
-  'bg': 'bg',
-  'background': 'bg',
-  'col': 'col',
-  'color': 'col',
-  'c': 'col',
-  'rad': 'rad',
-  'radius': 'rad',
-  'bor': 'bor',
-  'border': 'bor',
-  'boc': 'boc',
+  pad: 'pad',
+  padding: 'pad',
+  p: 'pad',
+  gap: 'gap',
+  g: 'gap',
+  bg: 'bg',
+  background: 'bg',
+  col: 'col',
+  color: 'col',
+  c: 'col',
+  rad: 'rad',
+  radius: 'rad',
+  bor: 'bor',
+  border: 'bor',
+  boc: 'boc',
   'border-color': 'boc',
-  'fs': 'fs',
+  fs: 'fs',
   'font-size': 'fs',
-  'line': 'line',
-  'o': 'o',
-  'opacity': 'o',
-  'opa': 'o',
-  'm': 'm',
-  'margin': 'm',
-  'w': 'w',
-  'width': 'w',
-  'h': 'h',
-  'height': 'h',
+  line: 'line',
+  o: 'o',
+  opacity: 'o',
+  opa: 'o',
+  m: 'm',
+  margin: 'm',
+  w: 'w',
+  width: 'w',
+  h: 'h',
+  height: 'h',
 }
 
 /**

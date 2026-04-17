@@ -522,7 +522,12 @@ export class BrowserTestRunner {
       }
 
       // 7. Execute animated drag to zone position
-      await this.executeAnimatedDragAligned(source, dropPos, params.targetNodeId)
+      await this.executeAnimatedDragAligned(
+        source,
+        dropPos,
+        params.targetNodeId,
+        params.alignmentZone
+      )
 
       // 8. Cleanup
       clearCurrentDragData()
@@ -583,7 +588,8 @@ export class BrowserTestRunner {
   private async executeAnimatedDragAligned(
     source: DragSource,
     endPos: Point,
-    targetNodeId: string
+    targetNodeId: string,
+    alignmentZone: AlignPosition
   ): Promise<void> {
     const controller = getDragController()
     const { steps, stepDelay, showCursor } = this.animationConfig
@@ -619,8 +625,16 @@ export class BrowserTestRunner {
       this.hideVisualCursor()
     }
 
-    // End drag - let the controller use its stored target (should be AlignedDropTarget)
-    controller.endDrag()
+    // Import the alignment property map
+    const { ALIGN_TO_PROPERTY } = await import('./indicator')
+
+    // Use simulateDrop with AlignedDropTarget for deterministic behavior
+    const target: AlignedDropTarget = {
+      mode: 'aligned',
+      containerId: targetNodeId,
+      alignmentProperty: ALIGN_TO_PROPERTY[alignmentZone],
+    }
+    await controller.simulateDrop(source, target)
   }
 
   /**

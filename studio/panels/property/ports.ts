@@ -11,7 +11,12 @@
  * Tests verwenden Mock-Adapters, Produktion verwendet DOM-Adapters.
  */
 
-import type { ExtractedElement, ExtractedProperty, PropertyCategory, ModificationResult } from '../../../compiler'
+import type {
+  ExtractedElement,
+  ExtractedProperty,
+  PropertyCategory,
+  ModificationResult,
+} from '../../../compiler'
 
 // ============================================
 // Common Types
@@ -27,15 +32,15 @@ export interface Rect {
 }
 
 export interface SpacingToken {
-  name: string      // e.g., "sm", "md", "lg"
-  fullName: string  // e.g., "sm.pad", "md.rad"
-  value: string     // e.g., "4", "8"
+  name: string // e.g., "sm", "md", "lg"
+  fullName: string // e.g., "sm.pad", "md.rad"
+  value: string // e.g., "4", "8"
 }
 
 export interface ColorToken {
-  name: string      // e.g., "primary", "danger"
+  name: string // e.g., "primary", "danger"
   fullName?: string // e.g., "primary.bg", "danger.col" (optional for simple tokens)
-  value: string     // e.g., "#2271C1", "#ef4444"
+  value: string // e.g., "#2271C1", "#ef4444"
 }
 
 export interface PropertyChange {
@@ -149,10 +154,11 @@ export interface TokenPort {
 
   /**
    * Resolves a token reference to its actual value.
-   * @param tokenRef - e.g., "$primary" or "$sm"
+   * @param tokenRef - e.g., "$primary" or "$sm" or "$sm.pad"
+   * @param propType - Optional property type hint for short references (e.g., "pad", "gap")
    * @returns The resolved value or null if not found
    */
-  resolveTokenValue(tokenRef: string): string | null
+  resolveTokenValue(tokenRef: string, propType?: string): string | null
 
   /**
    * Invalidates the token cache.

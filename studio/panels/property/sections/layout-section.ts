@@ -76,7 +76,8 @@ export class LayoutSection extends BaseSection {
     let gapDisplayValue = gapValue
     let gapInputClass = 'prop-input'
     if (isGapToken && data.resolveTokenValue) {
-      const resolved = data.resolveTokenValue(gapValue)
+      // Pass 'gap' as property type for short references like "$s" → "$s.gap"
+      const resolved = data.resolveTokenValue(gapValue, 'gap')
       if (resolved) {
         gapDisplayValue = resolved
         gapInputClass = 'prop-input token-resolved'

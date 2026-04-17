@@ -26,7 +26,8 @@ export interface SectionData {
   // Callbacks
   getSpacingTokens?: (propType: 'pad' | 'mar' | 'gap' | 'rad' | 'fs') => SpacingToken[]
   getColorTokens?: () => ColorToken[]
-  resolveTokenValue?: (tokenRef: string) => string | null
+  /** Resolve token value. propType is needed for short references like "$s" → "$s.pad" */
+  resolveTokenValue?: (tokenRef: string, propType?: string) => string | null
 }
 
 /**
@@ -145,7 +146,11 @@ export abstract class BaseSection {
   /**
    * Helper: Get property value or default
    */
-  protected getPropertyValue(props: ExtractedProperty[], name: string, defaultValue: string = ''): string {
+  protected getPropertyValue(
+    props: ExtractedProperty[],
+    name: string,
+    defaultValue: string = ''
+  ): string {
     const prop = props.find(p => p.name === name)
     return prop?.value ?? defaultValue
   }
@@ -153,7 +158,10 @@ export abstract class BaseSection {
   /**
    * Helper: Find property by name or alias
    */
-  protected findProperty(props: ExtractedProperty[], ...names: string[]): ExtractedProperty | undefined {
+  protected findProperty(
+    props: ExtractedProperty[],
+    ...names: string[]
+  ): ExtractedProperty | undefined {
     return props.find(p => names.includes(p.name))
   }
 }
@@ -162,9 +170,12 @@ export abstract class BaseSection {
  * Event handler map type
  * Maps CSS selector to event handlers
  */
-export type EventHandlerMap = Record<string, {
-  [eventName: string]: (e: Event, target: HTMLElement) => void
-}>
+export type EventHandlerMap = Record<
+  string,
+  {
+    [eventName: string]: (e: Event, target: HTMLElement) => void
+  }
+>
 
 /**
  * Section registry for dynamic section management

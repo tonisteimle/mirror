@@ -196,8 +196,8 @@ export function createTokenAdapter(options: TokenAdapterOptions): TokenPort {
       return tokenCache.getColorTokens(getAllSource)
     },
 
-    resolveTokenValue(tokenRef) {
-      return tokenCache.resolveTokenValue(tokenRef, getAllSource)
+    resolveTokenValue(tokenRef, propType) {
+      return tokenCache.resolveTokenValue(tokenRef, getAllSource, propType)
     },
 
     invalidateCache() {
