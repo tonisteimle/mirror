@@ -38,6 +38,7 @@ const CONTENT_ELEMENTS: Record<string, ContentField[]> = {
   Input: [{ field: 'placeholder', label: 'Placeholder', placeholder: 'Placeholder text...' }],
   Textarea: [{ field: 'placeholder', label: 'Placeholder', placeholder: 'Placeholder text...' }],
   Image: [{ field: 'src', label: 'Path', placeholder: './assets/image.jpg' }],
+  Img: [{ field: 'src', label: 'Path', placeholder: './assets/image.jpg' }], // Alias
   Label: [{ field: 'content', label: 'Text', placeholder: 'Label text...' }],
   H1: [{ field: 'content', label: 'Text', placeholder: 'Heading...' }],
   H2: [{ field: 'content', label: 'Text', placeholder: 'Heading...' }],

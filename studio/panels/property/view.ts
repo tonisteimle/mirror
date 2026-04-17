@@ -300,12 +300,6 @@ export class PropertyPanelView {
       result += positionSection.render({ ...sectionData, isInPositionedContainer })
     }
 
-    // Events section (onclick, onhover, etc.)
-    const eventsSection = this.sections.get('events')
-    if (eventsSection) {
-      result += eventsSection.render({ ...sectionData, events: element.events })
-    }
-
     if (layoutCat) {
       const section = this.sections.get('layout')
       if (section) {
@@ -353,6 +347,12 @@ export class PropertyPanelView {
       if (section) {
         result += section.render({ ...sectionData, category: typographyCat })
       }
+    }
+
+    // Events section (onclick, onhover, etc.) - at the end
+    const eventsSection = this.sections.get('events')
+    if (eventsSection) {
+      result += eventsSection.render({ ...sectionData, events: element.events })
     }
 
     return result
