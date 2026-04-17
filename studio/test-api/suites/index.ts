@@ -245,6 +245,16 @@ import { stressTests } from './stress'
 import { raceConditionTests } from './stress/race-conditions.test'
 import { codeModifierTests } from './stress/code-modifier.test'
 
+// Project Tests (multi-file projects)
+import {
+  allProjectTests,
+  projectSetupTests,
+  tokenComponentTests,
+  screenNavigationTests,
+  complexLayoutTests as projectComplexLayoutTests,
+  fileSwitchingTests,
+} from './project'
+
 // Data Binding
 import {
   allDataBindingTests,
@@ -320,6 +330,20 @@ import {
   responsiveComponentTests,
   complexResponsiveTests,
 } from './responsive-tests'
+
+// Sync (Editor ↔ Preview ↔ Panel)
+import {
+  allSyncTests,
+  editorToPreviewTests,
+  previewToEditorTests,
+  panelToEditorTests,
+  editorToPanelTests,
+  multiDirectionalTests,
+  rapidChangeTests,
+  edgeCaseTests as syncEdgeCaseTests,
+  selectionPersistenceTests,
+  complexScenarioTests,
+} from './sync-tests'
 
 // =============================================================================
 // Direct Imports (not yet migrated to directories)
@@ -561,8 +585,19 @@ export {
 }
 
 // Stress Tests (aggressive edge case testing)
-export const allStressTests = [...stressTests, ...raceConditionTests, ...codeModifierTests]
+// Note: stressTests already includes raceConditionTests and codeModifierTests
+export const allStressTests = [...stressTests]
 export { stressTests, raceConditionTests, codeModifierTests }
+
+// Project Tests (multi-file projects)
+export {
+  allProjectTests,
+  projectSetupTests,
+  tokenComponentTests,
+  screenNavigationTests,
+  projectComplexLayoutTests,
+  fileSwitchingTests,
+}
 
 // Data Binding Tests
 export {
@@ -640,6 +675,20 @@ export {
   complexResponsiveTests,
 }
 
+// Sync Tests (Editor ↔ Preview ↔ Panel)
+export {
+  allSyncTests,
+  editorToPreviewTests,
+  previewToEditorTests,
+  panelToEditorTests,
+  editorToPanelTests,
+  multiDirectionalTests,
+  rapidChangeTests,
+  syncEdgeCaseTests,
+  selectionPersistenceTests,
+  complexScenarioTests,
+}
+
 // Layout Verification Tests (visual/position-based)
 export {
   allLayoutVerificationTests,
@@ -692,7 +741,9 @@ export const allTests: TestCase[] = [
   ...allTableTests,
   ...allEventTests,
   ...allResponsiveTests,
+  ...allSyncTests,
   ...allStressTests,
+  ...allProjectTests,
 ]
 
 /**
@@ -737,7 +788,9 @@ export const testCounts = {
   tables: allTableTests.length,
   events: allEventTests.length,
   responsive: allResponsiveTests.length,
+  sync: allSyncTests.length,
   stress: allStressTests.length,
+  project: allProjectTests.length,
   total:
     allPrimitivesTests.length +
     allLayoutTests.length +
@@ -764,7 +817,9 @@ export const testCounts = {
     allTableTests.length +
     allEventTests.length +
     allResponsiveTests.length +
-    allStressTests.length,
+    allSyncTests.length +
+    allStressTests.length +
+    allProjectTests.length,
 }
 
 // =============================================================================
@@ -821,7 +876,9 @@ export type TestCategory =
   | 'tables'
   | 'events'
   | 'responsive'
+  | 'sync'
   | 'stress'
+  | 'project'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -854,7 +911,9 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     tables: allTableTests,
     events: allEventTests,
     responsive: allResponsiveTests,
+    sync: allSyncTests,
     stress: allStressTests,
+    project: allProjectTests,
   }
 
   const names: Record<TestCategory, string> = {
@@ -882,7 +941,9 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     tables: 'Tables',
     events: 'Events',
     responsive: 'Responsive',
+    sync: 'Sync',
     stress: 'Stress Tests',
+    project: 'Multi-File Project',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
@@ -917,7 +978,9 @@ export function printTestSummary(): void {
   console.log(`   Tables:             ${testCounts.tables} tests`)
   console.log(`   Events:             ${testCounts.events} tests`)
   console.log(`   Responsive:         ${testCounts.responsive} tests`)
+  console.log(`   Sync:               ${testCounts.sync} tests`)
   console.log(`   Stress:             ${testCounts.stress} tests`)
+  console.log(`   Project:            ${testCounts.project} tests`)
   console.log(`   ──────────────────────────`)
   console.log(`   Total:              ${testCounts.total} tests`)
   console.log('')
