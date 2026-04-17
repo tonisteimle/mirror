@@ -40,7 +40,7 @@ export interface DragSource {
 }
 
 /** Discriminated union for drop targets */
-export type DropTarget = FlexDropTarget | AbsoluteDropTarget
+export type DropTarget = FlexDropTarget | AbsoluteDropTarget | AlignedDropTarget
 
 /** Drop target for flex/grid layouts (index-based) */
 export interface FlexDropTarget {
@@ -56,4 +56,12 @@ export interface AbsoluteDropTarget {
   position: Point
   /** Insertion index (typically 'last' for stacked) */
   insertionIndex: number
+}
+
+/** Drop target for empty containers with alignment (9-point grid) */
+export interface AlignedDropTarget {
+  mode: 'aligned'
+  containerId: string
+  /** Alignment property to add (tl, tc, tr, cl, center, cr, bl, bc, br) */
+  alignmentProperty: string
 }

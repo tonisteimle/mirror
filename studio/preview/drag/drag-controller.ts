@@ -11,13 +11,14 @@ import type {
   DropTarget,
   FlexDropTarget,
   AbsoluteDropTarget,
+  AlignedDropTarget,
   HitResult,
 } from './types'
 import type { ControllerReport, Reportable } from './reporter/types'
 import { LayoutCache } from './layout-cache'
 import { HitDetector } from './hit-detector'
 import { InsertionCalculator } from './insertion-calculator'
-import { Indicator } from './indicator'
+import { Indicator, type AlignPosition, ALIGN_TO_PROPERTY } from './indicator'
 import { DragReporter } from './reporter/drag-reporter'
 import { createLogger } from '../../../compiler/utils/logger'
 
@@ -154,11 +155,32 @@ export class DragController implements Reportable<ControllerReport> {
       }
       this.storeAbsoluteTarget(hit.containerId, absResult.position)
     } else {
-      // Flex/grid layout: index-based drop
-      const insertion = this.calculateInsertion(cursor, hit)
-      this.showIndicator(insertion)
-      this.highlightContainer(hit.containerId, hit.containerRect)
-      this.storeFlexTarget(hit.containerId, insertion.index)
+      // Flex/grid layout: check if container is empty and large enough for alignment zones
+      const children = this.cache.getChildren(hit.containerId)
+      const isEmptyContainer = children.length === 0
+      const isLargeEnough = this.indicator.isLargeEnoughForAlignmentZones(hit.containerRect)
+
+      if (isEmptyContainer && isLargeEnough) {
+        // Empty container: show 9-point alignment zones
+        this.indicator.showAlignmentZones(hit.containerRect)
+        this.highlightContainer(hit.containerId, hit.containerRect)
+
+        // Determine which zone is hovered
+        const alignPosition = this.indicator.getAlignmentPositionFromCursor(
+          cursor,
+          hit.containerRect
+        )
+        this.indicator.updateHoveredZone(alignPosition)
+
+        // Store aligned target with the alignment property
+        this.storeAlignedTarget(hit.containerId, ALIGN_TO_PROPERTY[alignPosition])
+      } else {
+        // Normal flex/grid: index-based drop
+        const insertion = this.calculateInsertion(cursor, hit)
+        this.showIndicator(insertion)
+        this.highlightContainer(hit.containerId, hit.containerRect)
+        this.storeFlexTarget(hit.containerId, insertion.index)
+      }
     }
 
     // Capture frame for reporting
@@ -269,6 +291,11 @@ export class DragController implements Reportable<ControllerReport> {
     const children = this.cache.getChildren(containerId)
     const insertionIndex = children.length
     this.lastTarget = { mode: 'absolute', containerId, position, insertionIndex }
+  }
+
+  /** Store aligned drop target (for empty containers with 9-point grid) */
+  private storeAlignedTarget(containerId: string, alignmentProperty: string): void {
+    this.lastTarget = { mode: 'aligned', containerId, alignmentProperty }
   }
 
   /** Check if an element is a direct child of a container */

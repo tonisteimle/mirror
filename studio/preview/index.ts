@@ -275,7 +275,7 @@ export class PreviewController {
     }, PreviewController.RESIZE_DEBOUNCE_MS)
   }
 
-  /** Initialize the Visual Code System (overlay + resize) */
+  /** Initialize the Visual Code System (overlay + resize + inline align) */
   private initVisualCodeSystem(): void {
     this.overlayManager = createOverlayManager({ container: this.container })
     this.resizeManager = createResizeManager({
@@ -288,14 +288,24 @@ export class PreviewController {
     // Listen for resize:end events to execute commands
     this.unsubscribeResize = events.on(
       'resize:end',
-      (data: { nodeId: string; width: SizingMode; height: SizingMode; x?: number; y?: number }) => {
-        // Execute resize command for width/height
-        const command = new ResizeCommand({
-          nodeId: data.nodeId,
-          width: data.width === 'fill' ? 'full' : data.width,
-          height: data.height === 'fill' ? 'full' : data.height,
-        })
-        executor.execute(command)
+      (data: {
+        nodeId: string
+        width?: SizingMode
+        height?: SizingMode
+        x?: number
+        y?: number
+      }) => {
+        // Execute resize command for width/height (only if at least one dimension is specified)
+        if (data.width !== undefined || data.height !== undefined) {
+          const command = new ResizeCommand({
+            nodeId: data.nodeId,
+            width:
+              data.width === undefined ? undefined : data.width === 'fill' ? 'full' : data.width,
+            height:
+              data.height === undefined ? undefined : data.height === 'fill' ? 'full' : data.height,
+          })
+          executor.execute(command)
+        }
 
         // Execute additional commands for x/y position changes (absolute positioned elements)
         if (data.x !== undefined) {

@@ -17,3 +17,18 @@ export {
   dragDropTests,
   combinedTests,
 } from '../interaction-tests'
+
+export {
+  allLayoutShortcutTests,
+  horizontalLayoutTests,
+  verticalLayoutTests,
+  fullDimensionTests,
+  combinedShortcutTests,
+} from './layout-shortcuts.test'
+
+export {
+  allResizeHandleDblClickTests,
+  horizontalHandleTests,
+  verticalHandleTests,
+  cornerHandleTests,
+} from './resize-handle-dblclick.test'

@@ -12,6 +12,7 @@ import {
   SetPropertyCommand,
   RemovePropertyCommand,
   BatchCommand,
+  SetLayoutDirectionCommand,
 } from '../core/commands'
 
 export interface ActionResult {
@@ -273,6 +274,9 @@ export function canUngroup(): boolean {
 /**
  * Set layout direction for selected element
  *
+ * Uses SetLayoutDirectionCommand which handles removing competing layout properties
+ * (hor, ver, grid, stacked) and adding the new one in a single operation.
+ *
  * @param direction - 'horizontal' or 'vertical'
  * @returns ActionResult with success/failure info
  */
@@ -282,44 +286,13 @@ export function executeSetLayoutDirection(direction: 'horizontal' | 'vertical'):
     return { success: false, error: 'No element selected' }
   }
 
-  const sourceMap = state.get().sourceMap
-  if (!sourceMap) {
-    return { success: false, error: 'No source map available' }
-  }
-
-  const node = sourceMap.getNodeById(selection.nodeId)
-  if (!node) {
-    return { success: false, error: 'Selected node not found' }
-  }
-
-  // Layout mode properties to remove
-  const layoutProps = ['hor', 'horizontal', 'ver', 'vertical', 'grid', 'stacked']
-  const propToAdd = direction === 'horizontal' ? 'hor' : 'ver'
-
-  // Build batch of commands: remove all layout props, then add the new one
-  const commands: (SetPropertyCommand | RemovePropertyCommand)[] = []
-
-  // Remove existing layout properties
-  for (const prop of layoutProps) {
-    commands.push(
-      new RemovePropertyCommand({
-        nodeId: selection.nodeId,
-        property: prop,
-      })
-    )
-  }
-
-  // Add the new direction property (empty value = standalone flag)
-  commands.push(
-    new SetPropertyCommand({
+  // Execute the command
+  const result = executor.execute(
+    new SetLayoutDirectionCommand({
       nodeId: selection.nodeId,
-      property: propToAdd,
-      value: '',
+      direction,
     })
   )
-
-  // Execute as batch
-  const result = executor.execute(new BatchCommand({ commands }))
 
   if (result.success) {
     const label = direction === 'horizontal' ? 'Horizontal' : 'Vertical'

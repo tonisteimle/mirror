@@ -27,3 +27,11 @@ export {
   reorderEdgeCaseTests,
   sequentialReorderTests,
 } from '../flex-reorder-tests'
+
+export {
+  allAlignmentZoneTests,
+  basicAlignmentZoneTests,
+  allZonesTests,
+  alignmentEdgeCaseTests,
+  componentVarietyTests,
+} from './alignment-zone-tests'

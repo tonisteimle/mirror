@@ -154,6 +154,71 @@ export class RemovePropertyCommand implements Command {
     const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.removeProperty(this.nodeId, this.property)
     if (!result.success) return { success: false, error: result.error }
+
+    // Check for no-op (property didn't exist)
+    if (result.change.from === 0 && result.change.to === 0 && result.change.insert === '') {
+      // Property wasn't there, nothing to do - return success
+      this.change = null
+      this.oldLine = null
+      return { success: true }
+    }
+
+    this.change = result.change
+    const editorChange = adjustChangeForEditor(result.change, ctx)
+    ctx.applyChange(editorChange)
+    return { success: true, change: editorChange }
+  }
+
+  undo(ctx: CommandContext): CommandResult {
+    // If it was a no-op, undo is also a no-op
+    if (!this.change || !this.oldLine) {
+      return { success: true }
+    }
+
+    const offset = ctx.getPreludeOffset()
+    const undoChange: CodeChange = {
+      from: this.change.from - offset,
+      to: this.change.from - offset + this.change.insert.length,
+      insert: this.oldLine,
+    }
+    ctx.applyChange(undoChange)
+    return { success: true, change: undoChange }
+  }
+}
+
+/**
+ * SetLayoutDirectionCommand - Set layout direction (horizontal/vertical) in a single operation
+ *
+ * Removes all competing layout properties (hor, ver, grid, stacked) and adds the new one.
+ * This avoids SourceMap invalidation issues that occur with multiple commands.
+ */
+export class SetLayoutDirectionCommand implements Command {
+  readonly type = 'SET_LAYOUT_DIRECTION'
+  readonly description: string
+  private nodeId: string
+  private direction: 'horizontal' | 'vertical'
+  private oldLine: string | null = null
+  private change: CodeChange | null = null
+
+  constructor(params: { nodeId: string; direction: 'horizontal' | 'vertical' }) {
+    this.nodeId = params.nodeId
+    this.direction = params.direction
+    this.description = `Set layout to ${params.direction}`
+  }
+
+  execute(ctx: CommandContext): CommandResult {
+    const data = getSourceForModifier(ctx)
+    if (!data) return { success: false, error: 'No source map' }
+
+    const node = data.sourceMap.getNodeById(this.nodeId)
+    if (!node) return { success: false, error: `Node not found: ${this.nodeId}` }
+
+    this.oldLine = data.source.split('\n')[node.position.line - 1]
+
+    const modifier = new CodeModifier(data.source, data.sourceMap)
+    const result = modifier.setLayoutDirection(this.nodeId, this.direction)
+    if (!result.success) return { success: false, error: result.error }
+
     this.change = result.change
     const editorChange = adjustChangeForEditor(result.change, ctx)
     ctx.applyChange(editorChange)
@@ -162,6 +227,7 @@ export class RemovePropertyCommand implements Command {
 
   undo(ctx: CommandContext): CommandResult {
     if (!this.change || !this.oldLine) return { success: false, error: 'Cannot undo' }
+
     const offset = ctx.getPreludeOffset()
     const undoChange: CodeChange = {
       from: this.change.from - offset,

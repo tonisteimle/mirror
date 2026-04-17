@@ -13,7 +13,15 @@ export class ElementMoveHandler extends BaseDropHandler {
   }
 
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
-    const { source, targetNodeId, placement, insertionIndex } = result
-    return context.codeModifier.moveNode(source.nodeId!, targetNodeId, placement, insertionIndex)
+    const { source, targetNodeId, placement, insertionIndex, alignment } = result
+    // Pass alignment property if present (e.g., 'tl', 'center', 'br')
+    const options = alignment?.zone ? { properties: alignment.zone } : undefined
+    return context.codeModifier.moveNode(
+      source.nodeId!,
+      targetNodeId,
+      placement,
+      insertionIndex,
+      options
+    )
   }
 }

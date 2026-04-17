@@ -20,19 +20,19 @@ import { SYSTEM_STATES } from '../../schema/parser-helpers'
 import { convertStateAnimation, convertStateDependency } from './data-transformer'
 
 /**
- * CSS pseudo-class states that should NEVER be toggle targets.
- * These are browser-triggered states, not user-triggered toggle states.
- * Even if they have styles defined (e.g., "hover: bg #red"), they should not
- * be used as toggle() or exclusive() targets.
+ * CSS pseudo-class states that should ALWAYS be excluded from toggle targets.
+ * These are browser-triggered states that cannot be user-toggled.
+ * "hover", "focus" and variants are always CSS pseudo-classes.
  */
-const CSS_PSEUDO_STATES = new Set([
-  'hover',
-  'focus',
-  'active',
-  'disabled',
-  'focus-within',
-  'focus-visible',
-])
+const ALWAYS_CSS_PSEUDO_STATES = new Set(['hover', 'focus', 'focus-within', 'focus-visible'])
+
+/**
+ * CSS pseudo-class states that CAN be custom states if user defines styles.
+ * "active" is commonly used for tabs, menu items, etc.
+ * "disabled" can be a custom state in some UIs.
+ * If these have custom styles defined, they're user-defined states, not CSS pseudo-classes.
+ */
+const MAYBE_CUSTOM_STATES = new Set(['active', 'disabled'])
 
 /**
  * Context interface for state machine transformation.
@@ -211,13 +211,21 @@ export function buildStateMachine(
         if (action.isBuiltinStateFunction) {
           // Determine the target state for toggle/exclusive
           // Use the first custom state, fallback to 'on'
-          // IMPORTANT: Exclude CSS pseudo-states (hover, focus, active, disabled)
-          // even if they have styles defined - these are browser-triggered, not toggle targets
+          // IMPORTANT: Exclude true CSS pseudo-states (hover, focus, etc.) always.
+          // "active" and "disabled" CAN be custom states if they have styles defined.
           const customStateNames = Object.keys(stateDefinitions).filter(s => {
             if (s === 'default') return false
-            // Never use CSS pseudo-states as toggle targets
-            if (CSS_PSEUDO_STATES.has(s)) return false
             const def = stateDefinitions[s]
+            // hover, focus, focus-within, focus-visible are ALWAYS CSS pseudo-classes
+            // They should never be toggle targets, even with styles
+            if (ALWAYS_CSS_PSEUDO_STATES.has(s)) {
+              return false
+            }
+            // active, disabled CAN be custom states if they have styles defined
+            // If no styles, they're CSS pseudo-classes
+            if (MAYBE_CUSTOM_STATES.has(s) && (!def.styles || def.styles.length === 0)) {
+              return false
+            }
             // Include if not a system state, or if it has styles defined
             return !SYSTEM_STATES.has(s) || (def.styles && def.styles.length > 0)
           })

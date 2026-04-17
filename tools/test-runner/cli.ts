@@ -381,6 +381,10 @@ muted.col: #a1a1aa
       // If --category is specified, run ONLY that category (no drag tests)
       console.log(`📁 Running category: ${args.category}\n`)
       suites.push(await runner.runMirrorTests(args.category))
+    } else if (args.filter) {
+      // If --filter is specified, run only Mirror tests with filter (no drag tests)
+      console.log(`🔍 Running filtered tests: "${args.filter}"\n`)
+      suites.push(await runner.runMirrorTests())
     } else {
       // Determine which tests to run
       // Default: run all tests when no specific selection is made

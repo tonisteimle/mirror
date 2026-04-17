@@ -17,7 +17,15 @@ import {
   setCanvasDragData,
   type ComponentDragData,
 } from '../drag-preview'
-import type { DragSource, DropTarget, FlexDropTarget, AbsoluteDropTarget, Point } from './types'
+import type {
+  DragSource,
+  DropTarget,
+  FlexDropTarget,
+  AbsoluteDropTarget,
+  AlignedDropTarget,
+  Point,
+} from './types'
+import type { AlignPosition } from './indicator'
 
 // =============================================================================
 // Types
@@ -453,6 +461,169 @@ export class BrowserTestRunner {
   }
 
   /**
+   * Execute palette drop into alignment zone (9-point grid for empty containers)
+   */
+  async executePaletteDropAligned(params: {
+    componentName: string
+    targetNodeId: string
+    alignmentZone: AlignPosition
+    template?: string
+    properties?: string
+    textContent?: string
+  }): Promise<BrowserTestResult> {
+    const startTime = performance.now()
+    const codeBefore = this.getCode()
+    const description = `Drop ${params.componentName} into ${params.targetNodeId} at ${params.alignmentZone}`
+
+    try {
+      // 1. Find target element in DOM
+      const targetEl = this.findElement(params.targetNodeId)
+      if (!targetEl) {
+        return this.errorResult(
+          description,
+          `Target element ${params.targetNodeId} not found`,
+          startTime
+        )
+      }
+
+      // 2. Check if container is large enough for alignment zones (>= 80px)
+      const targetRect = targetEl.getBoundingClientRect()
+      if (targetRect.width < 80 || targetRect.height < 80) {
+        return this.errorResult(
+          description,
+          `Container too small for alignment zones (${targetRect.width}x${targetRect.height}, needs >= 80x80)`,
+          startTime,
+          codeBefore
+        )
+      }
+
+      // 3. Calculate position for the alignment zone (center of the zone)
+      const zonePosition = this.calculateZonePosition(params.alignmentZone, targetRect)
+
+      // 4. Set drag data
+      const dragData: ComponentDragData = {
+        componentName: params.componentName,
+        properties: params.properties,
+        textContent: params.textContent,
+        mirTemplate: params.template,
+      }
+      setCurrentDragData(dragData)
+
+      // 5. Calculate drop position (absolute screen coordinates)
+      const dropPos: Point = {
+        x: targetRect.left + zonePosition.x,
+        y: targetRect.top + zonePosition.y,
+      }
+
+      // 6. Create drag source
+      const source: DragSource = {
+        type: 'palette',
+        componentName: params.componentName,
+      }
+
+      // 7. Execute animated drag to zone position
+      await this.executeAnimatedDragAligned(source, dropPos, params.targetNodeId)
+
+      // 8. Cleanup
+      clearCurrentDragData()
+
+      // 9. Wait for code update
+      await this.waitForCodeChange(codeBefore)
+
+      return {
+        success: true,
+        description,
+        duration: performance.now() - startTime,
+        codeBefore,
+        codeAfter: this.getCode(),
+      }
+    } catch (error) {
+      clearCurrentDragData()
+      return this.errorResult(description, String(error), startTime, codeBefore)
+    }
+  }
+
+  /**
+   * Calculate position within container for an alignment zone
+   */
+  private calculateZonePosition(zone: AlignPosition, rect: DOMRect): Point {
+    const thirdWidth = rect.width / 3
+    const thirdHeight = rect.height / 3
+
+    // Zone centers
+    const cols = {
+      left: thirdWidth / 2,
+      center: rect.width / 2,
+      right: rect.width - thirdWidth / 2,
+    }
+    const rows = {
+      top: thirdHeight / 2,
+      center: rect.height / 2,
+      bottom: rect.height - thirdHeight / 2,
+    }
+
+    const zoneMap: Record<AlignPosition, Point> = {
+      'top-left': { x: cols.left, y: rows.top },
+      'top-center': { x: cols.center, y: rows.top },
+      'top-right': { x: cols.right, y: rows.top },
+      'center-left': { x: cols.left, y: rows.center },
+      center: { x: cols.center, y: rows.center },
+      'center-right': { x: cols.right, y: rows.center },
+      'bottom-left': { x: cols.left, y: rows.bottom },
+      'bottom-center': { x: cols.center, y: rows.bottom },
+      'bottom-right': { x: cols.right, y: rows.bottom },
+    }
+
+    return zoneMap[zone]
+  }
+
+  /**
+   * Execute animated drag for alignment zone positioning
+   */
+  private async executeAnimatedDragAligned(
+    source: DragSource,
+    endPos: Point,
+    targetNodeId: string
+  ): Promise<void> {
+    const controller = getDragController()
+    const { steps, stepDelay, showCursor } = this.animationConfig
+    const startPos = this.getPalettePosition()
+
+    // Show visual cursor
+    if (showCursor) {
+      this.showVisualCursor(startPos)
+    }
+
+    // Start the drag
+    controller.startDrag(source, this.previewContainer!)
+
+    // Animate movement
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps
+      const currentPos: Point = {
+        x: startPos.x + (endPos.x - startPos.x) * t,
+        y: startPos.y + (endPos.y - startPos.y) * t,
+      }
+
+      controller.updatePosition(currentPos)
+
+      if (showCursor) {
+        this.moveVisualCursor(currentPos)
+      }
+
+      await this.delay(stepDelay)
+    }
+
+    // Hide cursor
+    if (showCursor) {
+      this.hideVisualCursor()
+    }
+
+    // End drag - let the controller use its stored target (should be AlignedDropTarget)
+    controller.endDrag()
+  }
+
+  /**
    * Execute animated drag for absolute positioning
    */
   private async executeAnimatedDragAbsolute(
@@ -640,6 +811,19 @@ class PaletteDragBuilder {
   /** Set absolute position for stacked/absolute containers */
   atPosition(x: number, y: number): this {
     this.position = { x, y }
+    this.alignZone = undefined
+    return this
+  }
+
+  private alignZone?: AlignPosition
+
+  /**
+   * Set alignment zone for empty containers (9-point grid)
+   * Only works for empty containers >= 80x80px
+   */
+  atAlignmentZone(zone: AlignPosition): this {
+    this.alignZone = zone
+    this.position = undefined
     return this
   }
 
@@ -651,6 +835,18 @@ class PaletteDragBuilder {
         duration: 0,
         error: 'Target container not specified. Use .toContainer(nodeId)',
       }
+    }
+
+    // Use alignment zone if set
+    if (this.alignZone) {
+      return this.runner.executePaletteDropAligned({
+        componentName: this.componentName,
+        targetNodeId: this.targetId,
+        alignmentZone: this.alignZone,
+        template: this.template,
+        properties: this.properties,
+        textContent: this.text,
+      })
     }
 
     // Use absolute positioning if position is set

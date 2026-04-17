@@ -129,6 +129,18 @@ export interface AssertionResult {
   expected?: unknown
   actual?: unknown
   diff?: string
+  /** Additional details for debugging */
+  details?: string[]
+}
+
+/**
+ * Structure expectation for tree validation
+ */
+export interface StructureExpectation {
+  /** Expected tag name */
+  tag?: string
+  /** Node ID or structure expectation for children */
+  children?: (string | StructureExpectation)[]
 }
 
 export interface AssertionOptions {
@@ -394,6 +406,26 @@ export interface InteractionAPI {
   dragToPosition(component: string, target: string, x: number, y: number): Promise<void>
   /** Move element */
   moveElement(source: string, target: string, index: number): Promise<void>
+  /** Drag component from palette to alignment zone (9-point grid for empty containers) */
+  dragToAlignmentZone(
+    component: string,
+    target: string,
+    zone:
+      | 'top-left'
+      | 'top-center'
+      | 'top-right'
+      | 'center-left'
+      | 'center'
+      | 'center-right'
+      | 'bottom-left'
+      | 'bottom-center'
+      | 'bottom-right'
+  ): Promise<void>
+  /** Double-click on resize handle to set dimension to full */
+  doubleClickResizeHandle(
+    nodeId: string,
+    position: 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se'
+  ): Promise<void>
 }
 
 export interface AssertionAPI {
@@ -419,10 +451,50 @@ export interface AssertionAPI {
   hasAttribute(nodeId: string, attr: string, value?: string): void
   /** Assert code contains pattern */
   codeContains(pattern: string | RegExp): void
+  /** Assert code does NOT contain pattern */
+  codeNotContains(pattern: string | RegExp): void
   /** Assert code equals */
   codeEquals(expected: string): void
   /** Assert selection */
   isSelected(nodeId: string): void
+
+  // === Node-specific Code Assertions ===
+
+  /** Assert a specific node has a property in its code line */
+  nodeHasProperty(nodeId: string, property: string, value?: string): void
+  /** Assert a specific line contains pattern */
+  lineContains(lineNumber: number, pattern: string | RegExp): void
+  /** Assert a specific line does NOT contain pattern */
+  lineNotContains(lineNumber: number, pattern: string | RegExp): void
+  /** Assert the exact code line of a node */
+  nodeLineEquals(nodeId: string, expected: string): void
+
+  // === Side Effect Checks ===
+
+  /** Snapshot current code for later comparison */
+  snapshotCode(): string
+  /** Assert only specific lines changed since snapshot */
+  onlyLinesChanged(snapshot: string, allowedLines: number[]): void
+  /** Assert code unchanged except for specific line */
+  codeUnchangedExcept(snapshot: string, changedLine: number): void
+
+  // === Visual Validations ===
+
+  /** Assert element has specific icon */
+  hasIcon(nodeId: string, iconName: string): void
+  /** Assert icon has specific color */
+  hasIconColor(nodeId: string, color: string): void
+  /** Assert image has specific src */
+  hasImageSrc(nodeId: string, src: string): void
+
+  // === Structure Validations ===
+
+  /** Assert element is child of parent */
+  isChildOf(childId: string, parentId: string): void
+  /** Assert nodeA comes before nodeB in sibling order */
+  isSiblingBefore(nodeA: string, nodeB: string): void
+  /** Assert tree structure matches expectation */
+  hasStructure(rootId: string, expected: StructureExpectation): void
 }
 
 export interface StateAPI {

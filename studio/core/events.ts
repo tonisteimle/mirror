@@ -103,8 +103,8 @@ export interface StudioEvents {
   'resize:move': { nodeId: string; width: 'fill' | 'hug' | number; height: 'fill' | 'hug' | number }
   'resize:end': {
     nodeId: string
-    width: 'fill' | 'hug' | number
-    height: 'fill' | 'hug' | number
+    width?: 'fill' | 'hug' | number
+    height?: 'fill' | 'hug' | number
     x?: number
     y?: number
   }

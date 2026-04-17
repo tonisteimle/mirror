@@ -29,6 +29,12 @@ import {
   assertAlignment,
   assertGap,
   assertLayout,
+  // New pixel-accurate assertions
+  assertActualGap,
+  assertFillsSpace,
+  assertRelativePosition,
+  assertExactSize,
+  assertCentered,
   type LayoutInfo,
   type LayoutExpectation,
   type AssertionResult,
@@ -62,6 +68,12 @@ export {
   assertAlignment,
   assertGap,
   assertLayout,
+  // New pixel-accurate assertions
+  assertActualGap,
+  assertFillsSpace,
+  assertRelativePosition,
+  assertExactSize,
+  assertCentered,
   type LayoutInfo,
   type LayoutExpectation,
   type AssertionResult as LayoutAssertionResult,
@@ -313,7 +325,34 @@ export interface MirrorTestAPI {
     ) => AssertionResult
     assertGap: (info: LayoutInfo, expected: number) => AssertionResult
     assertLayout: (nodeId: string, expectations: LayoutExpectation) => AssertionResult[]
+    // New pixel-accurate assertions
+    assertActualGap: (parentId: string, expectedGap: number, tolerance?: number) => AssertionResult
+    assertFillsSpace: (
+      nodeId: string,
+      dimension: 'width' | 'height',
+      tolerance?: number
+    ) => AssertionResult
+    assertRelativePosition: (
+      nodeA: string,
+      nodeB: string,
+      relation: 'above' | 'below' | 'left-of' | 'right-of',
+      minGap?: number
+    ) => AssertionResult
+    assertExactSize: (
+      nodeId: string,
+      width: number,
+      height: number,
+      tolerance?: number
+    ) => AssertionResult
+    assertCentered: (
+      nodeId: string,
+      axis: 'horizontal' | 'vertical' | 'both',
+      tolerance?: number
+    ) => AssertionResult
   }
+
+  // Assertion API (comprehensive assertions)
+  assert: Assertions
 
   // DOM Bridge - declarative DOM validation using Mirror DSL properties
   dom: {
@@ -482,7 +521,19 @@ function createMirrorTestAPI(): MirrorTestAPI {
       assertAlignment,
       assertGap,
       assertLayout,
+      // New pixel-accurate assertions
+      assertActualGap,
+      assertFillsSpace,
+      assertRelativePosition,
+      assertExactSize,
+      assertCentered,
     },
+
+    // Comprehensive assertions API
+    assert: new Assertions(inspector, collector, getCode, () => {
+      const studio = (window as any).__mirrorStudio__
+      return studio?.state?.get()?.selection?.nodeId ?? null
+    }),
 
     // DOM Bridge
     dom: (() => {
@@ -797,6 +848,7 @@ async function setupTestSuites(): Promise<void> {
       tests: {
         primitives: suites.allPrimitivesTests,
         layout: suites.allLayoutTests,
+        layoutShortcuts: suites.allLayoutShortcutTests,
         layoutVerification: suites.allLayoutVerificationTests,
         styling: suites.allStylingTests,
         zag: suites.allZagTests,

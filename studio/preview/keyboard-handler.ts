@@ -63,6 +63,7 @@ export class KeyboardHandler {
     // Skip if target is an input element
     const target = e.target as HTMLElement
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      log.debug('Skipping key (input element):', e.key)
       return
     }
 

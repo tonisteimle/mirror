@@ -781,6 +781,369 @@ export function assertLayout(nodeId: string, expectations: LayoutExpectation): A
 }
 
 // =============================================================================
+// Pixel-Accurate Layout Assertions
+// =============================================================================
+
+/**
+ * Prüft den tatsächlichen Pixel-Abstand zwischen Kindern mittels DOM-Messung.
+ * Im Gegensatz zu assertGap (das CSS prüft) misst diese Funktion echte Positionen.
+ */
+export function assertActualGap(
+  parentId: string,
+  expectedGap: number,
+  tolerance: number = 2
+): AssertionResult {
+  const preview = document.getElementById('preview')
+  if (!preview) {
+    return { passed: false, message: 'Preview container not found' }
+  }
+
+  const container = preview.querySelector(`[data-mirror-id="${parentId}"]`) as HTMLElement
+  if (!container) {
+    return { passed: false, message: `Parent ${parentId} not found` }
+  }
+
+  const children = Array.from(container.children).filter(el =>
+    el.hasAttribute('data-mirror-id')
+  ) as HTMLElement[]
+
+  if (children.length < 2) {
+    return {
+      passed: false,
+      message: 'Need at least 2 children to measure gap',
+      details: [`Found ${children.length} children with data-mirror-id`],
+    }
+  }
+
+  const style = getComputedStyle(container)
+  const isHorizontal = style.flexDirection === 'row' || style.flexDirection === 'row-reverse'
+
+  const gaps: number[] = []
+  for (let i = 0; i < children.length - 1; i++) {
+    const rect1 = children[i].getBoundingClientRect()
+    const rect2 = children[i + 1].getBoundingClientRect()
+
+    const gap = isHorizontal ? rect2.left - rect1.right : rect2.top - rect1.bottom
+    gaps.push(gap)
+  }
+
+  const avgGap = gaps.reduce((a, b) => a + b, 0) / gaps.length
+  const minGap = Math.min(...gaps)
+  const maxGap = Math.max(...gaps)
+  const passed = Math.abs(avgGap - expectedGap) <= tolerance
+
+  return {
+    passed,
+    message: passed
+      ? `Actual gap is ${avgGap.toFixed(1)}px (expected ${expectedGap}px)`
+      : `Gap mismatch: expected ${expectedGap}px, got ${avgGap.toFixed(1)}px`,
+    expected: expectedGap,
+    actual: avgGap,
+    details: [
+      `Direction: ${isHorizontal ? 'horizontal' : 'vertical'}`,
+      `Individual gaps: ${gaps.map(g => g.toFixed(1)).join(', ')}px`,
+      `Range: ${minGap.toFixed(1)}px - ${maxGap.toFixed(1)}px`,
+    ],
+  }
+}
+
+/**
+ * Prüft ob ein Element tatsächlich den verfügbaren Platz füllt (grow behavior).
+ */
+export function assertFillsSpace(
+  nodeId: string,
+  dimension: 'width' | 'height',
+  tolerance: number = 5
+): AssertionResult {
+  const preview = document.getElementById('preview')
+  if (!preview) {
+    return { passed: false, message: 'Preview container not found' }
+  }
+
+  const element = preview.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+  if (!element) {
+    return { passed: false, message: `Element ${nodeId} not found` }
+  }
+
+  const parent = element.parentElement
+  if (!parent) {
+    return { passed: false, message: 'Parent element not found' }
+  }
+
+  const elementRect = element.getBoundingClientRect()
+  const parentRect = parent.getBoundingClientRect()
+  const parentStyle = getComputedStyle(parent)
+
+  // Calculate parent's content area (excluding padding)
+  const paddingLeft = parseFloat(parentStyle.paddingLeft) || 0
+  const paddingRight = parseFloat(parentStyle.paddingRight) || 0
+  const paddingTop = parseFloat(parentStyle.paddingTop) || 0
+  const paddingBottom = parseFloat(parentStyle.paddingBottom) || 0
+
+  const parentContentWidth = parentRect.width - paddingLeft - paddingRight
+  const parentContentHeight = parentRect.height - paddingTop - paddingBottom
+
+  const parentContentSize = dimension === 'width' ? parentContentWidth : parentContentHeight
+  const elementSize = dimension === 'width' ? elementRect.width : elementRect.height
+
+  // Account for siblings
+  const siblings = Array.from(parent.children).filter(el =>
+    el.hasAttribute('data-mirror-id')
+  ) as HTMLElement[]
+  const siblingCount = siblings.length
+
+  // Calculate total gap space
+  const gapStr = parentStyle.gap || '0px'
+  const gap = parseFloat(gapStr) || 0
+  const totalGap = siblingCount > 1 ? gap * (siblingCount - 1) : 0
+
+  // Calculate space taken by other siblings
+  let siblingSpace = 0
+  for (const sibling of siblings) {
+    if (sibling !== element) {
+      const siblingRect = sibling.getBoundingClientRect()
+      siblingSpace += dimension === 'width' ? siblingRect.width : siblingRect.height
+    }
+  }
+
+  const availableSpace = parentContentSize - totalGap - siblingSpace
+  const fillPercentage = (elementSize / availableSpace) * 100
+  const passed = fillPercentage >= 100 - tolerance
+
+  return {
+    passed,
+    message: passed
+      ? `Element fills ${fillPercentage.toFixed(0)}% of available ${dimension}`
+      : `Element only fills ${fillPercentage.toFixed(0)}% of available ${dimension} (expected ~100%)`,
+    expected: 'fills available space',
+    actual: `${elementSize.toFixed(1)}px of ${availableSpace.toFixed(1)}px available`,
+    details: [
+      `Parent content ${dimension}: ${parentContentSize.toFixed(1)}px`,
+      `Sibling space: ${siblingSpace.toFixed(1)}px`,
+      `Gap space: ${totalGap.toFixed(1)}px`,
+      `Available: ${availableSpace.toFixed(1)}px`,
+      `Element size: ${elementSize.toFixed(1)}px`,
+    ],
+  }
+}
+
+/**
+ * Prüft die relative Position zweier Elemente zueinander.
+ */
+export function assertRelativePosition(
+  nodeA: string,
+  nodeB: string,
+  relation: 'above' | 'below' | 'left-of' | 'right-of',
+  minGap?: number
+): AssertionResult {
+  const preview = document.getElementById('preview')
+  if (!preview) {
+    return { passed: false, message: 'Preview container not found' }
+  }
+
+  const elementA = preview.querySelector(`[data-mirror-id="${nodeA}"]`) as HTMLElement
+  const elementB = preview.querySelector(`[data-mirror-id="${nodeB}"]`) as HTMLElement
+
+  if (!elementA) {
+    return { passed: false, message: `Element ${nodeA} not found` }
+  }
+  if (!elementB) {
+    return { passed: false, message: `Element ${nodeB} not found` }
+  }
+
+  const rectA = elementA.getBoundingClientRect()
+  const rectB = elementB.getBoundingClientRect()
+
+  let passed = false
+  let actualGap = 0
+  let message = ''
+
+  switch (relation) {
+    case 'above':
+      // A is above B: A's bottom <= B's top
+      actualGap = rectB.top - rectA.bottom
+      passed = rectA.bottom <= rectB.top
+      message = passed
+        ? `${nodeA} is above ${nodeB} (gap: ${actualGap.toFixed(1)}px)`
+        : `${nodeA} is NOT above ${nodeB} (A bottom: ${rectA.bottom.toFixed(1)}, B top: ${rectB.top.toFixed(1)})`
+      break
+
+    case 'below':
+      // A is below B: A's top >= B's bottom
+      actualGap = rectA.top - rectB.bottom
+      passed = rectA.top >= rectB.bottom
+      message = passed
+        ? `${nodeA} is below ${nodeB} (gap: ${actualGap.toFixed(1)}px)`
+        : `${nodeA} is NOT below ${nodeB} (A top: ${rectA.top.toFixed(1)}, B bottom: ${rectB.bottom.toFixed(1)})`
+      break
+
+    case 'left-of':
+      // A is left of B: A's right <= B's left
+      actualGap = rectB.left - rectA.right
+      passed = rectA.right <= rectB.left
+      message = passed
+        ? `${nodeA} is left of ${nodeB} (gap: ${actualGap.toFixed(1)}px)`
+        : `${nodeA} is NOT left of ${nodeB} (A right: ${rectA.right.toFixed(1)}, B left: ${rectB.left.toFixed(1)})`
+      break
+
+    case 'right-of':
+      // A is right of B: A's left >= B's right
+      actualGap = rectA.left - rectB.right
+      passed = rectA.left >= rectB.right
+      message = passed
+        ? `${nodeA} is right of ${nodeB} (gap: ${actualGap.toFixed(1)}px)`
+        : `${nodeA} is NOT right of ${nodeB} (A left: ${rectA.left.toFixed(1)}, B right: ${rectB.right.toFixed(1)})`
+      break
+  }
+
+  // Check minimum gap if specified
+  if (passed && minGap !== undefined && actualGap < minGap) {
+    passed = false
+    message = `${nodeA} is ${relation} ${nodeB} but gap (${actualGap.toFixed(1)}px) is less than required (${minGap}px)`
+  }
+
+  return {
+    passed,
+    message,
+    expected: minGap !== undefined ? `${relation} with >= ${minGap}px gap` : relation,
+    actual: `gap: ${actualGap.toFixed(1)}px`,
+    details: [
+      `A bounds: left=${rectA.left.toFixed(1)}, right=${rectA.right.toFixed(1)}, top=${rectA.top.toFixed(1)}, bottom=${rectA.bottom.toFixed(1)}`,
+      `B bounds: left=${rectB.left.toFixed(1)}, right=${rectB.right.toFixed(1)}, top=${rectB.top.toFixed(1)}, bottom=${rectB.bottom.toFixed(1)}`,
+    ],
+  }
+}
+
+/**
+ * Prüft die exakte Größe eines Elements in Pixeln.
+ */
+export function assertExactSize(
+  nodeId: string,
+  width: number,
+  height: number,
+  tolerance: number = 2
+): AssertionResult {
+  const preview = document.getElementById('preview')
+  if (!preview) {
+    return { passed: false, message: 'Preview container not found' }
+  }
+
+  const element = preview.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+  if (!element) {
+    return { passed: false, message: `Element ${nodeId} not found` }
+  }
+
+  const rect = element.getBoundingClientRect()
+  const actualWidth = rect.width
+  const actualHeight = rect.height
+
+  const widthOk = Math.abs(actualWidth - width) <= tolerance
+  const heightOk = Math.abs(actualHeight - height) <= tolerance
+  const passed = widthOk && heightOk
+
+  const issues: string[] = []
+  if (!widthOk) {
+    issues.push(`width: expected ${width}px, got ${actualWidth.toFixed(1)}px`)
+  }
+  if (!heightOk) {
+    issues.push(`height: expected ${height}px, got ${actualHeight.toFixed(1)}px`)
+  }
+
+  return {
+    passed,
+    message: passed
+      ? `Element ${nodeId} is ${width}x${height}px as expected`
+      : `Size mismatch: ${issues.join('; ')}`,
+    expected: { width, height },
+    actual: { width: actualWidth, height: actualHeight },
+    details: [
+      `Expected: ${width}px x ${height}px`,
+      `Actual: ${actualWidth.toFixed(1)}px x ${actualHeight.toFixed(1)}px`,
+      `Tolerance: ${tolerance}px`,
+    ],
+  }
+}
+
+/**
+ * Prüft ob ein Element innerhalb seines Parents zentriert ist.
+ */
+export function assertCentered(
+  nodeId: string,
+  axis: 'horizontal' | 'vertical' | 'both',
+  tolerance: number = 3
+): AssertionResult {
+  const preview = document.getElementById('preview')
+  if (!preview) {
+    return { passed: false, message: 'Preview container not found' }
+  }
+
+  const element = preview.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+  if (!element) {
+    return { passed: false, message: `Element ${nodeId} not found` }
+  }
+
+  const parent = element.parentElement
+  if (!parent) {
+    return { passed: false, message: 'Parent element not found' }
+  }
+
+  const elementRect = element.getBoundingClientRect()
+  const parentRect = parent.getBoundingClientRect()
+  const parentStyle = getComputedStyle(parent)
+
+  // Calculate parent's content area
+  const paddingLeft = parseFloat(parentStyle.paddingLeft) || 0
+  const paddingRight = parseFloat(parentStyle.paddingRight) || 0
+  const paddingTop = parseFloat(parentStyle.paddingTop) || 0
+  const paddingBottom = parseFloat(parentStyle.paddingBottom) || 0
+
+  const parentContentLeft = parentRect.left + paddingLeft
+  const parentContentRight = parentRect.right - paddingRight
+  const parentContentTop = parentRect.top + paddingTop
+  const parentContentBottom = parentRect.bottom - paddingBottom
+
+  const issues: string[] = []
+  let horizontalOk = true
+  let verticalOk = true
+
+  if (axis === 'horizontal' || axis === 'both') {
+    const leftSpace = elementRect.left - parentContentLeft
+    const rightSpace = parentContentRight - elementRect.right
+    const diff = Math.abs(leftSpace - rightSpace)
+    horizontalOk = diff <= tolerance
+    if (!horizontalOk) {
+      issues.push(
+        `horizontal: left space ${leftSpace.toFixed(1)}px, right space ${rightSpace.toFixed(1)}px (diff: ${diff.toFixed(1)}px)`
+      )
+    }
+  }
+
+  if (axis === 'vertical' || axis === 'both') {
+    const topSpace = elementRect.top - parentContentTop
+    const bottomSpace = parentContentBottom - elementRect.bottom
+    const diff = Math.abs(topSpace - bottomSpace)
+    verticalOk = diff <= tolerance
+    if (!verticalOk) {
+      issues.push(
+        `vertical: top space ${topSpace.toFixed(1)}px, bottom space ${bottomSpace.toFixed(1)}px (diff: ${diff.toFixed(1)}px)`
+      )
+    }
+  }
+
+  const passed = horizontalOk && verticalOk
+
+  return {
+    passed,
+    message: passed
+      ? `Element ${nodeId} is centered ${axis === 'both' ? 'horizontally and vertically' : axis + 'ly'}`
+      : `Element ${nodeId} is NOT centered: ${issues.join('; ')}`,
+    expected: `centered ${axis}`,
+    actual: issues.length > 0 ? issues.join('; ') : 'centered',
+    details: issues,
+  }
+}
+
+// =============================================================================
 // Export for Test API
 // =============================================================================
 
@@ -791,4 +1154,10 @@ export const layoutAssertions = {
   assertAlignment,
   assertGap,
   assertLayout,
+  // New pixel-accurate assertions
+  assertActualGap,
+  assertFillsSpace,
+  assertRelativePosition,
+  assertExactSize,
+  assertCentered,
 }

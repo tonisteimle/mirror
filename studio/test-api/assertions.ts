@@ -334,6 +334,24 @@ export class Assertions implements AssertionAPI {
   }
 
   /**
+   * Assert code does NOT contain pattern
+   */
+  codeNotContains(pattern: string | RegExp): void {
+    const code = this.getCode()
+    const contains = typeof pattern === 'string' ? code.includes(pattern) : pattern.test(code)
+    const passed = !contains
+
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Code does not contain ${pattern}`
+        : `Expected code to NOT contain ${pattern}, but it does`,
+      expected: `Not: ${pattern.toString()}`,
+      actual: code,
+    })
+  }
+
+  /**
    * Assert code equals expected
    */
   codeEquals(expected: string): void {
@@ -363,6 +381,447 @@ export class Assertions implements AssertionAPI {
         : `Expected ${nodeId} to be selected, got ${selection}`,
       expected: nodeId,
       actual: selection,
+    })
+  }
+
+  // =============================================================================
+  // Node-specific Code Assertions
+  // =============================================================================
+
+  /**
+   * Get the source map from studio state
+   */
+  private getSourceMap(): any {
+    return (window as any).__studio?.state?.get()?.sourceMap
+  }
+
+  /**
+   * Assert a specific node has a property in its code line
+   */
+  nodeHasProperty(nodeId: string, property: string, value?: string): void {
+    const sourceMap = this.getSourceMap()
+    if (!sourceMap) {
+      this.collector.add({
+        passed: false,
+        message: 'No source map available - ensure code is compiled',
+        expected: `${property}${value !== undefined ? ` ${value}` : ''}`,
+        actual: null,
+      })
+      return
+    }
+
+    const node = sourceMap.getNodeById?.(nodeId) || sourceMap.nodeMap?.get?.(nodeId)
+    if (!node) {
+      this.collector.add({
+        passed: false,
+        message: `Node ${nodeId} not found in source map`,
+        expected: `${property}${value !== undefined ? ` ${value}` : ''}`,
+        actual: null,
+      })
+      return
+    }
+
+    const code = this.getCode()
+    const lines = code.split('\n')
+    const lineIndex = (node.position?.line ?? node.line) - 1
+    const line = lines[lineIndex] || ''
+
+    // Build pattern: match property with optional value
+    let pattern: RegExp
+    if (value !== undefined) {
+      // Escape special regex characters in value
+      const escapedValue = String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      pattern = new RegExp(`\\b${property}\\s+${escapedValue}\\b`)
+    } else {
+      pattern = new RegExp(`\\b${property}\\b`)
+    }
+
+    const passed = pattern.test(line)
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Node ${nodeId} has property ${property}${value !== undefined ? ` ${value}` : ''}`
+        : `Node ${nodeId} missing property ${property} on line ${lineIndex + 1}: "${line.trim()}"`,
+      expected: `${property}${value !== undefined ? ` ${value}` : ''}`,
+      actual: line.trim(),
+    })
+  }
+
+  /**
+   * Assert a specific line contains pattern
+   */
+  lineContains(lineNumber: number, pattern: string | RegExp): void {
+    const code = this.getCode()
+    const lines = code.split('\n')
+    const line = lines[lineNumber - 1] || ''
+
+    const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern
+    const passed = regex.test(line)
+
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Line ${lineNumber} contains ${pattern}`
+        : `Line ${lineNumber} does not contain ${pattern}`,
+      expected: pattern.toString(),
+      actual: line,
+    })
+  }
+
+  /**
+   * Assert a specific line does NOT contain pattern
+   */
+  lineNotContains(lineNumber: number, pattern: string | RegExp): void {
+    const code = this.getCode()
+    const lines = code.split('\n')
+    const line = lines[lineNumber - 1] || ''
+
+    const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern
+    const contains = regex.test(line)
+    const passed = !contains
+
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Line ${lineNumber} does not contain ${pattern}`
+        : `Line ${lineNumber} unexpectedly contains ${pattern}`,
+      expected: `NOT: ${pattern.toString()}`,
+      actual: line,
+    })
+  }
+
+  /**
+   * Assert the exact code line of a node (trimmed comparison)
+   */
+  nodeLineEquals(nodeId: string, expected: string): void {
+    const sourceMap = this.getSourceMap()
+    if (!sourceMap) {
+      this.collector.add({
+        passed: false,
+        message: 'No source map available',
+        expected,
+        actual: null,
+      })
+      return
+    }
+
+    const node = sourceMap.getNodeById?.(nodeId) || sourceMap.nodeMap?.get?.(nodeId)
+    if (!node) {
+      this.collector.add({
+        passed: false,
+        message: `Node ${nodeId} not found in source map`,
+        expected,
+        actual: null,
+      })
+      return
+    }
+
+    const code = this.getCode()
+    const lines = code.split('\n')
+    const lineIndex = (node.position?.line ?? node.line) - 1
+    const line = lines[lineIndex] || ''
+
+    const passed = line.trim() === expected.trim()
+    this.collector.add({
+      passed,
+      message: passed ? `Node ${nodeId} line matches expected` : `Node ${nodeId} line mismatch`,
+      expected: expected.trim(),
+      actual: line.trim(),
+    })
+  }
+
+  // =============================================================================
+  // Side Effect Checks
+  // =============================================================================
+
+  /**
+   * Snapshot current code for later comparison
+   */
+  snapshotCode(): string {
+    return this.getCode()
+  }
+
+  /**
+   * Assert only specific lines changed since snapshot
+   */
+  onlyLinesChanged(snapshot: string, allowedLines: number[]): void {
+    const before = snapshot.split('\n')
+    const after = this.getCode().split('\n')
+
+    const changedLines: number[] = []
+    const maxLines = Math.max(before.length, after.length)
+
+    for (let i = 0; i < maxLines; i++) {
+      if (before[i] !== after[i]) {
+        changedLines.push(i + 1) // 1-indexed
+      }
+    }
+
+    const unexpectedChanges = changedLines.filter(line => !allowedLines.includes(line))
+    const passed = unexpectedChanges.length === 0
+
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Only lines ${allowedLines.join(', ')} changed as expected`
+        : `Unexpected changes on lines: ${unexpectedChanges.join(', ')}`,
+      expected: `Changes only on lines ${allowedLines.join(', ')}`,
+      actual:
+        changedLines.length > 0 ? `Changes on lines ${changedLines.join(', ')}` : 'No changes',
+    })
+  }
+
+  /**
+   * Assert code unchanged except for specific line
+   */
+  codeUnchangedExcept(snapshot: string, changedLine: number): void {
+    this.onlyLinesChanged(snapshot, [changedLine])
+  }
+
+  // =============================================================================
+  // Visual Validations
+  // =============================================================================
+
+  /**
+   * Assert element has specific icon
+   */
+  hasIcon(nodeId: string, iconName: string): void {
+    const info = this.inspector.inspect(nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${nodeId} not found`,
+        expected: iconName,
+        actual: null,
+      })
+      return
+    }
+
+    // Check various ways icon might be specified
+    const dataIcon = info.dataAttributes['data-icon']
+    const useHref = info.attributes['href'] || ''
+
+    // Also check for SVG content with the icon name
+    const element = document.querySelector(`[data-mirror-id="${nodeId}"]`)
+    const svgUse = element?.querySelector('use')
+    const svgHref = svgUse?.getAttribute('href') || svgUse?.getAttribute('xlink:href') || ''
+
+    // Check if any of these contain the icon name
+    const found =
+      dataIcon === iconName ||
+      useHref.includes(iconName) ||
+      svgHref.includes(iconName) ||
+      info.fullText === iconName
+
+    this.collector.add({
+      passed: found,
+      message: found
+        ? `Element ${nodeId} has icon "${iconName}"`
+        : `Expected icon "${iconName}", found "${dataIcon || svgHref || 'none'}"`,
+      expected: iconName,
+      actual: dataIcon || svgHref || info.fullText || 'none',
+    })
+  }
+
+  /**
+   * Assert icon has specific color
+   */
+  hasIconColor(nodeId: string, color: string): void {
+    // Icons typically use 'color' CSS property (currentColor for SVG)
+    this.hasStyle(nodeId, 'color', color)
+  }
+
+  /**
+   * Assert image has specific src
+   */
+  hasImageSrc(nodeId: string, src: string): void {
+    const info = this.inspector.inspect(nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${nodeId} not found`,
+        expected: src,
+        actual: null,
+      })
+      return
+    }
+
+    const actualSrc = info.attributes['src'] || ''
+    // Allow partial match for URLs (handles relative vs absolute)
+    const passed = actualSrc === src || actualSrc.endsWith(src) || actualSrc.includes(src)
+
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Element ${nodeId} has src "${src}"`
+        : `Expected src "${src}", got "${actualSrc}"`,
+      expected: src,
+      actual: actualSrc,
+    })
+  }
+
+  // =============================================================================
+  // Structure Validations
+  // =============================================================================
+
+  /**
+   * Assert element is child of parent
+   */
+  isChildOf(childId: string, parentId: string): void {
+    const childInfo = this.inspector.inspect(childId)
+    if (!childInfo) {
+      this.collector.add({
+        passed: false,
+        message: `Child element ${childId} not found`,
+        expected: parentId,
+        actual: null,
+      })
+      return
+    }
+
+    const passed = childInfo.parent === parentId
+    this.collector.add({
+      passed,
+      message: passed
+        ? `${childId} is child of ${parentId}`
+        : `${childId} is not child of ${parentId} (actual parent: ${childInfo.parent || 'none'})`,
+      expected: parentId,
+      actual: childInfo.parent,
+    })
+  }
+
+  /**
+   * Assert nodeA comes before nodeB in sibling order
+   */
+  isSiblingBefore(nodeA: string, nodeB: string): void {
+    const infoA = this.inspector.inspect(nodeA)
+    const infoB = this.inspector.inspect(nodeB)
+
+    if (!infoA) {
+      this.collector.add({
+        passed: false,
+        message: `Node ${nodeA} not found`,
+        expected: `${nodeA} before ${nodeB}`,
+        actual: null,
+      })
+      return
+    }
+
+    if (!infoB) {
+      this.collector.add({
+        passed: false,
+        message: `Node ${nodeB} not found`,
+        expected: `${nodeA} before ${nodeB}`,
+        actual: null,
+      })
+      return
+    }
+
+    if (infoA.parent !== infoB.parent) {
+      this.collector.add({
+        passed: false,
+        message: `Nodes ${nodeA} and ${nodeB} are not siblings (different parents)`,
+        expected: `${nodeA} before ${nodeB}`,
+        actual: `${nodeA} parent: ${infoA.parent}, ${nodeB} parent: ${infoB.parent}`,
+      })
+      return
+    }
+
+    // Get parent to check child order
+    const parentInfo = infoA.parent ? this.inspector.inspect(infoA.parent) : null
+    if (!parentInfo) {
+      this.collector.add({
+        passed: false,
+        message: 'Parent not found',
+        expected: `${nodeA} before ${nodeB}`,
+        actual: null,
+      })
+      return
+    }
+
+    const indexA = parentInfo.children.indexOf(nodeA)
+    const indexB = parentInfo.children.indexOf(nodeB)
+    const passed = indexA < indexB && indexA !== -1 && indexB !== -1
+
+    this.collector.add({
+      passed,
+      message: passed
+        ? `${nodeA} (index ${indexA}) comes before ${nodeB} (index ${indexB})`
+        : `${nodeA} (index ${indexA}) does NOT come before ${nodeB} (index ${indexB})`,
+      expected: `${nodeA} before ${nodeB}`,
+      actual: `${nodeA} at index ${indexA}, ${nodeB} at index ${indexB}`,
+    })
+  }
+
+  /**
+   * Assert tree structure matches expectation
+   */
+  hasStructure(rootId: string, expected: import('./types').StructureExpectation): void {
+    const rootInfo = this.inspector.inspect(rootId)
+    if (!rootInfo) {
+      this.collector.add({
+        passed: false,
+        message: `Root element ${rootId} not found`,
+        expected: JSON.stringify(expected),
+        actual: null,
+      })
+      return
+    }
+
+    // Check tag if specified
+    if (expected.tag && rootInfo.tagName !== expected.tag.toLowerCase()) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${rootId} has wrong tag`,
+        expected: expected.tag,
+        actual: rootInfo.tagName,
+      })
+      return
+    }
+
+    // Check children if specified
+    if (expected.children) {
+      const actualChildren = rootInfo.children
+      if (actualChildren.length !== expected.children.length) {
+        this.collector.add({
+          passed: false,
+          message: `Element ${rootId} has wrong number of children`,
+          expected: expected.children.length,
+          actual: actualChildren.length,
+        })
+        return
+      }
+
+      // Recursively check each child
+      for (let i = 0; i < expected.children.length; i++) {
+        const expectedChild = expected.children[i]
+        const actualChildId = actualChildren[i]
+
+        if (typeof expectedChild === 'string') {
+          // Just check node ID
+          if (expectedChild !== actualChildId) {
+            this.collector.add({
+              passed: false,
+              message: `Child ${i} of ${rootId} should be ${expectedChild}`,
+              expected: expectedChild,
+              actual: actualChildId,
+            })
+            return
+          }
+        } else {
+          // Recursive structure check
+          this.hasStructure(actualChildId, expectedChild)
+          // If previous check failed, return early
+          if (!this.collector.passed) return
+        }
+      }
+    }
+
+    this.collector.add({
+      passed: true,
+      message: `Element ${rootId} matches expected structure`,
+      expected: JSON.stringify(expected),
+      actual: 'matches',
     })
   }
 
@@ -545,6 +1004,192 @@ export class ElementAssert {
       expected: count,
       actual,
     })
+    return this
+  }
+
+  /**
+   * Assert element has specific icon
+   */
+  hasIcon(iconName: string): this {
+    const info = this.inspector.inspect(this.nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${this.nodeId} not found`,
+        expected: iconName,
+        actual: null,
+      })
+      return this
+    }
+
+    const dataIcon = info.dataAttributes['data-icon']
+    const element = document.querySelector(`[data-mirror-id="${this.nodeId}"]`)
+    const svgUse = element?.querySelector('use')
+    const svgHref = svgUse?.getAttribute('href') || svgUse?.getAttribute('xlink:href') || ''
+
+    const found = dataIcon === iconName || svgHref.includes(iconName) || info.fullText === iconName
+
+    this.collector.add({
+      passed: found,
+      message: found
+        ? `Element has icon "${iconName}"`
+        : `Expected icon "${iconName}", found "${dataIcon || svgHref || 'none'}"`,
+      expected: iconName,
+      actual: dataIcon || svgHref || 'none',
+    })
+    return this
+  }
+
+  /**
+   * Assert icon has specific color
+   */
+  hasIconColor(color: string): this {
+    return this.hasStyle('color', color)
+  }
+
+  /**
+   * Assert image has specific src
+   */
+  hasImageSrc(src: string): this {
+    const info = this.inspector.inspect(this.nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${this.nodeId} not found`,
+        expected: src,
+        actual: null,
+      })
+      return this
+    }
+
+    const actualSrc = info.attributes['src'] || ''
+    const passed = actualSrc === src || actualSrc.endsWith(src) || actualSrc.includes(src)
+
+    this.collector.add({
+      passed,
+      message: passed ? `Element has src "${src}"` : `Expected src "${src}", got "${actualSrc}"`,
+      expected: src,
+      actual: actualSrc,
+    })
+    return this
+  }
+
+  /**
+   * Assert element is child of parent
+   */
+  isChildOf(parentId: string): this {
+    const info = this.inspector.inspect(this.nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${this.nodeId} not found`,
+        expected: parentId,
+        actual: null,
+      })
+      return this
+    }
+
+    const passed = info.parent === parentId
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Element is child of ${parentId}`
+        : `Element is not child of ${parentId} (actual parent: ${info.parent || 'none'})`,
+      expected: parentId,
+      actual: info.parent,
+    })
+    return this
+  }
+
+  /**
+   * Assert element comes before another sibling
+   */
+  isBefore(siblingId: string): this {
+    const info = this.inspector.inspect(this.nodeId)
+    const siblingInfo = this.inspector.inspect(siblingId)
+
+    if (!info || !siblingInfo) {
+      this.collector.add({
+        passed: false,
+        message: !info ? `Element ${this.nodeId} not found` : `Sibling ${siblingId} not found`,
+        expected: `${this.nodeId} before ${siblingId}`,
+        actual: null,
+      })
+      return this
+    }
+
+    if (info.parent !== siblingInfo.parent) {
+      this.collector.add({
+        passed: false,
+        message: 'Elements are not siblings',
+        expected: `${this.nodeId} before ${siblingId}`,
+        actual: `Different parents: ${info.parent} vs ${siblingInfo.parent}`,
+      })
+      return this
+    }
+
+    const parentInfo = info.parent ? this.inspector.inspect(info.parent) : null
+    if (!parentInfo) {
+      this.collector.add({
+        passed: false,
+        message: 'Parent not found',
+        expected: `${this.nodeId} before ${siblingId}`,
+        actual: null,
+      })
+      return this
+    }
+
+    const myIndex = parentInfo.children.indexOf(this.nodeId)
+    const siblingIndex = parentInfo.children.indexOf(siblingId)
+    const passed = myIndex < siblingIndex && myIndex !== -1 && siblingIndex !== -1
+
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Element comes before ${siblingId}`
+        : `Element (${myIndex}) does not come before ${siblingId} (${siblingIndex})`,
+      expected: `index < ${siblingIndex}`,
+      actual: myIndex,
+    })
+    return this
+  }
+
+  /**
+   * Assert element has attribute
+   */
+  hasAttribute(attr: string, value?: string): this {
+    const info = this.inspector.inspect(this.nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${this.nodeId} not found`,
+        expected: value ?? true,
+        actual: null,
+      })
+      return this
+    }
+
+    const actualValue = info.attributes[attr] ?? info.dataAttributes[`data-${attr}`]
+    const hasAttr = actualValue !== undefined
+
+    if (value !== undefined) {
+      const passed = actualValue === value
+      this.collector.add({
+        passed,
+        message: passed
+          ? `Element has ${attr}="${value}"`
+          : `Expected ${attr}="${value}", got "${actualValue}"`,
+        expected: value,
+        actual: actualValue,
+      })
+    } else {
+      this.collector.add({
+        passed: hasAttr,
+        message: hasAttr ? `Element has attribute ${attr}` : `Element missing attribute ${attr}`,
+        expected: true,
+        actual: hasAttr,
+      })
+    }
     return this
   }
 }

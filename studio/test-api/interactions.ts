@@ -429,17 +429,20 @@ export class Interactions implements InteractionAPI {
 
   /**
    * Press a key with optional modifiers
+   *
+   * Note: Dispatches on document to ensure global keyboard handlers receive the event.
+   * The KeyboardHandler for preview shortcuts listens on document.
    */
   async pressKey(key: string, modifiers?: KeyModifiers): Promise<void> {
-    const activeElement = document.activeElement || document.body
     const opts = this.buildModifiers(modifiers)
 
-    this.dispatchKeyboardEvent(activeElement as HTMLElement, 'keydown', key, opts)
+    // Dispatch on document for global shortcuts (H, V, F, etc.)
+    this.dispatchKeyboardEvent(document, 'keydown', key, opts)
     // keypress is deprecated for non-printable keys
     if (key.length === 1) {
-      this.dispatchKeyboardEvent(activeElement as HTMLElement, 'keypress', key, opts)
+      this.dispatchKeyboardEvent(document, 'keypress', key, opts)
     }
-    this.dispatchKeyboardEvent(activeElement as HTMLElement, 'keyup', key, opts)
+    this.dispatchKeyboardEvent(document, 'keyup', key, opts)
 
     await this.delay(50)
   }
@@ -640,6 +643,98 @@ export class Interactions implements InteractionAPI {
     if (!result.success) {
       throw new Error(`Move failed: ${result.error}`)
     }
+  }
+
+  /**
+   * Drag component from palette to alignment zone (9-point grid for empty containers)
+   * @param component - Component name (e.g., 'Button', 'Text')
+   * @param target - Target container node ID
+   * @param zone - Alignment zone: 'top-left', 'top-center', 'top-right',
+   *               'center-left', 'center', 'center-right',
+   *               'bottom-left', 'bottom-center', 'bottom-right'
+   */
+  async dragToAlignmentZone(
+    component: string,
+    target: string,
+    zone:
+      | 'top-left'
+      | 'top-center'
+      | 'top-right'
+      | 'center-left'
+      | 'center'
+      | 'center-right'
+      | 'bottom-left'
+      | 'bottom-center'
+      | 'bottom-right'
+  ): Promise<void> {
+    const dragTest = (window as any).__dragTest
+    if (!dragTest) {
+      throw new Error('Drag test API not available')
+    }
+
+    const result = await dragTest
+      .fromPalette(component)
+      .toContainer(target)
+      .atAlignmentZone(zone)
+      .execute()
+
+    if (!result.success) {
+      throw new Error(`Drag to alignment zone failed: ${result.error}`)
+    }
+  }
+
+  // ===========================================================================
+  // Resize Handle Interactions
+  // ===========================================================================
+
+  /**
+   * Double-click on a resize handle to set dimension to full
+   *
+   * - n/s handles: set height to full
+   * - e/w handles: set width to full
+   * - corner handles (nw/ne/sw/se): set both dimensions to full
+   */
+  async doubleClickResizeHandle(
+    nodeId: string,
+    position: 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se'
+  ): Promise<void> {
+    // First, select the element to show resize handles
+    await this.click(nodeId)
+    await this.delay(200) // Give more time for handles to appear
+
+    // Wait for resize handles to appear (retry a few times)
+    let resizeHandlesContainer: Element | null = null
+    for (let i = 0; i < 10; i++) {
+      resizeHandlesContainer = document.querySelector('.visual-overlay .resize-handles')
+      if (resizeHandlesContainer && resizeHandlesContainer.children.length > 0) {
+        break
+      }
+      await this.delay(50)
+    }
+
+    if (!resizeHandlesContainer || resizeHandlesContainer.children.length === 0) {
+      throw new Error('Resize handles container not found. Is the element selected?')
+    }
+
+    // Find the handle
+    const handle = resizeHandlesContainer.querySelector(
+      `.resize-handle[data-position="${position}"]`
+    ) as HTMLElement
+
+    if (!handle) {
+      throw new Error(`Resize handle at position "${position}" not found`)
+    }
+
+    // Double-click the handle
+    this.dispatchMouseEvent(handle, 'mousedown')
+    this.dispatchMouseEvent(handle, 'mouseup')
+    this.dispatchMouseEvent(handle, 'click')
+    this.dispatchMouseEvent(handle, 'mousedown')
+    this.dispatchMouseEvent(handle, 'mouseup')
+    this.dispatchMouseEvent(handle, 'click')
+    this.dispatchMouseEvent(handle, 'dblclick')
+
+    await this.delay(100)
   }
 }
 

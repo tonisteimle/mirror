@@ -2898,6 +2898,8 @@ function setupNotificationHandlers() {
         insertionIndex: target.insertionIndex,
         // Include position for absolute/stacked drops
         absolutePosition: target.position || undefined,
+        // Include alignment for aligned drops (9-point grid)
+        alignment: target.mode === 'aligned' ? { zone: target.alignmentProperty } : undefined,
       }
       handleStudioDropNew(dropResult, getDropGlobals())
       return
@@ -2928,6 +2930,8 @@ function setupNotificationHandlers() {
       insertionIndex: target.insertionIndex,
       // Include position for absolute/stacked drops
       absolutePosition: target.position || undefined,
+      // Include alignment for aligned drops (9-point grid)
+      alignment: target.mode === 'aligned' ? { zone: target.alignmentProperty } : undefined,
     }
 
     handleStudioDropNew(dropResult, getDropGlobals()).catch(err => {

@@ -133,7 +133,19 @@ export class ZagComponentHandler extends BaseDropHandler {
     if (this.needsPositionProperties(result)) {
       properties = this.addPositionProperties(properties, result, context)
     }
+    if (this.needsAlignmentProperty(result)) {
+      properties = this.addAlignmentProperty(properties, result)
+    }
     return properties
+  }
+
+  private needsAlignmentProperty(result: DropResult): boolean {
+    return !!result.alignment?.zone
+  }
+
+  private addAlignmentProperty(properties: string, result: DropResult): string {
+    const alignProp = result.alignment!.zone!
+    return properties ? `${properties}, ${alignProp}` : alignProp
   }
 
   private needsPositionProperties(result: DropResult): boolean {

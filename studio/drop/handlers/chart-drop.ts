@@ -31,7 +31,13 @@ export class ChartDropHandler extends BaseDropHandler {
       .split('\n')
       .map(line => `  ${line}`)
       .join('\n')}`
-    const chartCode = properties ? `${componentName!} ${properties}` : componentName!
+    // Build chart code with properties and alignment
+    let chartCode = properties ? `${componentName!} ${properties}` : componentName!
+    if (result.alignment?.zone) {
+      chartCode = properties
+        ? `${chartCode}, ${result.alignment.zone}`
+        : `${chartCode} ${result.alignment.zone}`
+    }
     return `${dataBlockCode}\n\n${chartCode}`
   }
 }

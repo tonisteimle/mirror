@@ -14,17 +14,49 @@ import type { IndicatorReport, Reportable } from './reporter/types'
 const INDICATOR_ID = 'drag-insertion-indicator'
 const CONTAINER_HIGHLIGHT_ID = 'drag-container-highlight'
 const GHOST_INDICATOR_ID = 'drag-ghost-indicator'
+const ALIGNMENT_ZONES_ID = 'drag-alignment-zones'
 const INDICATOR_COLOR = '#5BA8F5'
 const INDICATOR_GLOW = 'rgba(91, 168, 245, 0.4)'
 const GHOST_COLOR = 'rgba(139, 92, 246, 0.08)'
 const GHOST_BORDER = 'rgba(139, 92, 246, 0.4)'
 const INDICATOR_THICKNESS = 3
 
+/** Minimum container size to show alignment zones (in pixels) */
+const MIN_SIZE_FOR_ALIGNMENT_ZONES = 80
+
+/** All 9 alignment positions */
+export type AlignPosition =
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center-left'
+  | 'center'
+  | 'center-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
+
+/** Map from position to Mirror DSL property */
+export const ALIGN_TO_PROPERTY: Record<AlignPosition, string> = {
+  'top-left': 'tl',
+  'top-center': 'tc',
+  'top-right': 'tr',
+  'center-left': 'cl',
+  center: 'center',
+  'center-right': 'cr',
+  'bottom-left': 'bl',
+  'bottom-center': 'bc',
+  'bottom-right': 'br',
+}
+
 export class Indicator implements Reportable<IndicatorReport> {
   private element: HTMLDivElement | null = null
   private containerHighlight: HTMLDivElement | null = null
   private ghostElement: HTMLDivElement | null = null
+  private alignmentZonesContainer: HTMLDivElement | null = null
+  private alignmentZones: Map<AlignPosition, HTMLDivElement> = new Map()
   private currentContainerId: string | null = null
+  private hoveredAlignPosition: AlignPosition | null = null
 
   // Last state for reporting
   private lastLinePosition: Point | null = null
@@ -246,6 +278,7 @@ export class Indicator implements Reportable<IndicatorReport> {
       this.containerHighlight.style.display = 'none'
     }
     this.hideGhost()
+    this.hideAlignmentZones()
     this.currentContainerId = null
     this.lastLinePosition = null
     this.lastHighlightRect = null
@@ -256,6 +289,179 @@ export class Indicator implements Reportable<IndicatorReport> {
    */
   isVisible(): boolean {
     return this.element?.style.display === 'block'
+  }
+
+  // ===========================================================================
+  // Alignment Zones (9-point grid for empty containers)
+  // ===========================================================================
+
+  /**
+   * Check if container is large enough for alignment zones
+   */
+  isLargeEnoughForAlignmentZones(rect: DOMRect): boolean {
+    return rect.width >= MIN_SIZE_FOR_ALIGNMENT_ZONES && rect.height >= MIN_SIZE_FOR_ALIGNMENT_ZONES
+  }
+
+  /**
+   * Show the 9-point alignment zone grid for empty containers
+   */
+  showAlignmentZones(rect: DOMRect): void {
+    // Hide other indicators
+    if (this.element) this.element.style.display = 'none'
+    this.hideGhost()
+
+    const container = this.ensureAlignmentZonesContainer()
+    container.style.left = `${rect.x}px`
+    container.style.top = `${rect.y}px`
+    container.style.width = `${rect.width}px`
+    container.style.height = `${rect.height}px`
+    container.style.display = 'grid'
+  }
+
+  /**
+   * Hide alignment zones
+   */
+  hideAlignmentZones(): void {
+    if (this.alignmentZonesContainer) {
+      this.alignmentZonesContainer.style.display = 'none'
+    }
+    this.hoveredAlignPosition = null
+  }
+
+  /**
+   * Get the currently hovered alignment position based on cursor
+   */
+  getAlignmentPositionFromCursor(cursor: Point, containerRect: DOMRect): AlignPosition {
+    // Divide container into 3x3 grid
+    const thirdWidth = containerRect.width / 3
+    const thirdHeight = containerRect.height / 3
+    const relX = cursor.x - containerRect.x
+    const relY = cursor.y - containerRect.y
+
+    // Determine column (left, center, right)
+    let col: 'left' | 'center' | 'right'
+    if (relX < thirdWidth) col = 'left'
+    else if (relX < thirdWidth * 2) col = 'center'
+    else col = 'right'
+
+    // Determine row (top, center, bottom)
+    let row: 'top' | 'center' | 'bottom'
+    if (relY < thirdHeight) row = 'top'
+    else if (relY < thirdHeight * 2) row = 'center'
+    else row = 'bottom'
+
+    // Combine to position
+    if (row === 'center' && col === 'center') return 'center'
+    if (row === 'center') return `center-${col}` as AlignPosition
+    if (col === 'center') return `${row}-center` as AlignPosition
+    return `${row}-${col}` as AlignPosition
+  }
+
+  /**
+   * Update which zone is hovered (highlights the active zone)
+   */
+  updateHoveredZone(position: AlignPosition): void {
+    if (position === this.hoveredAlignPosition) return
+    this.hoveredAlignPosition = position
+
+    // Update visual state of all zones
+    for (const [pos, zone] of this.alignmentZones) {
+      if (pos === position) {
+        zone.classList.add('active')
+      } else {
+        zone.classList.remove('active')
+      }
+    }
+  }
+
+  /**
+   * Get currently hovered alignment position
+   */
+  getHoveredAlignPosition(): AlignPosition | null {
+    return this.hoveredAlignPosition
+  }
+
+  /**
+   * Check if alignment zones are visible
+   */
+  areAlignmentZonesVisible(): boolean {
+    return this.alignmentZonesContainer?.style.display === 'grid'
+  }
+
+  /** Ensure alignment zones container exists */
+  private ensureAlignmentZonesContainer(): HTMLDivElement {
+    if (this.alignmentZonesContainer) return this.alignmentZonesContainer
+
+    this.alignmentZonesContainer = document.createElement('div')
+    this.alignmentZonesContainer.id = ALIGNMENT_ZONES_ID
+    Object.assign(this.alignmentZonesContainer.style, {
+      position: 'fixed',
+      pointerEvents: 'none',
+      zIndex: '10000',
+      display: 'none',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gridTemplateRows: 'repeat(3, 1fr)',
+      background: 'rgba(91, 168, 245, 0.05)',
+      border: `1px dashed ${INDICATOR_COLOR}`,
+      borderRadius: '4px',
+    })
+
+    // Create the 9 zones
+    const positions: AlignPosition[] = [
+      'top-left',
+      'top-center',
+      'top-right',
+      'center-left',
+      'center',
+      'center-right',
+      'bottom-left',
+      'bottom-center',
+      'bottom-right',
+    ]
+
+    for (const pos of positions) {
+      const zone = document.createElement('div')
+      zone.dataset.position = pos
+      zone.className = 'alignment-zone'
+      Object.assign(zone.style, {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'background 0.1s ease-out',
+      })
+
+      // Add dot indicator
+      const dot = document.createElement('div')
+      dot.className = 'alignment-dot'
+      Object.assign(dot.style, {
+        width: '8px',
+        height: '8px',
+        borderRadius: '50%',
+        background: 'rgba(128, 128, 128, 0.3)',
+        transition: 'all 0.15s ease-out',
+      })
+      zone.appendChild(dot)
+
+      this.alignmentZones.set(pos, zone)
+      this.alignmentZonesContainer.appendChild(zone)
+    }
+
+    // Add styles for active state via stylesheet
+    const style = document.createElement('style')
+    style.textContent = `
+      #${ALIGNMENT_ZONES_ID} .alignment-zone.active {
+        background: rgba(91, 168, 245, 0.15);
+      }
+      #${ALIGNMENT_ZONES_ID} .alignment-zone.active .alignment-dot {
+        background: ${INDICATOR_COLOR};
+        transform: scale(1.3);
+        box-shadow: 0 0 6px ${INDICATOR_GLOW};
+      }
+    `
+    document.head.appendChild(style)
+
+    document.body.appendChild(this.alignmentZonesContainer)
+    return this.alignmentZonesContainer
   }
 
   /**
@@ -275,10 +481,16 @@ export class Indicator implements Reportable<IndicatorReport> {
       this.ghostElement.remove()
       this.ghostElement = null
     }
+    if (this.alignmentZonesContainer) {
+      this.alignmentZonesContainer.remove()
+      this.alignmentZonesContainer = null
+    }
+    this.alignmentZones.clear()
     this.currentContainerId = null
     this.lastLinePosition = null
     this.lastHighlightRect = null
     this.lastGhostRect = null
+    this.hoveredAlignPosition = null
   }
 
   /** Report current state for debugging */

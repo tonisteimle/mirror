@@ -92,6 +92,7 @@ export class ResizeManager {
   private boundMouseDown: (e: MouseEvent) => void
   private boundMouseMove: (e: MouseEvent) => void
   private boundMouseUp: (e: MouseEvent) => void
+  private boundDoubleClick: (e: MouseEvent) => void
 
   constructor(config: ResizeManagerConfig) {
     this.container = config.container
@@ -101,6 +102,7 @@ export class ResizeManager {
     this.boundMouseDown = this.onMouseDown.bind(this)
     this.boundMouseMove = this.onMouseMove.bind(this)
     this.boundMouseUp = this.onMouseUp.bind(this)
+    this.boundDoubleClick = this.onDoubleClick.bind(this)
 
     this.setupEventListeners()
   }
@@ -325,6 +327,7 @@ export class ResizeManager {
     // Cache container reference to ensure we remove from same element on dispose
     this.handlesContainerRef = this.overlayManager.getResizeHandlesContainer()
     this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
+    this.handlesContainerRef.addEventListener('dblclick', this.boundDoubleClick)
     document.addEventListener('mousemove', this.boundMouseMove)
     document.addEventListener('mouseup', this.boundMouseUp)
   }
@@ -333,6 +336,7 @@ export class ResizeManager {
     // Use cached reference to avoid memory leak if overlay was recreated
     if (this.handlesContainerRef) {
       this.handlesContainerRef.removeEventListener('mousedown', this.boundMouseDown)
+      this.handlesContainerRef.removeEventListener('dblclick', this.boundDoubleClick)
       this.handlesContainerRef = null
     }
     document.removeEventListener('mousemove', this.boundMouseMove)
@@ -413,6 +417,40 @@ export class ResizeManager {
       handle: position,
       startWidth,
       startHeight,
+    })
+  }
+
+  /**
+   * Double-click on resize handle sets dimension to full
+   * - n/s handles: set height to full
+   * - e/w handles: set width to full
+   * - corner handles (nw/ne/sw/se): set both width and height to full
+   */
+  private onDoubleClick(e: MouseEvent): void {
+    const handle = (e.target as HTMLElement).closest('.resize-handle') as HTMLElement
+    if (!handle) return
+
+    e.preventDefault()
+    e.stopPropagation()
+
+    const position = handle.dataset.position as ResizeHandle
+
+    // Multi-selection double-click not supported for now
+    if (handle.dataset.isMulti === 'true') return
+
+    const nodeId = handle.dataset.nodeId
+    if (!nodeId) return
+
+    // Determine which dimensions to set to full based on handle position
+    const setWidth = position.includes('e') || position.includes('w')
+    const setHeight = position.includes('n') || position.includes('s')
+
+    // Emit resize:end event with fill values (undefined means no change)
+    // The preview controller will convert 'fill' to 'full' in the ResizeCommand
+    events.emit('resize:end', {
+      nodeId,
+      width: setWidth ? 'fill' : undefined,
+      height: setHeight ? 'fill' : undefined,
     })
   }
 

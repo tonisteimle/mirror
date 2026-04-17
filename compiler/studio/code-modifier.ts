@@ -182,6 +182,72 @@ export class CodeModifier {
   }
 
   /**
+   * Set layout direction by removing competing layout properties and adding the new one
+   *
+   * Removes: hor, horizontal, ver, vertical, grid, stacked
+   * Adds: hor (for horizontal) or ver (for vertical)
+   *
+   * This is done in a single operation to avoid SourceMap invalidation issues
+   */
+  setLayoutDirection(nodeId: string, direction: 'horizontal' | 'vertical'): ModificationResult {
+    const nodeMapping = this.sourceMap.getNodeById(nodeId)
+    if (!nodeMapping) {
+      return this.errorResult(`Node not found: ${nodeId}`)
+    }
+
+    const nodeLine = nodeMapping.position.line
+    const line = this.lines[nodeLine - 1]
+    if (!line) {
+      return this.errorResult(`Line not found: ${nodeLine}`)
+    }
+
+    // Parse the line
+    const parsedLine = parseLine(line)
+
+    // Layout properties to remove
+    const layoutProps = ['hor', 'horizontal', 'ver', 'vertical', 'grid', 'stacked']
+
+    // Create new line by removing layout properties and adding the new one
+    let newLine = line
+    for (const propName of layoutProps) {
+      const parsed = parseLine(newLine)
+      const existingProp = findPropertyInLine(parsed, propName)
+      if (existingProp) {
+        newLine = removePropertyFromLine(parseLine(newLine), propName)
+      }
+    }
+
+    // Add the new layout property
+    const propToAdd = direction === 'horizontal' ? 'hor' : 'ver'
+    const finalParsed = parseLine(newLine)
+    newLine = addPropertyToLine(finalParsed, propToAdd, '')
+
+    // Calculate character offsets for the change
+    const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
+    const from = lineStartOffset
+    const to = lineStartOffset + line.length
+
+    // Apply the change
+    const newLines = [...this.lines]
+    newLines[nodeLine - 1] = newLine
+    const newSource = newLines.join('\n')
+
+    // CRITICAL: Persist the changes for subsequent calls
+    this.source = newSource
+    this.lines = newLines
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from,
+        to,
+        insert: newLine,
+      },
+    }
+  }
+
+  /**
    * Update an existing property value
    *
    * Uses LinePropertyParser for robust line analysis:
@@ -321,7 +387,13 @@ export class CodeModifier {
     const existingProp = findPropertyInLine(parsedLine, propName)
 
     if (!existingProp) {
-      return this.errorResult(`Property not found: ${propName}`)
+      // Property doesn't exist - this is a successful no-op
+      // (the property is already "removed" since it's not there)
+      return {
+        success: true,
+        change: { from: 0, to: 0, insert: '' },
+        newSource: this.source,
+      }
     }
 
     // Remove the property using the line parser

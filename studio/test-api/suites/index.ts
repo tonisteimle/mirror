@@ -84,6 +84,11 @@ import {
   selectionTests,
   dragDropTests,
   combinedTests as interactionCombinedTests,
+  allLayoutShortcutTests,
+  allResizeHandleDblClickTests,
+  horizontalHandleTests,
+  verticalHandleTests,
+  cornerHandleTests,
 } from './interactions'
 
 // Bidirectional
@@ -148,6 +153,11 @@ import {
   nestedContainerReorderTests,
   reorderEdgeCaseTests,
   sequentialReorderTests,
+  allAlignmentZoneTests,
+  basicAlignmentZoneTests,
+  allZonesTests,
+  alignmentEdgeCaseTests,
+  componentVarietyTests as alignmentComponentTests,
 } from './drag'
 
 // Workflow
@@ -481,6 +491,11 @@ export {
   selectionTests,
   dragDropTests,
   interactionCombinedTests,
+  allLayoutShortcutTests,
+  allResizeHandleDblClickTests,
+  horizontalHandleTests,
+  verticalHandleTests,
+  cornerHandleTests,
 }
 
 // Bidirectional Editing
@@ -535,6 +550,15 @@ export {
   nestedContainerReorderTests,
   reorderEdgeCaseTests,
   sequentialReorderTests,
+}
+
+// Alignment Zone Tests
+export {
+  allAlignmentZoneTests,
+  basicAlignmentZoneTests,
+  allZonesTests,
+  alignmentEdgeCaseTests,
+  alignmentComponentTests,
 }
 
 // Property Panel
@@ -811,11 +835,14 @@ export const allTests: TestCase[] = [
   ...allStylingTests,
   ...allZagTests,
   ...allInteractionTests,
+  ...allLayoutShortcutTests,
+  ...allResizeHandleDblClickTests,
   ...allBidirectionalTests,
   ...allUndoRedoTests,
   ...allAutocompleteTests,
   ...allStackedDragTests,
   ...allFlexReorderTests,
+  ...allAlignmentZoneTests,
   ...allPropertyPanelTests,
   ...allChartTests,
   ...allWorkflowTests,
@@ -867,6 +894,7 @@ export const testCounts = {
   autocomplete: allAutocompleteTests.length,
   stackedDrag: allStackedDragTests.length,
   flexReorder: allFlexReorderTests.length,
+  alignmentZone: allAlignmentZoneTests.length,
   propertyPanel: allPropertyPanelTests.length,
   charts: allChartTests.length,
   workflow: allWorkflowTests.length,
@@ -954,14 +982,17 @@ export async function runQuickTests(): Promise<TestSuiteResult> {
 export type TestCategory =
   | 'primitives'
   | 'layout'
+  | 'layoutShortcuts'
   | 'styling'
   | 'zag'
   | 'interactions'
+  | 'resizeHandleDblClick'
   | 'bidirectional'
   | 'undoRedo'
   | 'autocomplete'
   | 'stackedDrag'
   | 'flexReorder'
+  | 'alignmentZone'
   | 'propertyPanel'
   | 'charts'
   | 'workflow'
@@ -993,14 +1024,17 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
   const tests: Record<TestCategory, TestCase[]> = {
     primitives: allPrimitivesTests,
     layout: allLayoutTests,
+    layoutShortcuts: allLayoutShortcutTests,
     styling: allStylingTests,
     zag: allZagTests,
     interactions: allInteractionTests,
+    resizeHandleDblClick: allResizeHandleDblClickTests,
     bidirectional: allBidirectionalTests,
     undoRedo: allUndoRedoTests,
     autocomplete: allAutocompleteTests,
     stackedDrag: allStackedDragTests,
     flexReorder: allFlexReorderTests,
+    alignmentZone: allAlignmentZoneTests,
     propertyPanel: allPropertyPanelTests,
     charts: allChartTests,
     workflow: allWorkflowTests,
@@ -1027,14 +1061,17 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
   const names: Record<TestCategory, string> = {
     primitives: 'Primitives',
     layout: 'Layout',
+    layoutShortcuts: 'Layout Shortcuts (H, V, F)',
     styling: 'Styling',
     zag: 'Zag Components',
     interactions: 'Interactions',
+    resizeHandleDblClick: 'Resize Handle Double-Click',
     bidirectional: 'Bidirectional Editing',
     undoRedo: 'Undo/Redo',
     autocomplete: 'Autocomplete',
     stackedDrag: 'Stacked Drag & Drop',
     flexReorder: 'Flex Reorder',
+    alignmentZone: 'Alignment Zone',
     propertyPanel: 'Property Panel',
     charts: 'Charts',
     workflow: 'Workflow',
