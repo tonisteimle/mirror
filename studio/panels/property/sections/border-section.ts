@@ -67,13 +67,13 @@ export class BorderSection extends BaseSection {
   ): string {
     const isTokenRef = radiusValue.startsWith('$')
 
-    // Resolve token value for display
+    // Resolve token value for display - show resolved value in input
     let radiusDisplayValue = radiusValue
     let radiusInputClass = 'prop-input'
     if (isTokenRef && this.data?.resolveTokenValue) {
       const resolved = this.data.resolveTokenValue(radiusValue)
       if (resolved) {
-        radiusDisplayValue = resolved
+        radiusDisplayValue = resolved // Show pixel value in input
         radiusInputClass = 'prop-input token-resolved'
       }
     }

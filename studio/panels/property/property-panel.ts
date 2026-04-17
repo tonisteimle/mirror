@@ -21,6 +21,26 @@ import { PropertyPanelView, createPropertyPanelView } from './view'
 import { state, events } from '../../core'
 
 // ============================================
+// Helpers
+// ============================================
+
+/**
+ * Robust fallback for getAllSource when callback is not provided.
+ * Uses window.desktopFiles if available, otherwise returns current source.
+ * This ensures tokens from all project files are available.
+ */
+function getDefaultAllSource(): string {
+  // Try to get all files from desktop-files module (includes all preloaded files)
+  const desktopFiles = (window as any).desktopFiles?.getFiles?.()
+  if (desktopFiles && typeof desktopFiles === 'object') {
+    // Concatenate all file contents (tokens should be included)
+    return Object.values(desktopFiles).filter(Boolean).join('\n')
+  }
+  // Fallback to current source only (not ideal, but better than nothing)
+  return state.get().source
+}
+
+// ============================================
 // Types (re-exported for backwards compatibility)
 // ============================================
 
@@ -93,7 +113,7 @@ export class PropertyPanel {
           })
         }
       },
-      getAllSource: options.getAllSource ?? (() => state.get().source),
+      getAllSource: options.getAllSource ?? getDefaultAllSource,
     })
 
     // Create view
@@ -209,7 +229,7 @@ export class PropertyPanel {
           })
         }
       },
-      getAllSource: this.options.getAllSource ?? (() => state.get().source),
+      getAllSource: this.options.getAllSource ?? getDefaultAllSource,
     })
 
     // Recreate view with new ports

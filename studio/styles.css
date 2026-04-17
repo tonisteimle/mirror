@@ -4187,7 +4187,7 @@
       color: var(--text-primary);
     }
 
-    /* Token-resolved value: show in muted color */
+    /* Token-resolved value: show resolved value in muted color to indicate it's from a token */
     .pp-content .prop-input.token-resolved {
       color: var(--text-muted);
       font-style: italic;

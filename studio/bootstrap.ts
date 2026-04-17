@@ -194,6 +194,22 @@ let getAllSourceCallback: (() => string) | null = null
 // Store getCurrentFile callback for template selection
 let getCurrentFileCallback: (() => string) | null = null
 
+/**
+ * Robust fallback for getAllSource when callback is not provided.
+ * Uses window.desktopFiles if available, otherwise returns current source.
+ * This ensures tokens from all project files are available.
+ */
+function getDefaultAllSource(): string {
+  // Try to get all files from desktop-files module (includes all preloaded files)
+  const desktopFiles = (window as any).desktopFiles?.getFiles?.()
+  if (desktopFiles && typeof desktopFiles === 'object') {
+    // Concatenate all file contents (tokens should be included)
+    return Object.values(desktopFiles).filter(Boolean).join('\n')
+  }
+  // Fallback to current source only (not ideal, but better than nothing)
+  return state.get().source
+}
+
 // Global studio context
 let studioContext: StudioContext | null = null
 
@@ -871,7 +887,7 @@ export function updateStudioState(
           }
         },
         {
-          getAllSource: getAllSourceCallback ?? (() => state.get().source),
+          getAllSource: getAllSourceCallback ?? getDefaultAllSource,
         }
       )
       logBootstrap.info(' PropertyPanel initialized')

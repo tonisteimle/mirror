@@ -121,7 +121,7 @@ export class SpacingSection extends BaseSection {
     const tokenButtons = hasTokens ? this.renderTokenButtons(value, direction, tokens) : ''
     const tokenGroup = hasTokens ? `<div class="token-group">${tokenButtons}</div>` : ''
 
-    // Check if value is a token reference and resolve it
+    // Check if value is a token reference
     const isTokenRef = value.startsWith('$')
     let displayValue = value
     let inputClass = 'prop-input'
@@ -129,8 +129,9 @@ export class SpacingSection extends BaseSection {
     if (isTokenRef && this.data?.resolveTokenValue) {
       const resolved = this.data.resolveTokenValue(value)
       if (resolved) {
+        // Show resolved pixel value in input, token button shows which is active
         displayValue = resolved
-        inputClass = 'prop-input token-resolved' // Muted style for resolved token values
+        inputClass = 'prop-input token-resolved'
       }
     }
 
