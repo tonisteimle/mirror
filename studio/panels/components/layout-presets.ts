@@ -23,6 +23,16 @@ export const LAYOUT_SECTION: ComponentItem[] = [
     defaultSize: { width: 100, height: 150 },
   },
   {
+    id: 'layout-fill',
+    name: 'Fill',
+    category: 'Layout',
+    template: 'Frame',
+    properties: 'w full, h full',
+    icon: 'box',
+    description: 'Full width and height',
+    defaultSize: { width: 200, height: 200 },
+  },
+  {
     id: 'layout-grid',
     name: 'Grid',
     category: 'Layout',
@@ -31,6 +41,16 @@ export const LAYOUT_SECTION: ComponentItem[] = [
     icon: 'grid',
     description: 'Grid layout',
     defaultSize: { width: 200, height: 150 },
+  },
+  {
+    id: 'layout-hbar',
+    name: 'HBar',
+    category: 'Layout',
+    template: 'Frame',
+    properties: 'hor, w full, h 48, gap 8',
+    icon: 'row',
+    description: 'Full width, fixed height',
+    defaultSize: { width: 300, height: 48 },
   },
   {
     id: 'layout-row',
@@ -51,6 +71,16 @@ export const LAYOUT_SECTION: ComponentItem[] = [
     icon: 'stack',
     description: 'Stacked layers (absolute positioning)',
     defaultSize: { width: 100, height: 100 },
+  },
+  {
+    id: 'layout-vbar',
+    name: 'VBar',
+    category: 'Layout',
+    template: 'Frame',
+    properties: 'ver, w 48, h full, gap 8',
+    icon: 'column',
+    description: 'Fixed width, full height',
+    defaultSize: { width: 48, height: 300 },
   },
 ]
 

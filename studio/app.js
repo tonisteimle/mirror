@@ -2518,13 +2518,17 @@ const FILE_TYPE_ORDER = ['data', 'tokens', 'component', 'layout']
 function getAllProjectSource() {
   const filesByType = {}
 
+  // Use desktop files cache if available (includes all preloaded files)
+  // Falls back to local files object for playground/legacy mode
+  const allFiles = window.desktopFiles?.getFiles?.() || files
+
   // Group files by type
-  for (const filename of Object.keys(files)) {
+  for (const filename of Object.keys(allFiles)) {
     const type = getFileType(filename)
     if (!filesByType[type]) {
       filesByType[type] = []
     }
-    filesByType[type].push({ filename, content: files[filename] })
+    filesByType[type].push({ filename, content: allFiles[filename] })
   }
 
   // Concatenate in order: data -> tokens -> components -> layouts
