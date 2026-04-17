@@ -11,6 +11,9 @@ import type { PanelState } from './state-machine'
 import { PropertyPanelController, createPropertyPanelController } from './controller'
 import { escapeHtml, getDisplayLabel } from './utils'
 import {
+  createContentSection,
+  createPositionSection,
+  createEventsSection,
   createLayoutSection,
   createSizingSection,
   createSpacingSection,
@@ -107,6 +110,9 @@ export class PropertyPanelView {
   private initializeSections(): void {
     const deps = this.createSectionDependencies()
 
+    this.sections.set('content', createContentSection(deps))
+    this.sections.set('position', createPositionSection(deps))
+    this.sections.set('events', createEventsSection(deps))
     this.sections.set('layout', createLayoutSection(deps))
     this.sections.set('sizing', createSizingSection(deps))
     this.sections.set('spacing', createSpacingSection(deps))
@@ -282,6 +288,24 @@ export class PropertyPanelView {
       }
     }
 
+    // Content section (text, icon, placeholder, href, src)
+    const contentSection = this.sections.get('content')
+    if (contentSection) {
+      result += contentSection.render(sectionData)
+    }
+
+    // Position section (x, y, z - only for stacked containers)
+    const positionSection = this.sections.get('position')
+    if (positionSection) {
+      result += positionSection.render({ ...sectionData, isInPositionedContainer })
+    }
+
+    // Events section (onclick, onhover, etc.)
+    const eventsSection = this.sections.get('events')
+    if (eventsSection) {
+      result += eventsSection.render({ ...sectionData, events: element.events })
+    }
+
     if (layoutCat) {
       const section = this.sections.get('layout')
       if (section) {
@@ -312,7 +336,8 @@ export class PropertyPanelView {
     if (borderCat) {
       const section = this.sections.get('border')
       if (section) {
-        result += section.render({ ...sectionData, category: borderCat })
+        const radTokens = this.ports.tokens.getSpacingTokens('rad')
+        result += section.render({ ...sectionData, category: borderCat, spacingTokens: radTokens })
       }
     }
 
@@ -407,6 +432,22 @@ export class PropertyPanelView {
         this.handleColorPickerOpen(value)
         break
 
+      case '__OPEN_ICON_PICKER__':
+        this.handleIconPickerOpen()
+        break
+
+      case '__EVENT_ACTION__':
+        this.handleEventActionChange(value)
+        break
+
+      case '__ADD_EVENT__':
+        this.handleAddEvent(value)
+        break
+
+      case '__DELETE_EVENT__':
+        this.handleDeleteEvent(value)
+        break
+
       default:
         // Regular property change
         this.controller.changeProperty(propName, value)
@@ -423,6 +464,69 @@ export class PropertyPanelView {
     } catch (e) {
       log.error('Failed to parse color picker request:', e)
     }
+  }
+
+  private handleIconPickerOpen(): void {
+    // Dispatch a custom event that the IconPicker in the editor can listen to
+    // The picker will be positioned near the property panel icon field
+    const event = new CustomEvent('property-panel:open-icon-picker', {
+      bubbles: true,
+      detail: {
+        nodeId: this.controller.getCurrentNodeId(),
+        onSelect: (iconName: string) => {
+          // When an icon is selected, update the property
+          this.controller.changeProperty('content', iconName)
+        },
+      },
+    })
+    this.container.dispatchEvent(event)
+    log.info('Icon picker requested')
+  }
+
+  private handleEventActionChange(jsonValue: string): void {
+    try {
+      const data = JSON.parse(jsonValue)
+      const { event, actions } = data
+      // Dispatch event to update the event's actions in the code
+      const customEvent = new CustomEvent('property-panel:event-change', {
+        bubbles: true,
+        detail: {
+          nodeId: this.controller.getCurrentNodeId(),
+          eventName: event,
+          actionsString: actions,
+        },
+      })
+      this.container.dispatchEvent(customEvent)
+      log.info('Event action changed:', event, actions)
+    } catch (e) {
+      log.error('Failed to parse event action change:', e)
+    }
+  }
+
+  private handleAddEvent(eventName: string): void {
+    // Dispatch event to add a new event to the element
+    const event = new CustomEvent('property-panel:add-event', {
+      bubbles: true,
+      detail: {
+        nodeId: this.controller.getCurrentNodeId(),
+        eventName,
+      },
+    })
+    this.container.dispatchEvent(event)
+    log.info('Add event:', eventName)
+  }
+
+  private handleDeleteEvent(eventName: string): void {
+    // Dispatch event to remove an event from the element
+    const event = new CustomEvent('property-panel:delete-event', {
+      bubbles: true,
+      detail: {
+        nodeId: this.controller.getCurrentNodeId(),
+        eventName,
+      },
+    })
+    this.container.dispatchEvent(event)
+    log.info('Delete event:', eventName)
   }
 
   private handleLayoutModeChange(mode: string): void {

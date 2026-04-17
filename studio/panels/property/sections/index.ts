@@ -4,6 +4,9 @@
  * All standardized section components for the property panel.
  */
 
+export * from './content-section'
+export * from './position-section'
+export * from './events-section'
 export * from './spacing-section'
 export * from './border-section'
 export * from './color-section'
