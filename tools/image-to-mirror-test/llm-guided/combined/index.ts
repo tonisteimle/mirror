@@ -1564,36 +1564,43 @@ function generateMirrorCode(element: MergedElement, indent = 0): string {
   if (element.grow) props.push('grow')
   if (element.shrink) props.push('shrink')
 
-  // Background
-  if (element.backgroundColor) {
-    props.push(`bg ${element.backgroundColor}`)
+  // Container-only properties (Frame, Container, Card, etc.)
+  const isContainer = !['Text', 'Icon', 'Button', 'Input', 'Checkbox', 'Switch'].includes(
+    element.type || ''
+  )
+
+  if (isContainer) {
+    // Background
+    if (element.backgroundColor) {
+      props.push(`bg ${element.backgroundColor}`)
+    }
+
+    // Border
+    if (element.borderWidth) {
+      props.push(`bor ${element.borderWidth}`)
+      if (element.borderColor) props.push(`boc ${element.borderColor}`)
+    }
+
+    // Radius
+    if (element.borderRadius) props.push(`rad ${element.borderRadius}`)
+
+    // Padding
+    if (element.padding) {
+      const { top, right } = element.padding
+      if (top === right) {
+        props.push(`pad ${top}`)
+      } else {
+        props.push(`pad ${top} ${right}`)
+      }
+    }
   }
 
-  // Color
+  // Color (for Text and Icon)
   if (element.color) {
     props.push(element.color === '#ffffff' ? 'col white' : `col ${element.color}`)
   }
 
-  // Border
-  if (element.borderWidth) {
-    props.push(`bor ${element.borderWidth}`)
-    if (element.borderColor) props.push(`boc ${element.borderColor}`)
-  }
-
-  // Radius
-  if (element.borderRadius) props.push(`rad ${element.borderRadius}`)
-
-  // Padding
-  if (element.padding) {
-    const { top, right } = element.padding
-    if (top === right) {
-      props.push(`pad ${top}`)
-    } else {
-      props.push(`pad ${top} ${right}`)
-    }
-  }
-
-  // Font
+  // Font (only for Text)
   if (element.fontSize && element.type === 'Text') {
     props.push(`fs ${element.fontSize}`)
   }
