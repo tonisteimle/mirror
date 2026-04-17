@@ -201,22 +201,73 @@ class PropertyPanelAPIImpl implements PropertyPanelAPI {
           }
         }
       } else {
-        // Fallback: replace first occurrence (old behavior)
-        for (const propName of propNames) {
-          const patterns = [
-            new RegExp(`\\b${propName}\\s+#[a-fA-F0-9]{3,8}`),
-            new RegExp(`\\b${propName}\\s+\\d+(\\.\\d+)?`),
-            new RegExp(`\\b${propName}\\s+[a-zA-Z][a-zA-Z0-9-]*(?=\\s|,|$)`),
-          ]
+        // Fallback: Find line using SourceMap or nodeId
+        const nodeId = element?.nodeId
+        let targetLineIndex = -1
 
-          for (const pattern of patterns) {
-            if (pattern.test(newCode)) {
-              newCode = newCode.replace(pattern, `${dslName} ${value}`)
-              replaced = true
-              break
+        // Try to get line from SourceMap
+        const sourceMap = studio?.sourceMap || studio?.compiler?.sourceMap
+        if (sourceMap && nodeId) {
+          const nodeMapping = sourceMap.getNodeById?.(nodeId)
+          if (nodeMapping?.position?.line) {
+            // SourceMap lines are 1-indexed, arrays are 0-indexed
+            targetLineIndex = nodeMapping.position.line - 1
+          }
+        }
+
+        // Fallback: Use nodeId number to find nth non-empty element line
+        if (targetLineIndex < 0 && nodeId) {
+          const nodeNum = parseInt(nodeId.replace('node-', ''))
+          if (!isNaN(nodeNum)) {
+            let count = 0
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i].trim()
+              // Count non-empty, non-comment lines that look like elements
+              if (line && !line.startsWith('//') && /^[A-Z]/.test(line)) {
+                count++
+                if (count === nodeNum) {
+                  targetLineIndex = i
+                  break
+                }
+              }
             }
           }
-          if (replaced) break
+        }
+
+        // If we found a target line, modify it
+        if (targetLineIndex >= 0 && targetLineIndex < lines.length) {
+          const line = lines[targetLineIndex]
+
+          // Try to replace existing property first
+          for (const propName of propNames) {
+            const patterns = [
+              new RegExp(`\\b${propName}\\s+#[a-fA-F0-9]{3,8}`),
+              new RegExp(`\\b${propName}\\s+\\d+(\\.\\d+)?`),
+              new RegExp(`\\b${propName}\\s+[a-zA-Z][a-zA-Z0-9-]*(?=\\s|,|$)`),
+            ]
+
+            for (const pattern of patterns) {
+              if (pattern.test(line)) {
+                lines[targetLineIndex] = line.replace(pattern, `${dslName} ${value}`)
+                newCode = lines.join('\n')
+                replaced = true
+                break
+              }
+            }
+            if (replaced) break
+          }
+
+          // If no replacement, add the property
+          if (!replaced) {
+            const hasProperty = propNames.some(
+              n => line.includes(` ${n} `) || line.includes(`, ${n}`) || line.endsWith(n)
+            )
+            if (!hasProperty && line.trim().length > 0) {
+              lines[targetLineIndex] = line.trimEnd() + `, ${dslName} ${value}`
+              newCode = lines.join('\n')
+              replaced = true
+            }
+          }
         }
       }
 

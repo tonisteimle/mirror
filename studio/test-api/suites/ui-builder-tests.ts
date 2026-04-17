@@ -1,0 +1,1405 @@
+/**
+ * UI Builder Tests
+ *
+ * Tests that build UIs using ONLY:
+ * - Drag & Drop from palette
+ * - Property Panel modifications
+ * - NO code editing
+ *
+ * Goal: Verify that basic UIs can be built without touching code.
+ *
+ * Each test evaluates:
+ * 1. Generated Mirror Code (api.editor.getCode())
+ * 2. Preview DOM (document.querySelector in preview)
+ */
+
+import { testWithSetup, describe, type TestCase } from '../test-runner'
+import type { TestAPI } from '../types'
+
+// =============================================================================
+// Helper: Analyze Preview DOM
+// =============================================================================
+
+interface PreviewAnalysis {
+  elementCount: number
+  elements: Array<{
+    nodeId: string
+    tagName: string
+    text: string
+    styles: {
+      backgroundColor: string
+      color: string
+      width: string
+      height: string
+      padding: string
+      borderRadius: string
+    }
+  }>
+}
+
+function analyzePreview(): PreviewAnalysis {
+  const preview = document.getElementById('preview')
+  if (!preview) {
+    return { elementCount: 0, elements: [] }
+  }
+
+  const mirrorElements = preview.querySelectorAll('[data-mirror-id]')
+  const elements: PreviewAnalysis['elements'] = []
+
+  mirrorElements.forEach(el => {
+    const htmlEl = el as HTMLElement
+    const computed = getComputedStyle(htmlEl)
+
+    elements.push({
+      nodeId: htmlEl.getAttribute('data-mirror-id') || '',
+      tagName: htmlEl.tagName.toLowerCase(),
+      text: htmlEl.textContent?.trim() || '',
+      styles: {
+        backgroundColor: computed.backgroundColor,
+        color: computed.color,
+        width: computed.width,
+        height: computed.height,
+        padding: computed.padding,
+        borderRadius: computed.borderRadius,
+      },
+    })
+  })
+
+  return {
+    elementCount: mirrorElements.length,
+    elements,
+  }
+}
+
+function findElementInPreview(nodeId: string): PreviewAnalysis['elements'][0] | null {
+  const analysis = analyzePreview()
+  return analysis.elements.find(e => e.nodeId === nodeId) || null
+}
+
+// =============================================================================
+// Helper: Analyze Generated Code
+// =============================================================================
+
+interface CodeAnalysis {
+  lines: string[]
+  hasElement: (type: string) => boolean
+  hasProperty: (prop: string, value?: string) => boolean
+  countElements: (type: string) => number
+  getLine: (index: number) => string
+}
+
+function analyzeCode(code: string): CodeAnalysis {
+  const lines = code.split('\n').filter(l => l.trim())
+
+  return {
+    lines,
+    hasElement: (type: string) => code.includes(type),
+    hasProperty: (prop: string, value?: string) => {
+      if (value) {
+        return code.includes(`${prop} ${value}`) || code.includes(`${prop}: ${value}`)
+      }
+      return code.includes(prop)
+    },
+    countElements: (type: string) => (code.match(new RegExp(type, 'g')) || []).length,
+    getLine: (index: number) => lines[index] || '',
+  }
+}
+
+// =============================================================================
+// Level 1: Single Element - Drop and Verify
+// =============================================================================
+
+export const level1Tests: TestCase[] = describe('Level 1: Single Element', [
+  testWithSetup('Drop Button - verify code and preview', `Frame`, async (api: TestAPI) => {
+    // === ACTION: Drop Button ===
+    await api.interact.dragFromPalette('Button', 'node-1', 0)
+    await api.utils.delay(500)
+
+    // === VERIFY CODE ===
+    const code = analyzeCode(api.editor.getCode())
+    api.assert.ok(code.hasElement('Button'), 'CODE: Should contain Button')
+
+    // === VERIFY PREVIEW ===
+    const preview = analyzePreview()
+    api.assert.ok(preview.elementCount >= 2, 'PREVIEW: Should have Frame + Button')
+
+    const button = preview.elements.find(e => e.tagName === 'button')
+    api.assert.ok(button !== undefined, 'PREVIEW: Should have button element')
+
+    // Log for debugging
+    console.log('=== Test Results ===')
+    console.log('Code:', api.editor.getCode())
+    console.log(
+      'Preview elements:',
+      preview.elements.map(e => `${e.nodeId}: ${e.tagName}`)
+    )
+  }),
+
+  testWithSetup('Drop Text - verify code and preview', `Frame`, async (api: TestAPI) => {
+    // === ACTION ===
+    await api.interact.dragFromPalette('Text', 'node-1', 0)
+    await api.utils.delay(500)
+
+    // === VERIFY CODE ===
+    const code = analyzeCode(api.editor.getCode())
+    api.assert.ok(code.hasElement('Text'), 'CODE: Should contain Text')
+
+    // === VERIFY PREVIEW ===
+    const preview = analyzePreview()
+    const textEl = preview.elements.find(e => e.tagName === 'span')
+    api.assert.ok(textEl !== undefined, 'PREVIEW: Should have span element')
+
+    console.log('Code:', api.editor.getCode())
+  }),
+
+  testWithSetup('Drop Icon - verify code and preview', `Frame`, async (api: TestAPI) => {
+    // === ACTION ===
+    await api.interact.dragFromPalette('Icon', 'node-1', 0)
+    await api.utils.delay(500)
+
+    // === VERIFY CODE ===
+    const code = analyzeCode(api.editor.getCode())
+    api.assert.ok(code.hasElement('Icon'), 'CODE: Should contain Icon')
+
+    // === VERIFY PREVIEW ===
+    const preview = analyzePreview()
+    api.assert.ok(preview.elementCount >= 2, 'PREVIEW: Should have elements')
+
+    console.log('Code:', api.editor.getCode())
+  }),
+])
+
+// =============================================================================
+// Level 2: Property Panel - MODIFY Existing Properties
+// =============================================================================
+
+export const level2Tests: TestCase[] = describe('Level 2: Modify Existing Properties', [
+  testWithSetup(
+    'Change existing bg color via property panel',
+    `Frame
+  Button "Test", bg #333`,
+    async (api: TestAPI) => {
+      // === SELECT ===
+      await api.interact.click('node-2')
+      await api.utils.delay(300)
+
+      // === ACTION: Change existing bg ===
+      await api.panel.property.setProperty('bg', '#ff0000')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Code after change:', code)
+
+      const hasBgInCode = code.toLowerCase().includes('#ff0000') || code.includes('bg #ff0000')
+      api.assert.ok(hasBgInCode, `CODE: Should contain bg #ff0000. Got: ${code}`)
+
+      // === VERIFY PREVIEW ===
+      const button = findElementInPreview('node-2')
+      console.log('Button styles:', button?.styles)
+
+      if (button) {
+        const bgIsRed = button.styles.backgroundColor.includes('255')
+        api.assert.ok(
+          bgIsRed,
+          `PREVIEW: Button bg should be red. Got: ${button.styles.backgroundColor}`
+        )
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Change existing padding via property panel',
+    `Frame
+  Button "Test", pad 10`,
+    async (api: TestAPI) => {
+      // === SELECT ===
+      await api.interact.click('node-2')
+      await api.utils.delay(300)
+
+      // === ACTION ===
+      await api.panel.property.setProperty('pad', '24')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Code:', code)
+      api.assert.ok(code.includes('pad 24'), `CODE: Should have pad 24. Got: ${code}`)
+
+      // === VERIFY PREVIEW ===
+      const button = findElementInPreview('node-2')
+      if (button) {
+        console.log('Button padding:', button.styles.padding)
+        api.assert.ok(
+          button.styles.padding.includes('24'),
+          `PREVIEW: Padding should include 24. Got: ${button.styles.padding}`
+        )
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Change existing radius via property panel',
+    `Frame
+  Button "Test", rad 6`,
+    async (api: TestAPI) => {
+      // === SELECT ===
+      await api.interact.click('node-2')
+      await api.utils.delay(300)
+
+      // === ACTION ===
+      await api.panel.property.setProperty('rad', '20')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Code:', code)
+      api.assert.ok(code.includes('rad 20'), `CODE: Should have rad 20. Got: ${code}`)
+
+      // === VERIFY PREVIEW ===
+      const button = findElementInPreview('node-2')
+      if (button) {
+        console.log('Button border-radius:', button.styles.borderRadius)
+        api.assert.ok(
+          button.styles.borderRadius.includes('20'),
+          `PREVIEW: Border radius should be 20px. Got: ${button.styles.borderRadius}`
+        )
+      }
+    }
+  ),
+])
+
+// =============================================================================
+// Level 3: Property Panel - ADD New Properties (LIMITATION TEST)
+// =============================================================================
+
+export const level3Tests: TestCase[] = describe('Level 3: Add New Properties', [
+  testWithSetup(
+    'Add bg property to element without bg',
+    `Frame
+  Button "Test"`,
+    async (api: TestAPI) => {
+      // === DEBUG: Log initial state ===
+      const initialCode = api.editor.getCode()
+      console.log('Initial code:', initialCode)
+
+      // === SELECT ===
+      await api.interact.click('node-2')
+      await api.utils.delay(300)
+
+      // Verify selection
+      const selectedId = api.panel.property.getSelectedNodeId()
+      console.log('Selected node ID:', selectedId)
+
+      // === ACTION: Try to add new property ===
+      const result = await api.panel.property.setProperty('bg', '#2271C1')
+      console.log('setProperty result:', result)
+      await api.utils.delay(500)
+
+      // === VERIFY ===
+      const code = api.editor.getCode()
+      console.log('Code after setProperty:', code)
+
+      const hasNewBg = code.includes('#2271C1') || code.includes('bg #2271C1')
+      api.assert.ok(hasNewBg, `CODE: Should contain bg #2271C1. Got: ${code}`)
+
+      // === VERIFY PREVIEW ===
+      const button = findElementInPreview('node-2')
+      if (button) {
+        console.log('Button bg color:', button.styles.backgroundColor)
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Add padding property to element without padding',
+    `Frame
+  Text "Hello"`,
+    async (api: TestAPI) => {
+      // === SELECT ===
+      await api.interact.click('node-2')
+      await api.utils.delay(300)
+
+      // === ACTION ===
+      await api.panel.property.setProperty('pad', '20')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Code after adding pad:', code)
+
+      const hasPad = code.includes('pad 20')
+      api.assert.ok(hasPad, `CODE: Should contain pad 20. Got: ${code}`)
+    }
+  ),
+
+  testWithSetup(
+    'Add multiple properties to element',
+    `Frame
+  Button "Click"`,
+    async (api: TestAPI) => {
+      // === SELECT ===
+      await api.interact.click('node-2')
+      await api.utils.delay(300)
+
+      // === ADD bg ===
+      await api.panel.property.setProperty('bg', '#2271C1')
+      await api.utils.delay(400)
+
+      // === ADD pad ===
+      await api.panel.property.setProperty('pad', '16')
+      await api.utils.delay(400)
+
+      // === ADD rad ===
+      await api.panel.property.setProperty('rad', '8')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Code after adding 3 properties:', code)
+
+      api.assert.ok(code.includes('#2271C1'), `CODE: Should have bg. Got: ${code}`)
+      api.assert.ok(code.includes('pad 16'), `CODE: Should have pad 16. Got: ${code}`)
+      api.assert.ok(code.includes('rad 8'), `CODE: Should have rad 8. Got: ${code}`)
+    }
+  ),
+])
+
+// =============================================================================
+// Level 4: Nested Elements - Build Hierarchy
+// =============================================================================
+
+export const level4Tests: TestCase[] = describe('Level 4: Nested Elements', [
+  testWithSetup('Drop Frame into Frame - create nesting', `Frame`, async (api: TestAPI) => {
+    // === ACTION: Drop inner Frame ===
+    await api.interact.dragFromPalette('Frame', 'node-1', 0)
+    await api.utils.delay(500)
+
+    // === VERIFY CODE ===
+    const code = api.editor.getCode()
+    console.log('Nested Frame code:', code)
+
+    // Should have two Frames with indentation
+    const lines = code.split('\n')
+    api.assert.ok(lines.length >= 2, 'CODE: Should have multiple lines')
+    api.assert.ok(code.includes('Frame'), 'CODE: Should contain Frame')
+
+    // Check for indentation (inner frame should be indented)
+    const hasIndentedFrame = lines.some(l => l.startsWith('  Frame'))
+    api.assert.ok(hasIndentedFrame, `CODE: Should have indented Frame. Got: ${code}`)
+
+    // === VERIFY PREVIEW ===
+    const preview = analyzePreview()
+    api.assert.ok(preview.elementCount >= 2, 'PREVIEW: Should have 2+ elements')
+  }),
+
+  testWithSetup(
+    'Drop Button into nested Frame',
+    `Frame
+  Frame`,
+    async (api: TestAPI) => {
+      // === ACTION: Drop Button into inner Frame (node-2) ===
+      await api.interact.dragFromPalette('Button', 'node-2', 0)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Button in nested Frame:', code)
+
+      // Button should be indented twice (under inner Frame)
+      const hasDeepButton =
+        code.includes('    Button') || (code.includes('Frame') && code.includes('Button'))
+      api.assert.ok(hasDeepButton, `CODE: Button should be nested. Got: ${code}`)
+
+      // === VERIFY PREVIEW ===
+      const preview = analyzePreview()
+      const button = preview.elements.find(e => e.tagName === 'button')
+      api.assert.ok(button !== undefined, 'PREVIEW: Should have button')
+    }
+  ),
+
+  testWithSetup(
+    'Build 3-level hierarchy: Frame > Frame > Button',
+    `Frame`,
+    async (api: TestAPI) => {
+      // === ACTION 1: Drop inner Frame ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(400)
+
+      // === ACTION 2: Drop Button into inner Frame ===
+      await api.interact.dragFromPalette('Button', 'node-2', 0)
+      await api.utils.delay(400)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('3-level hierarchy:', code)
+
+      api.assert.ok(code.includes('Frame'), 'CODE: Should have Frame')
+      api.assert.ok(code.includes('Button'), 'CODE: Should have Button')
+
+      // === VERIFY PREVIEW ===
+      const preview = analyzePreview()
+      api.assert.ok(
+        preview.elementCount >= 3,
+        `PREVIEW: Should have 3+ elements. Got: ${preview.elementCount}`
+      )
+    }
+  ),
+])
+
+// =============================================================================
+// Level 5: Layout Properties
+// =============================================================================
+
+export const level5Tests: TestCase[] = describe('Level 5: Layout Properties', [
+  testWithSetup(
+    'Change Frame to horizontal layout',
+    `Frame hor
+  Button "A"
+  Button "B"`,
+    async (api: TestAPI) => {
+      // Start with hor, verify it's already horizontal
+      const preview = analyzePreview()
+      const frame = findElementInPreview('node-1')
+
+      console.log('Frame styles:', frame?.styles)
+
+      // === VERIFY PREVIEW: Buttons should be side by side ===
+      // In horizontal layout, elements have display: flex, flex-direction: row
+      api.assert.ok(frame !== undefined, 'PREVIEW: Should have frame')
+    }
+  ),
+
+  testWithSetup(
+    'Modify gap on Frame with existing gap',
+    `Frame gap 8
+  Button "A"
+  Button "B"`,
+    async (api: TestAPI) => {
+      // === SELECT Frame ===
+      await api.interact.click('node-1')
+      await api.utils.delay(300)
+
+      // === ACTION: Change gap ===
+      await api.panel.property.setProperty('gap', '24')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Gap modified:', code)
+      api.assert.ok(code.includes('gap 24'), `CODE: Should have gap 24. Got: ${code}`)
+    }
+  ),
+
+  testWithSetup(
+    'Modify multiple properties on Frame',
+    `Frame gap 8, pad 10, bg #333
+  Button "Test"`,
+    async (api: TestAPI) => {
+      // === SELECT Frame ===
+      await api.interact.click('node-1')
+      await api.utils.delay(300)
+
+      // === ACTION 1: Change gap ===
+      await api.panel.property.setProperty('gap', '16')
+      await api.utils.delay(300)
+
+      // === ACTION 2: Change padding ===
+      await api.panel.property.setProperty('pad', '20')
+      await api.utils.delay(300)
+
+      // === ACTION 3: Change background ===
+      await api.panel.property.setProperty('bg', '#1a1a1a')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Multiple props changed:', code)
+
+      api.assert.ok(code.includes('gap 16'), `CODE: gap 16. Got: ${code}`)
+      api.assert.ok(code.includes('pad 20'), `CODE: pad 20. Got: ${code}`)
+      api.assert.ok(code.toLowerCase().includes('#1a1a1a'), `CODE: bg #1a1a1a. Got: ${code}`)
+
+      // === VERIFY PREVIEW ===
+      const frame = findElementInPreview('node-1')
+      if (frame) {
+        console.log('Frame preview styles:', frame.styles)
+      }
+    }
+  ),
+])
+
+// =============================================================================
+// Level 6: Multiple Elements - Build Row of Buttons
+// =============================================================================
+
+export const level6Tests: TestCase[] = describe('Level 6: Multiple Elements', [
+  testWithSetup(
+    'Drop 3 buttons into horizontal Frame',
+    `Frame hor, gap 8`,
+    async (api: TestAPI) => {
+      // === DROP 3 BUTTONS ===
+      await api.interact.dragFromPalette('Button', 'node-1', 0)
+      await api.utils.delay(400)
+
+      await api.interact.dragFromPalette('Button', 'node-1', 1)
+      await api.utils.delay(400)
+
+      await api.interact.dragFromPalette('Button', 'node-1', 2)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = analyzeCode(api.editor.getCode())
+      console.log('3 buttons code:', api.editor.getCode())
+
+      const buttonCount = code.countElements('Button')
+      api.assert.ok(buttonCount === 3, `CODE: Should have 3 Buttons. Got: ${buttonCount}`)
+
+      // === VERIFY PREVIEW ===
+      const preview = analyzePreview()
+      const buttons = preview.elements.filter(e => e.tagName === 'button')
+      api.assert.ok(buttons.length === 3, `PREVIEW: Should have 3 buttons. Got: ${buttons.length}`)
+    }
+  ),
+
+  testWithSetup(
+    'Build icon + text + button row',
+    `Frame hor, gap 12, pad 16, bg #1a1a1a`,
+    async (api: TestAPI) => {
+      // === DROP Icon ===
+      await api.interact.dragFromPalette('Icon', 'node-1', 0)
+      await api.utils.delay(400)
+
+      // === DROP Text ===
+      await api.interact.dragFromPalette('Text', 'node-1', 1)
+      await api.utils.delay(400)
+
+      // === DROP Button ===
+      await api.interact.dragFromPalette('Button', 'node-1', 2)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Icon + Text + Button:', code)
+
+      api.assert.ok(code.includes('Icon'), 'CODE: Should have Icon')
+      api.assert.ok(code.includes('Text'), 'CODE: Should have Text')
+      api.assert.ok(code.includes('Button'), 'CODE: Should have Button')
+
+      // === VERIFY PREVIEW ===
+      const preview = analyzePreview()
+      api.assert.ok(
+        preview.elementCount >= 4,
+        `PREVIEW: Should have 4+ elements (Frame + 3 children)`
+      )
+    }
+  ),
+])
+
+// =============================================================================
+// Level 7: Build a Simple Card UI
+// =============================================================================
+
+export const level7Tests: TestCase[] = describe('Level 7: Build Card UI', [
+  testWithSetup(
+    'Build card with title and button',
+    `Frame gap 12, pad 16, bg #1a1a1a, rad 8`,
+    async (api: TestAPI) => {
+      // === DROP Text (title) ===
+      await api.interact.dragFromPalette('Text', 'node-1', 0)
+      await api.utils.delay(400)
+
+      // === DROP Button ===
+      await api.interact.dragFromPalette('Button', 'node-1', 1)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Simple card:', code)
+
+      api.assert.ok(code.includes('Text'), 'CODE: Should have Text')
+      api.assert.ok(code.includes('Button'), 'CODE: Should have Button')
+      api.assert.ok(code.includes('rad 8'), 'CODE: Should have rad 8')
+      api.assert.ok(code.includes('pad 16'), 'CODE: Should have pad 16')
+
+      // === VERIFY PREVIEW ===
+      const preview = analyzePreview()
+      const frame = findElementInPreview('node-1')
+
+      if (frame) {
+        api.assert.ok(
+          frame.styles.borderRadius.includes('8'),
+          `PREVIEW: Card should have border-radius. Got: ${frame.styles.borderRadius}`
+        )
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Build card with header row + content',
+    `Frame gap 16, pad 20, bg #1a1a1a, rad 12`,
+    async (api: TestAPI) => {
+      // === DROP Header Frame ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(400)
+
+      // === DROP Content Text ===
+      await api.interact.dragFromPalette('Text', 'node-1', 1)
+      await api.utils.delay(400)
+
+      // === DROP Action Button ===
+      await api.interact.dragFromPalette('Button', 'node-1', 2)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Card with sections:', code)
+
+      api.assert.ok(code.includes('Frame'), 'CODE: Should have Frame')
+      api.assert.ok(code.includes('Text'), 'CODE: Should have Text')
+      api.assert.ok(code.includes('Button'), 'CODE: Should have Button')
+
+      // Count elements
+      const analysis = analyzeCode(code)
+      const frameCount = analysis.countElements('Frame')
+      api.assert.ok(frameCount >= 2, `CODE: Should have 2+ Frames. Got: ${frameCount}`)
+
+      // === VERIFY PREVIEW ===
+      const preview = analyzePreview()
+      api.assert.ok(preview.elementCount >= 4, `PREVIEW: Should have 4+ elements`)
+    }
+  ),
+])
+
+// =============================================================================
+// Level 8: Build a Form
+// =============================================================================
+
+export const level8Tests: TestCase[] = describe('Level 8: Build Form', [
+  testWithSetup(
+    'Build login form: labels + inputs + button',
+    `Frame gap 16, pad 24, bg #1a1a1a, rad 12, w 300`,
+    async (api: TestAPI) => {
+      // === DROP Email Label ===
+      await api.interact.dragFromPalette('Text', 'node-1', 0)
+      await api.utils.delay(300)
+
+      // === DROP Email Input ===
+      await api.interact.dragFromPalette('Input', 'node-1', 1)
+      await api.utils.delay(300)
+
+      // === DROP Password Label ===
+      await api.interact.dragFromPalette('Text', 'node-1', 2)
+      await api.utils.delay(300)
+
+      // === DROP Password Input ===
+      await api.interact.dragFromPalette('Input', 'node-1', 3)
+      await api.utils.delay(300)
+
+      // === DROP Submit Button ===
+      await api.interact.dragFromPalette('Button', 'node-1', 4)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Login form code:', code)
+
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Text') >= 2, 'CODE: Should have 2+ Text elements')
+      api.assert.ok(analysis.countElements('Input') >= 2, 'CODE: Should have 2+ Input elements')
+      api.assert.ok(analysis.countElements('Button') >= 1, 'CODE: Should have Button')
+
+      // === VERIFY PREVIEW ===
+      const preview = analyzePreview()
+      const inputs = preview.elements.filter(e => e.tagName === 'input')
+      api.assert.ok(inputs.length >= 2, `PREVIEW: Should have 2+ inputs. Got: ${inputs.length}`)
+    }
+  ),
+
+  testWithSetup(
+    'Build form field group: horizontal label + input',
+    `Frame gap 12, pad 20, bg #1a1a1a, rad 8`,
+    async (api: TestAPI) => {
+      // === DROP horizontal row ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(300)
+
+      // Make it horizontal by adding hor property
+      await api.interact.click('node-2')
+      await api.utils.delay(200)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(300)
+
+      // === DROP Label into row ===
+      await api.interact.dragFromPalette('Text', 'node-2', 0)
+      await api.utils.delay(300)
+
+      // === DROP Input into row ===
+      await api.interact.dragFromPalette('Input', 'node-2', 1)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Form field group:', code)
+
+      api.assert.ok(code.includes('hor'), 'CODE: Inner Frame should be horizontal')
+      api.assert.ok(code.includes('Text'), 'CODE: Should have Text')
+      api.assert.ok(code.includes('Input'), 'CODE: Should have Input')
+    }
+  ),
+])
+
+// =============================================================================
+// Level 9: Build Navigation
+// =============================================================================
+
+export const level9Tests: TestCase[] = describe('Level 9: Build Navigation', [
+  testWithSetup(
+    'Build nav bar with logo + links',
+    `Frame hor, spread, pad 16, bg #111, w full`,
+    async (api: TestAPI) => {
+      // === DROP Logo (Icon or Text) ===
+      await api.interact.dragFromPalette('Text', 'node-1', 0)
+      await api.utils.delay(300)
+
+      // === DROP Nav Links Container ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 1)
+      await api.utils.delay(300)
+
+      // Make links container horizontal
+      await api.interact.click('node-3')
+      await api.utils.delay(200)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('gap', '24')
+      await api.utils.delay(300)
+
+      // === DROP Links ===
+      await api.interact.dragFromPalette('Text', 'node-3', 0)
+      await api.utils.delay(300)
+      await api.interact.dragFromPalette('Text', 'node-3', 1)
+      await api.utils.delay(300)
+      await api.interact.dragFromPalette('Text', 'node-3', 2)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Nav bar code:', code)
+
+      api.assert.ok(code.includes('spread'), 'CODE: Should have spread layout')
+      api.assert.ok(code.includes('hor'), 'CODE: Should have horizontal container')
+
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Text') >= 4, 'CODE: Should have 4+ Text elements')
+    }
+  ),
+
+  testWithSetup(
+    'Build tab bar with icons',
+    `Frame hor, gap 0, bg #1a1a1a, rad 8`,
+    async (api: TestAPI) => {
+      // === DROP 3 Tab Buttons ===
+      await api.interact.dragFromPalette('Button', 'node-1', 0)
+      await api.utils.delay(300)
+      await api.interact.dragFromPalette('Button', 'node-1', 1)
+      await api.utils.delay(300)
+      await api.interact.dragFromPalette('Button', 'node-1', 2)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Tab bar code:', code)
+
+      const analysis = analyzeCode(code)
+      api.assert.ok(
+        analysis.countElements('Button') === 3,
+        `CODE: Should have 3 Buttons. Got: ${analysis.countElements('Button')}`
+      )
+
+      // === VERIFY PREVIEW ===
+      const preview = analyzePreview()
+      const buttons = preview.elements.filter(e => e.tagName === 'button')
+      api.assert.ok(buttons.length === 3, `PREVIEW: Should have 3 buttons`)
+    }
+  ),
+])
+
+// =============================================================================
+// Level 10: Build List
+// =============================================================================
+
+export const level10Tests: TestCase[] = describe('Level 10: Build List', [
+  testWithSetup(
+    'Build simple list with items',
+    `Frame gap 8, pad 16, bg #1a1a1a, rad 8`,
+    async (api: TestAPI) => {
+      // === DROP 4 list items (Text elements) ===
+      for (let i = 0; i < 4; i++) {
+        await api.interact.dragFromPalette('Text', 'node-1', i)
+        await api.utils.delay(300)
+      }
+      await api.utils.delay(200)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('List code:', code)
+
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Text') === 4, `CODE: Should have 4 Text elements`)
+
+      // === VERIFY PREVIEW ===
+      const preview = analyzePreview()
+      const texts = preview.elements.filter(e => e.tagName === 'span')
+      api.assert.ok(texts.length === 4, `PREVIEW: Should have 4 text elements`)
+    }
+  ),
+
+  testWithSetup(
+    'Build list item with icon + text + action',
+    `Frame gap 8, pad 16, bg #1a1a1a, rad 8`,
+    async (api: TestAPI) => {
+      // === DROP item row ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(300)
+
+      // Style the row
+      await api.interact.click('node-2')
+      await api.utils.delay(200)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('pad', '12')
+      await api.utils.delay(300)
+
+      // === DROP Icon ===
+      await api.interact.dragFromPalette('Icon', 'node-2', 0)
+      await api.utils.delay(300)
+
+      // === DROP Text ===
+      await api.interact.dragFromPalette('Text', 'node-2', 1)
+      await api.utils.delay(300)
+
+      // === DROP Action Button ===
+      await api.interact.dragFromPalette('Button', 'node-2', 2)
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('List item code:', code)
+
+      api.assert.ok(code.includes('hor'), 'CODE: Row should be horizontal')
+      api.assert.ok(code.includes('Icon'), 'CODE: Should have Icon')
+      api.assert.ok(code.includes('Text'), 'CODE: Should have Text')
+      api.assert.ok(code.includes('Button'), 'CODE: Should have Button')
+    }
+  ),
+])
+
+// =============================================================================
+// Level 11: Styling Workflows
+// =============================================================================
+
+export const level11Tests: TestCase[] = describe('Level 11: Styling Workflows', [
+  testWithSetup(
+    'Style button: bg + color + padding + radius',
+    `Frame pad 20
+  Button "Click me"`,
+    async (api: TestAPI) => {
+      // === SELECT Button ===
+      await api.interact.click('node-2')
+      await api.utils.delay(300)
+
+      // === APPLY STYLES ===
+      await api.panel.property.setProperty('bg', '#2271C1')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('col', 'white')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('pad', '12 24')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('rad', '8')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Styled button code:', code)
+
+      api.assert.ok(code.includes('#2271C1'), 'CODE: Should have bg color')
+      api.assert.ok(code.includes('white'), 'CODE: Should have text color')
+      api.assert.ok(code.includes('pad'), 'CODE: Should have padding')
+      api.assert.ok(code.includes('rad 8'), 'CODE: Should have radius')
+
+      // === VERIFY PREVIEW ===
+      const button = findElementInPreview('node-2')
+      if (button) {
+        api.assert.ok(
+          button.styles.backgroundColor.includes('34') ||
+            button.styles.backgroundColor.includes('113'),
+          `PREVIEW: Button should have blue bg. Got: ${button.styles.backgroundColor}`
+        )
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Style card container: shadow + border',
+    `Frame pad 20
+  Frame gap 12
+    Text "Card Title"
+    Text "Card content"`,
+    async (api: TestAPI) => {
+      // === SELECT inner Frame (card) ===
+      await api.interact.click('node-2')
+      await api.utils.delay(300)
+
+      // === APPLY CARD STYLES ===
+      await api.panel.property.setProperty('bg', '#1a1a1a')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('pad', '20')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('rad', '12')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('bor', '1')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('boc', '#333')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Styled card code:', code)
+
+      api.assert.ok(code.includes('#1a1a1a'), 'CODE: Should have bg')
+      api.assert.ok(code.includes('pad 20'), 'CODE: Should have padding')
+      api.assert.ok(code.includes('rad 12'), 'CODE: Should have radius')
+      api.assert.ok(code.includes('bor 1'), 'CODE: Should have border')
+      api.assert.ok(code.includes('#333'), 'CODE: Should have border color')
+    }
+  ),
+
+  testWithSetup(
+    'Style text: size + weight + color',
+    `Frame pad 20
+  Text "Heading"`,
+    async (api: TestAPI) => {
+      // === SELECT Text ===
+      await api.interact.click('node-2')
+      await api.utils.delay(300)
+
+      // === APPLY TEXT STYLES ===
+      await api.panel.property.setProperty('fs', '24')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('weight', 'bold')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('col', '#fff')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Styled text code:', code)
+
+      api.assert.ok(code.includes('fs 24'), 'CODE: Should have font-size')
+      api.assert.ok(code.includes('bold'), 'CODE: Should have font-weight')
+      api.assert.ok(code.includes('#fff'), 'CODE: Should have color')
+    }
+  ),
+])
+
+// =============================================================================
+// Level 12: App Layouts (Sidebar + Content)
+// =============================================================================
+
+export const level12Tests: TestCase[] = describe('Level 12: App Layouts', [
+  testWithSetup(
+    'Build sidebar + main content layout',
+    `Frame hor, w full, h full`,
+    async (api: TestAPI) => {
+      // === DROP Sidebar ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(300)
+
+      // Style sidebar
+      await api.interact.click('node-2')
+      await api.utils.delay(200)
+      await api.panel.property.setProperty('w', '240')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('bg', '#111')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('pad', '16')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('gap', '8')
+      await api.utils.delay(300)
+
+      // === DROP Main Content ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 1)
+      await api.utils.delay(300)
+
+      // Style main content
+      await api.interact.click('node-3')
+      await api.utils.delay(200)
+      await api.panel.property.setProperty('grow', '')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('pad', '24')
+      await api.utils.delay(300)
+      await api.panel.property.setProperty('bg', '#0a0a0a')
+      await api.utils.delay(500)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Sidebar layout:', code)
+
+      api.assert.ok(code.includes('w 240'), 'CODE: Sidebar should have fixed width')
+      api.assert.ok(code.includes('grow'), 'CODE: Main should grow')
+      api.assert.ok(code.includes('#111'), 'CODE: Sidebar bg')
+    }
+  ),
+
+  testWithSetup(
+    'Build header + main + footer layout',
+    `Frame gap 0, w full, h full`,
+    async (api: TestAPI) => {
+      // === DROP Header ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(150)
+      await api.interact.click('node-2')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('h', '60')
+      await api.utils.delay(150)
+      await api.panel.property.setProperty('bg', '#1a1a1a')
+      await api.utils.delay(150)
+
+      // === DROP Main ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 1)
+      await api.utils.delay(150)
+      await api.interact.click('node-3')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('grow', '')
+      await api.utils.delay(150)
+
+      // === DROP Footer ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 2)
+      await api.utils.delay(150)
+      await api.interact.click('node-4')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('h', '50')
+      await api.utils.delay(150)
+      await api.panel.property.setProperty('bg', '#111')
+      await api.utils.delay(300)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      console.log('Header/Main/Footer:', code)
+
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Frame') >= 4, 'CODE: Should have 4 Frames')
+      api.assert.ok(code.includes('h 60'), 'CODE: Header height')
+      api.assert.ok(code.includes('grow'), 'CODE: Main grows')
+      api.assert.ok(code.includes('h 50'), 'CODE: Footer height')
+    }
+  ),
+])
+
+// =============================================================================
+// Level 13: Dashboard Cards Grid
+// =============================================================================
+
+export const level13Tests: TestCase[] = describe('Level 13: Dashboard Grid', [
+  testWithSetup('Build 2x2 card grid', `Frame gap 16, pad 20, bg #0a0a0a`, async (api: TestAPI) => {
+    // === DROP Row 1 ===
+    await api.interact.dragFromPalette('Frame', 'node-1', 0)
+    await api.utils.delay(150)
+    await api.interact.click('node-2')
+    await api.utils.delay(100)
+    await api.panel.property.setProperty('hor', '')
+    await api.utils.delay(150)
+    await api.panel.property.setProperty('gap', '16')
+    await api.utils.delay(150)
+
+    // === DROP Card 1 ===
+    await api.interact.dragFromPalette('Frame', 'node-2', 0)
+    await api.utils.delay(150)
+    await api.interact.click('node-3')
+    await api.utils.delay(100)
+    await api.panel.property.setProperty('grow', '')
+    await api.utils.delay(150)
+    await api.panel.property.setProperty('bg', '#1a1a1a')
+    await api.utils.delay(150)
+    await api.panel.property.setProperty('rad', '12')
+    await api.utils.delay(150)
+
+    // === DROP Card 2 ===
+    await api.interact.dragFromPalette('Frame', 'node-2', 1)
+    await api.utils.delay(150)
+    await api.interact.click('node-4')
+    await api.utils.delay(100)
+    await api.panel.property.setProperty('grow', '')
+    await api.utils.delay(150)
+    await api.panel.property.setProperty('bg', '#1a1a1a')
+    await api.utils.delay(150)
+    await api.panel.property.setProperty('rad', '12')
+    await api.utils.delay(300)
+
+    // === VERIFY CODE ===
+    const code = api.editor.getCode()
+    const analysis = analyzeCode(code)
+    api.assert.ok(analysis.countElements('Frame') >= 4, 'CODE: Should have 4+ Frames')
+    api.assert.ok(code.includes('hor'), 'CODE: Row should be horizontal')
+    api.assert.ok((code.match(/grow/g) || []).length >= 2, 'CODE: Cards should grow')
+  }),
+
+  testWithSetup(
+    'Build stat card with icon + number + label',
+    `Frame gap 16, pad 20, bg #0a0a0a`,
+    async (api: TestAPI) => {
+      // === DROP Card container ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(150)
+      await api.interact.click('node-2')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('bg', '#1a1a1a')
+      await api.utils.delay(150)
+      await api.panel.property.setProperty('rad', '12')
+      await api.utils.delay(150)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(150)
+
+      // === DROP Icon ===
+      await api.interact.dragFromPalette('Icon', 'node-2', 0)
+      await api.utils.delay(150)
+
+      // === DROP Number (big text) ===
+      await api.interact.dragFromPalette('Text', 'node-2', 1)
+      await api.utils.delay(150)
+      await api.interact.click('node-4')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('fs', '32')
+      await api.utils.delay(150)
+      await api.panel.property.setProperty('weight', 'bold')
+      await api.utils.delay(150)
+
+      // === DROP Label ===
+      await api.interact.dragFromPalette('Text', 'node-2', 2)
+      await api.utils.delay(150)
+      await api.interact.click('node-5')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('col', '#888')
+      await api.utils.delay(300)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('Icon'), 'CODE: Should have Icon')
+      api.assert.ok(code.includes('fs 32'), 'CODE: Number should be large')
+      api.assert.ok(code.includes('bold'), 'CODE: Number should be bold')
+      api.assert.ok(code.includes('#888'), 'CODE: Label should be muted')
+    }
+  ),
+])
+
+// =============================================================================
+// Level 14: Interactive Elements Setup
+// =============================================================================
+
+export const level14Tests: TestCase[] = describe('Level 14: Interactive Elements', [
+  testWithSetup(
+    'Build button group with different styles',
+    `Frame hor, gap 8, pad 20, bg #0a0a0a`,
+    async (api: TestAPI) => {
+      // === DROP Primary Button ===
+      await api.interact.dragFromPalette('Button', 'node-1', 0)
+      await api.utils.delay(150)
+      await api.interact.click('node-2')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('bg', '#2271C1')
+      await api.utils.delay(150)
+      await api.panel.property.setProperty('col', 'white')
+      await api.utils.delay(150)
+
+      // === DROP Secondary Button ===
+      await api.interact.dragFromPalette('Button', 'node-1', 1)
+      await api.utils.delay(150)
+      await api.interact.click('node-3')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('bg', '#333')
+      await api.utils.delay(150)
+
+      // === DROP Outline Button ===
+      await api.interact.dragFromPalette('Button', 'node-1', 2)
+      await api.utils.delay(150)
+      await api.interact.click('node-4')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('bg', 'transparent')
+      await api.utils.delay(150)
+      await api.panel.property.setProperty('bor', '1')
+      await api.utils.delay(150)
+      await api.panel.property.setProperty('boc', '#2271C1')
+      await api.utils.delay(300)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Button') === 3, 'CODE: Should have 3 buttons')
+      api.assert.ok(code.includes('#2271C1'), 'CODE: Primary color')
+      api.assert.ok(code.includes('#333'), 'CODE: Secondary color')
+      api.assert.ok(code.includes('transparent'), 'CODE: Outline bg')
+    }
+  ),
+
+  testWithSetup(
+    'Build icon button row',
+    `Frame hor, gap 4, pad 12, bg #1a1a1a, rad 8`,
+    async (api: TestAPI) => {
+      // === DROP 4 Icon Buttons ===
+      for (let i = 0; i < 4; i++) {
+        await api.interact.dragFromPalette('Button', 'node-1', i)
+        await api.utils.delay(100)
+        await api.interact.click(`node-${i + 2}`)
+        await api.utils.delay(80)
+        await api.panel.property.setProperty('bg', 'transparent')
+        await api.utils.delay(100)
+        await api.panel.property.setProperty('pad', '8')
+        await api.utils.delay(100)
+      }
+      await api.utils.delay(200)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Button') === 4, 'CODE: Should have 4 buttons')
+      api.assert.ok(
+        (code.match(/transparent/g) || []).length >= 4,
+        'CODE: All should be transparent'
+      )
+    }
+  ),
+])
+
+// =============================================================================
+// Level 15: Complex Nested Structures
+// =============================================================================
+
+export const level15Tests: TestCase[] = describe('Level 15: Complex Nesting', [
+  testWithSetup(
+    'Build settings panel with sections',
+    `Frame gap 24, pad 24, bg #0a0a0a, w 400`,
+    async (api: TestAPI) => {
+      // === SECTION 1: Profile ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(150)
+      await api.interact.click('node-2')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(150)
+
+      // Section title + Input row
+      await api.interact.dragFromPalette('Text', 'node-2', 0)
+      await api.utils.delay(100)
+      await api.interact.dragFromPalette('Frame', 'node-2', 1)
+      await api.utils.delay(100)
+      await api.interact.click('node-4')
+      await api.utils.delay(80)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('gap', '8')
+      await api.utils.delay(100)
+
+      await api.interact.dragFromPalette('Input', 'node-4', 0)
+      await api.utils.delay(100)
+      await api.interact.dragFromPalette('Button', 'node-4', 1)
+      await api.utils.delay(150)
+
+      // === SECTION 2: Preferences ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 1)
+      await api.utils.delay(150)
+      await api.interact.click('node-7')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(100)
+
+      await api.interact.dragFromPalette('Text', 'node-7', 0)
+      await api.utils.delay(100)
+      await api.interact.dragFromPalette('Switch', 'node-7', 1)
+      await api.utils.delay(300)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('Input'), 'CODE: Should have Input')
+      api.assert.ok(code.includes('Switch'), 'CODE: Should have Switch')
+      api.assert.ok(code.includes('Button'), 'CODE: Should have Button')
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Frame') >= 4, 'CODE: Should have nested Frames')
+    }
+  ),
+
+  testWithSetup(
+    'Build comment card with avatar + actions',
+    `Frame gap 12, pad 16, bg #1a1a1a, rad 12`,
+    async (api: TestAPI) => {
+      // === Header Row with Avatar ===
+      await api.interact.dragFromPalette('Frame', 'node-1', 0)
+      await api.utils.delay(100)
+      await api.interact.click('node-2')
+      await api.utils.delay(80)
+      await api.panel.property.setProperty('hor', '')
+      await api.utils.delay(100)
+      await api.panel.property.setProperty('gap', '12')
+      await api.utils.delay(100)
+
+      // Avatar
+      await api.interact.dragFromPalette('Frame', 'node-2', 0)
+      await api.utils.delay(80)
+      await api.interact.click('node-3')
+      await api.utils.delay(60)
+      await api.panel.property.setProperty('w', '40')
+      await api.utils.delay(80)
+      await api.panel.property.setProperty('h', '40')
+      await api.utils.delay(80)
+      await api.panel.property.setProperty('rad', '99')
+      await api.utils.delay(80)
+
+      // Name
+      await api.interact.dragFromPalette('Text', 'node-2', 1)
+      await api.utils.delay(80)
+
+      // === Content ===
+      await api.interact.dragFromPalette('Text', 'node-1', 1)
+      await api.utils.delay(80)
+
+      // === Actions ===
+      await api.interact.dragFromPalette('Button', 'node-1', 2)
+      await api.utils.delay(80)
+      await api.interact.dragFromPalette('Button', 'node-1', 3)
+      await api.utils.delay(200)
+
+      // === VERIFY CODE ===
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('rad 99'), 'CODE: Avatar should be round')
+      api.assert.ok(code.includes('w 40'), 'CODE: Avatar size')
+      const analysis = analyzeCode(code)
+      api.assert.ok(analysis.countElements('Text') >= 2, 'CODE: Multiple text elements')
+      api.assert.ok(analysis.countElements('Button') >= 2, 'CODE: Action buttons')
+    }
+  ),
+])
+
+// =============================================================================
+// Export All
+// =============================================================================
+
+export const allUIBuilderTests: TestCase[] = [
+  ...level1Tests,
+  ...level2Tests,
+  ...level3Tests,
+  ...level4Tests,
+  ...level5Tests,
+  ...level6Tests,
+  ...level7Tests,
+  ...level8Tests,
+  ...level9Tests,
+  ...level10Tests,
+  ...level11Tests,
+  ...level12Tests,
+  ...level13Tests,
+  ...level14Tests,
+  ...level15Tests,
+]

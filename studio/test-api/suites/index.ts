@@ -255,6 +255,21 @@ import {
   fileSwitchingTests,
 } from './project'
 
+// Compiler Verification (schwierigste Fälle)
+import {
+  allCompilerVerificationTests,
+  complexPropertyTests,
+  layoutVerificationTests,
+  nestedStructureTests,
+  tokenResolutionTests,
+  conditionalTests as compilerConditionalTests,
+  collectionTests as compilerCollectionTests,
+  componentInheritanceTests,
+  inlineSyntaxTests,
+  primitivesTests as compilerPrimitivesTests,
+  edgeCaseTests as compilerEdgeCaseTests,
+} from './compiler-verification'
+
 // Data Binding
 import {
   allDataBindingTests,
@@ -358,6 +373,13 @@ import {
   sequentialModTests,
   previewSyncTests,
 } from './property-robustness-tests'
+
+// UI Builder Tests (build UIs with only drag & drop + property panel)
+import {
+  allUIBuilderTests,
+  level1Tests as uiBuilderLevel1Tests,
+  level2Tests as uiBuilderLevel2Tests,
+} from './ui-builder-tests'
 
 // =============================================================================
 // Direct Imports (not yet migrated to directories)
@@ -613,6 +635,21 @@ export {
   fileSwitchingTests,
 }
 
+// Compiler Verification Tests (schwierigste Fälle)
+export {
+  allCompilerVerificationTests,
+  complexPropertyTests,
+  layoutVerificationTests,
+  nestedStructureTests,
+  tokenResolutionTests,
+  compilerConditionalTests,
+  compilerCollectionTests,
+  componentInheritanceTests,
+  inlineSyntaxTests,
+  compilerPrimitivesTests,
+  compilerEdgeCaseTests,
+}
+
 // Data Binding Tests
 export {
   allDataBindingTests,
@@ -717,6 +754,9 @@ export {
   previewSyncTests,
 }
 
+// UI Builder Tests
+export { allUIBuilderTests, uiBuilderLevel1Tests, uiBuilderLevel2Tests }
+
 // Layout Verification Tests (visual/position-based)
 export {
   allLayoutVerificationTests,
@@ -773,6 +813,7 @@ export const allTests: TestCase[] = [
   ...allPropertyRobustnessTests,
   ...allStressTests,
   ...allProjectTests,
+  ...allCompilerVerificationTests,
 ]
 
 /**
@@ -821,6 +862,7 @@ export const testCounts = {
   propertyRobustness: allPropertyRobustnessTests.length,
   stress: allStressTests.length,
   project: allProjectTests.length,
+  compilerVerification: allCompilerVerificationTests.length,
   total:
     allPrimitivesTests.length +
     allLayoutTests.length +
@@ -850,7 +892,8 @@ export const testCounts = {
     allSyncTests.length +
     allPropertyRobustnessTests.length +
     allStressTests.length +
-    allProjectTests.length,
+    allProjectTests.length +
+    allCompilerVerificationTests.length,
 }
 
 // =============================================================================
@@ -911,6 +954,8 @@ export type TestCategory =
   | 'propertyRobustness'
   | 'stress'
   | 'project'
+  | 'compilerVerification'
+  | 'uiBuilder'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -947,6 +992,8 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     propertyRobustness: allPropertyRobustnessTests,
     stress: allStressTests,
     project: allProjectTests,
+    compilerVerification: allCompilerVerificationTests,
+    uiBuilder: allUIBuilderTests,
   }
 
   const names: Record<TestCategory, string> = {
@@ -978,6 +1025,8 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     propertyRobustness: 'Property Robustness',
     stress: 'Stress Tests',
     project: 'Multi-File Project',
+    compilerVerification: 'Compiler Verification',
+    uiBuilder: 'UI Builder',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
@@ -1016,6 +1065,7 @@ export function printTestSummary(): void {
   console.log(`   Property Robust:    ${testCounts.propertyRobustness} tests`)
   console.log(`   Stress:             ${testCounts.stress} tests`)
   console.log(`   Project:            ${testCounts.project} tests`)
+  console.log(`   Compiler Verify:    ${testCounts.compilerVerification} tests`)
   console.log(`   ──────────────────────────`)
   console.log(`   Total:              ${testCounts.total} tests`)
   console.log('')
