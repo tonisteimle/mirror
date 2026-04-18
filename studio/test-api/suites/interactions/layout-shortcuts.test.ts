@@ -186,17 +186,16 @@ export const focusManagementTests: TestCase[] = describe('Focus Management', [
   ),
 
   testWithSetup(
-    'Preview shortcuts do NOT work when editor is focused and no selection',
+    'Preview shortcuts do NOT work when editor is focused (even with selection)',
     'Frame gap 8\n  Text "Item 1"\n  Text "Item 2"',
     async (api: TestAPI) => {
-      // Wait for compile
+      // Wait for compile and select an element first
       await api.utils.waitForCompile()
-
-      // Clear any selection by pressing Escape
-      await api.interact.pressKey('Escape')
+      await api.interact.click('node-1')
       await api.utils.delay(100)
 
-      // Focus the editor by simulating mousedown and focus events
+      // Now focus the editor by simulating mousedown and focus events
+      // This should set editorHasFocus = true
       const editorContainer = document.querySelector('#editor-container') as HTMLElement
       if (editorContainer) {
         editorContainer.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
@@ -208,24 +207,24 @@ export const focusManagementTests: TestCase[] = describe('Focus Management', [
       }
       await api.utils.delay(150)
 
-      // Now there should be no preview selection and editor has focus
+      // Selection still exists, but editor has focus
       // Pressing H should NOT trigger preview shortcut
 
       // Get code before pressing H
       const codeBefore = api.editor.getCode()
       const hadHorBefore = codeBefore.includes('hor')
 
-      // Press H key - should NOT trigger preview shortcut
+      // Press H key - should NOT trigger preview shortcut because editor is focused
       await api.interact.pressKey('h')
       await api.utils.delay(200)
 
       const codeAfter = api.editor.getCode()
 
-      // If 'hor' was added as a property (not as plain 'h' character), the shortcut fired incorrectly
+      // If 'hor' was added as a property, the shortcut fired incorrectly
       const horWasAdded = codeAfter.includes('hor') && !hadHorBefore
       api.assert.ok(
         !horWasAdded,
-        `H key should not add 'hor' when editor focused and no selection. Before: "${codeBefore.substring(0, 50)}..." After: "${codeAfter.substring(0, 50)}..."`
+        `H key should not add 'hor' when editor is focused (even with selection). Code: "${codeAfter.substring(0, 60)}..."`
       )
     }
   ),

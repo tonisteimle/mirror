@@ -81,3 +81,11 @@ export {
   liveVisualFeedbackTests as marginVisualFeedbackTests,
   robustnessTests as marginRobustnessTests,
 } from './margin.test'
+
+export {
+  allMarginHandlerTests,
+  marginModeToggleTests,
+  marginHandlePositionTests,
+  marginHandleDragTests,
+  marginModeSelectionTests,
+} from './margin-handlers.test'
