@@ -23,6 +23,7 @@ export {
   horizontalLayoutTests,
   verticalLayoutTests,
   fullDimensionTests,
+  focusManagementTests,
   combinedShortcutTests,
 } from './layout-shortcuts.test'
 
@@ -71,3 +72,12 @@ export {
   liveVisualFeedbackTests,
   robustnessTests,
 } from './padding.test'
+
+export {
+  allMarginTests,
+  singleSideMarginTests,
+  allSidesMarginTests,
+  axisMarginTests,
+  liveVisualFeedbackTests as marginVisualFeedbackTests,
+  robustnessTests as marginRobustnessTests,
+} from './margin.test'

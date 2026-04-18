@@ -163,6 +163,75 @@ export const fullDimensionTests: TestCase[] = describe('F Key - Full Dimension',
 ])
 
 // =============================================================================
+// Focus Management Tests
+// =============================================================================
+
+export const focusManagementTests: TestCase[] = describe('Focus Management', [
+  testWithSetup(
+    'Preview shortcuts work when element is selected',
+    'Frame gap 8\n  Text "Item 1"\n  Text "Item 2"',
+    async (api: TestAPI) => {
+      // Wait for compile and select element in preview
+      await api.utils.waitForCompile()
+      await api.interact.click('node-1')
+      await api.utils.delay(100)
+
+      // Press H key - should work because an element is selected
+      await api.interact.pressKey('h')
+      await api.utils.waitForCompile()
+
+      // Verify hor was added
+      api.assert.codeContains(/\bhor\b/)
+    }
+  ),
+
+  testWithSetup(
+    'Preview shortcuts do NOT work when editor is focused and no selection',
+    'Frame gap 8\n  Text "Item 1"\n  Text "Item 2"',
+    async (api: TestAPI) => {
+      // Wait for compile
+      await api.utils.waitForCompile()
+
+      // Clear any selection by pressing Escape
+      await api.interact.pressKey('Escape')
+      await api.utils.delay(100)
+
+      // Focus the editor by simulating mousedown and focus events
+      const editorContainer = document.querySelector('#editor-container') as HTMLElement
+      if (editorContainer) {
+        editorContainer.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+      }
+      const cmContent = document.querySelector('.cm-content') as HTMLElement
+      if (cmContent) {
+        cmContent.focus()
+        cmContent.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
+      }
+      await api.utils.delay(150)
+
+      // Now there should be no preview selection and editor has focus
+      // Pressing H should NOT trigger preview shortcut
+
+      // Get code before pressing H
+      const codeBefore = api.editor.getCode()
+      const hadHorBefore = codeBefore.includes('hor')
+
+      // Press H key - should NOT trigger preview shortcut
+      await api.interact.pressKey('h')
+      await api.utils.delay(200)
+
+      const codeAfter = api.editor.getCode()
+
+      // If 'hor' was added as a property (not as plain 'h' character), the shortcut fired incorrectly
+      const horWasAdded = codeAfter.includes('hor') && !hadHorBefore
+      api.assert.ok(
+        !horWasAdded,
+        `H key should not add 'hor' when editor focused and no selection. Before: "${codeBefore.substring(0, 50)}..." After: "${codeAfter.substring(0, 50)}..."`
+      )
+    }
+  ),
+])
+
+// =============================================================================
 // Combined Tests
 // =============================================================================
 
@@ -204,5 +273,6 @@ export const allLayoutShortcutTests: TestCase[] = [
   ...horizontalLayoutTests,
   ...verticalLayoutTests,
   ...fullDimensionTests,
+  ...focusManagementTests,
   ...combinedShortcutTests,
 ]

@@ -69,6 +69,16 @@ export class KeyboardHandler {
       return
     }
 
+    // Skip if editor has focus AND no preview selection
+    // Exception: Global shortcuts with Cmd/Ctrl modifier still work
+    // If there's a preview selection, we handle shortcuts regardless of editor focus state
+    const isGlobalShortcut = e.metaKey || e.ctrlKey
+    const hasPreviewSelection = !!state.get().selection?.nodeId
+    if (state.get().editorHasFocus && !isGlobalShortcut && !hasPreviewSelection) {
+      log.debug('Skipping key (editor has focus, no preview selection):', e.key)
+      return
+    }
+
     // Shift+Cmd/Ctrl+G = Ungroup/Unwrap selected element
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'g') {
       e.preventDefault()

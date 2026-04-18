@@ -161,6 +161,8 @@ export class PreviewController {
   private unsubscribeResize: (() => void) | null = null
   private unsubscribePaddingToggle: (() => void) | null = null
   private unsubscribePaddingEnd: (() => void) | null = null
+  private unsubscribeMarginToggle: (() => void) | null = null
+  private unsubscribeMarginEnd: (() => void) | null = null
   private unsubscribeZoom: (() => void) | null = null
   private unsubscribePreviewRendered: (() => void) | null = null
 
@@ -263,6 +265,7 @@ export class PreviewController {
       requestAnimationFrame(() => {
         this.resizeManager?.refresh()
         this.paddingManager?.refresh()
+        this.marginManager?.refresh()
       })
     })
 
@@ -296,6 +299,7 @@ export class PreviewController {
     // Refresh resize handles to update their positions after scroll
     this.resizeManager?.refresh()
     this.paddingManager?.refresh()
+    this.marginManager?.refresh()
   }
 
   /**
@@ -317,6 +321,7 @@ export class PreviewController {
       // Refresh resize handles to update their positions after window resize
       this.resizeManager?.refresh()
       this.paddingManager?.refresh()
+      this.marginManager?.refresh()
     }, PreviewController.RESIZE_DEBOUNCE_MS)
   }
 
@@ -515,6 +520,15 @@ export class PreviewController {
 
   attach(): void {
     this.detach()
+
+    // Make container focusable for keyboard event routing
+    // tabIndex=-1 allows programmatic focus but not Tab navigation
+    if (this.container.tabIndex < 0) {
+      this.container.tabIndex = -1
+    }
+    // Remove outline when focused (visual focus is shown via selection highlight)
+    this.container.style.outline = 'none'
+
     if (this.config.enableSelection) {
       this.container.addEventListener('click', this.boundHandleClick)
       this.container.addEventListener('dblclick', this.boundHandleDoubleClick)
@@ -561,6 +575,10 @@ export class PreviewController {
     this.unsubscribePaddingToggle = null
     this.unsubscribePaddingEnd?.()
     this.unsubscribePaddingEnd = null
+    this.unsubscribeMarginToggle?.()
+    this.unsubscribeMarginToggle = null
+    this.unsubscribeMarginEnd?.()
+    this.unsubscribeMarginEnd = null
     this.unsubscribeZoom?.()
     this.unsubscribeZoom = null
     this.unsubscribePreviewRendered?.()
@@ -587,6 +605,7 @@ export class PreviewController {
     this.contextMenu?.dispose()
     this.resizeManager?.dispose()
     this.paddingManager?.dispose()
+    this.marginManager?.dispose()
     this.overlayManager?.dispose()
     // Slot Visibility cleanup
     this.slotVisibilityService?.dispose()
@@ -606,6 +625,7 @@ export class PreviewController {
     this.handleManager?.hideHandles()
     this.resizeManager?.hideHandles()
     this.paddingManager?.hideHandles()
+    this.marginManager?.hideHandles()
   }
 
   /** Get current SourceMap version for staleness detection */
@@ -619,6 +639,13 @@ export class PreviewController {
     this.selectedNodeId = nodeId
     nodeId ? this.showSelectionUI(nodeId) : this.hideAllHandles()
     this.updateEditorFocusForSelection(nodeId)
+
+    // Focus the container to capture keyboard events when selecting an element
+    // This ensures P/H/V/F shortcuts work and keystrokes don't go to editor
+    if (nodeId) {
+      this.container.focus()
+    }
+
     this.notifySelectionChanged(nodeId)
   }
 
@@ -640,9 +667,15 @@ export class PreviewController {
     // Show handles based on current mode
     if (this.handleMode === 'padding') {
       this.resizeManager?.hideHandles()
+      this.marginManager?.hideHandles()
       this.paddingManager?.showHandles(nodeId)
+    } else if (this.handleMode === 'margin') {
+      this.resizeManager?.hideHandles()
+      this.paddingManager?.hideHandles()
+      this.marginManager?.showHandles(nodeId)
     } else {
       this.paddingManager?.hideHandles()
+      this.marginManager?.hideHandles()
       this.resizeManager?.showHandles(nodeId)
     }
   }
@@ -651,6 +684,7 @@ export class PreviewController {
     this.handleManager?.hideHandles()
     this.resizeManager?.hideHandles()
     this.paddingManager?.hideHandles()
+    this.marginManager?.hideHandles()
     // Reset to resize mode when hiding all handles
     this.handleMode = 'resize'
   }
@@ -717,9 +751,11 @@ export class PreviewController {
   disableVisualCode(): void {
     this.resizeManager?.dispose()
     this.paddingManager?.dispose()
+    this.marginManager?.dispose()
     this.overlayManager?.dispose()
     this.resizeManager = null
     this.paddingManager = null
+    this.marginManager = null
     this.overlayManager = null
   }
 
