@@ -8,6 +8,7 @@ import {
   events,
   executor,
   setCommandContext,
+  getCommandContext,
   getStateSelectionAdapter,
   SetPropertyCommand,
   RemovePropertyCommand,
@@ -875,7 +876,23 @@ export function updateStudioState(
         propertyExtractor,
         codeModifier,
         result => {
-          if (result.success && result.newSource) {
+          if (result.success && result.newSource && result.change) {
+            // Apply the change to the editor
+            const ctx = getCommandContext()
+            if (ctx?.applyChange) {
+              // Adjust for prelude offset
+              const preludeOffset = state.get().preludeOffset || 0
+              const adjustedChange = {
+                from: result.change.from - preludeOffset,
+                to: result.change.to - preludeOffset,
+                insert: result.change.insert,
+              }
+              // Validate before applying
+              const editorSource = ctx.getSource?.() ?? ''
+              if (adjustedChange.from >= 0 && adjustedChange.to <= editorSource.length) {
+                ctx.applyChange(adjustedChange)
+              }
+            }
             state.set({ source: result.newSource })
             events.emit('source:changed', { source: result.newSource, origin: 'panel' })
             events.emit('compile:requested', {})

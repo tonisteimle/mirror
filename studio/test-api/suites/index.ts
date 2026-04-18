@@ -101,6 +101,11 @@ import {
   metaClickTests,
   clearSelectionTests,
   cssClassTests as multiselectCssClassTests,
+  allPaddingTests,
+  singleSidePaddingTests,
+  allSidesPaddingTests,
+  axisPaddingTests,
+  liveVisualFeedbackTests,
 } from './interactions'
 
 // Bidirectional
@@ -143,6 +148,7 @@ import {
   tokenValueTests,
   tokenInteractionTests,
   projectTokenTests,
+  radiusChangeTests,
 } from './property-panel'
 
 // Drag & Drop
@@ -595,6 +601,7 @@ export {
   tokenValueTests,
   tokenInteractionTests,
   projectTokenTests,
+  radiusChangeTests,
 }
 
 // Charts
@@ -987,6 +994,11 @@ export const testCounts: Record<string, number> = {
   'multiselect.metaClick': metaClickTests.length,
   'multiselect.clearSelection': clearSelectionTests.length,
   'multiselect.cssClass': multiselectCssClassTests.length,
+  paddingDrag: allPaddingTests.length,
+  'paddingDrag.singleSide': singleSidePaddingTests.length,
+  'paddingDrag.allSides': allSidesPaddingTests.length,
+  'paddingDrag.axis': axisPaddingTests.length,
+  'paddingDrag.liveVisual': liveVisualFeedbackTests.length,
   resizeHandleDblClick: allResizeHandleDblClickTests.length,
   'resizeHandleDblClick.horizontal': horizontalHandleTests.length,
   'resizeHandleDblClick.vertical': verticalHandleTests.length,
@@ -1057,6 +1069,7 @@ export const testCounts: Record<string, number> = {
   'propertyPanel.tokenValue': tokenValueTests.length,
   'propertyPanel.tokenInteraction': tokenInteractionTests.length,
   'propertyPanel.projectToken': projectTokenTests.length,
+  'propertyPanel.radiusChange': radiusChangeTests.length,
 
   // === Charts ===
   charts: allChartTests.length,
@@ -1379,6 +1392,11 @@ export type TestCategory =
   | 'multiselect.metaClick'
   | 'multiselect.clearSelection'
   | 'multiselect.cssClass'
+  | 'paddingDrag'
+  | 'paddingDrag.singleSide'
+  | 'paddingDrag.allSides'
+  | 'paddingDrag.axis'
+  | 'paddingDrag.liveVisual'
   | 'resizeHandleDblClick'
   | 'resizeHandleDblClick.horizontal'
   | 'resizeHandleDblClick.vertical'
@@ -1449,6 +1467,7 @@ export type TestCategory =
   | 'propertyPanel.tokenValue'
   | 'propertyPanel.tokenInteraction'
   | 'propertyPanel.projectToken'
+  | 'propertyPanel.radiusChange'
 
   // === Charts ===
   | 'charts'
@@ -1740,6 +1759,11 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'multiselect.metaClick': metaClickTests,
     'multiselect.clearSelection': clearSelectionTests,
     'multiselect.cssClass': multiselectCssClassTests,
+    paddingDrag: allPaddingTests,
+    'paddingDrag.singleSide': singleSidePaddingTests,
+    'paddingDrag.allSides': allSidesPaddingTests,
+    'paddingDrag.axis': axisPaddingTests,
+    'paddingDrag.liveVisual': liveVisualFeedbackTests,
     resizeHandleDblClick: allResizeHandleDblClickTests,
     'resizeHandleDblClick.horizontal': horizontalHandleTests,
     'resizeHandleDblClick.vertical': verticalHandleTests,
@@ -1810,6 +1834,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'propertyPanel.tokenValue': tokenValueTests,
     'propertyPanel.tokenInteraction': tokenInteractionTests,
     'propertyPanel.projectToken': projectTokenTests,
+    'propertyPanel.radiusChange': radiusChangeTests,
 
     // === Charts ===
     charts: allChartTests,
@@ -2096,6 +2121,11 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'multiselect.metaClick': 'Multiselect: Cmd/Ctrl+Click',
     'multiselect.clearSelection': 'Multiselect: Clear Selection',
     'multiselect.cssClass': 'Multiselect: CSS Classes',
+    paddingDrag: 'Padding Drag',
+    'paddingDrag.singleSide': 'Padding: Single Side',
+    'paddingDrag.allSides': 'Padding: All Sides (Shift)',
+    'paddingDrag.axis': 'Padding: Axis (Alt)',
+    'paddingDrag.liveVisual': 'Padding: Live Visual Feedback',
     resizeHandleDblClick: 'Resize Handle Double-Click',
     'resizeHandleDblClick.horizontal': 'Resize DblClick: Horizontal',
     'resizeHandleDblClick.vertical': 'Resize DblClick: Vertical',
@@ -2166,6 +2196,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'propertyPanel.tokenValue': 'Token Values',
     'propertyPanel.tokenInteraction': 'Token Interaction',
     'propertyPanel.projectToken': 'Project Tokens',
+    'propertyPanel.radiusChange': 'Radius Changes',
 
     // === Charts ===
     charts: 'Charts',

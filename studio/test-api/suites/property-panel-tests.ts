@@ -726,6 +726,193 @@ Button "Accent", bg $accent.bg, col white, pad 12 24`,
 ])
 
 // =============================================================================
+// Radius Change Tests - Bug Reproduction
+// =============================================================================
+
+export const radiusChangeTests: TestCase[] = describe('Radius Changes', [
+  testWithSetup(
+    'Change radius on simple Frame',
+    `Frame rad 8, pad 16, bg #333`,
+    async (api: TestAPI) => {
+      // Select the Frame
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
+      await api.utils.delay(200)
+
+      // Verify initial radius
+      let code = api.editor.getCode()
+      api.assert.ok(code.includes('rad 8'), `Initial code should have rad 8, got: ${code}`)
+
+      // Change radius via property panel
+      const success = await api.panel.property.setProperty('rad', '16')
+      api.assert.ok(success, 'setProperty should succeed')
+
+      // Wait for debounce + compile
+      await api.utils.delay(800)
+      await api.utils.waitForCompile()
+
+      // Verify radius was changed
+      code = api.editor.getCode()
+      api.assert.ok(code.includes('rad 16'), `Code should contain rad 16, got: ${code}`)
+      api.assert.ok(!code.includes('rad 8'), `Code should not contain old rad 8, got: ${code}`)
+    }
+  ),
+
+  testWithSetup(
+    'Change radius on component definition',
+    `Card: bg #333, pad 16, rad 8
+
+Card`,
+    async (api: TestAPI) => {
+      // Select the Card instance (node-1)
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
+      await api.utils.delay(200)
+
+      // Verify property panel is showing the selected element
+      const selectedId = api.panel.property.getSelectedNodeId()
+      api.assert.ok(selectedId === 'node-1', `Panel should show node-1, got "${selectedId}"`)
+
+      // Verify initial radius in code
+      let code = api.editor.getCode()
+      api.assert.ok(code.includes('rad 8'), `Initial code should have rad 8, got: ${code}`)
+
+      // Change radius via property panel
+      const success = await api.panel.property.setProperty('rad', '20')
+      api.assert.ok(success, 'setProperty should succeed')
+
+      // Wait for debounce + compile
+      await api.utils.delay(800)
+      await api.utils.waitForCompile()
+
+      // Verify radius was changed
+      code = api.editor.getCode()
+      api.assert.ok(code.includes('rad 20'), `Code should contain rad 20, got: ${code}`)
+    }
+  ),
+
+  testWithSetup(
+    'Change radius on component instance with override',
+    `Card: bg #333, pad 16, rad 8
+
+Card rad 12`,
+    async (api: TestAPI) => {
+      // Select the Card instance (node-1)
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
+      await api.utils.delay(200)
+
+      // Verify initial radius override in code
+      let code = api.editor.getCode()
+      api.assert.ok(
+        code.includes('Card rad 12'),
+        `Initial code should have Card rad 12, got: ${code}`
+      )
+
+      // Change radius via property panel
+      const success = await api.panel.property.setProperty('rad', '24')
+      api.assert.ok(success, 'setProperty should succeed')
+
+      // Wait for debounce + compile
+      await api.utils.delay(800)
+      await api.utils.waitForCompile()
+
+      // Verify radius was changed on instance line
+      code = api.editor.getCode()
+      api.assert.ok(code.includes('rad 24'), `Code should contain rad 24, got: ${code}`)
+      api.assert.ok(
+        !code.includes('rad 12'),
+        `Code should not contain old rad 12 on instance line, got: ${code}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Change radius using token button',
+    `s.rad: 4
+m.rad: 8
+l.rad: 16
+
+Frame rad 8, pad 16, bg #333`,
+    async (api: TestAPI) => {
+      // Select the Frame
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
+      await api.utils.delay(200)
+
+      // Get available radius tokens
+      const radTokens = api.panel.property.getTokenOptions('rad')
+      api.assert.ok(
+        radTokens.length >= 3,
+        `Expected 3+ rad tokens, got ${radTokens.length}: ${radTokens.join(', ')}`
+      )
+
+      // Click the l token (value 16)
+      const success = await api.panel.property.clickToken('rad', 'l')
+      api.assert.ok(success, 'Token click should succeed')
+
+      // Wait for debounce + compile
+      await api.utils.delay(800)
+      await api.utils.waitForCompile()
+
+      // Verify radius was changed to token
+      const code = api.editor.getCode()
+      api.assert.ok(
+        code.includes('rad $l') || code.includes('rad 16'),
+        `Code should contain rad $l or rad 16, got: ${code.substring(code.indexOf('Frame'), code.indexOf('Frame') + 50)}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Change radius via input field directly',
+    `Frame rad 8, pad 16, bg #333`,
+    async (api: TestAPI) => {
+      // Select the Frame
+      await api.studio.setSelection('node-1')
+      await api.utils.waitForIdle()
+      await api.utils.delay(200)
+
+      // Find the radius input in the property panel
+      const panel = document.querySelector('.property-panel')
+      const radInput = panel?.querySelector(
+        'input[data-rad-input], input[data-radius]'
+      ) as HTMLInputElement
+
+      if (radInput) {
+        // Simulate user input
+        radInput.focus()
+        radInput.value = '32'
+        radInput.dispatchEvent(new Event('input', { bubbles: true }))
+        radInput.dispatchEvent(new Event('change', { bubbles: true }))
+        radInput.blur()
+
+        // Wait for debounce + compile
+        await api.utils.delay(800)
+        await api.utils.waitForCompile()
+
+        // Verify radius was changed
+        const code = api.editor.getCode()
+        api.assert.ok(
+          code.includes('rad 32'),
+          `Code should contain rad 32 after input change, got: ${code}`
+        )
+      } else {
+        // Fallback to Panel API
+        const success = await api.panel.property.setProperty('rad', '32')
+        api.assert.ok(success, 'setProperty should succeed as fallback')
+
+        await api.utils.delay(800)
+        await api.utils.waitForCompile()
+
+        const code = api.editor.getCode()
+        api.assert.ok(code.includes('rad 32'), `Code should contain rad 32, got: ${code}`)
+      }
+    }
+  ),
+])
+
+// =============================================================================
 // Export All
 // =============================================================================
 
@@ -734,4 +921,5 @@ export const allPropertyPanelTests: TestCase[] = [
   ...tokenValueTests,
   ...tokenInteractionTests,
   ...projectTokenTests,
+  ...radiusChangeTests,
 ]

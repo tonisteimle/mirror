@@ -10,4 +10,5 @@ export {
   tokenValueTests,
   tokenInteractionTests,
   projectTokenTests,
+  radiusChangeTests,
 } from '../property-panel-tests'
