@@ -327,7 +327,12 @@ Frame pad 12 24                       // Vertikal Horizontal
 Frame pad 8 16 12 16                  // Top Right Bottom Left
 Frame pad-x 16                        // Nur horizontal (px)
 Frame pad-y 12                        // Nur vertikal (py)
+Frame pad-t 8                         // Nur oben (pt)
+Frame pad-r 16                        // Nur rechts (pr)
 Frame mar 8                           // Margin außen
+Frame mar-x 16                        // Margin horizontal (mx)
+Frame mar-y 12                        // Margin vertikal (my)
+Frame mar-t 8                         // Margin oben (mt)
 Frame gap 12                          // Zwischen Kindern
 
 // Größen
@@ -833,7 +838,7 @@ Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is
 | **Position**    | `tl`, `tc`, `tr`, `cl`, `cr`, `bl`, `bc`, `br`, `x N`, `y N`           |
 | **Größe**       | `w N`, `h N`, `w full`, `w hug`, `grow`, `shrink`, `minw`, `maxw`      |
 | **Farbe**       | `bg #hex`, `col #hex`, `boc #hex`, `ic #hex`, `grad #a #b`             |
-| **Abstand**     | `pad N`, `pad V H`, `mar N`, `gap N`, `pad-x`, `pad-y`                 |
+| **Abstand**     | `pad N`, `pad-x`, `pad-y`, `pad-t/r/b/l`, `mar N`, `mar-x/y/t/r/b/l`   |
 | **Border**      | `bor N`, `boc #hex`, `rad N`                                           |
 | **Typo**        | `fs N`, `weight bold/500`, `font mono`, `truncate`, `uppercase`        |
 | **Effekte**     | `shadow sm/md/lg`, `opacity N`, `blur N`, `cursor pointer`             |
@@ -957,9 +962,17 @@ Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is
 | padding            | pad, p               | <number>, $token                                                                                                                                                             |
 | pad-x              | px                   | <number>, $token                                                                                                                                                             |
 | pad-y              | py                   | <number>, $token                                                                                                                                                             |
+| pad-t              | pt                   | <number>, $token                                                                                                                                                             |
+| pad-r              | pr                   | <number>, $token                                                                                                                                                             |
+| pad-b              | pb                   | <number>, $token                                                                                                                                                             |
+| pad-l              | pl                   | <number>, $token                                                                                                                                                             |
 | margin             | mar, m               | <number>, $token                                                                                                                                                             |
 | mar-x              | mx                   | <number>, $token                                                                                                                                                             |
 | mar-y              | my                   | <number>, $token                                                                                                                                                             |
+| mar-t              | mt                   | <number>, $token                                                                                                                                                             |
+| mar-r              | mr                   | <number>, $token                                                                                                                                                             |
+| mar-b              | mb                   | <number>, $token                                                                                                                                                             |
+| mar-l              | ml                   | <number>, $token                                                                                                                                                             |
 | background         | bg                   | <color>, $token                                                                                                                                                              |
 | color              | col, c               | <color>, $token                                                                                                                                                              |
 | border-color       | boc                  | <color>, $token                                                                                                                                                              |

@@ -482,16 +482,19 @@ export class PreviewController {
 
   /**
    * Toggle between resize and padding handle modes (P key)
+   * - From resize → padding
+   * - From margin → padding (direct switch)
+   * - From padding → resize
    */
   private toggleHandleMode(nodeId: string): void {
-    if (this.handleMode === 'resize') {
-      // Switch to padding mode
+    if (this.handleMode === 'resize' || this.handleMode === 'margin') {
+      // Switch to padding mode (from resize or margin)
       this.handleMode = 'padding'
       this.resizeManager?.hideHandles()
       this.marginManager?.hideHandles()
       this.paddingManager?.showHandles(nodeId)
     } else {
-      // Switch back to resize mode
+      // Switch back to resize mode (from padding)
       this.handleMode = 'resize'
       this.paddingManager?.hideHandles()
       this.marginManager?.hideHandles()
@@ -501,16 +504,19 @@ export class PreviewController {
 
   /**
    * Toggle between resize and margin handle modes (M key)
+   * - From resize → margin
+   * - From padding → margin (direct switch)
+   * - From margin → resize
    */
   private toggleMarginMode(nodeId: string): void {
-    if (this.handleMode === 'resize') {
-      // Switch to margin mode
+    if (this.handleMode === 'resize' || this.handleMode === 'padding') {
+      // Switch to margin mode (from resize or padding)
       this.handleMode = 'margin'
       this.resizeManager?.hideHandles()
       this.paddingManager?.hideHandles()
       this.marginManager?.showHandles(nodeId)
     } else {
-      // Switch back to resize mode
+      // Switch back to resize mode (from margin)
       this.handleMode = 'resize'
       this.paddingManager?.hideHandles()
       this.marginManager?.hideHandles()
