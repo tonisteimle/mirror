@@ -963,6 +963,17 @@ export class Interactions implements InteractionAPI {
     const elementHandles = resizeHandles.filter(h => h.nodeId === nodeId)
     if (elementHandles.length === 0) return false
 
+    // Get container bounds for clamping calculation
+    // The handles are rendered in an overlay relative to the preview container
+    const container =
+      document.querySelector('#preview-scroll-container') || document.querySelector('#preview-container')
+    const containerRect = container?.getBoundingClientRect()
+
+    // Handle clamping constants (must match resize-manager.ts)
+    const HANDLE_SIZE = 8
+    const HANDLE_HALF = HANDLE_SIZE / 2
+    const MIN_INSET = 2
+
     // Expected positions relative to element (handle centers)
     const expectedPositions: Record<ResizeHandle, { x: number; y: number }> = {
       nw: { x: 0, y: 0 },
@@ -975,16 +986,28 @@ export class Interactions implements InteractionAPI {
       w: { x: 0, y: 0.5 },
     }
 
-    // Tolerance for position matching (handles are 8x8, so 4px offset from edge)
-    const TOLERANCE = 6
+    // Tolerance for position matching
+    const TOLERANCE = 8
 
     for (const handle of elementHandles) {
       const expected = expectedPositions[handle.position]
       if (!expected) continue
 
-      // Calculate expected handle center position
-      const expectedX = elementRect.left + elementRect.width * expected.x
-      const expectedY = elementRect.top + elementRect.height * expected.y
+      // Calculate expected handle center position (before clamping)
+      let expectedX = elementRect.left + elementRect.width * expected.x
+      let expectedY = elementRect.top + elementRect.height * expected.y
+
+      // Apply clamping if container bounds are available
+      // This matches the clamping logic in resize-manager.ts
+      if (containerRect) {
+        const minX = containerRect.left + MIN_INSET + HANDLE_HALF
+        const maxX = containerRect.right - MIN_INSET - HANDLE_HALF
+        const minY = containerRect.top + MIN_INSET + HANDLE_HALF
+        const maxY = containerRect.bottom - MIN_INSET - HANDLE_HALF
+
+        expectedX = Math.max(minX, Math.min(maxX, expectedX))
+        expectedY = Math.max(minY, Math.min(maxY, expectedY))
+      }
 
       // Get actual handle center
       const actualX = handle.rect.left + handle.rect.width / 2
