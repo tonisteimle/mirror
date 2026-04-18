@@ -90,18 +90,14 @@ ${bold('Usage:')}
   npm run test:browser [-- options]
   npx tsx tools/test.ts [options]
 
-${bold('Test Selection:')}
-  (no flags)          Run all browser tests (default)
+${bold('Test Selection (one required):')}
+  --category=NAME     Run specific category (see --list)
   --test="NAME"       Run a single test by exact name
   --filter=PATTERN    Filter tests by name pattern (regex)
-  --category=NAME     Run specific category:
-                        primitives, layout, layoutVerification, styling, zag,
-                        interactions, bidirectional, undoRedo, autocomplete,
-                        stackedDrag, flexReorder, propertyPanel, charts, workflow,
-                        states, animations, transforms, gradients
+  --all               Run ALL tests (~1000+ tests, takes long!)
   --drag              Run drag & drop tests only
   --mirror            Run mirror tests only
-  --list              List all available tests
+  --list              List all categories with test counts
 
 ${bold('Diagnostics:')}
   --explore           Show file structure and project state
