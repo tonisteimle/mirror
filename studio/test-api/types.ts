@@ -523,6 +523,7 @@ export interface PaddingValues {
 }
 
 export interface PaddingZoneInfo {
+  position: 'top' | 'right' | 'bottom' | 'left' | 'unknown'
   rect: { left: number; top: number; width: number; height: number }
   color: string
   visible: boolean

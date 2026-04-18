@@ -739,9 +739,18 @@ export const radiusChangeTests: TestCase[] = describe('Radius Changes', [
       await api.utils.waitForIdle()
       await api.utils.delay(200)
 
-      // Verify initial radius
+      // Verify initial radius in code
       let code = api.editor.getCode()
       api.assert.ok(code.includes('rad 8'), `Initial code should have rad 8, got: ${code}`)
+
+      // Verify initial radius in DOM
+      const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(element, 'Element node-1 should exist in DOM')
+      const initialRadius = window.getComputedStyle(element).borderRadius
+      api.assert.ok(
+        initialRadius === '8px',
+        `Initial border-radius should be 8px, got: ${initialRadius}`
+      )
 
       // Change radius via property panel
       const success = await api.panel.property.setProperty('rad', '16')
@@ -751,10 +760,19 @@ export const radiusChangeTests: TestCase[] = describe('Radius Changes', [
       await api.utils.delay(800)
       await api.utils.waitForCompile()
 
-      // Verify radius was changed
+      // Verify radius was changed in code
       code = api.editor.getCode()
       api.assert.ok(code.includes('rad 16'), `Code should contain rad 16, got: ${code}`)
       api.assert.ok(!code.includes('rad 8'), `Code should not contain old rad 8, got: ${code}`)
+
+      // Verify radius was applied to DOM element
+      const updatedElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(updatedElement, 'Element node-1 should still exist after compile')
+      const newRadius = window.getComputedStyle(updatedElement).borderRadius
+      api.assert.ok(
+        newRadius === '16px',
+        `Border-radius should be updated to 16px in DOM, got: ${newRadius}`
+      )
     }
   ),
 
@@ -777,6 +795,15 @@ Card`,
       let code = api.editor.getCode()
       api.assert.ok(code.includes('rad 8'), `Initial code should have rad 8, got: ${code}`)
 
+      // Verify initial radius in DOM
+      const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(element, 'Element node-1 should exist in DOM')
+      const initialRadius = window.getComputedStyle(element).borderRadius
+      api.assert.ok(
+        initialRadius === '8px',
+        `Initial border-radius should be 8px, got: ${initialRadius}`
+      )
+
       // Change radius via property panel
       const success = await api.panel.property.setProperty('rad', '20')
       api.assert.ok(success, 'setProperty should succeed')
@@ -785,9 +812,18 @@ Card`,
       await api.utils.delay(800)
       await api.utils.waitForCompile()
 
-      // Verify radius was changed
+      // Verify radius was changed in code
       code = api.editor.getCode()
       api.assert.ok(code.includes('rad 20'), `Code should contain rad 20, got: ${code}`)
+
+      // Verify radius was applied to DOM element
+      const updatedElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(updatedElement, 'Element node-1 should still exist after compile')
+      const newRadius = window.getComputedStyle(updatedElement).borderRadius
+      api.assert.ok(
+        newRadius === '20px',
+        `Border-radius should be updated to 20px in DOM, got: ${newRadius}`
+      )
     }
   ),
 
@@ -809,6 +845,15 @@ Card rad 12`,
         `Initial code should have Card rad 12, got: ${code}`
       )
 
+      // Verify initial radius in DOM
+      const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(element, 'Element node-1 should exist in DOM')
+      const initialRadius = window.getComputedStyle(element).borderRadius
+      api.assert.ok(
+        initialRadius === '12px',
+        `Initial border-radius should be 12px, got: ${initialRadius}`
+      )
+
       // Change radius via property panel
       const success = await api.panel.property.setProperty('rad', '24')
       api.assert.ok(success, 'setProperty should succeed')
@@ -823,6 +868,15 @@ Card rad 12`,
       api.assert.ok(
         !code.includes('rad 12'),
         `Code should not contain old rad 12 on instance line, got: ${code}`
+      )
+
+      // Verify radius was applied to DOM element
+      const updatedElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(updatedElement, 'Element node-1 should still exist after compile')
+      const newRadius = window.getComputedStyle(updatedElement).borderRadius
+      api.assert.ok(
+        newRadius === '24px',
+        `Border-radius should be updated to 24px in DOM, got: ${newRadius}`
       )
     }
   ),

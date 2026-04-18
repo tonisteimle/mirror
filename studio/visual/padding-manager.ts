@@ -540,16 +540,30 @@ export class PaddingManager {
     // Observe the element itself for size changes
     this.resizeObserver?.observe(element)
 
+    // Also observe the element itself for style/class changes (e.g., external padding changes)
+    this.mutationObserver?.observe(element, {
+      attributes: true,
+      attributeFilter: ['style', 'class'],
+    })
+
     // Observe parent for layout changes that might shift the element
     const parent = element.parentElement
     if (parent) {
       this.resizeObserver?.observe(parent)
+      // Use subtree: true to catch sibling style changes that might affect our element
       this.mutationObserver?.observe(parent, {
         childList: true,
         attributes: true,
         attributeFilter: ['style', 'class'],
-        subtree: false,
+        subtree: true, // Observe siblings too
       })
+
+      // Observe all siblings for size changes
+      for (const sibling of parent.children) {
+        if (sibling !== element && sibling instanceof HTMLElement) {
+          this.resizeObserver?.observe(sibling)
+        }
+      }
     }
   }
 

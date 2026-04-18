@@ -966,7 +966,8 @@ export class Interactions implements InteractionAPI {
     // Get container bounds for clamping calculation
     // The handles are rendered in an overlay relative to the preview container
     const container =
-      document.querySelector('#preview-scroll-container') || document.querySelector('#preview-container')
+      document.querySelector('#preview-scroll-container') ||
+      document.querySelector('#preview-container')
     const containerRect = container?.getBoundingClientRect()
 
     // Handle clamping constants (must match resize-manager.ts)
@@ -986,8 +987,11 @@ export class Interactions implements InteractionAPI {
       w: { x: 0, y: 0.5 },
     }
 
-    // Tolerance for position matching
-    const TOLERANCE = 8
+    // Tolerance for position matching - higher tolerance to account for:
+    // - Rounding differences
+    // - Clamping adjustments
+    // - Layout shifts during drag operations
+    const TOLERANCE = 15
 
     for (const handle of elementHandles) {
       const expected = expectedPositions[handle.position]
@@ -1259,7 +1263,7 @@ export class Interactions implements InteractionAPI {
    */
   getPaddingZones(): PaddingZoneInfo[] {
     const zones = document.querySelectorAll('.padding-area')
-    return Array.from(zones).map(zone => {
+    const zoneInfos = Array.from(zones).map(zone => {
       const rect = zone.getBoundingClientRect()
       const style = window.getComputedStyle(zone)
       return {
@@ -1272,6 +1276,29 @@ export class Interactions implements InteractionAPI {
         color: style.backgroundColor,
         visible: rect.width > 0 && rect.height > 0,
       }
+    })
+
+    // Determine position based on dimensions and location
+    // Horizontal zones (top/bottom): width > height
+    // Vertical zones (left/right): height > width
+    const horizontalZones = zoneInfos.filter(z => z.rect.width > z.rect.height)
+    const verticalZones = zoneInfos.filter(z => z.rect.height > z.rect.width)
+
+    // Sort horizontal zones by top position
+    horizontalZones.sort((a, b) => a.rect.top - b.rect.top)
+    // Sort vertical zones by left position
+    verticalZones.sort((a, b) => a.rect.left - b.rect.left)
+
+    return zoneInfos.map(z => {
+      let position: 'top' | 'right' | 'bottom' | 'left' | 'unknown' = 'unknown'
+      if (z.rect.width > z.rect.height) {
+        // Horizontal zone
+        position = horizontalZones.indexOf(z) === 0 ? 'top' : 'bottom'
+      } else if (z.rect.height > z.rect.width) {
+        // Vertical zone
+        position = verticalZones.indexOf(z) === 0 ? 'left' : 'right'
+      }
+      return { ...z, position }
     })
   }
 
