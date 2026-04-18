@@ -241,6 +241,99 @@ export class DragTestRunner {
   }
 
   /**
+   * Simulate a canvas element move to an alignment zone
+   *
+   * This simulates dragging an existing element to an alignment zone in an empty container.
+   * This is used when moving the only child of a container - the container becomes
+   * "effectively empty" and shows the 9-point alignment grid.
+   */
+  async simulateCanvasMoveToAlignmentZone(params: {
+    sourceNodeId: string
+    targetNodeId: string
+    alignmentZone:
+      | 'top-left'
+      | 'top-center'
+      | 'top-right'
+      | 'center-left'
+      | 'center'
+      | 'center-right'
+      | 'bottom-left'
+      | 'bottom-center'
+      | 'bottom-right'
+  }): Promise<DragTestResult> {
+    const startTime = performance.now()
+    const codeBefore = this.config.captureCodeChanges ? this.context.getCode() : ''
+
+    // Map zone names to alignment property values
+    const zoneToProperty: Record<string, string> = {
+      'top-left': 'tl',
+      'top-center': 'tc',
+      'top-right': 'tr',
+      'center-left': 'cl',
+      center: 'center',
+      'center-right': 'cr',
+      'bottom-left': 'bl',
+      'bottom-center': 'bc',
+      'bottom-right': 'br',
+    }
+
+    // Build drag source
+    const source: DragSource = {
+      type: 'canvas',
+      nodeId: params.sourceNodeId,
+    }
+
+    // Build drop target with alignment
+    const target: DropTarget = {
+      mode: 'aligned',
+      containerId: params.targetNodeId,
+      alignmentProperty: zoneToProperty[params.alignmentZone],
+    }
+
+    // Set canvas drag data
+    this.setCanvasDragData(params.sourceNodeId)
+
+    try {
+      // Execute drop via DragController
+      const dropStartTime = performance.now()
+      await getDragController().simulateDrop(source, target)
+      const dropDuration = performance.now() - dropStartTime
+
+      // Wait for code modification
+      await this.waitForCodeChange(codeBefore)
+      const codeModificationDuration = performance.now() - dropStartTime - dropDuration
+
+      const codeAfter = this.context.getCode()
+      const totalDuration = performance.now() - startTime
+
+      return {
+        success: true,
+        source,
+        target,
+        codeChange: {
+          before: codeBefore,
+          after: codeAfter,
+          diff: this.createDiff(codeBefore, codeAfter),
+        },
+        timing: this.config.captureTimings
+          ? {
+              dropDuration,
+              codeModificationDuration,
+              totalDuration,
+            }
+          : undefined,
+      }
+    } catch (error) {
+      return this.createErrorResult(
+        error instanceof Error ? error.message : String(error),
+        codeBefore
+      )
+    } finally {
+      this.clearGlobalDragData()
+    }
+  }
+
+  /**
    * Set the initial code for testing
    */
   setCode(code: string): void {
@@ -460,11 +553,23 @@ class PaletteDragBuilderImpl {
   }
 }
 
+type AlignmentZone =
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center-left'
+  | 'center'
+  | 'center-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
+
 class CanvasMoveBuilderImpl {
   private context: DragTestContext
   private sourceNodeId: string
   private targetNodeId?: string
   private insertionIndex: number = 0
+  private alignmentZone?: AlignmentZone
 
   constructor(context: DragTestContext, sourceNodeId: string) {
     this.context = context
@@ -481,12 +586,36 @@ class CanvasMoveBuilderImpl {
     return this
   }
 
+  atIndex(index: number): this {
+    this.insertionIndex = index
+    return this
+  }
+
+  /**
+   * Move element to an alignment zone (9-point grid)
+   * Used when moving the only child of a container
+   */
+  atAlignmentZone(zone: AlignmentZone): this {
+    this.alignmentZone = zone
+    return this
+  }
+
   async execute(): Promise<DragTestResult> {
     if (!this.targetNodeId) {
       throw new Error('Target container must be specified with toContainer()')
     }
 
     const runner = new DragTestRunner(this.context)
+
+    // Use alignment zone if specified
+    if (this.alignmentZone) {
+      return runner.simulateCanvasMoveToAlignmentZone({
+        sourceNodeId: this.sourceNodeId,
+        targetNodeId: this.targetNodeId,
+        alignmentZone: this.alignmentZone,
+      })
+    }
+
     return runner.simulateCanvasMove({
       sourceNodeId: this.sourceNodeId,
       targetNodeId: this.targetNodeId,

@@ -28,8 +28,8 @@ export const marginModeToggleTests: TestCase[] = describe('M Key - Toggle Margin
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      // Select the Frame
-      await api.interact.click('node-1')
+      // Select the Frame (properly sets editorHasFocus = false)
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       // Press M to toggle to margin mode
@@ -51,8 +51,8 @@ export const marginModeToggleTests: TestCase[] = describe('M Key - Toggle Margin
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      // Select and enter margin mode
-      await api.interact.click('node-1')
+      // Select and enter margin mode (properly sets editorHasFocus = false)
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       // Press M to enter margin mode
@@ -81,7 +81,7 @@ export const marginModeToggleTests: TestCase[] = describe('M Key - Toggle Margin
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       await api.interact.pressKey('m')
@@ -103,7 +103,7 @@ export const marginModeToggleTests: TestCase[] = describe('M Key - Toggle Margin
       // Verify no margin in code initially
       api.assert.codeNotContains(/\bmar\s/)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       // Press M to enter margin mode
@@ -126,7 +126,7 @@ export const marginModeToggleTests: TestCase[] = describe('M Key - Toggle Margin
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       // Enter padding mode first
@@ -163,7 +163,7 @@ export const marginHandlePositionTests: TestCase[] = describe('Margin Handle Pos
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       await api.interact.pressKey('m')
@@ -201,7 +201,7 @@ export const marginHandlePositionTests: TestCase[] = describe('Margin Handle Pos
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       await api.interact.pressKey('m')
@@ -237,7 +237,7 @@ export const marginHandlePositionTests: TestCase[] = describe('Margin Handle Pos
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       await api.interact.pressKey('m')
@@ -271,7 +271,7 @@ export const marginHandlePositionTests: TestCase[] = describe('Margin Handle Pos
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       await api.interact.pressKey('m')
@@ -305,7 +305,7 @@ export const marginHandlePositionTests: TestCase[] = describe('Margin Handle Pos
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       await api.interact.pressKey('m')
@@ -339,7 +339,7 @@ export const marginHandlePositionTests: TestCase[] = describe('Margin Handle Pos
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       await api.interact.pressKey('m')
@@ -381,7 +381,7 @@ export const marginHandleDragTests: TestCase[] = describe('Margin Handle Drag', 
       await api.utils.delay(100)
 
       // Select and enter margin mode
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       // Press M to enter margin mode
@@ -436,7 +436,7 @@ export const marginHandleDragTests: TestCase[] = describe('Margin Handle Drag', 
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       await api.interact.pressKey('m')
@@ -491,7 +491,7 @@ export const marginModeSelectionTests: TestCase[] = describe('Margin Mode with S
       await api.utils.delay(100)
 
       // Select first Frame
-      await api.interact.click('node-2')
+      await api.studio.setSelection('node-2')
       await api.utils.delay(200)
 
       // Enter margin mode
@@ -503,7 +503,7 @@ export const marginModeSelectionTests: TestCase[] = describe('Margin Mode with S
       api.assert.ok(marginHandles.length === 4, 'First element should have margin handles')
 
       // Click second element
-      await api.interact.click('node-3')
+      await api.studio.setSelection('node-3')
       await api.utils.delay(200)
 
       // In margin mode, new selection should also show margin handles
@@ -522,7 +522,7 @@ export const marginModeSelectionTests: TestCase[] = describe('Margin Mode with S
       await api.utils.delay(100)
 
       // Select and enter margin mode
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       // Enter margin mode

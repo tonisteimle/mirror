@@ -65,6 +65,13 @@ export {
 } from './multiselect.test'
 
 export {
+  allEditorMultiselectTests,
+  basicEditorMultiselectTests,
+  parentChildFilterTests,
+  singleLineTests,
+} from './editor-multiselect.test'
+
+export {
   allPaddingTests,
   singleSidePaddingTests,
   allSidesPaddingTests,
@@ -90,6 +97,19 @@ export {
   marginHandleDragTests,
   marginModeSelectionTests,
 } from './margin-handlers.test'
+
+export {
+  allGapHandlerTests,
+  gapModeToggleTests,
+  gapModeSwitchingTests,
+  gapHandleDirectionTests,
+  gapHandleCountTests,
+  gapHandlePositionTests,
+  gapHandleDragTests,
+  gapModeSelectionTests,
+  gapValueTests,
+  nestedContainerTests,
+} from './gap-handlers.test'
 
 export {
   allWrapLayoutTests,

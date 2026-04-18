@@ -239,9 +239,9 @@ export const combinedShortcutTests: TestCase[] = describe('Layout Shortcuts Comb
     'Can switch between H and V',
     'Frame gap 8\n  Text "Item 1"\n  Text "Item 2"',
     async (api: TestAPI) => {
-      // Click to select
+      // Select using studio API (properly sets editorHasFocus = false)
       await api.utils.waitForCompile()
-      await api.interact.click('node-1')
+      await api.studio.setSelection('node-1')
       await api.utils.delay(100)
 
       // Press H

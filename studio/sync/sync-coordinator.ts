@@ -151,6 +151,83 @@ export class SyncCoordinator {
   }
 
   /**
+   * Handle multi-line selection in editor
+   * Finds all nodeIds in the line range and sets multiSelection
+   */
+  handleEditorSelection(fromEditorLine: number, toEditorLine: number): void {
+    if (!this.sourceMap) return
+
+    // Convert editor lines to SourceMap lines
+    const fromLine = this.lineOffset.editorToSourceMap(fromEditorLine)
+    const toLine = this.lineOffset.editorToSourceMap(toEditorLine)
+
+    if (this.options.debug) {
+      logSync.debug(' handleEditorSelection', {
+        fromEditorLine,
+        toEditorLine,
+        fromLine,
+        toLine,
+      })
+    }
+
+    // Find all nodeIds in the line range
+    const nodeIds: string[] = []
+
+    for (let line = fromLine; line <= toLine; line++) {
+      const node = this.sourceMap.getNodeAtLine(line)
+      if (node?.nodeId) {
+        // Only add if not already in the list
+        if (!nodeIds.includes(node.nodeId)) {
+          nodeIds.push(node.nodeId)
+        }
+      }
+    }
+
+    // Filter to only root elements (no children of already-selected parents)
+    // This prevents selecting both parent and child when parent's lines are selected
+    const filteredNodeIds = nodeIds.filter(nodeId => {
+      const element = document.querySelector(`[data-mirror-id="${nodeId}"]`)
+      if (!element) return true
+
+      // Check if any ancestor is in our selection
+      let parent = element.parentElement
+      while (parent) {
+        const parentId = parent.getAttribute('data-mirror-id')
+        if (parentId && nodeIds.includes(parentId)) {
+          return false // This is a child of another selected element
+        }
+        if (parent.id === 'preview' || parent.classList.contains('mirror-root')) {
+          break
+        }
+        parent = parent.parentElement
+      }
+      return true
+    })
+
+    if (this.options.debug) {
+      logSync.debug(' handleEditorSelection nodeIds', {
+        all: nodeIds,
+        filtered: filteredNodeIds,
+      })
+    }
+
+    // Set multiselection if more than one element, otherwise single selection
+    if (filteredNodeIds.length === 0) {
+      // No valid nodes found - clear selection
+      actions.clearMultiSelection()
+    } else if (filteredNodeIds.length === 1) {
+      // Single element - use regular selection
+      actions.clearMultiSelection()
+      actions.setSelection(filteredNodeIds[0], 'editor')
+    } else {
+      // Multiple elements - use multiselection
+      actions.setMultiSelection(filteredNodeIds)
+      // Also set primary selection to first element for property panel
+      actions.setSelection(filteredNodeIds[0], 'editor')
+    }
+  }
+
+  /**
    * Handle cursor move in editor (editor line, not combined)
    * Converts to SourceMap line and triggers selection
    */
@@ -159,7 +236,7 @@ export class SyncCoordinator {
       logSync.debug(' handleCursorMove', {
         editorLine,
         lastLine: this.lastCursorLine,
-        offset: this.lineOffset.getOffset()
+        offset: this.lineOffset.getOffset(),
       })
     }
 
@@ -245,7 +322,7 @@ export class SyncCoordinator {
           nodeId,
           origin,
           hasSourceMap: !!this.sourceMap,
-          hasScrollTarget: !!this.targets.scrollEditorToLine
+          hasScrollTarget: !!this.targets.scrollEditorToLine,
         })
       }
 
@@ -264,7 +341,7 @@ export class SyncCoordinator {
           logSync.debug(' node lookup', {
             found: !!node,
             position: node?.position,
-            offset: this.lineOffset.getOffset()
+            offset: this.lineOffset.getOffset(),
           })
         }
 
@@ -279,7 +356,7 @@ export class SyncCoordinator {
               sourceMapLine,
               editorLine,
               isInFile,
-              willScroll: isInFile && !!this.targets.scrollEditorToLine
+              willScroll: isInFile && !!this.targets.scrollEditorToLine,
             })
           }
 
@@ -325,6 +402,13 @@ export class SyncCoordinator {
     }
     if (!this.sourceMap) return
 
+    // Clear multiselection when moving to single cursor
+    // This ensures multiselection is cleared when user clicks away from range selection
+    const currentMultiSelection = state.get().multiSelection
+    if (currentMultiSelection.length > 0) {
+      actions.clearMultiSelection()
+    }
+
     // First try to find an instance node
     const node = this.sourceMap.getNodeAtLine(sourceMapLine)
     if (this.options.debug) {
@@ -343,7 +427,10 @@ export class SyncCoordinator {
     }
     if (definition && definition.componentName) {
       // Emit definition:selected event for PropertyPanel to handle
-      events.emit('definition:selected', { componentName: definition.componentName, origin: 'editor' })
+      events.emit('definition:selected', {
+        componentName: definition.componentName,
+        origin: 'editor',
+      })
     }
   }
 

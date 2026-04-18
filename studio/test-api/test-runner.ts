@@ -164,6 +164,16 @@ class EditorAPIImpl implements EditorAPI {
     })
   }
 
+  selectLines(fromLine: number, toLine: number): void {
+    if (!this.editor) return
+    // Select from start of fromLine to end of toLine
+    const fromLineInfo = this.editor.state.doc.line(fromLine)
+    const toLineInfo = this.editor.state.doc.line(toLine)
+    this.editor.dispatch({
+      selection: { anchor: fromLineInfo.from, head: toLineInfo.to },
+    })
+  }
+
   triggerAutocomplete(): void {
     // Use window-exposed CodeMirror command (avoid dynamic require in bundled code)
     const cm = (window as any).__codemirror
