@@ -80,6 +80,7 @@ export {
   axisMarginTests,
   liveVisualFeedbackTests as marginVisualFeedbackTests,
   robustnessTests as marginRobustnessTests,
+  marginScreenshotTests,
 } from './margin.test'
 
 export {

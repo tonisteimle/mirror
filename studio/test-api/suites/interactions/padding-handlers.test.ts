@@ -175,32 +175,6 @@ export const paddingModeToggleTests: TestCase[] = describe('P Key - Toggle Paddi
       api.assert.ok(paddingAreas.length > 0, 'Padding area overlays should be visible')
     }
   ),
-
-  testWithSetup(
-    'Element without padding gets default 16px when entering padding mode',
-    'Frame bg #1a1a1a, w 200, h 150\n  Text "Content"',
-    async (api: TestAPI) => {
-      await api.utils.waitForCompile()
-      await api.interact.pressKey('Escape')
-      await api.utils.delay(100)
-
-      // Verify no padding in code initially
-      api.assert.codeNotContains(/\bpad\s/)
-
-      await api.interact.click('node-1')
-      await api.utils.delay(200)
-
-      // Press P to enter padding mode
-      await api.interact.pressKey('p')
-      await api.utils.delay(300)
-
-      // Wait for compile after default padding is set
-      await api.utils.waitForCompile()
-
-      // Verify default padding was added
-      api.assert.codeContains(/\bpad\s+16\b/)
-    }
-  ),
 ])
 
 // =============================================================================

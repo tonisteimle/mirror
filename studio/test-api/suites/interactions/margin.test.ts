@@ -440,6 +440,48 @@ export const robustnessTests: TestCase[] = describe('Margin Mode Robustness', [
 ])
 
 // =============================================================================
+// Screenshot Debug Test
+// =============================================================================
+
+export const marginScreenshotTests: TestCase[] = describe('Margin Screenshot Debug', [
+  testWithSetup(
+    'Screenshot margin mode with existing margin',
+    'Frame mar 24, w 200, h 150, bg #1a1a1a\n  Text "Content", col white',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+
+      // Select the element
+      await api.interact.click('node-1')
+      await api.utils.delay(100)
+
+      // Enter margin mode
+      await api.interact.pressKey('m')
+      await api.utils.delay(200)
+
+      // Take screenshot
+      const screenshot = await api.inspect.screenshot()
+      console.log('Screenshot taken, length:', screenshot.length)
+
+      // Check handles exist
+      const handles = api.interact.getMarginHandles()
+      console.log('Margin handles found:', handles.length)
+      handles.forEach((h, i) => {
+        console.log(`  Handle ${i}: position=${h.position}, rect=`, h.rect)
+      })
+
+      // Check zones exist
+      const zones = api.interact.getMarginZones()
+      console.log('Margin zones found:', zones.length)
+      zones.forEach((z, i) => {
+        console.log(`  Zone ${i}: position=${z.position}, visible=${z.visible}, rect=`, z.rect)
+      })
+
+      api.assert.ok(handles.length === 4, `Expected 4 handles, got ${handles.length}`)
+    }
+  ),
+])
+
+// =============================================================================
 // Export All
 // =============================================================================
 
@@ -449,4 +491,5 @@ export const allMarginTests: TestCase[] = [
   ...axisMarginTests,
   ...liveVisualFeedbackTests,
   ...robustnessTests,
+  ...marginScreenshotTests,
 ]
