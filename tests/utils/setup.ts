@@ -8,6 +8,31 @@
 import { expect } from 'vitest'
 import * as matchers from './matchers'
 
+// Mock ResizeObserver for jsdom environment
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class ResizeObserver {
+    private callback: ResizeObserverCallback
+    constructor(callback: ResizeObserverCallback) {
+      this.callback = callback
+    }
+    observe(_target: Element) {}
+    unobserve(_target: Element) {}
+    disconnect() {}
+  }
+}
+
+// Mock MutationObserver if needed
+if (typeof globalThis.MutationObserver === 'undefined') {
+  globalThis.MutationObserver = class MutationObserver {
+    constructor(_callback: MutationCallback) {}
+    observe(_target: Node, _options?: MutationObserverInit) {}
+    disconnect() {}
+    takeRecords(): MutationRecord[] {
+      return []
+    }
+  }
+}
+
 // Register all custom matchers
 expect.extend(matchers)
 

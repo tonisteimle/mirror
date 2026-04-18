@@ -22,6 +22,7 @@ import { OverlayManager, createOverlayManager } from '../visual/overlay-manager'
 import { ResizeManager, createResizeManager, type SizingMode } from '../visual/resize-manager'
 import { PaddingManager, createPaddingManager, type PaddingHandle } from '../visual/padding-manager'
 import { MarginManager, createMarginManager, type MarginHandle } from '../visual/margin-manager'
+import { GapManager, createGapManager } from '../visual/gap-manager'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
 import { DragPreview, createDragPreview } from './drag-preview'
 
@@ -144,6 +145,7 @@ export class PreviewController {
   private resizeManager: ResizeManager | null = null
   private paddingManager: PaddingManager | null = null
   private marginManager: MarginManager | null = null
+  private gapManager: GapManager | null = null
   // handleMode is now in global state (state.get().handleMode)
 
   // Slot Visibility System
@@ -163,6 +165,8 @@ export class PreviewController {
   private unsubscribePaddingEnd: (() => void) | null = null
   private unsubscribeMarginToggle: (() => void) | null = null
   private unsubscribeMarginEnd: (() => void) | null = null
+  private unsubscribeGapToggle: (() => void) | null = null
+  private unsubscribeGapEnd: (() => void) | null = null
   private unsubscribeZoom: (() => void) | null = null
   private unsubscribePreviewRendered: (() => void) | null = null
 
@@ -300,6 +304,7 @@ export class PreviewController {
     this.resizeManager?.refresh()
     this.paddingManager?.refresh()
     this.marginManager?.refresh()
+    this.gapManager?.refresh()
   }
 
   /**
@@ -322,10 +327,11 @@ export class PreviewController {
       this.resizeManager?.refresh()
       this.paddingManager?.refresh()
       this.marginManager?.refresh()
+      this.gapManager?.refresh()
     }, PreviewController.RESIZE_DEBOUNCE_MS)
   }
 
-  /** Initialize the Visual Code System (overlay + resize + padding + inline align) */
+  /** Initialize the Visual Code System (overlay + resize + padding + margin + gap) */
   private initVisualCodeSystem(): void {
     this.overlayManager = createOverlayManager({ container: this.container })
     this.resizeManager = createResizeManager({
@@ -340,6 +346,11 @@ export class PreviewController {
       getSourceMap: () => this.sourceMap as any,
     })
     this.marginManager = createMarginManager({
+      container: this.container,
+      overlayManager: this.overlayManager,
+      getSourceMap: () => this.sourceMap as any,
+    })
+    this.gapManager = createGapManager({
       container: this.container,
       overlayManager: this.overlayManager,
       getSourceMap: () => this.sourceMap as any,
@@ -478,27 +489,49 @@ export class PreviewController {
         events.emit('selection:refresh', { nodeId: data.nodeId })
       }
     )
+
+    // Listen for gap toggle events (G key)
+    this.unsubscribeGapToggle = events.on('handles:toggle-gap', (data: { nodeId: string }) => {
+      this.toggleGapMode(data.nodeId)
+    })
+
+    // Listen for gap:end events to execute commands
+    this.unsubscribeGapEnd = events.on('gap:end', (data: { nodeId: string; gap: number }) => {
+      executor.execute(
+        new SetPropertyCommand({
+          nodeId: data.nodeId,
+          property: 'gap',
+          value: String(data.gap),
+        })
+      )
+
+      // Refresh property panel to show updated gap value
+      events.emit('selection:refresh', { nodeId: data.nodeId })
+    })
   }
 
   /**
    * Toggle between resize and padding handle modes (P key)
    * - From resize → padding
    * - From margin → padding (direct switch)
+   * - From gap → padding (direct switch)
    * - From padding → resize
    */
   private toggleHandleMode(nodeId: string): void {
     const currentMode = state.get().handleMode
-    if (currentMode === 'resize' || currentMode === 'margin') {
-      // Switch to padding mode (from resize or margin)
+    if (currentMode === 'resize' || currentMode === 'margin' || currentMode === 'gap') {
+      // Switch to padding mode (from resize, margin, or gap)
       actions.setHandleMode('padding')
       this.resizeManager?.hideHandles()
       this.marginManager?.hideHandles()
+      this.gapManager?.hideHandles()
       this.paddingManager?.showHandles(nodeId)
     } else {
       // Switch back to resize mode (from padding)
       actions.setHandleMode('resize')
       this.paddingManager?.hideHandles()
       this.marginManager?.hideHandles()
+      this.gapManager?.hideHandles()
       this.resizeManager?.showHandles(nodeId)
     }
   }
@@ -507,21 +540,50 @@ export class PreviewController {
    * Toggle between resize and margin handle modes (M key)
    * - From resize → margin
    * - From padding → margin (direct switch)
+   * - From gap → margin (direct switch)
    * - From margin → resize
    */
   private toggleMarginMode(nodeId: string): void {
     const currentMode = state.get().handleMode
-    if (currentMode === 'resize' || currentMode === 'padding') {
-      // Switch to margin mode (from resize or padding)
+    if (currentMode === 'resize' || currentMode === 'padding' || currentMode === 'gap') {
+      // Switch to margin mode (from resize, padding, or gap)
       actions.setHandleMode('margin')
       this.resizeManager?.hideHandles()
       this.paddingManager?.hideHandles()
+      this.gapManager?.hideHandles()
       this.marginManager?.showHandles(nodeId)
     } else {
       // Switch back to resize mode (from margin)
       actions.setHandleMode('resize')
       this.paddingManager?.hideHandles()
       this.marginManager?.hideHandles()
+      this.gapManager?.hideHandles()
+      this.resizeManager?.showHandles(nodeId)
+    }
+  }
+
+  /**
+   * Toggle between resize and gap handle modes (G key)
+   * - From resize → gap
+   * - From padding → gap (direct switch)
+   * - From margin → gap (direct switch)
+   * - From gap → resize
+   */
+  private toggleGapMode(nodeId: string): void {
+    const currentMode = state.get().handleMode
+    if (currentMode === 'resize' || currentMode === 'padding' || currentMode === 'margin') {
+      // Switch to gap mode (from resize, padding, or margin)
+      actions.setHandleMode('gap')
+      this.resizeManager?.hideHandles()
+      this.paddingManager?.hideHandles()
+      this.marginManager?.hideHandles()
+      this.gapManager?.showHandles(nodeId)
+    } else {
+      // Switch back to resize mode (from gap)
+      actions.setHandleMode('resize')
+      this.paddingManager?.hideHandles()
+      this.marginManager?.hideHandles()
+      this.gapManager?.hideHandles()
       this.resizeManager?.showHandles(nodeId)
     }
   }
@@ -587,6 +649,10 @@ export class PreviewController {
     this.unsubscribeMarginToggle = null
     this.unsubscribeMarginEnd?.()
     this.unsubscribeMarginEnd = null
+    this.unsubscribeGapToggle?.()
+    this.unsubscribeGapToggle = null
+    this.unsubscribeGapEnd?.()
+    this.unsubscribeGapEnd = null
     this.unsubscribeZoom?.()
     this.unsubscribeZoom = null
     this.unsubscribePreviewRendered?.()
@@ -614,6 +680,7 @@ export class PreviewController {
     this.resizeManager?.dispose()
     this.paddingManager?.dispose()
     this.marginManager?.dispose()
+    this.gapManager?.dispose()
     this.overlayManager?.dispose()
     // Slot Visibility cleanup
     this.slotVisibilityService?.dispose()
@@ -677,14 +744,22 @@ export class PreviewController {
     if (currentMode === 'padding') {
       this.resizeManager?.hideHandles()
       this.marginManager?.hideHandles()
+      this.gapManager?.hideHandles()
       this.paddingManager?.showHandles(nodeId)
     } else if (currentMode === 'margin') {
       this.resizeManager?.hideHandles()
       this.paddingManager?.hideHandles()
+      this.gapManager?.hideHandles()
       this.marginManager?.showHandles(nodeId)
+    } else if (currentMode === 'gap') {
+      this.resizeManager?.hideHandles()
+      this.paddingManager?.hideHandles()
+      this.marginManager?.hideHandles()
+      this.gapManager?.showHandles(nodeId)
     } else {
       this.paddingManager?.hideHandles()
       this.marginManager?.hideHandles()
+      this.gapManager?.hideHandles()
       this.resizeManager?.showHandles(nodeId)
     }
   }
@@ -761,9 +836,11 @@ export class PreviewController {
     this.resizeManager?.dispose()
     this.paddingManager?.dispose()
     this.marginManager?.dispose()
+    this.gapManager?.dispose()
     this.overlayManager?.dispose()
     this.resizeManager = null
     this.paddingManager = null
+    this.gapManager = null
     this.marginManager = null
     this.overlayManager = null
   }

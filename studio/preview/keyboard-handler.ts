@@ -9,6 +9,7 @@
  * - S: Toggle spread (space-between distribution)
  * - P: Toggle padding handles (show inner padding handles for direct manipulation)
  * - M: Toggle margin handles (show outer margin handles for direct manipulation)
+ * - G: Toggle gap handles (show gap handles between children for direct manipulation)
  * - Cmd/Ctrl+G: Group selected elements (wrap in Box)
  * - Shift+Cmd/Ctrl+G: Ungroup selected element (unwrap container)
  * - Cmd/Ctrl+D: Duplicate selected element
@@ -202,6 +203,16 @@ export class KeyboardHandler {
       if (nodeId) {
         e.preventDefault()
         events.emit('handles:toggle-margin', { nodeId })
+        return
+      }
+    }
+
+    // G = Toggle gap handles mode (without Cmd/Ctrl modifier)
+    if (e.key === 'g' && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+      const nodeId = state.get().selection?.nodeId
+      if (nodeId) {
+        e.preventDefault()
+        events.emit('handles:toggle-gap', { nodeId })
         return
       }
     }

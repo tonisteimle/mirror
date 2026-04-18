@@ -2345,7 +2345,9 @@ export class CodeModifier {
     })
 
     // Build new content (just the dedented children, no wrapper)
-    const newContent = dedentedLines.join('\n')
+    // Filter out empty lines that might result from the unwrap
+    const filteredLines = dedentedLines.filter(line => line.trim() !== '')
+    const newContent = filteredLines.join('\n')
 
     // Calculate character offsets
     const from = this.getCharacterOffset(startLine, 1)
@@ -2353,7 +2355,10 @@ export class CodeModifier {
     const to = this.getCharacterOffset(endLine, endLineContent.length + 1)
 
     // Apply the change
-    const newSource = this.source.substring(0, from) + newContent + this.source.substring(to)
+    let newSource = this.source.substring(0, from) + newContent + this.source.substring(to)
+
+    // Clean up any consecutive empty lines that might have been created
+    newSource = this.cleanupEmptyLines(newSource)
 
     // Persist changes for subsequent operations
     this.source = newSource
@@ -2798,6 +2803,15 @@ export class CodeModifier {
         insert: newLine,
       },
     }
+  }
+
+  /**
+   * Clean up consecutive empty lines in source code
+   * Replaces multiple consecutive empty lines with a single empty line
+   */
+  private cleanupEmptyLines(source: string): string {
+    // Replace 2+ consecutive empty lines (or lines with only whitespace) with a single empty line
+    return source.replace(/\n\s*\n\s*\n/g, '\n\n')
   }
 
   /**
