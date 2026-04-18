@@ -368,6 +368,35 @@ muted.col: #a1a1aa
 
     const suites: TestSuite[] = []
 
+    // Check if any test selection was made
+    const hasTestSelection =
+      args.test || args.category || args.filter || args.all || args.drag || args.mirror
+
+    if (!hasTestSelection) {
+      // No selection made - show error and category list
+      console.log('❌ No test selection specified.\n')
+      console.log('Please specify one of:')
+      console.log('  --category=NAME   Run a specific category')
+      console.log('  --test="NAME"     Run a single test by name')
+      console.log('  --filter=PATTERN  Filter tests by pattern')
+      console.log('  --all             Run all tests (~1000+)')
+      console.log('  --list            Show all categories\n')
+      console.log('Example: npx tsx tools/test.ts --category=propertyPanel\n')
+
+      // Show available categories
+      const categories = await runner.getCategories()
+      if (categories && categories.length > 0) {
+        console.log('📁 Available categories:\n')
+        for (const cat of categories) {
+          console.log(`   ${cat.name.padEnd(25)} ${cat.count} tests`)
+        }
+        console.log('')
+      }
+
+      await runner.stop()
+      process.exit(1)
+    }
+
     // If --test is specified, run only that single test
     if (args.test) {
       console.log(`🎯 Running single test: "${args.test}"\n`)
@@ -381,13 +410,10 @@ muted.col: #a1a1aa
       // If --filter is specified, run only Mirror tests with filter (no drag tests)
       console.log(`🔍 Running filtered tests: "${args.filter}"\n`)
       suites.push(await runner.runMirrorTests(undefined, args.filter))
-    } else {
-      // Determine which tests to run
-      // Default: run all tests when no specific selection is made
-      const noSelection = !args.drag && !args.mirror
-      const runAll = args.all || noSelection
-      const runDrag = runAll || args.drag
-      const runMirror = runAll || args.mirror
+    } else if (args.all || args.drag || args.mirror) {
+      // Explicit selection to run multiple test suites
+      const runDrag = args.all || args.drag
+      const runMirror = args.all || args.mirror
 
       if (runDrag) {
         suites.push(await runner.runDragTests())

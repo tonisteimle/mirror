@@ -297,6 +297,26 @@ export class TestRunner {
   }
 
   /**
+   * Get available test categories with counts
+   */
+  async getCategories(): Promise<{ name: string; count: number }[]> {
+    if (!this.cdp) throw new Error('Not started')
+
+    const result = await this.evaluate<{ name: string; count: number }[]>(`
+      (() => {
+        const counts = window.__mirrorTestSuites?.testCounts;
+        if (!counts) return [];
+        return Object.entries(counts)
+          .filter(([name]) => name !== 'total')
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+      })()
+    `)
+
+    return result || []
+  }
+
+  /**
    * Get a FileExplorer for inspecting project files
    */
   getFileExplorer(): FileExplorer {
