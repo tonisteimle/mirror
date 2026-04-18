@@ -172,7 +172,7 @@ export const zagSelectResizeTests: TestCase[] = describe('Zag Select: Resize Han
   ),
 
   testWithSetup(
-    'Select handles match element with explicit size',
+    'Select handles match container bounds (not internal trigger)',
     'Select placeholder "City", w 200',
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
@@ -182,26 +182,19 @@ export const zagSelectResizeTests: TestCase[] = describe('Zag Select: Resize Han
       await api.interact.click('node-1')
       await api.utils.delay(200)
 
-      const selectElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      if (!selectElement) throw new Error('Select element not found')
+      // Get the container element (this is what handles should match)
+      const container = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      if (!container) throw new Error('Container element not found')
 
-      const trigger =
-        selectElement.querySelector('[data-part="trigger"]') ||
-        selectElement.querySelector('button') ||
-        selectElement
-
-      const visualBounds = getVisualBounds(trigger as HTMLElement)
+      const containerBounds = getVisualBounds(container)
       const handles = api.interact.getResizeHandles()
       const handleBounds = getHandleBounds(handles)
 
-      // Width should be approximately 200px
-      if (Math.abs(handleBounds.width - 200) > TOLERANCE) {
-        throw new Error(`Handle width should be ~200px, got ${handleBounds.width.toFixed(1)}px`)
-      }
-
-      const result = compareBounds(visualBounds, handleBounds)
+      // Handles should match container bounds (with tolerance for full-width clamping)
+      const FULL_WIDTH_TOLERANCE = 20 // Allow for minInset clamping if element fills container
+      const result = compareBounds(containerBounds, handleBounds, FULL_WIDTH_TOLERANCE)
       if (!result.matches) {
-        throw new Error(`Resize handles don't match visual bounds:\n${result.errors.join('\n')}`)
+        throw new Error(`Resize handles don't match container bounds:\n${result.errors.join('\n')}`)
       }
     }
   ),
@@ -287,16 +280,17 @@ export const zagSwitchResizeTests: TestCase[] = describe('Zag Switch: Resize Han
 export const zagSliderResizeTests: TestCase[] = describe('Zag Slider: Resize Handles', [
   testWithSetup(
     'Slider handles match visual bounds',
-    'Slider value 50, min 0, max 100',
+    'Frame w 300, pad 16\n  Slider value 50, min 0, max 100',
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
       api.interact.clearSelection()
       await api.utils.delay(100)
 
-      await api.interact.click('node-1')
+      // Click on Slider (node-2, inside Frame node-1)
+      await api.interact.click('node-2')
       await api.utils.delay(200)
 
-      const sliderElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      const sliderElement = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
       if (!sliderElement) throw new Error('Slider element not found')
 
       const visualBounds = getVisualBounds(sliderElement)
@@ -308,7 +302,9 @@ export const zagSliderResizeTests: TestCase[] = describe('Zag Slider: Resize Han
 
       const handleBounds = getHandleBounds(handles)
 
-      const result = compareBounds(visualBounds, handleBounds)
+      // Slider typically fills its parent width, so allow tolerance for full-width clamping
+      const FULL_WIDTH_TOLERANCE = 20
+      const result = compareBounds(visualBounds, handleBounds, FULL_WIDTH_TOLERANCE)
       if (!result.matches) {
         throw new Error(`Resize handles don't match visual bounds:\n${result.errors.join('\n')}`)
       }

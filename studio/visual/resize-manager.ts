@@ -174,8 +174,7 @@ export class ResizeManager {
     const containerHeight = container.clientHeight || this.container.clientHeight
 
     // Minimum inset from container edge to keep handles visible and grabbable
-    // Must be large enough that handle centers are at least 10px from edges
-    const minInset = 10
+    const minInset = 4 // Just enough to be visible
 
     for (const { pos, x, y } of HANDLE_POSITIONS) {
       const handle = document.createElement('div')
@@ -630,7 +629,7 @@ export class ResizeManager {
 
     const handleSize = 8
     const handleHalf = handleSize / 2
-    const minInset = 10 // Keep handles grabbable (10px from container edge)
+    const minInset = 4 // Keep handles grabbable (just enough to be visible)
     const containerWidth = this.container.clientWidth
     const containerHeight = this.container.clientHeight
 
@@ -915,7 +914,7 @@ export class ResizeManager {
 
     const handleSize = 8
     const handleHalf = handleSize / 2
-    const minInset = 10 // Keep handles grabbable (10px from container edge)
+    const minInset = 4 // Keep handles grabbable (just enough to be visible)
     const containerWidth = this.container.clientWidth
     const containerHeight = this.container.clientHeight
 
