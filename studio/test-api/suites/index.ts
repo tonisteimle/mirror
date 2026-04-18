@@ -637,7 +637,7 @@ export {
 // Animations
 export {
   allAnimationTests,
-  allPresetAnimationTests,
+  allAnimationPresetTests,
   spinAnimationTests,
   pulseAnimationTests,
   bounceAnimationTests,
@@ -646,9 +646,10 @@ export {
   slideAnimationTests,
   scaleAnimationTests,
   allStateAnimationTests,
-  toggleAnimationTests,
+  stateToggleAnimationTests,
   hoverAnimationTests,
   entryExitAnimationTests,
+  combinedAnimationTests,
   quickAnimationTests,
 }
 
