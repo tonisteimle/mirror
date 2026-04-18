@@ -18,13 +18,10 @@ export const paddingModeToggleTests: TestCase[] = describe('P Key - Toggle Paddi
     'P key shows padding handles on selected element',
     'Frame pad 16, gap 8, bg #1a1a1a\n  Text "Content"',
     async (api: TestAPI) => {
-      // Reset state by pressing Escape
       await api.utils.waitForCompile()
-      await api.interact.pressKey('Escape')
-      await api.utils.delay(100)
 
-      // Select the Frame
-      await api.interact.click('node-1')
+      // Select the Frame using studio API (properly sets editorHasFocus = false)
+      await api.studio.setSelection('node-1')
       await api.utils.delay(200)
 
       // Press P to toggle to padding mode
@@ -41,14 +38,16 @@ export const paddingModeToggleTests: TestCase[] = describe('P Key - Toggle Paddi
     'P key twice returns to resize mode',
     'Frame pad 16, gap 8, bg #1a1a1a\n  Text "Content"',
     async (api: TestAPI) => {
-      // Reset state by pressing Escape
       await api.utils.waitForCompile()
-      await api.interact.pressKey('Escape')
+
+      // Clear selection first to reset handleMode to 'resize'
+      // This ensures P key enters padding mode (not toggles back)
+      api.studio.clearSelection()
       await api.utils.delay(100)
 
-      // Select and enter padding mode
-      await api.interact.click('node-1')
-      await api.utils.delay(200)
+      // Select element using studio API (properly sets editorHasFocus = false)
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(300) // Extra delay for headless mode
 
       // Press P to enter padding mode
       await api.interact.pressKey('p')

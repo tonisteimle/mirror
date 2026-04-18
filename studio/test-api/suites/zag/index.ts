@@ -26,6 +26,14 @@ export {
   combinedZagTests,
   zagStylingTests,
 } from './drag-and-style.test'
+export {
+  allZagResizeHandleTests,
+  zagSelectResizeTests,
+  zagCheckboxResizeTests,
+  zagSwitchResizeTests,
+  zagSliderResizeTests,
+  zagTabsResizeTests,
+} from './resize-handles.test'
 
 import { checkboxTests } from './checkbox.test'
 import { switchTests } from './switch.test'
@@ -39,6 +47,7 @@ import { datePickerTests } from './date-picker.test'
 import { sidenavTests } from './sidenav.test'
 import { zagInLayoutTests } from './layout.test'
 import { allZagDragTests } from './drag-and-style.test'
+import { allZagResizeHandleTests } from './resize-handles.test'
 
 export const allZagTests: TestCase[] = [
   ...checkboxTests,
@@ -53,4 +62,5 @@ export const allZagTests: TestCase[] = [
   ...sidenavTests,
   ...zagInLayoutTests,
   ...allZagDragTests,
+  ...allZagResizeHandleTests,
 ]

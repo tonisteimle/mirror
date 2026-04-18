@@ -404,6 +404,13 @@ export class StudioAPIImpl implements StudioAPI {
       // Try direct state update
       this.state.set({ selection: { nodeId, origin: 'test' } })
     }
+
+    // Also set editorHasFocus = false when selecting an element
+    // This mimics the behavior of clicking in preview
+    if (nodeId !== null && this.actions?.setEditorFocus) {
+      this.actions.setEditorFocus(false)
+    }
+
     await new Promise(resolve => setTimeout(resolve, 50))
   }
 
