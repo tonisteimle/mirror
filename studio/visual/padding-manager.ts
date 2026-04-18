@@ -18,7 +18,7 @@ import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 // Visual constants
 const HANDLE_VISUAL_SIZE = 1 // Visible line: 1px
 const HANDLE_HIT_AREA = 8 // Clickable area: 8px
-const OVERLAY_OPACITY = 0.4 // 40% opacity for padding zones
+const OVERLAY_OPACITY = 0.15 // 15% opacity for padding zones
 const HANDLE_COLOR = '#F59E0B' // Amber
 const HANDLE_HOVER_SIZE = 2 // Hover state: 2px
 const GRIP_SIZE = 8 // Square grip indicator size
@@ -82,28 +82,19 @@ export class PaddingManager {
     this.hideHandles()
     this.currentNodeId = nodeId
 
-    const layoutService = getLayoutService()
-    const layout = layoutService?.getLayout(nodeId)
+    const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+    if (!element) return
+
+    const rect = element.getBoundingClientRect()
+    const containerRect = this.container.getBoundingClientRect()
 
     let relRect: { left: number; top: number; width: number; height: number }
     let padding: { top: number; right: number; bottom: number; left: number }
 
-    if (layout) {
-      relRect = {
-        left: layout.x,
-        top: layout.y,
-        width: layout.width,
-        height: layout.height,
-      }
-      padding = layout.padding
-    } else {
-      const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
-      if (!element) return
-
-      const rect = element.getBoundingClientRect()
-      const containerRect = this.container.getBoundingClientRect()
+    // During active drag, ALWAYS use computed styles (includes inline changes)
+    // Otherwise we can use LayoutService for better performance
+    if (this.activeDrag) {
       const style = window.getComputedStyle(element)
-
       relRect = {
         left: rect.left - containerRect.left,
         top: rect.top - containerRect.top,
@@ -115,6 +106,33 @@ export class PaddingManager {
         right: parseInt(style.paddingRight || '0', 10),
         bottom: parseInt(style.paddingBottom || '0', 10),
         left: parseInt(style.paddingLeft || '0', 10),
+      }
+    } else {
+      const layoutService = getLayoutService()
+      const layout = layoutService?.getLayout(nodeId)
+
+      if (layout) {
+        relRect = {
+          left: layout.x,
+          top: layout.y,
+          width: layout.width,
+          height: layout.height,
+        }
+        padding = layout.padding
+      } else {
+        const style = window.getComputedStyle(element)
+        relRect = {
+          left: rect.left - containerRect.left,
+          top: rect.top - containerRect.top,
+          width: rect.width,
+          height: rect.height,
+        }
+        padding = {
+          top: parseInt(style.paddingTop || '0', 10),
+          right: parseInt(style.paddingRight || '0', 10),
+          bottom: parseInt(style.paddingBottom || '0', 10),
+          left: parseInt(style.paddingLeft || '0', 10),
+        }
       }
     }
 

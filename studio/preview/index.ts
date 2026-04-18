@@ -421,30 +421,6 @@ export class PreviewController {
       // Switch to padding mode
       this.handleMode = 'padding'
       this.resizeManager?.hideHandles()
-
-      // Check if element has padding, if not set default 16px
-      const element = this.container.querySelector(
-        `[${this.config.nodeIdAttribute}="${nodeId}"]`
-      ) as HTMLElement | null
-      if (element) {
-        const style = window.getComputedStyle(element)
-        const padTop = parseInt(style.paddingTop || '0', 10)
-        const padRight = parseInt(style.paddingRight || '0', 10)
-        const padBottom = parseInt(style.paddingBottom || '0', 10)
-        const padLeft = parseInt(style.paddingLeft || '0', 10)
-
-        // If no padding exists, set default 16px
-        if (padTop === 0 && padRight === 0 && padBottom === 0 && padLeft === 0) {
-          executor.execute(
-            new SetPropertyCommand({
-              nodeId,
-              property: 'pad',
-              value: '16',
-            })
-          )
-        }
-      }
-
       this.paddingManager?.showHandles(nodeId)
     } else {
       // Switch back to resize mode
