@@ -6,6 +6,7 @@
  * - V: Set vertical layout
  * - F: Set full dimension (analyzes shape: wider→w full, taller→h full, press again for both)
  * - P: Toggle padding handles (show inner padding handles for direct manipulation)
+ * - M: Toggle margin handles (show outer margin handles for direct manipulation)
  * - Cmd/Ctrl+G: Group selected elements (wrap in Box)
  * - Shift+Cmd/Ctrl+G: Ungroup selected element (unwrap container)
  * - Cmd/Ctrl+D: Duplicate selected element
@@ -132,6 +133,16 @@ export class KeyboardHandler {
       if (nodeId) {
         e.preventDefault()
         events.emit('handles:toggle-padding', { nodeId })
+        return
+      }
+    }
+
+    // M = Toggle margin handles mode
+    if (e.key === 'm' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const nodeId = state.get().selection?.nodeId
+      if (nodeId) {
+        e.preventDefault()
+        events.emit('handles:toggle-margin', { nodeId })
         return
       }
     }

@@ -115,6 +115,11 @@ export interface StudioEvents {
   'padding:start': { nodeId: string; handle: string; startPadding: number; mode: string }
   'padding:move': { nodeId: string; handle: string; mode: string; padding: number }
   'padding:end': { nodeId: string; handle: string; mode: string; padding: number }
+  /** Margin handle events */
+  'handles:toggle-margin': { nodeId: string }
+  'margin:start': { nodeId: string; handle: string; startMargin: number; mode: string }
+  'margin:move': { nodeId: string; handle: string; mode: string; margin: number }
+  'margin:end': { nodeId: string; handle: string; mode: string; margin: number }
   /** Multi-selection resize events (Feature 4) */
   'multiResize:start': {
     nodeIds: string[]

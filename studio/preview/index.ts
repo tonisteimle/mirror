@@ -21,6 +21,7 @@ import { ContextMenu, createContextMenu } from './context-menu'
 import { OverlayManager, createOverlayManager } from '../visual/overlay-manager'
 import { ResizeManager, createResizeManager, type SizingMode } from '../visual/resize-manager'
 import { PaddingManager, createPaddingManager, type PaddingHandle } from '../visual/padding-manager'
+import { MarginManager, createMarginManager, type MarginHandle } from '../visual/margin-manager'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
 import { DragPreview, createDragPreview } from './drag-preview'
 
@@ -142,7 +143,8 @@ export class PreviewController {
   private overlayManager: OverlayManager | null = null
   private resizeManager: ResizeManager | null = null
   private paddingManager: PaddingManager | null = null
-  private handleMode: 'resize' | 'padding' = 'resize'
+  private marginManager: MarginManager | null = null
+  private handleMode: 'resize' | 'padding' | 'margin' = 'resize'
 
   // Slot Visibility System
   private slotVisibilityService: SlotVisibilityService | null = null
