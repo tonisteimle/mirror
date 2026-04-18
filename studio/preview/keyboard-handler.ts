@@ -4,6 +4,7 @@
  * Shortcuts:
  * - H: Set horizontal layout (single selection) OR wrap in horizontal Frame (multiselect)
  * - V: Set vertical layout (single selection) OR wrap in vertical Frame (multiselect)
+ * - U: Ungroup/unwrap selected container
  * - F: Set full dimension (analyzes shape: wider→w full, taller→h full, press again for both)
  * - P: Toggle padding handles (show inner padding handles for direct manipulation)
  * - M: Toggle margin handles (show outer margin handles for direct manipulation)
@@ -90,10 +91,20 @@ export class KeyboardHandler {
     }
 
     // Shift+Cmd/Ctrl+G = Ungroup/Unwrap selected element
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'g') {
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'g') {
       e.preventDefault()
       this.handleUngroup()
       return
+    }
+
+    // U = Ungroup/Unwrap selected element (no modifiers)
+    if (e.key === 'u' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const nodeId = state.get().selection?.nodeId
+      if (nodeId) {
+        e.preventDefault()
+        this.handleUngroup()
+        return
+      }
     }
 
     // Cmd/Ctrl+G = Group/Wrap selected elements

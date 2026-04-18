@@ -127,6 +127,14 @@ import {
   nestedElementTests,
   gapCalculationTests,
   edgeCaseTests as wrapEdgeCaseTests,
+  allUngroupTests,
+  basicUngroupTests,
+  cannotUngroupTests,
+  nestedUngroupTests,
+  childPreservationTests,
+  groupUngroupCycleTests,
+  selectionAfterUngroupTests,
+  ungroupModifierTests,
 } from './interactions'
 
 // Bidirectional
@@ -916,6 +924,7 @@ export const allTests: TestCase[] = [
   ...resizeHandleDragTests,
   ...allMultiselectTests,
   ...allWrapLayoutTests,
+  ...allUngroupTests,
   ...allBidirectionalTests,
   ...allUndoRedoTests,
   ...allAutocompleteTests,
@@ -1069,6 +1078,14 @@ export const testCounts: Record<string, number> = {
   'wrapLayout.nested': nestedElementTests.length,
   'wrapLayout.gap': gapCalculationTests.length,
   'wrapLayout.edge': wrapEdgeCaseTests.length,
+  ungroup: allUngroupTests.length,
+  'ungroup.basic': basicUngroupTests.length,
+  'ungroup.cannotUngroup': cannotUngroupTests.length,
+  'ungroup.nested': nestedUngroupTests.length,
+  'ungroup.childPreservation': childPreservationTests.length,
+  'ungroup.groupCycle': groupUngroupCycleTests.length,
+  'ungroup.selectionAfter': selectionAfterUngroupTests.length,
+  'ungroup.modifiers': ungroupModifierTests.length,
 
   // === Bidirectional ===
   bidirectional: allBidirectionalTests.length,
@@ -1867,6 +1884,14 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'wrapLayout.nested': nestedElementTests,
     'wrapLayout.gap': gapCalculationTests,
     'wrapLayout.edge': wrapEdgeCaseTests,
+    ungroup: allUngroupTests,
+    'ungroup.basic': basicUngroupTests,
+    'ungroup.cannotUngroup': cannotUngroupTests,
+    'ungroup.nested': nestedUngroupTests,
+    'ungroup.childPreservation': childPreservationTests,
+    'ungroup.groupCycle': groupUngroupCycleTests,
+    'ungroup.selectionAfter': selectionAfterUngroupTests,
+    'ungroup.modifiers': ungroupModifierTests,
 
     // === Bidirectional ===
     bidirectional: allBidirectionalTests,

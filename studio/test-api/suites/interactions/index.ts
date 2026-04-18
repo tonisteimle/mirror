@@ -100,3 +100,14 @@ export {
   gapCalculationTests,
   edgeCaseTests,
 } from './wrap-layout.test'
+
+export {
+  allUngroupTests,
+  basicUngroupTests,
+  cannotUngroupTests,
+  nestedUngroupTests,
+  childPreservationTests,
+  groupUngroupCycleTests,
+  selectionAfterUngroupTests,
+  modifierTests as ungroupModifierTests,
+} from './ungroup.test'
