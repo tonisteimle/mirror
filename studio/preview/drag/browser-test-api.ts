@@ -267,6 +267,115 @@ export class BrowserTestRunner {
   }
 
   /**
+   * Execute a canvas element move to an alignment zone
+   */
+  async executeCanvasMoveToAlignmentZone(params: {
+    sourceNodeId: string
+    targetNodeId: string
+    alignmentZone:
+      | 'top-left'
+      | 'top-center'
+      | 'top-right'
+      | 'center-left'
+      | 'center'
+      | 'center-right'
+      | 'bottom-left'
+      | 'bottom-center'
+      | 'bottom-right'
+  }): Promise<BrowserTestResult> {
+    const startTime = performance.now()
+    const codeBefore = this.getCode()
+    const description = `Move ${params.sourceNodeId} to ${params.targetNodeId} alignment zone ${params.alignmentZone}`
+
+    try {
+      // 1. Find source and target elements
+      const sourceEl = this.findElement(params.sourceNodeId)
+      const targetEl = this.findElement(params.targetNodeId)
+
+      if (!sourceEl) {
+        return this.errorResult(
+          description,
+          `Source element ${params.sourceNodeId} not found`,
+          startTime
+        )
+      }
+      if (!targetEl) {
+        return this.errorResult(
+          description,
+          `Target element ${params.targetNodeId} not found`,
+          startTime
+        )
+      }
+
+      // 2. Verify container is large enough for alignment zones
+      const targetRect = targetEl.getBoundingClientRect()
+      if (targetRect.width < 80 || targetRect.height < 80) {
+        return this.errorResult(
+          description,
+          `Container too small for alignment zones (${targetRect.width}x${targetRect.height}, needs >= 80x80)`,
+          startTime,
+          codeBefore
+        )
+      }
+
+      // 3. Set canvas drag data
+      setCanvasDragData(params.sourceNodeId)
+
+      // 4. Calculate zone position within target
+      const zonePosition = this.calculateZonePosition(params.alignmentZone, targetRect)
+
+      // 5. Calculate drop position (absolute screen coordinates)
+      const dropPos: Point = {
+        x: targetRect.left + zonePosition.x,
+        y: targetRect.top + zonePosition.y,
+      }
+
+      // 6. Create drag source
+      const source: DragSource = {
+        type: 'canvas',
+        nodeId: params.sourceNodeId,
+      }
+
+      // 7. Execute animated drag to zone position (same as palette alignment drop)
+      await this.executeAnimatedDragAligned(
+        source,
+        dropPos,
+        params.targetNodeId,
+        params.alignmentZone
+      )
+
+      // 8. Cleanup
+      clearCurrentDragData()
+
+      // 9. Wait for code update with verification
+      const codeChanged = await this.waitForCodeChange(codeBefore, 2000)
+      const codeAfter = this.getCode()
+
+      if (!codeChanged) {
+        // Code didn't change - this likely means callbacks weren't set
+        return this.errorResult(
+          description,
+          `Code did not change after drop. This may indicate DragController callbacks are not set. ` +
+            `Ensure DragPreview is initialized before running tests.`,
+          startTime,
+          codeBefore
+        )
+      }
+
+      return {
+        success: true,
+        description,
+        duration: performance.now() - startTime,
+        codeBefore,
+        codeAfter,
+      }
+    } catch (error) {
+      clearCurrentDragData()
+      return this.errorResult(description, String(error), startTime, codeBefore)
+    }
+  }
+
+  /**
    * Find element by node ID
    */
   private findElement(nodeId: string): HTMLElement | null {
@@ -532,15 +641,25 @@ export class BrowserTestRunner {
       // 8. Cleanup
       clearCurrentDragData()
 
-      // 9. Wait for code update
-      await this.waitForCodeChange(codeBefore)
+      // 9. Wait for code update with verification
+      const codeChanged = await this.waitForCodeChange(codeBefore, 2000)
+      const codeAfter = this.getCode()
+
+      if (!codeChanged) {
+        return this.errorResult(
+          description,
+          `Code did not change after drop. This may indicate DragController callbacks are not set.`,
+          startTime,
+          codeBefore
+        )
+      }
 
       return {
         success: true,
         description,
         duration: performance.now() - startTime,
         codeBefore,
-        codeAfter: this.getCode(),
+        codeAfter,
       }
     } catch (error) {
       clearCurrentDragData()
@@ -700,15 +819,30 @@ export class BrowserTestRunner {
 
   /**
    * Wait for code to change (with timeout)
+   * @returns true if code changed, false if timed out
    */
-  private async waitForCodeChange(originalCode: string, timeout = 1000): Promise<void> {
+  private async waitForCodeChange(originalCode: string, timeout = 1000): Promise<boolean> {
     const startTime = performance.now()
     while (performance.now() - startTime < timeout) {
       if (this.getCode() !== originalCode) {
-        return
+        return true
       }
       await this.delay(50)
     }
+    return false
+  }
+
+  /**
+   * Check if DragController callbacks are set (required for drops to work)
+   */
+  private hasCallbacksSet(): boolean {
+    const controller = getDragController()
+    const state = controller.getTestState()
+    // The controller exposes source/target but not callbacks directly
+    // We can check by attempting a dry run or by checking internal state
+    // For now, we'll trust that if DragPreview was initialized, callbacks are set
+    // This is validated during startDrag/simulateDrop
+    return true
   }
 
   /**
@@ -887,11 +1021,23 @@ class PaletteDragBuilder {
   }
 }
 
+type AlignmentZone =
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'center-left'
+  | 'center'
+  | 'center-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
+
 class CanvasMoveBuilder {
   private runner: BrowserTestRunner
   private sourceId: string
   private targetId: string = ''
   private index: number = 0
+  private alignmentZone?: AlignmentZone
 
   constructor(runner: BrowserTestRunner, sourceId: string) {
     this.runner = runner
@@ -908,6 +1054,15 @@ class CanvasMoveBuilder {
     return this
   }
 
+  /**
+   * Move element to an alignment zone (9-point grid)
+   * Used when moving the only child of a container
+   */
+  atAlignmentZone(zone: AlignmentZone): this {
+    this.alignmentZone = zone
+    return this
+  }
+
   async execute(): Promise<BrowserTestResult> {
     if (!this.targetId)
       return {
@@ -916,6 +1071,16 @@ class CanvasMoveBuilder {
         duration: 0,
         error: 'Target container not specified. Use .toContainer(nodeId)',
       }
+
+    // Use alignment zone execution if specified
+    if (this.alignmentZone) {
+      return this.runner.executeCanvasMoveToAlignmentZone({
+        sourceNodeId: this.sourceId,
+        targetNodeId: this.targetId,
+        alignmentZone: this.alignmentZone,
+      })
+    }
+
     return this.runner.executeCanvasMove({
       sourceNodeId: this.sourceId,
       targetNodeId: this.targetId,

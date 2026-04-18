@@ -110,7 +110,7 @@ import {
   // Icon Picker (for property panel integration)
   getGlobalIconPicker,
   setGlobalIconPickerCallback,
-} from './dist/index.js?v=138'
+} from './dist/index.js?v=140'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1601,15 +1601,32 @@ const editor = new EditorView({
           }
         }
         // Track cursor/selection changes for Editor → Preview sync
-        const prevPos = update.startState.selection.main.head
-        const newPos = update.state.selection.main.head
-        if (prevPos !== newPos && studio.editor) {
-          const line = update.state.doc.lineAt(newPos)
-          studio.editor.notifyCursorMove({
-            line: line.number,
-            column: newPos - line.from + 1,
-            offset: newPos,
-          })
+        const selection = update.state.selection.main
+        const prevSelection = update.startState.selection.main
+
+        // Check if selection changed (position or range)
+        const selectionChanged =
+          selection.from !== prevSelection.from ||
+          selection.to !== prevSelection.to ||
+          selection.head !== prevSelection.head
+
+        if (selectionChanged && studio.editor) {
+          // Check if this is a range selection (multiple lines selected)
+          const fromLine = update.state.doc.lineAt(selection.from)
+          const toLine = update.state.doc.lineAt(selection.to)
+
+          if (fromLine.number !== toLine.number && studio.sync) {
+            // Multi-line selection → trigger multiselection in preview
+            studio.sync.handleEditorSelection(fromLine.number, toLine.number)
+          } else {
+            // Single line or cursor only → regular cursor sync
+            const line = update.state.doc.lineAt(selection.head)
+            studio.editor.notifyCursorMove({
+              line: line.number,
+              column: selection.head - line.from + 1,
+              offset: selection.head,
+            })
+          }
         }
       }),
       // New Unified Trigger System (replaces legacy token, color, icon, animation triggers)

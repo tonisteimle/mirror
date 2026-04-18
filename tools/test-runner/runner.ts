@@ -60,13 +60,6 @@ export class TestRunner {
     await this.enableCDPDomains()
     this.console.attach(this.cdp)
 
-    // Print [TEST] messages in real-time for debugging
-    this.console.onMessage(msg => {
-      if (msg.text.includes('[TEST]')) {
-        console.log(`  ${msg.text}`)
-      }
-    })
-
     if (this.config.screenshotOnFailure) {
       this.screenshot = new ScreenshotCapture(this.cdp, this.config.screenshotDir)
     }

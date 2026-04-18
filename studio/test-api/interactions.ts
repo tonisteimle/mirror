@@ -721,6 +721,48 @@ export class Interactions implements InteractionAPI {
     }
   }
 
+  /**
+   * Move element to alignment zone (9-point grid)
+   *
+   * Used when moving an element within its container. When the element is
+   * the only child, alignment zones appear allowing repositioning.
+   *
+   * @param source - Source element node ID
+   * @param target - Target container node ID
+   * @param zone - Alignment zone: 'top-left', 'top-center', 'top-right',
+   *               'center-left', 'center', 'center-right',
+   *               'bottom-left', 'bottom-center', 'bottom-right'
+   */
+  async moveElementToAlignmentZone(
+    source: string,
+    target: string,
+    zone:
+      | 'top-left'
+      | 'top-center'
+      | 'top-right'
+      | 'center-left'
+      | 'center'
+      | 'center-right'
+      | 'bottom-left'
+      | 'bottom-center'
+      | 'bottom-right'
+  ): Promise<void> {
+    const dragTest = (window as any).__dragTest
+    if (!dragTest) {
+      throw new Error('Drag test API not available')
+    }
+
+    const result = await dragTest
+      .moveElement(source)
+      .toContainer(target)
+      .atAlignmentZone(zone)
+      .execute()
+
+    if (!result.success) {
+      throw new Error(`Move to alignment zone failed: ${result.error}`)
+    }
+  }
+
   // ===========================================================================
   // Resize Handle Interactions
   // ===========================================================================

@@ -177,6 +177,14 @@ export class CodeModifier {
   }
 
   /**
+   * Get the length of the current source
+   * Useful for tracking original length before modifications
+   */
+  getSourceLength(): number {
+    return this.source.length
+  }
+
+  /**
    * Get the current source map
    */
   getSourceMap(): SourceMap {

@@ -15,18 +15,20 @@ export class ElementMoveHandler extends BaseDropHandler {
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
     const { source, targetNodeId, placement, insertionIndex, alignment } = result
 
-    // If alignment zone is specified, add it to the PARENT FIRST (before move)
-    // This ensures the SourceMap is still valid for the property addition
+    // Track original source length BEFORE any modifications
+    // This is needed because each modification updates the CodeModifier's internal source
+    const originalSourceLength = context.codeModifier.getSourceLength()
+
+    // If alignment zone is specified, add it to the PARENT FIRST
+    // addProperty only modifies line content (not line count), so SourceMap positions stay valid
     if (alignment?.zone) {
       const alignResult = context.codeModifier.addProperty(targetNodeId, alignment.zone, '')
       if (!alignResult.success) {
         return alignResult
       }
-      // Update the source map reference for the move operation
-      // Note: The move will use the updated source from addProperty
     }
 
-    // Then move the node
+    // Then move the node - CodeModifier uses updated this.source from addProperty
     const moveResult = context.codeModifier.moveNode(
       source.nodeId!,
       targetNodeId,
@@ -34,6 +36,21 @@ export class ElementMoveHandler extends BaseDropHandler {
       insertionIndex
     )
 
+    // If we did both addProperty and moveNode, we need to fix the change range
+    // The change.to should be based on the ORIGINAL source length, not the intermediate length
+    if (alignment?.zone && moveResult.success && moveResult.change) {
+      const fixedChange = {
+        from: 0,
+        to: originalSourceLength,
+        insert: moveResult.newSource!,
+      }
+      return {
+        ...moveResult,
+        change: fixedChange,
+      }
+    }
+
+    // moveResult.newSource includes both the alignment property and the move
     return moveResult
   }
 }

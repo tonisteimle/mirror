@@ -155,9 +155,18 @@ export class DragController implements Reportable<ControllerReport> {
       }
       this.storeAbsoluteTarget(hit.containerId, absResult.position)
     } else {
-      // Flex/grid layout: check if container is empty and large enough for alignment zones
+      // Flex/grid layout: check if container is empty (or will be empty) and large enough for alignment zones
       const children = this.cache.getChildren(hit.containerId)
-      const isEmptyContainer = children.length === 0
+
+      // Container is effectively empty if:
+      // 1. It has no children, OR
+      // 2. It has exactly one child AND that child is the element being dragged
+      //    (moving the only child would make the container empty)
+      const isOnlyChildBeingDragged =
+        children.length === 1 &&
+        this.source?.type === 'canvas' &&
+        children[0].nodeId === this.source.nodeId
+      const isEmptyContainer = children.length === 0 || isOnlyChildBeingDragged
       const isLargeEnough = this.indicator.isLargeEnoughForAlignmentZones(hit.containerRect)
 
       if (isEmptyContainer && isLargeEnough) {
@@ -322,13 +331,22 @@ export class DragController implements Reportable<ControllerReport> {
 
   /** Execute drop callback safely */
   private async executeDropCallback(source: DragSource, target: DropTarget): Promise<void> {
+    console.log('[DragController] executeDropCallback called', {
+      hasCallbacks: !!this.callbacks,
+      hasOnDrop: !!this.callbacks?.onDrop,
+      source: source.type,
+      targetMode: target.mode,
+    })
+
     if (!this.callbacks?.onDrop) {
       console.warn('[DragController] No onDrop callback set - drop will not be processed')
       return
     }
 
     try {
+      console.log('[DragController] Calling onDrop callback...')
       await this.callbacks.onDrop(source, target)
+      console.log('[DragController] onDrop callback completed')
     } catch (error) {
       console.error('[DragController] Drop failed:', error)
     }

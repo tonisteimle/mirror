@@ -333,6 +333,8 @@ export interface EditorAPI {
   getCursor(): { line: number; column: number }
   /** Set cursor position */
   setCursor(line: number, column: number): void
+  /** Select lines (from line to line, inclusive) */
+  selectLines(fromLine: number, toLine: number): void
   /** Trigger autocomplete */
   triggerAutocomplete(): void
   /** Get autocomplete suggestions */
@@ -415,6 +417,21 @@ export interface InteractionAPI {
   /** Drag component from palette to alignment zone (9-point grid for empty containers) */
   dragToAlignmentZone(
     component: string,
+    target: string,
+    zone:
+      | 'top-left'
+      | 'top-center'
+      | 'top-right'
+      | 'center-left'
+      | 'center'
+      | 'center-right'
+      | 'bottom-left'
+      | 'bottom-center'
+      | 'bottom-right'
+  ): Promise<void>
+  /** Move element to alignment zone (9-point grid) - used when moving the only child of a container */
+  moveElementToAlignmentZone(
+    source: string,
     target: string,
     zone:
       | 'top-left'

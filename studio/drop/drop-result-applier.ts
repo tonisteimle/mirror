@@ -91,10 +91,15 @@ export class DropResultApplier {
   constructor(private deps: ApplierDependencies) {}
 
   apply(result: ModificationResult, componentName: string): void {
-    if (!this.isValidResult(result)) return
+    if (!this.isValidResult(result)) {
+      return
+    }
 
     const change = this.adjustChange(result.change!)
-    if (!this.isValidChange(change)) return
+
+    if (!this.isValidChange(change)) {
+      return
+    }
 
     this.applyToEditor(change)
     this.recordForUndo(change)

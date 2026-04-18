@@ -43,3 +43,11 @@ export {
   alignmentVisualFeedbackTests,
   alignmentParentChildTests,
 } from './alignment-from-empty.test'
+
+export {
+  allAlignmentFromMoveTests,
+  moveSingleChildTests,
+  all9ZonesFromMoveTests,
+  multipleChildrenNoAlignmentTests,
+  alignmentMoveEdgeCases,
+} from './alignment-from-move.test'
