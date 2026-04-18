@@ -112,28 +112,11 @@ export class ZagComponentHandler extends BaseDropHandler {
       result.source.children!
     )
 
-    // First add the child component
-    const childResult = context.codeModifier.addChildWithTemplate(
-      result.targetNodeId,
-      instanceCode,
-      {
-        position: result.insertionIndex ?? 'last',
-      }
-    )
-
-    // If alignment zone is specified, set it on the PARENT, not the child
-    if (result.alignment?.zone && childResult.success) {
-      const alignResult = context.codeModifier.addProperty(
-        result.targetNodeId,
-        result.alignment.zone,
-        ''
-      )
-      if (alignResult.success) {
-        return alignResult
-      }
-    }
-
-    return childResult
+    // Add the child component with optional parent property for alignment
+    return context.codeModifier.addChildWithTemplate(result.targetNodeId, instanceCode, {
+      position: result.insertionIndex ?? 'last',
+      parentProperty: result.alignment?.zone,
+    })
   }
 
   // === HELPERS ===

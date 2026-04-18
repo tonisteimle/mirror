@@ -15,21 +15,24 @@ export class ElementMoveHandler extends BaseDropHandler {
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
     const { source, targetNodeId, placement, insertionIndex, alignment } = result
 
-    // First move the node
+    // If alignment zone is specified, add it to the PARENT FIRST (before move)
+    // This ensures the SourceMap is still valid for the property addition
+    if (alignment?.zone) {
+      const alignResult = context.codeModifier.addProperty(targetNodeId, alignment.zone, '')
+      if (!alignResult.success) {
+        return alignResult
+      }
+      // Update the source map reference for the move operation
+      // Note: The move will use the updated source from addProperty
+    }
+
+    // Then move the node
     const moveResult = context.codeModifier.moveNode(
       source.nodeId!,
       targetNodeId,
       placement,
       insertionIndex
     )
-
-    // If alignment zone is specified, set it on the PARENT, not the child
-    if (alignment?.zone && moveResult.success) {
-      const alignResult = context.codeModifier.addProperty(targetNodeId, alignment.zone, '')
-      if (alignResult.success) {
-        return alignResult
-      }
-    }
 
     return moveResult
   }

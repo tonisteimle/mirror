@@ -5,7 +5,13 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { validate, validateAST, formatErrors, Validator, ERROR_CODES } from '../../compiler/validator/index'
+import {
+  validate,
+  validateAST,
+  formatErrors,
+  Validator,
+  ERROR_CODES,
+} from '../../compiler/validator/index'
 import { generateValidationRules, clearRulesCache } from '../../compiler/validator/generator'
 import { tokenize } from '../../parser/lexer'
 import { Parser } from '../../parser/parser'
@@ -463,6 +469,42 @@ Card as Box:
     it('accepts hor with ver-center', () => {
       const result = validate('Box hor ver-center')
       expect(result.errors.filter(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toHaveLength(0)
+    })
+
+    it('errors when child has alignment in flex parent', () => {
+      const result = validate(`Frame hor
+  Button center`)
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
+      expect(result.errors[0].message).toContain('center')
+      expect(result.errors[0].message).toContain('not allowed on child')
+    })
+
+    it('errors when child has tl alignment in flex parent', () => {
+      const result = validate(`Frame ver
+  Text tl`)
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
+      expect(result.errors[0].message).toContain('tl')
+    })
+
+    it('allows child alignment in stacked parent', () => {
+      const result = validate(`Frame stacked
+  Button center`)
+      expect(result.errors.filter(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toHaveLength(0)
+    })
+
+    it('allows alignment on parent in flex mode', () => {
+      const result = validate('Frame hor, center')
+      expect(result.errors.filter(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toHaveLength(0)
+    })
+
+    it('errors when child has br alignment in default flex parent', () => {
+      const result = validate(`Frame
+  Button br`)
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
+      expect(result.errors[0].message).toContain('br')
     })
   })
 

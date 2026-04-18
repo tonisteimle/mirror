@@ -156,11 +156,13 @@ export interface StudioEvents {
     }
     target: {
       containerId: string
-      insertionIndex: number
-      /** For absolute/stacked containers: position mode */
-      mode?: 'flex' | 'absolute'
+      insertionIndex?: number
+      /** For absolute/stacked/aligned containers: position mode */
+      mode?: 'flex' | 'absolute' | 'aligned'
       /** For absolute/stacked containers: drop position */
       position?: { x: number; y: number }
+      /** For aligned drops: alignment property (tl, tc, tr, cl, center, cr, bl, bc, br) */
+      alignmentProperty?: string
     }
     dragData: ComponentDragData | null
   }

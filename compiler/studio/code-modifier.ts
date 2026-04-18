@@ -99,6 +99,8 @@ export interface AddChildOptions {
   properties?: string
   /** Text content for the component */
   textContent?: string
+  /** Property to add to the PARENT (e.g., alignment like 'center', 'tl', etc.) */
+  parentProperty?: string
 }
 
 /**
@@ -432,7 +434,7 @@ export class CodeModifier {
     componentName: string,
     options: AddChildOptions = {}
   ): ModificationResult {
-    const { position = 'last', properties, textContent } = options
+    const { position = 'last', properties, textContent, parentProperty } = options
 
     // Get parent node mapping
     const parentMapping = this.sourceMap.getNodeById(parentId)
@@ -440,7 +442,36 @@ export class CodeModifier {
       return this.errorResult(`Parent node not found: ${parentId}`)
     }
 
-    // Get existing children
+    // Track combined changes for when we modify parent AND add child
+    let combinedFrom = -1
+    let combinedTo = -1
+    let combinedInsert = ''
+    let parentLengthDelta = 0
+
+    // If parentProperty is specified, add it to the parent first
+    if (parentProperty) {
+      const parentLine = parentMapping.position.line
+      const line = this.lines[parentLine - 1]
+      if (line) {
+        const parsedLine = parseLine(line)
+        const newLine = addPropertyToLine(parsedLine, parentProperty, '')
+
+        // Calculate character offsets for the parent change
+        const lineStartOffset = this.getCharacterOffset(parentLine, 1)
+        combinedFrom = lineStartOffset
+        combinedTo = lineStartOffset + line.length
+        combinedInsert = newLine
+        parentLengthDelta = newLine.length - line.length
+
+        // Apply the parent property change
+        const newLines = [...this.lines]
+        newLines[parentLine - 1] = newLine
+        this.source = newLines.join('\n')
+        this.lines = newLines
+      }
+    }
+
+    // Get existing children (re-fetch after potential parent modification)
     const children = this.sourceMap.getChildren(parentId)
 
     // Calculate insertion point and indentation
@@ -454,17 +485,33 @@ export class CodeModifier {
       insertionInfo.indent
     )
 
-    // Create the change
+    // Create the change for child insertion
     const insertText = `\n${componentLine}`
-    const insertPosition = insertionInfo.charOffset
+    // Adjust insertion position if we modified the parent line
+    const insertPosition = insertionInfo.charOffset + parentLengthDelta
 
-    // Apply the change
+    // Apply the child change
     const newSource =
       this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
 
     // CRITICAL: Persist the changes for subsequent calls
     this.source = newSource
     this.lines = newSource.split('\n')
+
+    // If we had a parent property change, combine the changes
+    if (parentProperty && combinedFrom >= 0) {
+      // The combined change starts at the parent line and ends after the child insertion
+      const finalTo = insertPosition + insertText.length
+      return {
+        success: true,
+        newSource,
+        change: {
+          from: combinedFrom,
+          to: combinedTo,
+          insert: combinedInsert + this.source.substring(combinedTo + parentLengthDelta, finalTo),
+        },
+      }
+    }
 
     return {
       success: true,
@@ -490,9 +537,9 @@ export class CodeModifier {
   addChildWithTemplate(
     parentId: string,
     templateCode: string,
-    options: Pick<AddChildOptions, 'position'> = {}
+    options: Pick<AddChildOptions, 'position' | 'parentProperty'> = {}
   ): ModificationResult {
-    const { position = 'last' } = options
+    const { position = 'last', parentProperty } = options
 
     // Get parent node mapping
     const parentMapping = this.sourceMap.getNodeById(parentId)
@@ -500,7 +547,36 @@ export class CodeModifier {
       return this.errorResult(`Parent node not found: ${parentId}`)
     }
 
-    // Get existing children
+    // Track combined changes for when we modify parent AND add child
+    let combinedFrom = -1
+    let combinedTo = -1
+    let combinedInsert = ''
+    let parentLengthDelta = 0
+
+    // If parentProperty is specified, add it to the parent first
+    if (parentProperty) {
+      const parentLine = parentMapping.position.line
+      const line = this.lines[parentLine - 1]
+      if (line) {
+        const parsedLine = parseLine(line)
+        const newLine = addPropertyToLine(parsedLine, parentProperty, '')
+
+        // Calculate character offsets for the parent change
+        const lineStartOffset = this.getCharacterOffset(parentLine, 1)
+        combinedFrom = lineStartOffset
+        combinedTo = lineStartOffset + line.length
+        combinedInsert = newLine
+        parentLengthDelta = newLine.length - line.length
+
+        // Apply the parent property change
+        const newLines = [...this.lines]
+        newLines[parentLine - 1] = newLine
+        this.source = newLines.join('\n')
+        this.lines = newLines
+      }
+    }
+
+    // Get existing children (re-fetch after potential parent modification)
     const children = this.sourceMap.getChildren(parentId)
 
     // Calculate insertion point and indentation
@@ -511,7 +587,8 @@ export class CodeModifier {
 
     // Create the change
     const insertText = `\n${adjustedTemplate}`
-    const insertPosition = insertionInfo.charOffset
+    // Adjust insertion position if we modified the parent line
+    const insertPosition = insertionInfo.charOffset + parentLengthDelta
 
     // Apply the change
     const newSource =
@@ -520,6 +597,20 @@ export class CodeModifier {
     // CRITICAL: Persist the changes for subsequent calls
     this.source = newSource
     this.lines = newSource.split('\n')
+
+    // If we had a parent property change, combine the changes
+    if (parentProperty && combinedFrom >= 0) {
+      const finalTo = insertPosition + insertText.length
+      return {
+        success: true,
+        newSource,
+        change: {
+          from: combinedFrom,
+          to: combinedTo,
+          insert: combinedInsert + this.source.substring(combinedTo + parentLengthDelta, finalTo),
+        },
+      }
+    }
 
     return {
       success: true,

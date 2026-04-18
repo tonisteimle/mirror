@@ -16,24 +16,11 @@ export class ChartDropHandler extends BaseDropHandler {
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
     const template = this.buildChartTemplate(result)
 
-    // First add the child component
-    const childResult = context.codeModifier.addChildWithTemplate(result.targetNodeId, template, {
+    // Add the child component with optional parent property for alignment
+    return context.codeModifier.addChildWithTemplate(result.targetNodeId, template, {
       position: result.insertionIndex ?? 'last',
+      parentProperty: result.alignment?.zone,
     })
-
-    // If alignment zone is specified, set it on the PARENT, not the child
-    if (result.alignment?.zone && childResult.success) {
-      const alignResult = context.codeModifier.addProperty(
-        result.targetNodeId,
-        result.alignment.zone,
-        ''
-      )
-      if (alignResult.success) {
-        return alignResult
-      }
-    }
-
-    return childResult
   }
 
   private hasDataBlock(result: DropResult): boolean {

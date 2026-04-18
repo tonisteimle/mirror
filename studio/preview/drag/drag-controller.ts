@@ -322,7 +322,10 @@ export class DragController implements Reportable<ControllerReport> {
 
   /** Execute drop callback safely */
   private async executeDropCallback(source: DragSource, target: DropTarget): Promise<void> {
-    if (!this.callbacks?.onDrop) return
+    if (!this.callbacks?.onDrop) {
+      console.warn('[DragController] No onDrop callback set - drop will not be processed')
+      return
+    }
 
     try {
       await this.callbacks.onDrop(source, target)
@@ -392,10 +395,14 @@ export class DragController implements Reportable<ControllerReport> {
     this.lastTarget = target
     this.state = 'dragging'
 
-    const targetDesc =
-      target.mode === 'absolute'
-        ? `(${target.position.x}, ${target.position.y})`
-        : `index ${target.insertionIndex}`
+    let targetDesc: string
+    if (target.mode === 'absolute') {
+      targetDesc = `(${target.position.x}, ${target.position.y})`
+    } else if (target.mode === 'aligned') {
+      targetDesc = `aligned:${target.alignmentProperty}`
+    } else {
+      targetDesc = `index ${(target as FlexDropTarget).insertionIndex}`
+    }
 
     log.info(
       '[Test] Simulated drop:',

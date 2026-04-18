@@ -142,14 +142,20 @@ export class DragPreview {
 
     controller.setCallbacks({
       onDrop: async (source: DragSource, target: DropTarget) => {
-        log.info(
-          'Drop:',
-          source.componentName,
-          '→',
-          target.containerId,
-          'at index',
-          target.insertionIndex
-        )
+        // Build descriptive log message based on target mode
+        let targetDesc: string
+        if (target.mode === 'absolute') {
+          targetDesc = `at (${target.position.x}, ${target.position.y})`
+        } else if (target.mode === 'aligned') {
+          targetDesc = `aligned:${target.alignmentProperty}`
+        } else {
+          targetDesc = `at index ${(target as any).insertionIndex}`
+        }
+
+        log.info('Drop:', source.componentName, '→', target.containerId, targetDesc)
+
+        // Emit the event with current drag data
+        // Note: For aligned drops, the target contains alignmentProperty instead of insertionIndex
         events.emit('drag:dropped', { source, target, dragData: currentDragData })
       },
     })
