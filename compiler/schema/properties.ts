@@ -6,15 +6,15 @@
  */
 
 export type PropertyType =
-  | 'boolean'      // No value needed (hidden, italic)
-  | 'number'       // Numeric value (gap 16, opacity 0.5)
-  | 'string'       // String value (font "Inter")
-  | 'color'        // Color value (#fff, $token)
-  | 'size'         // Size value (100, hug, full, 50%)
-  | 'spacing'      // 1-4 values (pad 16, pad 8 16)
-  | 'border'       // Border shorthand (1 solid #333)
-  | 'enum'         // Fixed options (shadow: sm|md|lg)
-  | 'direction'    // Direction modifier (pad left 16)
+  | 'boolean' // No value needed (hidden, italic)
+  | 'number' // Numeric value (gap 16, opacity 0.5)
+  | 'string' // String value (font "Inter")
+  | 'color' // Color value (#fff, $token)
+  | 'size' // Size value (100, hug, full, 50%)
+  | 'spacing' // 1-4 values (pad 16, pad 8 16)
+  | 'border' // Border shorthand (1 solid #333)
+  | 'enum' // Fixed options (shadow: sm|md|lg)
+  | 'direction' // Direction modifier (pad left 16)
 
 export interface PropertyDefinition {
   name: string
@@ -23,11 +23,11 @@ export interface PropertyDefinition {
   category: PropertyCategory
   description: string
   defaultValue?: string | number | boolean
-  options?: string[]           // For enum type
-  min?: number                 // For number type
-  max?: number                 // For number type
-  unit?: string                // px, %, etc.
-  directions?: string[]        // For directional properties (t, r, b, l, etc.)
+  options?: string[] // For enum type
+  min?: number // For number type
+  max?: number // For number type
+  unit?: string // px, %, etc.
+  directions?: string[] // For directional properties (t, r, b, l, etc.)
 }
 
 export type PropertyCategory =
@@ -257,6 +257,92 @@ export const properties: PropertyDefinition[] = [
     category: 'spacing',
     description: 'Outer spacing',
     directions: ['top', 'right', 'bottom', 'left', 't', 'r', 'b', 'l'],
+  },
+  // Individual side paddings
+  {
+    name: 'pad-x',
+    aliases: ['px'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Horizontal padding',
+  },
+  {
+    name: 'pad-y',
+    aliases: ['py'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Vertical padding',
+  },
+  {
+    name: 'pad-t',
+    aliases: ['pt'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Top padding',
+  },
+  {
+    name: 'pad-r',
+    aliases: ['pr'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Right padding',
+  },
+  {
+    name: 'pad-b',
+    aliases: ['pb'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Bottom padding',
+  },
+  {
+    name: 'pad-l',
+    aliases: ['pl'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Left padding',
+  },
+  // Individual side margins
+  {
+    name: 'mar-x',
+    aliases: ['mx'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Horizontal margin',
+  },
+  {
+    name: 'mar-y',
+    aliases: ['my'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Vertical margin',
+  },
+  {
+    name: 'mar-t',
+    aliases: ['mt'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Top margin',
+  },
+  {
+    name: 'mar-r',
+    aliases: ['mr'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Right margin',
+  },
+  {
+    name: 'mar-b',
+    aliases: ['mb'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Bottom margin',
+  },
+  {
+    name: 'mar-l',
+    aliases: ['ml'],
+    type: 'spacing',
+    category: 'spacing',
+    description: 'Left margin',
   },
 
   // ============================================
@@ -645,9 +731,7 @@ export function getGroupedProperties(): Map<PropertyCategory, PropertyDefinition
  * Find property by name or alias
  */
 export function findProperty(nameOrAlias: string): PropertyDefinition | undefined {
-  return properties.find(p =>
-    p.name === nameOrAlias || p.aliases.includes(nameOrAlias)
-  )
+  return properties.find(p => p.name === nameOrAlias || p.aliases.includes(nameOrAlias))
 }
 
 /**

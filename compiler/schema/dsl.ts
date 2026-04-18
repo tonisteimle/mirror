@@ -1372,6 +1372,63 @@ export const SCHEMA: Record<string, PropertyDef> = {
     token: true,
   },
 
+  // Individual side paddings
+  'pad-t': {
+    name: 'pad-t',
+    aliases: ['pt'],
+    category: 'spacing',
+    description: 'Top padding',
+    numeric: {
+      description: 'Top padding in pixels',
+      unit: 'px',
+      css: n => [{ property: 'padding-top', value: `${n}px` }],
+      example: 'Box pad-t 16',
+    },
+    token: true,
+  },
+
+  'pad-r': {
+    name: 'pad-r',
+    aliases: ['pr'],
+    category: 'spacing',
+    description: 'Right padding',
+    numeric: {
+      description: 'Right padding in pixels',
+      unit: 'px',
+      css: n => [{ property: 'padding-right', value: `${n}px` }],
+      example: 'Box pad-r 16',
+    },
+    token: true,
+  },
+
+  'pad-b': {
+    name: 'pad-b',
+    aliases: ['pb'],
+    category: 'spacing',
+    description: 'Bottom padding',
+    numeric: {
+      description: 'Bottom padding in pixels',
+      unit: 'px',
+      css: n => [{ property: 'padding-bottom', value: `${n}px` }],
+      example: 'Box pad-b 16',
+    },
+    token: true,
+  },
+
+  'pad-l': {
+    name: 'pad-l',
+    aliases: ['pl'],
+    category: 'spacing',
+    description: 'Left padding',
+    numeric: {
+      description: 'Left padding in pixels',
+      unit: 'px',
+      css: n => [{ property: 'padding-left', value: `${n}px` }],
+      example: 'Box pad-l 16',
+    },
+    token: true,
+  },
+
   'mar-x': {
     name: 'mar-x',
     aliases: ['mx'],
@@ -1402,6 +1459,63 @@ export const SCHEMA: Record<string, PropertyDef> = {
         { property: 'margin-bottom', value: `${n}px` },
       ],
       example: 'Box mar-y 16',
+    },
+    token: true,
+  },
+
+  // Individual side margins
+  'mar-t': {
+    name: 'mar-t',
+    aliases: ['mt'],
+    category: 'spacing',
+    description: 'Top margin',
+    numeric: {
+      description: 'Top margin in pixels',
+      unit: 'px',
+      css: n => [{ property: 'margin-top', value: `${n}px` }],
+      example: 'Box mar-t 16',
+    },
+    token: true,
+  },
+
+  'mar-r': {
+    name: 'mar-r',
+    aliases: ['mr'],
+    category: 'spacing',
+    description: 'Right margin',
+    numeric: {
+      description: 'Right margin in pixels',
+      unit: 'px',
+      css: n => [{ property: 'margin-right', value: `${n}px` }],
+      example: 'Box mar-r 16',
+    },
+    token: true,
+  },
+
+  'mar-b': {
+    name: 'mar-b',
+    aliases: ['mb'],
+    category: 'spacing',
+    description: 'Bottom margin',
+    numeric: {
+      description: 'Bottom margin in pixels',
+      unit: 'px',
+      css: n => [{ property: 'margin-bottom', value: `${n}px` }],
+      example: 'Box mar-b 16',
+    },
+    token: true,
+  },
+
+  'mar-l': {
+    name: 'mar-l',
+    aliases: ['ml'],
+    category: 'spacing',
+    description: 'Left margin',
+    numeric: {
+      description: 'Left margin in pixels',
+      unit: 'px',
+      css: n => [{ property: 'margin-left', value: `${n}px` }],
+      example: 'Box mar-l 16',
     },
     token: true,
   },

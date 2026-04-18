@@ -68,6 +68,96 @@ export const paddingModeToggleTests: TestCase[] = describe('P Key - Toggle Paddi
   ),
 
   testWithSetup(
+    'P key switches directly from margin mode to padding mode',
+    'Frame pad 16, mar 8, bg #1a1a1a\n  Text "Content"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+
+      // Reset state
+      api.studio.clearSelection()
+      await api.utils.delay(100)
+
+      // Select element
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(200)
+
+      // Press M to enter margin mode
+      await api.interact.pressKey('m')
+      await api.utils.delay(200)
+
+      // Verify margin handles are visible
+      const marginHandles = document.querySelectorAll('.margin-handle')
+      api.assert.ok(
+        marginHandles.length === 4,
+        `Should have 4 margin handles, got ${marginHandles.length}`
+      )
+
+      // Now press P - should switch DIRECTLY to padding mode (not back to resize)
+      await api.interact.pressKey('p')
+      await api.utils.delay(200)
+
+      // Verify padding handles are now visible
+      const paddingHandles = document.querySelectorAll('.padding-handle')
+      api.assert.ok(
+        paddingHandles.length === 4,
+        `P key from margin mode should switch to padding mode. Expected 4 padding handles, got ${paddingHandles.length}`
+      )
+
+      // Verify margin handles are hidden
+      const marginHandlesAfter = document.querySelectorAll('.margin-handle')
+      api.assert.ok(
+        marginHandlesAfter.length === 0,
+        `Margin handles should be hidden after switching to padding mode, got ${marginHandlesAfter.length}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'M key switches directly from padding mode to margin mode',
+    'Frame pad 16, mar 8, bg #1a1a1a\n  Text "Content"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+
+      // Reset state
+      api.studio.clearSelection()
+      await api.utils.delay(100)
+
+      // Select element
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(200)
+
+      // Press P to enter padding mode
+      await api.interact.pressKey('p')
+      await api.utils.delay(200)
+
+      // Verify padding handles are visible
+      const paddingHandles = document.querySelectorAll('.padding-handle')
+      api.assert.ok(
+        paddingHandles.length === 4,
+        `Should have 4 padding handles, got ${paddingHandles.length}`
+      )
+
+      // Now press M - should switch DIRECTLY to margin mode (not back to resize)
+      await api.interact.pressKey('m')
+      await api.utils.delay(200)
+
+      // Verify margin handles are now visible
+      const marginHandles = document.querySelectorAll('.margin-handle')
+      api.assert.ok(
+        marginHandles.length === 4,
+        `M key from padding mode should switch to margin mode. Expected 4 margin handles, got ${marginHandles.length}`
+      )
+
+      // Verify padding handles are hidden
+      const paddingHandlesAfter = document.querySelectorAll('.padding-handle')
+      api.assert.ok(
+        paddingHandlesAfter.length === 0,
+        `Padding handles should be hidden after switching to margin mode, got ${paddingHandlesAfter.length}`
+      )
+    }
+  ),
+
+  testWithSetup(
     'Padding handles show padding overlay visualization',
     'Frame pad 24, bg #1a1a1a\n  Text "Content"',
     async (api: TestAPI) => {

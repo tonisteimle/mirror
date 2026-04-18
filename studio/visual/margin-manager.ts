@@ -19,7 +19,7 @@ import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 const HANDLE_VISUAL_SIZE = 1 // Visible line: 1px
 const HANDLE_HIT_AREA = 8 // Clickable area: 8px
 const OVERLAY_OPACITY = 0.15 // 15% opacity for margin zones
-const HANDLE_COLOR = '#06B6D4' // Cyan (different from padding's amber)
+const HANDLE_COLOR = '#D946EF' // Magenta/Fuchsia (distinct from padding's amber and selection blue)
 const HANDLE_HOVER_SIZE = 2 // Hover state: 2px
 const GRIP_SIZE = 8 // Square grip indicator size
 
@@ -372,7 +372,7 @@ export class MarginManager {
     rect: { left: number; top: number; width: number; height: number },
     margin: { top: number; right: number; bottom: number; left: number }
   ): void {
-    const overlayColor = `rgba(6, 182, 212, ${OVERLAY_OPACITY})` // Cyan
+    const overlayColor = `rgba(217, 70, 239, ${OVERLAY_OPACITY})` // Magenta/Fuchsia
 
     // Top margin area - full width including left/right margins
     if (margin.top > 0) {

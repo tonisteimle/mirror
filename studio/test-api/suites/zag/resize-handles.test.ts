@@ -130,6 +130,51 @@ function compareBounds(
 
 export const zagSelectResizeTests: TestCase[] = describe('Zag Select: Resize Handles', [
   testWithSetup(
+    'Debug: measure all bounds',
+    'Frame w 200, h 100, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      await api.interact.click('node-1')
+      await api.utils.delay(200)
+
+      // Get preview container
+      const preview = document.getElementById('preview')
+      if (!preview) throw new Error('Preview not found')
+      const previewRect = preview.getBoundingClientRect()
+
+      // Get element
+      const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      if (!element) throw new Error('Element not found')
+      const elementRect = element.getBoundingClientRect()
+
+      // Get handles
+      const handles = api.interact.getResizeHandles()
+      const nwHandle = handles.find(h => h.position === 'nw')
+      if (!nwHandle) throw new Error('NW handle not found')
+
+      // Calculate expected vs actual
+      const elementRelativeLeft = elementRect.left - previewRect.left
+      const elementRelativeTop = elementRect.top - previewRect.top
+
+      const info = [
+        `Preview:  viewport left=${previewRect.left.toFixed(0)}, top=${previewRect.top.toFixed(0)}`,
+        `Element:  viewport left=${elementRect.left.toFixed(0)}, top=${elementRect.top.toFixed(0)}, width=${elementRect.width.toFixed(0)}, height=${elementRect.height.toFixed(0)}`,
+        `Element:  relative left=${elementRelativeLeft.toFixed(0)}, top=${elementRelativeTop.toFixed(0)}`,
+        `NW Handle: viewport left=${nwHandle.rect.left.toFixed(0)}, top=${nwHandle.rect.top.toFixed(0)}`,
+        `NW Handle center: viewport left=${(nwHandle.rect.left + nwHandle.rect.width / 2).toFixed(0)}, top=${(nwHandle.rect.top + nwHandle.rect.height / 2).toFixed(0)}`,
+        `Expected NW center: viewport left=${elementRect.left.toFixed(0)}, top=${elementRect.top.toFixed(0)}`,
+        `Diff: left=${(nwHandle.rect.left + nwHandle.rect.width / 2 - elementRect.left).toFixed(0)}, top=${(nwHandle.rect.top + nwHandle.rect.height / 2 - elementRect.top).toFixed(0)}`,
+      ]
+
+      // This test always fails to show debug info
+      throw new Error('DEBUG OUTPUT:\n' + info.join('\n'))
+    }
+  ),
+
+  testWithSetup(
     'Select handles match trigger visual bounds',
     'Select placeholder "Choose an option..."',
     async (api: TestAPI) => {

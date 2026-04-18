@@ -194,10 +194,30 @@ export class ResizeManager {
       let handleLeft = rect.left + rect.width * x - handleHalf
       let handleTop = rect.top + rect.height * y - handleHalf
 
-      // Clamp to container bounds to prevent handles from being clipped
-      // Ensure handles stay at least minInset pixels inside the container
-      handleLeft = Math.max(minInset, Math.min(containerWidth - handleSize - minInset, handleLeft))
-      handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
+      // Only clamp handles for full-size elements that fill the entire container dimension
+      // For normal elements, allow handles to be at their natural positions (even slightly outside)
+      const elementFillsWidth = rect.left <= 0 && rect.left + rect.width >= containerWidth
+      const elementFillsHeight = rect.top <= 0 && rect.top + rect.height >= containerHeight
+
+      // Clamp to keep handles visible and grabbable
+      if (elementFillsWidth) {
+        // Full-width element: ensure handles stay minInset from edges
+        handleLeft = Math.max(
+          minInset,
+          Math.min(containerWidth - handleSize - minInset, handleLeft)
+        )
+      } else {
+        // Normal element: just prevent handles from being completely outside
+        handleLeft = Math.max(-handleHalf, Math.min(containerWidth - handleHalf, handleLeft))
+      }
+
+      if (elementFillsHeight) {
+        // Full-height element: ensure handles stay minInset from edges
+        handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
+      } else {
+        // Normal element: just prevent handles from being completely outside
+        handleTop = Math.max(-handleHalf, Math.min(containerHeight - handleHalf, handleTop))
+      }
 
       Object.assign(handle.style, {
         position: 'absolute',
@@ -620,11 +640,28 @@ export class ResizeManager {
       const position = HANDLE_POSITION_MAP[pos]
       if (!position) return
 
-      // Calculate and clamp position
+      // Calculate position
       let handleLeft = relRect.left + relRect.width * position.x - handleHalf
       let handleTop = relRect.top + relRect.height * position.y - handleHalf
-      handleLeft = Math.max(minInset, Math.min(containerWidth - handleSize - minInset, handleLeft))
-      handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
+
+      // Only clamp handles for full-size elements that fill the entire container dimension
+      const elementFillsWidth = relRect.left <= 0 && relRect.left + relRect.width >= containerWidth
+      const elementFillsHeight = relRect.top <= 0 && relRect.top + relRect.height >= containerHeight
+
+      if (elementFillsWidth) {
+        handleLeft = Math.max(
+          minInset,
+          Math.min(containerWidth - handleSize - minInset, handleLeft)
+        )
+      } else {
+        handleLeft = Math.max(-handleHalf, Math.min(containerWidth - handleHalf, handleLeft))
+      }
+
+      if (elementFillsHeight) {
+        handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
+      } else {
+        handleTop = Math.max(-handleHalf, Math.min(containerHeight - handleHalf, handleTop))
+      }
 
       handle.style.left = `${handleLeft}px`
       handle.style.top = `${handleTop}px`
@@ -890,11 +927,28 @@ export class ResizeManager {
       const position = HANDLE_POSITION_MAP[pos]
       if (!position) return
 
-      // Calculate and clamp position
+      // Calculate position
       let handleLeft = newX + newWidth * position.x - handleHalf
       let handleTop = newY + newHeight * position.y - handleHalf
-      handleLeft = Math.max(minInset, Math.min(containerWidth - handleSize - minInset, handleLeft))
-      handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
+
+      // Only clamp handles for full-size elements that fill the entire container dimension
+      const elementFillsWidth = newX <= 0 && newX + newWidth >= containerWidth
+      const elementFillsHeight = newY <= 0 && newY + newHeight >= containerHeight
+
+      if (elementFillsWidth) {
+        handleLeft = Math.max(
+          minInset,
+          Math.min(containerWidth - handleSize - minInset, handleLeft)
+        )
+      } else {
+        handleLeft = Math.max(-handleHalf, Math.min(containerWidth - handleHalf, handleLeft))
+      }
+
+      if (elementFillsHeight) {
+        handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
+      } else {
+        handleTop = Math.max(-handleHalf, Math.min(containerHeight - handleHalf, handleTop))
+      }
 
       handle.style.left = `${handleLeft}px`
       handle.style.top = `${handleTop}px`
