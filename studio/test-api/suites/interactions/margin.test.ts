@@ -458,9 +458,8 @@ export const marginScreenshotTests: TestCase[] = describe('Margin Screenshot Deb
       await api.interact.pressKey('m')
       await api.utils.delay(200)
 
-      // Take screenshot
-      const screenshot = await api.inspect.screenshot()
-      console.log('Screenshot taken, length:', screenshot.length)
+      // Log that we're in margin mode (screenshot removed - api doesn't support it)
+      console.log('Margin mode activated')
 
       // Check handles exist
       const handles = api.interact.getMarginHandles()
@@ -477,6 +476,155 @@ export const marginScreenshotTests: TestCase[] = describe('Margin Screenshot Deb
       })
 
       api.assert.ok(handles.length === 4, `Expected 4 handles, got ${handles.length}`)
+    }
+  ),
+
+  testWithSetup(
+    'Margin handle lines form closed rectangle',
+    'Frame mar 24, w 200, h 150, bg #1a1a1a\n  Text "Content", col white',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+
+      // Enter margin mode
+      await api.interact.enterMarginMode('node-1')
+      await api.utils.delay(100)
+
+      // Get the element rect
+      const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(element, 'Element should exist')
+      const elementRect = element.getBoundingClientRect()
+
+      // Get computed margin
+      const style = window.getComputedStyle(element)
+      const margin = {
+        top: parseFloat(style.marginTop) || 0,
+        right: parseFloat(style.marginRight) || 0,
+        bottom: parseFloat(style.marginBottom) || 0,
+        left: parseFloat(style.marginLeft) || 0,
+      }
+
+      console.log('Element rect:', elementRect)
+      console.log('Computed margin:', margin)
+
+      // Calculate expected outer boundary of margin area
+      const expectedOuter = {
+        top: elementRect.top - margin.top,
+        right: elementRect.right + margin.right,
+        bottom: elementRect.bottom + margin.bottom,
+        left: elementRect.left - margin.left,
+      }
+
+      console.log('Expected outer boundary:', expectedOuter)
+
+      // Get the visual lines from the handles
+      const handleLines = document.querySelectorAll('.margin-handle-line')
+      console.log('Handle lines found:', handleLines.length)
+
+      api.assert.ok(handleLines.length === 4, `Expected 4 handle lines, got ${handleLines.length}`)
+
+      // Get the bounding rects of all lines
+      const lineRects: { position: string; rect: DOMRect }[] = []
+      handleLines.forEach((line, i) => {
+        const rect = line.getBoundingClientRect()
+        const handle = line.parentElement as HTMLElement
+        const position = handle?.dataset.position || 'unknown'
+        lineRects.push({ position, rect })
+        console.log(`  Line ${i} (${position}):`, {
+          left: rect.left.toFixed(1),
+          top: rect.top.toFixed(1),
+          right: rect.right.toFixed(1),
+          bottom: rect.bottom.toFixed(1),
+          width: rect.width.toFixed(1),
+          height: rect.height.toFixed(1),
+        })
+      })
+
+      // Find each line by position
+      const topLine = lineRects.find(l => l.position === 'top')
+      const bottomLine = lineRects.find(l => l.position === 'bottom')
+      const leftLine = lineRects.find(l => l.position === 'left')
+      const rightLine = lineRects.find(l => l.position === 'right')
+
+      api.assert.ok(topLine, 'Top line should exist')
+      api.assert.ok(bottomLine, 'Bottom line should exist')
+      api.assert.ok(leftLine, 'Left line should exist')
+      api.assert.ok(rightLine, 'Right line should exist')
+
+      const TOLERANCE = 5 // Allow 5px tolerance
+
+      // Check: Top line should span from left margin edge to right margin edge
+      console.log('\nChecking TOP line horizontal span:')
+      console.log(
+        `  Expected: left=${expectedOuter.left.toFixed(1)}, right=${expectedOuter.right.toFixed(1)}`
+      )
+      console.log(
+        `  Actual: left=${topLine!.rect.left.toFixed(1)}, right=${topLine!.rect.right.toFixed(1)}`
+      )
+
+      api.assert.ok(
+        Math.abs(topLine!.rect.left - expectedOuter.left) < TOLERANCE,
+        `Top line left edge should be at ${expectedOuter.left.toFixed(1)}, got ${topLine!.rect.left.toFixed(1)}`
+      )
+      api.assert.ok(
+        Math.abs(topLine!.rect.right - expectedOuter.right) < TOLERANCE,
+        `Top line right edge should be at ${expectedOuter.right.toFixed(1)}, got ${topLine!.rect.right.toFixed(1)}`
+      )
+
+      // Check: Left line should span from top margin edge to bottom margin edge
+      console.log('\nChecking LEFT line vertical span:')
+      console.log(
+        `  Expected: top=${expectedOuter.top.toFixed(1)}, bottom=${expectedOuter.bottom.toFixed(1)}`
+      )
+      console.log(
+        `  Actual: top=${leftLine!.rect.top.toFixed(1)}, bottom=${leftLine!.rect.bottom.toFixed(1)}`
+      )
+
+      api.assert.ok(
+        Math.abs(leftLine!.rect.top - expectedOuter.top) < TOLERANCE,
+        `Left line top edge should be at ${expectedOuter.top.toFixed(1)}, got ${leftLine!.rect.top.toFixed(1)}`
+      )
+      api.assert.ok(
+        Math.abs(leftLine!.rect.bottom - expectedOuter.bottom) < TOLERANCE,
+        `Left line bottom edge should be at ${expectedOuter.bottom.toFixed(1)}, got ${leftLine!.rect.bottom.toFixed(1)}`
+      )
+
+      // Check: Right line should span from top margin edge to bottom margin edge
+      console.log('\nChecking RIGHT line vertical span:')
+      console.log(
+        `  Expected: top=${expectedOuter.top.toFixed(1)}, bottom=${expectedOuter.bottom.toFixed(1)}`
+      )
+      console.log(
+        `  Actual: top=${rightLine!.rect.top.toFixed(1)}, bottom=${rightLine!.rect.bottom.toFixed(1)}`
+      )
+
+      api.assert.ok(
+        Math.abs(rightLine!.rect.top - expectedOuter.top) < TOLERANCE,
+        `Right line top edge should be at ${expectedOuter.top.toFixed(1)}, got ${rightLine!.rect.top.toFixed(1)}`
+      )
+      api.assert.ok(
+        Math.abs(rightLine!.rect.bottom - expectedOuter.bottom) < TOLERANCE,
+        `Right line bottom edge should be at ${expectedOuter.bottom.toFixed(1)}, got ${rightLine!.rect.bottom.toFixed(1)}`
+      )
+
+      // Check: Bottom line should span from left margin edge to right margin edge
+      console.log('\nChecking BOTTOM line horizontal span:')
+      console.log(
+        `  Expected: left=${expectedOuter.left.toFixed(1)}, right=${expectedOuter.right.toFixed(1)}`
+      )
+      console.log(
+        `  Actual: left=${bottomLine!.rect.left.toFixed(1)}, right=${bottomLine!.rect.right.toFixed(1)}`
+      )
+
+      api.assert.ok(
+        Math.abs(bottomLine!.rect.left - expectedOuter.left) < TOLERANCE,
+        `Bottom line left edge should be at ${expectedOuter.left.toFixed(1)}, got ${bottomLine!.rect.left.toFixed(1)}`
+      )
+      api.assert.ok(
+        Math.abs(bottomLine!.rect.right - expectedOuter.right) < TOLERANCE,
+        `Bottom line right edge should be at ${expectedOuter.right.toFixed(1)}, got ${bottomLine!.rect.right.toFixed(1)}`
+      )
+
+      console.log('\n✅ All lines form a closed rectangle!')
     }
   ),
 ])

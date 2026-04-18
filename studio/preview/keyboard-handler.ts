@@ -2,8 +2,8 @@
  * KeyboardHandler - Keyboard shortcuts for preview interactions
  *
  * Shortcuts:
- * - H: Set horizontal layout
- * - V: Set vertical layout
+ * - H: Set horizontal layout (single selection) OR wrap in horizontal Frame (multiselect)
+ * - V: Set vertical layout (single selection) OR wrap in vertical Frame (multiselect)
  * - F: Set full dimension (analyzes shape: wider→w full, taller→h full, press again for both)
  * - P: Toggle padding handles (show inner padding handles for direct manipulation)
  * - M: Toggle margin handles (show outer margin handles for direct manipulation)
@@ -24,6 +24,7 @@ import {
   executeDelete,
   executeSetLayoutDirection,
   executeSetFullDimension,
+  executeWrapWithLayout,
 } from './shared-actions'
 import { SetPositionCommand } from '../core/commands'
 import type { CommandContext } from '../core/commands'
@@ -116,20 +117,36 @@ export class KeyboardHandler {
       return
     }
 
-    // H = Set horizontal layout (no modifiers)
+    // H = Horizontal layout or wrap multiselection in horizontal Frame
     if (e.key === 'h' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const multiSelection = state.get().multiSelection
+      if (multiSelection.length >= 2) {
+        // Multiselect: wrap in horizontal Frame with calculated gap
+        e.preventDefault()
+        this.handleWrapWithLayout('hor')
+        return
+      }
       const nodeId = state.get().selection?.nodeId
       if (nodeId) {
+        // Single selection: set horizontal layout
         e.preventDefault()
         this.handleSetLayoutDirection('horizontal')
         return
       }
     }
 
-    // V = Set vertical layout (no modifiers)
+    // V = Vertical layout or wrap multiselection in vertical Frame
     if (e.key === 'v' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const multiSelection = state.get().multiSelection
+      if (multiSelection.length >= 2) {
+        // Multiselect: wrap in vertical Frame with calculated gap
+        e.preventDefault()
+        this.handleWrapWithLayout('ver')
+        return
+      }
       const nodeId = state.get().selection?.nodeId
       if (nodeId) {
+        // Single selection: set vertical layout
         e.preventDefault()
         this.handleSetLayoutDirection('vertical')
         return
@@ -470,6 +487,16 @@ export class KeyboardHandler {
 
   private handleSetLayoutDirection(direction: 'horizontal' | 'vertical'): void {
     const result = executeSetLayoutDirection(direction)
+
+    if (result.success) {
+      events.emit('notification:success', { message: result.message!, duration: 1500 })
+    } else {
+      events.emit('notification:warning', { message: result.error! })
+    }
+  }
+
+  private handleWrapWithLayout(direction: 'hor' | 'ver'): void {
+    const result = executeWrapWithLayout(this.container, direction)
 
     if (result.success) {
       events.emit('notification:success', { message: result.message!, duration: 1500 })

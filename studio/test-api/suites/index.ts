@@ -22,6 +22,7 @@ import {
   basicPrimitives,
   semanticPrimitives,
   headingPrimitives,
+  primitiveDefaultsTests,
 } from './primitives'
 
 // Layout (fully migrated)
@@ -119,6 +120,13 @@ import {
   marginHandlePositionTests,
   marginHandleDragTests,
   marginModeSelectionTests,
+  allWrapLayoutTests,
+  hKeyBehaviorTests,
+  vKeyBehaviorTests,
+  selectionTransitionTests,
+  nestedElementTests,
+  gapCalculationTests,
+  edgeCaseTests as wrapEdgeCaseTests,
 } from './interactions'
 
 // Bidirectional
@@ -189,6 +197,11 @@ import {
   allZonesTests,
   alignmentEdgeCaseTests,
   componentVarietyTests as alignmentComponentTests,
+  allAlignmentFromEmptyTests,
+  alignmentFromEmptyTests,
+  all9ZonesFromEmptyTests,
+  alignmentVisualFeedbackTests,
+  alignmentParentChildTests,
 } from './drag'
 
 // Workflow
@@ -464,7 +477,13 @@ import type { TestCase, TestSuiteResult } from '../types'
 // =============================================================================
 
 // Primitives
-export { allPrimitivesTests, basicPrimitives, semanticPrimitives, headingPrimitives }
+export {
+  allPrimitivesTests,
+  basicPrimitives,
+  semanticPrimitives,
+  headingPrimitives,
+  primitiveDefaultsTests,
+}
 
 // Layout
 export {
@@ -605,6 +624,11 @@ export {
   allZonesTests,
   alignmentEdgeCaseTests,
   alignmentComponentTests,
+  allAlignmentFromEmptyTests,
+  alignmentFromEmptyTests,
+  all9ZonesFromEmptyTests,
+  alignmentVisualFeedbackTests,
+  alignmentParentChildTests,
 }
 
 // Property Panel
@@ -891,12 +915,14 @@ export const allTests: TestCase[] = [
   ...tokenExtractTests,
   ...resizeHandleDragTests,
   ...allMultiselectTests,
+  ...allWrapLayoutTests,
   ...allBidirectionalTests,
   ...allUndoRedoTests,
   ...allAutocompleteTests,
   ...allStackedDragTests,
   ...allFlexReorderTests,
   ...allAlignmentZoneTests,
+  ...allAlignmentFromEmptyTests,
   ...allPropertyPanelTests,
   ...allChartTests,
   ...allWorkflowTests,
@@ -945,6 +971,7 @@ export const testCounts: Record<string, number> = {
   'primitives.basic': basicPrimitives.length,
   'primitives.semantic': semanticPrimitives.length,
   'primitives.headings': headingPrimitives.length,
+  'primitives.defaults': primitiveDefaultsTests.length,
 
   // === Layout ===
   layout: allLayoutTests.length,
@@ -1035,6 +1062,13 @@ export const testCounts: Record<string, number> = {
   'paddingHandlers.drag': paddingHandleDragTests.length,
   'paddingHandlers.modeSelection': paddingModeSelectionTests.length,
   tokenExtract: tokenExtractTests.length,
+  wrapLayout: allWrapLayoutTests.length,
+  'wrapLayout.hKey': hKeyBehaviorTests.length,
+  'wrapLayout.vKey': vKeyBehaviorTests.length,
+  'wrapLayout.transitions': selectionTransitionTests.length,
+  'wrapLayout.nested': nestedElementTests.length,
+  'wrapLayout.gap': gapCalculationTests.length,
+  'wrapLayout.edge': wrapEdgeCaseTests.length,
 
   // === Bidirectional ===
   bidirectional: allBidirectionalTests.length,
@@ -1087,6 +1121,11 @@ export const testCounts: Record<string, number> = {
   'alignmentZone.allZones': allZonesTests.length,
   'alignmentZone.edgeCases': alignmentEdgeCaseTests.length,
   'alignmentZone.componentVariety': alignmentComponentTests.length,
+  alignmentFromEmpty: allAlignmentFromEmptyTests.length,
+  'alignmentFromEmpty.basic': alignmentFromEmptyTests.length,
+  'alignmentFromEmpty.all9Zones': all9ZonesFromEmptyTests.length,
+  'alignmentFromEmpty.visualFeedback': alignmentVisualFeedbackTests.length,
+  'alignmentFromEmpty.parentChild': alignmentParentChildTests.length,
 
   // === Property Panel ===
   propertyPanel: allPropertyPanelTests.length,
@@ -1355,6 +1394,7 @@ export type TestCategory =
   | 'primitives.basic'
   | 'primitives.semantic'
   | 'primitives.headings'
+  | 'primitives.defaults'
 
   // === Layout ===
   | 'layout'
@@ -1486,6 +1526,11 @@ export type TestCategory =
   | 'alignmentZone.allZones'
   | 'alignmentZone.edgeCases'
   | 'alignmentZone.componentVariety'
+  | 'alignmentFromEmpty'
+  | 'alignmentFromEmpty.basic'
+  | 'alignmentFromEmpty.all9Zones'
+  | 'alignmentFromEmpty.visualFeedback'
+  | 'alignmentFromEmpty.parentChild'
 
   // === Property Panel ===
   | 'propertyPanel'
@@ -1723,6 +1768,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'primitives.basic': basicPrimitives,
     'primitives.semantic': semanticPrimitives,
     'primitives.headings': headingPrimitives,
+    'primitives.defaults': primitiveDefaultsTests,
 
     // === Layout ===
     layout: allLayoutTests,
@@ -1814,6 +1860,13 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'paddingHandlers.drag': paddingHandleDragTests,
     'paddingHandlers.modeSelection': paddingModeSelectionTests,
     tokenExtract: tokenExtractTests,
+    wrapLayout: allWrapLayoutTests,
+    'wrapLayout.hKey': hKeyBehaviorTests,
+    'wrapLayout.vKey': vKeyBehaviorTests,
+    'wrapLayout.transitions': selectionTransitionTests,
+    'wrapLayout.nested': nestedElementTests,
+    'wrapLayout.gap': gapCalculationTests,
+    'wrapLayout.edge': wrapEdgeCaseTests,
 
     // === Bidirectional ===
     bidirectional: allBidirectionalTests,
@@ -1866,6 +1919,11 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'alignmentZone.allZones': allZonesTests,
     'alignmentZone.edgeCases': alignmentEdgeCaseTests,
     'alignmentZone.componentVariety': alignmentComponentTests,
+    alignmentFromEmpty: allAlignmentFromEmptyTests,
+    'alignmentFromEmpty.basic': alignmentFromEmptyTests,
+    'alignmentFromEmpty.all9Zones': all9ZonesFromEmptyTests,
+    'alignmentFromEmpty.visualFeedback': alignmentVisualFeedbackTests,
+    'alignmentFromEmpty.parentChild': alignmentParentChildTests,
 
     // === Property Panel ===
     propertyPanel: allPropertyPanelTests,
@@ -2098,6 +2156,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'primitives.basic': 'Basic Primitives',
     'primitives.semantic': 'Semantic Primitives',
     'primitives.headings': 'Heading Primitives',
+    'primitives.defaults': 'Primitive Defaults',
 
     // === Layout ===
     layout: 'Layout',
@@ -2229,6 +2288,11 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'alignmentZone.allZones': 'Alignment: All Zones',
     'alignmentZone.edgeCases': 'Alignment: Edge Cases',
     'alignmentZone.componentVariety': 'Alignment: Component Variety',
+    alignmentFromEmpty: 'Alignment from Empty',
+    'alignmentFromEmpty.basic': 'Alignment Empty: Basic',
+    'alignmentFromEmpty.all9Zones': 'Alignment Empty: All 9 Zones',
+    'alignmentFromEmpty.visualFeedback': 'Alignment Empty: Visual Feedback',
+    'alignmentFromEmpty.parentChild': 'Alignment Empty: Parent/Child',
 
     // === Property Panel ===
     propertyPanel: 'Property Panel',

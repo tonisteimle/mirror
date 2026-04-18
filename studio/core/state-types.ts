@@ -188,7 +188,14 @@ export interface StudioState {
   layoutInfo: Map<string, LayoutRect>
   /** Layout version - incremented after each layout extraction */
   layoutVersion: number
+  /** Current handle mode in preview (resize, padding, margin) */
+  handleMode: HandleMode
 }
+
+/**
+ * Handle mode for preview interactions
+ */
+export type HandleMode = 'resize' | 'padding' | 'margin'
 
 /**
  * Store subscriber type

@@ -90,3 +90,13 @@ export {
   marginHandleDragTests,
   marginModeSelectionTests,
 } from './margin-handlers.test'
+
+export {
+  allWrapLayoutTests,
+  hKeyBehaviorTests,
+  vKeyBehaviorTests,
+  selectionTransitionTests,
+  nestedElementTests,
+  gapCalculationTests,
+  edgeCaseTests,
+} from './wrap-layout.test'

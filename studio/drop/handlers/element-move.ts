@@ -14,14 +14,23 @@ export class ElementMoveHandler extends BaseDropHandler {
 
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
     const { source, targetNodeId, placement, insertionIndex, alignment } = result
-    // Pass alignment property if present (e.g., 'tl', 'center', 'br')
-    const options = alignment?.zone ? { properties: alignment.zone } : undefined
-    return context.codeModifier.moveNode(
+
+    // First move the node
+    const moveResult = context.codeModifier.moveNode(
       source.nodeId!,
       targetNodeId,
       placement,
-      insertionIndex,
-      options
+      insertionIndex
     )
+
+    // If alignment zone is specified, set it on the PARENT, not the child
+    if (alignment?.zone && moveResult.success) {
+      const alignResult = context.codeModifier.addProperty(targetNodeId, alignment.zone, '')
+      if (alignResult.success) {
+        return alignResult
+      }
+    }
+
+    return moveResult
   }
 }

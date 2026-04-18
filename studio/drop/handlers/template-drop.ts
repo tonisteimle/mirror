@@ -14,32 +14,29 @@ export class TemplateDropHandler extends BaseDropHandler {
   }
 
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
-    let template = result.source.mirTemplate!
-    // Add alignment property to template if present
-    if (result.alignment?.zone) {
-      template = this.addAlignmentToTemplate(template, result.alignment.zone)
-    }
-    return context.codeModifier.addChildWithTemplate(result.targetNodeId, template, {
+    const template = result.source.mirTemplate!
+
+    // First add the child component
+    const childResult = context.codeModifier.addChildWithTemplate(result.targetNodeId, template, {
       position: result.insertionIndex ?? 'last',
     })
+
+    // If alignment zone is specified, set it on the PARENT, not the child
+    if (result.alignment?.zone && childResult.success) {
+      const alignResult = context.codeModifier.addProperty(
+        result.targetNodeId,
+        result.alignment.zone,
+        ''
+      )
+      if (alignResult.success) {
+        return alignResult
+      }
+    }
+
+    return childResult
   }
 
   private hasMirTemplate(result: DropResult): boolean {
     return !!result.source.mirTemplate
-  }
-
-  /**
-   * Add alignment property to the first line of a template
-   * e.g., "Frame gap 12" + "center" → "Frame gap 12, center"
-   */
-  private addAlignmentToTemplate(template: string, alignProp: string): string {
-    const lines = template.split('\n')
-    if (lines.length === 0) return template
-    // Add alignment to the first line
-    const firstLine = lines[0]
-    // Check if first line already has properties (contains a comma or space after component name)
-    const hasProps = firstLine.includes(',') || /^\w+\s+\S/.test(firstLine)
-    lines[0] = hasProps ? `${firstLine}, ${alignProp}` : `${firstLine} ${alignProp}`
-    return lines.join('\n')
   }
 }

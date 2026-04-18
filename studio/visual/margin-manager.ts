@@ -16,11 +16,11 @@ import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 
 // Visual constants
-const HANDLE_VISUAL_SIZE = 1 // Visible line: 1px
+const HANDLE_VISUAL_SIZE = 2 // Visible line: 2px (1px is too thin to see)
 const HANDLE_HIT_AREA = 8 // Clickable area: 8px
 const OVERLAY_OPACITY = 0.15 // 15% opacity for margin zones
 const HANDLE_COLOR = '#D946EF' // Magenta/Fuchsia (distinct from padding's amber and selection blue)
-const HANDLE_HOVER_SIZE = 2 // Hover state: 2px
+const HANDLE_HOVER_SIZE = 3 // Hover state: 3px
 const GRIP_SIZE = 8 // Square grip indicator size
 
 export type MarginHandle = 'top' | 'right' | 'bottom' | 'left'
@@ -210,24 +210,24 @@ export class MarginManager {
       currentMargin: margin.bottom,
     })
 
-    // Left handle - vertical line to the left of the element
+    // Left handle - vertical line to the left of the element (full height including margins)
     this.createHandle(container, {
       position: 'left',
       nodeId,
       left: rect.left - margin.left,
-      top: rect.top,
-      height: rect.height,
+      top: rect.top - margin.top,
+      height: rect.height + margin.top + margin.bottom,
       cursor: 'ew-resize',
       currentMargin: margin.left,
     })
 
-    // Right handle - vertical line to the right of the element
+    // Right handle - vertical line to the right of the element (full height including margins)
     this.createHandle(container, {
       position: 'right',
       nodeId,
       left: rect.left + rect.width + margin.right,
-      top: rect.top,
-      height: rect.height,
+      top: rect.top - margin.top,
+      height: rect.height + margin.top + margin.bottom,
       cursor: 'ew-resize',
       currentMargin: margin.right,
     })

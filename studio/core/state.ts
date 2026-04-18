@@ -22,6 +22,7 @@ import type {
   PanelSizes,
   PanelSettings,
   LayoutRect,
+  HandleMode,
   StudioState,
   Subscriber,
   Selector,
@@ -38,6 +39,7 @@ export type {
   PanelSizes,
   PanelSettings,
   LayoutRect,
+  HandleMode,
   StudioState,
   Subscriber,
   Selector,
@@ -137,6 +139,7 @@ const initialState: StudioState = {
   playMode: false,
   layoutInfo: new Map(),
   layoutVersion: 0,
+  handleMode: 'resize',
 }
 
 export const state = new Store<StudioState>(initialState)
@@ -394,6 +397,17 @@ export const actions = {
   clearMultiSelection(): void {
     state.set({ multiSelection: [] })
     events.emit('multiselection:changed', { nodeIds: [] })
+  },
+
+  /**
+   * Set the handle mode (resize, padding, margin)
+   */
+  setHandleMode(mode: HandleMode): void {
+    const prevMode = state.get().handleMode
+    if (prevMode !== mode) {
+      state.set({ handleMode: mode })
+      events.emit('handleMode:changed', { mode, prevMode })
+    }
   },
 
   /**

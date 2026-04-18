@@ -144,7 +144,7 @@ export class PreviewController {
   private resizeManager: ResizeManager | null = null
   private paddingManager: PaddingManager | null = null
   private marginManager: MarginManager | null = null
-  private handleMode: 'resize' | 'padding' | 'margin' = 'resize'
+  // handleMode is now in global state (state.get().handleMode)
 
   // Slot Visibility System
   private slotVisibilityService: SlotVisibilityService | null = null
@@ -487,15 +487,16 @@ export class PreviewController {
    * - From padding → resize
    */
   private toggleHandleMode(nodeId: string): void {
-    if (this.handleMode === 'resize' || this.handleMode === 'margin') {
+    const currentMode = state.get().handleMode
+    if (currentMode === 'resize' || currentMode === 'margin') {
       // Switch to padding mode (from resize or margin)
-      this.handleMode = 'padding'
+      actions.setHandleMode('padding')
       this.resizeManager?.hideHandles()
       this.marginManager?.hideHandles()
       this.paddingManager?.showHandles(nodeId)
     } else {
       // Switch back to resize mode (from padding)
-      this.handleMode = 'resize'
+      actions.setHandleMode('resize')
       this.paddingManager?.hideHandles()
       this.marginManager?.hideHandles()
       this.resizeManager?.showHandles(nodeId)
@@ -509,15 +510,16 @@ export class PreviewController {
    * - From margin → resize
    */
   private toggleMarginMode(nodeId: string): void {
-    if (this.handleMode === 'resize' || this.handleMode === 'padding') {
+    const currentMode = state.get().handleMode
+    if (currentMode === 'resize' || currentMode === 'padding') {
       // Switch to margin mode (from resize or padding)
-      this.handleMode = 'margin'
+      actions.setHandleMode('margin')
       this.resizeManager?.hideHandles()
       this.paddingManager?.hideHandles()
       this.marginManager?.showHandles(nodeId)
     } else {
       // Switch back to resize mode (from margin)
-      this.handleMode = 'resize'
+      actions.setHandleMode('resize')
       this.paddingManager?.hideHandles()
       this.marginManager?.hideHandles()
       this.resizeManager?.showHandles(nodeId)
@@ -671,11 +673,12 @@ export class PreviewController {
 
     this.handleManager?.showHandles(nodeId)
     // Show handles based on current mode
-    if (this.handleMode === 'padding') {
+    const currentMode = state.get().handleMode
+    if (currentMode === 'padding') {
       this.resizeManager?.hideHandles()
       this.marginManager?.hideHandles()
       this.paddingManager?.showHandles(nodeId)
-    } else if (this.handleMode === 'margin') {
+    } else if (currentMode === 'margin') {
       this.resizeManager?.hideHandles()
       this.paddingManager?.hideHandles()
       this.marginManager?.showHandles(nodeId)
@@ -692,7 +695,7 @@ export class PreviewController {
     this.paddingManager?.hideHandles()
     this.marginManager?.hideHandles()
     // Reset to resize mode when hiding all handles
-    this.handleMode = 'resize'
+    actions.setHandleMode('resize')
   }
 
   private updateEditorFocusForSelection(nodeId: string | null): void {

@@ -35,3 +35,11 @@ export {
   alignmentEdgeCaseTests,
   componentVarietyTests,
 } from './alignment-zone-tests'
+
+export {
+  allAlignmentFromEmptyTests,
+  alignmentFromEmptyTests,
+  all9ZonesFromEmptyTests,
+  alignmentVisualFeedbackTests,
+  alignmentParentChildTests,
+} from './alignment-from-empty.test'

@@ -90,6 +90,132 @@ export function executeGroup(container: HTMLElement): ActionResult {
 }
 
 /**
+ * Wrap selected elements in a Frame with specified layout direction and calculated gap
+ *
+ * @param container - The preview container element (for reading element positions)
+ * @param direction - Layout direction ('hor' or 'ver')
+ * @returns ActionResult with success/failure info
+ */
+export function executeWrapWithLayout(
+  container: HTMLElement,
+  direction: 'hor' | 'ver'
+): ActionResult {
+  const multiSelection = state.get().multiSelection
+
+  if (multiSelection.length < 2) {
+    return {
+      success: false,
+      error: 'Select at least 2 elements (Shift+Click)',
+    }
+  }
+
+  const sourceMap = state.get().sourceMap
+  if (!sourceMap) {
+    return { success: false, error: 'No source map available' }
+  }
+
+  // Validate: all nodes must have the same parent
+  const nodes = multiSelection.map(id => sourceMap.getNodeById(id))
+  const parents = nodes.map(n => n?.parentId)
+  if (new Set(parents).size !== 1 || !parents[0]) {
+    return {
+      success: false,
+      error: 'Selected elements must be siblings (same parent)',
+    }
+  }
+
+  const firstNode = sourceMap.getNodeById(multiSelection[0])
+  if (!firstNode?.parentId) {
+    return { success: false, error: 'Cannot wrap root elements' }
+  }
+
+  // Calculate average gap between selected elements
+  const gap = calculateAverageGap(container, multiSelection, direction)
+
+  // Build wrapper properties
+  let wrapperProps = direction
+  if (gap > 0) {
+    wrapperProps += `, gap ${gap}`
+  }
+
+  // Execute wrap command
+  const result = executor.execute(
+    new WrapNodesCommand({
+      nodeIds: multiSelection,
+      wrapperName: 'Frame',
+      wrapperProps,
+    })
+  )
+
+  if (result.success) {
+    actions.clearMultiSelection()
+    const dirLabel = direction === 'hor' ? 'horizontal' : 'vertical'
+    return {
+      success: true,
+      message: `Wrapped ${multiSelection.length} elements (${dirLabel}, gap ${gap})`,
+    }
+  }
+
+  return { success: false, error: result.error || 'Failed to wrap elements' }
+}
+
+/**
+ * Calculate the average gap between elements based on their positions
+ */
+function calculateAverageGap(
+  container: HTMLElement,
+  nodeIds: string[],
+  direction: 'hor' | 'ver'
+): number {
+  if (nodeIds.length < 2) return 8 // Default gap
+
+  // Get element rects sorted by position
+  const rects: { id: string; rect: DOMRect }[] = []
+  for (const id of nodeIds) {
+    const el = container.querySelector(`[data-mirror-id="${id}"]`) as HTMLElement
+    if (el) {
+      rects.push({ id, rect: el.getBoundingClientRect() })
+    }
+  }
+
+  if (rects.length < 2) return 8 // Default gap
+
+  // Sort by position (left for horizontal, top for vertical)
+  if (direction === 'hor') {
+    rects.sort((a, b) => a.rect.left - b.rect.left)
+  } else {
+    rects.sort((a, b) => a.rect.top - b.rect.top)
+  }
+
+  // Calculate gaps between consecutive elements
+  const gaps: number[] = []
+  for (let i = 0; i < rects.length - 1; i++) {
+    const current = rects[i].rect
+    const next = rects[i + 1].rect
+
+    let gap: number
+    if (direction === 'hor') {
+      // Gap = next.left - current.right
+      gap = next.left - current.right
+    } else {
+      // Gap = next.top - current.bottom
+      gap = next.top - current.bottom
+    }
+
+    // Only count positive gaps (elements not overlapping)
+    if (gap > 0) {
+      gaps.push(gap)
+    }
+  }
+
+  if (gaps.length === 0) return 8 // Default gap if no valid gaps found
+
+  // Calculate average and round to nearest 4px (design grid)
+  const average = gaps.reduce((sum, g) => sum + g, 0) / gaps.length
+  return Math.round(average / 4) * 4 || 8
+}
+
+/**
  * Ungroup a container, promoting its children to the parent level
  *
  * @returns ActionResult with success/failure info

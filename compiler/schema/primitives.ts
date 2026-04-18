@@ -80,6 +80,7 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
     defaults: [
       { name: 'w', values: ['hug'] },
       { name: 'h', values: [SIZES.controlHeight] },
+      { name: 'minw', values: [SIZES.controlHeight] }, // Prevent buttons from being too narrow
       { name: 'pad', values: [0, 16] },
       { name: 'rad', values: [SIZES.radius] },
       { name: 'bor', values: [0] },

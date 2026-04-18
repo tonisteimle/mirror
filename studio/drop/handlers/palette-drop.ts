@@ -14,7 +14,25 @@ export class PaletteDropHandler extends BaseDropHandler {
 
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
     const properties = this.buildProperties(result, context)
-    return this.addComponent(result, properties, context)
+
+    // First add the child component
+    const childResult = this.addComponent(result, properties, context)
+
+    // If alignment zone is specified, set it on the PARENT, not the child
+    // This must happen AFTER addChild so the code state is correct
+    if (result.alignment?.zone && childResult.success) {
+      const alignResult = context.codeModifier.addProperty(
+        result.targetNodeId,
+        result.alignment.zone,
+        ''
+      )
+      // Return the alignment result as it has the final code state
+      if (alignResult.success) {
+        return alignResult
+      }
+    }
+
+    return childResult
   }
 
   private isZagComponent(result: DropResult): boolean {
@@ -26,19 +44,8 @@ export class PaletteDropHandler extends BaseDropHandler {
     if (this.needsPositionProperties(result)) {
       properties = this.addPositionProperties(properties, result, context)
     }
-    if (this.needsAlignmentProperty(result)) {
-      properties = this.addAlignmentProperty(properties, result)
-    }
+    // Note: Alignment is set on the PARENT in handle(), not on the child here
     return properties
-  }
-
-  private needsAlignmentProperty(result: DropResult): boolean {
-    return !!result.alignment?.zone
-  }
-
-  private addAlignmentProperty(properties: string, result: DropResult): string {
-    const alignProp = result.alignment!.zone!
-    return properties ? `${properties}, ${alignProp}` : alignProp
   }
 
   private needsPositionProperties(result: DropResult): boolean {

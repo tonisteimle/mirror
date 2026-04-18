@@ -15,9 +15,25 @@ export class ChartDropHandler extends BaseDropHandler {
 
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
     const template = this.buildChartTemplate(result)
-    return context.codeModifier.addChildWithTemplate(result.targetNodeId, template, {
+
+    // First add the child component
+    const childResult = context.codeModifier.addChildWithTemplate(result.targetNodeId, template, {
       position: result.insertionIndex ?? 'last',
     })
+
+    // If alignment zone is specified, set it on the PARENT, not the child
+    if (result.alignment?.zone && childResult.success) {
+      const alignResult = context.codeModifier.addProperty(
+        result.targetNodeId,
+        result.alignment.zone,
+        ''
+      )
+      if (alignResult.success) {
+        return alignResult
+      }
+    }
+
+    return childResult
   }
 
   private hasDataBlock(result: DropResult): boolean {
@@ -31,13 +47,8 @@ export class ChartDropHandler extends BaseDropHandler {
       .split('\n')
       .map(line => `  ${line}`)
       .join('\n')}`
-    // Build chart code with properties and alignment
-    let chartCode = properties ? `${componentName!} ${properties}` : componentName!
-    if (result.alignment?.zone) {
-      chartCode = properties
-        ? `${chartCode}, ${result.alignment.zone}`
-        : `${chartCode} ${result.alignment.zone}`
-    }
+    // Build chart code with properties (alignment is on parent now)
+    const chartCode = properties ? `${componentName!} ${properties}` : componentName!
     return `${dataBlockCode}\n\n${chartCode}`
   }
 }

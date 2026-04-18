@@ -111,9 +111,29 @@ export class ZagComponentHandler extends BaseDropHandler {
       properties,
       result.source.children!
     )
-    return context.codeModifier.addChildWithTemplate(result.targetNodeId, instanceCode, {
-      position: result.insertionIndex ?? 'last',
-    })
+
+    // First add the child component
+    const childResult = context.codeModifier.addChildWithTemplate(
+      result.targetNodeId,
+      instanceCode,
+      {
+        position: result.insertionIndex ?? 'last',
+      }
+    )
+
+    // If alignment zone is specified, set it on the PARENT, not the child
+    if (result.alignment?.zone && childResult.success) {
+      const alignResult = context.codeModifier.addProperty(
+        result.targetNodeId,
+        result.alignment.zone,
+        ''
+      )
+      if (alignResult.success) {
+        return alignResult
+      }
+    }
+
+    return childResult
   }
 
   // === HELPERS ===
@@ -133,19 +153,8 @@ export class ZagComponentHandler extends BaseDropHandler {
     if (this.needsPositionProperties(result)) {
       properties = this.addPositionProperties(properties, result, context)
     }
-    if (this.needsAlignmentProperty(result)) {
-      properties = this.addAlignmentProperty(properties, result)
-    }
+    // Note: Alignment is set on the PARENT in createInstance(), not on the child here
     return properties
-  }
-
-  private needsAlignmentProperty(result: DropResult): boolean {
-    return !!result.alignment?.zone
-  }
-
-  private addAlignmentProperty(properties: string, result: DropResult): string {
-    const alignProp = result.alignment!.zone!
-    return properties ? `${properties}, ${alignProp}` : alignProp
   }
 
   private needsPositionProperties(result: DropResult): boolean {
