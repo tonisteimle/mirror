@@ -428,21 +428,87 @@ export class PreviewController {
         events.emit('selection:refresh', { nodeId: data.nodeId })
       }
     )
+
+    // Listen for margin toggle events (M key)
+    this.unsubscribeMarginToggle = events.on(
+      'handles:toggle-margin',
+      (data: { nodeId: string }) => {
+        this.toggleMarginMode(data.nodeId)
+      }
+    )
+
+    // Listen for margin:end events to execute commands
+    this.unsubscribeMarginEnd = events.on(
+      'margin:end',
+      (data: { nodeId: string; handle: MarginHandle; mode: string; margin: number }) => {
+        // Determine property based on mode:
+        // - single: mar-t, mar-r, mar-b, mar-l (individual side)
+        // - all: mar (all sides uniform)
+        // - axis: mar-x or mar-y (horizontal or vertical pair)
+        let property: string
+        if (data.mode === 'all') {
+          property = 'mar'
+        } else if (data.mode === 'axis') {
+          property = data.handle === 'top' || data.handle === 'bottom' ? 'mar-y' : 'mar-x'
+        } else {
+          // Single side: map handle to directional property
+          const singlePropertyMap: Record<MarginHandle, string> = {
+            top: 'mar-t',
+            right: 'mar-r',
+            bottom: 'mar-b',
+            left: 'mar-l',
+          }
+          property = singlePropertyMap[data.handle]
+        }
+
+        executor.execute(
+          new SetPropertyCommand({
+            nodeId: data.nodeId,
+            property,
+            value: String(data.margin),
+          })
+        )
+
+        // Refresh property panel to show updated margin value
+        events.emit('selection:refresh', { nodeId: data.nodeId })
+      }
+    )
   }
 
   /**
-   * Toggle between resize and padding handle modes
+   * Toggle between resize and padding handle modes (P key)
    */
   private toggleHandleMode(nodeId: string): void {
     if (this.handleMode === 'resize') {
       // Switch to padding mode
       this.handleMode = 'padding'
       this.resizeManager?.hideHandles()
+      this.marginManager?.hideHandles()
       this.paddingManager?.showHandles(nodeId)
     } else {
       // Switch back to resize mode
       this.handleMode = 'resize'
       this.paddingManager?.hideHandles()
+      this.marginManager?.hideHandles()
+      this.resizeManager?.showHandles(nodeId)
+    }
+  }
+
+  /**
+   * Toggle between resize and margin handle modes (M key)
+   */
+  private toggleMarginMode(nodeId: string): void {
+    if (this.handleMode === 'resize') {
+      // Switch to margin mode
+      this.handleMode = 'margin'
+      this.resizeManager?.hideHandles()
+      this.paddingManager?.hideHandles()
+      this.marginManager?.showHandles(nodeId)
+    } else {
+      // Switch back to resize mode
+      this.handleMode = 'resize'
+      this.paddingManager?.hideHandles()
+      this.marginManager?.hideHandles()
       this.resizeManager?.showHandles(nodeId)
     }
   }
