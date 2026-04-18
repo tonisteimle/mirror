@@ -110,6 +110,7 @@ export {
   groupUngroupCycleTests,
   selectionAfterUngroupTests,
   modifierTests as ungroupModifierTests,
+  emptyLineTests as ungroupEmptyLineTests,
 } from './ungroup.test'
 
 export {

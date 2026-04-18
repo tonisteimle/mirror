@@ -125,6 +125,8 @@ export interface StudioEvents {
   'gap:start': { nodeId: string; gapIndex: number; startGap: number }
   'gap:move': { nodeId: string; gap: number }
   'gap:end': { nodeId: string; gap: number }
+  /** Handle mode changed */
+  'handleMode:changed': { mode: string; prevMode: string }
   /** Multi-selection resize events (Feature 4) */
   'multiResize:start': {
     nodeIds: string[]

@@ -501,6 +501,106 @@ export const modifierTests: TestCase[] = describe('Ungroup Modifier Keys', [
 ])
 
 // =============================================================================
+// Empty Line Cleanup
+// =============================================================================
+
+export const emptyLineTests: TestCase[] = describe('Empty Line Cleanup After Ungroup', [
+  testWithSetup(
+    'V wrap then ungroup leaves no empty lines',
+    'Frame ver, gap 16\n  Button "A"\n  Button "B"\n  Button "C"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+
+      // Multiselect A and B
+      await api.interact.click('node-2')
+      await api.utils.delay(100)
+      await api.interact.shiftClick('node-3')
+      await api.utils.delay(100)
+
+      // Wrap with V
+      await api.interact.pressKey('v')
+      await api.utils.waitForCompile()
+
+      // Verify wrap created a Frame
+      let code = api.editor.getCode()
+      api.assert.codeContains(/Frame ver/)
+
+      // Select the new wrapper (should be node-2) and ungroup
+      await api.studio.setSelection('node-2')
+      await api.utils.delay(100)
+
+      await api.interact.pressKey('u')
+      await api.utils.waitForCompile()
+
+      // Check for empty lines - there should be no consecutive empty lines
+      code = api.editor.getCode()
+      const hasConsecutiveEmptyLines = /\n\s*\n\s*\n/.test(code)
+      api.assert.ok(
+        !hasConsecutiveEmptyLines,
+        'Should not have consecutive empty lines after ungroup'
+      )
+
+      // Also verify content is still intact
+      api.assert.ok(code.includes('Button "A"'), 'Button A should still exist')
+      api.assert.ok(code.includes('Button "B"'), 'Button B should still exist')
+      api.assert.ok(code.includes('Button "C"'), 'Button C should still exist')
+    }
+  ),
+
+  testWithSetup(
+    'H wrap then ungroup leaves no empty lines',
+    'Frame ver, gap 12\n  Text "First"\n  Text "Second"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+
+      // Multiselect both texts
+      await api.interact.click('node-2')
+      await api.utils.delay(100)
+      await api.interact.shiftClick('node-3')
+      await api.utils.delay(100)
+
+      // Wrap with H
+      await api.interact.pressKey('h')
+      await api.utils.waitForCompile()
+
+      // Select the wrapper and ungroup
+      await api.studio.setSelection('node-2')
+      await api.utils.delay(100)
+
+      await api.interact.pressKey('u')
+      await api.utils.waitForCompile()
+
+      // Check for empty lines
+      const code = api.editor.getCode()
+      const hasConsecutiveEmptyLines = /\n\s*\n\s*\n/.test(code)
+      api.assert.ok(!hasConsecutiveEmptyLines, 'Should not have consecutive empty lines')
+    }
+  ),
+
+  testWithSetup(
+    'Ungroup deeply nested container leaves no empty lines',
+    'Frame pad 16\n  Frame ver\n    Text "Child 1"\n    Text "Child 2"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+
+      // Ungroup inner Frame (ver)
+      await api.studio.setSelection('node-2')
+      await api.utils.delay(100)
+      await api.interact.pressKey('u')
+      await api.utils.waitForCompile()
+
+      const code = api.editor.getCode()
+      const hasConsecutiveEmptyLines = /\n\s*\n\s*\n/.test(code)
+      api.assert.ok(!hasConsecutiveEmptyLines, 'No empty lines after ungroup')
+
+      // Content should still exist
+      api.assert.ok(code.includes('Text "Child 1"'), 'Child 1 preserved')
+      api.assert.ok(code.includes('Text "Child 2"'), 'Child 2 preserved')
+    }
+  ),
+])
+
+// =============================================================================
 // Combined Export
 // =============================================================================
 
@@ -512,4 +612,5 @@ export const allUngroupTests: TestCase[] = [
   ...groupUngroupCycleTests,
   ...selectionAfterUngroupTests,
   ...modifierTests,
+  ...emptyLineTests,
 ]

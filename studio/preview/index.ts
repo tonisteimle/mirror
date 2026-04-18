@@ -270,6 +270,7 @@ export class PreviewController {
         this.resizeManager?.refresh()
         this.paddingManager?.refresh()
         this.marginManager?.refresh()
+        this.gapManager?.refresh()
       })
     })
 
@@ -283,6 +284,8 @@ export class PreviewController {
           requestAnimationFrame(() => {
             this.resizeManager?.refresh()
             this.paddingManager?.refresh()
+            this.marginManager?.refresh()
+            this.gapManager?.refresh()
           })
         })
       }

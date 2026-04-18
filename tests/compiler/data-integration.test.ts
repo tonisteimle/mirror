@@ -19,15 +19,17 @@ describe('Data Integration: Output', () => {
   it('includes data entries in __mirrorData', () => {
     const dataFile: DataFile = {
       filename: 'posts',
-      entries: [{
-        name: 'hello',
-        attributes: [
-          { key: 'title', value: 'Hello World', line: 2 },
-          { key: 'count', value: 42, line: 3 },
-        ],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'hello',
+          attributes: [
+            { key: 'title', value: 'Hello World', line: 2 },
+            { key: 'count', value: 42, line: 3 },
+          ],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -74,22 +76,26 @@ describe('Data Integration: Output', () => {
     const dataFiles: DataFile[] = [
       {
         filename: 'posts',
-        entries: [{
-          name: 'first',
-          attributes: [{ key: 'title', value: 'First', line: 2 }],
-          blocks: [],
-          line: 1,
-        }],
+        entries: [
+          {
+            name: 'first',
+            attributes: [{ key: 'title', value: 'First', line: 2 }],
+            blocks: [],
+            line: 1,
+          },
+        ],
         errors: [],
       },
       {
         filename: 'users',
-        entries: [{
-          name: 'admin',
-          attributes: [{ key: 'name', value: 'Admin', line: 2 }],
-          blocks: [],
-          line: 1,
-        }],
+        entries: [
+          {
+            name: 'admin',
+            attributes: [{ key: 'name', value: 'Admin', line: 2 }],
+            blocks: [],
+            line: 1,
+          },
+        ],
         errors: [],
       },
     ]
@@ -105,16 +111,20 @@ describe('Data Integration: Output', () => {
   it('includes markdown blocks', () => {
     const dataFile: DataFile = {
       filename: 'content',
-      entries: [{
-        name: 'page',
-        attributes: [{ key: 'title', value: 'Page', line: 2 }],
-        blocks: [{
-          name: 'body',
-          content: 'This is **markdown**.',
-          line: 4,
-        }],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'page',
+          attributes: [{ key: 'title', value: 'Page', line: 2 }],
+          blocks: [
+            {
+              name: 'body',
+              content: 'This is **markdown**.',
+              line: 4,
+            },
+          ],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -140,12 +150,14 @@ describe('Data Integration: $get Accessor', () => {
   it('$get handles nested data access', () => {
     const dataFile: DataFile = {
       filename: 'test',
-      entries: [{
-        name: 'entry',
-        attributes: [{ key: 'nested', value: 'value', line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes: [{ key: 'nested', value: 'value', line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -166,25 +178,29 @@ describe('Data Integration: Merge', () => {
     const files: DataFile[] = [
       {
         filename: 'posts',
-        entries: [{
-          name: 'first',
-          attributes: [
-            { key: 'title', value: 'First Post', line: 2 },
-            { key: 'count', value: 10, line: 3 },
-          ],
-          blocks: [{ name: 'body', content: 'Content here', line: 5 }],
-          line: 1,
-        }],
+        entries: [
+          {
+            name: 'first',
+            attributes: [
+              { key: 'title', value: 'First Post', line: 2 },
+              { key: 'count', value: 10, line: 3 },
+            ],
+            blocks: [{ name: 'body', content: 'Content here', line: 5 }],
+            line: 1,
+          },
+        ],
         errors: [],
       },
       {
         filename: 'users',
-        entries: [{
-          name: 'admin',
-          attributes: [{ key: 'role', value: 'admin', line: 2 }],
-          blocks: [],
-          line: 1,
-        }],
+        entries: [
+          {
+            name: 'admin',
+            attributes: [{ key: 'role', value: 'admin', line: 2 }],
+            blocks: [],
+            line: 1,
+          },
+        ],
         errors: [],
       },
     ]
@@ -234,12 +250,14 @@ Text "Test"
 `
     const dataFile: DataFile = {
       filename: 'content',
-      entries: [{
-        name: 'page',
-        attributes: [{ key: 'title', value: 'Page', line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'page',
+          attributes: [{ key: 'title', value: 'Page', line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -296,16 +314,20 @@ describe('Data Integration: Special Values', () => {
   it('handles multi-line markdown in output', () => {
     const dataFile: DataFile = {
       filename: 'content',
-      entries: [{
-        name: 'page',
-        attributes: [],
-        blocks: [{
-          name: 'body',
-          content: 'Line 1\nLine 2\nLine 3',
-          line: 3,
-        }],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'page',
+          attributes: [],
+          blocks: [
+            {
+              name: 'body',
+              content: 'Line 1\nLine 2\nLine 3',
+              line: 3,
+            },
+          ],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -319,12 +341,14 @@ describe('Data Integration: Special Values', () => {
   it('escapes special characters in strings', () => {
     const dataFile: DataFile = {
       filename: 'test',
-      entries: [{
-        name: 'entry',
-        attributes: [{ key: 'text', value: 'Quote: "Hello"', line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes: [{ key: 'text', value: 'Quote: "Hello"', line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -344,7 +368,10 @@ describe('Data Integration: Errors', () => {
     const output = compile('Text "Test"')
 
     expect(output).toContain('__mirrorData')
-    expect(output).not.toContain('"undefined"')
+    // Check for actual undefined values being assigned (not comparison checks like typeof !== "undefined")
+    // Pattern: assignment of literal "undefined" string, but not comparison operators
+    expect(output).not.toMatch(/[^!=]= "undefined"/)
+    expect(output).not.toMatch(/: "undefined"/)
   })
 
   it('handles empty data files array', () => {
@@ -375,16 +402,18 @@ describe('Data Integration: Extended Output', () => {
   it('handles deeply nested data structure', () => {
     const dataFile: DataFile = {
       filename: 'config',
-      entries: [{
-        name: 'settings',
-        attributes: [
-          { key: 'theme', value: 'dark', line: 2 },
-          { key: 'version', value: 1, line: 3 },
-          { key: 'enabled', value: true, line: 4 },
-        ],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'settings',
+          attributes: [
+            { key: 'theme', value: 'dark', line: 2 },
+            { key: 'version', value: 1, line: 3 },
+            { key: 'enabled', value: true, line: 4 },
+          ],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -400,16 +429,18 @@ describe('Data Integration: Extended Output', () => {
   it('handles data with multiple blocks', () => {
     const dataFile: DataFile = {
       filename: 'article',
-      entries: [{
-        name: 'post',
-        attributes: [{ key: 'title', value: 'Article', line: 2 }],
-        blocks: [
-          { name: 'intro', content: 'Introduction text', line: 4 },
-          { name: 'body', content: 'Main body text', line: 7 },
-          { name: 'conclusion', content: 'Conclusion text', line: 10 },
-        ],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'post',
+          attributes: [{ key: 'title', value: 'Article', line: 2 }],
+          blocks: [
+            { name: 'intro', content: 'Introduction text', line: 4 },
+            { name: 'body', content: 'Main body text', line: 7 },
+            { name: 'conclusion', content: 'Conclusion text', line: 10 },
+          ],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -426,12 +457,14 @@ describe('Data Integration: Extended Output', () => {
   it('handles array values in output', () => {
     const dataFile: DataFile = {
       filename: 'tags',
-      entries: [{
-        name: 'post',
-        attributes: [{ key: 'categories', value: ['tech', 'design', 'code'], line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'post',
+          attributes: [{ key: 'categories', value: ['tech', 'design', 'code'], line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -445,15 +478,17 @@ describe('Data Integration: Extended Output', () => {
   it('handles boolean values correctly', () => {
     const dataFile: DataFile = {
       filename: 'flags',
-      entries: [{
-        name: 'feature',
-        attributes: [
-          { key: 'enabled', value: true, line: 2 },
-          { key: 'deprecated', value: false, line: 3 },
-        ],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'feature',
+          attributes: [
+            { key: 'enabled', value: true, line: 2 },
+            { key: 'deprecated', value: false, line: 3 },
+          ],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -466,17 +501,19 @@ describe('Data Integration: Extended Output', () => {
   it('handles numeric values correctly', () => {
     const dataFile: DataFile = {
       filename: 'stats',
-      entries: [{
-        name: 'metrics',
-        attributes: [
-          { key: 'count', value: 42, line: 2 },
-          { key: 'score', value: 3.14, line: 3 },
-          { key: 'zero', value: 0, line: 4 },
-          { key: 'negative', value: -10, line: 5 },
-        ],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'metrics',
+          attributes: [
+            { key: 'count', value: 42, line: 2 },
+            { key: 'score', value: 3.14, line: 3 },
+            { key: 'zero', value: 0, line: 4 },
+            { key: 'negative', value: -10, line: 5 },
+          ],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -522,12 +559,14 @@ describe('Data Integration: Extended Merge', () => {
   it('merges many data files', () => {
     const files: DataFile[] = Array.from({ length: 5 }, (_, i) => ({
       filename: `file${i}`,
-      entries: [{
-        name: 'entry',
-        attributes: [{ key: 'index', value: i, line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes: [{ key: 'index', value: i, line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }))
 
@@ -541,12 +580,26 @@ describe('Data Integration: Extended Merge', () => {
     const files: DataFile[] = [
       {
         filename: 'posts',
-        entries: [{ name: 'featured', attributes: [{ key: 'type', value: 'post', line: 2 }], blocks: [], line: 1 }],
+        entries: [
+          {
+            name: 'featured',
+            attributes: [{ key: 'type', value: 'post', line: 2 }],
+            blocks: [],
+            line: 1,
+          },
+        ],
         errors: [],
       },
       {
         filename: 'users',
-        entries: [{ name: 'featured', attributes: [{ key: 'type', value: 'user', line: 2 }], blocks: [], line: 1 }],
+        entries: [
+          {
+            name: 'featured',
+            attributes: [{ key: 'type', value: 'user', line: 2 }],
+            blocks: [],
+            line: 1,
+          },
+        ],
         errors: [],
       },
     ]
@@ -561,12 +614,14 @@ describe('Data Integration: Extended Merge', () => {
   it('handles empty entries', () => {
     const dataFile: DataFile = {
       filename: 'test',
-      entries: [{
-        name: 'empty',
-        attributes: [],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'empty',
+          attributes: [],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -579,14 +634,14 @@ describe('Data Integration: Extended Merge', () => {
   it('handles entries with only blocks', () => {
     const dataFile: DataFile = {
       filename: 'content',
-      entries: [{
-        name: 'page',
-        attributes: [],
-        blocks: [
-          { name: 'content', content: 'Block content', line: 3 },
-        ],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'page',
+          attributes: [],
+          blocks: [{ name: 'content', content: 'Block content', line: 3 }],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -598,17 +653,19 @@ describe('Data Integration: Extended Merge', () => {
   it('handles mixed value types in same entry', () => {
     const dataFile: DataFile = {
       filename: 'mixed',
-      entries: [{
-        name: 'data',
-        attributes: [
-          { key: 'str', value: 'text', line: 2 },
-          { key: 'num', value: 123, line: 3 },
-          { key: 'bool', value: true, line: 4 },
-          { key: 'arr', value: ['a', 'b'], line: 5 },
-        ],
-        blocks: [{ name: 'md', content: 'Markdown', line: 7 }],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'data',
+          attributes: [
+            { key: 'str', value: 'text', line: 2 },
+            { key: 'num', value: 123, line: 3 },
+            { key: 'bool', value: true, line: 4 },
+            { key: 'arr', value: ['a', 'b'], line: 5 },
+          ],
+          blocks: [{ name: 'md', content: 'Markdown', line: 7 }],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -624,12 +681,14 @@ describe('Data Integration: Extended Merge', () => {
   it('handles array with special characters', () => {
     const dataFile: DataFile = {
       filename: 'test',
-      entries: [{
-        name: 'entry',
-        attributes: [{ key: 'tags', value: ['hello world', 'foo-bar', 'test_123'], line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes: [{ key: 'tags', value: ['hello world', 'foo-bar', 'test_123'], line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -735,12 +794,14 @@ describe('Data Integration: Extended Special Values', () => {
   it('handles empty strings', () => {
     const dataFile: DataFile = {
       filename: 'test',
-      entries: [{
-        name: 'entry',
-        attributes: [{ key: 'empty', value: '', line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes: [{ key: 'empty', value: '', line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -752,15 +813,17 @@ describe('Data Integration: Extended Special Values', () => {
   it('handles special characters in strings', () => {
     const dataFile: DataFile = {
       filename: 'test',
-      entries: [{
-        name: 'entry',
-        attributes: [
-          { key: 'newline', value: 'Line1\nLine2', line: 2 },
-          { key: 'tab', value: 'Col1\tCol2', line: 3 },
-        ],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes: [
+            { key: 'newline', value: 'Line1\nLine2', line: 2 },
+            { key: 'tab', value: 'Col1\tCol2', line: 3 },
+          ],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -772,16 +835,18 @@ describe('Data Integration: Extended Special Values', () => {
   it('handles unicode in strings', () => {
     const dataFile: DataFile = {
       filename: 'i18n',
-      entries: [{
-        name: 'labels',
-        attributes: [
-          { key: 'german', value: 'Über', line: 2 },
-          { key: 'japanese', value: '日本語', line: 3 },
-          { key: 'emoji', value: '👋🌍', line: 4 },
-        ],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'labels',
+          attributes: [
+            { key: 'german', value: 'Über', line: 2 },
+            { key: 'japanese', value: '日本語', line: 3 },
+            { key: 'emoji', value: '👋🌍', line: 4 },
+          ],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -796,12 +861,14 @@ describe('Data Integration: Extended Special Values', () => {
     const longContent = 'Paragraph. '.repeat(100)
     const dataFile: DataFile = {
       filename: 'content',
-      entries: [{
-        name: 'article',
-        attributes: [],
-        blocks: [{ name: 'body', content: longContent, line: 3 }],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'article',
+          attributes: [],
+          blocks: [{ name: 'body', content: longContent, line: 3 }],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -813,12 +880,14 @@ describe('Data Integration: Extended Special Values', () => {
   it('handles empty array', () => {
     const dataFile: DataFile = {
       filename: 'test',
-      entries: [{
-        name: 'entry',
-        attributes: [{ key: 'tags', value: [], line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes: [{ key: 'tags', value: [], line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -831,12 +900,14 @@ describe('Data Integration: Extended Special Values', () => {
   it('handles single-item array', () => {
     const dataFile: DataFile = {
       filename: 'test',
-      entries: [{
-        name: 'entry',
-        attributes: [{ key: 'tags', value: ['single'], line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes: [{ key: 'tags', value: ['single'], line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -860,12 +931,14 @@ Text "Test"
 `
     const dataFile: DataFile = {
       filename: 'content',
-      entries: [{
-        name: 'page',
-        attributes: [{ key: 'title', value: 'Page', line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'page',
+          attributes: [{ key: 'title', value: 'Page', line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -886,12 +959,14 @@ Text "Test"
 `
     const dataFile: DataFile = {
       filename: 'posts',
-      entries: [{
-        name: 'first',
-        attributes: [{ key: 'title', value: 'First', line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'first',
+          attributes: [{ key: 'title', value: 'First', line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -937,9 +1012,7 @@ describe('Data Integration: Real-World Scenarios', () => {
               { key: 'date', value: '2024-01-20', line: 16 },
               { key: 'tags', value: ['advanced', 'deep-dive'], line: 17 },
             ],
-            blocks: [
-              { name: 'body', content: 'Advanced content.', line: 19 },
-            ],
+            blocks: [{ name: 'body', content: 'Advanced content.', line: 19 }],
             line: 13,
           },
         ],
@@ -998,9 +1071,7 @@ describe('Data Integration: Real-World Scenarios', () => {
             { key: 'inStock', value: true, line: 4 },
             { key: 'sizes', value: ['S', 'M', 'L', 'XL'], line: 5 },
           ],
-          blocks: [
-            { name: 'description', content: 'A comfortable **cotton** t-shirt.', line: 7 },
-          ],
+          blocks: [{ name: 'description', content: 'A comfortable **cotton** t-shirt.', line: 7 }],
           line: 1,
         },
         {
@@ -1054,9 +1125,7 @@ describe('Data Integration: Real-World Scenarios', () => {
             { key: 'returns', value: 'AST', line: 15 },
             { key: 'since', value: '1.0.0', line: 16 },
           ],
-          blocks: [
-            { name: 'description', content: 'Parses Mirror code into an AST.', line: 18 },
-          ],
+          blocks: [{ name: 'description', content: 'Parses Mirror code into an AST.', line: 18 }],
           line: 13,
         },
       ],
@@ -1120,12 +1189,14 @@ describe('Data Integration: Stress Tests', () => {
   it('handles many data files', () => {
     const dataFiles: DataFile[] = Array.from({ length: 20 }, (_, i) => ({
       filename: `file${i}`,
-      entries: [{
-        name: 'entry',
-        attributes: [{ key: 'index', value: i, line: 2 }],
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes: [{ key: 'index', value: i, line: 2 }],
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }))
 
@@ -1164,12 +1235,14 @@ describe('Data Integration: Stress Tests', () => {
 
     const dataFile: DataFile = {
       filename: 'attrs',
-      entries: [{
-        name: 'entry',
-        attributes,
-        blocks: [],
-        line: 1,
-      }],
+      entries: [
+        {
+          name: 'entry',
+          attributes,
+          blocks: [],
+          line: 1,
+        },
+      ],
       errors: [],
     }
 
@@ -1190,9 +1263,7 @@ describe('Data Integration: Stress Tests', () => {
           { key: 'bool', value: (fileIndex + entryIndex) % 2 === 0, line: 4 },
           { key: 'arr', value: ['a', 'b', 'c'], line: 5 },
         ],
-        blocks: [
-          { name: 'content', content: `Content for ${fileIndex}-${entryIndex}`, line: 7 },
-        ],
+        blocks: [{ name: 'content', content: `Content for ${fileIndex}-${entryIndex}`, line: 7 }],
         line: 1,
       })),
       errors: [],

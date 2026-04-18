@@ -28,6 +28,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 1 1`] = `
           "value": "36px",
         },
         {
+          "property": "min-width",
+          "value": "36px",
+        },
+        {
           "property": "padding",
           "value": "12px 24px",
         },
@@ -137,6 +141,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 2 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -792,6 +800,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 4 1`] = `
                   "value": "0",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "10px 20px",
                 },
@@ -843,6 +855,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 4 1`] = `
                 {
                   "property": "flex-shrink",
                   "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
                 },
                 {
                   "property": "padding",
@@ -2421,6 +2437,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 16px",
             },
@@ -2841,6 +2861,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
                   "value": "0",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "10px 16px",
                 },
@@ -2892,6 +2916,10 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
                 {
                   "property": "flex-shrink",
                   "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
                 },
                 {
                   "property": "padding",
@@ -3034,6 +3062,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -3087,6 +3119,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -3138,6 +3174,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 1 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -3764,6 +3804,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 4 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -5330,6 +5374,10 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 10 1`] = `
                 {
                   "property": "flex-shrink",
                   "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
                 },
                 {
                   "property": "padding",
@@ -18408,6 +18456,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 13 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -18703,6 +18755,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                   "value": "0",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "10px 20px",
                 },
@@ -18756,6 +18812,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                   "value": "0",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "10px 20px",
                 },
@@ -18807,6 +18867,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                 {
                   "property": "flex-shrink",
                   "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
                 },
                 {
                   "property": "padding",
@@ -18896,6 +18960,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                   "value": "0",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "10px 20px",
                 },
@@ -18947,6 +19015,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                 {
                   "property": "flex-shrink",
                   "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
                 },
                 {
                   "property": "padding",
@@ -19036,6 +19108,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                   "value": "0",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "10px 20px",
                 },
@@ -19083,6 +19159,10 @@ exports[`Tutorial IR Snapshots > 05 - styling > Example 14 1`] = `
                 {
                   "property": "flex-shrink",
                   "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
                 },
                 {
                   "property": "padding",
@@ -22032,6 +22112,10 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -24478,6 +24562,10 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -24722,6 +24810,10 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -25506,6 +25598,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 1 1`] = `
           "value": "36px",
         },
         {
+          "property": "min-width",
+          "value": "36px",
+        },
+        {
           "property": "padding",
           "value": "10px 20px",
         },
@@ -25590,6 +25686,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -25656,6 +25756,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -25726,6 +25830,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -25792,6 +25900,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 2 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -25988,6 +26100,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
                       "value": "0",
                     },
                     {
+                      "property": "min-width",
+                      "value": "36px",
+                    },
+                    {
                       "property": "padding",
                       "value": "8px 16px",
                     },
@@ -26053,6 +26169,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
                     {
                       "property": "flex-shrink",
                       "value": "0",
+                    },
+                    {
+                      "property": "min-width",
+                      "value": "36px",
                     },
                     {
                       "property": "padding",
@@ -26123,6 +26243,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
                       "value": "0",
                     },
                     {
+                      "property": "min-width",
+                      "value": "36px",
+                    },
+                    {
                       "property": "padding",
                       "value": "8px 16px",
                     },
@@ -26188,6 +26312,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 3 1`] = `
                     {
                       "property": "flex-shrink",
                       "value": "0",
+                    },
+                    {
+                      "property": "min-width",
+                      "value": "36px",
                     },
                     {
                       "property": "padding",
@@ -26375,6 +26503,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "8px 16px",
             },
@@ -26497,6 +26629,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -26867,6 +27003,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
                       "value": "0",
                     },
                     {
+                      "property": "min-width",
+                      "value": "36px",
+                    },
+                    {
                       "property": "padding",
                       "value": "6px 12px",
                     },
@@ -26985,6 +27125,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
                     {
                       "property": "flex-shrink",
                       "value": "0",
+                    },
+                    {
+                      "property": "min-width",
+                      "value": "36px",
                     },
                     {
                       "property": "padding",
@@ -27343,6 +27487,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
                   "value": "0",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "10px 16px",
                 },
@@ -27508,6 +27656,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -27600,6 +27752,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
                 {
                   "property": "flex-shrink",
                   "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
                 },
                 {
                   "property": "padding",
@@ -27772,6 +27928,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
                   "value": "0",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "10px 20px",
                 },
@@ -27835,6 +27995,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
                 {
                   "property": "flex-shrink",
                   "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
                 },
                 {
                   "property": "padding",
@@ -28034,6 +28198,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -28152,6 +28320,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -28404,6 +28576,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -28783,6 +28959,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "12px 20px",
             },
@@ -29002,16 +29182,16 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
                   "value": "stretch",
                 },
                 {
-                  "property": "min-width",
-                  "value": "0",
-                },
-                {
                   "property": "height",
                   "value": "36px",
                 },
                 {
                   "property": "flex-shrink",
                   "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
                 },
                 {
                   "property": "padding",
@@ -31015,6 +31195,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
                 "value": "36px",
               },
               {
+                "property": "min-width",
+                "value": "36px",
+              },
+              {
                 "property": "padding",
                 "value": "10px 20px",
               },
@@ -31198,6 +31382,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -31548,6 +31736,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
               },
               {
                 "property": "height",
+                "value": "36px",
+              },
+              {
+                "property": "min-width",
                 "value": "36px",
               },
               {
@@ -32173,6 +32365,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
           "value": "36px",
         },
         {
+          "property": "min-width",
+          "value": "36px",
+        },
+        {
           "property": "padding",
           "value": "10px 20px",
         },
@@ -32490,6 +32686,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
         },
         {
           "property": "height",
+          "value": "36px",
+        },
+        {
+          "property": "min-width",
           "value": "36px",
         },
         {
@@ -33164,6 +33364,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 27 1`] = `
             {
               "property": "flex-shrink",
               "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
             },
             {
               "property": "padding",
@@ -36576,6 +36780,10 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
               "value": "0",
             },
             {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
               "property": "padding",
               "value": "10px 20px",
             },
@@ -39041,6 +39249,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
                   "value": "36px",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "0px 16px",
                 },
@@ -39403,6 +39615,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 2 1`] = `
                   "value": "36px",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "0px 16px",
                 },
@@ -39631,6 +39847,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 3 1`] = `
                 },
                 {
                   "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "min-width",
                   "value": "36px",
                 },
                 {
@@ -39980,6 +40200,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                               "value": "0",
                             },
                             {
+                              "property": "min-width",
+                              "value": "36px",
+                            },
+                            {
                               "property": "padding",
                               "value": "0px 16px",
                             },
@@ -40054,6 +40278,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                         {
                           "property": "flex-shrink",
                           "value": "0",
+                        },
+                        {
+                          "property": "min-width",
+                          "value": "36px",
                         },
                         {
                           "property": "padding",
@@ -40217,6 +40445,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
                 },
                 {
                   "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "min-width",
                   "value": "36px",
                 },
                 {
@@ -40729,6 +40961,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                               "value": "0",
                             },
                             {
+                              "property": "min-width",
+                              "value": "36px",
+                            },
+                            {
                               "property": "padding",
                               "value": "0px 16px",
                             },
@@ -40803,6 +41039,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                         {
                           "property": "flex-shrink",
                           "value": "0",
+                        },
+                        {
+                          "property": "min-width",
+                          "value": "36px",
                         },
                         {
                           "property": "padding",
@@ -40969,6 +41209,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
                   "value": "36px",
                 },
                 {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
                   "property": "padding",
                   "value": "0px 16px",
                 },
@@ -41121,6 +41365,10 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
                 },
                 {
                   "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "min-width",
                   "value": "36px",
                 },
                 {
