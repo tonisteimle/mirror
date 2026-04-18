@@ -824,6 +824,97 @@ export const resizeDragAccuracyTests: TestCase[] = describe('Resize Drag: Handle
 ])
 
 // =============================================================================
+// Full-Size Element Handle Visibility Tests
+// =============================================================================
+
+export const resizeDragFullSizeTests: TestCase[] = describe(
+  'Resize Drag: Full-Size Element Handles',
+  [
+    testWithSetup(
+      'Handles visible for w full h full element',
+      'Frame w full, h full, bg #333',
+      async (api: TestAPI) => {
+        await api.utils.waitForCompile()
+        api.interact.clearSelection()
+        await api.utils.delay(100)
+
+        // Select the full-size element
+        await api.interact.click('node-1')
+        await api.utils.delay(200)
+
+        const handles = api.interact.getResizeHandles()
+        if (handles.length !== 8) {
+          throw new Error(`Expected 8 handles, found ${handles.length}`)
+        }
+
+        // Get container bounds (preview area)
+        const container = document.getElementById('preview') as HTMLElement
+        if (!container) throw new Error('Preview container not found')
+        const containerRect = container.getBoundingClientRect()
+
+        // Minimum distance from edge to be considered "grabbable"
+        const MIN_GRABBABLE_INSET = 8
+
+        // Check that all handles are at grabbable positions (not clipped at edges)
+        for (const handle of handles) {
+          const handleCenterX = handle.rect.left + handle.rect.width / 2
+          const handleCenterY = handle.rect.top + handle.rect.height / 2
+
+          const distFromLeft = handleCenterX - containerRect.left
+          const distFromRight = containerRect.right - handleCenterX
+          const distFromTop = handleCenterY - containerRect.top
+          const distFromBottom = containerRect.bottom - handleCenterY
+
+          // Handles should be at least MIN_GRABBABLE_INSET pixels from container edges
+          if (distFromLeft < MIN_GRABBABLE_INSET) {
+            throw new Error(
+              `${handle.position} handle too close to left edge: ${distFromLeft.toFixed(1)}px (min: ${MIN_GRABBABLE_INSET}px)`
+            )
+          }
+          if (distFromRight < MIN_GRABBABLE_INSET) {
+            throw new Error(
+              `${handle.position} handle too close to right edge: ${distFromRight.toFixed(1)}px (min: ${MIN_GRABBABLE_INSET}px)`
+            )
+          }
+          if (distFromTop < MIN_GRABBABLE_INSET) {
+            throw new Error(
+              `${handle.position} handle too close to top edge: ${distFromTop.toFixed(1)}px (min: ${MIN_GRABBABLE_INSET}px)`
+            )
+          }
+          if (distFromBottom < MIN_GRABBABLE_INSET) {
+            throw new Error(
+              `${handle.position} handle too close to bottom edge: ${distFromBottom.toFixed(1)}px (min: ${MIN_GRABBABLE_INSET}px)`
+            )
+          }
+        }
+      }
+    ),
+
+    testWithSetup(
+      'Can resize full-size element smaller',
+      'Frame w full, h full, bg #333',
+      async (api: TestAPI) => {
+        await api.utils.waitForCompile()
+        api.interact.clearSelection()
+        await api.utils.delay(100)
+
+        // Get initial dimensions
+        const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+        if (!element) throw new Error('Element not found')
+        const initialRect = element.getBoundingClientRect()
+
+        // Drag SE handle inward to make smaller
+        const result = await api.interact.dragResizeHandle('node-1', 'se', -50, -50)
+
+        // Element should be smaller
+        assertLess(result.after.width, initialRect.width, 'Width should decrease after resize')
+        assertLess(result.after.height, initialRect.height, 'Height should decrease after resize')
+      }
+    ),
+  ]
+)
+
+// =============================================================================
 // Export All Tests
 // =============================================================================
 
@@ -835,6 +926,7 @@ export const resizeHandleDragTests: TestCase[] = [
   ...resizeDragContextTests,
   ...resizeDragEdgeCaseTests,
   ...resizeDragAccuracyTests,
+  ...resizeDragFullSizeTests,
 ]
 
 export default resizeHandleDragTests

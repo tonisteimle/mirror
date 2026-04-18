@@ -52,6 +52,7 @@ export {
   resizeDragContextTests,
   resizeDragEdgeCaseTests,
   resizeDragAccuracyTests,
+  resizeDragFullSizeTests,
 } from './resize-handle-drag.test'
 
 export {
