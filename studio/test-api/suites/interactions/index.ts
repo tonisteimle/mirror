@@ -43,7 +43,16 @@ export {
 
 export { tokenExtractTests } from './token-extract.test'
 
-export { resizeHandleDragTests } from './resize-handle-drag.test'
+export {
+  resizeHandleDragTests,
+  resizeDragEdgeTests,
+  resizeDragCornerTests,
+  resizeDragSelectionTests,
+  resizeDragLivePreviewTests,
+  resizeDragContextTests,
+  resizeDragEdgeCaseTests,
+  resizeDragAccuracyTests,
+} from './resize-handle-drag.test'
 
 export {
   allMultiselectTests,
@@ -52,3 +61,12 @@ export {
   clearSelectionTests,
   cssClassTests,
 } from './multiselect.test'
+
+export {
+  allPaddingTests,
+  singleSidePaddingTests,
+  allSidesPaddingTests,
+  axisPaddingTests,
+  liveVisualFeedbackTests,
+  robustnessTests,
+} from './padding.test'

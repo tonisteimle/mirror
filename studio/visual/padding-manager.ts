@@ -24,15 +24,19 @@ const HANDLE_HOVER_SIZE = 2 // Hover state: 2px
 const GRIP_SIZE = 8 // Square grip indicator size
 
 export type PaddingHandle = 'top' | 'right' | 'bottom' | 'left'
+export type PaddingMode = 'single' | 'all' | 'axis' // single side, all sides, or axis (h/v)
 
 export interface PaddingState {
   nodeId: string
   handle: PaddingHandle
+  mode: PaddingMode
   startX: number
   startY: number
   startPadding: number
   currentPadding: number
   element: HTMLElement
+  // Store all start paddings for multi-side adjustments
+  startPaddings: { top: number; right: number; bottom: number; left: number }
 }
 
 export interface PaddingManagerConfig {
@@ -61,6 +65,16 @@ export class PaddingManager {
   private boundMouseDown: (e: MouseEvent) => void
   private boundMouseMove: (e: MouseEvent) => void
   private boundMouseUp: (e: MouseEvent) => void
+  private boundRefresh: () => void
+
+  // Observers for robustness
+  private resizeObserver: ResizeObserver | null = null
+  private mutationObserver: MutationObserver | null = null
+  private scrollUnsubscribe: (() => void) | null = null
+  private windowResizeUnsubscribe: (() => void) | null = null
+
+  // Debounce timer for refresh
+  private refreshDebounceId: number | null = null
 
   constructor(config: PaddingManagerConfig) {
     this.container = config.container
@@ -70,8 +84,29 @@ export class PaddingManager {
     this.boundMouseDown = this.onMouseDown.bind(this)
     this.boundMouseMove = this.onMouseMove.bind(this)
     this.boundMouseUp = this.onMouseUp.bind(this)
+    this.boundRefresh = this.debouncedRefresh.bind(this)
 
     this.setupEventListeners()
+    this.setupObservers()
+  }
+
+  // ============================================================================
+  // Debounced Refresh (for scroll, resize, mutations)
+  // ============================================================================
+
+  private debouncedRefresh(): void {
+    // Don't refresh during active drag (already handled by processMouseMove)
+    if (this.activeDrag) return
+
+    if (this.refreshDebounceId !== null) {
+      cancelAnimationFrame(this.refreshDebounceId)
+    }
+    this.refreshDebounceId = requestAnimationFrame(() => {
+      this.refreshDebounceId = null
+      if (this.currentNodeId) {
+        this.showHandles(this.currentNodeId)
+      }
+    })
   }
 
   // ============================================================================
@@ -84,6 +119,9 @@ export class PaddingManager {
 
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return
+
+    // Start observing the element for layout changes
+    this.observeElement(element)
 
     const rect = element.getBoundingClientRect()
     const containerRect = this.container.getBoundingClientRect()
@@ -428,6 +466,8 @@ export class PaddingManager {
     this.handles.forEach(h => h.remove())
     this.handles = []
     this.currentNodeId = null
+    // Stop observing when handles are hidden
+    this.unobserveAll()
   }
 
   refresh(): void {
@@ -441,9 +481,14 @@ export class PaddingManager {
       cancelAnimationFrame(this.rafId)
       this.rafId = null
     }
+    if (this.refreshDebounceId !== null) {
+      cancelAnimationFrame(this.refreshDebounceId)
+      this.refreshDebounceId = null
+    }
     this.pendingMouseEvent = null
     this.hideHandles()
     this.removeEventListeners()
+    this.removeObservers()
   }
 
   // ============================================================================
@@ -457,6 +502,62 @@ export class PaddingManager {
     document.addEventListener('mouseup', this.boundMouseUp)
   }
 
+  private setupObservers(): void {
+    // ResizeObserver for element size changes
+    this.resizeObserver = new ResizeObserver(() => {
+      this.boundRefresh()
+    })
+
+    // MutationObserver for DOM changes that might affect layout
+    this.mutationObserver = new MutationObserver(mutations => {
+      // Only refresh if mutations affect layout (not just text content)
+      const hasLayoutMutation = mutations.some(
+        m =>
+          m.type === 'childList' ||
+          (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class'))
+      )
+      if (hasLayoutMutation) {
+        this.boundRefresh()
+      }
+    })
+
+    // Scroll listener on container
+    const scrollHandler = () => this.boundRefresh()
+    this.container.addEventListener('scroll', scrollHandler, { passive: true })
+    this.scrollUnsubscribe = () => {
+      this.container.removeEventListener('scroll', scrollHandler)
+    }
+
+    // Window resize listener
+    const resizeHandler = () => this.boundRefresh()
+    window.addEventListener('resize', resizeHandler, { passive: true })
+    this.windowResizeUnsubscribe = () => {
+      window.removeEventListener('resize', resizeHandler)
+    }
+  }
+
+  private observeElement(element: HTMLElement): void {
+    // Observe the element itself for size changes
+    this.resizeObserver?.observe(element)
+
+    // Observe parent for layout changes that might shift the element
+    const parent = element.parentElement
+    if (parent) {
+      this.resizeObserver?.observe(parent)
+      this.mutationObserver?.observe(parent, {
+        childList: true,
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+        subtree: false,
+      })
+    }
+  }
+
+  private unobserveAll(): void {
+    this.resizeObserver?.disconnect()
+    this.mutationObserver?.disconnect()
+  }
+
   private removeEventListeners(): void {
     if (this.handlesContainerRef) {
       this.handlesContainerRef.removeEventListener('mousedown', this.boundMouseDown)
@@ -464,6 +565,14 @@ export class PaddingManager {
     }
     document.removeEventListener('mousemove', this.boundMouseMove)
     document.removeEventListener('mouseup', this.boundMouseUp)
+  }
+
+  private removeObservers(): void {
+    this.unobserveAll()
+    this.scrollUnsubscribe?.()
+    this.scrollUnsubscribe = null
+    this.windowResizeUnsubscribe?.()
+    this.windowResizeUnsubscribe = null
   }
 
   private onMouseDown(e: MouseEvent): void {
@@ -480,14 +589,34 @@ export class PaddingManager {
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return
 
+    // Detect modifier keys to determine padding mode
+    // Shift = all sides, Alt/Option = axis (horizontal or vertical), none = single side
+    let mode: PaddingMode = 'single'
+    if (e.shiftKey) {
+      mode = 'all'
+    } else if (e.altKey) {
+      mode = 'axis'
+    }
+
+    // Get all current paddings from the element
+    const style = window.getComputedStyle(element)
+    const startPaddings = {
+      top: parseInt(style.paddingTop || '0', 10),
+      right: parseInt(style.paddingRight || '0', 10),
+      bottom: parseInt(style.paddingBottom || '0', 10),
+      left: parseInt(style.paddingLeft || '0', 10),
+    }
+
     this.activeDrag = {
       nodeId,
       handle: position,
+      mode,
       startX: e.clientX,
       startY: e.clientY,
       startPadding,
       currentPadding: startPadding,
       element,
+      startPaddings,
     }
 
     // Visual feedback
@@ -498,6 +627,7 @@ export class PaddingManager {
       nodeId,
       handle: position,
       startPadding,
+      mode,
     })
   }
 
@@ -518,7 +648,7 @@ export class PaddingManager {
   private processMouseMove(e: MouseEvent): void {
     if (!this.activeDrag) return
 
-    const { handle, startX, startY, startPadding, element } = this.activeDrag
+    const { handle, mode, startX, startY, startPadding, startPaddings, element } = this.activeDrag
 
     let delta: number
     if (handle === 'top') {
@@ -535,26 +665,55 @@ export class PaddingManager {
     const newPadding = Math.max(0, startPadding + delta)
     this.activeDrag.currentPadding = newPadding
 
-    // Live visual feedback - apply padding directly
-    const paddingProp = `padding${handle.charAt(0).toUpperCase() + handle.slice(1)}`
-    ;(element.style as any)[paddingProp] = `${newPadding}px`
+    // Live visual feedback - apply padding based on mode
+    if (mode === 'all') {
+      // Shift: Apply to all sides
+      element.style.paddingTop = `${newPadding}px`
+      element.style.paddingRight = `${newPadding}px`
+      element.style.paddingBottom = `${newPadding}px`
+      element.style.paddingLeft = `${newPadding}px`
+    } else if (mode === 'axis') {
+      // Alt/Option: Apply to axis (horizontal or vertical)
+      if (handle === 'top' || handle === 'bottom') {
+        // Vertical axis
+        element.style.paddingTop = `${newPadding}px`
+        element.style.paddingBottom = `${newPadding}px`
+      } else {
+        // Horizontal axis
+        element.style.paddingLeft = `${newPadding}px`
+        element.style.paddingRight = `${newPadding}px`
+      }
+    } else {
+      // Single: Apply only to the dragged side
+      const paddingProp = `padding${handle.charAt(0).toUpperCase() + handle.slice(1)}`
+      ;(element.style as any)[paddingProp] = `${newPadding}px`
+    }
 
     // Update handle positions
     this.refresh()
 
-    // Show size indicator
+    // Show size indicator with mode info
     const rect = element.getBoundingClientRect()
     const containerRect = this.container.getBoundingClientRect()
+    let label: string
+    if (mode === 'all') {
+      label = 'pad'
+    } else if (mode === 'axis') {
+      label = handle === 'top' || handle === 'bottom' ? 'pad-y' : 'pad-x'
+    } else {
+      label = `pad-${handle[0]}`
+    }
     this.overlayManager.showSizeIndicator(
       rect.left - containerRect.left + rect.width / 2,
       rect.top - containerRect.top + rect.height / 2,
-      `pad-${handle}`,
+      label,
       `${newPadding}px`
     )
 
     events.emit('padding:move', {
       nodeId: this.activeDrag.nodeId,
       handle,
+      mode,
       padding: newPadding,
     })
   }
@@ -568,7 +727,7 @@ export class PaddingManager {
 
     if (!this.activeDrag) return
 
-    const { nodeId, handle, currentPadding } = this.activeDrag
+    const { nodeId, handle, mode, currentPadding } = this.activeDrag
 
     // Reset cursor
     document.body.style.cursor = ''
@@ -579,6 +738,7 @@ export class PaddingManager {
     events.emit('padding:end', {
       nodeId,
       handle,
+      mode,
       padding: currentPadding,
     })
 

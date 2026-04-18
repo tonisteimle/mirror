@@ -527,14 +527,39 @@ class PropertyPanelAPIImpl implements PropertyPanelAPI {
     // First, try to find and click token button in UI
     const panelEl = document.getElementById('property-panel')
     if (panelEl) {
-      const tokenButtons = panelEl.querySelectorAll('.token-btn, [data-token]')
-      for (const btn of tokenButtons) {
-        const text = btn.textContent?.trim()
-        const dataToken = btn.getAttribute('data-token')
-        if (text === tokenName || dataToken === tokenName) {
-          ;(btn as HTMLElement).click()
-          await new Promise(resolve => setTimeout(resolve, 300))
-          return true
+      // Map property to data attribute used in the UI
+      const propToAttr: Record<string, string> = {
+        pad: 'data-pad-token',
+        padding: 'data-pad-token',
+        gap: 'data-gap-token',
+        rad: 'data-radius',
+        radius: 'data-radius',
+      }
+
+      const dataAttr = propToAttr[property]
+
+      if (dataAttr) {
+        // Use specific selector for the property type
+        const tokenButtons = panelEl.querySelectorAll(`.token-btn[${dataAttr}]`)
+        for (const btn of tokenButtons) {
+          const text = btn.textContent?.trim()
+          if (text === tokenName) {
+            ;(btn as HTMLElement).click()
+            await new Promise(resolve => setTimeout(resolve, 300))
+            return true
+          }
+        }
+      } else {
+        // Generic fallback for other properties
+        const tokenButtons = panelEl.querySelectorAll('.token-btn, [data-token]')
+        for (const btn of tokenButtons) {
+          const text = btn.textContent?.trim()
+          const dataToken = btn.getAttribute('data-token')
+          if (text === tokenName || dataToken === tokenName) {
+            ;(btn as HTMLElement).click()
+            await new Promise(resolve => setTimeout(resolve, 300))
+            return true
+          }
         }
       }
     }

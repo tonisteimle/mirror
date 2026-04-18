@@ -388,21 +388,31 @@ export class PreviewController {
     // Listen for padding:end events to execute commands
     this.unsubscribePaddingEnd = events.on(
       'padding:end',
-      (data: { nodeId: string; handle: PaddingHandle; padding: number }) => {
-        // Map handle to property name
-        const propertyMap: Record<PaddingHandle, string> = {
-          top: 'pad',
-          right: 'pad',
-          bottom: 'pad',
-          left: 'pad',
+      (data: { nodeId: string; handle: PaddingHandle; mode: string; padding: number }) => {
+        // Determine property based on mode:
+        // - single: pad-t, pad-r, pad-b, pad-l (individual side)
+        // - all: pad (all sides uniform)
+        // - axis: pad-x or pad-y (horizontal or vertical pair)
+        let property: string
+        if (data.mode === 'all') {
+          property = 'pad'
+        } else if (data.mode === 'axis') {
+          property = data.handle === 'top' || data.handle === 'bottom' ? 'pad-y' : 'pad-x'
+        } else {
+          // Single side: map handle to directional property
+          const singlePropertyMap: Record<PaddingHandle, string> = {
+            top: 'pad-t',
+            right: 'pad-r',
+            bottom: 'pad-b',
+            left: 'pad-l',
+          }
+          property = singlePropertyMap[data.handle]
         }
 
-        // For now, we set uniform padding. In the future, we could support
-        // individual padding values (pad-top, pad-right, etc.)
         executor.execute(
           new SetPropertyCommand({
             nodeId: data.nodeId,
-            property: propertyMap[data.handle],
+            property,
             value: String(data.padding),
           })
         )

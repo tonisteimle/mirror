@@ -39,6 +39,24 @@ interface CLIArgs {
   watch: boolean
   verbose: boolean
   silent: boolean
+  hidePanels?: string // Comma-separated list of panels to hide
+  panelMode?: 'test' | 'focus' | 'normal' | 'minimal' // Predefined panel modes
+}
+
+// Panel visibility presets for test categories
+const categoryPanelPresets: Record<string, string[]> = {
+  // Drag tests: Only need preview (and optionally property for verification)
+  paddingDrag: ['files', 'components', 'code', 'prompt'],
+  stackedDrag: ['files', 'components', 'code', 'prompt'],
+  flexReorder: ['files', 'components', 'code', 'prompt'],
+  // Visual tests: Hide sidebars, keep preview prominent
+  animations: ['files', 'components', 'prompt'],
+  transforms: ['files', 'components', 'prompt'],
+  gradients: ['files', 'components', 'prompt'],
+  // Layout tests: Need preview and code for bidirectional
+  layout: ['files', 'components', 'prompt'],
+  // Property panel tests: Need property and preview
+  propertyPanel: ['files', 'components', 'prompt'],
 }
 
 function parseArgs(): CLIArgs {
@@ -68,6 +86,8 @@ function parseArgs(): CLIArgs {
     watch: args.includes('--watch'),
     verbose: !args.includes('--quiet'),
     silent: args.includes('--silent'),
+    hidePanels: getArgValue(args, '--hide-panels'),
+    panelMode: getArgValue(args, '--panel-mode') as CLIArgs['panelMode'],
   }
 }
 
@@ -115,6 +135,15 @@ ${bold('Execution Options:')}
   --timeout=MS        Test timeout in milliseconds (default: 30000)
   --watch             Watch mode - rerun on file changes
 
+${bold('Panel Options:')}
+  --hide-panels=LIST  Hide specific panels (comma-separated: files,components,code,property,prompt)
+  --panel-mode=MODE   Predefined modes: test|focus|normal|minimal
+                      - test: Only code + preview
+                      - focus: Only preview
+                      - minimal: Preview + property (for visual tests)
+                      - normal: All panels visible
+  Note: Some categories auto-hide panels (paddingDrag, animations, etc.)
+
 ${bold('Output Options:')}
   --junit=PATH        Generate JUnit XML report
   --html=PATH         Generate HTML report
@@ -140,11 +169,58 @@ ${bold('Examples:')}
   npx tsx tools/test.ts --headed                              # All with visible browser
   npx tsx tools/test.ts --explore                             # Show file structure
   npx tsx tools/test.ts --debug-tokens=pad                    # Debug padding tokens
+  npx tsx tools/test.ts --category=paddingDrag --panel-mode=minimal  # Padding tests with minimal UI
+  npx tsx tools/test.ts --hide-panels=files,components        # Hide specific panels
 `)
 }
 
 function bold(text: string): string {
   return `\x1b[1m${text}\x1b[0m`
+}
+
+// =============================================================================
+// Panel Configuration
+// =============================================================================
+
+// Panel mode presets
+const panelModePresets: Record<string, string[]> = {
+  test: ['files', 'components', 'prompt', 'property'], // Only code + preview
+  focus: ['files', 'components', 'code', 'property', 'prompt'], // Only preview
+  minimal: ['files', 'components', 'code', 'prompt'], // Preview + property
+  normal: [], // All visible
+}
+
+async function configurePanels(runner: TestRunner, args: CLIArgs): Promise<string[]> {
+  let panelsToHide: string[] = []
+
+  // Priority 1: Explicit --hide-panels flag
+  if (args.hidePanels) {
+    panelsToHide = args.hidePanels.split(',').map(p => p.trim())
+  }
+  // Priority 2: --panel-mode flag
+  else if (args.panelMode && panelModePresets[args.panelMode]) {
+    panelsToHide = panelModePresets[args.panelMode]
+  }
+  // Priority 3: Category preset (auto-hide for certain test categories)
+  else if (args.category && categoryPanelPresets[args.category]) {
+    panelsToHide = categoryPanelPresets[args.category]
+  }
+
+  // Apply panel visibility
+  if (panelsToHide.length > 0) {
+    for (const panel of panelsToHide) {
+      await runner.evaluate<void>(`
+        (() => {
+          const studio = window.__mirrorStudio__
+          if (studio?.actions?.setPanelVisibility) {
+            studio.actions.setPanelVisibility('${panel}', false)
+          }
+        })()
+      `)
+    }
+  }
+
+  return panelsToHide
 }
 
 // =============================================================================
@@ -203,6 +279,12 @@ async function main(): Promise<void> {
     }
 
     console.log('✅ Test API available\n')
+
+    // Configure panel visibility
+    const panelsToHide = await configurePanels(runner, args)
+    if (panelsToHide.length > 0) {
+      console.log(`🔲 Hidden panels: ${panelsToHide.join(', ')}\n`)
+    }
 
     // Handle new project creation (inject tokens)
     if (args.newProject) {

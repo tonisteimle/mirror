@@ -110,6 +110,20 @@ export class TestRunner {
   }
 
   /**
+   * Take a screenshot and save to file
+   */
+  async takeScreenshot(filename: string): Promise<string> {
+    if (!this.cdp) throw new Error('Not started')
+
+    // Initialize screenshot capture if needed
+    if (!this.screenshot) {
+      this.screenshot = new ScreenshotCapture(this.cdp, this.config.screenshotDir)
+    }
+
+    return this.screenshot.capturePage(filename)
+  }
+
+  /**
    * Wait for test API to be available
    */
   async waitForTestAPI(timeout = 10000): Promise<boolean> {

@@ -166,6 +166,15 @@ export class ResizeManager {
     }
   ): void {
     const borderColor = options.borderColor || '#5BA8F5'
+    const handleSize = 8
+    const handleHalf = handleSize / 2
+
+    // Get container bounds for clamping handles to visible area
+    const containerWidth = container.clientWidth || this.container.clientWidth
+    const containerHeight = container.clientHeight || this.container.clientHeight
+
+    // Minimum inset from container edge to keep handles visible and grabbable
+    const minInset = 2
 
     for (const { pos, x, y } of HANDLE_POSITIONS) {
       const handle = document.createElement('div')
@@ -180,12 +189,21 @@ export class ResizeManager {
         handle.dataset.isMulti = 'true'
       }
 
+      // Calculate raw position (centered on element edge)
+      let handleLeft = rect.left + rect.width * x - handleHalf
+      let handleTop = rect.top + rect.height * y - handleHalf
+
+      // Clamp to container bounds to prevent handles from being clipped
+      // Ensure handles stay at least minInset pixels inside the container
+      handleLeft = Math.max(minInset, Math.min(containerWidth - handleSize - minInset, handleLeft))
+      handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
+
       Object.assign(handle.style, {
         position: 'absolute',
-        left: `${rect.left + rect.width * x - 4}px`,
-        top: `${rect.top + rect.height * y - 4}px`,
-        width: '8px',
-        height: '8px',
+        left: `${handleLeft}px`,
+        top: `${handleTop}px`,
+        width: `${handleSize}px`,
+        height: `${handleSize}px`,
         background: borderColor,
         cursor: this.getCursor(pos),
         pointerEvents: 'auto',
@@ -589,13 +607,26 @@ export class ResizeManager {
       height: rect.height,
     }
 
+    const handleSize = 8
+    const handleHalf = handleSize / 2
+    const minInset = 2
+    const containerWidth = this.container.clientWidth
+    const containerHeight = this.container.clientHeight
+
     // Update handle positions using shared constant
     this.handles.forEach(handle => {
       const pos = handle.dataset.position as ResizeHandle
       const position = HANDLE_POSITION_MAP[pos]
       if (!position) return
-      handle.style.left = `${relRect.left + relRect.width * position.x - 4}px`
-      handle.style.top = `${relRect.top + relRect.height * position.y - 4}px`
+
+      // Calculate and clamp position
+      let handleLeft = relRect.left + relRect.width * position.x - handleHalf
+      let handleTop = relRect.top + relRect.height * position.y - handleHalf
+      handleLeft = Math.max(minInset, Math.min(containerWidth - handleSize - minInset, handleLeft))
+      handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
+
+      handle.style.left = `${handleLeft}px`
+      handle.style.top = `${handleTop}px`
     })
   }
 
@@ -844,6 +875,12 @@ export class ResizeManager {
         break
     }
 
+    const handleSize = 8
+    const handleHalf = handleSize / 2
+    const minInset = 2
+    const containerWidth = this.container.clientWidth
+    const containerHeight = this.container.clientHeight
+
     // Update handle positions using shared constant
     this.handles.forEach(handle => {
       const pos = handle.dataset.position as ResizeHandle
@@ -851,8 +888,15 @@ export class ResizeManager {
 
       const position = HANDLE_POSITION_MAP[pos]
       if (!position) return
-      handle.style.left = `${newX + newWidth * position.x - 4}px`
-      handle.style.top = `${newY + newHeight * position.y - 4}px`
+
+      // Calculate and clamp position
+      let handleLeft = newX + newWidth * position.x - handleHalf
+      let handleTop = newY + newHeight * position.y - handleHalf
+      handleLeft = Math.max(minInset, Math.min(containerWidth - handleSize - minInset, handleLeft))
+      handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
+
+      handle.style.left = `${handleLeft}px`
+      handle.style.top = `${handleTop}px`
     })
 
     // Update outline

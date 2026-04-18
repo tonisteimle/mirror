@@ -782,13 +782,14 @@ export class Interactions implements InteractionAPI {
    * @param position - Which handle to drag (n, s, e, w, nw, ne, sw, se)
    * @param deltaX - Horizontal drag distance in pixels
    * @param deltaY - Vertical drag distance in pixels
+   * @returns Object with before/during/after dimensions and handle verification for assertions
    */
   async dragResizeHandle(
     nodeId: string,
     position: 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se',
     deltaX: number,
     deltaY: number
-  ): Promise<void> {
+  ): Promise<ResizeDragResult> {
     // First, select the element to show resize handles
     await this.click(nodeId)
     await this.delay(200)
@@ -816,6 +817,35 @@ export class Interactions implements InteractionAPI {
       throw new Error(`Resize handle at position "${position}" not found`)
     }
 
+    // Get the element for dimension checks
+    const element = this.findElement(nodeId)
+    if (!element) {
+      throw new Error(`Element ${nodeId} not found`)
+    }
+
+    // Helper to get element dimensions
+    const getDimensions = (): ElementDimensions => {
+      const rect = element.getBoundingClientRect()
+      const style = window.getComputedStyle(element)
+      return {
+        width: rect.width,
+        height: rect.height,
+        left: rect.left,
+        top: rect.top,
+        computedWidth: style.width,
+        computedHeight: style.height,
+      }
+    }
+
+    // Helper to get handle positions
+    const getHandlePositions = (): ResizeHandleInfo[] => {
+      return this.getResizeHandles()
+    }
+
+    // Capture before state
+    const before = getDimensions()
+    const handlesBefore = getHandlePositions()
+
     // Get handle position for drag calculation
     const handleRect = handle.getBoundingClientRect()
     const startX = handleRect.left + handleRect.width / 2
@@ -829,13 +859,27 @@ export class Interactions implements InteractionAPI {
 
     await this.delay(50)
 
-    // Dispatch mousemove on document (drag)
-    this.dispatchMouseEvent(document.body, 'mousemove', {
-      clientX: startX + deltaX,
-      clientY: startY + deltaY,
-    })
+    // Step delay for drag simulation
+    const stepDelay = 20
+    const steps = 5
 
-    await this.delay(50)
+    // Smooth drag with multiple steps
+    for (let i = 1; i <= steps; i++) {
+      const progress = i / steps
+      const currentX = startX + deltaX * progress
+      const currentY = startY + deltaY * progress
+
+      this.dispatchMouseEvent(document.body, 'mousemove', {
+        clientX: currentX,
+        clientY: currentY,
+      })
+
+      await this.delay(stepDelay)
+    }
+
+    // Capture during state (while dragging, before mouseup)
+    const during = getDimensions()
+    const handlesDuring = getHandlePositions()
 
     // Dispatch mouseup on document
     this.dispatchMouseEvent(document.body, 'mouseup', {
@@ -844,7 +888,465 @@ export class Interactions implements InteractionAPI {
     })
 
     await this.delay(100)
+
+    // Capture after state
+    const after = getDimensions()
+    const handlesAfter = getHandlePositions()
+
+    // Check if element is still selected (handles should still be visible)
+    const isStillSelected = handlesAfter.length > 0
+
+    // Check if handles updated position correctly
+    const handlesUpdated = handlesBefore.some((hBefore, i) => {
+      const hAfter = handlesAfter[i]
+      if (!hAfter) return true // Handle count changed
+      return (
+        Math.abs(hBefore.rect.left - hAfter.rect.left) > 1 ||
+        Math.abs(hBefore.rect.top - hAfter.rect.top) > 1
+      )
+    })
+
+    // Check if handles are at correct position relative to element
+    const handlesCorrectlyPositioned = this.verifyHandlePositions(nodeId, handlesAfter)
+
+    return {
+      before,
+      during,
+      after,
+      isStillSelected,
+      handlesUpdated,
+      handlesCorrectlyPositioned,
+      handlesBefore,
+      handlesAfter,
+    }
   }
+
+  /**
+   * Get resize handle positions for assertions
+   *
+   * @returns Array of resize handle information
+   */
+  getResizeHandles(): ResizeHandleInfo[] {
+    const handles = document.querySelectorAll('.resize-handle')
+    return Array.from(handles).map(handle => {
+      const rect = handle.getBoundingClientRect()
+      const dataset = (handle as HTMLElement).dataset
+      return {
+        position: dataset.position as ResizeHandle,
+        nodeId: dataset.nodeId || '',
+        isMulti: dataset.isMulti === 'true',
+        rect: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+        },
+      }
+    })
+  }
+
+  /**
+   * Verify that resize handles are positioned correctly around the element
+   *
+   * @param nodeId - The element to check handles for
+   * @param handles - Optional handles array (fetched if not provided)
+   * @returns true if all handles are correctly positioned
+   */
+  verifyHandlePositions(nodeId: string, handles?: ResizeHandleInfo[]): boolean {
+    const element = this.findElement(nodeId)
+    if (!element) return false
+
+    const elementRect = element.getBoundingClientRect()
+    const resizeHandles = handles ?? this.getResizeHandles()
+
+    // Filter handles for this element
+    const elementHandles = resizeHandles.filter(h => h.nodeId === nodeId)
+    if (elementHandles.length === 0) return false
+
+    // Expected positions relative to element (handle centers)
+    const expectedPositions: Record<ResizeHandle, { x: number; y: number }> = {
+      nw: { x: 0, y: 0 },
+      n: { x: 0.5, y: 0 },
+      ne: { x: 1, y: 0 },
+      e: { x: 1, y: 0.5 },
+      se: { x: 1, y: 1 },
+      s: { x: 0.5, y: 1 },
+      sw: { x: 0, y: 1 },
+      w: { x: 0, y: 0.5 },
+    }
+
+    // Tolerance for position matching (handles are 8x8, so 4px offset from edge)
+    const TOLERANCE = 6
+
+    for (const handle of elementHandles) {
+      const expected = expectedPositions[handle.position]
+      if (!expected) continue
+
+      // Calculate expected handle center position
+      const expectedX = elementRect.left + elementRect.width * expected.x
+      const expectedY = elementRect.top + elementRect.height * expected.y
+
+      // Get actual handle center
+      const actualX = handle.rect.left + handle.rect.width / 2
+      const actualY = handle.rect.top + handle.rect.height / 2
+
+      // Check if within tolerance
+      if (Math.abs(expectedX - actualX) > TOLERANCE || Math.abs(expectedY - actualY) > TOLERANCE) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  /**
+   * Get detailed selection state for verification
+   *
+   * @param nodeId - The element to check
+   * @returns Selection verification info
+   */
+  getSelectionState(nodeId: string): SelectionStateInfo {
+    const element = this.findElement(nodeId)
+    if (!element) {
+      return {
+        elementExists: false,
+        isSelected: false,
+        hasResizeHandles: false,
+        hasPaddingHandles: false,
+        resizeHandleCount: 0,
+        paddingHandleCount: 0,
+      }
+    }
+
+    const resizeHandles = this.getResizeHandles().filter(h => h.nodeId === nodeId)
+    const paddingHandles = this.getPaddingHandles().filter(h => h.nodeId === nodeId)
+
+    return {
+      elementExists: true,
+      isSelected: resizeHandles.length > 0 || paddingHandles.length > 0,
+      hasResizeHandles: resizeHandles.length > 0,
+      hasPaddingHandles: paddingHandles.length > 0,
+      resizeHandleCount: resizeHandles.length,
+      paddingHandleCount: paddingHandles.length,
+    }
+  }
+
+  // ===========================================================================
+  // Padding Handle Interactions
+  // ===========================================================================
+
+  /**
+   * Enter padding mode for an element (press P key)
+   *
+   * @param nodeId - The element to enter padding mode for
+   */
+  async enterPaddingMode(nodeId: string): Promise<void> {
+    // First select the element
+    await this.click(nodeId)
+    await this.delay(100)
+
+    // Check if padding handles are already visible (mode already active)
+    const existingHandles = document.querySelectorAll('.padding-handle')
+    if (existingHandles.length > 0) {
+      // Mode is already active - check if it's for the right element
+      const handleNodeId = (existingHandles[0] as HTMLElement).dataset.nodeId
+      if (handleNodeId === nodeId) {
+        // Already in padding mode for this element
+        return
+      }
+      // Different element - exit current mode first
+      await this.pressKey('p')
+      await this.delay(100)
+    }
+
+    // Press P to enter padding mode
+    await this.pressKey('p')
+    await this.delay(150)
+
+    // Wait for padding handles to appear
+    let found = false
+    for (let i = 0; i < 10; i++) {
+      const paddingHandles = document.querySelectorAll('.padding-handle')
+      if (paddingHandles.length > 0) {
+        found = true
+        break
+      }
+      await this.delay(50)
+    }
+
+    if (!found) {
+      throw new Error('Padding handles not found after pressing P')
+    }
+  }
+
+  /**
+   * Exit padding mode (press P again to toggle back)
+   */
+  async exitPaddingMode(): Promise<void> {
+    await this.pressKey('p')
+    await this.delay(100)
+  }
+
+  /**
+   * Drag a padding handle to adjust padding
+   *
+   * @param side - Which padding side to drag (top, right, bottom, left)
+   * @param delta - Drag distance in pixels (positive = increase padding)
+   * @param options - Options for the drag operation
+   *                   - shift: adjust all sides uniformly
+   *                   - alt: adjust axis (top/bottom or left/right together)
+   * @returns Object with before/during/after padding values for verification
+   */
+  async dragPaddingHandle(
+    side: 'top' | 'right' | 'bottom' | 'left',
+    delta: number,
+    options?: { shift?: boolean; alt?: boolean }
+  ): Promise<{
+    before: PaddingValues
+    during: PaddingValues
+    after: PaddingValues
+    zonesUpdated: boolean
+  }> {
+    // Find the padding handle
+    const handle = document.querySelector(`.padding-handle-${side}`) as HTMLElement
+    if (!handle) {
+      throw new Error(
+        `Padding handle for "${side}" not found. Did you call enterPaddingMode first?`
+      )
+    }
+
+    // Get current padding values from the element
+    const nodeId = handle.dataset.nodeId
+    if (!nodeId) {
+      throw new Error('Padding handle missing nodeId')
+    }
+
+    const element = this.findElement(nodeId)
+    if (!element) {
+      throw new Error(`Element ${nodeId} not found`)
+    }
+
+    const getBoundsPadding = (): PaddingValues => {
+      const style = window.getComputedStyle(element)
+      return {
+        top: parseInt(style.paddingTop || '0', 10),
+        right: parseInt(style.paddingRight || '0', 10),
+        bottom: parseInt(style.paddingBottom || '0', 10),
+        left: parseInt(style.paddingLeft || '0', 10),
+      }
+    }
+
+    const getPaddingZoneBounds = (): DOMRect[] => {
+      const zones = document.querySelectorAll('.padding-area')
+      return Array.from(zones).map(z => z.getBoundingClientRect())
+    }
+
+    // Capture before state
+    const before = getBoundsPadding()
+    const zonesBefore = getPaddingZoneBounds()
+
+    // Calculate drag positions
+    const handleRect = handle.getBoundingClientRect()
+    const startX = handleRect.left + handleRect.width / 2
+    const startY = handleRect.top + handleRect.height / 2
+
+    // Calculate end position based on side and delta
+    let endX = startX
+    let endY = startY
+    if (side === 'top') {
+      endY = startY + delta
+    } else if (side === 'bottom') {
+      endY = startY - delta
+    } else if (side === 'left') {
+      endX = startX + delta
+    } else if (side === 'right') {
+      endX = startX - delta
+    }
+
+    const eventOptions = {
+      shiftKey: options?.shift ?? false,
+      altKey: options?.alt ?? false,
+    }
+
+    // Step delay for drag simulation (20ms default, smooth and fast)
+    const stepDelay = 20
+
+    // Start drag
+    this.dispatchMouseEvent(handle, 'mousedown', {
+      clientX: startX,
+      clientY: startY,
+      ...eventOptions,
+    })
+
+    await this.delay(stepDelay * 2)
+
+    // Move (multiple steps for smoother simulation)
+    const steps = 5
+    for (let i = 1; i <= steps; i++) {
+      const progress = i / steps
+      const currentX = startX + (endX - startX) * progress
+      const currentY = startY + (endY - startY) * progress
+
+      this.dispatchMouseEvent(document.body, 'mousemove', {
+        clientX: currentX,
+        clientY: currentY,
+        ...eventOptions,
+      })
+
+      await this.delay(stepDelay)
+    }
+
+    // Capture during state (while dragging)
+    const during = getBoundsPadding()
+    const zonesDuring = getPaddingZoneBounds()
+
+    // Check if zones updated during drag
+    const zonesUpdated =
+      zonesBefore.length !== zonesDuring.length ||
+      zonesBefore.some((z, i) => {
+        const d = zonesDuring[i]
+        return (
+          !d ||
+          Math.abs(z.width - d.width) > 1 ||
+          Math.abs(z.height - d.height) > 1 ||
+          Math.abs(z.left - d.left) > 1 ||
+          Math.abs(z.top - d.top) > 1
+        )
+      })
+
+    // End drag
+    this.dispatchMouseEvent(document.body, 'mouseup', {
+      clientX: endX,
+      clientY: endY,
+      ...eventOptions,
+    })
+
+    await this.delay(100)
+
+    // Capture after state
+    const after = getBoundsPadding()
+
+    return { before, during, after, zonesUpdated }
+  }
+
+  /**
+   * Get current padding zone information for assertions
+   *
+   * @returns Array of padding zone rectangles and their positions
+   */
+  getPaddingZones(): PaddingZoneInfo[] {
+    const zones = document.querySelectorAll('.padding-area')
+    return Array.from(zones).map(zone => {
+      const rect = zone.getBoundingClientRect()
+      const style = window.getComputedStyle(zone)
+      return {
+        rect: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+        },
+        color: style.backgroundColor,
+        visible: rect.width > 0 && rect.height > 0,
+      }
+    })
+  }
+
+  /**
+   * Get padding handle positions for assertions
+   */
+  getPaddingHandles(): PaddingHandleInfo[] {
+    const handles = document.querySelectorAll('.padding-handle')
+    return Array.from(handles).map(handle => {
+      const rect = handle.getBoundingClientRect()
+      const dataset = (handle as HTMLElement).dataset
+      return {
+        position: dataset.position as 'top' | 'right' | 'bottom' | 'left',
+        nodeId: dataset.nodeId || '',
+        padding: parseInt(dataset.padding || '0', 10),
+        rect: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+        },
+      }
+    })
+  }
+}
+
+// =============================================================================
+// Padding Types
+// =============================================================================
+
+export interface PaddingValues {
+  top: number
+  right: number
+  bottom: number
+  left: number
+}
+
+export interface PaddingZoneInfo {
+  rect: { left: number; top: number; width: number; height: number }
+  color: string
+  visible: boolean
+}
+
+export interface PaddingHandleInfo {
+  position: 'top' | 'right' | 'bottom' | 'left'
+  nodeId: string
+  padding: number
+  rect: { left: number; top: number; width: number; height: number }
+}
+
+// =============================================================================
+// Resize Types
+// =============================================================================
+
+export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
+
+export interface ElementDimensions {
+  width: number
+  height: number
+  left: number
+  top: number
+  computedWidth: string
+  computedHeight: string
+}
+
+export interface ResizeHandleInfo {
+  position: ResizeHandle
+  nodeId: string
+  isMulti: boolean
+  rect: { left: number; top: number; width: number; height: number }
+}
+
+export interface ResizeDragResult {
+  /** Element dimensions before resize */
+  before: ElementDimensions
+  /** Element dimensions during drag (live preview) */
+  during: ElementDimensions
+  /** Element dimensions after resize completed */
+  after: ElementDimensions
+  /** Whether the element is still selected after resize */
+  isStillSelected: boolean
+  /** Whether resize handles moved during the operation */
+  handlesUpdated: boolean
+  /** Whether resize handles are correctly positioned relative to element */
+  handlesCorrectlyPositioned: boolean
+  /** Handle positions before resize */
+  handlesBefore: ResizeHandleInfo[]
+  /** Handle positions after resize */
+  handlesAfter: ResizeHandleInfo[]
+}
+
+export interface SelectionStateInfo {
+  elementExists: boolean
+  isSelected: boolean
+  hasResizeHandles: boolean
+  hasPaddingHandles: boolean
+  resizeHandleCount: number
+  paddingHandleCount: number
 }
 
 // =============================================================================

@@ -1,147 +1,827 @@
 /**
  * Resize Handle Drag Test Suite
  *
- * Tests for dragging resize handles to change element dimensions:
- * - Drag east handle to increase width
- * - Drag south handle to increase height
- * - Drag corner handles to change both dimensions
+ * Comprehensive tests for resize handle interactions covering:
+ * - All 8 handle positions (n, s, e, w, nw, ne, sw, se)
+ * - Dimension verification (before/during/after)
+ * - Selection state preservation
+ * - Handle position accuracy
+ * - Various element contexts (flex, absolute, stacked)
+ * - Edge cases (minimum size, fill detection)
  */
 
 import type { TestCase, TestAPI } from '../../types'
 import { describe, testWithSetup } from '../../index'
 
-export const resizeHandleDragTests: TestCase[] = describe('Resize Handle Drag', [
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+const TOLERANCE = 5 // Pixel tolerance for dimension comparisons
+
+function assertApproxEqual(
+  actual: number,
+  expected: number,
+  message: string,
+  tolerance = TOLERANCE
+) {
+  if (Math.abs(actual - expected) > tolerance) {
+    throw new Error(`${message}. Expected ~${expected}, got ${actual}`)
+  }
+}
+
+function assertGreater(actual: number, expected: number, message: string) {
+  if (actual <= expected) {
+    throw new Error(`${message}. Expected > ${expected}, got ${actual}`)
+  }
+}
+
+function assertLess(actual: number, expected: number, message: string) {
+  if (actual >= expected) {
+    throw new Error(`${message}. Expected < ${expected}, got ${actual}`)
+  }
+}
+
+// =============================================================================
+// Edge Handle Tests (N, S, E, W)
+// =============================================================================
+
+export const resizeDragEdgeTests: TestCase[] = describe('Resize Drag: Edge Handles', [
+  // ---------------------------------------------------------------------------
+  // East Handle
+  // ---------------------------------------------------------------------------
   testWithSetup(
-    'Drag east handle increases width',
-    'Frame pad 16, w 400, h 300\n  Frame w 100, h 50, bg #333',
+    'E handle: drag right increases width',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
       api.interact.clearSelection()
       await api.utils.delay(100)
 
-      // Get initial width from code
-      const initialCode = window.editor?.state.doc.toString() || ''
-      const initialWidthMatch = initialCode.match(/Frame w (\d+), h 50/)
-      if (!initialWidthMatch) throw new Error('Could not find initial width')
-      const initialWidth = parseInt(initialWidthMatch[1])
+      const result = await api.interact.dragResizeHandle('node-2', 'e', 60, 0)
 
-      // Drag east handle by 50px
-      await api.interact.dragResizeHandle('node-2', 'e', 50, 0)
-      await api.utils.waitForCompile()
-
-      // Check that width increased in code
-      const newCode = window.editor?.state.doc.toString() || ''
-      const newWidthMatch = newCode.match(/Frame w (\d+), h 50/)
-
-      if (!newWidthMatch) {
-        // Width might have become 'full' if dragged to parent edge
-        if (newCode.includes('w full')) {
-          // This is acceptable - element was resized to fill parent
-          return
-        }
-        throw new Error('Could not find width in code')
-      }
-
-      const newWidth = parseInt(newWidthMatch[1])
-
-      if (newWidth <= initialWidth) {
-        throw new Error(`Width should have increased. Initial: ${initialWidth}, New: ${newWidth}`)
-      }
+      assertGreater(result.after.width, result.before.width, 'Width should increase')
+      assertApproxEqual(result.after.height, result.before.height, 'Height should stay same')
+      if (!result.isStillSelected) throw new Error('Element should remain selected')
+      if (!result.handlesCorrectlyPositioned)
+        throw new Error('Handles should be correctly positioned')
     }
   ),
 
   testWithSetup(
-    'Drag south handle increases height',
-    'Frame pad 16, w 400, h 300\n  Frame w 100, h 50, bg #333',
+    'E handle: drag left decreases width',
+    'Frame pad 16, w 400, h 300\n  Frame w 150, h 80, bg #333',
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
       api.interact.clearSelection()
       await api.utils.delay(100)
 
-      // Drag south handle by 30px
-      await api.interact.dragResizeHandle('node-2', 's', 0, 30)
+      const result = await api.interact.dragResizeHandle('node-2', 'e', -50, 0)
+
+      assertLess(result.after.width, result.before.width, 'Width should decrease')
+      assertApproxEqual(result.after.height, result.before.height, 'Height should stay same')
+    }
+  ),
+
+  // ---------------------------------------------------------------------------
+  // West Handle
+  // ---------------------------------------------------------------------------
+  testWithSetup(
+    'W handle: drag left increases width',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
       await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
 
-      // Check that height increased in code
-      const newCode = window.editor?.state.doc.toString() || ''
+      const result = await api.interact.dragResizeHandle('node-2', 'w', -50, 0)
 
-      // Height should be > 50 or 'full'
-      if (newCode.includes('h full')) {
-        return // Acceptable
-      }
-
-      const heightMatch = newCode.match(/h (\d+)/)
-      if (!heightMatch) {
-        throw new Error('Could not find height in code')
-      }
-
-      const newHeight = parseInt(heightMatch[1])
-      if (newHeight <= 50) {
-        throw new Error(`Height should have increased from 50. Got: ${newHeight}`)
-      }
+      assertGreater(result.after.width, result.before.width, 'Width should increase')
+      assertApproxEqual(result.after.height, result.before.height, 'Height should stay same')
     }
   ),
 
   testWithSetup(
-    'Drag west handle decreases width',
-    'Frame pad 16, w 400, h 300\n  Frame w 200, h 50, bg #333',
+    'W handle: drag right decreases width',
+    'Frame pad 16, w 400, h 300\n  Frame w 150, h 80, bg #333',
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
       api.interact.clearSelection()
       await api.utils.delay(100)
 
-      // Drag west handle right by 50px (decreases width)
-      await api.interact.dragResizeHandle('node-2', 'w', 50, 0)
+      const result = await api.interact.dragResizeHandle('node-2', 'w', 50, 0)
+
+      assertLess(result.after.width, result.before.width, 'Width should decrease')
+    }
+  ),
+
+  // ---------------------------------------------------------------------------
+  // South Handle
+  // ---------------------------------------------------------------------------
+  testWithSetup(
+    'S handle: drag down increases height',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
       await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
 
-      // Check that width decreased in code - look for the inner Frame (with h 50)
-      const newCode = window.editor?.state.doc.toString() || ''
-      const innerFrameMatch = newCode.match(/Frame w (\d+), h 50/)
+      const result = await api.interact.dragResizeHandle('node-2', 's', 0, 50)
 
-      if (!innerFrameMatch) {
-        throw new Error('Could not find inner Frame width in code')
-      }
-
-      const newWidth = parseInt(innerFrameMatch[1])
-      if (newWidth >= 200) {
-        throw new Error(`Width should have decreased from 200. Got: ${newWidth}`)
-      }
+      assertGreater(result.after.height, result.before.height, 'Height should increase')
+      assertApproxEqual(result.after.width, result.before.width, 'Width should stay same')
     }
   ),
 
   testWithSetup(
-    'Drag southeast corner changes both dimensions',
-    'Frame pad 16, w 400, h 300\n  Frame w 100, h 50, bg #333',
+    'S handle: drag up decreases height',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 120, bg #333',
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
       api.interact.clearSelection()
       await api.utils.delay(100)
 
-      // Drag southeast corner by 40x40
-      await api.interact.dragResizeHandle('node-2', 'se', 40, 40)
+      const result = await api.interact.dragResizeHandle('node-2', 's', 0, -40)
+
+      assertLess(result.after.height, result.before.height, 'Height should decrease')
+    }
+  ),
+
+  // ---------------------------------------------------------------------------
+  // North Handle
+  // ---------------------------------------------------------------------------
+  testWithSetup(
+    'N handle: drag up increases height',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
       await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
 
-      // Check that both dimensions changed
-      const newCode = window.editor?.state.doc.toString() || ''
+      const result = await api.interact.dragResizeHandle('node-2', 'n', 0, -50)
 
-      // Check width
-      const widthFull = newCode.includes('w full')
-      const widthMatch = newCode.match(/w (\d+)/)
-      const newWidth = widthFull ? 999 : widthMatch ? parseInt(widthMatch[1]) : 0
+      assertGreater(result.after.height, result.before.height, 'Height should increase')
+      assertApproxEqual(result.after.width, result.before.width, 'Width should stay same')
+    }
+  ),
 
-      // Check height
-      const heightFull = newCode.includes('h full')
-      const heightMatch = newCode.match(/Frame w.*h (\d+)/)
-      const newHeight = heightFull ? 999 : heightMatch ? parseInt(heightMatch[1]) : 0
+  testWithSetup(
+    'N handle: drag down decreases height',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 120, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
 
-      if (newWidth <= 100 && !widthFull) {
-        throw new Error(`Width should have increased from 100. Got: ${newWidth}`)
-      }
-      if (newHeight <= 50 && !heightFull) {
-        throw new Error(`Height should have increased from 50. Got: ${newHeight}`)
+      const result = await api.interact.dragResizeHandle('node-2', 'n', 0, 40)
+
+      assertLess(result.after.height, result.before.height, 'Height should decrease')
+    }
+  ),
+])
+
+// =============================================================================
+// Corner Handle Tests (NW, NE, SW, SE)
+// =============================================================================
+
+export const resizeDragCornerTests: TestCase[] = describe('Resize Drag: Corner Handles', [
+  testWithSetup(
+    'SE handle: drag right-down increases both dimensions',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'se', 50, 40)
+
+      assertGreater(result.after.width, result.before.width, 'Width should increase')
+      assertGreater(result.after.height, result.before.height, 'Height should increase')
+      if (!result.handlesCorrectlyPositioned) throw new Error('Handles should follow element')
+    }
+  ),
+
+  testWithSetup(
+    'SE handle: drag left-up decreases both dimensions',
+    'Frame pad 16, w 400, h 300\n  Frame w 150, h 120, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'se', -40, -30)
+
+      assertLess(result.after.width, result.before.width, 'Width should decrease')
+      assertLess(result.after.height, result.before.height, 'Height should decrease')
+    }
+  ),
+
+  testWithSetup(
+    'NW handle: drag left-up increases both dimensions',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'nw', -50, -40)
+
+      assertGreater(result.after.width, result.before.width, 'Width should increase')
+      assertGreater(result.after.height, result.before.height, 'Height should increase')
+    }
+  ),
+
+  testWithSetup(
+    'NE handle: drag right-up increases both dimensions',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'ne', 50, -40)
+
+      assertGreater(result.after.width, result.before.width, 'Width should increase')
+      assertGreater(result.after.height, result.before.height, 'Height should increase')
+    }
+  ),
+
+  testWithSetup(
+    'SW handle: drag left-down increases both dimensions',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'sw', -50, 40)
+
+      assertGreater(result.after.width, result.before.width, 'Width should increase')
+      assertGreater(result.after.height, result.before.height, 'Height should increase')
+    }
+  ),
+
+  testWithSetup(
+    'Corner handle: diagonal drag only changes one axis when constrained',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Drag SE corner mostly horizontal
+      const result = await api.interact.dragResizeHandle('node-2', 'se', 80, 5)
+
+      // Width should change significantly more than height
+      const widthDelta = result.after.width - result.before.width
+      const heightDelta = result.after.height - result.before.height
+
+      if (widthDelta < heightDelta * 2) {
+        throw new Error('Horizontal drag should primarily affect width')
       }
     }
   ),
 ])
+
+// =============================================================================
+// Selection State Tests
+// =============================================================================
+
+export const resizeDragSelectionTests: TestCase[] = describe('Resize Drag: Selection State', [
+  testWithSetup(
+    'Element remains selected after resize',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'e', 50, 0)
+
+      if (!result.isStillSelected) {
+        throw new Error('Element should remain selected after resize')
+      }
+
+      // Additional check via getSelectionState
+      const state = api.interact.getSelectionState('node-2')
+      if (!state.hasResizeHandles) {
+        throw new Error('Resize handles should still be visible')
+      }
+      if (state.resizeHandleCount !== 8) {
+        throw new Error(`Expected 8 handles, got ${state.resizeHandleCount}`)
+      }
+    }
+  ),
+
+  testWithSetup(
+    'All 8 handles present after resize',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'se', 50, 50)
+
+      if (result.handlesAfter.length !== 8) {
+        throw new Error(`Expected 8 handles, got ${result.handlesAfter.length}`)
+      }
+
+      // Verify all positions are present
+      const positions = result.handlesAfter.map(h => h.position).sort()
+      const expected = ['e', 'n', 'ne', 'nw', 's', 'se', 'sw', 'w']
+      if (JSON.stringify(positions) !== JSON.stringify(expected)) {
+        throw new Error(`Missing handle positions. Got: ${positions.join(', ')}`)
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Handles update position after resize',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'e', 80, 0)
+
+      if (!result.handlesUpdated) {
+        throw new Error('Handles should have moved after resize')
+      }
+
+      // Find the east handle before and after
+      const eBefore = result.handlesBefore.find(h => h.position === 'e')
+      const eAfter = result.handlesAfter.find(h => h.position === 'e')
+
+      if (!eBefore || !eAfter) {
+        throw new Error('Could not find east handle')
+      }
+
+      // East handle should have moved right
+      if (eAfter.rect.left <= eBefore.rect.left) {
+        throw new Error('East handle should have moved right')
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Handles correctly positioned relative to element',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'se', 60, 40)
+
+      if (!result.handlesCorrectlyPositioned) {
+        throw new Error('Handles are not correctly positioned around element')
+      }
+
+      // Additional verification
+      const isCorrect = api.interact.verifyHandlePositions('node-2')
+      if (!isCorrect) {
+        throw new Error('verifyHandlePositions returned false')
+      }
+    }
+  ),
+])
+
+// =============================================================================
+// Live Preview Tests
+// =============================================================================
+
+export const resizeDragLivePreviewTests: TestCase[] = describe('Resize Drag: Live Preview', [
+  testWithSetup(
+    'During state captures intermediate dimensions',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'e', 80, 0)
+
+      // During should be between before and after
+      if (result.during.width <= result.before.width) {
+        throw new Error('During width should be greater than before')
+      }
+
+      // Allow some tolerance for timing
+      if (result.during.width > result.after.width + 10) {
+        throw new Error('During width should not exceed after by much')
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Visual feedback shows during drag',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 's', 0, 60)
+
+      // Check that during state reflects the drag
+      const heightIncrease = result.during.height - result.before.height
+      if (heightIncrease < 20) {
+        throw new Error(`During drag should show height increase. Got ${heightIncrease}px`)
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Computed styles update during drag',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'e', 50, 0)
+
+      // Computed width should reflect the change
+      const beforeWidth = parseInt(result.before.computedWidth)
+      const afterWidth = parseInt(result.after.computedWidth)
+
+      if (afterWidth <= beforeWidth) {
+        throw new Error(
+          `Computed width should increase. Before: ${beforeWidth}, After: ${afterWidth}`
+        )
+      }
+    }
+  ),
+])
+
+// =============================================================================
+// Element Context Tests
+// =============================================================================
+
+export const resizeDragContextTests: TestCase[] = describe('Resize Drag: Element Contexts', [
+  testWithSetup(
+    'Resize flex child element',
+    'Frame hor, gap 8, pad 16, w 400, h 200\n  Frame w 80, h 60, bg #333\n  Frame w 80, h 60, bg #555\n  Frame w 80, h 60, bg #777',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Resize middle child
+      const result = await api.interact.dragResizeHandle('node-3', 'e', 40, 0)
+
+      assertGreater(result.after.width, result.before.width, 'Flex child width should increase')
+      if (!result.handlesCorrectlyPositioned) {
+        throw new Error('Handles should follow resized flex child')
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Resize nested element',
+    'Frame pad 16, w 400, h 300, bg #111\n  Frame pad 12, w 300, h 200, bg #222\n    Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Resize innermost element
+      const result = await api.interact.dragResizeHandle('node-3', 'se', 50, 40)
+
+      assertGreater(result.after.width, result.before.width, 'Nested element width should increase')
+      assertGreater(
+        result.after.height,
+        result.before.height,
+        'Nested element height should increase'
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Resize absolute positioned element',
+    'Frame w 400, h 300, bg #111\n  Frame w 100, h 80, bg #333, x 50, y 50',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'se', 60, 50)
+
+      assertGreater(result.after.width, result.before.width, 'Absolute element should resize')
+      if (!result.isStillSelected) {
+        throw new Error('Absolute element should remain selected')
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Resize element in stacked container',
+    'Frame stacked, w 400, h 300, bg #111\n  Frame w 200, h 150, bg #333\n  Frame w 100, h 80, bg #555, x 50, y 50',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Resize the overlay element
+      const result = await api.interact.dragResizeHandle('node-3', 'e', 50, 0)
+
+      assertGreater(result.after.width, result.before.width, 'Stacked element should resize')
+    }
+  ),
+
+  testWithSetup(
+    'Resize element with content (Text child)',
+    'Frame pad 16, w 400, h 300\n  Frame pad 12, w 150, h hug, bg #333\n    Text "Hello World"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'e', 50, 0)
+
+      assertGreater(result.after.width, result.before.width, 'Container with text should resize')
+    }
+  ),
+
+  testWithSetup(
+    'Resize Button element',
+    'Frame pad 16, w 400, h 300\n  Button "Click Me", w 120, h 40, bg #2271C1',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'e', 40, 0)
+
+      assertGreater(result.after.width, result.before.width, 'Button should resize')
+    }
+  ),
+])
+
+// =============================================================================
+// Edge Cases
+// =============================================================================
+
+export const resizeDragEdgeCaseTests: TestCase[] = describe('Resize Drag: Edge Cases', [
+  testWithSetup(
+    'Minimum size constraint prevents zero width',
+    'Frame pad 16, w 400, h 300\n  Frame w 60, h 50, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Try to make element very small
+      const result = await api.interact.dragResizeHandle('node-2', 'w', 70, 0)
+
+      // Should not go to zero - element must have some size
+      if (result.after.width <= 0) {
+        throw new Error(`Width should not be zero or negative. Got ${result.after.width}`)
+      }
+
+      // Element should still be valid
+      if (!result.isStillSelected) {
+        throw new Error('Element should remain selected even when small')
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Small drag delta still triggers resize',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Small drag
+      const result = await api.interact.dragResizeHandle('node-2', 'e', 10, 0)
+
+      // Should still register a change
+      const widthDelta = Math.abs(result.after.width - result.before.width)
+      if (widthDelta < 5) {
+        throw new Error('Small drag should still cause resize')
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Large drag works correctly',
+    'Frame pad 16, w 400, h 300\n  Frame w 50, h 50, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Large drag
+      const result = await api.interact.dragResizeHandle('node-2', 'se', 200, 150)
+
+      assertGreater(result.after.width, result.before.width + 100, 'Large drag should work')
+      assertGreater(result.after.height, result.before.height + 100, 'Large drag should work')
+    }
+  ),
+
+  testWithSetup(
+    'Negative coordinates handled correctly',
+    'Frame pad 16, w 400, h 300\n  Frame w 200, h 150, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Drag to decrease size
+      const result = await api.interact.dragResizeHandle('node-2', 'se', -80, -60)
+
+      assertLess(result.after.width, result.before.width, 'Negative drag should decrease width')
+      assertLess(result.after.height, result.before.height, 'Negative drag should decrease height')
+    }
+  ),
+
+  testWithSetup(
+    'Multiple sequential resizes work correctly',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // First resize
+      const result1 = await api.interact.dragResizeHandle('node-2', 'e', 30, 0)
+      await api.utils.delay(100)
+
+      // Second resize
+      const result2 = await api.interact.dragResizeHandle('node-2', 's', 0, 25)
+      await api.utils.delay(100)
+
+      // Third resize
+      const result3 = await api.interact.dragResizeHandle('node-2', 'se', 20, 20)
+
+      // Final dimensions should reflect all resizes
+      if (result3.after.width < result1.after.width) {
+        throw new Error('Width should have accumulated from multiple resizes')
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Resize after code change updates correctly',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // First resize
+      await api.interact.dragResizeHandle('node-2', 'e', 50, 0)
+      await api.utils.waitForCompile()
+
+      // Clear and re-select to ensure handles are fresh
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Second resize should work on updated element
+      const result = await api.interact.dragResizeHandle('node-2', 's', 0, 40)
+
+      if (!result.isStillSelected) {
+        throw new Error('Should be selected after second resize')
+      }
+    }
+  ),
+])
+
+// =============================================================================
+// Handle Position Accuracy Tests
+// =============================================================================
+
+export const resizeDragAccuracyTests: TestCase[] = describe('Resize Drag: Handle Accuracy', [
+  testWithSetup(
+    'Corner handles at exact corners',
+    'Frame pad 16, w 400, h 300\n  Frame w 120, h 90, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      // Select element
+      await api.interact.click('node-2')
+      await api.utils.delay(200)
+
+      const handles = api.interact.getResizeHandles()
+      const element = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+      const rect = element.getBoundingClientRect()
+
+      // Check NW corner
+      const nw = handles.find(h => h.position === 'nw')
+      if (!nw) throw new Error('NW handle not found')
+
+      const nwCenterX = nw.rect.left + nw.rect.width / 2
+      const nwCenterY = nw.rect.top + nw.rect.height / 2
+
+      if (Math.abs(nwCenterX - rect.left) > 6) {
+        throw new Error(`NW handle X off by ${Math.abs(nwCenterX - rect.left)}px`)
+      }
+      if (Math.abs(nwCenterY - rect.top) > 6) {
+        throw new Error(`NW handle Y off by ${Math.abs(nwCenterY - rect.top)}px`)
+      }
+
+      // Check SE corner
+      const se = handles.find(h => h.position === 'se')
+      if (!se) throw new Error('SE handle not found')
+
+      const seCenterX = se.rect.left + se.rect.width / 2
+      const seCenterY = se.rect.top + se.rect.height / 2
+
+      if (Math.abs(seCenterX - rect.right) > 6) {
+        throw new Error(`SE handle X off by ${Math.abs(seCenterX - rect.right)}px`)
+      }
+      if (Math.abs(seCenterY - rect.bottom) > 6) {
+        throw new Error(`SE handle Y off by ${Math.abs(seCenterY - rect.bottom)}px`)
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Edge handles at midpoints',
+    'Frame pad 16, w 400, h 300\n  Frame w 120, h 90, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      await api.interact.click('node-2')
+      await api.utils.delay(200)
+
+      const handles = api.interact.getResizeHandles()
+      const element = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+      const rect = element.getBoundingClientRect()
+
+      // Check N handle (top center)
+      const n = handles.find(h => h.position === 'n')
+      if (!n) throw new Error('N handle not found')
+
+      const nCenterX = n.rect.left + n.rect.width / 2
+      const expectedCenterX = rect.left + rect.width / 2
+
+      if (Math.abs(nCenterX - expectedCenterX) > 6) {
+        throw new Error(
+          `N handle X should be at center. Off by ${Math.abs(nCenterX - expectedCenterX)}px`
+        )
+      }
+
+      // Check E handle (right center)
+      const e = handles.find(h => h.position === 'e')
+      if (!e) throw new Error('E handle not found')
+
+      const eCenterY = e.rect.left + e.rect.height / 2
+      const expectedCenterY = rect.top + rect.height / 2
+
+      // Note: this checks Y position of E handle center relative to element
+      const eActualY = e.rect.top + e.rect.height / 2
+      if (Math.abs(eActualY - expectedCenterY) > 6) {
+        throw new Error(`E handle Y should be at vertical center`)
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Handles move precisely with resize',
+    'Frame pad 16, w 400, h 300\n  Frame w 100, h 80, bg #333',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      api.interact.clearSelection()
+      await api.utils.delay(100)
+
+      const result = await api.interact.dragResizeHandle('node-2', 'e', 50, 0)
+
+      // E handle should have moved approximately 50px
+      const eBefore = result.handlesBefore.find(h => h.position === 'e')
+      const eAfter = result.handlesAfter.find(h => h.position === 'e')
+
+      if (!eBefore || !eAfter) throw new Error('E handle not found')
+
+      const handleMovement = eAfter.rect.left - eBefore.rect.left
+      // Allow some tolerance due to rounding
+      if (Math.abs(handleMovement - 50) > 10) {
+        throw new Error(`E handle should have moved ~50px, moved ${handleMovement}px`)
+      }
+    }
+  ),
+])
+
+// =============================================================================
+// Export All Tests
+// =============================================================================
+
+export const resizeHandleDragTests: TestCase[] = [
+  ...resizeDragEdgeTests,
+  ...resizeDragCornerTests,
+  ...resizeDragSelectionTests,
+  ...resizeDragLivePreviewTests,
+  ...resizeDragContextTests,
+  ...resizeDragEdgeCaseTests,
+  ...resizeDragAccuracyTests,
+]
 
 export default resizeHandleDragTests

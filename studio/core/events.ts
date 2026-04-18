@@ -112,9 +112,9 @@ export interface StudioEvents {
   }
   /** Padding handle events */
   'handles:toggle-padding': { nodeId: string }
-  'padding:start': { nodeId: string; handle: string; startPadding: number }
-  'padding:move': { nodeId: string; handle: string; padding: number }
-  'padding:end': { nodeId: string; handle: string; padding: number }
+  'padding:start': { nodeId: string; handle: string; startPadding: number; mode: string }
+  'padding:move': { nodeId: string; handle: string; mode: string; padding: number }
+  'padding:end': { nodeId: string; handle: string; mode: string; padding: number }
   /** Multi-selection resize events (Feature 4) */
   'multiResize:start': {
     nodeIds: string[]

@@ -106,6 +106,7 @@ import {
   allSidesPaddingTests,
   axisPaddingTests,
   liveVisualFeedbackTests,
+  robustnessTests,
 } from './interactions'
 
 // Bidirectional
@@ -999,6 +1000,7 @@ export const testCounts: Record<string, number> = {
   'paddingDrag.allSides': allSidesPaddingTests.length,
   'paddingDrag.axis': axisPaddingTests.length,
   'paddingDrag.liveVisual': liveVisualFeedbackTests.length,
+  'paddingDrag.robustness': robustnessTests.length,
   resizeHandleDblClick: allResizeHandleDblClickTests.length,
   'resizeHandleDblClick.horizontal': horizontalHandleTests.length,
   'resizeHandleDblClick.vertical': verticalHandleTests.length,
@@ -1397,6 +1399,7 @@ export type TestCategory =
   | 'paddingDrag.allSides'
   | 'paddingDrag.axis'
   | 'paddingDrag.liveVisual'
+  | 'paddingDrag.robustness'
   | 'resizeHandleDblClick'
   | 'resizeHandleDblClick.horizontal'
   | 'resizeHandleDblClick.vertical'

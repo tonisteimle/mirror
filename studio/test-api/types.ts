@@ -432,13 +432,114 @@ export interface InteractionAPI {
     nodeId: string,
     position: 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se'
   ): Promise<void>
-  /** Drag a resize handle to change element size */
+  /** Drag a resize handle to change element size, returns verification data */
   dragResizeHandle(
     nodeId: string,
     position: 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se',
     deltaX: number,
     deltaY: number
-  ): Promise<void>
+  ): Promise<ResizeDragResult>
+  /** Get resize handle positions for assertions */
+  getResizeHandles(): ResizeHandleInfo[]
+  /** Verify that resize handles are positioned correctly around the element */
+  verifyHandlePositions(nodeId: string, handles?: ResizeHandleInfo[]): boolean
+  /** Get detailed selection state for verification */
+  getSelectionState(nodeId: string): SelectionStateInfo
+  /** Enter padding mode for an element */
+  enterPaddingMode(nodeId: string): Promise<void>
+  /** Exit padding mode */
+  exitPaddingMode(): Promise<void>
+  /** Drag a padding handle to adjust padding */
+  dragPaddingHandle(
+    side: 'top' | 'right' | 'bottom' | 'left',
+    delta: number,
+    options?: { shift?: boolean; alt?: boolean }
+  ): Promise<PaddingDragResult>
+  /** Get padding zone information for assertions */
+  getPaddingZones(): PaddingZoneInfo[]
+  /** Get padding handle positions for assertions */
+  getPaddingHandles(): PaddingHandleInfo[]
+}
+
+// =============================================================================
+// Resize Types
+// =============================================================================
+
+export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
+
+export interface ElementDimensions {
+  width: number
+  height: number
+  left: number
+  top: number
+  computedWidth: string
+  computedHeight: string
+}
+
+export interface ResizeHandleInfo {
+  position: ResizeHandle
+  nodeId: string
+  isMulti: boolean
+  rect: { left: number; top: number; width: number; height: number }
+}
+
+export interface ResizeDragResult {
+  /** Element dimensions before resize */
+  before: ElementDimensions
+  /** Element dimensions during drag (live preview) */
+  during: ElementDimensions
+  /** Element dimensions after resize completed */
+  after: ElementDimensions
+  /** Whether the element is still selected after resize */
+  isStillSelected: boolean
+  /** Whether resize handles moved during the operation */
+  handlesUpdated: boolean
+  /** Whether resize handles are correctly positioned relative to element */
+  handlesCorrectlyPositioned: boolean
+  /** Handle positions before resize */
+  handlesBefore: ResizeHandleInfo[]
+  /** Handle positions after resize */
+  handlesAfter: ResizeHandleInfo[]
+}
+
+export interface SelectionStateInfo {
+  elementExists: boolean
+  isSelected: boolean
+  hasResizeHandles: boolean
+  hasPaddingHandles: boolean
+  resizeHandleCount: number
+  paddingHandleCount: number
+}
+
+// =============================================================================
+// Padding Types
+// =============================================================================
+
+export interface PaddingValues {
+  top: number
+  right: number
+  bottom: number
+  left: number
+}
+
+export interface PaddingZoneInfo {
+  rect: { left: number; top: number; width: number; height: number }
+  color: string
+  visible: boolean
+}
+
+export interface PaddingHandleInfo {
+  position: 'top' | 'right' | 'bottom' | 'left'
+  nodeId: string
+  padding: number
+  rect: { left: number; top: number; width: number; height: number }
+}
+
+export interface PaddingDragResult {
+  before: PaddingValues
+  during: PaddingValues
+  after: PaddingValues
+  zonesUpdated: boolean
 }
 
 export interface AssertionAPI {
