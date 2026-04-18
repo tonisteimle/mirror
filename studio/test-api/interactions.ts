@@ -1040,21 +1040,26 @@ export class Interactions implements InteractionAPI {
         isSelected: false,
         hasResizeHandles: false,
         hasPaddingHandles: false,
+        hasMarginHandles: false,
         resizeHandleCount: 0,
         paddingHandleCount: 0,
+        marginHandleCount: 0,
       }
     }
 
     const resizeHandles = this.getResizeHandles().filter(h => h.nodeId === nodeId)
     const paddingHandles = this.getPaddingHandles().filter(h => h.nodeId === nodeId)
+    const marginHandles = this.getMarginHandles().filter(h => h.nodeId === nodeId)
 
     return {
       elementExists: true,
-      isSelected: resizeHandles.length > 0 || paddingHandles.length > 0,
+      isSelected: resizeHandles.length > 0 || paddingHandles.length > 0 || marginHandles.length > 0,
       hasResizeHandles: resizeHandles.length > 0,
       hasPaddingHandles: paddingHandles.length > 0,
+      hasMarginHandles: marginHandles.length > 0,
       resizeHandleCount: resizeHandles.length,
       paddingHandleCount: paddingHandles.length,
+      marginHandleCount: marginHandles.length,
     }
   }
 
@@ -1323,6 +1328,275 @@ export class Interactions implements InteractionAPI {
       }
     })
   }
+
+  // ===========================================================================
+  // Margin Handle Interactions
+  // ===========================================================================
+
+  /**
+   * Enter margin mode for an element (press M key)
+   *
+   * @param nodeId - The element to enter margin mode for
+   */
+  async enterMarginMode(nodeId: string): Promise<void> {
+    // First select the element
+    await this.click(nodeId)
+    await this.delay(100)
+
+    // Check if margin handles are already visible (mode already active)
+    const existingHandles = document.querySelectorAll('.margin-handle')
+    if (existingHandles.length > 0) {
+      // Mode is already active - check if it's for the right element
+      const handleNodeId = (existingHandles[0] as HTMLElement).dataset.nodeId
+      if (handleNodeId === nodeId) {
+        // Already in margin mode for this element
+        return
+      }
+      // Different element - exit current mode first
+      await this.pressKey('m')
+      await this.delay(100)
+    }
+
+    // Press M to enter margin mode
+    await this.pressKey('m')
+    await this.delay(150)
+
+    // Wait for margin handles to appear
+    let found = false
+    for (let i = 0; i < 10; i++) {
+      const marginHandles = document.querySelectorAll('.margin-handle')
+      if (marginHandles.length > 0) {
+        found = true
+        break
+      }
+      await this.delay(50)
+    }
+
+    if (!found) {
+      throw new Error('Margin handles not found after pressing M')
+    }
+  }
+
+  /**
+   * Exit margin mode (press M again to toggle back)
+   */
+  async exitMarginMode(): Promise<void> {
+    await this.pressKey('m')
+    await this.delay(100)
+  }
+
+  /**
+   * Drag a margin handle to adjust margin
+   *
+   * @param side - Which margin side to drag (top, right, bottom, left)
+   * @param delta - Drag distance in pixels (positive = increase margin)
+   * @param options - Options for the drag operation
+   *                   - shift: adjust all sides uniformly
+   *                   - alt: adjust axis (top/bottom or left/right together)
+   * @returns Object with before/during/after margin values for verification
+   */
+  async dragMarginHandle(
+    side: 'top' | 'right' | 'bottom' | 'left',
+    delta: number,
+    options?: { shift?: boolean; alt?: boolean }
+  ): Promise<{
+    before: MarginValues
+    during: MarginValues
+    after: MarginValues
+    zonesUpdated: boolean
+  }> {
+    // Find the margin handle
+    const handle = document.querySelector(`.margin-handle-${side}`) as HTMLElement
+    if (!handle) {
+      throw new Error(`Margin handle for "${side}" not found. Did you call enterMarginMode first?`)
+    }
+
+    // Get current margin values from the element
+    const nodeId = handle.dataset.nodeId
+    if (!nodeId) {
+      throw new Error('Margin handle missing nodeId')
+    }
+
+    const element = this.findElement(nodeId)
+    if (!element) {
+      throw new Error(`Element ${nodeId} not found`)
+    }
+
+    const getBoundsMargin = (): MarginValues => {
+      const style = window.getComputedStyle(element)
+      return {
+        top: parseInt(style.marginTop || '0', 10),
+        right: parseInt(style.marginRight || '0', 10),
+        bottom: parseInt(style.marginBottom || '0', 10),
+        left: parseInt(style.marginLeft || '0', 10),
+      }
+    }
+
+    const getMarginZoneBounds = (): DOMRect[] => {
+      const zones = document.querySelectorAll('.margin-area')
+      return Array.from(zones).map(z => z.getBoundingClientRect())
+    }
+
+    // Capture before state
+    const before = getBoundsMargin()
+    const zonesBefore = getMarginZoneBounds()
+
+    // Calculate drag positions
+    const handleRect = handle.getBoundingClientRect()
+    const startX = handleRect.left + handleRect.width / 2
+    const startY = handleRect.top + handleRect.height / 2
+
+    // Calculate end position based on side and delta
+    // Margin handles are OUTSIDE the element, so dragging direction is inverted:
+    // - Top: drag UP (negative Y) to increase margin
+    // - Bottom: drag DOWN (positive Y) to increase margin
+    // - Left: drag LEFT (negative X) to increase margin
+    // - Right: drag RIGHT (positive X) to increase margin
+    let endX = startX
+    let endY = startY
+    if (side === 'top') {
+      endY = startY - delta // Drag up to increase top margin
+    } else if (side === 'bottom') {
+      endY = startY + delta // Drag down to increase bottom margin
+    } else if (side === 'left') {
+      endX = startX - delta // Drag left to increase left margin
+    } else if (side === 'right') {
+      endX = startX + delta // Drag right to increase right margin
+    }
+
+    const eventOptions = {
+      shiftKey: options?.shift ?? false,
+      altKey: options?.alt ?? false,
+    }
+
+    // Step delay for drag simulation (20ms default, smooth and fast)
+    const stepDelay = 20
+
+    // Start drag
+    this.dispatchMouseEvent(handle, 'mousedown', {
+      clientX: startX,
+      clientY: startY,
+      ...eventOptions,
+    })
+
+    await this.delay(stepDelay * 2)
+
+    // Move (multiple steps for smoother simulation)
+    const steps = 5
+    for (let i = 1; i <= steps; i++) {
+      const progress = i / steps
+      const currentX = startX + (endX - startX) * progress
+      const currentY = startY + (endY - startY) * progress
+
+      this.dispatchMouseEvent(document.body, 'mousemove', {
+        clientX: currentX,
+        clientY: currentY,
+        ...eventOptions,
+      })
+
+      await this.delay(stepDelay)
+    }
+
+    // Capture during state (while dragging)
+    const during = getBoundsMargin()
+    const zonesDuring = getMarginZoneBounds()
+
+    // Check if zones updated during drag
+    const zonesUpdated =
+      zonesBefore.length !== zonesDuring.length ||
+      zonesBefore.some((z, i) => {
+        const d = zonesDuring[i]
+        return (
+          !d ||
+          Math.abs(z.width - d.width) > 1 ||
+          Math.abs(z.height - d.height) > 1 ||
+          Math.abs(z.left - d.left) > 1 ||
+          Math.abs(z.top - d.top) > 1
+        )
+      })
+
+    // End drag
+    this.dispatchMouseEvent(document.body, 'mouseup', {
+      clientX: endX,
+      clientY: endY,
+      ...eventOptions,
+    })
+
+    await this.delay(100)
+
+    // Capture after state
+    const after = getBoundsMargin()
+
+    return { before, during, after, zonesUpdated }
+  }
+
+  /**
+   * Get current margin zone information for assertions
+   *
+   * @returns Array of margin zone rectangles and their positions
+   */
+  getMarginZones(): MarginZoneInfo[] {
+    const zones = document.querySelectorAll('.margin-area')
+    const zoneInfos = Array.from(zones).map(zone => {
+      const rect = zone.getBoundingClientRect()
+      const style = window.getComputedStyle(zone)
+      return {
+        rect: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+        },
+        color: style.backgroundColor,
+        visible: rect.width > 0 && rect.height > 0,
+      }
+    })
+
+    // Determine position based on dimensions and location
+    // Horizontal zones (top/bottom): width > height
+    // Vertical zones (left/right): height > width
+    const horizontalZones = zoneInfos.filter(z => z.rect.width > z.rect.height)
+    const verticalZones = zoneInfos.filter(z => z.rect.height > z.rect.width)
+
+    // Sort horizontal zones by top position
+    horizontalZones.sort((a, b) => a.rect.top - b.rect.top)
+    // Sort vertical zones by left position
+    verticalZones.sort((a, b) => a.rect.left - b.rect.left)
+
+    return zoneInfos.map(z => {
+      let position: 'top' | 'right' | 'bottom' | 'left' | 'unknown' = 'unknown'
+      if (z.rect.width > z.rect.height) {
+        // Horizontal zone
+        position = horizontalZones.indexOf(z) === 0 ? 'top' : 'bottom'
+      } else if (z.rect.height > z.rect.width) {
+        // Vertical zone
+        position = verticalZones.indexOf(z) === 0 ? 'left' : 'right'
+      }
+      return { ...z, position }
+    })
+  }
+
+  /**
+   * Get margin handle positions for assertions
+   */
+  getMarginHandles(): MarginHandleInfo[] {
+    const handles = document.querySelectorAll('.margin-handle')
+    return Array.from(handles).map(handle => {
+      const rect = handle.getBoundingClientRect()
+      const dataset = (handle as HTMLElement).dataset
+      return {
+        position: dataset.position as 'top' | 'right' | 'bottom' | 'left',
+        nodeId: dataset.nodeId || '',
+        margin: parseInt(dataset.margin || '0', 10),
+        rect: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+        },
+      }
+    })
+  }
 }
 
 // =============================================================================
@@ -1346,6 +1620,31 @@ export interface PaddingHandleInfo {
   position: 'top' | 'right' | 'bottom' | 'left'
   nodeId: string
   padding: number
+  rect: { left: number; top: number; width: number; height: number }
+}
+
+// =============================================================================
+// Margin Types
+// =============================================================================
+
+export interface MarginValues {
+  top: number
+  right: number
+  bottom: number
+  left: number
+}
+
+export interface MarginZoneInfo {
+  rect: { left: number; top: number; width: number; height: number }
+  color: string
+  visible: boolean
+  position?: 'top' | 'right' | 'bottom' | 'left' | 'unknown'
+}
+
+export interface MarginHandleInfo {
+  position: 'top' | 'right' | 'bottom' | 'left'
+  nodeId: string
+  margin: number
   rect: { left: number; top: number; width: number; height: number }
 }
 
@@ -1395,8 +1694,10 @@ export interface SelectionStateInfo {
   isSelected: boolean
   hasResizeHandles: boolean
   hasPaddingHandles: boolean
+  hasMarginHandles: boolean
   resizeHandleCount: number
   paddingHandleCount: number
+  marginHandleCount: number
 }
 
 // =============================================================================

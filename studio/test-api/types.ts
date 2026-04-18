@@ -459,6 +459,20 @@ export interface InteractionAPI {
   getPaddingZones(): PaddingZoneInfo[]
   /** Get padding handle positions for assertions */
   getPaddingHandles(): PaddingHandleInfo[]
+  /** Enter margin mode for an element */
+  enterMarginMode(nodeId: string): Promise<void>
+  /** Exit margin mode */
+  exitMarginMode(): Promise<void>
+  /** Drag a margin handle to adjust margin */
+  dragMarginHandle(
+    side: 'top' | 'right' | 'bottom' | 'left',
+    delta: number,
+    options?: { shift?: boolean; alt?: boolean }
+  ): Promise<MarginDragResult>
+  /** Get margin zone information for assertions */
+  getMarginZones(): MarginZoneInfo[]
+  /** Get margin handle positions for assertions */
+  getMarginHandles(): MarginHandleInfo[]
 }
 
 // =============================================================================
@@ -507,8 +521,10 @@ export interface SelectionStateInfo {
   isSelected: boolean
   hasResizeHandles: boolean
   hasPaddingHandles: boolean
+  hasMarginHandles: boolean
   resizeHandleCount: number
   paddingHandleCount: number
+  marginHandleCount: number
 }
 
 // =============================================================================
@@ -540,6 +556,38 @@ export interface PaddingDragResult {
   before: PaddingValues
   during: PaddingValues
   after: PaddingValues
+  zonesUpdated: boolean
+}
+
+// =============================================================================
+// Margin Types
+// =============================================================================
+
+export interface MarginValues {
+  top: number
+  right: number
+  bottom: number
+  left: number
+}
+
+export interface MarginZoneInfo {
+  position: 'top' | 'right' | 'bottom' | 'left' | 'unknown'
+  rect: { left: number; top: number; width: number; height: number }
+  color: string
+  visible: boolean
+}
+
+export interface MarginHandleInfo {
+  position: 'top' | 'right' | 'bottom' | 'left'
+  nodeId: string
+  margin: number
+  rect: { left: number; top: number; width: number; height: number }
+}
+
+export interface MarginDragResult {
+  before: MarginValues
+  during: MarginValues
+  after: MarginValues
   zonesUpdated: boolean
 }
 
