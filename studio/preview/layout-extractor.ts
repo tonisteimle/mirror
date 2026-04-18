@@ -69,6 +69,14 @@ export function extractElementLayout(
       left: parseFloat(style.paddingLeft) || 0,
     }
 
+    // Parse margin values
+    const margin = {
+      top: parseFloat(style.marginTop) || 0,
+      right: parseFloat(style.marginRight) || 0,
+      bottom: parseFloat(style.marginBottom) || 0,
+      left: parseFloat(style.marginLeft) || 0,
+    }
+
     // Parse gap
     const gap = parseFloat(style.gap) || 0
 
@@ -82,9 +90,10 @@ export function extractElementLayout(
     // Determine flex direction
     let flexDirection: 'row' | 'column' | null = null
     if (style.display === 'flex' || style.display === 'inline-flex') {
-      flexDirection = style.flexDirection === 'column' || style.flexDirection === 'column-reverse'
-        ? 'column'
-        : 'row'
+      flexDirection =
+        style.flexDirection === 'column' || style.flexDirection === 'column-reverse'
+          ? 'column'
+          : 'row'
     }
 
     // Check if container (has children with data-mirror-id or is flex/grid)
@@ -101,6 +110,7 @@ export function extractElementLayout(
       width: rect.width,
       height: rect.height,
       padding,
+      margin,
       gap,
       radius,
       isAbsolute,

@@ -113,6 +113,13 @@ export interface LayoutRect {
     bottom: number
     left: number
   }
+  /** Margin values */
+  margin: {
+    top: number
+    right: number
+    bottom: number
+    left: number
+  }
   /** Gap between children (for flex/grid containers) */
   gap: number
   /** Border radius */

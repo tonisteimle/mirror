@@ -27,6 +27,7 @@ export interface ElementLayout {
   width: number
   height: number
   padding: { top: number; right: number; bottom: number; left: number }
+  margin: { top: number; right: number; bottom: number; left: number }
   gap: number
   radius: number
   isAbsolute: boolean
@@ -129,6 +130,7 @@ export class LayoutService {
       width: cached.width,
       height: cached.height,
       padding: cached.padding,
+      margin: cached.margin,
       gap: cached.gap,
       radius: cached.radius,
       isAbsolute: cached.isAbsolute,
@@ -161,18 +163,23 @@ export class LayoutService {
       left: parseFloat(style.paddingLeft) || 0,
     }
 
+    const margin = {
+      top: parseFloat(style.marginTop) || 0,
+      right: parseFloat(style.marginRight) || 0,
+      bottom: parseFloat(style.marginBottom) || 0,
+      left: parseFloat(style.marginLeft) || 0,
+    }
+
     const gap = parseFloat(style.gap) || 0
     const radius = parseFloat(style.borderRadius) || 0
     const isAbsolute = style.position === 'absolute'
     const isContainer =
-      (style.display === 'flex' || style.display === 'grid') &&
-      element.children.length > 0
+      (style.display === 'flex' || style.display === 'grid') && element.children.length > 0
 
     let flexDirection: 'row' | 'column' | null = null
     if (style.display === 'flex') {
-      flexDirection = style.flexDirection === 'row' || style.flexDirection === 'row-reverse'
-        ? 'row'
-        : 'column'
+      flexDirection =
+        style.flexDirection === 'row' || style.flexDirection === 'row-reverse' ? 'row' : 'column'
     }
 
     // Get parent ID
@@ -185,6 +192,7 @@ export class LayoutService {
       width: rect.width,
       height: rect.height,
       padding,
+      margin,
       gap,
       radius,
       isAbsolute,
@@ -281,6 +289,7 @@ export class LayoutService {
           width: layout.width,
           height: layout.height,
           padding: layout.padding,
+          margin: layout.margin,
           gap: layout.gap,
           radius: layout.radius,
           isAbsolute: layout.isAbsolute,
