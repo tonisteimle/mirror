@@ -160,6 +160,7 @@ export class PreviewController {
   private unsubscribePaddingToggle: (() => void) | null = null
   private unsubscribePaddingEnd: (() => void) | null = null
   private unsubscribeZoom: (() => void) | null = null
+  private unsubscribePreviewRendered: (() => void) | null = null
 
   // Layout invalidation handlers
   private boundHandleScroll: () => void
@@ -252,9 +253,30 @@ export class PreviewController {
       this.updateMultiSelectionHighlight()
     })
 
-    // Subscribe to preview:zoom for layout cache invalidation
+    // Subscribe to preview:zoom for layout cache invalidation and handle refresh
     this.unsubscribeZoom = events.on('preview:zoom', () => {
       actions.invalidateLayoutInfo('zoom')
+      // Refresh resize handles to update their positions after zoom
+      // Use requestAnimationFrame to ensure DOM has been updated
+      requestAnimationFrame(() => {
+        this.resizeManager?.refresh()
+        this.paddingManager?.refresh()
+      })
+    })
+
+    // Subscribe to preview:rendered to ensure handles are in sync after DOM updates
+    // This catches cases where layout changes happen through the render pipeline
+    this.unsubscribePreviewRendered = events.on('preview:rendered', ({ success }) => {
+      if (success && this.selectedNodeId) {
+        // Double RAF to ensure layout extraction has completed
+        // (render pipeline uses RAF, we need to wait for that + one more frame)
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.resizeManager?.refresh()
+            this.paddingManager?.refresh()
+          })
+        })
+      }
     })
 
     // Add scroll listener on container for layout cache invalidation
@@ -265,14 +287,17 @@ export class PreviewController {
   }
 
   /**
-   * Handle container scroll - invalidates layout cache
+   * Handle container scroll - invalidates layout cache and refreshes handles
    */
   private handleContainerScroll(): void {
     actions.invalidateLayoutInfo('scroll')
+    // Refresh resize handles to update their positions after scroll
+    this.resizeManager?.refresh()
+    this.paddingManager?.refresh()
   }
 
   /**
-   * Handle window resize - invalidates layout cache (debounced)
+   * Handle window resize - invalidates layout cache and refreshes handles (debounced)
    *
    * Debouncing prevents excessive invalidation during continuous resize events
    * (e.g., when user drags window edge). Invalidates once after resize settles.
@@ -287,6 +312,9 @@ export class PreviewController {
     this.resizeDebounceTimer = setTimeout(() => {
       this.resizeDebounceTimer = null
       actions.invalidateLayoutInfo('resize')
+      // Refresh resize handles to update their positions after window resize
+      this.resizeManager?.refresh()
+      this.paddingManager?.refresh()
     }, PreviewController.RESIZE_DEBOUNCE_MS)
   }
 
@@ -476,6 +504,8 @@ export class PreviewController {
     this.unsubscribePaddingEnd = null
     this.unsubscribeZoom?.()
     this.unsubscribeZoom = null
+    this.unsubscribePreviewRendered?.()
+    this.unsubscribePreviewRendered = null
 
     // Cancel pending resize debounce
     if (this.resizeDebounceTimer !== null) {

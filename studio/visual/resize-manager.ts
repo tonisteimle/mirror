@@ -188,7 +188,6 @@ export class ResizeManager {
         height: '8px',
         background: 'white',
         border: `2px solid ${borderColor}`,
-        borderRadius: '50%',
         cursor: this.getCursor(pos),
         pointerEvents: 'auto',
         zIndex: String(Z_INDEX_RESIZE_HANDLES),
