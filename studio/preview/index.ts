@@ -334,6 +334,11 @@ export class PreviewController {
       overlayManager: this.overlayManager,
       getSourceMap: () => this.sourceMap as any,
     })
+    this.marginManager = createMarginManager({
+      container: this.container,
+      overlayManager: this.overlayManager,
+      getSourceMap: () => this.sourceMap as any,
+    })
 
     // Listen for resize:end events to execute commands
     this.unsubscribeResize = events.on(
