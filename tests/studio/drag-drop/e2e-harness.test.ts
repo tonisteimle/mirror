@@ -389,7 +389,7 @@ describe('E2E: Event Verification', () => {
 
     const commands = harness.getCommands()
     expect(commands.length).toBe(1)
-    expect((commands[0] as { type: string }).type).toBe('recorded-change')
+    expect((commands[0] as { type: string }).type).toBe('DROP_CHANGE')
   })
 
   it('should set pending selection', async () => {

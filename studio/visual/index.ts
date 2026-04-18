@@ -31,6 +31,9 @@ export {
   type PaddingState,
 } from './padding-manager'
 
+// Gap Manager
+export { GapManager, createGapManager, type GapManagerConfig, type GapState } from './gap-manager'
+
 // Position Controls
 export {
   NumericInput,

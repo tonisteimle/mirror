@@ -701,6 +701,7 @@ export class PreviewController {
     this.resizeManager?.hideHandles()
     this.paddingManager?.hideHandles()
     this.marginManager?.hideHandles()
+    this.gapManager?.hideHandles()
   }
 
   /** Get current SourceMap version for staleness detection */
@@ -769,6 +770,7 @@ export class PreviewController {
     this.resizeManager?.hideHandles()
     this.paddingManager?.hideHandles()
     this.marginManager?.hideHandles()
+    this.gapManager?.hideHandles()
     // Reset to resize mode when hiding all handles
     actions.setHandleMode('resize')
   }
