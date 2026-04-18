@@ -135,6 +135,12 @@ import {
   groupUngroupCycleTests,
   selectionAfterUngroupTests,
   ungroupModifierTests,
+  allSpreadToggleTests,
+  basicSpreadTests,
+  spreadContainerTests,
+  spreadEdgeCaseTests,
+  spreadModifierTests,
+  spreadCombinedTests,
 } from './interactions'
 
 // Bidirectional
@@ -925,6 +931,7 @@ export const allTests: TestCase[] = [
   ...allMultiselectTests,
   ...allWrapLayoutTests,
   ...allUngroupTests,
+  ...allSpreadToggleTests,
   ...allBidirectionalTests,
   ...allUndoRedoTests,
   ...allAutocompleteTests,
@@ -1086,6 +1093,12 @@ export const testCounts: Record<string, number> = {
   'ungroup.groupCycle': groupUngroupCycleTests.length,
   'ungroup.selectionAfter': selectionAfterUngroupTests.length,
   'ungroup.modifiers': ungroupModifierTests.length,
+  spreadToggle: allSpreadToggleTests.length,
+  'spreadToggle.basic': basicSpreadTests.length,
+  'spreadToggle.containers': spreadContainerTests.length,
+  'spreadToggle.edgeCases': spreadEdgeCaseTests.length,
+  'spreadToggle.modifiers': spreadModifierTests.length,
+  'spreadToggle.combined': spreadCombinedTests.length,
 
   // === Bidirectional ===
   bidirectional: allBidirectionalTests.length,
@@ -1892,6 +1905,12 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'ungroup.groupCycle': groupUngroupCycleTests,
     'ungroup.selectionAfter': selectionAfterUngroupTests,
     'ungroup.modifiers': ungroupModifierTests,
+    spreadToggle: allSpreadToggleTests,
+    'spreadToggle.basic': basicSpreadTests,
+    'spreadToggle.containers': spreadContainerTests,
+    'spreadToggle.edgeCases': spreadEdgeCaseTests,
+    'spreadToggle.modifiers': spreadModifierTests,
+    'spreadToggle.combined': spreadCombinedTests,
 
     // === Bidirectional ===
     bidirectional: allBidirectionalTests,

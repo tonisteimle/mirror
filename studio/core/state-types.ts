@@ -195,7 +195,7 @@ export interface StudioState {
 /**
  * Handle mode for preview interactions
  */
-export type HandleMode = 'resize' | 'padding' | 'margin'
+export type HandleMode = 'resize' | 'padding' | 'margin' | 'gap'
 
 /**
  * Store subscriber type

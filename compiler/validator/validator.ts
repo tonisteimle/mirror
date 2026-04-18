@@ -263,10 +263,7 @@ export class Validator {
     }
   }
 
-  private validateInstance(
-    instance: Instance,
-    parentLayoutMode?: 'flex' | 'stacked' | 'none'
-  ): void {
+  private validateInstance(instance: Instance): void {
     const compLower = instance.component.toLowerCase()
 
     // Check if this is a state block (e.g., "hover" or "focus" as a child)
@@ -288,11 +285,10 @@ export class Validator {
       this.trackUsedComponent(instance.component, instance.line, instance.column)
     }
 
-    // Check if child has alignment properties when parent is in flex mode
-    // Alignment properties on children are only valid in stacked mode
-    if (parentLayoutMode === 'flex') {
-      this.checkChildAlignmentInFlexParent(instance)
-    }
+    // Note: We no longer validate child alignment properties because:
+    // 1. `center` on a child can mean "center this element's OWN children" (valid)
+    // 2. The DROP operation correctly sets alignment on parent (via parentProperty)
+    // 3. Existing code with child alignment should still work (backward compat)
 
     // Validate property set (layout conflicts, duplicates, required, ranges)
     this.validatePropertySet(
@@ -307,9 +303,6 @@ export class Validator {
       this.validateProperty(prop)
     }
 
-    // Determine this instance's layout mode for children
-    const thisLayoutMode = this.getLayoutMode(instance)
-
     // Validate children recursively
     for (const child of instance.children) {
       if (child.type === 'Instance') {
@@ -321,62 +314,8 @@ export class Validator {
         else if (child.component === 'state') {
           this.validateStateAsInstance(child)
         } else {
-          this.validateInstance(child, thisLayoutMode)
+          this.validateInstance(child)
         }
-      }
-    }
-  }
-
-  /**
-   * Get the layout mode of an instance based on its properties.
-   * - 'flex': has hor/horizontal or ver/vertical (default is flex vertical)
-   * - 'stacked': has stacked property
-   * - 'none': no explicit layout
-   */
-  private getLayoutMode(instance: Instance): 'flex' | 'stacked' | 'none' {
-    const propNames = new Set(instance.properties.map(p => p.name.toLowerCase()))
-
-    if (propNames.has('stacked')) {
-      return 'stacked'
-    }
-
-    // Default layout is flex (vertical), so we consider any container to be flex
-    // unless it has stacked
-    if (
-      propNames.has('hor') ||
-      propNames.has('horizontal') ||
-      propNames.has('ver') ||
-      propNames.has('vertical')
-    ) {
-      return 'flex'
-    }
-
-    // Default is flex (vertical) for container-like components
-    return 'flex'
-  }
-
-  /**
-   * Check if a child instance has alignment properties when parent is in flex mode.
-   * Alignment properties (tl, tc, tr, cl, center, cr, bl, bc, br) are only valid
-   * on the parent, not on children in flex layout.
-   */
-  private checkChildAlignmentInFlexParent(instance: Instance): void {
-    const propNames = new Set(instance.properties.map(p => p.name.toLowerCase()))
-    const alignmentProps = ZONE_ALIGNMENT_PROPS.filter(z => propNames.has(z))
-
-    if (alignmentProps.length > 0) {
-      const propWithAlignment = instance.properties.find(p =>
-        ZONE_ALIGNMENT_PROPS.includes(p.name.toLowerCase())
-      )
-      if (propWithAlignment) {
-        this.addError(
-          ERROR_CODES.LAYOUT_CONFLICT,
-          `Alignment property "${propWithAlignment.name}" is not allowed on child elements in flex layout. ` +
-            `Alignment should be set on the parent container.`,
-          propWithAlignment.line,
-          propWithAlignment.column,
-          'Move the alignment property to the parent or use "stacked" layout on the parent'
-        )
       }
     }
   }

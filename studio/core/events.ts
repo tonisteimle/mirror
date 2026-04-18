@@ -120,6 +120,11 @@ export interface StudioEvents {
   'margin:start': { nodeId: string; handle: string; startMargin: number; mode: string }
   'margin:move': { nodeId: string; handle: string; mode: string; margin: number }
   'margin:end': { nodeId: string; handle: string; mode: string; margin: number }
+  /** Gap handle events */
+  'handles:toggle-gap': { nodeId: string }
+  'gap:start': { nodeId: string; gapIndex: number; startGap: number }
+  'gap:move': { nodeId: string; gap: number }
+  'gap:end': { nodeId: string; gap: number }
   /** Multi-selection resize events (Feature 4) */
   'multiResize:start': {
     nodeIds: string[]

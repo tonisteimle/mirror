@@ -111,3 +111,12 @@ export {
   selectionAfterUngroupTests,
   modifierTests as ungroupModifierTests,
 } from './ungroup.test'
+
+export {
+  allSpreadToggleTests,
+  basicSpreadTests,
+  containerTypeTests as spreadContainerTests,
+  edgeCaseTests as spreadEdgeCaseTests,
+  modifierTests as spreadModifierTests,
+  combinedTests as spreadCombinedTests,
+} from './spread-toggle.test'

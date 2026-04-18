@@ -6,6 +6,7 @@
  * - V: Set vertical layout (single selection) OR wrap in vertical Frame (multiselect)
  * - U: Ungroup/unwrap selected container
  * - F: Set full dimension (analyzes shape: wider→w full, taller→h full, press again for both)
+ * - S: Toggle spread (space-between distribution)
  * - P: Toggle padding handles (show inner padding handles for direct manipulation)
  * - M: Toggle margin handles (show outer margin handles for direct manipulation)
  * - Cmd/Ctrl+G: Group selected elements (wrap in Box)
@@ -26,6 +27,7 @@ import {
   executeSetLayoutDirection,
   executeSetFullDimension,
   executeWrapWithLayout,
+  executeToggleSpread,
 } from './shared-actions'
 import { SetPositionCommand } from '../core/commands'
 import type { CommandContext } from '../core/commands'
@@ -170,6 +172,16 @@ export class KeyboardHandler {
       if (nodeId) {
         e.preventDefault()
         this.handleSetFullDimension()
+        return
+      }
+    }
+
+    // S = Toggle spread (space-between distribution)
+    if (e.key === 's' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const nodeId = state.get().selection?.nodeId
+      if (nodeId) {
+        e.preventDefault()
+        this.handleToggleSpread()
         return
       }
     }
@@ -518,6 +530,16 @@ export class KeyboardHandler {
 
   private handleSetFullDimension(): void {
     const result = executeSetFullDimension(this.container)
+
+    if (result.success) {
+      events.emit('notification:success', { message: result.message!, duration: 1500 })
+    } else {
+      events.emit('notification:warning', { message: result.error! })
+    }
+  }
+
+  private handleToggleSpread(): void {
+    const result = executeToggleSpread()
 
     if (result.success) {
       events.emit('notification:success', { message: result.message!, duration: 1500 })

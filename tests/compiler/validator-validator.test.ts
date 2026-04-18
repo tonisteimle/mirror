@@ -471,40 +471,19 @@ Card as Box:
       expect(result.errors.filter(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toHaveLength(0)
     })
 
-    it('errors when child has alignment in flex parent', () => {
+    // Note: Child alignment in flex parent is allowed because:
+    // 1. `center` on a child can mean "center this element's OWN children" (valid)
+    // 2. The DROP operation correctly sets alignment on parent (via parentProperty)
+    it('allows child with center property in flex parent', () => {
       const result = validate(`Frame hor
-  Button center`)
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
-      expect(result.errors[0].message).toContain('center')
-      expect(result.errors[0].message).toContain('not allowed on child')
-    })
-
-    it('errors when child has tl alignment in flex parent', () => {
-      const result = validate(`Frame ver
-  Text tl`)
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
-      expect(result.errors[0].message).toContain('tl')
-    })
-
-    it('allows child alignment in stacked parent', () => {
-      const result = validate(`Frame stacked
-  Button center`)
+  Frame center
+    Text "Hi"`)
       expect(result.errors.filter(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toHaveLength(0)
     })
 
     it('allows alignment on parent in flex mode', () => {
       const result = validate('Frame hor, center')
       expect(result.errors.filter(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toHaveLength(0)
-    })
-
-    it('errors when child has br alignment in default flex parent', () => {
-      const result = validate(`Frame
-  Button br`)
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.code === ERROR_CODES.LAYOUT_CONFLICT)).toBe(true)
-      expect(result.errors[0].message).toContain('br')
     })
   })
 

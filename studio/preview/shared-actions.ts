@@ -513,3 +513,63 @@ export function executeSetFullDimension(container: HTMLElement): ActionResult {
 
   return { success: false, error: result.error || 'Failed to set dimension' }
 }
+
+/**
+ * Toggle spread property on selected element
+ *
+ * If element has spread, removes it. If not, adds it.
+ *
+ * @returns ActionResult with success/failure info
+ */
+export function executeToggleSpread(): ActionResult {
+  const selection = state.get().selection
+  if (!selection?.nodeId) {
+    return { success: false, error: 'No element selected' }
+  }
+
+  const sourceMap = state.get().sourceMap
+  if (!sourceMap) {
+    return { success: false, error: 'No source map available' }
+  }
+
+  const node = sourceMap.getNodeById(selection.nodeId)
+  if (!node) {
+    return { success: false, error: 'Selected node not found' }
+  }
+
+  // Check if element has spread property
+  const source = state.get().source
+  const lines = source.split('\n')
+  const line = lines[node.position.line - 1] || ''
+
+  const hasSpread = /\bspread\b/.test(line)
+
+  if (hasSpread) {
+    // Remove spread
+    const result = executor.execute(
+      new RemovePropertyCommand({
+        nodeId: selection.nodeId,
+        property: 'spread',
+      })
+    )
+
+    if (result.success) {
+      return { success: true, message: 'Spread removed' }
+    }
+    return { success: false, error: result.error || 'Failed to remove spread' }
+  } else {
+    // Add spread
+    const result = executor.execute(
+      new SetPropertyCommand({
+        nodeId: selection.nodeId,
+        property: 'spread',
+        value: '',
+      })
+    )
+
+    if (result.success) {
+      return { success: true, message: 'Spread added' }
+    }
+    return { success: false, error: result.error || 'Failed to add spread' }
+  }
+}
