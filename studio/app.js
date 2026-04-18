@@ -3808,6 +3808,15 @@ window.resetCode = async () => {
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
     saveSizes()
+    // Invalidate layout cache and refresh resize handles after panel resize
+    if (window.MirrorStudio?.actions?.invalidateLayoutInfo) {
+      window.MirrorStudio.actions.invalidateLayoutInfo('resize')
+    }
+    // Refresh resize handles to match new element positions
+    if (window.MirrorStudio?.getPreviewController) {
+      const preview = window.MirrorStudio.getPreviewController()
+      preview?.getResizeManager()?.refresh()
+    }
   })
 
   // Load saved sizes after a short delay to ensure state is initialized

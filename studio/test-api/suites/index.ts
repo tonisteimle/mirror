@@ -195,27 +195,29 @@ import {
   allStateTests,
   allToggleTests,
   toggleBasicTests,
-  toggleMultipleStatesTests,
-  toggleContentChangeTests,
+  toggleMultipleTests,
+  toggleWithContentTests,
   allExclusiveTests,
   exclusiveBasicTests,
-  exclusiveInitialStateTests,
-  exclusiveMultipleGroupsTests,
-  allHoverStateTests,
+  exclusiveGroupTests,
+  exclusiveNavigationTests,
+  allHoverTests,
   hoverBasicTests,
-  hoverTransitionTests,
+  hoverWithTransitionTests,
   hoverNestedTests,
+  hoverScaleTests,
   allCrossElementTests,
-  crossElementShowHideTests,
-  crossElementMultipleTargetsTests,
-  crossElementComplexTests,
+  crossElementBasicTests,
+  crossElementDropdownTests,
+  crossElementModalTests,
+  crossElementFormTests,
   quickStateTests,
 } from './states'
 
 // Animations (fully migrated)
 import {
   allAnimationTests,
-  allPresetAnimationTests,
+  allAnimationPresetTests,
   spinAnimationTests,
   pulseAnimationTests,
   bounceAnimationTests,
@@ -224,9 +226,10 @@ import {
   slideAnimationTests,
   scaleAnimationTests,
   allStateAnimationTests,
-  toggleAnimationTests,
+  stateToggleAnimationTests,
   hoverAnimationTests,
   entryExitAnimationTests,
+  combinedAnimationTests,
   quickAnimationTests,
 } from './animations'
 
@@ -612,20 +615,22 @@ export {
   allStateTests,
   allToggleTests,
   toggleBasicTests,
-  toggleMultipleStatesTests,
-  toggleContentChangeTests,
+  toggleMultipleTests,
+  toggleWithContentTests,
   allExclusiveTests,
   exclusiveBasicTests,
-  exclusiveInitialStateTests,
-  exclusiveMultipleGroupsTests,
-  allHoverStateTests,
+  exclusiveGroupTests,
+  exclusiveNavigationTests,
+  allHoverTests,
   hoverBasicTests,
-  hoverTransitionTests,
+  hoverWithTransitionTests,
   hoverNestedTests,
+  hoverScaleTests,
   allCrossElementTests,
-  crossElementShowHideTests,
-  crossElementMultipleTargetsTests,
-  crossElementComplexTests,
+  crossElementBasicTests,
+  crossElementDropdownTests,
+  crossElementModalTests,
+  crossElementFormTests,
   quickStateTests,
 }
 
@@ -909,74 +914,367 @@ export const quickTests: TestCase[] = [
 ]
 
 /**
- * Test counts by category
+ * Test counts by category (including sub-categories)
+ *
+ * Use this to see test counts for each category when running --list
  */
-export const testCounts = {
+export const testCounts: Record<string, number> = {
+  // === Primitives ===
   primitives: allPrimitivesTests.length,
+  'primitives.basic': basicPrimitives.length,
+  'primitives.semantic': semanticPrimitives.length,
+  'primitives.headings': headingPrimitives.length,
+
+  // === Layout ===
   layout: allLayoutTests.length,
-  styling: allStylingTests.length,
-  zag: allZagTests.length,
-  interactions: allInteractionTests.length,
-  multiselect: allMultiselectTests.length,
-  bidirectional: allBidirectionalTests.length,
-  undoRedo: allUndoRedoTests.length,
-  autocomplete: allAutocompleteTests.length,
-  stackedDrag: allStackedDragTests.length,
-  flexReorder: allFlexReorderTests.length,
-  alignmentZone: allAlignmentZoneTests.length,
-  propertyPanel: allPropertyPanelTests.length,
-  charts: allChartTests.length,
-  workflow: allWorkflowTests.length,
+  'layout.direction': directionTests.length,
+  'layout.alignment': alignmentTests.length,
+  'layout.distribution': distributionTests.length,
+  'layout.gap': gapTests.length,
+  'layout.wrap': wrapTests.length,
+  'layout.flex': flexTests.length,
+  'layout.stacked': stackedTests.length,
+  'layout.grid': gridTests.length,
+  'layout.nesting': nestingTests.length,
+  'layout.complex': complexLayoutTests.length,
+  layoutShortcuts: allLayoutShortcutTests.length,
   layoutVerification: allLayoutVerificationTests.length,
-  testSystem: allTestSystemTests.length,
+  'layoutVerification.direction': directionVerificationTests.length,
+  'layoutVerification.size': sizeVerificationTests.length,
+  'layoutVerification.gap': gapVerificationTests.length,
+  'layoutVerification.alignment': alignmentVerificationTests.length,
+  'layoutVerification.complex': complexLayoutVerificationTests.length,
+
+  // === Styling ===
+  styling: allStylingTests.length,
+  'styling.colors': colorTests.length,
+  'styling.sizing': sizingTests.length,
+  'styling.spacing': spacingTests.length,
+  'styling.border': borderTests.length,
+  'styling.typography': typographyTests.length,
+  'styling.effects': effectTests.length,
+  'styling.visibility': visibilityTests.length,
+  'styling.combined': stylingCombinedTests.length,
+
+  // === Zag Components ===
+  zag: allZagTests.length,
+  'zag.checkbox': checkboxTests.length,
+  'zag.switch': switchTests.length,
+  'zag.slider': sliderTests.length,
+  'zag.select': selectTests.length,
+  'zag.radioGroup': radioGroupTests.length,
+  'zag.dialog': dialogTests.length,
+  'zag.tooltip': tooltipTests.length,
+  'zag.tabs': tabsTests.length,
+  'zag.datePicker': datePickerTests.length,
+  'zag.sidenav': sidenavTests.length,
+  'zag.inLayout': zagInLayoutTests.length,
+
+  // === Interactions ===
+  interactions: allInteractionTests.length,
+  'interactions.click': clickTests.length,
+  'interactions.hover': hoverTests.length,
+  'interactions.toggle': toggleTests.length,
+  'interactions.focus': focusTests.length,
+  'interactions.input': inputTests.length,
+  'interactions.keyboard': keyboardTests.length,
+  'interactions.selection': selectionTests.length,
+  'interactions.dragDrop': dragDropTests.length,
+  'interactions.combined': interactionCombinedTests.length,
+  multiselect: allMultiselectTests.length,
+  'multiselect.shiftClick': shiftClickTests.length,
+  'multiselect.metaClick': metaClickTests.length,
+  'multiselect.clearSelection': clearSelectionTests.length,
+  'multiselect.cssClass': multiselectCssClassTests.length,
+  resizeHandleDblClick: allResizeHandleDblClickTests.length,
+  'resizeHandleDblClick.horizontal': horizontalHandleTests.length,
+  'resizeHandleDblClick.vertical': verticalHandleTests.length,
+  'resizeHandleDblClick.corner': cornerHandleTests.length,
+  resizeHandleDrag: resizeHandleDragTests.length,
+  paddingHandlers: allPaddingHandlerTests.length,
+  'paddingHandlers.modeToggle': paddingModeToggleTests.length,
+  'paddingHandlers.position': paddingHandlePositionTests.length,
+  'paddingHandlers.drag': paddingHandleDragTests.length,
+  'paddingHandlers.modeSelection': paddingModeSelectionTests.length,
+  tokenExtract: tokenExtractTests.length,
+
+  // === Bidirectional ===
+  bidirectional: allBidirectionalTests.length,
+  'bidirectional.codeToPreview': codeToPreviewTests.length,
+  'bidirectional.selectionSync': selectionSyncTests.length,
+  'bidirectional.sourceMap': sourceMapTests.length,
+  'bidirectional.propertyPanel': bidirectionalPanelTests.length,
+  'bidirectional.complexSync': complexSyncTests.length,
+  'bidirectional.errorRecovery': errorRecoveryTests.length,
+
+  // === Undo/Redo ===
+  undoRedo: allUndoRedoTests.length,
+  'undoRedo.basicUndo': basicUndoTests.length,
+  'undoRedo.basicRedo': basicRedoTests.length,
+  'undoRedo.editTypes': undoEditTypesTests.length,
+  'undoRedo.withSelection': undoWithSelectionTests.length,
+  'undoRedo.edgeCases': undoEdgeCasesTests.length,
+
+  // === Autocomplete ===
+  autocomplete: allAutocompleteTests.length,
+  'autocomplete.primitives': primitiveCompletionTests.length,
+  'autocomplete.properties': propertyCompletionTests.length,
+  'autocomplete.values': valueCompletionTests.length,
+  'autocomplete.icons': iconCompletionTests.length,
+  'autocomplete.tokens': tokenCompletionTests.length,
+  'autocomplete.states': stateCompletionTests.length,
+  'autocomplete.components': componentCompletionTests.length,
+
+  // === Drag & Drop ===
+  stackedDrag: allStackedDragTests.length,
+  'stackedDrag.basic': basicStackedTests.length,
+  'stackedDrag.edgeCases': edgeCaseTests.length,
+  'stackedDrag.layoutDetection': layoutDetectionTests.length,
+  flexReorder: allFlexReorderTests.length,
+  'flexReorder.buttonVertical': buttonReorderVerticalTests.length,
+  'flexReorder.buttonHorizontal': buttonReorderHorizontalTests.length,
+  'flexReorder.text': textReorderTests.length,
+  'flexReorder.icon': iconReorderTests.length,
+  'flexReorder.input': inputReorderTests.length,
+  'flexReorder.image': imageReorderTests.length,
+  'flexReorder.dividerSpacer': dividerSpacerReorderTests.length,
+  'flexReorder.linkTextarea': linkTextareaReorderTests.length,
+  'flexReorder.mixedComponent': mixedComponentReorderTests.length,
+  'flexReorder.zagComponent': zagComponentReorderTests.length,
+  'flexReorder.nestedContainer': nestedContainerReorderTests.length,
+  'flexReorder.edgeCases': reorderEdgeCaseTests.length,
+  'flexReorder.sequential': sequentialReorderTests.length,
+  alignmentZone: allAlignmentZoneTests.length,
+  'alignmentZone.basic': basicAlignmentZoneTests.length,
+  'alignmentZone.allZones': allZonesTests.length,
+  'alignmentZone.edgeCases': alignmentEdgeCaseTests.length,
+  'alignmentZone.componentVariety': alignmentComponentTests.length,
+
+  // === Property Panel ===
+  propertyPanel: allPropertyPanelTests.length,
+  'propertyPanel.tokenDisplay': tokenDisplayTests.length,
+  'propertyPanel.tokenValue': tokenValueTests.length,
+  'propertyPanel.tokenInteraction': tokenInteractionTests.length,
+  'propertyPanel.projectToken': projectTokenTests.length,
+
+  // === Charts ===
+  charts: allChartTests.length,
+  'charts.dataFile': dataFileTests.length,
+  'charts.basic': basicChartTests.length,
+  'charts.styling': chartStylingTests.length,
+  'charts.layout': chartLayoutTests.length,
+  'charts.data': chartDataTests.length,
+
+  // === Workflow ===
+  workflow: allWorkflowTests.length,
+  'workflow.projectWithCode': projectWithCodeTests.length,
+  'workflow.projectWithDragDrop': projectWithDragDropTests.length,
+  'workflow.application': applicationTests.length,
+
+  // === States ===
   states: allStateTests.length,
+  'states.toggle': allToggleTests.length,
+  'states.toggle.basic': toggleBasicTests.length,
+  'states.toggle.multiple': toggleMultipleTests.length,
+  'states.toggle.content': toggleWithContentTests.length,
+  'states.exclusive': allExclusiveTests.length,
+  'states.exclusive.basic': exclusiveBasicTests.length,
+  'states.exclusive.group': exclusiveGroupTests.length,
+  'states.exclusive.navigation': exclusiveNavigationTests.length,
+  'states.hover': allHoverTests.length,
+  'states.hover.basic': hoverBasicTests.length,
+  'states.hover.transition': hoverWithTransitionTests.length,
+  'states.hover.nested': hoverNestedTests.length,
+  'states.hover.scale': hoverScaleTests.length,
+  'states.crossElement': allCrossElementTests.length,
+  'states.crossElement.basic': crossElementBasicTests.length,
+  'states.crossElement.dropdown': crossElementDropdownTests.length,
+  'states.crossElement.modal': crossElementModalTests.length,
+  'states.crossElement.form': crossElementFormTests.length,
+  'states.quick': quickStateTests.length,
+
+  // === Animations ===
   animations: allAnimationTests.length,
+  'animations.presets': allAnimationPresetTests.length,
+  'animations.spin': spinAnimationTests.length,
+  'animations.pulse': pulseAnimationTests.length,
+  'animations.bounce': bounceAnimationTests.length,
+  'animations.shake': shakeAnimationTests.length,
+  'animations.fade': fadeAnimationTests.length,
+  'animations.slide': slideAnimationTests.length,
+  'animations.scale': scaleAnimationTests.length,
+  'animations.stateAnimations': allStateAnimationTests.length,
+  'animations.stateToggle': stateToggleAnimationTests.length,
+  'animations.hover': hoverAnimationTests.length,
+  'animations.entryExit': entryExitAnimationTests.length,
+  'animations.combined': combinedAnimationTests.length,
+  'animations.quick': quickAnimationTests.length,
+
+  // === Transforms ===
   transforms: allTransformTests.length,
+  'transforms.rotate': allRotateTests.length,
+  'transforms.rotate.basic': rotateBasicTests.length,
+  'transforms.rotate.withOther': rotateWithOtherTransformsTests.length,
+  'transforms.rotate.interactive': rotateInteractiveTests.length,
+  'transforms.rotate.angles': rotateAnglesTests.length,
+  'transforms.scale': allScaleTests.length,
+  'transforms.scale.basic': scaleBasicTests.length,
+  'transforms.scale.interactive': scaleInteractiveTests.length,
+  'transforms.scale.edgeCases': scaleEdgeCasesTests.length,
+  'transforms.scale.withOther': scaleWithOtherPropertiesTests.length,
+  'transforms.translate': allTranslateTests.length,
+  'transforms.position.basic': positionBasicTests.length,
+  'transforms.stacked': stackedPositionTests.length,
+  'transforms.zIndex': zIndexTests.length,
+  'transforms.offset': translateOffsetTests.length,
+  'transforms.quick': quickTransformTests.length,
+
+  // === Gradients ===
   gradients: allGradientTests.length,
+  'gradients.horizontal': horizontalGradientTests.length,
+  'gradients.vertical': verticalGradientTests.length,
+  'gradients.angled': angledGradientTests.length,
+  'gradients.text': gradientTextTests.length,
+  'gradients.withEffects': gradientWithEffectsTests.length,
+  'gradients.quick': quickGradientTests.length,
+
+  // === Data Binding ===
   dataBinding: allDataBindingTests.length,
+  'dataBinding.variables': variableTests.length,
+  'dataBinding.collections': collectionTests.length,
+  'dataBinding.conditionals': conditionalTests.length,
+  'dataBinding.tokens': tokenTests.length,
+  'dataBinding.inputBinding': inputBindingTests.length,
+
+  // === Actions ===
   actions: allActionTests.length,
+  'actions.visibility': visibilityActionTests.length,
+  'actions.counter': counterActionTests.length,
+  'actions.scroll': scrollActionTests.length,
+  'actions.toast': toastActionTests.length,
+  'actions.form': formActionTests.length,
+  'actions.navigation': navigationActionTests.length,
+  'actions.clipboard': clipboardActionTests.length,
+  'actions.overlay': overlayActionTests.length,
+  'actions.crud': crudActionTests.length,
+  'actions.combined': combinedActionTests.length,
+
+  // === Components ===
   components: allComponentTests.length,
+  'components.basic': basicComponentTests.length,
+  'components.propertyOverride': propertyOverrideTests.length,
+  'components.inheritance': inheritanceTests.length,
+  'components.variants': variantTests.length,
+  'components.nestedSlots': nestedSlotTests.length,
+  'components.layout': layoutComponentTests.length,
+  'components.multiLevelInheritance': multiLevelInheritanceTests.length,
+  'components.state': componentStateTests.length,
+  'components.complex': complexComponentTests.length,
+
+  // === Tables ===
   tables: allTableTests.length,
+  'tables.static': staticTableTests.length,
+  'tables.dataBound': dataBoundTableTests.length,
+  'tables.layout': tableLayoutTests.length,
+  'tables.styling': tableStylingTests.length,
+  'tables.actions': tableActionTests.length,
+  'tables.filter': tableFilterTests.length,
+  'tables.complex': complexTableTests.length,
+
+  // === Events ===
   events: allEventTests.length,
+  'events.click': clickEventTests.length,
+  'events.hover': hoverEventTests.length,
+  'events.focus': focusEventTests.length,
+  'events.input': inputEventTests.length,
+  'events.keyboard': keyboardEventTests.length,
+  'events.view': viewEventTests.length,
+  'events.combined': combinedEventTests.length,
+  'events.edgeCases': eventEdgeCaseTests.length,
+
+  // === Responsive ===
   responsive: allResponsiveTests.length,
+  'responsive.basic': basicResponsiveTests.length,
+  'responsive.layout': responsiveLayoutTests.length,
+  'responsive.styling': responsiveStylingTests.length,
+  'responsive.visibility': responsiveVisibilityTests.length,
+  'responsive.customThreshold': customThresholdTests.length,
+  'responsive.components': responsiveComponentTests.length,
+  'responsive.complex': complexResponsiveTests.length,
+
+  // === Sync ===
   sync: allSyncTests.length,
+  'sync.editorToPreview': editorToPreviewTests.length,
+  'sync.previewToEditor': previewToEditorTests.length,
+  'sync.panelToEditor': panelToEditorTests.length,
+  'sync.editorToPanel': editorToPanelTests.length,
+  'sync.multiDirectional': multiDirectionalTests.length,
+  'sync.rapidChange': rapidChangeTests.length,
+  'sync.edgeCases': syncEdgeCaseTests.length,
+  'sync.selectionPersistence': selectionPersistenceTests.length,
+  'sync.complexScenario': complexScenarioTests.length,
+
+  // === Property Robustness ===
   propertyRobustness: allPropertyRobustnessTests.length,
+  'propertyRobustness.commaFormat': commaFormatTests.length,
+  'propertyRobustness.autoSeparation': autoSeparationTests.length,
+  'propertyRobustness.multiValue': multiValueTests.length,
+  'propertyRobustness.alias': aliasTests.length,
+  'propertyRobustness.order': orderTests.length,
+  'propertyRobustness.mixedFormat': mixedFormatTests.length,
+  'propertyRobustness.edgeCases': propertyEdgeCaseTests.length,
+  'propertyRobustness.sequentialMod': sequentialModTests.length,
+  'propertyRobustness.previewSync': previewSyncTests.length,
+
+  // === Stress Tests ===
   stress: allStressTests.length,
+  'stress.raceConditions': raceConditionTests.length,
+  'stress.codeModifier': codeModifierTests.length,
+
+  // === Project (Multi-File) ===
   project: allProjectTests.length,
+  'project.setup': projectSetupTests.length,
+  'project.tokenComponent': tokenComponentTests.length,
+  'project.screenNavigation': screenNavigationTests.length,
+  'project.complexLayout': projectComplexLayoutTests.length,
+  'project.fileSwitching': fileSwitchingTests.length,
+
+  // === Compiler Verification ===
   compilerVerification: allCompilerVerificationTests.length,
+  'compilerVerification.properties': complexPropertyTests.length,
+  'compilerVerification.layout': layoutVerificationTests.length,
+  'compilerVerification.nestedStructure': nestedStructureTests.length,
+  'compilerVerification.tokenResolution': tokenResolutionTests.length,
+  'compilerVerification.conditionals': compilerConditionalTests.length,
+  'compilerVerification.collections': compilerCollectionTests.length,
+  'compilerVerification.componentInheritance': componentInheritanceTests.length,
+  'compilerVerification.inlineSyntax': inlineSyntaxTests.length,
+  'compilerVerification.primitives': compilerPrimitivesTests.length,
+  'compilerVerification.edgeCases': compilerEdgeCaseTests.length,
+
+  // === UI Builder ===
+  uiBuilder: allUIBuilderTests.length,
+  'uiBuilder.level1': uiBuilderLevel1Tests.length,
+  'uiBuilder.level2': uiBuilderLevel2Tests.length,
+
+  // === Play Mode ===
   playMode: allPlayModeTests.length,
-  total:
-    allPrimitivesTests.length +
-    allLayoutTests.length +
-    allStylingTests.length +
-    allZagTests.length +
-    allInteractionTests.length +
-    allBidirectionalTests.length +
-    allUndoRedoTests.length +
-    allAutocompleteTests.length +
-    allStackedDragTests.length +
-    allFlexReorderTests.length +
-    allPropertyPanelTests.length +
-    allChartTests.length +
-    allWorkflowTests.length +
-    allLayoutVerificationTests.length +
-    allTestSystemTests.length +
-    allStateTests.length +
-    allAnimationTests.length +
-    allTransformTests.length +
-    allGradientTests.length +
-    allDataBindingTests.length +
-    allActionTests.length +
-    allComponentTests.length +
-    allTableTests.length +
-    allEventTests.length +
-    allResponsiveTests.length +
-    allSyncTests.length +
-    allPropertyRobustnessTests.length +
-    allStressTests.length +
-    allProjectTests.length +
-    allCompilerVerificationTests.length +
-    allPlayModeTests.length,
+  'playMode.activation': playModeActivationTests.length,
+  'playMode.visual': playModeVisualTests.length,
+  'playMode.reset': playModeResetTests.length,
+  'playMode.device': playModeDeviceTests.length,
+  'playMode.integration': playModeIntegrationTests.length,
+  'playMode.quick': quickPlayModeTests.length,
+
+  // === Test System (meta) ===
+  testSystem: allTestSystemTests.length,
+  'testSystem.fixtures': fixturesTests.length,
+  'testSystem.isolation': isolationTests.length,
+  'testSystem.keyboard': testSystemKeyboardTests.length,
+  'testSystem.waitHelper': waitHelperTests.length,
+
+  // === Total ===
+  total: allTests.length,
 }
 
 // =============================================================================
@@ -1007,44 +1305,365 @@ export async function runQuickTests(): Promise<TestSuiteResult> {
 
 /**
  * Run tests by category
+ *
+ * Categories are organized hierarchically with dot notation:
+ * - Top-level: 'primitives', 'layout', 'styling', etc.
+ * - Sub-categories: 'layout.direction', 'layout.grid', 'styling.colors', etc.
  */
 export type TestCategory =
+  // === Primitives ===
   | 'primitives'
+  | 'primitives.basic'
+  | 'primitives.semantic'
+  | 'primitives.headings'
+
+  // === Layout ===
   | 'layout'
+  | 'layout.direction'
+  | 'layout.alignment'
+  | 'layout.distribution'
+  | 'layout.gap'
+  | 'layout.wrap'
+  | 'layout.flex'
+  | 'layout.stacked'
+  | 'layout.grid'
+  | 'layout.nesting'
+  | 'layout.complex'
   | 'layoutShortcuts'
-  | 'styling'
-  | 'zag'
-  | 'interactions'
-  | 'multiselect'
-  | 'resizeHandleDblClick'
-  | 'paddingHandlers'
-  | 'bidirectional'
-  | 'undoRedo'
-  | 'autocomplete'
-  | 'stackedDrag'
-  | 'flexReorder'
-  | 'alignmentZone'
-  | 'propertyPanel'
-  | 'charts'
-  | 'workflow'
   | 'layoutVerification'
+  | 'layoutVerification.direction'
+  | 'layoutVerification.size'
+  | 'layoutVerification.gap'
+  | 'layoutVerification.alignment'
+  | 'layoutVerification.complex'
+
+  // === Styling ===
+  | 'styling'
+  | 'styling.colors'
+  | 'styling.sizing'
+  | 'styling.spacing'
+  | 'styling.border'
+  | 'styling.typography'
+  | 'styling.effects'
+  | 'styling.visibility'
+  | 'styling.combined'
+
+  // === Zag Components ===
+  | 'zag'
+  | 'zag.checkbox'
+  | 'zag.switch'
+  | 'zag.slider'
+  | 'zag.select'
+  | 'zag.radioGroup'
+  | 'zag.dialog'
+  | 'zag.tooltip'
+  | 'zag.tabs'
+  | 'zag.datePicker'
+  | 'zag.sidenav'
+  | 'zag.inLayout'
+
+  // === Interactions ===
+  | 'interactions'
+  | 'interactions.click'
+  | 'interactions.hover'
+  | 'interactions.toggle'
+  | 'interactions.focus'
+  | 'interactions.input'
+  | 'interactions.keyboard'
+  | 'interactions.selection'
+  | 'interactions.dragDrop'
+  | 'interactions.combined'
+  | 'multiselect'
+  | 'multiselect.shiftClick'
+  | 'multiselect.metaClick'
+  | 'multiselect.clearSelection'
+  | 'multiselect.cssClass'
+  | 'resizeHandleDblClick'
+  | 'resizeHandleDblClick.horizontal'
+  | 'resizeHandleDblClick.vertical'
+  | 'resizeHandleDblClick.corner'
+  | 'resizeHandleDrag'
+  | 'paddingHandlers'
+  | 'paddingHandlers.modeToggle'
+  | 'paddingHandlers.position'
+  | 'paddingHandlers.drag'
+  | 'paddingHandlers.modeSelection'
+  | 'tokenExtract'
+
+  // === Bidirectional ===
+  | 'bidirectional'
+  | 'bidirectional.codeToPreview'
+  | 'bidirectional.selectionSync'
+  | 'bidirectional.sourceMap'
+  | 'bidirectional.propertyPanel'
+  | 'bidirectional.complexSync'
+  | 'bidirectional.errorRecovery'
+
+  // === Undo/Redo ===
+  | 'undoRedo'
+  | 'undoRedo.basicUndo'
+  | 'undoRedo.basicRedo'
+  | 'undoRedo.editTypes'
+  | 'undoRedo.withSelection'
+  | 'undoRedo.edgeCases'
+
+  // === Autocomplete ===
+  | 'autocomplete'
+  | 'autocomplete.primitives'
+  | 'autocomplete.properties'
+  | 'autocomplete.values'
+  | 'autocomplete.icons'
+  | 'autocomplete.tokens'
+  | 'autocomplete.states'
+  | 'autocomplete.components'
+
+  // === Drag & Drop ===
+  | 'stackedDrag'
+  | 'stackedDrag.basic'
+  | 'stackedDrag.edgeCases'
+  | 'stackedDrag.layoutDetection'
+  | 'flexReorder'
+  | 'flexReorder.buttonVertical'
+  | 'flexReorder.buttonHorizontal'
+  | 'flexReorder.text'
+  | 'flexReorder.icon'
+  | 'flexReorder.input'
+  | 'flexReorder.image'
+  | 'flexReorder.dividerSpacer'
+  | 'flexReorder.linkTextarea'
+  | 'flexReorder.mixedComponent'
+  | 'flexReorder.zagComponent'
+  | 'flexReorder.nestedContainer'
+  | 'flexReorder.edgeCases'
+  | 'flexReorder.sequential'
+  | 'alignmentZone'
+  | 'alignmentZone.basic'
+  | 'alignmentZone.allZones'
+  | 'alignmentZone.edgeCases'
+  | 'alignmentZone.componentVariety'
+
+  // === Property Panel ===
+  | 'propertyPanel'
+  | 'propertyPanel.tokenDisplay'
+  | 'propertyPanel.tokenValue'
+  | 'propertyPanel.tokenInteraction'
+  | 'propertyPanel.projectToken'
+
+  // === Charts ===
+  | 'charts'
+  | 'charts.dataFile'
+  | 'charts.basic'
+  | 'charts.styling'
+  | 'charts.layout'
+  | 'charts.data'
+
+  // === Workflow ===
+  | 'workflow'
+  | 'workflow.projectWithCode'
+  | 'workflow.projectWithDragDrop'
+  | 'workflow.application'
+
+  // === States ===
   | 'states'
+  | 'states.toggle'
+  | 'states.toggle.basic'
+  | 'states.toggle.multiple'
+  | 'states.toggle.content'
+  | 'states.exclusive'
+  | 'states.exclusive.basic'
+  | 'states.exclusive.group'
+  | 'states.exclusive.navigation'
+  | 'states.hover'
+  | 'states.hover.basic'
+  | 'states.hover.transition'
+  | 'states.hover.nested'
+  | 'states.hover.scale'
+  | 'states.crossElement'
+  | 'states.crossElement.basic'
+  | 'states.crossElement.dropdown'
+  | 'states.crossElement.modal'
+  | 'states.crossElement.form'
+  | 'states.quick'
+
+  // === Animations ===
   | 'animations'
+  | 'animations.presets'
+  | 'animations.spin'
+  | 'animations.pulse'
+  | 'animations.bounce'
+  | 'animations.shake'
+  | 'animations.fade'
+  | 'animations.slide'
+  | 'animations.scale'
+  | 'animations.stateAnimations'
+  | 'animations.stateToggle'
+  | 'animations.hover'
+  | 'animations.entryExit'
+  | 'animations.combined'
+  | 'animations.quick'
+
+  // === Transforms ===
   | 'transforms'
+  | 'transforms.rotate'
+  | 'transforms.rotate.basic'
+  | 'transforms.rotate.withOther'
+  | 'transforms.rotate.interactive'
+  | 'transforms.rotate.angles'
+  | 'transforms.scale'
+  | 'transforms.scale.basic'
+  | 'transforms.scale.interactive'
+  | 'transforms.scale.edgeCases'
+  | 'transforms.scale.withOther'
+  | 'transforms.translate'
+  | 'transforms.position.basic'
+  | 'transforms.stacked'
+  | 'transforms.zIndex'
+  | 'transforms.offset'
+  | 'transforms.quick'
+
+  // === Gradients ===
   | 'gradients'
+  | 'gradients.horizontal'
+  | 'gradients.vertical'
+  | 'gradients.angled'
+  | 'gradients.text'
+  | 'gradients.withEffects'
+  | 'gradients.quick'
+
+  // === Data Binding ===
   | 'dataBinding'
+  | 'dataBinding.variables'
+  | 'dataBinding.collections'
+  | 'dataBinding.conditionals'
+  | 'dataBinding.tokens'
+  | 'dataBinding.inputBinding'
+
+  // === Actions ===
   | 'actions'
+  | 'actions.visibility'
+  | 'actions.counter'
+  | 'actions.scroll'
+  | 'actions.toast'
+  | 'actions.form'
+  | 'actions.navigation'
+  | 'actions.clipboard'
+  | 'actions.overlay'
+  | 'actions.crud'
+  | 'actions.combined'
+
+  // === Components ===
   | 'components'
+  | 'components.basic'
+  | 'components.propertyOverride'
+  | 'components.inheritance'
+  | 'components.variants'
+  | 'components.nestedSlots'
+  | 'components.layout'
+  | 'components.multiLevelInheritance'
+  | 'components.state'
+  | 'components.complex'
+
+  // === Tables ===
   | 'tables'
+  | 'tables.static'
+  | 'tables.dataBound'
+  | 'tables.layout'
+  | 'tables.styling'
+  | 'tables.actions'
+  | 'tables.filter'
+  | 'tables.complex'
+
+  // === Events ===
   | 'events'
+  | 'events.click'
+  | 'events.hover'
+  | 'events.focus'
+  | 'events.input'
+  | 'events.keyboard'
+  | 'events.view'
+  | 'events.combined'
+  | 'events.edgeCases'
+
+  // === Responsive ===
   | 'responsive'
+  | 'responsive.basic'
+  | 'responsive.layout'
+  | 'responsive.styling'
+  | 'responsive.visibility'
+  | 'responsive.customThreshold'
+  | 'responsive.components'
+  | 'responsive.complex'
+
+  // === Sync ===
   | 'sync'
+  | 'sync.editorToPreview'
+  | 'sync.previewToEditor'
+  | 'sync.panelToEditor'
+  | 'sync.editorToPanel'
+  | 'sync.multiDirectional'
+  | 'sync.rapidChange'
+  | 'sync.edgeCases'
+  | 'sync.selectionPersistence'
+  | 'sync.complexScenario'
+
+  // === Property Robustness ===
   | 'propertyRobustness'
+  | 'propertyRobustness.commaFormat'
+  | 'propertyRobustness.autoSeparation'
+  | 'propertyRobustness.multiValue'
+  | 'propertyRobustness.alias'
+  | 'propertyRobustness.order'
+  | 'propertyRobustness.mixedFormat'
+  | 'propertyRobustness.edgeCases'
+  | 'propertyRobustness.sequentialMod'
+  | 'propertyRobustness.previewSync'
+
+  // === Stress Tests ===
   | 'stress'
+  | 'stress.raceConditions'
+  | 'stress.codeModifier'
+
+  // === Project (Multi-File) ===
   | 'project'
+  | 'project.setup'
+  | 'project.tokenComponent'
+  | 'project.screenNavigation'
+  | 'project.complexLayout'
+  | 'project.fileSwitching'
+
+  // === Compiler Verification ===
   | 'compilerVerification'
+  | 'compilerVerification.properties'
+  | 'compilerVerification.layout'
+  | 'compilerVerification.nestedStructure'
+  | 'compilerVerification.tokenResolution'
+  | 'compilerVerification.conditionals'
+  | 'compilerVerification.collections'
+  | 'compilerVerification.componentInheritance'
+  | 'compilerVerification.inlineSyntax'
+  | 'compilerVerification.primitives'
+  | 'compilerVerification.edgeCases'
+
+  // === UI Builder ===
   | 'uiBuilder'
+  | 'uiBuilder.level1'
+  | 'uiBuilder.level2'
+
+  // === Play Mode ===
   | 'playMode'
+  | 'playMode.activation'
+  | 'playMode.visual'
+  | 'playMode.reset'
+  | 'playMode.device'
+  | 'playMode.integration'
+  | 'playMode.quick'
+
+  // === Test System (meta) ===
+  | 'testSystem'
+  | 'testSystem.fixtures'
+  | 'testSystem.isolation'
+  | 'testSystem.keyboard'
+  | 'testSystem.waitHelper'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -1053,81 +1672,715 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
   }
 
   const tests: Record<TestCategory, TestCase[]> = {
+    // === Primitives ===
     primitives: allPrimitivesTests,
+    'primitives.basic': basicPrimitives,
+    'primitives.semantic': semanticPrimitives,
+    'primitives.headings': headingPrimitives,
+
+    // === Layout ===
     layout: allLayoutTests,
+    'layout.direction': directionTests,
+    'layout.alignment': alignmentTests,
+    'layout.distribution': distributionTests,
+    'layout.gap': gapTests,
+    'layout.wrap': wrapTests,
+    'layout.flex': flexTests,
+    'layout.stacked': stackedTests,
+    'layout.grid': gridTests,
+    'layout.nesting': nestingTests,
+    'layout.complex': complexLayoutTests,
     layoutShortcuts: allLayoutShortcutTests,
-    styling: allStylingTests,
-    zag: allZagTests,
-    interactions: allInteractionTests,
-    multiselect: allMultiselectTests,
-    resizeHandleDblClick: allResizeHandleDblClickTests,
-    paddingHandlers: allPaddingHandlerTests,
-    bidirectional: allBidirectionalTests,
-    undoRedo: allUndoRedoTests,
-    autocomplete: allAutocompleteTests,
-    stackedDrag: allStackedDragTests,
-    flexReorder: allFlexReorderTests,
-    alignmentZone: allAlignmentZoneTests,
-    propertyPanel: allPropertyPanelTests,
-    charts: allChartTests,
-    workflow: allWorkflowTests,
     layoutVerification: allLayoutVerificationTests,
+    'layoutVerification.direction': directionVerificationTests,
+    'layoutVerification.size': sizeVerificationTests,
+    'layoutVerification.gap': gapVerificationTests,
+    'layoutVerification.alignment': alignmentVerificationTests,
+    'layoutVerification.complex': complexLayoutVerificationTests,
+
+    // === Styling ===
+    styling: allStylingTests,
+    'styling.colors': colorTests,
+    'styling.sizing': sizingTests,
+    'styling.spacing': spacingTests,
+    'styling.border': borderTests,
+    'styling.typography': typographyTests,
+    'styling.effects': effectTests,
+    'styling.visibility': visibilityTests,
+    'styling.combined': stylingCombinedTests,
+
+    // === Zag Components ===
+    zag: allZagTests,
+    'zag.checkbox': checkboxTests,
+    'zag.switch': switchTests,
+    'zag.slider': sliderTests,
+    'zag.select': selectTests,
+    'zag.radioGroup': radioGroupTests,
+    'zag.dialog': dialogTests,
+    'zag.tooltip': tooltipTests,
+    'zag.tabs': tabsTests,
+    'zag.datePicker': datePickerTests,
+    'zag.sidenav': sidenavTests,
+    'zag.inLayout': zagInLayoutTests,
+
+    // === Interactions ===
+    interactions: allInteractionTests,
+    'interactions.click': clickTests,
+    'interactions.hover': hoverTests,
+    'interactions.toggle': toggleTests,
+    'interactions.focus': focusTests,
+    'interactions.input': inputTests,
+    'interactions.keyboard': keyboardTests,
+    'interactions.selection': selectionTests,
+    'interactions.dragDrop': dragDropTests,
+    'interactions.combined': interactionCombinedTests,
+    multiselect: allMultiselectTests,
+    'multiselect.shiftClick': shiftClickTests,
+    'multiselect.metaClick': metaClickTests,
+    'multiselect.clearSelection': clearSelectionTests,
+    'multiselect.cssClass': multiselectCssClassTests,
+    resizeHandleDblClick: allResizeHandleDblClickTests,
+    'resizeHandleDblClick.horizontal': horizontalHandleTests,
+    'resizeHandleDblClick.vertical': verticalHandleTests,
+    'resizeHandleDblClick.corner': cornerHandleTests,
+    resizeHandleDrag: resizeHandleDragTests,
+    paddingHandlers: allPaddingHandlerTests,
+    'paddingHandlers.modeToggle': paddingModeToggleTests,
+    'paddingHandlers.position': paddingHandlePositionTests,
+    'paddingHandlers.drag': paddingHandleDragTests,
+    'paddingHandlers.modeSelection': paddingModeSelectionTests,
+    tokenExtract: tokenExtractTests,
+
+    // === Bidirectional ===
+    bidirectional: allBidirectionalTests,
+    'bidirectional.codeToPreview': codeToPreviewTests,
+    'bidirectional.selectionSync': selectionSyncTests,
+    'bidirectional.sourceMap': sourceMapTests,
+    'bidirectional.propertyPanel': bidirectionalPanelTests,
+    'bidirectional.complexSync': complexSyncTests,
+    'bidirectional.errorRecovery': errorRecoveryTests,
+
+    // === Undo/Redo ===
+    undoRedo: allUndoRedoTests,
+    'undoRedo.basicUndo': basicUndoTests,
+    'undoRedo.basicRedo': basicRedoTests,
+    'undoRedo.editTypes': undoEditTypesTests,
+    'undoRedo.withSelection': undoWithSelectionTests,
+    'undoRedo.edgeCases': undoEdgeCasesTests,
+
+    // === Autocomplete ===
+    autocomplete: allAutocompleteTests,
+    'autocomplete.primitives': primitiveCompletionTests,
+    'autocomplete.properties': propertyCompletionTests,
+    'autocomplete.values': valueCompletionTests,
+    'autocomplete.icons': iconCompletionTests,
+    'autocomplete.tokens': tokenCompletionTests,
+    'autocomplete.states': stateCompletionTests,
+    'autocomplete.components': componentCompletionTests,
+
+    // === Drag & Drop ===
+    stackedDrag: allStackedDragTests,
+    'stackedDrag.basic': basicStackedTests,
+    'stackedDrag.edgeCases': edgeCaseTests,
+    'stackedDrag.layoutDetection': layoutDetectionTests,
+    flexReorder: allFlexReorderTests,
+    'flexReorder.buttonVertical': buttonReorderVerticalTests,
+    'flexReorder.buttonHorizontal': buttonReorderHorizontalTests,
+    'flexReorder.text': textReorderTests,
+    'flexReorder.icon': iconReorderTests,
+    'flexReorder.input': inputReorderTests,
+    'flexReorder.image': imageReorderTests,
+    'flexReorder.dividerSpacer': dividerSpacerReorderTests,
+    'flexReorder.linkTextarea': linkTextareaReorderTests,
+    'flexReorder.mixedComponent': mixedComponentReorderTests,
+    'flexReorder.zagComponent': zagComponentReorderTests,
+    'flexReorder.nestedContainer': nestedContainerReorderTests,
+    'flexReorder.edgeCases': reorderEdgeCaseTests,
+    'flexReorder.sequential': sequentialReorderTests,
+    alignmentZone: allAlignmentZoneTests,
+    'alignmentZone.basic': basicAlignmentZoneTests,
+    'alignmentZone.allZones': allZonesTests,
+    'alignmentZone.edgeCases': alignmentEdgeCaseTests,
+    'alignmentZone.componentVariety': alignmentComponentTests,
+
+    // === Property Panel ===
+    propertyPanel: allPropertyPanelTests,
+    'propertyPanel.tokenDisplay': tokenDisplayTests,
+    'propertyPanel.tokenValue': tokenValueTests,
+    'propertyPanel.tokenInteraction': tokenInteractionTests,
+    'propertyPanel.projectToken': projectTokenTests,
+
+    // === Charts ===
+    charts: allChartTests,
+    'charts.dataFile': dataFileTests,
+    'charts.basic': basicChartTests,
+    'charts.styling': chartStylingTests,
+    'charts.layout': chartLayoutTests,
+    'charts.data': chartDataTests,
+
+    // === Workflow ===
+    workflow: allWorkflowTests,
+    'workflow.projectWithCode': projectWithCodeTests,
+    'workflow.projectWithDragDrop': projectWithDragDropTests,
+    'workflow.application': applicationTests,
+
+    // === States ===
     states: allStateTests,
+    'states.toggle': allToggleTests,
+    'states.toggle.basic': toggleBasicTests,
+    'states.toggle.multiple': toggleMultipleTests,
+    'states.toggle.content': toggleWithContentTests,
+    'states.exclusive': allExclusiveTests,
+    'states.exclusive.basic': exclusiveBasicTests,
+    'states.exclusive.group': exclusiveGroupTests,
+    'states.exclusive.navigation': exclusiveNavigationTests,
+    'states.hover': allHoverTests,
+    'states.hover.basic': hoverBasicTests,
+    'states.hover.transition': hoverWithTransitionTests,
+    'states.hover.nested': hoverNestedTests,
+    'states.hover.scale': hoverScaleTests,
+    'states.crossElement': allCrossElementTests,
+    'states.crossElement.basic': crossElementBasicTests,
+    'states.crossElement.dropdown': crossElementDropdownTests,
+    'states.crossElement.modal': crossElementModalTests,
+    'states.crossElement.form': crossElementFormTests,
+    'states.quick': quickStateTests,
+
+    // === Animations ===
     animations: allAnimationTests,
+    'animations.presets': allAnimationPresetTests,
+    'animations.spin': spinAnimationTests,
+    'animations.pulse': pulseAnimationTests,
+    'animations.bounce': bounceAnimationTests,
+    'animations.shake': shakeAnimationTests,
+    'animations.fade': fadeAnimationTests,
+    'animations.slide': slideAnimationTests,
+    'animations.scale': scaleAnimationTests,
+    'animations.stateAnimations': allStateAnimationTests,
+    'animations.stateToggle': stateToggleAnimationTests,
+    'animations.hover': hoverAnimationTests,
+    'animations.entryExit': entryExitAnimationTests,
+    'animations.combined': combinedAnimationTests,
+    'animations.quick': quickAnimationTests,
+
+    // === Transforms ===
     transforms: allTransformTests,
+    'transforms.rotate': allRotateTests,
+    'transforms.rotate.basic': rotateBasicTests,
+    'transforms.rotate.withOther': rotateWithOtherTransformsTests,
+    'transforms.rotate.interactive': rotateInteractiveTests,
+    'transforms.rotate.angles': rotateAnglesTests,
+    'transforms.scale': allScaleTests,
+    'transforms.scale.basic': scaleBasicTests,
+    'transforms.scale.interactive': scaleInteractiveTests,
+    'transforms.scale.edgeCases': scaleEdgeCasesTests,
+    'transforms.scale.withOther': scaleWithOtherPropertiesTests,
+    'transforms.translate': allTranslateTests,
+    'transforms.position.basic': positionBasicTests,
+    'transforms.stacked': stackedPositionTests,
+    'transforms.zIndex': zIndexTests,
+    'transforms.offset': translateOffsetTests,
+    'transforms.quick': quickTransformTests,
+
+    // === Gradients ===
     gradients: allGradientTests,
+    'gradients.horizontal': horizontalGradientTests,
+    'gradients.vertical': verticalGradientTests,
+    'gradients.angled': angledGradientTests,
+    'gradients.text': gradientTextTests,
+    'gradients.withEffects': gradientWithEffectsTests,
+    'gradients.quick': quickGradientTests,
+
+    // === Data Binding ===
     dataBinding: allDataBindingTests,
+    'dataBinding.variables': variableTests,
+    'dataBinding.collections': collectionTests,
+    'dataBinding.conditionals': conditionalTests,
+    'dataBinding.tokens': tokenTests,
+    'dataBinding.inputBinding': inputBindingTests,
+
+    // === Actions ===
     actions: allActionTests,
+    'actions.visibility': visibilityActionTests,
+    'actions.counter': counterActionTests,
+    'actions.scroll': scrollActionTests,
+    'actions.toast': toastActionTests,
+    'actions.form': formActionTests,
+    'actions.navigation': navigationActionTests,
+    'actions.clipboard': clipboardActionTests,
+    'actions.overlay': overlayActionTests,
+    'actions.crud': crudActionTests,
+    'actions.combined': combinedActionTests,
+
+    // === Components ===
     components: allComponentTests,
+    'components.basic': basicComponentTests,
+    'components.propertyOverride': propertyOverrideTests,
+    'components.inheritance': inheritanceTests,
+    'components.variants': variantTests,
+    'components.nestedSlots': nestedSlotTests,
+    'components.layout': layoutComponentTests,
+    'components.multiLevelInheritance': multiLevelInheritanceTests,
+    'components.state': componentStateTests,
+    'components.complex': complexComponentTests,
+
+    // === Tables ===
     tables: allTableTests,
+    'tables.static': staticTableTests,
+    'tables.dataBound': dataBoundTableTests,
+    'tables.layout': tableLayoutTests,
+    'tables.styling': tableStylingTests,
+    'tables.actions': tableActionTests,
+    'tables.filter': tableFilterTests,
+    'tables.complex': complexTableTests,
+
+    // === Events ===
     events: allEventTests,
+    'events.click': clickEventTests,
+    'events.hover': hoverEventTests,
+    'events.focus': focusEventTests,
+    'events.input': inputEventTests,
+    'events.keyboard': keyboardEventTests,
+    'events.view': viewEventTests,
+    'events.combined': combinedEventTests,
+    'events.edgeCases': eventEdgeCaseTests,
+
+    // === Responsive ===
     responsive: allResponsiveTests,
+    'responsive.basic': basicResponsiveTests,
+    'responsive.layout': responsiveLayoutTests,
+    'responsive.styling': responsiveStylingTests,
+    'responsive.visibility': responsiveVisibilityTests,
+    'responsive.customThreshold': customThresholdTests,
+    'responsive.components': responsiveComponentTests,
+    'responsive.complex': complexResponsiveTests,
+
+    // === Sync ===
     sync: allSyncTests,
+    'sync.editorToPreview': editorToPreviewTests,
+    'sync.previewToEditor': previewToEditorTests,
+    'sync.panelToEditor': panelToEditorTests,
+    'sync.editorToPanel': editorToPanelTests,
+    'sync.multiDirectional': multiDirectionalTests,
+    'sync.rapidChange': rapidChangeTests,
+    'sync.edgeCases': syncEdgeCaseTests,
+    'sync.selectionPersistence': selectionPersistenceTests,
+    'sync.complexScenario': complexScenarioTests,
+
+    // === Property Robustness ===
     propertyRobustness: allPropertyRobustnessTests,
+    'propertyRobustness.commaFormat': commaFormatTests,
+    'propertyRobustness.autoSeparation': autoSeparationTests,
+    'propertyRobustness.multiValue': multiValueTests,
+    'propertyRobustness.alias': aliasTests,
+    'propertyRobustness.order': orderTests,
+    'propertyRobustness.mixedFormat': mixedFormatTests,
+    'propertyRobustness.edgeCases': propertyEdgeCaseTests,
+    'propertyRobustness.sequentialMod': sequentialModTests,
+    'propertyRobustness.previewSync': previewSyncTests,
+
+    // === Stress Tests ===
     stress: allStressTests,
+    'stress.raceConditions': raceConditionTests,
+    'stress.codeModifier': codeModifierTests,
+
+    // === Project (Multi-File) ===
     project: allProjectTests,
+    'project.setup': projectSetupTests,
+    'project.tokenComponent': tokenComponentTests,
+    'project.screenNavigation': screenNavigationTests,
+    'project.complexLayout': projectComplexLayoutTests,
+    'project.fileSwitching': fileSwitchingTests,
+
+    // === Compiler Verification ===
     compilerVerification: allCompilerVerificationTests,
+    'compilerVerification.properties': complexPropertyTests,
+    'compilerVerification.layout': layoutVerificationTests,
+    'compilerVerification.nestedStructure': nestedStructureTests,
+    'compilerVerification.tokenResolution': tokenResolutionTests,
+    'compilerVerification.conditionals': compilerConditionalTests,
+    'compilerVerification.collections': compilerCollectionTests,
+    'compilerVerification.componentInheritance': componentInheritanceTests,
+    'compilerVerification.inlineSyntax': inlineSyntaxTests,
+    'compilerVerification.primitives': compilerPrimitivesTests,
+    'compilerVerification.edgeCases': compilerEdgeCaseTests,
+
+    // === UI Builder ===
     uiBuilder: allUIBuilderTests,
+    'uiBuilder.level1': uiBuilderLevel1Tests,
+    'uiBuilder.level2': uiBuilderLevel2Tests,
+
+    // === Play Mode ===
     playMode: allPlayModeTests,
+    'playMode.activation': playModeActivationTests,
+    'playMode.visual': playModeVisualTests,
+    'playMode.reset': playModeResetTests,
+    'playMode.device': playModeDeviceTests,
+    'playMode.integration': playModeIntegrationTests,
+    'playMode.quick': quickPlayModeTests,
+
+    // === Test System (meta) ===
+    testSystem: allTestSystemTests,
+    'testSystem.fixtures': fixturesTests,
+    'testSystem.isolation': isolationTests,
+    'testSystem.keyboard': testSystemKeyboardTests,
+    'testSystem.waitHelper': waitHelperTests,
   }
 
   const names: Record<TestCategory, string> = {
+    // === Primitives ===
     primitives: 'Primitives',
+    'primitives.basic': 'Basic Primitives',
+    'primitives.semantic': 'Semantic Primitives',
+    'primitives.headings': 'Heading Primitives',
+
+    // === Layout ===
     layout: 'Layout',
+    'layout.direction': 'Layout Direction (hor/ver)',
+    'layout.alignment': 'Layout Alignment',
+    'layout.distribution': 'Layout Distribution',
+    'layout.gap': 'Layout Gap',
+    'layout.wrap': 'Layout Wrap',
+    'layout.flex': 'Layout Flex (grow/shrink)',
+    'layout.stacked': 'Layout Stacked',
+    'layout.grid': 'Layout Grid',
+    'layout.nesting': 'Layout Nesting',
+    'layout.complex': 'Complex Layout',
     layoutShortcuts: 'Layout Shortcuts (H, V, F)',
-    styling: 'Styling',
-    zag: 'Zag Components',
-    interactions: 'Interactions',
-    multiselect: 'Multiselect',
-    resizeHandleDblClick: 'Resize Handle Double-Click',
-    paddingHandlers: 'Padding Handlers (P key)',
-    bidirectional: 'Bidirectional Editing',
-    undoRedo: 'Undo/Redo',
-    autocomplete: 'Autocomplete',
-    stackedDrag: 'Stacked Drag & Drop',
-    flexReorder: 'Flex Reorder',
-    alignmentZone: 'Alignment Zone',
-    propertyPanel: 'Property Panel',
-    charts: 'Charts',
-    workflow: 'Workflow',
     layoutVerification: 'Layout Verification',
+    'layoutVerification.direction': 'Layout Verify: Direction',
+    'layoutVerification.size': 'Layout Verify: Size',
+    'layoutVerification.gap': 'Layout Verify: Gap',
+    'layoutVerification.alignment': 'Layout Verify: Alignment',
+    'layoutVerification.complex': 'Layout Verify: Complex',
+
+    // === Styling ===
+    styling: 'Styling',
+    'styling.colors': 'Colors (bg, col)',
+    'styling.sizing': 'Sizing (w, h)',
+    'styling.spacing': 'Spacing (pad, mar, gap)',
+    'styling.border': 'Border & Radius',
+    'styling.typography': 'Typography',
+    'styling.effects': 'Effects (shadow, blur)',
+    'styling.visibility': 'Visibility',
+    'styling.combined': 'Combined Styling',
+
+    // === Zag Components ===
+    zag: 'Zag Components',
+    'zag.checkbox': 'Zag: Checkbox',
+    'zag.switch': 'Zag: Switch',
+    'zag.slider': 'Zag: Slider',
+    'zag.select': 'Zag: Select',
+    'zag.radioGroup': 'Zag: RadioGroup',
+    'zag.dialog': 'Zag: Dialog',
+    'zag.tooltip': 'Zag: Tooltip',
+    'zag.tabs': 'Zag: Tabs',
+    'zag.datePicker': 'Zag: DatePicker',
+    'zag.sidenav': 'Zag: Sidenav',
+    'zag.inLayout': 'Zag: In Layout',
+
+    // === Interactions ===
+    interactions: 'Interactions',
+    'interactions.click': 'Click Interactions',
+    'interactions.hover': 'Hover Interactions',
+    'interactions.toggle': 'Toggle Interactions',
+    'interactions.focus': 'Focus Interactions',
+    'interactions.input': 'Input Interactions',
+    'interactions.keyboard': 'Keyboard Interactions',
+    'interactions.selection': 'Selection Interactions',
+    'interactions.dragDrop': 'Drag & Drop Interactions',
+    'interactions.combined': 'Combined Interactions',
+    multiselect: 'Multiselect',
+    'multiselect.shiftClick': 'Multiselect: Shift+Click',
+    'multiselect.metaClick': 'Multiselect: Cmd/Ctrl+Click',
+    'multiselect.clearSelection': 'Multiselect: Clear Selection',
+    'multiselect.cssClass': 'Multiselect: CSS Classes',
+    resizeHandleDblClick: 'Resize Handle Double-Click',
+    'resizeHandleDblClick.horizontal': 'Resize DblClick: Horizontal',
+    'resizeHandleDblClick.vertical': 'Resize DblClick: Vertical',
+    'resizeHandleDblClick.corner': 'Resize DblClick: Corner',
+    resizeHandleDrag: 'Resize Handle Drag',
+    paddingHandlers: 'Padding Handlers (P key)',
+    'paddingHandlers.modeToggle': 'Padding: Mode Toggle',
+    'paddingHandlers.position': 'Padding: Handle Position',
+    'paddingHandlers.drag': 'Padding: Drag',
+    'paddingHandlers.modeSelection': 'Padding: Mode Selection',
+    tokenExtract: 'Token Extract',
+
+    // === Bidirectional ===
+    bidirectional: 'Bidirectional Editing',
+    'bidirectional.codeToPreview': 'Code → Preview',
+    'bidirectional.selectionSync': 'Selection Sync',
+    'bidirectional.sourceMap': 'Source Map',
+    'bidirectional.propertyPanel': 'Property Panel Sync',
+    'bidirectional.complexSync': 'Complex Sync',
+    'bidirectional.errorRecovery': 'Error Recovery',
+
+    // === Undo/Redo ===
+    undoRedo: 'Undo/Redo',
+    'undoRedo.basicUndo': 'Basic Undo',
+    'undoRedo.basicRedo': 'Basic Redo',
+    'undoRedo.editTypes': 'Edit Types',
+    'undoRedo.withSelection': 'With Selection',
+    'undoRedo.edgeCases': 'Edge Cases',
+
+    // === Autocomplete ===
+    autocomplete: 'Autocomplete',
+    'autocomplete.primitives': 'Primitive Completions',
+    'autocomplete.properties': 'Property Completions',
+    'autocomplete.values': 'Value Completions',
+    'autocomplete.icons': 'Icon Completions',
+    'autocomplete.tokens': 'Token Completions',
+    'autocomplete.states': 'State Completions',
+    'autocomplete.components': 'Component Completions',
+
+    // === Drag & Drop ===
+    stackedDrag: 'Stacked Drag & Drop',
+    'stackedDrag.basic': 'Stacked: Basic',
+    'stackedDrag.edgeCases': 'Stacked: Edge Cases',
+    'stackedDrag.layoutDetection': 'Stacked: Layout Detection',
+    flexReorder: 'Flex Reorder',
+    'flexReorder.buttonVertical': 'Flex: Button Vertical',
+    'flexReorder.buttonHorizontal': 'Flex: Button Horizontal',
+    'flexReorder.text': 'Flex: Text Reorder',
+    'flexReorder.icon': 'Flex: Icon Reorder',
+    'flexReorder.input': 'Flex: Input Reorder',
+    'flexReorder.image': 'Flex: Image Reorder',
+    'flexReorder.dividerSpacer': 'Flex: Divider/Spacer',
+    'flexReorder.linkTextarea': 'Flex: Link/Textarea',
+    'flexReorder.mixedComponent': 'Flex: Mixed Components',
+    'flexReorder.zagComponent': 'Flex: Zag Components',
+    'flexReorder.nestedContainer': 'Flex: Nested Containers',
+    'flexReorder.edgeCases': 'Flex: Edge Cases',
+    'flexReorder.sequential': 'Flex: Sequential',
+    alignmentZone: 'Alignment Zone',
+    'alignmentZone.basic': 'Alignment: Basic',
+    'alignmentZone.allZones': 'Alignment: All Zones',
+    'alignmentZone.edgeCases': 'Alignment: Edge Cases',
+    'alignmentZone.componentVariety': 'Alignment: Component Variety',
+
+    // === Property Panel ===
+    propertyPanel: 'Property Panel',
+    'propertyPanel.tokenDisplay': 'Token Display',
+    'propertyPanel.tokenValue': 'Token Values',
+    'propertyPanel.tokenInteraction': 'Token Interaction',
+    'propertyPanel.projectToken': 'Project Tokens',
+
+    // === Charts ===
+    charts: 'Charts',
+    'charts.dataFile': 'Chart: Data Files',
+    'charts.basic': 'Chart: Basic',
+    'charts.styling': 'Chart: Styling',
+    'charts.layout': 'Chart: Layout',
+    'charts.data': 'Chart: Data',
+
+    // === Workflow ===
+    workflow: 'Workflow',
+    'workflow.projectWithCode': 'Workflow: Code',
+    'workflow.projectWithDragDrop': 'Workflow: Drag & Drop',
+    'workflow.application': 'Workflow: Application',
+
+    // === States ===
     states: 'States',
+    'states.toggle': 'Toggle States',
+    'states.toggle.basic': 'Toggle: Basic',
+    'states.toggle.multiple': 'Toggle: Multiple',
+    'states.toggle.content': 'Toggle: Content',
+    'states.exclusive': 'Exclusive States',
+    'states.exclusive.basic': 'Exclusive: Basic',
+    'states.exclusive.group': 'Exclusive: Group',
+    'states.exclusive.navigation': 'Exclusive: Navigation',
+    'states.hover': 'Hover States',
+    'states.hover.basic': 'Hover: Basic',
+    'states.hover.transition': 'Hover: Transitions',
+    'states.hover.nested': 'Hover: Nested',
+    'states.hover.scale': 'Hover: Scale',
+    'states.crossElement': 'Cross-Element States',
+    'states.crossElement.basic': 'Cross: Basic',
+    'states.crossElement.dropdown': 'Cross: Dropdown',
+    'states.crossElement.modal': 'Cross: Modal',
+    'states.crossElement.form': 'Cross: Form',
+    'states.quick': 'Quick State Tests',
+
+    // === Animations ===
     animations: 'Animations',
+    'animations.presets': 'Animation Presets',
+    'animations.spin': 'Anim: Spin',
+    'animations.pulse': 'Anim: Pulse',
+    'animations.bounce': 'Anim: Bounce',
+    'animations.shake': 'Anim: Shake',
+    'animations.fade': 'Anim: Fade',
+    'animations.slide': 'Anim: Slide',
+    'animations.scale': 'Anim: Scale',
+    'animations.stateAnimations': 'State Animations',
+    'animations.stateToggle': 'Anim: State Toggle',
+    'animations.hover': 'Anim: Hover',
+    'animations.entryExit': 'Anim: Entry/Exit',
+    'animations.combined': 'Anim: Combined',
+    'animations.quick': 'Quick Animation Tests',
+
+    // === Transforms ===
     transforms: 'Transforms',
+    'transforms.rotate': 'Rotate',
+    'transforms.rotate.basic': 'Rotate: Basic',
+    'transforms.rotate.withOther': 'Rotate: With Other',
+    'transforms.rotate.interactive': 'Rotate: Interactive',
+    'transforms.rotate.angles': 'Rotate: Angles',
+    'transforms.scale': 'Scale',
+    'transforms.scale.basic': 'Scale: Basic',
+    'transforms.scale.interactive': 'Scale: Interactive',
+    'transforms.scale.edgeCases': 'Scale: Edge Cases',
+    'transforms.scale.withOther': 'Scale: With Other',
+    'transforms.translate': 'Translate',
+    'transforms.position.basic': 'Position: Basic',
+    'transforms.stacked': 'Stacked Position',
+    'transforms.zIndex': 'Z-Index',
+    'transforms.offset': 'Offset',
+    'transforms.quick': 'Quick Transform Tests',
+
+    // === Gradients ===
     gradients: 'Gradients',
+    'gradients.horizontal': 'Gradient: Horizontal',
+    'gradients.vertical': 'Gradient: Vertical',
+    'gradients.angled': 'Gradient: Angled',
+    'gradients.text': 'Gradient: Text',
+    'gradients.withEffects': 'Gradient: With Effects',
+    'gradients.quick': 'Quick Gradient Tests',
+
+    // === Data Binding ===
     dataBinding: 'Data Binding',
+    'dataBinding.variables': 'Variables',
+    'dataBinding.collections': 'Collections',
+    'dataBinding.conditionals': 'Conditionals',
+    'dataBinding.tokens': 'Data Tokens',
+    'dataBinding.inputBinding': 'Input Binding',
+
+    // === Actions ===
     actions: 'Actions',
+    'actions.visibility': 'Action: Visibility',
+    'actions.counter': 'Action: Counter',
+    'actions.scroll': 'Action: Scroll',
+    'actions.toast': 'Action: Toast',
+    'actions.form': 'Action: Form',
+    'actions.navigation': 'Action: Navigation',
+    'actions.clipboard': 'Action: Clipboard',
+    'actions.overlay': 'Action: Overlay',
+    'actions.crud': 'Action: CRUD',
+    'actions.combined': 'Action: Combined',
+
+    // === Components ===
     components: 'Components',
+    'components.basic': 'Component: Basic',
+    'components.propertyOverride': 'Component: Property Override',
+    'components.inheritance': 'Component: Inheritance',
+    'components.variants': 'Component: Variants',
+    'components.nestedSlots': 'Component: Nested Slots',
+    'components.layout': 'Component: Layout',
+    'components.multiLevelInheritance': 'Component: Multi-Level',
+    'components.state': 'Component: State',
+    'components.complex': 'Component: Complex',
+
+    // === Tables ===
     tables: 'Tables',
+    'tables.static': 'Table: Static',
+    'tables.dataBound': 'Table: Data Bound',
+    'tables.layout': 'Table: Layout',
+    'tables.styling': 'Table: Styling',
+    'tables.actions': 'Table: Actions',
+    'tables.filter': 'Table: Filter',
+    'tables.complex': 'Table: Complex',
+
+    // === Events ===
     events: 'Events',
+    'events.click': 'Event: Click',
+    'events.hover': 'Event: Hover',
+    'events.focus': 'Event: Focus',
+    'events.input': 'Event: Input',
+    'events.keyboard': 'Event: Keyboard',
+    'events.view': 'Event: View',
+    'events.combined': 'Event: Combined',
+    'events.edgeCases': 'Event: Edge Cases',
+
+    // === Responsive ===
     responsive: 'Responsive',
+    'responsive.basic': 'Responsive: Basic',
+    'responsive.layout': 'Responsive: Layout',
+    'responsive.styling': 'Responsive: Styling',
+    'responsive.visibility': 'Responsive: Visibility',
+    'responsive.customThreshold': 'Responsive: Custom Threshold',
+    'responsive.components': 'Responsive: Components',
+    'responsive.complex': 'Responsive: Complex',
+
+    // === Sync ===
     sync: 'Sync',
+    'sync.editorToPreview': 'Sync: Editor → Preview',
+    'sync.previewToEditor': 'Sync: Preview → Editor',
+    'sync.panelToEditor': 'Sync: Panel → Editor',
+    'sync.editorToPanel': 'Sync: Editor → Panel',
+    'sync.multiDirectional': 'Sync: Multi-Directional',
+    'sync.rapidChange': 'Sync: Rapid Change',
+    'sync.edgeCases': 'Sync: Edge Cases',
+    'sync.selectionPersistence': 'Sync: Selection Persistence',
+    'sync.complexScenario': 'Sync: Complex Scenario',
+
+    // === Property Robustness ===
     propertyRobustness: 'Property Robustness',
+    'propertyRobustness.commaFormat': 'Property: Comma Format',
+    'propertyRobustness.autoSeparation': 'Property: Auto Separation',
+    'propertyRobustness.multiValue': 'Property: Multi Value',
+    'propertyRobustness.alias': 'Property: Alias',
+    'propertyRobustness.order': 'Property: Order',
+    'propertyRobustness.mixedFormat': 'Property: Mixed Format',
+    'propertyRobustness.edgeCases': 'Property: Edge Cases',
+    'propertyRobustness.sequentialMod': 'Property: Sequential Mod',
+    'propertyRobustness.previewSync': 'Property: Preview Sync',
+
+    // === Stress Tests ===
     stress: 'Stress Tests',
+    'stress.raceConditions': 'Stress: Race Conditions',
+    'stress.codeModifier': 'Stress: Code Modifier',
+
+    // === Project (Multi-File) ===
     project: 'Multi-File Project',
+    'project.setup': 'Project: Setup',
+    'project.tokenComponent': 'Project: Token/Component',
+    'project.screenNavigation': 'Project: Screen Navigation',
+    'project.complexLayout': 'Project: Complex Layout',
+    'project.fileSwitching': 'Project: File Switching',
+
+    // === Compiler Verification ===
     compilerVerification: 'Compiler Verification',
+    'compilerVerification.properties': 'Compiler: Properties',
+    'compilerVerification.layout': 'Compiler: Layout',
+    'compilerVerification.nestedStructure': 'Compiler: Nested Structure',
+    'compilerVerification.tokenResolution': 'Compiler: Token Resolution',
+    'compilerVerification.conditionals': 'Compiler: Conditionals',
+    'compilerVerification.collections': 'Compiler: Collections',
+    'compilerVerification.componentInheritance': 'Compiler: Component Inheritance',
+    'compilerVerification.inlineSyntax': 'Compiler: Inline Syntax',
+    'compilerVerification.primitives': 'Compiler: Primitives',
+    'compilerVerification.edgeCases': 'Compiler: Edge Cases',
+
+    // === UI Builder ===
     uiBuilder: 'UI Builder',
+    'uiBuilder.level1': 'UI Builder: Level 1',
+    'uiBuilder.level2': 'UI Builder: Level 2',
+
+    // === Play Mode ===
     playMode: 'Play Mode',
+    'playMode.activation': 'Play: Activation',
+    'playMode.visual': 'Play: Visual',
+    'playMode.reset': 'Play: Reset',
+    'playMode.device': 'Play: Device',
+    'playMode.integration': 'Play: Integration',
+    'playMode.quick': 'Quick Play Mode Tests',
+
+    // === Test System (meta) ===
+    testSystem: 'Test System',
+    'testSystem.fixtures': 'Test: Fixtures',
+    'testSystem.isolation': 'Test: Isolation',
+    'testSystem.keyboard': 'Test: Keyboard',
+    'testSystem.waitHelper': 'Test: Wait Helper',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
