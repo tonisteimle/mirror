@@ -47,6 +47,8 @@ export interface StudioEvents {
   'selection:invalidated': { nodeId: string }
   /** Emitted when selection falls back to a different node (e.g., after queued selection fails) */
   'selection:fallback': { requestedId: string; resolvedId: string; reason: string }
+  /** Emitted when selection needs to be refreshed (e.g., after padding change) */
+  'selection:refresh': { nodeId: string }
   /** Emitted when a change is applied via ChangeService */
   'change:applied': { intent: ChangeIntent; oldSource: string; newSource: string }
   /** Emitted when a component definition is selected (e.g., cursor on definition line in .com file) */
@@ -108,6 +110,11 @@ export interface StudioEvents {
     x?: number
     y?: number
   }
+  /** Padding handle events */
+  'handles:toggle-padding': { nodeId: string }
+  'padding:start': { nodeId: string; handle: string; startPadding: number }
+  'padding:move': { nodeId: string; handle: string; padding: number }
+  'padding:end': { nodeId: string; handle: string; padding: number }
   /** Multi-selection resize events (Feature 4) */
   'multiResize:start': {
     nodeIds: string[]

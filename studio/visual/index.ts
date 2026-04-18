@@ -22,6 +22,15 @@ export {
   type SizingMode,
 } from './resize-manager'
 
+// Padding Manager
+export {
+  PaddingManager,
+  createPaddingManager,
+  type PaddingManagerConfig,
+  type PaddingHandle,
+  type PaddingState,
+} from './padding-manager'
+
 // Position Controls
 export {
   NumericInput,

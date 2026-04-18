@@ -384,7 +384,7 @@ muted.col: #a1a1aa
     } else if (args.filter) {
       // If --filter is specified, run only Mirror tests with filter (no drag tests)
       console.log(`🔍 Running filtered tests: "${args.filter}"\n`)
-      suites.push(await runner.runMirrorTests())
+      suites.push(await runner.runMirrorTests(undefined, args.filter))
     } else {
       // Determine which tests to run
       // Default: run all tests when no specific selection is made

@@ -190,6 +190,22 @@ export class EditorTriggerManager {
     // Get or create picker
     const picker = typeof config.picker === 'function' ? config.picker() : config.picker
 
+    // Set picker callback to go through trigger's onSelect (for click-to-select)
+    // This ensures clicks in the picker work the same as keyboard Enter
+    if ('callbacks' in picker && picker.callbacks) {
+      picker.callbacks.onSelect = (value: string) => {
+        // Call trigger's onSelect with proper context
+        if (value && this.state.context && this.currentView) {
+          try {
+            config.onSelect(value, this.state.context, this.currentView)
+          } catch (error) {
+            log.error('Error in click-to-select callback:', error)
+          }
+          this.hidePicker()
+        }
+      }
+    }
+
     // Update state
     this.state = {
       isOpen: true,

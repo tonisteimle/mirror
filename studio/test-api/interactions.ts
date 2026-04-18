@@ -118,6 +118,44 @@ export class Interactions implements InteractionAPI {
   }
 
   /**
+   * Click with modifiers (Shift, Cmd/Ctrl, Alt)
+   */
+  async clickWithModifiers(
+    nodeId: string,
+    modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean }
+  ): Promise<void> {
+    const element = this.findElement(nodeId)
+    if (!element) throw new Error(`Element ${nodeId} not found`)
+
+    const eventOptions = {
+      ctrlKey: modifiers.ctrl ?? false,
+      shiftKey: modifiers.shift ?? false,
+      altKey: modifiers.alt ?? false,
+      metaKey: modifiers.meta ?? false,
+    }
+
+    this.dispatchMouseEvent(element, 'mousedown', eventOptions)
+    this.dispatchMouseEvent(element, 'mouseup', eventOptions)
+    this.dispatchMouseEvent(element, 'click', eventOptions)
+
+    await this.delay(50)
+  }
+
+  /**
+   * Shift+Click (for multi-select)
+   */
+  async shiftClick(nodeId: string): Promise<void> {
+    return this.clickWithModifiers(nodeId, { shift: true })
+  }
+
+  /**
+   * Cmd/Ctrl+Click (for multi-select)
+   */
+  async metaClick(nodeId: string): Promise<void> {
+    return this.clickWithModifiers(nodeId, { meta: true })
+  }
+
+  /**
    * Double click on element
    */
   async doubleClick(nodeId: string): Promise<void> {
@@ -733,6 +771,77 @@ export class Interactions implements InteractionAPI {
     this.dispatchMouseEvent(handle, 'mouseup')
     this.dispatchMouseEvent(handle, 'click')
     this.dispatchMouseEvent(handle, 'dblclick')
+
+    await this.delay(100)
+  }
+
+  /**
+   * Drag a resize handle to change element size
+   *
+   * @param nodeId - The element to resize
+   * @param position - Which handle to drag (n, s, e, w, nw, ne, sw, se)
+   * @param deltaX - Horizontal drag distance in pixels
+   * @param deltaY - Vertical drag distance in pixels
+   */
+  async dragResizeHandle(
+    nodeId: string,
+    position: 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se',
+    deltaX: number,
+    deltaY: number
+  ): Promise<void> {
+    // First, select the element to show resize handles
+    await this.click(nodeId)
+    await this.delay(200)
+
+    // Wait for resize handles to appear
+    let resizeHandlesContainer: Element | null = null
+    for (let i = 0; i < 10; i++) {
+      resizeHandlesContainer = document.querySelector('.visual-overlay .resize-handles')
+      if (resizeHandlesContainer && resizeHandlesContainer.children.length > 0) {
+        break
+      }
+      await this.delay(50)
+    }
+
+    if (!resizeHandlesContainer || resizeHandlesContainer.children.length === 0) {
+      throw new Error('Resize handles container not found. Is the element selected?')
+    }
+
+    // Find the handle
+    const handle = resizeHandlesContainer.querySelector(
+      `.resize-handle[data-position="${position}"]`
+    ) as HTMLElement
+
+    if (!handle) {
+      throw new Error(`Resize handle at position "${position}" not found`)
+    }
+
+    // Get handle position for drag calculation
+    const handleRect = handle.getBoundingClientRect()
+    const startX = handleRect.left + handleRect.width / 2
+    const startY = handleRect.top + handleRect.height / 2
+
+    // Dispatch mousedown on handle
+    this.dispatchMouseEvent(handle, 'mousedown', {
+      clientX: startX,
+      clientY: startY,
+    })
+
+    await this.delay(50)
+
+    // Dispatch mousemove on document (drag)
+    this.dispatchMouseEvent(document.body, 'mousemove', {
+      clientX: startX + deltaX,
+      clientY: startY + deltaY,
+    })
+
+    await this.delay(50)
+
+    // Dispatch mouseup on document
+    this.dispatchMouseEvent(document.body, 'mouseup', {
+      clientX: startX + deltaX,
+      clientY: startY + deltaY,
+    })
 
     await this.delay(100)
   }

@@ -52,6 +52,8 @@ import {
   createTriggerExtensions,
   setIconTriggerPrimitives,
   getIconTriggerPrimitives,
+  createComponentExtractExtensionFromConfig,
+  createTokenExtractExtensionFromConfig,
   // Inline Prompt Extension (AI code generation)
   inlinePromptExtension,
   // Fixer Service (AI multi-file code generation)
@@ -105,7 +107,10 @@ import {
   hsvToHex as hsvToHexModule,
   // Full Color Picker (Clean Code module)
   createFullColorPicker,
-} from './dist/index.js?v=137'
+  // Icon Picker (for property panel integration)
+  getGlobalIconPicker,
+  setGlobalIconPickerCallback,
+} from './dist/index.js?v=138'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1358,6 +1363,28 @@ registerAllTriggers({
     return files
   },
   componentPrimitives: getIconTriggerPrimitives(),
+  // Component extraction callbacks (for :: syntax)
+  getFilesWithType: () => {
+    const allFiles = window.desktopFiles?.getFiles?.() || files
+    return Object.entries(allFiles).map(([name, code]) => ({
+      name,
+      type: getFileType(name),
+      code,
+    }))
+  },
+  updateFile: (filename, content) => {
+    // Update local cache
+    files[filename] = content
+    // Save to storage
+    saveFile(filename, content)
+    // Refresh file tree
+    if (window.DesktopFiles?.renderFileTree) {
+      window.DesktopFiles.renderFileTree()
+    }
+    // Recompile
+    compile(files[currentFile] || '')
+  },
+  getCurrentFile: () => currentFile,
 })
 
 // Initialize Fixer Service for AI code generation
@@ -1468,6 +1495,45 @@ const inlinePromptConfig = {
   onCancel: () => console.log('[InlinePrompt] Cancelled'),
 }
 
+// Create component extract extension (:: syntax for inline component definition)
+const componentExtractConfig = {
+  getFiles: () => {
+    // Try desktopFiles cache first
+    const desktopFilesCache = window.desktopFiles?.getFiles?.()
+    if (desktopFilesCache && Object.keys(desktopFilesCache).length > 0) {
+      return desktopFilesCache
+    }
+    // Try global files variable
+    if (files && Object.keys(files).length > 1) {
+      return files
+    }
+    return files
+  },
+  getFilesWithType: () => {
+    const allFiles = window.desktopFiles?.getFiles?.() || files
+    return Object.entries(allFiles).map(([name, code]) => ({
+      name,
+      type: getFileType(name),
+      code,
+    }))
+  },
+  updateFile: (filename, content) => {
+    // Update local cache
+    files[filename] = content
+    // Save to storage
+    saveFile(filename, content)
+    // Refresh file tree
+    if (window.DesktopFiles?.renderFileTree) {
+      window.DesktopFiles.renderFileTree()
+    }
+    // Recompile with updated files
+    compile(files[currentFile] || '')
+  },
+  getCurrentFile: () => currentFile,
+}
+const componentExtractExtension = createComponentExtractExtensionFromConfig(componentExtractConfig)
+const tokenExtractExtension = createTokenExtractExtensionFromConfig(componentExtractConfig)
+
 // Initialize modular color picker API for property panel
 
 const editor = new EditorView({
@@ -1572,6 +1638,10 @@ const editor = new EditorView({
         '&': { height: '100%' },
         '.cm-scroller': { fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace" },
       }),
+      // Component extract extension (:: syntax)
+      ...(componentExtractExtension ? [componentExtractExtension] : []),
+      // Token extract extension (:: syntax for tokens)
+      ...(tokenExtractExtension ? [tokenExtractExtension] : []),
     ],
   }),
   parent: editorContainer,
@@ -2690,6 +2760,9 @@ function initStudio() {
   // Set up move event handlers for debugging
   setupMoveEventHandlers()
 
+  // Set up icon picker for property panel
+  setupPropertyPanelIconPicker()
+
   // Initialize preview zoom controls
   initPreviewZoom()
 
@@ -3026,6 +3099,46 @@ function setupMoveEventHandlers() {
     // - Updating breadcrumb
     // - Triggering analytics
     // - Refreshing property panel
+  })
+}
+
+/**
+ * Setup icon picker for property panel
+ * Handles the property-panel:open-icon-picker event
+ */
+function setupPropertyPanelIconPicker() {
+  document.addEventListener('property-panel:open-icon-picker', event => {
+    const { onSelect } = event.detail || {}
+    if (!onSelect) {
+      console.warn('[IconPicker] No onSelect callback provided')
+      return
+    }
+
+    // Get the icon picker
+    const iconPicker = getGlobalIconPicker()
+
+    // Load Lucide icons if not already loaded
+    iconPicker.loadLucideIcons()
+
+    // Set the callback for when an icon is selected
+    setGlobalIconPickerCallback(iconName => {
+      onSelect(iconName)
+      iconPicker.hide()
+    })
+
+    // Get the button that triggered the event to position the picker
+    const triggerButton = event.target?.closest?.('button[data-open-icon-picker]')
+    if (triggerButton) {
+      const rect = triggerButton.getBoundingClientRect()
+      iconPicker.showAt(rect.left, rect.bottom + 4)
+    } else {
+      // Fallback: show near the property panel
+      const propertyPanel = document.getElementById('property-panel')
+      if (propertyPanel) {
+        const rect = propertyPanel.getBoundingClientRect()
+        iconPicker.showAt(rect.left + 20, rect.top + 100)
+      }
+    }
   })
 }
 

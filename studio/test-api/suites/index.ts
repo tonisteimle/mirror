@@ -89,6 +89,18 @@ import {
   horizontalHandleTests,
   verticalHandleTests,
   cornerHandleTests,
+  allPaddingHandlerTests,
+  paddingModeToggleTests,
+  paddingHandlePositionTests,
+  paddingHandleDragTests,
+  paddingModeSelectionTests,
+  tokenExtractTests,
+  resizeHandleDragTests,
+  allMultiselectTests,
+  shiftClickTests,
+  metaClickTests,
+  clearSelectionTests,
+  cssClassTests as multiselectCssClassTests,
 } from './interactions'
 
 // Bidirectional
@@ -496,6 +508,18 @@ export {
   horizontalHandleTests,
   verticalHandleTests,
   cornerHandleTests,
+  allPaddingHandlerTests,
+  paddingModeToggleTests,
+  paddingHandlePositionTests,
+  paddingHandleDragTests,
+  paddingModeSelectionTests,
+  tokenExtractTests,
+  resizeHandleDragTests,
+  allMultiselectTests,
+  shiftClickTests,
+  metaClickTests,
+  clearSelectionTests,
+  multiselectCssClassTests,
 }
 
 // Bidirectional Editing
@@ -837,6 +861,10 @@ export const allTests: TestCase[] = [
   ...allInteractionTests,
   ...allLayoutShortcutTests,
   ...allResizeHandleDblClickTests,
+  ...allPaddingHandlerTests,
+  ...tokenExtractTests,
+  ...resizeHandleDragTests,
+  ...allMultiselectTests,
   ...allBidirectionalTests,
   ...allUndoRedoTests,
   ...allAutocompleteTests,
@@ -889,6 +917,7 @@ export const testCounts = {
   styling: allStylingTests.length,
   zag: allZagTests.length,
   interactions: allInteractionTests.length,
+  multiselect: allMultiselectTests.length,
   bidirectional: allBidirectionalTests.length,
   undoRedo: allUndoRedoTests.length,
   autocomplete: allAutocompleteTests.length,
@@ -986,7 +1015,9 @@ export type TestCategory =
   | 'styling'
   | 'zag'
   | 'interactions'
+  | 'multiselect'
   | 'resizeHandleDblClick'
+  | 'paddingHandlers'
   | 'bidirectional'
   | 'undoRedo'
   | 'autocomplete'
@@ -1028,7 +1059,9 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     styling: allStylingTests,
     zag: allZagTests,
     interactions: allInteractionTests,
+    multiselect: allMultiselectTests,
     resizeHandleDblClick: allResizeHandleDblClickTests,
+    paddingHandlers: allPaddingHandlerTests,
     bidirectional: allBidirectionalTests,
     undoRedo: allUndoRedoTests,
     autocomplete: allAutocompleteTests,
@@ -1065,7 +1098,9 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     styling: 'Styling',
     zag: 'Zag Components',
     interactions: 'Interactions',
+    multiselect: 'Multiselect',
     resizeHandleDblClick: 'Resize Handle Double-Click',
+    paddingHandlers: 'Padding Handlers (P key)',
     bidirectional: 'Bidirectional Editing',
     undoRedo: 'Undo/Redo',
     autocomplete: 'Autocomplete',

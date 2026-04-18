@@ -259,7 +259,16 @@ export class TestRunner {
   /**
    * Run Mirror test suite
    */
-  async runMirrorTests(category?: string): Promise<TestSuite> {
+  async runMirrorTests(category?: string, filter?: string | RegExp): Promise<TestSuite> {
+    // If filter is provided, use __mirrorTest.filter()
+    if (filter) {
+      const filterPattern = typeof filter === 'string' ? filter : filter.source
+      const escapedPattern = filterPattern.replace(/'/g, "\\'")
+      const suiteName = `Mirror Tests (filter: ${filterPattern})`
+      const command = `__mirrorTest.filter('${escapedPattern}')`
+      return this.runBrowserSuite(command, suiteName)
+    }
+
     const suiteName = category ? `Mirror Tests (${category})` : 'Mirror Tests'
     const command = category
       ? `__mirrorTestSuites.runCategory('${category}')`

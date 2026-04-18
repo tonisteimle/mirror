@@ -32,3 +32,23 @@ export {
   verticalHandleTests,
   cornerHandleTests,
 } from './resize-handle-dblclick.test'
+
+export {
+  allPaddingHandlerTests,
+  paddingModeToggleTests,
+  paddingHandlePositionTests,
+  paddingHandleDragTests,
+  paddingModeSelectionTests,
+} from './padding-handlers.test'
+
+export { tokenExtractTests } from './token-extract.test'
+
+export { resizeHandleDragTests } from './resize-handle-drag.test'
+
+export {
+  allMultiselectTests,
+  shiftClickTests,
+  metaClickTests,
+  clearSelectionTests,
+  cssClassTests,
+} from './multiselect.test'

@@ -374,6 +374,12 @@ export interface KeyModifiers {
 export interface InteractionAPI {
   /** Click element */
   click(nodeId: string): Promise<void>
+  /** Click with modifiers (Shift, Cmd/Ctrl, Alt) */
+  clickWithModifiers(nodeId: string, modifiers: KeyModifiers): Promise<void>
+  /** Shift+Click (for multi-select) */
+  shiftClick(nodeId: string): Promise<void>
+  /** Cmd/Ctrl+Click (for multi-select) */
+  metaClick(nodeId: string): Promise<void>
   /** Double click */
   doubleClick(nodeId: string): Promise<void>
   /** Hover over element */
@@ -425,6 +431,13 @@ export interface InteractionAPI {
   doubleClickResizeHandle(
     nodeId: string,
     position: 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se'
+  ): Promise<void>
+  /** Drag a resize handle to change element size */
+  dragResizeHandle(
+    nodeId: string,
+    position: 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se',
+    deltaX: number,
+    deltaY: number
   ): Promise<void>
 }
 
@@ -500,6 +513,8 @@ export interface AssertionAPI {
 export interface StateAPI {
   /** Get current selection */
   getSelection(): string | null
+  /** Get multi-selection */
+  getMultiSelection(): string[]
   /** Get Zag machine state for component */
   getZagState(nodeId: string): unknown
   /** Get custom state (toggle, exclusive) */
@@ -750,6 +765,10 @@ export interface StudioAPI {
   setSelection(nodeId: string | null): Promise<void>
   /** Clear selection */
   clearSelection(): void
+  /** Get multi-selection */
+  getMultiSelection(): string[]
+  /** Clear multi-selection */
+  clearMultiSelection(): void
 
   // Notifications
   /** Show toast notification */

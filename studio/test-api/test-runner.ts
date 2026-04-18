@@ -233,6 +233,10 @@ class StateAPIImpl implements StateAPI {
     return this.studio?.state?.get()?.selection?.nodeId ?? null
   }
 
+  getMultiSelection(): string[] {
+    return this.studio?.state?.get()?.multiSelection ?? []
+  }
+
   getZagState(nodeId: string): unknown {
     // Access Zag machine state for component
     const preview = document.getElementById('preview')

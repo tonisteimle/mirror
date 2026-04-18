@@ -20,6 +20,7 @@ import { KeyboardHandler, createKeyboardHandler } from './keyboard-handler'
 import { ContextMenu, createContextMenu } from './context-menu'
 import { OverlayManager, createOverlayManager } from '../visual/overlay-manager'
 import { ResizeManager, createResizeManager, type SizingMode } from '../visual/resize-manager'
+import { PaddingManager, createPaddingManager, type PaddingHandle } from '../visual/padding-manager'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
 import { DragPreview, createDragPreview } from './drag-preview'
 
@@ -69,6 +70,14 @@ export {
   type ResizeState,
   type SizingMode,
 } from '../visual/resize-manager'
+
+export {
+  PaddingManager,
+  createPaddingManager,
+  type PaddingManagerConfig,
+  type PaddingHandle,
+  type PaddingState,
+} from '../visual/padding-manager'
 
 // Re-export slot visibility
 export {
@@ -132,6 +141,8 @@ export class PreviewController {
   // Visual Code System
   private overlayManager: OverlayManager | null = null
   private resizeManager: ResizeManager | null = null
+  private paddingManager: PaddingManager | null = null
+  private handleMode: 'resize' | 'padding' = 'resize'
 
   // Slot Visibility System
   private slotVisibilityService: SlotVisibilityService | null = null
@@ -146,6 +157,8 @@ export class PreviewController {
   private unsubscribeCompile: (() => void) | null = null
   private unsubscribeMultiSelection: (() => void) | null = null
   private unsubscribeResize: (() => void) | null = null
+  private unsubscribePaddingToggle: (() => void) | null = null
+  private unsubscribePaddingEnd: (() => void) | null = null
   private unsubscribeZoom: (() => void) | null = null
 
   // Layout invalidation handlers
@@ -228,6 +241,8 @@ export class PreviewController {
     // This ensures handles and highlights stay in sync with DOM changes
     this.unsubscribeCompile = events.on('compile:completed', () => {
       this.setSourceMap(state.get().sourceMap)
+      // Invalidate layout cache BEFORE refresh - DOM has changed, cached positions are stale
+      actions.invalidateLayoutInfo('manual')
       this.refresh()
     })
 
@@ -275,7 +290,7 @@ export class PreviewController {
     }, PreviewController.RESIZE_DEBOUNCE_MS)
   }
 
-  /** Initialize the Visual Code System (overlay + resize + inline align) */
+  /** Initialize the Visual Code System (overlay + resize + padding + inline align) */
   private initVisualCodeSystem(): void {
     this.overlayManager = createOverlayManager({ container: this.container })
     this.resizeManager = createResizeManager({
@@ -283,6 +298,11 @@ export class PreviewController {
       overlayManager: this.overlayManager,
       getSourceMap: () => this.sourceMap as any,
       // LayoutService is now used via global singleton (getLayoutService())
+    })
+    this.paddingManager = createPaddingManager({
+      container: this.container,
+      overlayManager: this.overlayManager,
+      getSourceMap: () => this.sourceMap as any,
     })
 
     // Listen for resize:end events to execute commands
@@ -328,6 +348,82 @@ export class PreviewController {
         }
       }
     )
+
+    // Listen for padding toggle events (P key)
+    this.unsubscribePaddingToggle = events.on(
+      'handles:toggle-padding',
+      (data: { nodeId: string }) => {
+        this.toggleHandleMode(data.nodeId)
+      }
+    )
+
+    // Listen for padding:end events to execute commands
+    this.unsubscribePaddingEnd = events.on(
+      'padding:end',
+      (data: { nodeId: string; handle: PaddingHandle; padding: number }) => {
+        // Map handle to property name
+        const propertyMap: Record<PaddingHandle, string> = {
+          top: 'pad',
+          right: 'pad',
+          bottom: 'pad',
+          left: 'pad',
+        }
+
+        // For now, we set uniform padding. In the future, we could support
+        // individual padding values (pad-top, pad-right, etc.)
+        executor.execute(
+          new SetPropertyCommand({
+            nodeId: data.nodeId,
+            property: propertyMap[data.handle],
+            value: String(data.padding),
+          })
+        )
+
+        // Refresh property panel to show updated padding value
+        events.emit('selection:refresh', { nodeId: data.nodeId })
+      }
+    )
+  }
+
+  /**
+   * Toggle between resize and padding handle modes
+   */
+  private toggleHandleMode(nodeId: string): void {
+    if (this.handleMode === 'resize') {
+      // Switch to padding mode
+      this.handleMode = 'padding'
+      this.resizeManager?.hideHandles()
+
+      // Check if element has padding, if not set default 16px
+      const element = this.container.querySelector(
+        `[${this.config.nodeIdAttribute}="${nodeId}"]`
+      ) as HTMLElement | null
+      if (element) {
+        const style = window.getComputedStyle(element)
+        const padTop = parseInt(style.paddingTop || '0', 10)
+        const padRight = parseInt(style.paddingRight || '0', 10)
+        const padBottom = parseInt(style.paddingBottom || '0', 10)
+        const padLeft = parseInt(style.paddingLeft || '0', 10)
+
+        // If no padding exists, set default 16px
+        if (padTop === 0 && padRight === 0 && padBottom === 0 && padLeft === 0) {
+          executor.execute(
+            new SetPropertyCommand({
+              nodeId,
+              property: 'pad',
+              value: '16',
+            })
+          )
+        }
+      }
+
+      this.paddingManager?.showHandles(nodeId)
+    } else {
+      // Switch back to resize mode
+      this.handleMode = 'resize'
+      this.paddingManager?.hideHandles()
+      this.resizeManager?.showHandles(nodeId)
+    }
   }
 
   attach(): void {
@@ -374,6 +470,10 @@ export class PreviewController {
     this.unsubscribeMultiSelection = null
     this.unsubscribeResize?.()
     this.unsubscribeResize = null
+    this.unsubscribePaddingToggle?.()
+    this.unsubscribePaddingToggle = null
+    this.unsubscribePaddingEnd?.()
+    this.unsubscribePaddingEnd = null
     this.unsubscribeZoom?.()
     this.unsubscribeZoom = null
 
@@ -397,6 +497,7 @@ export class PreviewController {
     this.keyboardHandler?.dispose()
     this.contextMenu?.dispose()
     this.resizeManager?.dispose()
+    this.paddingManager?.dispose()
     this.overlayManager?.dispose()
     // Slot Visibility cleanup
     this.slotVisibilityService?.dispose()
@@ -415,6 +516,7 @@ export class PreviewController {
     // Invalidate caches - handles will be repositioned on next refresh
     this.handleManager?.hideHandles()
     this.resizeManager?.hideHandles()
+    this.paddingManager?.hideHandles()
   }
 
   /** Get current SourceMap version for staleness detection */
@@ -437,13 +539,31 @@ export class PreviewController {
 
   private showSelectionUI(nodeId: string): void {
     this.highlightElement(nodeId)
+
+    // Hide all handles if multiselection is active (2+ elements)
+    const multiSelection = state.get().multiSelection
+    if (multiSelection.length >= 2) {
+      this.hideAllHandles()
+      return
+    }
+
     this.handleManager?.showHandles(nodeId)
-    this.resizeManager?.showHandles(nodeId)
+    // Show handles based on current mode
+    if (this.handleMode === 'padding') {
+      this.resizeManager?.hideHandles()
+      this.paddingManager?.showHandles(nodeId)
+    } else {
+      this.paddingManager?.hideHandles()
+      this.resizeManager?.showHandles(nodeId)
+    }
   }
 
   private hideAllHandles(): void {
     this.handleManager?.hideHandles()
     this.resizeManager?.hideHandles()
+    this.paddingManager?.hideHandles()
+    // Reset to resize mode when hiding all handles
+    this.handleMode = 'resize'
   }
 
   private updateEditorFocusForSelection(nodeId: string | null): void {
@@ -507,8 +627,10 @@ export class PreviewController {
   /** Disable Visual Code System */
   disableVisualCode(): void {
     this.resizeManager?.dispose()
+    this.paddingManager?.dispose()
     this.overlayManager?.dispose()
     this.resizeManager = null
+    this.paddingManager = null
     this.overlayManager = null
   }
 
@@ -629,8 +751,15 @@ export class PreviewController {
       if (nodeId) {
         e.stopPropagation()
 
-        // Shift+Click = Multi-select
-        if (e.shiftKey) {
+        // Cmd/Ctrl+Click or Shift+Click = Multi-select toggle
+        const isMultiSelectModifier = e.shiftKey || e.metaKey || e.ctrlKey
+        if (isMultiSelectModifier) {
+          // If there's a current single selection, add it to multi-selection first
+          const currentSelection = state.get().selection.nodeId
+          const multiSelection = state.get().multiSelection
+          if (currentSelection && !multiSelection.includes(currentSelection)) {
+            actions.toggleMultiSelection(currentSelection)
+          }
           actions.toggleMultiSelection(nodeId)
           this.updateMultiSelectionHighlight()
         } else {
@@ -674,6 +803,14 @@ export class PreviewController {
         element.classList.add('studio-multi-selected')
         this.highlightedNodeIds.add(nodeId)
       }
+    }
+
+    // Hide handles when multiselection is active (2+ elements)
+    if (multiSelection.length >= 2) {
+      this.hideAllHandles()
+    } else if (this.selectedNodeId) {
+      // Restore handles for single selection
+      this.showSelectionUI(this.selectedNodeId)
     }
   }
 

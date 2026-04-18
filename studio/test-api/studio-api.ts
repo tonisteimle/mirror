@@ -434,6 +434,22 @@ export class StudioAPIImpl implements StudioAPI {
     }
   }
 
+  getMultiSelection(): string[] {
+    return this.state?.get()?.multiSelection ?? []
+  }
+
+  clearMultiSelection(): void {
+    if (this.actions?.clearMultiSelection) {
+      this.actions.clearMultiSelection()
+      return
+    }
+
+    if (this.state?.set) {
+      this.state.set({ multiSelection: [] })
+      this.studio?.events?.emit?.('multiselection:changed', { nodeIds: [] })
+    }
+  }
+
   // ===========================================================================
   // Notifications
   // ===========================================================================
