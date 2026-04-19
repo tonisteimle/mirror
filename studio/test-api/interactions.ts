@@ -105,14 +105,38 @@ export class Interactions implements InteractionAPI {
 
   /**
    * Click on element
+   *
+   * Note: Uses altKey to bypass Studio's selection click handler and let
+   * the click pass through to component event handlers (toggle, etc.)
+   *
+   * Also sets selection and editorHasFocus = false to enable keyboard shortcuts.
+   * Clears multiselection (normal click replaces selection).
    */
   async click(nodeId: string): Promise<void> {
     const element = this.findElement(nodeId)
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
-    this.dispatchMouseEvent(element, 'mousedown')
-    this.dispatchMouseEvent(element, 'mouseup')
-    this.dispatchMouseEvent(element, 'click')
+    // Use altKey to bypass Studio selection and let click pass to components
+    const eventOptions = { altKey: true }
+    this.dispatchMouseEvent(element, 'mousedown', eventOptions)
+    this.dispatchMouseEvent(element, 'mouseup', eventOptions)
+    this.dispatchMouseEvent(element, 'click', eventOptions)
+
+    // Clear multiselection - normal click replaces any existing multiselection
+    if (this.studioActions?.clearMultiSelection) {
+      this.studioActions.clearMultiSelection()
+    }
+
+    // Set selection explicitly since altKey bypasses Studio's selection handler
+    if (this.studioActions?.setSelection) {
+      this.studioActions.setSelection(nodeId, 'test')
+    }
+
+    // Set editorHasFocus = false to enable keyboard shortcuts
+    // This mimics the real behavior of clicking in the preview
+    if (this.studioActions?.setEditorFocus) {
+      this.studioActions.setEditorFocus(false)
+    }
 
     await this.delay(50)
   }
@@ -138,6 +162,11 @@ export class Interactions implements InteractionAPI {
     this.dispatchMouseEvent(element, 'mouseup', eventOptions)
     this.dispatchMouseEvent(element, 'click', eventOptions)
 
+    // Set editorHasFocus = false to enable keyboard shortcuts
+    if (this.studioActions?.setEditorFocus) {
+      this.studioActions.setEditorFocus(false)
+    }
+
     await this.delay(50)
   }
 
@@ -157,18 +186,22 @@ export class Interactions implements InteractionAPI {
 
   /**
    * Double click on element
+   *
+   * Note: Uses altKey to bypass Studio's selection click handler
    */
   async doubleClick(nodeId: string): Promise<void> {
     const element = this.findElement(nodeId)
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
-    this.dispatchMouseEvent(element, 'mousedown')
-    this.dispatchMouseEvent(element, 'mouseup')
-    this.dispatchMouseEvent(element, 'click')
-    this.dispatchMouseEvent(element, 'mousedown')
-    this.dispatchMouseEvent(element, 'mouseup')
-    this.dispatchMouseEvent(element, 'click')
-    this.dispatchMouseEvent(element, 'dblclick')
+    // Use altKey to bypass Studio selection and let click pass to components
+    const eventOptions = { altKey: true }
+    this.dispatchMouseEvent(element, 'mousedown', eventOptions)
+    this.dispatchMouseEvent(element, 'mouseup', eventOptions)
+    this.dispatchMouseEvent(element, 'click', eventOptions)
+    this.dispatchMouseEvent(element, 'mousedown', eventOptions)
+    this.dispatchMouseEvent(element, 'mouseup', eventOptions)
+    this.dispatchMouseEvent(element, 'click', eventOptions)
+    this.dispatchMouseEvent(element, 'dblclick', eventOptions)
 
     await this.delay(50)
   }

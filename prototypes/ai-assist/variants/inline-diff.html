@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Assist - 2 Stufen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #333;
+    }
+    h1 { font-size: 20px; }
+    .back { color: #888; text-decoration: none; }
+    .back:hover { color: #fff; }
+    .status {
+      padding: 6px 12px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .status.loading { color: #f59e0b; }
+    .status.done { color: #10b981; }
+
+    .editor-container {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .editor {
+      padding: 16px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 300px;
+      outline: none;
+      white-space: pre-wrap;
+    }
+    .editor:empty::before {
+      content: 'Schreibe Mirror-Code...';
+      color: #444;
+    }
+
+    /* ===========================================
+       Validierter Code - Helle Farben
+       =========================================== */
+    .hl-keyword { color: #c792ea; }          /* Helles Lila */
+    .hl-string { color: #c3e88d; }           /* Helles Grün */
+    .hl-property { color: #82aaff; }         /* Helles Blau */
+    .hl-color { color: #f78c6c; }            /* Helles Orange */
+    .hl-number { color: #f78c6c; }           /* Helles Orange */
+    .hl-punctuation { color: #89ddff; }      /* Helles Cyan */
+
+    /* ===========================================
+       Draft/Neuer Code - Gedämpfte Farben
+       =========================================== */
+    .draft-line .hl-keyword { color: #6b5b7a; }
+    .draft-line .hl-string { color: #5a6b4d; }
+    .draft-line .hl-property { color: #4a5f7a; }
+    .draft-line .hl-color { color: #7a5a4a; }
+    .draft-line .hl-number { color: #7a5a4a; }
+    .draft-line .hl-punctuation { color: #4a6a6a; }
+    .draft-line { color: #555; }
+
+    /* Transition für sanften Wechsel */
+    .editor span {
+      transition: color 0.3s ease;
+    }
+    .line {
+      display: block;
+      transition: all 0.3s ease;
+    }
+
+    .info {
+      margin-top: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #888;
+    }
+    .info .draft-example { color: #6b5b7a; }
+    .info .validated-example { color: #c792ea; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <a href="index.html" class="back">← Zurück</a>
+        <h1>AI Assist - 2 Stufen</h1>
+      </div>
+      <div class="status" id="status">Bereit</div>
+    </header>
+
+    <div class="editor-container">
+      <div class="editor" id="editor" contenteditable="true" spellcheck="false"></div>
+    </div>
+
+    <div class="info">
+      <p><strong>So funktioniert's:</strong></p>
+      <p>Validierter Code: <span class="validated-example">Helle Farben</span></p>
+      <p>Neuer Code: <span class="draft-example">Gedämpfte Farben</span> (bis validiert)</p>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3456'
+    const editor = document.getElementById('editor')
+    const status = document.getElementById('status')
+
+    let pauseTimer = null
+    let isLoading = false
+
+    // Tracking: Welche Zeilen sind bereits validiert?
+    let validatedLines = []  // Array of validated line strings
+    let lastValidatedCode = ''
+
+    // Mirror DSL Syntax
+    const KEYWORDS = ['Frame', 'Text', 'Button', 'Icon', 'Input', 'Image', 'Link', 'Card', 'Box', 'Divider', 'Spacer', 'Header', 'Nav', 'Main', 'Section', 'Footer']
+    const PROPERTIES = ['bg', 'col', 'pad', 'rad', 'gap', 'w', 'h', 'fs', 'ic', 'is', 'hor', 'ver', 'center', 'spread', 'weight', 'grow', 'shrink', 'shadow', 'opacity', 'bor', 'boc']
+
+    // ===========================================
+    // Input Handler
+    // ===========================================
+    editor.addEventListener('input', () => {
+      clearTimeout(pauseTimer)
+
+      // Apply highlighting with draft/validated distinction
+      applyMixedHighlighting()
+
+      status.textContent = 'Tippen...'
+      status.className = 'status'
+
+      // Wait for pause, then validate
+      pauseTimer = setTimeout(() => {
+        const code = editor.innerText || ''
+        if (code.trim().length > 5) {
+          validateWithAI(code)
+        }
+      }, 1500)
+    })
+
+    // ===========================================
+    // AI Validation
+    // ===========================================
+    async function validateWithAI(code) {
+      if (isLoading) return
+      isLoading = true
+      status.textContent = 'AI prüft...'
+      status.className = 'status loading'
+
+      try {
+        const response = await fetch(`${API_URL}/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        })
+        const data = await response.json()
+
+        if (data.success) {
+          // Update validated state
+          lastValidatedCode = data.code
+          validatedLines = data.code.split('\n')
+
+          // Update editor with validated code
+          editor.innerText = data.code
+
+          // Apply highlighting - all lines are now validated
+          applyMixedHighlighting()
+
+          status.textContent = 'Validiert ✓'
+          status.className = 'status done'
+        }
+      } catch (e) {
+        status.textContent = 'Fehler'
+        status.className = 'status'
+      } finally {
+        isLoading = false
+      }
+    }
+
+    // ===========================================
+    // Mixed Highlighting (Draft + Validated)
+    // ===========================================
+    function applyMixedHighlighting() {
+      const text = editor.innerText || ''
+      const currentLines = text.split('\n')
+
+      const highlighted = currentLines.map((line, index) => {
+        // Check if this line matches a validated line
+        const isValidated = isLineValidated(line, index)
+
+        let result = highlightLine(line)
+
+        // Wrap in line span with draft class if not validated
+        const lineClass = isValidated ? 'line' : 'line draft-line'
+        return `<span class="${lineClass}">${result}</span>`
+      }).join('\n')
+
+      // Save cursor position
+      const selection = window.getSelection()
+      const hadFocus = document.activeElement === editor
+
+      editor.innerHTML = highlighted
+
+      // Restore cursor to end if had focus
+      if (hadFocus) {
+        const range = document.createRange()
+        range.selectNodeContents(editor)
+        range.collapse(false)
+        selection.removeAllRanges()
+        selection.addRange(range)
+      }
+    }
+
+    function isLineValidated(line, index) {
+      // If no validated code yet, nothing is validated
+      if (validatedLines.length === 0) return false
+
+      // Check if this exact line exists in validated lines at same position
+      if (index < validatedLines.length && validatedLines[index] === line) {
+        return true
+      }
+
+      // Also check if line exists anywhere in validated (for reordering)
+      // But only for non-empty lines
+      if (line.trim() && validatedLines.includes(line)) {
+        return true
+      }
+
+      return false
+    }
+
+    function highlightLine(line) {
+      let result = escapeHtml(line)
+
+      // Strings "..."
+      result = result.replace(/"([^"]+)"/g, '<span class="hl-string">"$1"</span>')
+
+      // Hex colors #xxx
+      result = result.replace(/(#[0-9a-fA-F]{3,8})/g, '<span class="hl-color">$1</span>')
+
+      // Numbers
+      result = result.replace(/\b(\d+)\b/g, '<span class="hl-number">$1</span>')
+
+      // Keywords at start of line
+      KEYWORDS.forEach(kw => {
+        const regex = new RegExp(`(^\\s*)(${kw})\\b`, 'g')
+        result = result.replace(regex, `$1<span class="hl-keyword">${kw}</span>`)
+      })
+
+      // Properties
+      PROPERTIES.forEach(prop => {
+        const regex = new RegExp(`\\b(${prop})\\b`, 'g')
+        result = result.replace(regex, `<span class="hl-property">${prop}</span>`)
+      })
+
+      // Punctuation
+      result = result.replace(/([,:])/g, '<span class="hl-punctuation">$1</span>')
+
+      return result || '&nbsp;'
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    }
+  </script>
+</body>
+</html>

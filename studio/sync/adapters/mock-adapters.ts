@@ -65,7 +65,7 @@ export function createMockEventBusPort(): MockEventBusPort {
     // ----------------------------------------
 
     simulateSelectionChanged(data: SelectionChangedEvent): void {
-      selectionHandlers.forEach((handler) => handler(data))
+      selectionHandlers.forEach(handler => handler(data))
     },
 
     // ----------------------------------------
@@ -120,6 +120,7 @@ export function createMockStateStorePort(): MockStateStorePort {
     nodeId: null,
     origin: 'editor',
   }
+  let multiSelection: string[] = []
   let breadcrumb: BreadcrumbItem[] = []
   const selectionHistory: Array<{ nodeId: string | null; origin: SelectionOrigin }> = []
   const breadcrumbHistory: BreadcrumbItem[][] = []
@@ -138,6 +139,14 @@ export function createMockStateStorePort(): MockStateStorePort {
       selectionHistory.push({ nodeId, origin })
     },
 
+    setMultiSelection(nodeIds: string[]): void {
+      multiSelection = [...nodeIds]
+    },
+
+    clearMultiSelection(): void {
+      multiSelection = []
+    },
+
     setBreadcrumb(newBreadcrumb: BreadcrumbItem[]): void {
       breadcrumb = [...newBreadcrumb]
       breadcrumbHistory.push([...newBreadcrumb])
@@ -152,7 +161,7 @@ export function createMockStateStorePort(): MockStateStorePort {
         selection: { ...selection },
         breadcrumb: [...breadcrumb],
         selectionHistory: [...selectionHistory],
-        breadcrumbHistory: breadcrumbHistory.map((b) => [...b]),
+        breadcrumbHistory: breadcrumbHistory.map(b => [...b]),
       }
     },
 
@@ -161,7 +170,7 @@ export function createMockStateStorePort(): MockStateStorePort {
     },
 
     getBreadcrumbHistory(): BreadcrumbItem[][] {
-      return breadcrumbHistory.map((b) => [...b])
+      return breadcrumbHistory.map(b => [...b])
     },
 
     // ----------------------------------------
@@ -322,7 +331,10 @@ export interface MockClockPort extends ClockPort {
 export function createMockClockPort(): MockClockPort {
   let timeoutId = 0
   let frameId = 0
-  const pendingTimeouts = new Map<number, { callback: () => void; delay: number; scheduledAt: number }>()
+  const pendingTimeouts = new Map<
+    number,
+    { callback: () => void; delay: number; scheduledAt: number }
+  >()
   const pendingFrames = new Map<number, () => void>()
   let currentTime = 0
 
@@ -356,15 +368,15 @@ export function createMockClockPort(): MockClockPort {
     // ----------------------------------------
 
     flushTimeouts(): void {
-      const callbacks = [...pendingTimeouts.values()].map((t) => t.callback)
+      const callbacks = [...pendingTimeouts.values()].map(t => t.callback)
       pendingTimeouts.clear()
-      callbacks.forEach((cb) => cb())
+      callbacks.forEach(cb => cb())
     },
 
     flushAnimationFrames(): void {
       const callbacks = [...pendingFrames.values()]
       pendingFrames.clear()
-      callbacks.forEach((cb) => cb())
+      callbacks.forEach(cb => cb())
     },
 
     flushAll(): void {

@@ -53,6 +53,13 @@ class EditorAPIImpl implements EditorAPI {
     const cm = (window as any).__codemirror
     const compileTestCode = (window as any).__compileTestCode
 
+    // IMPORTANT: Reset prelude offset to 0 for test code (no prelude)
+    // This ensures SourceMap line numbers match editor line numbers
+    const setPreludeOffset = (window as any).__setPreludeOffset
+    if (setPreludeOffset) {
+      setPreludeOffset(0)
+    }
+
     // Use setCodeWithHistory for proper undo tracking
     if (cm?.setCodeWithHistory) {
       cm.setCodeWithHistory(code)
@@ -169,9 +176,80 @@ class EditorAPIImpl implements EditorAPI {
     // Select from start of fromLine to end of toLine
     const fromLineInfo = this.editor.state.doc.line(fromLine)
     const toLineInfo = this.editor.state.doc.line(toLine)
-    this.editor.dispatch({
-      selection: { anchor: fromLineInfo.from, head: toLineInfo.to },
-    })
+    const anchor = fromLineInfo.from
+    const head = toLineInfo.to
+
+    // Store pre-dispatch debug
+    const preState = {
+      docLines: this.editor.state.doc.lines,
+      docLength: this.editor.state.doc.length,
+      preSel: this.editor.state.selection.main,
+      lineInfos: {
+        fromLine: { from: fromLineInfo.from, to: fromLineInfo.to, text: fromLineInfo.text },
+        toLine: { from: toLineInfo.from, to: toLineInfo.to, text: toLineInfo.text },
+      },
+    }
+
+    // Get EditorSelection if available
+    const cm = (window as any).__codemirror
+    const EditorSelection = cm?.EditorSelection
+
+    // Try both approaches: TransactionSpec and pre-created Transaction
+    let transactionResult: any = null
+
+    // Check state BEFORE dispatch
+    const stateBefore = this.editor.state
+    const selBefore = stateBefore.selection.main
+
+    // Check focus state
+    const editorDom = this.editor.dom
+    const hasFocusBefore = this.editor.hasFocus
+    const activeElementBefore = document.activeElement?.tagName
+
+    if (EditorSelection) {
+      const sel = EditorSelection.single(anchor, head)
+      transactionResult = {
+        selObj: {
+          mainFrom: sel.main.from,
+          mainTo: sel.main.to,
+          mainAnchor: sel.main.anchor,
+          mainHead: sel.main.head,
+        },
+        beforeSel: { from: selBefore.from, to: selBefore.to },
+        focusBefore: hasFocusBefore,
+        activeElBefore: activeElementBefore,
+      }
+
+      // NOTE: Don't call focus() before dispatch - it causes a separate update
+      // that can interfere with the selection. dispatch() works without focus.
+
+      // Try dispatching with TransactionSpec directly (not pre-created Transaction)
+      this.editor.dispatch({ selection: sel })
+
+      // Check state AFTER dispatch
+      const stateAfter = this.editor.state
+      const selAfter = stateAfter.selection.main
+
+      transactionResult.afterSel = { from: selAfter.from, to: selAfter.to }
+      transactionResult.afterAnchorHead = { anchor: selAfter.anchor, head: selAfter.head }
+      transactionResult.focusAfter = this.editor.hasFocus
+      transactionResult.sameEditorAsWindow = this.editor === (window as any).editor
+    } else {
+      this.editor.dispatch({
+        selection: { anchor, head },
+      })
+    }
+
+    // Store debug info for tests
+    const newSel = this.editor.state.selection.main
+    ;(window as any).__selectLinesDebug = {
+      input: { fromLine, toLine },
+      computed: { anchor, head },
+      result: { from: newSel.from, to: newSel.to, anchor: newSel.anchor, head: newSel.head },
+      preState,
+      usedEditorSelection: !!EditorSelection,
+      transactionResult,
+    }
   }
 
   triggerAutocomplete(): void {
@@ -547,6 +625,46 @@ export class TestRunner {
   }
 
   /**
+   * Reset state between tests for isolation
+   */
+  private resetTestState(): void {
+    const studio = (window as any).__mirrorStudio__
+
+    // Clear selection
+    if (studio?.actions?.clearSelection) {
+      studio.actions.clearSelection('test')
+    } else if (studio?.sync?.clearSelection) {
+      studio.sync.clearSelection('test')
+    }
+
+    // Clear multi-selection
+    if (studio?.actions?.clearMultiSelection) {
+      studio.actions.clearMultiSelection()
+    }
+
+    // Remove any test hover classes
+    document.querySelectorAll('.__test-hover').forEach(el => {
+      el.classList.remove('__test-hover')
+    })
+
+    // Remove any inline hover styles that may have been applied
+    // The Interactions class stores original styles in a WeakMap which resets naturally
+
+    // Exit any active edit modes (padding, margin)
+    if (studio?.state?.get()?.paddingMode) {
+      studio.events?.emit?.('padding-mode:toggle', { active: false })
+    }
+    if (studio?.state?.get()?.marginMode) {
+      studio.events?.emit?.('margin-mode:toggle', { active: false })
+    }
+
+    // Exit play mode if active
+    if (studio?.state?.get()?.playMode) {
+      studio.actions?.togglePlayMode?.()
+    }
+  }
+
+  /**
    * Check if test should run
    */
   private shouldRun(test: TestCase, hasOnlyTests: boolean): boolean {
@@ -587,6 +705,9 @@ export class TestRunner {
     let error: string | undefined
 
     try {
+      // Reset state before each test for isolation
+      this.resetTestState()
+
       // Setup
       if (test.setup) {
         await this.editorApi.setCode(test.setup)
@@ -637,10 +758,18 @@ export class TestRunner {
     // Check for 'only' tests
     const hasOnlyTests = tests.some(t => t.only)
 
+    // Count runnable tests
+    const runnableTests = tests.filter(t => this.shouldRun(t, hasOnlyTests))
+    const totalTests = runnableTests.length
+
     if (this.options.verbose) {
       console.group(`🧪 ${name}`)
     }
 
+    // Send initial progress message for CDP
+    console.log(`[TEST_PROGRESS] total:${totalTests} completed:0 passed:0 failed:0`)
+
+    let completed = 0
     for (const test of tests) {
       if (!this.shouldRun(test, hasOnlyTests)) {
         skipped++
@@ -656,6 +785,7 @@ export class TestRunner {
 
       const result = await this.runTest(test)
       results.push(result)
+      completed++
 
       if (result.passed) {
         passed++
@@ -678,6 +808,11 @@ export class TestRunner {
           break
         }
       }
+
+      // Send progress message for CDP after each test
+      console.log(
+        `[TEST_PROGRESS] total:${totalTests} completed:${completed} passed:${passed} failed:${failed} test:${result.name}`
+      )
     }
 
     const duration = performance.now() - startTime

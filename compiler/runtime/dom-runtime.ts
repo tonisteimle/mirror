@@ -2674,18 +2674,35 @@ export function transitionTo(
   stateName: string,
   animation?: StateAnimation
 ): void {
-  if (!el?._stateMachine) return
+  // DEBUG
+  console.log('[transitionTo] called:', stateName, 'el:', (el as any)?.dataset?.mirrorId)
+
+  if (!el?._stateMachine) {
+    console.log('[transitionTo] no state machine')
+    return
+  }
 
   const sm = el._stateMachine
   const prevStateName = sm.current
   const prevState = sm.states[prevStateName]
   const newState = sm.states[stateName]
 
-  if (!newState) return
-  if (prevStateName === stateName) return
+  console.log('[transitionTo] prev:', prevStateName, 'new:', stateName, 'hasNewState:', !!newState)
+
+  if (!newState) {
+    console.log('[transitionTo] no newState')
+    return
+  }
+  if (prevStateName === stateName) {
+    console.log('[transitionTo] same state')
+    return
+  }
 
   // Prevent concurrent transitions - if already transitioning, skip
-  if (el._isTransitioning) return
+  if (el._isTransitioning) {
+    console.log('[transitionTo] already transitioning')
+    return
+  }
   el._isTransitioning = true
 
   // Store base styles on first transition (for toggle back to default)
@@ -2801,7 +2818,13 @@ export function transitionTo(
         })
     } else {
       // No animation, apply styles immediately
+      console.log('[transitionTo] applying styles:', JSON.stringify(newState.styles))
       Object.assign(el.style, newState.styles as Partial<CSSStyleDeclaration>)
+      console.log('[transitionTo] after apply, el.style.background:', (el as any).style.background)
+      console.log(
+        '[transitionTo] after apply, computedStyle.backgroundColor:',
+        getComputedStyle(el).backgroundColor
+      )
       el._isTransitioning = false
     }
 

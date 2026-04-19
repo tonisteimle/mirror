@@ -3212,7 +3212,7 @@ export const interactionToggleTests: TestCase[] = describe('Interaction: Toggle 
 
       // Click to turn on
       await api.interact.click('node-1')
-      await api.utils.delay(100)
+      await api.utils.delay(200)
 
       btn = api.preview.inspect('node-1')
       api.assert.ok(
@@ -3222,7 +3222,7 @@ export const interactionToggleTests: TestCase[] = describe('Interaction: Toggle 
 
       // Click again to turn off
       await api.interact.click('node-1')
-      await api.utils.delay(100)
+      await api.utils.delay(200)
 
       btn = api.preview.inspect('node-1')
       api.assert.ok(
@@ -3291,7 +3291,7 @@ export const interactionToggleTests: TestCase[] = describe('Interaction: Toggle 
 
       // Click to toggle
       await api.interact.click('node-1')
-      await api.utils.delay(100)
+      await api.utils.delay(200)
 
       btn = api.preview.inspect('node-1')
       api.assert.ok(

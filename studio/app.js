@@ -1,4 +1,11 @@
-import { EditorState, RangeSetBuilder, Prec, Annotation, Transaction } from '@codemirror/state'
+import {
+  EditorState,
+  EditorSelection,
+  RangeSetBuilder,
+  Prec,
+  Annotation,
+  Transaction,
+} from '@codemirror/state'
 import {
   EditorView,
   keymap,
@@ -1195,6 +1202,17 @@ const APP_PREFIX = 'App'
 const CHILD_INDENT = '  ' // 2 spaces
 
 const appLockExtension = EditorState.transactionFilter.of(tr => {
+  // DEBUG: Track all transactions
+  if (!window.__txFilterDebug) window.__txFilterDebug = []
+  window.__txFilterDebug.push({
+    docChanged: tr.docChanged,
+    selection: tr.selection ? { from: tr.selection.main.from, to: tr.selection.main.to } : null,
+    startSelection: {
+      from: tr.startState.selection.main.from,
+      to: tr.startState.selection.main.to,
+    },
+  })
+
   if (!tr.docChanged) return tr
 
   // Allow file switch transactions through (they may load non-App files like tokens)
@@ -1615,6 +1633,18 @@ const editor = new EditorView({
           const fromLine = update.state.doc.lineAt(selection.from)
           const toLine = update.state.doc.lineAt(selection.to)
 
+          // DEBUG: Track what selection the update listener sees
+          if (!window.__updateDebugHistory) window.__updateDebugHistory = []
+          window.__updateDebugHistory.push({
+            from: selection.from,
+            to: selection.to,
+            anchor: selection.anchor,
+            head: selection.head,
+            fromLine: fromLine.number,
+            toLine: toLine.number,
+            isMultiLine: fromLine.number !== toLine.number,
+          })
+
           if (fromLine.number !== toLine.number && studio.sync) {
             // Multi-line selection → trigger multiselection in preview
             studio.sync.handleEditorSelection(fromLine.number, toLine.number)
@@ -1726,6 +1756,7 @@ function updateUndoRedoButtons() {
 
 // Call on editor transactions
 const originalDispatch = editor.dispatch.bind(editor)
+editor.__originalDispatch = originalDispatch // Expose for testing
 editor.dispatch = (...args) => {
   originalDispatch(...args)
   updateUndoRedoButtons()
@@ -2391,6 +2422,11 @@ if (typeof window !== 'undefined') {
     if (studio?.state?.set) {
       studio.state.set({ preludeOffset: offset, preludeLineOffset: 0 })
     }
+    // IMPORTANT: Also update the SyncCoordinator's lineOffset
+    // This ensures handleEditorSelection uses the correct line mapping
+    if (studio?.sync?.lineOffset) {
+      studio.sync.lineOffset.setOffset(offset)
+    }
   }
   window.__getPreludeOffset = () => currentPreludeOffset
   window.__isTestMode = () => testModeActive
@@ -2418,6 +2454,11 @@ if (typeof window !== 'undefined') {
     isWrappedWithApp = false
     if (studio?.state?.set) {
       studio.state.set({ preludeOffset: 0, preludeLineOffset: 0, resolvedSource: code })
+    }
+    // CRITICAL: Update SyncCoordinator's lineOffset to 0 for tests
+    // Without this, handleCursorMove uses wrong line offset
+    if (studio?.sync?.lineOffset) {
+      studio.sync.lineOffset.setOffset(0)
     }
 
     // Update files object so getAllProjectSource() returns the test code
@@ -2518,6 +2559,11 @@ if (typeof window !== 'undefined') {
         }
       }
 
+      // CRITICAL: Update SyncCoordinator and Preview with the new SourceMap
+      // Without this, handleEditorSelection won't find any nodes!
+      studio.sync?.setSourceMap(sourceMap)
+      studio.preview?.setSourceMap(sourceMap)
+
       console.log('[Test] Test code compiled successfully')
       return true
     } catch (error) {
@@ -2536,6 +2582,8 @@ if (typeof window !== 'undefined') {
    * The test runner needs these but can't use dynamic require in bundled code
    */
   window.__codemirror = {
+    // EditorSelection for explicit selection creation
+    EditorSelection,
     // Undo/Redo - also trigger recompile after history change
     undo: () => {
       undo(editor)

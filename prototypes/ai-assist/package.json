@@ -1,0 +1,10 @@
+{
+  "name": "ai-assist-prototype",
+  "version": "0.1.0",
+  "description": "Mirror AI Assist UX Prototype",
+  "scripts": {
+    "server": "npx tsx server.ts",
+    "start": "npx tsx server.ts & sleep 2 && open http://localhost:5173/prototypes/ai-assist/"
+  },
+  "dependencies": {}
+}

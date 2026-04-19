@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Variante C: Zeilen-Segmente</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #333;
+    }
+    h1 { font-size: 20px; }
+    .back { color: #888; text-decoration: none; }
+    .back:hover { color: #fff; }
+    .status {
+      padding: 6px 12px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .status.loading { color: #f59e0b; }
+    .status.done { color: #10b981; }
+
+    .editor-container {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .editor {
+      padding: 16px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 200px;
+      outline: none;
+      white-space: pre-wrap;
+    }
+    .editor:empty::before {
+      content: 'Schreibe Mirror-Code...';
+      color: #444;
+    }
+
+    /* Diff Panel */
+    .diff-panel {
+      margin-top: 16px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .diff-header {
+      padding: 12px 16px;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .diff-header h3 {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .diff-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .diff-actions button {
+      padding: 6px 12px;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #e0e0e0;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .diff-actions button:hover { background: #2a2a2a; }
+    .diff-actions button.accept { background: #1a3d2a; border-color: #10b981; }
+    .diff-actions button.reject { background: #3d1a1a; border-color: #ef4444; }
+
+    .diff-body {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    /* Line Segment */
+    .line-segment {
+      border-bottom: 1px solid #222;
+    }
+    .line-segment:last-child { border-bottom: none; }
+
+    .line-unchanged {
+      padding: 8px 16px;
+      color: #888;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+    }
+
+    .line-changed {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 8px 16px;
+      background: rgba(34, 113, 193, 0.05);
+    }
+
+    .line-versions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .line-original {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      color: #ef4444;
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .line-suggested {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      color: #10b981;
+    }
+
+    .line-actions {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .line-actions button {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      background: #222;
+      color: #888;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .line-actions button:hover { background: #2a2a2a; color: #fff; }
+    .line-actions button.accept:hover { background: #1a3d2a; color: #10b981; }
+    .line-actions button.reject:hover { background: #3d1a1a; color: #ef4444; }
+
+    .info {
+      margin-top: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #888;
+    }
+
+    .empty-state {
+      padding: 40px;
+      text-align: center;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <a href="index.html" class="back">← Zurück</a>
+        <h1>Variante C: Zeilen-Segmente</h1>
+      </div>
+      <div class="status" id="status">Bereit</div>
+    </header>
+
+    <div class="editor-container">
+      <div class="editor" id="editor" contenteditable="true" spellcheck="false"></div>
+    </div>
+
+    <div class="diff-panel" id="diffPanel" style="display: none;">
+      <div class="diff-header">
+        <h3 id="diffTitle">3 Änderungen</h3>
+        <div class="diff-actions">
+          <button class="accept" id="acceptAll">✓ Alle</button>
+          <button class="reject" id="rejectAll">✕ Keine</button>
+        </div>
+      </div>
+      <div class="diff-body" id="diffBody"></div>
+    </div>
+
+    <div class="info">
+      <p><strong>So funktioniert's:</strong></p>
+      <p>Schreibe Code, warte 1.5s. Jede geänderte Zeile erscheint mit Original und AI-Version.</p>
+      <p>✓ = Zeile akzeptieren, ✕ = Zeile ablehnen. Oder alle auf einmal.</p>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3456'
+    const editor = document.getElementById('editor')
+    const status = document.getElementById('status')
+    const diffPanel = document.getElementById('diffPanel')
+    const diffBody = document.getElementById('diffBody')
+    const diffTitle = document.getElementById('diffTitle')
+
+    let pauseTimer = null
+    let isLoading = false
+    let originalLines = []
+    let suggestedLines = []
+
+    // Pause detection
+    editor.addEventListener('input', () => {
+      clearTimeout(pauseTimer)
+      hideDiff()
+
+      pauseTimer = setTimeout(() => {
+        const code = editor.innerText || ''
+        if (code.trim().length > 5) {
+          getSuggestion(code)
+        }
+      }, 1500)
+    })
+
+    async function getSuggestion(code) {
+      if (isLoading) return
+      isLoading = true
+      status.textContent = 'AI analysiert...'
+      status.className = 'status loading'
+
+      try {
+        const response = await fetch(`${API_URL}/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        })
+        const data = await response.json()
+
+        if (data.success) {
+          showDiff(code, data.code)
+        }
+      } catch (e) {
+        status.textContent = 'Fehler'
+      } finally {
+        isLoading = false
+      }
+    }
+
+    function showDiff(original, suggested) {
+      originalLines = original.split('\n')
+      suggestedLines = suggested.split('\n')
+
+      // Find differences
+      const maxLen = Math.max(originalLines.length, suggestedLines.length)
+      let changes = []
+      let html = ''
+
+      for (let i = 0; i < maxLen; i++) {
+        const origLine = originalLines[i] || ''
+        const suggLine = suggestedLines[i] || ''
+
+        if (origLine === suggLine) {
+          html += `<div class="line-segment">
+            <div class="line-unchanged">${escapeHtml(origLine) || '&nbsp;'}</div>
+          </div>`
+        } else {
+          changes.push(i)
+          html += `<div class="line-segment" data-line="${i}">
+            <div class="line-changed">
+              <div class="line-versions">
+                <div class="line-original">${escapeHtml(origLine) || '(leer)'}</div>
+                <div class="line-suggested">${escapeHtml(suggLine) || '(leer)'}</div>
+              </div>
+              <div class="line-actions">
+                <button class="accept" onclick="acceptLine(${i})" title="Akzeptieren">✓</button>
+                <button class="reject" onclick="rejectLine(${i})" title="Ablehnen">✕</button>
+              </div>
+            </div>
+          </div>`
+        }
+      }
+
+      if (changes.length > 0) {
+        diffBody.innerHTML = html
+        diffTitle.textContent = `${changes.length} Änderung${changes.length > 1 ? 'en' : ''}`
+        diffPanel.style.display = 'block'
+        status.textContent = `${changes.length} Vorschläge`
+        status.className = 'status done'
+      } else {
+        status.textContent = 'Keine Änderungen'
+        status.className = 'status'
+      }
+    }
+
+    function hideDiff() {
+      diffPanel.style.display = 'none'
+    }
+
+    window.acceptLine = function(lineNum) {
+      originalLines[lineNum] = suggestedLines[lineNum]
+      applyChanges()
+      // Remove from diff
+      const segment = document.querySelector(`[data-line="${lineNum}"]`)
+      if (segment) {
+        segment.innerHTML = `<div class="line-unchanged" style="color: #10b981;">
+          ${escapeHtml(suggestedLines[lineNum])} ✓
+        </div>`
+      }
+    }
+
+    window.rejectLine = function(lineNum) {
+      // Remove from diff
+      const segment = document.querySelector(`[data-line="${lineNum}"]`)
+      if (segment) {
+        segment.innerHTML = `<div class="line-unchanged" style="color: #888;">
+          ${escapeHtml(originalLines[lineNum])}
+        </div>`
+      }
+    }
+
+    document.getElementById('acceptAll').addEventListener('click', () => {
+      editor.innerText = suggestedLines.join('\n')
+      hideDiff()
+      status.textContent = 'Alle akzeptiert'
+    })
+
+    document.getElementById('rejectAll').addEventListener('click', () => {
+      hideDiff()
+      status.textContent = 'Alle abgelehnt'
+    })
+
+    function applyChanges() {
+      editor.innerText = originalLines.join('\n')
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    }
+  </script>
+</body>
+</html>

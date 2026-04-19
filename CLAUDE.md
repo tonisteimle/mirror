@@ -89,7 +89,6 @@ dist/                  # Build Output
 | `tools/test.ts`                    | Browser Test Runner CLI              |
 | `tools/test-runner/`               | Test Runner Implementation (CDP)     |
 | `docs/TEST-FRAMEWORK.md`           | **Test Framework Dokumentation**     |
-| `docs/DRAG-DROP-TESTING.md`        | Drag & Drop Testing (Legacy)         |
 
 ## Commands
 
@@ -103,7 +102,7 @@ npm run studio         # Studio Server starten (localhost:5173)
 
 # Tests
 npm test               # Unit Tests (Vitest)
-npm run test:browser   # Browser Tests (alle)
+npm run test:browser:progress     # Browser Tests mit Fortschrittsanzeige (empfohlen)
 npm run test:browser -- --headed  # Browser Tests (sichtbar)
 
 # Sonstiges
@@ -1178,7 +1177,7 @@ Eigenes Test-Framework für Studio-Tests direkt im Browser. Ersetzt Playwright.
 | Bidirectional | ~20   | Code ↔ Preview Sync                 |
 | Undo/Redo     | ~15   | History Management                  |
 | Autocomplete  | ~20   | Completions                         |
-| Drag & Drop   | ~46   | Palette Drop, Canvas Move           |
+| Drag & Drop   | ~44   | Palette Drop, Canvas Move           |
 | States        | ~50   | toggle(), exclusive(), hover, cross |
 | Animations    | ~30   | spin, pulse, bounce, fade, slide    |
 | Transforms    | ~30   | rotate, scale, translate, z-index   |
@@ -1193,38 +1192,40 @@ Headless Browser-Tests via Chrome DevTools Protocol. Modularer, sauberer Code in
 npm run studio
 
 # Tests ausführen (Terminal 2)
-npm run test:browser              # Alle Browser Tests (default)
+npm run test:browser:progress     # Alle Tests mit Fortschrittsanzeige (empfohlen)
 npm run test:browser:drag         # Nur Drag Tests
 npm run test:browser:mirror       # Nur Mirror Tests
 npm run test:browser:headed       # Mit sichtbarem Browser
 
 # Erweiterte Optionen (via npx)
-npx tsx tools/test.ts --category=layout       # Nur eine Kategorie
-npx tsx tools/test.ts --filter="token"        # Nach Name filtern
-npx tsx tools/test.ts --junit=results.xml     # JUnit Report
-npx tsx tools/test.ts --html=report.html      # HTML Report
-npx tsx tools/test.ts --retries=2             # Retry bei Failures
+npx tsx tools/test.ts --progress --category=layout  # Kategorie mit Fortschritt
+npx tsx tools/test.ts --progress --all              # Alle Tests mit Fortschritt
+npx tsx tools/test.ts --filter="token"              # Nach Name filtern
+npx tsx tools/test.ts --junit=results.xml           # JUnit Report
+npx tsx tools/test.ts --html=report.html            # HTML Report
+npx tsx tools/test.ts --retries=2                   # Retry bei Failures
 ```
 
 **NPM Scripts:**
 
-| Script                        | Beschreibung                 |
-| ----------------------------- | ---------------------------- |
-| `npm run test:browser`        | Alle Browser Tests (default) |
-| `npm run test:browser:drag`   | Nur Drag & Drop Tests        |
-| `npm run test:browser:mirror` | Nur Mirror Tests             |
-| `npm run test:browser:headed` | Mit sichtbarem Browser       |
+| Script                          | Beschreibung                                |
+| ------------------------------- | ------------------------------------------- |
+| `npm run test:browser:progress` | Alle Tests mit Live-Fortschritt (empfohlen) |
+| `npm run test:browser:drag`     | Nur Drag & Drop Tests                       |
+| `npm run test:browser:mirror`   | Nur Mirror Tests                            |
+| `npm run test:browser:headed`   | Mit sichtbarem Browser                      |
 
 **CLI Optionen:**
 
-| Option             | Beschreibung             |
-| ------------------ | ------------------------ |
-| `--drag`           | Nur Drag & Drop Tests    |
-| `--mirror`         | Nur Mirror Tests         |
-| `--category=X`     | Einzelne Kategorie       |
-| `--filter=PATTERN` | Filter nach Name (Regex) |
+| Option             | Beschreibung                                        |
+| ------------------ | --------------------------------------------------- |
+| `--progress`       | Live-Fortschrittsanzeige + Log-Datei                |
+| `--all`            | Alle Tests ausführen                                |
+| `--category=X`     | Einzelne Kategorie                                  |
+| `--filter=PATTERN` | Filter nach Name (Regex)                            |
+| `--log=PATH`       | Log-Datei Pfad (default: test-results/test-run.log) |
 
-**Kategorien:** primitives, layout, styling, zag, interactions, bidirectional, undoRedo, autocomplete, stackedDrag, propertyPanel, charts, states, animations, transforms, gradients
+**Kategorien:** primitives, layout, styling, zag, interactions, bidirectional, undoRedo, autocomplete, comprehensiveDrag, stackedDrag, propertyPanel, charts, states, animations, transforms, gradients
 
 **Execution:**
 
@@ -1276,10 +1277,11 @@ Results: 40/46 passed (6 failed)
 
 ### Browser-Konsole APIs
 
-| API            | Beschreibung                               |
-| -------------- | ------------------------------------------ |
-| `__mirrorTest` | Compiler-Tests, DOM-Inspektion, Assertions |
-| `__dragTest`   | Drag & Drop Tests                          |
+| API                  | Beschreibung                               |
+| -------------------- | ------------------------------------------ |
+| `__mirrorTest`       | Compiler-Tests, DOM-Inspektion, Assertions |
+| `__mirrorTestSuites` | Einheitliches Test-Suite System            |
+| `__dragTest`         | Drag-API für Interaktionen (intern)        |
 
 **Quick Start:**
 
@@ -1289,6 +1291,9 @@ __mirrorTest.filter('Button') // Tests mit "Button" im Namen
 __mirrorTest.category('zag') // Alle Zag-Tests
 __mirrorTest.only('Checkbox toggle') // Einzelner Test
 __mirrorTest.list() // Kategorien auflisten
+
+// Drag & Drop Tests (unified)
+__mirrorTestSuites.runCategory('comprehensiveDrag')
 
 // Debug Mode
 __mirrorTest.debug('Checkbox toggle') // Step-by-Step Debug
@@ -1301,9 +1306,6 @@ __mirrorTest.inspect('node-1')
 
 // Assertions
 __mirrorTest.expect('node-1').hasText('Hello').hasBackground('#2271C1')
-
-// Drag & Drop Tests
-__dragTest.runDragTests()
 ```
 
 **Test-Suites:** `studio/test-api/suites/`

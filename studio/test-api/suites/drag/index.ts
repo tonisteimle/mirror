@@ -4,6 +4,25 @@
  * Re-exports from existing drag test files.
  */
 
+// Comprehensive drag tests (migrated from browser-test-api.ts)
+export {
+  allComprehensiveDragTests,
+  allPaletteDropTests,
+  allCanvasMoveTests,
+  paletteDropBasicTests,
+  paletteDropPositionTests,
+  paletteDropNestedTests,
+  paletteDropHorizontalTests,
+  paletteDropLayoutTests,
+  paletteDropZagTests,
+  paletteDropComplexTests,
+  canvasMoveReorderTests,
+  canvasMoveCrossContainerTests,
+  canvasMoveHorizontalTests,
+  canvasMoveComplexTests,
+  stackedDropTests,
+} from './comprehensive-drag-tests'
+
 export {
   allStackedDragTests,
   basicStackedTests,

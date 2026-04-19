@@ -56,7 +56,7 @@ export const toggleBasicTests: TestCase[] = describe('Toggle Basic', [
 
       // Click to toggle on
       await api.interact.click('node-1')
-      await api.utils.delay(150)
+      await api.utils.delay(200) // Wait for CSS transition (150ms) + buffer
 
       // Verify on state styling
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
@@ -77,12 +77,12 @@ export const toggleBasicTests: TestCase[] = describe('Toggle Basic', [
 
       // First click: on
       await api.interact.click('node-1')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
 
       // Second click: off again
       await api.interact.click('node-1')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(51, 51, 51)')
     }
   ),
@@ -102,7 +102,7 @@ export const toggleBasicTests: TestCase[] = describe('Toggle Basic', [
 
       // Click to toggle off
       await api.interact.click('node-1')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
 
       // Should now be in off state
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(51, 51, 51)')
@@ -129,7 +129,7 @@ export const toggleBasicTests: TestCase[] = describe('Toggle Basic', [
 
       // Toggle on
       await api.interact.click('node-1')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
 
       // Verify all on state styles
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(239, 68, 68)')
@@ -215,28 +215,28 @@ export const toggleMultipleTests: TestCase[] = describe('Multiple Toggle States'
 
       // Toggle first
       await api.interact.click('node-2')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
       api.assert.hasStyle('node-2', 'backgroundColor', 'rgb(34, 113, 193)')
       api.assert.hasStyle('node-3', 'backgroundColor', 'rgb(51, 51, 51)')
       api.assert.hasStyle('node-4', 'backgroundColor', 'rgb(51, 51, 51)')
 
       // Toggle second
       await api.interact.click('node-3')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
       api.assert.hasStyle('node-2', 'backgroundColor', 'rgb(34, 113, 193)')
       api.assert.hasStyle('node-3', 'backgroundColor', 'rgb(16, 185, 129)')
       api.assert.hasStyle('node-4', 'backgroundColor', 'rgb(51, 51, 51)')
 
       // Toggle third
       await api.interact.click('node-4')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
       api.assert.hasStyle('node-2', 'backgroundColor', 'rgb(34, 113, 193)')
       api.assert.hasStyle('node-3', 'backgroundColor', 'rgb(16, 185, 129)')
       api.assert.hasStyle('node-4', 'backgroundColor', 'rgb(239, 68, 68)')
 
       // Toggle first off
       await api.interact.click('node-2')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
       api.assert.hasStyle('node-2', 'backgroundColor', 'rgb(51, 51, 51)')
       api.assert.hasStyle('node-3', 'backgroundColor', 'rgb(16, 185, 129)')
       api.assert.hasStyle('node-4', 'backgroundColor', 'rgb(239, 68, 68)')
@@ -263,17 +263,17 @@ export const toggleMultipleTests: TestCase[] = describe('Multiple Toggle States'
 
       // Cycle through states: todo -> doing
       await api.interact.click('node-1')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
       // Should be in 'doing' state
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(245, 158, 11)')
 
       await api.interact.click('node-1')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
       // Should be in 'done' state
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(16, 185, 129)')
 
       await api.interact.click('node-1')
-      await api.utils.delay(150)
+      await api.utils.delay(200)
       // Should cycle back to 'todo'
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(51, 51, 51)')
     }

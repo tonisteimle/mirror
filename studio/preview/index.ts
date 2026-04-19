@@ -717,15 +717,22 @@ export class PreviewController {
     this.clearCurrentSelection()
     this.selectedNodeId = nodeId
     nodeId ? this.showSelectionUI(nodeId) : this.hideAllHandles()
-    this.updateEditorFocusForSelection(nodeId)
+    // Note: Focus handling moved to click handler to avoid stealing focus from editor
+    this.notifySelectionChanged(nodeId)
+  }
 
+  /**
+   * Select element and focus preview (for click events)
+   * This is separate from select() to avoid stealing focus when syncing from editor
+   */
+  selectAndFocus(nodeId: string | null): void {
+    this.select(nodeId)
     // Focus the container to capture keyboard events when selecting an element
     // This ensures P/H/V/F shortcuts work and keystrokes don't go to editor
     if (nodeId) {
+      this.updateEditorFocusForSelection(nodeId)
       this.container.focus()
     }
-
-    this.notifySelectionChanged(nodeId)
   }
 
   private clearCurrentSelection(): void {
@@ -982,7 +989,7 @@ export class PreviewController {
           // Normal click = Single select, clear multi
           actions.clearMultiSelection()
           this.clearMultiSelectionHighlight()
-          this.select(nodeId)
+          this.selectAndFocus(nodeId)
         }
       }
     }

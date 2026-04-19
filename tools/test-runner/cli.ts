@@ -6,7 +6,7 @@
  */
 
 import { TestRunner } from './runner'
-import { ConsoleReporter, JUnitReporter, HTMLReporter } from './reporters'
+import { ConsoleReporter, JUnitReporter, HTMLReporter, ProgressReporter } from './reporters'
 import { FileExplorer } from './file-explorer'
 import type { TestConfig, TestSuite } from './types'
 import { defaultConfig } from './types'
@@ -39,6 +39,8 @@ interface CLIArgs {
   watch: boolean
   verbose: boolean
   silent: boolean
+  progress: boolean // Show progress bar instead of individual test results
+  log?: string // Log file path for test results
   hidePanels?: string // Comma-separated list of panels to hide
   panelMode?: 'test' | 'focus' | 'normal' | 'minimal' // Predefined panel modes
 }
@@ -86,6 +88,10 @@ function parseArgs(): CLIArgs {
     watch: args.includes('--watch'),
     verbose: !args.includes('--quiet'),
     silent: args.includes('--silent'),
+    progress: args.includes('--progress'),
+    log:
+      getArgValue(args, '--log') ||
+      (args.includes('--progress') ? 'test-results/test-run.log' : undefined),
     hidePanels: getArgValue(args, '--hide-panels'),
     panelMode: getArgValue(args, '--panel-mode') as CLIArgs['panelMode'],
   }
@@ -115,8 +121,8 @@ ${bold('Test Selection (one required):')}
   --test="NAME"       Run a single test by exact name
   --filter=PATTERN    Filter tests by name pattern (regex)
   --all               Run ALL tests (~1000+ tests, takes long!)
-  --drag              Run drag & drop tests only
-  --mirror            Run mirror tests only
+  --drag              Run comprehensive drag & drop tests
+  --mirror            Run all mirror tests (includes drag tests)
   --list              List all categories with test counts
 
 ${bold('Diagnostics:')}
@@ -152,6 +158,8 @@ ${bold('Output Options:')}
   --verbose           Show all test output (default)
   --quiet             Reduce output
   --silent            No output except errors
+  --progress          Show progress bar with live updates (recommended for large test runs)
+  --log=PATH          Log results to file (default: test-results/test-run.log when --progress)
 
 ${bold('Examples:')}
   npx tsx tools/test.ts --list                                # List all tests
@@ -253,12 +261,28 @@ async function main(): Promise<void> {
   const runner = new TestRunner(config)
 
   // Add reporters
-  runner.addReporter(
-    new ConsoleReporter({
-      verbose: args.verbose,
-      silent: args.silent,
+  let progressReporter: ProgressReporter | null = null
+
+  if (args.progress) {
+    // Use ProgressReporter for live progress bar
+    progressReporter = new ProgressReporter({
+      logFile: args.log,
     })
-  )
+    runner.addReporter(progressReporter)
+
+    // Connect progress callback
+    runner.onProgress(update => {
+      progressReporter!.handleProgressUpdate(update)
+    })
+  } else {
+    // Use standard ConsoleReporter
+    runner.addReporter(
+      new ConsoleReporter({
+        verbose: args.verbose,
+        silent: args.silent,
+      })
+    )
+  }
 
   if (args.junit) {
     runner.addReporter(new JUnitReporter(args.junit))
@@ -479,6 +503,39 @@ muted.col: #a1a1aa
       process.exit(1)
     }
 
+    // Calculate total tests and suite count for progress reporting
+    if (args.progress && progressReporter) {
+      let totalTests = 0
+      let suiteCount = 0
+
+      if (args.test) {
+        totalTests = 1
+        suiteCount = 1
+      } else if (args.category) {
+        const categories = await runner.getCategories()
+        const cat = categories.find(c => c.name === args.category)
+        totalTests = cat?.count || 0
+        suiteCount = 1
+      } else if (args.drag && !args.all) {
+        // Drag tests are now part of unified system
+        const categories = await runner.getCategories()
+        const cat = categories.find(c => c.name === 'comprehensiveDrag')
+        totalTests = cat?.count || 0
+        suiteCount = 1
+      } else if (args.filter) {
+        // Can't easily know filter count, will be updated dynamically
+        suiteCount = 1
+      } else {
+        // Get total from all categories that will be run
+        totalTests = await runner.getTotalTestCount()
+        suiteCount = 1
+      }
+
+      if (totalTests > 0) {
+        progressReporter.setTotalTests(totalTests, suiteCount)
+      }
+    }
+
     // If --test is specified, run only that single test
     if (args.test) {
       console.log(`🎯 Running single test: "${args.test}"\n`)
@@ -494,11 +551,12 @@ muted.col: #a1a1aa
       suites.push(await runner.runMirrorTests(undefined, args.filter))
     } else if (args.all || args.drag || args.mirror) {
       // Explicit selection to run multiple test suites
-      const runDrag = args.all || args.drag
       const runMirror = args.all || args.mirror
 
-      if (runDrag) {
-        suites.push(await runner.runDragTests())
+      if (args.drag && !args.all) {
+        // --drag flag now runs comprehensiveDrag category from unified system
+        console.log('📁 Running category: comprehensiveDrag\n')
+        suites.push(await runner.runMirrorTests('comprehensiveDrag'))
       }
 
       if (runMirror) {

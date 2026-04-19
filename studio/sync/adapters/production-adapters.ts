@@ -51,6 +51,8 @@ export function createStateStorePort(): StateStorePort {
     },
     setSelection: (nodeId: string | null, origin: SelectionOrigin) =>
       actions.setSelection(nodeId, origin),
+    setMultiSelection: (nodeIds: string[]) => actions.setMultiSelection(nodeIds),
+    clearMultiSelection: () => actions.clearMultiSelection(),
     setBreadcrumb: (breadcrumb: BreadcrumbItem[]) => actions.setBreadcrumb(breadcrumb),
   }
 }

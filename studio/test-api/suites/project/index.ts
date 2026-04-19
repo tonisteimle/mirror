@@ -657,6 +657,10 @@ export const projectSetupTests: TestSuite = [
     run: async (api: TestAPI) => {
       const files = api.panel.files
 
+      // Clean up any pre-existing file from previous test runs
+      await files.delete('tokens.tok')
+      await api.utils.delay(50)
+
       const created = await files.create('tokens.tok', TOKENS_FILE)
       api.assert.ok(created, 'Token file should be created')
 

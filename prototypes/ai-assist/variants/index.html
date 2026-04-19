@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Assist - Varianten</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 40px;
+    }
+    h1 { margin-bottom: 32px; }
+    .variants {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.2s;
+    }
+    .card:hover {
+      border-color: #2271C1;
+      transform: translateY(-2px);
+    }
+    .card h2 { font-size: 18px; margin-bottom: 12px; }
+    .card p { color: #888; font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
+    .card a {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #2271C1;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .card a:hover { background: #1a5a9e; }
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #222;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>AI Assist - Varianten Vergleich</h1>
+
+  <div class="variants">
+    <div class="card">
+      <span class="tag">Variante A</span>
+      <h2>Inline-Diff</h2>
+      <p>Änderungen erscheinen inline im Code, farbig markiert. Grün = Ergänzung, klickbar zum Ablehnen.</p>
+      <a href="inline-diff.html">Testen</a>
+    </div>
+
+    <div class="card">
+      <span class="tag">Variante B</span>
+      <h2>Ghost Text</h2>
+      <p>Ergänzungen erscheinen als transparenter "Ghost"-Text. Tab = akzeptieren, weiterschreiben = ignorieren.</p>
+      <a href="ghost-text.html">Testen</a>
+    </div>
+
+    <div class="card">
+      <span class="tag">Variante C</span>
+      <h2>Zeilen-Segmente</h2>
+      <p>Jede geänderte Zeile zeigt Original und AI-Version. Explizite Accept/Reject pro Zeile.</p>
+      <a href="line-segments.html">Testen</a>
+    </div>
+  </div>
+</body>
+</html>

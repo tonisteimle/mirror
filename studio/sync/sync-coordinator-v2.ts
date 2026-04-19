@@ -255,6 +255,96 @@ export class SyncCoordinator {
   }
 
   /**
+   * Handle multi-line selection in editor.
+   * Finds all nodeIds in the line range and sets multiSelection.
+   */
+  handleEditorSelection(fromEditorLine: number, toEditorLine: number): void {
+    // Convert editor lines to SourceMap lines
+    const fromLine = this.lineOffset.editorToSourceMap(fromEditorLine)
+    const toLine = this.lineOffset.editorToSourceMap(toEditorLine)
+
+    // DEBUG: Store debug info globally for tests
+    if (!(window as any).__handleEditorSelectionDebug) {
+      ;(window as any).__handleEditorSelectionDebug = []
+    }
+    const debugEntry: any = {
+      fromEditorLine,
+      toEditorLine,
+      fromLine,
+      toLine,
+      nodesFound: [] as string[],
+    }
+
+    if (this.config.debug) {
+      logSync.debug(' handleEditorSelection', {
+        fromEditorLine,
+        toEditorLine,
+        fromLine,
+        toLine,
+      })
+    }
+
+    // Find all nodeIds in the line range
+    const nodeIds: string[] = []
+
+    for (let line = fromLine; line <= toLine; line++) {
+      const node = this.ports.sourceMap.getNodeAtLine(line)
+      debugEntry.nodesFound.push(`L${line}:${node?.nodeId ?? 'null'}`)
+      if (node?.nodeId) {
+        // Only add if not already in the list
+        if (!nodeIds.includes(node.nodeId)) {
+          nodeIds.push(node.nodeId)
+        }
+      }
+    }
+
+    debugEntry.nodeIds = [...nodeIds]
+    ;(window as any).__handleEditorSelectionDebug.push(debugEntry)
+
+    // Filter to only root elements (no children of already-selected parents)
+    // This prevents selecting both parent and child when parent's lines are selected
+    const filteredNodeIds = nodeIds.filter(nodeId => {
+      const element = this.ports.domQuery.findElementByMirrorId(nodeId)
+      if (!element) return true
+
+      // Check if any ancestor is in our selection
+      let parent = this.ports.domQuery.getParentWithMirrorId(element)
+      while (parent) {
+        if (nodeIds.includes(parent.nodeId)) {
+          return false // This is a child of another selected element
+        }
+        if (this.ports.domQuery.isPreviewBoundary(parent)) {
+          break
+        }
+        parent = this.ports.domQuery.getParentWithMirrorId(parent)
+      }
+      return true
+    })
+
+    if (this.config.debug) {
+      logSync.debug(' handleEditorSelection nodeIds', {
+        all: nodeIds,
+        filtered: filteredNodeIds,
+      })
+    }
+
+    // Set multiselection if more than one element, otherwise single selection
+    if (filteredNodeIds.length === 0) {
+      // No valid nodes found - clear selection
+      this.ports.stateStore.clearMultiSelection()
+    } else if (filteredNodeIds.length === 1) {
+      // Single element - use regular selection
+      this.ports.stateStore.clearMultiSelection()
+      this.ports.stateStore.setSelection(filteredNodeIds[0], 'editor')
+    } else {
+      // Multiple elements - use multiselection
+      this.ports.stateStore.setMultiSelection(filteredNodeIds)
+      // Also set primary selection to first element for property panel
+      this.ports.stateStore.setSelection(filteredNodeIds[0], 'editor')
+    }
+  }
+
+  /**
    * Handle click in preview - set selection, sync happens via event.
    * Cancels any pending cursor sync to prevent cursor jumping back.
    */
@@ -361,8 +451,13 @@ export class SyncCoordinator {
           }
 
           if (isInFile) {
+            // DEBUG: Track when scrollEditorToLine is called
+            console.log('[SYNC DEBUG] scrollEditorToLine called', { origin, editorLine, nodeId })
             this.targets.scrollEditorToLine?.(editorLine)
           }
+        } else if (node?.position) {
+          // DEBUG: Track when scroll is SKIPPED
+          console.log('[SYNC DEBUG] scrollEditorToLine SKIPPED (origin=editor)', { origin, nodeId })
         }
 
         // Highlight preview when selection comes from non-preview origin
@@ -394,11 +489,15 @@ export class SyncCoordinator {
 
   /**
    * Execute cursor sync - find node at line and select it.
+   * Single cursor position clears multiselection.
    */
   private executeCursorSync(sourceMapLine: number): void {
     if (this.config.debug) {
       logSync.debug(' executeCursorSync', { sourceMapLine })
     }
+
+    // Single cursor position (not multi-line selection) clears multiselection
+    this.ports.stateStore.clearMultiSelection()
 
     // First try to find an instance node
     const node = this.ports.sourceMap.getNodeAtLine(sourceMapLine)

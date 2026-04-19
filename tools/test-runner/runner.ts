@@ -18,6 +18,7 @@ import { connectCDP, getPageTarget } from './cdp'
 import { ConsoleCollector } from './console-collector'
 import { ScreenshotCapture } from './screenshot'
 import { FileExplorer } from './file-explorer'
+import { parseProgressMessage, type ProgressUpdate } from './reporters/progress'
 
 // =============================================================================
 // Test Runner
@@ -30,10 +31,19 @@ export class TestRunner {
   private console: ConsoleCollector
   private screenshot: ScreenshotCapture | null = null
   private reporters: Reporter[] = []
+  private progressCallback: ((update: ProgressUpdate) => void) | null = null
 
   constructor(config: Partial<TestConfig> = {}) {
     this.config = { ...defaultConfig, ...config }
     this.console = new ConsoleCollector()
+  }
+
+  /**
+   * Set a callback to receive progress updates from browser tests
+   */
+  onProgress(callback: (update: ProgressUpdate) => void): this {
+    this.progressCallback = callback
+    return this
   }
 
   /**
@@ -59,6 +69,30 @@ export class TestRunner {
 
     await this.enableCDPDomains()
     this.console.attach(this.cdp)
+
+    // Forward browser console to Node console for debugging
+    // Handle progress updates and errors
+    // Use Set to deduplicate messages (they come from two CDP events)
+    const seenMessages = new Set<string>()
+    this.console.onMessage(msg => {
+      // Deduplicate messages
+      const msgKey = `${msg.type}:${msg.text}`
+      if (seenMessages.has(msgKey)) return
+      seenMessages.add(msgKey)
+      // Clear old messages after 1000 to prevent memory leak
+      if (seenMessages.size > 1000) seenMessages.clear()
+
+      // Check for progress updates
+      const progressUpdate = parseProgressMessage(msg.text)
+      if (progressUpdate && this.progressCallback) {
+        this.progressCallback(progressUpdate)
+        return
+      }
+
+      if (msg.type === 'error') {
+        console.log(`[Browser] ${msg.text}`)
+      }
+    })
 
     if (this.config.screenshotOnFailure) {
       this.screenshot = new ScreenshotCapture(this.cdp, this.config.screenshotDir)
@@ -285,13 +319,6 @@ export class TestRunner {
   }
 
   /**
-   * Run drag tests
-   */
-  async runDragTests(): Promise<TestSuite> {
-    return this.runBrowserSuite(`__dragTest.runDragTests()`, 'Drag & Drop Tests')
-  }
-
-  /**
    * Run a single test by exact name
    */
   async runSingleTestByName(testName: string): Promise<TestSuite> {
@@ -321,6 +348,21 @@ export class TestRunner {
     `)
 
     return result || []
+  }
+
+  /**
+   * Get total test count across all categories
+   */
+  async getTotalTestCount(): Promise<number> {
+    if (!this.cdp) throw new Error('Not started')
+
+    const result = await this.evaluate<number>(`
+      (() => {
+        return window.__mirrorTestSuites?.testCounts?.total || 0;
+      })()
+    `)
+
+    return result || 0
   }
 
   /**

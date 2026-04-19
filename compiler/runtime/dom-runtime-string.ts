@@ -1506,7 +1506,14 @@ const _runtime = {
         el.appendChild(child.cloneNode(true))
       }
     }
+    // Temporarily disable transition to ensure immediate style application
+    const originalTransition = el.style.transition
+    el.style.transition = 'none'
     Object.assign(el.style, newState.styles)
+    // Force synchronous style recalc
+    void el.offsetHeight
+    // Restore transition
+    el.style.transition = originalTransition
     // Handle visibility states specially
     if (stateName === 'visible') {
       el.style.display = el._baseDisplay || 'flex'

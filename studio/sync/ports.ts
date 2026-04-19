@@ -78,6 +78,16 @@ export interface StateStorePort {
   setSelection(nodeId: string | null, origin: SelectionOrigin): void
 
   /**
+   * Set multiple elements as selected (multiselection).
+   */
+  setMultiSelection(nodeIds: string[]): void
+
+  /**
+   * Clear multiselection.
+   */
+  clearMultiSelection(): void
+
+  /**
    * Update breadcrumb in state.
    */
   setBreadcrumb(breadcrumb: BreadcrumbItem[]): void

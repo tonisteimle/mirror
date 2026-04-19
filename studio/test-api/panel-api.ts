@@ -769,7 +769,11 @@ class FilesPanelAPIImpl implements FilesPanelAPI {
   }
 
   async create(name: string, content = ''): Promise<boolean> {
-    const files = this.files
+    // Ensure window.files exists
+    if (!(window as any).files) {
+      ;(window as any).files = {}
+    }
+    const files = (window as any).files
     if (files[name] !== undefined) return false // Already exists
 
     files[name] = content

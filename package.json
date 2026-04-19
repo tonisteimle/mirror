@@ -27,6 +27,7 @@
     "studio": "npx serve . -p 5173",
     "test": "vitest",
     "test:browser": "npx tsx tools/test.ts",
+    "test:browser:progress": "npx tsx tools/test.ts --progress --all",
     "test:browser:drag": "npx tsx tools/test.ts --drag",
     "test:browser:mirror": "npx tsx tools/test.ts --mirror",
     "test:browser:headed": "npx tsx tools/test.ts --headed",

@@ -199,10 +199,37 @@ import {
   tokenInteractionTests,
   projectTokenTests,
   radiusChangeTests,
+  allComprehensivePropertyTests,
+  sizingPropertyTests,
+  spacingPropertyTests,
+  colorPropertyTests,
+  borderPropertyTests,
+  typographyPropertyTests,
+  visualPropertyTests,
+  layoutPropertyTests,
+  iconPropertyTests,
+  complexPropertyTests as comprehensiveComplexPropertyTests,
 } from './property-panel'
 
 // Drag & Drop
 import {
+  // Comprehensive drag tests (migrated from browser-test-api.ts)
+  allComprehensiveDragTests,
+  allPaletteDropTests,
+  allCanvasMoveTests,
+  paletteDropBasicTests,
+  paletteDropPositionTests,
+  paletteDropNestedTests,
+  paletteDropHorizontalTests,
+  paletteDropLayoutTests,
+  paletteDropZagTests,
+  paletteDropComplexTests,
+  canvasMoveReorderTests,
+  canvasMoveCrossContainerTests,
+  canvasMoveHorizontalTests,
+  canvasMoveComplexTests,
+  stackedDropTests,
+  // Legacy stacked drag tests
   allStackedDragTests,
   basicStackedTests,
   edgeCaseTests,
@@ -645,6 +672,25 @@ export {
   componentCompletionTests,
 }
 
+// Comprehensive Drag Tests (unified from browser-test-api.ts)
+export {
+  allComprehensiveDragTests,
+  allPaletteDropTests,
+  allCanvasMoveTests,
+  paletteDropBasicTests,
+  paletteDropPositionTests,
+  paletteDropNestedTests,
+  paletteDropHorizontalTests,
+  paletteDropLayoutTests,
+  paletteDropZagTests,
+  paletteDropComplexTests,
+  canvasMoveReorderTests,
+  canvasMoveCrossContainerTests,
+  canvasMoveHorizontalTests,
+  canvasMoveComplexTests,
+  stackedDropTests,
+}
+
 // Stacked Drag & Drop
 export { allStackedDragTests, basicStackedTests, edgeCaseTests, layoutDetectionTests }
 
@@ -688,6 +734,16 @@ export {
   tokenInteractionTests,
   projectTokenTests,
   radiusChangeTests,
+  allComprehensivePropertyTests,
+  sizingPropertyTests,
+  spacingPropertyTests,
+  colorPropertyTests,
+  borderPropertyTests,
+  typographyPropertyTests,
+  visualPropertyTests,
+  layoutPropertyTests,
+  iconPropertyTests,
+  comprehensiveComplexPropertyTests,
 }
 
 // Charts
@@ -971,12 +1027,14 @@ export const allTests: TestCase[] = [
   ...allBidirectionalTests,
   ...allUndoRedoTests,
   ...allAutocompleteTests,
+  ...allComprehensiveDragTests,
   ...allStackedDragTests,
   ...allFlexReorderTests,
   ...allAlignmentZoneTests,
   ...allAlignmentFromEmptyTests,
   ...allAlignmentFromMoveTests,
   ...allPropertyPanelTests,
+  ...allComprehensivePropertyTests,
   ...allChartTests,
   ...allWorkflowTests,
   ...allLayoutVerificationTests,
@@ -1180,6 +1238,19 @@ export const testCounts: Record<string, number> = {
   'autocomplete.components': componentCompletionTests.length,
 
   // === Drag & Drop ===
+  comprehensiveDrag: allComprehensiveDragTests.length,
+  'comprehensiveDrag.paletteDropBasic': paletteDropBasicTests.length,
+  'comprehensiveDrag.paletteDropPosition': paletteDropPositionTests.length,
+  'comprehensiveDrag.paletteDropNested': paletteDropNestedTests.length,
+  'comprehensiveDrag.paletteDropHorizontal': paletteDropHorizontalTests.length,
+  'comprehensiveDrag.paletteDropLayout': paletteDropLayoutTests.length,
+  'comprehensiveDrag.paletteDropZag': paletteDropZagTests.length,
+  'comprehensiveDrag.paletteDropComplex': paletteDropComplexTests.length,
+  'comprehensiveDrag.canvasMoveReorder': canvasMoveReorderTests.length,
+  'comprehensiveDrag.canvasMoveCross': canvasMoveCrossContainerTests.length,
+  'comprehensiveDrag.canvasMoveHorizontal': canvasMoveHorizontalTests.length,
+  'comprehensiveDrag.canvasMoveComplex': canvasMoveComplexTests.length,
+  'comprehensiveDrag.stackedDrop': stackedDropTests.length,
   stackedDrag: allStackedDragTests.length,
   'stackedDrag.basic': basicStackedTests.length,
   'stackedDrag.edgeCases': edgeCaseTests.length,
@@ -1221,6 +1292,16 @@ export const testCounts: Record<string, number> = {
   'propertyPanel.tokenInteraction': tokenInteractionTests.length,
   'propertyPanel.projectToken': projectTokenTests.length,
   'propertyPanel.radiusChange': radiusChangeTests.length,
+  comprehensiveProperty: allComprehensivePropertyTests.length,
+  'comprehensiveProperty.sizing': sizingPropertyTests.length,
+  'comprehensiveProperty.spacing': spacingPropertyTests.length,
+  'comprehensiveProperty.color': colorPropertyTests.length,
+  'comprehensiveProperty.border': borderPropertyTests.length,
+  'comprehensiveProperty.typography': typographyPropertyTests.length,
+  'comprehensiveProperty.visual': visualPropertyTests.length,
+  'comprehensiveProperty.layout': layoutPropertyTests.length,
+  'comprehensiveProperty.icon': iconPropertyTests.length,
+  'comprehensiveProperty.complex': comprehensiveComplexPropertyTests.length,
 
   // === Charts ===
   charts: allChartTests.length,
@@ -1594,6 +1675,19 @@ export type TestCategory =
   | 'autocomplete.components'
 
   // === Drag & Drop ===
+  | 'comprehensiveDrag'
+  | 'comprehensiveDrag.paletteDropBasic'
+  | 'comprehensiveDrag.paletteDropPosition'
+  | 'comprehensiveDrag.paletteDropNested'
+  | 'comprehensiveDrag.paletteDropHorizontal'
+  | 'comprehensiveDrag.paletteDropLayout'
+  | 'comprehensiveDrag.paletteDropZag'
+  | 'comprehensiveDrag.paletteDropComplex'
+  | 'comprehensiveDrag.canvasMoveReorder'
+  | 'comprehensiveDrag.canvasMoveCross'
+  | 'comprehensiveDrag.canvasMoveHorizontal'
+  | 'comprehensiveDrag.canvasMoveComplex'
+  | 'comprehensiveDrag.stackedDrop'
   | 'stackedDrag'
   | 'stackedDrag.basic'
   | 'stackedDrag.edgeCases'
@@ -2016,6 +2110,19 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'autocomplete.components': componentCompletionTests,
 
     // === Drag & Drop ===
+    comprehensiveDrag: allComprehensiveDragTests,
+    'comprehensiveDrag.paletteDropBasic': paletteDropBasicTests,
+    'comprehensiveDrag.paletteDropPosition': paletteDropPositionTests,
+    'comprehensiveDrag.paletteDropNested': paletteDropNestedTests,
+    'comprehensiveDrag.paletteDropHorizontal': paletteDropHorizontalTests,
+    'comprehensiveDrag.paletteDropLayout': paletteDropLayoutTests,
+    'comprehensiveDrag.paletteDropZag': paletteDropZagTests,
+    'comprehensiveDrag.paletteDropComplex': paletteDropComplexTests,
+    'comprehensiveDrag.canvasMoveReorder': canvasMoveReorderTests,
+    'comprehensiveDrag.canvasMoveCross': canvasMoveCrossContainerTests,
+    'comprehensiveDrag.canvasMoveHorizontal': canvasMoveHorizontalTests,
+    'comprehensiveDrag.canvasMoveComplex': canvasMoveComplexTests,
+    'comprehensiveDrag.stackedDrop': stackedDropTests,
     stackedDrag: allStackedDragTests,
     'stackedDrag.basic': basicStackedTests,
     'stackedDrag.edgeCases': edgeCaseTests,
@@ -2057,6 +2164,16 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'propertyPanel.tokenInteraction': tokenInteractionTests,
     'propertyPanel.projectToken': projectTokenTests,
     'propertyPanel.radiusChange': radiusChangeTests,
+    comprehensiveProperty: allComprehensivePropertyTests,
+    'comprehensiveProperty.sizing': sizingPropertyTests,
+    'comprehensiveProperty.spacing': spacingPropertyTests,
+    'comprehensiveProperty.color': colorPropertyTests,
+    'comprehensiveProperty.border': borderPropertyTests,
+    'comprehensiveProperty.typography': typographyPropertyTests,
+    'comprehensiveProperty.visual': visualPropertyTests,
+    'comprehensiveProperty.layout': layoutPropertyTests,
+    'comprehensiveProperty.icon': iconPropertyTests,
+    'comprehensiveProperty.complex': comprehensiveComplexPropertyTests,
 
     // === Charts ===
     charts: allChartTests,

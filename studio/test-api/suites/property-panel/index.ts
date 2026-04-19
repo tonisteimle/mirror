@@ -12,3 +12,16 @@ export {
   projectTokenTests,
   radiusChangeTests,
 } from '../property-panel-tests'
+
+export {
+  allComprehensivePropertyTests,
+  sizingPropertyTests,
+  spacingPropertyTests,
+  colorPropertyTests,
+  borderPropertyTests,
+  typographyPropertyTests,
+  visualPropertyTests,
+  layoutPropertyTests,
+  iconPropertyTests,
+  complexPropertyTests,
+} from './comprehensive.test'

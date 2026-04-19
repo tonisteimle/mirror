@@ -5,3 +5,4 @@
 export { ConsoleReporter } from './console'
 export { JUnitReporter } from './junit'
 export { HTMLReporter } from './html'
+export { ProgressReporter } from './progress'
