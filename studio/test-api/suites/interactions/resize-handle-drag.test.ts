@@ -827,9 +827,195 @@ export const resizeDragAccuracyTests: TestCase[] = describe('Resize Drag: Handle
 // Full-Size Element Handle Visibility Tests
 // =============================================================================
 
+/**
+ * Helper: Get element bounds in viewport coordinates
+ */
+function getElementBoundsViewport(element: HTMLElement): {
+  left: number
+  top: number
+  right: number
+  bottom: number
+  width: number
+  height: number
+} {
+  const rect = element.getBoundingClientRect()
+  return {
+    left: rect.left,
+    top: rect.top,
+    right: rect.right,
+    bottom: rect.bottom,
+    width: rect.width,
+    height: rect.height,
+  }
+}
+
+/**
+ * Helper: Get handle center positions in viewport coordinates
+ */
+function getHandleCentersViewport(
+  handles: Array<{
+    position: string
+    rect: { left: number; top: number; width: number; height: number }
+  }>
+): Map<string, { x: number; y: number }> {
+  const centers = new Map<string, { x: number; y: number }>()
+
+  for (const handle of handles) {
+    // Handle rect is already in viewport coordinates (from getBoundingClientRect)
+    const centerX = handle.rect.left + handle.rect.width / 2
+    const centerY = handle.rect.top + handle.rect.height / 2
+    centers.set(handle.position, { x: centerX, y: centerY })
+  }
+
+  return centers
+}
+
 export const resizeDragFullSizeTests: TestCase[] = describe(
   'Resize Drag: Full-Size Element Handles',
   [
+    testWithSetup(
+      'Full-width element: handles sit on selection border (with clamping)',
+      'Frame pad 16, h 300\n  Frame w full, h 100, bg #2271C1',
+      async (api: TestAPI) => {
+        await api.utils.waitForCompile()
+        api.interact.clearSelection()
+        await api.utils.delay(100)
+
+        // Select the full-width element
+        await api.interact.click('node-2')
+        await api.utils.delay(200)
+
+        // Get element reference
+        const element = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+        if (!element) throw new Error('Element not found')
+
+        const handles = api.interact.getResizeHandles()
+        if (handles.length !== 8) {
+          throw new Error(`Expected 8 handles, found ${handles.length}`)
+        }
+
+        // Get element bounds and handle positions in viewport coordinates
+        const elementBounds = getElementBoundsViewport(element)
+        const handleCenters = getHandleCentersViewport(handles)
+
+        // For full-width element (w full):
+        // - N/S handles should be exactly on the element's top/bottom edges
+        // - E/W handles may be clamped inward but should be at vertical center
+
+        // Check N handle (top center) - should be exactly on top edge
+        const nHandle = handleCenters.get('n')
+        if (!nHandle) throw new Error('N handle not found')
+
+        // N handle Y should be at element's top edge (with small tolerance)
+        const nYDiff = Math.abs(nHandle.y - elementBounds.top)
+        if (nYDiff > 3) {
+          throw new Error(
+            `N handle Y off by ${nYDiff.toFixed(1)}px (expected at ${elementBounds.top.toFixed(1)}, got ${nHandle.y.toFixed(1)})`
+          )
+        }
+
+        // Check S handle (bottom center) - should be exactly on bottom edge
+        const sHandle = handleCenters.get('s')
+        if (!sHandle) throw new Error('S handle not found')
+
+        const sYDiff = Math.abs(sHandle.y - elementBounds.bottom)
+        if (sYDiff > 3) {
+          throw new Error(
+            `S handle Y off by ${sYDiff.toFixed(1)}px (expected at ${elementBounds.bottom.toFixed(1)}, got ${sHandle.y.toFixed(1)})`
+          )
+        }
+
+        // Check E handle - for full-width, may be clamped but should be at vertical center
+        const eHandle = handleCenters.get('e')
+        if (!eHandle) throw new Error('E handle not found')
+
+        const expectedYCenter = elementBounds.top + elementBounds.height / 2
+        const eYDiff = Math.abs(eHandle.y - expectedYCenter)
+        if (eYDiff > 3) {
+          throw new Error(`E handle Y off by ${eYDiff.toFixed(1)}px from vertical center`)
+        }
+
+        // Check W handle - should be at vertical center
+        const wHandle = handleCenters.get('w')
+        if (!wHandle) throw new Error('W handle not found')
+
+        const wYDiff = Math.abs(wHandle.y - expectedYCenter)
+        if (wYDiff > 3) {
+          throw new Error(`W handle Y off by ${wYDiff.toFixed(1)}px from vertical center`)
+        }
+      }
+    ),
+
+    testWithSetup(
+      'Normal element: all 8 handles sit exactly on selection border',
+      // Use a simple layout without parent padding to avoid offset issues
+      'Frame w 200, h 100, bg #2271C1',
+      async (api: TestAPI) => {
+        await api.utils.waitForCompile()
+        api.interact.clearSelection()
+        await api.utils.delay(100)
+
+        // Select the element
+        await api.interact.click('node-1')
+        await api.utils.delay(200)
+
+        const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+        if (!element) throw new Error('Element not found')
+
+        const handles = api.interact.getResizeHandles()
+        if (handles.length !== 8) {
+          throw new Error(`Expected 8 handles, found ${handles.length}`)
+        }
+
+        // Verify handles are for the correct element
+        const handleNodeIds = handles.map(h => h.nodeId).filter((v, i, a) => a.indexOf(v) === i)
+        if (handleNodeIds.length !== 1 || handleNodeIds[0] !== 'node-1') {
+          throw new Error(`Handles should be for node-1, got: ${handleNodeIds.join(', ')}`)
+        }
+
+        // Get element bounds and handle positions in viewport coordinates
+        const elementBounds = getElementBoundsViewport(element)
+        const handleCenters = getHandleCentersViewport(handles)
+
+        // Tolerance for subpixel rounding only - handles must be EXACTLY on borders
+        const TOLERANCE = 1
+
+        // Expected positions for each handle (handle center should be on element edge/corner)
+        const expectedPositions: Record<string, { x: number; y: number }> = {
+          nw: { x: elementBounds.left, y: elementBounds.top },
+          n: { x: elementBounds.left + elementBounds.width / 2, y: elementBounds.top },
+          ne: { x: elementBounds.right, y: elementBounds.top },
+          e: { x: elementBounds.right, y: elementBounds.top + elementBounds.height / 2 },
+          se: { x: elementBounds.right, y: elementBounds.bottom },
+          s: { x: elementBounds.left + elementBounds.width / 2, y: elementBounds.bottom },
+          sw: { x: elementBounds.left, y: elementBounds.bottom },
+          w: { x: elementBounds.left, y: elementBounds.top + elementBounds.height / 2 },
+        }
+
+        // Check each handle sits EXACTLY on the selection border
+        for (const [position, expected] of Object.entries(expectedPositions)) {
+          const actual = handleCenters.get(position)
+          if (!actual) throw new Error(`${position.toUpperCase()} handle not found`)
+
+          const xDiff = Math.abs(actual.x - expected.x)
+          const yDiff = Math.abs(actual.y - expected.y)
+
+          if (xDiff > TOLERANCE) {
+            throw new Error(
+              `${position.toUpperCase()} handle X off by ${xDiff.toFixed(1)}px ` +
+                `(expected ${expected.x.toFixed(1)}, got ${actual.x.toFixed(1)})`
+            )
+          }
+          if (yDiff > TOLERANCE) {
+            throw new Error(
+              `${position.toUpperCase()} handle Y off by ${yDiff.toFixed(1)}px ` +
+                `(expected ${expected.y.toFixed(1)}, got ${actual.y.toFixed(1)})`
+            )
+          }
+        }
+      }
+    ),
+
     testWithSetup(
       'Handles visible for w full h full element',
       'Frame w full, h full, bg #333',

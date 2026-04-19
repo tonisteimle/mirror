@@ -115,37 +115,25 @@ export class ResizeManager {
     this.hideHandles()
     this.currentNodeId = nodeId
 
-    // Use LayoutService for unified layout access (cache-first, DOM-fallback)
-    const layoutService = getLayoutService()
-    const layout = layoutService?.getLayout(nodeId)
+    // Get element directly from DOM for exact positioning
+    const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+    if (!element) return
 
-    let relRect: { left: number; top: number; width: number; height: number }
-
-    if (layout) {
-      // Use layout from service (either cached or freshly read from DOM)
-      relRect = {
-        left: layout.x,
-        top: layout.y,
-        width: layout.width,
-        height: layout.height,
-      }
-    } else {
-      // Ultimate fallback if LayoutService not available
-      const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
-      if (!element) return
-
-      const rect = element.getBoundingClientRect()
-      const containerRect = this.container.getBoundingClientRect()
-
-      relRect = {
-        left: rect.left - containerRect.left,
-        top: rect.top - containerRect.top,
-        width: rect.width,
-        height: rect.height,
-      }
-    }
-
+    // Get handles container
     const handlesContainer = this.overlayManager.getResizeHandlesContainer()
+
+    // Use viewport coordinates for both element and handles container
+    // This ensures exact handle positioning on element bounds
+    const elementRect = element.getBoundingClientRect()
+    const handlesContainerRect = handlesContainer.getBoundingClientRect()
+
+    // Calculate position relative to handles container (using viewport coords)
+    const relRect = {
+      left: elementRect.left - handlesContainerRect.left,
+      top: elementRect.top - handlesContainerRect.top,
+      width: elementRect.width,
+      height: elementRect.height,
+    }
 
     // Create handles using shared helper
     this.createHandlesForRect(handlesContainer, relRect, { nodeId, borderColor: '#5BA8F5' })
@@ -276,30 +264,21 @@ export class ResizeManager {
   }
 
   private calculateMultiSelectionBounds(nodeIds: string[]): BoundingBox | null {
-    const layoutService = getLayoutService()
+    // Get handles container for consistent coordinate reference
+    const handlesContainer = this.overlayManager.getResizeHandlesContainer()
+    const handlesContainerRect = handlesContainer.getBoundingClientRect()
 
     const getRect = (nodeId: string): Rect | null => {
-      // Try LayoutService first (cache-first, DOM-fallback)
-      const layout = layoutService?.getLayout(nodeId)
-      if (layout) {
-        return {
-          x: layout.x,
-          y: layout.y,
-          width: layout.width,
-          height: layout.height,
-        }
-      }
-
-      // Ultimate fallback if LayoutService not available
+      // Get element directly from DOM for exact positioning
       const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
       if (!element) return null
 
+      // Use viewport coordinates relative to handles container
       const rect = element.getBoundingClientRect()
-      const containerRect = this.container.getBoundingClientRect()
 
       return {
-        x: rect.left - containerRect.left,
-        y: rect.top - containerRect.top,
+        x: rect.left - handlesContainerRect.left,
+        y: rect.top - handlesContainerRect.top,
         width: rect.width,
         height: rect.height,
       }
