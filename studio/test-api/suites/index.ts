@@ -555,6 +555,18 @@ import {
   waitHelperTests,
 } from './test-system-tests'
 
+// Integration Tests (real-world workflows)
+import {
+  allIntegrationTests,
+  componentTokenTests as integrationTokenTests,
+  componentStateTests as integrationStateTests,
+  componentTokenStateTests as integrationTrifectaTests,
+  nestedComponentTests as integrationNestedTests,
+  realWorldPatternTests as integrationPatternTests,
+  layoutIntegrationTests as integrationLayoutTests,
+  quickIntegrationTests,
+} from './integration'
+
 import type { TestCase, TestSuiteResult } from '../types'
 
 // =============================================================================
@@ -1046,6 +1058,18 @@ export {
   waitHelperTests,
 }
 
+// Integration Tests (real-world designer workflows)
+export {
+  allIntegrationTests,
+  integrationTokenTests,
+  integrationStateTests,
+  integrationTrifectaTests,
+  integrationNestedTests,
+  integrationPatternTests,
+  integrationLayoutTests,
+  quickIntegrationTests,
+}
+
 // =============================================================================
 // Combined Exports
 // =============================================================================
@@ -1104,6 +1128,7 @@ export const allTests: TestCase[] = [
   ...allCompilerVerificationTests,
   ...allPlayModeTests,
   ...allDraftLineTests,
+  ...allIntegrationTests,
 ]
 
 /**
@@ -1118,6 +1143,7 @@ export const quickTests: TestCase[] = [
   ...quickTransformTests,
   ...quickGradientTests,
   ...quickPlayModeTests,
+  ...quickIntegrationTests,
 ]
 
 /**
@@ -1589,6 +1615,15 @@ export const testCounts: Record<string, number> = {
   'draftLines.aiWorkflow.workflow': aiWorkflowTests.length,
   'draftLines.aiWorkflow.visual': visualVerificationTests.length,
 
+  // === Integration (real-world workflows) ===
+  integration: allIntegrationTests.length,
+  'integration.componentToken': integrationTokenTests.length,
+  'integration.componentState': integrationStateTests.length,
+  'integration.componentTokenState': integrationTrifectaTests.length,
+  'integration.nestedComponents': integrationNestedTests.length,
+  'integration.realWorldPatterns': integrationPatternTests.length,
+  'integration.layoutIntegration': integrationLayoutTests.length,
+
   // === Total ===
   total: allTests.length,
 }
@@ -2029,6 +2064,15 @@ export type TestCategory =
   | 'draftLines.aiWorkflow'
   | 'draftLines.aiWorkflow.workflow'
   | 'draftLines.aiWorkflow.visual'
+
+  // === Integration (real-world workflows) ===
+  | 'integration'
+  | 'integration.componentToken'
+  | 'integration.componentState'
+  | 'integration.componentTokenState'
+  | 'integration.nestedComponents'
+  | 'integration.realWorldPatterns'
+  | 'integration.layoutIntegration'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -2500,6 +2544,15 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'draftLines.aiWorkflow': allAIWorkflowTests,
     'draftLines.aiWorkflow.workflow': aiWorkflowTests,
     'draftLines.aiWorkflow.visual': visualVerificationTests,
+
+    // === Integration (real-world workflows) ===
+    integration: allIntegrationTests,
+    'integration.componentToken': integrationTokenTests,
+    'integration.componentState': integrationStateTests,
+    'integration.componentTokenState': integrationTrifectaTests,
+    'integration.nestedComponents': integrationNestedTests,
+    'integration.realWorldPatterns': integrationPatternTests,
+    'integration.layoutIntegration': integrationLayoutTests,
   }
 
   const names: Record<TestCategory, string> = {
@@ -2893,6 +2946,15 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'draftLines.aiWorkflow': 'Draft: AI Workflow (Complete Cycle)',
     'draftLines.aiWorkflow.workflow': 'AI Workflow: Correction Cycles',
     'draftLines.aiWorkflow.visual': 'AI Workflow: Visual Verification',
+
+    // === Integration ===
+    integration: 'Integration (Real-World Workflows)',
+    'integration.componentToken': 'Integration: Component + Token',
+    'integration.componentState': 'Integration: Component + State',
+    'integration.componentTokenState': 'Integration: Component + Token + State',
+    'integration.nestedComponents': 'Integration: Nested Components',
+    'integration.realWorldPatterns': 'Integration: Real-World UI Patterns',
+    'integration.layoutIntegration': 'Integration: Layout + Component + State',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
