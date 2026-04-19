@@ -210,6 +210,7 @@ import {
   iconPropertyTests,
   complexPropertyTests as comprehensiveComplexPropertyTests,
   colorPickerTests,
+  iconPickerTests,
 } from './property-panel'
 
 // Drag & Drop
@@ -1080,6 +1081,7 @@ export const allTests: TestCase[] = [
   ...allPropertyPanelTests,
   ...allComprehensivePropertyTests,
   ...colorPickerTests,
+  ...iconPickerTests,
   ...allChartTests,
   ...allWorkflowTests,
   ...dashboardE2ETests,
@@ -1350,6 +1352,7 @@ export const testCounts: Record<string, number> = {
   'comprehensiveProperty.icon': iconPropertyTests.length,
   'comprehensiveProperty.complex': comprehensiveComplexPropertyTests.length,
   colorPicker: colorPickerTests.length,
+  iconPicker: iconPickerTests.length,
 
   // === Charts ===
   charts: allChartTests.length,
@@ -1792,6 +1795,7 @@ export type TestCategory =
   | 'propertyPanel.projectToken'
   | 'propertyPanel.radiusChange'
   | 'colorPicker'
+  | 'iconPicker'
 
   // === Charts ===
   | 'charts'
@@ -2250,6 +2254,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'propertyPanel.projectToken': projectTokenTests,
     'propertyPanel.radiusChange': radiusChangeTests,
     colorPicker: colorPickerTests,
+    iconPicker: iconPickerTests,
     comprehensiveProperty: allComprehensivePropertyTests,
     'comprehensiveProperty.sizing': sizingPropertyTests,
     'comprehensiveProperty.spacing': spacingPropertyTests,
@@ -2653,6 +2658,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'propertyPanel.projectToken': 'Project Tokens',
     'propertyPanel.radiusChange': 'Radius Changes',
     colorPicker: 'Color Picker',
+    iconPicker: 'Icon Picker',
 
     // === Charts ===
     charts: 'Charts',

@@ -27,3 +27,5 @@ export {
 } from './comprehensive.test'
 
 export { colorPickerTests, allColorPickerTests } from './color-picker.test'
+
+export { iconPickerTests, allIconPickerTests } from './icon-picker.test'
