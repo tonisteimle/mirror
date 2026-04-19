@@ -27,7 +27,14 @@ import {
   type AutocompleteRequest,
   type AutocompleteResult,
 } from './autocomplete'
-import { EditorController, createEditorController, setEditorController } from './editor'
+import {
+  EditorController,
+  createEditorController,
+  setEditorController,
+  initDraftLinesManager,
+  disposeDraftLinesManager,
+  type DraftLinesManager,
+} from './editor'
 import {
   PreviewController,
   createPreviewController,
@@ -110,6 +117,8 @@ export interface StudioInstance {
   agent: AgentIntegration | null
   drawManager: DrawManager | null
   inlineEdit: InlineEditController | null
+  /** Draft lines manager for AI-assisted editing visual feedback */
+  draftLinesManager: DraftLinesManager | null
   /** Cleanup all event subscriptions and resources */
   dispose: () => void
 }
@@ -142,6 +151,7 @@ export const studio: StudioInstance = {
   agent: null,
   drawManager: null,
   inlineEdit: null,
+  draftLinesManager: null,
   dispose: () => {
     // Unsubscribe all event listeners
     for (const unsubscribe of eventUnsubscribes) {
@@ -158,6 +168,7 @@ export const studio: StudioInstance = {
     studio.drawManager?.dispose()
     studio.inlineEdit?.dispose()
     studio.preview?.dispose()
+    disposeDraftLinesManager()
 
     // Clear references
     studio.editor = null
@@ -170,6 +181,7 @@ export const studio: StudioInstance = {
     studio.breadcrumb = null
     studio.drawManager = null
     studio.inlineEdit = null
+    studio.draftLinesManager = null
     studio.agent = null
   },
 }
@@ -455,6 +467,13 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   setEditorController(editorController)
   studioContext.editor = editorController
   studio.editor = editorController
+
+  // Draft Lines Manager - visual feedback for AI-assisted editing
+  // New/changed lines appear muted (draft), validated lines appear bright
+  const draftLinesManager = initDraftLinesManager({
+    getEditorView: () => config.editor,
+  })
+  studio.draftLinesManager = draftLinesManager
 
   // Editor Drop Handler is now handled by createComponentDropExtension in app.js
   // Uses CodeMirror's native extension system for proper drop handling

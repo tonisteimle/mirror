@@ -14,7 +14,7 @@ import * as path from 'path'
 const CONFIG = {
   aiPort: 3456,
   filePort: 8765,
-  prototypeUrl: 'http://localhost:8765/variants/inline-diff.html',
+  prototypeUrl: 'http://localhost:8765/variants/codemirror-poc.html',
   charDelay: 40,
   wordPauseChance: 0.25,
   wordPauseMs: 120,

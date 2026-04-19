@@ -117,7 +117,9 @@ import {
   // Icon Picker (for property panel integration)
   getGlobalIconPicker,
   setGlobalIconPickerCallback,
-} from './dist/index.js?v=140'
+  // Draft Lines Extension (AI-assist visual feedback)
+  draftLinesExtension,
+} from './dist/index.js?v=141'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1564,6 +1566,7 @@ const editor = new EditorView({
       highlightActiveLine(),
       drawSelection(),
       history(),
+      draftLinesExtension(),
       mirrorHighlight,
       autocompletion({
         override: [mirrorCompletions],

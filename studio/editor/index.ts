@@ -108,6 +108,25 @@ export {
   type ComponentDropConfig,
 } from './editor-drop-handler'
 
+// Re-export draft lines extension (AI-assist visual feedback)
+export {
+  draftLinesExtension,
+  setDraftLines,
+  clearDraftLines,
+  detectDraftLines,
+  setDraftLinesEffect,
+  clearDraftLinesEffect,
+} from './draft-lines'
+
+// Re-export draft lines manager (integration with editor and compilation)
+export {
+  DraftLinesManager,
+  initDraftLinesManager,
+  getDraftLinesManager,
+  disposeDraftLinesManager,
+  type DraftLinesManagerConfig,
+} from './draft-lines-manager'
+
 // Re-export component templates
 export {
   COMPONENT_DEFINITIONS,

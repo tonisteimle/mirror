@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Assist - CodeMirror PoC</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #333;
+    }
+    h1 { font-size: 20px; }
+    .status {
+      padding: 6px 12px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .status.loading { color: #f59e0b; }
+    .status.done { color: #10b981; }
+
+    #editor-container {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* CodeMirror Base Theme */
+    .cm-editor {
+      height: 300px;
+      font-size: 14px;
+    }
+    .cm-editor.cm-focused { outline: none; }
+    .cm-scroller { overflow: auto; }
+    .cm-content { padding: 16px; }
+
+    /* Validated (normal) colors */
+    .cm-keyword { color: #c792ea; }
+    .cm-string { color: #c3e88d; }
+    .cm-propertyName { color: #82aaff; }
+    .cm-number { color: #f78c6c; }
+    .cm-punctuation { color: #89ddff; }
+    .cm-content { color: #e0e0e0; }
+
+    /* Draft line decoration - overrides to very muted colors */
+    .cm-line.draft-line .cm-keyword { color: #444 !important; }
+    .cm-line.draft-line .cm-string { color: #444 !important; }
+    .cm-line.draft-line .cm-propertyName { color: #444 !important; }
+    .cm-line.draft-line .cm-number { color: #444 !important; }
+    .cm-line.draft-line .cm-punctuation { color: #333 !important; }
+    .cm-line.draft-line { color: #444 !important; background: rgba(255,255,255,0.02); }
+
+    /* Smooth transition */
+    .cm-line {
+      transition: all 0.3s ease;
+    }
+    .cm-line span {
+      transition: color 0.3s ease;
+    }
+
+    .info {
+      margin-top: 24px;
+      padding: 16px;
+      background: #111;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AI Assist - CodeMirror PoC</h1>
+      <div class="status" id="status">Bereit</div>
+    </header>
+
+    <div id="editor-container"></div>
+
+    <div class="info">
+      <p><strong>So funktioniert's:</strong></p>
+      <p>Tippe Code → <span style="color:#6b5b7a">gedämpfte Farben</span> (draft)</p>
+      <p>Nach 1.5s Pause + AI → <span style="color:#c792ea">helle Farben</span> (validiert)</p>
+    </div>
+  </div>
+
+  <!-- CodeMirror 6 via ESM -->
+  <script type="module">
+    import {EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection} from 'https://esm.sh/@codemirror/view@6.24.0'
+    import {EditorState, StateField, StateEffect, RangeSet} from 'https://esm.sh/@codemirror/state@6.4.0'
+    import {defaultKeymap, history, historyKeymap} from 'https://esm.sh/@codemirror/commands@6.3.3'
+    import {HighlightStyle, syntaxHighlighting, StreamLanguage} from 'https://esm.sh/@codemirror/language@6.10.1'
+    import {tags} from 'https://esm.sh/@lezer/highlight@1.2.0'
+    import {Decoration} from 'https://esm.sh/@codemirror/view@6.24.0'
+
+    // ===========================================
+    // Mirror DSL Language Definition
+    // ===========================================
+    const mirrorLanguage = StreamLanguage.define({
+      token(stream) {
+        // Skip whitespace
+        if (stream.eatSpace()) return null
+
+        // Strings
+        if (stream.match(/"[^"]*"/)) return 'string'
+
+        // Hex colors
+        if (stream.match(/#[0-9a-fA-F]{3,8}/)) return 'number'
+
+        // Numbers
+        if (stream.match(/\d+/)) return 'number'
+
+        // Keywords (primitives)
+        if (stream.match(/\b(Frame|Text|Button|Icon|Input|Image|Link|Card|Box|Divider|Spacer|Header|Nav|Main|Section|Footer)\b/)) {
+          return 'keyword'
+        }
+
+        // Properties
+        if (stream.match(/\b(bg|col|pad|rad|gap|w|h|fs|ic|is|hor|ver|center|spread|weight|grow|shrink|shadow|opacity|bor|boc)\b/)) {
+          return 'propertyName'
+        }
+
+        // Punctuation
+        if (stream.match(/[,:]/)) return 'punctuation'
+
+        // Anything else
+        stream.next()
+        return null
+      }
+    })
+
+    // ===========================================
+    // Theme with highlight colors
+    // ===========================================
+    const mirrorHighlight = HighlightStyle.define([
+      { tag: tags.keyword, color: '#c792ea' },
+      { tag: tags.string, color: '#c3e88d' },
+      { tag: tags.propertyName, color: '#82aaff' },
+      { tag: tags.number, color: '#f78c6c' },
+      { tag: tags.punctuation, color: '#89ddff' },
+    ])
+
+    const darkTheme = EditorView.theme({
+      '&': { backgroundColor: '#111', color: '#e0e0e0' },
+      '.cm-content': { caretColor: '#fff' },
+      '.cm-cursor': { borderLeftColor: '#fff' },
+      '.cm-activeLine': { backgroundColor: 'transparent' },
+      '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
+        backgroundColor: '#3a3a5a'
+      },
+    }, { dark: true })
+
+    // ===========================================
+    // Draft Line Decoration System
+    // ===========================================
+
+    // Effect to set which lines are drafts
+    const setDraftLines = StateEffect.define()
+
+    // Decoration for draft lines
+    const draftLineDeco = Decoration.line({ class: 'draft-line' })
+
+    // State field that tracks draft line decorations
+    const draftLinesField = StateField.define({
+      create() {
+        return Decoration.none
+      },
+      update(decorations, tr) {
+        // Move decorations with document changes
+        decorations = decorations.map(tr.changes)
+
+        // Check for our effect
+        for (let effect of tr.effects) {
+          if (effect.is(setDraftLines)) {
+            const draftLineNumbers = effect.value // Set of line numbers
+            const builder = []
+
+            for (let lineNum of draftLineNumbers) {
+              try {
+                const line = tr.state.doc.line(lineNum)
+                builder.push(draftLineDeco.range(line.from))
+              } catch (e) {
+                // Line doesn't exist
+              }
+            }
+
+            decorations = Decoration.set(builder, true)
+          }
+        }
+
+        return decorations
+      },
+      provide: f => EditorView.decorations.from(f)
+    })
+
+    // ===========================================
+    // AI Validation Logic
+    // ===========================================
+
+    const API_URL = 'http://localhost:3456'
+    const statusEl = document.getElementById('status')
+
+    let pauseTimer = null
+    let isLoading = false
+    let lastValidatedContent = ''
+    let view = null
+
+    function updateDraftLines() {
+      if (!view) return
+
+      const currentContent = view.state.doc.toString()
+      const currentLines = currentContent.split('\n')
+      const validatedLines = lastValidatedContent.split('\n')
+
+      // Find which lines are different (draft)
+      const draftLineNumbers = new Set()
+
+      for (let i = 0; i < currentLines.length; i++) {
+        const lineNum = i + 1 // 1-indexed
+        const isDraft = i >= validatedLines.length || currentLines[i] !== validatedLines[i]
+        if (isDraft) {
+          draftLineNumbers.add(lineNum)
+        }
+        console.log(`Line ${lineNum}: "${currentLines[i]}" vs "${validatedLines[i] || '(none)'}" → ${isDraft ? 'DRAFT' : 'VALID'}`)
+      }
+
+      console.log('Draft lines:', [...draftLineNumbers])
+
+      // Apply the decoration
+      view.dispatch({
+        effects: setDraftLines.of(draftLineNumbers)
+      })
+    }
+
+    async function validateWithAI(code) {
+      if (isLoading) return
+      isLoading = true
+      statusEl.textContent = 'AI prüft...'
+      statusEl.className = 'status loading'
+
+      try {
+        const response = await fetch(`${API_URL}/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        })
+        const data = await response.json()
+
+        if (data.success) {
+          // Update editor with validated code
+          const currentContent = view.state.doc.toString()
+          if (data.code !== currentContent) {
+            view.dispatch({
+              changes: { from: 0, to: currentContent.length, insert: data.code }
+            })
+          }
+
+          // Mark all as validated
+          lastValidatedContent = data.code
+          view.dispatch({
+            effects: setDraftLines.of(new Set()) // No draft lines
+          })
+
+          statusEl.textContent = 'Validiert ✓'
+          statusEl.className = 'status done'
+        }
+      } catch (e) {
+        statusEl.textContent = 'Fehler: ' + e.message
+        statusEl.className = 'status'
+      } finally {
+        isLoading = false
+      }
+    }
+
+    // ===========================================
+    // Create Editor
+    // ===========================================
+
+    view = new EditorView({
+      doc: '',
+      extensions: [
+        lineNumbers(),
+        history(),
+        drawSelection(),
+        highlightActiveLine(),
+        keymap.of([...defaultKeymap, ...historyKeymap]),
+        mirrorLanguage,
+        syntaxHighlighting(mirrorHighlight),
+        darkTheme,
+        draftLinesField,
+        EditorView.updateListener.of(update => {
+          if (update.docChanged) {
+            clearTimeout(pauseTimer)
+
+            // Update draft decorations
+            updateDraftLines()
+
+            statusEl.textContent = 'Tippen...'
+            statusEl.className = 'status'
+
+            // Wait for pause
+            pauseTimer = setTimeout(() => {
+              const code = view.state.doc.toString()
+              if (code.trim().length > 5) {
+                validateWithAI(code)
+              }
+            }, 1500)
+          }
+        })
+      ],
+      parent: document.getElementById('editor-container')
+    })
+
+    // Focus editor
+    view.focus()
+
+    console.log('CodeMirror PoC loaded')
+  </script>
+</body>
+</html>

@@ -109,6 +109,7 @@ const loadedPanelSettings = loadPanelSettings()
 const initialState: StudioState = {
   source: '',
   resolvedSource: '',
+  validatedSource: '',
   ast: null,
   ir: null,
   sourceMap: null,

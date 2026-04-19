@@ -141,6 +141,8 @@ export interface StudioState {
   source: string
   /** Resolved source = prelude + current file (used by CodeModifier to match SourceMap positions) */
   resolvedSource: string
+  /** Last validated source content - used for draft line detection */
+  validatedSource: string
   ast: AST | null
   ir: IR | null
   sourceMap: SourceMap | null

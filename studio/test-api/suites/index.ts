@@ -491,6 +491,14 @@ import {
   quickPlayModeTests,
 } from './playmode'
 
+// Draft Lines (AI-assist visual feedback)
+import {
+  allDraftLineTests,
+  draftLineDetectionTests,
+  draftLineDecorationTests,
+  draftLineIntegrationTests,
+} from './draft-lines'
+
 // Property Robustness (various property formats)
 import {
   allPropertyRobustnessTests,
@@ -972,6 +980,14 @@ export {
   quickPlayModeTests,
 }
 
+// Draft Lines Tests (AI-assist visual feedback)
+export {
+  allDraftLineTests,
+  draftLineDetectionTests,
+  draftLineDecorationTests,
+  draftLineIntegrationTests,
+}
+
 // Property Robustness Tests
 export {
   allPropertyRobustnessTests,
@@ -1063,6 +1079,7 @@ export const allTests: TestCase[] = [
   ...allProjectTests,
   ...allCompilerVerificationTests,
   ...allPlayModeTests,
+  ...allDraftLineTests,
 ]
 
 /**
@@ -1528,6 +1545,12 @@ export const testCounts: Record<string, number> = {
   'testSystem.keyboard': testSystemKeyboardTests.length,
   'testSystem.waitHelper': waitHelperTests.length,
 
+  // === Draft Lines (AI-assist) ===
+  draftLines: allDraftLineTests.length,
+  'draftLines.detection': draftLineDetectionTests.length,
+  'draftLines.decoration': draftLineDecorationTests.length,
+  'draftLines.integration': draftLineIntegrationTests.length,
+
   // === Total ===
   total: allTests.length,
 }
@@ -1949,6 +1972,12 @@ export type TestCategory =
   | 'testSystem.isolation'
   | 'testSystem.keyboard'
   | 'testSystem.waitHelper'
+
+  // === Draft Lines (AI-assist) ===
+  | 'draftLines'
+  | 'draftLines.detection'
+  | 'draftLines.decoration'
+  | 'draftLines.integration'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -2400,6 +2429,12 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'testSystem.isolation': isolationTests,
     'testSystem.keyboard': testSystemKeyboardTests,
     'testSystem.waitHelper': waitHelperTests,
+
+    // === Draft Lines (AI-assist) ===
+    draftLines: allDraftLineTests,
+    'draftLines.detection': draftLineDetectionTests,
+    'draftLines.decoration': draftLineDecorationTests,
+    'draftLines.integration': draftLineIntegrationTests,
   }
 
   const names: Record<TestCategory, string> = {
@@ -2773,6 +2808,12 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'testSystem.isolation': 'Test: Isolation',
     'testSystem.keyboard': 'Test: Keyboard',
     'testSystem.waitHelper': 'Test: Wait Helper',
+
+    // === Draft Lines (AI-assist) ===
+    draftLines: 'Draft Lines',
+    'draftLines.detection': 'Draft: Detection Logic',
+    'draftLines.decoration': 'Draft: CodeMirror Decoration',
+    'draftLines.integration': 'Draft: Manager Integration',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
@@ -2813,6 +2854,7 @@ export function printTestSummary(): void {
   console.log(`   Project:            ${testCounts.project} tests`)
   console.log(`   Compiler Verify:    ${testCounts.compilerVerification} tests`)
   console.log(`   Play Mode:          ${testCounts.playMode} tests`)
+  console.log(`   Draft Lines:        ${testCounts.draftLines} tests`)
   console.log(`   ──────────────────────────`)
   console.log(`   Total:              ${testCounts.total} tests`)
   console.log('')
