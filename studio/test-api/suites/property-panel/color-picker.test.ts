@@ -236,29 +236,27 @@ export const colorPickerTests: TestCase[] = describe('Color Picker', [
     // Get tokens and verify colors
     const tokens = getTokenColorsFromPicker()
 
+    // STRICT: Tokens must exist - no silent skipping
     const primary = tokens.find(t => t.name.includes('primary'))
-    if (primary) {
-      api.assert.ok(
-        primary.color.toUpperCase() === '#3B82F6',
-        `Primary token should be #3B82F6, got ${primary.color}`
-      )
-    }
+    api.assert.ok(primary !== undefined, 'Primary token must exist in picker')
+    api.assert.ok(
+      primary!.color.toUpperCase() === '#3B82F6',
+      `Primary token should be #3B82F6, got ${primary!.color}`
+    )
 
     const success = tokens.find(t => t.name.includes('success'))
-    if (success) {
-      api.assert.ok(
-        success.color.toUpperCase() === '#10B981',
-        `Success token should be #10B981, got ${success.color}`
-      )
-    }
+    api.assert.ok(success !== undefined, 'Success token must exist in picker')
+    api.assert.ok(
+      success!.color.toUpperCase() === '#10B981',
+      `Success token should be #10B981, got ${success!.color}`
+    )
 
     const danger = tokens.find(t => t.name.includes('danger'))
-    if (danger) {
-      api.assert.ok(
-        danger.color.toUpperCase() === '#EF4444',
-        `Danger token should be #EF4444, got ${danger.color}`
-      )
-    }
+    api.assert.ok(danger !== undefined, 'Danger token must exist in picker')
+    api.assert.ok(
+      danger!.color.toUpperCase() === '#EF4444',
+      `Danger token should be #EF4444, got ${danger!.color}`
+    )
 
     // Clean up
     await api.interact.pressKey('Escape')

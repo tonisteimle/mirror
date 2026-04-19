@@ -24,12 +24,31 @@ Frame bg #1a1a1a, pad 24, gap 16
 `
 
 /**
- * Helper to setup layout with icon
+ * Helper to setup layout with icon and return the icon node ID
  */
-async function setupIconLayout(api: TestAPI): Promise<void> {
+async function setupIconLayout(api: TestAPI): Promise<string> {
   await api.editor.setCode(LAYOUT_WITH_ICON)
   await api.utils.waitForCompile()
   await api.utils.delay(300)
+
+  // Find the Icon element dynamically instead of hardcoding node-3
+  const iconElement = document.querySelector(
+    '[data-node-id][data-element-type="Icon"]'
+  ) as HTMLElement
+  if (iconElement) {
+    return iconElement.getAttribute('data-node-id') || 'node-3'
+  }
+  // Fallback: Icon is typically the 3rd element in our layout
+  return 'node-3'
+}
+
+/**
+ * Helper to get search input element
+ */
+function getSearchInput(): HTMLInputElement | null {
+  const picker = getIconPicker()
+  if (!picker) return null
+  return picker.querySelector('.icon-picker-search-input') as HTMLInputElement
 }
 
 /**
@@ -129,14 +148,14 @@ function getRecentIcons(): string[] {
 
 export const iconPickerTests: TestCase[] = describe('Icon Picker', [
   test('Icon picker opens from property panel', async (api: TestAPI) => {
-    // Setup layout with icon
-    await setupIconLayout(api)
+    // Setup layout with icon - returns the icon node ID dynamically
+    const iconNodeId = await setupIconLayout(api)
 
-    // Verify icon exists (node-3 is the Icon in this layout)
-    api.assert.exists('node-3', 'Icon should exist')
+    // Verify icon exists
+    api.assert.exists(iconNodeId, 'Icon element should exist')
 
     // Select the icon
-    await api.studio.setSelection('node-3')
+    await api.studio.setSelection(iconNodeId)
     await api.utils.delay(200)
 
     // Verify property panel is visible
@@ -145,51 +164,69 @@ export const iconPickerTests: TestCase[] = describe('Icon Picker', [
     // Open icon picker
     const opened = await openIconPicker(api)
     api.assert.ok(opened, 'Icon picker should open')
-    api.assert.ok(isIconPickerVisible(), 'Icon picker should be visible')
 
-    // Close picker
+    // Verify picker has expected structure
+    const picker = getIconPicker()
+    api.assert.ok(picker !== null, 'Picker element should exist')
+    api.assert.ok(picker!.classList.contains('visible'), 'Picker should have visible class')
+
+    // Close picker (Escape or click outside)
     await api.interact.pressKey('Escape')
-    await api.utils.delay(200)
+    await api.utils.delay(300)
+
+    // If still visible, try clicking outside
+    if (isIconPickerVisible()) {
+      const preview = document.getElementById('preview')
+      if (preview) {
+        preview.click()
+        await api.utils.delay(300)
+      }
+    }
+    // Note: Some implementations keep picker open until explicit close
+    // The main test here is that the picker opened successfully
   }),
 
   test('Icon picker displays icons in grid', async (api: TestAPI) => {
-    // Setup layout with icon
-    await setupIconLayout(api)
-
-    // Select the icon
-    await api.studio.setSelection('node-3')
+    const iconNodeId = await setupIconLayout(api)
+    await api.studio.setSelection(iconNodeId)
     await api.utils.delay(200)
 
-    // Open icon picker
     await openIconPicker(api)
     await api.utils.delay(300)
 
-    // Get icons
+    // Get icons and verify grid structure
     const icons = getIconItems()
     api.assert.ok(icons.length > 0, `Should have icons displayed, got ${icons.length}`)
-
-    // Should have multiple icons (at least built-in icons)
     api.assert.ok(icons.length >= 10, `Should have at least 10 icons, got ${icons.length}`)
 
-    // Close picker
+    // Verify icons are actually visible (not hidden via CSS)
+    const firstIcon = icons[0]
+    const computedStyle = window.getComputedStyle(firstIcon)
+    api.assert.ok(
+      computedStyle.display !== 'none' && computedStyle.visibility !== 'hidden',
+      'Icons should be visible (not hidden via CSS)'
+    )
+
+    // Verify grid container exists with proper layout
+    const picker = getIconPicker()
+    const grid = picker?.querySelector('.icon-picker-grid')
+    api.assert.ok(grid !== null, 'Grid container should exist')
+
     await api.interact.pressKey('Escape')
   }),
 
   test('Icon picker search filters icons', async (api: TestAPI) => {
-    // Setup layout with icon
-    await setupIconLayout(api)
-
-    // Select the icon
-    await api.studio.setSelection('node-3')
+    const iconNodeId = await setupIconLayout(api)
+    await api.studio.setSelection(iconNodeId)
     await api.utils.delay(200)
 
-    // Open icon picker
     await openIconPicker(api)
     await api.utils.delay(300)
 
     // Get initial icon count
     const initialIcons = getIconItems()
     const initialCount = initialIcons.length
+    api.assert.ok(initialCount > 20, `Should have many icons initially, got ${initialCount}`)
 
     // Search for "heart"
     await searchIcons(api, 'heart')
@@ -198,29 +235,34 @@ export const iconPickerTests: TestCase[] = describe('Icon Picker', [
     const filteredIcons = getIconItems()
     const filteredNames = getIconNames()
 
-    // Should have fewer icons after search
+    // STRICT: Must have fewer icons after search (not just <=20)
     api.assert.ok(
-      filteredIcons.length < initialCount || filteredIcons.length <= 20,
-      'Search should filter icons'
+      filteredIcons.length < initialCount,
+      `Search must reduce icon count: ${filteredIcons.length} should be < ${initialCount}`
     )
 
-    // Should have icons matching "heart"
-    const hasHeart = filteredNames.some(name => name.toLowerCase().includes('heart'))
-    api.assert.ok(hasHeart, 'Should have heart icon in results')
+    // STRICT: All visible icons should match the search term
+    const allMatchHeart = filteredNames.every(name => name.toLowerCase().includes('heart'))
+    api.assert.ok(
+      allMatchHeart || filteredNames.length === 0,
+      `All filtered icons should contain "heart", got: ${filteredNames.slice(0, 5).join(', ')}`
+    )
 
-    // Close picker
+    // Should have at least one heart icon
+    api.assert.ok(filteredNames.length > 0, 'Should have at least one heart icon in results')
+
     await api.interact.pressKey('Escape')
   }),
 
   test('Selecting icon updates code', async (api: TestAPI) => {
-    // Setup layout with icon
-    await setupIconLayout(api)
-
-    // Select the icon (node-3)
-    await api.studio.setSelection('node-3')
+    const iconNodeId = await setupIconLayout(api)
+    await api.studio.setSelection(iconNodeId)
     await api.utils.delay(200)
 
-    // Open icon picker
+    // Get original code
+    const originalCode = api.editor.getCode()
+    api.assert.ok(originalCode.includes('"check"'), 'Original code should have check icon')
+
     await openIconPicker(api)
     await api.utils.delay(500)
 
@@ -230,149 +272,254 @@ export const iconPickerTests: TestCase[] = describe('Icon Picker', [
 
     // Find a different icon to select (not "check")
     const newIcon = iconNames.find(name => name !== 'check' && !name.includes('check'))
-    if (newIcon) {
-      // Select the new icon
-      const selected = await selectIcon(api, newIcon)
-      api.assert.ok(selected, `Should be able to select icon: ${newIcon}`)
 
-      // Wait for code update
-      await api.utils.delay(500)
+    // STRICT: Must find a different icon - fail if not found
+    api.assert.ok(newIcon !== undefined, 'Must find an icon different from "check"')
 
-      // Verify code was updated - icon picker may add as content property or change icon name
-      const code = api.editor.getCode()
-      const hasNewIcon =
-        code.includes(`"${newIcon}"`) ||
-        code.includes(`'${newIcon}'`) ||
-        code.includes(`content ${newIcon}`) ||
-        code.includes(newIcon)
-      api.assert.ok(
-        hasNewIcon,
-        `Code should reference new icon "${newIcon}", got: ${code.substring(0, 200)}`
-      )
-    }
+    // Select the new icon
+    const selected = await selectIcon(api, newIcon!)
+    api.assert.ok(selected, `Should be able to select icon: ${newIcon}`)
+
+    await api.utils.delay(500)
+
+    // Verify code was updated
+    const newCode = api.editor.getCode()
+
+    // STRICT: Code must have changed
+    api.assert.ok(newCode !== originalCode, 'Code should have changed after icon selection')
+
+    // STRICT: New icon should be in code (with proper quoting or as content)
+    const hasNewIconQuoted = newCode.includes(`"${newIcon}"`) || newCode.includes(`'${newIcon}'`)
+    const hasNewIconContent =
+      newCode.includes(`content ${newIcon}`) || newCode.includes(`content "${newIcon}"`)
+    api.assert.ok(
+      hasNewIconQuoted || hasNewIconContent,
+      `Code should contain new icon "${newIcon}" with quotes, got: ${newCode.substring(0, 300)}`
+    )
+
+    // Verify the new icon is actually part of the Icon element definition
+    // The icon might be added via content property rather than replacing the original
+    const iconLineMatch = newCode.match(/Icon\s+.*$/m)
+    api.assert.ok(iconLineMatch !== null, 'Should still have an Icon element in code')
+
+    // Either the old icon is gone, OR the new icon is added (content property)
+    const oldIconGone = !newCode.includes('Icon "check"')
+    const newIconAdded = hasNewIconQuoted || hasNewIconContent
+
+    api.assert.ok(
+      oldIconGone || newIconAdded,
+      `Icon should be updated: old icon gone (${oldIconGone}) or new icon added (${newIconAdded})`
+    )
   }),
 
   test('Icon picker has search input', async (api: TestAPI) => {
-    // Setup layout with icon
-    await setupIconLayout(api)
-
-    // Select the icon
-    await api.studio.setSelection('node-3')
+    const iconNodeId = await setupIconLayout(api)
+    await api.studio.setSelection(iconNodeId)
     await api.utils.delay(200)
 
-    // Open icon picker
     await openIconPicker(api)
     await api.utils.delay(300)
 
     // Check for search input
-    const picker = getIconPicker()
-    api.assert.ok(picker !== null, 'Picker should exist')
-
-    const searchInput = picker?.querySelector('.icon-picker-search-input')
+    const searchInput = getSearchInput()
     api.assert.ok(searchInput !== null, 'Search input should exist')
 
-    // Close picker
+    // Verify it's a proper input element
+    api.assert.ok(
+      searchInput!.tagName.toLowerCase() === 'input',
+      `Search should be an input element, got ${searchInput!.tagName}`
+    )
+
+    // Verify input is focusable and editable
+    api.assert.ok(
+      !searchInput!.disabled && !searchInput!.readOnly,
+      'Search input should be editable'
+    )
+
     await api.interact.pressKey('Escape')
   }),
 
   test('Icon picker search clears on reopen', async (api: TestAPI) => {
-    // Setup layout with icon
-    await setupIconLayout(api)
-
-    // Select the icon
-    await api.studio.setSelection('node-3')
+    const iconNodeId = await setupIconLayout(api)
+    await api.studio.setSelection(iconNodeId)
     await api.utils.delay(200)
 
     // Open icon picker
     await openIconPicker(api)
     await api.utils.delay(300)
 
-    // Search for something
+    // Clear any previous search state first (test isolation)
+    const searchInputInit = getSearchInput()
+    if (searchInputInit && searchInputInit.value !== '') {
+      searchInputInit.value = ''
+      searchInputInit.dispatchEvent(new Event('input', { bubbles: true }))
+      await api.utils.delay(200)
+    }
+
+    // Get initial count after clearing
+    const initialCount = getIconItems().length
+    const searchInputBefore = getSearchInput()
+    api.assert.ok(searchInputBefore !== null, 'Search input should exist')
+    api.assert.ok(
+      searchInputBefore!.value === '',
+      `Search should be empty after clear, got: "${searchInputBefore!.value}"`
+    )
+
+    // Search for something specific
     await searchIcons(api, 'arrow')
     const filteredCount = getIconItems().length
+    api.assert.ok(
+      filteredCount < initialCount,
+      `Search should filter icons: ${filteredCount} < ${initialCount}`
+    )
 
-    // Close picker by clicking outside
-    const preview = document.getElementById('preview')
-    if (preview) {
-      preview.click()
-      await api.utils.delay(300)
+    // Verify search input has our query
+    const searchInputAfterSearch = getSearchInput()
+    api.assert.ok(
+      searchInputAfterSearch!.value === 'arrow',
+      `Search input should have "arrow", got: "${searchInputAfterSearch!.value}"`
+    )
+
+    // Close picker using Escape key
+    await api.interact.pressKey('Escape')
+    await api.utils.delay(300)
+
+    // If still visible, try clicking outside
+    if (isIconPickerVisible()) {
+      const preview = document.getElementById('preview')
+      if (preview) {
+        preview.click()
+        await api.utils.delay(300)
+      }
+    }
+
+    // If picker is still visible, we can't test reopen behavior
+    // Skip the reopen test in this case
+    if (isIconPickerVisible()) {
+      // Clear search manually and verify it works
+      const searchToClear = getSearchInput()
+      if (searchToClear) {
+        searchToClear.value = ''
+        searchToClear.dispatchEvent(new Event('input', { bubbles: true }))
+        await api.utils.delay(200)
+        const clearedCount = getIconItems().length
+        api.assert.ok(
+          clearedCount >= initialCount - 5,
+          `Clearing search should restore icons: ${clearedCount} >= ${initialCount - 5}`
+        )
+      }
+      return
     }
 
     // Reopen picker
-    await openIconPicker(api)
+    const reopened = await openIconPicker(api)
+    api.assert.ok(reopened, 'Should be able to reopen icon picker')
     await api.utils.delay(500)
 
-    // Should show icons (either all or filtered - behavior depends on implementation)
-    const reopenCount = getIconItems().length
-    api.assert.ok(reopenCount >= 10, `Should have icons displayed after reopen, got ${reopenCount}`)
+    // Check search state after reopen
+    const searchInputAfterReopen = getSearchInput()
+    api.assert.ok(searchInputAfterReopen !== null, 'Search input should exist after reopen')
 
-    // Close picker
-    const preview2 = document.getElementById('preview')
-    if (preview2) {
-      preview2.click()
-    }
+    const searchValue = searchInputAfterReopen!.value
+    const reopenCount = getIconItems().length
+
+    // Either search is cleared OR all icons are shown again
+    const searchCleared = searchValue === ''
+    const allIconsShown = reopenCount >= initialCount - 5 // Allow small variance
+
+    api.assert.ok(
+      searchCleared || allIconsShown,
+      `Search should clear on reopen. Search value: "${searchValue}", icons: ${reopenCount} (was ${initialCount})`
+    )
+
+    // Clean up
+    await api.interact.pressKey('Escape')
     await api.utils.delay(200)
   }),
 
   test('Icon picker shows icon titles on hover', async (api: TestAPI) => {
-    // Setup layout with icon
-    await setupIconLayout(api)
-
-    // Select the icon
-    await api.studio.setSelection('node-3')
+    const iconNodeId = await setupIconLayout(api)
+    await api.studio.setSelection(iconNodeId)
     await api.utils.delay(200)
 
-    // Open icon picker
     await openIconPicker(api)
     await api.utils.delay(300)
 
-    // Get first few icon items
     const items = getIconItems()
     api.assert.ok(items.length > 0, 'Should have icon items')
 
-    // Check that items have title attribute (for tooltip)
-    const firstItem = items[0]
-    const title = firstItem.getAttribute('title')
-    api.assert.ok(title && title.length > 0, `Icon should have title attribute, got: ${title}`)
+    // Check multiple items, not just first
+    const itemsToCheck = items.slice(0, Math.min(5, items.length))
+    for (const item of itemsToCheck) {
+      const title = item.getAttribute('title')
+      const dataIcon = item.getAttribute('data-icon')
 
-    // Title should match data-icon
-    const dataIcon = firstItem.getAttribute('data-icon')
-    api.assert.ok(title === dataIcon, `Title "${title}" should match data-icon "${dataIcon}"`)
+      api.assert.ok(
+        title !== null && title.length > 0,
+        `Icon should have title attribute, got: ${title}`
+      )
+      api.assert.ok(
+        dataIcon !== null && dataIcon.length > 0,
+        `Icon should have data-icon attribute, got: ${dataIcon}`
+      )
+      api.assert.ok(title === dataIcon, `Title "${title}" should match data-icon "${dataIcon}"`)
+    }
 
-    // Close picker
     await api.interact.pressKey('Escape')
   }),
 
-  test('Icon picker keyboard navigation', async (api: TestAPI) => {
-    // Setup layout with icon
-    await setupIconLayout(api)
-
-    // Select the icon
-    await api.studio.setSelection('node-3')
+  test('Icon picker keyboard navigation works', async (api: TestAPI) => {
+    const iconNodeId = await setupIconLayout(api)
+    await api.studio.setSelection(iconNodeId)
     await api.utils.delay(200)
 
-    // Open icon picker
     await openIconPicker(api)
     await api.utils.delay(300)
 
-    // Get initial items
     const items = getIconItems()
     api.assert.ok(items.length > 0, 'Should have icon items')
 
-    // Verify grid layout exists
+    // Verify grid structure for keyboard nav
     const picker = getIconPicker()
     const grid = picker?.querySelector('.icon-picker-grid')
     api.assert.ok(grid !== null, 'Should have icon grid')
 
-    // Items should have data-icon attribute for keyboard selection
-    const firstItem = items[0]
-    api.assert.ok(firstItem.hasAttribute('data-icon'), 'Icon items should have data-icon attribute')
+    // Focus search input first (typical keyboard flow)
+    const searchInput = getSearchInput()
+    api.assert.ok(searchInput !== null, 'Search input should exist for keyboard flow')
+    searchInput!.focus()
+    await api.utils.delay(100)
 
-    // Close picker by clicking outside
-    const preview = document.getElementById('preview')
-    if (preview) {
-      preview.click()
-    }
+    // Verify search input is focused
+    api.assert.ok(document.activeElement === searchInput, 'Search input should be focusable')
+
+    // Press Tab to move to grid items (or ArrowDown depending on implementation)
+    await api.interact.pressKey('Tab')
+    await api.utils.delay(100)
+
+    // Verify focus moved to an icon or stays in picker
+    const focusedElement = document.activeElement
+    const focusInPicker =
+      picker?.contains(focusedElement) || focusedElement?.classList.contains('icon-picker-item')
+
+    api.assert.ok(
+      focusInPicker,
+      `Focus should stay in picker after Tab, active: ${focusedElement?.className}`
+    )
+
+    // Items should have tabindex or be buttons for keyboard access
+    const firstItem = items[0]
+    const isKeyboardAccessible =
+      firstItem.hasAttribute('tabindex') ||
+      firstItem.tagName.toLowerCase() === 'button' ||
+      firstItem.getAttribute('role') === 'button'
+
+    api.assert.ok(
+      isKeyboardAccessible,
+      'Icon items should be keyboard accessible (tabindex, button, or role=button)'
+    )
+
+    await api.interact.pressKey('Escape')
     await api.utils.delay(200)
   }),
 ])
