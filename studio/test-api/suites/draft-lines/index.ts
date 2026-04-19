@@ -176,40 +176,57 @@ export const draftLineIntegrationTests: TestCase[] = [
   {
     name: 'Integration: new lines marked as draft after typing',
     run: async api => {
-      const { getDraftLinesManager } = await import('../../../editor/draft-lines-manager')
-      const { state } = await import('../../../core')
+      const { detectDraftLines, setDraftLines } = await import('../../../editor/draft-lines')
 
-      const manager = getDraftLinesManager()
-      if (!manager) {
-        throw new Error('DraftLinesManager not initialized')
-      }
+      const view = (window as any).editor
+      if (!view) throw new Error('EditorView not available')
 
-      // Set initial validated content
-      state.set({ validatedSource: 'Frame bg #1a1a1a' })
+      // Scenario: user has validated code, then types new content
+      const validated = 'Frame bg #1a1a1a'
+      const current = 'Frame bg #1a1a1a\n  Text "Hello"'
 
-      // Type new content (simulates user adding a line)
-      await api.editor.setCode('Frame bg #1a1a1a\n  Text "Hello"')
+      // Set code in editor
+      await api.editor.setCode(current)
       await api.utils.delay(100)
 
-      // Check draft lines
-      const draftLines = manager.getDraftLines()
+      // Detect draft lines using validated vs current
+      const draftLines = detectDraftLines(current, validated)
+
+      // Apply draft line decorations
+      setDraftLines(view, draftLines)
+      await api.utils.delay(50)
+
+      // Verify: Line 1 unchanged, Line 2 is new (draft)
       api.assert.ok(!draftLines.has(1), 'Line 1 should NOT be draft (validated)')
       api.assert.ok(draftLines.has(2), 'Line 2 should be draft (new)')
+
+      // Visual verification: check CSS class
+      const lines = document.querySelectorAll('.cm-line')
+      api.assert.ok(
+        !lines[0]?.classList.contains('cm-draft-line'),
+        'Line 1 should not have draft class'
+      )
+      api.assert.ok(lines[1]?.classList.contains('cm-draft-line'), 'Line 2 should have draft class')
     },
   },
 
   {
     name: 'Integration: draft lines cleared after successful compile',
     run: async api => {
-      const { clearDraftLines, setDraftLines } = await import('../../../editor/draft-lines')
+      const { setDraftLines } = await import('../../../editor/draft-lines')
       const { state, events } = await import('../../../core')
 
       const view = (window as any).editor
       if (!view) throw new Error('EditorView not available')
 
-      // Set some code and mark as draft
-      await api.editor.setCode('Frame bg #2271C1\n  Text "Test"')
+      const code = 'Frame bg #2271C1\n  Text "Test"'
+
+      // Set code in editor and state
+      state.set({ source: code, validatedSource: '' })
+      await api.editor.setCode(code)
       await api.utils.delay(100)
+
+      // Mark as draft
       setDraftLines(view, new Set([1, 2]))
       await api.utils.delay(50)
 
@@ -249,32 +266,82 @@ export const draftLineIntegrationTests: TestCase[] = [
   {
     name: 'Integration: validated lines stay bright when new code added',
     run: async api => {
-      const { getDraftLinesManager } = await import('../../../editor/draft-lines-manager')
-      const { state } = await import('../../../core')
+      const { detectDraftLines, setDraftLines, clearDraftLines } =
+        await import('../../../editor/draft-lines')
 
-      const manager = getDraftLinesManager()
-      if (!manager) throw new Error('DraftLinesManager not initialized')
+      const view = (window as any).editor
+      if (!view) throw new Error('EditorView not available')
 
-      // Start with validated content
+      // Scenario: user has 2 validated lines, adds a 3rd line
       const validatedCode = 'Frame bg #1a1a1a\n  Text "Validated"'
-      state.set({ validatedSource: validatedCode })
-      await api.editor.setCode(validatedCode)
-      await api.utils.delay(100)
-
-      // Add new line
       const newCode = 'Frame bg #1a1a1a\n  Text "Validated"\n  Button "New"'
+
+      // Clear any existing draft lines first
+      clearDraftLines(view)
+
+      // Set code in editor
       await api.editor.setCode(newCode)
       await api.utils.delay(100)
 
+      // Detect and apply draft lines
+      const draftLines = detectDraftLines(newCode, validatedCode)
+      setDraftLines(view, draftLines)
+      await api.utils.delay(50)
+
       // Check: first 2 lines should NOT be draft (unchanged from validated)
       // Line 3 should be draft (new)
-      const draftLines = manager.getDraftLines()
       api.assert.ok(!draftLines.has(1), 'Line 1 should stay validated (bright)')
       api.assert.ok(!draftLines.has(2), 'Line 2 should stay validated (bright)')
       api.assert.ok(draftLines.has(3), 'Line 3 should be draft (new)')
+
+      // Visual verification
+      const lines = document.querySelectorAll('.cm-line')
+      api.assert.ok(!lines[0]?.classList.contains('cm-draft-line'), 'Line 1 visual: no draft class')
+      api.assert.ok(!lines[1]?.classList.contains('cm-draft-line'), 'Line 2 visual: no draft class')
+      api.assert.ok(lines[2]?.classList.contains('cm-draft-line'), 'Line 3 visual: has draft class')
     },
   },
 ]
+
+// =============================================================================
+// Comprehensive Tests (from separate file)
+// =============================================================================
+
+export {
+  detectionTests as comprehensiveDetectionTests,
+  decorationTests as comprehensiveDecorationTests,
+  stateTests as comprehensiveStateTests,
+  workflowTests as comprehensiveWorkflowTests,
+  edgeCaseTests as comprehensiveEdgeCaseTests,
+  inspectionTests as comprehensiveInspectionTests,
+  allComprehensiveDraftLineTests,
+} from './comprehensive.test'
+
+// =============================================================================
+// AI Workflow Tests (from separate file)
+// =============================================================================
+
+export { aiWorkflowTests, visualVerificationTests, allAIWorkflowTests } from './ai-workflow.test'
+
+// Re-export API
+export {
+  createDraftLinesTestContext,
+  createDraftLinesAssertions,
+  DRAFT_LINES_SCENARIOS,
+  inspectLineStates,
+  formatLineStates,
+  // AI Workflow API
+  createAIWorkflowSimulator,
+  getTokenColor,
+  hasLinesMutedColors,
+  type DraftLinesTestContext,
+  type DraftLinesAssertions,
+  type DraftLinesScenario,
+  type LineVisualState,
+  type AIWorkflowSimulator,
+  type AIWorkflowContext,
+  type AIWorkflowStep,
+} from './draft-lines-api'
 
 // =============================================================================
 // Combined Exports

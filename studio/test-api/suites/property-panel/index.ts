@@ -25,3 +25,5 @@ export {
   iconPropertyTests,
   complexPropertyTests,
 } from './comprehensive.test'
+
+export { colorPickerTests, allColorPickerTests } from './color-picker.test'

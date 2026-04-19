@@ -458,9 +458,30 @@ export class PropertyPanelView {
     try {
       const data = JSON.parse(jsonValue)
       const { property, currentValue } = data
-      // TODO: Integrate with ColorPicker
-      // For now, emit an event that the color picker can listen to
-      log.info('Color picker requested for:', property, currentValue)
+
+      // Find the color trigger element to position the picker
+      const trigger = this.container?.querySelector(
+        `[data-color-prop="${property}"]`
+      ) as HTMLElement
+      if (!trigger) {
+        log.warn('Color trigger not found for property:', property)
+        return
+      }
+
+      const rect = trigger.getBoundingClientRect()
+      const x = rect.left
+      const y = rect.bottom + 8
+
+      // Use the global color picker API
+      const showColorPicker = (window as any).showColorPickerForProperty
+      if (showColorPicker) {
+        showColorPicker(x, y, property, currentValue, (color: string) => {
+          // When a color is selected, update the property
+          this.controller.changeProperty(property === 'bg' ? 'bg' : 'col', color)
+        })
+      } else {
+        log.warn('Color picker API not available')
+      }
     } catch (e) {
       log.error('Failed to parse color picker request:', e)
     }
