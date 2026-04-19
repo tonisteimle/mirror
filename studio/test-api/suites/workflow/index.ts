@@ -10,3 +10,6 @@ export {
   projectWithDragDropTests,
   applicationTests,
 } from '../workflow-tests'
+
+// Dashboard E2E test (comprehensive visual editing test)
+export { dashboardE2ETests, allDashboardE2ETests } from './dashboard-e2e.test'

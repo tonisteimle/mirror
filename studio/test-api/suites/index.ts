@@ -272,6 +272,7 @@ import {
   projectWithCodeTests,
   projectWithDragDropTests,
   applicationTests,
+  dashboardE2ETests,
 } from './workflow'
 
 // Charts
@@ -757,7 +758,13 @@ export {
 }
 
 // Workflow Tests
-export { allWorkflowTests, projectWithCodeTests, projectWithDragDropTests, applicationTests }
+export {
+  allWorkflowTests,
+  projectWithCodeTests,
+  projectWithDragDropTests,
+  applicationTests,
+  dashboardE2ETests,
+}
 
 // States
 export {
@@ -1037,6 +1044,7 @@ export const allTests: TestCase[] = [
   ...allComprehensivePropertyTests,
   ...allChartTests,
   ...allWorkflowTests,
+  ...dashboardE2ETests,
   ...allLayoutVerificationTests,
   ...allTestSystemTests,
   ...allStateTests,
@@ -1316,6 +1324,7 @@ export const testCounts: Record<string, number> = {
   'workflow.projectWithCode': projectWithCodeTests.length,
   'workflow.projectWithDragDrop': projectWithDragDropTests.length,
   'workflow.application': applicationTests.length,
+  'workflow.dashboardE2E': dashboardE2ETests.length,
 
   // === States ===
   states: allStateTests.length,
@@ -2188,6 +2197,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'workflow.projectWithCode': projectWithCodeTests,
     'workflow.projectWithDragDrop': projectWithDragDropTests,
     'workflow.application': applicationTests,
+    'workflow.dashboardE2E': dashboardE2ETests,
 
     // === States ===
     states: allStateTests,
