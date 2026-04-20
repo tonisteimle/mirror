@@ -216,22 +216,25 @@ export class SnappingService {
   // ============================================================================
 
   /**
-   * Snap a spacing value with priority:
-   * 1. Token snap (if within threshold)
-   * 2. Grid snap (fallback)
+   * Snap a spacing value to tokens
+   *
+   * Logic:
+   * - If tokens exist for this property type → snap ONLY to tokens
+   * - If NO tokens exist for this property type → fall back to grid snapping
    *
    * @param value - The current value
    * @param propertyType - The property type
    * @returns SnapResult
    */
   snapSpacing(value: number, propertyType: SpacingPropertyType): SnapResult {
-    // First try token snapping
-    const tokenResult = this.snapToToken(value, propertyType)
-    if (tokenResult.snapped) {
-      return tokenResult
+    const relevantTokens = this.getSpacingTokens(propertyType)
+
+    // If tokens exist for this property type, ONLY snap to tokens (no grid fallback)
+    if (relevantTokens.length > 0) {
+      return this.snapToToken(value, propertyType)
     }
 
-    // Fall back to grid snapping for spacing
+    // No tokens defined for this property type → fall back to grid snapping
     const handleSettings = handleSnapSettings.get()
     if (handleSettings.enabled) {
       const gridSize = handleSettings.gridSize

@@ -694,16 +694,15 @@ export const snapIndicatorTests: TestCase[] = describe('Snap Indicator Visual Fe
 
 export const gridSnappingFallbackTests: TestCase[] = describe('Grid Snapping Fallback', [
   testWithSetup(
-    'Padding snaps to grid when no token matches',
-    // Tokens are far from target value (25-30 range)
-    // Threshold is 4, so 25-30 should NOT snap to any token (closest is 32 at distance > 4)
-    's.pad: 4\nm.pad: 32\n\nFrame pad 25, bg #1a1a1a, w 200, h 150\n  Text "Content"',
+    'Padding snaps to grid when NO tokens are defined',
+    // NO padding tokens defined - should fall back to grid snapping
+    'Frame pad 25, bg #1a1a1a, w 200, h 150\n  Text "Content"',
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      // Initial padding is 25 (not close to 4 or 32)
+      // Initial padding is 25 (no tokens defined)
       const initialPadding = getComputedPadding('node-1')
       api.assert.ok(
         initialPadding.top === 25,
@@ -721,8 +720,7 @@ export const gridSnappingFallbackTests: TestCase[] = describe('Grid Snapping Fal
       const startX = handleRect.left + handleRect.width / 2
       const startY = handleRect.top + handleRect.height / 2
 
-      // Drag down slightly to increase padding from 25 to ~26-27
-      // This should snap to 24 (grid multiple of 8) since no tokens are nearby
+      // Drag slightly - since no tokens exist, should snap to grid
       topHandle.dispatchEvent(
         new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
       )
@@ -735,11 +733,61 @@ export const gridSnappingFallbackTests: TestCase[] = describe('Grid Snapping Fal
       await api.utils.waitForCompile()
       await api.utils.delay(100)
 
-      // Should snap to grid (multiple of 8)
+      // Should snap to grid (multiple of 8) since no tokens defined
       const finalPadding = getComputedPadding('node-1')
       api.assert.ok(
         finalPadding.top % 8 === 0,
-        `Padding should snap to grid (multiple of 8), got ${finalPadding.top}`
+        `Padding should snap to grid (multiple of 8) when no tokens defined, got ${finalPadding.top}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Padding does NOT snap to grid when tokens exist but value is not near any token',
+    // Tokens exist but value 25 is far from all of them (4, 32)
+    's.pad: 4\nm.pad: 32\n\nFrame pad 25, bg #1a1a1a, w 200, h 150\n  Text "Content"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      await api.interact.pressKey('Escape')
+      await api.utils.delay(100)
+
+      // Initial padding is 25 (tokens exist but not nearby)
+      const initialPadding = getComputedPadding('node-1')
+      api.assert.ok(
+        initialPadding.top === 25,
+        `Initial padding should be 25, got ${initialPadding.top}`
+      )
+
+      // Enter padding mode
+      await api.interact.enterPaddingMode('node-1')
+      await api.utils.delay(100)
+
+      const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
+      api.assert.ok(topHandle !== null, 'Top padding handle should exist')
+
+      const handleRect = topHandle.getBoundingClientRect()
+      const startX = handleRect.left + handleRect.width / 2
+      const startY = handleRect.top + handleRect.height / 2
+
+      // Drag slightly - tokens exist so NO grid fallback should happen
+      topHandle.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
+      )
+      document.dispatchEvent(
+        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 1 })
+      )
+      await api.utils.delay(100)
+      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+      await api.utils.waitForCompile()
+      await api.utils.delay(100)
+
+      // Should NOT snap to grid - value should be 26 (exact drag result)
+      // Since tokens exist, no grid fallback occurs
+      const finalPadding = getComputedPadding('node-1')
+      api.assert.ok(
+        finalPadding.top === 26,
+        `Padding should NOT snap to grid when tokens exist - expected 26, got ${finalPadding.top}`
       )
     }
   ),
