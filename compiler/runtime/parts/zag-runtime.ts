@@ -4350,6 +4350,9 @@ export const ZAG_RUNTIME = `
     if (isDisabled) {
       trigger.disabled = true
       el.setAttribute('data-disabled', 'true')
+      el.style.opacity = '0.5'
+      el.style.cursor = 'not-allowed'
+      el.style.pointerEvents = 'none'
     }
 
     if (isInvalid) {
@@ -4657,6 +4660,9 @@ export const ZAG_RUNTIME = `
 
     if (isDisabled) {
       el.setAttribute('data-disabled', 'true')
+      el.style.opacity = '0.5'
+      el.style.cursor = 'not-allowed'
+      el.style.pointerEvents = 'none'
     }
 
     if (isInvalid) {
@@ -4955,6 +4961,9 @@ export const ZAG_RUNTIME = `
 
     if (isDisabled) {
       el.setAttribute('data-disabled', 'true')
+      el.style.opacity = '0.5'
+      el.style.cursor = 'not-allowed'
+      el.style.pointerEvents = 'none'
       thumb.setAttribute('tabindex', '-1')
     }
 

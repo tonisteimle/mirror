@@ -8,6 +8,30 @@
 import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
+/**
+ * Helper to verify an element has an active CSS animation.
+ * Checks both animationName and animation properties strictly.
+ */
+function hasActiveAnimation(style: CSSStyleDeclaration): boolean {
+  const animName = style.animationName
+  const animDuration = style.animationDuration
+
+  // animationName must be set and not 'none'
+  const hasName = animName !== '' && animName !== 'none'
+
+  // animationDuration must be > 0
+  const hasDuration = animDuration !== '' && animDuration !== '0s'
+
+  return hasName && hasDuration
+}
+
+/**
+ * Helper to get animation details for error messages
+ */
+function getAnimationDebugInfo(style: CSSStyleDeclaration): string {
+  return `name="${style.animationName}", duration="${style.animationDuration}", timing="${style.animationTimingFunction}"`
+}
+
 export const spinAnimationTests: TestCase[] = describe('Spin Animation', [
   testWithSetup(
     'Icon with spin animation',
@@ -18,15 +42,16 @@ export const spinAnimationTests: TestCase[] = describe('Spin Animation', [
       const element = await api.utils.waitForElement('node-1')
       const computedStyle = window.getComputedStyle(element)
 
-      // Should have animation property
-      const animation = computedStyle.animation || computedStyle.animationName
-      api.assert.ok(animation !== '' && animation !== 'none', 'Should have animation applied')
-
-      // Verify it's a spin animation (infinite rotation)
+      // STRICT: Must have active animation with name and duration
       api.assert.ok(
-        computedStyle.animationIterationCount === 'infinite' ||
-          computedStyle.animationDuration !== '0s',
-        'Spin should be continuous'
+        hasActiveAnimation(computedStyle),
+        `Should have spin animation applied, got: ${getAnimationDebugInfo(computedStyle)}`
+      )
+
+      // Verify it's a continuous spin animation
+      api.assert.ok(
+        computedStyle.animationIterationCount === 'infinite',
+        `Spin should be infinite, got iterationCount="${computedStyle.animationIterationCount}"`
       )
     }
   ),
@@ -42,10 +67,10 @@ export const spinAnimationTests: TestCase[] = describe('Spin Animation', [
       const element = await api.utils.waitForElement('node-2')
       const computedStyle = window.getComputedStyle(element)
 
-      // Should have rotation animation
+      // STRICT: Must have spin animation
       api.assert.ok(
-        computedStyle.animation !== '' || computedStyle.animationName !== 'none',
-        'Should have spin animation'
+        hasActiveAnimation(computedStyle),
+        `Should have spin animation, got: ${getAnimationDebugInfo(computedStyle)}`
       )
     }
   ),
@@ -85,10 +110,10 @@ export const pulseAnimationTests: TestCase[] = describe('Pulse Animation', [
       const badge = await api.utils.waitForElement('node-3')
       const style = window.getComputedStyle(badge)
 
-      // Should have pulse animation
+      // STRICT: Must have pulse animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Badge should have pulse animation'
+        hasActiveAnimation(style),
+        `Badge should have pulse animation, got: ${getAnimationDebugInfo(style)}`
       )
 
       // Badge should be red
@@ -109,10 +134,10 @@ export const pulseAnimationTests: TestCase[] = describe('Pulse Animation', [
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
       api.assert.hasStyle('node-1', 'color', 'rgb(255, 255, 255)')
 
-      // Should have animation
+      // STRICT: Must have pulse animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== '',
-        'Should have pulse animation'
+        hasActiveAnimation(style),
+        `Should have pulse animation, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -149,10 +174,10 @@ export const bounceAnimationTests: TestCase[] = describe('Bounce Animation', [
       const icon = await api.utils.waitForElement('node-2')
       const style = window.getComputedStyle(icon)
 
-      // Should have bounce animation
+      // STRICT: Must have bounce animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Should have bounce animation'
+        hasActiveAnimation(style),
+        `Should have bounce animation, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -172,8 +197,11 @@ export const bounceAnimationTests: TestCase[] = describe('Bounce Animation', [
       const notification = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(notification)
 
-      // Should be animating
-      api.assert.ok(style.animation !== '', 'Should have bounce animation')
+      // STRICT: Must have bounce animation
+      api.assert.ok(
+        hasActiveAnimation(style),
+        `Should have bounce animation, got: ${getAnimationDebugInfo(style)}`
+      )
     }
   ),
 
@@ -188,7 +216,11 @@ export const bounceAnimationTests: TestCase[] = describe('Bounce Animation', [
       const arrow = await api.utils.waitForElement('node-2')
       const style = window.getComputedStyle(arrow)
 
-      api.assert.ok(style.animation !== '' || style.animationName !== 'none', 'Arrow should bounce')
+      // STRICT: Must have bounce animation
+      api.assert.ok(
+        hasActiveAnimation(style),
+        `Arrow should bounce, got: ${getAnimationDebugInfo(style)}`
+      )
     }
   ),
 ])
@@ -207,10 +239,10 @@ export const shakeAnimationTests: TestCase[] = describe('Shake Animation', [
       const button = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(button)
 
-      // Should have shake animation
+      // STRICT: Must have shake animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Should have shake animation'
+        hasActiveAnimation(style),
+        `Should have shake animation, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -230,7 +262,11 @@ export const shakeAnimationTests: TestCase[] = describe('Shake Animation', [
       const input = await api.utils.waitForElement('node-2')
       const style = window.getComputedStyle(input)
 
-      api.assert.ok(style.animation !== '' || style.animationName !== 'none', 'Input should shake')
+      // STRICT: Must have shake animation
+      api.assert.ok(
+        hasActiveAnimation(style),
+        `Input should shake, got: ${getAnimationDebugInfo(style)}`
+      )
     }
   ),
 ])
@@ -246,10 +282,10 @@ export const fadeAnimationTests: TestCase[] = describe('Fade Animations', [
       const frame = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(frame)
 
-      // Should have fade animation
+      // STRICT: Must have fade-in animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Should have fade-in animation'
+        hasActiveAnimation(style),
+        `Should have fade-in animation, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -264,9 +300,10 @@ export const fadeAnimationTests: TestCase[] = describe('Fade Animations', [
       const frame = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(frame)
 
+      // STRICT: Must have fade-out animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Should have fade-out animation'
+        hasActiveAnimation(style),
+        `Should have fade-out animation, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -283,9 +320,10 @@ export const slideAnimationTests: TestCase[] = describe('Slide Animations', [
       const frame = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(frame)
 
+      // STRICT: Must have slide-in animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Should have slide-in animation'
+        hasActiveAnimation(style),
+        `Should have slide-in animation, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -300,9 +338,10 @@ export const slideAnimationTests: TestCase[] = describe('Slide Animations', [
       const frame = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(frame)
 
+      // STRICT: Must have slide-up animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Should have slide-up animation'
+        hasActiveAnimation(style),
+        `Should have slide-up animation, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -322,9 +361,10 @@ export const slideAnimationTests: TestCase[] = describe('Slide Animations', [
       const dropdown = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(dropdown)
 
+      // STRICT: Must have slide-down animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Dropdown should slide down'
+        hasActiveAnimation(style),
+        `Dropdown should slide down, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -341,9 +381,10 @@ export const scaleAnimationTests: TestCase[] = describe('Scale Animations', [
       const frame = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(frame)
 
+      // STRICT: Must have scale-in animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Should have scale-in animation'
+        hasActiveAnimation(style),
+        `Should have scale-in animation, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -362,9 +403,10 @@ export const scaleAnimationTests: TestCase[] = describe('Scale Animations', [
       const style = window.getComputedStyle(modal)
 
       api.assert.hasStyle('node-2', 'backgroundColor', 'rgb(255, 255, 255)')
+      // STRICT: Must have scale-in animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Modal should scale in'
+        hasActiveAnimation(style),
+        `Modal should scale in, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),

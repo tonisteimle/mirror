@@ -126,7 +126,9 @@ function $get(name) {
   const aggMatch = name.match(/^(.+)\.(count|sum|avg|min|max|first|last|unique)(?:\(([^)]+)\))?(\..+)?$/)
   if (aggMatch) {
     const [, collectionPath, method, field, postAccessor] = aggMatch
-    const collection = $get(collectionPath)
+    let collection = $get(collectionPath)
+    // Handle both arrays and objects (convert objects to arrays via Object.values)
+    if (collection && typeof collection === "object" && !Array.isArray(collection)) { collection = Object.values(collection) }
     if (Array.isArray(collection)) {
       let result = field ? $agg[method](collection, field) : $agg[method](collection)
       // Handle post-accessor like .name after .first
@@ -243,12 +245,19 @@ export function createUI(data = {}) {
   @keyframes mirror-fade-out { from { opacity: 1; } to { opacity: 0; } }
   @keyframes mirror-slide-in { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   @keyframes mirror-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-20px); opacity: 0; } }
+  @keyframes mirror-slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes mirror-slide-down { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes mirror-slide-left { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes mirror-slide-right { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   @keyframes mirror-scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   @keyframes mirror-scale-out { from { transform: scale(1); opacity: 1; } to { transform: scale(0.9); opacity: 0; } }
   @keyframes mirror-bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
   @keyframes mirror-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
   @keyframes mirror-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
   @keyframes mirror-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes mirror-reveal-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes mirror-reveal-scale { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes mirror-reveal-fade { from { opacity: 0; } to { opacity: 1; } }
   
   [data-mirror-id^="node-5"]:hover {
     background: var(--bg-hover) !important;
@@ -7505,10 +7514,27 @@ const _runtime = {
   },
 
   // Evaluate a visibility condition using $get
+  // Supports both $varName and bare varName formats
   _evaluateVisibilityCondition(condition) {
     try {
-      // Replace $varName with $get("varName") for evaluation
-      const evalCondition = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+      const reserved = new Set([
+        'true', 'false', 'null', 'undefined', 'NaN', 'Infinity',
+        'typeof', 'instanceof', 'new', 'delete', 'void'
+      ])
+
+      // First handle $-prefixed variables: $varName → $get("varName")
+      let evalCondition = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+
+      // Then handle bare identifiers (not already wrapped, not reserved)
+      evalCondition = evalCondition.replace(
+        /(?<!["\w$.])(\b[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*\b)(?!["\w(])/g,
+        (match, identifier) => {
+          const firstPart = identifier.split('.')[0]
+          if (reserved.has(firstPart)) return match
+          return '$get("' + identifier + '")'
+        }
+      )
+
       // Use Function constructor to evaluate in the context with $get
       const result = new Function('$get', 'return ' + evalCondition)($get)
       return !!result
@@ -12595,6 +12621,9 @@ const _runtime = {
     if (isDisabled) {
       trigger.disabled = true
       el.setAttribute('data-disabled', 'true')
+      el.style.opacity = '0.5'
+      el.style.cursor = 'not-allowed'
+      el.style.pointerEvents = 'none'
     }
 
     if (isInvalid) {
@@ -12902,6 +12931,9 @@ const _runtime = {
 
     if (isDisabled) {
       el.setAttribute('data-disabled', 'true')
+      el.style.opacity = '0.5'
+      el.style.cursor = 'not-allowed'
+      el.style.pointerEvents = 'none'
     }
 
     if (isInvalid) {
@@ -13200,6 +13232,9 @@ const _runtime = {
 
     if (isDisabled) {
       el.setAttribute('data-disabled', 'true')
+      el.style.opacity = '0.5'
+      el.style.cursor = 'not-allowed'
+      el.style.pointerEvents = 'none'
       thumb.setAttribute('tabindex', '-1')
     }
 

@@ -196,15 +196,13 @@ export const level2Tests: TestCase[] = describe('Level 2: Modify Existing Proper
 
       // === VERIFY PREVIEW ===
       const button = findElementInPreview('node-2')
-      console.log('Button styles:', button?.styles)
+      api.assert.ok(button !== null, 'PREVIEW: Button element must exist')
 
-      if (button) {
-        const bgIsRed = button.styles.backgroundColor.includes('255')
-        api.assert.ok(
-          bgIsRed,
-          `PREVIEW: Button bg should be red. Got: ${button.styles.backgroundColor}`
-        )
-      }
+      const bgIsRed = button!.styles.backgroundColor.includes('255')
+      api.assert.ok(
+        bgIsRed,
+        `PREVIEW: Button bg should be red. Got: ${button!.styles.backgroundColor}`
+      )
     }
   ),
 
@@ -228,13 +226,12 @@ export const level2Tests: TestCase[] = describe('Level 2: Modify Existing Proper
 
       // === VERIFY PREVIEW ===
       const button = findElementInPreview('node-2')
-      if (button) {
-        console.log('Button padding:', button.styles.padding)
-        api.assert.ok(
-          button.styles.padding.includes('24'),
-          `PREVIEW: Padding should include 24. Got: ${button.styles.padding}`
-        )
-      }
+      api.assert.ok(button !== null, 'PREVIEW: Button element must exist')
+
+      api.assert.ok(
+        button!.styles.padding.includes('24'),
+        `PREVIEW: Padding should include 24. Got: ${button!.styles.padding}`
+      )
     }
   ),
 
@@ -258,13 +255,12 @@ export const level2Tests: TestCase[] = describe('Level 2: Modify Existing Proper
 
       // === VERIFY PREVIEW ===
       const button = findElementInPreview('node-2')
-      if (button) {
-        console.log('Button border-radius:', button.styles.borderRadius)
-        api.assert.ok(
-          button.styles.borderRadius.includes('20'),
-          `PREVIEW: Border radius should be 20px. Got: ${button.styles.borderRadius}`
-        )
-      }
+      api.assert.ok(button !== null, 'PREVIEW: Button element must exist')
+
+      api.assert.ok(
+        button!.styles.borderRadius.includes('20'),
+        `PREVIEW: Border radius should be 20px. Got: ${button!.styles.borderRadius}`
+      )
     }
   ),
 ])
@@ -305,9 +301,14 @@ export const level3Tests: TestCase[] = describe('Level 3: Add New Properties', [
 
       // === VERIFY PREVIEW ===
       const button = findElementInPreview('node-2')
-      if (button) {
-        console.log('Button bg color:', button.styles.backgroundColor)
-      }
+      api.assert.ok(button !== null, 'PREVIEW: Button element must exist')
+
+      // Verify the background color was applied (rgb contains 34, 113, 193 for #2271C1)
+      api.assert.ok(
+        button!.styles.backgroundColor.includes('34') ||
+          button!.styles.backgroundColor.includes('113'),
+        `PREVIEW: Button should have blue bg #2271C1. Got: ${button!.styles.backgroundColor}`
+      )
     }
   ),
 
@@ -626,12 +627,12 @@ export const level7Tests: TestCase[] = describe('Level 7: Build Card UI', [
       const preview = analyzePreview()
       const frame = findElementInPreview('node-1')
 
-      if (frame) {
-        api.assert.ok(
-          frame.styles.borderRadius.includes('8'),
-          `PREVIEW: Card should have border-radius. Got: ${frame.styles.borderRadius}`
-        )
-      }
+      // STRICT: Frame must exist and have correct styles
+      api.assert.ok(frame !== null, 'PREVIEW: Frame node-1 must exist in preview')
+      api.assert.ok(
+        frame!.styles.borderRadius.includes('8'),
+        `PREVIEW: Card should have border-radius. Got: ${frame!.styles.borderRadius}`
+      )
     }
   ),
 
@@ -933,13 +934,13 @@ export const level11Tests: TestCase[] = describe('Level 11: Styling Workflows', 
 
       // === VERIFY PREVIEW ===
       const button = findElementInPreview('node-2')
-      if (button) {
-        api.assert.ok(
-          button.styles.backgroundColor.includes('34') ||
-            button.styles.backgroundColor.includes('113'),
-          `PREVIEW: Button should have blue bg. Got: ${button.styles.backgroundColor}`
-        )
-      }
+      api.assert.ok(button !== null, 'PREVIEW: Button element must exist')
+
+      api.assert.ok(
+        button!.styles.backgroundColor.includes('34') ||
+          button!.styles.backgroundColor.includes('113'),
+        `PREVIEW: Button should have blue bg. Got: ${button!.styles.backgroundColor}`
+      )
     }
   ),
 

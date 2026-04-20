@@ -8376,15 +8376,7 @@ select.tomselected,
   display: none !important;
 }
 
-/* Components Panel Divider */
+/* Components Panel Divider - hidden, resize via edge */
 #components-divider {
-  flex: 0 0 4px;
-  background: var(--surface-default);
-  cursor: col-resize;
-  position: relative;
-}
-
-#components-divider:hover,
-#components-divider.dragging {
-  background: var(--primary-50);
+  display: none;
 }

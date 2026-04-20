@@ -40,9 +40,17 @@ const ANIMATION_KEYFRAMES = [
   '@keyframes mirror-fade-in { from { opacity: 0; } to { opacity: 1; } }',
   '@keyframes mirror-fade-out { from { opacity: 1; } to { opacity: 0; } }',
 
-  // slide-in / slide-out
+  // slide-in / slide-out (horizontal default)
   '@keyframes mirror-slide-in { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }',
   '@keyframes mirror-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-20px); opacity: 0; } }',
+
+  // slide-up / slide-down (vertical)
+  '@keyframes mirror-slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }',
+  '@keyframes mirror-slide-down { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }',
+
+  // slide-left / slide-right (horizontal explicit)
+  '@keyframes mirror-slide-left { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }',
+  '@keyframes mirror-slide-right { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }',
 
   // scale-in / scale-out
   '@keyframes mirror-scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }',
@@ -59,6 +67,11 @@ const ANIMATION_KEYFRAMES = [
 
   // spin
   '@keyframes mirror-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }',
+
+  // reveal animations (for scroll-triggered or entry)
+  '@keyframes mirror-reveal-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }',
+  '@keyframes mirror-reveal-scale { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }',
+  '@keyframes mirror-reveal-fade { from { opacity: 0; } to { opacity: 1; } }',
 ]
 
 /**
@@ -348,7 +361,9 @@ export function emitStyles(ctx: StyleEmitterContext): void {
 
   // Base reset
   ctx.emit('.mirror-root {')
-  ctx.emit("  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;")
+  ctx.emit(
+    "  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"
+  )
   ctx.emit('}')
   ctx.emit('.mirror-root * {')
   ctx.emit('  box-sizing: border-box;')

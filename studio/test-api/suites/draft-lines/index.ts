@@ -150,20 +150,30 @@ export const draftLineDecorationTests: TestCase[] = [
         throw new Error('Line 2 not found')
       }
 
-      // Find token element in line 2
-      const token = line2.querySelector('.tok-keyword')
+      // Verify draft line class is applied - this is the key functionality
+      api.assert.ok(
+        line2.classList.contains('cm-draft-line'),
+        'Line 2 should have cm-draft-line class'
+      )
+
+      // Try to find any token element in line 2 (might be .tok-keyword, .tok-variableName, or generic span)
+      const token =
+        line2.querySelector('.tok-keyword') ||
+        line2.querySelector('.tok-variableName') ||
+        line2.querySelector('span[class*="tok-"]') ||
+        line2.querySelector('span')
 
       if (token) {
         const style = window.getComputedStyle(token)
         const color = style.color
 
-        // Draft color should be muted (darker)
-        // We check if it's not the bright purple (#c792ea = rgb(199, 146, 234))
-        api.assert.ok(color !== 'rgb(199, 146, 234)', `Token color should be muted, got: ${color}`)
+        // Draft color should be muted (darker than bright purple #c792ea = rgb(199, 146, 234))
+        api.assert.ok(
+          color !== 'rgb(199, 146, 234)',
+          `Token color should be muted for draft line, got: ${color}`
+        )
       }
-
-      // Test passes if we got here - visual verification
-      api.assert.ok(true, 'Draft line decoration applied')
+      // If no token found, the cm-draft-line class test above is sufficient
     },
   },
 ]
@@ -202,11 +212,12 @@ export const draftLineIntegrationTests: TestCase[] = [
 
       // Visual verification: check CSS class
       const lines = document.querySelectorAll('.cm-line')
+      api.assert.ok(lines.length >= 2, `Should have at least 2 lines, got ${lines.length}`)
       api.assert.ok(
-        !lines[0]?.classList.contains('cm-draft-line'),
+        !lines[0].classList.contains('cm-draft-line'),
         'Line 1 should not have draft class'
       )
-      api.assert.ok(lines[1]?.classList.contains('cm-draft-line'), 'Line 2 should have draft class')
+      api.assert.ok(lines[1].classList.contains('cm-draft-line'), 'Line 2 should have draft class')
     },
   },
 
@@ -232,8 +243,9 @@ export const draftLineIntegrationTests: TestCase[] = [
 
       // Verify draft lines are set
       let lines = document.querySelectorAll('.cm-line')
+      api.assert.ok(lines.length >= 1, `Should have at least 1 line, got ${lines.length}`)
       api.assert.ok(
-        lines[0]?.classList.contains('cm-draft-line'),
+        lines[0].classList.contains('cm-draft-line'),
         'Line 1 should be draft before compile'
       )
 
@@ -257,7 +269,11 @@ export const draftLineIntegrationTests: TestCase[] = [
       // Check draft lines cleared
       lines = document.querySelectorAll('.cm-line')
       api.assert.ok(
-        !lines[0]?.classList.contains('cm-draft-line'),
+        lines.length >= 1,
+        `Should have at least 1 line after compile, got ${lines.length}`
+      )
+      api.assert.ok(
+        !lines[0].classList.contains('cm-draft-line'),
         'Line 1 should NOT be draft after compile'
       )
     },
@@ -296,9 +312,10 @@ export const draftLineIntegrationTests: TestCase[] = [
 
       // Visual verification
       const lines = document.querySelectorAll('.cm-line')
-      api.assert.ok(!lines[0]?.classList.contains('cm-draft-line'), 'Line 1 visual: no draft class')
-      api.assert.ok(!lines[1]?.classList.contains('cm-draft-line'), 'Line 2 visual: no draft class')
-      api.assert.ok(lines[2]?.classList.contains('cm-draft-line'), 'Line 3 visual: has draft class')
+      api.assert.ok(lines.length >= 3, `Should have at least 3 lines, got ${lines.length}`)
+      api.assert.ok(!lines[0].classList.contains('cm-draft-line'), 'Line 1 visual: no draft class')
+      api.assert.ok(!lines[1].classList.contains('cm-draft-line'), 'Line 2 visual: no draft class')
+      api.assert.ok(lines[2].classList.contains('cm-draft-line'), 'Line 3 visual: has draft class')
     },
   },
 ]

@@ -127,6 +127,39 @@ export {
   type DraftLinesManagerConfig,
 } from './draft-lines-manager'
 
+// Re-export draft mode extension (-- marker for AI-assisted editing)
+export {
+  draftModeExtension,
+  draftModeField,
+  isDraftModeActive,
+  getDraftState,
+  isLineInDraftBlock,
+  setDraftProcessing,
+  clearDraftBlock,
+  replaceDraftBlock,
+  prepareDraftSubmit,
+  cancelDraftProcessing,
+  parseDraftMarker,
+  parseDraftBlock,
+  getDraftLineNumbers,
+  extractDraftContent,
+  type DraftBlockState,
+  type DraftSubmitEvent,
+} from './draft-mode'
+
+// Re-export draft mode manager (AI integration)
+export {
+  DraftModeManager,
+  initDraftModeManager,
+  getDraftModeManager,
+  disposeDraftModeManager,
+  createDraftModeKeymap,
+  buildDraftModePrompt,
+  extractCodeFromAIResponse,
+  type DraftModeManagerConfig,
+  type DraftModeResult,
+} from './draft-mode-manager'
+
 // Re-export component templates
 export {
   COMPONENT_DEFINITIONS,

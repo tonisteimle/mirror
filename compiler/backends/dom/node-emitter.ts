@@ -19,6 +19,7 @@ export interface NodeEmitterContext {
   sanitizeVarName: (id: string) => string
   escapeString: (str: string | number | boolean | undefined | null) => string
   resolveContentValue: (value: string | number | boolean) => string
+  resolveStyleValue: (value: string | number | boolean) => { code: string; needsEval: boolean }
 }
 
 // ============================================
@@ -157,6 +158,10 @@ function emitAttribute(ctx: NodeEmitterContext, prop: IRProperty, varName: strin
 
 function formatAttributeValue(ctx: NodeEmitterContext, value: string | number | boolean): string {
   if (typeof value === 'string') {
+    // Handle conditional attribute values
+    if (value.includes('__conditional:')) {
+      return ctx.resolveContentValue(value)
+    }
     return `"${ctx.escapeString(value)}"`
   }
   return String(value)
@@ -189,7 +194,13 @@ function emitIconDefaultStyles(ctx: NodeEmitterContext, varName: string): void {
 
 function emitIconLoading(ctx: NodeEmitterContext, varName: string, iconName: string): void {
   ctx.emit(`// Load Lucide icon`)
-  ctx.emit(`_runtime.loadIcon(${varName}, "${ctx.escapeString(iconName)}")`)
+  // Handle conditional icon names
+  if (iconName.includes('__conditional:')) {
+    const resolvedName = ctx.resolveContentValue(iconName)
+    ctx.emit(`_runtime.loadIcon(${varName}, ${resolvedName})`)
+  } else {
+    ctx.emit(`_runtime.loadIcon(${varName}, "${ctx.escapeString(iconName)}")`)
+  }
 }
 
 // ============================================
@@ -235,11 +246,36 @@ function emitSlotLabelElement(ctx: NodeEmitterContext, varName: string, slotLabe
 export function emitBaseStyles(ctx: NodeEmitterContext, node: IRNode, varName: string): IRStyle[] {
   const baseStyles = node.styles.filter(s => !s.state && !s.sizeState)
   if (baseStyles.length === 0) return baseStyles
-  ctx.emit(`Object.assign(${varName}.style, {`)
-  ctx.indentIn()
-  for (const style of baseStyles) ctx.emit(`'${style.property}': '${style.value}',`)
-  ctx.indentOut()
-  ctx.emit('})')
+
+  // Separate static and conditional styles
+  const staticStyles: Array<{ property: string; value: string }> = []
+  const conditionalStyles: Array<{ property: string; code: string }> = []
+
+  for (const style of baseStyles) {
+    const resolved = ctx.resolveStyleValue(style.value)
+    if (resolved.needsEval) {
+      conditionalStyles.push({ property: style.property, code: resolved.code })
+    } else {
+      staticStyles.push({ property: style.property, value: String(style.value) })
+    }
+  }
+
+  // Emit static styles with Object.assign
+  if (staticStyles.length > 0) {
+    ctx.emit(`Object.assign(${varName}.style, {`)
+    ctx.indentIn()
+    for (const style of staticStyles) {
+      ctx.emit(`'${style.property}': '${style.value}',`)
+    }
+    ctx.indentOut()
+    ctx.emit('})')
+  }
+
+  // Emit conditional styles as separate assignments
+  for (const cond of conditionalStyles) {
+    ctx.emit(`${varName}.style['${cond.property}'] = ${cond.code}`)
+  }
+
   return baseStyles
 }
 
@@ -312,14 +348,66 @@ function emitStateStyleGroup(ctx: NodeEmitterContext, state: string, styles: IRS
 
 /**
  * Emit visible when condition
+ *
+ * Generates code that:
+ * 1. Stores the condition in _visibleWhen
+ * 2. Evaluates initial visibility using $get()
+ * 3. Sets up reactive bindings for data changes
  */
 export function emitVisibleWhen(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
   if (!node.visibleWhen) return
 
   ctx.emit(`${varName}._visibleWhen = '${node.visibleWhen}'`)
-  ctx.emit(`// Initially hidden until condition is met`)
-  ctx.emit(`${varName}.style.display = 'none'`)
+
+  // Transform the condition to use $get() for data lookup
+  // Handles both $varName and bare varName formats
+  const condition = transformVisibilityCondition(node.visibleWhen)
+
+  ctx.emit(`// Evaluate initial visibility`)
+  ctx.emit(`${varName}.style.display = (${condition}) ? '' : 'none'`)
+
   emitVisibilityBindings(ctx, node.visibleWhen, varName)
+}
+
+/**
+ * Transform visibility condition to use $get() for data lookup
+ * Supports: "loggedIn", "$loggedIn", "!loggedIn", "count > 0", "user.role === 'admin'"
+ */
+function transformVisibilityCondition(condition: string): string {
+  // Reserved words that should not be wrapped
+  const reserved = new Set([
+    'true',
+    'false',
+    'null',
+    'undefined',
+    'NaN',
+    'Infinity',
+    'typeof',
+    'instanceof',
+    'new',
+    'delete',
+    'void',
+  ])
+
+  // First handle $-prefixed variables: $varName → $get("varName")
+  let result = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+
+  // Then handle bare identifiers (not already wrapped, not in quotes, not reserved)
+  // Match identifiers with optional dot notation
+  result = result.replace(
+    /(?<!["\w$.])\b([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\b(?!["\w(])/g,
+    (match, identifier) => {
+      const firstPart = identifier.split('.')[0]
+      // Don't wrap reserved words
+      if (reserved.has(firstPart)) {
+        return match
+      }
+      // Don't wrap if it looks like a method on $get result (already handled)
+      return `$get("${identifier}")`
+    }
+  )
+
+  return result
 }
 
 function emitVisibilityBindings(
@@ -327,12 +415,43 @@ function emitVisibilityBindings(
   visibleWhen: string,
   varName: string
 ): void {
-  const dataMatches = visibleWhen.match(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g)
-  if (!dataMatches) return
+  // Match both $varName and bare varName patterns
+  const dollarMatches = visibleWhen.match(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g) || []
+  const bareMatches = visibleWhen.match(/(?<!["\w$.])\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?!["\w(])/g) || []
 
-  for (const match of dataMatches) {
+  // Reserved words to exclude
+  const reserved = new Set([
+    'true',
+    'false',
+    'null',
+    'undefined',
+    'NaN',
+    'Infinity',
+    'typeof',
+    'instanceof',
+    'new',
+    'delete',
+    'void',
+  ])
+
+  const paths = new Set<string>()
+
+  // Add $-prefixed variables (strip the $)
+  for (const match of dollarMatches) {
     const basePath = match.slice(1).split('.')[0]
-    ctx.emit(`_runtime.bindVisibility(${varName}, '${basePath}')`)
+    paths.add(basePath)
+  }
+
+  // Add bare identifiers (if not reserved)
+  for (const match of bareMatches) {
+    const basePath = match.split('.')[0]
+    if (!reserved.has(basePath)) {
+      paths.add(basePath)
+    }
+  }
+
+  for (const path of paths) {
+    ctx.emit(`_runtime.bindVisibility(${varName}, '${path}')`)
   }
 }
 

@@ -8,7 +8,7 @@
  * - Stacked container drops (absolute positioning)
  */
 
-import { testWithSetup, describe } from '../../test-runner'
+import { test, testWithSetup, describe } from '../../test-runner'
 import type { TestCase } from '../../types'
 
 // =============================================================================
@@ -31,45 +31,195 @@ function findComponentPos(code: string, component: string): number {
   return match ? match.index : -1
 }
 
+/**
+ * Check if an element exists in the preview DOM by its tag name or component type
+ */
+function elementExistsInPreview(tagOrType: string): boolean {
+  // Map component types to their HTML tags
+  const tagMap: Record<string, string> = {
+    Frame: 'div',
+    Button: 'button',
+    Text: 'span',
+    Input: 'input',
+    Textarea: 'textarea',
+    Icon: 'span',
+    Image: 'img',
+    Divider: 'hr',
+    Link: 'a',
+    Spacer: 'div',
+    Checkbox: 'label',
+    Switch: 'label',
+    Slider: 'div',
+  }
+
+  const tag = tagMap[tagOrType] || tagOrType.toLowerCase()
+  const preview = document.querySelector('.preview-container, .preview-frame, iframe')
+
+  if (!preview) {
+    // Fall back to searching in main document
+    return (
+      document.querySelectorAll(`[data-mirror-id] ${tag}`).length > 0 ||
+      document.querySelectorAll(`${tag}[data-mirror-id]`).length > 0
+    )
+  }
+
+  // Search within preview container
+  return preview.querySelectorAll(tag).length > 0
+}
+
+/**
+ * Count elements of a type in the preview DOM
+ */
+function countElementsInPreview(tagOrType: string): number {
+  const tagMap: Record<string, string> = {
+    Frame: 'div',
+    Button: 'button',
+    Text: 'span',
+    Input: 'input',
+    Icon: 'span',
+    Divider: 'hr',
+  }
+
+  const tag = tagMap[tagOrType] || tagOrType.toLowerCase()
+  return document.querySelectorAll(`[data-mirror-id] ${tag}, ${tag}[data-mirror-id]`).length
+}
+
+/**
+ * Get child count of a container element
+ */
+function getChildCount(nodeId: string): number {
+  const element = document.querySelector(`[data-mirror-id="${nodeId}"]`)
+  if (!element) return 0
+  // Filter out non-element children
+  return Array.from(element.children).filter(c => c.hasAttribute('data-mirror-id')).length
+}
+
 // =============================================================================
 // Palette Drop Tests (Basic Primitives)
 // =============================================================================
 
 export const paletteDropBasicTests: TestCase[] = describe('Palette Drop - Basic Primitives', [
+  // CRITICAL: Test dropping onto completely empty canvas (no code at all)
+  test('Drop Frame onto empty canvas (no code)', async api => {
+    // Start with empty code
+    await api.editor.setCode('')
+    await api.utils.waitForCompile()
+    await api.utils.delay(100)
+
+    // Verify canvas is empty but has placeholder node-1
+    const codeBefore = api.editor.getCode()
+    api.assert.ok(codeBefore.trim() === '', 'Canvas should start empty')
+
+    // Drop a Frame onto the empty canvas
+    await api.interact.dragFromPalette('Frame', 'node-1', 0)
+
+    // Wait for compile
+    await api.utils.waitForCompile()
+    await api.utils.delay(100)
+
+    // Verify code was added
+    const codeAfter = api.editor.getCode()
+    api.assert.ok(codeAfter.includes('Frame'), 'Frame should be added to code')
+
+    // Verify DOM element was created
+    const frameExists = document.querySelector('[data-mirror-id="node-1"]') !== null
+    api.assert.ok(frameExists, 'Frame element should exist in DOM')
+  }),
+
   testWithSetup('Drop Button into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
+    // Count buttons before drop
+    const buttonsBefore = countElementsInPreview('Button')
+
     await api.interact.dragFromPalette('Button', 'node-1', 0)
+
+    // Verify code change
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Button'), 'Button should be added as child of Frame')
+
+    // Verify DOM element was created
+    await api.utils.waitForCompile()
+    const buttonsAfter = countElementsInPreview('Button')
+    api.assert.ok(
+      buttonsAfter > buttonsBefore,
+      `DOM should have new button: ${buttonsBefore} -> ${buttonsAfter}`
+    )
+
+    // Verify parent container has the child
+    const childCount = getChildCount('node-1')
+    api.assert.ok(childCount >= 1, `Frame should have at least 1 child, got ${childCount}`)
   }),
 
   testWithSetup('Drop Text into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
+    const textsBefore = countElementsInPreview('Text')
+
     await api.interact.dragFromPalette('Text', 'node-1', 0)
+
+    // Verify code change
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Text'), 'Text should be added as child of Frame')
+
+    // Verify DOM element was created
+    await api.utils.waitForCompile()
+    const textsAfter = countElementsInPreview('Text')
+    api.assert.ok(
+      textsAfter > textsBefore,
+      `DOM should have new text element: ${textsBefore} -> ${textsAfter}`
+    )
   }),
 
   testWithSetup('Drop Input into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
     await api.interact.dragFromPalette('Input', 'node-1', 0)
+
+    // Verify code change
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Input'), 'Input should be added as child of Frame')
+
+    // Verify DOM element was created
+    await api.utils.waitForCompile()
+    const inputExists = document.querySelector('input[data-mirror-id]') !== null
+    api.assert.ok(inputExists, 'Input element should exist in DOM')
   }),
 
   testWithSetup('Drop Icon into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
     await api.interact.dragFromPalette('Icon', 'node-1', 0)
+
+    // Verify code change
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Icon'), 'Icon should be added as child of Frame')
+
+    // Verify DOM element was created (Icon may be span with SVG or just span)
+    await api.utils.waitForCompile()
+    const childCount = getChildCount('node-1')
+    api.assert.ok(
+      childCount >= 1,
+      `Frame should have at least 1 child (the icon), got ${childCount}`
+    )
   }),
 
   testWithSetup('Drop Image into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
     await api.interact.dragFromPalette('Image', 'node-1', 0)
+
+    // Verify code change
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Image'), 'Image should be added as child of Frame')
+
+    // Verify DOM element was created
+    await api.utils.waitForCompile()
+    const imgExists = document.querySelector('img[data-mirror-id]') !== null
+    api.assert.ok(imgExists, 'Image element should exist in DOM')
   }),
 
   testWithSetup('Drop Divider into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
     await api.interact.dragFromPalette('Divider', 'node-1', 0)
+
+    // Verify code change
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Divider'), 'Divider should be added as child of Frame')
+
+    // Verify DOM element was created (Divider is <hr>)
+    await api.utils.waitForCompile()
+    const hrExists = document.querySelector('hr[data-mirror-id]') !== null
+    api.assert.ok(hrExists, 'Divider (hr) element should exist in DOM')
   }),
 ])
 
@@ -340,11 +490,27 @@ export const canvasMoveReorderTests: TestCase[] = describe('Canvas Move - Reorde
     'Move element to first position',
     'Frame gap 12, pad 16, bg #1a1a1a\n  Text "First"\n  Button "Move Me"\n  Text "Last"',
     async api => {
+      // Verify initial state - button exists before move
+      const buttonBefore = document.querySelector('button[data-mirror-id="node-3"]')
+      api.assert.ok(buttonBefore !== null, 'Button should exist before move')
+
       await api.interact.moveElement('node-3', 'node-1', 0)
+
+      // Verify code change
       const code = api.editor.getCode()
       const buttonPos = findComponentPos(code, 'Button')
       const textPos = findComponentPos(code, 'Text')
-      api.assert.ok(buttonPos < textPos, 'Button should be moved to first position')
+      api.assert.ok(buttonPos < textPos, 'Button should be moved to first position in code')
+
+      // Verify DOM reflects the reorder
+      await api.utils.waitForCompile()
+      const container = document.querySelector('[data-mirror-id="node-1"]')
+      api.assert.ok(container !== null, 'Container should exist')
+      const firstChild = container!.querySelector('[data-mirror-id]')
+      api.assert.ok(
+        firstChild?.tagName.toLowerCase() === 'button',
+        `First child should be button, got ${firstChild?.tagName}`
+      )
     }
   ),
 
@@ -352,11 +518,24 @@ export const canvasMoveReorderTests: TestCase[] = describe('Canvas Move - Reorde
     'Move element to last position',
     'Frame gap 12, pad 16, bg #1a1a1a\n  Button "Move Me"\n  Text "Middle"\n  Text "Last"',
     async api => {
+      // Count children before
+      const childCountBefore = getChildCount('node-1')
+
       await api.interact.moveElement('node-2', 'node-1', 2)
+
+      // Verify code change
       const code = api.editor.getCode()
       api.assert.ok(
         verifyPattern(code, 'Button "Move Me"'),
         'Button should be moved to last position'
+      )
+
+      // Verify DOM - child count should stay same (move, not add)
+      await api.utils.waitForCompile()
+      const childCountAfter = getChildCount('node-1')
+      api.assert.ok(
+        childCountAfter === childCountBefore,
+        `Child count should stay same: ${childCountBefore} -> ${childCountAfter}`
       )
     }
   ),
@@ -366,8 +545,23 @@ export const canvasMoveReorderTests: TestCase[] = describe('Canvas Move - Reorde
     'Frame gap 12, pad 16, bg #1a1a1a\n  Text "First"\n  Text "Second"\n  Button "Move Me"',
     async api => {
       await api.interact.moveElement('node-4', 'node-1', 1)
+
+      // Verify code change
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Button "Move Me"'), 'Button should be moved between texts')
+
+      // Verify DOM structure
+      await api.utils.waitForCompile()
+      const container = document.querySelector('[data-mirror-id="node-1"]')
+      const children = container?.querySelectorAll('[data-mirror-id]')
+      api.assert.ok(children && children.length >= 3, 'Container should have at least 3 children')
+
+      // Second child should be button
+      const secondChild = children ? children[1] : null
+      api.assert.ok(
+        secondChild?.tagName.toLowerCase() === 'button',
+        `Second child should be button, got ${secondChild?.tagName}`
+      )
     }
   ),
 ])
@@ -485,10 +679,23 @@ export const stackedDropTests: TestCase[] = describe('Stacked Drop - Absolute Po
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Button', 'node-1', 100, 50)
+
+      // Verify code change
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Button'), 'Button should be added')
-      // Check for x/y properties
       api.assert.ok(code.includes('x ') || code.includes('x='), 'Should have x position')
+
+      // Verify DOM element was created
+      await api.utils.waitForCompile()
+      const button = document.querySelector('button[data-mirror-id]')
+      api.assert.ok(button !== null, 'Button should exist in DOM')
+
+      // Verify position styles were applied
+      const style = window.getComputedStyle(button!)
+      api.assert.ok(
+        style.position === 'absolute' || style.position === 'relative',
+        `Button should have positioned style, got ${style.position}`
+      )
     }
   ),
 
@@ -496,9 +703,22 @@ export const stackedDropTests: TestCase[] = describe('Stacked Drop - Absolute Po
     'Drop Icon into stacked with existing elements',
     'Frame stacked, w 400, h 300, bg #1a1a1a\n  Button "A", x 10, y 10',
     async api => {
+      // Count children before
+      const childCountBefore = getChildCount('node-1')
+
       await api.interact.dragToPosition('Icon', 'node-1', 200, 150)
+
+      // Verify code change
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Icon'), 'Icon should be added')
+
+      // Verify DOM - should have one more child
+      await api.utils.waitForCompile()
+      const childCountAfter = getChildCount('node-1')
+      api.assert.ok(
+        childCountAfter > childCountBefore,
+        `Child count should increase: ${childCountBefore} -> ${childCountAfter}`
+      )
     }
   ),
 
@@ -507,8 +727,15 @@ export const stackedDropTests: TestCase[] = describe('Stacked Drop - Absolute Po
     'Frame stacked, w 300, h 200, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Text', 'node-1', 20, 20)
+
+      // Verify code change
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Text'), 'Text should be added at top-left')
+
+      // Verify DOM element exists
+      await api.utils.waitForCompile()
+      const textElement = document.querySelector('span[data-mirror-id]')
+      api.assert.ok(textElement !== null, 'Text element should exist in DOM')
     }
   ),
 
@@ -517,8 +744,19 @@ export const stackedDropTests: TestCase[] = describe('Stacked Drop - Absolute Po
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async api => {
       await api.interact.dragToPosition('Input', 'node-1', 200, 150)
+
+      // Verify code change
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Input'), 'Input should be added at center')
+
+      // Verify DOM element exists and is positioned
+      await api.utils.waitForCompile()
+      const input = document.querySelector('input[data-mirror-id]')
+      api.assert.ok(input !== null, 'Input element should exist in DOM')
+
+      // Verify input is inside stacked container
+      const container = document.querySelector('[data-mirror-id="node-1"]')
+      api.assert.ok(container?.contains(input!), 'Input should be inside stacked container')
     }
   ),
 ])

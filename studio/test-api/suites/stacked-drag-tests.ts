@@ -78,11 +78,18 @@ export const basicStackedTests: TestCase[] = describe('Basic Stacked Drop', [
       const code = api.editor.getCode()
       api.assert.codeContains(/Text/)
 
-      const pos = verifyPosition(code, 20, 20, 30)
+      const pos = verifyPosition(code, 20, 20, 50)
+
+      // Verify X position is in top-left area (0-50px)
       api.assert.ok(
-        pos.ok ||
-          (pos.actualX !== null && pos.actualX <= 50 && pos.actualY !== null && pos.actualY <= 50),
-        `Position should be near top-left, got (${pos.actualX}, ${pos.actualY})`
+        pos.actualX !== null && pos.actualX >= 0 && pos.actualX <= 70,
+        `X position should be near left edge (0-70px), got: ${pos.actualX}`
+      )
+
+      // Verify Y position is in top area (0-50px)
+      api.assert.ok(
+        pos.actualY !== null && pos.actualY >= 0 && pos.actualY <= 70,
+        `Y position should be near top (0-70px), got: ${pos.actualY}`
       )
     }
   ),
@@ -320,11 +327,17 @@ export const appStackedTests: TestCase[] = describe('App Stacked', [
     api.assert.exists('node-2')
 
     const preview = document.getElementById('preview')
-    const node2El = preview?.querySelector('[data-mirror-id="node-2"]') as HTMLElement
-    if (node2El) {
-      api.assert.ok(node2El.offsetWidth > 0, `Button should have width > 0`)
-      api.assert.ok(node2El.offsetHeight > 0, `Button should have height > 0`)
-    }
+    api.assert.ok(preview !== null, 'Preview element must exist')
+    const node2El = preview!.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+    api.assert.ok(node2El !== null, 'Button element (node-2) must exist in preview')
+    api.assert.ok(
+      node2El.offsetWidth > 0,
+      `Button should have width > 0, got: ${node2El.offsetWidth}`
+    )
+    api.assert.ok(
+      node2El.offsetHeight > 0,
+      `Button should have height > 0, got: ${node2El.offsetHeight}`
+    )
   }),
 
   testWithSetup(

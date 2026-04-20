@@ -386,7 +386,8 @@ export const nestedStructureTests: TestCase[] = describe('Nested Structures', [
       )
 
       const text = api.preview.inspect('node-6')
-      api.assert.ok(text?.parent === 'node-5', `Text parent should be node-5, got ${text?.parent}`)
+      api.assert.ok(text !== null, 'Text element should exist')
+      api.assert.ok(text!.parent === 'node-5', `Text parent should be node-5, got ${text!.parent}`)
       api.assert.hasText('node-6', 'Deep')
     }
   ),
@@ -404,12 +405,26 @@ export const nestedStructureTests: TestCase[] = describe('Nested Structures', [
     Text "Item D", col #888`,
     async (api: TestAPI) => {
       const parent = api.preview.inspect('node-1')
-      api.assert.ok(parent?.styles.flexDirection === 'row', 'Parent should be row')
-      api.assert.ok(parent?.children.length === 2, 'Should have 2 column children')
+      api.assert.ok(parent !== null, 'Parent frame should exist')
+      api.assert.ok(
+        parent!.styles.flexDirection === 'row',
+        `Parent should be row, got: ${parent!.styles.flexDirection}`
+      )
+      api.assert.ok(
+        parent!.children.length === 2,
+        `Should have 2 column children, got: ${parent!.children.length}`
+      )
 
       const col1 = api.preview.inspect('node-2')
-      api.assert.ok(col1?.styles.flexDirection === 'column', 'Column 1 should be column')
-      api.assert.ok(col1?.children.length === 3, 'Column 1 should have 3 children')
+      api.assert.ok(col1 !== null, 'Column 1 should exist')
+      api.assert.ok(
+        col1!.styles.flexDirection === 'column',
+        `Column 1 should be column, got: ${col1!.styles.flexDirection}`
+      )
+      api.assert.ok(
+        col1!.children.length === 3,
+        `Column 1 should have 3 children, got: ${col1!.children.length}`
+      )
     }
   ),
 
@@ -439,8 +454,15 @@ Card
 
       // Header should be horizontal with spread
       const header = api.preview.inspect('node-2')
-      api.assert.ok(header?.styles.flexDirection === 'row', 'Header should be row')
-      api.assert.ok(header?.styles.justifyContent === 'space-between', 'Header should be spread')
+      api.assert.ok(header !== null, 'Header should exist')
+      api.assert.ok(
+        header!.styles.flexDirection === 'row',
+        `Header should be row, got: ${header!.styles.flexDirection}`
+      )
+      api.assert.ok(
+        header!.styles.justifyContent === 'space-between',
+        `Header should be spread, got: ${header!.styles.justifyContent}`
+      )
     }
   ),
 ])
@@ -594,7 +616,11 @@ Frame pad 16, bg #1a1a1a
     async (api: TestAPI) => {
       // Text should be visible
       const frame = api.preview.inspect('node-1')
-      api.assert.ok(frame?.children.length >= 1, 'Should have child when condition is true')
+      api.assert.ok(frame !== null, 'Frame inspect should return info')
+      api.assert.ok(
+        frame!.children.length >= 1,
+        `Should have child when condition is true, got ${frame!.children.length}`
+      )
 
       // Find text element
       const text = api.preview.findByText('Welcome!')
@@ -758,14 +784,15 @@ export const componentInheritanceTests: TestCase[] = describe('Component Inherit
 PrimaryBtn "Click Me"`,
     async (api: TestAPI) => {
       const btn = api.preview.inspect('node-1')
-      api.assert.ok(btn?.tagName === 'button', `Should be button, got ${btn?.tagName}`)
+      api.assert.ok(btn !== null, 'Button inspect should return info')
+      api.assert.ok(btn!.tagName === 'button', `Should be button, got ${btn!.tagName}`)
       api.assert.ok(
-        btn?.styles.cursor === 'pointer',
-        `Cursor should be pointer, got ${btn?.styles.cursor}`
+        btn!.styles.cursor === 'pointer',
+        `Cursor should be pointer, got ${btn!.styles.cursor}`
       )
       api.assert.ok(
-        colorsMatch(btn?.styles.backgroundColor || '', '#2271C1'),
-        `Background should be blue, got ${btn?.styles.backgroundColor}`
+        colorsMatch(btn!.styles.backgroundColor || '', '#2271C1'),
+        `Background should be blue, got ${btn!.styles.backgroundColor}`
       )
     }
   ),
@@ -784,7 +811,8 @@ Frame hor, gap 8
     async (api: TestAPI) => {
       // All buttons should have base Btn styles
       const primary = api.preview.inspect('node-2')
-      api.assert.ok(primary?.styles.cursor === 'pointer', 'Primary should have pointer cursor')
+      api.assert.ok(primary !== null, 'Primary button inspect should return info')
+      api.assert.ok(primary!.styles.cursor === 'pointer', 'Primary should have pointer cursor')
 
       const danger = api.preview.inspect('node-3')
       api.assert.ok(
@@ -1645,10 +1673,27 @@ export const formControlsTests: TestCase[] = describe('Form Controls', [
       const email = api.preview.inspect('node-4')
       const number = api.preview.inspect('node-5')
 
-      api.assert.ok(text?.attributes.type === 'text' || !text?.attributes.type, 'Text input type')
-      api.assert.ok(password?.attributes.type === 'password', 'Password input type')
-      api.assert.ok(email?.attributes.type === 'email', 'Email input type')
-      api.assert.ok(number?.attributes.type === 'number', 'Number input type')
+      // Text input: type defaults to 'text' in HTML if not specified
+      api.assert.ok(text !== null, 'Text input element must exist')
+      api.assert.ok(
+        text!.attributes.type === 'text' || text!.attributes.type === undefined,
+        `Text input type should be 'text' or default, got: ${text!.attributes.type}`
+      )
+      api.assert.ok(password !== null, 'Password input element must exist')
+      api.assert.ok(
+        password!.attributes.type === 'password',
+        `Password input type should be 'password', got: ${password!.attributes.type}`
+      )
+      api.assert.ok(email !== null, 'Email input element must exist')
+      api.assert.ok(
+        email!.attributes.type === 'email',
+        `Email input type should be 'email', got: ${email!.attributes.type}`
+      )
+      api.assert.ok(number !== null, 'Number input element must exist')
+      api.assert.ok(
+        number!.attributes.type === 'number',
+        `Number input type should be 'number', got: ${number!.attributes.type}`
+      )
     }
   ),
 
@@ -1659,11 +1704,15 @@ export const formControlsTests: TestCase[] = describe('Form Controls', [
       const input = api.preview.inspect('node-1')
       api.assert.ok(input !== null, 'Input should exist')
 
+      // STRICT: Must have readonly attribute
       const isReadonly =
         input.attributes.readonly !== undefined ||
         input.dataAttributes['data-readonly'] !== undefined
 
-      api.assert.ok(isReadonly || input.tagName === 'input', 'Should be readonly or input')
+      api.assert.ok(
+        isReadonly,
+        `Input should be readonly, got attributes: ${JSON.stringify(input.attributes)}`
+      )
     }
   ),
 ])
@@ -2779,8 +2828,12 @@ Frame gap 8, pad 16, bg #1a1a1a, rad 8
       const name = api.preview.findByText('John Doe')
       const email = api.preview.findByText('john@example.com')
 
-      api.assert.ok(name !== null || api.preview.getNodeIds().length >= 3, 'Name should render')
-      api.assert.ok(email !== null || api.preview.getNodeIds().length >= 3, 'Email should render')
+      // STRICT: Text content must be found - these are data-bound values
+      api.assert.ok(name !== null, `Name "John Doe" should render from $user.profile.name`)
+      api.assert.ok(
+        email !== null,
+        `Email "john@example.com" should render from $user.profile.email`
+      )
     }
   ),
 ])

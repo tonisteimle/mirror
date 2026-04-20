@@ -20,7 +20,11 @@ export const clickTests: TestCase[] = describe('Click Events', [
   testWithSetup('Button is clickable', 'Button "Click me"', async (api: TestAPI) => {
     api.assert.exists('node-1')
     const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.interactive === true, 'Button should be interactive')
+    api.assert.ok(info !== null, 'Button should exist')
+    api.assert.ok(
+      info!.interactive === true,
+      `Button should be interactive, got: ${info!.interactive}`
+    )
 
     // Click the button
     await api.interact.click('node-1')
@@ -162,7 +166,8 @@ export const inputTests: TestCase[] = describe('Input Interactions', [
 
       // Check value via Zag API
       const value = api.zag.getValue('node-1') as string
-      api.assert.ok(value?.includes('Multi'), `Textarea should have typed value, got "${value}"`)
+      api.assert.ok(value !== null && value !== undefined, 'Textarea value should exist')
+      api.assert.ok(value.includes('Multi'), `Textarea should have typed value, got "${value}"`)
     }
   ),
 ])

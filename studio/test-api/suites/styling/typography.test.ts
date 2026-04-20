@@ -45,6 +45,43 @@ export const typographyTests: TestCase[] = describe('Typography', [
 
   testWithSetup('font mono', 'Text "Code", font mono', async (api: TestAPI) => {
     api.assert.exists('node-1')
+    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+    api.assert.ok(element !== null, 'Element should exist')
+    const fontFamily = window.getComputedStyle(element).fontFamily.toLowerCase()
+    api.assert.ok(
+      fontFamily.includes('mono') ||
+        fontFamily.includes('courier') ||
+        fontFamily.includes('consolas') ||
+        fontFamily.includes('menlo'),
+      `font mono should set monospace fontFamily, got "${fontFamily}"`
+    )
+  }),
+
+  testWithSetup('font sans', 'Text "Sans", font sans', async (api: TestAPI) => {
+    api.assert.exists('node-1')
+    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+    api.assert.ok(element !== null, 'Element should exist')
+    const fontFamily = window.getComputedStyle(element).fontFamily.toLowerCase()
+    api.assert.ok(
+      fontFamily.includes('sans') ||
+        fontFamily.includes('helvetica') ||
+        fontFamily.includes('arial') ||
+        fontFamily.includes('inter'),
+      `font sans should set sans-serif fontFamily, got "${fontFamily}"`
+    )
+  }),
+
+  testWithSetup('font serif', 'Text "Serif", font serif', async (api: TestAPI) => {
+    api.assert.exists('node-1')
+    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+    api.assert.ok(element !== null, 'Element should exist')
+    const fontFamily = window.getComputedStyle(element).fontFamily.toLowerCase()
+    api.assert.ok(
+      fontFamily.includes('serif') ||
+        fontFamily.includes('georgia') ||
+        fontFamily.includes('times'),
+      `font serif should set serif fontFamily, got "${fontFamily}"`
+    )
   }),
 
   testWithSetup('italic', 'Text "Italic", italic', async (api: TestAPI) => {
@@ -72,9 +109,39 @@ export const typographyTests: TestCase[] = describe('Typography', [
     'Text "Very long text that gets cut off", truncate, w 100',
     async (api: TestAPI) => {
       api.assert.exists('node-1')
+      const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(element !== null, 'Element should exist')
+
+      // truncate requires overflow: hidden
       api.assert.hasStyle('node-1', 'overflow', 'hidden')
+
+      // truncate requires text-overflow: ellipsis
+      const textOverflow = window.getComputedStyle(element).textOverflow
+      api.assert.ok(
+        textOverflow === 'ellipsis',
+        `truncate should set text-overflow: ellipsis, got "${textOverflow}"`
+      )
+
+      // truncate requires white-space: nowrap
+      const whiteSpace = window.getComputedStyle(element).whiteSpace
+      api.assert.ok(
+        whiteSpace === 'nowrap',
+        `truncate should set white-space: nowrap, got "${whiteSpace}"`
+      )
     }
   ),
+
+  testWithSetup('line-height', 'Text "Line height test", line 1.5', async (api: TestAPI) => {
+    api.assert.exists('node-1')
+    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+    api.assert.ok(element !== null, 'Element should exist')
+    const lineHeight = window.getComputedStyle(element).lineHeight
+    // line-height can be in px or relative (e.g., "1.5" or "24px")
+    api.assert.ok(
+      lineHeight.includes('1.5') || parseFloat(lineHeight) > 0,
+      `line 1.5 should set line-height, got "${lineHeight}"`
+    )
+  }),
 
   testWithSetup(
     'text-align center',

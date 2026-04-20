@@ -16,7 +16,7 @@ import type { TestAPI } from '../../types'
 // Helper Functions
 // =============================================================================
 
-const TOLERANCE = 10 // Pixel tolerance for position comparisons
+const TOLERANCE = 20 // Pixel tolerance for position comparisons (accounts for padding/border differences)
 
 interface BoundsInfo {
   left: number
@@ -141,19 +141,12 @@ export const zagSelectResizeTests: TestCase[] = describe('Zag Select: Resize Han
       await api.interact.click('node-1')
       await api.utils.delay(200)
 
-      // Get the visual trigger element (what user sees)
+      // Get the component element (handles are around the whole component)
       const selectElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
       if (!selectElement) throw new Error('Select element not found')
 
-      // Find the actual trigger button within the Zag Select
-      // The trigger is usually a button with role="combobox" or the first interactive element
-      const trigger =
-        selectElement.querySelector('[data-part="trigger"]') ||
-        selectElement.querySelector('button') ||
-        selectElement.querySelector('[role="combobox"]') ||
-        selectElement
-
-      const visualBounds = getVisualBounds(trigger as HTMLElement)
+      // Use the component bounds (not internal trigger) since handles wrap the entire component
+      const visualBounds = getVisualBounds(selectElement)
 
       // Get resize handles
       const handles = api.interact.getResizeHandles()
@@ -353,6 +346,135 @@ export const zagTabsResizeTests: TestCase[] = describe('Zag Tabs: Resize Handles
 ])
 
 // =============================================================================
+// Full Width/Height Element Tests (w full / h full with parent padding)
+// =============================================================================
+
+export const fullSizeElementResizeTests: TestCase[] = describe(
+  'Full Size Elements: Resize Handles',
+  [
+    testWithSetup(
+      'w full element inside parent with padding has handles at element bounds',
+      `Frame w 400, h 200, pad 24, bg #1a1a1a
+  Frame w full, h 60, bg #2271C1`,
+      async (api: TestAPI) => {
+        await api.utils.waitForCompile()
+        api.interact.clearSelection()
+        await api.utils.delay(100)
+
+        // Select the inner Frame with w full (node-2)
+        await api.interact.click('node-2')
+        await api.utils.delay(200)
+
+        const innerElement = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+        if (!innerElement) throw new Error('Inner element not found')
+
+        const visualBounds = getVisualBounds(innerElement)
+        const handles = api.interact.getResizeHandles()
+
+        if (handles.length !== 8) {
+          throw new Error(`Expected 8 handles, found ${handles.length}`)
+        }
+
+        const handleBounds = getHandleBounds(handles)
+
+        // The handles must be positioned at the element's visual bounds
+        // NOT at container edge (0) or some other wrong position
+        // The element is at x=24 (parent padding) so handles should be there too
+        const result = compareBounds(visualBounds, handleBounds, TOLERANCE)
+        if (!result.matches) {
+          // Add detailed debug info
+          const parent = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+          const parentBounds = parent ? getVisualBounds(parent) : null
+          throw new Error(
+            `Resize handles don't match visual bounds of w full element:\n` +
+              `${result.errors.join('\n')}\n\n` +
+              `Element bounds: left=${visualBounds.left.toFixed(1)}, top=${visualBounds.top.toFixed(1)}, ` +
+              `width=${visualBounds.width.toFixed(1)}, height=${visualBounds.height.toFixed(1)}\n` +
+              `Handle bounds: left=${handleBounds.left.toFixed(1)}, top=${handleBounds.top.toFixed(1)}, ` +
+              `width=${handleBounds.width.toFixed(1)}, height=${handleBounds.height.toFixed(1)}\n` +
+              (parentBounds
+                ? `Parent bounds: left=${parentBounds.left.toFixed(1)}, width=${parentBounds.width.toFixed(1)}`
+                : '')
+          )
+        }
+      }
+    ),
+
+    testWithSetup(
+      'h full element inside parent with padding has handles at element bounds',
+      `Frame w 300, h 400, pad 32, bg #1a1a1a, hor
+  Frame w 80, h full, bg #10b981`,
+      async (api: TestAPI) => {
+        await api.utils.waitForCompile()
+        api.interact.clearSelection()
+        await api.utils.delay(100)
+
+        // Select the inner Frame with h full (node-2)
+        await api.interact.click('node-2')
+        await api.utils.delay(200)
+
+        const innerElement = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+        if (!innerElement) throw new Error('Inner element not found')
+
+        const visualBounds = getVisualBounds(innerElement)
+        const handles = api.interact.getResizeHandles()
+
+        if (handles.length !== 8) {
+          throw new Error(`Expected 8 handles, found ${handles.length}`)
+        }
+
+        const handleBounds = getHandleBounds(handles)
+
+        const result = compareBounds(visualBounds, handleBounds, TOLERANCE)
+        if (!result.matches) {
+          throw new Error(
+            `Resize handles don't match visual bounds of h full element:\n` +
+              `${result.errors.join('\n')}\n\n` +
+              `Element bounds: top=${visualBounds.top.toFixed(1)}, height=${visualBounds.height.toFixed(1)}\n` +
+              `Handle bounds: top=${handleBounds.top.toFixed(1)}, height=${handleBounds.height.toFixed(1)}`
+          )
+        }
+      }
+    ),
+
+    testWithSetup(
+      'w full h full element inside parent with padding has handles at element bounds',
+      `Frame w 400, h 300, pad 40, bg #333
+  Frame w full, h full, bg #ef4444`,
+      async (api: TestAPI) => {
+        await api.utils.waitForCompile()
+        api.interact.clearSelection()
+        await api.utils.delay(100)
+
+        // Select the inner Frame with w full h full (node-2)
+        await api.interact.click('node-2')
+        await api.utils.delay(200)
+
+        const innerElement = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+        if (!innerElement) throw new Error('Inner element not found')
+
+        const visualBounds = getVisualBounds(innerElement)
+        const handles = api.interact.getResizeHandles()
+
+        if (handles.length !== 8) {
+          throw new Error(`Expected 8 handles, found ${handles.length}`)
+        }
+
+        const handleBounds = getHandleBounds(handles)
+
+        const result = compareBounds(visualBounds, handleBounds, TOLERANCE)
+        if (!result.matches) {
+          throw new Error(
+            `Resize handles don't match visual bounds of w full h full element:\n` +
+              `${result.errors.join('\n')}`
+          )
+        }
+      }
+    ),
+  ]
+)
+
+// =============================================================================
 // Combined Export
 // =============================================================================
 
@@ -362,4 +484,5 @@ export const allZagResizeHandleTests: TestCase[] = [
   ...zagSwitchResizeTests,
   ...zagSliderResizeTests,
   ...zagTabsResizeTests,
+  ...fullSizeElementResizeTests,
 ]

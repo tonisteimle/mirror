@@ -698,14 +698,17 @@ describe('CodeModifier SourceMap: Error Handling', () => {
 // ============================================================================
 
 describe('CodeModifier SourceMap: Edge Cases', () => {
-  it('handles empty source', () => {
+  it('handles empty source by inserting as root', () => {
+    // When canvas is empty and we drop onto node-1, the element should be
+    // inserted as root element (not fail with "parent not found")
     const source = ``
     const sourceMap = new SourceMap()
 
     const modifier = new CodeModifier(source, sourceMap)
     const result = modifier.addChild('node-1', 'Box')
 
-    expect(result.success).toBe(false)
+    expect(result.success).toBe(true)
+    expect(result.newSource).toContain('Box')
   })
 
   it('handles single-line source', () => {

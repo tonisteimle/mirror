@@ -8,6 +8,7 @@ import type { IRZagNode, IRSlot, IRNode, IRItem } from '../../../ir/types'
 import type { ZagEmitterContext, ZagEmitterFn } from '../zag-emitter-context'
 import {
   emitSlotStyles,
+  emitRootStyles,
   emitComponentHeader,
   emitMachineConfig,
   emitRuntimeInit,
@@ -26,6 +27,9 @@ export function emitSwitchComponent(
 
   // Machine configuration
   emitMachineConfig(ctx, varName, 'switch', node.id, node.machineConfig || {})
+
+  // Apply root styles (combines node.styles and Root slot styles)
+  emitRootStyles(ctx, varName, node)
 
   // Create Track (the sliding background)
   const trackSlot = node.slots['Track']
@@ -106,17 +110,8 @@ export function emitCheckboxComponent(
   // Machine configuration
   emitMachineConfig(ctx, varName, 'checkbox', node.id, node.machineConfig || {})
 
-  // Apply root styles
-  const rootSlot = node.slots['Root']
-  if (rootSlot?.styles && rootSlot.styles.length > 0) {
-    ctx.emit(`Object.assign(${varName}.style, {`)
-    ctx.indentIn()
-    for (const style of rootSlot.styles) {
-      ctx.emit(`'${style.property}': '${style.value}',`)
-    }
-    ctx.indentOut()
-    ctx.emit('})')
-  }
+  // Apply root styles (combines node.styles and Root slot styles)
+  emitRootStyles(ctx, varName, node)
 
   // Create HiddenInput (for form submission)
   const hiddenInputVar = `${varName}_hiddenInput`
@@ -290,17 +285,8 @@ export function emitRadioGroupComponent(
   ctx.emit(`}`)
   ctx.emit('')
 
-  // Apply root styles
-  const rootSlot = node.slots['Root']
-  if (rootSlot?.styles && rootSlot.styles.length > 0) {
-    ctx.emit(`Object.assign(${varName}.style, {`)
-    ctx.indentIn()
-    for (const style of rootSlot.styles) {
-      ctx.emit(`'${style.property}': '${style.value}',`)
-    }
-    ctx.indentOut()
-    ctx.emit('})')
-  }
+  // Apply root styles (combines node.styles and Root slot styles)
+  emitRootStyles(ctx, varName, node)
 
   // Create Label if exists
   const labelText = node.machineConfig.label as string
@@ -410,6 +396,7 @@ export function emitSliderComponent(
   ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
   const isRangeSlider = node.name === 'RangeSlider'
   ctx.emit(`${varName}.dataset.zagComponent = '${isRangeSlider ? 'rangeslider' : 'slider'}'`)
+  ctx.emit(`${varName}.setAttribute('role', 'group')`)
   if (node.name) {
     ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
   }
@@ -424,17 +411,8 @@ export function emitSliderComponent(
   ctx.emit(`}`)
   ctx.emit('')
 
-  // Apply root styles
-  const rootSlot = node.slots['Root']
-  if (rootSlot?.styles && rootSlot.styles.length > 0) {
-    ctx.emit(`Object.assign(${varName}.style, {`)
-    ctx.indentIn()
-    for (const style of rootSlot.styles) {
-      ctx.emit(`'${style.property}': '${style.value}',`)
-    }
-    ctx.indentOut()
-    ctx.emit('})')
-  }
+  // Apply root styles (combines node.styles and Root slot styles)
+  emitRootStyles(ctx, varName, node)
 
   // Create Label if exists
   const labelText = node.machineConfig.label as string
@@ -642,8 +620,8 @@ export function emitPinInputComponent(
   ctx.emit(`}`)
   ctx.emit('')
 
-  // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  // Apply root styles (combines node.styles and Root slot styles)
+  emitRootStyles(ctx, varName, node)
 
   // Create Label if exists
   const labelText = node.machineConfig.label as string
@@ -735,8 +713,8 @@ export function emitPasswordInputComponent(
   ctx.emit(`}`)
   ctx.emit('')
 
-  // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  // Apply root styles (combines node.styles and Root slot styles)
+  emitRootStyles(ctx, varName, node)
 
   // Create Label if exists
   const labelText = node.machineConfig.label as string
@@ -997,8 +975,8 @@ export function emitDateInputComponent(
   ctx.emit(`}`)
   ctx.emit('')
 
-  // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  // Apply root styles (combines node.styles and Root slot styles)
+  emitRootStyles(ctx, varName, node)
 
   // Create Label if present
   const labelText = (node.machineConfig?.label as string) || ''
@@ -1067,8 +1045,8 @@ export function emitFormComponent(
   ctx.emit(`}`)
   ctx.emit('')
 
-  // Apply form styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  // Apply form styles (combines node.styles and Root slot styles)
+  emitRootStyles(ctx, varName, node)
 
   // Process Field items
   const items = node.items || []

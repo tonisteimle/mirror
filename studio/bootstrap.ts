@@ -33,7 +33,10 @@ import {
   setEditorController,
   initDraftLinesManager,
   disposeDraftLinesManager,
+  initDraftModeManager,
+  disposeDraftModeManager,
   type DraftLinesManager,
+  type DraftModeManager,
 } from './editor'
 import {
   PreviewController,
@@ -119,6 +122,8 @@ export interface StudioInstance {
   inlineEdit: InlineEditController | null
   /** Draft lines manager for AI-assisted editing visual feedback */
   draftLinesManager: DraftLinesManager | null
+  /** Draft mode manager for -- marker AI-assisted code generation */
+  draftModeManager: DraftModeManager | null
   /** Cleanup all event subscriptions and resources */
   dispose: () => void
 }
@@ -152,6 +157,7 @@ export const studio: StudioInstance = {
   drawManager: null,
   inlineEdit: null,
   draftLinesManager: null,
+  draftModeManager: null,
   dispose: () => {
     // Unsubscribe all event listeners
     for (const unsubscribe of eventUnsubscribes) {
@@ -169,6 +175,7 @@ export const studio: StudioInstance = {
     studio.inlineEdit?.dispose()
     studio.preview?.dispose()
     disposeDraftLinesManager()
+    disposeDraftModeManager()
 
     // Clear references
     studio.editor = null
@@ -182,6 +189,7 @@ export const studio: StudioInstance = {
     studio.drawManager = null
     studio.inlineEdit = null
     studio.draftLinesManager = null
+    studio.draftModeManager = null
     studio.agent = null
   },
 }
@@ -474,6 +482,13 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     getEditorView: () => config.editor,
   })
   studio.draftLinesManager = draftLinesManager
+
+  // Draft Mode Manager - handles -- marker for AI code generation
+  // User types --, then Cmd+Enter submits to AI
+  const draftModeManager = initDraftModeManager({
+    getEditorView: () => config.editor,
+  })
+  studio.draftModeManager = draftModeManager
 
   // Editor Drop Handler is now handled by createComponentDropExtension in app.js
   // Uses CodeMirror's native extension system for proper drop handling

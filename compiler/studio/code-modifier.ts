@@ -447,6 +447,10 @@ export class CodeModifier {
     // Get parent node mapping
     const parentMapping = this.sourceMap.getNodeById(parentId)
     if (!parentMapping) {
+      // Special case: empty canvas - insert as root element
+      if (this.source.trim() === '' && parentId === 'node-1') {
+        return this.insertAsRoot(componentName, properties, textContent)
+      }
       return this.errorResult(`Parent node not found: ${parentId}`)
     }
 
@@ -528,6 +532,36 @@ export class CodeModifier {
         from: insertPosition,
         to: insertPosition,
         insert: insertText,
+      },
+    }
+  }
+
+  /**
+   * Insert a component as root element when canvas is empty
+   * Called when dropping onto an empty canvas (no code yet)
+   */
+  private insertAsRoot(
+    componentName: string,
+    properties?: string,
+    textContent?: string
+  ): ModificationResult {
+    // Build the component line with no indentation (root level)
+    const componentLine = this.buildComponentLine(componentName, properties, textContent, '')
+
+    // Insert at the beginning (replacing any whitespace-only content)
+    const newSource = componentLine + '\n'
+
+    // Update internal state
+    this.source = newSource
+    this.lines = newSource.split('\n')
+
+    return {
+      success: true,
+      newSource,
+      change: {
+        from: 0,
+        to: this.source.length,
+        insert: newSource,
       },
     }
   }

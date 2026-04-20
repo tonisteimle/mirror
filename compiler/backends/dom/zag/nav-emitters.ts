@@ -6,7 +6,13 @@
 
 import type { IRZagNode, IRSlot, IRNode, IRItem } from '../../../ir/types'
 import type { ZagEmitterContext, ZagEmitterFn } from '../zag-emitter-context'
-import { emitSlotStyles, emitComponentHeader, emitMachineConfig, emitRuntimeInit } from './helpers'
+import {
+  emitSlotStyles,
+  emitRootStyles,
+  emitComponentHeader,
+  emitMachineConfig,
+  emitRuntimeInit,
+} from './helpers'
 
 export function emitTabsComponent(
   node: IRZagNode,
@@ -345,7 +351,7 @@ export function emitSideNavComponent(
   ctx.emit('')
 
   // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  emitRootStyles(ctx, varName, node)
 
   if (isCollapsed) {
     ctx.emit(`${varName}.setAttribute('data-collapsed', 'true')`)
@@ -475,7 +481,7 @@ export function emitToggleGroupComponent(
   ctx.emit('')
 
   // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  emitRootStyles(ctx, varName, node)
 
   // Create Items
   const itemSlot = node.slots['Item']
@@ -547,7 +553,7 @@ export function emitSegmentedControlComponent(
   ctx.emit('')
 
   // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  emitRootStyles(ctx, varName, node)
 
   // Create Indicator (slides behind active item)
   const indicatorSlot = node.slots['Indicator']

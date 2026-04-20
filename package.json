@@ -53,6 +53,10 @@
     "generate:check": "npx tsx scripts/generate-from-schema.ts --check",
     "generate:claude": "npx tsx scripts/generate-claude-tutorial.ts",
     "build:tutorial": "npx tsx scripts/generate-tutorial.ts",
+    "tutorial:extract": "npx tsx tools/extract-tutorial-tests.ts",
+    "tutorial:generate": "npx tsx tools/generate-tutorial-tests.ts",
+    "tutorial:sync": "npm run tutorial:extract && npm run tutorial:generate",
+    "test:browser:tutorial": "npx tsx tools/test.ts --category=tutorial --progress",
     "prepare": "husky"
   },
   "dependencies": {

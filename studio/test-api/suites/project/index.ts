@@ -698,12 +698,15 @@ export const projectSetupTests: TestSuite = [
       // Create screens folder structure
       const created = await files.create('screens/dashboard.mir', DASHBOARD_SCREEN)
 
-      // Check if file was created (may or may not support subdirs)
+      // Verify creation reported success
+      api.assert.ok(created, 'files.create() should return true')
+
+      // Check if file exists in file list (subdirectory support varies)
       const fileList = files.list()
       const hasFile =
         fileList.includes('screens/dashboard.mir') || fileList.includes('dashboard.mir')
 
-      api.assert.ok(hasFile || created, 'Layout file should be created')
+      api.assert.ok(hasFile, `Created file should be in file list, got: ${fileList.join(', ')}`)
 
       // Cleanup
       await files.delete('screens/dashboard.mir')
@@ -819,7 +822,11 @@ PrimaryBtn "Click Me"`)
       api.assert.exists('node-4') // PrimaryBtn
 
       const card = api.preview.inspect('node-1')
-      api.assert.ok(card?.children.length >= 3, 'Card should have children')
+      api.assert.ok(card !== null, 'Card inspect should return info')
+      api.assert.ok(
+        card!.children.length >= 3,
+        `Card should have children, got ${card!.children.length}`
+      )
 
       await files.delete('components.com')
       await files.delete('tokens.tok')
@@ -949,7 +956,11 @@ export const complexLayoutTests: TestSuite = [
       // Check structure
       api.assert.exists('node-1') // App
       const app = api.preview.inspect('node-1')
-      api.assert.ok(app?.children.length >= 2, 'App should have Header and Frame')
+      api.assert.ok(app !== null, 'App inspect should return info')
+      api.assert.ok(
+        app!.children.length >= 2,
+        `App should have Header and Frame, got ${app!.children.length}`
+      )
 
       await cleanupProject(api)
     },
@@ -974,7 +985,11 @@ export const complexLayoutTests: TestSuite = [
       await api.utils.delay(200)
 
       const container = api.preview.inspect('node-1')
-      api.assert.ok(container?.children.length === 4, 'Should have 4 cards')
+      api.assert.ok(container !== null, 'Container inspect should return info')
+      api.assert.ok(
+        container!.children.length === 4,
+        `Should have 4 cards, got ${container!.children.length}`
+      )
 
       await cleanupProject(api)
     },
@@ -1002,7 +1017,11 @@ export const complexLayoutTests: TestSuite = [
       // Check that table rendered
       api.assert.exists('node-1')
       const table = api.preview.inspect('node-1')
-      api.assert.ok(table?.children.length >= 3, 'Table should have header and rows')
+      api.assert.ok(table !== null, 'Table inspect should return info')
+      api.assert.ok(
+        table!.children.length >= 3,
+        `Table should have header and rows, got ${table!.children.length}`
+      )
 
       await cleanupProject(api)
     },
@@ -1034,10 +1053,18 @@ export const fileSwitchingTests: TestSuite = [
 
       // Check content retrieval
       const content1 = files.getContent('screen1.mir')
-      api.assert.ok(content1?.includes('Screen 1'), 'Should retrieve Screen 1 content')
+      api.assert.ok(content1 !== null && content1 !== undefined, 'Screen 1 content should exist')
+      api.assert.ok(
+        content1!.includes('Screen 1'),
+        `Should retrieve Screen 1 content, got: "${content1}"`
+      )
 
       const content2 = files.getContent('screen2.mir')
-      api.assert.ok(content2?.includes('Screen 2'), 'Should retrieve Screen 2 content')
+      api.assert.ok(content2 !== null && content2 !== undefined, 'Screen 2 content should exist')
+      api.assert.ok(
+        content2!.includes('Screen 2'),
+        `Should retrieve Screen 2 content, got: "${content2}"`
+      )
 
       await files.delete('screen1.mir')
       await files.delete('screen2.mir')

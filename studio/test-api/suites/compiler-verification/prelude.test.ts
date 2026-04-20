@@ -12,6 +12,13 @@
 import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
+// Helper to inspect with null check
+function inspectStrict(api: TestAPI, nodeId: string, name: string) {
+  const info = api.preview.inspect(nodeId)
+  api.assert.ok(info !== null, `${name} inspect should return info`)
+  return info!
+}
+
 /**
  * No Automatic App Wrapper Tests
  *
@@ -34,8 +41,11 @@ export const noAutoWrapperTests: TestCase[] = describe('No Auto Wrapper', [
     async (api: TestAPI) => {
       api.assert.exists('node-1')
       // The first node should be our Frame, not an App wrapper
-      const info = api.preview.inspect('node-1')
-      api.assert.ok(info?.tagName === 'div', 'First element should be a div (Frame)')
+      const info = inspectStrict(api, 'node-1', 'Frame')
+      api.assert.ok(
+        info.tagName === 'div',
+        `First element should be a div (Frame), got: ${info.tagName}`
+      )
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(26, 26, 26)')
     }
   ),
@@ -47,8 +57,8 @@ export const noAutoWrapperTests: TestCase[] = describe('No Auto Wrapper', [
       api.assert.exists('node-1')
       api.assert.hasText('node-1', 'Direct Text')
       // Text should be the root element, not wrapped in App
-      const info = api.preview.inspect('node-1')
-      api.assert.ok(info?.tagName === 'span', 'Text should be span')
+      const info = inspectStrict(api, 'node-1', 'Text')
+      api.assert.ok(info.tagName === 'span', `Text should be span, got: ${info.tagName}`)
     }
   ),
 
@@ -65,8 +75,11 @@ export const noAutoWrapperTests: TestCase[] = describe('No Auto Wrapper', [
 
   testWithSetup('Button as root - no App wrapper', 'Button "Click Me"', async (api: TestAPI) => {
     api.assert.exists('node-1')
-    const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'button', 'Button should be root')
+    const info = inspectStrict(api, 'node-1', 'Button')
+    api.assert.ok(
+      info.tagName === 'button',
+      `Button should be button element, got: ${info.tagName}`
+    )
     api.assert.hasText('node-1', 'Click Me')
   }),
 ])
@@ -167,8 +180,8 @@ export const nestedStructureTests: TestCase[] = describe('Nested Structure', [
       api.assert.hasStyle('node-2', 'gap', '8px')
       api.assert.hasStyle('node-2', 'padding', '12px')
       // Structure: node-1 > node-2 > node-3
-      const outer = api.preview.inspect('node-1')
-      api.assert.ok(outer?.children.includes('node-2'), 'node-2 should be child of node-1')
+      const outer = inspectStrict(api, 'node-1', 'Outer frame')
+      api.assert.ok(outer.children.includes('node-2'), 'node-2 should be child of node-1')
     }
   ),
 

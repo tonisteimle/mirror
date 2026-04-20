@@ -7,6 +7,21 @@
 import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
+// Helper to extract rotation angle from CSS transform matrix
+// matrix(a, b, c, d, tx, ty) where rotation = atan2(b, a) in radians
+function getRotationFromMatrix(transform: string): number | null {
+  const match = transform.match(/matrix\(([^)]+)\)/)
+  if (!match) return null
+
+  const values = match[1].split(',').map(v => parseFloat(v.trim()))
+  if (values.length < 2) return null
+
+  const [a, b] = values
+  const radians = Math.atan2(b, a)
+  const degrees = radians * (180 / Math.PI)
+  return Math.round(degrees)
+}
+
 export const rotateBasicTests: TestCase[] = describe('Rotate Basic', [
   testWithSetup(
     'Icon rotated 45 degrees',
@@ -20,13 +35,15 @@ export const rotateBasicTests: TestCase[] = describe('Rotate Basic', [
       // Should have transform with rotation
       api.assert.ok(
         style.transform !== 'none' && style.transform !== '',
-        'Should have transform applied'
+        `Should have transform applied, got: "${style.transform}"`
       )
 
-      // Verify it's a rotation (matrix contains rotation values)
+      // Verify actual rotation angle is ~45 degrees
+      const rotation = getRotationFromMatrix(style.transform)
+      api.assert.ok(rotation !== null, `Transform should be a matrix, got: "${style.transform}"`)
       api.assert.ok(
-        style.transform.includes('matrix') || style.transform.includes('rotate'),
-        'Transform should include rotation'
+        Math.abs(rotation! - 45) < 2,
+        `Rotation should be ~45 degrees, got: ${rotation} degrees`
       )
     }
   ),
@@ -40,7 +57,18 @@ export const rotateBasicTests: TestCase[] = describe('Rotate Basic', [
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      api.assert.ok(style.transform !== 'none', 'Should have rotation transform')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have rotation transform, got: "${style.transform}"`
+      )
+
+      // Verify actual rotation angle is ~90 degrees
+      const rotation = getRotationFromMatrix(style.transform)
+      api.assert.ok(rotation !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(
+        Math.abs(rotation! - 90) < 2,
+        `Rotation should be ~90 degrees, got: ${rotation} degrees`
+      )
     }
   ),
 
@@ -53,8 +81,18 @@ export const rotateBasicTests: TestCase[] = describe('Rotate Basic', [
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      // 180 degree rotation creates specific matrix values
-      api.assert.ok(style.transform !== 'none', 'Should have 180 degree rotation')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have 180 degree rotation, got: "${style.transform}"`
+      )
+
+      // 180 degree rotation: matrix(-1, 0, 0, -1, 0, 0) gives atan2(0, -1) = 180 or -180
+      const rotation = getRotationFromMatrix(style.transform)
+      api.assert.ok(rotation !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(
+        Math.abs(Math.abs(rotation!) - 180) < 2,
+        `Rotation should be ~180 degrees, got: ${rotation} degrees`
+      )
     }
   ),
 
@@ -67,7 +105,18 @@ export const rotateBasicTests: TestCase[] = describe('Rotate Basic', [
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      api.assert.ok(style.transform !== 'none', 'Should have negative rotation')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have negative rotation, got: "${style.transform}"`
+      )
+
+      // Verify actual rotation angle is ~-45 degrees
+      const rotation = getRotationFromMatrix(style.transform)
+      api.assert.ok(rotation !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(
+        Math.abs(rotation! - -45) < 2,
+        `Rotation should be ~-45 degrees, got: ${rotation} degrees`
+      )
     }
   ),
 
@@ -142,10 +191,34 @@ export const rotateInteractiveTests: TestCase[] = describe('Rotate Interactive',
       // Verify element renders correctly
       api.assert.exists('node-1')
 
-      // Note: Programmatic hover doesn't trigger CSS :hover
-      // We verify the element exists and has base styles
       const element = await api.utils.waitForElement('node-1')
       api.assert.ok(element !== null, 'Icon should exist')
+
+      // Get initial transform (should be none or identity)
+      const initialStyle = window.getComputedStyle(element)
+      const initialTransform = initialStyle.transform
+
+      // Hover over element
+      await api.interact.hover('node-1')
+      await api.utils.delay(100)
+
+      // After hover, should have rotation transform
+      const hoverStyle = window.getComputedStyle(element)
+      api.assert.ok(
+        hoverStyle.transform !== 'none',
+        `Should have rotation on hover, got: "${hoverStyle.transform}"`
+      )
+
+      // Verify rotation is ~90 degrees
+      const rotation = getRotationFromMatrix(hoverStyle.transform)
+      api.assert.ok(
+        rotation !== null,
+        `Transform should be a matrix, got: "${hoverStyle.transform}"`
+      )
+      api.assert.ok(
+        Math.abs(rotation! - 90) < 5,
+        `Hover rotation should be ~90 degrees, got: ${rotation!} degrees`
+      )
     }
   ),
 
@@ -165,6 +238,12 @@ export const rotateInteractiveTests: TestCase[] = describe('Rotate Interactive',
       const initial = await api.utils.waitForElement('node-1')
       const initialTransform = window.getComputedStyle(initial).transform
 
+      // Initial should have no rotation (identity or none)
+      api.assert.ok(
+        initialTransform === 'none' || initialTransform === 'matrix(1, 0, 0, 1, 0, 0)',
+        `Initial should have no rotation, got: "${initialTransform}"`
+      )
+
       // Toggle
       await api.interact.click('node-1')
       await api.utils.delay(150)
@@ -172,11 +251,22 @@ export const rotateInteractiveTests: TestCase[] = describe('Rotate Interactive',
       // Background should change
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
 
-      // Transform should change (rotate 180)
+      // Transform should now be 180 degrees
       const afterStyle = window.getComputedStyle(initial)
       api.assert.ok(
-        afterStyle.transform !== initialTransform || afterStyle.transform.includes('matrix'),
-        'Should be rotated after toggle'
+        afterStyle.transform !== 'none',
+        `Should have rotation after toggle, got: "${afterStyle.transform}"`
+      )
+
+      // Verify rotation is ~180 degrees
+      const rotation = getRotationFromMatrix(afterStyle.transform)
+      api.assert.ok(
+        rotation !== null,
+        `Transform should be a matrix, got: "${afterStyle.transform}"`
+      )
+      api.assert.ok(
+        Math.abs(Math.abs(rotation!) - 180) < 5,
+        `Toggle rotation should be ~180 degrees, got: ${rotation} degrees`
       )
     }
   ),
@@ -193,10 +283,16 @@ export const rotateInteractiveTests: TestCase[] = describe('Rotate Interactive',
       const spinner = await api.utils.waitForElement('node-2')
       const style = window.getComputedStyle(spinner)
 
-      // Should have spin animation (which applies rotation)
+      // Should have spin animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Spinner should be animating'
+        style.animationName !== 'none' && style.animationName !== '',
+        `Spinner should have animation name, got: "${style.animationName}"`
+      )
+
+      // Animation should be running
+      api.assert.ok(
+        style.animationPlayState === 'running',
+        `Animation should be running, got: "${style.animationPlayState}"`
       )
     }
   ),
@@ -215,8 +311,16 @@ export const rotateAnglesTests: TestCase[] = describe('Rotate Various Angles', [
       // Should have identity matrix or no transform
       api.assert.ok(
         style.transform === 'none' || style.transform === 'matrix(1, 0, 0, 1, 0, 0)',
-        'Zero rotation should be identity'
+        `Zero rotation should be identity, got: "${style.transform}"`
       )
+
+      // If there is a transform, verify rotation is 0
+      if (style.transform !== 'none') {
+        const rotation = getRotationFromMatrix(style.transform)
+        if (rotation !== null) {
+          api.assert.ok(Math.abs(rotation) < 2, `Rotation should be ~0 degrees, got: ${rotation}`)
+        }
+      }
     }
   ),
 
@@ -226,9 +330,21 @@ export const rotateAnglesTests: TestCase[] = describe('Rotate Various Angles', [
     async (api: TestAPI) => {
       api.assert.exists('node-1')
 
-      // Full rotation should look same as no rotation
       const element = await api.utils.waitForElement('node-1')
-      api.assert.ok(element !== null, 'Element should exist')
+      const style = window.getComputedStyle(element)
+
+      // 360 degree rotation should be equivalent to 0 degrees (identity)
+      // The rotation value wraps around, so we check if it's close to 0 or 360
+      if (style.transform !== 'none') {
+        const rotation = getRotationFromMatrix(style.transform)
+        if (rotation !== null) {
+          const normalizedRotation = Math.abs(rotation) % 360
+          api.assert.ok(
+            normalizedRotation < 5 || normalizedRotation > 355,
+            `Full rotation (360) should be equivalent to 0, got: ${rotation} degrees`
+          )
+        }
+      }
     }
   ),
 
@@ -241,7 +357,18 @@ export const rotateAnglesTests: TestCase[] = describe('Rotate Various Angles', [
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      api.assert.ok(style.transform !== 'none', 'Should have rotation with decimal angle')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have rotation with decimal angle, got: "${style.transform}"`
+      )
+
+      // Verify rotation is ~22.5 degrees
+      const rotation = getRotationFromMatrix(style.transform)
+      api.assert.ok(rotation !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(
+        Math.abs(rotation! - 22.5) < 2,
+        `Rotation should be ~22.5 degrees, got: ${rotation} degrees`
+      )
     }
   ),
 ])

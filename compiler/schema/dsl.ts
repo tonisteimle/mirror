@@ -1132,13 +1132,13 @@ export const SCHEMA: Record<string, PropertyDef> = {
     name: 'shrink',
     aliases: [],
     category: 'layout',
-    description: 'Flex shrink',
+    description: 'Allow flex shrink - element can shrink below its preferred size',
 
     keywords: {
       _standalone: {
-        description: 'Allow element to shrink',
+        description: 'Allow element to shrink when space is limited',
         css: [{ property: 'flex-shrink', value: '1' }],
-        example: 'Box shrink',
+        example: 'Box w 200, shrink',
       },
     },
   },

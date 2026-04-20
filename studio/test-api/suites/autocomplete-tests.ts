@@ -47,8 +47,16 @@ export const primitiveCompletionTests: TestCase[] = describe('Primitive Completi
     await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
+    // Should have completions AND all should start with "bu"
+    api.assert.ok(
+      completions.length > 0,
+      `Should have completions for 'Bu' prefix, got ${completions.length}`
+    )
     const allStartWithBu = completions.every(c => c.toLowerCase().startsWith('bu'))
-    api.assert.ok(allStartWithBu || completions.length === 0, 'Should filter by prefix')
+    api.assert.ok(
+      allStartWithBu,
+      `All completions should start with 'bu', got: ${completions.slice(0, 5).join(', ')}`
+    )
   }),
 ])
 
@@ -217,8 +225,16 @@ export const iconCompletionTests: TestCase[] = describe('Icon Completions', [
     await api.utils.waitForIdle()
 
     const completions = api.editor.getCompletions()
+    // Should have completions AND all should start with 'arrow'
+    api.assert.ok(
+      completions.length > 0,
+      `Should have completions for 'arrow' prefix, got ${completions.length}`
+    )
     const allArrow = completions.every(c => c.startsWith('arrow'))
-    api.assert.ok(allArrow || completions.length === 0, 'Should filter icons by prefix')
+    api.assert.ok(
+      allArrow,
+      `All completions should start with 'arrow', got: ${completions.slice(0, 5).join(', ')}`
+    )
   }),
 ])
 

@@ -454,8 +454,17 @@ export const edgeCaseTests: TestCase[] = describe('Edge Cases', [
       // For a Button (non-container), H might not change code
       // This tests that single selection doesn't trigger wrap
       const codeAfter = api.editor.getCode()
-      // Button doesn't have layout direction, so code unchanged
-      api.assert.ok(true, 'Single selection does not trigger wrap')
+
+      // Button doesn't have layout direction, so code should be unchanged
+      // OR if it changed, verify it's still valid code
+      const buttonStillExists = codeAfter.includes('Button "A"')
+      api.assert.ok(buttonStillExists, 'Button element should still exist in code after H key')
+
+      // Code should either be unchanged OR only have valid changes
+      api.assert.ok(
+        codeAfter.length > 0,
+        'Code should not be empty after H key on single selection'
+      )
     }
   ),
 

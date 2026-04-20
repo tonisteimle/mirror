@@ -1111,10 +1111,27 @@ const _runtime = {
   },
 
   // Evaluate a visibility condition using $get
+  // Supports both $varName and bare varName formats
   _evaluateVisibilityCondition(condition) {
     try {
-      // Replace $varName with $get("varName") for evaluation
-      const evalCondition = condition.replace(/\\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+      const reserved = new Set([
+        'true', 'false', 'null', 'undefined', 'NaN', 'Infinity',
+        'typeof', 'instanceof', 'new', 'delete', 'void'
+      ])
+
+      // First handle $-prefixed variables: $varName → $get("varName")
+      let evalCondition = condition.replace(/\\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+
+      // Then handle bare identifiers (not already wrapped, not reserved)
+      evalCondition = evalCondition.replace(
+        /(?<![\"\\w$.])(\\b[a-zA-Z_][a-zA-Z0-9_]*(?:\\.[a-zA-Z_][a-zA-Z0-9_]*)*\\b)(?![\"\\w(])/g,
+        (match, identifier) => {
+          const firstPart = identifier.split('.')[0]
+          if (reserved.has(firstPart)) return match
+          return '$get("' + identifier + '")'
+        }
+      )
+
       // Use Function constructor to evaluate in the context with $get
       const result = new Function('$get', 'return ' + evalCondition)($get)
       return !!result

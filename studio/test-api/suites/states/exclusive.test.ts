@@ -175,12 +175,59 @@ export const exclusiveGroupTests: TestCase[] = describe('Exclusive Groups', [
         bg #10b981
         col white`,
     async (api: TestAPI) => {
-      // Size group: node-3 (S), node-4 (M), node-5 (L)
-      // Color group: node-8 (Red), node-9 (Blue), node-10 (Green)
+      // Structure: node-1 (Frame), node-2 (Frame hor), node-3 (Text "Size:"),
+      //           node-4 (S), node-5 (M), node-6 (L)
+      //           node-7 (Frame hor), node-8 (Text "Color:"),
+      //           node-9 (Red), node-10 (Blue), node-11 (Green)
       api.assert.exists('node-1')
 
       const nodeIds = api.preview.getNodeIds()
-      api.assert.ok(nodeIds.length >= 10, 'Should have at least 10 nodes')
+      api.assert.ok(nodeIds.length >= 11, 'Should have at least 11 nodes')
+
+      // All buttons start unselected (S=node-4, M=node-5, L=node-6)
+      api.assert.hasStyle('node-4', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-5', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-6', 'backgroundColor', 'rgb(51, 51, 51)')
+      // Color buttons (Red=node-9, Blue=node-10, Green=node-11)
+      api.assert.hasStyle('node-9', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-10', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-11', 'backgroundColor', 'rgb(51, 51, 51)')
+
+      // Select "M" in Size group (node-5)
+      await api.interact.click('node-5')
+      await api.utils.delay(150)
+
+      // Only M selected in Size group
+      api.assert.hasStyle('node-4', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-5', 'backgroundColor', 'rgb(34, 113, 193)')
+      api.assert.hasStyle('node-6', 'backgroundColor', 'rgb(51, 51, 51)')
+      // Color group unchanged
+      api.assert.hasStyle('node-9', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-10', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-11', 'backgroundColor', 'rgb(51, 51, 51)')
+
+      // Select "Green" in Color group (node-11)
+      await api.interact.click('node-11')
+      await api.utils.delay(150)
+
+      // Size group unchanged - M still selected
+      api.assert.hasStyle('node-4', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-5', 'backgroundColor', 'rgb(34, 113, 193)')
+      api.assert.hasStyle('node-6', 'backgroundColor', 'rgb(51, 51, 51)')
+      // Only Green selected in Color group
+      api.assert.hasStyle('node-9', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-10', 'backgroundColor', 'rgb(51, 51, 51)')
+      api.assert.hasStyle('node-11', 'backgroundColor', 'rgb(16, 185, 129)')
+
+      // Select "S" in Size group (node-4) - should deselect M
+      await api.interact.click('node-4')
+      await api.utils.delay(150)
+
+      // S selected, M deselected
+      api.assert.hasStyle('node-4', 'backgroundColor', 'rgb(34, 113, 193)')
+      api.assert.hasStyle('node-5', 'backgroundColor', 'rgb(51, 51, 51)')
+      // Color group still has Green selected
+      api.assert.hasStyle('node-11', 'backgroundColor', 'rgb(16, 185, 129)')
     }
   ),
 

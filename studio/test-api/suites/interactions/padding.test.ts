@@ -115,7 +115,14 @@ export const allSidesPaddingTests: TestCase[] = describe('All Sides Padding (Shi
       // Verify we start with 0 padding
       const zones = api.interact.getPaddingZones()
       const topZone = zones.find(z => z.position === 'top')
-      api.assert.ok(topZone?.rect.height === 0 || !topZone, 'Initial padding should be 0')
+      api.assert.ok(
+        topZone !== undefined,
+        `Padding top zone should exist, found zones: ${zones.map(z => z.position).join(', ')}`
+      )
+      api.assert.ok(
+        topZone!.rect.height === 0,
+        `Initial padding should be 0, got height: ${topZone!.rect.height}`
+      )
 
       const result = await api.interact.dragPaddingHandle('top', 24, { shift: true })
 

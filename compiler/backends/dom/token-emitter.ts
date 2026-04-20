@@ -256,7 +256,11 @@ function emitGetHelper(ctx: TokenEmitterContext): void {
   ctx.emit('if (aggMatch) {')
   ctx.indentIn()
   ctx.emit('const [, collectionPath, method, field, postAccessor] = aggMatch')
-  ctx.emit('const collection = $get(collectionPath)')
+  ctx.emit('let collection = $get(collectionPath)')
+  ctx.emit('// Handle both arrays and objects (convert objects to arrays via Object.values)')
+  ctx.emit(
+    'if (collection && typeof collection === "object" && !Array.isArray(collection)) { collection = Object.values(collection) }'
+  )
   ctx.emit('if (Array.isArray(collection)) {')
   ctx.indentIn()
   ctx.emit('let result = field ? $agg[method](collection, field) : $agg[method](collection)')

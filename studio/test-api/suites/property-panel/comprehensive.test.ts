@@ -115,15 +115,15 @@ export const sizingPropertyTests: TestCase[] = describe('Sizing Properties', [
       // Verify preview - should have 100% or fill parent
       const element = getElement('node-2')
       const parent = getElement('node-1')
-      if (element && parent) {
-        const elementWidth = element.getBoundingClientRect().width
-        const parentWidth = parent.getBoundingClientRect().width
-        // Allow some tolerance for padding
-        api.assert.ok(
-          elementWidth >= parentWidth - 50,
-          `Element should fill parent width. Element: ${elementWidth}, Parent: ${parentWidth}`
-        )
-      }
+      api.assert.ok(element !== null, 'Child element (node-2) should exist')
+      api.assert.ok(parent !== null, 'Parent element (node-1) should exist')
+      const elementWidth = element!.getBoundingClientRect().width
+      const parentWidth = parent!.getBoundingClientRect().width
+      // Allow some tolerance for padding
+      api.assert.ok(
+        elementWidth >= parentWidth - 50,
+        `Element should fill parent width. Element: ${elementWidth}, Parent: ${parentWidth}`
+      )
     }
   ),
 ])
@@ -612,15 +612,14 @@ export const layoutPropertyTests: TestCase[] = describe('Layout Properties', [
       // Verify children are side-by-side (first child left of second)
       const child1 = getElement('node-2')
       const child2 = getElement('node-3')
-      api.assert.ok(child1 && child2, 'Both children should exist')
-      if (child1 && child2) {
-        const rect1 = child1.getBoundingClientRect()
-        const rect2 = child2.getBoundingClientRect()
-        api.assert.ok(
-          rect1.right <= rect2.left + 20, // Allow small gap
-          `First child should be left of second (${rect1.right} <= ${rect2.left})`
-        )
-      }
+      api.assert.ok(child1 !== null, 'First child (node-2) should exist')
+      api.assert.ok(child2 !== null, 'Second child (node-3) should exist')
+      const rect1 = child1!.getBoundingClientRect()
+      const rect2 = child2!.getBoundingClientRect()
+      api.assert.ok(
+        rect1.right <= rect2.left + 20, // Allow small gap
+        `First child should be left of second (${rect1.right} <= ${rect2.left})`
+      )
     }
   ),
 
@@ -646,24 +645,23 @@ export const layoutPropertyTests: TestCase[] = describe('Layout Properties', [
       // Verify child is visually centered
       const parent = getElement('node-1')
       const child = getElement('node-2')
-      api.assert.ok(parent && child, 'Parent and child should exist')
-      if (parent && child) {
-        const parentRect = parent.getBoundingClientRect()
-        const childRect = child.getBoundingClientRect()
-        const parentCenterX = parentRect.left + parentRect.width / 2
-        const childCenterX = childRect.left + childRect.width / 2
-        const parentCenterY = parentRect.top + parentRect.height / 2
-        const childCenterY = childRect.top + childRect.height / 2
+      api.assert.ok(parent !== null, 'Parent (node-1) should exist')
+      api.assert.ok(child !== null, 'Child (node-2) should exist')
+      const parentRect = parent!.getBoundingClientRect()
+      const childRect = child!.getBoundingClientRect()
+      const parentCenterX = parentRect.left + parentRect.width / 2
+      const childCenterX = childRect.left + childRect.width / 2
+      const parentCenterY = parentRect.top + parentRect.height / 2
+      const childCenterY = childRect.top + childRect.height / 2
 
-        api.assert.ok(
-          Math.abs(parentCenterX - childCenterX) < 5,
-          `Child should be horizontally centered (${Math.abs(parentCenterX - childCenterX)} < 5)`
-        )
-        api.assert.ok(
-          Math.abs(parentCenterY - childCenterY) < 5,
-          `Child should be vertically centered (${Math.abs(parentCenterY - childCenterY)} < 5)`
-        )
-      }
+      api.assert.ok(
+        Math.abs(parentCenterX - childCenterX) < 5,
+        `Child should be horizontally centered (${Math.abs(parentCenterX - childCenterX)} < 5)`
+      )
+      api.assert.ok(
+        Math.abs(parentCenterY - childCenterY) < 5,
+        `Child should be vertically centered (${Math.abs(parentCenterY - childCenterY)} < 5)`
+      )
     }
   ),
 ])

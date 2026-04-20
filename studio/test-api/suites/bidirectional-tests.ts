@@ -61,16 +61,17 @@ export const codeToPreviewTests: TestCase[] = describe('Code → Preview', [
   ),
 
   testWithSetup('Style change updates element', 'Frame bg #333', async (api: TestAPI) => {
-    // Change background
+    // Change background to red
     await api.editor.setCode('Frame bg #ff0000')
     await api.utils.waitForCompile()
 
     const info = api.preview.inspect('node-1')
-    api.assert.ok(
-      info?.styles.backgroundColor.includes('255') ||
-        info?.styles.backgroundColor.includes('rgb(255'),
-      'Background should be red'
-    )
+    api.assert.ok(info !== null, 'Frame should exist after code change')
+
+    // Red is rgb(255, 0, 0) - check that red channel is 255
+    const bgColor = info!.styles.backgroundColor
+    const isRed = bgColor.includes('255') && bgColor.includes('0')
+    api.assert.ok(isRed, `Background should be red (rgb(255, 0, 0)), got: ${bgColor}`)
   }),
 
   testWithSetup(
@@ -126,25 +127,36 @@ export const selectionSyncTests: TestCase[] = describe('Selection Sync', [
     }
   ),
 
-  // TODO: This test is flaky - clearSelection works in production but not reliably in test env
-  // The state.set() call appears to work synchronously, but something resets the selection
-  // Skipping for now - see CLAUDE.md for known issues
-  testWithSetup('Clear selection works', 'Frame\n  Button "Test"', async (api: TestAPI) => {
-    api.interact.select('node-2')
-    await api.utils.waitForIdle()
-    api.assert.isSelected('node-2')
+  testWithSetup(
+    'Escape navigates to parent element',
+    'Frame\n  Button "Test"',
+    async (api: TestAPI) => {
+      api.interact.select('node-2')
+      await api.utils.waitForIdle()
+      api.assert.isSelected('node-2')
 
-    // Clear selection via actions (production approach)
-    const studio = (window as any).__mirrorStudio__
-    studio?.actions?.clearSelection?.('test')
+      // Escape navigates to parent element (node-1 = Frame)
+      await api.interact.pressKey('Escape')
+      await api.utils.delay(200) // Give time for state update
 
-    await api.utils.delay(100)
+      // Selection should move to parent (node-1)
+      const selection = api.state.getSelection()
+      api.assert.ok(
+        selection === 'node-1',
+        `Selection should navigate to parent (node-1), got: ${selection}`
+      )
 
-    // This may fail in test environment due to selection restoration
-    const selection = api.state.getSelection()
-    // Allow the test to pass if selection is cleared OR if it's a known flaky behavior
-    api.assert.ok(selection === null || selection === 'node-2', 'Selection clear attempted')
-  }),
+      // Press Escape again from root element - should clear selection
+      await api.interact.pressKey('Escape')
+      await api.utils.delay(200)
+
+      const finalSelection = api.state.getSelection()
+      api.assert.ok(
+        finalSelection === null || finalSelection === undefined,
+        `Selection should be cleared after Escape from root, got: ${finalSelection}`
+      )
+    }
+  ),
 ])
 
 // =============================================================================
@@ -172,10 +184,15 @@ export const sourceMapTests: TestCase[] = describe('SourceMap', [
       api.assert.exists('node-3') // Text
 
       const inner = api.preview.inspect('node-2')
-      api.assert.ok(inner?.parent === 'node-1', 'Inner frame parent should be outer frame')
+      api.assert.ok(inner !== null, 'Inner frame should exist')
+      api.assert.ok(
+        inner!.parent === 'node-1',
+        `Inner frame parent should be node-1, got: ${inner!.parent}`
+      )
 
       const text = api.preview.inspect('node-3')
-      api.assert.ok(text?.parent === 'node-2', 'Text parent should be inner frame')
+      api.assert.ok(text !== null, 'Text element should exist')
+      api.assert.ok(text!.parent === 'node-2', `Text parent should be node-2, got: ${text!.parent}`)
     }
   ),
 
@@ -211,10 +228,15 @@ export const propertyPanelTests: TestCase[] = describe('Property Panel', [
     'Text "Styled", fs 24, weight bold',
     async (api: TestAPI) => {
       const info = api.preview.inspect('node-1')
-      api.assert.ok(info?.styles.fontSize === '24px', 'Font size should be 24px')
+      api.assert.ok(info !== null, 'Text element should exist')
       api.assert.ok(
-        info?.styles.fontWeight === '700' || info?.styles.fontWeight === 'bold',
-        'Font weight should be bold'
+        info!.styles.fontSize === '24px',
+        `Font size should be 24px, got: ${info!.styles.fontSize}`
+      )
+      const weight = info!.styles.fontWeight
+      api.assert.ok(
+        weight === '700' || weight === 'bold',
+        `Font weight should be bold (700), got: ${weight}`
       )
     }
   ),
@@ -273,7 +295,11 @@ export const complexSyncTests: TestCase[] = describe('Complex Sync', [
 
     api.assert.exists('node-1')
     const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.styles.borderRadius !== '0px', 'Should have border radius')
+    api.assert.ok(info !== null, 'Button should exist after code change')
+    api.assert.ok(
+      info!.styles.borderRadius !== '0px',
+      `Should have border radius, got: ${info!.styles.borderRadius}`
+    )
   }),
 
   testWithSetup(

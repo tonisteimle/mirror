@@ -24,7 +24,8 @@ export const primitiveTests: TestCase[] = describe('Primitives', [
     async (api: TestAPI) => {
       api.assert.exists('node-1')
       const info = api.preview.inspect('node-1')
-      api.assert.ok(info?.tagName === 'div', 'Frame should be a div')
+      api.assert.ok(info !== null, 'Frame inspect should return info')
+      api.assert.ok(info!.tagName === 'div', `Frame should be a div, got: ${info!.tagName}`)
       api.assert.hasStyle('node-1', 'display', 'flex')
       api.assert.hasStyle('node-1', 'flexDirection', 'column')
     }
@@ -38,7 +39,11 @@ export const primitiveTests: TestCase[] = describe('Primitives', [
   testWithSetup('Button renders as button element', 'Button "Click Me"', async (api: TestAPI) => {
     api.assert.exists('node-1')
     const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'button', 'Button should be a button element')
+    api.assert.ok(info !== null, 'Button inspect should return info')
+    api.assert.ok(
+      info!.tagName === 'button',
+      `Button should be a button element, got: ${info!.tagName}`
+    )
     api.assert.hasText('node-1', 'Click Me')
   }),
 
@@ -55,7 +60,11 @@ export const primitiveTests: TestCase[] = describe('Primitives', [
     async (api: TestAPI) => {
       api.assert.exists('node-1')
       const info = api.preview.inspect('node-1')
-      api.assert.ok(info?.tagName === 'input', 'Input should be an input element')
+      api.assert.ok(info !== null, 'Input inspect should return info')
+      api.assert.ok(
+        info!.tagName === 'input',
+        `Input should be an input element, got: ${info!.tagName}`
+      )
       api.assert.hasAttribute('node-1', 'placeholder', 'Enter text')
     }
   ),
@@ -63,7 +72,8 @@ export const primitiveTests: TestCase[] = describe('Primitives', [
   testWithSetup('Divider renders as hr', 'Divider', async (api: TestAPI) => {
     api.assert.exists('node-1')
     const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'hr', 'Divider should be an hr element')
+    api.assert.ok(info !== null, 'Divider inspect should return info')
+    api.assert.ok(info!.tagName === 'hr', `Divider should be an hr element, got: ${info!.tagName}`)
   }),
 ])
 
@@ -188,9 +198,22 @@ export const nestingTests: TestCase[] = describe('Nesting', [
       const middle = api.preview.inspect('node-2')
       const leaf = api.preview.inspect('node-3')
 
-      api.assert.ok(root?.children.includes('node-2'), 'node-2 should be child of node-1')
-      api.assert.ok(middle?.children.includes('node-3'), 'node-3 should be child of node-2')
-      api.assert.ok(leaf?.children.length === 0, 'node-3 should have no children')
+      api.assert.ok(root !== null, 'Root frame inspect should return info')
+      api.assert.ok(middle !== null, 'Middle frame inspect should return info')
+      api.assert.ok(leaf !== null, 'Leaf frame inspect should return info')
+
+      api.assert.ok(
+        root!.children.includes('node-2'),
+        `node-2 should be child of node-1, got children: ${root!.children.join(', ')}`
+      )
+      api.assert.ok(
+        middle!.children.includes('node-3'),
+        `node-3 should be child of node-2, got children: ${middle!.children.join(', ')}`
+      )
+      api.assert.ok(
+        leaf!.children.length === 0,
+        `node-3 should have no children, got: ${leaf!.children.join(', ')}`
+      )
     }
   ),
 

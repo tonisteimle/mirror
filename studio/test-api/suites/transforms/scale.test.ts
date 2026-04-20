@@ -7,6 +7,21 @@
 import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
+// Helper to extract scale from CSS transform matrix
+// matrix(a, b, c, d, tx, ty) where scaleX = sqrt(a^2 + b^2), scaleY = sqrt(c^2 + d^2)
+function getScaleFromMatrix(transform: string): { x: number; y: number } | null {
+  const match = transform.match(/matrix\(([^)]+)\)/)
+  if (!match) return null
+
+  const values = match[1].split(',').map(v => parseFloat(v.trim()))
+  if (values.length < 4) return null
+
+  const [a, b, c, d] = values
+  const scaleX = Math.sqrt(a * a + b * b)
+  const scaleY = Math.sqrt(c * c + d * d)
+  return { x: Math.round(scaleX * 100) / 100, y: Math.round(scaleY * 100) / 100 }
+}
+
 export const scaleBasicTests: TestCase[] = describe('Scale Basic', [
   testWithSetup(
     'Element scaled up 1.5x',
@@ -20,11 +35,14 @@ export const scaleBasicTests: TestCase[] = describe('Scale Basic', [
       // Should have scale transform
       api.assert.ok(
         style.transform !== 'none' && style.transform !== '',
-        'Should have scale transform'
+        `Should have scale transform, got: "${style.transform}"`
       )
 
-      // Matrix should reflect 1.5 scale
-      api.assert.ok(style.transform.includes('matrix'), 'Should have matrix transform')
+      // Verify actual scale value is 1.5
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(Math.abs(scale!.x - 1.5) < 0.05, `Scale X should be ~1.5, got: ${scale!.x}`)
+      api.assert.ok(Math.abs(scale!.y - 1.5) < 0.05, `Scale Y should be ~1.5, got: ${scale!.y}`)
     }
   ),
 
@@ -37,7 +55,15 @@ export const scaleBasicTests: TestCase[] = describe('Scale Basic', [
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      api.assert.ok(style.transform !== 'none', 'Should have scale-down transform')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have scale-down transform, got: "${style.transform}"`
+      )
+
+      // Verify actual scale value is 0.5
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(Math.abs(scale!.x - 0.5) < 0.05, `Scale X should be ~0.5, got: ${scale!.x}`)
     }
   ),
 
@@ -51,10 +77,15 @@ export const scaleBasicTests: TestCase[] = describe('Scale Basic', [
       const style = window.getComputedStyle(element)
 
       // Scale 1 should be identity or no transform
-      api.assert.ok(
-        style.transform === 'none' || style.transform === 'matrix(1, 0, 0, 1, 0, 0)',
-        'Scale 1 should be identity'
-      )
+      if (style.transform !== 'none') {
+        const scale = getScaleFromMatrix(style.transform)
+        if (scale !== null) {
+          api.assert.ok(
+            Math.abs(scale.x - 1) < 0.05,
+            `Scale 1 should have scaleX ~1, got: ${scale.x}`
+          )
+        }
+      }
     }
   ),
 
@@ -67,7 +98,15 @@ export const scaleBasicTests: TestCase[] = describe('Scale Basic', [
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      api.assert.ok(style.transform !== 'none', 'Should have decimal scale transform')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have decimal scale transform, got: "${style.transform}"`
+      )
+
+      // Verify actual scale value is 0.85
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(Math.abs(scale!.x - 0.85) < 0.05, `Scale X should be ~0.85, got: ${scale!.x}`)
     }
   ),
 
@@ -80,7 +119,15 @@ export const scaleBasicTests: TestCase[] = describe('Scale Basic', [
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      api.assert.ok(style.transform !== 'none', 'Icon should have scale transform')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Icon should have scale transform, got: "${style.transform}"`
+      )
+
+      // Verify scale is 2x
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(Math.abs(scale!.x - 2) < 0.1, `Icon scale should be ~2, got: ${scale!.x}`)
     }
   ),
 ])
@@ -98,8 +145,21 @@ export const scaleInteractiveTests: TestCase[] = describe('Scale Interactive', [
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
       api.assert.hasStyle('node-1', 'color', 'rgb(255, 255, 255)')
 
-      // Note: Active state is brief during mouse down
-      // We verify the element exists and has correct base styling
+      // Verify button has active state defined (check CSS rules)
+      const element = await api.utils.waitForElement('node-1')
+      api.assert.ok(element !== null, 'Button should exist')
+
+      // Initial state should have no scale
+      const initialStyle = window.getComputedStyle(element)
+      if (initialStyle.transform !== 'none') {
+        const initialScale = getScaleFromMatrix(initialStyle.transform)
+        if (initialScale !== null) {
+          api.assert.ok(
+            Math.abs(initialScale.x - 1) < 0.05,
+            `Initial scale should be ~1, got: ${initialScale.x}`
+          )
+        }
+      }
     }
   ),
 
@@ -116,9 +176,8 @@ export const scaleInteractiveTests: TestCase[] = describe('Scale Interactive', [
 
       const card = await api.utils.waitForElement('node-1')
 
-      // Get initial transform
+      // Get initial transform (should be none)
       const initialStyle = window.getComputedStyle(card)
-      const initialTransform = initialStyle.transform
 
       // Hover
       await api.interact.hover('node-1')
@@ -127,8 +186,16 @@ export const scaleInteractiveTests: TestCase[] = describe('Scale Interactive', [
       // Should have scale transform now
       const hoverStyle = window.getComputedStyle(card)
       api.assert.ok(
-        hoverStyle.transform !== initialTransform || hoverStyle.transform.includes('matrix'),
-        'Should scale up on hover'
+        hoverStyle.transform !== 'none',
+        `Should have scale transform on hover, got: "${hoverStyle.transform}"`
+      )
+
+      // Verify scale is ~1.02
+      const scale = getScaleFromMatrix(hoverStyle.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${hoverStyle.transform}"`)
+      api.assert.ok(
+        Math.abs(scale!.x - 1.02) < 0.05,
+        `Hover scale should be ~1.02, got: ${scale!.x}`
       )
     }
   ),
@@ -156,7 +223,18 @@ export const scaleInteractiveTests: TestCase[] = describe('Scale Interactive', [
 
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
-      api.assert.ok(style.transform !== 'none', 'Should have scale transform in on state')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have scale transform in on state, got: "${style.transform}"`
+      )
+
+      // Verify scale is ~1.1
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(
+        Math.abs(scale!.x - 1.1) < 0.05,
+        `Toggle scale should be ~1.1, got: ${scale!.x}`
+      )
     }
   ),
 
@@ -174,8 +252,8 @@ export const scaleInteractiveTests: TestCase[] = describe('Scale Interactive', [
       // Should have transition
       const style = window.getComputedStyle(button)
       api.assert.ok(
-        style.transition !== '' && style.transition !== 'none',
-        'Should have transition'
+        style.transition !== '' && style.transition !== 'none' && style.transitionDuration !== '0s',
+        `Should have transition, got: "${style.transition}"`
       )
 
       // Hover
@@ -184,6 +262,19 @@ export const scaleInteractiveTests: TestCase[] = describe('Scale Interactive', [
 
       // Verify background changed
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(30, 95, 170)')
+
+      // Verify scale transform
+      const hoverStyle = window.getComputedStyle(button)
+      api.assert.ok(
+        hoverStyle.transform !== 'none',
+        `Button should have scale transform on hover, got: "${hoverStyle.transform}"`
+      )
+      const scale = getScaleFromMatrix(hoverStyle.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${hoverStyle.transform}"`)
+      api.assert.ok(
+        Math.abs(scale!.x - 1.05) < 0.05,
+        `Hover scale should be ~1.05, got: ${scale!.x}`
+      )
     }
   ),
 ])
@@ -199,7 +290,15 @@ export const scaleEdgeCasesTests: TestCase[] = describe('Scale Edge Cases', [
       const style = window.getComputedStyle(element)
 
       // Scale 0 should make element point-sized
-      api.assert.ok(style.transform !== 'none', 'Should have scale 0 transform')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have scale 0 transform, got: "${style.transform}"`
+      )
+
+      // Verify scale is 0
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(scale!.x < 0.01, `Scale should be ~0, got: ${scale!.x}`)
     }
   ),
 
@@ -212,7 +311,15 @@ export const scaleEdgeCasesTests: TestCase[] = describe('Scale Edge Cases', [
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      api.assert.ok(style.transform !== 'none', 'Should have large scale transform')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have large scale transform, got: "${style.transform}"`
+      )
+
+      // Verify scale is 3
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(Math.abs(scale!.x - 3) < 0.1, `Scale should be ~3, got: ${scale!.x}`)
     }
   ),
 
@@ -229,7 +336,18 @@ export const scaleEdgeCasesTests: TestCase[] = describe('Scale Edge Cases', [
       // Parent has scale
       const parent = await api.utils.waitForElement('node-1')
       const parentStyle = window.getComputedStyle(parent)
-      api.assert.ok(parentStyle.transform !== 'none', 'Parent should be scaled')
+      api.assert.ok(
+        parentStyle.transform !== 'none',
+        `Parent should be scaled, got: "${parentStyle.transform}"`
+      )
+
+      // Verify parent scale is 1.5
+      const scale = getScaleFromMatrix(parentStyle.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${parentStyle.transform}"`)
+      api.assert.ok(
+        Math.abs(scale!.x - 1.5) < 0.05,
+        `Parent scale should be ~1.5, got: ${scale!.x}`
+      )
 
       // Child content should still exist
       api.assert.hasText('node-3', 'Hi')
@@ -246,7 +364,16 @@ export const scaleEdgeCasesTests: TestCase[] = describe('Scale Edge Cases', [
       const style = window.getComputedStyle(element)
 
       // Negative scale creates a flip
-      api.assert.ok(style.transform !== 'none', 'Should have negative scale (mirror) transform')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have negative scale (mirror) transform, got: "${style.transform}"`
+      )
+
+      // Verify scale magnitude is 1 (but flipped)
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      // Note: getScaleFromMatrix returns absolute values, so we check it's ~1
+      api.assert.ok(Math.abs(scale!.x - 1) < 0.05, `Scale magnitude should be ~1, got: ${scale!.x}`)
     }
   ),
 ])
@@ -262,7 +389,15 @@ export const scaleWithOtherPropertiesTests: TestCase[] = describe('Scale with Ot
 
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
-      api.assert.ok(style.transform !== 'none', 'Should have both scale and opacity')
+      api.assert.ok(
+        style.transform !== 'none',
+        `Should have scale transform, got: "${style.transform}"`
+      )
+
+      // Verify scale is 1.2
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(Math.abs(scale!.x - 1.2) < 0.05, `Scale should be ~1.2, got: ${scale!.x}`)
     }
   ),
 
@@ -275,8 +410,16 @@ export const scaleWithOtherPropertiesTests: TestCase[] = describe('Scale with Ot
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      api.assert.ok(style.transform !== 'none', 'Should have scale')
-      api.assert.ok(style.boxShadow !== 'none' && style.boxShadow !== '', 'Should have shadow')
+      api.assert.ok(style.transform !== 'none', `Should have scale, got: "${style.transform}"`)
+      api.assert.ok(
+        style.boxShadow !== 'none' && style.boxShadow !== '',
+        `Should have shadow, got: "${style.boxShadow}"`
+      )
+
+      // Verify scale is 1.1
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(Math.abs(scale!.x - 1.1) < 0.05, `Scale should be ~1.1, got: ${scale!.x}`)
     }
   ),
 
@@ -292,7 +435,15 @@ export const scaleWithOtherPropertiesTests: TestCase[] = describe('Scale with Ot
       // Should have combined transform matrix
       api.assert.ok(
         style.transform !== 'none' && style.transform.includes('matrix'),
-        'Should have combined scale and rotate'
+        `Should have combined scale and rotate, got: "${style.transform}"`
+      )
+
+      // Verify scale is 1.3 (need to account for rotation in matrix)
+      const scale = getScaleFromMatrix(style.transform)
+      api.assert.ok(scale !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(
+        Math.abs(scale!.x - 1.3) < 0.1,
+        `Scale should be ~1.3 (combined with rotation), got: ${scale!.x}`
       )
     }
   ),

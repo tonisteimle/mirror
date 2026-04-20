@@ -10,6 +10,30 @@
 import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
+/**
+ * Helper to verify an element has an active CSS animation.
+ * Checks both animationName and animationDuration strictly.
+ */
+function hasActiveAnimation(style: CSSStyleDeclaration): boolean {
+  const animName = style.animationName
+  const animDuration = style.animationDuration
+
+  // animationName must be set and not 'none'
+  const hasName = animName !== '' && animName !== 'none'
+
+  // animationDuration must be > 0
+  const hasDuration = animDuration !== '' && animDuration !== '0s'
+
+  return hasName && hasDuration
+}
+
+/**
+ * Helper to get animation details for error messages
+ */
+function getAnimationDebugInfo(style: CSSStyleDeclaration): string {
+  return `name="${style.animationName}", duration="${style.animationDuration}", timing="${style.animationTimingFunction}"`
+}
+
 export const stateToggleAnimationTests: TestCase[] = describe('State Toggle Animations', [
   testWithSetup(
     'Toggle with bounce animation on state change',
@@ -61,10 +85,10 @@ export const stateToggleAnimationTests: TestCase[] = describe('State Toggle Anim
       const element = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(element)
 
-      // Should have pulse animation active
+      // STRICT: Must have pulse animation active
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Should have pulse animation in on state'
+        hasActiveAnimation(style),
+        `Should have pulse animation in on state, got: ${getAnimationDebugInfo(style)}`
       )
 
       // Toggle off - animation should stop
@@ -147,14 +171,23 @@ export const hoverAnimationTests: TestCase[] = describe('Hover with Animation Ti
       const card = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(card)
 
-      // Should have transition timing function
-      if (style.transitionTimingFunction) {
-        api.assert.ok(
-          style.transitionTimingFunction.includes('ease') ||
-            style.transitionTimingFunction.includes('cubic'),
-          'Should have easing function'
-        )
-      }
+      // Validate transition timing function exists and has easing
+      const timingFunc = style.transitionTimingFunction
+      api.assert.ok(
+        timingFunc !== '' &&
+          timingFunc !== 'ease' &&
+          (timingFunc.includes('ease') ||
+            timingFunc.includes('cubic') ||
+            timingFunc.includes('linear')),
+        `Should have easing function, got: "${timingFunc}"`
+      )
+
+      // Validate transition duration is ~0.15s
+      const duration = style.transitionDuration
+      api.assert.ok(
+        duration !== '' && duration !== '0s',
+        `Should have transition duration, got: "${duration}"`
+      )
 
       // Hover
       await api.interact.hover('node-1')
@@ -175,19 +208,31 @@ export const hoverAnimationTests: TestCase[] = describe('Hover with Animation Ti
 
       const button = await api.utils.waitForElement('node-1')
 
-      // Get initial transform
+      // Get initial transform (should be none or identity)
       const initialStyle = window.getComputedStyle(button)
       const initialTransform = initialStyle.transform
+
+      // Verify initial has no scale
+      api.assert.ok(
+        initialTransform === 'none' || initialTransform === 'matrix(1, 0, 0, 1, 0, 0)',
+        `Initial should have no transform, got: "${initialTransform}"`
+      )
 
       // Hover
       await api.interact.hover('node-1')
       await api.utils.delay(150)
 
-      // Should have scale transform
+      // Should have scale transform after hover
       const hoverStyle = window.getComputedStyle(button)
       api.assert.ok(
-        hoverStyle.transform !== initialTransform || hoverStyle.transform.includes('matrix'),
-        'Transform should change on hover'
+        hoverStyle.transform !== 'none' && hoverStyle.transform !== initialTransform,
+        `Transform should change on hover to scale, got: "${hoverStyle.transform}"`
+      )
+
+      // Verify the transform contains a scale (matrix values differ from identity)
+      api.assert.ok(
+        hoverStyle.transform.includes('matrix'),
+        `Should have matrix transform for scale, got: "${hoverStyle.transform}"`
       )
 
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(30, 95, 170)')
@@ -238,10 +283,10 @@ export const entryExitAnimationTests: TestCase[] = describe('Entry/Exit Animatio
       const toast = await api.utils.waitForElement('node-1')
       const style = window.getComputedStyle(toast)
 
-      // Should have fade-in animation
+      // STRICT: Must have fade-in animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Toast should fade in'
+        hasActiveAnimation(style),
+        `Toast should fade in, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -279,9 +324,10 @@ export const entryExitAnimationTests: TestCase[] = describe('Entry/Exit Animatio
       const modal = await api.utils.waitForElement('node-2')
       const style = window.getComputedStyle(modal)
 
+      // STRICT: Must have scale-in animation
       api.assert.ok(
-        style.animation !== '' || style.animationName !== 'none',
-        'Modal should scale in'
+        hasActiveAnimation(style),
+        `Modal should scale in, got: ${getAnimationDebugInfo(style)}`
       )
     }
   ),
@@ -301,13 +347,13 @@ export const entryExitAnimationTests: TestCase[] = describe('Entry/Exit Animatio
       api.assert.exists('node-4')
       api.assert.exists('node-6')
 
-      // Each item should have animation
+      // STRICT: Each item must have reveal animation
       for (const nodeId of ['node-2', 'node-4', 'node-6']) {
         const element = await api.utils.waitForElement(nodeId)
         const style = window.getComputedStyle(element)
         api.assert.ok(
-          style.animation !== '' || style.animationName !== 'none',
-          `${nodeId} should have reveal animation`
+          hasActiveAnimation(style),
+          `${nodeId} should have reveal animation, got: ${getAnimationDebugInfo(style)}`
         )
       }
     }
@@ -387,9 +433,17 @@ export const combinedAnimationTests: TestCase[] = describe('Combined Animation S
       // Banner should have slide animation
       const banner = await api.utils.waitForElement('node-1')
       const bannerStyle = window.getComputedStyle(banner)
+
+      // STRICT: Banner must have animation name set (not 'none')
       api.assert.ok(
-        bannerStyle.animation !== '' || bannerStyle.animationName !== 'none',
-        'Banner should slide down'
+        bannerStyle.animationName !== 'none' && bannerStyle.animationName !== '',
+        `Banner should have slide-down animation, got animationName="${bannerStyle.animationName}"`
+      )
+
+      // Verify animation duration is set
+      api.assert.ok(
+        bannerStyle.animationDuration !== '0s' && bannerStyle.animationDuration !== '',
+        `Banner animation should have duration, got: "${bannerStyle.animationDuration}"`
       )
 
       // Verify banner styling

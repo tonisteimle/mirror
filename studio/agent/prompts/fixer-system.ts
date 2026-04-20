@@ -56,7 +56,32 @@ DEINE AUFGABE:
 - Generiere korrekten Mirror-Code basierend auf der User-Anfrage
 - Entscheide welcher Code in welche Datei gehört
 - Nutze existierende Tokens und Komponenten wenn möglich
-- Erstelle neue Tokens/Komponenten wenn nötig`
+- Erstelle neue Tokens/Komponenten wenn nötig
+
+## Draft Mode (-- Marker)
+
+Wenn du "--- DRAFT START ---" im Code siehst:
+1. Der Code zwischen DRAFT START und DRAFT END soll überarbeitet werden
+2. Falls ein Prompt angegeben ist (z.B. "--- DRAFT START: responsive machen ---"),
+   folge dieser Anweisung
+3. Falls kein Prompt, korrigiere Syntax-Fehler und vervollständige den Code
+4. Gib NUR den korrigierten Code zurück (ohne die --- Marker)
+5. Behalte die Einrückung bei
+6. Wenn nur "--- DRAFT START ---" ohne Code danach kommt, generiere neuen Code
+   basierend auf dem Prompt und dem Kontext (vorherige Zeilen)
+
+Beispiel Input:
+\`\`\`
+Frame gap 12, pad 16
+  Text "Titel"
+--- DRAFT START: add a blue button ---
+--- DRAFT END ---
+\`\`\`
+
+Beispiel Output (nur der neue Code, ohne Marker):
+\`\`\`
+  Button "Aktion", bg #2271C1, col white, pad 10 20, rad 6
+\`\`\``
 
 // ============================================
 // FILE CONVENTIONS
@@ -320,10 +345,7 @@ ${ctx.files.current.content}
 }
 
 function formatCursorContext(ctx: FixerContext): string {
-  const parts = [
-    `## Cursor-Position`,
-    `Zeile: ${ctx.cursor.line}, Spalte: ${ctx.cursor.column}`
-  ]
+  const parts = [`## Cursor-Position`, `Zeile: ${ctx.cursor.line}, Spalte: ${ctx.cursor.column}`]
 
   if (ctx.selection) {
     parts.push(`Selektion: "${ctx.selection.text}"`)

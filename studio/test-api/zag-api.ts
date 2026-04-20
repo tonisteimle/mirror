@@ -126,11 +126,21 @@ export class ZagAPIImpl implements ZagAPI {
       context.value = element.type === 'checkbox' ? element.checked : element.value
     }
 
+    // Helper to parse attribute values
+    const parseValue = (value: string): unknown => {
+      // Boolean conversion
+      if (value === 'true') return true
+      if (value === 'false') return false
+      // Numeric conversion
+      if (/^-?\d+(\.\d+)?$/.test(value)) return parseFloat(value)
+      return value
+    }
+
     // Extract data attributes
     for (const attr of element.attributes) {
       if (attr.name.startsWith('data-') && attr.name !== 'data-mirror-id') {
         const key = attr.name.replace('data-', '').replace(/-([a-z])/g, g => g[1].toUpperCase())
-        context[key] = attr.value
+        context[key] = parseValue(attr.value)
       }
     }
 
@@ -226,7 +236,7 @@ export class ZagAPIImpl implements ZagAPI {
   async close(nodeId: string): Promise<void> {
     if (!this.isOpen(nodeId)) return
 
-    const element = this.findElement(nodeId)
+    const element = this.findElement(nodeId) as any
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
     // Check if this is a tooltip (requires mouseleave)
@@ -243,6 +253,34 @@ export class ZagAPIImpl implements ZagAPI {
       return
     }
 
+    // For Select components, close via internal state
+    if (element._selectState !== undefined) {
+      element._selectState.isOpen = false
+      element.setAttribute('data-state', 'closed')
+      const content = element.querySelector('[data-slot="Content"]') as HTMLElement
+      if (content) {
+        content.style.display = 'none'
+      }
+      // Update aria-expanded on trigger
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false')
+      }
+      await new Promise(resolve => setTimeout(resolve, 50))
+      return
+    }
+
+    // For DatePicker components, close via internal state
+    if (element._datePickerState !== undefined) {
+      element._datePickerState.isOpen = false
+      element.setAttribute('data-state', 'closed')
+      const content = element.querySelector('[data-slot="Content"]') as HTMLElement
+      if (content) {
+        content.style.display = 'none'
+      }
+      await new Promise(resolve => setTimeout(resolve, 50))
+      return
+    }
+
     // Find close trigger (support both data-part and data-slot)
     const closeTrigger = element.querySelector(
       '[data-part="close-trigger"], [data-slot="CloseTrigger"]'
@@ -253,8 +291,16 @@ export class ZagAPIImpl implements ZagAPI {
       return
     }
 
-    // Try pressing Escape
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    // Try pressing Escape on the trigger
+    if (trigger) {
+      trigger.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+      )
+    } else {
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+      )
+    }
     await new Promise(resolve => setTimeout(resolve, 150))
   }
 
@@ -433,8 +479,49 @@ export class ZagAPIImpl implements ZagAPI {
   }
 
   async setValue(nodeId: string, value: unknown): Promise<void> {
-    const element = this.findElement(nodeId)
+    const element = this.findElement(nodeId) as any
     if (!element) throw new Error(`Element ${nodeId} not found`)
+
+    // Check for slider component - set value via internal state
+    if (element._sliderState !== undefined) {
+      const config = element._zagConfig?.machineConfig || {}
+      const min = config.min ?? 0
+      const max = config.max ?? 100
+      const step = config.step ?? 1
+      const numValue = Number(value)
+
+      // Clamp and round to step
+      const clampedValue = Math.min(max, Math.max(min, numValue))
+      const steps = Math.round((clampedValue - min) / step)
+      const finalValue = min + steps * step
+
+      element._sliderState.value = finalValue
+
+      // Update UI
+      const thumb = element.querySelector('[data-slot="Thumb"]') as HTMLElement
+      const range = element.querySelector('[data-slot="Range"]') as HTMLElement
+      const track = element.querySelector('[data-slot="Track"]') as HTMLElement
+      const valueText = element.querySelector('[data-slot="ValueText"]') as HTMLElement
+
+      if (thumb && track) {
+        const percent = ((finalValue - min) / (max - min)) * 100
+        thumb.style.left = `${percent}%`
+        if (range) range.style.width = `${percent}%`
+        thumb.setAttribute('aria-valuenow', String(finalValue))
+      }
+      if (valueText) {
+        valueText.textContent = String(finalValue)
+      }
+
+      element.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { value: finalValue },
+          bubbles: true,
+        })
+      )
+      await new Promise(resolve => setTimeout(resolve, 50))
+      return
+    }
 
     const input = element.querySelector('input, textarea') as
       | HTMLInputElement
@@ -447,13 +534,6 @@ export class ZagAPIImpl implements ZagAPI {
       input.dispatchEvent(new Event('change', { bubbles: true }))
       await new Promise(resolve => setTimeout(resolve, 50))
       return
-    }
-
-    // For slider, try to find thumb and set via data attribute
-    const thumb = element.querySelector('[data-part="thumb"]') as HTMLElement
-    if (thumb) {
-      // Sliders are complex - would need to simulate drag
-      console.warn('Setting slider value programmatically requires drag simulation')
     }
   }
 

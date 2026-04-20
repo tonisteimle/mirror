@@ -4451,12 +4451,44 @@ export function bindVisibility(el: MirrorElement, path: string): void {
 
 /**
  * Evaluate a visibility condition using $get for data lookup
- * @param condition The visibility condition (e.g., "!$selectedAddress" or "$selectedAddress")
+ * Supports both $varName and bare varName formats:
+ * - "loggedIn" → $get("loggedIn")
+ * - "$loggedIn" → $get("loggedIn")
+ * - "!loggedIn" → !$get("loggedIn")
+ * - "count > 0" → $get("count") > 0
  */
 function _evaluateVisibilityCondition(condition: string): boolean {
   try {
-    // Replace $varName with $get("varName") for evaluation
-    const evalCondition = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+    // Reserved words that should not be wrapped
+    const reserved = new Set([
+      'true',
+      'false',
+      'null',
+      'undefined',
+      'NaN',
+      'Infinity',
+      'typeof',
+      'instanceof',
+      'new',
+      'delete',
+      'void',
+    ])
+
+    // First handle $-prefixed variables: $varName → $get("varName")
+    let evalCondition = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+
+    // Then handle bare identifiers (not already wrapped, not in quotes, not reserved)
+    evalCondition = evalCondition.replace(
+      /(?<!["\w$.])\b([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\b(?!["\w(])/g,
+      (match, identifier) => {
+        const firstPart = identifier.split('.')[0]
+        if (reserved.has(firstPart)) {
+          return match
+        }
+        return `$get("${identifier}")`
+      }
+    )
+
     // Use Function constructor to evaluate in the context with $get
     const $getFunc = (window as unknown as { $get: (path: string) => unknown }).$get
     const result = new Function('$get', 'return ' + evalCondition)($getFunc)

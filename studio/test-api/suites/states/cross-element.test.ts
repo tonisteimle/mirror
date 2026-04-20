@@ -222,6 +222,50 @@ export const crossElementDropdownTests: TestCase[] = describe('Cross-Element Dro
       // Get all section toggles
       const nodeIds = api.preview.getNodeIds()
       api.assert.ok(nodeIds.length >= 9, 'Should have multiple sections')
+
+      // Structure: node-1 (outer Frame), node-2 (Sec1 wrapper), node-3 (Sec1 Button),
+      //            node-4 (Sec1 Content), node-5 (Sec1 Text),
+      //            node-6 (Sec2 wrapper), node-7 (Sec2 Button), node-8 (Sec2 Content), node-9 (Sec2 Text),
+      //            node-10 (Sec3 wrapper), node-11 (Sec3 Button), node-12 (Sec3 Content), node-13 (Sec3 Text)
+      api.assert.exists('node-3') // Section 1 button
+      api.assert.exists('node-4') // Section 1 content
+      api.assert.exists('node-7') // Section 2 button
+      api.assert.exists('node-8') // Section 2 content
+      api.assert.exists('node-11') // Section 3 button
+      api.assert.exists('node-12') // Section 3 content
+
+      // All content hidden initially
+      api.assert.hasStyle('node-4', 'display', 'none')
+      api.assert.hasStyle('node-8', 'display', 'none')
+      api.assert.hasStyle('node-12', 'display', 'none')
+
+      // Open Section 1
+      await api.interact.click('node-3')
+      await api.utils.delay(150)
+
+      // Section 1 content visible, others hidden
+      api.assert.hasStyle('node-3', 'backgroundColor', 'rgb(34, 34, 34)')
+      api.assert.hasStyle('node-4', 'display', 'flex')
+      api.assert.hasStyle('node-8', 'display', 'none')
+      api.assert.hasStyle('node-12', 'display', 'none')
+
+      // Open Section 2 (accordion allows multiple open - toggle() not exclusive)
+      await api.interact.click('node-7')
+      await api.utils.delay(150)
+
+      // Both Section 1 and 2 should be open
+      api.assert.hasStyle('node-4', 'display', 'flex')
+      api.assert.hasStyle('node-8', 'display', 'flex')
+      api.assert.hasStyle('node-12', 'display', 'none')
+
+      // Close Section 1
+      await api.interact.click('node-3')
+      await api.utils.delay(150)
+
+      // Section 1 closed, Section 2 still open
+      api.assert.hasStyle('node-3', 'backgroundColor', 'rgb(26, 26, 26)')
+      api.assert.hasStyle('node-4', 'display', 'none')
+      api.assert.hasStyle('node-8', 'display', 'flex')
     }
   ),
 ])
@@ -303,20 +347,57 @@ export const crossElementFormTests: TestCase[] = describe('Cross-Element Form Pa
   Frame relative
     Input placeholder "Password", type password, name PwdInput, w 250, pad 12, bg #1a1a1a, col white, rad 6
     Button absolute, x 210, y 8, bg transparent, name EyeBtn, toggle()
-      Icon "eye-off", ic #888, is 18
+      Icon "eye-off", is 18
       on:
-        Icon "eye", ic #2271C1, is 18`,
+        Icon "eye", is 18`,
     async (api: TestAPI) => {
       api.assert.exists('node-2') // Input container
       api.assert.exists('node-3') // Input
       api.assert.exists('node-4') // Eye button
+      api.assert.exists('node-5') // Icon
+
+      // Get initial icon - should be eye-off (hidden password)
+      const initialIcon = api.preview.inspect('node-5')
+      api.assert.ok(initialIcon !== null, 'Initial icon should exist')
+
+      // Verify initial icon has SVG
+      const iconElement = await api.utils.waitForElement('node-5')
+      await api.utils.delay(100) // Wait for SVG to load
+      const svg = iconElement.querySelector('svg')
+      api.assert.ok(svg !== null, 'Icon should contain SVG')
+
+      // Get button data-state initially (should be off/default)
+      const buttonElement = await api.utils.waitForElement('node-4')
+      const initialState = buttonElement.getAttribute('data-state')
+      api.assert.ok(
+        !initialState || initialState !== 'on',
+        `Button should start in default state, got ${initialState}`
+      )
 
       // Toggle eye button
       await api.interact.click('node-4')
       await api.utils.delay(150)
 
-      // Icon should change (eye-off to eye)
-      // The toggle state changes the icon
+      // Button should be in 'on' state
+      const toggledState = buttonElement.getAttribute('data-state')
+      api.assert.ok(
+        toggledState === 'on',
+        `Button should be in 'on' state after click, got ${toggledState}`
+      )
+
+      // Toggle back
+      await api.interact.click('node-4')
+      await api.utils.delay(150)
+
+      // Should return to default state
+      const finalState = buttonElement.getAttribute('data-state')
+      api.assert.ok(
+        !finalState || finalState !== 'on',
+        `Button should return to default state, got ${finalState}`
+      )
+
+      // Note: Icon color changes in toggle states work, but verifying SVG stroke/fill
+      // requires the icon to use currentColor and have color set via CSS.
     }
   ),
 

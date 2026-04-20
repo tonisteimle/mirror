@@ -1012,7 +1012,8 @@ export class Parser {
       }
 
       // Check for attribute: key: value
-      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+      // Allow reserved keywords like 'desc' as attribute keys
+      if (this.checkIsIdentifierOrKeyword() && this.checkNext('COLON')) {
         const attr = this.parseDataAttribute()
         if (attr) attributes.push(attr)
         continue
@@ -1021,14 +1022,15 @@ export class Parser {
       // Check for simple list item: identifier without colon
       // e.g., colors: \n  rot \n  grün \n  blau
       if (
-        this.check('IDENTIFIER') &&
+        this.checkIsIdentifierOrKeyword() &&
         (this.checkNext('NEWLINE') || this.checkNext('DEDENT') || this.peekAt(1) === undefined)
       ) {
-        const token = this.advance()
+        const key = this.advanceIdentifierOrKeyword()
+        const line = this.tokens[this.pos - 1].line
         attributes.push({
-          key: token.value,
-          value: token.value, // key IS the value for simple list items
-          line: token.line,
+          key,
+          value: key, // key IS the value for simple list items
+          line,
         })
         continue
       }
@@ -1062,8 +1064,9 @@ export class Parser {
    *       title: "Sprint Planning"
    */
   private parseDataAttribute(): DataAttribute | null {
-    const keyToken = this.advance() // key
-    const line = keyToken.line
+    // Use advanceIdentifierOrKeyword to handle reserved keywords like 'desc' as keys
+    const key = this.advanceIdentifierOrKeyword()
+    const line = this.tokens[this.pos - 1].line
     this.advance() // :
 
     // Check for nested object: NEWLINE followed by INDENT
@@ -1093,7 +1096,8 @@ export class Parser {
         if (this.check('DEDENT') || this.isAtEnd()) break
 
         // Check for nested attribute: key: ...
-        if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
+        // Allow reserved keywords like 'desc' as attribute keys
+        if (this.checkIsIdentifierOrKeyword() && this.checkNext('COLON')) {
           const nestedAttr = this.parseDataAttribute()
           if (nestedAttr) children.push(nestedAttr)
           continue
@@ -1109,7 +1113,7 @@ export class Parser {
       }
 
       return {
-        key: keyToken.value,
+        key,
         children,
         line,
       }
@@ -1192,7 +1196,7 @@ export class Parser {
     }
 
     return {
-      key: keyToken.value,
+      key,
       value,
       line,
     }
@@ -3369,7 +3373,7 @@ export class Parser {
         if (this.check('ELSE')) {
           this.advance() // consume ELSE
           this.skipNewlines()
-          const negatedCondition = '!' + visibleWhen
+          const negatedCondition = '!(' + visibleWhen + ')'
           if (this.check('INDENT')) {
             this.advance() // consume INDENT
             for (
@@ -3506,7 +3510,7 @@ export class Parser {
         if (this.check('ELSE')) {
           this.advance() // consume ELSE
           this.skipNewlines()
-          const negatedCondition = '!' + visibleWhen
+          const negatedCondition = '!(' + visibleWhen + ')'
           if (this.check('INDENT')) {
             this.advance() // consume INDENT
             for (
@@ -4283,10 +4287,11 @@ export class Parser {
           const startColumn = token.column
           let varAccess = identName
 
-          // Handle property access: user.name, item.nested.value
-          while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
+          // Handle property access: user.name, item.nested.value, card.desc
+          // Note: property names can be reserved keywords like 'desc'
+          while (this.check('DOT') && this.checkNextIsPropertyName()) {
             this.advance() // .
-            varAccess += '.' + this.advance().value
+            varAccess += '.' + this.advancePropertyName()
           }
 
           // Handle array indexing: user.name[0], items[1]
@@ -4453,7 +4458,10 @@ export class Parser {
         // If collected tokens start with DOT, include the property name (it's actually part of the condition)
         // e.g., `Icon task.done ? "check" : "circle"` - task is parsed as property name but is really part of condition
         const startsWithDot = collectedTokens.length > 0 && collectedTokens[0].type === 'DOT'
-        if (startsWithDot) {
+        // Also, if NO tokens were collected and we hit ?, the "property name" IS the condition
+        // e.g., `Text active ? "Aktiv" : "Inaktiv"` - active is the condition, not a property name
+        const isSimpleTernary = collectedTokens.length === 0
+        if (startsWithDot || isSimpleTernary) {
           condition = name.value
         }
 
@@ -4550,9 +4558,10 @@ export class Parser {
           else: elseValue,
         })
 
-        // If the condition started with a dot, the "property name" was actually part of the expression
+        // If the condition started with a dot or was a simple ternary (identifier ? value : value),
+        // the "property name" was actually part of the expression
         // So use 'content' as the implicit property name (like Icon "search" → content: "search")
-        const propertyName = startsWithDot ? 'content' : name.value
+        const propertyName = startsWithDot || isSimpleTernary ? 'content' : name.value
 
         return {
           type: 'Property',
@@ -5119,9 +5128,9 @@ export class Parser {
     } else if (this.check('IDENTIFIER')) {
       collection = this.advance().value
       // Handle property access for nested loop collections: category.items
-      while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
+      while (this.check('DOT') && this.checkNextIsPropertyName()) {
         this.advance() // .
-        collection += '.' + this.advance().value
+        collection += '.' + this.advancePropertyName()
       }
     } else {
       return null
@@ -5418,9 +5427,9 @@ export class Parser {
       parts.push(parseFloat(this.advance().value))
     } else if (this.check('IDENTIFIER')) {
       let combined = this.advance().value
-      while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
+      while (this.check('DOT') && this.checkNextIsPropertyName()) {
         this.advance() // .
-        combined += '.' + this.advance().value
+        combined += '.' + this.advancePropertyName()
       }
       // Handle array indexing: user.name[0]
       while (this.check('LBRACKET')) {
@@ -5481,9 +5490,9 @@ export class Parser {
       parts.push(parseFloat(this.advance().value))
     } else if (this.check('IDENTIFIER')) {
       let combined = this.advance().value
-      while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
+      while (this.check('DOT') && this.checkNextIsPropertyName()) {
         this.advance()
-        combined += '.' + this.advance().value
+        combined += '.' + this.advancePropertyName()
       }
       // Handle array indexing: user.name[0]
       while (this.check('LBRACKET')) {
@@ -5521,9 +5530,9 @@ export class Parser {
         parts.push(parseFloat(this.advance().value))
       } else if (this.check('IDENTIFIER')) {
         let combined = this.advance().value
-        while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
+        while (this.check('DOT') && this.checkNextIsPropertyName()) {
           this.advance()
-          combined += '.' + this.advance().value
+          combined += '.' + this.advancePropertyName()
         }
         // Handle array indexing: user.name[0]
         while (this.check('LBRACKET')) {
@@ -5677,9 +5686,87 @@ export class Parser {
     return this.current().type === type
   }
 
+  /**
+   * Reserved keyword token types that can be used as property/attribute names.
+   * These are words like 'desc', 'in', 'if' that have special meaning in certain
+   * contexts but can also be valid property names like `card.desc` or `item.in`.
+   */
+  private static readonly KEYWORD_TOKEN_TYPES: TokenType[] = [
+    'AS',
+    'EXTENDS',
+    'EACH',
+    'IN',
+    'IF',
+    'ELSE',
+    'THEN',
+    'WHERE',
+    'AND',
+    'OR',
+    'NOT',
+    'DATA',
+    'KEYS',
+    'SELECTION',
+    'BIND',
+    'ROUTE',
+    'WITH',
+    'BY',
+    'ASC',
+    'DESC',
+    'GROUPED',
+    'USE',
+  ]
+
+  /**
+   * Check if the current token can be used as an identifier/property name.
+   * This includes IDENTIFIER and reserved keywords that get their own token types.
+   * Used for data attribute keys like `desc: "value"` where 'desc' is a reserved keyword.
+   */
+  private checkIsIdentifierOrKeyword(): boolean {
+    if (this.isAtEnd()) return false
+    const type = this.current().type
+    return type === 'IDENTIFIER' || Parser.KEYWORD_TOKEN_TYPES.includes(type)
+  }
+
+  /**
+   * Get the value of the current token if it's an identifier or keyword.
+   * For reserved keywords, returns the lowercase version of the token type.
+   */
+  private advanceIdentifierOrKeyword(): string {
+    const token = this.advance()
+    if (token.type === 'IDENTIFIER') {
+      return token.value
+    }
+    // For reserved keywords, the value is the lowercase of the token type
+    return token.type.toLowerCase()
+  }
+
   private checkNext(type: TokenType): boolean {
     if (this.pos + 1 >= this.tokens.length) return false
     return this.tokens[this.pos + 1].type === type
+  }
+
+  /**
+   * Check if the next token can be used as a property name.
+   * This includes IDENTIFIER and reserved keywords that get their own token types.
+   * Used for property access chains like `card.desc` where `desc` is a reserved keyword.
+   */
+  private checkNextIsPropertyName(): boolean {
+    if (this.pos + 1 >= this.tokens.length) return false
+    const nextType = this.tokens[this.pos + 1].type
+    return nextType === 'IDENTIFIER' || Parser.KEYWORD_TOKEN_TYPES.includes(nextType)
+  }
+
+  /**
+   * Get the value of the next token if it can be used as a property name.
+   * Returns the value for IDENTIFIER or reserved keyword tokens.
+   */
+  private advancePropertyName(): string {
+    const token = this.advance()
+    // For reserved keywords, the token value is uppercase, but we want the lowercase property name
+    if (token.type !== 'IDENTIFIER') {
+      return token.type.toLowerCase()
+    }
+    return token.value
   }
 
   /**

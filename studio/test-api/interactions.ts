@@ -25,12 +25,55 @@ export class Interactions implements InteractionAPI {
   }
 
   /**
-   * Find element by node ID
+   * Find element by node ID or pseudo-ID
+   *
+   * Supports:
+   * - Regular node IDs: "node-1" -> [data-mirror-id="node-1"]
+   * - Slot pseudo-IDs: "node-1:Slot" -> [data-mirror-id="node-1"] [data-slot="Slot"]
+   * - Slot with value: "node-1:Item:b" -> [data-mirror-id="node-1"] [data-slot="Item"][data-value="b"]
+   * - Slot with value and index: "node-1:Item:b:1" -> second Item with value b
    */
   private findElement(nodeId: string): HTMLElement | null {
-    return this.previewContainer?.querySelector(
-      `[data-mirror-id="${nodeId}"]`
-    ) as HTMLElement | null
+    const preview = this.previewContainer
+    if (!preview) return null
+
+    // Check for pseudo-ID format (contains colon)
+    if (nodeId.includes(':')) {
+      const parts = nodeId.split(':')
+      const parentId = parts[0]
+      const slotName = parts[1]
+      const value = parts[2]
+      const indexStr = parts[3]
+
+      // Find parent element
+      const parent = preview.querySelector(`[data-mirror-id="${parentId}"]`)
+      if (!parent) return null
+
+      // Build selector for slot element
+      let selector = `[data-slot="${slotName}"]`
+      if (value !== undefined && value !== '') {
+        selector += `[data-value="${value}"]`
+      }
+
+      // Find matching elements
+      const elements = parent.querySelectorAll(selector)
+      if (elements.length === 0) return null
+
+      // If index specified, return that element
+      if (indexStr !== undefined) {
+        const index = parseInt(indexStr, 10)
+        if (index < elements.length) {
+          return elements[index] as HTMLElement
+        }
+        return null
+      }
+
+      // Return first match
+      return elements[0] as HTMLElement
+    }
+
+    // Standard data-mirror-id lookup
+    return preview.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement | null
   }
 
   /**
@@ -116,11 +159,18 @@ export class Interactions implements InteractionAPI {
     const element = this.findElement(nodeId)
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
+    // For Select components, dispatch click on the trigger since that's where
+    // the click handler is attached
+    const zagComponent = element.getAttribute('data-zag-component')
+    const trigger = element.querySelector('[data-slot="Trigger"]') as HTMLElement
+
+    const targetElement = zagComponent === 'select' && trigger ? trigger : element
+
     // Use altKey to bypass Studio selection and let click pass to components
     const eventOptions = { altKey: true }
-    this.dispatchMouseEvent(element, 'mousedown', eventOptions)
-    this.dispatchMouseEvent(element, 'mouseup', eventOptions)
-    this.dispatchMouseEvent(element, 'click', eventOptions)
+    this.dispatchMouseEvent(targetElement, 'mousedown', eventOptions)
+    this.dispatchMouseEvent(targetElement, 'mouseup', eventOptions)
+    this.dispatchMouseEvent(targetElement, 'click', eventOptions)
 
     // Clear multiselection - normal click replaces any existing multiselection
     if (this.studioActions?.clearMultiSelection) {
@@ -1288,17 +1338,22 @@ export class Interactions implements InteractionAPI {
     await this.delay(stepDelay * 2)
 
     // Move (multiple steps for smoother simulation)
+    // Dispatch directly to document because PaddingManager listens on document
     const steps = 5
     for (let i = 1; i <= steps; i++) {
       const progress = i / steps
       const currentX = startX + (endX - startX) * progress
       const currentY = startY + (endY - startY) * progress
 
-      this.dispatchMouseEvent(document.body, 'mousemove', {
+      const moveEvent = new MouseEvent('mousemove', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
         clientX: currentX,
         clientY: currentY,
         ...eventOptions,
       })
+      document.dispatchEvent(moveEvent)
 
       await this.delay(stepDelay)
     }
@@ -1321,12 +1376,16 @@ export class Interactions implements InteractionAPI {
         )
       })
 
-    // End drag
-    this.dispatchMouseEvent(document.body, 'mouseup', {
+    // End drag - dispatch directly to document
+    const upEvent = new MouseEvent('mouseup', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
       clientX: endX,
       clientY: endY,
       ...eventOptions,
     })
+    document.dispatchEvent(upEvent)
 
     await this.delay(100)
 
@@ -1557,17 +1616,22 @@ export class Interactions implements InteractionAPI {
     await this.delay(stepDelay * 2)
 
     // Move (multiple steps for smoother simulation)
+    // Dispatch directly to document because MarginManager listens on document
     const steps = 5
     for (let i = 1; i <= steps; i++) {
       const progress = i / steps
       const currentX = startX + (endX - startX) * progress
       const currentY = startY + (endY - startY) * progress
 
-      this.dispatchMouseEvent(document.body, 'mousemove', {
+      const moveEvent = new MouseEvent('mousemove', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
         clientX: currentX,
         clientY: currentY,
         ...eventOptions,
       })
+      document.dispatchEvent(moveEvent)
 
       await this.delay(stepDelay)
     }
@@ -1590,12 +1654,16 @@ export class Interactions implements InteractionAPI {
         )
       })
 
-    // End drag
-    this.dispatchMouseEvent(document.body, 'mouseup', {
+    // End drag - dispatch directly to document
+    const upEvent = new MouseEvent('mouseup', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
       clientX: endX,
       clientY: endY,
       ...eventOptions,
     })
+    document.dispatchEvent(upEvent)
 
     await this.delay(100)
 

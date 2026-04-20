@@ -30,8 +30,15 @@ export const staticTableTests: TestCase[] = describe('Static Tables', [
 
       const table = document.querySelector('[data-mirror-id="node-1"]')
       api.assert.ok(table !== null, 'Table should exist')
-      api.assert.ok(table?.textContent?.includes('Max'), 'Should contain Max')
-      api.assert.ok(table?.textContent?.includes('Anna'), 'Should contain Anna')
+      const content = table!.textContent || ''
+      api.assert.ok(
+        content.includes('Max'),
+        `Should contain Max, got: ${content.substring(0, 100)}`
+      )
+      api.assert.ok(
+        content.includes('Anna'),
+        `Should contain Anna, got: ${content.substring(0, 100)}`
+      )
     }
   ),
 
@@ -91,8 +98,15 @@ Table $users
 
       const table = document.querySelector('[data-mirror-id="node-1"]')
       api.assert.ok(table !== null, 'Table should exist')
-      api.assert.ok(table?.textContent?.includes('John'), 'Should render John')
-      api.assert.ok(table?.textContent?.includes('Jane'), 'Should render Jane')
+      const content = table!.textContent || ''
+      api.assert.ok(
+        content.includes('John'),
+        `Should render John, got: ${content.substring(0, 100)}`
+      )
+      api.assert.ok(
+        content.includes('Jane'),
+        `Should render Jane, got: ${content.substring(0, 100)}`
+      )
     }
   ),
 

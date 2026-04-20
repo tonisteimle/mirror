@@ -30,14 +30,19 @@ function createTestSourceMap(config: {
   const builder = new SourceMapBuilder()
 
   for (const node of config.nodes) {
-    builder.addNode(node.id, node.componentName, {
-      line: node.line,
-      column: 1,
-      endLine: node.endLine,
-      endColumn: 100,
-    }, {
-      parentId: node.parentId,
-    })
+    builder.addNode(
+      node.id,
+      node.componentName,
+      {
+        line: node.line,
+        column: 1,
+        endLine: node.endLine,
+        endColumn: 100,
+      },
+      {
+        parentId: node.parentId,
+      }
+    )
   }
 
   return builder.build()
@@ -52,9 +57,7 @@ describe('CodeModifier Error Handling: Invalid Node Operations', () => {
     it('returns error for non-existent parent ID', () => {
       const source = `Container`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -67,9 +70,7 @@ describe('CodeModifier Error Handling: Invalid Node Operations', () => {
     it('returns error for empty parent ID', () => {
       const source = `Container`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -81,9 +82,7 @@ describe('CodeModifier Error Handling: Invalid Node Operations', () => {
     it('returns error for null-like parent ID', () => {
       const source = `Container`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -114,9 +113,7 @@ describe('CodeModifier Error Handling: Invalid Node Operations', () => {
     it('returns error for empty node ID', () => {
       const source = `Container`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -164,9 +161,7 @@ describe('CodeModifier Error Handling: Invalid Node Operations', () => {
     it('returns error for both invalid source and target', () => {
       const source = `Container`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -180,9 +175,7 @@ describe('CodeModifier Error Handling: Invalid Node Operations', () => {
     it('returns error for non-existent node ID', () => {
       const source = `Box bg #FFF`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Box', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Box', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -292,17 +285,23 @@ describe('CodeModifier Error Handling: Structural Errors', () => {
 
 describe('CodeModifier Error Handling: Source Code Edge Cases', () => {
   describe('empty source', () => {
-    it('handles completely empty source', () => {
+    it('handles completely empty source by inserting as root', () => {
+      // When canvas is empty and we drop onto node-1 (the virtual placeholder),
+      // the element should be inserted as root element - this enables the
+      // fundamental use case of dropping onto an empty canvas
       const source = ``
       const sourceMap = new SourceMap()
 
       const modifier = new CodeModifier(source, sourceMap)
       const result = modifier.addChild('node-1', 'Box')
 
-      expect(result.success).toBe(false)
+      expect(result.success).toBe(true)
+      expect(result.newSource).toContain('Box')
     })
 
-    it('handles whitespace-only source', () => {
+    it('handles whitespace-only source by inserting as root', () => {
+      // When canvas has only whitespace and we drop onto node-1,
+      // the element should be inserted as root element
       const source = `
 
     `
@@ -311,7 +310,8 @@ describe('CodeModifier Error Handling: Source Code Edge Cases', () => {
       const modifier = new CodeModifier(source, sourceMap)
       const result = modifier.addChild('node-1', 'Box')
 
-      expect(result.success).toBe(false)
+      expect(result.success).toBe(true)
+      expect(result.newSource).toContain('Box')
     })
   })
 
@@ -423,9 +423,7 @@ describe('CodeModifier Error Handling: Source Code Edge Cases', () => {
     it('handles component with only properties (no children)', () => {
       const source = `Box bg #FFF, pad 16, rad 8`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Box', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Box', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -439,9 +437,7 @@ describe('CodeModifier Error Handling: Source Code Edge Cases', () => {
     it('handles component with text content', () => {
       const source = `Text "Hello World"`
       const sourceMap = createTestSourceMap({
-        nodes: [
-          { id: 'node-1', componentName: 'Text', line: 1, endLine: 1 },
-        ],
+        nodes: [{ id: 'node-1', componentName: 'Text', line: 1, endLine: 1 }],
       })
 
       const modifier = new CodeModifier(source, sourceMap)
@@ -497,9 +493,7 @@ describe('CodeModifier Error Handling: Result Validation', () => {
   it('successful operation returns newSource', () => {
     const source = `Container`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -513,9 +507,7 @@ describe('CodeModifier Error Handling: Result Validation', () => {
   it('failed operation includes error message', () => {
     const source = `Container`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)
@@ -529,9 +521,7 @@ describe('CodeModifier Error Handling: Result Validation', () => {
   it('multiple errors do not accumulate across operations', () => {
     const source = `Container`
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Container', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Container', line: 1, endLine: 1 }],
     })
 
     const modifier = new CodeModifier(source, sourceMap)

@@ -13,21 +13,89 @@ export const effectTests: TestCase[] = describe('Effects', [
     api.assert.hasStyle('node-1', 'opacity', '0.5')
   }),
 
-  testWithSetup('shadow sm', 'Frame shadow sm', async (api: TestAPI) => {
+  testWithSetup('shadow sm', 'Frame shadow sm, w 100, h 100', async (api: TestAPI) => {
     api.assert.exists('node-1')
+    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+    api.assert.ok(element !== null, 'Element should exist')
+    const boxShadow = window.getComputedStyle(element).boxShadow
+    api.assert.ok(
+      boxShadow !== 'none' && boxShadow !== '',
+      `shadow sm should set boxShadow, got "${boxShadow}"`
+    )
+    // shadow sm should be small - check for small blur values
+    api.assert.ok(
+      boxShadow.includes('1px') || boxShadow.includes('2px'),
+      `shadow sm should have small blur (1-2px), got "${boxShadow}"`
+    )
   }),
 
-  testWithSetup('shadow md', 'Frame shadow md', async (api: TestAPI) => {
+  testWithSetup('shadow md', 'Frame shadow md, w 100, h 100', async (api: TestAPI) => {
     api.assert.exists('node-1')
+    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+    api.assert.ok(element !== null, 'Element should exist')
+    const boxShadow = window.getComputedStyle(element).boxShadow
+    api.assert.ok(
+      boxShadow !== 'none' && boxShadow !== '',
+      `shadow md should set boxShadow, got "${boxShadow}"`
+    )
+    // shadow md should have medium blur
+    api.assert.ok(
+      boxShadow.includes('4px') || boxShadow.includes('5px') || boxShadow.includes('6px'),
+      `shadow md should have medium blur (4-6px), got "${boxShadow}"`
+    )
   }),
 
-  testWithSetup('shadow lg', 'Frame shadow lg', async (api: TestAPI) => {
+  testWithSetup('shadow lg', 'Frame shadow lg, w 100, h 100', async (api: TestAPI) => {
     api.assert.exists('node-1')
+    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+    api.assert.ok(element !== null, 'Element should exist')
+    const boxShadow = window.getComputedStyle(element).boxShadow
+    api.assert.ok(
+      boxShadow !== 'none' && boxShadow !== '',
+      `shadow lg should set boxShadow, got "${boxShadow}"`
+    )
+    // shadow lg should have large blur (10px+)
+    api.assert.ok(
+      boxShadow.includes('10px') ||
+        boxShadow.includes('15px') ||
+        boxShadow.includes('20px') ||
+        boxShadow.includes('25px'),
+      `shadow lg should have large blur (10px+), got "${boxShadow}"`
+    )
   }),
 
-  testWithSetup('blur', 'Frame blur 4', async (api: TestAPI) => {
+  testWithSetup('blur', 'Frame blur 4, w 100, h 100, bg #333', async (api: TestAPI) => {
     api.assert.exists('node-1')
+    const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+    api.assert.ok(element !== null, 'Element should exist')
+    const filter = window.getComputedStyle(element).filter
+    api.assert.ok(
+      filter.includes('blur'),
+      `blur should set CSS filter with blur(), got "${filter}"`
+    )
+    // Check for blur value around 4px
+    api.assert.ok(
+      filter.includes('blur(4px)') || filter.includes('blur(4'),
+      `blur 4 should have blur(4px), got "${filter}"`
+    )
   }),
+
+  testWithSetup(
+    'backdrop-blur',
+    'Frame backdrop-blur 8, w 100, h 100, bg rgba(0,0,0,0.5)',
+    async (api: TestAPI) => {
+      api.assert.exists('node-1')
+      const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(element !== null, 'Element should exist')
+      const backdropFilter =
+        window.getComputedStyle(element).backdropFilter ||
+        window.getComputedStyle(element).webkitBackdropFilter
+      api.assert.ok(
+        backdropFilter && backdropFilter.includes('blur'),
+        `backdrop-blur should set backdropFilter with blur(), got "${backdropFilter}"`
+      )
+    }
+  ),
 
   testWithSetup('cursor pointer', 'Frame cursor pointer', async (api: TestAPI) => {
     api.assert.exists('node-1')

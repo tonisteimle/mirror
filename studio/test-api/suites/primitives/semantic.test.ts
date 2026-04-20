@@ -7,46 +7,48 @@
 import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
+// Helper to assert element tag name with proper null checking
+function assertTagName(
+  api: TestAPI,
+  nodeId: string,
+  expectedTag: string,
+  elementName: string
+): void {
+  api.assert.exists(nodeId)
+  const info = api.preview.inspect(nodeId)
+  api.assert.ok(info !== null, `${elementName} inspect should return info`)
+  api.assert.ok(
+    info!.tagName === expectedTag,
+    `${elementName} should be ${expectedTag} element, got: ${info!.tagName}`
+  )
+}
+
 export const semanticPrimitives: TestCase[] = describe('Semantic HTML', [
   testWithSetup('Header renders as header', 'Header', async (api: TestAPI) => {
-    api.assert.exists('node-1')
-    const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'header', 'Header should be header element')
+    assertTagName(api, 'node-1', 'header', 'Header')
   }),
 
   testWithSetup('Nav renders as nav', 'Nav', async (api: TestAPI) => {
-    api.assert.exists('node-1')
-    const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'nav', 'Nav should be nav element')
+    assertTagName(api, 'node-1', 'nav', 'Nav')
   }),
 
   testWithSetup('Main renders as main', 'Main', async (api: TestAPI) => {
-    api.assert.exists('node-1')
-    const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'main', 'Main should be main element')
+    assertTagName(api, 'node-1', 'main', 'Main')
   }),
 
   testWithSetup('Section renders as section', 'Section', async (api: TestAPI) => {
-    api.assert.exists('node-1')
-    const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'section', 'Section should be section element')
+    assertTagName(api, 'node-1', 'section', 'Section')
   }),
 
   testWithSetup('Article renders as article', 'Article', async (api: TestAPI) => {
-    api.assert.exists('node-1')
-    const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'article', 'Article should be article element')
+    assertTagName(api, 'node-1', 'article', 'Article')
   }),
 
   testWithSetup('Aside renders as aside', 'Aside', async (api: TestAPI) => {
-    api.assert.exists('node-1')
-    const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'aside', 'Aside should be aside element')
+    assertTagName(api, 'node-1', 'aside', 'Aside')
   }),
 
   testWithSetup('Footer renders as footer', 'Footer', async (api: TestAPI) => {
-    api.assert.exists('node-1')
-    const info = api.preview.inspect('node-1')
-    api.assert.ok(info?.tagName === 'footer', 'Footer should be footer element')
+    assertTagName(api, 'node-1', 'footer', 'Footer')
   }),
 ])

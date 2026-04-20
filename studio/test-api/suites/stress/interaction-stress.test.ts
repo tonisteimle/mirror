@@ -353,12 +353,23 @@ Frame gap 4
       // Wait for initial render
       await api.utils.delay(100)
 
-      // Click first rendered button
+      // Verify container exists
       const container = api.preview.inspect('node-1')
-      if (container && container.children.length > 0) {
-        // Try to interact with a rendered item
-        api.assert.ok(container.children.length >= 1, 'Should have rendered items')
-      }
+      api.assert.ok(container !== null, 'Container should exist')
+
+      // Verify items were rendered from the each loop
+      api.assert.ok(
+        container!.children.length >= 1,
+        `Should have rendered items from each loop, got ${container!.children.length} children`
+      )
+
+      // Verify at least one button exists
+      const buttons = api.preview.query('[data-mirror-id^="node-"]')
+      const buttonElements = buttons.filter(b => b.tagName.toLowerCase() === 'button')
+      api.assert.ok(
+        buttonElements.length >= 1,
+        `Should have at least 1 button element, found ${buttonElements.length}`
+      )
     }
   ),
 ]

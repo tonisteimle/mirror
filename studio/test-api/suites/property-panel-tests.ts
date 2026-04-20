@@ -546,7 +546,8 @@ Button "Test", pad $m.pad, bg #333`,
           b.textContent?.trim().toLowerCase() === 'm' ||
           (b as HTMLElement).dataset.tokenRef?.includes('m.pad')
       )
-      api.assert.ok(mButton?.classList.contains('active'), 'm token button should be active')
+      api.assert.ok(mButton !== undefined, 'm token button should exist')
+      api.assert.ok(mButton!.classList.contains('active'), 'm token button should be active')
     }
   ),
 
@@ -679,18 +680,19 @@ Button "Test", pad $m.pad, bg #333`,
       // 1. Check that padding input shows resolved value "8" (from $m token)
       const padInput = queryPropertyPanel('input[data-pad-dir="h"]') as HTMLInputElement
       api.assert.ok(padInput !== null, 'Padding input should exist')
-      api.assert.equals(padInput?.value, '8', 'Input should show resolved token value "8"')
+      api.assert.equals(padInput.value, '8', 'Input should show resolved token value "8"')
 
       // 2. Check input HAS token-resolved class (should be muted)
       api.assert.ok(
-        padInput?.classList.contains('token-resolved'),
+        padInput.classList.contains('token-resolved'),
         'Token value SHOULD have token-resolved class (should be muted)'
       )
 
       // 3. Check that m token button is active
       const buttons = getPadTokenButtons()
       const mButton = buttons.find(b => b.textContent?.trim().toLowerCase() === 'm')
-      api.assert.ok(mButton?.classList.contains('active'), 'm token button should be active')
+      api.assert.ok(mButton !== undefined, 'm token button should exist')
+      api.assert.ok(mButton!.classList.contains('active'), 'm token button should be active')
     }
   ),
 

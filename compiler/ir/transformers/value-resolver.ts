@@ -44,6 +44,13 @@ export function resolveContentValue(values: PropertyValue[]): string {
       if (typeof v === 'object' && v.kind === 'expression') {
         return buildExpressionString(v.parts, v.operators)
       }
+      // Conditional (ternary) expression - build with __conditional: marker for backend
+      if (typeof v === 'object' && v.kind === 'conditional') {
+        const cond = v as Conditional
+        const thenVal = typeof cond.then === 'string' ? cond.then : String(cond.then)
+        const elseVal = typeof cond.else === 'string' ? cond.else : String(cond.else)
+        return `__conditional:${cond.condition}?${thenVal}:${elseVal}`
+      }
       // Explicit token reference object - preserve as $name for runtime
       if (typeof v === 'object' && v.kind === 'token') {
         return `$${v.name}`

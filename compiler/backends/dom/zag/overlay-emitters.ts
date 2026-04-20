@@ -6,7 +6,13 @@
 
 import type { IRZagNode, IRSlot, IRNode, IRItem } from '../../../ir/types'
 import type { ZagEmitterContext, ZagEmitterFn } from '../zag-emitter-context'
-import { emitSlotStyles, emitComponentHeader, emitMachineConfig, emitRuntimeInit } from './helpers'
+import {
+  emitSlotStyles,
+  emitRootStyles,
+  emitComponentHeader,
+  emitMachineConfig,
+  emitRuntimeInit,
+} from './helpers'
 
 export function emitTooltipComponent(
   node: IRZagNode,
@@ -495,7 +501,7 @@ export function emitCollapsibleComponent(
   emitMachineConfig(ctx, varName, 'collapsible', node.id, node.machineConfig || {})
 
   // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  emitRootStyles(ctx, varName, node)
 
   // Trigger
   const triggerSlot = node.slots['Trigger']
@@ -578,6 +584,9 @@ export function emitDatePickerComponent(
   ctx.indentOut()
   ctx.emit(`}`)
   ctx.emit('')
+
+  // Apply root styles (combines node.styles and Root slot styles)
+  emitRootStyles(ctx, varName, node)
 
   // Create Control (wrapper for Input + Trigger)
   const controlSlot = node.slots['Control']

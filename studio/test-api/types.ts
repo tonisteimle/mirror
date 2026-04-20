@@ -74,6 +74,10 @@ export interface ComputedStyles {
   backgroundImage: string
   color: string
   borderColor: string
+  borderTopColor: string
+  borderRightColor: string
+  borderBottomColor: string
+  borderLeftColor: string
   // Border
   borderWidth: string
   borderTopWidth: string

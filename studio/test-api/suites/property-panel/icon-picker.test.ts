@@ -241,15 +241,15 @@ export const iconPickerTests: TestCase[] = describe('Icon Picker', [
       `Search must reduce icon count: ${filteredIcons.length} should be < ${initialCount}`
     )
 
+    // STRICT: Must have at least one heart icon in results
+    api.assert.ok(filteredNames.length > 0, 'Search for "heart" should return at least one icon')
+
     // STRICT: All visible icons should match the search term
     const allMatchHeart = filteredNames.every(name => name.toLowerCase().includes('heart'))
     api.assert.ok(
-      allMatchHeart || filteredNames.length === 0,
-      `All filtered icons should contain "heart", got: ${filteredNames.slice(0, 5).join(', ')}`
+      allMatchHeart,
+      `All ${filteredNames.length} filtered icons should contain "heart", got: ${filteredNames.slice(0, 5).join(', ')}`
     )
-
-    // Should have at least one heart icon
-    api.assert.ok(filteredNames.length > 0, 'Should have at least one heart icon in results')
 
     await api.interact.pressKey('Escape')
   }),

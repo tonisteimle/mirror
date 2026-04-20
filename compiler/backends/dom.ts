@@ -209,14 +209,35 @@ class DOMGenerator {
       emitNode: (node: IRNode, parentVar: string) => this.emitNode(node, parentVar),
       emitStyles: (varName: string, styles) => {
         const baseStyles = styles.filter(s => !s.state)
-        if (baseStyles.length > 0) {
+        if (baseStyles.length === 0) return
+
+        // Separate static and conditional styles
+        const staticStyles: Array<{ property: string; value: string }> = []
+        const conditionalStyles: Array<{ property: string; code: string }> = []
+
+        for (const style of baseStyles) {
+          const resolved = this.resolveStyleValueForTopLevel(String(style.value))
+          if (resolved.needsEval) {
+            conditionalStyles.push({ property: style.property, code: resolved.code })
+          } else {
+            staticStyles.push({ property: style.property, value: String(style.value) })
+          }
+        }
+
+        // Emit static styles with Object.assign
+        if (staticStyles.length > 0) {
           this.emit(`Object.assign(${varName}.style, {`)
           this.indent++
-          for (const style of baseStyles) {
+          for (const style of staticStyles) {
             this.emit(`'${style.property}': '${style.value}',`)
           }
           this.indent--
           this.emit('})')
+        }
+
+        // Emit conditional styles as separate assignments
+        for (const cond of conditionalStyles) {
+          this.emit(`${varName}.style['${cond.property}'] = ${cond.code}`)
         }
       },
       emitSlotStyles: (varName: string, slot) => {
@@ -873,9 +894,16 @@ class DOMGenerator {
     // Set HTML properties
     for (const prop of node.properties) {
       if (prop.name === 'textContent') {
-        const value =
-          typeof prop.value === 'string' ? `"${this.escapeString(prop.value)}"` : prop.value
-        this.emit(`${varName}.textContent = ${value}`)
+        const propValue = String(prop.value)
+        // Handle conditional text content: __conditional:condition?thenValue:elseValue
+        if (propValue.includes('__conditional:')) {
+          const resolved = this.parseTopLevelConditional(propValue)
+          this.emit(`${varName}.textContent = ${resolved}`)
+        } else {
+          const value =
+            typeof prop.value === 'string' ? `"${this.escapeString(prop.value)}"` : prop.value
+          this.emit(`${varName}.textContent = ${value}`)
+        }
       } else if (prop.name === 'disabled' || prop.name === 'hidden') {
         this.emit(`${varName}.${prop.name} = ${prop.value}`)
       } else {
@@ -888,13 +916,34 @@ class DOMGenerator {
     // Apply base styles
     const baseStyles = node.styles.filter(s => !s.state)
     if (baseStyles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
+      // Separate static and conditional styles
+      const staticStyles: Array<{ property: string; value: string }> = []
+      const conditionalStyles: Array<{ property: string; code: string }> = []
+
       for (const style of baseStyles) {
-        this.emit(`'${style.property}': '${style.value}',`)
+        const resolved = this.resolveStyleValueForTopLevel(String(style.value))
+        if (resolved.needsEval) {
+          conditionalStyles.push({ property: style.property, code: resolved.code })
+        } else {
+          staticStyles.push({ property: style.property, value: String(style.value) })
+        }
       }
-      this.indent--
-      this.emit('})')
+
+      // Emit static styles with Object.assign
+      if (staticStyles.length > 0) {
+        this.emit(`Object.assign(${varName}.style, {`)
+        this.indent++
+        for (const style of staticStyles) {
+          this.emit(`'${style.property}': '${style.value}',`)
+        }
+        this.indent--
+        this.emit('})')
+      }
+
+      // Emit conditional styles as separate assignments
+      for (const cond of conditionalStyles) {
+        this.emit(`${varName}.style['${cond.property}'] = ${cond.code}`)
+      }
     }
 
     // Handle icon loading (special case for Icon primitive)
@@ -1388,6 +1437,114 @@ class DOMGenerator {
   }
 
   /**
+   * Resolve a style value for non-loop context (top-level nodes)
+   * Handles __conditional: markers by converting them to $get()-based ternary expressions
+   */
+  private resolveStyleValueForTopLevel(value: string): { code: string; needsEval: boolean } {
+    if (!value.includes('__conditional:')) {
+      return { code: `'${value}'`, needsEval: false }
+    }
+
+    // Parse and convert conditional to $get()-based ternary
+    const resolvedCode = this.parseTopLevelConditional(value)
+    return { code: resolvedCode, needsEval: true }
+  }
+
+  private parseTopLevelConditional(str: string): string {
+    if (!str.startsWith('__conditional:')) {
+      return this.resolveTopLevelValue(str)
+    }
+
+    const content = str.slice('__conditional:'.length)
+
+    // Find the ? that separates condition from then/else
+    let questionPos = -1
+    let depth = 0
+    for (let i = 0; i < content.length; i++) {
+      const char = content[i]
+      if (char === '(') depth++
+      else if (char === ')') depth--
+      else if (
+        char === '?' &&
+        depth === 0 &&
+        !content.slice(Math.max(0, i - 1), i + 1).match(/[=!<>]=?\?/)
+      ) {
+        questionPos = i
+        break
+      }
+    }
+
+    if (questionPos === -1) {
+      return this.resolveTopLevelValue(content)
+    }
+
+    const condition = content.slice(0, questionPos).trim()
+    const rest = content.slice(questionPos + 1)
+
+    // Find the : that separates then from else
+    let colonPos = -1
+    depth = 0
+    let inConditional = false
+    for (let i = 0; i < rest.length; i++) {
+      const char = rest[i]
+      if (rest.slice(i).startsWith('__conditional:')) {
+        inConditional = true
+      }
+      if (char === '(') depth++
+      else if (char === ')') depth--
+      else if (char === ':' && depth === 0 && !inConditional) {
+        colonPos = i
+        break
+      }
+      if (char === '?' && inConditional) {
+        inConditional = false
+      }
+    }
+
+    if (colonPos === -1) {
+      return this.resolveTopLevelValue(content)
+    }
+
+    const thenValue = rest.slice(0, colonPos).trim()
+    const elseValue = rest.slice(colonPos + 1).trim()
+
+    // Resolve condition: bare identifiers become $get("identifier")
+    const resolvedCondition = this.resolveTopLevelCondition(condition)
+
+    // Recursively parse then/else
+    const resolvedThen = this.parseTopLevelConditional(thenValue)
+    const resolvedElse = this.parseTopLevelConditional(elseValue)
+
+    return `(${resolvedCondition} ? ${resolvedThen} : ${resolvedElse})`
+  }
+
+  private resolveTopLevelCondition(condition: string): string {
+    // Replace bare identifiers with $get("identifier")
+    const reserved = new Set(['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'])
+    return condition.replace(
+      /(?<!["\w$.])\b([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\b(?!["\w(])/g,
+      (match, identifier) => {
+        const firstPart = identifier.split('.')[0]
+        if (reserved.has(firstPart)) return match
+        return `$get("${identifier}")`
+      }
+    )
+  }
+
+  private resolveTopLevelValue(value: string): string {
+    // Handle hex colors
+    if (value.startsWith('#')) {
+      return `"${value}"`
+    }
+    // Handle numbers
+    if (/^-?\d+(\.\d+)?$/.test(value)) {
+      return value
+    }
+    // Handle named colors and other values
+    return `"${value}"`
+  }
+
+  /**
    * Emit template event listener for loop items
    * Delegates to extracted event-emitter.ts
    */
@@ -1493,6 +1650,7 @@ class DOMGenerator {
       sanitizeVarName: (id: string) => this.sanitizeVarName(id),
       escapeString: str => this.escapeString(str),
       resolveContentValue: value => this.resolveContentValue(value),
+      resolveStyleValue: value => this.resolveStyleValueForTopLevel(String(value)),
     }
   }
 
@@ -1576,6 +1734,12 @@ class DOMGenerator {
       if (value.startsWith('__loopVar:')) {
         const varName = value.slice('__loopVar:'.length)
         return varName // Return unquoted - it's a JS variable reference
+      }
+
+      // Check for conditional expression (marked by IR)
+      // Format: __conditional:condition?thenValue:elseValue
+      if (value.includes('__conditional:')) {
+        return this.parseTopLevelConditional(value)
       }
 
       // Check if this is a computed expression from the IR

@@ -232,22 +232,21 @@ export const dashboardE2ETests: TestCase[] = describe('Dashboard E2E', [
 
     // Check Frame hor has flex-direction: row
     const frameHor = getLayoutInfo('node-2')
-    if (frameHor) {
-      const flexDir = frameHor.computedStyle.flexDirection
-      api.assert.ok(flexDir === 'row', `Frame hor should be row, got ${flexDir}`)
-    }
+    api.assert.ok(frameHor !== null, 'Frame hor (node-2) should have layout info')
+
+    const flexDir = frameHor!.computedStyle.flexDirection
+    api.assert.ok(flexDir === 'row', `Frame hor should be row, got ${flexDir}`)
 
     // Find Sidebar by checking for width 240 and surface background
-    // Sidebar is node-3, but its children (Text, NavItems) make MainContent much later
     const sidebarInfo = getLayoutInfo('node-3')
-    if (sidebarInfo) {
-      // Sidebar should have width around 240
-      const sidebarWidth = sidebarInfo.bounds.width
-      api.assert.ok(
-        sidebarWidth >= 230 && sidebarWidth <= 250,
-        `Sidebar should have width ~240, got ${sidebarWidth}`
-      )
-    }
+    api.assert.ok(sidebarInfo !== null, 'Sidebar (node-3) should have layout info')
+
+    // Sidebar should have width around 240
+    const sidebarWidth = sidebarInfo!.bounds.width
+    api.assert.ok(
+      sidebarWidth >= 230 && sidebarWidth <= 250,
+      `Sidebar should have width ~240, got ${sidebarWidth}`
+    )
 
     // Verify code structure shows horizontal layout with Sidebar and MainContent
     api.assert.ok(codeHas(code, 'Frame hor'), 'Should have horizontal Frame')
@@ -326,11 +325,10 @@ export const dashboardE2ETests: TestCase[] = describe('Dashboard E2E', [
     console.log('📝 Phase 8: Testing keyboard shortcuts...')
 
     // Select a StatCard and try to toggle its layout
-    // Find a StatCard - should be around node-10 or so
     const nodeIds = api.preview.getNodeIds()
     let statCardId: string | null = null
 
-    // Find a node that's a StatCard by checking if it has the card bg color
+    // Find a node that's a StatCard by checking if it has the card bg color (#27272a)
     for (const id of nodeIds) {
       if (verifyBackgroundColor(id, '#27272a')) {
         statCardId = id
@@ -338,19 +336,31 @@ export const dashboardE2ETests: TestCase[] = describe('Dashboard E2E', [
       }
     }
 
-    if (statCardId) {
-      await api.studio.setSelection(statCardId)
-      await api.utils.delay(200)
+    api.assert.ok(
+      statCardId !== null,
+      `Should find StatCard with card bg color. Checked ${nodeIds.length} nodes`
+    )
 
-      // Press H to try horizontal
-      await api.interact.pressKey('h')
-      await api.utils.delay(300)
+    await api.studio.setSelection(statCardId!)
+    await api.utils.delay(200)
 
-      // Just verify no errors - the component may or may not change
-      api.assert.ok(true, 'H key pressed without error')
-    } else {
-      api.assert.ok(true, 'Skipping H key test - no StatCard found')
-    }
+    // Verify selection worked
+    const statCardSelectedId = api.panel.property.getSelectedNodeId()
+    api.assert.ok(
+      statCardSelectedId === statCardId,
+      `StatCard ${statCardId} should be selected, got ${statCardSelectedId}`
+    )
+
+    // Get code before pressing H
+    const codeBefore = api.editor.getCode()
+
+    // Press H to try horizontal
+    await api.interact.pressKey('h')
+    await api.utils.delay(300)
+
+    // Verify the key press was processed (selection should still exist)
+    const selectionAfter = api.panel.property.getSelectedNodeId()
+    api.assert.ok(selectionAfter !== null, 'Selection should persist after H key press')
 
     console.log('✅ Phase 8 complete: Keyboard shortcuts work')
 

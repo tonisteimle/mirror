@@ -12,6 +12,27 @@ import type { TestCase, TestAPI } from '../../types'
 import { describe, testWithSetup } from '../../index'
 
 // =============================================================================
+// Helper Functions
+// =============================================================================
+
+function getComputedMargin(nodeId: string): {
+  top: number
+  right: number
+  bottom: number
+  left: number
+} {
+  const element = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+  if (!element) return { top: 0, right: 0, bottom: 0, left: 0 }
+  const style = window.getComputedStyle(element)
+  return {
+    top: parseFloat(style.marginTop) || 0,
+    right: parseFloat(style.marginRight) || 0,
+    bottom: parseFloat(style.marginBottom) || 0,
+    left: parseFloat(style.marginLeft) || 0,
+  }
+}
+
+// =============================================================================
 // Single Side Margin Tests
 // =============================================================================
 
@@ -21,6 +42,13 @@ export const singleSideMarginTests: TestCase[] = describe('Single Side Margin', 
     'Frame w 200, h 200, bg #1a1a1a\n  Text "Content"',
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
+
+      // Verify initial CSS has no margin
+      const initialCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        initialCSS.top === 0,
+        `Initial CSS margin-top should be 0, got ${initialCSS.top}`
+      )
 
       // Enter margin mode on element with no margin defined
       await api.interact.enterMarginMode('node-1')
@@ -35,7 +63,7 @@ export const singleSideMarginTests: TestCase[] = describe('Single Side Margin', 
       // Drag to add margin from zero
       const result = await api.interact.dragMarginHandle('top', 20)
 
-      // Margin should now exist
+      // Margin should now exist (API result)
       api.assert.ok(
         result.after.top > 0,
         `Top margin should be added: ${result.before.top} -> ${result.after.top}`
@@ -43,6 +71,20 @@ export const singleSideMarginTests: TestCase[] = describe('Single Side Margin', 
       api.assert.ok(
         result.before.top === 0,
         `Initial top margin should have been 0, was ${result.before.top}`
+      )
+
+      // Verify CSS computed style actually changed
+      const afterCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        afterCSS.top > 0,
+        `CSS margin-top should be > 0 after drag, got ${afterCSS.top}px`
+      )
+
+      // Verify code was updated
+      const code = api.editor.getCode()
+      api.assert.ok(
+        code.includes('mar') || code.includes('mar-t'),
+        `Code should contain margin property after drag, got: ${code}`
       )
     }
   ),
@@ -53,13 +95,20 @@ export const singleSideMarginTests: TestCase[] = describe('Single Side Margin', 
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
+      // Verify initial CSS margin
+      const initialCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        initialCSS.top === 16,
+        `Initial CSS margin-top should be 16px, got ${initialCSS.top}px`
+      )
+
       // Enter margin mode
       await api.interact.enterMarginMode('node-1')
 
       // Drag top handle up (increase margin)
       const result = await api.interact.dragMarginHandle('top', 20)
 
-      // Only top should change
+      // Only top should change (API result)
       api.assert.ok(
         result.after.top > result.before.top,
         `Top margin should increase: ${result.before.top} -> ${result.after.top}`
@@ -76,6 +125,32 @@ export const singleSideMarginTests: TestCase[] = describe('Single Side Margin', 
         result.after.left === result.before.left,
         `Left margin should stay same: ${result.after.left}`
       )
+
+      // Verify CSS computed style - only top changed
+      const afterCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        afterCSS.top > initialCSS.top,
+        `CSS margin-top should increase: ${initialCSS.top}px -> ${afterCSS.top}px`
+      )
+      api.assert.ok(
+        afterCSS.right === initialCSS.right,
+        `CSS margin-right should stay same: ${afterCSS.right}px`
+      )
+      api.assert.ok(
+        afterCSS.bottom === initialCSS.bottom,
+        `CSS margin-bottom should stay same: ${afterCSS.bottom}px`
+      )
+      api.assert.ok(
+        afterCSS.left === initialCSS.left,
+        `CSS margin-left should stay same: ${afterCSS.left}px`
+      )
+
+      // Verify code was updated with specific margin value
+      const code = api.editor.getCode()
+      api.assert.ok(
+        code.includes('mar-t') || code.includes(`mar ${afterCSS.top}`),
+        `Code should contain updated margin, got: ${code}`
+      )
     }
   ),
 
@@ -85,9 +160,17 @@ export const singleSideMarginTests: TestCase[] = describe('Single Side Margin', 
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
+      // Verify initial CSS margin
+      const initialCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        initialCSS.left === 16,
+        `Initial CSS margin-left should be 16px, got ${initialCSS.left}px`
+      )
+
       await api.interact.enterMarginMode('node-1')
       const result = await api.interact.dragMarginHandle('left', 15)
 
+      // API result checks
       api.assert.ok(
         result.after.left > result.before.left,
         `Left margin should increase: ${result.before.left} -> ${result.after.left}`
@@ -95,6 +178,28 @@ export const singleSideMarginTests: TestCase[] = describe('Single Side Margin', 
       api.assert.ok(result.after.top === result.before.top, `Top margin should stay same`)
       api.assert.ok(result.after.right === result.before.right, `Right margin should stay same`)
       api.assert.ok(result.after.bottom === result.before.bottom, `Bottom margin should stay same`)
+
+      // Verify CSS computed style - only left changed
+      const afterCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        afterCSS.left > initialCSS.left,
+        `CSS margin-left should increase: ${initialCSS.left}px -> ${afterCSS.left}px`
+      )
+      api.assert.ok(
+        afterCSS.top === initialCSS.top,
+        `CSS margin-top should stay same: ${afterCSS.top}px`
+      )
+      api.assert.ok(
+        afterCSS.right === initialCSS.right,
+        `CSS margin-right should stay same: ${afterCSS.right}px`
+      )
+
+      // Verify code was updated
+      const code = api.editor.getCode()
+      api.assert.ok(
+        code.includes('mar-l') || code.includes('mar '),
+        `Code should contain margin property, got: ${code}`
+      )
     }
   ),
 ])
@@ -110,16 +215,27 @@ export const allSidesMarginTests: TestCase[] = describe('All Sides Margin (Shift
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
+      // Verify initial CSS has no margin
+      const initialCSS = getComputedMargin('node-1')
+      api.assert.ok(initialCSS.top === 0, `Initial CSS margin should be 0, got ${initialCSS.top}`)
+
       await api.interact.enterMarginMode('node-1')
 
       // Verify we start with 0 margin
       const zones = api.interact.getMarginZones()
       const topZone = zones.find(z => z.position === 'top')
-      api.assert.ok(topZone?.rect.height === 0 || !topZone, 'Initial margin should be 0')
+      api.assert.ok(
+        topZone !== undefined,
+        `Margin top zone should exist, found zones: ${zones.map(z => z.position).join(', ')}`
+      )
+      api.assert.ok(
+        topZone!.rect.height === 0,
+        `Initial margin should be 0, got height: ${topZone!.rect.height}`
+      )
 
       const result = await api.interact.dragMarginHandle('top', 24, { shift: true })
 
-      // All sides should have the same new value
+      // All sides should have the same new value (API result)
       api.assert.ok(
         result.after.top === result.after.right &&
           result.after.top === result.after.bottom &&
@@ -129,6 +245,20 @@ export const allSidesMarginTests: TestCase[] = describe('All Sides Margin (Shift
 
       // And should be > 0 now
       api.assert.ok(result.after.top > 0, `Margin should have been added: ${result.after.top}`)
+
+      // Verify CSS computed style - all sides should be equal and > 0
+      const afterCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        afterCSS.top > 0 &&
+          afterCSS.top === afterCSS.right &&
+          afterCSS.top === afterCSS.bottom &&
+          afterCSS.top === afterCSS.left,
+        `CSS margins should all be equal and > 0: t=${afterCSS.top}, r=${afterCSS.right}, b=${afterCSS.bottom}, l=${afterCSS.left}`
+      )
+
+      // Verify code contains margin
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('mar '), `Code should contain uniform margin, got: ${code}`)
     }
   ),
 
@@ -138,10 +268,14 @@ export const allSidesMarginTests: TestCase[] = describe('All Sides Margin (Shift
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
+      // Verify initial CSS margin
+      const initialCSS = getComputedMargin('node-1')
+      api.assert.ok(initialCSS.top === 16, `Initial CSS margin should be 16px`)
+
       await api.interact.enterMarginMode('node-1')
       const result = await api.interact.dragMarginHandle('top', 20, { shift: true })
 
-      // All sides should have the same new value
+      // All sides should have the same new value (API result)
       api.assert.ok(
         result.after.top === result.after.right &&
           result.after.top === result.after.bottom &&
@@ -151,6 +285,26 @@ export const allSidesMarginTests: TestCase[] = describe('All Sides Margin (Shift
 
       // And should be different from before
       api.assert.ok(result.after.top !== result.before.top, `Margin should have changed`)
+
+      // Verify CSS computed style - all sides should be equal
+      const afterCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        afterCSS.top === afterCSS.right &&
+          afterCSS.top === afterCSS.bottom &&
+          afterCSS.top === afterCSS.left,
+        `CSS margins should all be equal: t=${afterCSS.top}, r=${afterCSS.right}, b=${afterCSS.bottom}, l=${afterCSS.left}`
+      )
+      api.assert.ok(
+        afterCSS.top !== initialCSS.top,
+        `CSS margin should have changed from ${initialCSS.top}px to ${afterCSS.top}px`
+      )
+
+      // Verify code contains uniform margin
+      const code = api.editor.getCode()
+      api.assert.ok(
+        code.includes(`mar ${afterCSS.top}`) || code.includes('mar '),
+        `Code should contain uniform margin value, got: ${code}`
+      )
     }
   ),
 
@@ -160,14 +314,32 @@ export const allSidesMarginTests: TestCase[] = describe('All Sides Margin (Shift
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
+      // Verify initial CSS margin
+      const initialCSS = getComputedMargin('node-1')
+      api.assert.ok(initialCSS.right === 12, `Initial CSS margin should be 12px`)
+
       await api.interact.enterMarginMode('node-1')
       const result = await api.interact.dragMarginHandle('right', 10, { shift: true })
 
+      // API result check
       api.assert.ok(
         result.after.top === result.after.right &&
           result.after.top === result.after.bottom &&
           result.after.top === result.after.left,
         `All margins should be equal after shift+drag right`
+      )
+
+      // Verify CSS computed style - all sides should be equal
+      const afterCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        afterCSS.top === afterCSS.right &&
+          afterCSS.top === afterCSS.bottom &&
+          afterCSS.top === afterCSS.left,
+        `CSS margins should all be equal: t=${afterCSS.top}, r=${afterCSS.right}, b=${afterCSS.bottom}, l=${afterCSS.left}`
+      )
+      api.assert.ok(
+        afterCSS.right !== initialCSS.right,
+        `CSS margin should have changed from ${initialCSS.right}px to ${afterCSS.right}px`
       )
     }
   ),
@@ -184,10 +356,14 @@ export const axisMarginTests: TestCase[] = describe('Axis Margin (Alt+drag)', [
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
+      // Verify initial CSS margin
+      const initialCSS = getComputedMargin('node-1')
+      api.assert.ok(initialCSS.top === 16, `Initial CSS margin should be 16px`)
+
       await api.interact.enterMarginMode('node-1')
       const result = await api.interact.dragMarginHandle('top', 20, { alt: true })
 
-      // Top and bottom should be equal and changed
+      // Top and bottom should be equal and changed (API result)
       api.assert.ok(
         result.after.top === result.after.bottom,
         `Top and bottom should be equal: t=${result.after.top}, b=${result.after.bottom}`
@@ -197,6 +373,28 @@ export const axisMarginTests: TestCase[] = describe('Axis Margin (Alt+drag)', [
       // Left and right should be unchanged
       api.assert.ok(result.after.left === result.before.left, `Left margin should stay same`)
       api.assert.ok(result.after.right === result.before.right, `Right margin should stay same`)
+
+      // Verify CSS computed style - top and bottom equal, left/right unchanged
+      const afterCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        afterCSS.top === afterCSS.bottom,
+        `CSS top and bottom should be equal: t=${afterCSS.top}, b=${afterCSS.bottom}`
+      )
+      api.assert.ok(
+        afterCSS.top !== initialCSS.top,
+        `CSS vertical margin should have changed from ${initialCSS.top}px`
+      )
+      api.assert.ok(
+        afterCSS.left === initialCSS.left && afterCSS.right === initialCSS.right,
+        `CSS horizontal margins should stay same: l=${afterCSS.left}, r=${afterCSS.right}`
+      )
+
+      // Verify code was updated
+      const code = api.editor.getCode()
+      api.assert.ok(
+        code.includes('mar-y') || code.includes('mar '),
+        `Code should contain vertical margin, got: ${code}`
+      )
     }
   ),
 
@@ -206,10 +404,14 @@ export const axisMarginTests: TestCase[] = describe('Axis Margin (Alt+drag)', [
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
+      // Verify initial CSS margin
+      const initialCSS = getComputedMargin('node-1')
+      api.assert.ok(initialCSS.left === 16, `Initial CSS margin should be 16px`)
+
       await api.interact.enterMarginMode('node-1')
       const result = await api.interact.dragMarginHandle('left', 15, { alt: true })
 
-      // Left and right should be equal and changed
+      // Left and right should be equal and changed (API result)
       api.assert.ok(
         result.after.left === result.after.right,
         `Left and right should be equal: l=${result.after.left}, r=${result.after.right}`
@@ -222,6 +424,28 @@ export const axisMarginTests: TestCase[] = describe('Axis Margin (Alt+drag)', [
       // Top and bottom should be unchanged
       api.assert.ok(result.after.top === result.before.top, `Top margin should stay same`)
       api.assert.ok(result.after.bottom === result.before.bottom, `Bottom margin should stay same`)
+
+      // Verify CSS computed style - left and right equal, top/bottom unchanged
+      const afterCSS = getComputedMargin('node-1')
+      api.assert.ok(
+        afterCSS.left === afterCSS.right,
+        `CSS left and right should be equal: l=${afterCSS.left}, r=${afterCSS.right}`
+      )
+      api.assert.ok(
+        afterCSS.left !== initialCSS.left,
+        `CSS horizontal margin should have changed from ${initialCSS.left}px`
+      )
+      api.assert.ok(
+        afterCSS.top === initialCSS.top && afterCSS.bottom === initialCSS.bottom,
+        `CSS vertical margins should stay same: t=${afterCSS.top}, b=${afterCSS.bottom}`
+      )
+
+      // Verify code was updated
+      const code = api.editor.getCode()
+      api.assert.ok(
+        code.includes('mar-x') || code.includes('mar '),
+        `Code should contain horizontal margin, got: ${code}`
+      )
     }
   ),
 ])

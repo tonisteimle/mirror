@@ -10,6 +10,16 @@ import type { TestCase, TestAPI } from '../../types'
 import { describe, testWithSetup } from '../../index'
 
 // =============================================================================
+// Helper Functions
+// =============================================================================
+
+function getComputedPadding(nodeId: string): string {
+  const element = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
+  if (!element) return '0px'
+  return window.getComputedStyle(element).padding
+}
+
+// =============================================================================
 // P Key - Toggle Padding Mode
 // =============================================================================
 
@@ -424,51 +434,111 @@ export const paddingHandleDragTests: TestCase[] = describe('Padding Handle Drag'
       await api.interact.pressKey('Escape')
       await api.utils.delay(100)
 
-      // Select and enter padding mode
+      // Verify initial padding value
+      api.assert.codeContains('pad 16')
+      const initialCSS = getComputedPadding('node-1')
+      api.assert.ok(initialCSS === '16px', `Initial CSS padding should be 16px, got ${initialCSS}`)
+
+      // Enter padding mode
       await api.interact.click('node-1')
       await api.utils.delay(200)
-
-      // Press P to enter padding mode
       await api.interact.pressKey('p')
       await api.utils.delay(200)
 
-      // Get the top padding handle
+      // Verify padding handles exist
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      // Get handle position
+      // Get handle position for drag
       const handleRect = topHandle.getBoundingClientRect()
       const startX = handleRect.left + handleRect.width / 2
       const startY = handleRect.top + handleRect.height / 2
 
-      // Simulate drag down (increase padding)
-      const mousedown = new MouseEvent('mousedown', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY,
-      })
-      topHandle.dispatchEvent(mousedown)
-
-      // Move down by 8px
-      const mousemove = new MouseEvent('mousemove', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY + 8,
-      })
-      document.dispatchEvent(mousemove)
-
-      // Wait for RAF
+      // Simulate drag down (increases top padding)
+      topHandle.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
+      )
+      document.dispatchEvent(
+        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 10 })
+      )
       await api.utils.delay(100)
+      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
 
-      // Release
-      const mouseup = new MouseEvent('mouseup', { bubbles: true })
-      document.dispatchEvent(mouseup)
-
-      // Wait for compile
+      // Wait for code update
       await api.utils.waitForCompile()
 
-      // Verify padding was updated (should be around 24)
-      api.assert.codeContains(/\bpad\s+\d+/)
+      // Verify code was updated - pad-t should be added with value > 16
+      const code = api.editor.getCode()
+      const padTMatch = code.match(/\bpad-t\s+(\d+)/)
+      const padMatch = code.match(/\bpad\s+(\d+)/)
+      const newPadding = padTMatch
+        ? parseInt(padTMatch[1], 10)
+        : padMatch
+          ? parseInt(padMatch[1], 10)
+          : null
+
+      api.assert.ok(
+        newPadding !== null && newPadding > 16,
+        `Padding should have increased from 16, got ${newPadding}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Dragging bottom padding handle decreases padding',
+    'Frame pad 30, bg #1a1a1a, w 200, h 150\n  Text "Content"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      await api.interact.pressKey('Escape')
+      await api.utils.delay(100)
+
+      // Verify initial padding value - code and CSS
+      api.assert.codeContains('pad 30')
+      const initialCSS = getComputedPadding('node-1')
+      api.assert.ok(initialCSS === '30px', `Initial CSS padding should be 30px, got ${initialCSS}`)
+
+      // Use the helper to enter padding mode (click + press P)
+      await api.interact.enterPaddingMode('node-1')
+      await api.utils.delay(100)
+
+      // Verify padding handles exist
+      const handles = document.querySelectorAll('.padding-handle')
+      api.assert.ok(handles.length === 4, `Should have 4 padding handles, got ${handles.length}`)
+
+      // Use the dragPaddingHandle helper to perform the drag
+      // Negative delta on bottom moves handle DOWN (towards element edge, away from content)
+      // which expands content area and decreases bottom padding
+      const result = await api.interact.dragPaddingHandle('bottom', -10)
+
+      await api.utils.waitForCompile()
+
+      // Verify the drag operation worked
+      api.assert.ok(
+        result.after.bottom < result.before.bottom,
+        `Bottom padding should have decreased. Before: ${result.before.bottom}, After: ${result.after.bottom}`
+      )
+
+      // Verify code was updated
+      const code = api.editor.getCode()
+
+      // Check for pad-b (specific side property) or updated pad value
+      const padBMatch = code.match(/\bpad-b\s+(\d+)/)
+      const padMatch = code.match(/\bpad\s+(\d+)/)
+
+      if (padBMatch) {
+        const newPadding = parseInt(padBMatch[1], 10)
+        api.assert.ok(newPadding < 30, `pad-b should have decreased from 30, got ${newPadding}`)
+      } else if (padMatch) {
+        const newPadding = parseInt(padMatch[1], 10)
+        api.assert.ok(newPadding < 30, `Padding should have decreased from 30, got ${newPadding}`)
+      } else {
+        api.assert.fail('Code should contain pad or pad-b value')
+      }
+
+      // Verify CSS computed style - paddingBottom should be < 30
+      const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      const paddingBottom = parseInt(window.getComputedStyle(element).paddingBottom, 10)
+      api.assert.ok(paddingBottom < 30, `CSS paddingBottom should be < 30, got ${paddingBottom}`)
     }
   ),
 ])

@@ -50,6 +50,10 @@ const STYLE_PROPERTIES: (keyof ComputedStyles)[] = [
   'backgroundImage',
   'color',
   'borderColor',
+  'borderTopColor',
+  'borderRightColor',
+  'borderBottomColor',
+  'borderLeftColor',
   // Border
   'borderWidth',
   'borderTopWidth',
@@ -258,14 +262,96 @@ export class PreviewInspector implements PreviewAPI {
     const results: ElementInfo[] = []
 
     for (const el of Array.from(elements)) {
-      const nodeId = el.getAttribute('data-mirror-id')
+      const htmlEl = el as HTMLElement
+      const nodeId = htmlEl.getAttribute('data-mirror-id')
+
       if (nodeId) {
+        // Element has its own mirror ID
         const info = this.inspect(nodeId)
+        if (info) results.push(info)
+      } else {
+        // Element doesn't have mirror ID (e.g., slot elements)
+        // Create ElementInfo directly from the element
+        const info = this.inspectElement(htmlEl)
         if (info) results.push(info)
       }
     }
 
     return results
+  }
+
+  /**
+   * Inspect a raw HTMLElement (for elements without data-mirror-id)
+   */
+  private inspectElement(element: HTMLElement): ElementInfo | null {
+    if (!element) return null
+
+    const styles = this.extractStyles(element)
+    const rect = element.getBoundingClientRect()
+
+    // Extract attributes
+    const attributes: Record<string, string> = {}
+    const dataAttributes: Record<string, string> = {}
+    for (const attr of Array.from(element.attributes)) {
+      if (attr.name.startsWith('data-')) {
+        dataAttributes[attr.name] = attr.value
+      } else {
+        attributes[attr.name] = attr.value
+      }
+    }
+
+    // Generate a stable pseudo-ID based on slot name and parent mirror ID
+    const slotName = element.getAttribute('data-slot')
+    const parentMirrorId = this.getParentNodeId(element) || 'root'
+    const slotValue = element.getAttribute('data-value') || ''
+    const slotIndex = this.getSlotIndex(element)
+
+    const pseudoId = slotName
+      ? `${parentMirrorId}:${slotName}${slotValue ? ':' + slotValue : ''}${slotIndex > 0 ? ':' + slotIndex : ''}`
+      : `element-${parentMirrorId}-${slotIndex}`
+
+    return {
+      nodeId: pseudoId,
+      tagName: element.tagName.toLowerCase(),
+      textContent: this.getDirectTextContent(element),
+      fullText: element.textContent?.trim() || '',
+      styles,
+      attributes,
+      dataAttributes,
+      bounds: rect,
+      children: this.getChildNodeIds(element),
+      parent: this.getParentNodeId(element),
+      visible: this.isElementVisible(element),
+      interactive: this.isInteractive(element),
+    }
+  }
+
+  /**
+   * Get the index of a slot element among siblings with the same slot name AND value
+   *
+   * This ensures elements with different values have separate index sequences:
+   * - Item value="a" → index 0 (first Item with value "a")
+   * - Item value="b" → index 0 (first Item with value "b")
+   * - Item value="a" (second) → index 1
+   */
+  private getSlotIndex(element: HTMLElement): number {
+    const slotName = element.getAttribute('data-slot')
+    if (!slotName || !element.parentElement) return 0
+
+    const slotValue = element.getAttribute('data-value')
+
+    // Filter siblings with same slot name AND same value (if value exists)
+    const siblings = Array.from(element.parentElement.children).filter(el => {
+      if (el.getAttribute('data-slot') !== slotName) return false
+      // If element has a value, only match siblings with same value
+      if (slotValue !== null) {
+        return el.getAttribute('data-value') === slotValue
+      }
+      // If no value, only match siblings without value
+      return el.getAttribute('data-value') === null
+    })
+
+    return siblings.indexOf(element)
   }
 
   /**

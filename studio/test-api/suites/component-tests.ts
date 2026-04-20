@@ -162,7 +162,11 @@ Card
       api.assert.exists('node-2') // Text
 
       const card = document.querySelector('[data-mirror-id="node-1"]')
-      api.assert.ok(card?.tagName === 'DIV', 'Card should be a div (from Frame)')
+      api.assert.ok(card !== null, 'Card element should exist in DOM')
+      api.assert.ok(
+        card!.tagName === 'DIV',
+        `Card should be a div (from Frame), got: ${card!.tagName}`
+      )
     }
   ),
 
@@ -288,10 +292,14 @@ Card
       // Check for title and description content
       const card = document.querySelector('[data-mirror-id="node-1"]')
       api.assert.ok(card !== null, 'Card should exist')
-      api.assert.ok(card?.textContent?.includes('Project Name'), 'Should contain title')
+      const content = card!.textContent || ''
       api.assert.ok(
-        card?.textContent?.includes('A description of the project'),
-        'Should contain description'
+        content.includes('Project Name'),
+        `Should contain title, got: ${content.substring(0, 100)}`
+      )
+      api.assert.ok(
+        content.includes('A description of the project'),
+        `Should contain description, got: ${content.substring(0, 100)}`
       )
     }
   ),

@@ -73,7 +73,11 @@ export const fixturesTests: TestCase[] = [
 
       // Check horizontal layout
       const root = api.preview.inspect(nodeIds[0])
-      api.assert.ok(root?.styles.flexDirection === 'row', 'Should have horizontal flex direction')
+      api.assert.ok(root !== null, 'Root element should exist')
+      api.assert.ok(
+        root!.styles.flexDirection === 'row',
+        `Should have horizontal flex direction, got: ${root!.styles.flexDirection}`
+      )
     },
   },
 
@@ -169,10 +173,17 @@ export const isolationTests: TestCase[] = [
       await api.utils.delay(200)
 
       const nodeIds = api.preview.getNodeIds()
-      if (nodeIds.length > 0) {
-        api.interact.select(nodeIds[0])
-        await api.utils.delay(100)
-      }
+      api.assert.ok(nodeIds.length > 0, 'Should have nodes to select')
+
+      api.interact.select(nodeIds[0])
+      await api.utils.delay(100)
+
+      // Verify selection was made
+      const selectionBefore = api.studio.getSelection()
+      api.assert.ok(
+        selectionBefore === nodeIds[0],
+        `Should have selected ${nodeIds[0]}, got ${selectionBefore}`
+      )
 
       // Reset
       await api.studio.reset()
@@ -214,48 +225,91 @@ export const keyboardTests: TestCase[] = [
       const nodeIds = api.preview.getNodeIds()
       const inputId = nodeIds.find(id => {
         const info = api.preview.inspect(id)
-        // Check for input tag (case insensitive)
         return info?.tagName?.toUpperCase() === 'INPUT'
       })
 
-      if (!inputId) {
-        // Fallback: just test that pressKey works without an element
-        await api.interact.pressKey('a')
-        await api.interact.pressKey('b')
-        await api.interact.pressKey('c')
-        api.assert.ok(true, 'Keys pressed without error (no input element)')
-        return
-      }
+      api.assert.ok(inputId !== undefined, 'Should find Input element in setup')
 
-      await api.interact.focus(inputId)
+      await api.interact.focus(inputId!)
+
+      // Press keys and verify input receives them
       await api.interact.pressKey('a')
       await api.interact.pressKey('b')
       await api.interact.pressKey('c')
 
-      api.assert.ok(true, 'Keys pressed without error')
+      // Verify input element is still focused after key presses
+      const inputElement = document.querySelector(
+        `[data-mirror-id="${inputId}"]`
+      ) as HTMLInputElement
+      api.assert.ok(inputElement !== null, 'Input element should exist in DOM')
+
+      // Verify we can access input value (even if empty due to how pressKey works)
+      api.assert.ok(
+        typeof inputElement.value === 'string',
+        'Input should have accessible value property'
+      )
     },
   },
 
   {
     name: 'Keyboard: pressSequence fires multiple keys',
     category: 'testSystem',
+    setup: `Frame
+  Input placeholder "Navigate..."`,
     run: async api => {
-      // Just verify the method works without error
-      await api.interact.pressSequence(['ArrowDown', 'ArrowDown', 'Enter'])
-      api.assert.ok(true, 'Key sequence completed')
+      await api.utils.delay(100)
+
+      // Verify setup worked
+      const nodeIds = api.preview.getNodeIds()
+      api.assert.ok(nodeIds.length >= 2, 'Should have Frame and Input elements')
+
+      // Focus the input before sending key sequence
+      const inputId = nodeIds.find(id => {
+        const info = api.preview.inspect(id)
+        return info?.tagName?.toUpperCase() === 'INPUT'
+      })
+      api.assert.ok(inputId !== undefined, 'Should find Input element')
+
+      await api.interact.focus(inputId!)
+
+      // Press sequence - verify no errors
+      const keysToPress = ['ArrowDown', 'ArrowDown', 'Enter']
+      await api.interact.pressSequence(keysToPress)
+
+      // Verify method completed by checking DOM is still responsive
+      const inputElement = document.querySelector(`[data-mirror-id="${inputId}"]`)
+      api.assert.ok(inputElement !== null, 'Input should still exist after key sequence')
     },
   },
 
   {
     name: 'Keyboard: pressKey with modifiers',
     category: 'testSystem',
+    setup: `Frame
+  Input placeholder "Shortcuts..."`,
     run: async api => {
-      // Test that modifiers are accepted
+      await api.utils.delay(100)
+
+      const nodeIds = api.preview.getNodeIds()
+      const inputId = nodeIds.find(id => {
+        const info = api.preview.inspect(id)
+        return info?.tagName?.toUpperCase() === 'INPUT'
+      })
+      api.assert.ok(inputId !== undefined, 'Should find Input element')
+
+      await api.interact.focus(inputId!)
+
+      // Test modifier key combinations
       await api.interact.pressKey('a', { ctrl: true })
       await api.interact.pressKey('s', { ctrl: true, shift: true })
       await api.interact.pressKey('z', { meta: true })
 
-      api.assert.ok(true, 'Keys with modifiers pressed')
+      // Verify DOM is responsive after modifier key presses
+      const inputElement = document.querySelector(
+        `[data-mirror-id="${inputId}"]`
+      ) as HTMLInputElement
+      api.assert.ok(inputElement !== null, 'Input should exist after modifier keys')
+      api.assert.ok(!inputElement.disabled, 'Input should still be enabled')
     },
   },
 
@@ -272,17 +326,21 @@ export const keyboardTests: TestCase[] = [
         return info?.tagName?.toUpperCase() === 'INPUT'
       })
 
-      if (!inputId) {
-        // Fallback: test typeText without an input
-        await api.interact.typeText('Hi', 10)
-        api.assert.ok(true, 'Text typed (no input element)')
-        return
-      }
+      api.assert.ok(inputId !== undefined, 'Should find Input element in setup')
 
-      await api.interact.focus(inputId)
+      const inputElement = document.querySelector(
+        `[data-mirror-id="${inputId}"]`
+      ) as HTMLInputElement
+      api.assert.ok(inputElement !== null, 'Input element should exist in DOM')
+
+      await api.interact.focus(inputId!)
       await api.interact.typeText('Hello', 10)
 
-      api.assert.ok(true, 'Text typed character by character')
+      // Verify input received the text
+      api.assert.ok(
+        inputElement.value === 'Hello',
+        `Input value should be "Hello", got "${inputElement.value}"`
+      )
     },
   },
 ]
@@ -330,16 +388,33 @@ export const waitHelperTests: TestCase[] = [
     run: async api => {
       // Should find 4 elements (1 Frame + 3 Text)
       await api.utils.waitForCount('[data-mirror-id]', 4)
-      api.assert.ok(true, 'Found expected count')
+
+      // Verify count is actually 4
+      const elements = document.querySelectorAll('[data-mirror-id]')
+      api.assert.ok(
+        elements.length === 4,
+        `Should have exactly 4 elements with data-mirror-id, got ${elements.length}`
+      )
     },
   },
 
   {
     name: 'WaitHelpers: waitForIdle completes',
     category: 'testSystem',
+    setup: `Frame
+  Text "Idle Test"`,
     run: async api => {
+      // Make a change to trigger activity
+      await api.editor.setCode('Frame\n  Text "Updated"')
+
       await api.utils.waitForIdle()
-      api.assert.ok(true, 'waitForIdle completed')
+
+      // Verify we can interact with DOM after idle (system is responsive)
+      const nodeIds = api.preview.getNodeIds()
+      api.assert.ok(nodeIds.length >= 2, 'Should have nodes after waitForIdle')
+
+      const text = api.preview.findByText('Updated')
+      api.assert.ok(text !== null, 'Should find updated text after idle')
     },
   },
 
@@ -350,7 +425,14 @@ export const waitHelperTests: TestCase[] = [
   Text "Animated"`,
     run: async api => {
       await api.utils.waitForAnimation()
-      api.assert.ok(true, 'waitForAnimation completed')
+
+      // Verify DOM is accessible after animation completes
+      const nodeIds = api.preview.getNodeIds()
+      api.assert.ok(nodeIds.length >= 2, 'Should have nodes after waitForAnimation')
+
+      // Verify text element exists and is rendered
+      const text = api.preview.findByText('Animated')
+      api.assert.ok(text !== null, 'Should find Animated text element')
     },
   },
 

@@ -630,8 +630,20 @@ export const selectionPersistenceTests: TestCase[] = describe('Selection Persist
   Text "Keep", col white`)
       await api.utils.delay(100)
 
-      // Should handle gracefully (no crash)
-      api.assert.ok(true, 'Should handle deleted selection gracefully')
+      // Verify the element was deleted
+      const nodeIds = api.preview.getNodeIds()
+      api.assert.ok(!nodeIds.includes('node-3'), 'Deleted element (node-3) should no longer exist')
+
+      // Verify the kept element still exists
+      api.assert.exists('node-2')
+      api.assert.hasText('node-2', 'Keep')
+
+      // Verify selection state is handled (cleared or changed)
+      const selection = api.state.getSelection()
+      api.assert.ok(
+        selection !== 'node-3',
+        `Selection should not point to deleted node, got: ${selection}`
+      )
     }
   ),
 ])

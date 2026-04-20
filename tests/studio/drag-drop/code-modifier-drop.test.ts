@@ -19,6 +19,34 @@ function createModifier(code: string): CodeModifier {
 }
 
 describe('CodeModifier.addChild', () => {
+  it('should add component as root when canvas is empty', () => {
+    // Empty code - simulates dropping onto empty canvas
+    const code = ``
+    const ast = parse(code)
+    const { sourceMap } = toIR(ast, true)
+    const modifier = new CodeModifier(code, sourceMap)
+
+    // Try to add to node-1 (the virtual root element in empty canvas)
+    const result = modifier.addChild('node-1', 'Frame', { properties: 'gap 8, pad 16' })
+
+    expect(result.success).toBe(true)
+    expect(result.newSource).toContain('Frame')
+    expect(result.newSource).toContain('gap 8')
+    expect(result.newSource.trim()).toBe('Frame gap 8, pad 16')
+  })
+
+  it('should add component as root when canvas has only whitespace', () => {
+    const code = `   \n  \n   `
+    const ast = parse(code)
+    const { sourceMap } = toIR(ast, true)
+    const modifier = new CodeModifier(code, sourceMap)
+
+    const result = modifier.addChild('node-1', 'Button', { textContent: 'Click' })
+
+    expect(result.success).toBe(true)
+    expect(result.newSource).toContain('Button "Click"')
+  })
+
   it('should add Button to empty Frame', () => {
     const code = `Frame gap 8`
     const modifier = createModifier(code)

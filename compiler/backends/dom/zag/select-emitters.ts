@@ -6,7 +6,13 @@
 
 import type { IRZagNode, IRSlot, IRNode, IRItem } from '../../../ir/types'
 import type { ZagEmitterContext, ZagEmitterFn } from '../zag-emitter-context'
-import { emitSlotStyles, emitComponentHeader, emitMachineConfig, emitRuntimeInit } from './helpers'
+import {
+  emitSlotStyles,
+  emitRootStyles,
+  emitComponentHeader,
+  emitMachineConfig,
+  emitRuntimeInit,
+} from './helpers'
 
 export function emitSelectComponent(
   node: IRZagNode,
@@ -51,7 +57,7 @@ export function emitSelectComponent(
   ctx.emit('')
 
   // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  emitRootStyles(ctx, varName, node)
 
   // Create Trigger
   const triggerSlot = node.slots['Trigger']
@@ -174,7 +180,7 @@ export function emitTreeViewComponent(
   ctx.emit('')
 
   // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  emitRootStyles(ctx, varName, node)
 
   // Create Tree element (ul)
   const treeSlot = node.slots['Tree']
@@ -242,7 +248,7 @@ export function emitListboxComponent(
   emitMachineConfig(ctx, varName, 'listbox', node.id, node.machineConfig || {})
 
   // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  emitRootStyles(ctx, varName, node)
 
   // Create Label if provided
   const labelSlot = node.slots['Label']
@@ -360,7 +366,7 @@ export function emitAccordionComponent(
   ctx.emit('')
 
   // Apply root styles
-  emitSlotStyles(ctx, varName, node.slots['Root'])
+  emitRootStyles(ctx, varName, node)
 
   // Create Item containers for each accordion item
   const itemSlot = node.slots['Item']

@@ -87,15 +87,39 @@ export const shiftClickTests: TestCase[] = describe('Shift+Click Multiselect', [
       await api.interact.shiftClick('node-3')
       await api.utils.delay(100)
 
+      // Verify we have 2 elements before toggle
+      let multiSelection = api.studio.getMultiSelection()
+      api.assert.ok(
+        multiSelection.length === 2,
+        `Should have 2 elements before toggle, got ${multiSelection.length}`
+      )
+      api.assert.ok(
+        multiSelection.includes('node-2'),
+        'node-2 should be in multiselection before toggle'
+      )
+      api.assert.ok(
+        multiSelection.includes('node-3'),
+        'node-3 should be in multiselection before toggle'
+      )
+
       // Shift+Click second button again to deselect
       await api.interact.shiftClick('node-3')
       await api.utils.delay(100)
 
-      // Check multiselection - node-3 should be removed
-      const multiSelection = api.studio.getMultiSelection()
+      // Check multiselection - node-3 should be removed, node-2 should remain
+      multiSelection = api.studio.getMultiSelection()
       api.assert.ok(
         !multiSelection.includes('node-3'),
-        'node-3 should be removed from multiselection'
+        'node-3 should be removed from multiselection after toggle'
+      )
+
+      // Important: node-2 should still be selected (either in multiSelection or single selection)
+      // When only 1 element remains, it may switch to single selection
+      const singleSelection = api.studio.getSelection()
+      const node2StillSelected = multiSelection.includes('node-2') || singleSelection === 'node-2'
+      api.assert.ok(
+        node2StillSelected,
+        `node-2 should still be selected after toggling node-3. Multi: [${multiSelection.join(', ')}], Single: ${singleSelection}`
       )
     }
   ),
