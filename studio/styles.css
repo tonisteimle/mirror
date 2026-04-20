@@ -389,6 +389,14 @@
       height: var(--size-icon-xl);
     }
 
+    .activity-bar-spacer {
+      flex: 1;
+    }
+
+    .activity-bar-bottom-item {
+      margin-top: auto;
+    }
+
     .explorer-content {
       flex: 1;
       display: flex;
@@ -1432,11 +1440,11 @@
       display: flex;
       align-items: center;
       padding: 0 12px;
-      font-size: var(--font-sm);
+      font-size: var(--font-xs);
       font-weight: var(--weight-semibold);
-      text-transform: var(--text-uppercase);
+      text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
-      color: var(--text-muted);
+      color: var(--text-primary);
       border-bottom: 1px solid var(--border-default);
       flex-shrink: 0;
       height: var(--panel-header-height);
@@ -3793,11 +3801,11 @@
     }
 
     .pp-title {
-      font-size: var(--font-sm);
+      font-size: var(--font-xs);
       font-weight: var(--weight-semibold);
-      text-transform: var(--text-uppercase);
+      text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
-      color: var(--text-muted);
+      color: var(--text-primary);
     }
 
     .pp-close {
@@ -6203,11 +6211,11 @@
     }
 
     .file-panel-title {
-      font-size: var(--font-sm);
+      font-size: var(--font-xs);
       font-weight: var(--weight-semibold);
-      text-transform: var(--text-uppercase);
+      text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
-      color: var(--text-muted);
+      color: var(--text-primary);
     }
 
     .file-panel-add-btn {
@@ -6667,31 +6675,13 @@
       margin-bottom: 8px;
     }
 
-    .component-panel-section-header {
-      padding: 12px 8px 0 8px;
-      margin-bottom: 6px;
-    }
-
-    .component-panel-section-name {
-      display: inline-block;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--border-default);
-      color: var(--text-primary);
-      font-size: var(--font-xs);
-      text-transform: var(--text-uppercase);
-      letter-spacing: var(--tracking-wide);
-      font-weight: var(--weight-semibold);
-    }
-
-    .component-panel-section-toggle {
-      display: none;
-    }
+    /* Component panel section headers use shared .section-header styles */
 
     .component-panel-items {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 2px;
-      padding: 0 4px;
+      padding: 0 10px;
     }
 
     .component-panel-item {
@@ -6853,47 +6843,7 @@
       display: none;
     }
 
-    .user-components-panel-section-header {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      padding: var(--space-3) 10px;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: var(--font-sm);
-      font-weight: var(--weight-medium);
-      user-select: none;
-    }
-
-    .user-components-panel-section-header:hover {
-      color: var(--text-primary);
-    }
-
-    .user-components-panel-section-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: var(--size-icon-xs);
-      height: var(--size-icon-xs);
-      color: var(--text-muted);
-    }
-
-    .user-components-panel-section-toggle svg {
-      width: var(--size-icon-xs);
-      height: var(--size-icon-xs);
-    }
-
-    .user-components-panel-section-name {
-      flex: 1;
-    }
-
-    .user-components-panel-section-count {
-      font-size: var(--font-xs);
-      color: var(--text-muted);
-      background: var(--bg-input);
-      padding: 1px 6px;
-      border-radius: var(--radius-xl);
-    }
+    /* User components panel section headers use shared .section-header styles */
 
     .user-components-panel-items {
       display: flex;
@@ -7688,6 +7638,29 @@
   background: var(--color-success);
 }
 
+/* Settings Panel - Uses same styles as Property Panel */
+.settings-panel {
+  width: 240px;
+  min-width: 200px;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-default);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settings-panel.visible {
+  display: flex;
+}
+
+/* Settings panel unit label */
+.settings-panel .prop-unit {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  width: 20px;
+  flex-shrink: 0;
+}
+
 /* ============================================================================
  * Click-to-Draw Overlay Styles
  * ============================================================================ */
@@ -8024,6 +7997,67 @@ select.tomselected,
   height: 100%;
 }
 
+/* ==========================================
+   Shared Section Header Component
+   Used by: Components Panel, Property Panel
+   ========================================== */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  margin-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+  user-select: none;
+}
+
+.section-header-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.section-header-toggle:hover {
+  color: var(--text-primary);
+}
+
+.section-header-toggle svg {
+  width: 10px;
+  height: 10px;
+}
+
+.section-header-label {
+  flex: 1;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.section-header-count {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* Section header in Components Panel - add horizontal padding */
+.component-panel-section-header.section-header,
+.user-components-panel-section-header.section-header {
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 /* Section label content with icon */
 .section-label-content {
   display: flex;
@@ -8041,27 +8075,64 @@ select.tomselected,
   height: var(--size-icon-xs);
 }
 
-/* Input wrapper with unit */
-.input-wrapper {
-  display: flex;
-  align-items: center;
-  background: var(--bg-input);
-  border-radius: var(--radius-md);
-  width: var(--pp-input-width);
+/* Input wrapper with unit - looks like single input field */
+.input-wrapper,
+.pp-content .input-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  background: var(--bg-input) !important;
+  border-radius: var(--radius-md) !important;
+  height: var(--input-height) !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
 }
 
-.input-wrapper .prop-input {
-  background: transparent;
-  border-radius: var(--radius-md) 0 0 5px;
-  flex: 1;
-  width: auto;
+/* Settings panel: ensure all containers constrain their children */
+.settings-panel .prop-content {
+  overflow: hidden !important;
+  min-width: 0 !important;
 }
 
-.input-unit {
+/* Settings panel: input wrapper must fit within available space */
+.settings-panel .input-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  background: var(--bg-input) !important;
+  border-radius: var(--radius-md) !important;
+  height: var(--input-height) !important;
+  box-sizing: border-box !important;
+  flex-shrink: 1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+.input-wrapper .prop-input,
+.settings-panel .input-wrapper .prop-input,
+.settings-panel .section-content .input-wrapper .prop-input,
+.pp-content .input-wrapper .prop-input {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  flex: 1 !important;
+  min-width: 30px !important;
+  width: auto !important;
+  height: 100% !important;
+  padding: 0 4px 0 8px !important;
+  min-height: unset !important;
+  max-height: unset !important;
+}
+
+.input-unit,
+.settings-panel .input-unit {
   padding: 0 8px 0 0;
   font-size: var(--font-xs);
   color: var(--text-disabled);
   user-select: none;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Slider */

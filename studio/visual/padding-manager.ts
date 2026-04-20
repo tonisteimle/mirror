@@ -491,6 +491,136 @@ export class PaddingManager {
     }
   }
 
+  /**
+   * Update handle positions in-place during drag (no remove/recreate)
+   * This prevents visual snap-back flickering
+   */
+  private updateHandlePositionsDuringDrag(): void {
+    if (!this.currentNodeId || !this.activeDrag) return
+
+    const element = this.container.querySelector(
+      `[data-mirror-id="${this.currentNodeId}"]`
+    ) as HTMLElement
+    if (!element) return
+
+    const rect = element.getBoundingClientRect()
+    const containerRect = this.container.getBoundingClientRect()
+
+    const style = window.getComputedStyle(element)
+    const padding = {
+      top: parseInt(style.paddingTop || '0', 10),
+      right: parseInt(style.paddingRight || '0', 10),
+      bottom: parseInt(style.paddingBottom || '0', 10),
+      left: parseInt(style.paddingLeft || '0', 10),
+    }
+
+    const relRect = {
+      left: rect.left - containerRect.left,
+      top: rect.top - containerRect.top,
+      width: rect.width,
+      height: rect.height,
+    }
+
+    // Content area boundaries
+    const contentLeft = relRect.left + padding.left
+    const contentTop = relRect.top + padding.top
+    const contentWidth = relRect.width - padding.left - padding.right
+    const contentHeight = relRect.height - padding.top - padding.bottom
+
+    const hitAreaOffset = (HANDLE_HIT_AREA - HANDLE_VISUAL_SIZE) / 2
+
+    // Update handle positions
+    for (const handle of this.handles) {
+      const position = handle.dataset?.position as PaddingHandle | undefined
+      if (!position) continue // Skip padding areas
+
+      const isHorizontal = position === 'top' || position === 'bottom'
+
+      if (position === 'top') {
+        handle.style.left = `${contentLeft}px`
+        handle.style.top = `${contentTop - hitAreaOffset}px`
+        handle.style.width = `${contentWidth}px`
+      } else if (position === 'bottom') {
+        handle.style.left = `${contentLeft}px`
+        handle.style.top = `${relRect.top + relRect.height - padding.bottom - hitAreaOffset}px`
+        handle.style.width = `${contentWidth}px`
+      } else if (position === 'left') {
+        handle.style.left = `${contentLeft - hitAreaOffset}px`
+        handle.style.top = `${contentTop}px`
+        handle.style.height = `${contentHeight}px`
+      } else if (position === 'right') {
+        handle.style.left = `${relRect.left + relRect.width - padding.right - hitAreaOffset}px`
+        handle.style.top = `${contentTop}px`
+        handle.style.height = `${contentHeight}px`
+      }
+
+      // Update data-padding attribute
+      if (position === 'top') handle.dataset.padding = String(padding.top)
+      else if (position === 'bottom') handle.dataset.padding = String(padding.bottom)
+      else if (position === 'left') handle.dataset.padding = String(padding.left)
+      else if (position === 'right') handle.dataset.padding = String(padding.right)
+    }
+
+    // Update padding overlay areas
+    this.updatePaddingOverlays(relRect, padding)
+  }
+
+  /**
+   * Update padding overlay areas in-place
+   */
+  private updatePaddingOverlays(
+    rect: { left: number; top: number; width: number; height: number },
+    padding: { top: number; right: number; bottom: number; left: number }
+  ): void {
+    const areas = this.handles.filter(h => h.classList.contains('padding-area'))
+
+    // We have up to 4 areas: top, bottom, left, right (in that creation order)
+    let areaIndex = 0
+
+    // Top area
+    if (padding.top > 0 && areas[areaIndex]) {
+      Object.assign(areas[areaIndex].style, {
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${padding.top}px`,
+      })
+      areaIndex++
+    }
+
+    // Bottom area
+    if (padding.bottom > 0 && areas[areaIndex]) {
+      Object.assign(areas[areaIndex].style, {
+        left: `${rect.left}px`,
+        top: `${rect.top + rect.height - padding.bottom}px`,
+        width: `${rect.width}px`,
+        height: `${padding.bottom}px`,
+      })
+      areaIndex++
+    }
+
+    // Left area
+    if (padding.left > 0 && areas[areaIndex]) {
+      Object.assign(areas[areaIndex].style, {
+        left: `${rect.left}px`,
+        top: `${rect.top + padding.top}px`,
+        width: `${padding.left}px`,
+        height: `${rect.height - padding.top - padding.bottom}px`,
+      })
+      areaIndex++
+    }
+
+    // Right area
+    if (padding.right > 0 && areas[areaIndex]) {
+      Object.assign(areas[areaIndex].style, {
+        left: `${rect.left + rect.width - padding.right}px`,
+        top: `${rect.top + padding.top}px`,
+        width: `${padding.right}px`,
+        height: `${rect.height - padding.top - padding.bottom}px`,
+      })
+    }
+  }
+
   dispose(): void {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId)
@@ -761,8 +891,8 @@ export class PaddingManager {
       ;(element.style as any)[paddingProp] = `${newPadding}px`
     }
 
-    // Update handle positions
-    this.refresh()
+    // Update handle positions in-place (no remove/recreate to prevent flicker)
+    this.updateHandlePositionsDuringDrag()
 
     // Show size indicator with mode info
     const rect = element.getBoundingClientRect()

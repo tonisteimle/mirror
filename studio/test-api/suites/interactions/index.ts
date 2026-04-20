@@ -144,6 +144,7 @@ export {
 
 export {
   allSnappingTests,
+  snappingDiagnosticTests,
   paddingTokenSnappingTests,
   marginTokenSnappingTests,
   gapTokenSnappingTests,

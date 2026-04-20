@@ -50,7 +50,7 @@ import { LLMBridge, getLLMBridge, getContextBuilder, getEditPrompt, type LLMResp
 import { initializeAgent, getAgentIntegration, type AgentIntegration } from './agent'
 import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../compiler/studio'
 import { gridSettings } from './core/settings'
-import { PropertyPanel, createPropertyPanel } from './panels'
+import { PropertyPanel, createPropertyPanel, SettingsPanel, createSettingsPanel } from './panels'
 import {
   ComponentPanel,
   createComponentPanel,
@@ -124,6 +124,8 @@ export interface StudioInstance {
   draftLinesManager: DraftLinesManager | null
   /** Draft mode manager for -- marker AI-assisted code generation */
   draftModeManager: DraftModeManager | null
+  /** Settings panel for studio configuration */
+  settingsPanel: SettingsPanel | null
   /** Cleanup all event subscriptions and resources */
   dispose: () => void
 }
@@ -158,6 +160,7 @@ export const studio: StudioInstance = {
   inlineEdit: null,
   draftLinesManager: null,
   draftModeManager: null,
+  settingsPanel: null,
   dispose: () => {
     // Unsubscribe all event listeners
     for (const unsubscribe of eventUnsubscribes) {
@@ -174,6 +177,7 @@ export const studio: StudioInstance = {
     studio.drawManager?.dispose()
     studio.inlineEdit?.dispose()
     studio.preview?.dispose()
+    studio.settingsPanel?.dispose()
     disposeDraftLinesManager()
     disposeDraftModeManager()
 
@@ -190,6 +194,7 @@ export const studio: StudioInstance = {
     studio.inlineEdit = null
     studio.draftLinesManager = null
     studio.draftModeManager = null
+    studio.settingsPanel = null
     studio.agent = null
   },
 }
@@ -684,6 +689,30 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     })
   )
 
+  // ============================================
+  // Settings Panel
+  // ============================================
+  studio.settingsPanel = createSettingsPanel(undefined, {
+    onClose: () => {
+      // Update activity bar when settings panel is closed
+      globalActivityBar?.setActive('settings', false)
+    },
+  })
+
+  // Cmd+, (macOS) / Ctrl+, (Windows/Linux) to open settings
+  const handleSettingsShortcut = (e: KeyboardEvent) => {
+    if (e.key === ',' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      studio.settingsPanel?.toggle()
+      // Update activity bar state
+      globalActivityBar?.setActive('settings', studio.settingsPanel?.isShowing() ?? false)
+    }
+  }
+  document.addEventListener('keydown', handleSettingsShortcut)
+  eventUnsubscribes.push(() => document.removeEventListener('keydown', handleSettingsShortcut))
+
+  logBootstrap.info(' Settings Panel initialized (Cmd+, to open)')
+
   // Initialize panel visibility (MUST run first - sets up event listener)
   initializePanelVisibility()
 
@@ -834,6 +863,11 @@ function initializeActivityBar(): void {
     { id: 'property', icon: ACTIVITY_BAR_ICONS.properties, tooltip: 'Properties' },
   ]
 
+  // Bottom items (settings)
+  const bottomItems = [
+    { id: 'settings', icon: ACTIVITY_BAR_ICONS.settings, tooltip: 'Settings (Cmd+,)' },
+  ]
+
   // Get initial visibility from state
   const visibility = state.get().panelVisibility
   const activeItems = Object.entries(visibility)
@@ -846,11 +880,19 @@ function initializeActivityBar(): void {
       container,
       items,
       activeItems,
+      bottomItems,
     },
     {
       onToggle: (id, active) => {
         // Update panel visibility via state action
         actions.setPanelVisibility(id as keyof typeof visibility, active)
+      },
+      onBottomItemClick: id => {
+        if (id === 'settings') {
+          studio.settingsPanel?.toggle()
+          // Update active state based on panel visibility
+          globalActivityBar?.setActive('settings', studio.settingsPanel?.isShowing() ?? false)
+        }
       },
     }
   )

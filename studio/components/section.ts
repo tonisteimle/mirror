@@ -2,21 +2,21 @@
  * Section Component
  *
  * Collapsible section container for property panel.
+ * Uses shared createSectionHeader component for consistency.
  *
  * CSS Classes used:
- * - .section, .pp-section
- * - .section-label, .pp-label
- * - .section-expand-btn
- * - .section-content
+ * - .section, .pp-section (container)
+ * - .section-content (content container)
  * - .expanded (state)
  */
 
 import type { SectionConfig, ComponentInstance } from './types'
-import { getIcon } from './icons'
+import { createSectionHeader, updateSectionHeaderState } from './section-header'
 
 export class Section implements ComponentInstance {
   private element: HTMLElement
   private contentEl: HTMLElement
+  private headerEl: HTMLElement
   private collapsed: boolean
   private config: SectionConfig
 
@@ -25,6 +25,7 @@ export class Section implements ComponentInstance {
     this.collapsed = config.collapsed ?? false
     this.element = document.createElement('div')
     this.contentEl = document.createElement('div')
+    this.headerEl = document.createElement('div')
     this.render()
   }
 
@@ -37,41 +38,15 @@ export class Section implements ComponentInstance {
       this.element.setAttribute('data-testid', this.config.testId)
     }
 
-    // Header
-    const header = document.createElement('div')
-    header.className = 'section-label pp-label'
+    // Use shared section header component
+    this.headerEl = createSectionHeader({
+      label: this.config.label,
+      expanded: !this.collapsed,
+      className: 'pp-section-header',
+      onToggle: () => this.toggle(),
+    })
 
-    // Label with optional icon
-    const labelContainer = document.createElement('span')
-    labelContainer.className = 'section-label-content'
-
-    if (this.config.icon) {
-      const iconEl = document.createElement('span')
-      iconEl.className = 'section-icon'
-      iconEl.innerHTML = getIcon(this.config.icon as any) || ''
-      labelContainer.appendChild(iconEl)
-    }
-
-    const labelText = document.createElement('span')
-    labelText.textContent = this.config.label
-    labelContainer.appendChild(labelText)
-    header.appendChild(labelContainer)
-
-    // Expand/collapse button
-    const expandBtn = document.createElement('button')
-    expandBtn.className = 'section-expand-btn'
-    expandBtn.innerHTML = `
-      <svg class="icon icon-collapsed" viewBox="0 0 12 12">
-        <path d="M4 2L8 6L4 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <svg class="icon icon-expanded" viewBox="0 0 12 12">
-        <path d="M2 4L6 8L10 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `
-    expandBtn.onclick = () => this.toggle()
-    header.appendChild(expandBtn)
-
-    this.element.appendChild(header)
+    this.element.appendChild(this.headerEl)
 
     // Content container
     this.contentEl.className = 'section-content'
@@ -88,6 +63,7 @@ export class Section implements ComponentInstance {
     this.collapsed = !this.collapsed
     this.element.classList.toggle('expanded', !this.collapsed)
     this.contentEl.style.display = this.collapsed ? 'none' : ''
+    updateSectionHeaderState(this.headerEl, !this.collapsed)
     this.config.onToggle?.(this.collapsed)
   }
 

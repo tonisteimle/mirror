@@ -46,3 +46,11 @@ export {
   type ComponentDragData,
   type ComponentIcon,
 } from './components'
+
+// Settings Panel
+export {
+  SettingsPanel,
+  createSettingsPanel,
+  type SettingsPanelConfig,
+  type SettingsPanelCallbacks,
+} from './settings'

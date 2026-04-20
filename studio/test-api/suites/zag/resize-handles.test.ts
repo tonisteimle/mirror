@@ -438,6 +438,51 @@ export const fullSizeElementResizeTests: TestCase[] = describe(
     ),
 
     testWithSetup(
+      'ROOT element with w full h full has handles at element bounds',
+      // This simulates the App element which fills the preview but may have offset
+      `Frame w full, h full, pad 24, bg #1a1a1a
+  Text "Content inside"`,
+      async (api: TestAPI) => {
+        await api.utils.waitForCompile()
+        api.interact.clearSelection()
+        await api.utils.delay(100)
+
+        // Select the ROOT Frame (node-1)
+        await api.interact.click('node-1')
+        await api.utils.delay(200)
+
+        const rootElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+        if (!rootElement) throw new Error('Root element not found')
+
+        const visualBounds = getVisualBounds(rootElement)
+        const handles = api.interact.getResizeHandles()
+
+        if (handles.length !== 8) {
+          throw new Error(`Expected 8 handles, found ${handles.length}`)
+        }
+
+        const handleBounds = getHandleBounds(handles)
+
+        // Log for debugging
+        console.log('ROOT element test:')
+        console.log('  Element:', visualBounds)
+        console.log('  Handles:', handleBounds)
+
+        const result = compareBounds(visualBounds, handleBounds, TOLERANCE)
+        if (!result.matches) {
+          throw new Error(
+            `ROOT: Resize handles don't match visual bounds:\n` +
+              `${result.errors.join('\n')}\n\n` +
+              `Element: left=${visualBounds.left.toFixed(1)}, top=${visualBounds.top.toFixed(1)}, ` +
+              `width=${visualBounds.width.toFixed(1)}, height=${visualBounds.height.toFixed(1)}\n` +
+              `Handles: left=${handleBounds.left.toFixed(1)}, top=${handleBounds.top.toFixed(1)}, ` +
+              `width=${handleBounds.width.toFixed(1)}, height=${handleBounds.height.toFixed(1)}`
+          )
+        }
+      }
+    ),
+
+    testWithSetup(
       'w full h full element inside parent with padding has handles at element bounds',
       `Frame w 400, h 300, pad 40, bg #333
   Frame w full, h full, bg #ef4444`,

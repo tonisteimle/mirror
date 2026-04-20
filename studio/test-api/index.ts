@@ -50,6 +50,7 @@ import {
 } from './dom-bridge'
 import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
 import { createStudioAPI } from './studio-api'
+import { createSnappingAPI, setupSnappingAPI, type SnappingAPI } from './snapping-api'
 import type { TestCase, TestSuiteResult, ElementInfo } from './types'
 
 const log = createLogger('TestAPI')
@@ -98,6 +99,12 @@ export {
   type FixtureSpec,
   type FixturesAPI,
 } from './fixtures'
+export {
+  createSnappingAPI,
+  getSnappingAPI,
+  setupSnappingAPI,
+  type SnappingAPI,
+} from './snapping-api'
 
 export interface StudioTestAPI {
   /** Wait for any picker to open */
@@ -427,6 +434,10 @@ export interface MirrorTestAPI {
   step: () => void
   /** Abort debug mode */
   abort: () => void
+
+  // Snapping Debug API
+  /** Snapping service debug API */
+  snapping: SnappingAPI
 }
 
 /**
@@ -780,6 +791,9 @@ function createMirrorTestAPI(): MirrorTestAPI {
       }
       console.log('🛑 Aborting debug...')
     },
+
+    // Snapping Debug API
+    snapping: createSnappingAPI(),
   }
 }
 
@@ -793,6 +807,9 @@ export function setupMirrorTestAPI(): void {
   ;(window as any).__mirrorTest = api
 
   enableHoverSimulation()
+
+  // Setup snapping debug API
+  setupSnappingAPI()
 
   // Also expose test suites for CDP access
   setupTestSuites()

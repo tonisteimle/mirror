@@ -475,6 +475,128 @@ export class MarginManager {
     }
   }
 
+  /**
+   * Update handle positions in-place during drag (no remove/recreate)
+   * This prevents visual snap-back flickering
+   */
+  private updateHandlePositionsDuringDrag(): void {
+    if (!this.currentNodeId || !this.activeDrag) return
+
+    const element = this.container.querySelector(
+      `[data-mirror-id="${this.currentNodeId}"]`
+    ) as HTMLElement
+    if (!element) return
+
+    const rect = element.getBoundingClientRect()
+    const containerRect = this.container.getBoundingClientRect()
+
+    const style = window.getComputedStyle(element)
+    const margin = {
+      top: parseInt(style.marginTop || '0', 10),
+      right: parseInt(style.marginRight || '0', 10),
+      bottom: parseInt(style.marginBottom || '0', 10),
+      left: parseInt(style.marginLeft || '0', 10),
+    }
+
+    const relRect = {
+      left: rect.left - containerRect.left,
+      top: rect.top - containerRect.top,
+      width: rect.width,
+      height: rect.height,
+    }
+
+    const hitAreaOffset = (HANDLE_HIT_AREA - HANDLE_VISUAL_SIZE) / 2
+
+    // Update handle positions (margin handles are OUTSIDE the element)
+    for (const handle of this.handles) {
+      const position = handle.dataset?.position as MarginHandle | undefined
+      if (!position) continue // Skip margin areas
+
+      if (position === 'top') {
+        handle.style.left = `${relRect.left - margin.left}px`
+        handle.style.top = `${relRect.top - margin.top - hitAreaOffset}px`
+        handle.style.width = `${relRect.width + margin.left + margin.right}px`
+      } else if (position === 'bottom') {
+        handle.style.left = `${relRect.left - margin.left}px`
+        handle.style.top = `${relRect.top + relRect.height + margin.bottom - hitAreaOffset}px`
+        handle.style.width = `${relRect.width + margin.left + margin.right}px`
+      } else if (position === 'left') {
+        handle.style.left = `${relRect.left - margin.left - hitAreaOffset}px`
+        handle.style.top = `${relRect.top - margin.top}px`
+        handle.style.height = `${relRect.height + margin.top + margin.bottom}px`
+      } else if (position === 'right') {
+        handle.style.left = `${relRect.left + relRect.width + margin.right - hitAreaOffset}px`
+        handle.style.top = `${relRect.top - margin.top}px`
+        handle.style.height = `${relRect.height + margin.top + margin.bottom}px`
+      }
+
+      // Update data-margin attribute
+      if (position === 'top') handle.dataset.margin = String(margin.top)
+      else if (position === 'bottom') handle.dataset.margin = String(margin.bottom)
+      else if (position === 'left') handle.dataset.margin = String(margin.left)
+      else if (position === 'right') handle.dataset.margin = String(margin.right)
+    }
+
+    // Update margin overlay areas
+    this.updateMarginOverlays(relRect, margin)
+  }
+
+  /**
+   * Update margin overlay areas in-place
+   */
+  private updateMarginOverlays(
+    rect: { left: number; top: number; width: number; height: number },
+    margin: { top: number; right: number; bottom: number; left: number }
+  ): void {
+    const areas = this.handles.filter(h => h.classList.contains('margin-area'))
+
+    // We have up to 4 areas: top, bottom, left, right (in that creation order)
+    let areaIndex = 0
+
+    // Top margin area (full width including left/right margins)
+    if (margin.top > 0 && areas[areaIndex]) {
+      Object.assign(areas[areaIndex].style, {
+        left: `${rect.left - margin.left}px`,
+        top: `${rect.top - margin.top}px`,
+        width: `${rect.width + margin.left + margin.right}px`,
+        height: `${margin.top}px`,
+      })
+      areaIndex++
+    }
+
+    // Bottom margin area (full width including left/right margins)
+    if (margin.bottom > 0 && areas[areaIndex]) {
+      Object.assign(areas[areaIndex].style, {
+        left: `${rect.left - margin.left}px`,
+        top: `${rect.top + rect.height}px`,
+        width: `${rect.width + margin.left + margin.right}px`,
+        height: `${margin.bottom}px`,
+      })
+      areaIndex++
+    }
+
+    // Left margin area (excluding top/bottom corners)
+    if (margin.left > 0 && areas[areaIndex]) {
+      Object.assign(areas[areaIndex].style, {
+        left: `${rect.left - margin.left}px`,
+        top: `${rect.top}px`,
+        width: `${margin.left}px`,
+        height: `${rect.height}px`,
+      })
+      areaIndex++
+    }
+
+    // Right margin area (excluding top/bottom corners)
+    if (margin.right > 0 && areas[areaIndex]) {
+      Object.assign(areas[areaIndex].style, {
+        left: `${rect.left + rect.width}px`,
+        top: `${rect.top}px`,
+        width: `${margin.right}px`,
+        height: `${rect.height}px`,
+      })
+    }
+  }
+
   dispose(): void {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId)
@@ -726,7 +848,8 @@ export class MarginManager {
       ;(element.style as any)[marginProp] = `${newMargin}px`
     }
 
-    this.refresh()
+    // Update handle positions in-place (no remove/recreate to prevent flicker)
+    this.updateHandlePositionsDuringDrag()
 
     // Show size indicator
     const rect = element.getBoundingClientRect()

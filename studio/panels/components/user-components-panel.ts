@@ -12,6 +12,7 @@ import type {
   ComponentDragData,
 } from './types'
 import { getComponentIcon } from '../../icons'
+import { createSectionHeader } from '../../components/section-header'
 
 // =============================================================================
 // =============================================================================
@@ -259,10 +260,6 @@ export class UserComponentsPanel {
     return emptyState
   }
 
-  // Chevron SVGs for section toggle
-  private static CHEVRON_RIGHT = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2L8 6L4 10"/></svg>`
-  private static CHEVRON_DOWN = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4L6 8L10 4"/></svg>`
-
   /**
    * Render a section
    */
@@ -271,39 +268,17 @@ export class UserComponentsPanel {
     sectionEl.className = 'user-components-panel-section'
     sectionEl.dataset.section = section.name
 
-    // Section header with toggle
-    const header = document.createElement('div')
-    header.className = 'user-components-panel-section-header'
-
-    const toggle = document.createElement('span')
-    toggle.className = 'user-components-panel-section-toggle'
-    toggle.innerHTML = section.isExpanded
-      ? UserComponentsPanel.CHEVRON_DOWN
-      : UserComponentsPanel.CHEVRON_RIGHT
-
-    const nameSpan = document.createElement('span')
-    nameSpan.className = 'user-components-panel-section-name'
-    nameSpan.textContent = section.name
-
-    const countSpan = document.createElement('span')
-    countSpan.className = 'user-components-panel-section-count'
-    countSpan.textContent = `${section.items.length}`
-
-    header.appendChild(toggle)
-    header.appendChild(nameSpan)
-    header.appendChild(countSpan)
-
-    header.addEventListener(
-      'click',
-      () => {
-        section.isExpanded = !section.isExpanded
-        sectionEl.classList.toggle('collapsed', !section.isExpanded)
-        toggle.innerHTML = section.isExpanded
-          ? UserComponentsPanel.CHEVRON_DOWN
-          : UserComponentsPanel.CHEVRON_RIGHT
+    // Use shared section header component
+    const header = createSectionHeader({
+      label: section.name,
+      expanded: section.isExpanded,
+      count: section.items.length,
+      onToggle: expanded => {
+        section.isExpanded = expanded
+        sectionEl.classList.toggle('collapsed', !expanded)
       },
-      { signal: this.abortController?.signal }
-    )
+    })
+    header.classList.add('user-components-panel-section-header')
 
     sectionEl.appendChild(header)
 

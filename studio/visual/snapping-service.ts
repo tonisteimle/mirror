@@ -86,15 +86,17 @@ export class SnappingService {
   /**
    * Parse spacing tokens from source code
    * Looks for patterns like: s.pad: 4, m.mar: 8, l.gap: 16
+   * Allows optional leading whitespace and optional $ prefix
    */
   private parseSpacingTokens(source: string): SpacingToken[] {
     const tokens: SpacingToken[] = []
-    const lines = source.split('\n')
 
-    // Match patterns like: s.pad: 4 or $s.pad: 4
+    // Match patterns like: s.pad: 4 or $s.pad: 4 (with optional leading whitespace)
+    // ^\\s* allows leading whitespace at start of line
     const suffixes = ['pad', 'mar', 'gap']
     for (const suffix of suffixes) {
-      const regex = new RegExp(`^\\$?([a-zA-Z0-9_-]+)\\.${suffix}\\s*:\\s*(\\d+)`, 'gm')
+      // Allow optional leading whitespace and optional $ prefix
+      const regex = new RegExp(`^\\s*\\$?([a-zA-Z0-9_-]+)\\.${suffix}\\s*:\\s*(\\d+)`, 'gm')
       let match
 
       while ((match = regex.exec(source)) !== null) {

@@ -136,48 +136,8 @@ export class ResizeManager {
       height: elementRect.height,
     }
 
-    // Detect if element fills its parent (for w full / h full)
-    const { fillsWidth, fillsHeight } = this.detectFillsParent(element)
-
     // Create handles using shared helper
-    this.createHandlesForRect(handlesContainer, relRect, {
-      nodeId,
-      borderColor: '#5BA8F5',
-      fillsWidth,
-      fillsHeight,
-    })
-  }
-
-  /**
-   * Detect if an element fills its parent's content area (w full / h full).
-   * This compares element size to parent's inner size (minus padding).
-   */
-  private detectFillsParent(element: HTMLElement): { fillsWidth: boolean; fillsHeight: boolean } {
-    const parent = element.parentElement
-    if (!parent) return { fillsWidth: false, fillsHeight: false }
-
-    const elementRect = element.getBoundingClientRect()
-    const parentRect = parent.getBoundingClientRect()
-    const parentStyle = window.getComputedStyle(parent)
-
-    // Get parent's padding
-    const paddingLeft = parseFloat(parentStyle.paddingLeft) || 0
-    const paddingRight = parseFloat(parentStyle.paddingRight) || 0
-    const paddingTop = parseFloat(parentStyle.paddingTop) || 0
-    const paddingBottom = parseFloat(parentStyle.paddingBottom) || 0
-
-    // Calculate parent's content area (inner size)
-    const parentContentWidth = parentRect.width - paddingLeft - paddingRight
-    const parentContentHeight = parentRect.height - paddingTop - paddingBottom
-
-    // Tolerance for float comparison (1px)
-    const tolerance = 1
-
-    // Check if element fills parent's content area
-    const fillsWidth = Math.abs(elementRect.width - parentContentWidth) < tolerance
-    const fillsHeight = Math.abs(elementRect.height - parentContentHeight) < tolerance
-
-    return { fillsWidth, fillsHeight }
+    this.createHandlesForRect(handlesContainer, relRect, { nodeId, borderColor: '#5BA8F5' })
   }
 
   /**
@@ -192,20 +152,11 @@ export class ResizeManager {
       nodeIds?: string[]
       borderColor?: string
       isMulti?: boolean
-      fillsWidth?: boolean // Element has w full (fills parent)
-      fillsHeight?: boolean // Element has h full (fills parent)
     }
   ): void {
     const borderColor = options.borderColor || '#5BA8F5'
     const handleSize = 8
     const handleHalf = handleSize / 2
-
-    // Get container bounds for clamping handles to visible area
-    const containerWidth = container.clientWidth || this.container.clientWidth
-    const containerHeight = container.clientHeight || this.container.clientHeight
-
-    // Minimum inset from container edge to keep handles visible and grabbable
-    const minInset = 4 // Just enough to be visible
 
     for (const { pos, x, y } of HANDLE_POSITIONS) {
       const handle = document.createElement('div')
@@ -220,38 +171,10 @@ export class ResizeManager {
         handle.dataset.isMulti = 'true'
       }
 
-      // Calculate raw position (centered on element edge)
-      let handleLeft = rect.left + rect.width * x - handleHalf
-      let handleTop = rect.top + rect.height * y - handleHalf
-
-      // Use explicit fills flags if provided (from detectFillsParent),
-      // otherwise fall back to container-edge detection (legacy/multi-select)
-      const elementFillsWidth =
-        options.fillsWidth ?? (rect.left <= 0 && rect.left + rect.width >= containerWidth)
-      const elementFillsHeight =
-        options.fillsHeight ?? (rect.top <= 0 && rect.top + rect.height >= containerHeight)
-
-      // Clamp to keep handles visible and grabbable
-      if (elementFillsWidth) {
-        // Full-width element: clamp handles to element's visible bounds
-        // Use element bounds (rect.left, rect.left + rect.width) not container bounds
-        const minX = rect.left + minInset
-        const maxX = rect.left + rect.width - handleSize - minInset
-        handleLeft = Math.max(minX, Math.min(maxX, handleLeft))
-      } else {
-        // Normal element: just prevent handles from being completely outside container
-        handleLeft = Math.max(-handleHalf, Math.min(containerWidth - handleHalf, handleLeft))
-      }
-
-      if (elementFillsHeight) {
-        // Full-height element: clamp handles to element's visible bounds
-        const minY = rect.top + minInset
-        const maxY = rect.top + rect.height - handleSize - minInset
-        handleTop = Math.max(minY, Math.min(maxY, handleTop))
-      } else {
-        // Normal element: just prevent handles from being completely outside container
-        handleTop = Math.max(-handleHalf, Math.min(containerHeight - handleHalf, handleTop))
-      }
+      // Calculate position (centered on element edge)
+      // Handles are ALWAYS positioned at the element bounds - no clamping
+      const handleLeft = rect.left + rect.width * x - handleHalf
+      const handleTop = rect.top + rect.height * y - handleHalf
 
       Object.assign(handle.style, {
         position: 'absolute',
@@ -681,41 +604,15 @@ export class ResizeManager {
 
     const handleSize = 8
     const handleHalf = handleSize / 2
-    const minInset = 4 // Keep handles grabbable (just enough to be visible)
-    const containerWidth = this.container.clientWidth
-    const containerHeight = this.container.clientHeight
 
-    // Detect if element fills parent (for w full / h full)
-    const { fillsWidth, fillsHeight } = this.detectFillsParent(element)
-
-    // Update handle positions using shared constant
+    // Update handle positions - always at element bounds, no clamping
     this.handles.forEach(handle => {
       const pos = handle.dataset.position as ResizeHandle
       const position = HANDLE_POSITION_MAP[pos]
       if (!position) return
 
-      // Calculate position
-      let handleLeft = relRect.left + relRect.width * position.x - handleHalf
-      let handleTop = relRect.top + relRect.height * position.y - handleHalf
-
-      // Clamp handles to keep them visible
-      if (fillsWidth) {
-        // Full-width element: clamp handles to element's visible bounds
-        const minX = relRect.left + minInset
-        const maxX = relRect.left + relRect.width - handleSize - minInset
-        handleLeft = Math.max(minX, Math.min(maxX, handleLeft))
-      } else {
-        handleLeft = Math.max(-handleHalf, Math.min(containerWidth - handleHalf, handleLeft))
-      }
-
-      if (fillsHeight) {
-        // Full-height element: clamp handles to element's visible bounds
-        const minY = relRect.top + minInset
-        const maxY = relRect.top + relRect.height - handleSize - minInset
-        handleTop = Math.max(minY, Math.min(maxY, handleTop))
-      } else {
-        handleTop = Math.max(-handleHalf, Math.min(containerHeight - handleHalf, handleTop))
-      }
+      const handleLeft = relRect.left + relRect.width * position.x - handleHalf
+      const handleTop = relRect.top + relRect.height * position.y - handleHalf
 
       handle.style.left = `${handleLeft}px`
       handle.style.top = `${handleTop}px`
@@ -969,11 +866,8 @@ export class ResizeManager {
 
     const handleSize = 8
     const handleHalf = handleSize / 2
-    const minInset = 4 // Keep handles grabbable (just enough to be visible)
-    const containerWidth = this.container.clientWidth
-    const containerHeight = this.container.clientHeight
 
-    // Update handle positions using shared constant
+    // Update handle positions - always at bounds, no clamping
     this.handles.forEach(handle => {
       const pos = handle.dataset.position as ResizeHandle
       if (!pos || handle.className.includes('outline')) return
@@ -981,28 +875,8 @@ export class ResizeManager {
       const position = HANDLE_POSITION_MAP[pos]
       if (!position) return
 
-      // Calculate position
-      let handleLeft = newX + newWidth * position.x - handleHalf
-      let handleTop = newY + newHeight * position.y - handleHalf
-
-      // Only clamp handles for full-size elements that fill the entire container dimension
-      const elementFillsWidth = newX <= 0 && newX + newWidth >= containerWidth
-      const elementFillsHeight = newY <= 0 && newY + newHeight >= containerHeight
-
-      if (elementFillsWidth) {
-        handleLeft = Math.max(
-          minInset,
-          Math.min(containerWidth - handleSize - minInset, handleLeft)
-        )
-      } else {
-        handleLeft = Math.max(-handleHalf, Math.min(containerWidth - handleHalf, handleLeft))
-      }
-
-      if (elementFillsHeight) {
-        handleTop = Math.max(minInset, Math.min(containerHeight - handleSize - minInset, handleTop))
-      } else {
-        handleTop = Math.max(-handleHalf, Math.min(containerHeight - handleHalf, handleTop))
-      }
+      const handleLeft = newX + newWidth * position.x - handleHalf
+      const handleTop = newY + newHeight * position.y - handleHalf
 
       handle.style.left = `${handleLeft}px`
       handle.style.top = `${handleTop}px`

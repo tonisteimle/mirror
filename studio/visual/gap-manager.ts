@@ -461,6 +461,124 @@ export class GapManager {
     }
   }
 
+  /**
+   * Update handle positions in-place during drag (no remove/recreate)
+   * This prevents visual snap-back flickering
+   */
+  private updateHandlePositionsDuringDrag(): void {
+    if (!this.currentNodeId || !this.activeDrag) return
+
+    const element = this.container.querySelector(
+      `[data-mirror-id="${this.currentNodeId}"]`
+    ) as HTMLElement
+    if (!element) return
+
+    const style = window.getComputedStyle(element)
+    const display = style.display
+    if (display !== 'flex' && display !== 'grid' && display !== 'inline-flex') return
+
+    const children = Array.from(element.children).filter(
+      child => child instanceof HTMLElement && child.hasAttribute('data-mirror-id')
+    ) as HTMLElement[]
+
+    if (children.length < 2) return
+
+    const containerRect = this.container.getBoundingClientRect()
+    const elementRect = element.getBoundingClientRect()
+
+    const flexDirection = style.flexDirection
+    const direction: 'horizontal' | 'vertical' =
+      flexDirection === 'row' || flexDirection === 'row-reverse' ? 'horizontal' : 'vertical'
+
+    const gap = this.activeDrag.currentGap
+
+    const parentRect = {
+      left: elementRect.left - containerRect.left,
+      top: elementRect.top - containerRect.top,
+      width: elementRect.width,
+      height: elementRect.height,
+    }
+
+    // Calculate child rects
+    const childRects = children.map(child => {
+      const rect = child.getBoundingClientRect()
+      return {
+        rect,
+        relRect: {
+          left: rect.left - containerRect.left,
+          top: rect.top - containerRect.top,
+          width: rect.width,
+          height: rect.height,
+        },
+      }
+    })
+
+    // Sort children by position
+    if (direction === 'horizontal') {
+      childRects.sort((a, b) => a.rect.left - b.rect.left)
+    } else {
+      childRects.sort((a, b) => a.rect.top - b.rect.top)
+    }
+
+    const hitAreaOffset = (HANDLE_HIT_AREA - HANDLE_VISUAL_SIZE) / 2
+    const isHorizontal = direction === 'horizontal'
+
+    // Update gap handles
+    const gapHandles = this.handles.filter(h => h.dataset?.gapIndex !== undefined)
+    const gapAreas = this.handles.filter(h => h.classList.contains('gap-area'))
+
+    for (let i = 0; i < childRects.length - 1; i++) {
+      const current = childRects[i]
+      const next = childRects[i + 1]
+      const handle = gapHandles[i]
+      const area = gapAreas[i]
+
+      if (direction === 'horizontal') {
+        const gapStart = current.relRect.left + current.relRect.width
+        const gapEnd = next.relRect.left
+        const gapWidth = gapEnd - gapStart
+        const handleX = (gapStart + gapEnd) / 2
+
+        if (handle) {
+          handle.style.left = `${handleX - hitAreaOffset}px`
+          handle.style.top = `${parentRect.top}px`
+          handle.style.height = `${parentRect.height}px`
+          handle.dataset.gap = String(gap)
+        }
+
+        if (area && gapWidth > 0) {
+          Object.assign(area.style, {
+            left: `${gapStart}px`,
+            top: `${parentRect.top}px`,
+            width: `${gapWidth}px`,
+            height: `${parentRect.height}px`,
+          })
+        }
+      } else {
+        const gapStart = current.relRect.top + current.relRect.height
+        const gapEnd = next.relRect.top
+        const gapHeight = gapEnd - gapStart
+        const handleY = (gapStart + gapEnd) / 2
+
+        if (handle) {
+          handle.style.left = `${parentRect.left}px`
+          handle.style.top = `${handleY - hitAreaOffset}px`
+          handle.style.width = `${parentRect.width}px`
+          handle.dataset.gap = String(gap)
+        }
+
+        if (area && gapHeight > 0) {
+          Object.assign(area.style, {
+            left: `${parentRect.left}px`,
+            top: `${gapStart}px`,
+            width: `${parentRect.width}px`,
+            height: `${gapHeight}px`,
+          })
+        }
+      }
+    }
+  }
+
   dispose(): void {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId)
@@ -670,8 +788,8 @@ export class GapManager {
     // Apply gap to element
     element.style.gap = `${newGap}px`
 
-    // Update handle positions
-    this.refresh()
+    // Update handle positions in-place (no remove/recreate to prevent flicker)
+    this.updateHandlePositionsDuringDrag()
 
     // Show size indicator
     const rect = element.getBoundingClientRect()

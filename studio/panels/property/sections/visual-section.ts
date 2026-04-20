@@ -5,7 +5,12 @@
  * cursor dropdown, z-index input, and visibility toggles.
  */
 
-import { BaseSection, type SectionDependencies, type SectionData, type EventHandlerMap } from '../base/section'
+import {
+  BaseSection,
+  type SectionDependencies,
+  type SectionData,
+  type EventHandlerMap,
+} from '../base/section'
 import { PROPERTY_ICONS } from '../../../icons'
 
 /**
@@ -62,7 +67,9 @@ export class VisualSection extends BaseSection {
 
     return `
       <div class="pp-section">
-        <div class="pp-label">Visual</div>
+        <div class="section-header pp-section-header">
+          <span class="section-header-label">Visual</span>
+        </div>
         <div class="pp-visual-row">
           <span class="pp-visual-label">Shadow</span>
           <div class="pp-shadow-group">
@@ -113,8 +120,8 @@ export class VisualSection extends BaseSection {
   }
 
   private renderCursorSelect(cursorValue: string): string {
-    const options = CURSOR_OPTIONS.map(opt =>
-      `<option value="${opt}" ${opt === cursorValue ? 'selected' : ''}>${opt}</option>`
+    const options = CURSOR_OPTIONS.map(
+      opt => `<option value="${opt}" ${opt === cursorValue ? 'selected' : ''}>${opt}</option>`
     ).join('')
 
     return `
@@ -125,10 +132,14 @@ export class VisualSection extends BaseSection {
     `
   }
 
-  private renderVisibilityToggles(props: Array<{ name: string; value: string; hasValue?: boolean }>): string {
+  private renderVisibilityToggles(
+    props: Array<{ name: string; value: string; hasValue?: boolean }>
+  ): string {
     return VISIBILITY_PROPS.map(prop => {
       const propObj = props.find(p => p.name === prop)
-      const isActive = propObj && (propObj.value === 'true' || (propObj.value === '' && propObj.hasValue !== false))
+      const isActive =
+        propObj &&
+        (propObj.value === 'true' || (propObj.value === '' && propObj.hasValue !== false))
       const iconPath = PROPERTY_ICONS[prop as keyof typeof PROPERTY_ICONS]
       return `
         <button class="pp-visibility-toggle ${isActive ? 'active' : ''}" data-visibility="${prop}" title="${prop}">
@@ -146,7 +157,7 @@ export class VisualSection extends BaseSection {
           if (shadow) {
             this.deps.onPropertyChange('shadow', shadow === 'none' ? '' : shadow, 'toggle')
           }
-        }
+        },
       },
       '.pp-opacity-preset[data-opacity]': {
         click: (e: Event, target: HTMLElement) => {
@@ -154,25 +165,25 @@ export class VisualSection extends BaseSection {
           if (opacity) {
             this.deps.onPropertyChange('opacity', opacity, 'preset')
           }
-        }
+        },
       },
       'input[data-prop="opacity"]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           this.deps.onPropertyChange('opacity', input.value, 'input')
-        }
+        },
       },
       'select[data-prop="cursor"]': {
         change: (e: Event, target: HTMLElement) => {
           const select = target as HTMLSelectElement
           this.deps.onPropertyChange('cursor', select.value, 'select')
-        }
+        },
       },
       'input[data-prop="z"]': {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           this.deps.onPropertyChange('z', input.value, 'input')
-        }
+        },
       },
       '.pp-visibility-toggle[data-visibility]': {
         click: (e: Event, target: HTMLElement) => {
@@ -180,8 +191,8 @@ export class VisualSection extends BaseSection {
           if (prop) {
             this.deps.onToggleProperty(prop, target.classList.contains('active'))
           }
-        }
-      }
+        },
+      },
     }
   }
 }

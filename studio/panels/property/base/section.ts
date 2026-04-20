@@ -111,12 +111,15 @@ export abstract class BaseSection {
 
   /**
    * Helper: Render a section wrapper
+   * Uses shared section-header classes for consistency with Components Panel
    */
   protected renderSectionWrapper(content: string, extraClass?: string): string {
     const classes = ['pp-section', extraClass].filter(Boolean).join(' ')
     return `
       <div class="${classes}">
-        <div class="pp-label">${this.deps.escapeHtml(this.config.label)}</div>
+        <div class="section-header pp-section-header">
+          <span class="section-header-label">${this.deps.escapeHtml(this.config.label)}</span>
+        </div>
         ${content}
       </div>
     `

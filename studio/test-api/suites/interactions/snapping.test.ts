@@ -83,6 +83,256 @@ function getElementDimensions(nodeId: string): { width: number; height: number }
 }
 
 // =============================================================================
+// Snapping Diagnostic - runs first to check service state
+// =============================================================================
+
+export const snappingDiagnosticTests: TestCase[] = describe('Snapping Diagnostic', [
+  testWithSetup(
+    'DIAGNOSTIC: Token parsing with various formats',
+    // Test different token formats
+    `// Standard format
+s.pad: 4
+m.pad: 8
+l.pad: 16
+
+// With $ prefix
+$xs.pad: 2
+$xl.pad: 24
+
+// Margin tokens
+s.mar: 4
+m.mar: 8
+
+// Gap tokens
+s.gap: 4
+m.gap: 8
+
+Frame pad 10, bg #1a1a1a, w 200, h 150
+  Text "Content"`,
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      await api.utils.delay(200)
+
+      const snapping = (window as any).__snapping
+      if (!snapping) {
+        throw new Error('Snapping API not available')
+      }
+
+      console.log('\n========================================')
+      console.log('TOKEN PARSING DIAGNOSTIC')
+      console.log('========================================')
+
+      const debugInfo = snapping.getDebugInfo()
+
+      console.log('\nParsed tokens:')
+      console.log(
+        '- Padding:',
+        debugInfo.tokens.pad.map((t: any) => `${t.name}=${t.value}`).join(', ')
+      )
+      console.log(
+        '- Margin:',
+        debugInfo.tokens.mar.map((t: any) => `${t.name}=${t.value}`).join(', ')
+      )
+      console.log('- Gap:', debugInfo.tokens.gap.map((t: any) => `${t.name}=${t.value}`).join(', '))
+
+      // Should find all padding tokens: s=4, m=8, l=16, xs=2, xl=24
+      api.assert.ok(
+        debugInfo.tokens.pad.length >= 5,
+        `Should find at least 5 padding tokens, found ${debugInfo.tokens.pad.length}: ${debugInfo.tokens.pad.map((t: any) => t.name).join(', ')}`
+      )
+
+      // Should find margin tokens: s=4, m=8
+      api.assert.ok(
+        debugInfo.tokens.mar.length >= 2,
+        `Should find at least 2 margin tokens, found ${debugInfo.tokens.mar.length}`
+      )
+
+      // Should find gap tokens: s=4, m=8
+      api.assert.ok(
+        debugInfo.tokens.gap.length >= 2,
+        `Should find at least 2 gap tokens, found ${debugInfo.tokens.gap.length}`
+      )
+
+      console.log('\n========================================\n')
+    }
+  ),
+
+  testWithSetup(
+    'DIAGNOSTIC: Check snapping service initialization and token parsing',
+    // Define spacing tokens: s.pad: 4, m.pad: 8, l.pad: 16
+    's.pad: 4\nm.pad: 8\nl.pad: 16\ns.mar: 4\nm.mar: 8\n\nFrame pad 10, bg #1a1a1a, w 200, h 150\n  Text "Content"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      await api.utils.delay(200)
+
+      // Get snapping API
+      const snapping = (window as any).__snapping
+      if (!snapping) {
+        throw new Error('Snapping API not available at window.__snapping')
+      }
+
+      // Log full state
+      console.log('\n========================================')
+      console.log('SNAPPING DIAGNOSTIC TEST')
+      console.log('========================================')
+      snapping.logState()
+
+      // Get debug info
+      const debugInfo = snapping.getDebugInfo()
+      console.log('\nDebug Info:', JSON.stringify(debugInfo, null, 2))
+
+      // Test snap
+      console.log('\n--- Testing snap(10, "pad") ---')
+      const snapResult = snapping.testSnap(10, 'pad')
+      console.log('Snap result:', JSON.stringify(snapResult, null, 2))
+
+      // Assertions
+      api.assert.ok(debugInfo.initialized, 'Snapping service should be initialized')
+
+      api.assert.ok(
+        debugInfo.tokens.pad.length > 0,
+        `Should have padding tokens, got ${debugInfo.tokens.pad.length}`
+      )
+
+      api.assert.ok(debugInfo.settings.handleSnap.enabled, 'Handle snap should be enabled')
+
+      api.assert.ok(debugInfo.settings.handleSnap.tokenSnapping, 'Token snapping should be enabled')
+
+      // Value 10 should be within threshold (4) of value 8
+      api.assert.ok(
+        snapResult.result.snapped,
+        `Value 10 should snap to 8 (within threshold 4), but snapped=${snapResult.result.snapped}`
+      )
+
+      api.assert.ok(
+        snapResult.result.value === 8,
+        `Snapped value should be 8, got ${snapResult.result.value}`
+      )
+
+      console.log('\n========================================')
+      console.log('DIAGNOSTIC COMPLETE')
+      console.log('========================================\n')
+    }
+  ),
+
+  testWithSetup(
+    'DIAGNOSTIC: Test actual padding drag with snapping',
+    's.pad: 4\nm.pad: 8\nl.pad: 16\n\nFrame pad 10, bg #1a1a1a, w 200, h 150\n  Text "Content"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      await api.interact.pressKey('Escape')
+      await api.utils.delay(200)
+
+      const snapping = (window as any).__snapping
+      if (!snapping) {
+        throw new Error('Snapping API not available')
+      }
+
+      // Get sources for comparison
+      const editorSource = api.editor.getCode()
+      const stateSource = (window as any).__mirrorStudio__?.state?.get?.()?.source ?? 'N/A'
+
+      console.log('\n========================================')
+      console.log('ACTUAL DRAG DIAGNOSTIC')
+      console.log('========================================')
+
+      console.log('\n0. SOURCE COMPARISON:')
+      console.log('Editor source length:', editorSource.length)
+      console.log('State source length:', stateSource.length)
+      console.log('Sources match:', editorSource === stateSource)
+      console.log('Editor source (first 200 chars):', editorSource.substring(0, 200))
+      console.log('State source (first 200 chars):', stateSource.substring(0, 200))
+
+      // Check initial state (BEFORE reinit)
+      console.log('\n1. Initial state (BEFORE reinit):')
+      snapping.logState()
+
+      const debugInfoBefore = snapping.getDebugInfo()
+      console.log('Tokens found BEFORE reinit:', debugInfoBefore.tokens.pad.length)
+
+      // DO NOT reinit - test the actual state
+      // snapping.reinit()
+      // console.log('\n2. After reinit:')
+      // snapping.logState()
+
+      const initialPadding = getComputedPadding('node-1')
+      console.log(`\n3. Initial computed padding: ${JSON.stringify(initialPadding)}`)
+
+      // Enter padding mode
+      await api.interact.enterPaddingMode('node-1')
+      await api.utils.delay(200)
+
+      console.log('\n4. Entered padding mode')
+
+      // Get handle
+      const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
+      if (!topHandle) {
+        throw new Error('Top padding handle not found')
+      }
+
+      const handleRect = topHandle.getBoundingClientRect()
+      const startX = handleRect.left + handleRect.width / 2
+      const startY = handleRect.top + handleRect.height / 2
+
+      console.log(`\n5. Handle position: (${startX}, ${startY})`)
+
+      // Simulate drag
+      console.log('\n6. Starting drag...')
+      topHandle.dispatchEvent(
+        new MouseEvent('mousedown', {
+          bubbles: true,
+          clientX: startX,
+          clientY: startY,
+        })
+      )
+
+      // Move to create delta that should snap to 8
+      // Moving up by 2 should change padding from 10 to 8 (within threshold)
+      console.log('\n7. Moving mouse up by 2px...')
+      document.dispatchEvent(
+        new MouseEvent('mousemove', {
+          bubbles: true,
+          clientX: startX,
+          clientY: startY - 2,
+        })
+      )
+
+      await api.utils.delay(200)
+
+      // Check live padding during drag
+      const duringDragPadding = getComputedPadding('node-1')
+      console.log(`\n8. Padding during drag: ${JSON.stringify(duringDragPadding)}`)
+
+      // End drag
+      console.log('\n9. Ending drag...')
+      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+      await api.utils.waitForCompile()
+      await api.utils.delay(200)
+
+      // Check final padding
+      const finalPadding = getComputedPadding('node-1')
+      console.log(`\n10. Final padding: ${JSON.stringify(finalPadding)}`)
+
+      // Check the source code
+      const code = api.editor.getCode()
+      console.log(`\n11. Final code:\n${code}`)
+
+      console.log('\n========================================')
+      console.log('DRAG DIAGNOSTIC COMPLETE')
+      console.log('========================================\n')
+
+      // The key assertion - did it snap to 8?
+      api.assert.ok(
+        finalPadding.top === 8,
+        `Padding should have snapped to token value 8, but got ${finalPadding.top}. ` +
+          `During drag was: ${duringDragPadding.top}`
+      )
+    }
+  ),
+])
+
+// =============================================================================
 // Token Snapping - Padding
 // =============================================================================
 
@@ -853,6 +1103,7 @@ export const tokenPriorityTests: TestCase[] = describe('Token Priority over Grid
 // =============================================================================
 
 export const allSnappingTests: TestCase[] = [
+  ...snappingDiagnosticTests,
   ...paddingTokenSnappingTests,
   ...marginTokenSnappingTests,
   ...gapTokenSnappingTests,
