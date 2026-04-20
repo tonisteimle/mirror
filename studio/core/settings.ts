@@ -206,6 +206,8 @@ export interface HandleSnapSettings {
   threshold: number
   /** Maximum value for handles */
   maxValue: number
+  /** Token snapping enabled (snap to design tokens) */
+  tokenSnapping: boolean
 }
 
 const DEFAULT_HANDLE_SNAP: HandleSnapSettings = {
@@ -214,6 +216,7 @@ const DEFAULT_HANDLE_SNAP: HandleSnapSettings = {
   customPoints: [],
   threshold: 4,
   maxValue: 200,
+  tokenSnapping: true,
 }
 
 // In-memory state
@@ -254,12 +257,21 @@ export const handleSnapSettings = {
   },
 
   /**
+   * Toggle token snapping on/off
+   */
+  toggleTokenSnapping(): boolean {
+    const newValue = !currentHandleSnapSettings.tokenSnapping
+    this.set({ tokenSnapping: newValue })
+    return newValue
+  },
+
+  /**
    * Add custom snap point
    */
   addCustomPoint(value: number): void {
     if (!currentHandleSnapSettings.customPoints.includes(value)) {
       this.set({
-        customPoints: [...currentHandleSnapSettings.customPoints, value].sort((a, b) => a - b)
+        customPoints: [...currentHandleSnapSettings.customPoints, value].sort((a, b) => a - b),
       })
     }
   },
@@ -269,7 +281,7 @@ export const handleSnapSettings = {
    */
   removeCustomPoint(value: number): void {
     this.set({
-      customPoints: currentHandleSnapSettings.customPoints.filter(p => p !== value)
+      customPoints: currentHandleSnapSettings.customPoints.filter(p => p !== value),
     })
   },
 

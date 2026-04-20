@@ -146,3 +146,18 @@ export {
   type SnapConfig,
   type SnapContext,
 } from './models/snap'
+
+// Snapping Service (token and grid snapping)
+export {
+  SnappingService,
+  getSnappingService,
+  initSnappingService,
+  resetSnappingService,
+  shouldBypassSnapping,
+  type SnapResult,
+  type SpacingToken,
+  type SpacingPropertyType,
+} from './snapping-service'
+
+// Snap Indicator (visual feedback)
+export { SnapIndicator, createSnapIndicator, type SnapIndicatorConfig } from './snap-indicator'

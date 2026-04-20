@@ -23,6 +23,7 @@ import { ResizeManager, createResizeManager, type SizingMode } from '../visual/r
 import { PaddingManager, createPaddingManager, type PaddingHandle } from '../visual/padding-manager'
 import { MarginManager, createMarginManager, type MarginHandle } from '../visual/margin-manager'
 import { GapManager, createGapManager } from '../visual/gap-manager'
+import { initSnappingService, resetSnappingService } from '../visual/snapping-service'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
 import { DragPreview, createDragPreview } from './drag-preview'
 
@@ -337,6 +338,11 @@ export class PreviewController {
   /** Initialize the Visual Code System (overlay + resize + padding + margin + gap) */
   private initVisualCodeSystem(): void {
     this.overlayManager = createOverlayManager({ container: this.container })
+
+    // Initialize snapping service for token and grid snapping
+    // Uses the editor source for token lookup
+    initSnappingService(() => state.get().source || '')
+
     this.resizeManager = createResizeManager({
       container: this.container,
       overlayManager: this.overlayManager,
@@ -850,6 +856,7 @@ export class PreviewController {
     this.marginManager?.dispose()
     this.gapManager?.dispose()
     this.overlayManager?.dispose()
+    resetSnappingService()
     this.resizeManager = null
     this.paddingManager = null
     this.gapManager = null

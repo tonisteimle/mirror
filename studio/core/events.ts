@@ -113,18 +113,36 @@ export interface StudioEvents {
   /** Padding handle events */
   'handles:toggle-padding': { nodeId: string }
   'padding:start': { nodeId: string; handle: string; startPadding: number; mode: string }
-  'padding:move': { nodeId: string; handle: string; mode: string; padding: number }
-  'padding:end': { nodeId: string; handle: string; mode: string; padding: number }
+  'padding:move': {
+    nodeId: string
+    handle: string
+    mode: string
+    padding: number
+    tokenName?: string
+  }
+  'padding:end': {
+    nodeId: string
+    handle: string
+    mode: string
+    padding: number
+    tokenName?: string
+  }
   /** Margin handle events */
   'handles:toggle-margin': { nodeId: string }
   'margin:start': { nodeId: string; handle: string; startMargin: number; mode: string }
-  'margin:move': { nodeId: string; handle: string; mode: string; margin: number }
-  'margin:end': { nodeId: string; handle: string; mode: string; margin: number }
+  'margin:move': {
+    nodeId: string
+    handle: string
+    mode: string
+    margin: number
+    tokenName?: string
+  }
+  'margin:end': { nodeId: string; handle: string; mode: string; margin: number; tokenName?: string }
   /** Gap handle events */
   'handles:toggle-gap': { nodeId: string }
   'gap:start': { nodeId: string; gapIndex: number; startGap: number }
-  'gap:move': { nodeId: string; gap: number }
-  'gap:end': { nodeId: string; gap: number }
+  'gap:move': { nodeId: string; gap: number; tokenName?: string }
+  'gap:end': { nodeId: string; gap: number; tokenName?: string }
   /** Handle mode changed */
   'handleMode:changed': { mode: string; prevMode: string }
   /** Multi-selection resize events (Feature 4) */
@@ -268,6 +286,20 @@ export interface StudioEvents {
   'rename:undone': { oldName: string; newName: string; symbolType: 'component' | 'token' }
   /** File update requested (from rename or other cross-file operations) */
   'file:update-requested': { filename: string; content: string }
+  /** Draft mode events (AI-assisted code editing with -- marker) */
+  'draft:submit': {
+    prompt: string | null
+    startLine: number
+    endLine: number
+    indent: number
+    content: string
+    fullSource: string
+    abortController: AbortController
+  }
+  'draft:processing': { startLine: number }
+  'draft:completed': { startLine: number; endLine: number; code: string }
+  'draft:cancelled': { startLine: number; reason: string }
+  'draft:ai-response': { code: string; error?: string }
 }
 
 /** Component Panel item (simplified for event typing) */

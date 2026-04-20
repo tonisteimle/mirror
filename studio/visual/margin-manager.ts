@@ -14,6 +14,8 @@
 import { OverlayManager } from './overlay-manager'
 import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
+import { getSnappingService, shouldBypassSnapping, type SnapResult } from './snapping-service'
+import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 2 // Visible line: 2px (1px is too thin to see)
@@ -37,6 +39,8 @@ export interface MarginState {
   element: HTMLElement
   // Store all start margins for multi-side adjustments
   startMargins: { top: number; right: number; bottom: number; left: number }
+  // Last snap result for visual feedback
+  lastSnapResult?: SnapResult
 }
 
 export interface MarginManagerConfig {
@@ -76,6 +80,9 @@ export class MarginManager {
   // Debounce timer for refresh
   private refreshDebounceId: number | null = null
 
+  // Snap indicator for visual feedback
+  private snapIndicator: SnapIndicator | null = null
+
   constructor(config: MarginManagerConfig) {
     this.container = config.container
     this.overlayManager = config.overlayManager
@@ -88,6 +95,11 @@ export class MarginManager {
 
     this.setupEventListeners()
     this.setupObservers()
+
+    // Initialize snap indicator
+    this.snapIndicator = createSnapIndicator({
+      container: this.overlayManager.getResizeHandlesContainer(),
+    })
   }
 
   // ============================================================================
@@ -116,6 +128,9 @@ export class MarginManager {
   showHandles(nodeId: string): void {
     this.hideHandles()
     this.currentNodeId = nodeId
+
+    // Ensure event listeners are on the current container (handles overlay recreation)
+    this.setupEventListeners()
 
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return
@@ -473,6 +488,7 @@ export class MarginManager {
     this.hideHandles()
     this.removeEventListeners()
     this.removeObservers()
+    this.snapIndicator?.dispose()
   }
 
   // ============================================================================
@@ -480,10 +496,26 @@ export class MarginManager {
   // ============================================================================
 
   private setupEventListeners(): void {
-    this.handlesContainerRef = this.overlayManager.getResizeHandlesContainer()
-    this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
-    document.addEventListener('mousemove', this.boundMouseMove)
-    document.addEventListener('mouseup', this.boundMouseUp)
+    // Get the current handles container
+    const currentContainer = this.overlayManager.getResizeHandlesContainer()
+
+    // Only update if container has changed (overlay was recreated)
+    if (this.handlesContainerRef !== currentContainer) {
+      // Remove old listener if exists
+      if (this.handlesContainerRef) {
+        this.handlesContainerRef.removeEventListener('mousedown', this.boundMouseDown)
+      }
+      // Attach to new container
+      this.handlesContainerRef = currentContainer
+      this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
+    }
+
+    // Document listeners only need to be set once (they're on document, which is stable)
+    if (!(this as any)._documentListenersAdded) {
+      document.addEventListener('mousemove', this.boundMouseMove)
+      document.addEventListener('mouseup', this.boundMouseUp)
+      ;(this as any)._documentListenersAdded = true
+    }
   }
 
   private setupObservers(): void {
@@ -647,8 +679,33 @@ export class MarginManager {
       delta = e.clientX - startX // Dragging right increases right margin
     }
 
-    const newMargin = Math.max(0, startMargin + delta)
+    let newMargin = Math.max(0, startMargin + delta)
+
+    // Token snapping (unless Cmd/Ctrl held to bypass)
+    let snapResult: SnapResult | undefined
+    if (!shouldBypassSnapping(e)) {
+      const snappingService = getSnappingService()
+      if (snappingService) {
+        snapResult = snappingService.snapSpacing(newMargin, 'mar')
+        if (snapResult.snapped) {
+          newMargin = snapResult.value
+
+          // Show snap indicator
+          if (snapResult.tokenName && this.snapIndicator) {
+            this.snapIndicator.showTokenSnap(e.clientX, e.clientY, snapResult.tokenName)
+          }
+        } else {
+          // Hide indicator if no snap
+          this.snapIndicator?.hide()
+        }
+      }
+    } else {
+      // Bypass snapping - hide indicator
+      this.snapIndicator?.hide()
+    }
+
     this.activeDrag.currentMargin = newMargin
+    this.activeDrag.lastSnapResult = snapResult
 
     // Live visual feedback
     if (mode === 'all') {
@@ -682,11 +739,14 @@ export class MarginManager {
     } else {
       label = `mar-${handle[0]}`
     }
+
+    // Show token name in indicator if snapped
+    const valueDisplay = snapResult?.tokenName || `${newMargin}px`
     this.overlayManager.showSizeIndicator(
       rect.left - containerRect.left + rect.width / 2,
       rect.top - containerRect.top + rect.height / 2,
       label,
-      `${newMargin}px`
+      valueDisplay
     )
 
     events.emit('margin:move', {
@@ -694,6 +754,7 @@ export class MarginManager {
       handle,
       mode,
       margin: newMargin,
+      tokenName: snapResult?.tokenName,
     })
   }
 
@@ -706,16 +767,18 @@ export class MarginManager {
 
     if (!this.activeDrag) return
 
-    const { nodeId, handle, mode, currentMargin } = this.activeDrag
+    const { nodeId, handle, mode, currentMargin, lastSnapResult } = this.activeDrag
 
     document.body.style.cursor = ''
     this.overlayManager.hideSizeIndicator()
+    this.snapIndicator?.hide()
 
     events.emit('margin:end', {
       nodeId,
       handle,
       mode,
       margin: currentMargin,
+      tokenName: lastSnapResult?.tokenName,
     })
 
     this.activeDrag = null

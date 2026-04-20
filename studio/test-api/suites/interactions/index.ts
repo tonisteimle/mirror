@@ -141,3 +141,15 @@ export {
   modifierTests as spreadModifierTests,
   combinedTests as spreadCombinedTests,
 } from './spread-toggle.test'
+
+export {
+  allSnappingTests,
+  paddingTokenSnappingTests,
+  marginTokenSnappingTests,
+  gapTokenSnappingTests,
+  resizeGridSnappingTests,
+  snappingBypassTests,
+  snapIndicatorTests,
+  gridSnappingFallbackTests,
+  tokenPriorityTests,
+} from './snapping.test'

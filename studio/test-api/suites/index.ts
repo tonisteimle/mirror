@@ -156,6 +156,15 @@ import {
   spreadEdgeCaseTests,
   spreadModifierTests,
   spreadCombinedTests,
+  allSnappingTests,
+  paddingTokenSnappingTests,
+  marginTokenSnappingTests,
+  gapTokenSnappingTests,
+  resizeGridSnappingTests,
+  snappingBypassTests,
+  snapIndicatorTests,
+  gridSnappingFallbackTests,
+  tokenPriorityTests,
 } from './interactions'
 
 // Bidirectional
@@ -513,6 +522,52 @@ import {
   visualVerificationTests,
 } from './draft-lines'
 
+// Draft Mode (-- marker for AI code generation)
+import {
+  allDraftModeTests,
+  allBasicDraftModeTests,
+  allVisualDraftModeTests,
+  allAutocompleteDraftModeTests,
+  allScenarioDraftModeTests,
+  detectionTests as draftModeDetectionTests,
+  indentationTests as draftModeIndentationTests,
+  blockStructureTests as draftModeBlockTests,
+  lineDetectionTests as draftModeLineTests,
+  dynamicEditingTests as draftModeDynamicTests,
+  cssClassTests as draftModeCssTests,
+  mutedColorTests as draftModeMutedTests,
+  dynamicVisualTests as draftModeVisualDynamicTests,
+  suppressionTests as draftModeSuppressionTests,
+  pickerTests as draftModePickerTests,
+  generationTests as draftModeGenerationTests,
+  correctionTests as draftModeCorrectionTests,
+  refactoringTests as draftModeRefactoringTests,
+  workflowTests as draftModeWorkflowTests,
+  contextTests as draftModeContextTests,
+  quickDraftModeTests,
+} from './draft-mode'
+
+// Tutorial Tests (auto-generated from docs/tutorial/*.html)
+import {
+  allTutorialTests,
+  tutorialChapters,
+  chapter_01_elementeTests,
+  chapter_02_komponentenTests,
+  chapter_03_tokensTests,
+  chapter_04_layoutTests,
+  chapter_05_stylingTests,
+  chapter_06_statesTests,
+  chapter_07_animationenTests,
+  chapter_08_functionsTests,
+  chapter_09_datenTests,
+  chapter_10_seitenTests,
+  chapter_11_eingabeTests,
+  chapter_12_navigationTests,
+  chapter_13_overlaysTests,
+  chapter_14_tabellenTests,
+  chapter_15_chartsTests,
+} from './tutorial'
+
 // Property Robustness (various property formats)
 import {
   allPropertyRobustnessTests,
@@ -564,6 +619,12 @@ import {
   nestedComponentTests as integrationNestedTests,
   realWorldPatternTests as integrationPatternTests,
   layoutIntegrationTests as integrationLayoutTests,
+  dataIterationTests as integrationDataTests,
+  conditionalTests as integrationConditionalTests,
+  iconButtonTests as integrationIconButtonTests,
+  animationTests as integrationAnimationTests,
+  formIntegrationTests as integrationFormTests,
+  gradientTests as integrationGradientTests,
   quickIntegrationTests,
 } from './integration'
 
@@ -1022,6 +1083,31 @@ export {
   comprehensiveInspectionTests,
 }
 
+// Draft Mode Tests (-- marker for AI code generation)
+export {
+  allDraftModeTests,
+  allBasicDraftModeTests,
+  allVisualDraftModeTests,
+  allAutocompleteDraftModeTests,
+  allScenarioDraftModeTests,
+  draftModeDetectionTests,
+  draftModeIndentationTests,
+  draftModeBlockTests,
+  draftModeLineTests,
+  draftModeDynamicTests,
+  draftModeCssTests,
+  draftModeMutedTests,
+  draftModeVisualDynamicTests,
+  draftModeSuppressionTests,
+  draftModePickerTests,
+  draftModeGenerationTests,
+  draftModeCorrectionTests,
+  draftModeRefactoringTests,
+  draftModeWorkflowTests,
+  draftModeContextTests,
+  quickDraftModeTests,
+}
+
 // Property Robustness Tests
 export {
   allPropertyRobustnessTests,
@@ -1038,6 +1124,27 @@ export {
 
 // UI Builder Tests
 export { allUIBuilderTests, uiBuilderLevel1Tests, uiBuilderLevel2Tests }
+
+// Tutorial Tests (auto-generated from docs/tutorial/*.html)
+export {
+  allTutorialTests,
+  tutorialChapters,
+  chapter_01_elementeTests,
+  chapter_02_komponentenTests,
+  chapter_03_tokensTests,
+  chapter_04_layoutTests,
+  chapter_05_stylingTests,
+  chapter_06_statesTests,
+  chapter_07_animationenTests,
+  chapter_08_functionsTests,
+  chapter_09_datenTests,
+  chapter_10_seitenTests,
+  chapter_11_eingabeTests,
+  chapter_12_navigationTests,
+  chapter_13_overlaysTests,
+  chapter_14_tabellenTests,
+  chapter_15_chartsTests,
+}
 
 // Layout Verification Tests (visual/position-based)
 export {
@@ -1093,6 +1200,7 @@ export const allTests: TestCase[] = [
   ...allWrapLayoutTests,
   ...allUngroupTests,
   ...allSpreadToggleTests,
+  ...allSnappingTests,
   ...allBidirectionalTests,
   ...allUndoRedoTests,
   ...allAutocompleteTests,
@@ -1128,7 +1236,9 @@ export const allTests: TestCase[] = [
   ...allCompilerVerificationTests,
   ...allPlayModeTests,
   ...allDraftLineTests,
+  ...allDraftModeTests,
   ...allIntegrationTests,
+  ...allTutorialTests,
 ]
 
 /**
@@ -1284,6 +1394,15 @@ export const testCounts: Record<string, number> = {
   'spreadToggle.edgeCases': spreadEdgeCaseTests.length,
   'spreadToggle.modifiers': spreadModifierTests.length,
   'spreadToggle.combined': spreadCombinedTests.length,
+  snapping: allSnappingTests.length,
+  'snapping.paddingToken': paddingTokenSnappingTests.length,
+  'snapping.marginToken': marginTokenSnappingTests.length,
+  'snapping.gapToken': gapTokenSnappingTests.length,
+  'snapping.resizeGrid': resizeGridSnappingTests.length,
+  'snapping.bypass': snappingBypassTests.length,
+  'snapping.indicator': snapIndicatorTests.length,
+  'snapping.gridFallback': gridSnappingFallbackTests.length,
+  'snapping.tokenPriority': tokenPriorityTests.length,
 
   // === Bidirectional ===
   bidirectional: allBidirectionalTests.length,
@@ -1604,6 +1723,28 @@ export const testCounts: Record<string, number> = {
   'draftLines.integration': draftLineIntegrationTests.length,
   // Comprehensive Draft Lines Tests
   'draftLines.comprehensive': allComprehensiveDraftLineTests.length,
+
+  // === Draft Mode (-- marker for AI code generation) ===
+  draftMode: allDraftModeTests.length,
+  'draftMode.basic': allBasicDraftModeTests.length,
+  'draftMode.visual': allVisualDraftModeTests.length,
+  'draftMode.autocomplete': allAutocompleteDraftModeTests.length,
+  'draftMode.scenarios': allScenarioDraftModeTests.length,
+  'draftMode.basic.detection': draftModeDetectionTests.length,
+  'draftMode.basic.indentation': draftModeIndentationTests.length,
+  'draftMode.basic.blockStructure': draftModeBlockTests.length,
+  'draftMode.basic.lineDetection': draftModeLineTests.length,
+  'draftMode.basic.dynamic': draftModeDynamicTests.length,
+  'draftMode.visual.css': draftModeCssTests.length,
+  'draftMode.visual.muted': draftModeMutedTests.length,
+  'draftMode.visual.dynamic': draftModeVisualDynamicTests.length,
+  'draftMode.autocomplete.suppression': draftModeSuppressionTests.length,
+  'draftMode.autocomplete.pickers': draftModePickerTests.length,
+  'draftMode.scenarios.generation': draftModeGenerationTests.length,
+  'draftMode.scenarios.correction': draftModeCorrectionTests.length,
+  'draftMode.scenarios.refactoring': draftModeRefactoringTests.length,
+  'draftMode.scenarios.workflow': draftModeWorkflowTests.length,
+  'draftMode.scenarios.context': draftModeContextTests.length,
   'draftLines.comprehensive.detection': comprehensiveDetectionTests.length,
   'draftLines.comprehensive.decoration': comprehensiveDecorationTests.length,
   'draftLines.comprehensive.state': comprehensiveStateTests.length,
@@ -1623,6 +1764,30 @@ export const testCounts: Record<string, number> = {
   'integration.nestedComponents': integrationNestedTests.length,
   'integration.realWorldPatterns': integrationPatternTests.length,
   'integration.layoutIntegration': integrationLayoutTests.length,
+  'integration.dataIteration': integrationDataTests.length,
+  'integration.conditional': integrationConditionalTests.length,
+  'integration.iconButton': integrationIconButtonTests.length,
+  'integration.animation': integrationAnimationTests.length,
+  'integration.form': integrationFormTests.length,
+  'integration.gradient': integrationGradientTests.length,
+
+  // === Tutorial ===
+  tutorial: allTutorialTests.length,
+  'tutorial.01-elemente': chapter_01_elementeTests.length,
+  'tutorial.02-komponenten': chapter_02_komponentenTests.length,
+  'tutorial.03-tokens': chapter_03_tokensTests.length,
+  'tutorial.04-layout': chapter_04_layoutTests.length,
+  'tutorial.05-styling': chapter_05_stylingTests.length,
+  'tutorial.06-states': chapter_06_statesTests.length,
+  'tutorial.07-animationen': chapter_07_animationenTests.length,
+  'tutorial.08-functions': chapter_08_functionsTests.length,
+  'tutorial.09-daten': chapter_09_datenTests.length,
+  'tutorial.10-seiten': chapter_10_seitenTests.length,
+  'tutorial.11-eingabe': chapter_11_eingabeTests.length,
+  'tutorial.12-navigation': chapter_12_navigationTests.length,
+  'tutorial.13-overlays': chapter_13_overlaysTests.length,
+  'tutorial.14-tabellen': chapter_14_tabellenTests.length,
+  'tutorial.15-charts': chapter_15_chartsTests.length,
 
   // === Total ===
   total: allTests.length,
@@ -2065,6 +2230,32 @@ export type TestCategory =
   | 'draftLines.aiWorkflow.workflow'
   | 'draftLines.aiWorkflow.visual'
 
+  // === Draft Mode (-- marker for AI code generation) ===
+  | 'draftMode'
+  | 'draftMode.basic'
+  | 'draftMode.visual'
+  | 'draftMode.autocomplete'
+  | 'draftMode.scenarios'
+  // Basic sub-categories
+  | 'draftMode.basic.detection'
+  | 'draftMode.basic.indentation'
+  | 'draftMode.basic.blockStructure'
+  | 'draftMode.basic.lineDetection'
+  | 'draftMode.basic.dynamic'
+  // Visual sub-categories
+  | 'draftMode.visual.css'
+  | 'draftMode.visual.muted'
+  | 'draftMode.visual.dynamic'
+  // Autocomplete sub-categories
+  | 'draftMode.autocomplete.suppression'
+  | 'draftMode.autocomplete.pickers'
+  // Scenario sub-categories
+  | 'draftMode.scenarios.generation'
+  | 'draftMode.scenarios.correction'
+  | 'draftMode.scenarios.refactoring'
+  | 'draftMode.scenarios.workflow'
+  | 'draftMode.scenarios.context'
+
   // === Integration (real-world workflows) ===
   | 'integration'
   | 'integration.componentToken'
@@ -2073,6 +2264,30 @@ export type TestCategory =
   | 'integration.nestedComponents'
   | 'integration.realWorldPatterns'
   | 'integration.layoutIntegration'
+  | 'integration.dataIteration'
+  | 'integration.conditional'
+  | 'integration.iconButton'
+  | 'integration.animation'
+  | 'integration.form'
+  | 'integration.gradient'
+
+  // === Tutorial ===
+  | 'tutorial'
+  | 'tutorial.01-elemente'
+  | 'tutorial.02-komponenten'
+  | 'tutorial.03-tokens'
+  | 'tutorial.04-layout'
+  | 'tutorial.05-styling'
+  | 'tutorial.06-states'
+  | 'tutorial.07-animationen'
+  | 'tutorial.08-functions'
+  | 'tutorial.09-daten'
+  | 'tutorial.10-seiten'
+  | 'tutorial.11-eingabe'
+  | 'tutorial.12-navigation'
+  | 'tutorial.13-overlays'
+  | 'tutorial.14-tabellen'
+  | 'tutorial.15-charts'
 
 export async function runCategory(category: TestCategory): Promise<TestSuiteResult> {
   const api = (window as any).__mirrorTest
@@ -2214,6 +2429,15 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'spreadToggle.edgeCases': spreadEdgeCaseTests,
     'spreadToggle.modifiers': spreadModifierTests,
     'spreadToggle.combined': spreadCombinedTests,
+    snapping: allSnappingTests,
+    'snapping.paddingToken': paddingTokenSnappingTests,
+    'snapping.marginToken': marginTokenSnappingTests,
+    'snapping.gapToken': gapTokenSnappingTests,
+    'snapping.resizeGrid': resizeGridSnappingTests,
+    'snapping.bypass': snappingBypassTests,
+    'snapping.indicator': snapIndicatorTests,
+    'snapping.gridFallback': gridSnappingFallbackTests,
+    'snapping.tokenPriority': tokenPriorityTests,
 
     // === Bidirectional ===
     bidirectional: allBidirectionalTests,
@@ -2534,6 +2758,32 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'draftLines.integration': draftLineIntegrationTests,
     // Comprehensive Draft Lines Tests
     'draftLines.comprehensive': allComprehensiveDraftLineTests,
+
+    // Draft Mode (-- marker for AI code generation)
+    draftMode: allDraftModeTests,
+    'draftMode.basic': allBasicDraftModeTests,
+    'draftMode.visual': allVisualDraftModeTests,
+    'draftMode.autocomplete': allAutocompleteDraftModeTests,
+    'draftMode.scenarios': allScenarioDraftModeTests,
+    // Basic sub-categories
+    'draftMode.basic.detection': draftModeDetectionTests,
+    'draftMode.basic.indentation': draftModeIndentationTests,
+    'draftMode.basic.blockStructure': draftModeBlockTests,
+    'draftMode.basic.lineDetection': draftModeLineTests,
+    'draftMode.basic.dynamic': draftModeDynamicTests,
+    // Visual sub-categories
+    'draftMode.visual.css': draftModeCssTests,
+    'draftMode.visual.muted': draftModeMutedTests,
+    'draftMode.visual.dynamic': draftModeVisualDynamicTests,
+    // Autocomplete sub-categories
+    'draftMode.autocomplete.suppression': draftModeSuppressionTests,
+    'draftMode.autocomplete.pickers': draftModePickerTests,
+    // Scenario sub-categories
+    'draftMode.scenarios.generation': draftModeGenerationTests,
+    'draftMode.scenarios.correction': draftModeCorrectionTests,
+    'draftMode.scenarios.refactoring': draftModeRefactoringTests,
+    'draftMode.scenarios.workflow': draftModeWorkflowTests,
+    'draftMode.scenarios.context': draftModeContextTests,
     'draftLines.comprehensive.detection': comprehensiveDetectionTests,
     'draftLines.comprehensive.decoration': comprehensiveDecorationTests,
     'draftLines.comprehensive.state': comprehensiveStateTests,
@@ -2553,6 +2803,30 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'integration.nestedComponents': integrationNestedTests,
     'integration.realWorldPatterns': integrationPatternTests,
     'integration.layoutIntegration': integrationLayoutTests,
+    'integration.dataIteration': integrationDataTests,
+    'integration.conditional': integrationConditionalTests,
+    'integration.iconButton': integrationIconButtonTests,
+    'integration.animation': integrationAnimationTests,
+    'integration.form': integrationFormTests,
+    'integration.gradient': integrationGradientTests,
+
+    // === Tutorial ===
+    tutorial: allTutorialTests,
+    'tutorial.01-elemente': chapter_01_elementeTests,
+    'tutorial.02-komponenten': chapter_02_komponentenTests,
+    'tutorial.03-tokens': chapter_03_tokensTests,
+    'tutorial.04-layout': chapter_04_layoutTests,
+    'tutorial.05-styling': chapter_05_stylingTests,
+    'tutorial.06-states': chapter_06_statesTests,
+    'tutorial.07-animationen': chapter_07_animationenTests,
+    'tutorial.08-functions': chapter_08_functionsTests,
+    'tutorial.09-daten': chapter_09_datenTests,
+    'tutorial.10-seiten': chapter_10_seitenTests,
+    'tutorial.11-eingabe': chapter_11_eingabeTests,
+    'tutorial.12-navigation': chapter_12_navigationTests,
+    'tutorial.13-overlays': chapter_13_overlaysTests,
+    'tutorial.14-tabellen': chapter_14_tabellenTests,
+    'tutorial.15-charts': chapter_15_chartsTests,
   }
 
   const names: Record<TestCategory, string> = {
@@ -2936,6 +3210,32 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'draftLines.integration': 'Draft: Manager Integration',
     // Comprehensive Draft Lines Tests
     'draftLines.comprehensive': 'Draft: Comprehensive Suite',
+
+    // Draft Mode (-- marker for AI code generation)
+    draftMode: 'Draft Mode (-- marker)',
+    'draftMode.basic': 'Draft Mode: Basic',
+    'draftMode.visual': 'Draft Mode: Visual Feedback',
+    'draftMode.autocomplete': 'Draft Mode: Autocomplete',
+    'draftMode.scenarios': 'Draft Mode: Scenarios',
+    // Basic sub-categories
+    'draftMode.basic.detection': 'Draft Mode: -- Detection',
+    'draftMode.basic.indentation': 'Draft Mode: Indentation',
+    'draftMode.basic.blockStructure': 'Draft Mode: Block Structure',
+    'draftMode.basic.lineDetection': 'Draft Mode: Line Detection',
+    'draftMode.basic.dynamic': 'Draft Mode: Dynamic Editing',
+    // Visual sub-categories
+    'draftMode.visual.css': 'Draft Mode: CSS Classes',
+    'draftMode.visual.muted': 'Draft Mode: Muted Colors',
+    'draftMode.visual.dynamic': 'Draft Mode: Dynamic Visual',
+    // Autocomplete sub-categories
+    'draftMode.autocomplete.suppression': 'Draft Mode: AC Suppression',
+    'draftMode.autocomplete.pickers': 'Draft Mode: Pickers',
+    // Scenario sub-categories
+    'draftMode.scenarios.generation': 'Draft Mode: Generation',
+    'draftMode.scenarios.correction': 'Draft Mode: Correction',
+    'draftMode.scenarios.refactoring': 'Draft Mode: Refactoring',
+    'draftMode.scenarios.workflow': 'Draft Mode: Workflow',
+    'draftMode.scenarios.context': 'Draft Mode: Context',
     'draftLines.comprehensive.detection': 'Draft Comprehensive: Detection',
     'draftLines.comprehensive.decoration': 'Draft Comprehensive: Decoration',
     'draftLines.comprehensive.state': 'Draft Comprehensive: State',
@@ -2955,6 +3255,30 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'integration.nestedComponents': 'Integration: Nested Components',
     'integration.realWorldPatterns': 'Integration: Real-World UI Patterns',
     'integration.layoutIntegration': 'Integration: Layout + Component + State',
+    'integration.dataIteration': 'Integration: Data & Iteration',
+    'integration.conditional': 'Integration: Conditional Rendering',
+    'integration.iconButton': 'Integration: Icon & Button Patterns',
+    'integration.animation': 'Integration: Animation & Transition',
+    'integration.form': 'Integration: Form',
+    'integration.gradient': 'Integration: Gradients',
+
+    // === Tutorial ===
+    tutorial: 'Tutorial',
+    'tutorial.01-elemente': 'Tutorial: Elemente & Hierarchie',
+    'tutorial.02-komponenten': 'Tutorial: Komponenten',
+    'tutorial.03-tokens': 'Tutorial: Design Tokens',
+    'tutorial.04-layout': 'Tutorial: Layout',
+    'tutorial.05-styling': 'Tutorial: Styling',
+    'tutorial.06-states': 'Tutorial: States',
+    'tutorial.07-animationen': 'Tutorial: Animationen',
+    'tutorial.08-functions': 'Tutorial: Functions',
+    'tutorial.09-daten': 'Tutorial: Daten',
+    'tutorial.10-seiten': 'Tutorial: Seiten & Navigation',
+    'tutorial.11-eingabe': 'Tutorial: Eingabe',
+    'tutorial.12-navigation': 'Tutorial: Navigation',
+    'tutorial.13-overlays': 'Tutorial: Overlays',
+    'tutorial.14-tabellen': 'Tutorial: Tabellen',
+    'tutorial.15-charts': 'Tutorial: Charts',
   }
 
   return api.run(tests[category], `${names[category]} Tests`)
@@ -2996,6 +3320,7 @@ export function printTestSummary(): void {
   console.log(`   Compiler Verify:    ${testCounts.compilerVerification} tests`)
   console.log(`   Play Mode:          ${testCounts.playMode} tests`)
   console.log(`   Draft Lines:        ${testCounts.draftLines} tests`)
+  console.log(`   Draft Mode:         ${testCounts.draftMode} tests`)
   console.log(`   ──────────────────────────`)
   console.log(`   Total:              ${testCounts.total} tests`)
   console.log('')

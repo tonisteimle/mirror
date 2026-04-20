@@ -15,6 +15,8 @@
 import { OverlayManager } from './overlay-manager'
 import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
+import { getSnappingService, shouldBypassSnapping, type SnapResult } from './snapping-service'
+import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 2 // Visible line: 2px
@@ -33,6 +35,8 @@ export interface GapState {
   currentGap: number
   element: HTMLElement
   direction: 'horizontal' | 'vertical'
+  // Last snap result for visual feedback
+  lastSnapResult?: SnapResult
 }
 
 export interface GapManagerConfig {
@@ -78,6 +82,9 @@ export class GapManager {
   // Debounce timer for refresh
   private refreshDebounceId: number | null = null
 
+  // Snap indicator for visual feedback
+  private snapIndicator: SnapIndicator | null = null
+
   constructor(config: GapManagerConfig) {
     this.container = config.container
     this.overlayManager = config.overlayManager
@@ -90,6 +97,11 @@ export class GapManager {
 
     this.setupEventListeners()
     this.setupObservers()
+
+    // Initialize snap indicator
+    this.snapIndicator = createSnapIndicator({
+      container: this.overlayManager.getResizeHandlesContainer(),
+    })
   }
 
   // ============================================================================
@@ -117,6 +129,9 @@ export class GapManager {
   showHandles(nodeId: string): void {
     this.hideHandles()
     this.currentNodeId = nodeId
+
+    // Ensure event listeners are on the current container (handles overlay recreation)
+    this.setupEventListeners()
 
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return
@@ -459,6 +474,7 @@ export class GapManager {
     this.hideHandles()
     this.removeEventListeners()
     this.removeObservers()
+    this.snapIndicator?.dispose()
   }
 
   // ============================================================================
@@ -466,10 +482,26 @@ export class GapManager {
   // ============================================================================
 
   private setupEventListeners(): void {
-    this.handlesContainerRef = this.overlayManager.getResizeHandlesContainer()
-    this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
-    document.addEventListener('mousemove', this.boundMouseMove)
-    document.addEventListener('mouseup', this.boundMouseUp)
+    // Get the current handles container
+    const currentContainer = this.overlayManager.getResizeHandlesContainer()
+
+    // Only update if container has changed (overlay was recreated)
+    if (this.handlesContainerRef !== currentContainer) {
+      // Remove old listener if exists
+      if (this.handlesContainerRef) {
+        this.handlesContainerRef.removeEventListener('mousedown', this.boundMouseDown)
+      }
+      // Attach to new container
+      this.handlesContainerRef = currentContainer
+      this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
+    }
+
+    // Document listeners only need to be set once (they're on document, which is stable)
+    if (!(this as any)._documentListenersAdded) {
+      document.addEventListener('mousemove', this.boundMouseMove)
+      document.addEventListener('mouseup', this.boundMouseUp)
+      ;(this as any)._documentListenersAdded = true
+    }
   }
 
   private setupObservers(): void {
@@ -607,8 +639,33 @@ export class GapManager {
     }
 
     // Calculate new gap (minimum 0)
-    const newGap = Math.max(0, startGap + delta)
+    let newGap = Math.max(0, startGap + delta)
+
+    // Token snapping (unless Cmd/Ctrl held to bypass)
+    let snapResult: SnapResult | undefined
+    if (!shouldBypassSnapping(e)) {
+      const snappingService = getSnappingService()
+      if (snappingService) {
+        snapResult = snappingService.snapSpacing(newGap, 'gap')
+        if (snapResult.snapped) {
+          newGap = snapResult.value
+
+          // Show snap indicator
+          if (snapResult.tokenName && this.snapIndicator) {
+            this.snapIndicator.showTokenSnap(e.clientX, e.clientY, snapResult.tokenName)
+          }
+        } else {
+          // Hide indicator if no snap
+          this.snapIndicator?.hide()
+        }
+      }
+    } else {
+      // Bypass snapping - hide indicator
+      this.snapIndicator?.hide()
+    }
+
     this.activeDrag.currentGap = newGap
+    this.activeDrag.lastSnapResult = snapResult
 
     // Apply gap to element
     element.style.gap = `${newGap}px`
@@ -619,16 +676,20 @@ export class GapManager {
     // Show size indicator
     const rect = element.getBoundingClientRect()
     const containerRect = this.container.getBoundingClientRect()
+
+    // Show token name in indicator if snapped
+    const valueDisplay = snapResult?.tokenName || `${newGap}px`
     this.overlayManager.showSizeIndicator(
       rect.left - containerRect.left + rect.width / 2,
       rect.top - containerRect.top + rect.height / 2,
       'gap',
-      `${newGap}px`
+      valueDisplay
     )
 
     events.emit('gap:move', {
       nodeId: this.activeDrag.nodeId,
       gap: newGap,
+      tokenName: snapResult?.tokenName,
     })
   }
 
@@ -641,17 +702,19 @@ export class GapManager {
 
     if (!this.activeDrag) return
 
-    const { nodeId, currentGap } = this.activeDrag
+    const { nodeId, currentGap, lastSnapResult } = this.activeDrag
 
     // Reset cursor
     document.body.style.cursor = ''
 
-    // Hide indicator
+    // Hide indicators
     this.overlayManager.hideSizeIndicator()
+    this.snapIndicator?.hide()
 
     events.emit('gap:end', {
       nodeId,
       gap: currentGap,
+      tokenName: lastSnapResult?.tokenName,
     })
 
     this.activeDrag = null

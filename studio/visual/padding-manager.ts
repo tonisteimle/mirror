@@ -14,6 +14,8 @@
 import { OverlayManager } from './overlay-manager'
 import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
+import { getSnappingService, shouldBypassSnapping, type SnapResult } from './snapping-service'
+import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 1 // Visible line: 1px
@@ -37,6 +39,8 @@ export interface PaddingState {
   element: HTMLElement
   // Store all start paddings for multi-side adjustments
   startPaddings: { top: number; right: number; bottom: number; left: number }
+  // Last snap result for visual feedback
+  lastSnapResult?: SnapResult
 }
 
 export interface PaddingManagerConfig {
@@ -76,6 +80,9 @@ export class PaddingManager {
   // Debounce timer for refresh
   private refreshDebounceId: number | null = null
 
+  // Snap indicator for visual feedback
+  private snapIndicator: SnapIndicator | null = null
+
   constructor(config: PaddingManagerConfig) {
     this.container = config.container
     this.overlayManager = config.overlayManager
@@ -88,6 +95,11 @@ export class PaddingManager {
 
     this.setupEventListeners()
     this.setupObservers()
+
+    // Initialize snap indicator
+    this.snapIndicator = createSnapIndicator({
+      container: this.overlayManager.getResizeHandlesContainer(),
+    })
   }
 
   // ============================================================================
@@ -116,6 +128,9 @@ export class PaddingManager {
   showHandles(nodeId: string): void {
     this.hideHandles()
     this.currentNodeId = nodeId
+
+    // Ensure event listeners are on the current container (handles overlay recreation)
+    this.setupEventListeners()
 
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return
@@ -489,6 +504,7 @@ export class PaddingManager {
     this.hideHandles()
     this.removeEventListeners()
     this.removeObservers()
+    this.snapIndicator?.dispose()
   }
 
   // ============================================================================
@@ -496,10 +512,27 @@ export class PaddingManager {
   // ============================================================================
 
   private setupEventListeners(): void {
-    this.handlesContainerRef = this.overlayManager.getResizeHandlesContainer()
-    this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
-    document.addEventListener('mousemove', this.boundMouseMove)
-    document.addEventListener('mouseup', this.boundMouseUp)
+    // Get the current handles container
+    const currentContainer = this.overlayManager.getResizeHandlesContainer()
+
+    // Only update if container has changed (overlay was recreated)
+    if (this.handlesContainerRef !== currentContainer) {
+      // Remove old listener if exists
+      if (this.handlesContainerRef) {
+        this.handlesContainerRef.removeEventListener('mousedown', this.boundMouseDown)
+      }
+      // Attach to new container
+      this.handlesContainerRef = currentContainer
+      this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
+    }
+
+    // Document listeners only need to be set once (they're on document, which is stable)
+    // Check if we've already added them by using a marker
+    if (!(this as any)._documentListenersAdded) {
+      document.addEventListener('mousemove', this.boundMouseMove)
+      document.addEventListener('mouseup', this.boundMouseUp)
+      ;(this as any)._documentListenersAdded = true
+    }
   }
 
   private setupObservers(): void {
@@ -676,8 +709,33 @@ export class PaddingManager {
     }
 
     // Calculate new padding (clamp to minimum of 0)
-    const newPadding = Math.max(0, startPadding + delta)
+    let newPadding = Math.max(0, startPadding + delta)
+
+    // Token snapping (unless Cmd/Ctrl held to bypass)
+    let snapResult: SnapResult | undefined
+    if (!shouldBypassSnapping(e)) {
+      const snappingService = getSnappingService()
+      if (snappingService) {
+        snapResult = snappingService.snapSpacing(newPadding, 'pad')
+        if (snapResult.snapped) {
+          newPadding = snapResult.value
+
+          // Show snap indicator
+          if (snapResult.tokenName && this.snapIndicator) {
+            this.snapIndicator.showTokenSnap(e.clientX, e.clientY, snapResult.tokenName)
+          }
+        } else {
+          // Hide indicator if no snap
+          this.snapIndicator?.hide()
+        }
+      }
+    } else {
+      // Bypass snapping - hide indicator
+      this.snapIndicator?.hide()
+    }
+
     this.activeDrag.currentPadding = newPadding
+    this.activeDrag.lastSnapResult = snapResult
 
     // Live visual feedback - apply padding based on mode
     if (mode === 'all') {
@@ -717,11 +775,14 @@ export class PaddingManager {
     } else {
       label = `pad-${handle[0]}`
     }
+
+    // Show token name in indicator if snapped
+    const valueDisplay = snapResult?.tokenName || `${newPadding}px`
     this.overlayManager.showSizeIndicator(
       rect.left - containerRect.left + rect.width / 2,
       rect.top - containerRect.top + rect.height / 2,
       label,
-      `${newPadding}px`
+      valueDisplay
     )
 
     events.emit('padding:move', {
@@ -729,6 +790,7 @@ export class PaddingManager {
       handle,
       mode,
       padding: newPadding,
+      tokenName: snapResult?.tokenName,
     })
   }
 
@@ -741,19 +803,21 @@ export class PaddingManager {
 
     if (!this.activeDrag) return
 
-    const { nodeId, handle, mode, currentPadding } = this.activeDrag
+    const { nodeId, handle, mode, currentPadding, lastSnapResult } = this.activeDrag
 
     // Reset cursor
     document.body.style.cursor = ''
 
-    // Hide indicator
+    // Hide indicators
     this.overlayManager.hideSizeIndicator()
+    this.snapIndicator?.hide()
 
     events.emit('padding:end', {
       nodeId,
       handle,
       mode,
       padding: currentPadding,
+      tokenName: lastSnapResult?.tokenName,
     })
 
     this.activeDrag = null
