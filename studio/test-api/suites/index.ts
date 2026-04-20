@@ -399,6 +399,12 @@ import {
   inlineSyntaxTests,
   primitivesTests as compilerPrimitivesTests,
   edgeCaseTests as compilerEdgeCaseTests,
+  // Prelude Tests (No automatic App wrapper)
+  allPreludeTests,
+  noAutoWrapperTests,
+  explicitAppTests,
+  codeIntegrityTests,
+  preludeNestedTests,
 } from './compiler-verification'
 
 // Data Binding
@@ -964,6 +970,12 @@ export {
   inlineSyntaxTests,
   compilerPrimitivesTests,
   compilerEdgeCaseTests,
+  // Prelude Tests (No automatic App wrapper)
+  allPreludeTests,
+  noAutoWrapperTests,
+  explicitAppTests,
+  codeIntegrityTests,
+  preludeNestedTests,
 }
 
 // Data Binding Tests

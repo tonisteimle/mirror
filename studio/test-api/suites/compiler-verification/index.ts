@@ -15,6 +15,23 @@
 import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
+// Prelude Tests (No automatic App wrapper)
+import {
+  allPreludeTests,
+  noAutoWrapperTests,
+  explicitAppTests,
+  codeIntegrityTests,
+  nestedStructureTests as preludeNestedTests,
+} from './prelude.test'
+
+export {
+  allPreludeTests,
+  noAutoWrapperTests,
+  explicitAppTests,
+  codeIntegrityTests,
+  preludeNestedTests,
+}
+
 // =============================================================================
 // Helper: Exakte Farb-Vergleiche
 // =============================================================================
@@ -4051,6 +4068,7 @@ export const iconVariantTests: TestCase[] = describe('Icon Variants', [
 // =============================================================================
 
 export const allCompilerVerificationTests: TestCase[] = [
+  ...allPreludeTests,
   ...complexPropertyTests,
   ...layoutVerificationTests,
   ...nestedStructureTests,
