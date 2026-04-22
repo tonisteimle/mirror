@@ -1337,10 +1337,11 @@ const runtime = {
 // ICON LOADING
 // =============================================================================
 
-async function loadIcon(el: HTMLElement, name: string, props: MirrorProps): Promise<void> {
-  const size = props['icon-size'] ?? props.is ?? 24
-  const color = props['icon-color'] ?? props.ic ?? 'currentColor'
-  const weight = props['icon-weight'] ?? props.iw ?? 2
+async function loadIcon(el: HTMLElement, name: string, props?: MirrorProps): Promise<void> {
+  // Read from props first, then from dataset attributes (set by compiler), then defaults
+  const size = props?.['icon-size'] ?? props?.is ?? el.dataset.iconSize ?? 24
+  const color = props?.['icon-color'] ?? props?.ic ?? el.dataset.iconColor ?? 'currentColor'
+  const weight = props?.['icon-weight'] ?? props?.iw ?? el.dataset.iconWeight ?? 2
 
   try {
     const res = await fetch(`https://unpkg.com/lucide-static/icons/${name}.svg`)

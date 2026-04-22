@@ -194,7 +194,15 @@ export function createColorHashTriggerConfig(): TriggerConfig {
       return COLOR_CONTEXT_PATTERN.test(context.textBefore)
     },
     shouldClose: (update: ViewUpdate, insertedText: string, context: TriggerContext) => {
-      // Let the global picker handle its own closing
+      // Close picker when user types newline, comma, or completes hex value
+      if (insertedText === '\n' || insertedText === ',') {
+        return true
+      }
+      // Close if we have a complete hex color followed by space or more text
+      const textAfterHash = context.textBefore.split('#').pop() || ''
+      if (textAfterHash.length >= 6 && insertedText === ' ') {
+        return true
+      }
       return false
     },
   }

@@ -254,9 +254,14 @@ export function generateComponentCodeFromDragData(
   dragData: ComponentDragData,
   options?: { componentId?: string; filename?: string }
 ): string {
-  const { componentName, properties, textContent, children } = dragData
+  const { componentName, properties, textContent, children, mirTemplate } = dragData
 
-  // Try template-based code generation first
+  // 1. Use mirTemplate if provided (Pure Mirror components like Accordion, Select)
+  if (mirTemplate) {
+    return mirTemplate
+  }
+
+  // 2. Try template-based code generation from COMPONENT_TEMPLATES
   if (options?.componentId && options?.filename) {
     const fileType = getFileType(options.filename)
     const template = getComponentTemplate(options.componentId, fileType)
@@ -265,7 +270,7 @@ export function generateComponentCodeFromDragData(
     }
   }
 
-  // Fallback to property-based code generation
+  // 3. Fallback to property-based code generation
   let code = componentName
   if (properties) {
     code += ` ${properties}`

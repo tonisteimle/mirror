@@ -68,7 +68,7 @@ describe('FileTreeController File Selection', () => {
   it('should cache file content on selection', async () => {
     await controller.selectFile('index.mir')
     expect(controller.filesCache['index.mir']).toBeDefined()
-    expect(controller.filesCache['index.mir']).toContain('Mirror')
+    expect(controller.filesCache['index.mir']).toContain('Frame')
   })
 
   it('should call onFileSelect callback', async () => {
@@ -345,7 +345,7 @@ describe('FileTreeController File Cache', () => {
     await controller.selectFile('index.mir')
     const content = controller.getFileContent('index.mir')
     expect(content).toBeDefined()
-    expect(content).toContain('Mirror')
+    expect(content).toContain('Frame')
   })
 
   it('should update file cache', () => {

@@ -93,14 +93,21 @@ function buildChromeArgs(userDataDir: string, options: LaunchOptions): string[] 
     '--disable-background-networking',
     '--disable-sync',
     '--disable-translate',
+    '--disable-features=Translate,TranslateUI',
+    '--lang=de-DE',
+    '--accept-lang=de-DE,de',
     '--metrics-recording-only',
     '--safebrowsing-disable-auto-update',
     '--disable-extensions',
     '--disable-popup-blocking',
+    '--disable-infobars',
+    '--disable-notifications',
   ]
 
   if (options.headless !== false) {
     args.push('--headless=new')
+    // Large viewport for headless mode (similar to maximized)
+    args.push('--window-size=1920,1080')
   } else {
     // In headed mode, start maximized for better visibility
     args.push('--start-maximized')

@@ -75,12 +75,13 @@ describe('DemoProvider File Tree', () => {
   it('should return tree with default files', async () => {
     const tree = await provider.getTree()
 
-    expect(tree.length).toBeGreaterThan(0)
+    expect(tree.length).toBe(4)
 
     const fileNames = tree.map(item => item.name)
     expect(fileNames).toContain('index.mir')
     expect(fileNames).toContain('tokens.tok')
     expect(fileNames).toContain('components.com')
+    expect(fileNames).toContain('data.yaml')
   })
 
   it('should sort tree with folders first', async () => {
@@ -145,7 +146,7 @@ describe('DemoProvider File Operations', () => {
     it('should read existing file', async () => {
       const content = await provider.readFile('index.mir')
 
-      expect(content).toContain('Mirror')
+      expect(content).toContain('Frame')
     })
 
     it('should throw on non-existent file', async () => {
@@ -385,7 +386,7 @@ describe('DemoProvider State', () => {
 
     // Default file should be back
     const content = await provider.readFile('index.mir')
-    expect(content).toContain('Mirror')
+    expect(content).toContain('Frame')
 
     // Modifications flag should be reset
     expect(provider.hasModifications()).toBe(false)

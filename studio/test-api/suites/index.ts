@@ -150,6 +150,7 @@ import {
   paddingHandleDragTests,
   paddingModeSelectionTests,
   tokenExtractTests,
+  componentExtractTests,
   resizeHandleDragTests,
   allMultiselectTests,
   shiftClickTests,
@@ -269,6 +270,25 @@ import {
   tabIndentTests,
   indentationEdgeCases,
 } from './editor/indentation.test'
+
+// Editor Drop Tests (drag components into CodeMirror)
+import {
+  allEditorDropTests,
+  editorDropMirTemplateTests,
+  editorDropPrimitiveTests,
+  editorDropLayoutTests,
+  editorDropCombinationTests,
+  editorDropRegressionTests,
+} from './editor/editor-drop.test'
+
+// Linter (code validation - unknown properties, undefined tokens)
+import {
+  allLinterTests,
+  unknownPropertyTests,
+  undefinedTokenTests,
+  lintUITests,
+  lintEdgeCases,
+} from './editor/linter.test'
 
 // Property Panel
 import {
@@ -478,6 +498,9 @@ import {
   complexLayoutTests as projectComplexLayoutTests,
   fileSwitchingTests,
 } from './project'
+
+// Demo Project Tests
+import { demoProjectTests } from './demo-project.test'
 
 // Compiler Verification (schwierigste Fälle)
 import {
@@ -810,6 +833,7 @@ export {
   paddingHandleDragTests,
   paddingModeSelectionTests,
   tokenExtractTests,
+  componentExtractTests,
   resizeHandleDragTests,
   allMultiselectTests,
   shiftClickTests,
@@ -873,6 +897,15 @@ export {
   blockIndentTests,
   tabIndentTests,
   indentationEdgeCases,
+}
+
+// Linter (code validation)
+export {
+  allLinterTests,
+  unknownPropertyTests,
+  undefinedTokenTests,
+  lintUITests,
+  lintEdgeCases,
 }
 
 // Comprehensive Drag Tests (unified from browser-test-api.ts)
@@ -1320,6 +1353,7 @@ export const allTests: TestCase[] = [
   ...allResizeHandleDblClickTests,
   ...allPaddingHandlerTests,
   ...tokenExtractTests,
+  ...componentExtractTests,
   ...resizeHandleDragTests,
   ...allMultiselectTests,
   ...allEditorMultiselectTests,
@@ -1331,6 +1365,8 @@ export const allTests: TestCase[] = [
   ...allUndoRedoTests,
   ...allAutocompleteTests,
   ...allIndentationTests,
+  ...allEditorDropTests,
+  ...allLinterTests,
   ...allComprehensiveDragTests,
   ...allStackedDragTests,
   ...allFlexReorderTests,
@@ -1361,6 +1397,7 @@ export const allTests: TestCase[] = [
   ...allPropertyRobustnessTests,
   // ...allStressTests, // TODO: Causes hang at ~70% - removed from automated runs
   ...allProjectTests,
+  ...demoProjectTests,
   ...allCompilerVerificationTests,
   ...allPlayModeTests,
   ...allDraftLineTests,
@@ -1516,6 +1553,7 @@ export const testCounts: Record<string, number> = {
   'paddingHandlers.drag': paddingHandleDragTests.length,
   'paddingHandlers.modeSelection': paddingModeSelectionTests.length,
   tokenExtract: tokenExtractTests.length,
+  componentExtract: componentExtractTests.length,
   wrapLayout: allWrapLayoutTests.length,
   'wrapLayout.hKey': hKeyBehaviorTests.length,
   'wrapLayout.vKey': vKeyBehaviorTests.length,
@@ -1589,6 +1627,13 @@ export const testCounts: Record<string, number> = {
   'indentation.blockIndent': blockIndentTests.length,
   'indentation.tabIndent': tabIndentTests.length,
   'indentation.edgeCases': indentationEdgeCases.length,
+
+  // === Linter ===
+  linter: allLinterTests.length,
+  'linter.unknownProperty': unknownPropertyTests.length,
+  'linter.undefinedToken': undefinedTokenTests.length,
+  'linter.ui': lintUITests.length,
+  'linter.edgeCases': lintEdgeCases.length,
 
   // === Drag & Drop ===
   comprehensiveDrag: allComprehensiveDragTests.length,
@@ -2104,6 +2149,7 @@ export type TestCategory =
   | 'paddingHandlers.drag'
   | 'paddingHandlers.modeSelection'
   | 'tokenExtract'
+  | 'componentExtract'
 
   // === Validation Tests (B3.1) ===
   | 'validation'
@@ -2642,6 +2688,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'paddingHandlers.drag': paddingHandleDragTests,
     'paddingHandlers.modeSelection': paddingModeSelectionTests,
     tokenExtract: tokenExtractTests,
+    componentExtract: componentExtractTests,
     wrapLayout: allWrapLayoutTests,
     'wrapLayout.hKey': hKeyBehaviorTests,
     'wrapLayout.vKey': vKeyBehaviorTests,
@@ -2715,6 +2762,13 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'indentation.blockIndent': blockIndentTests,
     'indentation.tabIndent': tabIndentTests,
     'indentation.edgeCases': indentationEdgeCases,
+
+    // === Linter ===
+    linter: allLinterTests,
+    'linter.unknownProperty': unknownPropertyTests,
+    'linter.undefinedToken': undefinedTokenTests,
+    'linter.ui': lintUITests,
+    'linter.edgeCases': lintEdgeCases,
 
     // === Drag & Drop ===
     comprehensiveDrag: allComprehensiveDragTests,
@@ -3199,6 +3253,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'paddingHandlers.drag': 'Padding: Drag',
     'paddingHandlers.modeSelection': 'Padding: Mode Selection',
     tokenExtract: 'Token Extract',
+    componentExtract: 'Component Extract',
 
     // === Validation Tests (B3.1) ===
     validation: 'Validation Tests',

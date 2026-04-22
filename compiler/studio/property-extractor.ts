@@ -27,7 +27,7 @@ import {
 } from '../schema/properties'
 import { isZagPrimitive } from '../schema/zag-primitives'
 import { logPropertyExtractor as log } from '../utils/logger'
-import { getZagPropMetadata, type ZagPropMeta } from '../schema/zag-prop-metadata'
+import { getZagPropMetadata, hasZagPropMetadata, type ZagPropMeta } from '../schema/zag-prop-metadata'
 
 /**
  * Property types for UI rendering
@@ -491,8 +491,8 @@ export class PropertyExtractor {
       this.addAvailableProperties(allProperties, nodeMapping.componentName)
     }
 
-    // Add Zag behavior props for Zag primitives or ZagNodes
-    if (isZagPrimitive(nodeMapping.componentName) || astNode.type === 'ZagComponent') {
+    // Add behavior props for components with metadata (Zag primitives, Pure Mirror components)
+    if (isZagPrimitive(nodeMapping.componentName) || astNode.type === 'ZagComponent' || hasZagPropMetadata(nodeMapping.componentName)) {
       const behaviorProps = this.extractZagBehaviorProps(
         nodeMapping.componentName,
         astNode as Instance | ZagNode
@@ -557,8 +557,8 @@ export class PropertyExtractor {
       this.addAvailableProperties(allProperties, componentName)
     }
 
-    // Add Zag behavior props for Zag primitives
-    if (isZagPrimitive(componentName)) {
+    // Add behavior props for components with metadata (Zag primitives, Pure Mirror components)
+    if (isZagPrimitive(componentName) || hasZagPropMetadata(componentName)) {
       const behaviorProps = this.extractZagBehaviorPropsFromDef(componentName, componentDef)
       allProperties.push(...behaviorProps)
     }

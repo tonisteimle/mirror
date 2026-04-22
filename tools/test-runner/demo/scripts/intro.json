@@ -1,0 +1,52 @@
+{
+  "name": "Mirror Studio Quick Intro",
+  "description": "A simple introduction to Mirror Studio",
+  "config": {
+    "speed": "normal",
+    "showKeystrokeOverlay": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "duration": 1000,
+      "comment": "Initial state"
+    },
+    {
+      "action": "comment",
+      "text": "Welcome to Mirror Studio"
+    },
+    {
+      "action": "highlight",
+      "target": ".cm-editor",
+      "duration": 1500
+    },
+    {
+      "action": "moveTo",
+      "target": ".cm-editor"
+    },
+    {
+      "action": "click"
+    },
+    {
+      "action": "wait",
+      "duration": 500
+    },
+    {
+      "action": "type",
+      "text": "Frame bg #2271C1, pad 24, rad 12"
+    },
+    {
+      "action": "pressKey",
+      "key": "Enter"
+    },
+    {
+      "action": "type",
+      "text": "  Text \"Hello Mirror!\", col white, fs 24"
+    },
+    {
+      "action": "wait",
+      "duration": 2000,
+      "comment": "Show the result"
+    }
+  ]
+}

@@ -41,3 +41,22 @@ export {
   tabIndentTests,
   indentationEdgeCases,
 } from './indentation.test'
+
+// Editor drop tests (drag components into CodeMirror)
+export {
+  allEditorDropTests,
+  editorDropMirTemplateTests,
+  editorDropPrimitiveTests,
+  editorDropLayoutTests,
+  editorDropCombinationTests,
+  editorDropRegressionTests,
+} from './editor-drop.test'
+
+// Linter tests (code validation)
+export {
+  allLinterTests,
+  unknownPropertyTests,
+  undefinedTokenTests,
+  lintUITests,
+  lintEdgeCases,
+} from './linter.test'

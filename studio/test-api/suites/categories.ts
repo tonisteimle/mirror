@@ -80,6 +80,7 @@ import {
   allMarginTests,
   allSnappingTests,
   tokenExtractTests,
+  componentExtractTests,
 } from './interactions'
 
 // Selection
@@ -111,6 +112,8 @@ import { allSyncTests } from './sync-tests'
 import { allUndoRedoTests } from './undo-redo'
 import { allAutocompleteTests } from './autocomplete'
 import { allIndentationTests } from './editor/indentation.test'
+import { allEditorDropTests } from './editor/editor-drop.test'
+import { allLinterTests } from './editor/linter.test'
 
 // Data (Data Binding, Actions, Events, Responsive)
 import { allDataBindingTests } from './data-binding-tests'
@@ -122,6 +125,7 @@ import { allResponsiveTests } from './responsive-tests'
 import { allProjectTests } from './project'
 import { allWorkflowTests } from './workflow'
 import { allUIBuilderTests } from './ui-builder-tests'
+import { demoProjectTests } from './demo-project.test'
 
 // Compiler
 import { allCompilerVerificationTests, allPreludeTests } from './compiler-verification'
@@ -228,6 +232,7 @@ export const handlesTests: TestCase[] = [
   ...allMarginTests,
   ...allSnappingTests,
   ...tokenExtractTests,
+  ...componentExtractTests,
 ]
 
 /**
@@ -256,7 +261,7 @@ export const propertyPanelTests: TestCase[] = [
 ]
 
 /**
- * 11. EDITOR - Bidirectional sync, undo/redo, autocomplete, indentation
+ * 11. EDITOR - Bidirectional sync, undo/redo, autocomplete, indentation, editor drops, linter
  */
 export const editorTests: TestCase[] = [
   ...allBidirectionalTests,
@@ -264,6 +269,8 @@ export const editorTests: TestCase[] = [
   ...allUndoRedoTests,
   ...allAutocompleteTests,
   ...allIndentationTests,
+  ...allEditorDropTests,
+  ...allLinterTests,
 ]
 
 /**
@@ -283,6 +290,7 @@ export const projectTests: TestCase[] = [
   ...allProjectTests,
   ...allWorkflowTests,
   ...allUIBuilderTests,
+  ...demoProjectTests,
 ]
 
 /**
@@ -417,7 +425,7 @@ export const categories: Record<CategoryName, CategoryInfo> = {
   },
   editor: {
     name: 'editor',
-    description: 'Editor (bidirectional sync, undo/redo, autocomplete, indentation)',
+    description: 'Editor (bidirectional sync, undo/redo, autocomplete, indentation, linter)',
     tests: editorTests,
   },
   data: {

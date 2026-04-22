@@ -106,6 +106,8 @@ describe('LocalStorageProvider Initialization', () => {
     expect(names).toContain('index.mir')
     expect(names).toContain('tokens.tok')
     expect(names).toContain('components.com')
+    expect(names).toContain('data.yaml')
+    expect(names.length).toBe(4)
   })
 
   it('should load existing files from storage', async () => {
@@ -185,7 +187,7 @@ describe('LocalStorageProvider File Operations', () => {
       const provider = new LocalStorageProvider()
       const content = await provider.readFile('index.mir')
 
-      expect(content).toContain('Mirror')
+      expect(content).toContain('Frame')
     })
 
     it('should throw on non-existent file', async () => {
@@ -504,7 +506,7 @@ describe('LocalStorageProvider Utilities', () => {
 
       // Verify demo files are back
       const content = await provider.readFile('index.mir')
-      expect(content).toContain('Mirror')
+      expect(content).toContain('Frame')
       await expect(provider.readFile('custom.mir')).rejects.toThrow()
     })
 

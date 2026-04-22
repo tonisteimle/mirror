@@ -8,8 +8,10 @@
 import { TestRunner } from './runner'
 import { ConsoleReporter, JUnitReporter, HTMLReporter, ProgressReporter } from './reporters'
 import { FileExplorer } from './file-explorer'
+import { DemoRunner, loadDemoScript } from './demo'
 import type { TestConfig, TestSuite } from './types'
 import { defaultConfig } from './types'
+import type { DemoConfig } from './demo/types'
 
 // =============================================================================
 // CLI Arguments
@@ -43,6 +45,16 @@ interface CLIArgs {
   log?: string // Log file path for test results
   hidePanels?: string // Comma-separated list of panels to hide
   panelMode?: 'test' | 'focus' | 'normal' | 'minimal' // Predefined panel modes
+  // Demo mode options
+  demo?: string // Path to demo script
+  demoSpeed?: 'slow' | 'normal' | 'fast' // Demo speed preset (legacy)
+  demoPacing?: 'video' | 'presentation' | 'tutorial' | 'testing' | 'instant' // Pacing profile
+  demoOverlay: boolean // Show keystroke overlay (default: true)
+  demoValidate: boolean // Only validate demo script (dry-run)
+  demoTiming: boolean // Show timing report
+  // Validation options
+  demoAutoValidate: boolean // Enable auto-validation for all actions
+  demoValidationLevel?: 'strict' | 'normal' | 'lenient' // Validation strictness
 }
 
 // Panel visibility presets for test categories
@@ -94,6 +106,16 @@ function parseArgs(): CLIArgs {
       (args.includes('--progress') ? 'test-results/test-run.log' : undefined),
     hidePanels: getArgValue(args, '--hide-panels'),
     panelMode: getArgValue(args, '--panel-mode') as CLIArgs['panelMode'],
+    // Demo mode
+    demo: getArgValue(args, '--demo'),
+    demoSpeed: (getArgValue(args, '--demo-speed') || 'normal') as CLIArgs['demoSpeed'],
+    demoPacing: (getArgValue(args, '--pacing') || 'video') as CLIArgs['demoPacing'],
+    demoOverlay: !args.includes('--no-overlay'),
+    demoValidate: args.includes('--demo-validate'),
+    demoTiming: args.includes('--timing'),
+    // Validation options
+    demoAutoValidate: args.includes('--validate') || args.includes('--auto-validate'),
+    demoValidationLevel: getArgValue(args, '--validation-level') as CLIArgs['demoValidationLevel'],
   }
 }
 
@@ -161,6 +183,31 @@ ${bold('Output Options:')}
   --progress          Show progress bar with live updates (recommended for large test runs)
   --log=PATH          Log results to file (default: test-results/test-run.log when --progress)
 
+${bold('Demo Mode (for video recording):')}
+  --demo=PATH         Run a demo script (TypeScript or JSON)
+  --pacing=PROFILE    Pacing profile with optimized action timings:
+                      - video: Comfortable viewing (default) - 45ms/char, 400ms mouse
+                      - presentation: Slower, dramatic - 65ms/char, 600ms mouse
+                      - tutorial: Balanced learning - 55ms/char, 500ms mouse
+                      - testing: Fast but visible - 15ms/char, 150ms mouse
+                      - instant: No delays (CI/validation only)
+  --demo-speed=SPEED  Legacy speed preset: slow, normal, fast
+  --no-overlay        Disable keystroke overlay
+  --demo-validate     Validate demo script with built-in checks (test mode)
+  --timing            Show detailed timing report with optimization suggestions
+
+${bold('Demo Auto-Validation:')}
+  --validate          Enable comprehensive auto-validation for all actions:
+                      • Pre-validation: Check element exists, visible, interactable
+                      • Post-validation: Verify actions had expected effect
+                      • Console monitoring: Catch runtime errors
+                      • State tracking: Compare before/after snapshots
+  --auto-validate     Alias for --validate
+  --validation-level  Strictness level:
+                      - strict: Fail on any warning or error
+                      - normal: Fail only on errors (default when enabled)
+                      - lenient: Max retries, longer timeouts
+
 ${bold('Main Categories (17):')}
   core        Primitives (Frame, Text, Button, Icon, etc.)
   layout      Layout (direction, gap, grid, stacked, wrap)
@@ -191,6 +238,19 @@ ${bold('Examples:')}
   npx tsx tools/test.ts --filter="Button"                     # Filter by pattern
   npx tsx tools/test.ts --progress --category=layout          # With progress bar
   npx tsx tools/test.ts --explore                             # Show file structure
+
+${bold('Demo Examples:')}
+  npx tsx tools/test.ts --demo=tools/test-runner/demo/scripts/example.ts --headed
+  npx tsx tools/test.ts --demo=scripts/intro.ts --pacing=presentation --headed  # Slow, dramatic
+  npx tsx tools/test.ts --demo=scripts/card-workflow.ts --pacing=video --headed # Optimal for recording
+  npx tsx tools/test.ts --demo=demo.json --no-overlay --headed
+  npx tsx tools/test.ts --demo=scripts/card-workflow.ts --demo-validate          # Fast validation
+  npx tsx tools/test.ts --demo=scripts/card-workflow.ts --timing                 # Timing analysis
+
+${bold('Validation Examples:')}
+  npx tsx tools/test.ts --demo=scripts/workflow.ts --validate --headed           # With auto-validation
+  npx tsx tools/test.ts --demo=scripts/test.ts --validate --validation-level=strict  # Strict mode
+  npx tsx tools/test.ts --demo=scripts/test.ts --validate --timing               # Combined reports
 `)
 }
 
@@ -244,6 +304,109 @@ async function configurePanels(runner: TestRunner, args: CLIArgs): Promise<strin
 }
 
 // =============================================================================
+// Demo Mode
+// =============================================================================
+
+async function runDemoMode(args: CLIArgs): Promise<number> {
+  const isValidateMode = args.demoValidate
+
+  if (isValidateMode) {
+    console.log(`\n🔍 ${bold('Demo Validation Mode')}\n`)
+  } else {
+    console.log(`\n🎬 ${bold('Demo Mode')}\n`)
+    if (!args.headed) {
+      console.log('⚠️  Demo mode works best with --headed flag for video recording\n')
+    }
+  }
+
+  try {
+    // Load demo script
+    console.log(`📄 Loading demo script: ${args.demo}`)
+    const script = await loadDemoScript(args.demo!)
+    console.log(`   Name: ${script.name}`)
+    console.log(`   Steps: ${script.steps.length}`)
+
+    // Count validation steps
+    const validationSteps = script.steps.filter(s => s.action === 'validate').length
+    if (validationSteps > 0) {
+      console.log(`   Validations: ${validationSteps}`)
+    }
+    console.log('')
+
+    // Create test runner for browser control
+    const config: Partial<TestConfig> = {
+      headless: !args.headed,
+      url: args.url,
+      verbose: args.verbose,
+      silent: args.silent,
+    }
+
+    const runner = new TestRunner(config)
+
+    try {
+      await runner.start()
+      await runner.navigate(args.url)
+
+      // Wait for page to be ready
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // Determine pacing profile
+      let pacing = args.demoPacing || 'video'
+      if (isValidateMode) {
+        pacing = 'testing' // Use testing profile for validation
+      }
+
+      // Create demo config with validation options
+      const demoConfig: Partial<DemoConfig> & {
+        timing?: boolean
+        autoValidate?: boolean
+        validationLevel?: 'strict' | 'normal' | 'lenient'
+      } = {
+        speed: isValidateMode ? 'fast' : (args.demoSpeed || 'normal'),
+        pacing: pacing as any,
+        showKeystrokeOverlay: isValidateMode ? false : args.demoOverlay,
+        timing: args.demoTiming,
+        autoValidate: args.demoAutoValidate,
+        validationLevel: args.demoValidationLevel,
+      }
+
+      // Get CDP session for demo runner
+      const cdp = (runner as any).cdp
+      if (!cdp) {
+        throw new Error('Could not access CDP session')
+      }
+
+      // Create and run demo
+      const demoRunner = new DemoRunner(cdp, demoConfig)
+      const result = await demoRunner.run(script)
+
+      // Keep browser open for a moment at the end (only in non-validate mode)
+      if (!isValidateMode) {
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      }
+
+      // Return exit code based on validation results
+      if (result.success) {
+        if (isValidateMode) {
+          console.log('\n🎉 All validations passed!\n')
+        }
+        return 0
+      } else {
+        if (isValidateMode) {
+          console.log('\n💥 Validation failed!\n')
+        }
+        return 1
+      }
+    } finally {
+      await runner.stop()
+    }
+  } catch (err) {
+    console.error('❌ Demo error:', err)
+    return 1
+  }
+}
+
+// =============================================================================
 // Main
 // =============================================================================
 
@@ -286,6 +449,12 @@ async function main(): Promise<void> {
     console.log('  npx tsx tools/test.ts --category=components --headed')
     console.log('  npx tsx tools/test.ts --progress --category=drag\n')
     process.exit(0)
+  }
+
+  // Handle demo mode
+  if (args.demo) {
+    const exitCode = await runDemoMode(args)
+    process.exit(exitCode)
   }
 
   const config: Partial<TestConfig> = {

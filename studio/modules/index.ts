@@ -30,3 +30,13 @@ export {
   type TokenRenderDeps,
   type ComponentRenderDeps,
 } from '../compile'
+
+// Validator (for code linting)
+export {
+  validate,
+  validateAST,
+  toCodeMirrorDiagnostics,
+  type ValidationResult,
+  type ValidationError,
+  type CodeMirrorDiagnostic,
+} from '../../compiler/validator'

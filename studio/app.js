@@ -5,6 +5,7 @@ import {
   Prec,
   Annotation,
   Transaction,
+  Compartment,
 } from '@codemirror/state'
 import {
   EditorView,
@@ -38,6 +39,7 @@ import {
   currentCompletions,
 } from '@codemirror/autocomplete'
 import { indentUnit } from '@codemirror/language'
+import { linter, lintGutter, forceLinting } from '@codemirror/lint'
 
 // Custom dialogs
 import { alert, confirm, prompt } from './dialog.js'
@@ -129,7 +131,10 @@ import {
   indentGuidesExtension,
   // Smart Paste Extension (auto-adjust indentation on paste)
   smartPasteExtension,
-} from './dist/index.js?v=144'
+  // Validator (for code linting)
+  validate as validateCode,
+  toCodeMirrorDiagnostics,
+} from './dist/index.js?v=146'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1039,8 +1044,8 @@ document.addEventListener(
   e => {
     if (!colorPickerVisible) return
 
-    // Escape: close picker
-    if (e.key === 'Escape' && !hashTriggerActive) {
+    // Escape: close picker (always, regardless of trigger mode)
+    if (e.key === 'Escape') {
       e.preventDefault()
       e.stopPropagation()
       hideColorPicker()
@@ -1072,7 +1077,11 @@ document.addEventListener(
 ) // Use capturing phase
 
 document.addEventListener('mousedown', e => {
-  if (colorPickerVisible && !colorPicker.contains(e.target)) {
+  if (!colorPickerVisible) return
+
+  // Get the color picker element (may have been re-rendered)
+  const pickerEl = document.getElementById('color-picker')
+  if (!pickerEl || !pickerEl.contains(e.target)) {
     hideColorPicker()
   }
 })
@@ -1564,6 +1573,14 @@ const componentExtractConfig = {
 const componentExtractExtension = createComponentExtractExtensionFromConfig(componentExtractConfig)
 const tokenExtractExtension = createTokenExtractExtensionFromConfig(componentExtractConfig)
 
+// Linter state - store current diagnostics for the linter extension
+let currentDiagnostics = []
+
+// Create linter extension that returns stored diagnostics
+const mirrorLinter = linter(view => {
+  return currentDiagnostics
+})
+
 // Initialize Draft Mode Manager (AI-assisted editing with -- marker)
 // Note: We pass a getter function since editor isn't created yet
 let editor // Forward declaration for draft mode manager
@@ -1584,6 +1601,8 @@ editor = new EditorView({
       highlightActiveLine(),
       drawSelection(),
       history(),
+      lintGutter(), // Show error markers in gutter
+      mirrorLinter, // Dynamic diagnostics (updated on compile)
       indentGuidesExtension(), // Visual indent guides (vertical lines)
       smartPasteExtension(), // Auto-adjust indentation on paste
       draftLinesExtension(),
@@ -2352,6 +2371,14 @@ function compile(code) {
       status.className = 'status ok'
     }
 
+    // Validate code and update linter diagnostics
+    // We validate the user's code (not resolved with prelude) so errors show at correct positions
+    const validationResult = validateCode(code)
+    currentDiagnostics = toCodeMirrorDiagnostics(validationResult, code)
+    if (editor) {
+      forceLinting(editor)
+    }
+
     // Log compile timings
     const compileEnd = performance.now()
     const totalTime = compileEnd - compileStart
@@ -2384,6 +2411,12 @@ function compile(code) {
   } catch (err) {
     // Reset compile status on error
     studioActions.setCompiling(false)
+
+    // Clear diagnostics on compile error (parser errors are shown in preview)
+    currentDiagnostics = []
+    if (editor) {
+      forceLinting(editor)
+    }
 
     if (status) {
       status.textContent = 'Error'
@@ -3823,6 +3856,7 @@ window.startCompletion = startCompletion
 window.closeCompletion = closeCompletion
 window.files = files
 window.studio = studio // New architecture
+window.generateComponentCodeFromDragData = generateComponentCodeFromDragData // For editor drop tests
 window.resetCode = async () => {
   // No longer supported - all content comes from server
   console.log('[App] resetCode is deprecated - content managed by server')

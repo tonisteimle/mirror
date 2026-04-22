@@ -267,6 +267,57 @@ export const colorPickerTests: TestCase[] = describe('Color Picker', [
     await api.interact.pressKey('Escape')
   }),
 
+  test('Color picker closes when pressing Escape', async (api: TestAPI) => {
+    // Start with simple code that has a button
+    await api.editor.setCode(`Frame bg #1a1a1a, pad 24
+  Button "Test", bg #333333, col white`)
+    await api.utils.waitForCompile()
+    await api.utils.delay(300)
+
+    // Select the button
+    await api.studio.setSelection('node-2')
+    await api.utils.delay(200)
+
+    // Open color picker for background
+    const opened = await openColorPicker(api, 'bg')
+    api.assert.ok(opened, 'Should be able to open color picker')
+    api.assert.ok(isColorPickerVisible(), 'Color picker should be visible')
+
+    // Press Escape to close
+    await api.interact.pressKey('Escape')
+    await api.utils.delay(300)
+
+    // Verify color picker is closed
+    api.assert.ok(!isColorPickerVisible(), 'Color picker should close after pressing Escape')
+  }),
+
+  test('Color picker closes when clicking outside', async (api: TestAPI) => {
+    // Start with simple code that has a button
+    await api.editor.setCode(`Frame bg #1a1a1a, pad 24
+  Button "Test", bg #333333, col white`)
+    await api.utils.waitForCompile()
+    await api.utils.delay(300)
+
+    // Select the button
+    await api.studio.setSelection('node-2')
+    await api.utils.delay(200)
+
+    // Open color picker for background
+    const opened = await openColorPicker(api, 'bg')
+    api.assert.ok(opened, 'Should be able to open color picker')
+    api.assert.ok(isColorPickerVisible(), 'Color picker should be visible')
+
+    // Click outside the picker (on the preview area)
+    const preview = document.getElementById('preview') as HTMLElement
+    if (preview) {
+      preview.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+    }
+    await api.utils.delay(300)
+
+    // Verify color picker is closed
+    api.assert.ok(!isColorPickerVisible(), 'Color picker should close after clicking outside')
+  }),
+
   test('Selecting palette color updates button', async (api: TestAPI) => {
     // Setup simple layout without tokens
     await api.editor.setCode(`Frame bg #1a1a1a, pad 24

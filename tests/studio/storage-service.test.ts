@@ -66,7 +66,7 @@ describe('StorageService File Operations', () => {
   describe('readFile', () => {
     it('should read file from provider', async () => {
       const content = await service.readFile('index.mir')
-      expect(content).toContain('Mirror')
+      expect(content).toContain('Frame')
     })
 
     it('should cache file content', async () => {
@@ -362,7 +362,7 @@ describe('StorageService Prelude', () => {
   it('should build prelude string', async () => {
     const prelude = await service.buildPrelude()
 
-    // Prelude contains components that use tokens (e.g., bg $accent)
+    // Prelude contains token references
     expect(prelude).toContain('$')
     expect(typeof prelude).toBe('string')
   })

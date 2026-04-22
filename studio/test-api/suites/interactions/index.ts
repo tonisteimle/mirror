@@ -43,6 +43,7 @@ export {
 } from './padding-handlers.test'
 
 export { tokenExtractTests } from './token-extract.test'
+export { componentExtractTests } from './component-extract.test'
 
 export {
   resizeHandleDragTests,

@@ -872,8 +872,10 @@ export const FLEX_ITEM_TESTS: Array<{
     description: 'Allow shrinking',
   },
   {
+    // Note: explicit width overrides shrink because the compiler always adds flex-shrink: 0
+    // to explicit widths to prevent them from being compressed in flex containers
     code: 'Frame shrink, w 200',
-    expectedCSS: { 'flex-shrink': '1', 'width': '200px' },
+    expectedCSS: { 'flex-shrink': '0', 'width': '200px' },
     description: 'Shrink with preferred width',
   },
   // Note: 'grow' is removed - use 'w full' in horizontal context

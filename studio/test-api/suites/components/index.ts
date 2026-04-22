@@ -36,6 +36,16 @@ export {
 export { pureCheckboxTests } from './pure-checkbox.test'
 export { pureRadioGroupTests } from './pure-radio-group.test'
 
+// Select Component Tests - Drag & Verify (comprehensive)
+export {
+  allSelectDragAndVerifyTests,
+  selectDragTests,
+  selectAppearanceTests,
+  selectFunctionalityTests,
+  selectKeyboardTests,
+  selectHoverTests,
+} from './select-drag-and-verify.test'
+
 // Panel Drag All Components Tests
 export {
   allPanelDragTests,
@@ -57,12 +67,13 @@ import { allAccordionDropTests } from './accordion-drop.test'
 import { pureCheckboxTests } from './pure-checkbox.test'
 import { pureRadioGroupTests } from './pure-radio-group.test'
 import { allPanelDragTests } from './panel-drag-all.test'
+import { allSelectDragAndVerifyTests } from './select-drag-and-verify.test'
 
-// Legacy exports for backwards compatibility (empty arrays)
+// Legacy exports for backwards compatibility (empty arrays or filled)
 export const checkboxTests: TestCase[] = []
 export const switchTests: TestCase[] = []
 export const sliderTests: TestCase[] = []
-export const selectTests: TestCase[] = []
+export const selectTests: TestCase[] = [...allSelectDragAndVerifyTests]
 export const radioGroupTests: TestCase[] = []
 export const dialogTests: TestCase[] = []
 export const tooltipTests: TestCase[] = []
@@ -83,4 +94,5 @@ export const allComponentTests: TestCase[] = [
   ...pureCheckboxTests,
   ...pureRadioGroupTests,
   ...allPanelDragTests,
+  ...allSelectDragAndVerifyTests,
 ]

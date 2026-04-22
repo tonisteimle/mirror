@@ -5,7 +5,16 @@
  * Gleiche API für Browser (localStorage) und Tauri.
  */
 
-import { storage } from './index'
+// Lazy import to avoid circular dependency with index.ts
+// storage singleton is created in index.ts which re-exports this module
+let _storage: typeof import('./index').storage | null = null
+function getStorage() {
+  if (!_storage) {
+    _storage = require('./index').storage
+  }
+  return _storage
+}
+
 import { isTauri } from './providers'
 import { createLogger } from '../../compiler/utils/logger'
 
@@ -35,223 +44,62 @@ export const EMPTY_PROJECT: Record<string, string> = {
 // Default/Demo Project Template
 // =============================================================================
 
-// Used for demo projects - includes starter tokens, components, and layout
-// Uses canvas keyword for app-level styling with device presets
+// Simple demo project - shows all file types working together
 // Exported for testing
 export const DEFAULT_PROJECT: Record<string, string> = {
-  'index.mir': `canvas mobile, bg $canvas, col $text, font $font
+  // Tokens - Farben und Abstände
+  'tokens.tok': `// Design Tokens
+primary.bg: #2271C1
+primary.ic: #2271C1
+surface.bg: #1a1a1a
+card.bg: #27272a
+muted.col: #888
+muted.ic: #888
+space.pad: 16
+space.gap: 12
+radius.rad: 8`,
 
-// Header
-Frame hor, spread, ver-center, pad $m
-  Text "Mirror Demo", fs $l, weight bold
-  Frame hor, gap $s
-    Icon "sun", ic $muted, is 20
-    Switch "Theme"
-      Label: hidden
+  // Components - Wiederverwendbare Bausteine
+  'components.com': `// Komponenten
+Card: bg $card, pad $space, rad $radius, gap 8
 
-// Navigation Tabs
-Tabs defaultValue "Home"
-  Tab "Home"
-    Frame pad $l, gap $l
-      Card
-        Text "Willkommen!", fs $l, weight bold
-        TextMuted "Dies ist ein Demo-Projekt mit verschiedenen Komponenten."
-        PrimaryBtn "Mehr erfahren"
-
-      Card
-        Text "Quick Stats", fs $m, weight 500
-        Frame hor, gap $l, wrap
-          StatBox
-            Text "4", fs $xxl, weight bold, col $accent
-            TextMuted "Aufgaben"
-          StatBox
-            Text "2", fs $xxl, weight bold, col #10b981
-            TextMuted "Erledigt"
-
-  Tab "Tasks"
-    Frame pad $l, gap $m
-      Frame hor, spread, ver-center
-        Text "Aufgaben", fs $l, weight bold
-        PrimaryBtn "Neu", pad $s $m, fs $s
-
-      each task in $tasks
-        TaskItem
-          Frame w 20, h 20, rad 4, bor 1, boc $border, center
-            Icon task.done ? "check" : "", ic $accent, is 14
-          Text task.title, col task.done ? $muted : $text
-          Icon "trash-2", ic $muted, is 16, cursor pointer
-
-  Tab "Settings"
-    Frame pad $l, gap $l
-      Card
-        Text "Einstellungen", fs $l, weight bold, mar 0 0 $m 0
-
-        SettingRow
-          Frame gap $s
-            Text "Dark Mode"
-            TextMuted "Dunkles Farbschema verwenden"
-          Switch "Dark Mode"
-            Label: hidden
-
-        Divider
-
-        SettingRow
-          Frame gap $s
-            Text "Benachrichtigungen"
-            TextMuted "Push-Benachrichtigungen aktivieren"
-          Switch "Notifications"
-            Label: hidden
-
-        Divider
-
-        SettingRow
-          Frame gap $s
-            Text "Sprache"
-            TextMuted "Anzeigesprache wählen"
-          Select placeholder "Wählen..."
-            Item "Deutsch"
-            Item "English"
-            Item "Français"
-
-// Info Dialog
-Dialog
-  Trigger: Link "Über Mirror", col $accent, fs $s, pad $m
-  Backdrop: bg rgba(0,0,0,0.7)
-  Content: Frame w 300, bg $surface, pad $l, rad $m, gap $m
-    Text "Über Mirror", fs $l, weight bold
-    TextMuted "Mirror ist eine DSL für AI-unterstütztes UI-Design. Erstelle Interfaces durch einfache, lesbare Syntax."
-    Frame hor, gap $s
-      CloseTrigger: GhostBtn "Schließen", grow
-      CloseTrigger: PrimaryBtn "OK", grow`,
-
-  'tokens.tok': `// Theme Tokens
-
-// Typography
-font: Inter, system-ui, -apple-system, sans-serif
-
-s.fs: 12
-m.fs: 14
-l.fs: 18
-xl.fs: 24
-xxl.fs: 32
-
-// Colors
-accent.bg: #5BA8F5
-success.bg: #10b981
-warning.bg: #f59e0b
-danger.bg: #ef4444
-surface.bg: #27272a
-canvas.bg: #18181b
-input.bg: #1f1f1f
-text.col: #ffffff
-muted.col: #71717a
-border.boc: #3f3f46
-focus.boc: #5BA8F5
-
-// Spacing
-s.pad: 4
-m.pad: 8
-l.pad: 16
-xl.pad: 24
-
-s.gap: 4
-m.gap: 8
-l.gap: 16
-xl.gap: 24
-
-// Radius
-s.rad: 4
-m.rad: 8
-l.rad: 12`,
-
-  'components.com': `// Component Definitions
-
-// Typography
-Title: fs $xl, weight bold
-TextMuted: fs $m, col $muted
-
-// Buttons
-PrimaryBtn as Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
+Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
   hover:
-    bg #2271C1
+    opacity 0.9`,
 
-GhostBtn as Button: pad $m $l, bg transparent, rad $s, col $muted, cursor pointer
-  hover:
-    bg $surface
-    col $text
+  // Data - Strukturierte Daten
+  'data.yaml': `// Karten-Daten
+cards:
+  welcome:
+    title: "Willkommen"
+    text: "Dies ist ein Demo-Projekt."
+    icon: home
+  components:
+    title: "Komponenten"
+    text: "Baue wiederverwendbare UI-Bausteine."
+    icon: layers
+  preview:
+    title: "Live Preview"
+    text: "Änderungen sofort sehen."
+    icon: eye`,
 
-DangerBtn as Button: pad $m $l, bg $danger, rad $s, col white, cursor pointer
-  hover:
-    bg #dc2626
+  // Main Layout - nutzt alles
+  'index.mir': `// Demo - zeigt Tokens, Components und Data
+Frame bg $surface, col white, pad 24, gap $space, h full
 
-// Layout Components
-Card: bg $surface, pad $l, rad $m, gap $m
+  // Header
+  Frame hor, spread, ver-center
+    Text "Demo App", fs 20, weight bold
+    Icon "settings", ic $muted
 
-StatBox: bg $canvas, pad $m, rad $s, center
-
-SettingRow: hor, spread, ver-center, pad $s 0
-
-TaskItem: hor, gap $m, ver-center, pad $m, bg $surface, rad $s
-  hover:
-    bg #333
-
-// Form
-Input: pad $m, bg $input, rad $s, bor 1, boc $border
-  focus:
-    boc $focus`,
-
-  'data.data': `// Demo Data
-
-tasks:
-  task1:
-    title: "Design Review abschließen"
-    done: true
-  task2:
-    title: "Komponenten dokumentieren"
-    done: false
-  task3:
-    title: "Tests schreiben"
-    done: false
-  task4:
-    title: "Deployment vorbereiten"
-    done: true
-
-sales:
-  Jan: 120
-  Feb: 180
-  Mar: 240
-  Apr: 200
-  May: 280
-  Jun: 320
-
-products:
-  laptop:
-    name: "Laptop Pro"
-    price: 1299
-    stock: 45
-  phone:
-    name: "SmartPhone X"
-    price: 899
-    stock: 120
-  tablet:
-    name: "Tablet Air"
-    price: 599
-    stock: 80
-
-categories:
-  electronics: 45
-  clothing: 32
-  books: 18
-  home: 25
-
-traffic:
-  Mon: 1200
-  Tue: 1450
-  Wed: 1380
-  Thu: 1520
-  Fri: 1680
-  Sat: 980
-  Sun: 750`,
+  // Karten aus Daten
+  each card in $cards
+    Card
+      Frame hor, gap $space, ver-center
+        Icon card.icon, ic $primary, is 20
+        Text card.title, fs 16, weight 500
+      Text card.text, col $muted, fs 14
+      Btn "Mehr"`,
 }
 
 // =============================================================================
@@ -260,9 +108,9 @@ traffic:
 
 /**
  * Neues Projekt erstellen
- * @param type - 'empty' für leeres Projekt, 'demo' für Demo-Projekt
+ * @param type - 'empty' für leeres Projekt (default), 'demo' für Demo-Projekt
  */
-export async function newProject(type: ProjectType = 'demo'): Promise<void> {
+export async function newProject(type: ProjectType = 'empty'): Promise<void> {
   if (isTauri()) {
     // Tauri: Native Dialog für neuen Ordner
     await tauriNewProject(type)
@@ -417,6 +265,7 @@ async function tauriLoadDemo(): Promise<void> {
     await tauriBridge.loadDemo()
   } else {
     // Fallback: Default-Project direkt schreiben
+    const storage = getStorage()
     for (const [path, content] of Object.entries(DEFAULT_PROJECT)) {
       await storage.writeFile(path, content)
     }

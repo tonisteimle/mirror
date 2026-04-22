@@ -45,7 +45,9 @@ interface PanelConfig {
 }
 
 const PANEL_CONFIG: Record<string, PanelConfig> = {
-  // Simple primitives - compact mode, no headers
+  // ==========================================================================
+  // BASIC PRIMITIVES
+  // ==========================================================================
   Icon: {
     sections: ['content', 'color', 'sizing'],
     compact: true,
@@ -69,7 +71,9 @@ const PANEL_CONFIG: Record<string, PanelConfig> = {
     compact: true,
   },
 
-  // Text elements
+  // ==========================================================================
+  // TEXT ELEMENTS
+  // ==========================================================================
   Text: {
     sections: ['content', 'color', 'typography', 'sizing'],
     compact: true,
@@ -87,7 +91,9 @@ const PANEL_CONFIG: Record<string, PanelConfig> = {
   H5: { sections: ['content', 'color', 'typography'], compact: true, colorProps: ['col'] },
   H6: { sections: ['content', 'color', 'typography'], compact: true, colorProps: ['col'] },
 
-  // Interactive elements
+  // ==========================================================================
+  // INTERACTIVE ELEMENTS
+  // ==========================================================================
   Button: {
     sections: ['content', 'color', 'spacing', 'border', 'typography'],
     colorProps: ['bg', 'col'],
@@ -97,7 +103,9 @@ const PANEL_CONFIG: Record<string, PanelConfig> = {
     colorProps: ['col'],
   },
 
-  // Form elements
+  // ==========================================================================
+  // FORM INPUTS
+  // ==========================================================================
   Input: {
     sections: ['content', 'color', 'sizing', 'spacing', 'border', 'typography'],
     colorProps: ['bg', 'col', 'boc'],
@@ -107,7 +115,9 @@ const PANEL_CONFIG: Record<string, PanelConfig> = {
     colorProps: ['bg', 'col', 'boc'],
   },
 
-  // Containers - full sections
+  // ==========================================================================
+  // CONTAINERS
+  // ==========================================================================
   Frame: {
     sections: ['layout', 'sizing', 'spacing', 'border', 'color'],
     colorProps: ['bg', 'col'],
@@ -126,7 +136,9 @@ const PANEL_CONFIG: Record<string, PanelConfig> = {
   Aside: { sections: ['layout', 'sizing', 'spacing', 'color'], colorProps: ['bg'] },
   Footer: { sections: ['layout', 'sizing', 'spacing', 'color'], colorProps: ['bg'] },
 
-  // Data components
+  // ==========================================================================
+  // DATA COMPONENTS
+  // ==========================================================================
   Table: {
     sections: ['layout', 'sizing', 'spacing', 'border', 'color'],
     colorProps: ['bg', 'col'],
@@ -136,30 +148,19 @@ const PANEL_CONFIG: Record<string, PanelConfig> = {
   TableCell: { sections: ['sizing', 'spacing', 'color', 'typography'], colorProps: ['col'] },
   TableHeaderCell: { sections: ['sizing', 'spacing', 'color', 'typography'], colorProps: ['col'] },
 
-  // Navigation components
-  Tabs: {
-    sections: ['layout', 'sizing', 'spacing', 'color'],
-    colorProps: ['bg'],
-  },
-  Tab: {
-    sections: ['content', 'spacing', 'color', 'typography'],
+  // ==========================================================================
+  // COMPONENT PANEL: FORM CONTROLS
+  // ==========================================================================
+  Checkbox: {
+    sections: ['content', 'sizing', 'spacing', 'color'],
     colorProps: ['bg', 'col'],
   },
-
-  // Form controls
-  Checkbox: {
-    sections: ['content', 'spacing', 'color'],
-    compact: true,
-    colorProps: ['col'],
-  },
   Switch: {
-    sections: ['content', 'spacing', 'color'],
-    compact: true,
+    sections: ['content', 'sizing', 'spacing', 'color'],
     colorProps: ['bg'],
   },
   Slider: {
-    sections: ['sizing', 'color'],
-    compact: true,
+    sections: ['sizing', 'spacing', 'color'],
     colorProps: ['bg'],
   },
   RadioGroup: {
@@ -172,29 +173,108 @@ const PANEL_CONFIG: Record<string, PanelConfig> = {
     colorProps: ['col'],
   },
 
-  // Accordion
-  AccordionItem: {
-    sections: ['layout', 'spacing', 'color'],
-    colorProps: ['bg'],
-  },
-
-  // Select (Pure Mirror)
+  // ==========================================================================
+  // COMPONENT PANEL: SELECT (Pure Mirror)
+  // ==========================================================================
   Select: {
-    sections: ['sizing', 'spacing', 'color'],
+    sections: ['sizing', 'spacing', 'border', 'color', 'typography'],
+    colorProps: ['bg', 'col', 'boc'],
+  },
+  SelectTrigger: {
+    sections: ['sizing', 'spacing', 'border', 'color', 'typography'],
+    colorProps: ['bg', 'col', 'boc'],
+  },
+  Trigger: {
+    sections: ['sizing', 'spacing', 'border', 'color', 'typography'],
+    colorProps: ['bg', 'col', 'boc'],
+  },
+  SelectContent: {
+    sections: ['sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'boc'],
+  },
+  Content: {
+    sections: ['sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'boc'],
+  },
+  SelectItem: {
+    sections: ['spacing', 'border', 'color', 'typography'],
+    compact: true,
+    colorProps: ['bg', 'col'],
+  },
+  Item: {
+    sections: ['spacing', 'border', 'color', 'typography'],
+    compact: true,
     colorProps: ['bg', 'col'],
   },
 
-  // Chart
-  Chart: {
-    sections: ['sizing', 'color'],
+  // ==========================================================================
+  // COMPONENT PANEL: DIALOG
+  // ==========================================================================
+  Dialog: {
+    sections: ['sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'boc'],
+  },
+  DialogTrigger: {
+    sections: ['sizing', 'spacing', 'border', 'color', 'typography'],
+    colorProps: ['bg', 'col', 'boc'],
+  },
+  DialogContent: {
+    sections: ['sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'boc'],
+  },
+  DialogBackdrop: {
+    sections: ['color'],
+    compact: true,
+    colorProps: ['bg'],
+  },
+  Backdrop: {
+    sections: ['color'],
     compact: true,
     colorProps: ['bg'],
   },
 
-  // DatePicker (Zag)
-  DatePicker: {
-    sections: ['sizing', 'spacing', 'color'],
+  // ==========================================================================
+  // COMPONENT PANEL: TABS
+  // ==========================================================================
+  Tabs: {
+    sections: ['layout', 'sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'boc'],
+  },
+  Tab: {
+    sections: ['content', 'spacing', 'border', 'color', 'typography'],
+    colorProps: ['bg', 'col', 'boc'],
+  },
+  TabList: {
+    sections: ['layout', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'boc'],
+  },
+  TabContent: {
+    sections: ['spacing', 'color'],
+    colorProps: ['bg'],
+  },
+
+  // ==========================================================================
+  // COMPONENT PANEL: SIDENAV
+  // ==========================================================================
+  SideNav: {
+    sections: ['layout', 'sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'boc'],
+  },
+  NavItem: {
+    sections: ['spacing', 'border', 'color', 'typography'],
     colorProps: ['bg', 'col'],
+  },
+
+  // ==========================================================================
+  // COMPONENT PANEL: DATE PICKER
+  // ==========================================================================
+  DatePicker: {
+    sections: ['sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'col', 'boc'],
+  },
+  DateInput: {
+    sections: ['sizing', 'spacing', 'border', 'color', 'typography'],
+    colorProps: ['bg', 'col', 'boc'],
   },
 }
 

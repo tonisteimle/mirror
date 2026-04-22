@@ -5,18 +5,25 @@
  * definition (properties + children) to a .com file and replaces the
  * current code with just the instance name.
  *
- * Example:
+ * Example (new component):
  *   Card:: pad 16, bg #333
  *     Text "Hello"
  *     Button "OK"
  *
  * Becomes in editor:
  *   Card
+ *     Text "Hello"
+ *     Button "OK"
  *
  * And in components.com:
  *   Card: pad 16, bg #333
- *     Text "Hello"
- *     Button "OK"
+ *
+ * Example (existing component - smart diffing):
+ *   If Card already exists with: pad 16, bg #333
+ *   And you type: Card:: pad 16, bg #333, rad 8
+ *
+ *   Result: Card rad 8
+ *   (Only the different property 'rad 8' is kept as override)
  */
 
 import { EditorView, ViewUpdate } from '@codemirror/view'
@@ -31,6 +38,91 @@ export const COMPONENT_EXTRACT_TRIGGER_ID = 'component-extract'
 // Pattern to detect Name:: (PascalCase name followed by ::)
 // Matches the full "Name::" at the end of text
 const EXTRACT_PATTERN = /([A-Z][a-zA-Z0-9]*)::$/
+
+/**
+ * Parse properties from a property string like "pad 16, bg #333, rad 8"
+ * Returns a Map of property name -> full property string (e.g., "pad" -> "pad 16")
+ */
+function parseProperties(propsString: string): Map<string, string> {
+  const props = new Map<string, string>()
+  if (!propsString.trim()) return props
+
+  // Split by comma, handling potential quoted strings
+  const parts: string[] = []
+  let current = ''
+  let inQuotes = false
+  let quoteChar = ''
+
+  for (const char of propsString) {
+    if ((char === '"' || char === "'") && !inQuotes) {
+      inQuotes = true
+      quoteChar = char
+      current += char
+    } else if (char === quoteChar && inQuotes) {
+      inQuotes = false
+      quoteChar = ''
+      current += char
+    } else if (char === ',' && !inQuotes) {
+      if (current.trim()) parts.push(current.trim())
+      current = ''
+    } else {
+      current += char
+    }
+  }
+  if (current.trim()) parts.push(current.trim())
+
+  // Parse each property
+  for (const part of parts) {
+    const trimmed = part.trim()
+    if (!trimmed) continue
+
+    // Extract property name (first word)
+    const spaceIndex = trimmed.indexOf(' ')
+    const propName = spaceIndex > 0 ? trimmed.slice(0, spaceIndex) : trimmed
+
+    // Store full property string
+    props.set(propName, trimmed)
+  }
+
+  return props
+}
+
+/**
+ * Extract component definition properties from .com file content
+ */
+function getComponentDefinitionProps(
+  comContent: string,
+  componentName: string
+): Map<string, string> | null {
+  // Find the component definition line
+  const pattern = new RegExp(`^${componentName}\\s*:\\s*(.*)$`, 'm')
+  const match = comContent.match(pattern)
+
+  if (!match) return null
+
+  return parseProperties(match[1])
+}
+
+/**
+ * Diff properties: return only properties that are different from the component definition
+ */
+function diffProperties(
+  instanceProps: Map<string, string>,
+  componentProps: Map<string, string>
+): string[] {
+  const overrides: string[] = []
+
+  for (const [propName, propValue] of instanceProps) {
+    const componentValue = componentProps.get(propName)
+
+    // Keep if: not in component, or different value
+    if (!componentValue || componentValue !== propValue) {
+      overrides.push(propValue)
+    }
+  }
+
+  return overrides
+}
 
 interface ComponentExtractCallbacks {
   /** Get all project files */
@@ -205,44 +297,163 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
   // Check if component already exists
   const existingPattern = new RegExp(`^${componentName}\\s*:`, 'm')
   if (existingPattern.test(comContent)) {
-    log.warn(`Component ${componentName} already exists in ${comFilename}`)
-    // Just remove the :: to convert to instance usage
-    const doubleColonStart = line.from + colonIndex
+    log.info(`Component ${componentName} already exists - performing smart diff`)
+
+    // Get component definition properties
+    const componentProps = getComponentDefinitionProps(comContent, componentName)
+    if (!componentProps) {
+      log.error(`Could not parse component ${componentName} from ${comFilename}`)
+      return
+    }
+
+    // Get instance properties
+    const instanceProps = parseProperties(propertiesAfterColons)
+
+    // Diff: find properties that are different or new
+    const overrides = diffProperties(instanceProps, componentProps)
+
+    log.info(`Component props: ${[...componentProps.values()].join(', ')}`)
+    log.info(`Instance props: ${[...instanceProps.values()].join(', ')}`)
+    log.info(`Overrides: ${overrides.join(', ') || '(none)'}`)
+
+    // Build replacement: ComponentName [overrides]
+    const baseLine = doc.line(lineNumber)
+    const nameMatch = baseLine.text.match(new RegExp(`(\\s*)${componentName}::`))
+    const indent = nameMatch ? nameMatch[1] : ''
+
+    // Find children (lines with greater indentation)
+    let endLine = lineNumber
+    const baseIndentMatch = baseLine.text.match(/^(\s*)/)
+    const baseIndent = baseIndentMatch ? baseIndentMatch[1].length : 0
+    const totalLines = doc.lines
+
+    // Collect children
+    const children: string[] = []
+    for (let i = lineNumber + 1; i <= totalLines; i++) {
+      const childLine = doc.line(i)
+      const childText = childLine.text
+
+      if (childText.trim() === '') {
+        // Check if there are more children after empty line
+        let hasMore = false
+        for (let j = i + 1; j <= totalLines; j++) {
+          const nextLine = doc.line(j)
+          if (nextLine.text.trim() === '') continue
+          const nextIndent = (nextLine.text.match(/^(\s*)/) || ['', ''])[1].length
+          if (nextIndent > baseIndent) hasMore = true
+          break
+        }
+        if (hasMore) {
+          children.push('')
+          endLine = i
+          continue
+        }
+        break
+      }
+
+      const childIndent = (childText.match(/^(\s*)/) || ['', ''])[1].length
+      if (childIndent <= baseIndent) break
+
+      // Preserve relative indentation
+      const relativeIndent = childIndent - baseIndent
+      const relativeSpaces = '  '.repeat(Math.ceil(relativeIndent / 2))
+      children.push(relativeSpaces + childText.trim())
+      endLine = i
+    }
+
+    // Build replacement string
+    let replacement = indent + componentName
+    if (overrides.length > 0) {
+      replacement += ' ' + overrides.join(', ')
+    }
+
+    // Add children if any
+    if (children.length > 0) {
+      replacement += '\n' + children.map(c => indent + c).join('\n')
+    }
+
+    const endLineObj = doc.line(endLine)
     view.dispatch({
-      changes: { from: doubleColonStart, to: line.to, insert: '' },
-      selection: { anchor: doubleColonStart },
+      changes: { from: baseLine.from, to: endLineObj.to, insert: replacement },
+      selection: { anchor: baseLine.from + replacement.length },
       annotations: Transaction.userEvent.of('input.extract'),
     })
+
+    log.info(`Converted to instance with ${overrides.length} override(s)`)
     return
   }
 
+  // Create component definition with ONLY properties (not children)
+  const propsOnlyDefinition = `${componentName}: ${propertiesAfterColons.trim()}`
+
   // Add to components file
-  const newComContent = addToComponentsFile(comContent, definition)
+  const newComContent = addToComponentsFile(comContent, propsOnlyDefinition)
 
   // Update components file
   callbacks.updateFile(comFilename, newComContent)
   log.info(`Added ${componentName} to ${comFilename}`)
 
-  // Calculate what to remove from current file
+  // Calculate what to replace in current file
   const baseLine = doc.line(lineNumber)
-  const endLineObj = doc.line(endLine)
 
   // Find start of component name on the line
   const nameMatch = baseLine.text.match(new RegExp(`(\\s*)${componentName}::`))
   const indent = nameMatch ? nameMatch[1] : ''
 
-  // Replace entire component block with just the instance name
-  const removeFrom = baseLine.from
-  const removeTo = endLineObj.to
-  const replacement = indent + componentName
+  // Collect children (keep them in the editor!)
+  const baseIndentMatch = baseLine.text.match(/^(\s*)/)
+  const baseIndent = baseIndentMatch ? baseIndentMatch[1].length : 0
+  const totalLines = doc.lines
 
+  const children: string[] = []
+  let childEndLine = lineNumber
+
+  for (let i = lineNumber + 1; i <= totalLines; i++) {
+    const childLine = doc.line(i)
+    const childText = childLine.text
+
+    if (childText.trim() === '') {
+      // Check if more children after empty line
+      let hasMore = false
+      for (let j = i + 1; j <= totalLines; j++) {
+        const nextLine = doc.line(j)
+        if (nextLine.text.trim() === '') continue
+        const nextIndent = (nextLine.text.match(/^(\s*)/) || ['', ''])[1].length
+        if (nextIndent > baseIndent) hasMore = true
+        break
+      }
+      if (hasMore) {
+        children.push('')
+        childEndLine = i
+        continue
+      }
+      break
+    }
+
+    const childIndent = (childText.match(/^(\s*)/) || ['', ''])[1].length
+    if (childIndent <= baseIndent) break
+
+    // Preserve relative indentation
+    const relativeIndent = childIndent - baseIndent
+    const relativeSpaces = '  '.repeat(Math.ceil(relativeIndent / 2))
+    children.push(relativeSpaces + childText.trim())
+    childEndLine = i
+  }
+
+  // Build replacement: instance name + children
+  let replacement = indent + componentName
+  if (children.length > 0) {
+    replacement += '\n' + children.map(c => indent + c).join('\n')
+  }
+
+  const endLineObj = doc.line(childEndLine)
   view.dispatch({
-    changes: { from: removeFrom, to: removeTo, insert: replacement },
-    selection: { anchor: removeFrom + replacement.length },
+    changes: { from: baseLine.from, to: endLineObj.to, insert: replacement },
+    selection: { anchor: baseLine.from + indent.length + componentName.length },
     annotations: Transaction.userEvent.of('input.extract'),
   })
 
-  log.info(`Replaced code with instance: ${componentName}`)
+  log.info(`Created component ${componentName}, kept ${children.length} children in editor`)
 }
 
 /**

@@ -89,8 +89,9 @@ Card
 `)
     const js = generateDOM(ast)
 
-    // Hover is now CSS, not _stateStyles
-    expect(js).toContain(':hover {')
+    // Hover is now CSS with selector prefix, not _stateStyles
+    // Format: [data-mirror-id="node-1"]:hover, [data-mirror-id="node-1"][data-hover="true"] { ... }
+    expect(js).toContain(':hover,')
     expect(js).toContain('background: #555')
   })
 
@@ -255,7 +256,8 @@ Button
 `)
     const js = generateDOM(ast)
 
-    expect(js).toContain(':hover {')
+    // Format: [data-mirror-id="node-1"]:hover, [data-mirror-id="node-1"][data-hover="true"] { ... }
+    expect(js).toContain(':hover,')
     expect(js).toContain('background: #555')
   })
 
@@ -270,7 +272,8 @@ Input
 `)
     const js = generateDOM(ast)
 
-    expect(js).toContain(':focus {')
+    // Format: [data-mirror-id="node-1"]:focus, [data-mirror-id="node-1"][data-focus="true"] { ... }
+    expect(js).toContain(':focus,')
   })
 
   it('adds data-mirror-id attribute', () => {
