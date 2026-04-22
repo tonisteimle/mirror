@@ -29,3 +29,24 @@ export {
 export { colorPickerTests, allColorPickerTests } from './color-picker.test'
 
 export { iconPickerTests, allIconPickerTests } from './icon-picker.test'
+
+export {
+  allEventsTests,
+  addEventTests,
+  existingEventTests,
+  editEventTests,
+  deleteEventTests,
+  eventIntegrationTests,
+} from './events.test'
+
+// Error Handling Tests (B2.2)
+export {
+  allPanelErrorTests,
+  invalidColorTests,
+  invalidSizeTests,
+  invalidTokenReferenceTests,
+  spacingErrorTests,
+  borderErrorTests,
+  typographyErrorTests,
+  panelEdgeCaseTests,
+} from './errors.test'

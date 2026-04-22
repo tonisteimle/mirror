@@ -15,6 +15,37 @@ import { getComponentIcon } from '../../icons'
 import { createSectionHeader } from '../../components/section-header'
 
 // =============================================================================
+// System Components (built-in, not shown in MyComponents)
+// =============================================================================
+
+/**
+ * Component names that are system/built-in and should not appear in MyComponents.
+ * These are added automatically when dropping from the Component Panel.
+ */
+const SYSTEM_COMPONENTS = new Set([
+  // Accordion
+  'AccordionItem',
+  // Tabs
+  'Tab',
+  'TabBar',
+  'TabContent',
+  // Add more system components here as needed
+])
+
+/**
+ * Check if a component name is a system component (built-in)
+ */
+export function isSystemComponent(name: string): boolean {
+  return SYSTEM_COMPONENTS.has(name)
+}
+
+/**
+ * Get all system component names
+ */
+export function getSystemComponentNames(): string[] {
+  return Array.from(SYSTEM_COMPONENTS)
+}
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -44,6 +75,7 @@ interface ParsedComponent {
 
 /**
  * Parse component definitions from .com file content
+ * Filters out system components (built-in components from Component Panel)
  */
 function parseComFile(content: string, filename: string): ParsedComponent[] {
   const components: ParsedComponent[] = []
@@ -60,8 +92,15 @@ function parseComFile(content: string, filename: string): ParsedComponent[] {
     // Examples: "App:", "Button as button:", "Card: bg $surface, pad $l"
     const match = trimmed.match(/^([A-Z][a-zA-Z0-9_-]*)(?:\s+as\s+([a-zA-Z][a-zA-Z0-9_-]*))?:/)
     if (match) {
+      const componentName = match[1]
+
+      // Skip system components (built-in from Component Panel)
+      if (SYSTEM_COMPONENTS.has(componentName)) {
+        continue
+      }
+
       components.push({
-        name: match[1],
+        name: componentName,
         basePrimitive: match[2],
         line: i + 1,
       })

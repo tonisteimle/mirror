@@ -23,11 +23,6 @@ import type {
   ZagNode,
   ZagSlotDef,
   ZagItem,
-  TableNode,
-  TableColumnNode,
-  TableSlotNode,
-  TableStaticRowNode,
-  TableStaticCellNode,
   DataAttribute,
   DataReference,
   DataReferenceArray,
@@ -65,7 +60,6 @@ import {
   isText,
   isEach,
   hasContent,
-  isTable,
 } from '../parser/ast'
 import type {
   IR,
@@ -91,10 +85,6 @@ import type {
   IRStateDefinition,
   IRStateTransition,
   IRToken,
-  IRTable,
-  IRTableColumn,
-  IRTableStaticRow,
-  IRTableStaticCell,
   IRDataObject,
   IRDataValue,
   IRDataReference,
@@ -120,12 +110,6 @@ import {
 import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
 import { isZagPrimitive, ZAG_PRIMITIVES } from '../schema/zag-primitives'
 import {
-  isCompoundPrimitive,
-  getCompoundPrimitive,
-  getCompoundSlotDef,
-  isCompoundSlot,
-} from '../schema/compound-primitives'
-import {
   isChartPrimitive,
   getChartPrimitive,
   getChartSlotProperty,
@@ -134,10 +118,6 @@ import { isContainer as isContainerPrimitive, FLEX_DEFAULTS } from '../schema/la
 import type { IRChartSlot } from './types'
 import { getCanonicalPropertyName, SYSTEM_STATES } from '../schema/parser-helpers'
 // Extracted transformers
-import {
-  transformTable as transformTableExtracted,
-  humanizeFieldName,
-} from './transformers/table-transformer'
 import { transformChart as transformChartExtracted } from './transformers/chart-transformer'
 import { transformZagComponent as transformZagComponentExtracted } from './transformers/zag-transformer'
 import type { TransformerContext, ParentLayoutContext } from './transformers/transformer-context'
@@ -223,11 +203,6 @@ import {
   type ValidationContext,
 } from './transformers/validation'
 import { expandPropertySets as expandPropertySetsExtracted } from './transformers/property-set-expander'
-import {
-  transformCompoundPrimitive as transformCompoundPrimitiveExtracted,
-  transformCompoundSlot as transformCompoundSlotExtracted,
-  type CompoundTransformContext,
-} from './transformers/compound-transformer'
 import {
   transformStateChild as transformStateChildExtracted,
   type StateChildContext,
@@ -453,9 +428,6 @@ class IRTransformer {
       if (isZagComponent(inst)) {
         return this.transformZagComponent(inst)
       }
-      if (isTable(inst)) {
-        return this.transformTable(inst)
-      }
       return this.transformInstance(inst as Instance)
     })
 
@@ -578,15 +550,6 @@ class IRTransformer {
   ): IRNode {
     const ctx = this.createTransformerContext()
     return transformZagComponentExtracted(ctx, zagNode, parentLayoutContext, parentId)
-  }
-
-  /**
-   * Transform a TableNode to an IRTable
-   * Delegates to extracted table-transformer.ts
-   */
-  private transformTable(table: TableNode): IRTable {
-    const ctx = this.createTransformerContext()
-    return transformTableExtracted(ctx, table)
   }
 
   /**
@@ -739,30 +702,6 @@ class IRTransformer {
   }
 
   /**
-   * Transform a Compound primitive (Shell, etc.) into an IRNode
-   * Delegates to extracted compound-transformer.ts
-   */
-  private transformCompoundPrimitive(
-    instance: Instance,
-    parentId?: string,
-    parentLayoutContext?: ParentLayoutContext
-  ): IRNode {
-    const ctx: CompoundTransformContext = {
-      generateId: () => this.generateId(),
-      transformProperties: (props, prim, plc) => this.transformProperties(props, prim, plc),
-      transformInstance: (inst, pid, isEach, isCond, plc) =>
-        this.transformInstance(inst, pid, isEach, isCond, plc),
-      createTextNode: text => this.createTextNode(text),
-      tokenSet: this.tokenSet,
-      includeSourceMap: this.includeSourceMap,
-      addToSourceMap: this.includeSourceMap
-        ? (nodeId, name, pos, opts) => this.sourceMapBuilder.addNode(nodeId, name, pos, opts)
-        : undefined,
-    }
-    return transformCompoundPrimitiveExtracted(instance, ctx, parentId, parentLayoutContext)
-  }
-
-  /**
    * Create a text node from a Text AST node
    */
   private createTextNode(text: Text): IRNode {
@@ -834,11 +773,6 @@ class IRTransformer {
       )
     }
 
-    // Handle Compound primitives (Shell, etc.)
-    if (instance.isCompound && instance.compoundType) {
-      return this.transformCompoundPrimitive(instance, parentId, parentLayoutContext)
-    }
-
     // Get primitive defaults and convert to Property format
     const primitiveDefaults = convertDefaultsToProperties(getPrimitiveDefaults(primitive))
 
@@ -851,7 +785,7 @@ class IRTransformer {
     const expandedInstanceProps = this.expandPropertySets(instance.properties)
 
     // Merge properties: Primitive Defaults < Component Defaults < Expanded Instance Properties
-    const properties = mergeProperties(
+    let properties = mergeProperties(
       primitiveDefaults,
       mergeProperties(resolvedComponent?.properties || [], expandedInstanceProps)
     )
@@ -1140,8 +1074,29 @@ class IRTransformer {
       valueBinding = bind.startsWith('$') ? bind.slice(1) : bind
     }
 
+    // Extract mask for input elements
+    let mask: string | undefined
+    if (primitiveLower === 'input') {
+      const maskProp = properties.find(p => p.name === 'mask')
+      if (maskProp && maskProp.values[0]) {
+        mask = String(maskProp.values[0])
+        properties = properties.filter(p => p.name !== 'mask')
+      }
+    }
+
     // Check for keyboard-nav property (enables form keyboard navigation)
     const hasKeyboardNav = properties.some(p => p.name === 'keyboard-nav' || p.name === 'keynav')
+
+    // Check for loop-focus property (enables focus looping at start/end)
+    const hasLoopFocus = properties.some(p => p.name === 'loop-focus' || p.name === 'loopfocus')
+
+    // Check for typeahead property (enables typeahead navigation)
+    const hasTypeahead = properties.some(p => p.name === 'typeahead')
+
+    // Check for trigger-text property (updates trigger text on selection)
+    const hasTriggerText = properties.some(
+      p => p.name === 'trigger-text' || p.name === 'triggertext'
+    )
 
     return {
       id: nodeId,
@@ -1169,7 +1124,11 @@ class IRTransformer {
       layoutType,
       isDefinition: instance.isDefinition ?? false,
       valueBinding,
+      mask,
       keyboardNav: hasKeyboardNav || undefined,
+      loopFocus: hasLoopFocus || undefined,
+      typeahead: hasTypeahead || undefined,
+      triggerText: hasTriggerText || undefined,
       needsContainer: needsContainer || undefined,
     }
   }
@@ -1490,10 +1449,6 @@ class IRTransformer {
     if (isZagComponent(child)) {
       return this.transformZagComponent(child, parentLayoutContext, parentId)
     }
-    // Handle Table children (e.g., Table $tasks inside a Frame)
-    if (isTable(child)) {
-      return this.transformTable(child)
-    }
     return this.transformInstance(child as Instance, parentId, false, false, parentLayoutContext)
   }
 
@@ -1553,6 +1508,42 @@ class IRTransformer {
   ): IRStyle[] {
     // First, expand any property set references
     const expandedProperties = this.expandPropertySets(properties)
+
+    // Device presets - expand to width/height
+    const DEVICE_PRESETS: Record<string, { w: number; h: number }> = {
+      mobile: { w: 375, h: 812 },
+      tablet: { w: 768, h: 1024 },
+      desktop: { w: 1440, h: 900 },
+    }
+
+    // Find and expand device property - replace IN PLACE so that explicit w/h after device still wins
+    const deviceIndex = expandedProperties.findIndex(p => p.name === 'device')
+    if (deviceIndex !== -1) {
+      const deviceProp = expandedProperties[deviceIndex]
+      if (deviceProp.values[0]) {
+        const deviceName = String(deviceProp.values[0]).toLowerCase()
+        const preset = DEVICE_PRESETS[deviceName]
+        if (preset) {
+          // Replace device property with w/h at the same position
+          // This ensures "device mobile, w 400" results in w being 400 (last wins)
+          const wProp: Property = {
+            type: 'Property',
+            name: 'w',
+            values: [preset.w],
+            line: deviceProp.line,
+            column: deviceProp.column,
+          }
+          const hProp: Property = {
+            type: 'Property',
+            name: 'h',
+            values: [preset.h],
+            line: deviceProp.line,
+            column: deviceProp.column,
+          }
+          expandedProperties.splice(deviceIndex, 1, wProp, hProp)
+        }
+      }
+    }
 
     const styles: IRStyle[] = []
     const layoutContext = createLayoutContext()

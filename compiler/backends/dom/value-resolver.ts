@@ -288,6 +288,16 @@ function resolveBareIdentifiers(condition: string, loopVars: Set<string>): strin
 }
 
 /**
+ * Convert Mirror logical operators to JavaScript operators
+ * and → &&, or → ||
+ */
+function convertMirrorOperators(condition: string): string {
+  // Convert 'and' to '&&' and 'or' to '||'
+  // Use word boundaries to avoid matching partial words
+  return condition.replace(/\s+and\s+/g, ' && ').replace(/\s+or\s+/g, ' || ')
+}
+
+/**
  * Resolve condition variables for code generation
  */
 export function resolveConditionVariables(condition: string): string {
@@ -295,6 +305,9 @@ export function resolveConditionVariables(condition: string): string {
 
   // Strip __loopVar: prefix
   let result = resolveLoopVarMarkers(condition)
+
+  // Convert Mirror operators (and/or) to JavaScript (&&/||)
+  result = convertMirrorOperators(result)
 
   // Resolve $-prefixed variables
   result = resolveDollarVarsInCondition(result)

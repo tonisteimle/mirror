@@ -15,7 +15,6 @@ import { fileURLToPath } from 'url'
 import { DSL, SCHEMA, type PropertyDef } from '../compiler/schema/dsl'
 import { ZAG_PRIMITIVES } from '../compiler/schema/zag-primitives'
 import { ZAG_PROP_METADATA, type ZagPropMeta } from '../compiler/schema/zag-prop-metadata'
-import { COMPOUND_PRIMITIVES } from '../compiler/schema/compound-primitives'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -26,7 +25,12 @@ const ROOT = path.join(__dirname, '..')
 // ============================================================================
 
 function generatePrimitivesTable(): string {
-  const lines = ['### Primitives', '', '| Primitive | HTML | Aliases |', '|-----------|------|---------|']
+  const lines = [
+    '### Primitives',
+    '',
+    '| Primitive | HTML | Aliases |',
+    '|-----------|------|---------|',
+  ]
 
   for (const [name, def] of Object.entries(DSL.primitives)) {
     const aliases = def.aliases?.join(', ') || '-'
@@ -43,20 +47,43 @@ function generateZagPrimitivesTable(): string {
     '> Note: Select, Checkbox, Radio are now Zag components with full accessibility and keyboard navigation.',
     '',
     '| Component | Machine | Slots | Description |',
-    '|-----------|---------|-------|-------------|'
+    '|-----------|---------|-------|-------------|',
   ]
 
   // Group by category
   const categories: Record<string, string[]> = {
     'Selection & Dropdowns': ['Select', 'Combobox', 'Listbox'],
-    'Menus': ['Menu', 'ContextMenu', 'NestedMenu', 'NavigationMenu'],
-    'Form Controls': ['Checkbox', 'Switch', 'RadioGroup', 'Slider', 'RangeSlider', 'AngleSlider', 'NumberInput', 'PinInput', 'PasswordInput', 'TagsInput', 'Editable', 'RatingGroup', 'SegmentedControl', 'ToggleGroup'],
+    Menus: ['Menu', 'ContextMenu', 'NestedMenu', 'NavigationMenu'],
+    'Form Controls': [
+      'Checkbox',
+      'Switch',
+      'RadioGroup',
+      'Slider',
+      'RangeSlider',
+      'AngleSlider',
+      'NumberInput',
+      'PinInput',
+      'PasswordInput',
+      'TagsInput',
+      'Editable',
+      'RatingGroup',
+      'SegmentedControl',
+      'ToggleGroup',
+    ],
     'Date & Time': ['DatePicker', 'DateInput', 'Timer'],
-    'Overlays & Modals': ['Dialog', 'Tooltip', 'Popover', 'HoverCard', 'FloatingPanel', 'Tour', 'Presence'],
-    'Navigation': ['Tabs', 'Accordion', 'Collapsible', 'Steps', 'Pagination', 'TreeView'],
+    'Overlays & Modals': [
+      'Dialog',
+      'Tooltip',
+      'Popover',
+      'HoverCard',
+      'FloatingPanel',
+      'Tour',
+      'Presence',
+    ],
+    Navigation: ['Tabs', 'Accordion', 'Collapsible', 'Steps', 'Pagination', 'TreeView'],
     'Media & Files': ['Avatar', 'FileUpload', 'ImageCropper', 'Carousel', 'SignaturePad'],
     'Feedback & Status': ['Progress', 'CircularProgress', 'Toast', 'Marquee'],
-    'Utility': ['Clipboard', 'QRCode', 'ScrollArea', 'Splitter'],
+    Utility: ['Clipboard', 'QRCode', 'ScrollArea', 'Splitter'],
   }
 
   for (const [category, components] of Object.entries(categories)) {
@@ -70,7 +97,9 @@ function generateZagPrimitivesTable(): string {
       const slotPreview = slots.slice(0, 3).join(', ')
       const slotCount = slots.length > 3 ? ` +${slots.length - 3}` : ''
 
-      lines.push(`| ${compName} | ${def.machine} | ${slotPreview}${slotCount} | ${def.description || ''} |`)
+      lines.push(
+        `| ${compName} | ${def.machine} | ${slotPreview}${slotCount} | ${def.description || ''} |`
+      )
     }
   }
 
@@ -78,36 +107,17 @@ function generateZagPrimitivesTable(): string {
 }
 
 function generateCompoundPrimitivesTable(): string {
-  const lines = [
-    '### Compound Primitives (Layout Components)',
-    '',
-    '> Pre-built layout components for rapid prototyping. Fully customizable.',
-    '',
-    '| Component | Slots | Nested Slots | Description |',
-    '|-----------|-------|--------------|-------------|'
-  ]
-
-  for (const [name, def] of Object.entries(COMPOUND_PRIMITIVES)) {
-    const slots = def.slots.join(', ')
-
-    // Collect all nested slots
-    const nestedSlots: string[] = []
-    if (def.nestedSlots) {
-      for (const children of Object.values(def.nestedSlots)) {
-        nestedSlots.push(...children)
-      }
-    }
-    const nestedPreview = [...new Set(nestedSlots)].slice(0, 4).join(', ')
-    const nestedCount = nestedSlots.length > 4 ? ` +${nestedSlots.length - 4}` : ''
-
-    lines.push(`| ${name} | ${slots} | ${nestedPreview}${nestedCount} | ${def.description || ''} |`)
-  }
-
-  return lines.join('\n')
+  // Compound primitives have been removed - Table is now a standard primitive
+  return ''
 }
 
 function generatePropertiesTable(): string {
-  const lines = ['### Properties', '', '| Property | Aliases | Werte |', '|----------|---------|-------|']
+  const lines = [
+    '### Properties',
+    '',
+    '| Property | Aliases | Werte |',
+    '|----------|---------|-------|',
+  ]
 
   for (const prop of Object.values(SCHEMA)) {
     const aliases = prop.aliases.length > 0 ? prop.aliases.join(', ') : '-'
@@ -186,11 +196,7 @@ function generateStatesSection(): string {
 }
 
 function generateKeysSection(): string {
-  return [
-    '### Keyboard Keys',
-    '',
-    DSL.keys.join(', '),
-  ].join('\n')
+  return ['### Keyboard Keys', '', DSL.keys.join(', ')].join('\n')
 }
 
 function generateZagPropertiesSection(): string {
@@ -206,7 +212,9 @@ function generateZagPropertiesSection(): string {
   for (const props of Object.values(ZAG_PROP_METADATA)) {
     totalProps += Object.keys(props).length
   }
-  lines.push(`*${Object.keys(ZAG_PROP_METADATA).length} components with ${totalProps} behavior properties total.*`)
+  lines.push(
+    `*${Object.keys(ZAG_PROP_METADATA).length} components with ${totalProps} behavior properties total.*`
+  )
   lines.push('')
 
   // Generate property summary by type
@@ -344,7 +352,6 @@ function updateGeneratedDocs(content: string): boolean {
 function printStats(): void {
   const primitiveCount = Object.keys(DSL.primitives).length
   const zagCount = Object.keys(ZAG_PRIMITIVES).length
-  const compoundCount = Object.keys(COMPOUND_PRIMITIVES).length
   const propertyCount = Object.keys(SCHEMA).length
   const aliasCount = Object.values(SCHEMA).reduce((sum, p) => sum + p.aliases.length, 0)
   const eventCount = Object.keys(DSL.events).length
@@ -363,7 +370,6 @@ function printStats(): void {
   console.log('Schema Statistics:')
   console.log(`  Primitives:      ${primitiveCount}`)
   console.log(`  Zag Components:  ${zagCount}`)
-  console.log(`  Compound:        ${compoundCount}`)
   console.log(`  CSS Properties:  ${propertyCount} (+ ${aliasCount} aliases)`)
   console.log(`  Zag Properties:  ${zagPropCount} (across ${zagComponentsWithProps} components)`)
   console.log(`  Events:          ${eventCount}`)

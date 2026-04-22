@@ -7,6 +7,7 @@
  * - x, y positioning (absolute)
  * - x-offset, y-offset (translate)
  * - z (z-index)
+ * - Combinations (A4.2 - Phase 4)
  */
 
 import type { TestCase } from '../../types'
@@ -38,6 +39,17 @@ import {
   translateOffsetTests,
 } from './translate.test'
 
+// Combination tests (A4.2)
+import {
+  allCombinationTests,
+  rotateScaleTests,
+  translateRotateTests,
+  multiTransformTests,
+  transformOrderTests,
+  transformOriginTests,
+  transformEdgeCaseTests,
+} from './combinations.test'
+
 // Re-export individual test arrays
 export {
   // Rotate
@@ -58,6 +70,14 @@ export {
   stackedPositionTests,
   zIndexTests,
   translateOffsetTests,
+  // Combinations (A4.2)
+  allCombinationTests,
+  rotateScaleTests,
+  translateRotateTests,
+  multiTransformTests,
+  transformOrderTests,
+  transformOriginTests,
+  transformEdgeCaseTests,
 }
 
 /**
@@ -67,6 +87,7 @@ export const allTransformTests: TestCase[] = [
   ...allRotateTests,
   ...allScaleTests,
   ...allTranslateTests,
+  ...allCombinationTests,
 ]
 
 /**
@@ -76,4 +97,5 @@ export const quickTransformTests: TestCase[] = [
   ...rotateBasicTests.slice(0, 2),
   ...scaleBasicTests.slice(0, 2),
   ...positionBasicTests.slice(0, 2),
+  ...rotateScaleTests.slice(0, 2),
 ]

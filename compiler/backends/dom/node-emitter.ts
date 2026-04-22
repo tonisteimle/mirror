@@ -520,9 +520,48 @@ export function emitKeyboardNav(ctx: NodeEmitterContext, node: IRNode, varName: 
   ctx.emit(`_runtime.setupKeyboardNav(${varName})`)
 }
 
+/**
+ * Emit loop focus setup (wrap around at start/end of list)
+ */
+export function emitLoopFocus(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
+  if (!node.loopFocus) return
+
+  ctx.emit(`// Enable loop focus (wrap around at start/end)`)
+  ctx.emit(`${varName}._loopFocus = true`)
+}
+
+/**
+ * Emit typeahead setup (typing jumps to matching item)
+ */
+export function emitTypeahead(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
+  if (!node.typeahead) return
+
+  ctx.emit(`// Enable typeahead navigation`)
+  ctx.emit(`_runtime.setupTypeahead(${varName})`)
+}
+
+/**
+ * Emit trigger text binding (trigger shows selected option)
+ */
+export function emitTriggerText(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
+  if (!node.triggerText) return
+
+  ctx.emit(`// Bind trigger text to show selected value`)
+  ctx.emit(`_runtime.bindTriggerText(${varName})`)
+}
+
 // ============================================
 // TWO-WAY DATA BINDING
 // ============================================
+
+/**
+ * Emit input mask setup
+ */
+export function emitMask(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
+  if (!node.mask) return
+  ctx.emit(`// Input mask: ${node.mask}`)
+  ctx.emit(`_runtime.applyMask(${varName}, "${node.mask}")`)
+}
 
 /**
  * Emit two-way data binding for input elements
@@ -532,19 +571,34 @@ export function emitValueBinding(ctx: NodeEmitterContext, node: IRNode, varName:
 
   const bindingPath = node.valueBinding
   ctx.emit(`// Two-way data binding: ${bindingPath}`)
-  ctx.emit(`${varName}.value = $get("${bindingPath}") ?? ""`)
-  emitInputEventListener(ctx, varName, bindingPath)
+
+  // Format initial value with mask if present
+  if (node.mask) {
+    ctx.emit(
+      `${varName}.value = _runtime.formatWithMask($get("${bindingPath}") ?? "", "${node.mask}")`
+    )
+  } else {
+    ctx.emit(`${varName}.value = $get("${bindingPath}") ?? ""`)
+  }
+
+  emitInputEventListener(ctx, varName, bindingPath, node.mask)
   ctx.emit(`_runtime.bindValue(${varName}, "${bindingPath}")`)
 }
 
 function emitInputEventListener(
   ctx: NodeEmitterContext,
   varName: string,
-  bindingPath: string
+  bindingPath: string,
+  mask?: string
 ): void {
   ctx.emit(`${varName}.addEventListener('input', (e) => {`)
   ctx.indentIn()
-  ctx.emit(`$set("${bindingPath}", e.target.value)`)
+  // Use raw value for masked inputs
+  if (mask) {
+    ctx.emit(`$set("${bindingPath}", _runtime.getMaskRawValue(e.target))`)
+  } else {
+    ctx.emit(`$set("${bindingPath}", e.target.value)`)
+  }
   ctx.indentOut()
   ctx.emit(`})`)
 }

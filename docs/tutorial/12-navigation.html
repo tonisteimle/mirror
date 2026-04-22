@@ -25,157 +25,148 @@
       <p class="subtitle">Tabs und SideNav</p>
     </header>
 
-    <p class="intro">Zwei Komponenten für Navigation: <strong>Tabs</strong> wechseln zwischen Ansichten. <strong>SideNav</strong> ist eine Sidebar-Navigation.</p>
+    <p class="intro">Zwei fertige Komponenten für Navigation: <strong>Tabs</strong> für horizontales Umschalten zwischen Inhalten, <strong>SideNav</strong> für vertikale Sidebar-Navigation mit Icons.</p>
+
 
     <!-- ============================================================ -->
     <section>
       <h2>Tabs</h2>
-      <p>Tabs wechseln zwischen Inhalten. Jeder <code>Tab</code> hat ein Label – mit <code>defaultValue</code> sagst du, welcher Tab beim Start aktiv sein soll:</p>
+      <p>Tabs organisieren Inhalte in horizontale Reiter. Klick auf einen Tab zeigt dessen Inhalt:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Tabs defaultValue "Home"
   Tab "Home"
-    Text "Welcome to the home page"
+    Frame pad 16, gap 8
+      Text "Willkommen!", fs 18, weight bold
+      Text "Dies ist die Startseite."
   Tab "Profile"
-    Text "Your profile settings"
+    Frame pad 16, gap 8
+      Text "Dein Profil", fs 18, weight bold
+      Text "Hier sind deine Einstellungen."
   Tab "Settings"
-    Text "Application settings"</textarea>
+    Frame pad 16, gap 8
+      Text "Einstellungen", fs 18, weight bold
+      Text "App-Konfiguration hier."</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Die Kinder jedes Tabs werden zum Panel-Content. Klickst du auf einen Tab, zeigt Mirror automatisch den passenden Inhalt.</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>Tabs</code> – der Container für alle Tabs</li>
+        <li><code>defaultValue "Home"</code> – welcher Tab beim Start aktiv ist</li>
+        <li><code>Tab "Label"</code> – ein einzelner Tab mit seinem Label</li>
+        <li>Kinder von <code>Tab</code> – der Inhalt, der bei Auswahl erscheint</li>
+      </ul>
 
-      <h3>Custom Styling</h3>
-      <p>Tabs besteht intern aus mehreren Teilen: <code>List:</code> (Container um die Tab-Header), <code>Indicator:</code> (animierte Markierung), <code>Content:</code> (Panel-Container). Diese kannst du mit Kind-Komponenten überschreiben.</p>
+      <table class="ref-table">
+        <tr><th>Property</th><th>Beschreibung</th></tr>
+        <tr><td><code>defaultValue "name"</code></td><td>Anfangs aktiver Tab</td></tr>
+        <tr><td><code>Tab "Label"</code></td><td>Tab mit sichtbarem Label</td></tr>
+      </table>
 
-      <p><strong>Wichtig:</strong> Kind-Komponenten stehen direkt unter <code>Tabs</code> – <strong>vor</strong> den eigentlichen Tabs:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Tabs defaultValue "Dashboard"
-  // Kind-Komponenten (mit :) zuerst
-  List: bor 0 0 1 0, boc #333, gap 24
-  Indicator: h 2, bg #2271C1
-  Content: pad 16 0
-
-  // Dann die Tabs (ohne :)
-  Tab "Dashboard"
-    Text "Dashboard content"
-  Tab "Analytics"
-    Text "Analytics content"</textarea>
-        </div>
-        <div class="playground-preview"></div>
+      <div class="note">
+        <strong>Tipp:</strong> Der Tab-Inhalt kann beliebig komplex sein – Frames, Listen, Formulare. Tabs eignen sich für Einstellungsseiten, Dashboards oder Produktdetails.
       </div>
-
-      <p>Die Kind-Komponenten gelten für alle Tabs gleichzeitig. Du kannst nicht einzelne Tabs unterschiedlich stylen – dafür sind die Styles ja da: einmal definieren, überall anwenden.</p>
-
     </section>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>SideNav</h2>
-      <p>SideNav ist eine Sidebar-Navigation. Jedes <code>NavItem</code> hat einen <code>value</code> – mit <code>defaultValue</code> bestimmst du, welches Item aktiv startet:</p>
+      <p>SideNav ist eine vertikale Navigation mit Icons – typisch für Dashboards und Admin-Panels:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>SideNav defaultValue "dashboard", w 200
   NavItem "Dashboard", icon "home", value "dashboard"
   NavItem "Projects", icon "folder", value "projects"
+  NavItem "Messages", icon "mail", value "messages"
   NavItem "Settings", icon "settings", value "settings"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>SideNav unterstützt <code>Header:</code> und <code>Footer:</code> für feste Bereiche, <code>badge</code> für Zähler, und <code>NavGroup</code> für Gruppierung. Mit <code>collapsible</code> werden Gruppen auf-/zuklappbar:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>SideNav defaultValue "dashboard", w 200
-  Header:
-    Frame pad 12
-      Text "My App", fs 14, weight bold
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>SideNav</code> – der Container mit <code>w 200</code> für die Breite</li>
+        <li><code>defaultValue</code> – welches Item beim Start ausgewählt ist</li>
+        <li><code>NavItem "Label"</code> – ein Navigationselement</li>
+        <li><code>icon "name"</code> – Lucide-Icon vor dem Label</li>
+        <li><code>value "key"</code> – interner Wert für die Auswahl</li>
+      </ul>
 
-  NavItem "Dashboard", icon "home", value "dashboard"
-  NavItem "Messages", icon "mail", value "messages", badge "3"
-
-  NavGroup "Settings", collapsible, defaultOpen
-    NavItem "Account", icon "user", value "account"
-    NavItem "Security", icon "shield", value "security"
-
-  Footer:
-    Frame pad 12
-      Text "v1.0.0", col #666, fs 11</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Mit <code>collapsed</code> wird die SideNav schmal – Labels werden ausgeblendet, nur Icons bleiben sichtbar:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>SideNav defaultValue "dashboard", collapsed, w 56
-  NavItem "Dashboard", icon "home", value "dashboard"
-  NavItem "Projects", icon "folder", value "projects"
-  NavItem "Settings", icon "settings", value "settings"</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <h3>Views wechseln mit navigate()</h3>
-      <p>Mit <code>navigate(ViewName)</code> zeigst du bei Klick eine View an. Die anderen Views werden automatisch ausgeblendet:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame hor
-  SideNav defaultValue "dashboard", w 160
-    NavItem "Dashboard", icon "home", value "dashboard", navigate(DashboardView)
-    NavItem "Settings", icon "settings", value "settings", navigate(SettingsView)
-
-  Frame w full, pad 16
-    Frame name DashboardView
-      Text "Dashboard Content", col white
-    Frame name SettingsView, hidden
-      Text "Settings Content", col white</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Die Views sind Frames mit <code>name</code>. Die erste ist sichtbar, die anderen starten mit <code>hidden</code>.</p>
-
-      <h3>Custom Styling</h3>
-      <p>Auch SideNav hat Kind-Komponenten. Wieder gilt: <strong>zuerst</strong> die Kind-Komponenten (mit <code>:</code>), <strong>dann</strong> die Inhalte:</p>
+      <h3>Mit Badges</h3>
+      <p>Badges zeigen Zähler oder Status an – ideal für ungelesene Nachrichten oder Benachrichtigungen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>SideNav defaultValue "dashboard", w 220
-  // Kind-Komponenten zuerst
-  Root: bg #050510, pad 8
-  Item: pad 12 16, rad 8, mar 4 8, col #aaa, bg #151520
-  ItemIcon: ic #818cf8
-  ItemBadge: bg #ef4444, col white, pad 2 8, rad 99, fs 11, weight 600
-  GroupLabel: pad 12 16, col #666, fs 11, uppercase
-
-  // Dann die NavItems
   NavItem "Dashboard", icon "home", value "dashboard"
   NavItem "Messages", icon "mail", value "messages", badge "5"
-  NavGroup "Admin"
-    NavItem "Users", icon "users", value "users"
-    NavItem "Logs", icon "file-text", value "logs"</textarea>
+  NavItem "Notifications", icon "bell", value "notifications", badge "12"
+  NavItem "Tasks", icon "check-square", value "tasks", badge "3"</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>Item:</code> stylt alle NavItems, <code>ItemIcon:</code> die Icons, <code>ItemBadge:</code> die Badges, <code>GroupLabel:</code> die Gruppenüberschriften. Welche Kind-Komponenten es gibt, findest du in der <a href="../reference/navigation.html">Referenz</a>.</p>
+      <h3>Gruppierte Navigation</h3>
+      <p>Mit <code>NavGroup</code> organisierst du Items in Kategorien. <code>collapsible</code> macht die Gruppe auf-/zuklappbar:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>SideNav defaultValue "dashboard", w 220
+  NavItem "Dashboard", icon "home", value "dashboard"
+  NavItem "Projects", icon "folder", value "projects"
 
+  NavGroup "Settings", collapsible
+    NavItem "Account", icon "user", value "account"
+    NavItem "Security", icon "shield", value "security"
+    NavItem "Billing", icon "credit-card", value "billing"
+
+  NavGroup "Help", collapsible
+    NavItem "Documentation", icon "book", value "docs"
+    NavItem "Support", icon "help-circle", value "support"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>NavGroup "Label"</code> – gruppiert mehrere NavItems</li>
+        <li><code>collapsible</code> – macht die Gruppe auf-/zuklappbar</li>
+        <li>NavItems in NavGroup werden eingerückt dargestellt</li>
+      </ul>
+
+      <table class="ref-table">
+        <tr><th>Property</th><th>Beschreibung</th></tr>
+        <tr><td><code>icon "name"</code></td><td>Lucide-Icon vor dem Label</td></tr>
+        <tr><td><code>value "key"</code></td><td>Interner Wert für Auswahl</td></tr>
+        <tr><td><code>badge "text"</code></td><td>Zähler/Status rechts</td></tr>
+        <tr><td><code>collapsible</code></td><td>Gruppe auf-/zuklappbar</td></tr>
+      </table>
+
+      <div class="note">
+        <strong>Tipp:</strong> SideNav eignet sich für App-Shells mit fester Sidebar. Kombiniere es mit einem Content-Bereich rechts davon.
+      </div>
     </section>
 
 
     <!-- ============================================================ -->
-    <!-- ZUSAMMENFASSUNG -->
-    <!-- ============================================================ -->
-
     <div class="summary">
       <h2>Zusammenfassung</h2>
 
-      <p><strong>Tabs</strong> für horizontale Tab-Navigation. Jeder <code>Tab</code> enthält seinen Content als Kinder.</p>
-      <p><strong>SideNav</strong> für Sidebar-Navigation. <code>NavItem</code> mit <code>icon</code>, <code>badge</code>, optional <code>navigate(View)</code>.</p>
-      <p><strong>NavGroup</strong> gruppiert Items, optional <code>collapsible</code>.</p>
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Verwendung</th><th>Wichtige Properties</th></tr>
+        <tr><td><code>Tabs</code></td><td>Horizontale Tab-Navigation</td><td><code>defaultValue</code></td></tr>
+        <tr><td><code>Tab</code></td><td>Einzelner Tab mit Inhalt</td><td>Label als erster Parameter</td></tr>
+        <tr><td><code>SideNav</code></td><td>Vertikale Sidebar-Navigation</td><td><code>defaultValue</code>, <code>w</code></td></tr>
+        <tr><td><code>NavItem</code></td><td>Navigationselement</td><td><code>icon</code>, <code>value</code>, <code>badge</code></td></tr>
+        <tr><td><code>NavGroup</code></td><td>Gruppiert NavItems</td><td><code>collapsible</code></td></tr>
+      </table>
+
+      <p><strong>Tabs:</strong> Für horizontales Umschalten zwischen Inhalten. Jeder <code>Tab</code> enthält seinen eigenen Content.</p>
+
+      <p><strong>SideNav:</strong> Für vertikale Sidebar-Navigation. <code>NavItem</code> mit Icons und optionalen Badges.</p>
+
+      <p><strong>NavGroup:</strong> Gruppiert Items in Kategorien, mit <code>collapsible</code> auf-/zuklappbar.</p>
     </div>
 
 

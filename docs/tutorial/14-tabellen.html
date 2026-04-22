@@ -22,29 +22,36 @@
 
     <header>
       <h1>Tabellen</h1>
-      <p class="subtitle">Statische und datengebundene Tabellen</p>
+      <p class="subtitle">Statische und datengebundene Tabellen mit each</p>
     </header>
 
-    <p class="intro">Tabellen zeigen strukturierte Daten. <strong>Statische Tabellen</strong> für feste Inhalte. <strong>Datengebundene Tabellen</strong> für dynamische Daten mit Filtern und Sortieren.</p>
+    <p class="intro">Tabellen in Mirror sind normale Komponenten. Du baust sie mit <code>Table</code>, <code>TableHeader</code>, <code>TableRow</code> und <code>each</code> Loops. Keine Magie, volle Kontrolle.</p>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Statische Tabellen</h2>
-      <p>Die einfachste Art, eine Tabelle zu erstellen – ohne Datenbindung. Mit <code>Header:</code> markierst du die Kopfzeile, jede <code>Row</code> enthält die Zell-Werte:</p>
+      <p>Die einfachste Art, eine Tabelle zu erstellen. Mit <code>TableHeader</code> markierst du die Kopfzeile, jede <code>TableRow</code> enthält die Zellen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Table
-  Header:
-    Row "Name", "Alter", "Stadt"
-  Row "Max", "25", "Berlin"
-  Row "Anna", "30", "München"
-  Row "Tom", "28", "Hamburg"</textarea>
+          <textarea>Table bg #1a1a1a, rad 8
+  TableHeader hor, gap 24, pad 12 16, bg #252525
+    Text "Name", col #888, fs 11, uppercase
+    Text "Alter", col #888, fs 11, uppercase
+    Text "Stadt", col #888, fs 11, uppercase
+  TableRow hor, gap 24, pad 12 16
+    Text "Max", col white
+    Text "25", col white
+    Text "Berlin", col white
+  TableRow hor, gap 24, pad 12 16
+    Text "Anna", col white
+    Text "30", col white
+    Text "München", col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das ist alles – nur <code>Table</code>, <code>Header:</code> und <code>Row</code> mit den Werten.</p>
+      <p>Die Struktur ist klar: <code>Table</code> als Container, <code>TableHeader</code> für Spaltenüberschriften, <code>TableRow</code> für Datenzeilen.</p>
 
       <p class="note"><strong>Wann statisch?</strong> Verwende statische Tabellen für: Preislisten, Feature-Vergleiche, Kontaktdaten, Referenztabellen – alles mit festen, bekannten Werten.</p>
     </section>
@@ -53,7 +60,7 @@
     <!-- ============================================================ -->
     <section>
       <h2>Datengebundene Tabellen</h2>
-      <p>Für dynamische Daten bindest du eine Datenquelle mit <code>Table $name</code> und definierst ein <code>Row:</code> Template:</p>
+      <p>Für dynamische Daten nutzt du <code>each</code> um über eine Datenquelle zu iterieren:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>tasks:
@@ -67,21 +74,23 @@
     title: "Testing"
     status: "todo"
 
-Table $tasks, bg #111, rad 12, w full
-  Row: hor, gap 16, pad 12 16, bor 0 0 1 0, boc #222, w full
-    Text row.title, col white, w 140
-    Text row.status, col #888</textarea>
+Table bg #1a1a1a, rad 8, w full
+  TableHeader hor, gap 24, pad 12 16, bg #252525
+    Text "Aufgabe", col #888, fs 11, uppercase
+    Text "Status", col #888, fs 11, uppercase
+  each task in $tasks
+    TableRow hor, gap 24, pad 12 16, bor 0 0 1 0, boc #222
+      Text task.title, col white
+      Text task.status, col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <ul>
-        <li><code>Table $tasks</code> – Die Datenquelle (Datenobjekt mit Einträgen)</li>
-        <li><code>Row:</code> – Template für jede Zeile (mit Doppelpunkt!)</li>
-        <li><code>row.title</code> – Zugriff auf Felder des aktuellen Eintrags</li>
+        <li><code>each task in $tasks</code> – Iteriert über alle Einträge</li>
+        <li><code>task.title</code> – Zugriff auf Felder des aktuellen Eintrags</li>
+        <li>Der Header steht vor dem <code>each</code>, wird nur einmal gerendert</li>
       </ul>
-      <p class="note"><strong>Hinweis:</strong> Daten werden im Entry-Format definiert: <code>name:</code> gefolgt von eingerückten <code>key: value</code> Paaren. Bei der Verwendung mit <code>$name</code> iteriert die Runtime automatisch über alle Einträge.</p>
-
     </section>
 
 
@@ -102,16 +111,17 @@ Table $tasks, bg #111, rad 12, w full
     name: "Dev"
     status: "wip"
 
-Table $tasks, bg #111, pad 16, rad 12
-  Row: hor, spread, pad 12 16, bor 0 0 1 0, boc #222, w full
-    Text row.name, col white
-    Text row.status, col #888</textarea>
+Table bg #0a0a0a, pad 16, rad 12, gap 4, w full
+  each task in $tasks
+    TableRow hor, spread, pad 12 16, bg #1a1a1a, rad 6
+      Text task.name, col white
+      Text task.status, col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <h3>Header: und Footer: Styles</h3>
-      <p>Mit <code>Header:</code> und <code>Footer:</code> stylst du Kopf- und Fußbereich separat:</p>
+      <h3>Header und Footer</h3>
+      <p>Mit <code>TableHeader</code> und <code>TableFooter</code> stylst du Kopf- und Fußbereich separat:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>tasks:
@@ -122,20 +132,52 @@ Table $tasks, bg #111, pad 16, rad 12
     name: "Task 2"
     effort: 3
 
-Table $tasks, bg #111, rad 12, gap 4
-  Header: bg #222, pad 12 16, rad 8 8 0 0
-    Row "Aufgabe", "Aufwand"
-  Row: hor, spread, pad 12 16, w full
-    Text row.name, col white
-    Text row.effort + "h", col #888
-  Footer: bg #222, pad 12 16, rad 0 0 8 8
-    Row "Total", "8h"</textarea>
+Table bg #1a1a1a, rad 12, w full
+  TableHeader hor, spread, pad 12 16, bg #252525, rad 8 8 0 0
+    Text "Aufgabe", col #888, fs 11, uppercase
+    Text "Aufwand", col #888, fs 11, uppercase
+  each task in $tasks
+    TableRow hor, spread, pad 12 16, bor 0 0 1 0, boc #222
+      Text task.name, col white
+      Text task.effort + "h", col #888
+  TableFooter hor, spread, pad 12 16, bg #252525, rad 0 0 8 8
+    Text "Total", col white, weight 500
+    Text "8h", col #10b981, weight 600</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <h3>Zebra-Muster mit RowOdd: und RowEven:</h3>
-      <p>Für alternierende Zeilenfarben nutze <code>RowOdd:</code> und <code>RowEven:</code>:</p>
+      <h3>Zeilen mit Hover</h3>
+      <p>Füge Hover-Effekte zu Zeilen hinzu:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>users:
+  u1:
+    name: "Anna"
+    role: "Designer"
+  u2:
+    name: "Max"
+    role: "Developer"
+  u3:
+    name: "Tom"
+    role: "Manager"
+
+Table bg #1a1a1a, rad 8, w full
+  TableHeader hor, spread, pad 12 16, bg #252525
+    Text "Name", col #888, fs 11, uppercase
+    Text "Rolle", col #888, fs 11, uppercase
+  each user in $users
+    TableRow hor, spread, pad 12 16, bor 0 0 1 0, boc #222, cursor pointer
+      hover:
+        bg #252525
+      Text user.name, col white
+      Text user.role, col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <h3>Zebra-Muster</h3>
+      <p>Für alternierende Zeilenfarben definiere separate Komponenten:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>users:
@@ -152,74 +194,23 @@ Table $tasks, bg #111, rad 12, gap 4
     name: "Lisa"
     role: "Designer"
 
-Table $users, bg #111, rad 12, w full
-  Header: bg #222, pad 12 16
-    Row "Name", "Rolle"
-  RowOdd: bg #1a1a1a
-  RowEven: bg #151515
-  Row: hor, spread, pad 12 16, w full
-    Text row.name, col white
-    Text row.role, col #888</textarea>
+OddRow: hor, spread, pad 12 16, bg #1a1a1a
+EvenRow: hor, spread, pad 12 16, bg #151515
+
+Table bg #1a1a1a, rad 8, w full
+  TableHeader hor, spread, pad 12 16, bg #252525
+    Text "Name", col #888, fs 11, uppercase
+    Text "Rolle", col #888, fs 11, uppercase
+  each user in $users
+    TableRow hor, spread, pad 12 16
+      Text user.name, col white
+      Text user.role, col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p class="note"><strong>Tipp:</strong> <code>RowOdd:</code> und <code>RowEven:</code> werden automatisch basierend auf dem Zeilen-Index angewendet. Ungerade Zeilen (1, 3, 5...) bekommen <code>RowOdd:</code>, gerade Zeilen (0, 2, 4...) bekommen <code>RowEven:</code>.</p>
+      <p class="note"><strong>Tipp:</strong> Für echtes Zebra-Muster mit Runtime-Index kannst du CSS <code>:nth-child(odd)</code> verwenden oder separate Komponenten definieren.</p>
 
-      <h3>Column Styles</h3>
-      <p>Bei spaltenbasierten Tabellen kannst du Styles direkt auf <code>Column</code> setzen – sie wirken auf alle Zellen dieser Spalte:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>tasks:
-  t1:
-    title: "Design Review"
-    status: "done"
-  t2:
-    title: "API Integration"
-    status: "wip"
-  t3:
-    title: "Testing"
-    status: "todo"
-
-Table $tasks, bg #111, rad 12, pad 8
-  Header: bg #222, pad 12
-    Row "Aufgabe", "Status"
-  Column title, col white, pad 12
-  Column status, col #10b981, pad 12, weight 600</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <h3>Kombiniertes Styling</h3>
-      <p>Alle Styling-Ebenen können kombiniert werden:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>products:
-  p1:
-    name: "Basic"
-    price: 9
-    users: 5
-  p2:
-    name: "Pro"
-    price: 29
-    users: 50
-  p3:
-    name: "Enterprise"
-    price: 99
-    users: 999
-
-Table $products, bg #0a0a0a, rad 16, w full
-  Header: bg #1a1a1a, pad 16, rad 8 8 0 0
-    Row "Plan", "Preis", "Users"
-  RowOdd: bg #151515
-  RowEven: bg #111
-  Row: hor, pad 16, w full
-    Text row.name, col white, weight 500, w 120
-    Text "$" + row.price, col #10b981, w 80
-    Text row.users + " Users", col #666</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
     </section>
 
 
@@ -243,39 +234,42 @@ Table $products, bg #0a0a0a, rad 16, w full
     title: "Documentation"
     done: true
 
-// Nur nicht erledigte Tasks
-Table $tasks where row.done == false, bg #111, rad 12, w full
-  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
-    Icon "circle", ic #f59e0b, is 16
-    Text row.title, col white, grow</textarea>
+Table bg #1a1a1a, rad 8, w full
+  TableHeader hor, pad 12 16, bg #252525
+    Text "Offene Tasks", col #888, fs 11, uppercase
+  each task in $tasks where task.done == false
+    TableRow hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center
+      Icon "circle", ic #f59e0b, is 16
+      Text task.title, col white, grow</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><strong>Vergleichsoperatoren:</strong> <code>==</code>, <code>!=</code>, <code>></code>, <code><</code>, <code>>=</code>, <code><=</code></p>
+      <p><strong>Vergleichsoperatoren:</strong> <code>==</code>, <code>!=</code>, <code>></code>, <code>&lt;</code>, <code>>=</code>, <code>&lt;=</code></p>
       <p><strong>Kombinieren mit and/or:</strong></p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>tasks:
   task1:
     title: "Critical Bug"
-    priority: 1
+    urgent: true
     done: false
   task2:
     title: "Minor Fix"
-    priority: 3
+    urgent: false
     done: false
   task3:
     title: "Feature"
-    priority: 2
+    urgent: true
     done: true
 
-// Nicht erledigt UND hohe Priorität
-Table $tasks where row.done == false and row.priority &lt; 3, bg #111, rad 12, w full
-  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
-    Icon "alert-circle", ic #ef4444, is 16
-    Text row.title, col white, grow
-    Text "P" + row.priority, col #ef4444, fs 12, weight 600</textarea>
+Table bg #1a1a1a, rad 8, w full
+  TableHeader hor, pad 12 16, bg #252525
+    Text "Dringende offene Tasks", col #888, fs 11, uppercase
+  each task in $tasks where task.done == false and task.urgent == true
+    TableRow hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center
+      Icon "alert-circle", ic #ef4444, is 16
+      Text task.title, col white, grow</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -300,11 +294,13 @@ Table $tasks where row.done == false and row.priority &lt; 3, bg #111, rad 12, w
     title: "Medium Priority"
     priority: 2
 
-// Sortiert nach Priorität (aufsteigend)
-Table $tasks by priority, bg #111, rad 12, w full
-  Row: hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
-    Text row.priority, col #2563eb, fs 14, weight 600, w 24
-    Text row.title, col white, grow</textarea>
+Table bg #1a1a1a, rad 8, w full
+  TableHeader hor, pad 12 16, bg #252525
+    Text "Nach Priorität sortiert", col #888, fs 11, uppercase
+  each task in $tasks by priority
+    TableRow hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center
+      Text task.priority, col #2563eb, fs 14, weight 600, w 24
+      Text task.title, col white, grow</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -323,15 +319,50 @@ Table $tasks by priority, bg #111, rad 12, w full
     name: "Cap"
     price: 19
 
-// Teuerste zuerst
-Table $products by price desc, bg #111, rad 12, w full
-  Row: hor, spread, pad 12 16, bor 0 0 1 0, boc #222, ver-center, w full
-    Text row.name, col white, weight 500
-    Text "€" + row.price, col #10b981, fs 14, weight 600</textarea>
+Table bg #1a1a1a, rad 8, w full
+  TableHeader hor, spread, pad 12 16, bg #252525
+    Text "Produkt", col #888, fs 11, uppercase
+    Text "Preis", col #888, fs 11, uppercase
+  each product in $products by price desc
+    TableRow hor, spread, pad 12 16, bor 0 0 1 0, boc #222, ver-center
+      Text product.name, col white, weight 500
+      Text product.price + " EUR", col #10b981, fs 14, weight 600</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tabellen mit Aktionen</h2>
+      <p>Füge Buttons oder Icons für Aktionen hinzu:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>users:
+  u1:
+    name: "Max Mustermann"
+    email: "max@example.com"
+  u2:
+    name: "Anna Schmidt"
+    email: "anna@example.com"
+
+Table bg #1a1a1a, rad 8, w full
+  TableHeader hor, pad 12 16, bg #252525
+    Text "Benutzer", col #888, fs 11, uppercase, grow
+    Text "Aktionen", col #888, fs 11, uppercase, w 100
+  each user in $users
+    TableRow hor, pad 12 16, bor 0 0 1 0, boc #222, ver-center
+      Frame gap 2, grow
+        Text user.name, col white, weight 500
+        Text user.email, col #888, fs 12
+      Frame hor, gap 8, w 100
+        Icon "edit", ic #888, is 18, cursor pointer
+        Icon "trash-2", ic #ef4444, is 18, cursor pointer</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
     </section>
 
 
@@ -342,46 +373,42 @@ Table $products by price desc, bg #111, rad 12, w full
     <div class="summary">
       <h2>Zusammenfassung</h2>
 
-      <p><strong>Statische Tabellen:</strong> <code>Table</code> + <code>Row "A", "B", "C"</code> für feste Werte. Optional <code>Header:</code> für Kopfzeile.</p>
+      <p><strong>Statische Tabellen:</strong> <code>Table</code> + <code>TableHeader</code> + <code>TableRow</code> für feste Werte.</p>
 
-      <p><strong>Datengebundene Tabellen:</strong> <code>Table $data</code> mit <code>Row:</code> Template. Zugriff auf Felder mit <code>row.field</code>.</p>
+      <p><strong>Datengebundene Tabellen:</strong> <code>each item in $data</code> um über Daten zu iterieren.</p>
 
-      <h3>Styling</h3>
+      <h3>Struktur</h3>
       <table class="ref-table">
         <tr>
-          <td><code>Table $data, bg #111, pad 16, rad 12</code></td>
-          <td>Table-Level Styles</td>
+          <td><code>Table bg #1a1a1a, rad 8</code></td>
+          <td>Container</td>
         </tr>
         <tr>
-          <td><code>Header: bg #222, pad 12</code></td>
-          <td>Kopfzeilen-Styles</td>
+          <td><code>TableHeader hor, pad 12, bg #252525</code></td>
+          <td>Kopfzeile</td>
         </tr>
         <tr>
-          <td><code>Footer: bg #222, pad 12</code></td>
-          <td>Fußzeilen-Styles</td>
+          <td><code>TableRow hor, pad 12</code></td>
+          <td>Datenzeile</td>
         </tr>
         <tr>
-          <td><code>Row: pad 12, bg #1a1a1a</code></td>
-          <td>Zeilen-Styles (alle Zeilen)</td>
-        </tr>
-        <tr>
-          <td><code>RowOdd: bg #1a1a1a</code></td>
-          <td>Ungerade Zeilen (Zebra)</td>
-        </tr>
-        <tr>
-          <td><code>RowEven: bg #151515</code></td>
-          <td>Gerade Zeilen (Zebra)</td>
-        </tr>
-        <tr>
-          <td><code>Column title, col white, pad 12</code></td>
-          <td>Spalten/Zellen-Styles</td>
+          <td><code>TableFooter hor, pad 12, bg #252525</code></td>
+          <td>Fußzeile</td>
         </tr>
       </table>
 
       <h3>Daten-Operationen</h3>
       <table class="ref-table">
         <tr>
-          <td><code>where row.done == false</code></td>
+          <td><code>each task in $tasks</code></td>
+          <td>Über Daten iterieren</td>
+        </tr>
+        <tr>
+          <td><code>each task, index in $tasks</code></td>
+          <td>Mit Index</td>
+        </tr>
+        <tr>
+          <td><code>where task.done == false</code></td>
           <td>Filtern</td>
         </tr>
         <tr>
@@ -393,6 +420,9 @@ Table $products by price desc, bg #111, rad 12, w full
           <td>Absteigend sortieren</td>
         </tr>
       </table>
+
+      <h3>Zebra-Muster</h3>
+      <p>Für alternierende Farben nutze CSS <code>:nth-child(odd/even)</code> oder definiere separate Row-Komponenten.</p>
     </div>
 
 

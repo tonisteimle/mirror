@@ -101,6 +101,9 @@ function buildChromeArgs(userDataDir: string, options: LaunchOptions): string[] 
 
   if (options.headless !== false) {
     args.push('--headless=new')
+  } else {
+    // In headed mode, start maximized for better visibility
+    args.push('--start-maximized')
   }
 
   if (options.args) {

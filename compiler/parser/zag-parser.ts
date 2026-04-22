@@ -20,7 +20,6 @@ import type {
   Instance,
   Slot,
   State,
-  TableNode,
   TokenReference,
   LoopVarReference,
   Conditional,
@@ -67,7 +66,7 @@ export interface ZagParserCallbacks {
   parseProperty: () => Property | null
   parseNumericArray: () => number[]
   parseEvent: () => Event | null
-  parseInstance: (nameToken: Token) => Instance | Slot | TableNode | { type: 'ZagComponent' }
+  parseInstance: (nameToken: Token) => Instance | Slot | { type: 'ZagComponent' }
   skipNewlines: () => void
   previous: () => Token | null
   hasColonOnLine: () => boolean

@@ -14,7 +14,6 @@ import {
   DSL,
   SCHEMA,
   ZAG_PRIMITIVES,
-  COMPOUND_PRIMITIVES,
   CHART_PRIMITIVES,
   type PropertyDef,
 } from '../../compiler/schema/dsl'
@@ -157,40 +156,6 @@ export function generateChartCompletions(): Completion[] {
       type: 'component',
       boost: 8,
     })
-  }
-
-  return completions
-}
-
-// ============================================================================
-// Compound Primitive Completions
-// ============================================================================
-
-/**
- * Generate completions for Compound primitives (Table, etc.)
- */
-export function generateCompoundCompletions(): Completion[] {
-  const completions: Completion[] = []
-
-  for (const [name, def] of Object.entries(COMPOUND_PRIMITIVES)) {
-    completions.push({
-      label: name,
-      detail: def.description || `${name} component`,
-      type: 'component',
-      boost: 8,
-    })
-
-    // Add slot completions (Row, Column, Header, etc.)
-    if (def.slots) {
-      for (const slot of def.slots) {
-        completions.push({
-          label: slot,
-          detail: `${name} slot`,
-          type: 'component',
-          boost: 7,
-        })
-      }
-    }
   }
 
   return completions
@@ -911,7 +876,6 @@ export const SCHEMA_COMPLETIONS = {
   zagSlots: generateZagSlotsByComponent(),
   zagItemKeywords: generateZagItemKeywordCompletions(),
   chartComponents: generateChartCompletions(),
-  compoundComponents: generateCompoundCompletions(),
   properties: generatePropertyCompletions(),
   propertyValues: generateAllPropertyValueCompletions(),
   events: generateEventCompletions(),
@@ -942,7 +906,6 @@ export function getAllComponentCompletions(): Completion[] {
     ...SCHEMA_COMPLETIONS.zagComponents,
     ...SCHEMA_COMPLETIONS.zagItemKeywords,
     ...SCHEMA_COMPLETIONS.chartComponents,
-    ...SCHEMA_COMPLETIONS.compoundComponents,
   ]
 }
 

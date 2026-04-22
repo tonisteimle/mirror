@@ -258,6 +258,27 @@ function emitRuntimeAction(
     case 'highlight':
       emitHighlightAction(ctx, action, currentVar)
       break
+    case 'highlightNext':
+      if (action.args && action.args.length > 0) {
+        ctx.emit(`_runtime.highlightNext(_elements['${action.args[0]}'])`)
+      } else {
+        ctx.emit(`_runtime.highlightNext(${currentVar})`)
+      }
+      break
+    case 'highlightPrev':
+      if (action.args && action.args.length > 0) {
+        ctx.emit(`_runtime.highlightPrev(_elements['${action.args[0]}'])`)
+      } else {
+        ctx.emit(`_runtime.highlightPrev(${currentVar})`)
+      }
+      break
+    case 'selectHighlighted':
+      if (action.args && action.args.length > 0) {
+        ctx.emit(`_runtime.selectHighlighted(_elements['${action.args[0]}'])`)
+      } else {
+        ctx.emit(`_runtime.selectHighlighted(${currentVar})`)
+      }
+      break
     case 'activate':
       if (action.args && action.args.length > 0) {
         ctx.emit(`_runtime.activate(_elements['${action.args[0]}'])`)

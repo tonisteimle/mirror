@@ -6,6 +6,7 @@
  * - State-triggered animations
  * - Hover transitions with timing
  * - Entry/exit animations
+ * - Playback verification (A4.1 - Phase 4)
  */
 
 import type { TestCase } from '../../types'
@@ -31,6 +32,16 @@ import {
   combinedAnimationTests,
 } from './state-animations.test'
 
+// Playback verification tests (A4.1)
+import {
+  allPlaybackVerificationTests,
+  playbackStateTests,
+  durationTests,
+  timingFunctionTests,
+  transformMotionTests,
+  multipleAnimationTests,
+} from './playback-verification.test'
+
 // Re-export individual test arrays
 export {
   // Presets
@@ -48,12 +59,23 @@ export {
   hoverAnimationTests,
   entryExitAnimationTests,
   combinedAnimationTests,
+  // Playback verification (A4.1)
+  allPlaybackVerificationTests,
+  playbackStateTests,
+  durationTests,
+  timingFunctionTests,
+  transformMotionTests,
+  multipleAnimationTests,
 }
 
 /**
  * All animation tests combined
  */
-export const allAnimationTests: TestCase[] = [...allAnimationPresetTests, ...allStateAnimationTests]
+export const allAnimationTests: TestCase[] = [
+  ...allAnimationPresetTests,
+  ...allStateAnimationTests,
+  ...allPlaybackVerificationTests,
+]
 
 /**
  * Quick animation tests for fast validation
@@ -62,4 +84,5 @@ export const quickAnimationTests: TestCase[] = [
   ...spinAnimationTests.slice(0, 2),
   ...bounceAnimationTests.slice(0, 2),
   ...hoverAnimationTests.slice(0, 2),
+  ...playbackStateTests.slice(0, 2),
 ]

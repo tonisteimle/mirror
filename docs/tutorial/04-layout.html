@@ -93,6 +93,54 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
         <strong>Merke:</strong> <code>full</code> ist der häufigste Fall – Elemente füllen standardmäßig den verfügbaren Platz. <code>hug</code> brauchst du, wenn ein Element nur so groß wie nötig sein soll.
       </div>
 
+      <h3>Device Presets</h3>
+      <p>Für App-Prototypen gibt es vordefinierte Device-Größen. Statt <code>w 375, h 812</code> schreibst du einfach <code>device mobile</code>:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16, bg #0a0a0a, pad 16, rad 8
+
+  // Mobile: 375 × 812
+  Frame device mobile, bg #1a1a1a, rad 8, pad 16, gap 8
+    Text "Mobile", col white, fs 14, weight 500
+    Text "375 × 812", col #888, fs 12
+
+  // Tablet: 768 × 1024
+  Frame device tablet, bg #1a1a1a, rad 8, pad 16, gap 8
+    Text "Tablet", col white, fs 14, weight 500
+    Text "768 × 1024", col #888, fs 12
+
+  // Desktop: 1440 × 900
+  Frame device desktop, bg #1a1a1a, rad 8, pad 16, gap 8
+    Text "Desktop", col white, fs 14, weight 500
+    Text "1440 × 900", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <table class="ref-table">
+        <tr><th>Device</th><th>Breite</th><th>Höhe</th></tr>
+        <tr><td><code>device mobile</code></td><td>375px</td><td>812px</td></tr>
+        <tr><td><code>device tablet</code></td><td>768px</td><td>1024px</td></tr>
+        <tr><td><code>device desktop</code></td><td>1440px</td><td>900px</td></tr>
+      </table>
+
+      <p>Du kannst Device-Presets mit expliziten Werten überschreiben – die expliziten Werte gewinnen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 16, bg #0a0a0a, pad 16, rad 8
+  // Mobile-Breite, aber eigene Höhe
+  Frame device mobile, h 400, bg #1a1a1a, rad 8, pad 16, gap 8
+    Text "Mobile-Breite", col white, fs 14, weight 500
+    Text "375 × 400 (h überschrieben)", col #888, fs 12
+
+  // Eigene Breite, Mobile-Höhe
+  Frame device mobile, w 280, bg #1a1a1a, rad 8, pad 16, gap 8
+    Text "Custom-Breite", col white, fs 14, weight 500
+    Text "280 × 812 (w überschrieben)", col #888, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
       <h3>Zentrieren und Verteilen</h3>
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -585,6 +633,7 @@ Frame gap 16
         <li><code>spread</code> – Kinder an Rändern verteilen</li>
         <li><code>tl</code> bis <code>br</code> – 9 Positionen</li>
         <li><code>w/h</code>: Pixel, <code>hug</code>, <code>full</code></li>
+        <li><code>device mobile/tablet/desktop</code> – vordefinierte App-Größen</li>
         <li><code>wrap</code> – Zeilenumbruch</li>
       </ul>
       <p><strong>Grid:</strong></p>

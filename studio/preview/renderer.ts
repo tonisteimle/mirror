@@ -197,7 +197,10 @@ export class PreviewRenderer {
           ${jsCode}
           if (typeof createUI === 'function') {
             const root = document.querySelector('.preview-layout-sandbox');
-            if (root) createUI(root);
+            if (root) {
+              const ui = createUI();
+              root.appendChild(ui);
+            }
           }
         })();
       `

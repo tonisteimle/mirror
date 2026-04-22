@@ -51,6 +51,9 @@ export interface MirrorElement extends HTMLElement {
     renderElse?: () => DocumentFragment
   }
   _loopItem?: unknown
+  _loopFocus?: boolean
+  _typeaheadEnabled?: boolean
+  _triggerBinding?: string // Trigger element shows selected text
   _stateMachine?: {
     initial: string
     current: string

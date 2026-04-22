@@ -37,24 +37,23 @@ export {
 } from './dsl'
 
 // Primitives - Note: PRIMITIVES was removed, use isPrimitive() instead
-export {
-  ZAG_PRIMITIVES,
-  COMPOUND_PRIMITIVES,
-  CHART_PRIMITIVES,
-} from './dsl'
+export { ZAG_PRIMITIVES, CHART_PRIMITIVES } from './dsl'
 
 // Properties
 export * from './properties'
 
 // Zag-specific
-export { isZagPrimitive, getSlotDef, getSlotMappings, type ZagSlotDef, type ZagPrimitiveDef } from './zag-primitives'
+export {
+  isZagPrimitive,
+  getSlotDef,
+  getSlotMappings,
+  type ZagSlotDef,
+  type ZagPrimitiveDef,
+} from './zag-primitives'
 export { getZagPropMetadata, type ZagPropMeta } from './zag-prop-metadata'
 
 // Component templates
 export { COMPONENT_TEMPLATES, adjustTemplateIndentation } from './component-templates'
-
-// Compound primitives
-export { getCompoundPrimitive, type CompoundPrimitiveDef, type CompoundSlotDef } from './compound-primitives'
 
 // Component tokens
 export * from './component-tokens'

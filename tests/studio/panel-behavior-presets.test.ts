@@ -82,15 +82,18 @@ describe('Component Panel Structure', () => {
   })
 
   describe('Zag Select Components', () => {
-    it('should include Select with slots and items', () => {
+    it('should include Select with Frame-based implementation', () => {
       const select = COMPONENTS_SECTION.find(c => c.id === 'comp-select')
       expect(select).toBeDefined()
-      expect(select?.template).toBe('Select')
-      expect(select?.children?.find(c => c.template === 'Trigger')?.isSlot).toBe(true)
-      const content = select?.children?.find(c => c.template === 'Content')
-      expect(content?.isSlot).toBe(true)
-      // Items are nested inside Content slot
-      expect(content?.children?.filter(c => c.isItem).length).toBe(3)
+      // Select is now implemented as a Frame with name Select
+      expect(select?.template).toBe('Frame')
+      expect(select?.name).toBe('Select')
+      // Uses mirTemplate for complex multi-line component
+      expect(select?.mirTemplate).toBeDefined()
+      expect(select?.mirTemplate).toContain('name Select')
+      expect(select?.mirTemplate).toContain('Trigger')
+      expect(select?.mirTemplate).toContain('Content')
+      expect(select?.mirTemplate).toContain('Item')
     })
   })
 
@@ -158,19 +161,16 @@ describe('Component Panel Structure', () => {
   })
 
   describe('Code Generation', () => {
-    it('should generate slot syntax with colon', () => {
-      const container = document.createElement('div')
-      const panel = new ComponentPanel({ container })
-
-      const buildCode = (panel as any).buildComponentCode.bind(panel)
+    it('should use mirTemplate for complex components like Select', () => {
+      // Select uses mirTemplate for multi-line code, not buildComponentCode
       const select = COMPONENTS_SECTION.find(c => c.id === 'comp-select')!
-      const code = buildCode(select)
 
-      expect(code).toContain('Trigger:')
-      expect(code).toContain('Content:')
-      expect(code).toContain('Item "Option A"')
-
-      panel.dispose()
+      // mirTemplate contains the full complex component code
+      expect(select.mirTemplate).toBeDefined()
+      expect(select.mirTemplate).toContain('Frame name Select')
+      expect(select.mirTemplate).toContain('Frame name Trigger')
+      expect(select.mirTemplate).toContain('Frame name Content')
+      expect(select.mirTemplate).toContain('Frame name Item')
     })
 
     it('should generate nested slot children correctly', () => {
@@ -212,9 +212,19 @@ describe('Component Panel Structure', () => {
       const allItems = sections.flatMap(s => s.items)
 
       // Check for key components
-      const componentIds = ['comp-select', 'comp-checkbox', 'comp-switch', 'comp-slider', 'comp-dialog', 'comp-tabs']
+      const componentIds = [
+        'comp-select',
+        'comp-checkbox',
+        'comp-switch',
+        'comp-slider',
+        'comp-dialog',
+        'comp-tabs',
+      ]
       for (const id of componentIds) {
-        expect(allItems.find(i => i.id === id), `Missing component: ${id}`).toBeDefined()
+        expect(
+          allItems.find(i => i.id === id),
+          `Missing component: ${id}`
+        ).toBeDefined()
       }
 
       panel.dispose()

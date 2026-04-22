@@ -567,6 +567,162 @@ export const playModeIntegrationTests: TestCase[] = describe('Play Mode Integrat
 ])
 
 // =============================================================================
+// Form Input Tests (Input, Textarea in Play Mode)
+// =============================================================================
+
+export const playModeInputTests: TestCase[] = describe('Play Mode Input Interaction', [
+  testWithSetup(
+    'Input is focusable in play mode',
+    'Input placeholder "Enter text...", w 200, pad 12, bg #1e1e2e, rad 6, bor 1, boc #444',
+    async (api: TestAPI) => {
+      await exitPlayModeIfActive(api)
+      await togglePlayMode(api)
+
+      // Get the input element
+      const inputEl = document.querySelector('[data-mirror-id="node-1"]') as HTMLInputElement
+      api.assert.ok(inputEl !== null, 'Input element should exist')
+      api.assert.ok(inputEl.tagName.toLowerCase() === 'input', 'Should be an input element')
+
+      // Focus the input (in play mode, focus should work)
+      inputEl.focus()
+      await api.utils.delay(50)
+
+      // Check if focused
+      api.assert.ok(document.activeElement === inputEl, 'Input should be focused in play mode')
+
+      // Cleanup
+      await exitPlayModeIfActive(api)
+    }
+  ),
+
+  testWithSetup(
+    'Input accepts text input in play mode',
+    'Input placeholder "Enter text...", w 200, pad 12, bg #1e1e2e, rad 6',
+    async (api: TestAPI) => {
+      await exitPlayModeIfActive(api)
+      await togglePlayMode(api)
+
+      const inputEl = document.querySelector('[data-mirror-id="node-1"]') as HTMLInputElement
+      api.assert.ok(inputEl !== null, 'Input element should exist')
+
+      // Focus and type
+      inputEl.focus()
+      inputEl.value = 'Hello World'
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }))
+      await api.utils.delay(50)
+
+      api.assert.ok(inputEl.value === 'Hello World', 'Input should contain typed text')
+
+      // Cleanup
+      await exitPlayModeIfActive(api)
+    }
+  ),
+
+  testWithSetup(
+    'Input is NOT focusable outside play mode (selection mode)',
+    'Input placeholder "Enter text...", w 200, pad 12, bg #1e1e2e, rad 6',
+    async (api: TestAPI) => {
+      await exitPlayModeIfActive(api)
+
+      const inputEl = document.querySelector('[data-mirror-id="node-1"]') as HTMLInputElement
+      api.assert.ok(inputEl !== null, 'Input element should exist')
+
+      // Click the input - should select it, not focus it
+      await api.interact.click('node-1')
+      await api.utils.delay(50)
+
+      // Input should NOT be the active element (preview container or selection should have focus)
+      api.assert.ok(
+        document.activeElement !== inputEl || document.activeElement?.tagName !== 'INPUT',
+        'Input should not be focused in selection mode'
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Textarea is focusable in play mode',
+    'Textarea placeholder "Enter message...", w 200, h 100, pad 12, bg #1e1e2e, rad 6',
+    async (api: TestAPI) => {
+      await exitPlayModeIfActive(api)
+      await togglePlayMode(api)
+
+      const textareaEl = document.querySelector('[data-mirror-id="node-1"]') as HTMLTextAreaElement
+      api.assert.ok(textareaEl !== null, 'Textarea element should exist')
+      api.assert.ok(textareaEl.tagName.toLowerCase() === 'textarea', 'Should be a textarea element')
+
+      // Focus the textarea (in play mode, focus should work)
+      textareaEl.focus()
+      await api.utils.delay(50)
+
+      api.assert.ok(
+        document.activeElement === textareaEl,
+        'Textarea should be focused in play mode'
+      )
+
+      // Cleanup
+      await exitPlayModeIfActive(api)
+    }
+  ),
+
+  testWithSetup(
+    'Multiple inputs can be tabbed through in play mode',
+    `Frame gap 8
+  Input placeholder "Name", w 200, pad 12, bg #1e1e2e, rad 6
+  Input placeholder "Email", w 200, pad 12, bg #1e1e2e, rad 6
+  Input placeholder "Phone", w 200, pad 12, bg #1e1e2e, rad 6`,
+    async (api: TestAPI) => {
+      await exitPlayModeIfActive(api)
+      await togglePlayMode(api)
+
+      // Focus first input
+      const input1 = document.querySelector('[data-mirror-id="node-2"]') as HTMLInputElement
+      const input2 = document.querySelector('[data-mirror-id="node-3"]') as HTMLInputElement
+      const input3 = document.querySelector('[data-mirror-id="node-4"]') as HTMLInputElement
+
+      api.assert.ok(input1 && input2 && input3, 'All three inputs should exist')
+
+      input1.focus()
+      await api.utils.delay(50)
+      api.assert.ok(document.activeElement === input1, 'First input should be focused')
+
+      // Tab to second input
+      input1.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))
+      input2.focus() // Simulate tab behavior
+      await api.utils.delay(50)
+      api.assert.ok(document.activeElement === input2, 'Second input should be focused after Tab')
+
+      // Cleanup
+      await exitPlayModeIfActive(api)
+    }
+  ),
+
+  testWithSetup(
+    'Input with bind updates value',
+    `searchTerm: ""
+Input bind searchTerm, placeholder "Search...", w 200, pad 12, bg #1e1e2e, rad 6`,
+    async (api: TestAPI) => {
+      await exitPlayModeIfActive(api)
+      await togglePlayMode(api)
+
+      const inputEl = document.querySelector('[data-mirror-id="node-1"]') as HTMLInputElement
+      api.assert.ok(inputEl !== null, 'Input element should exist')
+
+      // Type into input
+      inputEl.focus()
+      inputEl.value = 'test query'
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }))
+      await api.utils.delay(100)
+
+      // Check value persists
+      api.assert.ok(inputEl.value === 'test query', 'Input value should be updated')
+
+      // Cleanup
+      await exitPlayModeIfActive(api)
+    }
+  ),
+])
+
+// =============================================================================
 // Exports
 // =============================================================================
 
@@ -576,6 +732,7 @@ export const allPlayModeTests: TestCase[] = [
   ...playModeResetTests,
   ...playModeDeviceTests,
   ...playModeIntegrationTests,
+  ...playModeInputTests,
 ]
 
 export const quickPlayModeTests: TestCase[] = [

@@ -43,11 +43,6 @@ import type {
   SchemaType,
   SchemaConstraint,
   IconDefinition,
-  TableNode,
-  TableColumnNode,
-  TableSlotNode,
-  TableStaticRowNode,
-  TableStaticCellNode,
   DataReference,
   DataReferenceArray,
 } from './ast'
@@ -78,7 +73,6 @@ import {
   isZagItemKeyword,
   isZagGroupKeyword,
 } from '../schema/zag-primitives'
-import { isCompoundPrimitive, isCompoundSlot } from '../schema/compound-primitives'
 import { logParser as log } from '../utils/logger'
 import {
   isChartPrimitive,
@@ -1502,7 +1496,6 @@ export class Parser {
     | Slot
     | AnimationDefinition
     | ZagNode
-    | TableNode
     | null {
     const name = this.advance()
 
@@ -1688,7 +1681,7 @@ export class Parser {
     return component
   }
 
-  private parseInstance(name: Token): Instance | Slot | ZagNode | TableNode {
+  private parseInstance(name: Token): Instance | Slot | ZagNode {
     // Special handling for Slot primitive (case-insensitive, using schema)
     // Syntax: Slot "Name", w full, h 100
     // The first string is the slot name, NOT text content
@@ -1696,19 +1689,10 @@ export class Parser {
       return this.parseSlotPrimitive(name)
     }
 
-    // Special handling for Table primitive
-    // Syntax: Table $collection [where ...] [by ... [desc]] [grouped by ...]
-    if (name.value === 'Table') {
-      return this.parseTable(name)
-    }
-
     // Check if this is a Zag primitive (e.g., Select, Accordion)
     if (isZagPrimitive(name.value)) {
       return this.parseZagComponentWithContext(name)
     }
-
-    // Check if this is a Compound primitive (e.g., Shell)
-    const isCompound = isCompoundPrimitive(name.value)
 
     const instance: Instance = {
       type: 'Instance',
@@ -1720,7 +1704,6 @@ export class Parser {
       events: [],
       line: name.line,
       column: name.column,
-      ...(isCompound && { isCompound: true, compoundType: name.value }),
     }
 
     // Named instance: Component named instanceName
@@ -1873,738 +1856,6 @@ export class Parser {
 
     return slot
   }
-
-  /**
-   * Parse a Table component
-   *
-   * Syntax:
-   *   Table $collection [where expression] [by field [desc]] [grouped by field]
-   *   Table $tasks where done == false by priority desc, select()
-   *     Column titel, w 250
-   *     Column effort, suffix "h", sum
-   *     Header:
-   *       ...custom header
-   */
-  private parseTable(nameToken: Token): TableNode {
-    const table: TableNode = {
-      type: 'Table',
-      properties: [],
-      columns: [],
-      line: nameToken.line,
-      column: nameToken.column,
-    }
-
-    // Parse data source: $collection (parsed as IDENTIFIER starting with $)
-    // Data source is optional - manual tables don't have one
-    if (this.check('IDENTIFIER') && this.current().value.startsWith('$')) {
-      table.dataSource = this.advance().value
-      // Parse optional clauses: where, by, grouped by (only for data-driven tables)
-      this.parseTableClauses(table)
-    }
-
-    // Parse inline properties (select, pageSize, etc.)
-    const events: Event[] = []
-    this.parseInlineProperties(table.properties, events)
-
-    // Convert select() event to selectionMode property
-    // select() appears as an event with action 'select'
-    for (const event of events) {
-      for (const action of event.actions) {
-        if (action.name === 'select') {
-          // Check if multi: select(multi)
-          const isMulti = action.args?.some(arg => typeof arg === 'string' && arg === 'multi')
-          table.properties.push({
-            type: 'Property',
-            name: 'selectionMode',
-            values: [isMulti ? 'multi' : 'single'],
-            line: event.line,
-            column: event.column,
-          })
-        }
-      }
-    }
-
-    // Extract stickyHeader flag from properties
-    const stickyHeaderProp = table.properties.find(p => p.name === 'stickyHeader')
-    if (stickyHeaderProp) {
-      table.stickyHeader = true
-      // Remove from properties array (it's a direct flag, not a style property)
-      table.properties = table.properties.filter(p => p.name !== 'stickyHeader')
-    }
-
-    // Parse children (Column, Header:, Row:, Footer:, Group:)
-    if (this.check('INDENT')) {
-      this.advance()
-      this.parseTableBody(table)
-    }
-
-    return table
-  }
-
-  /**
-   * Parse Table clauses: where, by, grouped by
-   * Note: where, by, desc, grouped are reserved keywords with their own token types
-   */
-  private parseTableClauses(table: TableNode): void {
-    for (let iter = 0; !this.isAtEnd() && iter < Parser.MAX_ITERATIONS; iter++) {
-      // Check for 'where' clause (token type WHERE)
-      if (this.check('WHERE')) {
-        this.advance()
-        table.filter = this.parseTableExpression()
-      }
-      // Check for 'by' clause (token type BY)
-      else if (this.check('BY')) {
-        this.advance()
-        if (this.check('IDENTIFIER')) {
-          table.orderBy = this.advance().value
-          // Check for desc (token type DESC)
-          if (this.check('DESC')) {
-            this.advance()
-            table.orderDesc = true
-          }
-        }
-      }
-      // Check for 'grouped by' clause (token type GROUPED)
-      else if (this.check('GROUPED')) {
-        this.advance()
-        // Expect "by" after "grouped"
-        if (this.check('BY')) {
-          this.advance()
-          if (this.check('IDENTIFIER')) {
-            table.groupBy = this.advance().value
-          }
-        }
-      }
-      // Not a clause keyword, stop parsing clauses
-      else {
-        break
-      }
-    }
-  }
-
-  /**
-   * Parse a table expression (for where clause)
-   * Collects tokens until we hit a clause keyword or comma
-   * Note: by, grouped are reserved keywords with their own token types (BY, GROUPED)
-   */
-  private parseTableExpression(): string {
-    const parts: string[] = []
-    const comparisonTokens = new Set([
-      'EQUALS',
-      'GT',
-      'LT',
-      'GTE',
-      'LTE',
-      'NOT_EQUAL',
-      'STRICT_EQUAL',
-      'STRICT_NOT_EQUAL',
-      'AND_AND',
-      'OR_OR',
-      'BANG',
-    ])
-
-    // Safety guard to prevent infinite loops
-    let lastPos = this.pos
-    const maxIterations = 1000 // Reasonable limit for expression parsing
-
-    for (
-      let i = 0;
-      i < maxIterations &&
-      !this.isAtEnd() &&
-      !this.check('COMMA') &&
-      !this.check('NEWLINE') &&
-      !this.check('INDENT');
-      i++
-    ) {
-      const token = this.current()
-
-      // Stop at clause keywords (these have their own token types)
-      if (token.type === 'BY' || token.type === 'GROUPED') {
-        break
-      }
-
-      // Handle token reference ($variable)
-      if (token.type === 'IDENTIFIER' && token.value.startsWith('$')) {
-        parts.push(`$get("${token.value.slice(1)}")`)
-      } else if (token.type === 'STRING') {
-        parts.push(`"${token.value}"`)
-      } else if (comparisonTokens.has(token.type)) {
-        // Map token types to JavaScript operators
-        const opMap: Record<string, string> = {
-          EQUALS: '==',
-          GT: '>',
-          LT: '<',
-          GTE: '>=',
-          LTE: '<=',
-          NOT_EQUAL: '!=',
-          STRICT_EQUAL: '===',
-          STRICT_NOT_EQUAL: '!==',
-          AND_AND: '&&',
-          OR_OR: '||',
-          BANG: '!',
-        }
-        parts.push(opMap[token.type] || token.value)
-      } else if (token.type === 'OR') {
-        // Convert 'or' keyword to '||'
-        parts.push('||')
-      } else if (token.type === 'AND') {
-        // Convert 'and' keyword to '&&'
-        parts.push('&&')
-      } else {
-        parts.push(token.value)
-      }
-
-      this.advance()
-
-      // Verify progress to prevent infinite loop
-      if (this.pos === lastPos) {
-        log.warn('parseTableExpression: no progress made, breaking to prevent infinite loop')
-        break
-      }
-      lastPos = this.pos
-    }
-
-    return parts.join(' ')
-  }
-
-  /**
-   * Parse Table body (columns, slots, and static rows)
-   */
-  private parseTableBody(table: TableNode): void {
-    while (!this.check('DEDENT') && !this.isAtEnd()) {
-      // Skip newlines
-      if (this.check('NEWLINE')) {
-        this.advance()
-        continue
-      }
-
-      if (this.check('IDENTIFIER')) {
-        const name = this.current().value
-
-        if (name === 'Column') {
-          this.advance()
-          const column = this.parseTableColumn()
-          table.columns.push(column)
-        } else if (name === 'Header' && this.checkNext('COLON')) {
-          this.advance() // Header
-          this.advance() // :
-          table.headerSlot = this.parseTableSlot('Header')
-        } else if (name === 'Row' && this.checkNext('COLON')) {
-          // Row: slot for data-driven tables
-          this.advance() // Row
-          this.advance() // :
-          table.rowSlot = this.parseTableSlot('Row')
-        } else if (name === 'RowOdd' && this.checkNext('COLON')) {
-          // RowOdd: slot for zebra striping (odd rows)
-          this.advance() // RowOdd
-          this.advance() // :
-          table.rowOddSlot = this.parseTableSlot('RowOdd')
-        } else if (name === 'RowEven' && this.checkNext('COLON')) {
-          // RowEven: slot for zebra striping (even rows)
-          this.advance() // RowEven
-          this.advance() // :
-          table.rowEvenSlot = this.parseTableSlot('RowEven')
-        } else if (name === 'Row' && !this.checkNext('COLON')) {
-          // Row without colon = static row for manual tables
-          this.advance() // Row
-          const staticRow = this.parseTableStaticRow()
-          if (!table.staticRows) table.staticRows = []
-          table.staticRows.push(staticRow)
-        } else if (name === 'Footer' && this.checkNext('COLON')) {
-          this.advance() // Footer
-          this.advance() // :
-          table.footerSlot = this.parseTableSlot('Footer')
-        } else if (name === 'Group' && this.checkNext('COLON')) {
-          this.advance() // Group
-          this.advance() // :
-          table.groupSlot = this.parseTableSlot('Group')
-        } else if (name === 'SortIcon' && this.checkNext('COLON')) {
-          this.advance() // SortIcon
-          this.advance() // :
-          table.sortIconSlot = this.parseTableSlot('SortIcon')
-        } else if (name === 'SortAsc' && this.checkNext('COLON')) {
-          this.advance() // SortAsc
-          this.advance() // :
-          table.sortAscSlot = this.parseTableSlot('SortAsc')
-        } else if (name === 'SortDesc' && this.checkNext('COLON')) {
-          this.advance() // SortDesc
-          this.advance() // :
-          table.sortDescSlot = this.parseTableSlot('SortDesc')
-        } else if (name === 'Paginator' && this.checkNext('COLON')) {
-          this.advance() // Paginator
-          this.advance() // :
-          table.paginatorSlot = this.parseTablePaginatorSlot()
-        } else {
-          // Unknown, skip
-          this.advance()
-        }
-      } else {
-        this.advance()
-      }
-    }
-
-    // Consume DEDENT
-    if (this.check('DEDENT')) {
-      this.advance()
-    }
-  }
-
-  /**
-   * Parse Paginator: slot with sub-slots (Prev:, Next:, PageInfo:)
-   */
-  private parseTablePaginatorSlot(): TableSlotNode {
-    const startToken = this.previous()
-    const slot: TableSlotNode = {
-      name: 'Paginator',
-      properties: [],
-      children: [],
-      sourcePosition: {
-        line: startToken?.line ?? 0,
-        column: startToken?.column ?? 0,
-        endLine: startToken?.line ?? 0,
-        endColumn: startToken?.column ?? 0,
-      },
-    }
-
-    // Parse inline properties
-    this.parseInlineProperties(slot.properties)
-
-    // Check for 'table' in case we need to access parent node to store sub-slots
-    // For now, we just parse the slot normally and handle sub-slots inside
-
-    if (this.check('INDENT')) {
-      this.advance()
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
-        if (this.check('NEWLINE')) {
-          this.advance()
-          continue
-        }
-
-        if (this.check('IDENTIFIER')) {
-          const subName = this.current().value
-
-          if (subName === 'Prev' && this.checkNext('COLON')) {
-            this.advance() // Prev
-            this.advance() // :
-            // Store in slot's children with a marker
-            slot.prevSlot = this.parseTableSlot('Prev')
-          } else if (subName === 'Next' && this.checkNext('COLON')) {
-            this.advance() // Next
-            this.advance() // :
-            slot.nextSlot = this.parseTableSlot('Next')
-          } else if (subName === 'PageInfo' && this.checkNext('COLON')) {
-            this.advance() // PageInfo
-            this.advance() // :
-            slot.pageInfoSlot = this.parseTableSlot('PageInfo')
-          } else {
-            // Regular child element
-            const child = this.parseInstance(this.advance())
-            if (child.type !== 'ZagComponent' && child.type !== 'Table') {
-              slot.children.push(child as Instance | Slot)
-            }
-          }
-        } else {
-          this.advance()
-        }
-      }
-      if (this.check('DEDENT')) {
-        this.advance()
-      }
-    }
-
-    return slot
-  }
-
-  /**
-   * Parse a static Row for manual tables
-   *
-   * Syntax:
-   *   Row "Cell1", "Cell2", "Cell3"
-   *   Row
-   *     Text "Content"
-   *     Frame ...
-   */
-  private parseTableStaticRow(): TableStaticRowNode {
-    const startToken = this.previous()
-    const row: TableStaticRowNode = {
-      type: 'TableStaticRow',
-      cells: [],
-      properties: [],
-      line: startToken?.line ?? 0,
-      column: startToken?.column ?? 0,
-    }
-
-    // Parse inline cells (strings separated by commas)
-    // Row "Name", "Age", "Email"
-    while (!this.check('NEWLINE') && !this.check('INDENT') && !this.isAtEnd()) {
-      if (this.check('STRING')) {
-        const token = this.advance()
-        row.cells.push({
-          type: 'TableStaticCell',
-          text: token.value,
-          properties: [],
-          line: token.line,
-          column: token.column,
-        })
-      } else if (this.check('NUMBER')) {
-        const token = this.advance()
-        row.cells.push({
-          type: 'TableStaticCell',
-          text: String(token.value),
-          properties: [],
-          line: token.line,
-          column: token.column,
-        })
-      } else if (this.check('COMMA')) {
-        this.advance()
-      } else if (this.check('IDENTIFIER')) {
-        // Could be a property like bg, pad, etc.
-        // For now, skip unknown identifiers in inline position
-        break
-      } else {
-        break
-      }
-    }
-
-    // Skip newline
-    if (this.check('NEWLINE')) {
-      this.advance()
-    }
-
-    // Parse child content (indented block)
-    if (this.check('INDENT')) {
-      this.advance()
-      // If we had inline cells, children are additional content
-      // If no inline cells, children become the cell content
-      const children: (Instance | Slot)[] = []
-
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
-        if (this.check('NEWLINE')) {
-          this.advance()
-          continue
-        }
-
-        if (this.check('IDENTIFIER')) {
-          const child = this.parseInstance(this.advance())
-          // Only accept Instance and Slot in static cells (not Table/Zag)
-          if (child && (child.type === 'Instance' || child.type === 'Slot')) {
-            children.push(child)
-          }
-        } else {
-          this.advance()
-        }
-      }
-
-      // If we have children but no cells, wrap children in a single cell
-      if (row.cells.length === 0 && children.length > 0) {
-        row.cells.push({
-          type: 'TableStaticCell',
-          children,
-          properties: [],
-          line: startToken?.line ?? 0,
-          column: startToken?.column ?? 0,
-        })
-      } else if (children.length > 0) {
-        // Add children to the last cell or create new cell
-        const lastCell = row.cells[row.cells.length - 1]
-        if (lastCell && !lastCell.children) {
-          lastCell.children = children
-        }
-      }
-
-      if (this.check('DEDENT')) {
-        this.advance()
-      }
-    }
-
-    return row
-  }
-
-  /**
-   * Parse a Column definition
-   *
-   * Syntax:
-   *   Column fieldName [, w N] [, suffix "str"] [, sortable] [, sum|avg|count]
-   *   Column "Custom Label"
-   *     Cell:
-   *       ...custom cell template
-   */
-  private parseTableColumn(): TableColumnNode {
-    const startToken = this.previous()
-    const column: TableColumnNode = {
-      type: 'TableColumn',
-      field: '',
-      line: startToken?.line ?? 0,
-      column: startToken?.column ?? 0,
-    }
-
-    // Column-config properties (not style properties)
-    const columnConfigProps = new Set([
-      'w',
-      'width',
-      'prefix',
-      'suffix',
-      'align',
-      'sortable',
-      'desc',
-      'filterable',
-      'hidden',
-      'sum',
-      'avg',
-      'count',
-    ])
-
-    // Field name or custom label
-    if (this.check('STRING')) {
-      column.label = this.advance().value
-      column.field = column.label.toLowerCase().replace(/\s+/g, '_')
-    } else if (this.check('IDENTIFIER')) {
-      column.field = this.advance().value
-    }
-
-    // Parse column properties
-    while (this.check('COMMA')) {
-      this.advance() // consume comma
-
-      if (this.check('IDENTIFIER')) {
-        const propName = this.advance().value
-
-        // Check if this is a column-config property
-        if (columnConfigProps.has(propName)) {
-          switch (propName) {
-            case 'w':
-            case 'width':
-              if (this.check('NUMBER')) {
-                column.width = parseInt(this.advance().value, 10)
-              }
-              break
-            case 'prefix':
-              if (this.check('STRING')) {
-                column.prefix = this.advance().value
-              }
-              break
-            case 'suffix':
-              if (this.check('STRING')) {
-                column.suffix = this.advance().value
-              }
-              break
-            case 'align':
-              if (this.check('IDENTIFIER')) {
-                const alignValue = this.advance().value
-                if (alignValue === 'left' || alignValue === 'right' || alignValue === 'center') {
-                  column.align = alignValue
-                }
-              }
-              break
-            case 'sortable':
-              column.sortable = true
-              break
-            case 'desc':
-              column.sortDesc = true
-              break
-            case 'filterable':
-              column.filterable = true
-              break
-            case 'hidden':
-              column.hidden = true
-              break
-            case 'sum':
-              column.aggregation = 'sum'
-              break
-            case 'avg':
-              column.aggregation = 'avg'
-              break
-            case 'count':
-              column.aggregation = 'count'
-              break
-          }
-        } else {
-          // Style property - collect for cell styling
-          if (!column.cellProperties) column.cellProperties = []
-          const prevToken = this.previous()
-          const prop: Property = {
-            type: 'Property',
-            name: propName,
-            values: [],
-            line: prevToken?.line ?? 0,
-            column: prevToken?.column ?? 0,
-          }
-          // Collect value(s) for this property
-          while (
-            !this.check('COMMA') &&
-            !this.check('NEWLINE') &&
-            !this.check('INDENT') &&
-            !this.isAtEnd()
-          ) {
-            const token = this.advance()
-            if (token.type === 'NUMBER') {
-              // Hex colors like #333 come as NUMBER tokens - keep as string
-              if (token.value.startsWith('#')) {
-                prop.values.push(token.value)
-              } else {
-                prop.values.push(parseFloat(token.value))
-              }
-            } else if (token.type === 'STRING') {
-              prop.values.push(token.value)
-            } else if (token.type === 'IDENTIFIER') {
-              // Check if it's a color (#hex)
-              if (token.value.startsWith('#')) {
-                prop.values.push(token.value)
-              } else {
-                prop.values.push(token.value)
-              }
-            } else {
-              break
-            }
-          }
-          column.cellProperties.push(prop)
-        }
-      }
-    }
-
-    // Check for Cell: slot (custom cell template)
-    if (this.check('INDENT')) {
-      this.advance()
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
-        if (this.check('NEWLINE')) {
-          this.advance()
-          continue
-        }
-
-        if (
-          this.check('IDENTIFIER') &&
-          this.current().value === 'Cell' &&
-          this.checkNext('COLON')
-        ) {
-          this.advance() // Cell
-          this.advance() // :
-          column.customCell = this.parseTableCellSlot()
-        } else {
-          this.advance()
-        }
-      }
-      if (this.check('DEDENT')) {
-        this.advance()
-      }
-    }
-
-    return column
-  }
-
-  /**
-   * Parse a Table slot (Header:, Row:, Footer:, Group:)
-   */
-  private parseTableSlot(slotName: string): TableSlotNode {
-    const startToken = this.previous()
-    const slot: TableSlotNode = {
-      name: slotName,
-      properties: [],
-      children: [],
-      sourcePosition: {
-        line: startToken?.line ?? 0,
-        column: startToken?.column ?? 0,
-        endLine: startToken?.line ?? 0,
-        endColumn: startToken?.column ?? 0,
-      },
-    }
-
-    // Parse inline properties
-    this.parseInlineProperties(slot.properties)
-
-    // For Row: slot, add 'row' and 'index' as loop variables
-    // so that row.field references are detected as loop variable references
-    const isRowSlot = slotName === 'Row'
-    if (isRowSlot) {
-      this.loopVariables.add('row')
-      this.loopVariables.add('index')
-    }
-
-    // Parse children - use try-finally to guarantee loop variable cleanup
-    try {
-      if (this.check('INDENT')) {
-        this.advance()
-        while (!this.check('DEDENT') && !this.isAtEnd()) {
-          if (this.check('NEWLINE')) {
-            this.advance()
-            continue
-          }
-
-          if (this.check('IDENTIFIER')) {
-            const name = this.current().value
-
-            // Special case: Row without colon inside Header or Footer slot = static row
-            if (
-              (slotName === 'Header' || slotName === 'Footer') &&
-              name === 'Row' &&
-              !this.checkNext('COLON')
-            ) {
-              this.advance() // Row
-              slot.staticRow = this.parseTableStaticRow()
-            } else {
-              const child = this.parseInstance(this.advance())
-              if (child.type !== 'ZagComponent') {
-                slot.children.push(child as Instance | Slot)
-              }
-            }
-          } else {
-            this.advance()
-          }
-        }
-        if (this.check('DEDENT')) {
-          this.advance()
-        }
-      }
-    } finally {
-      // Clean up loop variables for Row: slot - guaranteed to run
-      if (isRowSlot) {
-        this.loopVariables.delete('row')
-        this.loopVariables.delete('index')
-      }
-    }
-
-    return slot
-  }
-
-  /**
-   * Parse a custom Cell template
-   */
-  private parseTableCellSlot(): (Instance | Slot)[] {
-    const children: (Instance | Slot)[] = []
-
-    // Parse inline content first
-    if (this.check('IDENTIFIER')) {
-      const child = this.parseInstance(this.advance())
-      if (child.type !== 'ZagComponent') {
-        children.push(child as Instance | Slot)
-      }
-    }
-
-    // Parse indented children
-    if (this.check('INDENT')) {
-      this.advance()
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
-        if (this.check('NEWLINE')) {
-          this.advance()
-          continue
-        }
-
-        if (this.check('IDENTIFIER')) {
-          const child = this.parseInstance(this.advance())
-          if (child.type !== 'ZagComponent') {
-            children.push(child as Instance | Slot)
-          }
-        } else {
-          this.advance()
-        }
-      }
-      if (this.check('DEDENT')) {
-        this.advance()
-      }
-    }
-
-    return children
-  }
-
   /**
    * Wrapper method that calls the extracted Zag parser.
    * Creates context and callbacks for the modular parser.
@@ -4868,9 +4119,24 @@ export class Parser {
       column: eventToken.column,
     }
 
+    // Track if we're in block mode (colon was consumed)
+    let isBlockMode = false
+
     // Handle onclick: syntax (colon directly after event name)
     if (this.check('COLON')) {
       this.advance() // consume the colon
+      isBlockMode = true
+    }
+
+    // Check for key modifier with parentheses: onkeydown(arrow-down)
+    if (this.check('LPAREN')) {
+      this.advance() // consume (
+      if (this.check('IDENTIFIER')) {
+        event.key = this.advance().value
+      }
+      if (this.check('RPAREN')) {
+        this.advance() // consume )
+      }
     }
 
     // Check for key modifier: onkeydown escape:
@@ -4880,6 +4146,7 @@ export class Parser {
         event.key = next.value
         this.advance() // key
         this.advance() // :
+        isBlockMode = true
       }
     }
 
@@ -4893,6 +4160,7 @@ export class Parser {
 
         if (this.check('COLON')) {
           this.advance()
+          isBlockMode = true
         }
       }
     }
@@ -4912,22 +4180,21 @@ export class Parser {
       }
     }
 
-    // Parse block actions (multi-line)
+    // Parse block actions (multi-line) - ONLY if we're in block mode (colon was used)
     // onclick:
     //   Menu open
     //   Backdrop visible
     //
-    // IMPORTANT: Only skip newlines if followed by INDENT (block actions).
-    // If followed by same-level content (another sibling), we must NOT consume
-    // the NEWLINE, as it's the separator between siblings.
+    // IMPORTANT: Only enter block mode if a colon was consumed (isBlockMode = true).
+    // Without a colon, any NEWLINE+INDENT is for children of the parent, not event actions.
     //
-    // Example that should NOT consume NEWLINE:
-    //   Button "A", onenter toggle()
-    //   Button "B", onescape toggle()   ← NEWLINE before this is a sibling separator
-    if (this.check('NEWLINE') && this.peekAt(1)?.type === 'INDENT') {
+    // Example that should NOT consume NEWLINE+INDENT:
+    //   Frame onclick action
+    //     Text "child"     ← This is a child of Frame, not an action of onclick
+    if (isBlockMode && this.check('NEWLINE') && this.peekAt(1)?.type === 'INDENT') {
       this.skipNewlines()
     }
-    if (this.check('INDENT')) {
+    if (isBlockMode && this.check('INDENT')) {
       // Don't consume INDENT if it's followed by a state block pattern (e.g., "on:", "hover:")
       // This happens when an inline event like "onenter toggle()" is followed by a state block
       // Example:

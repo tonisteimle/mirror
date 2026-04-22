@@ -121,6 +121,8 @@ export interface ComponentFixture {
   textContent?: string
   /** Template string for code generation */
   template: string
+  /** Multi-line template for presets/composites (e.g., Accordion, Tabs) */
+  mirTemplate?: string
   /** Whether component creates a definition (ends with :) */
   hasDefinition?: boolean
   /** Whether component has child slots */

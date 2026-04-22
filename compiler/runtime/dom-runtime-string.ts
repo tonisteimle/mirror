@@ -171,9 +171,15 @@ const _runtime = {
   close(el) {
     if (!el) return
     const initialState = el._initialState
-    if (initialState === 'closed' || initialState === 'open' || el.dataset.state === 'open' || el.dataset.state === 'closed') {
+    const currentState = el.dataset.state
+    const hasStateMachine = el._stateMachine
+
+    // Check if element has open/closed states in its state machine
+    if (hasStateMachine && (hasStateMachine.states?.open || hasStateMachine.states?.closed)) {
+      this.transitionTo(el, 'default')
+    } else if (initialState === 'closed' || initialState === 'open' || currentState === 'open' || currentState === 'closed') {
       this.setState(el, 'closed')
-    } else if (initialState === 'expanded' || initialState === 'collapsed' || el.dataset.state === 'expanded' || el.dataset.state === 'collapsed') {
+    } else if (initialState === 'expanded' || initialState === 'collapsed' || currentState === 'expanded' || currentState === 'collapsed') {
       this.setState(el, 'collapsed')
     } else {
       this.hide(el)
@@ -603,6 +609,93 @@ const _runtime = {
         target.blur()
       }
     })
+  },
+
+  // ============================================
+  // TYPEAHEAD NAVIGATION (Accessibility)
+  // ============================================
+
+  /**
+   * Setup typeahead for a list container
+   * Typing characters jumps to matching item
+   */
+  setupTypeahead(container) {
+    if (!container) return
+    if (container._typeaheadEnabled) return // Already setup
+    container._typeaheadEnabled = true
+
+    // Typeahead state
+    const state = { text: '', timeout: null }
+
+    // Get highlightable items
+    const getItems = () => {
+      const findItems = (el, requireState) => {
+        const items = []
+        for (const child of el.children) {
+          if (child._stateStyles?.highlighted) {
+            items.push(child)
+          } else if (!requireState && child.style.cursor === 'pointer') {
+            items.push(child)
+          } else {
+            items.push(...findItems(child, requireState))
+          }
+        }
+        return items
+      }
+      // First try with highlight state, then fallback to cursor:pointer
+      let items = findItems(container, true)
+      if (!items.length) items = findItems(container, false)
+      return items
+    }
+
+    container.addEventListener('keydown', (e) => {
+      // Only handle printable characters
+      if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return
+
+      const char = e.key.toLowerCase()
+      const items = getItems()
+      if (!items.length) return
+
+      // Clear previous timeout
+      if (state.timeout) clearTimeout(state.timeout)
+
+      // Add character to buffer
+      state.text += char
+
+      // Find matching item
+      const searchText = state.text.toLowerCase()
+      const match = items.find(item => {
+        const text = item.textContent?.trim().toLowerCase() || ''
+        return text.startsWith(searchText)
+      })
+
+      if (match) {
+        // Unhighlight others, highlight match
+        for (const item of items) {
+          if (item !== match && item.dataset.highlighted) {
+            delete item.dataset.highlighted
+            this.removeState(item, 'highlighted')
+          }
+        }
+        match.dataset.highlighted = 'true'
+        this.applyState(match, 'highlighted')
+        match.scrollIntoView({ block: 'nearest' })
+      }
+
+      // Clear buffer after 500ms
+      state.timeout = setTimeout(() => {
+        state.text = ''
+      }, 500)
+    })
+  },
+
+  /**
+   * Bind trigger text to show selected value
+   * When an item is selected, update the trigger element's text
+   */
+  bindTriggerText(container) {
+    if (!container) return
+    container._triggerBinding = 'true'
   },
 
   // ============================================
@@ -1084,6 +1177,123 @@ const _runtime = {
     this._inputBindings.get(path).add(el)
   },
 
+  // ============================================
+  // INPUT MASK
+  // ============================================
+
+  // Parse mask pattern into char types
+  _parseMask(pattern) {
+    return pattern.split('').map(c => {
+      if (c === '#') return { type: 'digit', char: c }
+      if (c === 'A') return { type: 'letter', char: c }
+      if (c === '*') return { type: 'alphanum', char: c }
+      return { type: 'literal', char: c }
+    })
+  },
+
+  // Check if char is valid for mask type
+  _isMaskCharValid(char, type) {
+    if (type === 'digit') return /\\d/.test(char)
+    if (type === 'letter') return /[a-zA-Z]/.test(char)
+    if (type === 'alphanum') return /[a-zA-Z0-9]/.test(char)
+    return false
+  },
+
+  // Format value with mask pattern
+  formatWithMask(value, pattern) {
+    const mask = this._parseMask(pattern)
+    const raw = String(value || '').replace(/[^a-zA-Z0-9]/g, '').split('')
+    let result = '', ri = 0
+
+    for (const m of mask) {
+      if (ri >= raw.length) break
+      if (m.type === 'literal') {
+        result += m.char
+      } else {
+        while (ri < raw.length && !this._isMaskCharValid(raw[ri], m.type)) ri++
+        if (ri < raw.length) result += raw[ri++]
+      }
+    }
+    return result
+  },
+
+  // Get raw value from masked input (extracts all alphanumeric chars)
+  getMaskRawValue(input) {
+    const pattern = input._maskPattern
+    if (!pattern) return input.value
+    // Extract all alphanumeric characters, regardless of current formatting
+    return (input.value || '').replace(/[^a-zA-Z0-9]/g, '')
+  },
+
+  // Adjust cursor position after formatting
+  _adjustMaskCursor(oldVal, newVal, oldPos, pattern) {
+    const mask = this._parseMask(pattern)
+    let inputChars = 0
+    for (let i = 0; i < oldPos && i < mask.length; i++) {
+      if (mask[i].type !== 'literal') inputChars++
+    }
+    let newPos = 0, counted = 0
+    for (let i = 0; i < newVal.length && i < mask.length; i++) {
+      newPos = i + 1
+      if (mask[i].type !== 'literal') {
+        counted++
+        if (counted >= inputChars) break
+      }
+    }
+    while (newPos < mask.length && mask[newPos] && mask[newPos].type === 'literal') newPos++
+    return Math.min(newPos, newVal.length)
+  },
+
+  // Apply mask to input element
+  applyMask(input, pattern) {
+    const self = this
+    input._maskPattern = pattern
+
+    // Format initial value
+    if (input.value) {
+      input.value = self.formatWithMask(input.value, pattern)
+    }
+
+    // Handle input events
+    input.addEventListener('input', () => {
+      const pos = input.selectionStart || 0
+      const old = input.value
+      const raw = self.getMaskRawValue(input)
+      const formatted = self.formatWithMask(raw, pattern)
+
+      if (formatted !== old) {
+        input.value = formatted
+        const newPos = self._adjustMaskCursor(old, formatted, pos, pattern)
+        input.setSelectionRange(newPos, newPos)
+      }
+    })
+
+    // Validate keypress
+    input.addEventListener('keypress', (e) => {
+      if (e.ctrlKey || e.metaKey || e.key.length > 1) return
+      const pos = input.selectionStart || 0
+      const mask = self._parseMask(pattern)
+
+      let maskIdx = 0
+      for (let i = 0; i < pos && maskIdx < mask.length; i++) {
+        maskIdx++
+      }
+      while (maskIdx < mask.length && mask[maskIdx].type === 'literal') maskIdx++
+
+      if (maskIdx >= mask.length || !self._isMaskCharValid(e.key, mask[maskIdx].type)) {
+        e.preventDefault()
+      }
+    })
+
+    // Handle paste
+    input.addEventListener('paste', (e) => {
+      e.preventDefault()
+      const data = (e.clipboardData && e.clipboardData.getData('text')) || ''
+      input.value = self.formatWithMask(data, pattern)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+  },
+
   // Register element for text binding (Text elements that display data)
   bindText(el, path, expression) {
     if (!el || !path) return
@@ -1362,7 +1572,15 @@ const _runtime = {
     const items = this.getHighlightableItems(container)
     if (!items.length) return
     const current = items.findIndex(el => el.dataset.highlighted === 'true')
-    const next = current === -1 ? 0 : Math.min(current + 1, items.length - 1)
+    const loop = container._loopFocus === true || container.dataset.loopFocus === 'true'
+    let next
+    if (current === -1) {
+      next = 0
+    } else if (loop) {
+      next = (current + 1) % items.length
+    } else {
+      next = Math.min(current + 1, items.length - 1)
+    }
     this.highlight(items[next])
   },
 
@@ -1371,7 +1589,15 @@ const _runtime = {
     const items = this.getHighlightableItems(container)
     if (!items.length) return
     const current = items.findIndex(el => el.dataset.highlighted === 'true')
-    const prev = current === -1 ? items.length - 1 : Math.max(current - 1, 0)
+    const loop = container._loopFocus === true || container.dataset.loopFocus === 'true'
+    let prev
+    if (current === -1) {
+      prev = items.length - 1
+    } else if (loop) {
+      prev = (current - 1 + items.length) % items.length
+    } else {
+      prev = Math.max(current - 1, 0)
+    }
     this.highlight(items[prev])
   },
 
@@ -1871,17 +2097,43 @@ const _runtime = {
   // Selection binding
   updateSelectionBinding(el) {
     if (!el) return
+    const value = el.textContent?.trim() || ''
     let parent = el.parentElement
     while (parent) {
+      // Selection variable binding
       if (parent._selectionBinding) {
-        const value = el.textContent?.trim() || ''
         const varName = parent._selectionBinding
         window._mirrorState = window._mirrorState || {}
         window._mirrorState[varName] = value
         this.updateBoundElements(varName, value)
-        return
+      }
+      // Trigger text binding - update trigger to show selected value
+      if (parent._triggerBinding) {
+        this.updateTriggerText(parent, value)
       }
       parent = parent.parentElement
+    }
+  },
+
+  // Update trigger text to show selected value
+  updateTriggerText(container, selectedText) {
+    // Find the trigger element within the container
+    // Try both data-trigger attribute and data-mirror-name="Trigger"
+    const trigger = container.querySelector('[data-trigger]') || container.querySelector('[data-mirror-name="Trigger"]')
+    if (trigger) {
+      // Find the text element within the trigger (span or element with data-text)
+      const textEl = trigger.querySelector('span, [data-text]')
+      if (textEl) {
+        textEl.textContent = selectedText
+      } else {
+        // If no text element, update the trigger's first text node
+        const textNode = Array.from(trigger.childNodes).find(
+          node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()
+        )
+        if (textNode) {
+          textNode.textContent = selectedText
+        }
+      }
     }
   },
 

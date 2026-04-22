@@ -185,13 +185,15 @@ describe('Generated Code Quality', () => {
   })
 
   it('Select generates valid structure with Items', () => {
-    const selectItem = COMPONENTS_SECTION.find(item => item.template === 'Select')
+    const selectItem = COMPONENTS_SECTION.find(item => item.name === 'Select')
     expect(selectItem).toBeDefined()
 
-    const code = generateCodeForMirFile(selectItem!)
-    expect(code).toMatch(/^Select/)
-    // Should have Item children or placeholder
-    expect(code).toMatch(/Item|placeholder/)
+    // Select uses mirTemplate for its complex multi-line code
+    // When dropped, the mirTemplate is used directly (not generated from drag data)
+    const code = selectItem!.mirTemplate!
+    expect(code).toMatch(/^Frame name Select/)
+    // Should have Item children
+    expect(code).toMatch(/Item/)
   })
 
   it('Checkbox generates valid structure', () => {

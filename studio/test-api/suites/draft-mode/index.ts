@@ -76,6 +76,9 @@ import {
   edgeCaseScenarioTests,
 } from './scenarios.test'
 
+// Integration tests (test ACTUAL wiring, not just isolated functions)
+import { draftModeIntegrationTests } from '../ai/draft-mode-integration.test'
+
 // =============================================================================
 // Re-export Individual Test Groups
 // =============================================================================
@@ -115,14 +118,23 @@ export {
   edgeCaseScenarioTests,
 }
 
+// Integration tests (CRITICAL - tests actual wiring)
+export { draftModeIntegrationTests }
+
 // =============================================================================
 // Combined Exports
 // =============================================================================
 
 /**
  * All draft mode tests combined
+ *
+ * NOTE: Integration tests are run FIRST because they are smoke tests
+ * that verify the feature is actually wired up correctly.
  */
 export const allDraftModeTests: TestCase[] = [
+  // CRITICAL: Integration tests first - these catch wiring issues
+  ...draftModeIntegrationTests,
+  // Then the regular unit tests
   ...allBasicDraftModeTests,
   ...allVisualDraftModeTests,
   ...allAutocompleteDraftModeTests,
@@ -157,6 +169,9 @@ export const quickDraftModeTests: TestCase[] = [
  * Maps category names to test arrays for CLI filtering
  */
 export const draftModeCategories: Record<string, TestCase[]> = {
+  // CRITICAL: Integration tests (run these first to verify wiring)
+  integration: draftModeIntegrationTests,
+
   // Main categories
   basic: allBasicDraftModeTests,
   visual: allVisualDraftModeTests,
@@ -197,6 +212,7 @@ export const draftModeCategories: Record<string, TestCase[]> = {
 
 export const draftModeTestCounts = {
   total: allDraftModeTests.length,
+  integration: draftModeIntegrationTests.length,
   basic: allBasicDraftModeTests.length,
   visual: allVisualDraftModeTests.length,
   autocomplete: allAutocompleteDraftModeTests.length,

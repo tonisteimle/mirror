@@ -23,13 +23,26 @@ export interface ComponentTemplates {
  * Format: ComponentName:\n  SlotName: properties\n  ...
  */
 export const COMPONENT_DEFINITIONS: Record<string, string> = {
-  // Select - Dropdown with Trigger, Content, Item slots
-  Select: `Select:
-  Trigger: pad 8 12, bg #27272a, rad 6, col #e4e4e7
-    hover bg #3f3f46
-  Content: bg #27272a, rad 8, pad 4, shadow md
-  Item: pad 8 12, rad 4, col #e4e4e7
-    hover bg #3f3f46`,
+  // Select - Pure Mirror Dropdown with Trigger, Content, Item
+  // Note: Item onclick order matters! close() first transitions Trigger to default state,
+  // then select() updates the trigger text with the selected value.
+  Select: `Select: trigger-text, loop-focus, typeahead
+  Trigger: hor, spread, pad 10 12, bg #27272a, rad 6, bor 1, boc #3f3f46, cursor pointer, ver-center, toggle()
+    Text "Choose...", col #a1a1aa
+    Icon "chevron-down", is 16, ic #71717a
+    hover:
+      bg #3f3f46
+    open:
+      Icon "chevron-up", is 16, ic #71717a
+  Content: bg #27272a, rad 8, pad 4, shadow md, gap 2, hidden, onkeydown(arrow-down) highlightNext(Content), onkeydown(arrow-up) highlightPrev(Content), onkeydown(enter) selectHighlighted(Content), onkeydown(escape) toggle(Trigger)
+    Trigger.open:
+      visible
+  Item: pad 8 12, rad 4, col #e4e4e7, cursor pointer, exclusive(), onclick close(Trigger) select()
+    highlighted:
+      bg #3f3f46
+    selected:
+      bg #5BA8F5
+      col white`,
 
   // Checkbox - Control and Label
   Checkbox: `Checkbox:
@@ -124,21 +137,25 @@ export function findDefinitionInsertPosition(code: string): number {
     const line = lines[i].trim()
     // Token definition: starts with $ or is new syntax name.suffix:
     if (line.startsWith('$') || /^[a-z][a-zA-Z0-9_-]*\.[a-z]+\s*:/.test(line)) {
-      lastTokenLine = i + 1  // 1-indexed line number
+      lastTokenLine = i + 1 // 1-indexed line number
     }
     // Component definition: starts with CapitalLetter and ends with :
     // But NOT a slot (which would be indented)
-    if (/^[A-Z][a-zA-Z0-9]*\s*:/.test(line) && !lines[i].startsWith(' ') && !lines[i].startsWith('\t')) {
+    if (
+      /^[A-Z][a-zA-Z0-9]*\s*:/.test(line) &&
+      !lines[i].startsWith(' ') &&
+      !lines[i].startsWith('\t')
+    ) {
       // Also check the NEXT line to see if this definition has children
       // If the next non-empty line is indented, count those lines too
       let endLine = i + 1
       for (let j = i + 1; j < lines.length; j++) {
         const nextLine = lines[j]
-        if (!nextLine.trim()) continue  // Skip empty lines
+        if (!nextLine.trim()) continue // Skip empty lines
         if (nextLine.startsWith(' ') || nextLine.startsWith('\t')) {
-          endLine = j + 1  // This line is part of the definition
+          endLine = j + 1 // This line is part of the definition
         } else {
-          break  // Not indented, end of definition
+          break // Not indented, end of definition
         }
       }
       lastDefinitionLine = endLine
@@ -293,17 +310,24 @@ PageLayout: ver, w full, h 400
   },
 
   // ============================================================================
-  // ZAG: SELECT
+  // PURE MIRROR: SELECT
   // ============================================================================
   'form-select': {
-    mir: `Select placeholder "Choose..."
-  Item "Option A"
-  Item "Option B"
-  Item "Option C"`,
-    com: `Select placeholder "Choose...", searchable, clearable
-  Item "Option A"
-  Item "Option B"
-  Item "Option C"`,
+    mir: `Select
+  Trigger
+    Text "Choose..."
+  Content
+    Item "Option A"
+    Item "Option B"
+    Item "Option C"`,
+    com: `Select
+  Trigger
+    Text "Choose..."
+    Icon "chevron-down", is 16
+  Content
+    Item "Option A"
+    Item "Option B"
+    Item "Option C"`,
   },
 
   // ============================================================================

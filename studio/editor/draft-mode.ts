@@ -283,16 +283,17 @@ const draftProcessingDecoration = Decoration.line({
 export const draftModeViewPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet
+    private pendingSync = false
 
     constructor(view: EditorView) {
       this.decorations = this.buildDecorations(view)
-      this.syncDraftLines(view)
+      // Schedule initial sync via requestAnimationFrame to avoid dispatch during init
+      this.scheduleDraftLinesSync(view)
     }
 
     update(update: ViewUpdate) {
       if (update.docChanged || update.viewportChanged) {
         this.decorations = this.buildDecorations(update.view)
-        this.syncDraftLines(update.view)
       }
 
       // Check for state field changes
@@ -300,8 +301,23 @@ export const draftModeViewPlugin = ViewPlugin.fromClass(
       const oldState = update.startState.field(draftModeField)
       if (newState !== oldState) {
         this.decorations = this.buildDecorations(update.view)
-        this.syncDraftLines(update.view)
+        // Schedule sync via requestAnimationFrame to avoid dispatch during update
+        this.scheduleDraftLinesSync(update.view)
       }
+    }
+
+    /**
+     * Schedule draft lines sync outside of the update cycle
+     * Uses requestAnimationFrame to defer the dispatch
+     */
+    private scheduleDraftLinesSync(view: EditorView) {
+      if (this.pendingSync) return
+      this.pendingSync = true
+
+      requestAnimationFrame(() => {
+        this.pendingSync = false
+        this.syncDraftLines(view)
+      })
     }
 
     buildDecorations(view: EditorView): DecorationSet {

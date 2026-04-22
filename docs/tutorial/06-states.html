@@ -259,6 +259,31 @@ Frame gap 8, bind city
 
     <!-- ============================================================ -->
     <section>
+      <h2>State-Propagation: Kinder reagieren auf Parent</h2>
+      <p>Wenn ein Parent <code>toggle()</code> hat, können seine Kinder mit <code>on:</code> darauf reagieren:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>LikeBtn: hor, gap 8, pad 12 16, bg #1a1a1a, rad 6, cursor pointer, toggle()
+  Icon "heart", ic #888, is 18
+    on:
+      ic #ef4444
+      fill
+  Text "Like", col #888
+    on:
+      col #ef4444
+
+LikeBtn</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Parent (<code>LikeBtn</code>) hat <code>toggle()</code>. Die Kinder (<code>Icon</code>, <code>Text</code>) haben eigene <code>on:</code> States, die automatisch aktiviert werden, wenn der Parent aktiviert ist.</p>
+      <p class="note"><strong>State-Propagation</strong> macht Komponenten wie Checkbox oder Switch möglich: Der Parent hat die State-Machine, die Kinder ändern ihr Aussehen entsprechend.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>Auf andere Elemente reagieren</h2>
       <p>Manchmal soll ein Element sein Aussehen ändern, wenn ein <em>anderes</em> Element seinen State wechselt. Klassisches Beispiel: Ein Menü wird sichtbar, wenn ein Button aktiviert wird.</p>
       <p>Dafür brauchst du zwei Dinge:</p>
@@ -289,26 +314,26 @@ Frame gap 8, bind city
     <!-- ============================================================ -->
     <section>
       <h2>Praktisch: Accordion</h2>
-      <p>Ein Accordion zeigt im geschlossenen Zustand nur einen Header, im offenen Zustand auch den Inhalt:</p>
+      <p>Ein Accordion mit State-Propagation – der Chevron rotiert, das Panel wird sichtbar:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Panel: bg #1a1a1a, rad 8, clip, toggle()
-  Frame hor, spread, ver-center, gap 8, pad 16, cursor pointer
-    Text "Mehr anzeigen", col white, fs 14
-    Icon "chevron-down", ic #888, is 18
-  open:
-    Frame hor, spread, ver-center, gap 8, pad 16, cursor pointer
-      Text "Weniger anzeigen", col white, fs 14
-      Icon "chevron-up", ic #888, is 18
-    Frame pad 0 16 16 16, gap 8
-      Text "Hier ist der versteckte Inhalt.", col #888, fs 13
+          <textarea>AccordionItem: ver, bg #1a1a1a, rad 8, toggle()
+  Frame hor, spread, ver-center, pad 12 16, cursor pointer
+    Text "Abschnitt 1", col white
+    Icon "chevron-down", ic #888, is 16
+      on:
+        rot 180
+  Frame pad 16, hidden
+    on:
+      visible
+    Text "Hier ist der versteckte Inhalt.", col #888
 
-Panel</textarea>
+AccordionItem</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Der Base-State zeigt "Mehr anzeigen" mit Pfeil nach unten. Der <code>open</code>-State zeigt "Weniger anzeigen" mit Pfeil nach oben plus den zusätzlichen Inhalt.</p>
+      <p>Der Chevron hat <code>on: rot 180</code> – rotiert wenn Parent aktiv. Das Panel hat <code>on: visible</code> – wird sichtbar wenn Parent aktiv.</p>
     </section>
 
 
@@ -369,6 +394,9 @@ Frame gap 8
         <tr><td><code>bind varName</code></td><td>Aktiven Wert in Variable speichern</td></tr>
         <tr><td><code>Btn "Text", on</code></td><td>Instanz startet im State</td></tr>
       </table>
+
+      <h3>State-Propagation</h3>
+      <p>Kinder mit <code>on:</code> reagieren automatisch auf Parent mit <code>toggle()</code>.</p>
 
       <h3>Cross-Element</h3>
       <table class="ref-table">

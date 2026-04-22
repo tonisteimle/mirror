@@ -19,14 +19,12 @@ import type {
   IRZagNode,
   IRStateMachine,
   IRStateTransition,
-  IRTable,
-  IRTableColumn,
   IRItem,
   IRProperty,
   IRSlot,
   IRItemProperty,
 } from '../ir/types'
-import { isIRZagNode, isIRTable } from '../ir/types'
+import { isIRZagNode } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import type { DataFile } from '../parser/data-types'
 import { dispatchZagEmitter } from './dom/zag-emitters'
@@ -36,7 +34,6 @@ import type { ZagEmitterContext } from './dom/zag-emitter-context'
 import { escapeJSString, sanitizeVarName, cssPropertyToJS, generateVarName } from './dom/utils'
 import { ZAG_SLOT_NAMES, type GenerateDOMOptions } from './dom/types'
 import type { EmitterContext, DeferredWhenWatcher } from './dom/emitter-context'
-import { emitTable } from './dom/table-emitter'
 import {
   emitStateMachine as emitStateMachineExtracted,
   emitDeferredWhenWatchers,
@@ -75,6 +72,10 @@ import {
   emitComponentAttributes,
   emitRouteAttribute,
   emitKeyboardNav,
+  emitLoopFocus,
+  emitTypeahead,
+  emitTriggerText,
+  emitMask,
   emitValueBinding,
   emitAbsolutePositioning,
   emitAbsContainerMarker,
@@ -467,13 +468,6 @@ class DOMGenerator {
       return
     }
 
-    // Handle Table components (extracted to table-emitter.ts)
-    if (isIRTable(node)) {
-      const ctx = this.createEmitterContext()
-      emitTable(ctx, node, parentVar)
-      return
-    }
-
     // Handle each loop nodes
     if (node.each) {
       this.emitEachLoop(node.each, parentVar)
@@ -557,6 +551,15 @@ class DOMGenerator {
     // Keyboard navigation for form containers
     emitKeyboardNav(nodeCtx, node, varName)
 
+    // Loop focus (wrap around at start/end of list)
+    emitLoopFocus(nodeCtx, node, varName)
+
+    // Typeahead navigation (typing jumps to matching item)
+    emitTypeahead(nodeCtx, node, varName)
+
+    // Trigger text binding (shows selected value)
+    emitTriggerText(nodeCtx, node, varName)
+
     // Add event listeners
     // Check if there are keyboard events and make element focusable
     const hasKeyboardEvents = node.events.some(
@@ -574,6 +577,9 @@ class DOMGenerator {
       }
       this.emitEventListener(varName, event)
     }
+
+    // Input mask (apply before value binding so initial value gets formatted)
+    emitMask(nodeCtx, node, varName)
 
     // Two-way data binding for input elements
     emitValueBinding(nodeCtx, node, varName)
@@ -1940,6 +1946,9 @@ class DOMGenerator {
 
     // Handle __loopVar: markers - strip the prefix but keep the variable name
     let result = condition.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
+
+    // Convert Mirror logical operators (and/or) to JavaScript (&&/||)
+    result = result.replace(/\s+and\s+/g, ' && ').replace(/\s+or\s+/g, ' || ')
 
     // Then handle $-prefixed variables (already explicit)
     // Only capture the variable name, not method calls (stop at parenthesis)

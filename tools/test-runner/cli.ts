@@ -161,24 +161,36 @@ ${bold('Output Options:')}
   --progress          Show progress bar with live updates (recommended for large test runs)
   --log=PATH          Log results to file (default: test-results/test-run.log when --progress)
 
+${bold('Main Categories (17):')}
+  core        Primitives (Frame, Text, Button, Icon, etc.)
+  layout      Layout (direction, gap, grid, stacked, wrap)
+  styling     Styling (colors, sizing, spacing, borders, gradients)
+  visuals     Animations & transforms
+  states      State management (toggle, exclusive, hover)
+  components  UI patterns (checkbox, dialog, tabs, accordion)
+  drag        Drag & drop operations
+  handles     Visual handles (padding, margin, gap, resize, snapping)
+  selection   Multi-select, ungroup, spread toggle
+  propertyPanel  Property panel UI
+  editor      Bidirectional sync, undo/redo, autocomplete
+  data        Data binding, actions, events, responsive
+  project     Multi-file projects, workflows
+  compiler    Compiler verification
+  ai          AI-assist (draft lines, draft mode)
+  tutorial    Tutorial verification
+  stress      Stress tests, integration, play mode
+
 ${bold('Examples:')}
-  npx tsx tools/test.ts --list                                # List all tests
-  npx tsx tools/test.ts --test="Drop Avatar into App stacked" # Run single test
+  npx tsx tools/test.ts --list                                # List all categories
+  npx tsx tools/test.ts --category=layout                     # All layout tests
+  npx tsx tools/test.ts --category=components                 # UI pattern tests
+  npx tsx tools/test.ts --category=drag                       # Drag & drop tests
+  npx tsx tools/test.ts --category=handles                    # Visual handles tests
+  npx tsx tools/test.ts --category=ai                         # AI-assist tests
   npx tsx tools/test.ts --test="Drop Avatar" --headed         # Single test, visible
-  npx tsx tools/test.ts --category=stackedDrag                # Stacked drag tests
-  npx tsx tools/test.ts --category=flexReorder                # Flex reorder tests
-  npx tsx tools/test.ts --category=layoutVerification         # Layout position tests
-  npx tsx tools/test.ts --category=workflow                   # Workflow tests
-  npx tsx tools/test.ts --category=states                     # State (toggle, hover) tests
-  npx tsx tools/test.ts --category=animations                 # Animation preset tests
-  npx tsx tools/test.ts --category=transforms                 # Transform (rotate, scale) tests
-  npx tsx tools/test.ts --category=gradients                  # Gradient background tests
-  npx tsx tools/test.ts --filter="App stacked"                # Filter by pattern
-  npx tsx tools/test.ts --headed                              # All with visible browser
+  npx tsx tools/test.ts --filter="Button"                     # Filter by pattern
+  npx tsx tools/test.ts --progress --category=layout          # With progress bar
   npx tsx tools/test.ts --explore                             # Show file structure
-  npx tsx tools/test.ts --debug-tokens=pad                    # Debug padding tokens
-  npx tsx tools/test.ts --category=paddingDrag --panel-mode=minimal  # Padding tests with minimal UI
-  npx tsx tools/test.ts --hide-panels=files,components        # Hide specific panels
 `)
 }
 
@@ -243,6 +255,39 @@ async function main(): Promise<void> {
     process.exit(0)
   }
 
+  // Handle --list flag to show categories
+  if (args.list) {
+    console.log(`\n${bold('Mirror Browser Test Categories')}\n`)
+    console.log(`${bold('Main Categories (17):')}\n`)
+    const mainCategories = [
+      { name: 'core', desc: 'Basic primitives (Frame, Text, Button, Icon)' },
+      { name: 'layout', desc: 'Layout (direction, gap, grid, stacked, wrap)' },
+      { name: 'styling', desc: 'Styling (colors, sizing, spacing, gradients)' },
+      { name: 'visuals', desc: 'Animations & transforms' },
+      { name: 'states', desc: 'State management (toggle, exclusive, hover)' },
+      { name: 'components', desc: 'UI patterns (checkbox, dialog, tabs)' },
+      { name: 'drag', desc: 'Drag & drop operations' },
+      { name: 'handles', desc: 'Visual handles (padding, margin, resize)' },
+      { name: 'selection', desc: 'Multi-select, ungroup, spread toggle' },
+      { name: 'propertyPanel', desc: 'Property panel UI' },
+      { name: 'editor', desc: 'Sync, undo/redo, autocomplete' },
+      { name: 'data', desc: 'Data binding, actions, events' },
+      { name: 'project', desc: 'Multi-file projects, workflows' },
+      { name: 'compiler', desc: 'Compiler verification' },
+      { name: 'ai', desc: 'AI-assist (draft lines, draft mode)' },
+      { name: 'tutorial', desc: 'Tutorial verification' },
+      { name: 'stress', desc: 'Stress tests, integration' },
+    ]
+    for (const cat of mainCategories) {
+      console.log(`  ${cat.name.padEnd(15)} ${cat.desc}`)
+    }
+    console.log(`\n${bold('Usage:')}\n`)
+    console.log('  npx tsx tools/test.ts --category=layout')
+    console.log('  npx tsx tools/test.ts --category=components --headed')
+    console.log('  npx tsx tools/test.ts --progress --category=drag\n')
+    process.exit(0)
+  }
+
   const config: Partial<TestConfig> = {
     headless: !args.headed,
     url: args.url,
@@ -299,6 +344,15 @@ async function main(): Promise<void> {
     const hasAPI = await runner.waitForTestAPI()
     if (!hasAPI) {
       console.error('❌ Test API not found. Is the Studio running?')
+      process.exit(1)
+    }
+
+    // Wait for test suites to be loaded (async import)
+    const hasSuites = await runner.waitForTestSuites()
+    if (!hasSuites) {
+      // Try to get the actual error
+      const loadError = await runner.evaluate<string>(`window.__suitesLoadError || 'Unknown error'`)
+      console.error('❌ Test suites not loaded. Error:', loadError)
       process.exit(1)
     }
 

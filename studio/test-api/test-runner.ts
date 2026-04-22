@@ -29,6 +29,11 @@ import { createPanelAPI } from './panel-api'
 import { createZagAPI } from './zag-api'
 import { createStudioAPI } from './studio-api'
 import { createFixturesAPI } from './fixtures'
+import {
+  createCodeMirrorTestAPI,
+  createDraftModeTestAPI,
+  createEventTestAPI,
+} from './codemirror-api'
 
 // =============================================================================
 // Editor API Implementation
@@ -85,6 +90,29 @@ class EditorAPIImpl implements EditorAPI {
 
   private async waitForCompileWithCode(expectedCode: string, timeout = 2000): Promise<void> {
     const startTime = Date.now()
+
+    // B5.2: Handle empty code specially - don't wait for nodes
+    const isEmptyCode = expectedCode.trim().length === 0
+    if (isEmptyCode) {
+      return new Promise(resolve => {
+        const check = () => {
+          const currentCode = this.editor?.state?.doc?.toString() ?? ''
+          if (currentCode.trim().length === 0) {
+            // Empty code is set, wait a short time for any cleanup
+            setTimeout(resolve, 100)
+            return
+          }
+          if (Date.now() - startTime > timeout) {
+            // Still resolve for empty code even on timeout
+            resolve()
+            return
+          }
+          setTimeout(check, 50)
+        }
+        setTimeout(check, 50)
+      })
+    }
+
     return new Promise((resolve, reject) => {
       const check = () => {
         // Verify the editor has the expected code
@@ -383,16 +411,36 @@ class UtilsAPIImpl implements UtilsAPI {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
+  /** Alias for delay */
+  async sleep(ms: number): Promise<void> {
+    return this.delay(ms)
+  }
+
   async waitForCompile(timeout = 2000): Promise<void> {
     const startTime = Date.now()
+
+    // B5.2: Check if editor has empty code - if so, don't wait for nodes
+    const editor = (window as any).editor
+    const editorCode = editor?.state?.doc?.toString() ?? ''
+
     return new Promise((resolve, reject) => {
       const check = () => {
         const preview = document.getElementById('preview')
         const hasNodes = preview?.querySelectorAll('[data-mirror-id]').length ?? 0
+
+        // If we have nodes, we're done
         if (hasNodes > 0) {
           setTimeout(resolve, 100)
           return
         }
+
+        // B5.2: If code is empty/whitespace, resolve without waiting for nodes
+        const currentCode = editor?.state?.doc?.toString() ?? ''
+        if (currentCode.trim().length === 0) {
+          setTimeout(resolve, 100)
+          return
+        }
+
         if (Date.now() - startTime > timeout) {
           reject(new Error('Compile timeout'))
           return
@@ -451,6 +499,76 @@ class UtilsAPIImpl implements UtilsAPI {
     }
 
     throw new Error(`Style ${property} did not become "${expectedValue}" within ${timeout}ms`)
+  }
+
+  async waitForText(nodeId: string, expectedText: string, timeout = 2000): Promise<void> {
+    const startTime = Date.now()
+
+    while (Date.now() - startTime < timeout) {
+      const element = this.previewContainer?.querySelector(
+        `[data-mirror-id="${nodeId}"]`
+      ) as HTMLElement | null
+
+      if (element) {
+        const actualText = element.textContent?.trim() ?? ''
+        if (actualText.includes(expectedText)) return
+      }
+
+      await this.delay(50)
+    }
+
+    const element = this.previewContainer?.querySelector(
+      `[data-mirror-id="${nodeId}"]`
+    ) as HTMLElement | null
+    const actualText = element?.textContent?.trim() ?? '(element not found)'
+    throw new Error(
+      `Text "${expectedText}" not found in element ${nodeId} within ${timeout}ms (actual: "${actualText}")`
+    )
+  }
+
+  async waitForVisible(nodeId: string, timeout = 2000): Promise<void> {
+    const startTime = Date.now()
+
+    while (Date.now() - startTime < timeout) {
+      const element = this.previewContainer?.querySelector(
+        `[data-mirror-id="${nodeId}"]`
+      ) as HTMLElement | null
+
+      if (element) {
+        const style = window.getComputedStyle(element)
+        const isVisible =
+          style.display !== 'none' && style.visibility !== 'hidden' && parseFloat(style.opacity) > 0
+
+        if (isVisible) return
+      }
+
+      await this.delay(50)
+    }
+
+    throw new Error(`Element ${nodeId} did not become visible within ${timeout}ms`)
+  }
+
+  async waitForHidden(nodeId: string, timeout = 2000): Promise<void> {
+    const startTime = Date.now()
+
+    while (Date.now() - startTime < timeout) {
+      const element = this.previewContainer?.querySelector(
+        `[data-mirror-id="${nodeId}"]`
+      ) as HTMLElement | null
+
+      // Element doesn't exist = hidden
+      if (!element) return
+
+      const style = window.getComputedStyle(element)
+      const isHidden =
+        style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0
+
+      if (isHidden) return
+
+      await this.delay(50)
+    }
+
+    throw new Error(`Element ${nodeId} did not become hidden within ${timeout}ms`)
   }
 
   async waitForCount(selector: string, count: number, timeout = 2000): Promise<void> {
@@ -609,6 +727,11 @@ export class TestRunner {
     const studioApi = createStudioAPI()
     const fixturesApi = createFixturesAPI()
 
+    // Create CodeMirror, DraftMode, and Event APIs
+    const codemirrorApi = createCodeMirrorTestAPI()
+    const draftModeApi = createDraftModeTestAPI()
+    const eventApi = createEventTestAPI()
+
     return {
       editor: this.editorApi,
       preview: this.inspector,
@@ -621,14 +744,22 @@ export class TestRunner {
       zag: zagApi,
       studio: studioApi,
       fixtures: fixturesApi,
+      codemirror: codemirrorApi,
+      draftMode: draftModeApi,
+      events: eventApi,
     }
   }
 
   /**
    * Reset state between tests for isolation
+   * This ensures each test starts with a clean slate
    */
   private resetTestState(): void {
     const studio = (window as any).__mirrorStudio__
+
+    // =========================================================================
+    // Selection State
+    // =========================================================================
 
     // Clear selection
     if (studio?.actions?.clearSelection) {
@@ -642,13 +773,61 @@ export class TestRunner {
       studio.actions.clearMultiSelection()
     }
 
+    // =========================================================================
+    // Focus State - B1.3
+    // =========================================================================
+
+    // Blur any focused element in the preview
+    const previewDoc = this.previewContainer
+    if (previewDoc) {
+      const focused = previewDoc.querySelector(':focus') as HTMLElement | null
+      focused?.blur()
+    }
+
+    // Also blur from main document (e.g., editor focus)
+    if (document.activeElement && document.activeElement !== document.body) {
+      ;(document.activeElement as HTMLElement)?.blur?.()
+    }
+
+    // =========================================================================
+    // Hover State - B1.3 / B5.1
+    // =========================================================================
+
     // Remove any test hover classes
     document.querySelectorAll('.__test-hover').forEach(el => {
-      el.classList.remove('__test-hover')
+      el.classList.remove('.__test-hover')
+    })
+
+    // Remove data-hover attribute used by some components
+    // Important: Dispatch mouseleave BEFORE removing attribute
+    this.previewContainer?.querySelectorAll('[data-hover]').forEach(el => {
+      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true, cancelable: true }))
+      el.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, cancelable: true }))
+      el.removeAttribute('data-hover')
+    })
+
+    // Dispatch mouseleave on any element that might have hover state
+    // Use a fresh query to avoid stale references
+    const allMirrorElements = this.previewContainer?.querySelectorAll('[data-mirror-id]')
+    allMirrorElements?.forEach(el => {
+      // Only dispatch if element doesn't already have mouseleave dispatched
+      if (!el.hasAttribute('data-hover-cleared')) {
+        el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true, cancelable: true }))
+        el.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, cancelable: true }))
+      }
+    })
+
+    // Remove data-focus attributes that might conflict with hover
+    this.previewContainer?.querySelectorAll('[data-focus]').forEach(el => {
+      el.removeAttribute('data-focus')
     })
 
     // Remove any inline hover styles that may have been applied
     // The Interactions class stores original styles in a WeakMap which resets naturally
+
+    // =========================================================================
+    // UI Mode State
+    // =========================================================================
 
     // Exit any active edit modes (padding, margin)
     if (studio?.state?.get()?.paddingMode) {
@@ -662,6 +841,35 @@ export class TestRunner {
     if (studio?.state?.get()?.playMode) {
       studio.actions?.togglePlayMode?.()
     }
+
+    // =========================================================================
+    // Dialog/Modal/Overlay State - B1.3
+    // =========================================================================
+
+    // Close any open dialogs
+    this.previewContainer?.querySelectorAll('[data-state="open"]').forEach(el => {
+      el.setAttribute('data-state', 'closed')
+    })
+
+    // Close any open select dropdowns
+    this.previewContainer
+      ?.querySelectorAll('[data-scope="select"][data-part="content"]')
+      .forEach(el => {
+        ;(el as HTMLElement).style.display = 'none'
+      })
+
+    // Dismiss any visible tooltips
+    this.previewContainer?.querySelectorAll('[data-scope="tooltip"]').forEach(el => {
+      ;(el as HTMLElement).style.visibility = 'hidden'
+    })
+
+    // =========================================================================
+    // Custom State (toggle, exclusive)
+    // =========================================================================
+
+    // Reset custom states to initial values - this is tricky because we don't
+    // know the initial state. For now, we don't reset these automatically.
+    // Tests should set explicit initial states in their setup.
   }
 
   /**

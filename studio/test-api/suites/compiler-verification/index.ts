@@ -24,12 +24,31 @@ import {
   nestedStructureTests as preludeNestedTests,
 } from './prelude.test'
 
+// Error Handling Tests (B2.1)
+import {
+  allCompilerErrorTests,
+  invalidPropertyTests,
+  undefinedComponentTests,
+  invalidTokenTests,
+  syntaxErrorTests,
+  compilerErrorRecoveryTests,
+  edgeCaseErrorTests,
+} from './errors.test'
+
 export {
   allPreludeTests,
   noAutoWrapperTests,
   explicitAppTests,
   codeIntegrityTests,
   preludeNestedTests,
+  // Error handling exports
+  allCompilerErrorTests,
+  invalidPropertyTests,
+  undefinedComponentTests,
+  invalidTokenTests,
+  syntaxErrorTests,
+  compilerErrorRecoveryTests,
+  edgeCaseErrorTests,
 }
 
 // =============================================================================
@@ -2960,12 +2979,23 @@ Line $revenue, w 400, h 250, colors #10b981
 export const tableTests: TestCase[] = describe('Tables', [
   testWithSetup(
     'Static table',
-    `Table
-  Header:
-    Row "Name", "Status", "Action"
-  Row "Alice", "Active", "Edit"
-  Row "Bob", "Pending", "Edit"
-  Row "Charlie", "Inactive", "Edit"`,
+    `Table bg #1a1a1a, rad 8
+  TableHeader hor, gap 24, pad 12 16, bg #252525
+    Text "Name", col #888, fs 11, uppercase
+    Text "Status", col #888, fs 11, uppercase
+    Text "Action", col #888, fs 11, uppercase
+  TableRow hor, gap 24, pad 12 16
+    Text "Alice", col white
+    Text "Active", col white
+    Text "Edit", col white
+  TableRow hor, gap 24, pad 12 16
+    Text "Bob", col white
+    Text "Pending", col white
+    Text "Edit", col white
+  TableRow hor, gap 24, pad 12 16
+    Text "Charlie", col white
+    Text "Inactive", col white
+    Text "Edit", col white`,
     async (api: TestAPI) => {
       const allNodes = api.preview.getNodeIds()
       api.assert.ok(allNodes.length >= 1, 'Table should render')
@@ -2988,13 +3018,16 @@ export const tableTests: TestCase[] = describe('Tables', [
     email: "charlie@example.com"
     role: "Editor"
 
-Table $users
-  Header: bg #222, pad 12
-    Row "Name", "Email", "Role"
-  Row: pad 12, bg #1a1a1a
-    Text row.name, col white
-    Text row.email, col #888
-    Text row.role, col #2271C1`,
+Table bg #1a1a1a, rad 8
+  TableHeader hor, pad 12, bg #222
+    Text "Name", col #888, fs 11, uppercase
+    Text "Email", col #888, fs 11, uppercase
+    Text "Role", col #888, fs 11, uppercase
+  each user in $users
+    TableRow hor, pad 12, bg #1a1a1a
+      Text user.name, col white
+      Text user.email, col #888
+      Text user.role, col #2271C1`,
     async (api: TestAPI) => {
       const allNodes = api.preview.getNodeIds()
       api.assert.ok(allNodes.length >= 1, 'Data table should render')

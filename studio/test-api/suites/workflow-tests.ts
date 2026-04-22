@@ -723,16 +723,18 @@ Frame gap 12, pad 16, bg #1a1a1a
     name: "Bob"
     role: "User"
 
-Table $users
-  Header: bg #222, pad 12
-    Row "Name", "Role"
-  Row: pad 12, bg #1a1a1a
-    Text row.name
-    Text row.role`,
+Table bg #1a1a1a, rad 8
+  TableHeader hor, pad 12, bg #222
+    Text "Name", col #888, fs 11, uppercase
+    Text "Role", col #888, fs 11, uppercase
+  each user in $users
+    TableRow hor, pad 12
+      Text user.name, col white
+      Text user.role, col #888`,
     async api => {
-      api.assert.codeContains(/Table \$users/)
-      api.assert.codeContains(/Header:/)
-      api.assert.codeContains(/row\.name/)
+      api.assert.codeContains(/Table bg/)
+      api.assert.codeContains(/TableHeader/)
+      api.assert.codeContains(/user\.name/)
       api.dom.expect('node-1', { exists: true })
     }
   ),

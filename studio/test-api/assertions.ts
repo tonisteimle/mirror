@@ -110,6 +110,13 @@ export class Assertions implements AssertionAPI {
   }
 
   /**
+   * Alias for equals (for compatibility)
+   */
+  equal<T>(actual: T, expected: T, message?: string): void {
+    this.equals(actual, expected, message)
+  }
+
+  /**
    * Assert string matches pattern
    */
   matches(actual: string, pattern: RegExp, message?: string): void {
@@ -185,6 +192,101 @@ export class Assertions implements AssertionAPI {
   }
 
   /**
+   * Assert element has style with numeric tolerance
+   * Useful for dimensions that may vary slightly due to browser rendering
+   */
+  hasStyleApprox(
+    nodeId: string,
+    property: keyof ComputedStyles,
+    value: number,
+    tolerance: number
+  ): void {
+    const info = this.inspector.inspect(nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${nodeId} not found`,
+        expected: `${value} ±${tolerance}`,
+        actual: null,
+      })
+      return
+    }
+
+    const actualValue = info.styles[property]
+    // Extract numeric value from CSS value (e.g., "100px" -> 100)
+    const numericMatch = actualValue?.match(/^(-?\d+(?:\.\d+)?)/)?.[1]
+    const actualNumeric = numericMatch ? parseFloat(numericMatch) : NaN
+
+    const passed = !isNaN(actualNumeric) && Math.abs(actualNumeric - value) <= tolerance
+
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Element ${nodeId} has ${property}: ${actualNumeric} (within ±${tolerance} of ${value})`
+        : `Expected ${nodeId}.${property} to be ${value} ±${tolerance}, got "${actualValue}" (${actualNumeric})`,
+      expected: `${value} ±${tolerance}`,
+      actual: actualValue,
+    })
+  }
+
+  /**
+   * Assert element has multiple styles at once
+   * More efficient than calling hasStyle multiple times
+   */
+  hasStyles(nodeId: string, styles: Partial<Record<keyof ComputedStyles, string>>): void {
+    const info = this.inspector.inspect(nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${nodeId} not found`,
+        expected: JSON.stringify(styles),
+        actual: null,
+      })
+      return
+    }
+
+    const failures: Array<{ property: string; expected: string; actual: string }> = []
+
+    for (const [property, expectedValue] of Object.entries(styles)) {
+      const actualValue = info.styles[property as keyof ComputedStyles]
+      let matches = false
+
+      if (property === 'backgroundColor' || property === 'color' || property === 'borderColor') {
+        matches = colorsMatchWithTolerance(actualValue, expectedValue, 5)
+      } else {
+        const actualStr = String(actualValue ?? '')
+        const expectedStr = String(expectedValue)
+        matches =
+          actualStr === expectedStr ||
+          actualStr.replace(/px$/, '') === expectedStr.replace(/px$/, '') ||
+          actualStr.toLowerCase() === expectedStr.toLowerCase()
+      }
+
+      if (!matches) {
+        failures.push({
+          property,
+          expected: expectedValue,
+          actual: actualValue ?? 'undefined',
+        })
+      }
+    }
+
+    const passed = failures.length === 0
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Element ${nodeId} has all expected styles`
+        : `Element ${nodeId} style mismatches: ${failures.map(f => `${f.property}: expected "${f.expected}", got "${f.actual}"`).join('; ')}`,
+      expected: JSON.stringify(styles),
+      actual: JSON.stringify(
+        Object.fromEntries(
+          Object.keys(styles).map(k => [k, info.styles[k as keyof ComputedStyles]])
+        )
+      ),
+    })
+  }
+
+  /**
    * Assert element has text content
    */
   hasText(nodeId: string, text: string, options?: { exact?: boolean }): void {
@@ -246,6 +348,33 @@ export class Assertions implements AssertionAPI {
       message:
         message || (info.visible ? `Element ${nodeId} is visible` : `Element ${nodeId} is hidden`),
       expected: true,
+      actual: info.visible,
+    })
+  }
+
+  /**
+   * Assert element is hidden (display: none, visibility: hidden, or opacity: 0)
+   */
+  isHidden(nodeId: string, message?: string): void {
+    const info = this.inspector.inspect(nodeId)
+    if (!info) {
+      // Element not found - technically hidden, but maybe not what we want
+      this.collector.add({
+        passed: false,
+        message: `Element ${nodeId} not found (cannot verify hidden state)`,
+        expected: false,
+        actual: null,
+      })
+      return
+    }
+
+    const hidden = !info.visible
+    this.collector.add({
+      passed: hidden,
+      message:
+        message ||
+        (hidden ? `Element ${nodeId} is hidden` : `Element ${nodeId} is visible (expected hidden)`),
+      expected: false, // visible should be false
       actual: info.visible,
     })
   }
@@ -381,6 +510,152 @@ export class Assertions implements AssertionAPI {
         : `Expected ${nodeId} to be selected, got ${selection}`,
       expected: nodeId,
       actual: selection,
+    })
+  }
+
+  // =============================================================================
+  // Focus & Animation Assertions
+  // =============================================================================
+
+  /**
+   * Assert element has focus
+   */
+  hasFocus(nodeId: string, message?: string): void {
+    const element = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement | null
+    if (!element) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${nodeId} not found`,
+        expected: true,
+        actual: null,
+      })
+      return
+    }
+
+    const hasFocus = document.activeElement === element
+    this.collector.add({
+      passed: hasFocus,
+      message:
+        message ||
+        (hasFocus
+          ? `Element ${nodeId} has focus`
+          : `Element ${nodeId} does not have focus (active: ${document.activeElement?.getAttribute('data-mirror-id') || document.activeElement?.tagName || 'none'})`),
+      expected: true,
+      actual: hasFocus,
+    })
+  }
+
+  /**
+   * Assert element can receive focus (is focusable)
+   */
+  isFocusable(nodeId: string, message?: string): void {
+    const element = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement | null
+    if (!element) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${nodeId} not found`,
+        expected: true,
+        actual: null,
+      })
+      return
+    }
+
+    // Check if element is natively focusable or has tabindex
+    const tagName = element.tagName.toLowerCase()
+    const nativelyFocusable = ['button', 'input', 'textarea', 'select', 'a'].includes(tagName)
+    const hasTabIndex = element.hasAttribute('tabindex')
+    const tabIndexValue = element.getAttribute('tabindex')
+    const isDisabled = element.hasAttribute('disabled')
+
+    // Element is focusable if:
+    // - It's natively focusable and not disabled, OR
+    // - It has tabindex >= 0
+    const isFocusable =
+      (nativelyFocusable && !isDisabled) || (hasTabIndex && tabIndexValue !== '-1')
+
+    this.collector.add({
+      passed: isFocusable,
+      message:
+        message ||
+        (isFocusable
+          ? `Element ${nodeId} is focusable`
+          : `Element ${nodeId} is not focusable (tag: ${tagName}, tabindex: ${tabIndexValue || 'none'}, disabled: ${isDisabled})`),
+      expected: true,
+      actual: isFocusable,
+    })
+  }
+
+  /**
+   * Assert element is currently animating
+   * Checks if the element has any CSS animation running
+   */
+  isAnimating(nodeId: string, message?: string): void {
+    const element = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement | null
+    if (!element) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${nodeId} not found`,
+        expected: true,
+        actual: null,
+      })
+      return
+    }
+
+    const computedStyle = getComputedStyle(element)
+    const animationName = computedStyle.animationName
+    const animationPlayState = computedStyle.animationPlayState
+    const animationDuration = computedStyle.animationDuration
+
+    // Check if animation is defined and running
+    const hasAnimation = animationName !== 'none' && animationName !== ''
+    const isRunning = animationPlayState === 'running'
+    const hasDuration = animationDuration !== '0s' && animationDuration !== ''
+
+    const isAnimating = hasAnimation && isRunning && hasDuration
+
+    this.collector.add({
+      passed: isAnimating,
+      message:
+        message ||
+        (isAnimating
+          ? `Element ${nodeId} is animating (${animationName})`
+          : `Element ${nodeId} is not animating (name: ${animationName}, state: ${animationPlayState}, duration: ${animationDuration})`),
+      expected: true,
+      actual: isAnimating,
+    })
+  }
+
+  /**
+   * Assert element has specific animation
+   */
+  hasAnimation(nodeId: string, animationName: string, message?: string): void {
+    const element = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement | null
+    if (!element) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${nodeId} not found`,
+        expected: animationName,
+        actual: null,
+      })
+      return
+    }
+
+    const computedStyle = getComputedStyle(element)
+    const actualAnimation = computedStyle.animationName
+
+    // Animation name may be a list (e.g., "spin, pulse"), check if it includes the expected one
+    const animationList = actualAnimation.split(',').map(a => a.trim())
+    const hasAnimation = animationList.some(a => a === animationName || a.includes(animationName))
+
+    this.collector.add({
+      passed: hasAnimation,
+      message:
+        message ||
+        (hasAnimation
+          ? `Element ${nodeId} has animation "${animationName}"`
+          : `Element ${nodeId} does not have animation "${animationName}" (has: "${actualAnimation}")`),
+      expected: animationName,
+      actual: actualAnimation,
     })
   }
 
@@ -1190,6 +1465,220 @@ export class ElementAssert {
         actual: hasAttr,
       })
     }
+    return this
+  }
+
+  /**
+   * Assert element is hidden
+   */
+  isHidden(): this {
+    const info = this.inspector.inspect(this.nodeId)
+    const hidden = info ? !info.visible : true
+    this.collector.add({
+      passed: hidden,
+      message: hidden
+        ? `Element ${this.nodeId} is hidden`
+        : `Element ${this.nodeId} is visible (expected hidden)`,
+      expected: false,
+      actual: info?.visible ?? null,
+    })
+    return this
+  }
+
+  /**
+   * Assert element has style with numeric tolerance
+   */
+  hasStyleApprox(property: keyof ComputedStyles, value: number, tolerance: number): this {
+    const info = this.inspector.inspect(this.nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${this.nodeId} not found`,
+        expected: `${value} ±${tolerance}`,
+        actual: null,
+      })
+      return this
+    }
+
+    const actualValue = info.styles[property]
+    const numericMatch = actualValue?.match(/^(-?\d+(?:\.\d+)?)/)?.[1]
+    const actualNumeric = numericMatch ? parseFloat(numericMatch) : NaN
+    const passed = !isNaN(actualNumeric) && Math.abs(actualNumeric - value) <= tolerance
+
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Element has ${property}: ${actualNumeric} (within ±${tolerance} of ${value})`
+        : `Expected ${property}: ${value} ±${tolerance}, got "${actualValue}"`,
+      expected: `${value} ±${tolerance}`,
+      actual: actualValue,
+    })
+    return this
+  }
+
+  /**
+   * Assert element has multiple styles at once
+   */
+  hasStyles(styles: Partial<Record<keyof ComputedStyles, string>>): this {
+    const info = this.inspector.inspect(this.nodeId)
+    if (!info) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${this.nodeId} not found`,
+        expected: JSON.stringify(styles),
+        actual: null,
+      })
+      return this
+    }
+
+    const failures: string[] = []
+    for (const [property, expected] of Object.entries(styles)) {
+      const actual = info.styles[property as keyof ComputedStyles]
+      if (actual !== expected && !actual?.includes(expected)) {
+        failures.push(`${property}: expected "${expected}", got "${actual}"`)
+      }
+    }
+
+    const passed = failures.length === 0
+    this.collector.add({
+      passed,
+      message: passed
+        ? `Element has all expected styles`
+        : `Style mismatches: ${failures.join('; ')}`,
+      expected: JSON.stringify(styles),
+      actual: JSON.stringify(
+        Object.fromEntries(
+          Object.keys(styles).map(k => [k, info.styles[k as keyof ComputedStyles]])
+        )
+      ),
+    })
+    return this
+  }
+
+  /**
+   * Assert element has focus
+   */
+  hasFocus(): this {
+    const element = document.querySelector(
+      `[data-mirror-id="${this.nodeId}"]`
+    ) as HTMLElement | null
+    const hasFocus = element ? document.activeElement === element : false
+    this.collector.add({
+      passed: hasFocus,
+      message: hasFocus
+        ? `Element ${this.nodeId} has focus`
+        : `Element ${this.nodeId} does not have focus`,
+      expected: true,
+      actual: hasFocus,
+    })
+    return this
+  }
+
+  /**
+   * Assert element can receive focus
+   */
+  isFocusable(): this {
+    const element = document.querySelector(
+      `[data-mirror-id="${this.nodeId}"]`
+    ) as HTMLElement | null
+    if (!element) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${this.nodeId} not found`,
+        expected: true,
+        actual: null,
+      })
+      return this
+    }
+
+    const tagName = element.tagName.toLowerCase()
+    const nativelyFocusable = ['button', 'input', 'textarea', 'select', 'a'].includes(tagName)
+    const hasTabIndex = element.hasAttribute('tabindex')
+    const tabIndexValue = element.getAttribute('tabindex')
+    const isDisabled = element.hasAttribute('disabled')
+
+    const isFocusable =
+      (nativelyFocusable && !isDisabled) || (hasTabIndex && tabIndexValue !== '-1')
+
+    this.collector.add({
+      passed: isFocusable,
+      message: isFocusable
+        ? `Element ${this.nodeId} is focusable`
+        : `Element ${this.nodeId} is not focusable`,
+      expected: true,
+      actual: isFocusable,
+    })
+    return this
+  }
+
+  /**
+   * Assert element is currently animating
+   */
+  isAnimating(): this {
+    const element = document.querySelector(
+      `[data-mirror-id="${this.nodeId}"]`
+    ) as HTMLElement | null
+    if (!element) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${this.nodeId} not found`,
+        expected: true,
+        actual: null,
+      })
+      return this
+    }
+
+    const computedStyle = getComputedStyle(element)
+    const animationName = computedStyle.animationName
+    const animationPlayState = computedStyle.animationPlayState
+    const animationDuration = computedStyle.animationDuration
+
+    const hasAnimation = animationName !== 'none' && animationName !== ''
+    const isRunning = animationPlayState === 'running'
+    const hasDuration = animationDuration !== '0s' && animationDuration !== ''
+    const isAnimating = hasAnimation && isRunning && hasDuration
+
+    this.collector.add({
+      passed: isAnimating,
+      message: isAnimating
+        ? `Element ${this.nodeId} is animating (${animationName})`
+        : `Element ${this.nodeId} is not animating`,
+      expected: true,
+      actual: isAnimating,
+    })
+    return this
+  }
+
+  /**
+   * Assert element has specific animation
+   */
+  hasAnimation(animationName: string): this {
+    const element = document.querySelector(
+      `[data-mirror-id="${this.nodeId}"]`
+    ) as HTMLElement | null
+    if (!element) {
+      this.collector.add({
+        passed: false,
+        message: `Element ${this.nodeId} not found`,
+        expected: animationName,
+        actual: null,
+      })
+      return this
+    }
+
+    const computedStyle = getComputedStyle(element)
+    const actualAnimation = computedStyle.animationName
+    const animationList = actualAnimation.split(',').map(a => a.trim())
+    const hasAnimation = animationList.some(a => a === animationName || a.includes(animationName))
+
+    this.collector.add({
+      passed: hasAnimation,
+      message: hasAnimation
+        ? `Element has animation "${animationName}"`
+        : `Element does not have animation "${animationName}" (has: "${actualAnimation}")`,
+      expected: animationName,
+      actual: actualAnimation,
+    })
     return this
   }
 }

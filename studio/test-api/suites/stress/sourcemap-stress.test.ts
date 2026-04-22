@@ -231,15 +231,12 @@ export const edgeCasePatternTests: TestSuite = [
     api.assert.exists('node-2')
   }),
 
-  // BUG: Clearing all content causes compile to timeout
-  // This is a legitimate bug found by stress testing
-  // TODO: Fix compile handling for empty content
+  // B5.2: Fixed - Empty content now handled correctly
   {
     name: 'Pattern: Content to empty',
     setup: `Frame bg #333
   Text "Content"
   Button "Action"`,
-    skip: true, // Skip until bug is fixed
     run: async (api: TestAPI) => {
       // Clear all content
       await api.editor.setCode(``)

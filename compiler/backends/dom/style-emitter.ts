@@ -133,7 +133,14 @@ function emitNodeStateCSS(ctx: StyleEmitterContext, node: IRNode): void {
     for (const [state, styles] of Object.entries(byState)) {
       const pseudoClass = state === 'disabled' ? '[disabled]' : `:${state}`
       ctx.emit('')
-      ctx.emit(`[data-mirror-id^="${node.id}"]${pseudoClass} {`)
+      // For focus/hover/active, also add attribute selector for headless browser support
+      // In headless Chrome, :focus doesn't work but data-focus="true" does
+      if (state === 'focus' || state === 'hover' || state === 'active') {
+        ctx.emit(`[data-mirror-id="${node.id}"]${pseudoClass},`)
+        ctx.emit(`[data-mirror-id="${node.id}"][data-${state}="true"] {`)
+      } else {
+        ctx.emit(`[data-mirror-id="${node.id}"]${pseudoClass} {`)
+      }
       ctx.indentIn()
       for (const style of styles) {
         ctx.emit(`${style.property}: ${style.value} !important;`)
@@ -375,5 +382,22 @@ export function emitStyles(ctx: StyleEmitterContext): void {
 
   ctx.emit('`')
   ctx.emit('_root.appendChild(_style)')
+  ctx.emit('')
+
+  // Add focus/blur event delegation for headless browser support
+  // In headless Chrome, :focus doesn't work, so we use data-focus attribute
+  ctx.emit('// Focus state management for headless browser support')
+  ctx.emit('_root.addEventListener("focusin", e => {')
+  ctx.emit('  const target = e.target')
+  ctx.emit('  if (target.dataset?.mirrorId) {')
+  ctx.emit('    target.setAttribute("data-focus", "true")')
+  ctx.emit('  }')
+  ctx.emit('})')
+  ctx.emit('_root.addEventListener("focusout", e => {')
+  ctx.emit('  const target = e.target')
+  ctx.emit('  if (target.dataset?.mirrorId) {')
+  ctx.emit('    target.removeAttribute("data-focus")')
+  ctx.emit('  }')
+  ctx.emit('})')
   ctx.emit('')
 }

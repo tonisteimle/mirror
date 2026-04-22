@@ -44,6 +44,15 @@ import {
   crossElementFormTests,
 } from './cross-element.test'
 
+// System states tests (focus, active, disabled)
+import {
+  allSystemStatesTests,
+  focusStateTests,
+  activeStateTests,
+  disabledStateTests,
+  combinedSystemStatesTests,
+} from './system-states.test'
+
 // Re-export individual test arrays
 export {
   // Toggle
@@ -68,6 +77,12 @@ export {
   crossElementDropdownTests,
   crossElementModalTests,
   crossElementFormTests,
+  // System states
+  allSystemStatesTests,
+  focusStateTests,
+  activeStateTests,
+  disabledStateTests,
+  combinedSystemStatesTests,
 }
 
 /**
@@ -78,6 +93,7 @@ export const allStateTests: TestCase[] = [
   ...allExclusiveTests,
   ...allHoverTests,
   ...allCrossElementTests,
+  ...allSystemStatesTests,
 ]
 
 /**
@@ -88,4 +104,6 @@ export const quickStateTests: TestCase[] = [
   ...exclusiveBasicTests.slice(0, 2),
   ...hoverBasicTests.slice(0, 3),
   ...crossElementBasicTests.slice(0, 2),
+  ...focusStateTests.slice(0, 2),
+  ...disabledStateTests.slice(0, 2),
 ]

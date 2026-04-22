@@ -159,6 +159,23 @@ export class Interactions implements InteractionAPI {
     const element = this.findElement(nodeId)
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
+    // Check if element is disabled - skip click events like native browser behavior
+    // Check both the attribute AND the DOM property since Mirror sets `.disabled = true`
+    // Use 'in' check and type coercion for more robust detection
+    const hasDisabledAttr = element.hasAttribute('disabled')
+    const hasDisabledProp = 'disabled' in element && (element as any).disabled
+    const isDisabled = hasDisabledAttr || hasDisabledProp
+
+    if (isDisabled) {
+      // Disabled elements don't respond to clicks
+      // Still update selection for Studio but don't dispatch click events
+      if (this.studioActions?.setSelection) {
+        this.studioActions.setSelection(nodeId, 'test')
+      }
+      await this.delay(50)
+      return
+    }
+
     // For Select components, dispatch click on the trigger since that's where
     // the click handler is attached
     const zagComponent = element.getAttribute('data-zag-component')
@@ -261,150 +278,50 @@ export class Interactions implements InteractionAPI {
   // ===========================================================================
 
   /**
-   * Store original inline styles for unhover restoration
+   * Clear all hover states in the preview
+   * Called before setting a new hover to ensure only one element has hover at a time
    */
-  private hoverOriginalStyles = new WeakMap<HTMLElement, string>()
+  private clearAllHoverStates(): void {
+    const preview = this.previewContainer
+    if (!preview) return
 
-  /**
-   * Find and apply CSS :hover rules for an element
-   */
-  private applyHoverStyles(element: HTMLElement): void {
-    // Store original inline style for later restoration
-    this.hoverOriginalStyles.set(element, element.getAttribute('style') || '')
+    // Remove data-hover from all elements
+    const hoveredElements = preview.querySelectorAll('[data-hover="true"]')
+    for (const el of hoveredElements) {
+      // Dispatch mouseleave before removing attribute to ensure proper cleanup
+      this.dispatchMouseEvent(el as HTMLElement, 'mouseleave')
+      this.dispatchMouseEvent(el as HTMLElement, 'mouseout')
+      el.removeAttribute('data-hover')
+    }
 
-    // Collect all :hover styles that match this element
-    const hoverStyles: Record<string, string> = {}
-
-    // First, search through document.styleSheets
-    for (const sheet of Array.from(document.styleSheets)) {
-      try {
-        const rules = sheet.cssRules || sheet.rules
-        if (!rules) continue
-
-        for (const rule of Array.from(rules)) {
-          if (rule instanceof CSSStyleRule && rule.selectorText?.includes(':hover')) {
-            this.extractHoverStylesFromRule(rule, element, hoverStyles)
-          }
-        }
-      } catch {
-        // Cross-origin stylesheet, skip
+    // Also remove data-focus to prevent state conflicts
+    const focusedElements = preview.querySelectorAll('[data-focus="true"]')
+    for (const el of focusedElements) {
+      if (document.activeElement !== el) {
+        el.removeAttribute('data-focus')
       }
-    }
-
-    // Also search through inline <style> elements in the preview
-    // (these might not be in document.styleSheets yet due to timing)
-    const preview = document.getElementById('preview')
-    if (preview) {
-      const styleElements = preview.querySelectorAll('style')
-      for (const styleEl of styleElements) {
-        this.extractHoverStylesFromStyleElement(styleEl, element, hoverStyles)
-      }
-    }
-
-    // Apply collected hover styles
-    for (const [prop, value] of Object.entries(hoverStyles)) {
-      element.style.setProperty(prop, value, 'important')
-    }
-  }
-
-  /**
-   * Extract hover styles from a CSS rule
-   */
-  private extractHoverStylesFromRule(
-    rule: CSSStyleRule,
-    element: HTMLElement,
-    hoverStyles: Record<string, string>
-  ): void {
-    // Create a selector without :hover to test if it matches
-    const baseSelector = rule.selectorText
-      .replace(/:hover/g, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-
-    try {
-      if (baseSelector && element.matches(baseSelector)) {
-        // Extract styles from this rule
-        for (let i = 0; i < rule.style.length; i++) {
-          const prop = rule.style[i]
-          const value = rule.style.getPropertyValue(prop)
-          if (value) {
-            hoverStyles[prop] = value
-          }
-        }
-      }
-    } catch {
-      // Invalid selector, skip
-    }
-  }
-
-  /**
-   * Extract hover styles by parsing a <style> element's text content
-   */
-  private extractHoverStylesFromStyleElement(
-    styleEl: HTMLStyleElement,
-    element: HTMLElement,
-    hoverStyles: Record<string, string>
-  ): void {
-    const css = styleEl.textContent || ''
-
-    // Parse hover rules with regex - find selector:hover { ... }
-    // Pattern: [data-mirror-id^="node-X"]:hover { property: value !important; }
-    const hoverRuleRegex = /\[data-mirror-id\^?="([^"]+)"\]:hover\s*\{([^}]+)\}/g
-    let match
-
-    while ((match = hoverRuleRegex.exec(css)) !== null) {
-      const nodeIdPattern = match[1]
-      const styleBlock = match[2]
-
-      // Check if element matches this pattern
-      const mirrorId = element.getAttribute('data-mirror-id')
-      if (mirrorId && mirrorId.startsWith(nodeIdPattern)) {
-        // Parse the style block
-        const styleDecls = styleBlock.split(';').filter(s => s.trim())
-        for (const decl of styleDecls) {
-          const colonIdx = decl.indexOf(':')
-          if (colonIdx > 0) {
-            const prop = decl.substring(0, colonIdx).trim()
-            let value = decl.substring(colonIdx + 1).trim()
-            // Remove !important suffix for setProperty call
-            value = value.replace(/\s*!important\s*$/, '')
-            if (prop && value) {
-              hoverStyles[prop] = value
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Remove applied hover styles and restore original
-   */
-  private removeHoverStyles(element: HTMLElement): void {
-    const originalStyle = this.hoverOriginalStyles.get(element)
-    if (originalStyle !== undefined) {
-      element.setAttribute('style', originalStyle)
-      this.hoverOriginalStyles.delete(element)
     }
   }
 
   /**
    * Hover over element
-   * Simulates CSS :hover by finding and applying matching :hover rules
+   * Uses data-hover attribute which matches CSS selector [data-hover="true"]
+   * generated by style-emitter.ts for headless browser support
    */
   async hover(nodeId: string): Promise<void> {
     const element = this.findElement(nodeId)
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
+    // Clear any existing hover states first
+    this.clearAllHoverStates()
+
     // Dispatch mouse events for JavaScript handlers
     this.dispatchMouseEvent(element, 'mouseenter')
     this.dispatchMouseEvent(element, 'mouseover')
 
-    // Add hover class for any class-based hover handling
-    element.classList.add('__test-hover')
-
-    // Apply CSS :hover styles directly
-    this.applyHoverStyles(element)
+    // Set data-hover attribute for CSS selector matching
+    // This matches [data-hover="true"] in generated CSS
+    element.setAttribute('data-hover', 'true')
 
     await this.delay(50)
   }
@@ -420,11 +337,8 @@ export class Interactions implements InteractionAPI {
     this.dispatchMouseEvent(element, 'mouseleave')
     this.dispatchMouseEvent(element, 'mouseout')
 
-    // Remove hover class
-    element.classList.remove('__test-hover')
-
-    // Restore original styles
-    this.removeHoverStyles(element)
+    // Remove data-hover attribute
+    element.removeAttribute('data-hover')
 
     await this.delay(50)
   }
@@ -435,12 +349,40 @@ export class Interactions implements InteractionAPI {
 
   /**
    * Focus element
+   *
+   * Note: For non-focusable elements (div, span, etc.), we set tabindex="-1"
+   * to make them programmatically focusable. This is required for keyboard
+   * event dispatching to work correctly.
    */
   async focus(nodeId: string): Promise<void> {
     const element = this.findElement(nodeId)
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
+    // Check if element is disabled - disabled elements cannot be focused
+    const isDisabled =
+      element.hasAttribute('disabled') || ('disabled' in element && (element as any).disabled)
+
+    if (isDisabled) {
+      // Disabled elements cannot be focused
+      await this.delay(50)
+      return
+    }
+
+    // Clear hover state when focusing - focus takes precedence over hover
+    // in the CSS cascade for system states
+    element.removeAttribute('data-hover')
+
+    // Make element focusable if it isn't already
+    const focusableTags = ['input', 'textarea', 'button', 'a', 'select']
+    const tagName = element.tagName.toLowerCase()
+    if (!focusableTags.includes(tagName) && !element.hasAttribute('tabindex')) {
+      element.setAttribute('tabindex', '-1')
+    }
+
     element.focus()
+
+    // Set data-focus for headless browser support (where :focus doesn't work)
+    element.setAttribute('data-focus', 'true')
 
     await this.delay(50)
   }
@@ -453,6 +395,9 @@ export class Interactions implements InteractionAPI {
     if (!element) throw new Error(`Element ${nodeId} not found`)
 
     element.blur()
+
+    // Remove data-focus attribute
+    element.removeAttribute('data-focus')
 
     await this.delay(50)
   }
@@ -555,17 +500,85 @@ export class Interactions implements InteractionAPI {
    * The KeyboardHandler for preview shortcuts listens on document.
    */
   async pressKey(key: string, modifiers?: KeyModifiers): Promise<void> {
+    return this.keydown(key, modifiers)
+  }
+
+  /**
+   * Alias for pressKey - dispatch keydown event
+   * Dispatches to the focused element if one exists, otherwise to document.
+   * This allows both component-level handlers (onkeydown) and global shortcuts to work.
+   *
+   * Special handling for Tab key: Synthetic Tab events don't move focus in browsers
+   * (security feature), so we manually move focus to next/prev focusable element.
+   */
+  async keydown(key: string, modifiers?: KeyModifiers): Promise<void> {
     const opts = this.buildModifiers(modifiers)
 
-    // Dispatch on document for global shortcuts (H, V, F, etc.)
-    this.dispatchKeyboardEvent(document, 'keydown', key, opts)
+    // Get the focused element - dispatch there if it exists
+    // This is important for component-level keyboard handlers (e.g., Select's onkeydown)
+    const target = document.activeElement || document
+
+    this.dispatchKeyboardEvent(target as HTMLElement | Document, 'keydown', key, opts)
     // keypress is deprecated for non-printable keys
     if (key.length === 1) {
-      this.dispatchKeyboardEvent(document, 'keypress', key, opts)
+      this.dispatchKeyboardEvent(target as HTMLElement | Document, 'keypress', key, opts)
     }
-    this.dispatchKeyboardEvent(document, 'keyup', key, opts)
+    this.dispatchKeyboardEvent(target as HTMLElement | Document, 'keyup', key, opts)
+
+    // Special handling for Tab key - manually move focus
+    // Synthetic Tab events don't trigger browser's native tab navigation
+    if (key === 'Tab') {
+      await this.handleTabNavigation(modifiers?.shift ?? false)
+    }
 
     await this.delay(50)
+  }
+
+  /**
+   * Handle Tab navigation manually since synthetic Tab events don't move focus
+   */
+  private async handleTabNavigation(reverse: boolean): Promise<void> {
+    const preview = this.previewContainer
+    if (!preview) return
+
+    // Find all focusable elements in the preview
+    const focusableSelector = [
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'textarea:not([disabled])',
+      'select:not([disabled])',
+      'a[href]',
+      '[tabindex]:not([tabindex="-1"]):not([disabled])',
+    ].join(', ')
+
+    const focusables = Array.from(preview.querySelectorAll(focusableSelector)) as HTMLElement[]
+    if (focusables.length === 0) return
+
+    const currentFocused = document.activeElement as HTMLElement
+    const currentIndex = focusables.indexOf(currentFocused)
+
+    let nextIndex: number
+    if (reverse) {
+      // Shift+Tab - go backwards
+      nextIndex = currentIndex <= 0 ? focusables.length - 1 : currentIndex - 1
+    } else {
+      // Tab - go forwards
+      nextIndex = currentIndex >= focusables.length - 1 ? 0 : currentIndex + 1
+    }
+
+    const nextElement = focusables[nextIndex]
+    if (nextElement) {
+      // Clear old focus attribute
+      if (currentFocused && currentFocused.hasAttribute('data-focus')) {
+        currentFocused.removeAttribute('data-focus')
+      }
+
+      // Focus new element
+      nextElement.focus()
+
+      // Set new focus attribute
+      nextElement.setAttribute('data-focus', 'true')
+    }
   }
 
   /**

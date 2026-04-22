@@ -257,6 +257,27 @@ export class DraftModeManager {
   provideAIResponse(code: string, error?: string): void {
     events.emit('draft:ai-response', { code, error })
   }
+
+  /**
+   * Replace the draft block with new content
+   * This is useful for testing or manual AI integration
+   */
+  replaceDraftBlock(content: string): boolean {
+    const view = this.getEditorView()
+    if (!view) {
+      log.warn('No editor view available for replaceDraftBlock')
+      return false
+    }
+
+    const draftState = getDraftState(view)
+    if (!draftState.active) {
+      log.warn('No active draft block to replace')
+      return false
+    }
+
+    replaceDraftBlock(view, content)
+    return true
+  }
 }
 
 // ===========================================

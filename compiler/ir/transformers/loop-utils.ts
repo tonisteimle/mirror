@@ -30,8 +30,9 @@ export function markLoopVariablesInFilter(
   // Match the item variable followed by optional property access or method calls
   // e.g., "entry", "entry.project", "entry.task.toLowerCase()"
   // We need to be careful not to match partial words (e.g., "entry" in "reentry")
+  // Added: also recognize Mirror's 'and'/'or' operators as valid boundaries
   const itemVarPattern = new RegExp(
-    `(?<![\\w$])${escapeRegex(itemVar)}(?=\\.|\\s|==|!=|&&|\\|\\||\\)|$|,)`,
+    `(?<![\\w$])${escapeRegex(itemVar)}(?=\\.|\\s|==|!=|&&|\\|\\||\\)|$|,|\\s+and\\s|\\s+or\\s)`,
     'g'
   )
   let result = filter.replace(itemVarPattern, `__loopVar:${itemVar}`)
@@ -39,7 +40,7 @@ export function markLoopVariablesInFilter(
   // Also mark index variable if present
   if (indexVar) {
     const indexVarPattern = new RegExp(
-      `(?<![\\w$])${escapeRegex(indexVar)}(?=\\s|==|!=|&&|\\|\\||\\)|$|,)`,
+      `(?<![\\w$])${escapeRegex(indexVar)}(?=\\s|==|!=|&&|\\|\\||\\)|$|,|\\s+and\\s|\\s+or\\s)`,
       'g'
     )
     result = result.replace(indexVarPattern, `__loopVar:${indexVar}`)

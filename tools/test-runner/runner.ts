@@ -164,6 +164,24 @@ export class TestRunner {
   }
 
   /**
+   * Wait for test suites to be loaded
+   */
+  async waitForTestSuites(timeout = 15000): Promise<boolean> {
+    const start = Date.now()
+    while (Date.now() - start < timeout) {
+      const hasSuites = await this.evaluate<boolean>(`
+        (function() {
+          const s = window.__mirrorTestSuites;
+          return s && s.tests && Object.keys(s.tests).length > 0;
+        })()
+      `)
+      if (hasSuites) return true
+      await this.sleep(200)
+    }
+    return false
+  }
+
+  /**
    * Run a test suite from the browser
    */
   async runBrowserSuite(suiteCommand: string, suiteName: string): Promise<TestSuite> {

@@ -450,6 +450,67 @@ export class PreviewInspector implements PreviewAPI {
     console.warn('html2canvas not available, screenshot skipped')
     return ''
   }
+
+  /**
+   * Get raw HTMLElement by node ID
+   */
+  getElement(nodeId: string): HTMLElement | null {
+    return this.findElement(nodeId)
+  }
+
+  /**
+   * Find first element in preview matching predicate
+   */
+  find(predicate: (element: HTMLElement) => boolean): HTMLElement | null {
+    const preview = this.previewContainer
+    if (!preview) return null
+
+    // Walk through all elements in preview
+    const walker = document.createTreeWalker(preview, NodeFilter.SHOW_ELEMENT, null)
+
+    let node = walker.nextNode()
+    while (node) {
+      const element = node as HTMLElement
+      try {
+        if (predicate(element)) {
+          return element
+        }
+      } catch {
+        // Ignore errors from predicate
+      }
+      node = walker.nextNode()
+    }
+
+    return null
+  }
+
+  /**
+   * Find all elements in preview matching predicate
+   */
+  findAll(predicate: (element: HTMLElement) => boolean): HTMLElement[] {
+    const preview = this.previewContainer
+    if (!preview) return []
+
+    const results: HTMLElement[] = []
+
+    // Walk through all elements in preview
+    const walker = document.createTreeWalker(preview, NodeFilter.SHOW_ELEMENT, null)
+
+    let node = walker.nextNode()
+    while (node) {
+      const element = node as HTMLElement
+      try {
+        if (predicate(element)) {
+          results.push(element)
+        }
+      } catch {
+        // Ignore errors from predicate
+      }
+      node = walker.nextNode()
+    }
+
+    return results
+  }
 }
 
 // =============================================================================

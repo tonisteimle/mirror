@@ -602,17 +602,18 @@ export function propertyToCSS(
     ]
   }
 
-  // Handle numeric width/height in flex containers - prevent shrinking
+  // Handle numeric width/height - prevent shrinking in flex containers
   // Value can be number or numeric string from parser
+  // Always add flex-shrink: 0 for explicit dimensions to prevent flex from overriding
+  // This is especially important for:
+  // 1. Root elements that may be inside a flex preview container
+  // 2. Child elements in flex containers
   const isNumericValue =
     typeof value === 'number' || (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value))
-  if (
-    (name === 'width' || name === 'w' || name === 'height' || name === 'h') &&
-    isNumericValue &&
-    parentLayoutContext?.type === 'flex'
-  ) {
+  if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && isNumericValue) {
     const isWidth = name === 'width' || name === 'w'
     const cssValue = formatCSSValue(name, String(value))
+    // Always add flex-shrink: 0 to prevent flex containers from shrinking explicit sizes
     return [
       { property: isWidth ? 'width' : 'height', value: cssValue },
       { property: 'flex-shrink', value: '0' },

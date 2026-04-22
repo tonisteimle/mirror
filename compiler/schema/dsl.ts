@@ -36,22 +36,6 @@ import {
   type ZagSlotDef,
 } from './zag-primitives'
 
-// Import Compound primitives
-import {
-  COMPOUND_PRIMITIVES,
-  COMPOUND_SLOT_MAPPINGS,
-  isCompoundPrimitive,
-  getCompoundPrimitive,
-  getCompoundSlotMappings,
-  getCompoundSlotDef,
-  isCompoundSlot,
-  getAllCompoundSlots,
-  getParentSlot,
-  getAllCompoundPrimitives,
-  type CompoundPrimitiveDef,
-  type CompoundSlotDef,
-} from './compound-primitives'
-
 // Import Chart primitives
 import {
   CHART_PRIMITIVES,
@@ -78,22 +62,6 @@ export {
   getStateSelector,
   type ZagPrimitiveDef,
   type ZagSlotDef,
-}
-
-// Re-export Compound primitives
-export {
-  COMPOUND_PRIMITIVES,
-  COMPOUND_SLOT_MAPPINGS,
-  isCompoundPrimitive,
-  getCompoundPrimitive,
-  getCompoundSlotMappings,
-  getCompoundSlotDef,
-  isCompoundSlot,
-  getAllCompoundSlots,
-  getParentSlot,
-  getAllCompoundPrimitives,
-  type CompoundPrimitiveDef,
-  type CompoundSlotDef,
 }
 
 // Re-export Chart primitives
@@ -301,6 +269,14 @@ export const DSL = {
     H4: { html: 'h4', description: 'Heading level 4' },
     H5: { html: 'h5', description: 'Heading level 5' },
     H6: { html: 'h6', description: 'Heading level 6' },
+
+    // Table primitives (now standard components, not compound)
+    Table: { html: 'div', description: 'Table container' },
+    TableHeader: { html: 'div', description: 'Table header row' },
+    TableRow: { html: 'div', description: 'Table row' },
+    TableFooter: { html: 'div', description: 'Table footer' },
+    TableCell: { html: 'div', description: 'Table cell' },
+    TableHeaderCell: { html: 'div', description: 'Table header cell' },
   } as Record<string, PrimitiveDef>,
 
   // ---------------------------------------------------------------------------
@@ -643,6 +619,40 @@ export const SCHEMA: Record<string, PropertyDef> = {
     },
 
     token: true,
+  },
+
+  device: {
+    name: 'device',
+    aliases: [],
+    category: 'sizing',
+    description: 'Device size preset: mobile (375×812), tablet (768×1024), desktop (1440×900)',
+
+    keywords: {
+      mobile: {
+        description: 'Mobile device size (375×812)',
+        css: [
+          { property: 'width', value: '375px' },
+          { property: 'height', value: '812px' },
+        ],
+        example: 'Frame device mobile',
+      },
+      tablet: {
+        description: 'Tablet device size (768×1024)',
+        css: [
+          { property: 'width', value: '768px' },
+          { property: 'height', value: '1024px' },
+        ],
+        example: 'Frame device tablet',
+      },
+      desktop: {
+        description: 'Desktop device size (1440×900)',
+        css: [
+          { property: 'width', value: '1440px' },
+          { property: 'height', value: '900px' },
+        ],
+        example: 'Frame device desktop',
+      },
+    },
   },
 
   'min-width': {
@@ -2232,6 +2242,15 @@ export const SCHEMA: Record<string, PropertyDef> = {
     keywords: {},
   },
 
+  mask: {
+    name: 'mask',
+    aliases: [],
+    category: 'input',
+    description: 'Input mask pattern. # = digit, A = letter, * = alphanumeric, others = literal',
+
+    keywords: {},
+  },
+
   // ---------------------------------------------------------------------------
   // INPUT (Form element attributes)
   // ---------------------------------------------------------------------------
@@ -2277,6 +2296,51 @@ export const SCHEMA: Record<string, PropertyDef> = {
         description: 'Enter moves to next field, Escape blurs, Tab cycles through fields',
         css: [], // Runtime behavior, not CSS
         example: 'Frame keyboard-nav',
+      },
+    },
+  },
+
+  'loop-focus': {
+    name: 'loop-focus',
+    aliases: ['loopfocus'],
+    category: 'input',
+    description: 'Enable focus looping for highlight navigation',
+
+    keywords: {
+      _standalone: {
+        description: 'Arrow keys wrap around at start/end of list',
+        css: [], // Runtime behavior, not CSS
+        example: 'Frame loop-focus',
+      },
+    },
+  },
+
+  typeahead: {
+    name: 'typeahead',
+    aliases: [],
+    category: 'input',
+    description: 'Enable typeahead for list navigation',
+
+    keywords: {
+      _standalone: {
+        description: 'Typing characters jumps to matching item',
+        css: [], // Runtime behavior, not CSS
+        example: 'Frame typeahead',
+      },
+    },
+  },
+
+  'trigger-text': {
+    name: 'trigger-text',
+    aliases: ['triggertext'],
+    category: 'input',
+    description: 'Update trigger text when selection changes',
+
+    keywords: {
+      _standalone: {
+        description: 'Trigger element shows the selected option text',
+        css: [], // Runtime behavior, not CSS
+        example: 'Frame trigger-text',
       },
     },
   },
@@ -2610,9 +2674,6 @@ export function isPrimitive(name: string): boolean {
       return true
     }
   }
-
-  // Check compound primitives (Shell, etc.)
-  if (isCompoundPrimitive(name)) return true
 
   // Check chart primitives (Line, Bar, Pie, etc.)
   if (isChartPrimitive(name)) return true

@@ -824,14 +824,302 @@ function generateSkippedTest(testName: string, code: string, features: Extracted
 
   const escapedCode = escapeString(code)
 
+  // Generate deep validation based on feature type
+  const assertions: string[] = []
+  assertions.push(`      // Complex feature: ${reasons.join(', ')}`)
+  assertions.push(`      // Deep validation for complex features`)
+  assertions.push(``)
+
+  // === STATE VALIDATION ===
+  if (features.hasToggle || features.hasExclusive || features.hasHover) {
+    assertions.push(`      // === STATE VALIDATION ===`)
+    assertions.push(`      const nodeIds = api.preview.getNodeIds()`)
+    assertions.push(`      api.assert.ok(nodeIds.length > 0, 'State example should have elements')`)
+
+    if (features.hasToggle) {
+      assertions.push(``)
+      assertions.push(`      // Toggle: Element mit toggle() sollte cursor: pointer haben`)
+      assertions.push(`      const toggleEl = api.preview.find(el => {`)
+      assertions.push(`        const computed = window.getComputedStyle(el)`)
+      assertions.push(`        return computed.cursor === 'pointer'`)
+      assertions.push(`      })`)
+      assertions.push(
+        `      api.assert.ok(toggleEl !== null, 'Toggle element should have cursor: pointer')`
+      )
+    }
+
+    if (features.hasExclusive) {
+      assertions.push(``)
+      assertions.push(
+        `      // Exclusive: Sollte mehrere Elemente mit role="button" oder ähnlich haben`
+      )
+      assertions.push(`      const interactiveEls = api.preview.findAll(el => {`)
+      assertions.push(`        const computed = window.getComputedStyle(el)`)
+      assertions.push(`        return computed.cursor === 'pointer'`)
+      assertions.push(`      })`)
+      assertions.push(
+        `      api.assert.ok(interactiveEls.length >= 1, 'Exclusive group should have interactive elements')`
+      )
+    }
+
+    if (features.hasHover) {
+      assertions.push(``)
+      assertions.push(`      // Hover: Element existiert und kann gehovered werden`)
+      assertions.push(`      api.assert.exists('node-1')`)
+      assertions.push(`      const el = api.preview.getElement('node-1')`)
+      assertions.push(
+        `      api.assert.ok(el instanceof HTMLElement, 'Hover target should be HTMLElement')`
+      )
+    }
+  }
+
+  // === FUNCTION VALIDATION ===
+  if (
+    features.properties.some(p =>
+      ['toggle', 'increment', 'decrement', 'show', 'hide', 'toast', 'focus', 'navigate'].includes(p)
+    )
+  ) {
+    assertions.push(``)
+    assertions.push(`      // === FUNCTION VALIDATION ===`)
+
+    // Check for button elements with onclick behavior
+    assertions.push(`      // Buttons mit Funktionen sollten existieren`)
+    assertions.push(`      const buttons = api.preview.findAll(el => el.tagName === 'BUTTON')`)
+    assertions.push(
+      `      api.assert.ok(buttons.length > 0, 'Function example should have buttons')`
+    )
+
+    // Check for counter targets if increment/decrement
+    if (features.properties.includes('increment') || features.properties.includes('decrement')) {
+      assertions.push(``)
+      assertions.push(`      // Counter: Text-Element für Anzeige sollte existieren`)
+      assertions.push(
+        `      const textEls = api.preview.findAll(el => el.tagName === 'SPAN' || el.tagName === 'DIV')`
+      )
+      assertions.push(
+        `      api.assert.ok(textEls.length > 0, 'Counter should have display element')`
+      )
+    }
+
+    // Check for show/hide targets
+    if (features.properties.includes('show') || features.properties.includes('hide')) {
+      assertions.push(``)
+      assertions.push(`      // Show/Hide: Target-Element sollte existieren`)
+      assertions.push(
+        `      const namedEls = api.preview.findAll(el => el.hasAttribute('data-name'))`
+      )
+      assertions.push(`      // Named targets are optional, check nodes exist`)
+      assertions.push(
+        `      api.assert.ok(api.preview.getNodeIds().length >= 2, 'Show/Hide should have trigger and target')`
+      )
+    }
+  }
+
+  // === ZAG/OVERLAY VALIDATION ===
+  if (features.hasZag) {
+    assertions.push(``)
+    assertions.push(`      // === ZAG COMPONENT VALIDATION ===`)
+
+    const zagComps = features.zagComponents
+
+    if (zagComps.includes('Dialog')) {
+      assertions.push(``)
+      assertions.push(`      // Dialog: Trigger und Backdrop sollten existieren`)
+      assertions.push(`      const dialogTrigger = api.preview.find(el => {`)
+      assertions.push(
+        `        return el.hasAttribute('data-part') && el.getAttribute('data-part') === 'trigger'`
+      )
+      assertions.push(`      })`)
+      assertions.push(
+        `      api.assert.ok(dialogTrigger !== null, 'Dialog should have trigger element')`
+      )
+    }
+
+    if (zagComps.includes('Tooltip')) {
+      assertions.push(``)
+      assertions.push(`      // Tooltip: Trigger sollte existieren`)
+      assertions.push(`      const tooltipTrigger = api.preview.find(el => {`)
+      assertions.push(
+        `        return el.hasAttribute('data-part') && el.getAttribute('data-part') === 'trigger'`
+      )
+      assertions.push(`      })`)
+      assertions.push(
+        `      api.assert.ok(tooltipTrigger !== null, 'Tooltip should have trigger element')`
+      )
+    }
+
+    if (zagComps.includes('Tabs')) {
+      assertions.push(``)
+      assertions.push(`      // Tabs: Tab-Liste sollte existieren mit role="tablist"`)
+      assertions.push(
+        `      const tabList = api.preview.find(el => el.getAttribute('role') === 'tablist')`
+      )
+      assertions.push(`      api.assert.ok(tabList !== null, 'Tabs should have tablist with role')`)
+      assertions.push(`      // Tab-Triggers sollten existieren`)
+      assertions.push(
+        `      const tabs = api.preview.findAll(el => el.getAttribute('role') === 'tab')`
+      )
+      assertions.push(
+        `      api.assert.ok(tabs.length >= 2, 'Tabs should have at least 2 tab triggers')`
+      )
+    }
+
+    if (zagComps.includes('Select')) {
+      assertions.push(``)
+      assertions.push(`      // Select: Trigger sollte existieren`)
+      assertions.push(`      const selectTrigger = api.preview.find(el => {`)
+      assertions.push(
+        `        return el.hasAttribute('data-part') && el.getAttribute('data-part') === 'trigger'`
+      )
+      assertions.push(`      })`)
+      assertions.push(
+        `      api.assert.ok(selectTrigger !== null, 'Select should have trigger element')`
+      )
+    }
+
+    if (zagComps.includes('Checkbox')) {
+      assertions.push(``)
+      assertions.push(`      // Checkbox: Control mit role="checkbox" sollte existieren`)
+      assertions.push(
+        `      const checkbox = api.preview.find(el => el.getAttribute('role') === 'checkbox')`
+      )
+      assertions.push(
+        `      api.assert.ok(checkbox !== null, 'Checkbox should have element with role="checkbox"')`
+      )
+    }
+
+    if (zagComps.includes('Switch')) {
+      assertions.push(``)
+      assertions.push(`      // Switch: Track und Thumb sollten existieren`)
+      assertions.push(`      const switchRoot = api.preview.find(el => {`)
+      assertions.push(
+        `        return el.hasAttribute('data-part') && el.getAttribute('data-part') === 'root'`
+      )
+      assertions.push(`      })`)
+      assertions.push(`      api.assert.ok(switchRoot !== null, 'Switch should have root element')`)
+    }
+
+    if (zagComps.includes('RadioGroup')) {
+      assertions.push(``)
+      assertions.push(`      // RadioGroup: Items mit role="radio" sollten existieren`)
+      assertions.push(
+        `      const radios = api.preview.findAll(el => el.getAttribute('role') === 'radio')`
+      )
+      assertions.push(
+        `      api.assert.ok(radios.length >= 2, 'RadioGroup should have at least 2 radio items')`
+      )
+    }
+
+    if (zagComps.includes('Slider')) {
+      assertions.push(``)
+      assertions.push(`      // Slider: Thumb und Track sollten existieren`)
+      assertions.push(`      const sliderThumb = api.preview.find(el => {`)
+      assertions.push(
+        `        return el.hasAttribute('data-part') && el.getAttribute('data-part') === 'thumb'`
+      )
+      assertions.push(`      })`)
+      assertions.push(
+        `      api.assert.ok(sliderThumb !== null, 'Slider should have thumb element')`
+      )
+    }
+
+    if (zagComps.includes('DatePicker')) {
+      assertions.push(``)
+      assertions.push(`      // DatePicker: Trigger sollte existieren`)
+      assertions.push(`      const datePickerTrigger = api.preview.find(el => {`)
+      assertions.push(
+        `        return el.hasAttribute('data-part') && el.getAttribute('data-part') === 'trigger'`
+      )
+      assertions.push(`      })`)
+      assertions.push(
+        `      api.assert.ok(datePickerTrigger !== null, 'DatePicker should have trigger element')`
+      )
+    }
+
+    // General Zag validation
+    if (
+      zagComps.length > 0 &&
+      !assertions.some(a => a.includes('data-part') || a.includes('role='))
+    ) {
+      assertions.push(``)
+      assertions.push(`      // Generic Zag validation: data-scope attribute should exist`)
+      assertions.push(`      const zagEl = api.preview.find(el => el.hasAttribute('data-scope'))`)
+      assertions.push(
+        `      api.assert.ok(zagEl !== null, 'Zag component should have data-scope attribute')`
+      )
+    }
+  }
+
+  // === ANIMATION VALIDATION ===
+  if (features.hasAnimation) {
+    assertions.push(``)
+    assertions.push(`      // === ANIMATION VALIDATION ===`)
+    assertions.push(`      // Animated element should have animation CSS`)
+    assertions.push(`      const animatedEl = api.preview.find(el => {`)
+    assertions.push(`        const computed = window.getComputedStyle(el)`)
+    assertions.push(
+      `        return computed.animationName !== 'none' && computed.animationName !== ''`
+    )
+    assertions.push(`      })`)
+    assertions.push(
+      `      api.assert.ok(animatedEl !== null, 'Animation example should have animated element')`
+    )
+    assertions.push(`      if (animatedEl) {`)
+    assertions.push(`        const computed = window.getComputedStyle(animatedEl)`)
+    assertions.push(
+      `        api.assert.ok(computed.animationDuration !== '0s', 'Animation should have duration')`
+    )
+    assertions.push(`      }`)
+  }
+
+  // === DATA BINDING VALIDATION ===
+  if (features.hasData && !features.hasEach && !features.hasIf) {
+    assertions.push(``)
+    assertions.push(`      // === DATA BINDING VALIDATION ===`)
+    assertions.push(`      // Data-bound elements should render`)
+    assertions.push(`      const nodeIds = api.preview.getNodeIds()`)
+    assertions.push(
+      `      api.assert.ok(nodeIds.length > 0, 'Data binding example should render elements')`
+    )
+  }
+
+  // === CHART VALIDATION ===
+  if (features.hasChart) {
+    assertions.push(``)
+    assertions.push(`      // === CHART VALIDATION ===`)
+    assertions.push(`      // Chart should render canvas or SVG`)
+    assertions.push(`      const chartEl = api.preview.find(el => {`)
+    assertions.push(`        return el.tagName === 'CANVAS' || el.tagName === 'SVG'`)
+    assertions.push(`      })`)
+    assertions.push(
+      `      api.assert.ok(chartEl !== null, 'Chart should render canvas or SVG element')`
+    )
+  }
+
+  // === COMPONENT VALIDATION ===
+  if (features.hasComponent && !features.hasEach && !features.hasIf) {
+    assertions.push(``)
+    assertions.push(`      // === COMPONENT VALIDATION ===`)
+    assertions.push(`      // Component template should expand to DOM elements`)
+    assertions.push(`      const nodeIds = api.preview.getNodeIds()`)
+    assertions.push(
+      `      api.assert.ok(nodeIds.length > 0, 'Component should expand to DOM elements')`
+    )
+  }
+
+  // Fallback: Basic compilation check
+  if (assertions.length <= 3) {
+    assertions.push(``)
+    assertions.push(`      // Basic validation: compilation succeeded`)
+    assertions.push(`      api.assert.ok(true, 'Compilation successful')`)
+  }
+
   return `
   testWithSetup(
     '${testName}',
     \`${escapedCode}\`,
     async (api: TestAPI) => {
-      // Complex feature: ${reasons.join(', ')}
-      // If we reach here, compilation succeeded (no exception thrown)
-      api.assert.ok(true, 'Compilation successful')
+${assertions.join('\n')}
     }
   ),`
 }

@@ -35,6 +35,41 @@ export {
   zagTabsResizeTests,
 } from './resize-handles.test'
 
+// Pure Tabs Drop Tests
+export { allTabsDropTests, tabsDropTests, tabsStylingAfterDropTests } from './tabs-drop.test'
+
+// Pure Accordion Tests
+export {
+  allAccordionTests,
+  accordionStructureTests,
+  accordionToggleTests,
+  accordionChevronTests,
+  accordionStylingTests,
+  accordionContentTests,
+  accordionEdgeCaseTests,
+} from './accordion.test'
+
+// Pure Accordion Drop Tests
+export {
+  allAccordionDropTests,
+  accordionDropTests,
+  accordionStylingAfterDropTests,
+  accordionWithTabsTests,
+} from './accordion-drop.test'
+
+// Keyboard Navigation Tests
+export {
+  allZagKeyboardTests,
+  dialogKeyboardTests,
+  tabsKeyboardTests,
+  selectKeyboardTests,
+  radioGroupKeyboardTests,
+  checkboxKeyboardTests,
+  switchKeyboardTests,
+  sliderKeyboardTests,
+  tooltipKeyboardTests,
+} from './keyboard-navigation.test'
+
 import { checkboxTests } from './checkbox.test'
 import { switchTests } from './switch.test'
 import { sliderTests } from './slider.test'
@@ -48,6 +83,10 @@ import { sidenavTests } from './sidenav.test'
 import { zagInLayoutTests } from './layout.test'
 import { allZagDragTests } from './drag-and-style.test'
 import { allZagResizeHandleTests } from './resize-handles.test'
+import { allTabsDropTests } from './tabs-drop.test'
+import { allAccordionTests } from './accordion.test'
+import { allAccordionDropTests } from './accordion-drop.test'
+import { allZagKeyboardTests } from './keyboard-navigation.test'
 
 export const allZagTests: TestCase[] = [
   ...checkboxTests,
@@ -63,4 +102,9 @@ export const allZagTests: TestCase[] = [
   ...zagInLayoutTests,
   ...allZagDragTests,
   ...allZagResizeHandleTests,
+  // Pure Component Drop Tests
+  ...allTabsDropTests,
+  ...allAccordionTests,
+  ...allAccordionDropTests,
+  // NOTE: Keyboard tests moved to 'headed' category (require real browser window)
 ]

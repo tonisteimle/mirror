@@ -154,3 +154,12 @@ export {
   gridSnappingFallbackTests,
   tokenPriorityTests,
 } from './snapping.test'
+
+// Validation Tests (B3.1) - Deep DOM/CSS validation
+export {
+  allValidationTests,
+  spreadCssTests,
+  ungroupDomTests,
+  selectionUndoRedoTests,
+  multiselectVisualTests,
+} from './validation.test'

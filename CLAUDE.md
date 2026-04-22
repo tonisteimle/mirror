@@ -295,6 +295,14 @@ Frame grid 12, gap 8
   Frame x 1, y 3, w 3, h 4, bg gray    // Sidebar
   Frame x 4, y 3, w 9, h 4, bg white   // Content
 
+// Device Presets (vordefinierte App-Größen)
+Frame device mobile     // 375 × 812
+Frame device tablet     // 768 × 1024
+Frame device desktop    // 1440 × 900
+
+// Preset mit Override
+Frame device mobile, h 600   // 375 × 600 (Höhe überschrieben)
+
 // Stacked (übereinander für Overlays, Badges)
 Frame stacked, w 100, h 100
   Image src "bg.jpg", w full, h full
@@ -607,6 +615,16 @@ each todo in $todos
 
 // Mehrere Funktionen kombinieren
 Button toggle(), increment(count), toast("Liked!")
+
+// List Navigation (für Select, Dropdown, etc.)
+Frame loop-focus, typeahead    // Navigation-Features aktivieren
+  onkeydown(arrow-down) highlightNext(Options)
+  onkeydown(arrow-up) highlightPrev(Options)
+  onkeydown(enter) selectHighlighted(Options)
+
+// loop-focus: Arrow-Keys wrappen am Ende/Anfang
+// typeahead: Tippen springt zur passenden Option
+// trigger-text: Trigger zeigt ausgewählten Wert
 ```
 
 ### Daten & Bedingungen
@@ -676,7 +694,7 @@ Icon done ? "check" : "circle", ic done ? #10b981 : #888
 Text count > 0 ? "$count Items" : "Leer"
 ```
 
-### Zag-Komponenten (fertige UI-Patterns)
+### UI-Komponenten (fertige UI-Patterns)
 
 ```mirror
 // Dialog (Modal)
@@ -707,12 +725,16 @@ Tabs defaultValue "home"
     Frame pad 16
       Text "Settings Content"
 
-// Select (Dropdown)
-Select placeholder "Stadt wählen..."
-  Option "Berlin"
-  Option "Hamburg"
-  Option "München"
-  Option "Köln"
+// Select (Pure Mirror Dropdown)
+// Verwendet: trigger-text, loop-focus, typeahead
+Select
+  Trigger
+    Text "Stadt wählen..."
+  Content
+    Item "Berlin"
+    Item "Hamburg"
+    Item "München"
+    Item "Köln"
 
 // Form Controls
 Checkbox "Newsletter abonnieren"
@@ -734,6 +756,23 @@ DatePicker placeholder "Datum wählen"
 searchTerm: ""
 Input bind searchTerm, placeholder "Suchen..."
 Text "Suche: $searchTerm", col #888
+
+// Input Mask (Pattern-basiert)
+Input mask "###.####.####.##", placeholder "AHV-Nummer"  // 756.1234.5678.90
+Input mask "(###) ###-####", placeholder "Telefon"       // (079) 123-4567
+Input mask "####-##-##", placeholder "Datum"             // 2024-01-15
+Input mask "##'###.##", placeholder "Betrag CHF"         // 12'345.67
+Input mask "AAA-###", placeholder "Kennzeichen"          // ZH-1234
+
+// Pattern-Zeichen:
+// # = Ziffer (0-9)
+// A = Buchstabe (a-z, A-Z)
+// * = Alphanumerisch
+// Alle anderen = Literal (wird automatisch eingefügt)
+
+// Mask mit Binding (speichert rohen Wert ohne Formatierung)
+ahv: ""
+Input mask "###.####.####.##", bind ahv
 ```
 
 ### Tabellen
@@ -831,22 +870,24 @@ Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is
 
 ### Quick Reference
 
-| Kategorie       | Properties                                                             |
-| --------------- | ---------------------------------------------------------------------- |
-| **Layout**      | `hor`, `ver`, `gap N`, `center`, `spread`, `wrap`, `grid N`, `stacked` |
-| **Position**    | `tl`, `tc`, `tr`, `cl`, `cr`, `bl`, `bc`, `br`, `x N`, `y N`           |
-| **Größe**       | `w N`, `h N`, `w full`, `w hug`, `grow`, `shrink`, `minw`, `maxw`      |
-| **Farbe**       | `bg #hex`, `col #hex`, `boc #hex`, `ic #hex`, `grad #a #b`             |
-| **Abstand**     | `pad N`, `pad-x`, `pad-y`, `pad-t/r/b/l`, `mar N`, `mar-x/y/t/r/b/l`   |
-| **Border**      | `bor N`, `boc #hex`, `rad N`                                           |
-| **Typo**        | `fs N`, `weight bold/500`, `font mono`, `truncate`, `uppercase`        |
-| **Effekte**     | `shadow sm/md/lg`, `opacity N`, `blur N`, `cursor pointer`             |
-| **Sichtbar**    | `hidden`, `visible`, `clip`, `scroll`                                  |
-| **States**      | `hover:`, `focus:`, `active:`, `disabled:`, `on:`, `open:`             |
-| **Animation**   | `anim pulse/bounce/shake/spin`, `0.2s ease-out`                        |
-| **Komponenten** | `Name:` Definition, `Name` Verwendung, `as` erben                      |
-| **Tokens**      | `name.bg: #hex` Definition, `bg $name` Verwendung                      |
-| **Daten**       | `name: value`, `$name`, `each x in $list`, `if cond`                   |
+| Kategorie       | Properties                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------- |
+| **Layout**      | `hor`, `ver`, `gap N`, `center`, `spread`, `wrap`, `grid N`, `stacked`                            |
+| **Position**    | `tl`, `tc`, `tr`, `cl`, `cr`, `bl`, `bc`, `br`, `x N`, `y N`                                      |
+| **Größe**       | `w N`, `h N`, `w full`, `w hug`, `device mobile/tablet/desktop`, `grow`, `shrink`, `minw`, `maxw` |
+| **Farbe**       | `bg #hex`, `col #hex`, `boc #hex`, `ic #hex`, `grad #a #b`                                        |
+| **Abstand**     | `pad N`, `pad-x`, `pad-y`, `pad-t/r/b/l`, `mar N`, `mar-x/y/t/r/b/l`                              |
+| **Border**      | `bor N`, `boc #hex`, `rad N`                                                                      |
+| **Typo**        | `fs N`, `weight bold/500`, `font mono`, `truncate`, `uppercase`                                   |
+| **Effekte**     | `shadow sm/md/lg`, `opacity N`, `blur N`, `cursor pointer`                                        |
+| **Sichtbar**    | `hidden`, `visible`, `clip`, `scroll`                                                             |
+| **States**      | `hover:`, `focus:`, `active:`, `disabled:`, `on:`, `open:`                                        |
+| **Animation**   | `anim pulse/bounce/shake/spin`, `0.2s ease-out`                                                   |
+| **Listen**      | `loop-focus`, `typeahead`, `trigger-text`, `highlightNext/Prev`                                   |
+| **Input**       | `placeholder`, `type`, `mask "###-####"`, `bind varName`, `disabled`                              |
+| **Komponenten** | `Name:` Definition, `Name` Verwendung, `as` erben                                                 |
+| **Tokens**      | `name.bg: #hex` Definition, `bg $name` Verwendung                                                 |
+| **Daten**       | `name: value`, `$name`, `each x in $list`, `if cond`                                              |
 
 <!-- GENERATED:TUTORIAL:END -->
 
@@ -1015,9 +1056,13 @@ Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is
 | href               | -                    | -                                                                                                                                                                            |
 | src                | -                    | -                                                                                                                                                                            |
 | placeholder        | -                    | -                                                                                                                                                                            |
+| mask               | -                    | Input mask pattern (# = digit, A = letter, \* = alphanumeric)                                                                                                                |
 | focusable          | -                    | _(standalone)_                                                                                                                                                               |
 | editable           | -                    | _(standalone)_                                                                                                                                                               |
 | keyboard-nav       | keynav               | _(standalone)_                                                                                                                                                               |
+| loop-focus         | loopfocus            | _(standalone)_                                                                                                                                                               |
+| typeahead          | -                    | _(standalone)_                                                                                                                                                               |
+| trigger-text       | triggertext          | _(standalone)_                                                                                                                                                               |
 | readonly           | -                    | _(standalone)_                                                                                                                                                               |
 | type               | -                    | -                                                                                                                                                                            |
 | name               | -                    | -                                                                                                                                                                            |
@@ -1165,23 +1210,27 @@ npm test -- parser          # Nur Parser Tests
 
 Eigenes Test-Framework für Studio-Tests direkt im Browser. Ersetzt Playwright.
 
-**Test-Kategorien (~325 Tests):**
+**Test-Kategorien (17 Hauptkategorien):**
 
-| Kategorie     | Tests | Beschreibung                        |
-| ------------- | ----- | ----------------------------------- |
-| Primitives    | ~25   | Frame, Text, Button, Icon, etc.     |
-| Layout        | ~35   | hor, ver, gap, grid, stacked        |
-| Styling       | ~50   | bg, col, pad, rad, shadow           |
-| Zag           | ~30   | Dialog, Tabs, Select, Checkbox      |
-| Interactions  | ~30   | Click, Hover, Focus, Input          |
-| Bidirectional | ~20   | Code ↔ Preview Sync                 |
-| Undo/Redo     | ~15   | History Management                  |
-| Autocomplete  | ~20   | Completions                         |
-| Drag & Drop   | ~44   | Palette Drop, Canvas Move           |
-| States        | ~50   | toggle(), exclusive(), hover, cross |
-| Animations    | ~30   | spin, pulse, bounce, fade, slide    |
-| Transforms    | ~30   | rotate, scale, translate, z-index   |
-| Gradients     | ~15   | grad, grad-ver, text gradients      |
+| Kategorie     | Beschreibung                                    |
+| ------------- | ----------------------------------------------- |
+| core          | Primitives (Frame, Text, Button, Icon, etc.)    |
+| layout        | Layout (direction, gap, grid, stacked, wrap)    |
+| styling       | Styling (colors, sizing, spacing, gradients)    |
+| visuals       | Animations & Transforms                         |
+| states        | State Management (toggle, exclusive, hover)     |
+| components    | UI Patterns (checkbox, dialog, tabs, accordion) |
+| drag          | Drag & Drop Operationen                         |
+| handles       | Visual Handles (padding, margin, gap, resize)   |
+| selection     | Multi-select, Ungroup, Spread Toggle            |
+| propertyPanel | Property Panel UI                               |
+| editor        | Bidirectional Sync, Undo/Redo, Autocomplete     |
+| data          | Data Binding, Actions, Events, Responsive       |
+| project       | Multi-File Projects, Workflows                  |
+| compiler      | Compiler Verification                           |
+| ai            | AI-Assist (Draft Lines, Draft Mode)             |
+| tutorial      | Tutorial Verification                           |
+| stress        | Stress Tests, Integration, Play Mode            |
 
 ### CLI Test Runner (CDP)
 
@@ -1225,7 +1274,7 @@ npx tsx tools/test.ts --retries=2                   # Retry bei Failures
 | `--filter=PATTERN` | Filter nach Name (Regex)                            |
 | `--log=PATH`       | Log-Datei Pfad (default: test-results/test-run.log) |
 
-**Kategorien:** primitives, layout, styling, zag, interactions, bidirectional, undoRedo, autocomplete, comprehensiveDrag, stackedDrag, propertyPanel, charts, states, animations, transforms, gradients
+**Kategorien:** core, layout, styling, visuals, states, components, drag, handles, selection, propertyPanel, editor, data, project, compiler, ai, tutorial, stress
 
 **Execution:**
 

@@ -1,7 +1,8 @@
 /**
  * Sizing Section - Width and Height
  *
- * Renders width and height controls with hug/full toggles and numeric inputs.
+ * Renders width and height controls with hug/full toggles, numeric inputs,
+ * and device size presets dropdown.
  */
 
 import {
@@ -19,6 +20,32 @@ const SIZE_ICONS = {
   widthFull: '<path d="M2 3v8M12 3v8M2 7h10"/>',
   heightHug: '<path d="M3 4h8M3 10h8M7 1v3M7 10v3"/>',
   heightFull: '<path d="M3 2h8M3 12h8M7 2v10"/>',
+}
+
+/**
+ * Device size presets
+ */
+const DEVICE_PRESETS: { label: string; value: string; w: number; h: number }[] = [
+  { label: 'Custom', value: '', w: 0, h: 0 },
+  { label: 'Mobile (375×812)', value: 'mobile', w: 375, h: 812 },
+  { label: 'Tablet (768×1024)', value: 'tablet', w: 768, h: 1024 },
+  { label: 'Desktop (1440×900)', value: 'desktop', w: 1440, h: 900 },
+]
+
+/**
+ * Detect device preset from width/height values
+ */
+function detectDevice(width: string, height: string): string {
+  const w = parseInt(width, 10)
+  const h = parseInt(height, 10)
+  if (isNaN(w) || isNaN(h)) return ''
+
+  for (const preset of DEVICE_PRESETS) {
+    if (preset.w === w && preset.h === h) {
+      return preset.value
+    }
+  }
+  return ''
 }
 
 /**
@@ -75,10 +102,27 @@ export class SizingSection extends BaseSection {
       }
     }
 
+    // Detect current device preset from w/h values
+    const currentDevice = detectDevice(widthValue, heightValue)
+
+    // Build device dropdown options
+    const deviceOptionsHtml = DEVICE_PRESETS.map(
+      preset =>
+        `<option value="${preset.value}" ${currentDevice === preset.value ? 'selected' : ''}>${preset.label}</option>`
+    ).join('')
+
     return `
       <div class="section">
         <div class="section-label">Size</div>
         <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Device</span>
+            <div class="prop-content">
+              <select class="prop-select" data-device-preset>
+                ${deviceOptionsHtml}
+              </select>
+            </div>
+          </div>
           <div class="prop-row">
             <span class="prop-label">Width</span>
             <div class="prop-content">
@@ -122,6 +166,20 @@ export class SizingSection extends BaseSection {
 
   getHandlers(): EventHandlerMap {
     return {
+      'select[data-device-preset]': {
+        change: (e: Event, target: HTMLElement) => {
+          const select = target as HTMLSelectElement
+          const deviceValue = select.value
+          if (!deviceValue) return // Custom selected, don't change anything
+
+          // Find the preset and set both width and height
+          const preset = DEVICE_PRESETS.find(p => p.value === deviceValue)
+          if (preset) {
+            // Use __DEVICE_PRESET__ as a special signal to set both w and h
+            this.deps.onPropertyChange('__DEVICE_PRESET__', deviceValue, 'dropdown')
+          }
+        },
+      },
       '.toggle-btn[data-size-mode]': {
         click: (e: Event, target: HTMLElement) => {
           const mode = target.dataset.sizeMode

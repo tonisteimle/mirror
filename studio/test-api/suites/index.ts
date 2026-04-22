@@ -3,7 +3,11 @@
  *
  * Exports all test suites for easy import.
  *
- * Usage:
+ * NEW: Use consolidated categories for simpler test execution:
+ *   npm run test:browser -- --category=layout
+ *   npm run test:browser -- --category=components
+ *
+ * Legacy usage still supported:
  *   import { allTests, runAllTests } from './suites'
  *   __mirrorTest.run(allTests)
  *
@@ -11,6 +15,38 @@
  *   import { allPrimitivesTests, allLayoutTests } from './suites'
  *   __mirrorTest.run(allPrimitivesTests, 'Primitives')
  */
+
+// =============================================================================
+// CONSOLIDATED CATEGORIES (17 main categories)
+// =============================================================================
+export {
+  // Categories
+  coreTests,
+  layoutTests as layoutCategoryTests,
+  stylingTests as stylingCategoryTests,
+  visualsTests,
+  statesTests,
+  componentsTests,
+  dragTests,
+  handlesTests,
+  selectionTests,
+  propertyPanelTests as propertyPanelCategoryTests,
+  editorTests,
+  dataTests,
+  projectTests as projectCategoryTests,
+  compilerTests as compilerCategoryTests,
+  aiTests,
+  tutorialTests as tutorialCategoryTests,
+  stressAndIntegrationTests,
+  // Registry
+  categories,
+  type CategoryName,
+  type CategoryInfo,
+  getCategory,
+  getCategoryCounts,
+  listCategories,
+  allCategoryTests,
+} from './categories'
 
 // =============================================================================
 // Imports from New Directory Structure
@@ -38,6 +74,13 @@ import {
   gridTests,
   nestingTests,
   complexLayoutTests,
+  // Extended Layout Tests (B3.3)
+  allExtendedLayoutTests,
+  minMaxWidthTests,
+  minMaxHeightTests,
+  gridPositionTests,
+  rowHeightTests,
+  gapXYTests,
 } from './layout'
 
 // Styling (fully migrated)
@@ -51,6 +94,14 @@ import {
   effectTests,
   visibilityTests,
   combinedTests as stylingCombinedTests,
+  // Extended Styling Tests (B3.2)
+  allExtendedStylingTests,
+  rgbaColorTests,
+  hexAlphaTests,
+  perSidePaddingTests,
+  perSideMarginTests,
+  perSideBorderTests,
+  shadowValidationTests,
 } from './styling'
 
 // Zag (fully migrated)
@@ -68,6 +119,9 @@ import {
   sidenavTests,
   zagInLayoutTests,
 } from './zag'
+
+// Pure Mirror Select (new)
+import { pureSelectTests } from './pure-select.test'
 
 // =============================================================================
 // Imports from Legacy Files (via proxy index files)
@@ -165,6 +219,12 @@ import {
   snapIndicatorTests,
   gridSnappingFallbackTests,
   tokenPriorityTests,
+  // Validation Tests (B3.1)
+  allValidationTests,
+  spreadCssTests,
+  ungroupDomTests,
+  selectionUndoRedoTests,
+  multiselectVisualTests,
 } from './interactions'
 
 // Bidirectional
@@ -175,7 +235,7 @@ import {
   sourceMapTests,
   propertyPanelTests as bidirectionalPanelTests,
   complexSyncTests,
-  errorRecoveryTests,
+  errorRecoveryTests as bidirectionalErrorRecoveryTests,
 } from './bidirectional'
 
 // Undo/Redo
@@ -200,6 +260,16 @@ import {
   componentCompletionTests,
 } from './autocomplete'
 
+// Indentation (indent guides, smart paste, block indent)
+import {
+  allIndentationTests,
+  indentGuidesTests,
+  smartPasteTests,
+  blockIndentTests,
+  tabIndentTests,
+  indentationEdgeCases,
+} from './editor/indentation.test'
+
 // Property Panel
 import {
   allPropertyPanelTests,
@@ -220,6 +290,22 @@ import {
   complexPropertyTests as comprehensiveComplexPropertyTests,
   colorPickerTests,
   iconPickerTests,
+  // Events tests
+  allEventsTests,
+  addEventTests,
+  existingEventTests,
+  editEventTests,
+  deleteEventTests,
+  eventIntegrationTests,
+  // Error Handling Tests (B2.2)
+  allPanelErrorTests,
+  invalidColorTests as panelInvalidColorTests,
+  invalidSizeTests as panelInvalidSizeTests,
+  invalidTokenReferenceTests as panelInvalidTokenTests,
+  spacingErrorTests as panelSpacingErrorTests,
+  borderErrorTests as panelBorderErrorTests,
+  typographyErrorTests as panelTypographyErrorTests,
+  panelEdgeCaseTests,
 } from './property-panel'
 
 // Drag & Drop
@@ -405,6 +491,14 @@ import {
   explicitAppTests,
   codeIntegrityTests,
   preludeNestedTests,
+  // Error Handling Tests (B2.1)
+  allCompilerErrorTests,
+  invalidPropertyTests,
+  undefinedComponentTests,
+  invalidTokenTests,
+  syntaxErrorTests,
+  compilerErrorRecoveryTests,
+  edgeCaseErrorTests,
 } from './compiler-verification'
 
 // Data Binding
@@ -445,18 +539,6 @@ import {
   componentStateTests,
   complexComponentTests,
 } from './component-tests'
-
-// Tables
-import {
-  allTableTests,
-  staticTableTests,
-  dataBoundTableTests,
-  tableLayoutTests,
-  tableStylingTests,
-  tableActionTests,
-  tableFilterTests,
-  complexTableTests,
-} from './table-tests'
 
 // Events
 import {
@@ -505,6 +587,7 @@ import {
   playModeResetTests,
   playModeDeviceTests,
   playModeIntegrationTests,
+  playModeInputTests,
   quickPlayModeTests,
 } from './playmode'
 
@@ -687,6 +770,7 @@ export {
   switchTests,
   sliderTests,
   selectTests,
+  pureSelectTests,
   radioGroupTests,
   dialogTests,
   tooltipTests,
@@ -705,7 +789,7 @@ export {
   focusTests,
   inputTests,
   keyboardTests,
-  selectionTests,
+  // selectionTests is already exported from categories
   dragDropTests,
   interactionCombinedTests,
   allLayoutShortcutTests,
@@ -749,7 +833,7 @@ export {
   sourceMapTests,
   bidirectionalPanelTests as propertyPanelTests,
   complexSyncTests,
-  errorRecoveryTests,
+  bidirectionalErrorRecoveryTests,
 }
 
 // Undo/Redo
@@ -772,6 +856,16 @@ export {
   tokenCompletionTests,
   stateCompletionTests,
   componentCompletionTests,
+}
+
+// Indentation
+export {
+  allIndentationTests,
+  indentGuidesTests,
+  smartPasteTests,
+  blockIndentTests,
+  tabIndentTests,
+  indentationEdgeCases,
 }
 
 // Comprehensive Drag Tests (unified from browser-test-api.ts)
@@ -976,6 +1070,14 @@ export {
   explicitAppTests,
   codeIntegrityTests,
   preludeNestedTests,
+  // Error Handling Tests (B2.1)
+  allCompilerErrorTests,
+  invalidPropertyTests,
+  undefinedComponentTests,
+  invalidTokenTests,
+  syntaxErrorTests,
+  compilerErrorRecoveryTests,
+  edgeCaseErrorTests,
 }
 
 // Data Binding Tests
@@ -1015,18 +1117,6 @@ export {
   multiLevelInheritanceTests,
   componentStateTests,
   complexComponentTests,
-}
-
-// Table Tests
-export {
-  allTableTests,
-  staticTableTests,
-  dataBoundTableTests,
-  tableLayoutTests,
-  tableStylingTests,
-  tableActionTests,
-  tableFilterTests,
-  complexTableTests,
 }
 
 // Event Tests
@@ -1076,6 +1166,7 @@ export {
   playModeResetTests,
   playModeDeviceTests,
   playModeIntegrationTests,
+  playModeInputTests,
   quickPlayModeTests,
 }
 
@@ -1189,6 +1280,18 @@ export {
   quickIntegrationTests,
 }
 
+// E2E Tests (comprehensive app building simulations)
+export {
+  allE2ETests,
+  uxAgencyAppTests,
+  uxAgencyDesignSystemTests,
+  uxAgencyLayoutTests,
+  uxAgencyFeatureTests,
+  uxAgencyProjectsTests,
+  uxAgencyIntegrationTests,
+  uxAgencyInteractionTests,
+}
+
 // =============================================================================
 // Combined Exports
 // =============================================================================
@@ -1201,6 +1304,7 @@ export const allTests: TestCase[] = [
   ...allLayoutTests,
   ...allStylingTests,
   ...allZagTests,
+  ...pureSelectTests,
   ...allInteractionTests,
   ...allLayoutShortcutTests,
   ...allResizeHandleDblClickTests,
@@ -1216,6 +1320,7 @@ export const allTests: TestCase[] = [
   ...allBidirectionalTests,
   ...allUndoRedoTests,
   ...allAutocompleteTests,
+  ...allIndentationTests,
   ...allComprehensiveDragTests,
   ...allStackedDragTests,
   ...allFlexReorderTests,
@@ -1238,7 +1343,6 @@ export const allTests: TestCase[] = [
   ...allDataBindingTests,
   ...allActionTests,
   ...allComponentTests,
-  ...allTableTests,
   ...allEventTests,
   ...allResponsiveTests,
   ...allSyncTests,
@@ -1293,6 +1397,13 @@ export const testCounts: Record<string, number> = {
   'layout.grid': gridTests.length,
   'layout.nesting': nestingTests.length,
   'layout.complex': complexLayoutTests.length,
+  // Extended Layout (B3.3)
+  'layout.extended': allExtendedLayoutTests.length,
+  'layout.extended.minMaxWidth': minMaxWidthTests.length,
+  'layout.extended.minMaxHeight': minMaxHeightTests.length,
+  'layout.extended.gridPosition': gridPositionTests.length,
+  'layout.extended.rowHeight': rowHeightTests.length,
+  'layout.extended.gapXY': gapXYTests.length,
   layoutShortcuts: allLayoutShortcutTests.length,
   layoutVerification: allLayoutVerificationTests.length,
   'layoutVerification.direction': directionVerificationTests.length,
@@ -1311,6 +1422,14 @@ export const testCounts: Record<string, number> = {
   'styling.effects': effectTests.length,
   'styling.visibility': visibilityTests.length,
   'styling.combined': stylingCombinedTests.length,
+  // Extended Styling (B3.2)
+  'styling.extended': allExtendedStylingTests.length,
+  'styling.extended.rgba': rgbaColorTests.length,
+  'styling.extended.hexAlpha': hexAlphaTests.length,
+  'styling.extended.perSidePadding': perSidePaddingTests.length,
+  'styling.extended.perSideMargin': perSideMarginTests.length,
+  'styling.extended.perSideBorder': perSideBorderTests.length,
+  'styling.extended.shadowValidation': shadowValidationTests.length,
 
   // === Zag Components ===
   zag: allZagTests.length,
@@ -1325,6 +1444,7 @@ export const testCounts: Record<string, number> = {
   'zag.datePicker': datePickerTests.length,
   'zag.sidenav': sidenavTests.length,
   'zag.inLayout': zagInLayoutTests.length,
+  'zag.pureSelect': pureSelectTests.length,
 
   // === Interactions ===
   interactions: allInteractionTests.length,
@@ -1416,6 +1536,13 @@ export const testCounts: Record<string, number> = {
   'snapping.gridFallback': gridSnappingFallbackTests.length,
   'snapping.tokenPriority': tokenPriorityTests.length,
 
+  // === Validation Tests (B3.1) ===
+  validation: allValidationTests.length,
+  'validation.spreadCss': spreadCssTests.length,
+  'validation.ungroupDom': ungroupDomTests.length,
+  'validation.selectionUndoRedo': selectionUndoRedoTests.length,
+  'validation.multiselectVisual': multiselectVisualTests.length,
+
   // === Bidirectional ===
   bidirectional: allBidirectionalTests.length,
   'bidirectional.codeToPreview': codeToPreviewTests.length,
@@ -1423,7 +1550,7 @@ export const testCounts: Record<string, number> = {
   'bidirectional.sourceMap': sourceMapTests.length,
   'bidirectional.propertyPanel': bidirectionalPanelTests.length,
   'bidirectional.complexSync': complexSyncTests.length,
-  'bidirectional.errorRecovery': errorRecoveryTests.length,
+  'bidirectional.errorRecovery': bidirectionalErrorRecoveryTests.length,
 
   // === Undo/Redo ===
   undoRedo: allUndoRedoTests.length,
@@ -1442,6 +1569,14 @@ export const testCounts: Record<string, number> = {
   'autocomplete.tokens': tokenCompletionTests.length,
   'autocomplete.states': stateCompletionTests.length,
   'autocomplete.components': componentCompletionTests.length,
+
+  // === Indentation ===
+  indentation: allIndentationTests.length,
+  'indentation.guides': indentGuidesTests.length,
+  'indentation.smartPaste': smartPasteTests.length,
+  'indentation.blockIndent': blockIndentTests.length,
+  'indentation.tabIndent': tabIndentTests.length,
+  'indentation.edgeCases': indentationEdgeCases.length,
 
   // === Drag & Drop ===
   comprehensiveDrag: allComprehensiveDragTests.length,
@@ -1498,6 +1633,21 @@ export const testCounts: Record<string, number> = {
   'propertyPanel.tokenInteraction': tokenInteractionTests.length,
   'propertyPanel.projectToken': projectTokenTests.length,
   'propertyPanel.radiusChange': radiusChangeTests.length,
+  'propertyPanel.events': allEventsTests.length,
+  'propertyPanel.events.add': addEventTests.length,
+  'propertyPanel.events.existing': existingEventTests.length,
+  'propertyPanel.events.edit': editEventTests.length,
+  'propertyPanel.events.delete': deleteEventTests.length,
+  'propertyPanel.events.integration': eventIntegrationTests.length,
+  // Error Handling Tests (B2.2)
+  'propertyPanel.errors': allPanelErrorTests.length,
+  'propertyPanel.errors.colors': panelInvalidColorTests.length,
+  'propertyPanel.errors.sizes': panelInvalidSizeTests.length,
+  'propertyPanel.errors.tokens': panelInvalidTokenTests.length,
+  'propertyPanel.errors.spacing': panelSpacingErrorTests.length,
+  'propertyPanel.errors.border': panelBorderErrorTests.length,
+  'propertyPanel.errors.typography': panelTypographyErrorTests.length,
+  'propertyPanel.errors.edgeCases': panelEdgeCaseTests.length,
   comprehensiveProperty: allComprehensivePropertyTests.length,
   'comprehensiveProperty.sizing': sizingPropertyTests.length,
   'comprehensiveProperty.spacing': spacingPropertyTests.length,
@@ -1626,16 +1776,6 @@ export const testCounts: Record<string, number> = {
   'components.state': componentStateTests.length,
   'components.complex': complexComponentTests.length,
 
-  // === Tables ===
-  tables: allTableTests.length,
-  'tables.static': staticTableTests.length,
-  'tables.dataBound': dataBoundTableTests.length,
-  'tables.layout': tableLayoutTests.length,
-  'tables.styling': tableStylingTests.length,
-  'tables.actions': tableActionTests.length,
-  'tables.filter': tableFilterTests.length,
-  'tables.complex': complexTableTests.length,
-
   // === Events ===
   events: allEventTests.length,
   'events.click': clickEventTests.length,
@@ -1706,6 +1846,14 @@ export const testCounts: Record<string, number> = {
   'compilerVerification.inlineSyntax': inlineSyntaxTests.length,
   'compilerVerification.primitives': compilerPrimitivesTests.length,
   'compilerVerification.edgeCases': compilerEdgeCaseTests.length,
+  // Error Handling Tests (B2.1)
+  'compilerVerification.errors': allCompilerErrorTests.length,
+  'compilerVerification.errors.invalidProperty': invalidPropertyTests.length,
+  'compilerVerification.errors.undefinedComponent': undefinedComponentTests.length,
+  'compilerVerification.errors.invalidToken': invalidTokenTests.length,
+  'compilerVerification.errors.syntax': syntaxErrorTests.length,
+  'compilerVerification.errors.recovery': compilerErrorRecoveryTests.length,
+  'compilerVerification.errors.edgeCases': edgeCaseErrorTests.length,
 
   // === UI Builder ===
   uiBuilder: allUIBuilderTests.length,
@@ -1719,6 +1867,7 @@ export const testCounts: Record<string, number> = {
   'playMode.reset': playModeResetTests.length,
   'playMode.device': playModeDeviceTests.length,
   'playMode.integration': playModeIntegrationTests.length,
+  'playMode.input': playModeInputTests.length,
   'playMode.quick': quickPlayModeTests.length,
 
   // === Test System (meta) ===
@@ -1858,6 +2007,13 @@ export type TestCategory =
   | 'layout.grid'
   | 'layout.nesting'
   | 'layout.complex'
+  // Extended Layout (B3.3)
+  | 'layout.extended'
+  | 'layout.extended.minMaxWidth'
+  | 'layout.extended.minMaxHeight'
+  | 'layout.extended.gridPosition'
+  | 'layout.extended.rowHeight'
+  | 'layout.extended.gapXY'
   | 'layoutShortcuts'
   | 'layoutVerification'
   | 'layoutVerification.direction'
@@ -1876,6 +2032,14 @@ export type TestCategory =
   | 'styling.effects'
   | 'styling.visibility'
   | 'styling.combined'
+  // Extended Styling (B3.2)
+  | 'styling.extended'
+  | 'styling.extended.rgba'
+  | 'styling.extended.hexAlpha'
+  | 'styling.extended.perSidePadding'
+  | 'styling.extended.perSideMargin'
+  | 'styling.extended.perSideBorder'
+  | 'styling.extended.shadowValidation'
 
   // === Zag Components ===
   | 'zag'
@@ -1928,6 +2092,13 @@ export type TestCategory =
   | 'paddingHandlers.drag'
   | 'paddingHandlers.modeSelection'
   | 'tokenExtract'
+
+  // === Validation Tests (B3.1) ===
+  | 'validation'
+  | 'validation.spreadCss'
+  | 'validation.ungroupDom'
+  | 'validation.selectionUndoRedo'
+  | 'validation.multiselectVisual'
 
   // === Bidirectional ===
   | 'bidirectional'
@@ -2006,6 +2177,21 @@ export type TestCategory =
   | 'propertyPanel.tokenInteraction'
   | 'propertyPanel.projectToken'
   | 'propertyPanel.radiusChange'
+  | 'propertyPanel.events'
+  | 'propertyPanel.events.add'
+  | 'propertyPanel.events.existing'
+  | 'propertyPanel.events.edit'
+  | 'propertyPanel.events.delete'
+  | 'propertyPanel.events.integration'
+  // Error Handling Tests (B2.2)
+  | 'propertyPanel.errors'
+  | 'propertyPanel.errors.colors'
+  | 'propertyPanel.errors.sizes'
+  | 'propertyPanel.errors.tokens'
+  | 'propertyPanel.errors.spacing'
+  | 'propertyPanel.errors.border'
+  | 'propertyPanel.errors.typography'
+  | 'propertyPanel.errors.edgeCases'
   | 'colorPicker'
   | 'iconPicker'
 
@@ -2203,6 +2389,14 @@ export type TestCategory =
   | 'compilerVerification.inlineSyntax'
   | 'compilerVerification.primitives'
   | 'compilerVerification.edgeCases'
+  // Error Handling Tests (B2.1)
+  | 'compilerVerification.errors'
+  | 'compilerVerification.errors.invalidProperty'
+  | 'compilerVerification.errors.undefinedComponent'
+  | 'compilerVerification.errors.invalidToken'
+  | 'compilerVerification.errors.syntax'
+  | 'compilerVerification.errors.recovery'
+  | 'compilerVerification.errors.edgeCases'
 
   // === UI Builder ===
   | 'uiBuilder'
@@ -2216,6 +2410,7 @@ export type TestCategory =
   | 'playMode.reset'
   | 'playMode.device'
   | 'playMode.integration'
+  | 'playMode.input'
   | 'playMode.quick'
 
   // === Test System (meta) ===
@@ -2327,6 +2522,13 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'layout.grid': gridTests,
     'layout.nesting': nestingTests,
     'layout.complex': complexLayoutTests,
+    // Extended Layout (B3.3)
+    'layout.extended': allExtendedLayoutTests,
+    'layout.extended.minMaxWidth': minMaxWidthTests,
+    'layout.extended.minMaxHeight': minMaxHeightTests,
+    'layout.extended.gridPosition': gridPositionTests,
+    'layout.extended.rowHeight': rowHeightTests,
+    'layout.extended.gapXY': gapXYTests,
     layoutShortcuts: allLayoutShortcutTests,
     layoutVerification: allLayoutVerificationTests,
     'layoutVerification.direction': directionVerificationTests,
@@ -2345,6 +2547,14 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'styling.effects': effectTests,
     'styling.visibility': visibilityTests,
     'styling.combined': stylingCombinedTests,
+    // Extended Styling (B3.2)
+    'styling.extended': allExtendedStylingTests,
+    'styling.extended.rgba': rgbaColorTests,
+    'styling.extended.hexAlpha': hexAlphaTests,
+    'styling.extended.perSidePadding': perSidePaddingTests,
+    'styling.extended.perSideMargin': perSideMarginTests,
+    'styling.extended.perSideBorder': perSideBorderTests,
+    'styling.extended.shadowValidation': shadowValidationTests,
 
     // === Zag Components ===
     zag: allZagTests,
@@ -2359,6 +2569,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'zag.datePicker': datePickerTests,
     'zag.sidenav': sidenavTests,
     'zag.inLayout': zagInLayoutTests,
+    'zag.pureSelect': pureSelectTests,
 
     // === Interactions ===
     interactions: allInteractionTests,
@@ -2451,6 +2662,13 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'snapping.gridFallback': gridSnappingFallbackTests,
     'snapping.tokenPriority': tokenPriorityTests,
 
+    // === Validation Tests (B3.1) ===
+    validation: allValidationTests,
+    'validation.spreadCss': spreadCssTests,
+    'validation.ungroupDom': ungroupDomTests,
+    'validation.selectionUndoRedo': selectionUndoRedoTests,
+    'validation.multiselectVisual': multiselectVisualTests,
+
     // === Bidirectional ===
     bidirectional: allBidirectionalTests,
     'bidirectional.codeToPreview': codeToPreviewTests,
@@ -2458,7 +2676,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'bidirectional.sourceMap': sourceMapTests,
     'bidirectional.propertyPanel': bidirectionalPanelTests,
     'bidirectional.complexSync': complexSyncTests,
-    'bidirectional.errorRecovery': errorRecoveryTests,
+    'bidirectional.errorRecovery': bidirectionalErrorRecoveryTests,
 
     // === Undo/Redo ===
     undoRedo: allUndoRedoTests,
@@ -2477,6 +2695,14 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'autocomplete.tokens': tokenCompletionTests,
     'autocomplete.states': stateCompletionTests,
     'autocomplete.components': componentCompletionTests,
+
+    // === Indentation ===
+    indentation: allIndentationTests,
+    'indentation.guides': indentGuidesTests,
+    'indentation.smartPaste': smartPasteTests,
+    'indentation.blockIndent': blockIndentTests,
+    'indentation.tabIndent': tabIndentTests,
+    'indentation.edgeCases': indentationEdgeCases,
 
     // === Drag & Drop ===
     comprehensiveDrag: allComprehensiveDragTests,
@@ -2533,6 +2759,21 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'propertyPanel.tokenInteraction': tokenInteractionTests,
     'propertyPanel.projectToken': projectTokenTests,
     'propertyPanel.radiusChange': radiusChangeTests,
+    'propertyPanel.events': allEventsTests,
+    'propertyPanel.events.add': addEventTests,
+    'propertyPanel.events.existing': existingEventTests,
+    'propertyPanel.events.edit': editEventTests,
+    'propertyPanel.events.delete': deleteEventTests,
+    'propertyPanel.events.integration': eventIntegrationTests,
+    // Error Handling Tests (B2.2)
+    'propertyPanel.errors': allPanelErrorTests,
+    'propertyPanel.errors.colors': panelInvalidColorTests,
+    'propertyPanel.errors.sizes': panelInvalidSizeTests,
+    'propertyPanel.errors.tokens': panelInvalidTokenTests,
+    'propertyPanel.errors.spacing': panelSpacingErrorTests,
+    'propertyPanel.errors.border': panelBorderErrorTests,
+    'propertyPanel.errors.typography': panelTypographyErrorTests,
+    'propertyPanel.errors.edgeCases': panelEdgeCaseTests,
     colorPicker: colorPickerTests,
     iconPicker: iconPickerTests,
     comprehensiveProperty: allComprehensivePropertyTests,
@@ -2661,16 +2902,6 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'components.state': componentStateTests,
     'components.complex': complexComponentTests,
 
-    // === Tables ===
-    tables: allTableTests,
-    'tables.static': staticTableTests,
-    'tables.dataBound': dataBoundTableTests,
-    'tables.layout': tableLayoutTests,
-    'tables.styling': tableStylingTests,
-    'tables.actions': tableActionTests,
-    'tables.filter': tableFilterTests,
-    'tables.complex': complexTableTests,
-
     // === Events ===
     events: allEventTests,
     'events.click': clickEventTests,
@@ -2741,6 +2972,14 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'compilerVerification.inlineSyntax': inlineSyntaxTests,
     'compilerVerification.primitives': compilerPrimitivesTests,
     'compilerVerification.edgeCases': compilerEdgeCaseTests,
+    // Error Handling Tests (B2.1)
+    'compilerVerification.errors': allCompilerErrorTests,
+    'compilerVerification.errors.invalidProperty': invalidPropertyTests,
+    'compilerVerification.errors.undefinedComponent': undefinedComponentTests,
+    'compilerVerification.errors.invalidToken': invalidTokenTests,
+    'compilerVerification.errors.syntax': syntaxErrorTests,
+    'compilerVerification.errors.recovery': compilerErrorRecoveryTests,
+    'compilerVerification.errors.edgeCases': edgeCaseErrorTests,
 
     // === UI Builder ===
     uiBuilder: allUIBuilderTests,
@@ -2754,6 +2993,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'playMode.reset': playModeResetTests,
     'playMode.device': playModeDeviceTests,
     'playMode.integration': playModeIntegrationTests,
+    'playMode.input': playModeInputTests,
     'playMode.quick': quickPlayModeTests,
 
     // === Test System (meta) ===
@@ -2861,6 +3101,13 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'layout.grid': 'Layout Grid',
     'layout.nesting': 'Layout Nesting',
     'layout.complex': 'Complex Layout',
+    // Extended Layout (B3.3)
+    'layout.extended': 'Extended Layout',
+    'layout.extended.minMaxWidth': 'Min/Max Width',
+    'layout.extended.minMaxHeight': 'Min/Max Height',
+    'layout.extended.gridPosition': 'Grid x/y Position',
+    'layout.extended.rowHeight': 'Row Height',
+    'layout.extended.gapXY': 'Gap-X / Gap-Y',
     layoutShortcuts: 'Layout Shortcuts (H, V, F)',
     layoutVerification: 'Layout Verification',
     'layoutVerification.direction': 'Layout Verify: Direction',
@@ -2879,6 +3126,14 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'styling.effects': 'Effects (shadow, blur)',
     'styling.visibility': 'Visibility',
     'styling.combined': 'Combined Styling',
+    // Extended Styling (B3.2)
+    'styling.extended': 'Extended Styling',
+    'styling.extended.rgba': 'RGBA Colors',
+    'styling.extended.hexAlpha': 'Hex with Alpha',
+    'styling.extended.perSidePadding': 'Per-Side Padding',
+    'styling.extended.perSideMargin': 'Per-Side Margin',
+    'styling.extended.perSideBorder': 'Per-Side Border',
+    'styling.extended.shadowValidation': 'Shadow Validation',
 
     // === Zag Components ===
     zag: 'Zag Components',
@@ -2893,6 +3148,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'zag.datePicker': 'Zag: DatePicker',
     'zag.sidenav': 'Zag: Sidenav',
     'zag.inLayout': 'Zag: In Layout',
+    'zag.pureSelect': 'Pure Mirror Select',
 
     // === Interactions ===
     interactions: 'Interactions',
@@ -2931,6 +3187,13 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'paddingHandlers.drag': 'Padding: Drag',
     'paddingHandlers.modeSelection': 'Padding: Mode Selection',
     tokenExtract: 'Token Extract',
+
+    // === Validation Tests (B3.1) ===
+    validation: 'Validation Tests',
+    'validation.spreadCss': 'Spread: CSS Validation',
+    'validation.ungroupDom': 'Ungroup: DOM Validation',
+    'validation.selectionUndoRedo': 'Selection: Undo/Redo',
+    'validation.multiselectVisual': 'Multiselect: Visual',
 
     // === Bidirectional ===
     bidirectional: 'Bidirectional Editing',
@@ -2996,6 +3259,20 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'propertyPanel.tokenInteraction': 'Token Interaction',
     'propertyPanel.projectToken': 'Project Tokens',
     'propertyPanel.radiusChange': 'Radius Changes',
+    'propertyPanel.events': 'Property Panel Events',
+    'propertyPanel.events.add': 'PP Events: Add Event',
+    'propertyPanel.events.existing': 'PP Events: Existing Events',
+    'propertyPanel.events.edit': 'PP Events: Edit Event',
+    'propertyPanel.events.delete': 'PP Events: Delete Event',
+    'propertyPanel.events.integration': 'PP Events: Integration',
+    'propertyPanel.errors': 'Property Panel: Errors',
+    'propertyPanel.errors.colors': 'PP Errors: Invalid Colors',
+    'propertyPanel.errors.sizes': 'PP Errors: Invalid Sizes',
+    'propertyPanel.errors.tokens': 'PP Errors: Invalid Tokens',
+    'propertyPanel.errors.spacing': 'PP Errors: Spacing',
+    'propertyPanel.errors.border': 'PP Errors: Border',
+    'propertyPanel.errors.typography': 'PP Errors: Typography',
+    'propertyPanel.errors.edgeCases': 'PP Errors: Edge Cases',
     colorPicker: 'Color Picker',
     iconPicker: 'Icon Picker',
 
@@ -3193,6 +3470,14 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'compilerVerification.inlineSyntax': 'Compiler: Inline Syntax',
     'compilerVerification.primitives': 'Compiler: Primitives',
     'compilerVerification.edgeCases': 'Compiler: Edge Cases',
+    // Error Handling Tests (B2.1)
+    'compilerVerification.errors': 'Compiler: Error Handling',
+    'compilerVerification.errors.invalidProperty': 'Compiler Errors: Invalid Properties',
+    'compilerVerification.errors.undefinedComponent': 'Compiler Errors: Undefined Components',
+    'compilerVerification.errors.invalidToken': 'Compiler Errors: Invalid Tokens',
+    'compilerVerification.errors.syntax': 'Compiler Errors: Syntax Errors',
+    'compilerVerification.errors.recovery': 'Compiler Errors: Recovery',
+    'compilerVerification.errors.edgeCases': 'Compiler Errors: Edge Cases',
 
     // === UI Builder ===
     uiBuilder: 'UI Builder',
@@ -3206,6 +3491,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'playMode.reset': 'Play: Reset',
     'playMode.device': 'Play: Device',
     'playMode.integration': 'Play: Integration',
+    'playMode.input': 'Play: Input',
     'playMode.quick': 'Quick Play Mode Tests',
 
     // === Test System (meta) ===

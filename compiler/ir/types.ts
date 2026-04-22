@@ -86,9 +86,14 @@ export interface IRNode {
   isDefinition?: boolean // True if this is a component definition (not instance)
   layoutType?: LayoutType // Explicit layout type (for drop strategy detection)
   valueBinding?: string // Token path for two-way binding (e.g., "user.name")
+  mask?: string // Input mask pattern (e.g., "###.####.####.##")
   keyboardNav?: boolean // Enable keyboard navigation for form containers
+  loopFocus?: boolean // Enable focus looping for highlight navigation (wrap at start/end)
+  typeahead?: boolean // Enable typeahead for list navigation (typing jumps to matching item)
+  triggerText?: boolean // Update trigger text when selection changes
   _sizing?: SizingFlags // Internal: tracks how width/height were sized (not CSS marker)
   needsContainer?: boolean // True if element uses size-states (needs container-type: inline-size)
+  device?: string // Device size preset (mobile, tablet, desktop)
 }
 
 export interface IRProperty {
@@ -516,153 +521,6 @@ export type InferredDataType =
   | 'relation'
   | 'array'
   | 'unknown'
-
-/**
- * IR representation of a table column
- *
- * Contains all data needed to render a column header and cells.
- */
-export interface IRTableColumn {
-  /** Field name from data schema */
-  field: string
-  /** Display label (humanized field name or override) */
-  label: string
-  /** Column width in pixels */
-  width?: number
-  /** Value prefix (e.g., "$" for currency) */
-  prefix?: string
-  /** Value suffix (e.g., "h" for hours) */
-  suffix?: string
-  /** Alignment (derived from type or override) */
-  align?: 'left' | 'right' | 'center'
-  /** Inferred data type for default rendering */
-  inferredType: InferredDataType
-  /** Enable sorting for this column */
-  sortable?: boolean
-  /** Initial sort direction is descending */
-  sortDesc?: boolean
-  /** Enable filtering for this column */
-  filterable?: boolean
-  /** Hide this column */
-  hidden?: boolean
-  /** Aggregation function for footer */
-  aggregation?: 'sum' | 'avg' | 'count'
-  /** Custom cell template (when Column has Cell: slot) */
-  customCell?: IRNode[]
-  /** Cell styles (from Column properties) */
-  cellStyles?: IRStyle[]
-  /** Header cell styles (column-specific header styling) */
-  headerCellStyles?: IRStyle[]
-  /** Target collection for relation types */
-  relationTo?: string
-}
-
-/**
- * IR node for Table component (data-driven or manual)
- *
- * Extends IRNode with table-specific data for code generation.
- */
-export interface IRTable extends IRNode {
-  /** Indicates this is a Table component */
-  isTableComponent: true
-  /** Data source reference (e.g., "$tasks" → "tasks") - optional for manual tables */
-  dataSource?: string
-  /** Filter expression (JavaScript) from where clause */
-  filter?: string
-  /** Field to sort by */
-  orderBy?: string
-  /** Sort in descending order */
-  orderDesc?: boolean
-  /** Field to group by */
-  groupBy?: string
-  /** Column definitions (inferred + overrides) */
-  columns: IRTableColumn[]
-  /** Selection mode: single click, multi with checkbox */
-  selectionMode?: 'single' | 'multi'
-  /** Number of rows per page (pagination) */
-  pageSize?: number
-  /** Enable infinite scroll */
-  infinite?: boolean
-  /** Enable sticky header */
-  stickyHeader?: boolean
-  /** Custom header slot */
-  headerSlot?: IRNode[]
-  /** Header slot styles (from Header: properties) */
-  headerSlotStyles?: IRStyle[]
-  /** Static header row (from Header: Row "A", "B", "C" syntax) */
-  headerStaticRow?: IRTableStaticRow
-  /** Custom row slot */
-  rowSlot?: IRNode[]
-  /** Row slot styles (from Row: properties) */
-  rowSlotStyles?: IRStyle[]
-  /** Odd row styles for zebra striping */
-  rowOddStyles?: IRStyle[]
-  /** Even row styles for zebra striping */
-  rowEvenStyles?: IRStyle[]
-  /** Custom footer slot */
-  footerSlot?: IRNode[]
-  /** Footer slot styles (from Footer: properties) */
-  footerSlotStyles?: IRStyle[]
-  /** Static footer row (from Footer: Row "A", "B", "C" syntax) */
-  footerStaticRow?: IRTableStaticRow
-  /** Custom group header slot */
-  groupSlot?: IRNode[]
-  /** Group slot styles (from Group: properties) */
-  groupSlotStyles?: IRStyle[]
-  /** Static rows for manual tables (when no dataSource) */
-  staticRows?: IRTableStaticRow[]
-  /** Custom sort icon slot (applies to all sortable columns) */
-  sortIconSlot?: IRNode[]
-  /** Custom ascending sort icon slot */
-  sortAscSlot?: IRNode[]
-  /** Custom descending sort icon slot */
-  sortDescSlot?: IRNode[]
-  /** Custom paginator slot */
-  paginatorSlot?: IRNode[]
-  /** Paginator slot styles */
-  paginatorSlotStyles?: IRStyle[]
-  /** Custom previous page button slot */
-  paginatorPrevSlot?: IRNode[]
-  /** Previous button slot styles */
-  paginatorPrevSlotStyles?: IRStyle[]
-  /** Custom next page button slot */
-  paginatorNextSlot?: IRNode[]
-  /** Next button slot styles */
-  paginatorNextSlotStyles?: IRStyle[]
-  /** Custom page info slot */
-  paginatorPageInfoSlot?: IRNode[]
-  /** Page info slot styles */
-  paginatorPageInfoSlotStyles?: IRStyle[]
-}
-
-/**
- * Static row for manual tables
- */
-export interface IRTableStaticRow {
-  /** Cell contents */
-  cells: IRTableStaticCell[]
-  /** Row styles */
-  styles?: IRStyle[]
-}
-
-/**
- * Static cell for manual tables
- */
-export interface IRTableStaticCell {
-  /** Simple text content */
-  text?: string
-  /** Complex content (child nodes) */
-  children?: IRNode[]
-  /** Cell styles */
-  styles?: IRStyle[]
-}
-
-/**
- * Type guard to check if an IRNode is a Table component
- */
-export function isIRTable(node: IRNode): node is IRTable {
-  return (node as IRTable).isTableComponent === true
-}
 
 // ============================================================================
 // Chart Component IR Types

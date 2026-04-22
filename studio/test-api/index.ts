@@ -51,6 +51,14 @@ import {
 import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
 import { createStudioAPI } from './studio-api'
 import { createSnappingAPI, setupSnappingAPI, type SnappingAPI } from './snapping-api'
+import {
+  createCodeMirrorTestAPI,
+  createDraftModeTestAPI,
+  createEventTestAPI,
+  type CodeMirrorTestAPI,
+  type DraftModeTestAPI,
+  type EventTestAPI,
+} from './codemirror-api'
 import type { TestCase, TestSuiteResult, ElementInfo } from './types'
 
 const log = createLogger('TestAPI')
@@ -438,6 +446,87 @@ export interface MirrorTestAPI {
   // Snapping Debug API
   /** Snapping service debug API */
   snapping: SnappingAPI
+
+  // CodeMirror internals (for testing editor integration)
+  /** CodeMirror test API for direct editor access */
+  codemirror: {
+    /** Check if extension is registered */
+    hasExtension: (name: string) => boolean
+    /** Get all extension names */
+    getExtensionNames: () => string[]
+    /** Execute key binding (e.g., 'Mod-Enter') */
+    executeKeyBinding: (key: string) => boolean
+    /** Type text at cursor */
+    typeText: (text: string) => void
+    /** Set cursor position */
+    setCursor: (line: number, column?: number) => void
+    /** Get cursor position */
+    getCursor: () => { line: number; column: number; offset: number }
+    /** Get content */
+    getContent: () => string
+    /** Set content */
+    setContent: (content: string) => void
+    /** Get line */
+    getLine: (lineNumber: number) => string | null
+    /** Focus editor */
+    focus: () => void
+    /** Has focus */
+    hasFocus: () => boolean
+  }
+
+  // Draft Mode API (AI-assist feature testing)
+  /** Draft mode test API */
+  draftMode: {
+    /** Check if extension is registered */
+    isExtensionRegistered: () => boolean
+    /** Check if keymap is registered */
+    isKeymapRegistered: () => boolean
+    /** Check if draft mode is active */
+    isActive: () => boolean
+    /** Get current state */
+    getState: () => {
+      active: boolean
+      startLine: number | null
+      endLine: number | null
+      prompt: string | null
+      indent: number
+      processing: boolean
+    }
+    /** Check if line is in draft */
+    isLineInDraft: (lineNumber: number) => boolean
+    /** Trigger submit (Cmd+Enter) */
+    triggerSubmit: () => Promise<boolean>
+    /** Trigger cancel (Escape) */
+    triggerCancel: () => boolean
+    /** Replace draft block */
+    replaceDraftBlock: (content: string) => boolean
+    /** Wait for submit event */
+    waitForSubmitEvent: (timeout?: number) => Promise<{
+      content: string
+      prompt: string | null
+      startLine: number
+      endLine: number | null
+    }>
+    /** Simulate full AI flow */
+    simulateAIGeneration: (generatedCode: string) => Promise<boolean>
+  }
+
+  // Event tracking API
+  /** Event test API for verifying event emission */
+  events: {
+    /** Wait for event */
+    waitFor: <T = unknown>(eventName: string, timeout?: number) => Promise<T>
+    /** Check if event was emitted */
+    wasEmitted: (eventName: string) => boolean
+    /** Get all emitted events */
+    getEmittedEvents: () => Array<{ name: string; payload: unknown; timestamp: number }>
+    /** Reset tracking */
+    reset: () => void
+    /** Start tracking */
+    startTracking: () => void
+    /** Stop tracking */
+    stopTracking: () => void
+  }
 }
 
 /**
@@ -794,6 +883,54 @@ function createMirrorTestAPI(): MirrorTestAPI {
 
     // Snapping Debug API
     snapping: createSnappingAPI(),
+
+    // CodeMirror Test API
+    codemirror: (() => {
+      const api = createCodeMirrorTestAPI()
+      return {
+        hasExtension: api.hasExtension.bind(api),
+        getExtensionNames: api.getExtensionNames.bind(api),
+        executeKeyBinding: api.executeKeyBinding.bind(api),
+        typeText: api.typeText.bind(api),
+        setCursor: api.setCursor.bind(api),
+        getCursor: api.getCursor.bind(api),
+        getContent: api.getContent.bind(api),
+        setContent: api.setContent.bind(api),
+        getLine: api.getLine.bind(api),
+        focus: api.focus.bind(api),
+        hasFocus: api.hasFocus.bind(api),
+      }
+    })(),
+
+    // Draft Mode Test API
+    draftMode: (() => {
+      const api = createDraftModeTestAPI()
+      return {
+        isExtensionRegistered: api.isExtensionRegistered.bind(api),
+        isKeymapRegistered: api.isKeymapRegistered.bind(api),
+        isActive: api.isActive.bind(api),
+        getState: api.getState.bind(api),
+        isLineInDraft: api.isLineInDraft.bind(api),
+        triggerSubmit: api.triggerSubmit.bind(api),
+        triggerCancel: api.triggerCancel.bind(api),
+        replaceDraftBlock: api.replaceDraftBlock.bind(api),
+        waitForSubmitEvent: api.waitForSubmitEvent.bind(api),
+        simulateAIGeneration: api.simulateAIGeneration.bind(api),
+      }
+    })(),
+
+    // Event Test API
+    events: (() => {
+      const api = createEventTestAPI()
+      return {
+        waitFor: api.waitFor.bind(api),
+        wasEmitted: api.wasEmitted.bind(api),
+        getEmittedEvents: api.getEmittedEvents.bind(api),
+        reset: api.reset.bind(api),
+        startTracking: api.startTracking.bind(api),
+        stopTracking: api.stopTracking.bind(api),
+      }
+    })(),
   }
 }
 
@@ -843,14 +980,29 @@ async function setupTestSuites(): Promise<void> {
     const suites = await import('./suites')
 
     const suitesAPI = {
-      // Test counts
+      // Test counts (legacy detailed counts)
       testCounts: suites.testCounts,
+
+      // Consolidated category counts (new)
+      categoryCounts: suites.getCategoryCounts(),
+
+      // List available categories
+      listCategories: () => suites.listCategories(),
 
       // Run all tests
       runAll: () => suites.runAllTests(),
 
-      // Run by category
-      runCategory: (category: string) => suites.runCategory(category as any),
+      // Run by category (supports both old and new category names)
+      runCategory: (category: string) => {
+        // Check if it's a new consolidated category
+        if (suites.categories && category in suites.categories) {
+          const cat = suites.categories[category as keyof typeof suites.categories]
+          const runner = new TestRunner({ verbose: true })
+          return runner.runSuite(`${category} Tests`, cat.tests)
+        }
+        // Fall back to legacy category handling
+        return suites.runCategory(category as any)
+      },
 
       // Run a single test by name
       runSingleTest: (testName: string) => suites.runSingleTest(testName),
@@ -861,13 +1013,34 @@ async function setupTestSuites(): Promise<void> {
       // Print summary
       printSummary: () => suites.printTestSummary(),
 
-      // Individual test arrays (for custom running)
+      // NEW: Consolidated categories (17 main categories)
+      categories: suites.categories,
+
+      // Individual test arrays (legacy - for backwards compatibility)
       tests: {
+        // NEW consolidated categories
+        core: suites.coreTests,
+        layout: suites.layoutCategoryTests,
+        styling: suites.stylingCategoryTests,
+        visuals: suites.visualsTests,
+        states: suites.statesTests,
+        components: suites.componentsTests,
+        drag: suites.dragTests,
+        handles: suites.handlesTests,
+        selection: suites.selectionTests,
+        propertyPanel: suites.propertyPanelCategoryTests,
+        editor: suites.editorTests,
+        data: suites.dataTests,
+        project: suites.projectCategoryTests,
+        compiler: suites.compilerCategoryTests,
+        ai: suites.aiTests,
+        tutorial: suites.tutorialCategoryTests,
+        stress: suites.stressAndIntegrationTests,
+
+        // LEGACY categories (backwards compatibility)
         primitives: suites.allPrimitivesTests,
-        layout: suites.allLayoutTests,
         layoutShortcuts: suites.allLayoutShortcutTests,
         layoutVerification: suites.allLayoutVerificationTests,
-        styling: suites.allStylingTests,
         zag: suites.allZagTests,
         interactions: suites.allInteractionTests,
         bidirectional: suites.allBidirectionalTests,
@@ -875,10 +1048,8 @@ async function setupTestSuites(): Promise<void> {
         autocomplete: suites.allAutocompleteTests,
         stackedDrag: suites.allStackedDragTests,
         flexReorder: suites.allFlexReorderTests,
-        propertyPanel: suites.allPropertyPanelTests,
         charts: suites.allChartTests,
         workflow: suites.allWorkflowTests,
-        stress: suites.allStressTests,
         playMode: suites.allPlayModeTests,
         all: suites.allTests,
       },
@@ -886,9 +1057,14 @@ async function setupTestSuites(): Promise<void> {
 
     ;(window as any).__mirrorTestSuites = suitesAPI
 
-    console.log(`📊 Test suites loaded: ${suites.testCounts.total} tests available`)
+    const categoryCount = suites.listCategories().length
+    console.log(
+      `📊 Test suites loaded: ${suites.testCounts.total} tests in ${categoryCount} categories`
+    )
   } catch (e) {
-    console.warn('Failed to load test suites:', e)
+    console.error('❌ Failed to load test suites:', e)
+    // Store error on window for debugging
+    ;(window as any).__suitesLoadError = e instanceof Error ? e.message : String(e)
   }
 }
 

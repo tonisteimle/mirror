@@ -25,131 +25,109 @@
       <p class="subtitle">Formular-Komponenten</p>
     </header>
 
-    <p class="intro">Interaktive Formular-Komponenten. Alle haben ein Default-Styling – du kannst sie direkt verwenden oder das Aussehen anpassen.</p>
+    <p class="intro">Formular-Komponenten sind die Grundbausteine für Benutzereingaben. Mirror bietet sie mit Default-Styling – du kannst sie direkt verwenden oder anpassen.</p>
 
 
     <!-- ============================================================ -->
-    <!-- TEXT INPUT -->
-    <!-- ============================================================ -->
-
     <section>
       <h2>Input</h2>
-      <p>Ein einzeiliges Textfeld – der Klassiker für Namen, E-Mail, Suche.</p>
+      <p>Das einzeilige Textfeld – der Klassiker für Namen, E-Mail-Adressen, Passwörter und Suchfelder. Mit <code>placeholder</code> gibst du einen Hilfstext, mit <code>type</code> definierst du den Eingabetyp:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 12, w 280
   Input placeholder "Name eingeben..."
   Input placeholder "E-Mail", type "email"
+  Input placeholder "Passwort", type "password"
   Input placeholder "Deaktiviert", disabled</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>placeholder</code> zeigt Hilfstext. <code>type</code> kann <code>"email"</code>, <code>"password"</code>, <code>"number"</code> sein. <code>disabled</code> deaktiviert das Feld.</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>placeholder</code> – zeigt Hilfstext, solange das Feld leer ist</li>
+        <li><code>type "email"</code> – aktiviert E-Mail-Validierung und mobile Tastatur</li>
+        <li><code>type "password"</code> – versteckt die Eingabe mit Punkten</li>
+        <li><code>disabled</code> – deaktiviert das Feld (keine Eingabe möglich)</li>
+      </ul>
+
+      <table class="ref-table">
+        <tr><th>Type</th><th>Verwendung</th></tr>
+        <tr><td><code>type "text"</code></td><td>Standard (default)</td></tr>
+        <tr><td><code>type "email"</code></td><td>E-Mail mit @-Validierung</td></tr>
+        <tr><td><code>type "password"</code></td><td>Versteckte Eingabe</td></tr>
+        <tr><td><code>type "number"</code></td><td>Nur Zahlen</td></tr>
+      </table>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Textarea</h2>
-      <p>Ein mehrzeiliges Textfeld – für längere Eingaben wie Kommentare oder Beschreibungen.</p>
+      <p>Für längere Texte – Kommentare, Beschreibungen, Nachrichten. Textarea wächst über mehrere Zeilen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Frame gap 12, w 280
-  Textarea placeholder "Deine Nachricht..."
-  Textarea placeholder "Mit Inhalt", value "Hallo Welt!\nZweite Zeile."</textarea>
+  Textarea placeholder "Deine Nachricht...", h 80
+  Textarea placeholder "Mit Inhalt", value "Zeile 1\nZeile 2", h 80</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Gleiche Props wie Input: <code>placeholder</code>, <code>value</code>, <code>disabled</code>, <code>readonly</code>.</p>
-    </section>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>h 80</code> – definiert die Höhe in Pixeln (wichtig bei Textarea)</li>
+        <li><code>value</code> – setzt einen Startwert</li>
+        <li><code>\n</code> – Zeilenumbruch im value</li>
+      </ul>
 
-
-    <!-- ============================================================ -->
-    <!-- FORM CONTROLS -->
-    <!-- ============================================================ -->
-
-    <section>
-      <h2>Checkbox</h2>
-      <p>Eine Checkbox mit Label – der Klassiker für Ja/Nein-Auswahlen.</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame gap 12
-  Checkbox "Newsletter abonnieren"
-  Checkbox "AGB akzeptieren", checked
-  Checkbox "Deaktiviert", disabled</textarea>
-        </div>
-        <div class="playground-preview"></div>
+      <div class="note">
+        <strong>Tipp:</strong> Textarea hat dieselben Properties wie Input: <code>placeholder</code>, <code>value</code>, <code>disabled</code>, <code>readonly</code>.
       </div>
-
-      <p><code>checked</code> setzt den Startzustand. <code>disabled</code> deaktiviert die Checkbox.</p>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Switch</h2>
-      <p>Ein Toggle-Switch für An/Aus-Zustände – visuell klarer als eine Checkbox.</p>
+      <h2>Checkbox &amp; Switch</h2>
+      <p>Zwei Wege für An/Aus-Auswahlen: <code>Checkbox</code> ist der klassische Haken, <code>Switch</code> der moderne Schieberegler. Beide funktionieren gleich:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame gap 12
-  Switch "Dark Mode"
-  Switch "Benachrichtigungen", checked
-  Switch "Premium", disabled</textarea>
+          <textarea>Frame gap 16
+  Frame gap 8
+    Checkbox "Newsletter abonnieren"
+    Checkbox "AGB akzeptieren", checked
+    Checkbox "Deaktiviert", disabled
+
+  Frame gap 8
+    Switch "Dark Mode"
+    Switch "Notifications", checked
+    Switch "Premium", disabled</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Gleiche Props wie Checkbox: <code>checked</code>, <code>disabled</code>.</p>
-    </section>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>Checkbox "Text"</code> – das Label erscheint neben dem Kästchen</li>
+        <li><code>checked</code> – startet im aktivierten Zustand</li>
+        <li><code>disabled</code> – deaktiviert (ausgegraut, nicht klickbar)</li>
+      </ul>
 
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>RadioGroup</h2>
-      <p>Eine Gruppe von Radio-Buttons – nur einer kann ausgewählt sein.</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>RadioGroup value "monthly"
-  RadioItem "Monatlich – €9/Monat", value "monthly"
-  RadioItem "Jährlich – €99/Jahr", value "yearly"
-  RadioItem "Lifetime – €299", value "lifetime"</textarea>
-        </div>
-        <div class="playground-preview"></div>
+      <div class="note">
+        <strong>Wann was?</strong> Checkbox für Mehrfachauswahlen oder Zustimmungen ("Ich akzeptiere..."). Switch für An/Aus-Einstellungen ("Dark Mode", "Notifications").
       </div>
-
-      <p><code>value</code> auf der RadioGroup bestimmt die Auswahl. Jedes <code>RadioItem</code> braucht einen eigenen <code>value</code>.</p>
     </section>
 
 
     <!-- ============================================================ -->
-    <section>
-      <h2>Slider</h2>
-      <p>Ein Schieberegler für numerische Werte in einem Bereich.</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame gap 16, w 240
-  Slider value 50, min 0, max 100
-  Slider value 75, min 0, max 100, step 25</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p><code>min</code> und <code>max</code> definieren den Bereich. <code>step</code> bestimmt die Schrittweite – mit <code>step 25</code> rastet der Slider bei 0, 25, 50, 75, 100 ein.</p>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <!-- SELECTION & MENUS -->
-    <!-- ============================================================ -->
-
     <section>
       <h2>Select</h2>
-      <p>Ein Dropdown zur Auswahl aus mehreren Optionen:</p>
+      <p>Ein Dropdown zur Auswahl aus mehreren Optionen. Anders als HTML-Selects ist dieses vollständig stylebar und tastaturgesteuert:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Select placeholder "Stadt wählen..."
+          <textarea>Frame gap 12
+  Select placeholder "Stadt wählen..."
     Option "Berlin"
     Option "Hamburg"
     Option "München"
@@ -158,47 +136,36 @@
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>Option "Text"</code> reicht – der <code>value</code> wird automatisch vom Label übernommen. Mit <code>placeholder</code> zeigst du Text, wenn nichts ausgewählt ist. Das Dropdown öffnet bei Klick, ist mit Pfeiltasten navigierbar und schließt bei Auswahl oder Escape.</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>placeholder</code> – zeigt Text, wenn nichts ausgewählt ist</li>
+        <li><code>Option "Text"</code> – definiert eine Auswahloption</li>
+        <li>Klick öffnet das Dropdown, Pfeiltasten navigieren, Enter wählt aus</li>
+        <li>Escape oder Klick außerhalb schließt das Dropdown</li>
+      </ul>
 
-      <p>Für unterschiedliche Werte (z.B. für Datenbanken) kannst du <code>value</code> explizit setzen:</p>
+      <h3>Mit expliziten Values</h3>
+      <p>Standardmäßig ist der Value gleich dem Label. Für Datenbanken oder APIs brauchst du oft andere Values:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Select placeholder "Status wählen..."
-    Option "In Bearbeitung", value "in_progress"
-    Option "Abgeschlossen", value "done"
-    Option "Abgebrochen", value "cancelled"</textarea>
+          <textarea>Select placeholder "Status..."
+  Option "In Bearbeitung", value "in_progress"
+  Option "Abgeschlossen", value "done"
+  Option "Abgebrochen", value "cancelled"</textarea>
         </div>
         <div class="playground-preview"></div>
+      </div>
+
+      <div class="note">
+        <strong>Accessibility:</strong> Select unterstützt volle Tastaturnavigation – wichtig für Barrierefreiheit. Nutzer können mit Pfeiltasten navigieren und mit Enter auswählen, ohne die Maus zu verwenden.
       </div>
     </section>
 
 
     <!-- ============================================================ -->
-    <!-- DATE & TIME -->
-    <!-- ============================================================ -->
-
-    <section>
-      <h2>DatePicker</h2>
-      <p>Ein Kalender zur Datumsauswahl:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>DatePicker</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Mit den Buttons oben wechselst du zwischen Monaten.</p>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <!-- TWO-WAY BINDING -->
-    <!-- ============================================================ -->
-
     <section>
       <h2>Two-Way Binding</h2>
-      <p>Mit <code>bind</code> verknüpfst du ein Eingabefeld mit einer Variable. Änderungen im Feld aktualisieren die Variable automatisch:</p>
-
+      <p>Mit <code>bind</code> verknüpfst du ein Eingabefeld mit einer Variable. Änderungen im Feld aktualisieren die Variable automatisch – und umgekehrt:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>searchTerm: ""
@@ -210,134 +177,144 @@ Frame gap 12, w 280
         <div class="playground-preview"></div>
       </div>
 
-      <p><code>bind varName</code> ersetzt die alte Syntax <code>value $varName, bind varName</code>. Tippe in das Feld – der Text darunter aktualisiert sich sofort.</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>searchTerm: ""</code> – definiert eine Variable mit Startwert</li>
+        <li><code>bind searchTerm</code> – verknüpft Input mit der Variable</li>
+        <li><code>$searchTerm</code> – zeigt den aktuellen Wert der Variable</li>
+        <li>Tippe in das Feld → der Text darunter aktualisiert sich sofort</li>
+      </ul>
 
-      <h3>Mit Select</h3>
-      <p>Auch Select unterstützt <code>bind</code>:</p>
+      <h3>Binding mit Select</h3>
+      <p>Auch Select unterstützt <code>bind</code> – der ausgewählte Value wird in der Variable gespeichert:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>city: ""
+          <textarea>selectedCity: ""
 
 Frame gap 12, w 280
-  Select bind city, placeholder "Stadt wählen..."
+  Select bind selectedCity, placeholder "Stadt wählen..."
     Option "Berlin"
     Option "Hamburg"
     Option "München"
-  Text "Gewählt: $city", col #888</textarea>
+  Text "Gewählt: $selectedCity", col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <!-- KEYBOARD NAVIGATION -->
-    <!-- ============================================================ -->
-
-    <section>
-      <h2>Tastatursteuerung</h2>
-      <p>Mit <code>keyboard-nav</code> (oder <code>keynav</code>) auf einem Container aktivierst du Tastaturnavigation für Formulare:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Frame keyboard-nav, gap 12, w 280, bg #1a1a1a, pad 16, rad 8
-  Input placeholder "Name"
-  Input placeholder "E-Mail"
-  Input placeholder "Telefon"
-  Button "Absenden", bg #2271C1, col white, pad 10 20, rad 6</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p><strong>Was passiert:</strong></p>
-      <ul>
-        <li><strong>Enter</strong> springt zum nächsten Eingabefeld</li>
-        <li><strong>Enter</strong> im letzten Feld klickt den Button</li>
-        <li><strong>Escape</strong> verlässt das aktuelle Feld</li>
-        <li><strong>Tab</strong> funktioniert wie gewohnt</li>
-      </ul>
 
       <div class="note">
-        <strong>Tipp:</strong> <code>keyboard-nav</code> ist besonders nützlich für Formulare ohne Maus – z.B. auf Touch-Geräten mit externer Tastatur oder für Accessibility.
+        <strong>Kurzform:</strong> <code>bind varName</code> ersetzt die alte Syntax <code>value $varName, onchange set(varName, event.value)</code>. Eine Property, alles erledigt.
       </div>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Custom Styling</h2>
-      <p>Wenn du nur <code>Checkbox "Text"</code> schreibst, rendert Mirror im Hintergrund eine komplette Struktur mit Default-Styling. Diese Struktur besteht aus mehreren Elementen:</p>
-
+      <h2>Praktisch: Login-Formular</h2>
+      <p>Ein typisches Login-Formular, das die Konzepte kombiniert:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Das schreibst du:
-Checkbox "Newsletter"
+          <textarea>email: ""
+password: ""
 
-// Das erzeugt Mirror intern (vereinfacht):
-// Root (Container, horizontal)
-//   └─ Control (das Kästchen)
-//   └─ Label (der Text)</textarea>
+Frame gap 16, w 300, bg #1a1a1a, pad 24, rad 12
+  Text "Anmelden", fs 20, weight bold, col white
+
+  Frame gap 4
+    Text "E-Mail", fs 12, col #888
+    Input bind email, placeholder "name@example.com", type "email"
+
+  Frame gap 4
+    Text "Passwort", fs 12, col #888
+    Input bind password, placeholder "••••••••", type "password"
+
+  Checkbox "Angemeldet bleiben"
+
+  Button "Anmelden", w full, pad 12, bg #2271C1, col white, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Jedes dieser Elemente ist eine <strong>Kind-Komponente</strong> – genau wie in <a href="02-komponenten.html">Kapitel 2</a> erklärt. Mit <code>:</code> kannst du sie überschreiben. Die Kind-Komponenten stehen direkt unter der Hauptkomponente:</p>
-
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Checkbox "Custom Checkbox"
-  // Kind-Komponenten mit : überschreiben
-  Root: hor, gap 12, pad 12, bg #1a1a1a, rad 8
-  Control: w 24, h 24, rad 6, bg #333
-  Label: col white, fs 14</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Du überschreibst nur, was du ändern willst – alles andere behält das Default-Styling.</p>
-
-      <p>Ein Switch hat andere Kind-Komponenten. Statt <code>Control</code> gibt es <code>Track</code> (die Schiene) und <code>Thumb</code> (der Schieber):</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Switch "Dark Mode"
-  Root: hor, gap 12
-  Track: w 52, h 28, rad 99, bg #333
-  Thumb: w 24, h 24, rad 99, bg white
-  Label: col white, fs 14</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Welche Kind-Komponenten eine Komponente hat, findest du in der <a href="../reference/eingabe.html">Referenz</a>.</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li>Zwei Variablen (<code>email</code>, <code>password</code>) speichern die Eingaben</li>
+        <li>Labels über den Inputs als separate Text-Elemente</li>
+        <li><code>type "email"</code> und <code>type "password"</code> für korrekte Eingabetypen</li>
+        <li>Checkbox für "Angemeldet bleiben" Option</li>
+      </ul>
     </section>
 
 
     <!-- ============================================================ -->
-    <!-- ZUSAMMENFASSUNG -->
-    <!-- ============================================================ -->
+    <section>
+      <h2>Input Mask</h2>
+      <p>Mit <code>mask</code> definierst du ein Eingabeformat. Literale Zeichen werden automatisch eingefügt, ungültige Zeichen werden blockiert:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame gap 12, w 280
+  Input mask "###.####.####.##", placeholder "AHV-Nummer"
+  Input mask "(###) ###-####", placeholder "Telefon"
+  Input mask "####-##-##", placeholder "Datum"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
 
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>#</code> – erlaubt eine Ziffer (0-9)</li>
+        <li><code>A</code> – erlaubt einen Buchstaben (a-z, A-Z)</li>
+        <li><code>*</code> – erlaubt Ziffer oder Buchstabe</li>
+        <li>Alle anderen Zeichen sind Literale (Punkte, Bindestriche, Klammern)</li>
+      </ul>
+
+      <table class="ref-table">
+        <tr><th>Pattern</th><th>Beispiel-Ausgabe</th><th>Verwendung</th></tr>
+        <tr><td><code>###.####.####.##</code></td><td>756.1234.5678.90</td><td>AHV-Nummer</td></tr>
+        <tr><td><code>(###) ###-####</code></td><td>(079) 123-4567</td><td>Telefon</td></tr>
+        <tr><td><code>####-##-##</code></td><td>2024-01-15</td><td>Datum</td></tr>
+        <tr><td><code>##'###.##</code></td><td>12'345.67</td><td>Währung CHF</td></tr>
+        <tr><td><code>AAA-###</code></td><td>ABC-123</td><td>Kennzeichen</td></tr>
+      </table>
+
+      <h3>Mask mit Data Binding</h3>
+      <p>Bei <code>bind</code> wird der <strong>rohe Wert</strong> (ohne Formatierung) in der Variable gespeichert:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>ahv: ""
+
+Frame gap 12, w 280
+  Input mask "###.####.####.##", bind ahv, placeholder "AHV-Nummer"
+  Text "Formatiert: $ahv", col #888
+  Text "Hinweis: Der rohe Wert (ohne Punkte) wird gespeichert", fs 11, col #666</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="note">
+        <strong>Tipp:</strong> Die Maske validiert während der Eingabe – ungültige Zeichen werden ignoriert. Das verbessert die Datenqualität und die User Experience.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
     <div class="summary">
       <h2>Zusammenfassung</h2>
 
       <table class="ref-table">
-        <tr><th>Komponente</th><th>Verwendung</th></tr>
-        <tr><td><code>Input</code></td><td>Einzeiliges Textfeld</td></tr>
-        <tr><td><code>Textarea</code></td><td>Mehrzeiliges Textfeld</td></tr>
-        <tr><td><code>Checkbox</code></td><td>Einzelne Ja/Nein-Auswahl</td></tr>
-        <tr><td><code>Switch</code></td><td>An/Aus-Toggle (visuell klarer)</td></tr>
-        <tr><td><code>RadioGroup</code> + <code>RadioItem</code></td><td>Eine aus mehreren Optionen</td></tr>
-        <tr><td><code>Slider</code></td><td>Numerischer Bereich</td></tr>
-        <tr><td><code>Select</code> + <code>Option</code></td><td>Dropdown-Auswahl</td></tr>
-        <tr><td><code>DatePicker</code></td><td>Kalender-Auswahl</td></tr>
+        <tr><th>Komponente</th><th>Verwendung</th><th>Wichtige Properties</th></tr>
+        <tr><td><code>Input</code></td><td>Einzeiliges Textfeld</td><td><code>placeholder</code>, <code>type</code>, <code>mask</code>, <code>disabled</code></td></tr>
+        <tr><td><code>Textarea</code></td><td>Mehrzeiliges Textfeld</td><td><code>placeholder</code>, <code>h</code>, <code>value</code></td></tr>
+        <tr><td><code>Checkbox</code></td><td>An/Aus mit Haken</td><td><code>checked</code>, <code>disabled</code></td></tr>
+        <tr><td><code>Switch</code></td><td>An/Aus als Schieberegler</td><td><code>checked</code>, <code>disabled</code></td></tr>
+        <tr><td><code>Select</code></td><td>Dropdown-Auswahl</td><td><code>placeholder</code>, <code>bind</code></td></tr>
       </table>
 
-      <p><strong>Two-Way Binding:</strong> <code>Input bind varName</code> verknüpft Eingabe mit Variable. Gilt auch für <code>Textarea</code> und <code>Select</code>.</p>
+      <p><strong>Binding:</strong> <code>Input bind varName</code> verknüpft Eingabe bidirektional mit einer Variable.</p>
 
-      <p><strong>Option Defaults:</strong> <code>Option "Text"</code> reicht – der <code>value</code> wird automatisch vom Label übernommen.</p>
+      <p><strong>Startzustand:</strong> <code>checked</code> für aktivierte Checkboxen/Switches, <code>value</code> für vorausgefüllte Textfelder.</p>
 
-      <p><strong>Tastatursteuerung:</strong> <code>Frame keyboard-nav</code> aktiviert Enter/Escape-Navigation für Formulare.</p>
+      <p><strong>Option-Values:</strong> <code>Option "Label", value "key"</code> wenn Label und Value unterschiedlich sein sollen.</p>
 
-      <p><strong>Custom Styling:</strong> Über Kind-Komponenten wie <code>Root:</code>, <code>Control:</code>, <code>Label:</code> – siehe <a href="../reference/eingabe.html">Referenz</a></p>
+      <p><strong>Input Mask:</strong> <code>mask "###-####"</code> formatiert Eingaben automatisch. <code>#</code>=Ziffer, <code>A</code>=Buchstabe, <code>*</code>=beides.</p>
     </div>
 
 

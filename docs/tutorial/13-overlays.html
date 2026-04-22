@@ -25,161 +25,176 @@
       <p class="subtitle">Dialog und Tooltip</p>
     </header>
 
-    <p class="intro">Overlays erscheinen über dem normalen Content. Beide folgen dem gleichen Muster: <code>Trigger:</code> ist das auslösende Element, <code>Content:</code> der Overlay-Inhalt.</p>
+    <p class="intro">Overlays erscheinen über dem normalen Content. Beide folgen dem gleichen Slot-Muster: <code>Trigger:</code> löst aus, <code>Content:</code> zeigt den Inhalt.</p>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Dialog</h2>
-      <p>Dialoge sind modale Fenster – sie blockieren die Interaktion mit dem Rest der Seite:</p>
+      <p>Dialoge sind modale Fenster – sie blockieren die Interaktion mit dem Rest der Seite, bis sie geschlossen werden:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Dialog
-  Trigger: Button "Open Dialog"
-  Content: Frame ver, gap 8, pad 16, bg #1a1a1a, rad 12
-    Text "Dialog Title", weight bold, fs 18
-    Text "This is the dialog content."</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-      <p>Mit <code>CloseTrigger:</code> baust du Schließen-Buttons ein. Diese können überall im Content platziert werden:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Dialog
-  Trigger: Button "Open"
-  Content: Frame ver, gap 12, pad 24, bg #1a1a1a, rad 12, w 320
+  Trigger: Button "Dialog öffnen", bg #2271C1, col white, pad 10 20, rad 6
+  Backdrop: bg rgba(0,0,0,0.5)
+  Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 340
     Frame hor, spread, ver-center
-      Text "Settings", weight bold, fs 18
+      Text "Bestätigung", weight bold, fs 18, col white
       CloseTrigger: Icon "x", ic #666, cursor pointer
-    Text "Dialog content here"</textarea>
+    Text "Möchtest du diese Aktion wirklich ausführen?", col #888
+    Frame hor, gap 8
+      CloseTrigger: Button "Abbrechen", bg #333, col white, pad 10 20, rad 6, grow
+      Button "Bestätigen", bg #2271C1, col white, pad 10 20, rad 6, grow</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Mit <code>Backdrop:</code> kannst du den Overlay-Hintergrund stylen:</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>Dialog</code> – der Container für das modale Fenster</li>
+        <li><code>Trigger:</code> – das Element, das den Dialog öffnet (Klick)</li>
+        <li><code>Backdrop:</code> – der halbtransparente Hintergrund</li>
+        <li><code>Content:</code> – der eigentliche Dialog-Inhalt</li>
+        <li><code>CloseTrigger:</code> – Elemente, die den Dialog schließen</li>
+      </ul>
+
+      <table class="ref-table">
+        <tr><th>Slot</th><th>Beschreibung</th></tr>
+        <tr><td><code>Trigger:</code></td><td>Öffnet den Dialog bei Klick</td></tr>
+        <tr><td><code>Backdrop:</code></td><td>Hintergrund-Overlay (klickbar zum Schließen)</td></tr>
+        <tr><td><code>Content:</code></td><td>Der Dialog-Inhalt</td></tr>
+        <tr><td><code>CloseTrigger:</code></td><td>Schließt den Dialog bei Klick</td></tr>
+      </table>
+
+      <h3>Dialog mit Formular</h3>
+      <p>Dialoge eignen sich für Formulare, die den Fokus des Nutzers erfordern:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Dialog
-  Trigger: Button "Custom backdrop"
-  Backdrop: bg rgba(0,0,100,0.5)
-  Content: Frame pad 24, bg #1a1a1a, rad 12
-    Text "Dialog with blue backdrop"</textarea>
+  Trigger: Button "Neuer Kontakt", bg #10b981, col white, pad 10 20, rad 6
+  Backdrop: bg rgba(0,0,0,0.6)
+  Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 360
+    Text "Kontakt hinzufügen", weight bold, fs 18, col white
+    Frame ver, gap 12
+      Frame ver, gap 4
+        Text "Name", fs 12, col #888
+        Input placeholder "Max Mustermann"
+      Frame ver, gap 4
+        Text "E-Mail", fs 12, col #888
+        Input placeholder "max@example.com", type "email"
+    Frame hor, gap 8
+      CloseTrigger: Button "Abbrechen", bg #333, col white, pad 10 20, rad 6, grow
+      Button "Speichern", bg #10b981, col white, pad 10 20, rad 6, grow</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
       <div class="note">
-        <strong>Accessibility:</strong> Dialoge sind vollständig tastatursteuerbar:
-        <ul>
-          <li><strong>Tab</strong> / <strong>Shift+Tab</strong> – zwischen Elementen im Dialog wechseln (Fokus bleibt im Dialog)</li>
-          <li><strong>Escape</strong> – Dialog schließen</li>
-          <li><strong>Fokus-Wiederherstellung</strong> – nach Schließen springt der Fokus zurück zum Trigger</li>
-        </ul>
+        <strong>Accessibility:</strong> Dialoge fangen den Fokus – Tab navigiert nur innerhalb des Dialogs. Escape schließt den Dialog. Das ist wichtig für Tastaturnutzer.
       </div>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Praktisch: Confirm Dialog</h2>
-      <p>Ein typischer Bestätigungs-Dialog mit zwei Buttons:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Dialog
-  Trigger: Button "Delete item", bg #ef4444
-  Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 380
-    Frame hor, gap 12, ver-center
-      Frame w 40, h 40, rad 99, bg rgba(239,68,68,0.2), center
-        Icon "trash", ic #ef4444
-      Frame ver
-        Text "Delete Item", weight bold, fs 16
-        Text "This action cannot be undone.", col #888, fs 14
-    Frame hor, gap 8
-      CloseTrigger: Button "Cancel", grow
-      Button "Delete", bg #ef4444, grow</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Praktisch: Form Dialog</h2>
-      <p>Ein Dialog mit Eingabefeldern:</p>
-      <div class="playground" data-playground>
-        <div class="playground-code">
-          <textarea>Dialog
-  Trigger: Button "Create new"
-  Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 400
-    Frame hor, spread, ver-center
-      Text "Create Project", weight bold, fs 18
-      CloseTrigger: Icon "x", ic #666, cursor pointer
-    Frame ver, gap 12
-      Frame ver, gap 4
-        Label "Project Name"
-        Input placeholder "Enter project name"
-      Frame ver, gap 4
-        Label "Description"
-        Textarea placeholder "Enter description", h 80
-    Frame hor, gap 8
-      CloseTrigger: Button "Cancel", grow
-      Button "Create", bg #5BA8F5, grow</textarea>
-        </div>
-        <div class="playground-preview"></div>
-      </div>
-
     </section>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Tooltip</h2>
-      <p>Tooltips erscheinen bei Hover – ideal für kurze Hilfetexte. Sie blockieren nichts und verschwinden automatisch:</p>
+      <p>Tooltips zeigen kurze Hilfetexte bei Hover. Sie eignen sich für Icons oder Buttons, die zusätzliche Erklärung brauchen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Tooltip
-  Trigger: Button "Hover me"
-  Content: Text "This is a tooltip"</textarea>
+          <textarea>Frame hor, gap 16
+  Tooltip positioning "bottom"
+    Trigger: Icon "info", ic #888, is 20, cursor pointer
+    Content: Text "Weitere Informationen", fs 12
+
+  Tooltip positioning "top"
+    Trigger: Button "Speichern", bg #2271C1, col white, pad 8 16, rad 6
+    Content: Text "Änderungen speichern", fs 12
+
+  Tooltip positioning "right"
+    Trigger: Icon "help-circle", ic #888, is 20, cursor pointer
+    Content: Text "Hilfe anzeigen", fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
-      <p>Mit <code>positioning</code> bestimmst du, wo der Tooltip erscheint (<code>"top"</code>, <code>"bottom"</code>, <code>"left"</code>, <code>"right"</code>):</p>
+      <p><strong>Was passiert hier?</strong></p>
+      <ul>
+        <li><code>Tooltip</code> – der Container für Tooltip-Verhalten</li>
+        <li><code>positioning</code> – wo der Tooltip erscheint (top, bottom, left, right)</li>
+        <li><code>Trigger:</code> – das Element, bei dem Hover den Tooltip zeigt</li>
+        <li><code>Content:</code> – der Tooltip-Inhalt</li>
+      </ul>
+
+      <table class="ref-table">
+        <tr><th>Positioning</th><th>Beschreibung</th></tr>
+        <tr><td><code>"top"</code></td><td>Oberhalb des Triggers</td></tr>
+        <tr><td><code>"bottom"</code></td><td>Unterhalb des Triggers</td></tr>
+        <tr><td><code>"left"</code></td><td>Links vom Trigger</td></tr>
+        <tr><td><code>"right"</code></td><td>Rechts vom Trigger</td></tr>
+      </table>
+
+      <h3>Tooltip mit mehr Inhalt</h3>
+      <p>Tooltips können auch komplexere Inhalte enthalten:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>Frame hor, gap 8, pad 16
-    Tooltip positioning "bottom"
-      Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
-        Icon "home"
-      Content: Text "Home", fs 12
-    Tooltip positioning "bottom"
-      Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
-        Icon "settings"
-      Content: Text "Settings", fs 12
-    Tooltip positioning "bottom"
-      Trigger: Frame pad 8, rad 4, bg #222, cursor pointer
-        Icon "user"
-      Content: Text "Profile", fs 12</textarea>
+          <textarea>Tooltip positioning "bottom"
+  Trigger: Frame hor, gap 8, pad 8 12, bg #1a1a1a, rad 6, cursor pointer
+    Icon "user", ic #888, is 16
+    Text "Max Mustermann", col white, fs 14
+  Content: Frame ver, gap 4, pad 8
+    Text "Profil anzeigen", fs 12, weight 500
+    Text "Letzte Aktivität: vor 5 Min.", fs 11, col #888</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
 
+      <div class="note">
+        <strong>Tipp:</strong> Tooltips sollten kurz und informativ sein. Für längere Inhalte oder Interaktionen nutze lieber einen Dialog oder ein Popover.
+      </div>
     </section>
 
 
     <!-- ============================================================ -->
-    <!-- ZUSAMMENFASSUNG -->
-    <!-- ============================================================ -->
+    <section>
+      <h2>Das Slot-Muster</h2>
+      <p>Beide Komponenten folgen dem gleichen Muster mit benannten Slots (<code>Name:</code>):</p>
 
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Dialog-Muster
+Dialog
+  Trigger: [Element das öffnet]
+  Backdrop: [Hintergrund-Styling]
+  Content: [Dialog-Inhalt]
+    CloseTrigger: [Elemente die schließen]
+
+// Tooltip-Muster
+Tooltip positioning "position"
+  Trigger: [Element bei Hover]
+  Content: [Tooltip-Inhalt]</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Der Doppelpunkt (<code>:</code>) nach dem Namen markiert einen <strong>Slot</strong> – einen benannten Bereich, der von der Komponente speziell behandelt wird.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
     <div class="summary">
       <h2>Zusammenfassung</h2>
-      <p><strong>Dialog</strong> ist modal – blockiert die Seite, hat <code>Backdrop:</code> und <code>CloseTrigger:</code>.</p>
-      <p><strong>Tooltip</strong> erscheint bei Hover – für kurze Hilfetexte, mit <code>positioning</code> platzierbar.</p>
-      <p><strong>Gemeinsames Muster:</strong> <code>Trigger:</code> + <code>Content:</code></p>
-      <p><strong>Custom Styling:</strong> Auch Overlays haben Kind-Komponenten – siehe <a href="../reference/overlays.html">Referenz</a>.</p>
+
+      <table class="ref-table">
+        <tr><th>Komponente</th><th>Verwendung</th><th>Wichtige Slots</th></tr>
+        <tr><td><code>Dialog</code></td><td>Modale Fenster</td><td><code>Trigger:</code>, <code>Backdrop:</code>, <code>Content:</code>, <code>CloseTrigger:</code></td></tr>
+        <tr><td><code>Tooltip</code></td><td>Hover-Hilfetexte</td><td><code>Trigger:</code>, <code>Content:</code></td></tr>
+      </table>
+
+      <p><strong>Dialog:</strong> Modale Fenster, die die Seite blockieren. Mit <code>Backdrop:</code> für Hintergrund und <code>CloseTrigger:</code> zum Schließen.</p>
+
+      <p><strong>Tooltip:</strong> Kurze Hilfetexte bei Hover. Mit <code>positioning</code> für die Richtung (top, bottom, left, right).</p>
+
+      <p><strong>Gemeinsames Muster:</strong> Beide nutzen <code>Trigger:</code> und <code>Content:</code> Slots – <code>Trigger:</code> löst aus, <code>Content:</code> zeigt den Inhalt.</p>
     </div>
 
 

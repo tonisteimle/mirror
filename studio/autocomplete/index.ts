@@ -160,7 +160,6 @@ export const ELEMENT_COMPLETIONS: Completion[] = [
   ...SCHEMA_COMPLETIONS.zagComponents,
   ...SCHEMA_COMPLETIONS.zagItemKeywords,
   ...SCHEMA_COMPLETIONS.chartComponents,
-  ...SCHEMA_COMPLETIONS.compoundComponents,
 ]
 
 /**
@@ -176,7 +175,6 @@ export function extractElementNames(source: string): string[] {
     ...SCHEMA_COMPLETIONS.zagComponents.map(c => c.label),
     ...SCHEMA_COMPLETIONS.zagItemKeywords.map(c => c.label),
     ...SCHEMA_COMPLETIONS.chartComponents.map(c => c.label),
-    ...SCHEMA_COMPLETIONS.compoundComponents.map(c => c.label),
   ])
 
   for (const line of lines) {

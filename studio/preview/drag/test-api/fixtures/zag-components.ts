@@ -127,6 +127,30 @@ export const ZAG_WITH_SLOTS: Record<string, ComponentFixture> = {
     expectedLines: ['DatePicker', '  Control:', '  Input:', '  Trigger:', '  Content:'],
     category: 'zag',
   },
+
+  Accordion: {
+    componentName: 'Accordion',
+    template: 'Frame',
+    hasSlots: true,
+    mirTemplate: `AccordionItem as Frame: ver, toggle()
+  Header: Frame hor, spread, ver-center, pad 12 16, bg #27272a, rad 6, cursor pointer
+    hover:
+      bg #3f3f46
+    Content: Slot
+    Chevron: Icon "chevron-down", is 16, ic #888
+      on:
+        rot 180
+  Panel: Frame pad 16, hidden
+    on:
+      visible
+    Content: Slot
+
+AccordionItem
+  Header: Text "Section 1"
+  Panel: Text "Content for section 1"`,
+    expectedLines: ['AccordionItem as Frame:', 'Header:', 'Panel:', 'AccordionItem', 'Section 1'],
+    category: 'zag',
+  },
 }
 
 /**

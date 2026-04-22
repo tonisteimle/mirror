@@ -35,9 +35,6 @@ export {
   emitRuntimeInit,
 } from './zag-emitters'
 
-// Table Emitter
-export { emitTable } from './table-emitter'
-
 // State Machine Emitter
 export {
   emitStateMachine,
@@ -83,6 +80,10 @@ export {
   emitComponentAttributes,
   emitRouteAttribute,
   emitKeyboardNav,
+  emitLoopFocus,
+  emitTypeahead,
+  emitTriggerText,
+  emitMask,
   emitValueBinding,
   emitAbsolutePositioning,
   emitAbsContainerMarker,

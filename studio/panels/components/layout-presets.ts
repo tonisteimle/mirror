@@ -69,6 +69,31 @@ export const LAYOUT_SECTION: ComponentItem[] = [
  */
 export const COMPONENTS_SECTION: ComponentItem[] = [
   {
+    id: 'comp-accordion',
+    name: 'Accordion',
+    category: 'Components',
+    template: 'Frame',
+    icon: 'chevron-down',
+    description: 'Collapsible content sections',
+    defaultSize: { width: 300, height: 180 },
+    mirTemplate: `AccordionItem as Frame: ver, toggle()
+  Header: Frame hor, spread, ver-center, pad 12 16, bg #27272a, rad 6, cursor pointer
+    hover:
+      bg #3f3f46
+    Content: Slot
+    Chevron: Icon "chevron-down", is 16, ic #888
+      on:
+        rot 180
+  Panel: Frame pad 16, hidden
+    on:
+      visible
+    Content: Slot
+
+AccordionItem
+  Header: Text "Section 1"
+  Panel: Text "Content for section 1"`,
+  },
+  {
     id: 'preset-avatar',
     name: 'Avatar',
     category: 'Components',
@@ -288,24 +313,30 @@ export const COMPONENTS_SECTION: ComponentItem[] = [
     id: 'comp-select',
     name: 'Select',
     category: 'Components',
-    template: 'Select',
-    properties: 'placeholder "Choose..."',
+    template: 'Frame',
     icon: 'select',
     description: 'Dropdown select',
     defaultSize: { width: 200, height: 40 },
-    children: [
-      { template: 'Trigger', isSlot: true, properties: 'pad 12, bg #1e1e2e, rad 6, bor 1 #333' },
-      {
-        template: 'Content',
-        isSlot: true,
-        properties: 'bg #2a2a3e, rad 8, pad 4, shadow md',
-        children: [
-          { template: 'Item', isItem: true, textContent: 'Option A' },
-          { template: 'Item', isItem: true, textContent: 'Option B' },
-          { template: 'Item', isItem: true, textContent: 'Option C' },
-        ],
-      },
-    ],
+    mirTemplate: `Frame name Select, trigger-text, loop-focus, typeahead
+  Frame name Trigger, hor, spread, pad 10 12, bg #27272a, rad 6, bor 1, boc #3f3f46, cursor pointer, ver-center, toggle()
+    Text "Choose...", col #a1a1aa
+    Icon "chevron-down", is 16, ic #71717a
+    hover:
+      bg #3f3f46
+    open:
+      Icon "chevron-up", is 16, ic #71717a
+  Frame name Content, bg #27272a, rad 8, pad 4, shadow md, gap 2, hidden, onkeydown(arrow-down) highlightNext(Content), onkeydown(arrow-up) highlightPrev(Content), onkeydown(enter) selectHighlighted(Content), onkeydown(escape) toggle(Trigger)
+    Trigger.open:
+      visible
+    Frame name Item, pad 8 12, rad 4, col #e4e4e7, cursor pointer, exclusive(), onclick toggle(Trigger)
+      highlighted:
+        bg #3f3f46
+      selected:
+        bg #5BA8F5
+        col white
+    Item "Option A"
+    Item "Option B"
+    Item "Option C"`,
   },
   {
     id: 'comp-sidenav',

@@ -11,12 +11,24 @@ export { borderTests } from './borders.test'
 export { typographyTests } from './typography.test'
 export { effectTests, visibilityTests, combinedTests } from './effects.test'
 
+// Extended Styling Tests (B3.2)
+export {
+  allExtendedStylingTests,
+  rgbaColorTests,
+  hexAlphaTests,
+  perSidePaddingTests,
+  perSideMarginTests,
+  perSideBorderTests,
+  shadowValidationTests,
+} from './extended.test'
+
 import { colorTests } from './colors.test'
 import { sizingTests } from './sizing.test'
 import { spacingTests } from './spacing.test'
 import { borderTests } from './borders.test'
 import { typographyTests } from './typography.test'
 import { effectTests, visibilityTests, combinedTests } from './effects.test'
+import { allExtendedStylingTests } from './extended.test'
 
 export const allStylingTests: TestCase[] = [
   ...colorTests,
@@ -27,4 +39,5 @@ export const allStylingTests: TestCase[] = [
   ...effectTests,
   ...visibilityTests,
   ...combinedTests,
+  ...allExtendedStylingTests,
 ]

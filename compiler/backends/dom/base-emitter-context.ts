@@ -10,7 +10,15 @@
  * - Specialized contexts: Pick<EmitterContext, ...> for subset needs
  */
 
-import type { IRNode, IRStyle, IRSlot, IREach, IRConditional, IRTable, IRStateMachine, IRStateTransition } from '../../ir/types'
+import type {
+  IRNode,
+  IRStyle,
+  IRSlot,
+  IREach,
+  IRConditional,
+  IRStateMachine,
+  IRStateTransition,
+} from '../../ir/types'
 
 // =============================================================================
 // Deferred Types
@@ -138,10 +146,7 @@ export type ZagEmitterContext = Pick<
  */
 export type EventEmitterContext = Pick<
   EmitterContext,
-  | 'emit'
-  | 'indentIn'
-  | 'indentOut'
-  | 'escapeString'
+  'emit' | 'indentIn' | 'indentOut' | 'escapeString'
 >
 
 /**
@@ -150,11 +155,7 @@ export type EventEmitterContext = Pick<
  */
 export type StateMachineEmitterContext = Pick<
   EmitterContext,
-  | 'emit'
-  | 'indentIn'
-  | 'indentOut'
-  | 'escapeString'
-  | 'addDeferredWhenWatcher'
+  'emit' | 'indentIn' | 'indentOut' | 'escapeString' | 'addDeferredWhenWatcher'
 >
 
 /**
@@ -179,11 +180,7 @@ export type LoopEmitterContext = Pick<
 /**
  * Type for an emitter function that operates on a specific node type
  */
-export type EmitterFn<T> = (
-  node: T,
-  parentVar: string,
-  ctx: EmitterContext
-) => void
+export type EmitterFn<T> = (node: T, parentVar: string, ctx: EmitterContext) => void
 
 /**
  * Type for a Zag component emitter function

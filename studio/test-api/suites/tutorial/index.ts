@@ -27,6 +27,11 @@ import { chapter_13_overlaysTests } from './13-overlays.test'
 import { chapter_14_tabellenTests } from './14-tabellen.test'
 import { chapter_15_chartsTests } from './15-charts.test'
 
+// Manual Deep Validation Tests (B4.2)
+import { allStatesDeepTests } from './states-deep.test'
+import { allFunctionsDeepTests } from './functions-deep.test'
+import { allOverlaysDeepTests } from './overlays-deep.test'
+
 export {
   chapter_01_elementeTests,
   chapter_02_komponentenTests,
@@ -43,6 +48,10 @@ export {
   chapter_13_overlaysTests,
   chapter_14_tabellenTests,
   chapter_15_chartsTests,
+  // Deep validation tests (manual)
+  allStatesDeepTests,
+  allFunctionsDeepTests,
+  allOverlaysDeepTests,
 }
 
 export const allTutorialTests = [
@@ -61,6 +70,10 @@ export const allTutorialTests = [
   ...chapter_13_overlaysTests,
   ...chapter_14_tabellenTests,
   ...chapter_15_chartsTests,
+  // Deep validation tests (manual)
+  ...allStatesDeepTests,
+  ...allFunctionsDeepTests,
+  ...allOverlaysDeepTests,
 ]
 
 export const tutorialChapters = [
@@ -83,4 +96,8 @@ export const tutorialChapters = [
   { name: 'chapter_13_overlays', tests: chapter_13_overlaysTests, title: 'Overlays' },
   { name: 'chapter_14_tabellen', tests: chapter_14_tabellenTests, title: 'Tabellen' },
   { name: 'chapter_15_charts', tests: chapter_15_chartsTests, title: 'Charts' },
+  // Deep validation tests (manual - B4.2)
+  { name: 'states_deep', tests: allStatesDeepTests, title: 'States Deep Validation' },
+  { name: 'functions_deep', tests: allFunctionsDeepTests, title: 'Functions Deep Validation' },
+  { name: 'overlays_deep', tests: allOverlaysDeepTests, title: 'Overlays Deep Validation' },
 ]

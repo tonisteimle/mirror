@@ -11,12 +11,23 @@ export { stackedTests } from './stacked.test'
 export { gridTests } from './grid.test'
 export { nestingTests, complexLayoutTests } from './nesting.test'
 
+// Extended Layout Tests (B3.3)
+export {
+  allExtendedLayoutTests,
+  minMaxWidthTests,
+  minMaxHeightTests,
+  gridPositionTests,
+  rowHeightTests,
+  gapXYTests,
+} from './extended.test'
+
 import { directionTests } from './direction.test'
 import { alignmentTests, distributionTests } from './alignment.test'
 import { gapTests, wrapTests, flexTests } from './gap.test'
 import { stackedTests } from './stacked.test'
 import { gridTests } from './grid.test'
 import { nestingTests, complexLayoutTests } from './nesting.test'
+import { allExtendedLayoutTests } from './extended.test'
 
 export const allLayoutTests: TestCase[] = [
   ...directionTests,
@@ -29,4 +40,5 @@ export const allLayoutTests: TestCase[] = [
   ...gridTests,
   ...nestingTests,
   ...complexLayoutTests,
+  ...allExtendedLayoutTests,
 ]

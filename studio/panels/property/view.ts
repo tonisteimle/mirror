@@ -419,6 +419,10 @@ export class PropertyPanelView {
         this.handleLayoutModeChange(value)
         break
 
+      case '__DEVICE_PRESET__':
+        this.handleDevicePresetChange(value)
+        break
+
       case '__PAD_TOKEN__':
       case '__PAD_INPUT__':
         this.handlePaddingChange(propName, value)
@@ -554,6 +558,24 @@ export class PropertyPanelView {
     if (!this.controller.getCurrentNodeId()) return
     const shortMode = mode === 'horizontal' ? 'hor' : mode === 'vertical' ? 'ver' : mode
     this.controller.changeProperty(shortMode, '')
+  }
+
+  private handleDevicePresetChange(device: string): void {
+    if (!this.controller.getCurrentNodeId()) return
+
+    // Device presets
+    const DEVICE_PRESETS: Record<string, { w: number; h: number }> = {
+      mobile: { w: 375, h: 812 },
+      tablet: { w: 768, h: 1024 },
+      desktop: { w: 1440, h: 900 },
+    }
+
+    const preset = DEVICE_PRESETS[device]
+    if (preset) {
+      // Set both width and height
+      this.controller.changeProperty('w', String(preset.w))
+      this.controller.changeProperty('h', String(preset.h))
+    }
   }
 
   private handlePaddingChange(propName: string, jsonValue: string): void {

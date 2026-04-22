@@ -233,6 +233,12 @@ export interface TestAPI {
   studio: StudioAPI
   // Fixtures (test data)
   fixtures: FixturesAPI
+  // CodeMirror internals (for testing editor integration)
+  codemirror: CodeMirrorAPI
+  // Draft Mode (AI-assist feature)
+  draftMode: DraftModeAPI
+  // Event tracking (for testing event emission)
+  events: EventAPI
 }
 
 export interface FixturesAPI {
@@ -368,6 +374,12 @@ export interface PreviewAPI {
   waitFor(nodeId: string, timeout?: number): Promise<ElementInfo>
   /** Take screenshot */
   screenshot(): Promise<string>
+  /** Get raw HTMLElement by node ID */
+  getElement(nodeId: string): HTMLElement | null
+  /** Find first element matching predicate */
+  find(predicate: (element: HTMLElement) => boolean): HTMLElement | null
+  /** Find all elements matching predicate */
+  findAll(predicate: (element: HTMLElement) => boolean): HTMLElement[]
 }
 
 export interface KeyModifiers {
@@ -617,18 +629,31 @@ export interface AssertionAPI {
   ok(condition: boolean, message?: string): void
   /** Assert values are equal */
   equals<T>(actual: T, expected: T, message?: string): void
+  /** Alias for equals (for compatibility) */
+  equal<T>(actual: T, expected: T, message?: string): void
   /** Assert value matches pattern */
   matches(actual: string, pattern: RegExp, message?: string): void
   /** Assert value contains substring */
   contains(actual: string, substring: string, message?: string): void
   /** Assert element has style */
   hasStyle(nodeId: string, property: keyof ComputedStyles, value: string): void
+  /** Assert element has style with numeric tolerance (e.g., width: 100 ±5) */
+  hasStyleApprox(
+    nodeId: string,
+    property: keyof ComputedStyles,
+    value: number,
+    tolerance: number
+  ): void
+  /** Assert element has multiple styles at once */
+  hasStyles(nodeId: string, styles: Partial<Record<keyof ComputedStyles, string>>): void
   /** Assert element has text */
   hasText(nodeId: string, text: string, options?: { exact?: boolean }): void
   /** Assert element exists */
   exists(nodeId: string, message?: string): void
   /** Assert element is visible */
   isVisible(nodeId: string, message?: string): void
+  /** Assert element is hidden (display: none, visibility: hidden, or opacity: 0) */
+  isHidden(nodeId: string, message?: string): void
   /** Assert element has children count */
   hasChildren(nodeId: string, count: number): void
   /** Assert element has attribute */
@@ -641,6 +666,17 @@ export interface AssertionAPI {
   codeEquals(expected: string): void
   /** Assert selection */
   isSelected(nodeId: string): void
+
+  // === Focus & Animation Assertions ===
+
+  /** Assert element has focus */
+  hasFocus(nodeId: string, message?: string): void
+  /** Assert element can receive focus (is focusable) */
+  isFocusable(nodeId: string, message?: string): void
+  /** Assert element is currently animating */
+  isAnimating(nodeId: string, message?: string): void
+  /** Assert element has specific animation */
+  hasAnimation(nodeId: string, animationName: string, message?: string): void
 
   // === Node-specific Code Assertions ===
 
@@ -707,6 +743,12 @@ export interface UtilsAPI {
   waitForElement(nodeId: string, timeout?: number): Promise<HTMLElement>
   /** Wait for element to have specific style */
   waitForStyle(nodeId: string, property: string, value: string, timeout?: number): Promise<void>
+  /** Wait for element to contain specific text */
+  waitForText(nodeId: string, text: string, timeout?: number): Promise<void>
+  /** Wait for element to become visible */
+  waitForVisible(nodeId: string, timeout?: number): Promise<void>
+  /** Wait for element to become hidden */
+  waitForHidden(nodeId: string, timeout?: number): Promise<void>
   /** Wait for element count */
   waitForCount(selector: string, count: number, timeout?: number): Promise<void>
   /** Wait for CSS animations/transitions to complete */
@@ -984,4 +1026,119 @@ export interface ViewportAPI {
   scrollTo(x: number, y: number): Promise<void>
   /** Get scroll position */
   getScroll(): { x: number; y: number }
+}
+
+// =============================================================================
+// CodeMirror API (for testing editor internals)
+// =============================================================================
+
+export interface CodeMirrorAPI {
+  /** Check if an extension is registered */
+  hasExtension(name: string): boolean
+
+  /** Get all registered extension names */
+  getExtensionNames(): string[]
+
+  /** Execute a key binding (e.g., 'Mod-Enter', 'Escape') */
+  executeKeyBinding(key: string): boolean
+
+  /** Type text at cursor */
+  typeText(text: string): void
+
+  /** Set cursor position (1-indexed) */
+  setCursor(line: number, column?: number): void
+
+  /** Get cursor position */
+  getCursor(): { line: number; column: number; offset: number }
+
+  /** Get editor content */
+  getContent(): string
+
+  /** Set editor content */
+  setContent(content: string): void
+
+  /** Get line content (1-indexed) */
+  getLine(lineNumber: number): string | null
+
+  /** Focus editor */
+  focus(): void
+
+  /** Check if editor has focus */
+  hasFocus(): boolean
+}
+
+// =============================================================================
+// Draft Mode API (for testing AI-assist features)
+// =============================================================================
+
+export interface DraftModeAPI {
+  /** Check if draft mode extension is registered in editor */
+  isExtensionRegistered(): boolean
+
+  /** Check if draft mode keymap is registered */
+  isKeymapRegistered(): boolean
+
+  /** Check if draft mode is active (-- marker detected) */
+  isActive(): boolean
+
+  /** Get current draft state */
+  getState(): DraftModeState
+
+  /** Check if a line is in the draft block */
+  isLineInDraft(lineNumber: number): boolean
+
+  /** Trigger submit (what Cmd+Enter should do) */
+  triggerSubmit(): Promise<boolean>
+
+  /** Cancel draft mode (what Escape should do) */
+  triggerCancel(): boolean
+
+  /** Replace draft block with content */
+  replaceDraftBlock(content: string): boolean
+
+  /** Wait for draft:submit event */
+  waitForSubmitEvent(timeout?: number): Promise<DraftSubmitEvent>
+
+  /** Simulate the full AI flow */
+  simulateAIGeneration(generatedCode: string): Promise<boolean>
+}
+
+export interface DraftModeState {
+  active: boolean
+  startLine: number | null
+  endLine: number | null
+  prompt: string | null
+  indent: number
+  processing: boolean
+}
+
+export interface DraftSubmitEvent {
+  content: string
+  prompt: string | null
+  startLine: number
+  endLine: number | null
+}
+
+// =============================================================================
+// Event API (for testing event emission)
+// =============================================================================
+
+export interface EventAPI {
+  /** Wait for any event */
+  waitFor<T = unknown>(eventName: string, timeout?: number): Promise<T>
+
+  /** Check if event was emitted since last reset */
+  wasEmitted(eventName: string): boolean
+
+  /** Get all emitted events since last reset */
+  getEmittedEvents(): Array<{ name: string; payload: unknown; timestamp: number }>
+
+  /** Reset event tracking */
+  reset(): void
+
+  /** Start tracking events */
+  startTracking(): void
+
+  /** Stop tracking events */
+  stopTracking(): void
 }

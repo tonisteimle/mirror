@@ -133,6 +133,7 @@ export class DragTestRunner {
       properties: params.properties ?? fixture.properties,
       textContent: params.textContent ?? fixture.textContent,
       children: params.children,
+      mirTemplate: fixture.mirTemplate,
       fromComponentPanel: true,
     })
 
@@ -376,6 +377,7 @@ export class DragTestRunner {
     properties?: string
     textContent?: string
     children?: string
+    mirTemplate?: string
     fromComponentPanel?: boolean
   }): void {
     getDragDataHelpers().setCurrentDragData(data)
