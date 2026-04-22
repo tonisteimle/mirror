@@ -125,7 +125,7 @@ describe('AutocompleteEngine', () => {
     it('should return all state names after "state "', () => {
       const result = engine.getCompletions({
         lineText: 'state ',
-        cursorColumn: 6
+        cursorColumn: 6,
       })
       expect(result.context).toBe('state')
       expect(result.completions.length).toBeGreaterThan(0)
@@ -134,7 +134,7 @@ describe('AutocompleteEngine', () => {
     it('should include common states', () => {
       const result = engine.getCompletions({
         lineText: 'state ',
-        cursorColumn: 6
+        cursorColumn: 6,
       })
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('hover')
@@ -147,7 +147,7 @@ describe('AutocompleteEngine', () => {
     it('should filter state names by typed text', () => {
       const result = engine.getCompletions({
         lineText: 'state ho',
-        cursorColumn: 8
+        cursorColumn: 8,
       })
       expect(result.completions.length).toBe(1)
       expect(result.completions[0].label).toBe('hover')
@@ -156,7 +156,7 @@ describe('AutocompleteEngine', () => {
     it('should filter states starting with "sel"', () => {
       const result = engine.getCompletions({
         lineText: 'state sel',
-        cursorColumn: 9
+        cursorColumn: 9,
       })
       expect(result.completions.some(c => c.label === 'selected')).toBe(true)
     })
@@ -164,7 +164,7 @@ describe('AutocompleteEngine', () => {
     it('should filter states starting with "on"', () => {
       const result = engine.getCompletions({
         lineText: 'state on',
-        cursorColumn: 8
+        cursorColumn: 8,
       })
       expect(result.completions.some(c => c.label === 'on')).toBe(true)
     })
@@ -172,7 +172,7 @@ describe('AutocompleteEngine', () => {
     it('should return empty for non-matching filter', () => {
       const result = engine.getCompletions({
         lineText: 'state xyz',
-        cursorColumn: 9
+        cursorColumn: 9,
       })
       expect(result.completions.length).toBe(0)
     })
@@ -186,7 +186,7 @@ describe('AutocompleteEngine', () => {
     it('should return properties after component name', () => {
       const result = engine.getCompletions({
         lineText: 'Box ',
-        cursorColumn: 4
+        cursorColumn: 4,
       })
       expect(result.context).toBe('property')
       expect(result.completions.length).toBeGreaterThan(0)
@@ -195,7 +195,7 @@ describe('AutocompleteEngine', () => {
     it('should include common layout properties', () => {
       const result = engine.getCompletions({
         lineText: 'Box ',
-        cursorColumn: 4
+        cursorColumn: 4,
       })
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('bg')
@@ -206,7 +206,7 @@ describe('AutocompleteEngine', () => {
     it('should filter properties by typed text', () => {
       const result = engine.getCompletions({
         lineText: 'Box bg',
-        cursorColumn: 6
+        cursorColumn: 6,
       })
       expect(result.completions.some(c => c.label === 'bg')).toBe(true)
     })
@@ -214,7 +214,7 @@ describe('AutocompleteEngine', () => {
     it('should filter properties starting with "pad"', () => {
       const result = engine.getCompletions({
         lineText: 'Box pad',
-        cursorColumn: 7
+        cursorColumn: 7,
       })
       expect(result.completions.some(c => c.label === 'pad')).toBe(true)
     })
@@ -222,7 +222,7 @@ describe('AutocompleteEngine', () => {
     it('should prioritize common properties', () => {
       const result = engine.getCompletions({
         lineText: 'Box ',
-        cursorColumn: 4
+        cursorColumn: 4,
       })
       // bg, pad, gap should be near the top
       const firstFew = result.completions.slice(0, 10).map(c => c.label)
@@ -232,7 +232,7 @@ describe('AutocompleteEngine', () => {
     it('should return completions after comma', () => {
       const result = engine.getCompletions({
         lineText: 'Box pad 10, ',
-        cursorColumn: 12
+        cursorColumn: 12,
       })
       expect(result.context).toBe('property')
       expect(result.completions.length).toBeGreaterThan(0)
@@ -241,7 +241,7 @@ describe('AutocompleteEngine', () => {
     it('should return element completions on indented line', () => {
       const result = engine.getCompletions({
         lineText: '  ',
-        cursorColumn: 2
+        cursorColumn: 2,
       })
       expect(result.context).toBe('element')
       expect(result.completions.length).toBeGreaterThan(0)
@@ -254,7 +254,7 @@ describe('AutocompleteEngine', () => {
     it('should NOT include primitives/components in property context', () => {
       const result = engine.getCompletions({
         lineText: 'Frame ',
-        cursorColumn: 6
+        cursorColumn: 6,
       })
       expect(result.context).toBe('property')
       const labels = result.completions.map(c => c.label)
@@ -276,7 +276,7 @@ Frame
       const result = engine.getCompletions({
         lineText: '  ',
         cursorColumn: 2,
-        fullSource: sourceCode
+        fullSource: sourceCode,
       })
       expect(result.context).toBe('element')
       const labels = result.completions.map(c => c.label)
@@ -297,7 +297,7 @@ Frame
     it('should return cursor values after "cursor "', () => {
       const result = engine.getCompletions({
         lineText: 'cursor ',
-        cursorColumn: 7
+        cursorColumn: 7,
       })
       expect(result.context).toBe('value')
       const labels = result.completions.map(c => c.label)
@@ -309,7 +309,7 @@ Frame
     it('should return width values after "w "', () => {
       const result = engine.getCompletions({
         lineText: 'w ',
-        cursorColumn: 2
+        cursorColumn: 2,
       })
       expect(result.context).toBe('value')
       const labels = result.completions.map(c => c.label)
@@ -320,7 +320,7 @@ Frame
     it('should return height values after "h "', () => {
       const result = engine.getCompletions({
         lineText: 'h ',
-        cursorColumn: 2
+        cursorColumn: 2,
       })
       expect(result.context).toBe('value')
       expect(result.completions.some(c => c.label === 'hug')).toBe(true)
@@ -332,7 +332,7 @@ Frame
     it('should return shadow values', () => {
       const result = engine.getCompletions({
         lineText: 'shadow ',
-        cursorColumn: 7
+        cursorColumn: 7,
       })
       expect(result.context).toBe('value')
       const labels = result.completions.map(c => c.label)
@@ -344,7 +344,7 @@ Frame
     it('should return weight values', () => {
       const result = engine.getCompletions({
         lineText: 'weight ',
-        cursorColumn: 7
+        cursorColumn: 7,
       })
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('bold')
@@ -354,7 +354,7 @@ Frame
     it('should return text-align values', () => {
       const result = engine.getCompletions({
         lineText: 'text-align ',
-        cursorColumn: 11
+        cursorColumn: 11,
       })
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('center')
@@ -365,7 +365,7 @@ Frame
     it('should filter values by typed text', () => {
       const result = engine.getCompletions({
         lineText: 'cursor po',
-        cursorColumn: 9
+        cursorColumn: 9,
       })
       expect(result.completions.length).toBeGreaterThan(0)
       expect(result.completions.some(c => c.label === 'pointer')).toBe(true)
@@ -485,7 +485,9 @@ describe('Autocomplete Constants', () => {
   describe('ALL_COMPLETIONS', () => {
     it('should include properties, keywords, and actions', () => {
       // ALL_COMPLETIONS includes primitives, Zag components, properties, events, keywords, and actions
-      expect(ALL_COMPLETIONS.length).toBeGreaterThan(MIRROR_PROPERTIES.length + MIRROR_KEYWORDS.length)
+      expect(ALL_COMPLETIONS.length).toBeGreaterThan(
+        MIRROR_PROPERTIES.length + MIRROR_KEYWORDS.length
+      )
     })
 
     it('should include primitives', () => {
@@ -495,12 +497,10 @@ describe('Autocomplete Constants', () => {
       expect(labels).toContain('Button')
     })
 
-    it('should include Zag components', () => {
+    it('should include DatePicker (only remaining Zag component)', () => {
       const labels = ALL_COMPLETIONS.map(c => c.label)
-      // Tutorial Set: Dialog, Select, Tabs, Checkbox, Switch, RadioGroup, Slider, DatePicker, Tooltip, SideNav
-      expect(labels).toContain('Dialog')
-      expect(labels).toContain('Select')
-      expect(labels).toContain('Tabs')
+      // DatePicker is the only remaining Zag component
+      expect(labels).toContain('DatePicker')
     })
   })
 
@@ -545,7 +545,7 @@ describe('Edge Cases', () => {
   it('should handle empty line gracefully', () => {
     const result = engine.getCompletions({
       lineText: '',
-      cursorColumn: 0
+      cursorColumn: 0,
     })
     // Empty line returns no completions (context is 'none')
     expect(result).toBeDefined()
@@ -555,7 +555,7 @@ describe('Edge Cases', () => {
   it('should handle cursor at start of line', () => {
     const result = engine.getCompletions({
       lineText: 'Box',
-      cursorColumn: 0
+      cursorColumn: 0,
     })
     expect(result).toBeDefined()
   })
@@ -563,7 +563,7 @@ describe('Edge Cases', () => {
   it('should handle cursor beyond line length', () => {
     const result = engine.getCompletions({
       lineText: 'Box',
-      cursorColumn: 100
+      cursorColumn: 100,
     })
     expect(result).toBeDefined()
   })
@@ -571,7 +571,7 @@ describe('Edge Cases', () => {
   it('should handle whitespace-only line (element context)', () => {
     const result = engine.getCompletions({
       lineText: '    ',
-      cursorColumn: 4
+      cursorColumn: 4,
     })
     expect(result.context).toBe('element')
   })
@@ -579,7 +579,7 @@ describe('Edge Cases', () => {
   it('should handle tab indentation', () => {
     const result = engine.getCompletions({
       lineText: '\t\t',
-      cursorColumn: 2
+      cursorColumn: 2,
     })
     expect(result).toBeDefined()
   })
@@ -587,7 +587,7 @@ describe('Edge Cases', () => {
   it('should handle multiple spaces', () => {
     const result = engine.getCompletions({
       lineText: 'Box   pad   10',
-      cursorColumn: 6
+      cursorColumn: 6,
     })
     expect(result).toBeDefined()
   })
@@ -595,7 +595,7 @@ describe('Edge Cases', () => {
   it('should handle special characters in component name', () => {
     const result = engine.getCompletions({
       lineText: 'My_Component: ',
-      cursorColumn: 14
+      cursorColumn: 14,
     })
     expect(result.context).toBe('property')
   })
@@ -615,7 +615,7 @@ describe('Completion Positions', () => {
   it('should return correct from position for state', () => {
     const result = engine.getCompletions({
       lineText: 'state ho',
-      cursorColumn: 8
+      cursorColumn: 8,
     })
     expect(result.from).toBe(6) // After "state "
   })
@@ -623,7 +623,7 @@ describe('Completion Positions', () => {
   it('should return correct to position', () => {
     const result = engine.getCompletions({
       lineText: 'state ho',
-      cursorColumn: 8
+      cursorColumn: 8,
     })
     expect(result.to).toBe(8) // At cursor
   })
@@ -631,7 +631,7 @@ describe('Completion Positions', () => {
   it('should return correct positions for property', () => {
     const result = engine.getCompletions({
       lineText: 'Box bg',
-      cursorColumn: 6
+      cursorColumn: 6,
     })
     expect(result.from).toBeLessThanOrEqual(result.to)
   })
@@ -652,7 +652,7 @@ describe('Explicit Trigger', () => {
     const result = engine.getCompletions({
       lineText: 'Box ',
       cursorColumn: 4,
-      explicit: true
+      explicit: true,
     })
     expect(result.completions.length).toBeGreaterThan(0)
   })
@@ -661,7 +661,7 @@ describe('Explicit Trigger', () => {
     const result = engine.getCompletions({
       lineText: 'Box ',
       cursorColumn: 4,
-      explicit: false
+      explicit: false,
     })
     expect(result.completions.length).toBeGreaterThan(0)
   })
@@ -714,7 +714,7 @@ describe('Action Chain Autocomplete', () => {
     it('should return action completions after "onclick: "', () => {
       const result = engine.getCompletions({
         lineText: 'onclick: ',
-        cursorColumn: 9
+        cursorColumn: 9,
       })
       expect(result.context).toBe('action')
       expect(result.completions.length).toBeGreaterThan(0)
@@ -723,7 +723,7 @@ describe('Action Chain Autocomplete', () => {
     it('should include common actions', () => {
       const result = engine.getCompletions({
         lineText: 'onclick: ',
-        cursorColumn: 9
+        cursorColumn: 9,
       })
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('show')
@@ -736,7 +736,7 @@ describe('Action Chain Autocomplete', () => {
     it('should filter actions by typed text', () => {
       const result = engine.getCompletions({
         lineText: 'onclick: to',
-        cursorColumn: 11
+        cursorColumn: 11,
       })
       expect(result.completions.some(c => c.label === 'toggle')).toBe(true)
     })
@@ -744,7 +744,7 @@ describe('Action Chain Autocomplete', () => {
     it('should filter actions starting with "sh"', () => {
       const result = engine.getCompletions({
         lineText: 'onclick: sh',
-        cursorColumn: 11
+        cursorColumn: 11,
       })
       expect(result.completions.some(c => c.label === 'show')).toBe(true)
     })
@@ -781,7 +781,7 @@ describe('Action Chain Autocomplete', () => {
     it('should return target keywords after "onclick: show "', () => {
       const result = engine.getCompletions({
         lineText: 'onclick: show ',
-        cursorColumn: 14
+        cursorColumn: 14,
       })
       expect(result.context).toBe('target')
       expect(result.completions.length).toBeGreaterThan(0)
@@ -790,7 +790,7 @@ describe('Action Chain Autocomplete', () => {
     it('should include target keywords', () => {
       const result = engine.getCompletions({
         lineText: 'onclick: toggle ',
-        cursorColumn: 16
+        cursorColumn: 16,
       })
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('self')
@@ -811,7 +811,7 @@ Button
       const result = engine.getCompletions({
         lineText: '  onclick: toggle ',
         cursorColumn: 18,
-        fullSource: source
+        fullSource: source,
       })
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('Modal')
@@ -821,7 +821,7 @@ Button
     it('should filter targets by typed text', () => {
       const result = engine.getCompletions({
         lineText: 'onclick: show sel',
-        cursorColumn: 17
+        cursorColumn: 17,
       })
       expect(result.completions.some(c => c.label === 'self')).toBe(true)
       expect(result.completions.some(c => c.label === 'selected')).toBe(true)
@@ -849,7 +849,7 @@ Button
     it('should return duration values after "transition all "', () => {
       const result = engine.getCompletions({
         lineText: 'transition all ',
-        cursorColumn: 15
+        cursorColumn: 15,
       })
       expect(result.context).toBe('duration')
       expect(result.completions.length).toBeGreaterThan(0)
@@ -858,7 +858,7 @@ Button
     it('should include common durations', () => {
       const result = engine.getCompletions({
         lineText: 'transition all ',
-        cursorColumn: 15
+        cursorColumn: 15,
       })
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('100')
@@ -869,7 +869,7 @@ Button
     it('should filter durations by typed text', () => {
       const result = engine.getCompletions({
         lineText: 'transition all 2',
-        cursorColumn: 16
+        cursorColumn: 16,
       })
       expect(result.completions.some(c => c.label === '200')).toBe(true)
     })
@@ -891,7 +891,7 @@ Button
     it('should return easing values after "transition all 200 "', () => {
       const result = engine.getCompletions({
         lineText: 'transition all 200 ',
-        cursorColumn: 19
+        cursorColumn: 19,
       })
       expect(result.context).toBe('easing')
       expect(result.completions.length).toBeGreaterThan(0)
@@ -900,7 +900,7 @@ Button
     it('should include common easings', () => {
       const result = engine.getCompletions({
         lineText: 'transition all 200 ',
-        cursorColumn: 19
+        cursorColumn: 19,
       })
       const labels = result.completions.map(c => c.label)
       expect(labels).toContain('ease')
@@ -912,7 +912,7 @@ Button
     it('should filter easings by typed text', () => {
       const result = engine.getCompletions({
         lineText: 'transition all 200 ease-i',
-        cursorColumn: 25
+        cursorColumn: 25,
       })
       expect(result.completions.some(c => c.label === 'ease-in')).toBe(true)
       expect(result.completions.some(c => c.label === 'ease-in-out')).toBe(true)

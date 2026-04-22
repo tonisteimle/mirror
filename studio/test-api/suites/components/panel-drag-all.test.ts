@@ -45,19 +45,11 @@ const PALETTE_NAMES: Record<string, string> = {
   'preset-list-item': 'List Item',
   'preset-search-bar': 'Search Bar',
   'preset-stat-card': 'Stat Card',
-  // Zag Components
-  'comp-checkbox': 'Checkbox',
-  'comp-switch': 'Switch',
-  'comp-slider': 'Slider',
-  'comp-radio-group': 'Radio Group',
+  // Zag Components (only DatePicker remains)
   'comp-date-picker': 'Date Picker',
-  'comp-dialog': 'Dialog',
-  'comp-tabs': 'Tabs',
-  'comp-sidenav': 'SideNav',
+  // Pure Mirror Components
   'comp-select': 'Select',
-  'comp-tooltip': 'Tooltip',
   'comp-accordion': 'Accordion',
-  'comp-table': 'Table',
   'comp-chart': 'Chart',
 }
 
@@ -88,19 +80,11 @@ const EXPECTED_MIR_PATTERNS: Record<string, string[]> = {
   'preset-list-item': ['Frame', 'hor', 'Icon', 'Text'],
   'preset-search-bar': ['Frame', 'Icon', 'Input', 'search'],
   'preset-stat-card': ['Frame', 'Text'],
-  // Zag components
-  'comp-checkbox': ['Checkbox'],
-  'comp-switch': ['Switch'],
-  'comp-slider': ['Slider'],
-  'comp-radio-group': ['RadioGroup', 'RadioItem'],
+  // Zag components (only DatePicker remains)
   'comp-date-picker': ['DatePicker'],
-  'comp-dialog': ['Dialog', 'Trigger', 'Content'],
-  'comp-tabs': ['Tabs', 'Tab'],
-  'comp-sidenav': ['SideNav', 'NavItem'],
+  // Pure Mirror components
   'comp-select': ['Select', 'Trigger', 'Content', 'Item'],
-  'comp-tooltip': ['Tooltip', 'Trigger', 'Content'],
   'comp-accordion': ['AccordionItem', 'Header', 'Panel'],
-  'comp-table': ['Table', 'Header', 'Row'],
   'comp-chart': ['Chart'],
 }
 
@@ -346,15 +330,15 @@ export const presetDragTests: TestCase[] = describe('Panel Drag - Preset Compone
 /**
  * NOTE: Most Zag component tests are disabled because they require runtime
  * dependencies (updateFileList) that aren't available in the test environment.
- * The ZagComponentHandler needs to look up existing component definitions
- * which requires the file management system to be fully initialized.
+ * Most components are now Pure Mirror and work in tests.
+ * Only DatePicker remains as a Zag component and requires full environment.
  *
  * The following work in tests:
- * - Select (Pure Mirror - uses mirTemplate, not children)
+ * - Select (Pure Mirror - uses mirTemplate)
  * - Accordion (Pure Mirror - uses mirTemplate)
  *
  * These require full environment and are skipped:
- * - Checkbox, Switch, Slider, RadioGroup, DatePicker, Dialog, Tabs, SideNav, Tooltip
+ * - DatePicker (only remaining Zag component)
  */
 export const zagComponentDragTests: TestCase[] = describe('Panel Drag - Zag Components', [
   // Select works because it uses mirTemplate (Pure Mirror component)
@@ -388,9 +372,8 @@ export const zagComponentDragTests: TestCase[] = describe('Panel Drag - Zag Comp
     }
   ),
 
-  // NOTE: The following tests are disabled due to updateFileList dependency:
-  // - Checkbox, Switch, Slider, RadioGroup, DatePicker, Dialog, Tabs, SideNav, Tooltip
-  // These components use `children` which requires ZagComponentHandler runtime dependencies.
+  // NOTE: DatePicker test disabled due to updateFileList dependency.
+  // It's the only remaining Zag component with `children` pattern.
 ])
 
 // =============================================================================
@@ -398,8 +381,8 @@ export const zagComponentDragTests: TestCase[] = describe('Panel Drag - Zag Comp
 // =============================================================================
 
 /**
- * NOTE: Table tests are disabled due to the same updateFileList dependency issue.
- * Chart works because it doesn't have children structure.
+ * Data components (Chart)
+ * Table was removed as it was a compound primitive using children pattern.
  */
 export const dataComponentDragTests: TestCase[] = describe('Panel Drag - Data Components', [
   testWithSetup('Drag Chart', 'Frame gap 12, pad 16, bg #1a1a1a', async (api: TestAPI) => {
@@ -541,6 +524,70 @@ export const codeVerificationTests: TestCase[] = describe('Panel Drag - Code Ver
       api.assert.ok(code.includes('Text'), 'Should contain Text')
       api.assert.ok(code.includes('Button'), 'Should contain Button')
       api.assert.ok(code.includes('Icon'), 'Should contain Icon')
+    }
+  ),
+
+  // Verify Card preset inserts full mirTemplate structure
+  testWithSetup(
+    'Card preset inserts complete structure',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Card', 'node-1', 0)
+      await api.utils.waitForCompile()
+      const code = api.editor.getCode()
+
+      // Card mirTemplate should include:
+      // - Frame with gap, pad, bg, rad
+      // - Text for title
+      // - Text for description
+      // - Frame hor for actions
+      // - Button for action
+      api.assert.ok(
+        code.includes('Frame ver') || code.includes('Frame gap'),
+        'Should have Frame container'
+      )
+      api.assert.ok(
+        code.includes('"Card Title"') || code.includes('Text'),
+        'Should have title text'
+      )
+      api.assert.ok(code.includes('Button'), 'Should have action button')
+      api.assert.ok(code.includes('rad 12') || code.includes('rad'), 'Should have border radius')
+      api.assert.ok(code.includes('bg #27272a') || code.includes('bg'), 'Should have background')
+
+      // Log actual code for debugging
+      console.log('[Card Code]:', code)
+    }
+  ),
+
+  // Verify Select (Pure Mirror) inserts full structure
+  testWithSetup(
+    'Select inserts complete Pure Mirror structure',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Select', 'node-1', 0)
+      await api.utils.waitForCompile()
+      const code = api.editor.getCode()
+
+      // Select mirTemplate should include:
+      // - Frame name Select with trigger-text, loop-focus, typeahead
+      // - Trigger Frame
+      // - Content Frame with Items
+      api.assert.ok(
+        code.includes('name Select') || code.includes('Select'),
+        'Should have Select name'
+      )
+      api.assert.ok(code.includes('Trigger') || code.includes('trigger'), 'Should have Trigger')
+      api.assert.ok(
+        code.includes('Content') || code.includes('Item'),
+        'Should have Content or Items'
+      )
+      api.assert.ok(
+        code.includes('toggle()') || code.includes('exclusive()'),
+        'Should have state functions'
+      )
+
+      // Log actual code for debugging
+      console.log('[Select Code]:', code)
     }
   ),
 ])

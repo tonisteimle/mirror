@@ -153,19 +153,6 @@ AccordionItem
     Button "Action", pad 8 16, bg #5BA8F5, col white, rad 6`,
   },
   {
-    id: 'comp-checkbox',
-    name: 'Checkbox',
-    category: 'Components',
-    template: 'Checkbox',
-    icon: 'checkbox',
-    description: 'Checkbox',
-    defaultSize: { width: 150, height: 24 },
-    children: [
-      { template: 'Control', isSlot: true, properties: 'w 20, h 20, bor 1 #555, rad 4' },
-      { template: 'Label', isSlot: true, textContent: 'Check me' },
-    ],
-  },
-  {
     id: 'comp-date-picker',
     name: 'Date Picker',
     category: 'Components',
@@ -178,34 +165,6 @@ AccordionItem
       { template: 'Input', isSlot: true },
       { template: 'Trigger', isSlot: true },
       { template: 'Content', isSlot: true },
-    ],
-  },
-  {
-    id: 'comp-dialog',
-    name: 'Dialog',
-    category: 'Components',
-    template: 'Dialog',
-    icon: 'dialog',
-    description: 'Modal dialog',
-    defaultSize: { width: 120, height: 44 },
-    children: [
-      {
-        template: 'Trigger',
-        isSlot: true,
-        children: [
-          {
-            template: 'Button',
-            properties: 'pad 12 24, bg #5BA8F5, col #fff, rad 6',
-            textContent: 'Open',
-          },
-        ],
-      },
-      { template: 'Backdrop', isSlot: true, properties: 'bg #00000080' },
-      {
-        template: 'Content',
-        isSlot: true,
-        properties: 'w 400, bg #1e1e2e, rad 12, pad 24, shadow lg',
-      },
     ],
   },
   {
@@ -284,20 +243,6 @@ AccordionItem
   Text "List item text", fs 14, col #e4e4e7`,
   },
   {
-    id: 'comp-radio-group',
-    name: 'Radio Group',
-    category: 'Components',
-    template: 'RadioGroup',
-    icon: 'radio',
-    description: 'Radio buttons',
-    defaultSize: { width: 150, height: 80 },
-    children: [
-      { template: 'RadioItem', isItem: true, textContent: 'Option A' },
-      { template: 'RadioItem', isItem: true, textContent: 'Option B' },
-      { template: 'RadioItem', isItem: true, textContent: 'Option C' },
-    ],
-  },
-  {
     id: 'preset-search-bar',
     name: 'Search Bar',
     category: 'Components',
@@ -339,34 +284,6 @@ AccordionItem
     Item "Option C"`,
   },
   {
-    id: 'comp-sidenav',
-    name: 'SideNav',
-    category: 'Components',
-    template: 'SideNav',
-    icon: 'sidebar',
-    description: 'Sidebar navigation',
-    defaultSize: { width: 220, height: 200 },
-    children: [
-      { template: 'NavItem', isItem: true, textContent: 'Dashboard', properties: 'icon "home"' },
-      { template: 'NavItem', isItem: true, textContent: 'Projects', properties: 'icon "folder"' },
-      { template: 'NavItem', isItem: true, textContent: 'Settings', properties: 'icon "settings"' },
-    ],
-  },
-  {
-    id: 'comp-slider',
-    name: 'Slider',
-    category: 'Components',
-    template: 'Slider',
-    icon: 'slider',
-    description: 'Range slider',
-    defaultSize: { width: 200, height: 24 },
-    children: [
-      { template: 'Track', isSlot: true, properties: 'h 4, bg #333, rad 2' },
-      { template: 'Range', isSlot: true, properties: 'bg #5BA8F5' },
-      { template: 'Thumb', isSlot: true, properties: 'w 16, h 16, rad 8, bg #fff' },
-    ],
-  },
-  {
     id: 'preset-stat-card',
     name: 'Stat Card',
     category: 'Components',
@@ -377,59 +294,6 @@ AccordionItem
     mirTemplate: `Frame ver, gap 4, pad 16, bg #27272a, rad 12
   Text "1,234", fs 28, weight 700, col #e4e4e7
   Text "Total Users", fs 12, col #71717a`,
-  },
-  {
-    id: 'comp-switch',
-    name: 'Switch',
-    category: 'Components',
-    template: 'Switch',
-    icon: 'toggle',
-    description: 'Toggle switch',
-    defaultSize: { width: 50, height: 28 },
-    children: [
-      { template: 'Track', isSlot: true, properties: 'w 44, h 24, rad 12, bg #555' },
-      { template: 'Thumb', isSlot: true, properties: 'w 20, h 20, rad 10, bg #fff' },
-    ],
-  },
-  {
-    id: 'comp-table',
-    name: 'Table',
-    category: 'Components',
-    template: 'Table',
-    icon: 'table',
-    description: 'Data table',
-    defaultSize: { width: 400, height: 200 },
-    children: [
-      {
-        template: 'Header',
-        isSlot: true,
-        children: [{ template: 'Row', textContent: 'Name", "Status", "Actions' }],
-      },
-      { template: 'Row', textContent: 'Item 1", "Active", "Edit' },
-      { template: 'Row', textContent: 'Item 2", "Pending", "Edit' },
-    ],
-  },
-  {
-    id: 'comp-tabs',
-    name: 'Tabs',
-    category: 'Components',
-    template: 'Tabs',
-    icon: 'tabs',
-    description: 'Tabbed navigation',
-    defaultSize: { width: 300, height: 150 },
-    children: [
-      {
-        template: 'List',
-        isSlot: true,
-        properties: 'hor, gap 4, bg #1e1e2e, pad 4, rad 8',
-        children: [
-          { template: 'Tab', isItem: true, textContent: 'Tab 1' },
-          { template: 'Tab', isItem: true, textContent: 'Tab 2' },
-          { template: 'Tab', isItem: true, textContent: 'Tab 3' },
-        ],
-      },
-      { template: 'Content', isSlot: true, properties: 'pad 16' },
-    ],
   },
   {
     id: 'comp-text',
@@ -452,28 +316,6 @@ AccordionItem
     icon: 'input',
     description: 'Multi-line text input',
     defaultSize: { width: 200, height: 80 },
-  },
-  {
-    id: 'comp-tooltip',
-    name: 'Tooltip',
-    category: 'Components',
-    template: 'Tooltip',
-    icon: 'tooltip',
-    description: 'Hover tooltip',
-    defaultSize: { width: 150, height: 40 },
-    children: [
-      {
-        template: 'Trigger',
-        isSlot: true,
-        children: [{ template: 'Button', textContent: 'Hover me' }],
-      },
-      {
-        template: 'Content',
-        isSlot: true,
-        properties: 'pad 8 12, bg #333, col #fff, rad 4, fs 12',
-        children: [{ template: 'Text', textContent: 'Tooltip text' }],
-      },
-    ],
   },
 ]
 

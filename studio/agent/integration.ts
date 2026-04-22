@@ -1,18 +1,20 @@
 /**
  * Agent Integration for Mirror Studio
  *
- * Initializes the AI agent with OpenRouter configuration and
+ * Initializes the AI agent based on user settings and
  * connects it to the studio state.
  */
 
 import { createMirrorAgent } from './mirror-agent'
 import { createClaudeCliAgent, type ClaudeCliAgent } from './claude-cli-agent'
+import { createAnthropicSdkAgent, type AnthropicSdkAgent } from './anthropic-sdk-agent'
 import type { MirrorAgentConfig } from './types'
-import { ChatPanel, type ChatPanelConfig } from '../panels/chat-panel'
+import { ChatPanel } from '../panels/chat-panel'
 import { createCommandHandler, type AgentCommandHandler } from './command-handler'
 import { validateAndFix, formatErrors } from './validator'
 import { getLLMBridge } from '../llm'
-import { state } from '../core'
+import { state, events } from '../core'
+import { agentSettings } from '../core/settings'
 import type { LLMCommand } from './types'
 import { logAgent } from '../../compiler/utils/logger'
 
@@ -39,7 +41,11 @@ export interface AgentIntegrationConfig {
   /** Get current file name */
   getCurrentFile?: () => string
   /** Get all project files with types */
-  getFiles?: () => { name: string; type: 'tokens' | 'components' | 'component' | 'layout' | 'data' | 'unknown'; code: string }[]
+  getFiles?: () => {
+    name: string
+    type: 'tokens' | 'components' | 'component' | 'layout' | 'data' | 'unknown'
+    code: string
+  }[]
   /** Get all code concatenated */
   getAllCode?: () => string
   /** Update file content */
@@ -61,17 +67,24 @@ const DEFAULT_MODEL = 'anthropic/claude-sonnet-4'
 export class AgentIntegration {
   private agent: ReturnType<typeof createMirrorAgent>
   private claudeAgent: ClaudeCliAgent | null = null
+  private anthropicAgent: AnthropicSdkAgent | null = null
   private chatPanel: ChatPanel | null = null
   private commandHandler: AgentCommandHandler | null = null
   private llmBridge = getLLMBridge()
   private config: AgentIntegrationConfig
+  private settingsUnsubscribe: (() => void) | null = null
 
   constructor(config: AgentIntegrationConfig) {
-    // Build agent config
+    this.config = config
+
+    // Get current agent settings
+    const settings = agentSettings.get()
+
+    // Build agent config for OpenRouter (MirrorAgent)
     const agentConfig: MirrorAgentConfig = {
-      apiKey: config.apiKey,
+      apiKey: settings.openrouterApiKey || config.apiKey,
       baseUrl: OPENROUTER_BASE_URL,
-      model: config.model || DEFAULT_MODEL,
+      model: settings.openrouterModel || config.model || DEFAULT_MODEL,
       maxIterations: 10,
 
       // Code access
@@ -80,33 +93,7 @@ export class AgentIntegration {
         const pos = state.get().cursor
         return { line: pos.line, column: pos.column }
       },
-      getSelection: () => {
-        const nodeId = state.get().selection.nodeId
-        if (!nodeId) return null
-        const sourceMap = state.get().sourceMap
-        if (!sourceMap) return null
-        const node = sourceMap.getNodeById(nodeId)
-        if (!node) return null
-        const source = state.get().source
-        // Calculate character offsets from line/column positions
-        const lines = source.split('\n')
-        let startOffset = 0
-        for (let i = 0; i < node.position.line - 1; i++) {
-          startOffset += lines[i].length + 1 // +1 for newline
-        }
-        startOffset += node.position.column - 1
-        let endOffset = 0
-        for (let i = 0; i < node.position.endLine - 1; i++) {
-          endOffset += lines[i].length + 1
-        }
-        endOffset += node.position.endColumn - 1
-        const text = source.substring(startOffset, endOffset)
-        return {
-          from: startOffset,
-          to: endOffset,
-          text
-        }
-      },
+      getSelection: () => this.getSelectionHelper(),
 
       // Tokens and components
       tokens: config.tokens || {},
@@ -136,14 +123,13 @@ export class AgentIntegration {
       },
       clearHighlights: () => {
         document.querySelectorAll('[data-mirror-id]').forEach(el => {
-          (el as HTMLElement).style.outline = ''
+          ;(el as HTMLElement).style.outline = ''
           ;(el as HTMLElement).style.outlineOffset = ''
         })
-      }
+      },
     }
 
     this.agent = createMirrorAgent(agentConfig)
-    this.config = config
 
     // Create Claude CLI agent (works in Tauri desktop app)
     this.claudeAgent = createClaudeCliAgent({
@@ -153,30 +139,32 @@ export class AgentIntegration {
         const pos = state.get().cursor
         return { line: pos.line, column: pos.column }
       },
-      getSelection: () => {
-        const nodeId = state.get().selection.nodeId
-        if (!nodeId) return null
-        const sourceMap = state.get().sourceMap
-        if (!sourceMap) return null
-        const node = sourceMap.getNodeById(nodeId)
-        if (!node) return null
-        const source = state.get().source
-        const lines = source.split('\n')
-        let startOffset = 0
-        for (let i = 0; i < node.position.line - 1; i++) {
-          startOffset += lines[i].length + 1
-        }
-        startOffset += node.position.column - 1
-        let endOffset = 0
-        for (let i = 0; i < node.position.endLine - 1; i++) {
-          endOffset += lines[i].length + 1
-        }
-        endOffset += node.position.endColumn - 1
-        const text = source.substring(startOffset, endOffset)
-        return { from: startOffset, to: endOffset, text }
-      },
+      getSelection: () => this.getSelectionHelper(),
       tokens: config.tokens || {},
-      components: config.components || []
+      components: config.components || [],
+    })
+
+    // Create Anthropic SDK agent
+    this.anthropicAgent = createAnthropicSdkAgent({
+      apiKey: settings.anthropicApiKey,
+      model: settings.anthropicModel,
+      maxIterations: 10,
+      getCode: () => state.get().source,
+      getCurrentFile: config.getCurrentFile,
+      getFiles: config.getFiles,
+      getAllCode: config.getAllCode,
+      getCursor: () => {
+        const pos = state.get().cursor
+        return { line: pos.line, column: pos.column }
+      },
+      getSelection: () => this.getSelectionHelper(),
+      tokens: config.tokens || {},
+      components: config.components || [],
+    })
+
+    // Listen for agent settings changes
+    this.settingsUnsubscribe = events.on('agent:changed', () => {
+      this.updateAgentsFromSettings()
     })
 
     // Initialize command handler if project callbacks provided
@@ -195,6 +183,49 @@ export class AgentIntegration {
     }
   }
 
+  /**
+   * Helper to get selection (shared between agents)
+   */
+  private getSelectionHelper(): { from: number; to: number; text: string } | null {
+    const nodeId = state.get().selection.nodeId
+    if (!nodeId) return null
+    const sourceMap = state.get().sourceMap
+    if (!sourceMap) return null
+    const node = sourceMap.getNodeById(nodeId)
+    if (!node) return null
+    const source = state.get().source
+    const lines = source.split('\n')
+    let startOffset = 0
+    for (let i = 0; i < node.position.line - 1; i++) {
+      startOffset += lines[i].length + 1
+    }
+    startOffset += node.position.column - 1
+    let endOffset = 0
+    for (let i = 0; i < node.position.endLine - 1; i++) {
+      endOffset += lines[i].length + 1
+    }
+    endOffset += node.position.endColumn - 1
+    const text = source.substring(startOffset, endOffset)
+    return { from: startOffset, to: endOffset, text }
+  }
+
+  /**
+   * Update agents when settings change
+   */
+  private updateAgentsFromSettings(): void {
+    const settings = agentSettings.get()
+
+    // Update Anthropic SDK agent
+    if (this.anthropicAgent) {
+      this.anthropicAgent.updateApiKey(settings.anthropicApiKey)
+      this.anthropicAgent.updateModel(settings.anthropicModel)
+    }
+
+    // For OpenRouter agent, we need to recreate it (config is not mutable)
+    // This is fine since the chat panel will use the new settings on next message
+    logAgent.info('Agent settings updated:', settings.type)
+  }
+
   private async handleCommand(command: LLMCommand): Promise<void> {
     // Check if this is a project command that needs special handling
     const projectCommands = ['ADD_TOKEN', 'ADD_COMPONENT', 'USE_COMPONENT', 'REPLACE_ALL']
@@ -208,13 +239,15 @@ export class AgentIntegration {
           command = { ...command, code: validationResult.fixedCode }
         }
         if (!validationResult.valid && validationResult.errors.length > 0) {
-          const criticalErrors = validationResult.errors.filter(e =>
-            e.type === 'self-closing-with-children'
+          const criticalErrors = validationResult.errors.filter(
+            e => e.type === 'self-closing-with-children'
           )
           if (criticalErrors.length > 0) {
             logAgent.warn('Generated code has structural issues:\n', formatErrors(criticalErrors))
             if (this.config.onError) {
-              this.config.onError(`Code has structural issues that need manual fixing:\n${formatErrors(criticalErrors)}`)
+              this.config.onError(
+                `Code has structural issues that need manual fixing:\n${formatErrors(criticalErrors)}`
+              )
             }
           }
         }
@@ -228,10 +261,12 @@ export class AgentIntegration {
         // If there's a code change, apply it through LLMBridge
         if (result.change) {
           this.llmBridge.executeResponse({
-            commands: [{
-              type: 'UPDATE_SOURCE',
-              ...result.change
-            }]
+            commands: [
+              {
+                type: 'UPDATE_SOURCE',
+                ...result.change,
+              },
+            ],
           })
         }
       } else {
@@ -251,22 +286,24 @@ export class AgentIntegration {
 
       if (!validationResult.valid && validationResult.errors.length > 0) {
         // Log warnings for errors that couldn't be auto-fixed
-        const criticalErrors = validationResult.errors.filter(e =>
-          e.type === 'self-closing-with-children'
+        const criticalErrors = validationResult.errors.filter(
+          e => e.type === 'self-closing-with-children'
         )
 
         if (criticalErrors.length > 0) {
           logAgent.warn('Generated code has structural issues:\n', formatErrors(criticalErrors))
           // Still apply the code but warn the user
           if (this.config.onError) {
-            this.config.onError(`Code has structural issues that need manual fixing:\n${formatErrors(criticalErrors)}`)
+            this.config.onError(
+              `Code has structural issues that need manual fixing:\n${formatErrors(criticalErrors)}`
+            )
           }
         }
       }
 
       // Apply the (possibly fixed) code
       const result = this.llmBridge.executeResponse({
-        commands: [command]
+        commands: [command],
       })
 
       if (!result.success && this.config.onError) {
@@ -275,7 +312,7 @@ export class AgentIntegration {
     } else {
       // Use LLMBridge for other standard commands
       const result = this.llmBridge.executeResponse({
-        commands: [command]
+        commands: [command],
       })
 
       if (!result.success && this.config.onError) {
@@ -295,18 +332,33 @@ export class AgentIntegration {
       container: config.chatContainer,
       agent: this.agent,
       claudeAgent: this.claudeAgent || undefined,
-      onCommand: (command) => {
+      anthropicAgent: this.anthropicAgent || undefined,
+      onCommand: command => {
         this.handleCommand(command)
       },
-      onError: config.onError
+      onError: config.onError,
     })
   }
 
   /**
-   * Get the agent instance
+   * Get the OpenRouter agent instance
    */
   getAgent() {
     return this.agent
+  }
+
+  /**
+   * Get the Claude CLI agent instance
+   */
+  getClaudeAgent() {
+    return this.claudeAgent
+  }
+
+  /**
+   * Get the Anthropic SDK agent instance
+   */
+  getAnthropicAgent() {
+    return this.anthropicAgent
   }
 
   /**
@@ -314,6 +366,20 @@ export class AgentIntegration {
    */
   getChatPanel() {
     return this.chatPanel
+  }
+
+  /**
+   * Dispose and clean up resources
+   */
+  dispose(): void {
+    if (this.settingsUnsubscribe) {
+      this.settingsUnsubscribe()
+      this.settingsUnsubscribe = null
+    }
+    if (this.chatPanel) {
+      this.chatPanel.dispose()
+      this.chatPanel = null
+    }
   }
 
   /**
@@ -363,8 +429,8 @@ export function getAgentIntegration(): AgentIntegration | null {
 }
 
 /**
- * Check if agent is available (has API key)
+ * Check if agent is available and configured
  */
 export function isAgentAvailable(): boolean {
-  return instance !== null
+  return instance !== null && agentSettings.isConfigured()
 }

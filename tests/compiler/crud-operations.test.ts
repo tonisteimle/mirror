@@ -125,7 +125,7 @@ todos:
     done: true
 
 each todo in $todos
-  Checkbox checked todo.done
+  Frame w 20, h 20, bor 1, rad 4
     Text todo.text
 `
     const ast = parse(code)
@@ -274,7 +274,7 @@ Frame gap 12
 
   each todo in $todos
     Frame hor, gap 8
-      Checkbox checked todo.done
+      Frame w 20, h 20, bor 1, rad 4
       Text todo.text, editable
       Button "Delete", remove(todo)
 `
@@ -370,9 +370,7 @@ describe('CRUD: IR Transformation', () => {
     expect(buttonNode.events).toBeDefined()
 
     // Check for add action in events
-    const hasAddAction = buttonNode.events?.some(e =>
-      e.actions?.some(a => a.name === 'add')
-    )
+    const hasAddAction = buttonNode.events?.some(e => e.actions?.some(a => a.name === 'add'))
     expect(hasAddAction).toBe(true)
   })
 
@@ -383,9 +381,7 @@ describe('CRUD: IR Transformation', () => {
     const buttonNode = ast.instances[0]
     expect(buttonNode).toBeDefined()
 
-    const hasRemoveAction = buttonNode.events?.some(e =>
-      e.actions?.some(a => a.name === 'remove')
-    )
+    const hasRemoveAction = buttonNode.events?.some(e => e.actions?.some(a => a.name === 'remove'))
     expect(hasRemoveAction).toBe(true)
   })
 

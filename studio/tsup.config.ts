@@ -4,7 +4,7 @@ export default defineConfig({
   entry: ['studio/index.ts'],
   format: ['esm'],
   outDir: 'studio/dist',
-  splitting: true,  // Enable code splitting for lazy-loaded modules
+  splitting: true, // Enable code splitting for lazy-loaded modules
   // Replace process.env.NODE_ENV for browser compatibility
   define: {
     'process.env.NODE_ENV': '"production"',
@@ -18,8 +18,8 @@ export default defineConfig({
     '@codemirror/commands',
     '@codemirror/autocomplete',
   ],
-  // Force bundling of ALL @zag-js and @atlaskit packages (not external)
-  noExternal: [/^@zag-js\/.*/, /^@atlaskit\/.*/],
+  // Force bundling of ALL @zag-js, @atlaskit, and @anthropic-ai packages (not external)
+  noExternal: [/^@zag-js\/.*/, /^@atlaskit\/.*/, /^@anthropic-ai\/.*/],
 
   // FUTURE: Separate Compiler Bundle (~1.3MB savings)
   // To make the compiler external:

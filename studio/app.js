@@ -129,7 +129,7 @@ import {
   indentGuidesExtension,
   // Smart Paste Extension (auto-adjust indentation on paste)
   smartPasteExtension,
-} from './dist/index.js?v=143'
+} from './dist/index.js?v=144'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1857,7 +1857,7 @@ function getZagDeps() {
     emitNotification: (type, message) => {
       studio.events.emit(`notification:${type}`, { message, duration: 2000 })
     },
-    updateFileList,
+    updateFileList: () => renderFileList(),
   }
 }
 

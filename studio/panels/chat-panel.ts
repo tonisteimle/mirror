@@ -8,9 +8,12 @@ import {
   MirrorAgent,
   ClaudeCliAgent,
   isClaudeCliAvailable,
+  AnthropicSdkAgent,
   type AgentEvent,
   type LLMCommand,
 } from '../agent'
+import { agentSettings, type AgentType } from '../core/settings'
+import { events } from '../core/events'
 
 // ============================================
 // TYPES
@@ -38,6 +41,7 @@ export interface ChatPanelConfig {
   container: HTMLElement
   agent?: MirrorAgent
   claudeAgent?: ClaudeCliAgent
+  anthropicAgent?: AnthropicSdkAgent
   onCommand?: (command: LLMCommand) => void
   onError?: (error: string) => void
 }
@@ -50,11 +54,13 @@ export class ChatPanel {
   private container: HTMLElement
   private agent?: MirrorAgent
   private claudeAgent?: ClaudeCliAgent
-  private useClaudeCli = false
+  private anthropicAgent?: AnthropicSdkAgent
+  private currentAgentType: AgentType = 'openrouter'
   private messages: ChatMessage[] = []
   private isStreaming = false
   private onCommand?: (command: LLMCommand) => void
   private onError?: (error: string) => void
+  private settingsUnsubscribe?: () => void
 
   // DOM elements
   private messagesContainer!: HTMLElement
@@ -66,24 +72,50 @@ export class ChatPanel {
     this.container = config.container
     this.agent = config.agent
     this.claudeAgent = config.claudeAgent
+    this.anthropicAgent = config.anthropicAgent
     this.onCommand = config.onCommand
     this.onError = config.onError
 
     this.render()
     this.setupEventListeners()
     this.detectAgent()
+
+    // Listen for settings changes
+    this.settingsUnsubscribe = events.on('agent:changed', () => {
+      this.detectAgent()
+    })
   }
 
   private async detectAgent(): Promise<void> {
+    const settings = agentSettings.get()
+    this.currentAgentType = settings.type
+
     try {
-      if (this.claudeAgent && (await isClaudeCliAvailable())) {
-        this.useClaudeCli = true
-        this.updateAgentIndicator('Claude CLI', true)
-      } else if (this.agent) {
-        this.useClaudeCli = false
-        this.updateAgentIndicator('OpenRouter', true)
-      } else {
-        this.updateAgentIndicator('Kein Agent', false)
+      switch (settings.type) {
+        case 'anthropic-sdk':
+          if (this.anthropicAgent && settings.anthropicApiKey) {
+            this.updateAgentIndicator('Anthropic SDK', true)
+          } else {
+            this.updateAgentIndicator('Anthropic SDK (API Key fehlt)', false)
+          }
+          break
+
+        case 'claude-cli':
+          if (this.claudeAgent && (await isClaudeCliAvailable())) {
+            this.updateAgentIndicator('Claude CLI', true)
+          } else {
+            this.updateAgentIndicator('Claude CLI (nicht verfügbar)', false)
+          }
+          break
+
+        case 'openrouter':
+        default:
+          if (this.agent && settings.openrouterApiKey) {
+            this.updateAgentIndicator('OpenRouter', true)
+          } else {
+            this.updateAgentIndicator('OpenRouter (API Key fehlt)', false)
+          }
+          break
       }
     } catch {
       this.updateAgentIndicator('Kein Agent', false)
@@ -274,11 +306,21 @@ export class ChatPanel {
     this.updateStreamingState(true)
 
     try {
-      // Choose agent
-      const agentRunner =
-        this.useClaudeCli && this.claudeAgent
-          ? this.claudeAgent.run(messageText)
-          : this.agent?.run(messageText)
+      // Choose agent based on settings
+      let agentRunner: AsyncGenerator<AgentEvent> | undefined
+
+      switch (this.currentAgentType) {
+        case 'anthropic-sdk':
+          agentRunner = this.anthropicAgent?.run(messageText)
+          break
+        case 'claude-cli':
+          agentRunner = this.claudeAgent?.run(messageText)
+          break
+        case 'openrouter':
+        default:
+          agentRunner = this.agent?.run(messageText)
+          break
+      }
 
       if (!agentRunner) {
         throw new Error('Kein Agent verfügbar')
@@ -469,6 +511,12 @@ export class ChatPanel {
    * Dispose the chat panel and clean up resources
    */
   dispose(): void {
+    // Unsubscribe from settings changes
+    if (this.settingsUnsubscribe) {
+      this.settingsUnsubscribe()
+      this.settingsUnsubscribe = undefined
+    }
+
     // Clear messages
     this.messages = []
 

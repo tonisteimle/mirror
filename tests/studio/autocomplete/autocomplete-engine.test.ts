@@ -358,8 +358,8 @@ Cus`
 
       expect(result.context).toBe('element')
       // User-defined component should appear with user component detail
-      const customFrame = result.completions.find(c =>
-        c.label === 'CustomFrame' && c.detail === 'user component'
+      const customFrame = result.completions.find(
+        c => c.label === 'CustomFrame' && c.detail === 'user component'
       )
       expect(customFrame).toBeDefined()
       // User components should be boosted (higher priority)
@@ -460,37 +460,37 @@ Cus`
   describe('Zag Component Completions', () => {
     it('should complete Zag components', () => {
       const result = engine.getCompletions({
-        lineText: 'Tab',
-        cursorColumn: 3,
-        explicit: false,
-      })
-
-      expect(result.context).toBe('element')
-      expect(result.completions.some(c => c.label === 'Tabs')).toBe(true)
-    })
-
-    it('should provide Zag slot completions', () => {
-      const slots = engine.getZagSlotCompletions('Tabs')
-
-      expect(slots.length).toBeGreaterThan(0)
-      expect(slots.some(c => c.label.includes('Tabs'))).toBe(true)
-    })
-
-    it('should provide Zag prop completions', () => {
-      const props = engine.getZagPropCompletions('Tabs')
-
-      expect(props.length).toBeGreaterThan(0)
-    })
-
-    it('should complete Dialog component', () => {
-      const result = engine.getCompletions({
-        lineText: 'Dial',
+        lineText: 'Date',
         cursorColumn: 4,
         explicit: false,
       })
 
       expect(result.context).toBe('element')
-      expect(result.completions.some(c => c.label === 'Dialog')).toBe(true)
+      expect(result.completions.some(c => c.label === 'DatePicker')).toBe(true)
+    })
+
+    it('should provide Zag slot completions', () => {
+      const slots = engine.getZagSlotCompletions('DatePicker')
+
+      expect(slots.length).toBeGreaterThan(0)
+      expect(slots.some(c => c.label.includes('DatePicker'))).toBe(true)
+    })
+
+    it('should provide Zag prop completions', () => {
+      const props = engine.getZagPropCompletions('DatePicker')
+
+      expect(props.length).toBeGreaterThan(0)
+    })
+
+    it('should complete DatePicker component', () => {
+      const result = engine.getCompletions({
+        lineText: 'Date',
+        cursorColumn: 4,
+        explicit: false,
+      })
+
+      expect(result.context).toBe('element')
+      expect(result.completions.some(c => c.label === 'DatePicker')).toBe(true)
     })
   })
 
@@ -519,10 +519,11 @@ Cus`
 
       // Should filter to Frame-related completions
       expect(result.completions.some(c => c.label === 'Frame')).toBe(true)
-      expect(result.completions.every(c =>
-        c.label.toLowerCase().includes('fr') ||
-        c.label.toLowerCase().startsWith('fr')
-      )).toBe(true)
+      expect(
+        result.completions.every(
+          c => c.label.toLowerCase().includes('fr') || c.label.toLowerCase().startsWith('fr')
+        )
+      ).toBe(true)
     })
   })
 
@@ -568,8 +569,7 @@ MyButton: Button`
     it('should return Zag components', () => {
       const zag = engine.getZagComponents()
       expect(zag.length).toBeGreaterThan(0)
-      expect(zag.some(c => c.label === 'Dialog')).toBe(true)
-      expect(zag.some(c => c.label === 'Tabs')).toBe(true)
+      expect(zag.some(c => c.label === 'DatePicker')).toBe(true)
     })
   })
 
@@ -618,7 +618,7 @@ MyButton: Button`
       })
 
       expect(result.from).toBe(6) // Start of "bg"
-      expect(result.to).toBe(8)  // End of "bg"
+      expect(result.to).toBe(8) // End of "bg"
     })
 
     it('should handle special characters in line', () => {
@@ -714,11 +714,11 @@ describe('Mock Autocomplete Adapters', () => {
     it('should track parent Zag components', () => {
       const ports = createMockAutocompletePorts()
 
-      ports.sourceMap.setParentZagComponent(2, 'Tabs')
-      ports.sourceMap.setParentZagComponent(3, 'Tabs')
+      ports.sourceMap.setParentZagComponent(2, 'DatePicker')
+      ports.sourceMap.setParentZagComponent(3, 'DatePicker')
 
-      expect(ports.sourceMap.getParentZagComponent(2)).toBe('Tabs')
-      expect(ports.sourceMap.getParentZagComponent(3)).toBe('Tabs')
+      expect(ports.sourceMap.getParentZagComponent(2)).toBe('DatePicker')
+      expect(ports.sourceMap.getParentZagComponent(3)).toBe('DatePicker')
       expect(ports.sourceMap.getParentZagComponent(1)).toBeNull()
     })
 
@@ -810,7 +810,7 @@ describe('Mock Autocomplete Adapters', () => {
       const ports = createMockAutocompletePorts()
 
       let selectedLabel = ''
-      ports.ui.onCompletionSelected((c) => {
+      ports.ui.onCompletionSelected(c => {
         selectedLabel = c.label
       })
 

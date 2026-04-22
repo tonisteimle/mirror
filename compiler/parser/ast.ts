@@ -4,6 +4,7 @@
 
 export type NodeType =
   | 'Program'
+  | 'Canvas'
   | 'Token'
   | 'Component'
   | 'Instance'
@@ -27,7 +28,7 @@ export interface BaseNode {
   type: NodeType
   line: number
   column: number
-  nodeId?: string  // Unique identifier for studio selection
+  nodeId?: string // Unique identifier for studio selection
 }
 
 export interface ParseError {
@@ -39,15 +40,43 @@ export interface ParseError {
 
 export interface Program extends BaseNode {
   type: 'Program'
-  imports: string[]  // Imported files via 'use filename'
+  imports: string[] // Imported files via 'use filename'
+  canvas?: CanvasDefinition // Canvas definition (optional, must be first)
   tokens: TokenDefinition[]
   components: ComponentDefinition[]
-  animations: AnimationDefinition[]  // Animation definitions
+  animations: AnimationDefinition[] // Animation definitions
   instances: (Instance | Slot | TableNode | Each | ConditionalNode | ZagNode)[]
-  javascript?: JavaScriptBlock  // JavaScript code at end of file
-  schema?: SchemaDefinition  // Schema definition for data collections
-  icons: IconDefinition[]  // Custom icon definitions
+  javascript?: JavaScriptBlock // JavaScript code at end of file
+  schema?: SchemaDefinition // Schema definition for data collections
+  icons: IconDefinition[] // Custom icon definitions
   errors: ParseError[]
+}
+
+/**
+ * Canvas definition - defines base styling for the application
+ *
+ * Syntax:
+ *   canvas bg #1a1a1a, w 375, h 812, col white, font sans
+ *   canvas mobile                    // Device preset: 375×812
+ *   canvas tablet, bg #1a1a1a        // Preset + properties
+ *   canvas desktop                   // Device preset: 1440×900
+ *
+ * Properties:
+ * - bg: Background color
+ * - w, h: Width and height
+ * - col: Default text color (inherited)
+ * - font: Default font family (inherited)
+ * - fs: Default font size (inherited)
+ *
+ * Device presets:
+ * - mobile: 375×812
+ * - tablet: 768×1024
+ * - desktop: 1440×900
+ */
+export interface CanvasDefinition extends BaseNode {
+  type: 'Canvas'
+  device?: 'mobile' | 'tablet' | 'desktop' // Device preset
+  properties: Property[]
 }
 
 // ============================================================================
@@ -116,21 +145,21 @@ export interface IconDefinition {
 
 export interface JavaScriptBlock extends BaseNode {
   type: 'JavaScript'
-  code: string  // Raw JavaScript code
+  code: string // Raw JavaScript code
 }
 
 export interface TokenDefinition extends BaseNode {
   type: 'Token'
   name: string
-  tokenType?: 'color' | 'size' | 'font' | 'icon'  // Optional, inferred from value
-  value?: string | number | boolean  // Optional when attributes are present (data object)
-  section?: string  // Section header this token belongs to (--- Title ---)
+  tokenType?: 'color' | 'size' | 'font' | 'icon' // Optional, inferred from value
+  value?: string | number | boolean // Optional when attributes are present (data object)
+  section?: string // Section header this token belongs to (--- Title ---)
   // Data object fields (when value is not present)
-  attributes?: DataAttribute[]  // key-value pairs
-  blocks?: DataBlock[]  // @blockname markdown content
+  attributes?: DataAttribute[] // key-value pairs
+  blocks?: DataBlock[] // @blockname markdown content
   // Property Set fields (mixin/stylesheet)
   // e.g., standardtext: fs 14, col #888, weight 500
-  properties?: Property[]  // reusable property combinations
+  properties?: Property[] // reusable property combinations
 }
 
 /**
@@ -181,43 +210,51 @@ export interface DataBlock {
 export interface ComponentDefinition extends BaseNode {
   type: 'Component'
   name: string
-  primitive: string | null    // 'frame' | 'text' | 'button' | etc. (for 'as')
-  extends: string | null      // parent component name (for 'extends')
+  primitive: string | null // 'frame' | 'text' | 'button' | etc. (for 'as')
+  extends: string | null // parent component name (for 'extends')
   properties: Property[]
   states: State[]
   events: Event[]
   children: (Instance | Slot)[]
-  initialState?: string       // initial state: "closed" → initialState: "closed"
-  selection?: string          // selection binding: "selection $selected" → selection: "$selected"
-  bind?: string               // bind active exclusive() child: "bind value" → bind: "value"
-  visibleWhen?: string        // state-based visibility: "if (open)" → visibleWhen: "open"
-  route?: string              // navigation target: "route Home" → route: "Home"
+  initialState?: string // initial state: "closed" → initialState: "closed"
+  selection?: string // selection binding: "selection $selected" → selection: "$selected"
+  bind?: string // bind active exclusive() child: "bind value" → bind: "value"
+  visibleWhen?: string // state-based visibility: "if (open)" → visibleWhen: "open"
+  route?: string // navigation target: "route Home" → route: "Home"
 }
 
 export interface Instance extends BaseNode {
   type: 'Instance'
   component: string
-  name: string | null         // named instance
+  name: string | null // named instance
   properties: Property[]
-  states?: State[]            // inline states: "hover: bg light"
-  events?: Event[]            // inline events: "onkeydown enter: submit"
+  states?: State[] // inline states: "hover: bg light"
+  events?: Event[] // inline events: "onkeydown enter: submit"
   children: (Instance | Slot | Text | ZagNode)[]
-  childOverrides?: ChildOverride[]  // inline child overrides: NavItem Icon "home"; Label "Home"
-  visibleWhen?: string        // state-based visibility: "if open" → visibleWhen: "open"
-  initialState?: string       // initial state: "closed" → initialState: "closed"
-  selection?: string          // selection binding: "selection $selected" → selection: "$selected"
-  bind?: string               // bind active exclusive() child: "bind value" → bind: "value"
-  route?: string              // navigation target: "route Home" → route: "Home"
-  isDefinition?: boolean      // true if ends with : (definition, not rendered)
-  isCompound?: boolean        // true if this is a Compound primitive (Shell, etc.)
-  compoundType?: string       // Compound primitive type (e.g., 'Shell')
-  chartSlots?: Record<string, ChartSlotNode>  // chart subcomponents: XAxis:, Legend:, etc.
+  childOverrides?: ChildOverride[] // inline child overrides: NavItem Icon "home"; Label "Home"
+  visibleWhen?: string // state-based visibility: "if open" → visibleWhen: "open"
+  initialState?: string // initial state: "closed" → initialState: "closed"
+  selection?: string // selection binding: "selection $selected" → selection: "$selected"
+  bind?: string // bind active exclusive() child: "bind value" → bind: "value"
+  route?: string // navigation target: "route Home" → route: "Home"
+  isDefinition?: boolean // true if ends with : (definition, not rendered)
+  isCompound?: boolean // true if this is a Compound primitive (Shell, etc.)
+  compoundType?: string // Compound primitive type (e.g., 'Shell')
+  chartSlots?: Record<string, ChartSlotNode> // chart subcomponents: XAxis:, Legend:, etc.
 }
 
 export interface Property extends BaseNode {
   type: 'Property'
   name: string
-  values: (string | number | boolean | TokenReference | LoopVarReference | Conditional | ComputedExpression)[]
+  values: (
+    | string
+    | number
+    | boolean
+    | TokenReference
+    | LoopVarReference
+    | Conditional
+    | ComputedExpression
+  )[]
 }
 
 export interface TokenReference {
@@ -240,8 +277,8 @@ export interface LoopVarReference {
  */
 export interface ComputedExpression {
   kind: 'expression'
-  parts: (string | number | TokenReference | LoopVarReference)[]  // Operands
-  operators: string[]  // Operators between operands (+, -, *, /)
+  parts: (string | number | TokenReference | LoopVarReference)[] // Operands
+  operators: string[] // Operators between operands (+, -, *, /)
 }
 
 export interface Conditional {
@@ -259,16 +296,16 @@ export interface State extends BaseNode {
   name: string
   properties: Property[]
   childOverrides: ChildOverride[]
-  children?: (Instance | Slot)[]      // State can have completely different children (like Figma Variants)
+  children?: (Instance | Slot)[] // State can have completely different children (like Figma Variants)
   // Interaction model fields
   modifier?: 'exclusive' | 'toggle' | 'initial'
-  trigger?: string                    // 'onclick', 'onkeydown escape', etc.
-  when?: StateDependency              // dependency on another element's state
-  targetState?: string                // for 'when' dependencies: the state to transition to
+  trigger?: string // 'onclick', 'onkeydown escape', etc.
+  when?: StateDependency // dependency on another element's state
+  targetState?: string // for 'when' dependencies: the state to transition to
   // Animation fields
-  animation?: StateAnimation          // animation on enter (after trigger/colon)
-  enter?: StateAnimation              // explicit enter animation
-  exit?: StateAnimation               // explicit exit animation
+  animation?: StateAnimation // animation on enter (after trigger/colon)
+  enter?: StateAnimation // explicit enter animation
+  exit?: StateAnimation // explicit exit animation
 }
 
 /**
@@ -280,10 +317,10 @@ export interface State extends BaseNode {
  *   slide-in 0.2s             → { preset: 'slide-in', duration: 0.2 }
  */
 export interface StateAnimation {
-  preset?: string                     // 'fade-in', 'bounce', custom name, etc.
-  duration?: number                   // duration in seconds
-  easing?: string                     // 'ease-out', 'ease-in-out', etc.
-  delay?: number                      // delay in seconds
+  preset?: string // 'fade-in', 'bounce', custom name, etc.
+  duration?: number // duration in seconds
+  easing?: string // 'ease-out', 'ease-in-out', etc.
+  delay?: number // delay in seconds
 }
 
 /**
@@ -291,10 +328,10 @@ export interface StateAnimation {
  * Example: visible when Menu open
  */
 export interface StateDependency {
-  target: string                      // element name (e.g., 'Menu')
-  state: string                       // state name (e.g., 'open')
-  condition?: 'and' | 'or'            // for chaining
-  next?: StateDependency              // next dependency in chain
+  target: string // element name (e.g., 'Menu')
+  state: string // state name (e.g., 'open')
+  condition?: 'and' | 'or' // for chaining
+  next?: StateDependency // next dependency in chain
 }
 
 export interface ChildOverride {
@@ -304,8 +341,8 @@ export interface ChildOverride {
 
 export interface Event extends BaseNode {
   type: 'Event'
-  name: string                // 'onclick', 'onhover', etc.
-  key?: string                // for keyboard events
+  name: string // 'onclick', 'onhover', etc.
+  key?: string // for keyboard events
   modifiers?: EventModifier[]
   actions: Action[]
 }
@@ -317,10 +354,10 @@ export interface EventModifier {
 
 export interface Action extends BaseNode {
   type: 'Action'
-  name: string                // 'toggle', 'select', 'show', 'hide', 'call', 'animate', etc.
-  target?: string             // target element or 'next', 'prev', etc.
+  name: string // 'toggle', 'select', 'show', 'hide', 'call', 'animate', etc.
+  target?: string // target element or 'next', 'prev', etc.
   args?: string[]
-  isFunctionCall?: boolean    // true for new syntax: toggle(), cycle(), customFn()
+  isFunctionCall?: boolean // true for new syntax: toggle(), cycle(), customFn()
 }
 
 /**
@@ -342,33 +379,33 @@ export interface Action extends BaseNode {
  */
 export interface AnimationDefinition extends BaseNode {
   type: 'Animation'
-  name: string                  // Animation name (e.g., 'FadeUp')
-  easing?: string               // Default easing function (e.g., 'ease-out', 'ease-in-out')
-  duration?: number             // Duration in ms (calculated from last keyframe time)
-  roles?: string[]              // Named roles for choreography
+  name: string // Animation name (e.g., 'FadeUp')
+  easing?: string // Default easing function (e.g., 'ease-out', 'ease-in-out')
+  duration?: number // Duration in ms (calculated from last keyframe time)
+  roles?: string[] // Named roles for choreography
   keyframes: AnimationKeyframe[]
 }
 
 export interface AnimationKeyframe {
-  time: number                  // Time in normalized form (0.00 - 1.00)
+  time: number // Time in normalized form (0.00 - 1.00)
   properties: AnimationKeyframeProperty[]
 }
 
 export interface AnimationKeyframeProperty {
-  target?: string               // Role name for choreography (e.g., 'item1', 'all')
-  name: string                  // Property name (e.g., 'opacity', 'y-offset')
-  value: string | number        // Property value
-  easing?: string               // Per-property easing override
+  target?: string // Role name for choreography (e.g., 'item1', 'all')
+  name: string // Property name (e.g., 'opacity', 'y-offset')
+  value: string | number // Property value
+  easing?: string // Per-property easing override
 }
 
 export interface Each extends BaseNode {
   type: 'Each'
   item: string
-  index?: string                // Optional index variable: each item, i in collection
+  index?: string // Optional index variable: each item, i in collection
   collection: string
   filter?: Expression
-  orderBy?: string              // Field to sort by: each task in $tasks by priority
-  orderDesc?: boolean           // Descending order: each task in $tasks by priority desc
+  orderBy?: string // Field to sort by: each task in $tasks by priority
+  orderDesc?: boolean // Descending order: each task in $tasks by priority desc
   children: (Instance | Slot | ConditionalNode | Each)[]
 }
 
@@ -405,7 +442,7 @@ export interface Text extends BaseNode {
 export interface TextFormat {
   start: number
   end: number
-  style: 'bold' | 'italic' | 'underline' | string  // string for token names
+  style: 'bold' | 'italic' | 'underline' | string // string for token names
 }
 
 // ============================================================================
@@ -727,6 +764,7 @@ export interface TableSlotNode {
 
 export type Node =
   | Program
+  | CanvasDefinition
   | TokenDefinition
   | ComponentDefinition
   | AnimationDefinition
@@ -781,7 +819,9 @@ export function isEach(node: unknown): node is Each {
 
 /** Check if node is a Conditional */
 export function isConditional(node: unknown): node is Conditional {
-  return typeof node === 'object' && node !== null && (node as { kind?: string }).kind === 'conditional'
+  return (
+    typeof node === 'object' && node !== null && (node as { kind?: string }).kind === 'conditional'
+  )
 }
 
 /** Check if node has content (Text-like) */

@@ -98,44 +98,15 @@ describe('Component Code Generation - Correct Component Names', () => {
     })
   })
 
-  describe('Form Components', () => {
-    const formComponents = COMPONENTS_SECTION.filter(item =>
-      ['Checkbox', 'Switch', 'Slider', 'RadioGroup', 'Select', 'DatePicker'].includes(item.template)
-    )
+  describe('DatePicker Component', () => {
+    it('DatePicker generates code starting with "DatePicker"', () => {
+      const datePicker = COMPONENTS_SECTION.find(item => item.template === 'DatePicker')
+      expect(datePicker).toBeDefined()
 
-    it.each(formComponents)('$name generates code starting with "$template"', item => {
-      const code = generateCodeForMirFile(item)
+      const code = generateCodeForMirFile(datePicker!)
       const firstWord = code.split(/[\s\n]/)[0]
 
-      expect(firstWord).toBe(item.template)
-      expect(firstWord).not.toBe('Frame')
-    })
-  })
-
-  describe('Navigation Components', () => {
-    const navComponents = COMPONENTS_SECTION.filter(item =>
-      ['Tabs', 'SideNav'].includes(item.template)
-    )
-
-    it.each(navComponents)('$name generates code starting with "$template"', item => {
-      const code = generateCodeForMirFile(item)
-      const firstWord = code.split(/[\s\n]/)[0]
-
-      expect(firstWord).toBe(item.template)
-      expect(firstWord).not.toBe('Frame')
-    })
-  })
-
-  describe('Overlay Components', () => {
-    const overlayComponents = COMPONENTS_SECTION.filter(item =>
-      ['Dialog', 'Tooltip'].includes(item.template)
-    )
-
-    it.each(overlayComponents)('$name generates code starting with "$template"', item => {
-      const code = generateCodeForMirFile(item)
-      const firstWord = code.split(/[\s\n]/)[0]
-
-      expect(firstWord).toBe(item.template)
+      expect(firstWord).toBe('DatePicker')
       expect(firstWord).not.toBe('Frame')
     })
   })
@@ -196,20 +167,13 @@ describe('Generated Code Quality', () => {
     expect(code).toMatch(/Item/)
   })
 
-  it('Checkbox generates valid structure', () => {
-    const checkboxItem = COMPONENTS_SECTION.find(item => item.template === 'Checkbox')
-    expect(checkboxItem).toBeDefined()
+  it('DatePicker generates valid structure with slots', () => {
+    const datePickerItem = COMPONENTS_SECTION.find(item => item.template === 'DatePicker')
+    expect(datePickerItem).toBeDefined()
 
-    const code = generateCodeForMirFile(checkboxItem!)
-    expect(code).toMatch(/^Checkbox/)
-  })
-
-  it('Dialog generates valid structure with Trigger and Content', () => {
-    const dialogItem = COMPONENTS_SECTION.find(item => item.template === 'Dialog')
-    expect(dialogItem).toBeDefined()
-
-    const code = generateCodeForMirFile(dialogItem!)
-    expect(code).toMatch(/^Dialog/)
+    const code = generateCodeForMirFile(datePickerItem!)
+    expect(code).toMatch(/^DatePicker/)
+    expect(code).toContain('Control')
     expect(code).toContain('Trigger')
     expect(code).toContain('Content')
   })

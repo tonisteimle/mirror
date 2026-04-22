@@ -31,7 +31,20 @@ export interface IRIcon {
   viewBox?: string // default "0 0 24 24"
 }
 
+/**
+ * Canvas definition - base styling for the application
+ *
+ * Properties like col, font, fs are inherited by all children.
+ */
+export interface IRCanvas {
+  /** CSS styles to apply to root element */
+  styles: IRStyle[]
+  /** Source position for bidirectional editing */
+  sourcePosition?: SourcePosition
+}
+
 export interface IR {
+  canvas?: IRCanvas // Canvas definition (optional)
   nodes: IRNode[]
   tokens: IRToken[]
   animations: IRAnimation[]

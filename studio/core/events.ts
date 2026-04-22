@@ -236,6 +236,14 @@ export interface StudioEvents {
     customPoints: number[]
     threshold: number
   }
+  /** Agent settings changed */
+  'agent:changed': {
+    type: 'openrouter' | 'claude-cli' | 'anthropic-sdk'
+    anthropicApiKey: string
+    anthropicModel: string
+    openrouterApiKey: string
+    openrouterModel: string
+  }
   /** Inline text editing started */
   'inline-edit:started': { nodeId: string; element: HTMLElement }
   /** Inline text editing input changed */

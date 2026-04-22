@@ -13,6 +13,7 @@ import type { DropResult, DropContext, ModificationResult } from '../types'
 import {
   hasPureComponentDefinition,
   getPureComponentDefinition,
+  type PureComponentDefinition,
 } from '../../panels/components/component-templates'
 
 export class PureComponentHandler extends BaseDropHandler {
@@ -40,26 +41,83 @@ export class PureComponentHandler extends BaseDropHandler {
     // Check if definition already exists using the same mechanism as Zag components
     const existing = context.findExistingZagDefinition(componentName)
 
-    // If definition doesn't exist, add it first and wait for code to stabilize
+    // If definition doesn't exist, we need to add both in ONE atomic operation
+    // to avoid node ID shift issues when the definition is added first
     if (!existing.exists) {
-      // Add definition to code
-      const definitionWithSpacing = pureDefinition.structure + '\n\n'
-      context.addZagDefinitionToCode(definitionWithSpacing)
+      // First, add the instance using the code modifier - this returns a ModificationResult
+      // with the change that needs to be applied
+      const instanceCode = this.buildInstanceCode(result, componentName, pureDefinition)
+      const instanceResult = context.codeModifier.addChildWithTemplate(
+        result.targetNodeId,
+        instanceCode,
+        {
+          position: result.insertionIndex ?? 'last',
+          parentProperty: result.alignment?.zone,
+        }
+      )
 
-      // Wait for editor to update and recompile (debounce is 300ms, so wait 500ms)
-      await new Promise(resolve => setTimeout(resolve, 500))
+      if (!instanceResult.success || !instanceResult.newSource || !instanceResult.change) {
+        return instanceResult
+      }
+
+      // Now we have the source with the instance added. We need to prepend the definition.
+      const definitionCode = pureDefinition.structure + '\n\n'
+      const combinedSource = definitionCode + instanceResult.newSource
+
+      // Calculate the original source length before any changes
+      // The instanceResult.change is an insertion (from == to), so original length is:
+      // newSource.length - inserted.length
+      const originalSourceLength =
+        instanceResult.newSource.length - instanceResult.change.insert.length
 
       // Notify user that definition was added
       context.emitNotification('info', `${componentName} Definition hinzugefügt`)
 
-      // Now the codeModifier should be updated - add the instance
-      // Note: context.codeModifier is a reference to the global studioCodeModifier,
-      // which gets updated after each compile
-      return this.createInstance(result, componentName, context)
+      // Return a result that replaces the entire original source with the combined code
+      return {
+        success: true,
+        newSource: combinedSource,
+        change: {
+          from: 0,
+          to: originalSourceLength,
+          insert: combinedSource,
+        },
+      }
     }
 
     // Definition exists, create instance normally
     return this.createInstance(result, componentName, context)
+  }
+
+  /**
+   * Build the instance code string with positioning
+   */
+  private buildInstanceCode(
+    result: DropResult,
+    componentName: string,
+    pureDefinition: PureComponentDefinition
+  ): string {
+    // Get text content from source, or use defaultLabel, or fallback to componentName
+    const defaultLabel = pureDefinition.defaultLabel || componentName
+    const textContent = result.source.textContent || `"${defaultLabel}"`
+    let properties = result.source.properties || ''
+
+    // Add position properties for absolute placement
+    if (result.placement === 'absolute' && result.absolutePosition) {
+      const posProps = `x ${Math.round(result.absolutePosition.x)}, y ${Math.round(result.absolutePosition.y)}`
+      properties = properties ? `${properties}, ${posProps}` : posProps
+    }
+
+    // Build instance code with text content
+    let instanceCode = componentName
+    if (textContent) {
+      instanceCode += ` ${textContent}`
+    }
+    if (properties) {
+      instanceCode += `, ${properties}`
+    }
+
+    return instanceCode
   }
 
   /**

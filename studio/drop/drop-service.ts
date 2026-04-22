@@ -13,6 +13,7 @@ import { PaletteDropHandler } from './handlers/palette-drop'
 import { ZagComponentHandler } from './handlers/zag-component'
 import { ChartDropHandler } from './handlers/chart-drop'
 import { TemplateDropHandler } from './handlers/template-drop'
+import { PureComponentHandler } from './handlers/pure-component'
 
 export class DropService {
   private handlers: DropHandler[]
@@ -27,6 +28,7 @@ export class DropService {
       new ElementDuplicateHandler(),
       new AbsolutePositionHandler(),
       new ElementMoveHandler(),
+      new PureComponentHandler(), // Pure Mirror components (Checkbox, Switch, Slider) - before Zag!
       new ZagComponentHandler(),
       new ChartDropHandler(), // Charts with dataBlock
       new TemplateDropHandler(), // Presets with mirTemplate

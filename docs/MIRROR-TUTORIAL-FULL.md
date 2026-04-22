@@ -3,6 +3,100 @@
 > Diese Datei wird automatisch aus den HTML-Tutorials generiert.
 > Für die kompakte Version siehe CLAUDE.md
 
+## Canvas (App-Basis)
+
+_Das Fundament deiner Mirror-Anwendung_
+
+Das `canvas` Keyword definiert die Basis-Styling für deine gesamte Anwendung. Es muss die erste Zeile sein (optional) und legt Hintergrund, Größe und vererbbare Eigenschaften fest.
+
+### Grundsyntax
+
+```mirror
+canvas bg #1a1a1a, w 375, h 812, col white, font sans
+
+Text "Titel", fs 24
+Frame hor, gap 12
+  Button "A"
+  Button "B"
+```
+
+**Was passiert hier?**
+
+- `canvas` – definiert die App-Basis (muss erste Zeile sein)
+- `bg #1a1a1a` – Hintergrundfarbe der App
+- `w 375, h 812` – Breite und Höhe der App
+- `col white` – Standard-Textfarbe (wird vererbt)
+- `font sans` – Standard-Schriftart (wird vererbt)
+
+### Device Presets
+
+Statt manueller Größenangaben kannst du vordefinierte Device-Größen verwenden:
+
+```mirror
+// Mobile (iPhone-Größe)
+canvas mobile                    // 375 × 812
+
+// Tablet (iPad-Größe)
+canvas tablet                    // 768 × 1024
+
+// Desktop
+canvas desktop                   // 1440 × 900
+```
+
+### Preset mit zusätzlichen Properties
+
+Device Presets können mit weiteren Properties kombiniert werden:
+
+```mirror
+canvas mobile, bg #1a1a1a, col white
+
+Text "Mobile App", fs 24
+Button "Los geht's", bg #2271C1, col white, pad 12 24, rad 6
+```
+
+### Override-Verhalten
+
+Explizite Angaben überschreiben das Preset (letzte Angabe gewinnt):
+
+```mirror
+// Preset-Höhe überschreiben
+canvas mobile, h 600             // 375 × 600 (nicht 812)
+
+// Preset-Breite überschreiben
+canvas tablet, w 800             // 800 × 1024 (nicht 768)
+```
+
+### Vererbbare Properties
+
+Diese Canvas-Properties werden automatisch an alle Kind-Elemente vererbt:
+
+| Property | Beschreibung | Beispiel                 |
+| -------- | ------------ | ------------------------ |
+| `col`    | Textfarbe    | `col white`              |
+| `font`   | Schriftart   | `font sans`, `font mono` |
+| `fs`     | Schriftgröße | `fs 16`                  |
+
+```mirror
+canvas mobile, bg #1a1a1a, col white, font sans, fs 14
+
+// Alle Texte erben col white, font sans, fs 14
+Text "Titel", fs 24              // Überschreibt nur fs
+Text "Untertitel"                // Erbt alles
+Button "Klick"                   // Erbt col und font
+```
+
+### Canvas ist optional
+
+Wenn kein Canvas definiert ist, werden Standard-Werte verwendet:
+
+```mirror
+// Ohne Canvas – funktioniert auch
+Frame bg #1a1a1a, w 375, h 812
+  Text "Hello World", col white
+```
+
+---
+
 ## Elemente & Hierarchie
 
 _Die Grundbausteine jeder Mirror-Oberfläche_

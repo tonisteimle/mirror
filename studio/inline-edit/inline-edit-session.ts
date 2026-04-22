@@ -139,15 +139,15 @@ export class InlineEditSession {
     this.inputElement.value = this.originalText
     this.inputElement.className = 'inline-edit-input'
 
-    // Match the element's typography
+    // Match the element's typography and size exactly
     this.inputElement.style.cssText = `
       position: fixed;
       left: ${rect.left}px;
       top: ${rect.top}px;
-      width: ${Math.max(rect.width + 20, 60)}px;
+      width: ${rect.width}px;
       height: ${rect.height}px;
-      min-width: 60px;
-      padding: 0 4px;
+      min-width: 40px;
+      padding: 0;
       margin: 0;
       border: 2px solid var(--color-primary, #5BA8F5);
       border-radius: 3px;
@@ -159,7 +159,7 @@ export class InlineEditSession {
       line-height: ${rect.height}px;
       text-align: ${computed.textAlign};
       outline: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 0 0 1px rgba(91, 168, 245, 0.3);
       z-index: 9999;
       box-sizing: border-box;
     `
@@ -247,10 +247,14 @@ export class InlineEditSession {
     const text = this.inputElement?.value || ''
     this.onInput?.(text)
 
-    // Auto-resize input width
+    // Auto-resize input width only if text is longer than current width
     if (this.inputElement) {
       const textWidth = this.measureTextWidth(text)
-      this.inputElement.style.width = `${Math.max(textWidth + 30, 60)}px`
+      const currentWidth = parseFloat(this.inputElement.style.width) || 40
+      // Only grow, never shrink below original size
+      if (textWidth + 16 > currentWidth) {
+        this.inputElement.style.width = `${textWidth + 16}px`
+      }
     }
   }
 

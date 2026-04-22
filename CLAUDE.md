@@ -208,6 +208,33 @@ Bei Änderungen an `studio/app.js` oder `studio/styles.css`:
 
 > Vollständige Dokumentation: `docs/MIRROR-TUTORIAL-FULL.md`
 
+### Canvas (App-Basis)
+
+```mirror
+// Canvas definiert Basis-Styling für die gesamte Anwendung
+// Muss erste Zeile sein (optional)
+
+canvas bg #1a1a1a, w 375, h 812, col white, font sans
+
+// Mit Device Preset (vordefinierte Größen)
+canvas mobile                    // 375 × 812
+canvas tablet                    // 768 × 1024
+canvas desktop                   // 1440 × 900
+
+// Preset mit zusätzlichen Properties
+canvas mobile, bg #1a1a1a, col white
+
+// Top-Level Elemente brauchen keine Einrückung nach canvas
+canvas mobile, bg #1a1a1a
+
+Text "Titel", fs 24
+Frame hor, gap 12
+  Button "A"
+  Button "B"
+```
+
+**Vererbbare Properties:** `col`, `font`, `fs` fließen automatisch zu allen Kindern.
+
 ### Grundsyntax
 
 ```mirror
@@ -872,6 +899,7 @@ Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is
 
 | Kategorie       | Properties                                                                                        |
 | --------------- | ------------------------------------------------------------------------------------------------- |
+| **Canvas**      | `canvas mobile/tablet/desktop`, `canvas bg #hex, w N, h N, col #hex, font sans, fs N`             |
 | **Layout**      | `hor`, `ver`, `gap N`, `center`, `spread`, `wrap`, `grid N`, `stacked`                            |
 | **Position**    | `tl`, `tc`, `tr`, `cl`, `cr`, `bl`, `bc`, `br`, `x N`, `y N`                                      |
 | **Größe**       | `w N`, `h N`, `w full`, `w hug`, `device mobile/tablet/desktop`, `grow`, `shrink`, `minw`, `maxw` |

@@ -100,6 +100,9 @@ import {
 } from './property-panel'
 import { allPropertyRobustnessTests } from './property-robustness-tests'
 
+// Settings Panel
+import { allAgentSettingsTests } from './settings'
+
 // Editor
 import { allBidirectionalTests } from './bidirectional'
 import { allSyncTests } from './sync-tests'
@@ -236,7 +239,7 @@ export const selectionTests: TestCase[] = [
 ]
 
 /**
- * 10. PROPERTY PANEL - Property panel UI, pickers, robustness
+ * 10. PROPERTY PANEL - Property panel UI, pickers, settings, robustness
  */
 export const propertyPanelTests: TestCase[] = [
   ...allPropertyPanelTests,
@@ -245,6 +248,7 @@ export const propertyPanelTests: TestCase[] = [
   ...iconPickerTests,
   ...allEventsTests,
   ...allPropertyRobustnessTests,
+  ...allAgentSettingsTests,
 ]
 
 /**

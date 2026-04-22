@@ -9,6 +9,7 @@ import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
 import type {
   IR,
+  IRCanvas,
   IRNode,
   IRStyle,
   IREvent,
@@ -427,6 +428,11 @@ class DOMGenerator {
     this.emit("const _root = document.createElement('div')")
     this.emit("_root.className = 'mirror-root'")
     this.emit("_root.dataset.mirrorRoot = 'true'")
+
+    // Apply canvas styles to root
+    if (this.ir.canvas) {
+      this.emitCanvasStyles('_root')
+    }
     this.emit('')
 
     // Inject CSS (variables + system state styles)
@@ -448,6 +454,31 @@ class DOMGenerator {
     this.indent--
     this.emit('}')
     this.emit('')
+  }
+
+  /**
+   * Emit canvas styles to root element
+   * Applies base styling and CSS variables for inherited properties
+   */
+  private emitCanvasStyles(varName: string): void {
+    if (!this.ir.canvas?.styles.length) return
+
+    this.emit(`Object.assign(${varName}.style, {`)
+    this.indent++
+    for (const style of this.ir.canvas.styles) {
+      const jsProperty = cssPropertyToJS(style.property)
+      this.emit(`'${jsProperty}': '${style.value}',`)
+    }
+    this.indent--
+    this.emit('})')
+
+    // Set CSS variables for inherited properties (color, font-family, font-size)
+    const inheritableProps = ['color', 'font-family', 'font-size']
+    for (const style of this.ir.canvas.styles) {
+      if (inheritableProps.includes(style.property)) {
+        this.emit(`${varName}.style.setProperty('--mirror-${style.property}', '${style.value}')`)
+      }
+    }
   }
 
   private emitNode(node: IRNode, parentVar: string, isMainRoot = false): void {

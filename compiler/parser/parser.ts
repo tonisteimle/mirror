@@ -9,6 +9,7 @@ import { Token, TokenType, tokenize } from './lexer'
 import type {
   AST,
   Program,
+  CanvasDefinition,
   TokenDefinition,
   ComponentDefinition,
   Instance,
@@ -245,6 +246,12 @@ export class Parser {
       instances: [],
       icons: [],
       errors: [],
+    }
+
+    // Check for canvas at start (must be first non-empty line)
+    this.skipNewlines()
+    if (this.check('CANVAS')) {
+      program.canvas = this.parseCanvas()
     }
 
     // Track current section for tokens
@@ -3670,6 +3677,55 @@ export class Parser {
     }
 
     return { collection, filter }
+  }
+
+  /**
+   * Parse canvas definition
+   *
+   * Syntax:
+   *   canvas bg #1a1a1a, w 375, h 812, col white
+   *   canvas mobile
+   *   canvas tablet, bg #1a1a1a
+   *   canvas desktop
+   */
+  private parseCanvas(): CanvasDefinition {
+    const startToken = this.advance() // consume CANVAS
+    const canvas: CanvasDefinition = {
+      type: 'Canvas',
+      properties: [],
+      line: startToken.line,
+      column: startToken.column,
+    }
+
+    // Check for device preset (mobile, tablet, desktop)
+    if (this.check('IDENTIFIER')) {
+      const deviceValue = this.current().value.toLowerCase()
+      if (deviceValue === 'mobile' || deviceValue === 'tablet' || deviceValue === 'desktop') {
+        canvas.device = deviceValue as 'mobile' | 'tablet' | 'desktop'
+        this.advance() // consume device preset
+      }
+    }
+
+    // Parse properties (comma-separated, same line)
+    while (
+      !this.check('NEWLINE') &&
+      !this.check('INDENT') &&
+      !this.check('DEDENT') &&
+      !this.isAtEnd()
+    ) {
+      // Skip commas
+      while (this.check('COMMA')) {
+        this.advance()
+      }
+      if (this.check('NEWLINE') || this.check('INDENT') || this.check('DEDENT')) break
+
+      const prop = this.parseProperty()
+      if (prop) {
+        canvas.properties.push(prop)
+      }
+    }
+
+    return canvas
   }
 
   private parseProperty(): Property | null {

@@ -58,6 +58,7 @@ export type TokenType =
   | 'ROUTE'
   | 'WITH'
   | 'ANIMATION' // animation keyword for animation definitions
+  | 'CANVAS' // canvas keyword for canvas definitions
   | 'USE' // use filename (imports components from another file)
   | 'SLASH'
   | 'PLUS' // + (addition/concatenation)
@@ -598,7 +599,10 @@ export class Lexer {
         const afterNext = this.source[this.pos + 2]
         if (afterNext === 'i' || afterNext === 'a') {
           const afterAfterNext = this.source[this.pos + 3]
-          if ((afterNext === 'i' && afterAfterNext === 'n') || (afterNext === 'a' && afterAfterNext === 'x')) {
+          if (
+            (afterNext === 'i' && afterAfterNext === 'n') ||
+            (afterNext === 'a' && afterAfterNext === 'x')
+          ) {
             value += this.advance() // v
             value += this.advance() // m
             value += this.advance() // i or a

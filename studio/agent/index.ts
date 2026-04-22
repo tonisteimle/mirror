@@ -24,13 +24,23 @@
 // Fixer (Multi-File Code Generation)
 export { FixerService, createFixer, getFixer } from './fixer'
 export type { FixerConfig } from './fixer'
-export { ContextCollector, createContextCollector, getContextCollector, extractProjectContext } from './context-collector'
+export {
+  ContextCollector,
+  createContextCollector,
+  getContextCollector,
+  extractProjectContext,
+} from './context-collector'
 export { CodeApplicator, createCodeApplicator, getCodeApplicator } from './code-applicator'
 export { buildFixerSystemPrompt, buildFixerPrompt } from './prompts/fixer-system'
 
 // Legacy agents
 export { MirrorAgent, createMirrorAgent } from './mirror-agent'
 export { ClaudeCliAgent, createClaudeCliAgent, isClaudeCliAvailable } from './claude-cli-agent'
+export {
+  AnthropicSdkAgent,
+  createAnthropicSdkAgent,
+  isAnthropicSdkAvailable,
+} from './anthropic-sdk-agent'
 export { buildSystemPrompt } from './prompts/system'
 export { coreTools } from './tools/core'
 export { writeTools } from './tools/write'
@@ -43,18 +53,35 @@ export { validateStructure, validateAndFix, formatErrors } from './validator'
 export type { ValidationError, ValidationResult } from './validator'
 export { AgentCommandHandler, createCommandHandler } from './command-handler'
 export type { CommandHandlerConfig, AgentCommandResult } from './command-handler'
-export { VisualFeedbackManager, getVisualFeedbackManager, createVisualFeedbackManager } from './visual-feedback'
+export {
+  VisualFeedbackManager,
+  getVisualFeedbackManager,
+  createVisualFeedbackManager,
+} from './visual-feedback'
 
 // Phase 4: Intelligence
 export { MemoryStore, getMemoryStore, createMemoryStore } from './memory'
-export type { MemoryEntry, Preference, Pattern, PatternAction, Correction, Snippet, Interaction } from './memory'
+export type {
+  MemoryEntry,
+  Preference,
+  Pattern,
+  PatternAction,
+  Correction,
+  Snippet,
+  Interaction,
+} from './memory'
 export { SuggestionEngine, getSuggestionEngine, createSuggestionEngine } from './suggestions'
 export type { Suggestion, SuggestionAction, SuggestionContext } from './suggestions'
 export { LearningManager, getLearningManager, createLearningManager } from './learning'
 export type { LearningConfig, FeedbackData, LearningStats } from './learning'
 
 // Integration
-export { AgentIntegration, initializeAgent, getAgentIntegration, isAgentAvailable } from './integration'
+export {
+  AgentIntegration,
+  initializeAgent,
+  getAgentIntegration,
+  isAgentAvailable,
+} from './integration'
 export type { AgentIntegrationConfig } from './integration'
 
 export * from './types'

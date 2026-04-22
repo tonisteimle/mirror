@@ -199,6 +199,7 @@ export const DSL = {
   keywords: {
     reserved: [
       'as',
+      'canvas',
       'extends',
       'named',
       'each',

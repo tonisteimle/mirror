@@ -78,7 +78,8 @@ function searchCurrentFile(name: string, deps: ZagDependencies): ZagDefinitionRe
   if (!ast?.components) return { exists: false }
 
   for (const comp of ast.components) {
-    if (comp.primitive === name || comp.extends === name) {
+    // Match by name (for Pure components), primitive, or extends
+    if (comp.name === name || comp.primitive === name || comp.extends === name) {
       return { exists: true, definitionName: comp.name, sourceFile: deps.getCurrentFile() }
     }
   }
@@ -111,7 +112,8 @@ function searchFileForDefinition(
     if (!ast?.components) return { exists: false }
 
     for (const comp of ast.components) {
-      if (comp.primitive === name || comp.extends === name) {
+      // Match by name (for Pure components), primitive, or extends
+      if (comp.name === name || comp.primitive === name || comp.extends === name) {
         return { exists: true, definitionName: comp.name, sourceFile: filename }
       }
     }

@@ -6,6 +6,7 @@
  */
 
 import { events } from '../core/events'
+import { agentSettings, type AgentSettings } from '../core/settings'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('UserSettings')
@@ -17,6 +18,7 @@ const log = createLogger('UserSettings')
 export interface UserSettings {
   recentIcons: string[]
   agentMemory: AgentMemoryData | null
+  agentSettings: AgentSettings | null
 }
 
 export interface AgentMemoryData {
@@ -69,6 +71,7 @@ const STORAGE_KEY = 'mirror-user-settings'
 const DEFAULT_SETTINGS: UserSettings = {
   recentIcons: [],
   agentMemory: null,
+  agentSettings: null,
 }
 
 // =============================================================================
@@ -93,12 +96,20 @@ class UserSettingsService {
           ...data,
         }
         log.info('Loaded from localStorage')
+
+        // Apply agent settings to the agent settings store
+        if (this.settings.agentSettings) {
+          agentSettings.load(this.settings.agentSettings)
+          log.info('Applied stored agent settings')
+        }
       } else {
         this.settings = { ...DEFAULT_SETTINGS }
         log.info('No settings found, using defaults')
       }
       this.loaded = true
-      events.emit('userSettings:loaded', { settings: this.settings as unknown as Record<string, unknown> })
+      events.emit('userSettings:loaded', {
+        settings: this.settings as unknown as Record<string, unknown>,
+      })
     } catch (error) {
       log.warn('Failed to load:', error)
       this.settings = { ...DEFAULT_SETTINGS }
@@ -166,6 +177,25 @@ class UserSettingsService {
 
   clearAgentMemory(): void {
     this.settings.agentMemory = null
+    this.scheduleSave()
+  }
+
+  // ===========================================================================
+  // Agent Settings
+  // ===========================================================================
+
+  getAgentSettings(): AgentSettings | null {
+    return this.settings.agentSettings
+  }
+
+  setAgentSettings(settings: AgentSettings): void {
+    this.settings.agentSettings = settings
+    this.scheduleSave()
+    log.info('Agent settings saved')
+  }
+
+  clearAgentSettings(): void {
+    this.settings.agentSettings = null
     this.scheduleSave()
   }
 

@@ -9,12 +9,16 @@ import {
   smartGuidesSettings,
   handleSnapSettings,
   generalSettings,
+  agentSettings,
   type GridSettings,
   type SmartGuidesSettings,
   type HandleSnapSettings,
   type GeneralSettings,
+  type AgentSettings,
+  type AgentType,
 } from '../../core/settings'
 import { events } from '../../core/events'
+import { getUserSettings } from '../../storage/user-settings'
 
 export interface SettingsPanelConfig {
   container?: HTMLElement
@@ -93,6 +97,7 @@ export class SettingsPanel {
         <button class="pp-close" data-action="close" title="Close (Esc)">${ICONS.close}</button>
       </div>
       <div class="pp-content">
+        ${this.renderAgentSection()}
         ${this.renderGridSection()}
         ${this.renderSmartGuidesSection()}
         ${this.renderHandleSnapSection()}
@@ -128,6 +133,97 @@ export class SettingsPanel {
           <div class="input-wrapper">
             <input type="text" class="prop-input" data-setting="${setting}" value="${value}" data-min="${min}" data-max="${max}">
             <span class="input-unit">px</span>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  private renderSelect(
+    setting: string,
+    label: string,
+    value: string,
+    options: { value: string; label: string }[]
+  ): string {
+    const optionsHtml = options
+      .map(
+        opt =>
+          `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${opt.label}</option>`
+      )
+      .join('')
+
+    return `
+      <div class="prop-row">
+        <span class="prop-label">${label}</span>
+        <div class="prop-content">
+          <select class="prop-select" data-setting="${setting}">
+            ${optionsHtml}
+          </select>
+        </div>
+      </div>
+    `
+  }
+
+  private renderTextInput(
+    setting: string,
+    label: string,
+    value: string,
+    placeholder: string = '',
+    type: string = 'text'
+  ): string {
+    return `
+      <div class="prop-row">
+        <span class="prop-label">${label}</span>
+        <div class="prop-content">
+          <input type="${type}" class="prop-input full-width" data-setting="${setting}" value="${value}" placeholder="${placeholder}">
+        </div>
+      </div>
+    `
+  }
+
+  private renderAgentSection(): string {
+    const settings = agentSettings.get()
+    const agentOptions = [
+      { value: 'openrouter', label: 'OpenRouter' },
+      { value: 'anthropic-sdk', label: 'Anthropic SDK' },
+      { value: 'claude-cli', label: 'Claude CLI (Desktop)' },
+    ]
+
+    const anthropicModels = [
+      { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
+      { value: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
+    ]
+
+    const openrouterModels = [
+      { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4' },
+      { value: 'anthropic/claude-opus-4', label: 'Claude Opus 4' },
+      { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+    ]
+
+    // Conditionally show fields based on agent type
+    const showAnthropicFields = settings.type === 'anthropic-sdk'
+    const showOpenrouterFields = settings.type === 'openrouter'
+
+    return `
+      <div class="section">
+        <div class="section-label">AI Agent</div>
+        <div class="section-content">
+          ${this.renderSelect('agent.type', 'Backend', settings.type, agentOptions)}
+
+          <div class="agent-fields anthropic-fields" style="display: ${showAnthropicFields ? 'block' : 'none'}">
+            ${this.renderTextInput('agent.anthropicApiKey', 'API Key', settings.anthropicApiKey, 'sk-ant-...', 'password')}
+            ${this.renderSelect('agent.anthropicModel', 'Model', settings.anthropicModel, anthropicModels)}
+          </div>
+
+          <div class="agent-fields openrouter-fields" style="display: ${showOpenrouterFields ? 'block' : 'none'}">
+            ${this.renderTextInput('agent.openrouterApiKey', 'API Key', settings.openrouterApiKey, 'sk-or-...', 'password')}
+            ${this.renderSelect('agent.openrouterModel', 'Model', settings.openrouterModel, openrouterModels)}
+          </div>
+
+          <div class="agent-fields claude-cli-fields" style="display: ${settings.type === 'claude-cli' ? 'block' : 'none'}">
+            <div class="prop-row">
+              <span class="prop-label hint">Verwendet Claude Code CLI in der Desktop-App</span>
+            </div>
           </div>
         </div>
       </div>
@@ -232,22 +328,59 @@ export class SettingsPanel {
 
     // Number inputs (text type with validation)
     this.container.querySelectorAll('input.prop-input[data-setting]').forEach(input => {
-      input.addEventListener(
+      const inputEl = input as HTMLInputElement
+      const setting = inputEl.dataset.setting
+      if (!setting) return
+
+      // Skip agent text inputs (they use different handling)
+      if (setting.startsWith('agent.') && !inputEl.dataset.min) {
+        // Text input for agent settings (API keys)
+        inputEl.addEventListener(
+          'change',
+          e => {
+            const target = e.target as HTMLInputElement
+            const [section, key] = setting.split('.')
+            this.updateSetting(section, key, target.value)
+          },
+          { signal }
+        )
+      } else {
+        // Number input
+        inputEl.addEventListener(
+          'change',
+          e => {
+            const target = e.target as HTMLInputElement
+            const [section, key] = setting.split('.')
+            const value = parseInt(target.value, 10)
+            const min = parseInt(target.dataset.min || '0', 10)
+            const max = parseInt(target.dataset.max || '100', 10)
+
+            if (!isNaN(value)) {
+              const clampedValue = Math.max(min, Math.min(max, value))
+              target.value = String(clampedValue)
+              this.updateSetting(section, key, clampedValue)
+            }
+          },
+          { signal }
+        )
+      }
+    })
+
+    // Select inputs
+    this.container.querySelectorAll('select.prop-select[data-setting]').forEach(select => {
+      select.addEventListener(
         'change',
         e => {
-          const target = e.target as HTMLInputElement
+          const target = e.target as HTMLSelectElement
           const setting = target.dataset.setting
           if (!setting) return
 
           const [section, key] = setting.split('.')
-          const value = parseInt(target.value, 10)
-          const min = parseInt(target.dataset.min || '0', 10)
-          const max = parseInt(target.dataset.max || '100', 10)
+          this.updateSetting(section, key, target.value)
 
-          if (!isNaN(value)) {
-            const clampedValue = Math.max(min, Math.min(max, value))
-            target.value = String(clampedValue)
-            this.updateSetting(section, key, clampedValue)
+          // Special handling for agent type change - show/hide fields
+          if (setting === 'agent.type') {
+            this.toggleAgentFields(target.value as AgentType)
           }
         },
         { signal }
@@ -259,8 +392,25 @@ export class SettingsPanel {
       events.on('grid:changed', () => this.refreshValues()),
       events.on('smartGuides:changed', () => this.refreshValues()),
       events.on('handleSnap:changed', () => this.refreshValues()),
-      events.on('settings:changed', () => this.refreshValues())
+      events.on('settings:changed', () => this.refreshValues()),
+      events.on('agent:changed', () => this.refreshValues())
     )
+  }
+
+  private toggleAgentFields(agentType: AgentType): void {
+    const anthropicFields = this.container.querySelector('.anthropic-fields') as HTMLElement
+    const openrouterFields = this.container.querySelector('.openrouter-fields') as HTMLElement
+    const cliFields = this.container.querySelector('.claude-cli-fields') as HTMLElement
+
+    if (anthropicFields) {
+      anthropicFields.style.display = agentType === 'anthropic-sdk' ? 'block' : 'none'
+    }
+    if (openrouterFields) {
+      openrouterFields.style.display = agentType === 'openrouter' ? 'block' : 'none'
+    }
+    if (cliFields) {
+      cliFields.style.display = agentType === 'claude-cli' ? 'block' : 'none'
+    }
   }
 
   private unbindEvents(): void {
@@ -272,7 +422,7 @@ export class SettingsPanel {
     this.abortController = null
   }
 
-  private updateSetting(section: string, key: string, value: boolean | number): void {
+  private updateSetting(section: string, key: string, value: boolean | number | string): void {
     switch (section) {
       case 'grid':
         gridSettings.set({ [key]: value } as Partial<GridSettings>)
@@ -286,9 +436,19 @@ export class SettingsPanel {
       case 'general':
         generalSettings.set({ [key]: value } as Partial<GeneralSettings>)
         break
+      case 'agent':
+        agentSettings.set({ [key]: value } as Partial<AgentSettings>)
+        // Persist to localStorage
+        this.saveAgentSettings()
+        break
     }
 
     this.callbacks.onSettingsChange?.(section, { [key]: value })
+  }
+
+  private saveAgentSettings(): void {
+    const settings = agentSettings.get()
+    getUserSettings().setAgentSettings(settings)
   }
 
   private refreshValues(): void {
@@ -307,6 +467,16 @@ export class SettingsPanel {
       'general.moveStepShift': generalSettings.get().moveStepShift,
     }
 
+    // Agent settings (string values)
+    const agentSettingsValues = agentSettings.get()
+    const allAgentSettings: Record<string, string> = {
+      'agent.type': agentSettingsValues.type,
+      'agent.anthropicApiKey': agentSettingsValues.anthropicApiKey,
+      'agent.anthropicModel': agentSettingsValues.anthropicModel,
+      'agent.openrouterApiKey': agentSettingsValues.openrouterApiKey,
+      'agent.openrouterModel': agentSettingsValues.openrouterModel,
+    }
+
     for (const [key, value] of Object.entries(allSettings)) {
       // Toggle buttons
       const btn = this.container.querySelector(`.toggle-btn[data-setting="${key}"]`)
@@ -320,6 +490,24 @@ export class SettingsPanel {
         input.value = String(value)
       }
     }
+
+    // Update agent settings
+    for (const [key, value] of Object.entries(allAgentSettings)) {
+      const input = this.container.querySelector(`input[data-setting="${key}"]`) as HTMLInputElement
+      if (input) {
+        input.value = value
+      }
+
+      const select = this.container.querySelector(
+        `select[data-setting="${key}"]`
+      ) as HTMLSelectElement
+      if (select) {
+        select.value = value
+      }
+    }
+
+    // Update field visibility based on agent type
+    this.toggleAgentFields(agentSettingsValues.type)
   }
 
   dispose(): void {

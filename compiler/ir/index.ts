@@ -7,6 +7,7 @@
 
 import type {
   AST,
+  CanvasDefinition,
   ComponentDefinition,
   Instance,
   Property,
@@ -63,6 +64,7 @@ import {
 } from '../parser/ast'
 import type {
   IR,
+  IRCanvas,
   IRNode,
   IRStyle,
   IREvent,
@@ -441,7 +443,53 @@ class IRTransformer {
       viewBox: icon.viewBox || '0 0 24 24',
     }))
 
-    return { nodes, tokens, animations, icons }
+    // Transform canvas
+    const canvas = this.ast.canvas ? this.transformCanvas(this.ast.canvas) : undefined
+
+    return { canvas, nodes, tokens, animations, icons }
+  }
+
+  /**
+   * Device preset dimensions
+   */
+  private static readonly DEVICE_PRESETS: Record<string, { width: string; height: string }> = {
+    mobile: { width: '375px', height: '812px' },
+    tablet: { width: '768px', height: '1024px' },
+    desktop: { width: '1440px', height: '900px' },
+  }
+
+  /**
+   * Transform canvas definition to IR
+   * Converts properties to CSS styles for root element
+   */
+  private transformCanvas(canvas: CanvasDefinition): IRCanvas {
+    const styles: IRStyle[] = []
+
+    // Apply device preset if specified
+    if (canvas.device && IRTransformer.DEVICE_PRESETS[canvas.device]) {
+      const preset = IRTransformer.DEVICE_PRESETS[canvas.device]
+      styles.push({ property: 'width', value: preset.width })
+      styles.push({ property: 'height', value: preset.height })
+    }
+
+    // Apply explicit properties (can override device preset)
+    for (const prop of canvas.properties) {
+      const propName = prop.name.toLowerCase()
+      const value = prop.values[0]
+
+      // Use existing property transformation logic
+      if (typeof value === 'string' || typeof value === 'number') {
+        const result = simplePropertyToCSS(propName, String(value))
+        if (result.handled) {
+          styles.push(...result.styles)
+        }
+      }
+    }
+
+    return {
+      styles,
+      sourcePosition: calculateSourcePosition(canvas.line, canvas.column),
+    }
   }
 
   // Data and animation transformation functions (transformDataAttributes, transformDataValue,

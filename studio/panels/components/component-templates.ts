@@ -435,3 +435,101 @@ export function getFileType(filename: string): 'mir' | 'com' {
   if (filename.endsWith('.com')) return 'com'
   return 'mir'
 }
+
+// ============================================================================
+// PURE COMPONENT DEFINITIONS
+// ============================================================================
+
+/**
+ * Definition for Pure Mirror components
+ *
+ * Pure Mirror components have their structure fully defined in Mirror syntax,
+ * making them visible, editable, and translatable to other frameworks.
+ */
+export interface PureComponentDefinition {
+  /** The Mirror structure code for the component definition */
+  structure: string
+  /** Default label text for instances */
+  defaultLabel?: string
+  /** Accessibility properties */
+  accessibility?: {
+    role?: string
+    ariaChecked?: boolean
+  }
+  /** Whether to generate a hidden input for forms */
+  hiddenInput?: boolean
+}
+
+/**
+ * Pure Mirror component definitions
+ *
+ * These are inserted at the top of the file when a component is first dropped.
+ * The structure is fully in Mirror syntax for visibility and editability.
+ */
+export const PURE_COMPONENT_DEFINITIONS: Record<string, PureComponentDefinition> = {
+  Checkbox: {
+    structure: `Checkbox as Label: hor, gap 8, cursor pointer, toggle()
+  Control: Frame w 18, h 18, rad 4, bor 2, boc #3f3f46, center
+    hover:
+      boc #888
+    on:
+      bg #5BA8F5, boc #5BA8F5
+  Indicator: Icon "check", is 12, col white, opacity 0, scale 0.8
+    on:
+      opacity 1, scale 1
+  Content: Slot`,
+    defaultLabel: 'Checkbox',
+    accessibility: {
+      role: 'checkbox',
+      ariaChecked: true,
+    },
+    hiddenInput: true,
+  },
+
+  Switch: {
+    structure: `Switch as Label: hor, gap 8, cursor pointer, toggle()
+  Track: Frame w 44, h 24, rad 99, bg #3f3f46, relative
+    on:
+      bg #5BA8F5
+  Thumb: Frame w 20, h 20, rad 99, bg white, absolute, x 2, y 2
+    on:
+      x 22
+  Content: Slot`,
+    defaultLabel: 'Switch',
+    accessibility: {
+      role: 'switch',
+      ariaChecked: true,
+    },
+    hiddenInput: true,
+  },
+
+  Slider: {
+    structure: `Slider as Frame: w full, h 24, relative, cursor pointer
+  Track: Frame w full, h 4, rad 2, bg #3f3f46, absolute, y 10
+  Range: Frame h 4, rad 2, bg #5BA8F5, absolute, y 10, w 50%
+  Thumb: Frame w 16, h 16, rad 99, bg white, shadow md, absolute, y 4, x 50%
+    hover:
+      scale 1.1
+    active:
+      scale 0.95`,
+    accessibility: {
+      role: 'slider',
+    },
+  },
+}
+
+/**
+ * Check if a component has a pure definition
+ */
+export function hasPureComponentDefinition(componentName: string): boolean {
+  return componentName in PURE_COMPONENT_DEFINITIONS
+}
+
+/**
+ * Get the pure component definition
+ */
+export function getPureComponentDefinition(
+  componentName: string
+): PureComponentDefinition | undefined {
+  return PURE_COMPONENT_DEFINITIONS[componentName]
+}

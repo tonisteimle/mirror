@@ -10,12 +10,7 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { parse } from '../../compiler/parser'
 import { generateDOM } from '../../compiler/backends/dom'
-import {
-  add,
-  remove,
-  updateField,
-  setupEditable,
-} from '../../compiler/runtime/dom-runtime'
+import { add, remove, updateField, setupEditable } from '../../compiler/runtime/dom-runtime'
 
 // Setup window.__mirrorData for runtime tests
 beforeEach(() => {
@@ -37,7 +32,6 @@ function getMockData(): Record<string, unknown> {
 // ============================================================================
 
 describe('P0: Critical - Data Integrity', () => {
-
   describe('ID Collision on rapid add() calls', () => {
     test('multiple add() calls in same millisecond should create unique IDs', () => {
       const data = getMockData()
@@ -82,9 +76,9 @@ describe('P0: Critical - Data Integrity', () => {
           name: 'Max',
           address: {
             city: 'Berlin',
-            zip: '10115'
-          }
-        }
+            zip: '10115',
+          },
+        },
       }
 
       const item = (data.users as Record<string, unknown>).user1 as Record<string, unknown>
@@ -105,11 +99,11 @@ describe('P0: Critical - Data Integrity', () => {
           level1: {
             level2: {
               level3: {
-                value: 'original'
-              }
-            }
-          }
-        }
+                value: 'original',
+              },
+            },
+          },
+        },
       }
 
       const item = (data.data as Record<string, unknown>).entry1 as Record<string, unknown>
@@ -140,9 +134,10 @@ describe('P0: Critical - Data Integrity', () => {
       const output = generateDOM(ast)
 
       // Should handle hyphenated names - either _runtime.add or $collection().add
-      const hasAddCall = output.includes('_runtime.add') ||
-                         output.includes('$collection') ||
-                         output.includes('.add(')
+      const hasAddCall =
+        output.includes('_runtime.add') ||
+        output.includes('$collection') ||
+        output.includes('.add(')
       expect(hasAddCall).toBe(true)
     })
 
@@ -196,14 +191,13 @@ each todo in $todos
 // ============================================================================
 
 describe('P1: High - Functionality', () => {
-
   describe('remove() with item without _key', () => {
     test('remove() with plain object (no _key) should warn and not crash', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const data = getMockData()
 
       data.todos = {
-        task1: { text: 'Test' }
+        task1: { text: 'Test' },
       }
 
       // Pass object without _key
@@ -211,9 +205,7 @@ describe('P1: High - Functionality', () => {
       remove(badItem)
 
       // Should warn
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('without _key')
-      )
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('without _key'))
 
       // Collection should be unchanged
       const todos = data.todos as Record<string, unknown>
@@ -244,10 +236,10 @@ describe('P1: High - Functionality', () => {
       const data = getMockData()
       // Same key in different collections
       data.todos = {
-        shared_key: { _key: 'shared_key', text: 'Todo item' }
+        shared_key: { _key: 'shared_key', text: 'Todo item' },
       }
       data.notes = {
-        shared_key: { _key: 'shared_key', text: 'Note item' }
+        shared_key: { _key: 'shared_key', text: 'Note item' },
       }
 
       // Remove from todos
@@ -269,10 +261,10 @@ describe('P1: High - Functionality', () => {
       // This documents the existing behavior (not necessarily ideal)
       const data = getMockData()
       data.a = {
-        key1: { _key: 'key1', value: 'A' }
+        key1: { _key: 'key1', value: 'A' },
       }
       data.b = {
-        key1: { _key: 'key1', value: 'B' }  // Same key, different collection
+        key1: { _key: 'key1', value: 'B' }, // Same key, different collection
       }
 
       const itemB = { _key: 'key1', value: 'B' }
@@ -296,7 +288,7 @@ describe('P1: High - Functionality', () => {
       // Collection is an array (e.g., from data file)
       data.items = [
         { id: 1, name: 'First' },
-        { id: 2, name: 'Second' }
+        { id: 2, name: 'Second' },
       ]
 
       // add() should handle arrays
@@ -338,20 +330,18 @@ describe('P1: High - Functionality', () => {
       } as unknown as HTMLElement
 
       data.items = {
-        test: { _key: 'test', text: 'Original' }
+        test: { _key: 'test', text: 'Original' },
       }
 
       // Setup editable
-      setupEditable(mockElement,
+      setupEditable(
+        mockElement,
         (data.items as Record<string, unknown>).test as Record<string, unknown>,
         'text'
       )
 
       // Verify double-click handler was added
-      expect(mockElement.addEventListener).toHaveBeenCalledWith(
-        'dblclick',
-        expect.any(Function)
-      )
+      expect(mockElement.addEventListener).toHaveBeenCalledWith('dblclick', expect.any(Function))
     })
   })
 })
@@ -361,7 +351,6 @@ describe('P1: High - Functionality', () => {
 // ============================================================================
 
 describe('P2: Medium - Edge Cases', () => {
-
   describe('Editable on empty element', () => {
     test('editable text with empty string should work', () => {
       const code = `
@@ -382,7 +371,7 @@ each item in $items
     test('editable preserves whitespace-only content', () => {
       const data = getMockData()
       data.items = {
-        space: { _key: 'space', text: '   ' }
+        space: { _key: 'space', text: '   ' },
       }
 
       const item = (data.items as Record<string, unknown>).space as Record<string, unknown>
@@ -396,7 +385,7 @@ each item in $items
     test('updateField should create new field if not exists', () => {
       const data = getMockData()
       data.items = {
-        item1: { _key: 'item1', existing: 'value' }
+        item1: { _key: 'item1', existing: 'value' },
       }
 
       const item = (data.items as Record<string, unknown>).item1 as Record<string, unknown>
@@ -413,9 +402,7 @@ each item in $items
       const orphanItem = { _key: 'orphan_123', text: 'test' }
       updateField(orphanItem, 'text', 'updated')
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Could not find item')
-      )
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Could not find item'))
     })
   })
 
@@ -460,7 +447,7 @@ each item in $items
     test('field names with unicode should work', () => {
       const data = getMockData()
       data.items = {
-        item1: { _key: 'item1', 'ü名前': 'value' }
+        item1: { _key: 'item1', ü名前: 'value' },
       }
 
       const item = (data.items as Record<string, unknown>).item1 as Record<string, unknown>
@@ -482,7 +469,7 @@ each item in $items
     test('emoji in field values', () => {
       const data = getMockData()
       data.items = {
-        emoji: { _key: 'emoji', text: '👋' }
+        emoji: { _key: 'emoji', text: '👋' },
       }
 
       const item = (data.items as Record<string, unknown>).emoji as Record<string, unknown>
@@ -496,7 +483,7 @@ each item in $items
     test('updateField with null value', () => {
       const data = getMockData()
       data.items = {
-        item1: { _key: 'item1', value: 'something' }
+        item1: { _key: 'item1', value: 'something' },
       }
 
       const item = (data.items as Record<string, unknown>).item1 as Record<string, unknown>
@@ -508,7 +495,7 @@ each item in $items
     test('updateField with undefined value', () => {
       const data = getMockData()
       data.items = {
-        item1: { _key: 'item1', value: 'something' }
+        item1: { _key: 'item1', value: 'something' },
       }
 
       const item = (data.items as Record<string, unknown>).item1 as Record<string, unknown>
@@ -520,7 +507,7 @@ each item in $items
     test('updateField with object value', () => {
       const data = getMockData()
       data.items = {
-        item1: { _key: 'item1', data: {} }
+        item1: { _key: 'item1', data: {} },
       }
 
       const item = (data.items as Record<string, unknown>).item1 as Record<string, unknown>
@@ -533,7 +520,7 @@ each item in $items
     test('updateField with array value', () => {
       const data = getMockData()
       data.items = {
-        item1: { _key: 'item1', tags: [] }
+        item1: { _key: 'item1', tags: [] },
       }
 
       const item = (data.items as Record<string, unknown>).item1 as Record<string, unknown>
@@ -558,7 +545,7 @@ each item in $items
     test('updateField with __proto__ as field should not pollute', () => {
       const data = getMockData()
       data.items = {
-        item1: { _key: 'item1' }
+        item1: { _key: 'item1' },
       }
 
       const item = (data.items as Record<string, unknown>).item1 as Record<string, unknown>
@@ -602,7 +589,6 @@ each item in $items
 // ============================================================================
 
 describe('Generated Code Quality', () => {
-
   test('generated code should have balanced braces and parens', () => {
     const code = `
 todos:
@@ -614,7 +600,7 @@ Frame gap 12
   Button "Add", add(todos, text: "New", done: false)
   each todo in $todos
     Frame hor
-      Checkbox checked todo.done
+      Frame w 20, h 20, bor 1, rad 4
       Text todo.text, editable
       Button "Delete", remove(todo)
 `
@@ -716,6 +702,6 @@ Frame gap 12
 
     // Should not contain broken add call
     expect(output).not.toContain("_runtime.add('')")
-    expect(output).not.toContain("_runtime.add()")
+    expect(output).not.toContain('_runtime.add()')
   })
 })

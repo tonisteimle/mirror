@@ -153,6 +153,12 @@ export class BrowserTestRunner {
     try {
       // 1. Find target element in DOM
       const targetEl = this.findElement(params.targetNodeId)
+
+      // Handle empty canvas case - directly insert as root element
+      if (!targetEl && codeBefore.trim() === '') {
+        return this.handleEmptyCanvasDrop(params, startTime, codeBefore, description)
+      }
+
       if (!targetEl) {
         return this.errorResult(
           description,
@@ -207,6 +213,70 @@ export class BrowserTestRunner {
       }
     } catch (error) {
       clearCurrentDragData()
+      return this.errorResult(description, String(error), startTime, codeBefore)
+    }
+  }
+
+  /**
+   * Handle dropping onto an empty canvas (no existing code)
+   * Directly inserts the component as a root element
+   */
+  private async handleEmptyCanvasDrop(
+    params: {
+      componentName: string
+      targetNodeId: string
+      insertionIndex: number
+      template?: string
+      properties?: string
+      textContent?: string
+      children?: any[]
+    },
+    startTime: number,
+    codeBefore: string,
+    description: string
+  ): Promise<BrowserTestResult> {
+    try {
+      // Build the component code
+      let componentCode = params.componentName
+
+      // Add text content if provided
+      if (params.textContent) {
+        componentCode += ` "${params.textContent}"`
+      }
+
+      // Add properties if provided
+      if (params.properties) {
+        componentCode += params.textContent ? `, ${params.properties}` : ` ${params.properties}`
+      }
+
+      // Use template if provided (for complex components)
+      if (params.template) {
+        componentCode = params.template
+      }
+
+      // Set the code directly
+      const editor = (window as any).editor
+      if (!editor) {
+        return this.errorResult(description, 'Editor not available', startTime, codeBefore)
+      }
+
+      const transaction = editor.state.update({
+        changes: { from: 0, to: editor.state.doc.length, insert: componentCode },
+      })
+      editor.dispatch(transaction)
+
+      // Wait for compile
+      await this.delay(100)
+      await this.waitForCodeChange('')
+
+      return {
+        success: true,
+        description: `${description} (empty canvas - created root)`,
+        duration: performance.now() - startTime,
+        codeBefore,
+        codeAfter: this.getCode(),
+      }
+    } catch (error) {
       return this.errorResult(description, String(error), startTime, codeBefore)
     }
   }

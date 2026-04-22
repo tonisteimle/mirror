@@ -97,66 +97,12 @@ describe('Component Panel Structure', () => {
     })
   })
 
-  describe('Zag Form Controls', () => {
-    it('should include Checkbox with Control and Label slots', () => {
-      const checkbox = COMPONENTS_SECTION.find(c => c.id === 'comp-checkbox')
-      expect(checkbox).toBeDefined()
-      expect(checkbox?.children?.find(c => c.template === 'Control')?.isSlot).toBe(true)
-      expect(checkbox?.children?.find(c => c.template === 'Label')?.isSlot).toBe(true)
-    })
-
-    it('should include Switch with Track and Thumb slots', () => {
-      const toggle = COMPONENTS_SECTION.find(c => c.id === 'comp-switch')
-      expect(toggle).toBeDefined()
-      expect(toggle?.children?.find(c => c.template === 'Track')?.isSlot).toBe(true)
-      expect(toggle?.children?.find(c => c.template === 'Thumb')?.isSlot).toBe(true)
-    })
-
-    it('should include Slider with Track, Range, Thumb slots', () => {
-      const slider = COMPONENTS_SECTION.find(c => c.id === 'comp-slider')
-      expect(slider).toBeDefined()
-      expect(slider?.children?.find(c => c.template === 'Track')?.isSlot).toBe(true)
-      expect(slider?.children?.find(c => c.template === 'Range')?.isSlot).toBe(true)
-      expect(slider?.children?.find(c => c.template === 'Thumb')?.isSlot).toBe(true)
-    })
-
-    it('should include Radio Group with items', () => {
-      const radio = COMPONENTS_SECTION.find(c => c.id === 'comp-radio-group')
-      expect(radio).toBeDefined()
-      expect(radio?.children?.filter(c => c.isItem).length).toBe(3)
-    })
-  })
-
-  describe('Zag Overlays', () => {
-    it('should include Dialog with Trigger, Backdrop, Content slots', () => {
-      const dialog = COMPONENTS_SECTION.find(c => c.id === 'comp-dialog')
-      expect(dialog).toBeDefined()
-      expect(dialog?.children?.find(c => c.template === 'Trigger')?.isSlot).toBe(true)
-      expect(dialog?.children?.find(c => c.template === 'Backdrop')?.isSlot).toBe(true)
-      expect(dialog?.children?.find(c => c.template === 'Content')?.isSlot).toBe(true)
-    })
-
-    it('should include Tooltip', () => {
-      const tooltip = COMPONENTS_SECTION.find(c => c.id === 'comp-tooltip')
-      expect(tooltip).toBeDefined()
-      expect(tooltip?.template).toBe('Tooltip')
-    })
-  })
-
-  describe('Zag Navigation', () => {
-    it('should include Tabs with List slot and Tab items', () => {
-      const tabs = COMPONENTS_SECTION.find(c => c.id === 'comp-tabs')
-      expect(tabs).toBeDefined()
-      const list = tabs?.children?.find(c => c.template === 'List')
-      expect(list?.isSlot).toBe(true)
-      // Tab items are nested inside List slot
-      expect(list?.children?.filter(c => c.template === 'Tab').length).toBe(3)
-    })
-
-    it('should include SideNav', () => {
-      const sidenav = COMPONENTS_SECTION.find(c => c.id === 'comp-sidenav')
-      expect(sidenav).toBeDefined()
-      expect(sidenav?.template).toBe('SideNav')
+  describe('DatePicker Component', () => {
+    it('should include DatePicker with slots', () => {
+      const datePicker = COMPONENTS_SECTION.find(c => c.id === 'comp-date-picker')
+      expect(datePicker).toBeDefined()
+      expect(datePicker?.template).toBe('DatePicker')
+      expect(datePicker?.children?.find(c => c.template === 'Control')?.isSlot).toBe(true)
     })
   })
 
@@ -173,17 +119,17 @@ describe('Component Panel Structure', () => {
       expect(select.mirTemplate).toContain('Frame name Item')
     })
 
-    it('should generate nested slot children correctly', () => {
+    it('should generate nested slot children correctly for DatePicker', () => {
       const container = document.createElement('div')
       const panel = new ComponentPanel({ container })
 
       const buildCode = (panel as any).buildComponentCode.bind(panel)
-      const dialog = COMPONENTS_SECTION.find(c => c.id === 'comp-dialog')!
-      const code = buildCode(dialog)
+      const datePicker = COMPONENTS_SECTION.find(c => c.id === 'comp-date-picker')!
+      const code = buildCode(datePicker)
 
+      expect(code).toContain('Control:')
+      expect(code).toContain('Input:')
       expect(code).toContain('Trigger:')
-      expect(code).toContain('Button')
-      expect(code).toContain('Backdrop:')
       expect(code).toContain('Content:')
 
       panel.dispose()
@@ -204,22 +150,15 @@ describe('Component Panel Structure', () => {
       panel.dispose()
     })
 
-    it('should have all Zag components available', () => {
+    it('should have key components available', () => {
       const container = document.createElement('div')
       const panel = new ComponentPanel({ container })
 
       const sections = panel.getSections()
       const allItems = sections.flatMap(s => s.items)
 
-      // Check for key components
-      const componentIds = [
-        'comp-select',
-        'comp-checkbox',
-        'comp-switch',
-        'comp-slider',
-        'comp-dialog',
-        'comp-tabs',
-      ]
+      // Check for key components (Select is Pure Mirror, DatePicker is only Zag)
+      const componentIds = ['comp-select', 'comp-date-picker']
       for (const id of componentIds) {
         expect(
           allItems.find(i => i.id === id),
