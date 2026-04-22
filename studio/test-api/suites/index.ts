@@ -118,7 +118,7 @@ import {
   datePickerTests,
   sidenavTests,
   zagInLayoutTests,
-} from './zag'
+} from './components'
 
 // Pure Mirror Select (new)
 import { pureSelectTests } from './pure-select.test'

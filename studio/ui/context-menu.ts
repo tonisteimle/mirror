@@ -1,5 +1,4 @@
 // @ts-nocheck
-// TODO: Update to Zag.js 1.x API (breaking changes in machine/service types)
 /**
  * Context Menu Component (Zag.js)
  *
@@ -62,7 +61,7 @@ export class ZagContextMenu {
   init(): this {
     this.service = menu.machine({
       id: this.config.id,
-      onSelect: (details) => {
+      onSelect: details => {
         this.callbacks.onSelect?.(details.value)
       },
     })

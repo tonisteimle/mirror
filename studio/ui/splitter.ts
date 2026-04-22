@@ -1,5 +1,4 @@
 // @ts-nocheck
-// TODO: Update to Zag.js 1.x API (breaking changes in machine/service types)
 /**
  * Splitter Component (Zag.js)
  *
@@ -77,7 +76,7 @@ export class ZagSplitter {
       panels,
       defaultSize: this.config.defaultSizes,
       orientation: this.config.orientation ?? 'horizontal',
-      onSizeChange: (details) => {
+      onSizeChange: details => {
         this.callbacks.onSizeChange?.(details.size)
       },
     })
@@ -195,7 +194,13 @@ export class ZagSplitter {
         const handler = value as EventListener
         el.removeEventListener(event, handler)
         el.addEventListener(event, handler)
-      } else if (key.startsWith('data-') || key.startsWith('aria-') || key === 'role' || key === 'id' || key === 'tabindex') {
+      } else if (
+        key.startsWith('data-') ||
+        key.startsWith('aria-') ||
+        key === 'role' ||
+        key === 'id' ||
+        key === 'tabindex'
+      ) {
         el.setAttribute(key, String(value))
       } else if (typeof value === 'boolean') {
         if (value) {
@@ -256,24 +261,27 @@ export function createStudioSplitter(
   config: StudioLayoutConfig,
   callbacks: StudioLayoutCallbacks = {}
 ): ZagSplitter {
-  const splitter = new ZagSplitter({
-    id: 'studio-layout',
-    panels: [
-      { id: 'sidebar', minSize: 10, maxSize: 30, collapsible: true, collapsedSize: 0 },
-      { id: 'editor', minSize: 15, maxSize: 70 },
-      { id: 'preview', minSize: 15, maxSize: 70 },
-    ],
-    defaultSizes: [20, 40, 40], // 20% sidebar, 40% editor, 40% preview
-    orientation: 'horizontal',
-  }, {
-    onSizeChange: (sizes) => {
-      callbacks.onLayoutChange?.({
-        sidebar: sizes[0],
-        editor: sizes[1],
-        preview: sizes[2],
-      })
+  const splitter = new ZagSplitter(
+    {
+      id: 'studio-layout',
+      panels: [
+        { id: 'sidebar', minSize: 10, maxSize: 30, collapsible: true, collapsedSize: 0 },
+        { id: 'editor', minSize: 15, maxSize: 70 },
+        { id: 'preview', minSize: 15, maxSize: 70 },
+      ],
+      defaultSizes: [20, 40, 40], // 20% sidebar, 40% editor, 40% preview
+      orientation: 'horizontal',
     },
-  })
+    {
+      onSizeChange: sizes => {
+        callbacks.onLayoutChange?.({
+          sidebar: sizes[0],
+          editor: sizes[1],
+          preview: sizes[2],
+        })
+      },
+    }
+  )
 
   splitter.init()
 

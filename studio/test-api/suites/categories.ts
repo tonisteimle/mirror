@@ -34,7 +34,7 @@ import { allTransformTests } from './transforms'
 // States
 import { allStateTests } from './states'
 
-// Components (Pure Mirror UI Patterns - formerly "zag")
+// Components (Pure Mirror UI Patterns)
 import {
   checkboxTests,
   switchTests,
@@ -54,7 +54,7 @@ import {
   allAccordionDropTests,
   // Keyboard tests require headed browser (real window focus)
   allZagKeyboardTests,
-} from './zag'
+} from './components'
 import { allComponentTests } from './component-tests'
 
 // Drag & Drop

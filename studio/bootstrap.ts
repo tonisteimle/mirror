@@ -722,7 +722,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Initialize global Activity Bar for panel toggles
   initializeActivityBar()
 
-  // Expose studio on window for legacy code (PanelResizer, cleanup.js)
+  // Expose studio on window for legacy code (PanelResizer)
   window.MirrorStudio = studio
 
   logBootstrap.info(' New architecture initialized')

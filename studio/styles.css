@@ -1231,21 +1231,6 @@
       height: 16px;
     }
 
-    /* Cleanup Button Loading State */
-    #cleanup-btn.loading {
-      opacity: 0.7;
-      cursor: wait;
-    }
-
-    #cleanup-btn.loading svg {
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
     /* Sidebar Content (File Tree) */
     .sidebar-content {
       flex: 1;
