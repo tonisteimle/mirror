@@ -79,7 +79,7 @@ const PRESET_NAMES = new Set(COMPONENTS_SECTION.map(c => c.name))
  * Returns user-defined components, excluding:
  * - Tokens (names containing `.` like primary.bg)
  * - Built-in primitives (Button, Text, Frame, etc.)
- * - Built-in presets (Card, Badge, Avatar, etc.)
+ * - Built-in components
  */
 function parseComFile(content: string): ParsedComponent[] {
   const components: ParsedComponent[] = []

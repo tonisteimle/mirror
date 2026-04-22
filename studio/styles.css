@@ -337,6 +337,7 @@
       flex-direction: column;
       gap: 0;
       height: 100%;
+      padding-bottom: 12px;
     }
 
     .activity-bar-logo {
@@ -396,6 +397,8 @@
 
     .activity-bar-bottom-item {
       margin-top: auto;
+      padding: 10px;
+      color: #999;
     }
 
     .explorer-content {
@@ -2860,9 +2863,9 @@
     .settings-button {
       background: transparent;
       border: none;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       cursor: pointer;
-      padding: var(--space-2);
+      padding: 10px;
       border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
@@ -4050,6 +4053,8 @@
       background: var(--bg-input);
       border-radius: var(--radius-md);
       padding: var(--pp-group-pad);
+      overflow: visible;
+      position: relative;
     }
 
     .pp-content .token-btn,
@@ -4081,6 +4086,83 @@
       background: var(--bg-input);
       color: var(--color-light);
       box-shadow: var(--focus-ring);
+    }
+
+    /* Token More Dropdown */
+    .pp-content .token-more-container {
+      position: relative;
+    }
+
+    .pp-content .token-more-btn {
+      width: var(--pp-unit);
+      padding: 0;
+    }
+
+    .pp-content .token-more-btn.has-active {
+      color: var(--color-primary);
+    }
+
+    /* Show dropdown on hover over container */
+    .pp-content .token-more-container:hover .token-dropdown {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .pp-content .token-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      min-width: 120px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      padding: 4px;
+    }
+
+    .pp-content .token-dropdown.open {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .pp-content .token-dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: var(--font-xs);
+      font-weight: var(--weight-semibold);
+      text-transform: uppercase;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .pp-content .token-dropdown-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .pp-content .token-dropdown-item.active {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .pp-content .token-dropdown-value {
+      font-weight: normal;
+      color: var(--text-muted);
+      font-size: var(--font-xs);
+    }
+
+    .pp-content .token-dropdown-item.active .token-dropdown-value {
+      color: rgba(255, 255, 255, 0.7);
     }
 
 

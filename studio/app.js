@@ -2561,8 +2561,12 @@ if (typeof window !== 'undefined') {
         studioPropertyExtractor = new MirrorLang.PropertyExtractor(ast, sourceMap)
       }
 
-      // Update PropertyPanel dependencies so it can extract tokens from new source
-      if (studio?.propertyPanel?.updateDependencies) {
+      // Update PropertyPanel via updateStudioState (creates panel if not exists, updates dependencies)
+      // This ensures proper PropertyPanel initialization for test code
+      if (typeof updateStudioState === 'function') {
+        updateStudioState(ast, irResult, sourceMap, code)
+      } else if (studio?.propertyPanel?.updateDependencies) {
+        // Fallback: Update PropertyPanel dependencies so it can extract tokens from new source
         studio.propertyPanel.updateDependencies(studioPropertyExtractor, studioCodeModifier)
       }
 

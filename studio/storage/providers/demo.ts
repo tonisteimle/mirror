@@ -18,97 +18,11 @@ import { isMirrorFile } from '../types'
 // Default Project Template
 // =============================================================================
 
-const DEFAULT_PROJECT: Record<string, string> = {
-  // App is the root container (defined in components.com) with canvas background and spacing
-  'index.mir': `App
-  Title "Welcome to Mirror"
-  TextMuted "Edit this code to get started"
+// Import shared default project template
+import { DEFAULT_PROJECT } from '../project-actions'
 
-  Card
-    TextMuted "Your first component"
-    Button "Click Me"
-
-  // Zag Select Component
-  Select placeholder "Choose an option..."
-    Item "Option 1"
-    Item "Option 2"
-    Item "Option 3"`,
-
-  'tokens.tok': `// Theme Tokens
-
-// Typography (max 3)
-s.fs: 12
-m.fs: 14
-l.fs: 18
-
-// Colors (max 3 per type)
-accent.bg: #5BA8F5
-surface.bg: #27272a
-canvas.bg: #18181b
-text.col: #ffffff
-muted.col: #a1a1aa
-border.boc: #333333
-
-// Spacing (max 3)
-s.pad: 4
-m.pad: 8
-l.pad: 16
-
-s.gap: 4
-m.gap: 8
-l.gap: 16
-
-// Radius (max 3)
-s.rad: 4
-m.rad: 8
-l.rad: 12`,
-
-  'components.com': `// Component Definitions
-
-App: w full, h full, bg $canvas, pad $l, gap $l
-
-Title: fs $l, weight bold, col $text
-
-TextMuted: fs $m, col $muted
-
-Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
-  hover bg #2271C1
-
-Card: bg $surface, pad $l, rad $m, gap $l
-
-Input: pad $m, bg $surface, rad $s, bor 1, boc $border, col $text
-  focus boc $accent`,
-
-  'data.data': `// Demo Daten für Charts
-
-sales:
-  Jan: 120
-  Feb: 180
-  Mar: 240
-  Apr: 200
-  May: 280
-  Jun: 320
-
-products:
-  Widget A: 450
-  Widget B: 320
-  Widget C: 180
-  Service X: 520
-
-categories:
-  Design: 35
-  Development: 45
-  Marketing: 20
-
-traffic:
-  Mon: 1200
-  Tue: 1450
-  Wed: 1380
-  Thu: 1520
-  Fri: 1100
-  Sat: 650
-  Sun: 480`,
-}
+// Re-export for local use
+export { DEFAULT_PROJECT }
 
 // =============================================================================
 // Demo Provider

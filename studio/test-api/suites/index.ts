@@ -297,6 +297,10 @@ import {
   editEventTests,
   deleteEventTests,
   eventIntegrationTests,
+  // Token Dropdown Tests
+  allTokenDropdownTests,
+  // Primitive-specific Sections Tests
+  allPrimitiveSectionTests,
   // Error Handling Tests (B2.2)
   allPanelErrorTests,
   invalidColorTests as panelInvalidColorTests,
@@ -1337,6 +1341,8 @@ export const allTests: TestCase[] = [
   ...allComprehensivePropertyTests,
   ...colorPickerTests,
   ...iconPickerTests,
+  ...allTokenDropdownTests,
+  ...allPrimitiveSectionTests,
   ...allChartTests,
   ...allWorkflowTests,
   ...dashboardE2ETests,

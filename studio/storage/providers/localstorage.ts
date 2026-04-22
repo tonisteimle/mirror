@@ -6,8 +6,15 @@
  * Bei leerem Storage wird ein Demo-Projekt erstellt.
  */
 
-import type { StorageProvider, StorageProject, StorageItem, StorageFile, StorageFolder } from '../types'
+import type {
+  StorageProvider,
+  StorageProject,
+  StorageItem,
+  StorageFile,
+  StorageFolder,
+} from '../types'
 import { createLogger } from '../../../compiler/utils/logger'
+import { DEFAULT_PROJECT } from '../project-actions'
 
 const log = createLogger('LocalStorageProvider')
 
@@ -16,80 +23,6 @@ const log = createLogger('LocalStorageProvider')
 // =============================================================================
 
 const STORAGE_KEY = 'mirror-files'
-
-// =============================================================================
-// Default Project (loaded when storage is empty)
-// =============================================================================
-
-const DEFAULT_PROJECT: Record<string, string> = {
-  // App is the root container (defined in components.com) with canvas background and spacing
-  'index.mir': `App
-  Title "Welcome to Mirror"
-  TextMuted "Edit this code to get started"
-
-  Card
-    TextMuted "Your first component"
-    Button "Click Me"
-
-  // Zag Select Component
-  Select placeholder "Choose an option..."
-    Item "Option 1"
-    Item "Option 2"
-    Item "Option 3"`,
-
-  'tokens.tok': `// Theme Tokens
-
-// Typography
-font: Inter, system-ui, -apple-system, sans-serif
-
-s.fs: 12
-m.fs: 14
-l.fs: 18
-xl.fs: 24
-xxl.fs: 32
-
-// Colors
-accent.bg: #5BA8F5
-surface.bg: #27272a
-canvas.bg: #18181b
-input.bg: #1f1f1f
-text.col: #ffffff
-muted.col: #a1a1aa
-border.boc: #333333
-focus.boc: #5BA8F5
-
-// Spacing
-s.pad: 4
-m.pad: 8
-l.pad: 16
-xl.pad: 32
-
-s.gap: 4
-m.gap: 8
-l.gap: 16
-xl.gap: 32
-
-// Radius
-s.rad: 4
-m.rad: 8
-l.rad: 12`,
-
-  'components.com': `// Component Definitions
-
-App: w full, h full, bg $canvas, pad $l, gap $l
-
-Title: fs $xl, weight bold, col $text
-
-TextMuted: fs $m, col $muted
-
-Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
-  hover bg #2271C1
-
-Card: bg $surface, pad $l, rad $m, gap $l
-
-Input: pad $m, bg $input, rad $s, bor 1, boc $border, col $text
-  focus boc $focus`
-}
 
 // =============================================================================
 // LocalStorage Provider
@@ -142,12 +75,14 @@ export class LocalStorageProvider implements StorageProvider {
   // ===========================================================================
 
   async listProjects(): Promise<StorageProject[]> {
-    return [{
-      id: 'local',
-      name: 'Local Project',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }]
+    return [
+      {
+        id: 'local',
+        name: 'Local Project',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
   }
 
   async createProject(_name: string): Promise<StorageProject> {
@@ -194,7 +129,7 @@ export class LocalStorageProvider implements StorageProvider {
                 type: 'folder',
                 name: folderName,
                 path: currentPath,
-                children: []
+                children: [],
               }
               folders.set(currentPath, folder)
               parentChildren.push(folder)
@@ -211,7 +146,7 @@ export class LocalStorageProvider implements StorageProvider {
         tree.push({
           type: 'file',
           name: fileName,
-          path: path
+          path: path,
         })
       } else {
         // Datei in Unterordner
@@ -226,7 +161,7 @@ export class LocalStorageProvider implements StorageProvider {
               type: 'folder',
               name: folderName,
               path: currentPath,
-              children: []
+              children: [],
             }
             folders.set(currentPath, folder)
             parentChildren.push(folder)
@@ -238,7 +173,7 @@ export class LocalStorageProvider implements StorageProvider {
         parentChildren.push({
           type: 'file',
           name: fileName,
-          path: path
+          path: path,
         })
       }
     }

@@ -17,26 +17,112 @@ declare const MirrorDialog: {
 }
 
 // =============================================================================
-// Default Project Template
+// Project Types
 // =============================================================================
 
-// Used for new projects - includes starter tokens, components, and layout
-// App is the root container (defined in components.com) with canvas background and spacing
+export type ProjectType = 'empty' | 'demo'
+
+// =============================================================================
+// Empty Project Template
+// =============================================================================
+
+// Minimal project with just an empty index.mir
+export const EMPTY_PROJECT: Record<string, string> = {
+  'index.mir': '',
+}
+
+// =============================================================================
+// Default/Demo Project Template
+// =============================================================================
+
+// Used for demo projects - includes starter tokens, components, and layout
+// Uses canvas keyword for app-level styling with device presets
 // Exported for testing
 export const DEFAULT_PROJECT: Record<string, string> = {
-  'index.mir': `App
-  Title "Welcome to Mirror"
-  TextMuted "Edit this code to get started"
+  'index.mir': `canvas mobile, bg $canvas, col $text, font $font
 
-  Card
-    TextMuted "Your first component"
-    Button "Click Me"
+// Header
+Frame hor, spread, ver-center, pad $m
+  Text "Mirror Demo", fs $l, weight bold
+  Frame hor, gap $s
+    Icon "sun", ic $muted, is 20
+    Switch "Theme"
+      Label: hidden
 
-  // Zag Select Component
-  Select placeholder "Choose an option..."
-    Item "Option 1"
-    Item "Option 2"
-    Item "Option 3"`,
+// Navigation Tabs
+Tabs defaultValue "Home"
+  Tab "Home"
+    Frame pad $l, gap $l
+      Card
+        Text "Willkommen!", fs $l, weight bold
+        TextMuted "Dies ist ein Demo-Projekt mit verschiedenen Komponenten."
+        PrimaryBtn "Mehr erfahren"
+
+      Card
+        Text "Quick Stats", fs $m, weight 500
+        Frame hor, gap $l, wrap
+          StatBox
+            Text "4", fs $xxl, weight bold, col $accent
+            TextMuted "Aufgaben"
+          StatBox
+            Text "2", fs $xxl, weight bold, col #10b981
+            TextMuted "Erledigt"
+
+  Tab "Tasks"
+    Frame pad $l, gap $m
+      Frame hor, spread, ver-center
+        Text "Aufgaben", fs $l, weight bold
+        PrimaryBtn "Neu", pad $s $m, fs $s
+
+      each task in $tasks
+        TaskItem
+          Frame w 20, h 20, rad 4, bor 1, boc $border, center
+            Icon task.done ? "check" : "", ic $accent, is 14
+          Text task.title, col task.done ? $muted : $text
+          Icon "trash-2", ic $muted, is 16, cursor pointer
+
+  Tab "Settings"
+    Frame pad $l, gap $l
+      Card
+        Text "Einstellungen", fs $l, weight bold, mar 0 0 $m 0
+
+        SettingRow
+          Frame gap $s
+            Text "Dark Mode"
+            TextMuted "Dunkles Farbschema verwenden"
+          Switch "Dark Mode"
+            Label: hidden
+
+        Divider
+
+        SettingRow
+          Frame gap $s
+            Text "Benachrichtigungen"
+            TextMuted "Push-Benachrichtigungen aktivieren"
+          Switch "Notifications"
+            Label: hidden
+
+        Divider
+
+        SettingRow
+          Frame gap $s
+            Text "Sprache"
+            TextMuted "Anzeigesprache wählen"
+          Select placeholder "Wählen..."
+            Item "Deutsch"
+            Item "English"
+            Item "Français"
+
+// Info Dialog
+Dialog
+  Trigger: Link "Über Mirror", col $accent, fs $s, pad $m
+  Backdrop: bg rgba(0,0,0,0.7)
+  Content: Frame w 300, bg $surface, pad $l, rad $m, gap $m
+    Text "Über Mirror", fs $l, weight bold
+    TextMuted "Mirror ist eine DSL für AI-unterstütztes UI-Design. Erstelle Interfaces durch einfache, lesbare Syntax."
+    Frame hor, gap $s
+      CloseTrigger: GhostBtn "Schließen", grow
+      CloseTrigger: PrimaryBtn "OK", grow`,
 
   'tokens.tok': `// Theme Tokens
 
@@ -51,24 +137,27 @@ xxl.fs: 32
 
 // Colors
 accent.bg: #5BA8F5
+success.bg: #10b981
+warning.bg: #f59e0b
+danger.bg: #ef4444
 surface.bg: #27272a
 canvas.bg: #18181b
 input.bg: #1f1f1f
 text.col: #ffffff
-muted.col: #a1a1aa
-border.boc: #333333
+muted.col: #71717a
+border.boc: #3f3f46
 focus.boc: #5BA8F5
 
 // Spacing
 s.pad: 4
 m.pad: 8
 l.pad: 16
-xl.pad: 32
+xl.pad: 24
 
 s.gap: 4
 m.gap: 8
 l.gap: 16
-xl.gap: 32
+xl.gap: 24
 
 // Radius
 s.rad: 4
@@ -77,21 +166,55 @@ l.rad: 12`,
 
   'components.com': `// Component Definitions
 
-App: w full, h full, bg $canvas, pad $l, gap $l
-
-Title: fs $xl, weight bold, col $text
-
+// Typography
+Title: fs $xl, weight bold
 TextMuted: fs $m, col $muted
 
-Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
-  hover bg #2271C1
+// Buttons
+PrimaryBtn as Button: pad $m $l, bg $accent, rad $s, col white, cursor pointer
+  hover:
+    bg #2271C1
 
-Card: bg $surface, pad $l, rad $m, gap $l
+GhostBtn as Button: pad $m $l, bg transparent, rad $s, col $muted, cursor pointer
+  hover:
+    bg $surface
+    col $text
 
-Input: pad $m, bg $input, rad $s, bor 1, boc $border, col $text
-  focus boc $focus`,
+DangerBtn as Button: pad $m $l, bg $danger, rad $s, col white, cursor pointer
+  hover:
+    bg #dc2626
 
-  'data.data': `// Demo Daten für Charts
+// Layout Components
+Card: bg $surface, pad $l, rad $m, gap $m
+
+StatBox: bg $canvas, pad $m, rad $s, center
+
+SettingRow: hor, spread, ver-center, pad $s 0
+
+TaskItem: hor, gap $m, ver-center, pad $m, bg $surface, rad $s
+  hover:
+    bg #333
+
+// Form
+Input: pad $m, bg $input, rad $s, bor 1, boc $border
+  focus:
+    boc $focus`,
+
+  'data.data': `// Demo Data
+
+tasks:
+  task1:
+    title: "Design Review abschließen"
+    done: true
+  task2:
+    title: "Komponenten dokumentieren"
+    done: false
+  task3:
+    title: "Tests schreiben"
+    done: false
+  task4:
+    title: "Deployment vorbereiten"
+    done: true
 
 sales:
   Jan: 120
@@ -102,24 +225,33 @@ sales:
   Jun: 320
 
 products:
-  Widget A: 450
-  Widget B: 320
-  Widget C: 180
-  Service X: 520
+  laptop:
+    name: "Laptop Pro"
+    price: 1299
+    stock: 45
+  phone:
+    name: "SmartPhone X"
+    price: 899
+    stock: 120
+  tablet:
+    name: "Tablet Air"
+    price: 599
+    stock: 80
 
 categories:
-  Design: 35
-  Development: 45
-  Marketing: 20
+  electronics: 45
+  clothing: 32
+  books: 18
+  home: 25
 
 traffic:
   Mon: 1200
   Tue: 1450
   Wed: 1380
   Thu: 1520
-  Fri: 1100
-  Sat: 650
-  Sun: 480`,
+  Fri: 1680
+  Sat: 980
+  Sun: 750`,
 }
 
 // =============================================================================
@@ -127,15 +259,16 @@ traffic:
 // =============================================================================
 
 /**
- * Neues leeres Projekt erstellen
+ * Neues Projekt erstellen
+ * @param type - 'empty' für leeres Projekt, 'demo' für Demo-Projekt
  */
-export async function newProject(): Promise<void> {
+export async function newProject(type: ProjectType = 'demo'): Promise<void> {
   if (isTauri()) {
     // Tauri: Native Dialog für neuen Ordner
-    await tauriNewProject()
+    await tauriNewProject(type)
   } else {
     // Browser: localStorage leeren
-    await browserNewProject()
+    await browserNewProject(type)
   }
 }
 
@@ -176,9 +309,10 @@ export async function exportProject(): Promise<void> {
 // Browser Implementation
 // =============================================================================
 
-async function browserNewProject(): Promise<void> {
-  // Neues Projekt mit Default-Template erstellen
-  localStorage.setItem('mirror-files', JSON.stringify(DEFAULT_PROJECT))
+async function browserNewProject(type: ProjectType): Promise<void> {
+  // Projekt-Template basierend auf Typ wählen
+  const projectFiles = type === 'empty' ? EMPTY_PROJECT : DEFAULT_PROJECT
+  localStorage.setItem('mirror-files', JSON.stringify(projectFiles))
 
   // Seite neu laden um sauberen State zu haben
   window.location.reload()
@@ -267,11 +401,11 @@ async function browserExportProject(): Promise<void> {
 // Tauri Implementation (Stubs - werden von tauri-bridge.js überschrieben)
 // =============================================================================
 
-async function tauriNewProject(): Promise<void> {
+async function tauriNewProject(type: ProjectType): Promise<void> {
   // Wird von Tauri überschrieben
   const tauriBridge = (window as any).__TAURI_BRIDGE__
   if (tauriBridge?.newProject) {
-    await tauriBridge.newProject()
+    await tauriBridge.newProject(type)
   } else {
     log.warn('Tauri bridge not available')
   }

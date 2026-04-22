@@ -153,20 +153,60 @@ export class SpacingSection extends BaseSection {
     tokens: SpacingToken[]
   ): string {
     const isTokenRef = activeValue.startsWith('$')
+    const MAX_VISIBLE = 3
 
-    return tokens
+    const renderToken = (token: SpacingToken) => {
+      const tokenRef = `$${token.fullName}`
+      const shortRef = `$${token.name}` // e.g., "$md" for "md.pad"
+      // Active if:
+      // - Value is token ref and matches full ref ($md.pad) or short ref ($md)
+      // - Value is literal and matches token value (16)
+      const isActive = isTokenRef
+        ? activeValue === tokenRef || activeValue === shortRef
+        : activeValue === token.value
+      return `<button class="token-btn ${isActive ? 'active' : ''}" data-pad-token="${token.value}" data-token-ref="${tokenRef}" data-pad-dir="${direction}" title="${tokenRef}: ${token.value}">${token.name}</button>`
+    }
+
+    // Show all if 3 or fewer tokens
+    if (tokens.length <= MAX_VISIBLE) {
+      return tokens.map(renderToken).join('')
+    }
+
+    // Show first 3 + dropdown for rest
+    const visibleTokens = tokens.slice(0, MAX_VISIBLE)
+    const hiddenTokens = tokens.slice(MAX_VISIBLE)
+
+    // Check if active token is in hidden list
+    const activeInHidden = hiddenTokens.some(token => {
+      const tokenRef = `$${token.fullName}`
+      const shortRef = `$${token.name}`
+      return isTokenRef
+        ? activeValue === tokenRef || activeValue === shortRef
+        : activeValue === token.value
+    })
+
+    const dropdownItems = hiddenTokens
       .map(token => {
         const tokenRef = `$${token.fullName}`
-        const shortRef = `$${token.name}` // e.g., "$md" for "md.pad"
-        // Active if:
-        // - Value is token ref and matches full ref ($md.pad) or short ref ($md)
-        // - Value is literal and matches token value (16)
+        const shortRef = `$${token.name}`
         const isActive = isTokenRef
           ? activeValue === tokenRef || activeValue === shortRef
           : activeValue === token.value
-        return `<button class="token-btn ${isActive ? 'active' : ''}" data-pad-token="${token.value}" data-token-ref="${tokenRef}" data-pad-dir="${direction}" title="${tokenRef}: ${token.value}">${token.name}</button>`
+        return `<button class="token-dropdown-item ${isActive ? 'active' : ''}" data-pad-token="${token.value}" data-token-ref="${tokenRef}" data-pad-dir="${direction}">${token.name} <span class="token-dropdown-value">${token.value}</span></button>`
       })
       .join('')
+
+    return `
+      ${visibleTokens.map(renderToken).join('')}
+      <div class="token-more-container">
+        <button class="token-btn token-more-btn ${activeInHidden ? 'has-active' : ''}" data-pad-dir="${direction}" title="${hiddenTokens.length} more tokens">
+          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <div class="token-dropdown" data-pad-dir="${direction}">
+          ${dropdownItems}
+        </div>
+      </div>
+    `
   }
 
   getHandlers(): EventHandlerMap {
@@ -179,6 +219,44 @@ export class SpacingSection extends BaseSection {
           if (value && dir) {
             this.deps.onPropertyChange('__PAD_TOKEN__', JSON.stringify({ value, dir }), 'token')
           }
+        },
+      },
+      '.token-more-btn': {
+        click: (e: Event, target: HTMLElement) => {
+          e.stopPropagation()
+          const container = target.closest('.token-more-container')
+          const dropdown = container?.querySelector('.token-dropdown') as HTMLElement
+          if (dropdown) {
+            const isOpen = dropdown.classList.contains('open')
+            // Close all other dropdowns first
+            document
+              .querySelectorAll('.token-dropdown.open')
+              .forEach(d => d.classList.remove('open'))
+            if (!isOpen) {
+              dropdown.classList.add('open')
+              // Close on outside click
+              const closeHandler = (evt: Event) => {
+                if (!container?.contains(evt.target as Node)) {
+                  dropdown.classList.remove('open')
+                  document.removeEventListener('click', closeHandler)
+                }
+              }
+              setTimeout(() => document.addEventListener('click', closeHandler), 0)
+            }
+          }
+        },
+      },
+      '.token-dropdown-item': {
+        click: (e: Event, target: HTMLElement) => {
+          const tokenRef = target.dataset.tokenRef
+          const value = tokenRef || target.dataset.padToken
+          const dir = target.dataset.padDir
+          if (value && dir) {
+            this.deps.onPropertyChange('__PAD_TOKEN__', JSON.stringify({ value, dir }), 'token')
+          }
+          // Close dropdown
+          const dropdown = target.closest('.token-dropdown')
+          dropdown?.classList.remove('open')
         },
       },
       'input[data-pad-dir]': {

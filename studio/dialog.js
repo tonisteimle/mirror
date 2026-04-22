@@ -176,11 +176,12 @@ function createDialog({ title, message, input, buttons, onClose }) {
 
   html += `<div class="mirror-dialog-footer">`
   buttons.forEach((btn, i) => {
-    const btnClass = btn.variant === 'danger'
-      ? 'mirror-dialog-btn-danger'
-      : btn.primary
-        ? 'mirror-dialog-btn-primary'
-        : 'mirror-dialog-btn-secondary'
+    const btnClass =
+      btn.variant === 'danger'
+        ? 'mirror-dialog-btn-danger'
+        : btn.primary
+          ? 'mirror-dialog-btn-primary'
+          : 'mirror-dialog-btn-secondary'
     html += `<button class="mirror-dialog-btn ${btnClass}" data-index="${i}">${escapeHtml(btn.label)}</button>`
   })
   html += `</div>`
@@ -206,7 +207,7 @@ function createDialog({ title, message, input, buttons, onClose }) {
   })
 
   // Event handlers
-  const close = (result) => {
+  const close = result => {
     overlay.classList.remove('visible')
     setTimeout(() => {
       overlay.remove()
@@ -229,7 +230,7 @@ function createDialog({ title, message, input, buttons, onClose }) {
 
   // Enter key in input
   if (inputEl) {
-    inputEl.addEventListener('keydown', (e) => {
+    inputEl.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault()
         close(inputEl.value)
@@ -241,7 +242,7 @@ function createDialog({ title, message, input, buttons, onClose }) {
   }
 
   // Escape key
-  const handleKeydown = (e) => {
+  const handleKeydown = e => {
     if (e.key === 'Escape') {
       e.preventDefault()
       const cancelBtn = buttons.find(b => !b.primary)
@@ -251,7 +252,7 @@ function createDialog({ title, message, input, buttons, onClose }) {
   document.addEventListener('keydown', handleKeydown)
 
   // Click outside
-  overlay.addEventListener('click', (e) => {
+  overlay.addEventListener('click', e => {
     if (e.target === overlay) {
       const cancelBtn = buttons.find(b => !b.primary)
       close(cancelBtn ? cancelBtn.value : null)
@@ -287,10 +288,8 @@ export function alert(message, options = {}) {
     createDialog({
       title: options.title,
       message,
-      buttons: [
-        { label: options.buttonLabel || 'OK', primary: true, value: true }
-      ],
-      onClose: () => resolve()
+      buttons: [{ label: options.buttonLabel || 'OK', primary: true, value: true }],
+      onClose: () => resolve(),
     })
   })
 }
@@ -316,10 +315,10 @@ export function confirm(message, options = {}) {
           label: options.confirmLabel || 'OK',
           primary: true,
           value: true,
-          variant: options.danger ? 'danger' : undefined
-        }
+          variant: options.danger ? 'danger' : undefined,
+        },
       ],
-      onClose: (result) => resolve(result === true)
+      onClose: result => resolve(result === true),
     })
   })
 }
@@ -347,13 +346,13 @@ export function prompt(message, options = {}) {
       message,
       input: {
         defaultValue: options.defaultValue || '',
-        placeholder: options.placeholder || ''
+        placeholder: options.placeholder || '',
       },
       buttons: [
         { label: options.cancelLabel || 'Abbrechen', primary: false, value: null },
-        { label: options.confirmLabel || 'OK', primary: true, value: true }
+        { label: options.confirmLabel || 'OK', primary: true, value: true },
       ],
-      onClose: (result) => resolve(result === null ? null : result)
+      onClose: result => resolve(result === null ? null : result),
     })
   })
 }
@@ -365,18 +364,44 @@ export function prompt(message, options = {}) {
  * @returns {Promise<boolean>}
  */
 export function confirmDelete(itemName, options = {}) {
-  return confirm(
-    options.message || `"${itemName}" wirklich löschen?`,
-    {
-      title: options.title || 'Löschen bestätigen',
-      confirmLabel: options.confirmLabel || 'Löschen',
-      cancelLabel: options.cancelLabel || 'Abbrechen',
-      danger: true
-    }
-  )
+  return confirm(options.message || `"${itemName}" wirklich löschen?`, {
+    title: options.title || 'Löschen bestätigen',
+    confirmLabel: options.confirmLabel || 'Löschen',
+    cancelLabel: options.cancelLabel || 'Abbrechen',
+    danger: true,
+  })
+}
+
+/**
+ * Show a choice dialog with multiple options
+ * @param {string} message - The message to display
+ * @param {Array<{label: string, value: any, primary?: boolean}>} choices - The options to choose from
+ * @param {Object} options - Optional settings
+ * @param {string} options.title - Dialog title
+ * @param {string} options.cancelLabel - Cancel button label (default: "Abbrechen")
+ * @returns {Promise<any|null>} - The value of the selected choice, or null if cancelled
+ */
+export function choose(message, choices, options = {}) {
+  return new Promise(resolve => {
+    const buttons = [
+      { label: options.cancelLabel || 'Abbrechen', primary: false, value: null },
+      ...choices.map(c => ({
+        label: c.label,
+        primary: c.primary || false,
+        value: c.value,
+      })),
+    ]
+
+    createDialog({
+      title: options.title,
+      message,
+      buttons,
+      onClose: result => resolve(result),
+    })
+  })
 }
 
 // Make available globally for non-module scripts
 if (typeof window !== 'undefined') {
-  window.MirrorDialog = { alert, confirm, prompt, confirmDelete }
+  window.MirrorDialog = { alert, confirm, prompt, confirmDelete, choose }
 }

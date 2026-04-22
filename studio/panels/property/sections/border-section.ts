@@ -79,17 +79,48 @@ export class BorderSection extends BaseSection {
       }
     }
 
-    // Token buttons including 0 preset
-    const tokenButtons = [
+    // Build token list: 0 + user tokens
+    const allTokens = [
       { label: '0', value: '0', tokenRef: '' },
       ...tokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` })),
     ]
-      .map(token => {
-        const isActive = isTokenRef ? radiusValue === token.tokenRef : radiusValue === token.value
-        const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
-        return `<button class="token-btn ${isActive ? 'active' : ''}" data-radius="${token.value}" data-token-ref="${token.tokenRef}" title="${title}">${token.label}</button>`
-      })
-      .join('')
+
+    const MAX_VISIBLE = 3 // 0 + 2 tokens, then dropdown
+    const renderToken = (token: { label: string; value: string; tokenRef: string }) => {
+      const isActive = isTokenRef ? radiusValue === token.tokenRef : radiusValue === token.value
+      const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
+      return `<button class="token-btn ${isActive ? 'active' : ''}" data-radius="${token.value}" data-token-ref="${token.tokenRef}" title="${title}">${token.label}</button>`
+    }
+
+    let tokenButtons: string
+    if (allTokens.length <= MAX_VISIBLE) {
+      tokenButtons = allTokens.map(renderToken).join('')
+    } else {
+      const visibleTokens = allTokens.slice(0, MAX_VISIBLE)
+      const hiddenTokens = allTokens.slice(MAX_VISIBLE)
+      const activeInHidden = hiddenTokens.some(t =>
+        isTokenRef ? radiusValue === t.tokenRef : radiusValue === t.value
+      )
+
+      const dropdownItems = hiddenTokens
+        .map(token => {
+          const isActive = isTokenRef ? radiusValue === token.tokenRef : radiusValue === token.value
+          return `<button class="token-dropdown-item ${isActive ? 'active' : ''}" data-radius="${token.value}" data-token-ref="${token.tokenRef}">${token.label} <span class="token-dropdown-value">${token.value}</span></button>`
+        })
+        .join('')
+
+      tokenButtons = `
+        ${visibleTokens.map(renderToken).join('')}
+        <div class="token-more-container">
+          <button class="token-btn token-more-btn ${activeInHidden ? 'has-active' : ''}" title="${hiddenTokens.length} more">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          </button>
+          <div class="token-dropdown token-dropdown-rad">
+            ${dropdownItems}
+          </div>
+        </div>
+      `
+    }
 
     // Full radius button (999)
     const fullRadiusActive = radiusValue === '999'
@@ -243,6 +274,39 @@ export class BorderSection extends BaseSection {
           if (value) {
             this.deps.onPropertyChange('radius', value, 'token')
           }
+        },
+      },
+      '.token-more-btn': {
+        click: (e: Event, target: HTMLElement) => {
+          e.stopPropagation()
+          const container = target.closest('.token-more-container')
+          const dropdown = container?.querySelector('.token-dropdown') as HTMLElement
+          if (dropdown) {
+            const isOpen = dropdown.classList.contains('open')
+            document
+              .querySelectorAll('.token-dropdown.open')
+              .forEach(d => d.classList.remove('open'))
+            if (!isOpen) {
+              dropdown.classList.add('open')
+              const closeHandler = (evt: Event) => {
+                if (!container?.contains(evt.target as Node)) {
+                  dropdown.classList.remove('open')
+                  document.removeEventListener('click', closeHandler)
+                }
+              }
+              setTimeout(() => document.addEventListener('click', closeHandler), 0)
+            }
+          }
+        },
+      },
+      '.token-dropdown-item[data-radius]': {
+        click: (e: Event, target: HTMLElement) => {
+          const tokenRef = target.dataset.tokenRef
+          const value = tokenRef || target.dataset.radius
+          if (value) {
+            this.deps.onPropertyChange('radius', value, 'token')
+          }
+          target.closest('.token-dropdown')?.classList.remove('open')
         },
       },
       'input[data-prop="radius"]': {

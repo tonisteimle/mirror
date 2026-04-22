@@ -40,6 +40,22 @@ class PropertyPanelAPIImpl implements PropertyPanelAPI {
     return element?.nodeId ?? null
   }
 
+  /**
+   * Wait for element to be available and return its nodeId.
+   * Use this when you need to verify selection was processed.
+   */
+  async waitForSelectedNodeId(timeout = 1000): Promise<string | null> {
+    const startTime = Date.now()
+    while (Date.now() - startTime < timeout) {
+      const element = this.getCurrentElement()
+      if (element?.nodeId) {
+        return element.nodeId
+      }
+      await new Promise(resolve => setTimeout(resolve, 50))
+    }
+    return null
+  }
+
   getPropertyValue(name: string): string | null {
     const element = this.getCurrentElement()
     if (!element) return null

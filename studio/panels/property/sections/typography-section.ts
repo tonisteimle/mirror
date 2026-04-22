@@ -170,12 +170,39 @@ export class TypographySection extends BaseSection {
   }
 
   private renderSizeTokens(fontSizeValue: string, tokens: SpacingToken[]): string {
-    return tokens
+    const MAX_VISIBLE = 3
+
+    const renderToken = (token: SpacingToken) => {
+      const isActive = fontSizeValue === token.value
+      return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${token.value}" title="${token.value}px">${token.name}</button>`
+    }
+
+    if (tokens.length <= MAX_VISIBLE) {
+      return tokens.map(renderToken).join('')
+    }
+
+    const visibleTokens = tokens.slice(0, MAX_VISIBLE)
+    const hiddenTokens = tokens.slice(MAX_VISIBLE)
+    const activeInHidden = hiddenTokens.some(t => fontSizeValue === t.value)
+
+    const dropdownItems = hiddenTokens
       .map(token => {
         const isActive = fontSizeValue === token.value
-        return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${token.value}" title="${token.value}px">${token.name}</button>`
+        return `<button class="token-dropdown-item ${isActive ? 'active' : ''}" data-font-size="${token.value}">${token.name} <span class="token-dropdown-value">${token.value}</span></button>`
       })
       .join('')
+
+    return `
+      ${visibleTokens.map(renderToken).join('')}
+      <div class="token-more-container">
+        <button class="token-btn token-more-btn ${activeInHidden ? 'has-active' : ''}" title="${hiddenTokens.length} more tokens">
+          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <div class="token-dropdown token-dropdown-fs">
+          ${dropdownItems}
+        </div>
+      </div>
+    `
   }
 
   private renderAlignToggles(textAlignValue: string): string {
@@ -218,6 +245,38 @@ export class TypographySection extends BaseSection {
           if (value) {
             this.deps.onPropertyChange('font-size', value, 'token')
           }
+        },
+      },
+      '.token-more-btn': {
+        click: (e: Event, target: HTMLElement) => {
+          e.stopPropagation()
+          const container = target.closest('.token-more-container')
+          const dropdown = container?.querySelector('.token-dropdown') as HTMLElement
+          if (dropdown) {
+            const isOpen = dropdown.classList.contains('open')
+            document
+              .querySelectorAll('.token-dropdown.open')
+              .forEach(d => d.classList.remove('open'))
+            if (!isOpen) {
+              dropdown.classList.add('open')
+              const closeHandler = (evt: Event) => {
+                if (!container?.contains(evt.target as Node)) {
+                  dropdown.classList.remove('open')
+                  document.removeEventListener('click', closeHandler)
+                }
+              }
+              setTimeout(() => document.addEventListener('click', closeHandler), 0)
+            }
+          }
+        },
+      },
+      '.token-dropdown-item[data-font-size]': {
+        click: (e: Event, target: HTMLElement) => {
+          const value = target.dataset.fontSize
+          if (value) {
+            this.deps.onPropertyChange('font-size', value, 'token')
+          }
+          target.closest('.token-dropdown')?.classList.remove('open')
         },
       },
       'input[data-prop="font-size"]': {

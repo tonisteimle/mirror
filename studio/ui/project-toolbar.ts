@@ -16,6 +16,11 @@ const log = createLogger('ProjectToolbar')
 // Custom dialog module (loaded globally)
 declare const MirrorDialog: {
   confirm: (message: string, options?: { title?: string }) => Promise<boolean>
+  choose: <T>(
+    message: string,
+    choices: Array<{ label: string; value: T; primary?: boolean }>,
+    options?: { title?: string; cancelLabel?: string }
+  ) => Promise<T | null>
 }
 
 // =============================================================================
@@ -84,12 +89,7 @@ export class ProjectToolbar {
     this.addButton('save', 'Projekt speichern', ICONS.save, this.handleSave)
   }
 
-  private addButton(
-    id: string,
-    title: string,
-    icon: string,
-    handler: () => void
-  ): void {
+  private addButton(id: string, title: string, icon: string, handler: () => void): void {
     const btn = document.createElement('button')
     btn.className = 'project-toolbar-btn'
     btn.id = `project-${id}-btn`
@@ -105,10 +105,20 @@ export class ProjectToolbar {
 
   private async handleNew(): Promise<void> {
     try {
-      if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Neues Projekt erstellen?' })) {
+      const projectType = await MirrorDialog.choose<'empty' | 'demo'>(
+        'Alle aktuellen Änderungen gehen verloren.',
+        [
+          { label: 'Leeres Projekt', value: 'empty' },
+          { label: 'Demo-Projekt', value: 'demo', primary: true },
+        ],
+        { title: 'Neues Projekt erstellen' }
+      )
+
+      if (projectType === null) {
         return
       }
-      await projectActions.new()
+
+      await projectActions.new(projectType)
     } catch (error) {
       log.error('Failed to create new project:', error)
     }
@@ -116,7 +126,11 @@ export class ProjectToolbar {
 
   private async handleDemo(): Promise<void> {
     try {
-      if (!await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', { title: 'Demo-Projekt laden?' })) {
+      if (
+        !(await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', {
+          title: 'Demo-Projekt laden?',
+        }))
+      ) {
         return
       }
       await projectActions.demo()

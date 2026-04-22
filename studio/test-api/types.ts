@@ -779,6 +779,8 @@ export interface PropertyPanelAPI {
   isVisible(): boolean
   /** Get currently selected node ID */
   getSelectedNodeId(): string | null
+  /** Wait for selected node ID (with retry logic) */
+  waitForSelectedNodeId(timeout?: number): Promise<string | null>
   /** Get a property value */
   getPropertyValue(name: string): string | null
   /** Get all properties */

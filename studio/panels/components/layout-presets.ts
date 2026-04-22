@@ -94,28 +94,6 @@ AccordionItem
   Panel: Text "Content for section 1"`,
   },
   {
-    id: 'preset-avatar',
-    name: 'Avatar',
-    category: 'Components',
-    template: 'Frame',
-    icon: 'avatar',
-    description: 'Circular avatar with initials',
-    defaultSize: { width: 48, height: 48 },
-    mirTemplate: `Frame w 48, h 48, bg #5BA8F5, rad 99, center
-  Text "AB", col white, fs 16, weight 600`,
-  },
-  {
-    id: 'preset-badge',
-    name: 'Badge',
-    category: 'Components',
-    template: 'Frame',
-    icon: 'custom',
-    description: 'Status badge pill',
-    defaultSize: { width: 60, height: 24 },
-    mirTemplate: `Frame pad 4 8, bg #10b981, rad 99
-  Text "Active", fs 11, col white, weight 500`,
-  },
-  {
     id: 'comp-button',
     name: 'Button',
     category: 'Components',
@@ -127,30 +105,24 @@ AccordionItem
     defaultSize: { width: 100, height: 40 },
   },
   {
-    id: 'preset-button-group',
-    name: 'Button Group',
+    id: 'comp-chart',
+    name: 'Chart',
     category: 'Components',
-    template: 'Frame',
-    icon: 'horizontal',
-    description: 'Cancel + Save button pair',
-    defaultSize: { width: 200, height: 48 },
-    mirTemplate: `Frame hor, gap 8
-  Button "Cancel", pad 12 24, bg #3f3f46, col #e4e4e7, rad 6
-  Button "Save", pad 12 24, bg #5BA8F5, col white, rad 6`,
+    template: 'Chart',
+    properties: 'type line, $sales, w 300, h 200',
+    icon: 'chart',
+    description: 'Chart (line, bar, pie, donut, area)',
+    defaultSize: { width: 300, height: 200 },
   },
   {
-    id: 'preset-card',
-    name: 'Card',
+    id: 'comp-checkbox',
+    name: 'Checkbox',
     category: 'Components',
-    template: 'Frame',
-    icon: 'card',
-    description: 'Card with title, description, action',
-    defaultSize: { width: 280, height: 160 },
-    mirTemplate: `Frame ver, gap 12, pad 16, bg #27272a, rad 12
-  Text "Card Title", fs 16, weight 600, col #e4e4e7
-  Text "Card description goes here.", fs 14, col #a1a1aa
-  Frame hor, gap 8, mar 8 0 0 0
-    Button "Action", pad 8 16, bg #5BA8F5, col white, rad 6`,
+    template: 'Checkbox',
+    icon: 'checkbox',
+    description: 'Checkbox with label',
+    defaultSize: { width: 150, height: 24 },
+    mirTemplate: `Checkbox "Accept terms"`,
   },
   {
     id: 'comp-date-picker',
@@ -168,16 +140,6 @@ AccordionItem
     ],
   },
   {
-    id: 'comp-chart',
-    name: 'Chart',
-    category: 'Components',
-    template: 'Chart',
-    properties: 'type line, $sales, w 300, h 200',
-    icon: 'chart',
-    description: 'Chart (line, bar, pie, donut, area)',
-    defaultSize: { width: 300, height: 200 },
-  },
-  {
     id: 'comp-frame',
     name: 'Frame',
     category: 'Components',
@@ -188,16 +150,26 @@ AccordionItem
     defaultSize: { width: 100, height: 100 },
   },
   {
-    id: 'preset-form-field',
-    name: 'Form Field',
+    id: 'comp-h1',
+    name: 'H1',
     category: 'Components',
-    template: 'Frame',
-    icon: 'input',
-    description: 'Label + Input combination',
-    defaultSize: { width: 200, height: 60 },
-    mirTemplate: `Frame ver, gap 4
-  Text "Label", fs 12, col #a1a1aa
-  Input w full, pad 12, bg #1e1e2e, rad 6, bor 1, boc #444, col #e4e4e7, placeholder "Enter value..."`,
+    template: 'H1',
+    textContent: 'Heading 1',
+    properties: 'col #e4e4e7',
+    icon: 'text',
+    description: 'Main heading',
+    defaultSize: { width: 200, height: 40 },
+  },
+  {
+    id: 'comp-h2',
+    name: 'H2',
+    category: 'Components',
+    template: 'H2',
+    textContent: 'Heading 2',
+    properties: 'col #e4e4e7',
+    icon: 'text',
+    description: 'Section heading',
+    defaultSize: { width: 180, height: 32 },
   },
   {
     id: 'comp-icon',
@@ -231,28 +203,17 @@ AccordionItem
     defaultSize: { width: 200, height: 40 },
   },
   {
-    id: 'preset-list-item',
-    name: 'List Item',
+    id: 'comp-radio-group',
+    name: 'Radio Group',
     category: 'Components',
-    template: 'Frame',
-    icon: 'list',
-    description: 'Icon + text list row',
-    defaultSize: { width: 200, height: 44 },
-    mirTemplate: `Frame hor, gap 12, pad 10 12, bg #27272a, rad 8, ver-center
-  Icon "file", is 18, ic #71717a
-  Text "List item text", fs 14, col #e4e4e7`,
-  },
-  {
-    id: 'preset-search-bar',
-    name: 'Search Bar',
-    category: 'Components',
-    template: 'Frame',
-    icon: 'input',
-    description: 'Search icon + input',
-    defaultSize: { width: 240, height: 44 },
-    mirTemplate: `Frame hor, gap 8, pad 10 12, bg #1e1e2e, rad 8, bor 1, boc #3f3f46, ver-center
-  Icon "search", is 18, ic #71717a
-  Input bg transparent, col #e4e4e7, grow, placeholder "Search..."`,
+    template: 'RadioGroup',
+    icon: 'radio',
+    description: 'Radio button group',
+    defaultSize: { width: 200, height: 100 },
+    mirTemplate: `RadioGroup value "a"
+  RadioItem "Option A", value "a"
+  RadioItem "Option B", value "b"
+  RadioItem "Option C", value "c"`,
   },
   {
     id: 'comp-select',
@@ -284,16 +245,67 @@ AccordionItem
     Item "Option C"`,
   },
   {
-    id: 'preset-stat-card',
-    name: 'Stat Card',
+    id: 'comp-slider',
+    name: 'Slider',
     category: 'Components',
-    template: 'Frame',
-    icon: 'card',
-    description: 'Number + label stat display',
-    defaultSize: { width: 140, height: 100 },
-    mirTemplate: `Frame ver, gap 4, pad 16, bg #27272a, rad 12
-  Text "1,234", fs 28, weight 700, col #e4e4e7
-  Text "Total Users", fs 12, col #71717a`,
+    template: 'Slider',
+    icon: 'slider',
+    description: 'Range slider',
+    defaultSize: { width: 200, height: 24 },
+    mirTemplate: `Slider min 0, max 100, value 50, step 1`,
+  },
+  {
+    id: 'comp-switch',
+    name: 'Switch',
+    category: 'Components',
+    template: 'Switch',
+    icon: 'toggle',
+    description: 'Toggle switch',
+    defaultSize: { width: 50, height: 24 },
+    mirTemplate: `Switch "Dark mode"`,
+  },
+  {
+    id: 'comp-table',
+    name: 'Table',
+    category: 'Components',
+    template: 'Table',
+    icon: 'table',
+    description: 'Data table',
+    defaultSize: { width: 300, height: 150 },
+    mirTemplate: `Table gap 1, bg #27272a, rad 8, pad 2
+  TableHeader bg #1e1e2e, pad 12
+    TableHeaderCell "Name", col #a1a1aa, w 120
+    TableHeaderCell "Status", col #a1a1aa, w 80
+    TableHeaderCell "Action", col #a1a1aa, w 80
+  TableRow pad 12
+    TableCell "Item 1", col #e4e4e7
+    TableCell "Active", col #10b981
+    TableCell
+      Button "Edit", pad 4 8, bg #5BA8F5, col white, rad 4, fs 12
+  TableRow pad 12
+    TableCell "Item 2", col #e4e4e7
+    TableCell "Pending", col #f59e0b
+    TableCell
+      Button "Edit", pad 4 8, bg #5BA8F5, col white, rad 4, fs 12`,
+  },
+  {
+    id: 'comp-tabs',
+    name: 'Tabs',
+    category: 'Components',
+    template: 'Tabs',
+    icon: 'tabs',
+    description: 'Tabbed navigation',
+    defaultSize: { width: 300, height: 150 },
+    mirTemplate: `Tabs defaultValue "tab1"
+  Tab "Overview", value "tab1"
+    Frame pad 16
+      Text "Overview content", col #e4e4e7
+  Tab "Details", value "tab2"
+    Frame pad 16
+      Text "Details content", col #e4e4e7
+  Tab "Settings", value "tab3"
+    Frame pad 16
+      Text "Settings content", col #e4e4e7`,
   },
   {
     id: 'comp-text',

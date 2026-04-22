@@ -34,21 +34,21 @@ const PALETTE_NAMES: Record<string, string> = {
   'comp-button': 'Button',
   'comp-input': 'Input',
   'comp-textarea': 'Textarea',
+  'comp-h1': 'H1',
+  'comp-h2': 'H2',
   'comp-icon': 'Icon',
   'comp-image': 'Image',
-  // Presets
-  'preset-avatar': 'Avatar',
-  'preset-badge': 'Badge',
-  'preset-button-group': 'Button Group',
-  'preset-card': 'Card',
-  'preset-form-field': 'Form Field',
-  'preset-list-item': 'List Item',
-  'preset-search-bar': 'Search Bar',
-  'preset-stat-card': 'Stat Card',
+  // Form Controls
+  'comp-checkbox': 'Checkbox',
+  'comp-radio-group': 'Radio Group',
+  'comp-slider': 'Slider',
+  'comp-switch': 'Switch',
   // Zag Components (only DatePicker remains)
   'comp-date-picker': 'Date Picker',
   // Pure Mirror Components
   'comp-select': 'Select',
+  'comp-table': 'Table',
+  'comp-tabs': 'Tabs',
   'comp-accordion': 'Accordion',
   'comp-chart': 'Chart',
 }
@@ -69,21 +69,21 @@ const EXPECTED_MIR_PATTERNS: Record<string, string[]> = {
   'comp-button': ['Button'],
   'comp-input': ['Input'],
   'comp-textarea': ['Textarea'],
+  'comp-h1': ['H1'],
+  'comp-h2': ['H2'],
   'comp-icon': ['Icon'],
   'comp-image': ['Image'],
-  // Presets - check for key structural elements
-  'preset-avatar': ['Frame', 'rad 99', 'Text'],
-  'preset-badge': ['Frame', 'rad 99', 'Text'],
-  'preset-button-group': ['Frame', 'hor', 'Button'],
-  'preset-card': ['Frame', 'Text', 'Button'],
-  'preset-form-field': ['Frame', 'Text', 'Input'],
-  'preset-list-item': ['Frame', 'hor', 'Icon', 'Text'],
-  'preset-search-bar': ['Frame', 'Icon', 'Input', 'search'],
-  'preset-stat-card': ['Frame', 'Text'],
+  // Form Controls
+  'comp-checkbox': ['Checkbox'],
+  'comp-radio-group': ['RadioGroup', 'RadioItem'],
+  'comp-slider': ['Slider'],
+  'comp-switch': ['Switch'],
   // Zag components (only DatePicker remains)
   'comp-date-picker': ['DatePicker'],
   // Pure Mirror components
   'comp-select': ['Select', 'Trigger', 'Content', 'Item'],
+  'comp-table': ['Table', 'TableHeader', 'TableRow', 'TableCell'],
+  'comp-tabs': ['Tabs', 'Tab'],
   'comp-accordion': ['AccordionItem', 'Header', 'Panel'],
   'comp-chart': ['Chart'],
 }
@@ -227,98 +227,125 @@ export const basicPrimitiveDragTests: TestCase[] = describe('Panel Drag - Basic 
 ])
 
 // =============================================================================
-// PRESET COMPONENTS
+// HEADING COMPONENTS
 // =============================================================================
 
-export const presetDragTests: TestCase[] = describe('Panel Drag - Preset Components', [
-  testWithSetup('Drag Avatar preset', 'Frame gap 12, pad 16, bg #1a1a1a', async (api: TestAPI) => {
-    await api.interact.dragFromPalette('Avatar', 'node-1', 0)
+export const presetDragTests: TestCase[] = describe('Panel Drag - Heading Components', [
+  testWithSetup('Drag H1 heading', 'Frame gap 12, pad 16, bg #1a1a1a', async (api: TestAPI) => {
+    await api.interact.dragFromPalette('H1', 'node-1', 0)
     await api.utils.waitForCompile()
     const code = api.editor.getCode()
-    api.assert.ok(code.includes('Frame'), 'Should contain Frame')
-    api.assert.ok(code.includes('rad 99') || code.includes('rad 48'), 'Should be circular')
-    api.assert.ok(code.includes('Text'), 'Should contain initials Text')
+    api.assert.ok(code.includes('H1'), 'Should contain H1')
   }),
 
-  testWithSetup('Drag Badge preset', 'Frame gap 12, pad 16, bg #1a1a1a', async (api: TestAPI) => {
-    await api.interact.dragFromPalette('Badge', 'node-1', 0)
+  testWithSetup('Drag H2 heading', 'Frame gap 12, pad 16, bg #1a1a1a', async (api: TestAPI) => {
+    await api.interact.dragFromPalette('H2', 'node-1', 0)
     await api.utils.waitForCompile()
     const code = api.editor.getCode()
-    api.assert.ok(code.includes('Frame'), 'Should contain Frame')
-    api.assert.ok(code.includes('rad 99'), 'Should be pill-shaped')
+    api.assert.ok(code.includes('H2'), 'Should contain H2')
   }),
+])
 
+// =============================================================================
+// TABLE & TABS COMPONENTS
+// =============================================================================
+
+export const tableTabsDragTests: TestCase[] = describe('Panel Drag - Table & Tabs', [
   testWithSetup(
-    'Drag Button Group preset',
+    'Drag Table component',
     'Frame gap 12, pad 16, bg #1a1a1a',
     async (api: TestAPI) => {
-      await api.interact.dragFromPalette('Button Group', 'node-1', 0)
+      await api.interact.dragFromPalette('Table', 'node-1', 0)
       await api.utils.waitForCompile()
       const code = api.editor.getCode()
-      api.assert.ok(code.includes('Frame'), 'Should contain Frame')
-      api.assert.ok(code.includes('hor'), 'Should be horizontal')
-      api.assert.ok(code.includes('Button'), 'Should contain Buttons')
+      api.assert.ok(code.includes('Table'), 'Should contain Table')
+      api.assert.ok(code.includes('TableHeader'), 'Should contain TableHeader')
+      api.assert.ok(code.includes('TableRow'), 'Should contain TableRow')
+      api.assert.ok(code.includes('TableCell'), 'Should contain TableCell')
     }
   ),
 
-  testWithSetup('Drag Card preset', 'Frame gap 12, pad 16, bg #1a1a1a', async (api: TestAPI) => {
-    await api.interact.dragFromPalette('Card', 'node-1', 0)
+  testWithSetup('Drag Tabs component', 'Frame gap 12, pad 16, bg #1a1a1a', async (api: TestAPI) => {
+    await api.interact.dragFromPalette('Tabs', 'node-1', 0)
     await api.utils.waitForCompile()
     const code = api.editor.getCode()
-    api.assert.ok(code.includes('Frame'), 'Should contain Frame')
-    api.assert.ok(code.includes('Text'), 'Should contain Text')
-    api.assert.ok(code.includes('rad'), 'Should have border radius')
+    api.assert.ok(code.includes('Tabs'), 'Should contain Tabs')
+    api.assert.ok(code.includes('Tab'), 'Should contain Tab')
   }),
 
   testWithSetup(
-    'Drag Form Field preset',
+    'Table has correct structure',
     'Frame gap 12, pad 16, bg #1a1a1a',
     async (api: TestAPI) => {
-      await api.interact.dragFromPalette('Form Field', 'node-1', 0)
+      await api.interact.dragFromPalette('Table', 'node-1', 0)
       await api.utils.waitForCompile()
       const code = api.editor.getCode()
-      api.assert.ok(code.includes('Frame'), 'Should contain Frame')
-      api.assert.ok(code.includes('Text'), 'Should contain label Text')
-      api.assert.ok(code.includes('Input'), 'Should contain Input')
+      api.assert.ok(code.includes('TableHeaderCell'), 'Should contain TableHeaderCell')
+      api.assert.ok(code.includes('Button'), 'Should contain action Button')
     }
   ),
 
   testWithSetup(
-    'Drag List Item preset',
+    'Tabs has multiple tabs',
     'Frame gap 12, pad 16, bg #1a1a1a',
     async (api: TestAPI) => {
-      await api.interact.dragFromPalette('List Item', 'node-1', 0)
+      await api.interact.dragFromPalette('Tabs', 'node-1', 0)
       await api.utils.waitForCompile()
       const code = api.editor.getCode()
-      api.assert.ok(code.includes('Frame'), 'Should contain Frame')
-      api.assert.ok(code.includes('hor'), 'Should be horizontal')
-      api.assert.ok(code.includes('Icon'), 'Should contain Icon')
-      api.assert.ok(code.includes('Text'), 'Should contain Text')
+      // Should have multiple Tab entries
+      const tabCount = (code.match(/Tab "/g) || []).length
+      api.assert.ok(tabCount >= 2, `Should have at least 2 tabs, found ${tabCount}`)
+    }
+  ),
+])
+
+// =============================================================================
+// FORM CONTROLS
+// =============================================================================
+
+export const formControlDragTests: TestCase[] = describe('Panel Drag - Form Controls', [
+  testWithSetup(
+    'Drag Checkbox component',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Checkbox', 'node-1', 0)
+      await api.utils.waitForCompile()
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('Checkbox'), 'Should contain Checkbox')
     }
   ),
 
   testWithSetup(
-    'Drag Search Bar preset',
+    'Drag Switch component',
     'Frame gap 12, pad 16, bg #1a1a1a',
     async (api: TestAPI) => {
-      await api.interact.dragFromPalette('Search Bar', 'node-1', 0)
+      await api.interact.dragFromPalette('Switch', 'node-1', 0)
       await api.utils.waitForCompile()
       const code = api.editor.getCode()
-      api.assert.ok(code.includes('Frame'), 'Should contain Frame')
-      api.assert.ok(code.includes('Icon'), 'Should contain search Icon')
-      api.assert.ok(code.includes('Input'), 'Should contain Input')
+      api.assert.ok(code.includes('Switch'), 'Should contain Switch')
     }
   ),
 
   testWithSetup(
-    'Drag Stat Card preset',
+    'Drag Slider component',
     'Frame gap 12, pad 16, bg #1a1a1a',
     async (api: TestAPI) => {
-      await api.interact.dragFromPalette('Stat Card', 'node-1', 0)
+      await api.interact.dragFromPalette('Slider', 'node-1', 0)
       await api.utils.waitForCompile()
       const code = api.editor.getCode()
-      api.assert.ok(code.includes('Frame'), 'Should contain Frame')
-      api.assert.ok(code.includes('Text'), 'Should contain Text elements')
+      api.assert.ok(code.includes('Slider'), 'Should contain Slider')
+    }
+  ),
+
+  testWithSetup(
+    'Drag Radio Group component',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Radio Group', 'node-1', 0)
+      await api.utils.waitForCompile()
+      const code = api.editor.getCode()
+      api.assert.ok(code.includes('RadioGroup'), 'Should contain RadioGroup')
+      api.assert.ok(code.includes('RadioItem'), 'Should contain RadioItem')
     }
   ),
 ])
@@ -527,38 +554,6 @@ export const codeVerificationTests: TestCase[] = describe('Panel Drag - Code Ver
     }
   ),
 
-  // Verify Card preset inserts full mirTemplate structure
-  testWithSetup(
-    'Card preset inserts complete structure',
-    'Frame gap 12, pad 16, bg #1a1a1a',
-    async (api: TestAPI) => {
-      await api.interact.dragFromPalette('Card', 'node-1', 0)
-      await api.utils.waitForCompile()
-      const code = api.editor.getCode()
-
-      // Card mirTemplate should include:
-      // - Frame with gap, pad, bg, rad
-      // - Text for title
-      // - Text for description
-      // - Frame hor for actions
-      // - Button for action
-      api.assert.ok(
-        code.includes('Frame ver') || code.includes('Frame gap'),
-        'Should have Frame container'
-      )
-      api.assert.ok(
-        code.includes('"Card Title"') || code.includes('Text'),
-        'Should have title text'
-      )
-      api.assert.ok(code.includes('Button'), 'Should have action button')
-      api.assert.ok(code.includes('rad 12') || code.includes('rad'), 'Should have border radius')
-      api.assert.ok(code.includes('bg #27272a') || code.includes('bg'), 'Should have background')
-
-      // Log actual code for debugging
-      console.log('[Card Code]:', code)
-    }
-  ),
-
   // Verify Select (Pure Mirror) inserts full structure
   testWithSetup(
     'Select inserts complete Pure Mirror structure',
@@ -600,6 +595,8 @@ export const allPanelDragTests: TestCase[] = [
   ...layoutDragTests,
   ...basicPrimitiveDragTests,
   ...presetDragTests,
+  ...tableTabsDragTests,
+  ...formControlDragTests,
   ...zagComponentDragTests,
   ...dataComponentDragTests,
   ...insertionPositionTests,

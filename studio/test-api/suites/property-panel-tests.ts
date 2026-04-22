@@ -71,8 +71,8 @@ Frame pad 16, bg #333`,
       // Check if property panel is visible via Panel API
       api.assert.ok(api.panel.property.isVisible(), 'Property panel should be visible')
 
-      // Verify selected node matches via Panel API
-      const selectedId = api.panel.property.getSelectedNodeId()
+      // Verify selected node matches via Panel API (use async version with retry)
+      const selectedId = await api.panel.property.waitForSelectedNodeId()
       api.assert.ok(
         selectedId === 'node-1',
         `Property panel should show node-1, got "${selectedId}"`
@@ -275,11 +275,8 @@ Frame pad 20, bg #333`,
     await api.studio.setSelection('node-1')
     await api.utils.waitForIdle()
 
-    // Wait for property panel to be ready
-    await api.utils.delay(200)
-
-    // Verify panel is showing the selected element
-    const selectedId = api.panel.property.getSelectedNodeId()
+    // Verify panel is showing the selected element (use async version with retry)
+    const selectedId = await api.panel.property.waitForSelectedNodeId()
     api.assert.ok(selectedId === 'node-1', `Panel should show node-1, got "${selectedId}"`)
 
     // Set padding via Panel API
@@ -360,13 +357,11 @@ Button "Click me", pad 16, bg #2271C1, col white`,
       // Select the Button using Studio API for reliable selection
       await api.studio.setSelection('node-1')
       await api.utils.waitForIdle()
-      await api.utils.delay(200) // Wait for panel to update
-
       // 1. Verify property panel is visible via Panel API
       api.assert.ok(api.panel.property.isVisible(), 'Property panel should be visible')
 
-      // 2. Check selected node
-      const selectedId = api.panel.property.getSelectedNodeId()
+      // 2. Check selected node (use async version with retry)
+      const selectedId = await api.panel.property.waitForSelectedNodeId()
       api.assert.ok(selectedId === 'node-1', `Panel should show node-1, got "${selectedId}"`)
 
       // 3. Verify tokens are available via Panel API (more reliable than DOM queries)
@@ -472,31 +467,25 @@ Frame rad 8, pad 16, bg #27272a
       showPropertyPanel()
       await api.utils.waitForIdle()
 
-      // Select the Frame (node-1)
-      api.interact.select('node-1')
+      // Select the Frame using Studio API for reliable selection
+      await api.studio.setSelection('node-1')
       await api.utils.waitForIdle()
+      await api.utils.delay(200) // Wait for panel to update
 
-      // Check that radius token buttons exist
-      const buttons = getRadiusTokenButtons()
+      // Verify tokens are available via Panel API (more reliable than DOM queries)
+      const radTokens = api.panel.property.getTokenOptions('rad')
       api.assert.ok(
-        buttons.length >= 3,
-        `Expected at least 3 radius token buttons (s, m, l), got ${buttons.length}`
+        radTokens.length >= 3,
+        `Expected at least 3 radius tokens (s, m, l), got ${radTokens.length}: ${radTokens.join(', ')}`
       )
 
-      // Check button labels - should have s, m, l (plus 0 preset and possibly circle)
-      const labels = buttons.map(b => b.textContent?.trim().toLowerCase())
-      api.assert.ok(
-        labels.some(l => l === 's'),
-        'Should have "s" radius token button'
-      )
-      api.assert.ok(
-        labels.some(l => l === 'm'),
-        'Should have "m" radius token button'
-      )
-      api.assert.ok(
-        labels.some(l => l === 'l'),
-        'Should have "l" radius token button'
-      )
+      // Check token names
+      const hasS = radTokens.some(t => t.toLowerCase() === 's')
+      const hasM = radTokens.some(t => t.toLowerCase() === 'm')
+      const hasL = radTokens.some(t => t.toLowerCase() === 'l')
+      api.assert.ok(hasS, `Should have "s" token. Found: ${radTokens.join(', ')}`)
+      api.assert.ok(hasM, `Should have "m" token. Found: ${radTokens.join(', ')}`)
+      api.assert.ok(hasL, `Should have "l" token. Found: ${radTokens.join(', ')}`)
     }
   ),
 
@@ -787,10 +776,9 @@ Card`,
       // Select the Card instance (node-1)
       await api.studio.setSelection('node-1')
       await api.utils.waitForIdle()
-      await api.utils.delay(200)
 
-      // Verify property panel is showing the selected element
-      const selectedId = api.panel.property.getSelectedNodeId()
+      // Verify property panel is showing the selected element (use async version with retry)
+      const selectedId = await api.panel.property.waitForSelectedNodeId()
       api.assert.ok(selectedId === 'node-1', `Panel should show node-1, got "${selectedId}"`)
 
       // Verify initial radius in code

@@ -42,6 +42,8 @@ export {
   layoutDragTests,
   basicPrimitiveDragTests,
   presetDragTests,
+  tableTabsDragTests,
+  formControlDragTests,
   zagComponentDragTests,
   dataComponentDragTests,
   insertionPositionTests,

@@ -20,7 +20,15 @@ import { createLogger } from '../../compiler/utils/logger'
 import { PreviewInspector } from './inspector'
 import { Assertions, AssertionCollector, ElementAssert } from './assertions'
 import { Interactions, enableHoverSimulation } from './interactions'
-import { TestRunner, test, testWithSetup, testOnly, testSkip, describe } from './test-runner'
+import {
+  TestRunner,
+  test,
+  testWithSetup,
+  testWithSetupSkip,
+  testOnly,
+  testSkip,
+  describe,
+} from './test-runner'
 import {
   layoutAssertions,
   getLayoutInfo,
@@ -68,7 +76,15 @@ export * from './types'
 export { PreviewInspector } from './inspector'
 export { Assertions, AssertionCollector, ElementAssert } from './assertions'
 export { Interactions } from './interactions'
-export { TestRunner, test, testWithSetup, testOnly, testSkip, describe } from './test-runner'
+export {
+  TestRunner,
+  test,
+  testWithSetup,
+  testWithSetupSkip,
+  testOnly,
+  testSkip,
+  describe,
+} from './test-runner'
 export {
   layoutAssertions,
   getLayoutInfo,

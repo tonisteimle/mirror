@@ -396,13 +396,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
           events.emit('component:drag-end', { item, event })
         },
         onClick: item => {
-          // Enter draw mode if DrawManager is available
-          if (studio.drawManager) {
-            studio.drawManager.enterDrawMode(item)
-          } else {
-            // Fallback to event emission (legacy behavior)
-            events.emit('component:insert-requested', { item })
-          }
+          // Insert component at cursor in editor
+          events.emit('component:insert-requested', { item })
         },
       }
     )
@@ -434,13 +429,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
           events.emit('component:drag-end', { item, event })
         },
         onClick: item => {
-          // Enter draw mode if DrawManager is available
-          if (studio.drawManager) {
-            studio.drawManager.enterDrawMode(item)
-          } else {
-            // Fallback to event emission (legacy behavior)
-            events.emit('component:insert-requested', { item })
-          }
+          // Insert component at cursor in editor
+          events.emit('component:insert-requested', { item })
         },
         onRefresh: () => {
           logBootstrap.info(' UserComponentsPanel refreshed')
@@ -651,17 +641,8 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Handle component insert request (click on component in palette)
   eventUnsubscribes.push(
     events.on('component:insert-requested', ({ item }) => {
-      // Try DrawManager first, fallback to editor insert
-      if (studio.drawManager && studio.preview) {
-        // Convert ComponentPanelItem to ComponentItem with defaults
-        const componentItem = {
-          ...item,
-          category: item.category ?? 'custom',
-          icon: (item.icon ?? 'box') as import('./panels/components/types').ComponentIcon,
-        }
-        studio.drawManager.enterDrawMode(componentItem)
-      } else if (studio.editor) {
-        // Insert at cursor in editor (use template based on file type)
+      // Insert at cursor in editor
+      if (studio.editor) {
         const currentFile = getCurrentFileCallback?.() || 'index.mir'
         const code = generateComponentCodeFromDragData(
           {

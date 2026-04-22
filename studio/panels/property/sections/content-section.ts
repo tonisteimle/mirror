@@ -85,6 +85,17 @@ export class ContentSection extends BaseSection {
     const allProps = data.allProperties || []
     const rows = fields.map(field => this.renderField(field, allProps)).join('')
 
+    // Use compact mode (no header) for simple primitives
+    if (data.compact) {
+      return `
+        <div class="section">
+          <div class="section-content">
+            ${rows}
+          </div>
+        </div>
+      `
+    }
+
     return `
       <div class="section">
         <div class="section-label">Content</div>

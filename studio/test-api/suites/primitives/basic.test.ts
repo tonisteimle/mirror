@@ -104,6 +104,7 @@ export const basicPrimitives: TestCase[] = describe('Basic Primitives', [
   // Icon
   testWithSetup('Icon renders with SVG', 'Icon "check"', async (api: TestAPI) => {
     api.assert.exists('node-1')
+    await api.utils.delay(300) // Wait for SVG to load (increased from 100ms for reliability)
     const info = inspectStrict(api, 'node-1', 'Icon')
     api.assert.ok(info !== null, 'Icon should render')
 

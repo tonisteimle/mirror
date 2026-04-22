@@ -281,10 +281,9 @@ export const level3Tests: TestCase[] = describe('Level 3: Add New Properties', [
 
       // === SELECT ===
       await api.interact.click('node-2')
-      await api.utils.delay(300)
 
-      // Verify selection
-      const selectedId = api.panel.property.getSelectedNodeId()
+      // Verify selection (use async version with retry)
+      const selectedId = await api.panel.property.waitForSelectedNodeId()
       console.log('Selected node ID:', selectedId)
 
       // === ACTION: Try to add new property ===

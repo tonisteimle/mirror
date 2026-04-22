@@ -139,6 +139,34 @@ export class InlineEditSession {
     this.inputElement.value = this.originalText
     this.inputElement.className = 'inline-edit-input'
 
+    // Determine text alignment:
+    // 1. Use explicit text-align if not 'start'
+    // 2. If element uses flexbox centering, use 'center'
+    // 3. Default to 'left'
+    let textAlign = computed.textAlign
+    if (textAlign === 'start' || textAlign === '-webkit-auto') {
+      // Check if element is using flexbox centering
+      const display = computed.display
+      const justifyContent = computed.justifyContent
+      const alignItems = computed.alignItems
+
+      if (display === 'flex' || display === 'inline-flex') {
+        if (
+          justifyContent === 'center' ||
+          justifyContent === 'space-around' ||
+          justifyContent === 'space-evenly'
+        ) {
+          textAlign = 'center'
+        } else if (justifyContent === 'flex-end' || justifyContent === 'end') {
+          textAlign = 'right'
+        }
+      }
+    }
+
+    // Get background color - use element's background or a default
+    const bgColor = computed.backgroundColor
+    const hasBgColor = bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent'
+
     // Match the element's typography and size exactly
     this.inputElement.style.cssText = `
       position: fixed;
@@ -151,17 +179,18 @@ export class InlineEditSession {
       margin: 0;
       border: 2px solid var(--color-primary, #5BA8F5);
       border-radius: 3px;
-      background: transparent;
+      background: ${hasBgColor ? bgColor : 'rgba(30, 30, 30, 0.95)'};
       color: ${computed.color};
       font-family: ${computed.fontFamily};
       font-size: ${computed.fontSize};
       font-weight: ${computed.fontWeight};
       line-height: ${rect.height}px;
-      text-align: ${computed.textAlign};
+      text-align: ${textAlign};
       outline: none;
       box-shadow: 0 0 0 1px rgba(91, 168, 245, 0.3);
       z-index: 9999;
       box-sizing: border-box;
+      caret-color: ${computed.color};
     `
 
     // Add event listeners with bound handlers for proper cleanup

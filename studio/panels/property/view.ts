@@ -29,6 +29,189 @@ import { createLogger } from '../../../compiler/utils/logger'
 const log = createLogger('PropertyPanelView')
 
 // ============================================
+// Primitive-specific Panel Configuration
+// ============================================
+
+/**
+ * Defines which sections to show for each primitive type.
+ * - sections: array of section names to show
+ * - compact: hide section headers (for simple primitives)
+ * - colorProps: which color properties to show (bg, col, ic, boc)
+ */
+interface PanelConfig {
+  sections: string[]
+  compact?: boolean
+  colorProps?: string[]
+}
+
+const PANEL_CONFIG: Record<string, PanelConfig> = {
+  // Simple primitives - compact mode, no headers
+  Icon: {
+    sections: ['content', 'color', 'sizing'],
+    compact: true,
+    colorProps: ['ic'],
+  },
+  Image: {
+    sections: ['content', 'sizing', 'border'],
+    compact: true,
+  },
+  Img: {
+    sections: ['content', 'sizing', 'border'],
+    compact: true,
+  },
+  Divider: {
+    sections: ['color', 'spacing'],
+    compact: true,
+    colorProps: ['bg'],
+  },
+  Spacer: {
+    sections: ['sizing'],
+    compact: true,
+  },
+
+  // Text elements
+  Text: {
+    sections: ['content', 'color', 'typography', 'sizing'],
+    compact: true,
+    colorProps: ['col'],
+  },
+  Label: {
+    sections: ['content', 'color', 'typography'],
+    compact: true,
+    colorProps: ['col'],
+  },
+  H1: { sections: ['content', 'color', 'typography'], compact: true, colorProps: ['col'] },
+  H2: { sections: ['content', 'color', 'typography'], compact: true, colorProps: ['col'] },
+  H3: { sections: ['content', 'color', 'typography'], compact: true, colorProps: ['col'] },
+  H4: { sections: ['content', 'color', 'typography'], compact: true, colorProps: ['col'] },
+  H5: { sections: ['content', 'color', 'typography'], compact: true, colorProps: ['col'] },
+  H6: { sections: ['content', 'color', 'typography'], compact: true, colorProps: ['col'] },
+
+  // Interactive elements
+  Button: {
+    sections: ['content', 'color', 'spacing', 'border', 'typography'],
+    colorProps: ['bg', 'col'],
+  },
+  Link: {
+    sections: ['content', 'color', 'typography'],
+    colorProps: ['col'],
+  },
+
+  // Form elements
+  Input: {
+    sections: ['content', 'color', 'sizing', 'spacing', 'border', 'typography'],
+    colorProps: ['bg', 'col', 'boc'],
+  },
+  Textarea: {
+    sections: ['content', 'color', 'sizing', 'spacing', 'border', 'typography'],
+    colorProps: ['bg', 'col', 'boc'],
+  },
+
+  // Containers - full sections
+  Frame: {
+    sections: ['layout', 'sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'col'],
+  },
+  Box: {
+    sections: ['layout', 'sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg'],
+  },
+
+  // Semantic containers
+  Header: { sections: ['layout', 'sizing', 'spacing', 'color'], colorProps: ['bg'] },
+  Nav: { sections: ['layout', 'sizing', 'spacing', 'color'], colorProps: ['bg'] },
+  Main: { sections: ['layout', 'sizing', 'spacing', 'color'], colorProps: ['bg'] },
+  Section: { sections: ['layout', 'sizing', 'spacing', 'color'], colorProps: ['bg'] },
+  Article: { sections: ['layout', 'sizing', 'spacing', 'color'], colorProps: ['bg'] },
+  Aside: { sections: ['layout', 'sizing', 'spacing', 'color'], colorProps: ['bg'] },
+  Footer: { sections: ['layout', 'sizing', 'spacing', 'color'], colorProps: ['bg'] },
+
+  // Data components
+  Table: {
+    sections: ['layout', 'sizing', 'spacing', 'border', 'color'],
+    colorProps: ['bg', 'col'],
+  },
+  TableHeader: { sections: ['spacing', 'color'], colorProps: ['bg', 'col'] },
+  TableRow: { sections: ['spacing', 'color'], colorProps: ['bg', 'col'] },
+  TableCell: { sections: ['sizing', 'spacing', 'color', 'typography'], colorProps: ['col'] },
+  TableHeaderCell: { sections: ['sizing', 'spacing', 'color', 'typography'], colorProps: ['col'] },
+
+  // Navigation components
+  Tabs: {
+    sections: ['layout', 'sizing', 'spacing', 'color'],
+    colorProps: ['bg'],
+  },
+  Tab: {
+    sections: ['content', 'spacing', 'color', 'typography'],
+    colorProps: ['bg', 'col'],
+  },
+
+  // Form controls
+  Checkbox: {
+    sections: ['content', 'spacing', 'color'],
+    compact: true,
+    colorProps: ['col'],
+  },
+  Switch: {
+    sections: ['content', 'spacing', 'color'],
+    compact: true,
+    colorProps: ['bg'],
+  },
+  Slider: {
+    sections: ['sizing', 'color'],
+    compact: true,
+    colorProps: ['bg'],
+  },
+  RadioGroup: {
+    sections: ['layout', 'spacing', 'color'],
+    colorProps: ['col'],
+  },
+  RadioItem: {
+    sections: ['content', 'spacing', 'color'],
+    compact: true,
+    colorProps: ['col'],
+  },
+
+  // Accordion
+  AccordionItem: {
+    sections: ['layout', 'spacing', 'color'],
+    colorProps: ['bg'],
+  },
+
+  // Select (Pure Mirror)
+  Select: {
+    sections: ['sizing', 'spacing', 'color'],
+    colorProps: ['bg', 'col'],
+  },
+
+  // Chart
+  Chart: {
+    sections: ['sizing', 'color'],
+    compact: true,
+    colorProps: ['bg'],
+  },
+
+  // DatePicker (Zag)
+  DatePicker: {
+    sections: ['sizing', 'spacing', 'color'],
+    colorProps: ['bg', 'col'],
+  },
+}
+
+/** Default config for unknown primitives */
+const DEFAULT_PANEL_CONFIG: PanelConfig = {
+  sections: ['content', 'layout', 'sizing', 'spacing', 'border', 'color', 'typography'],
+  colorProps: ['bg', 'col'],
+}
+
+/**
+ * Get panel configuration for a primitive
+ */
+function getPanelConfig(primitive: string): PanelConfig {
+  return PANEL_CONFIG[primitive] || DEFAULT_PANEL_CONFIG
+}
+
+// ============================================
 // View Options
 // ============================================
 
@@ -220,9 +403,13 @@ export class PropertyPanelView {
       isInPositionedContainer
     )
 
+    // Use component name in title (e.g., "Text Properties", "Button Properties")
+    const componentName = element.componentName || 'Element'
+    const title = `${componentName} Properties`
+
     this.container.innerHTML = `
       <div class="pp-header">
-        <span class="pp-title">Properties</span>
+        <span class="pp-title">${title}</span>
       </div>
       ${
         element.isTemplateInstance
@@ -256,7 +443,12 @@ export class PropertyPanelView {
       return `<div class="pp-empty"><p>No properties</p></div>`
     }
 
-    // Prepare section data
+    // Get primitive type and panel configuration
+    const primitive = element.componentName || 'Frame'
+    const config = getPanelConfig(primitive)
+    const allowedSections = new Set(config.sections)
+
+    // Prepare section data with primitive info
     const sectionData: SectionData = {
       categories,
       currentElement: {
@@ -265,6 +457,8 @@ export class PropertyPanelView {
         isDefinition: element.isDefinition,
       },
       allProperties: element.allProperties,
+      primitive,
+      compact: config.compact,
       getSpacingTokens: propType => this.ports.tokens.getSpacingTokens(propType),
       getColorTokens: () => this.ports.tokens.getColorTokens(),
       resolveTokenValue: (ref, propType) => this.ports.tokens.resolveTokenValue(ref, propType),
@@ -280,7 +474,7 @@ export class PropertyPanelView {
 
     let result = ''
 
-    // Render sections in order (matching legacy order)
+    // Behavior section always shows if it has content (Zag components)
     if (behaviorCat && behaviorCat.properties.length > 0) {
       const section = this.sections.get('behavior')
       if (section) {
@@ -289,37 +483,43 @@ export class PropertyPanelView {
     }
 
     // Content section (text, icon, placeholder, href, src)
-    const contentSection = this.sections.get('content')
-    if (contentSection) {
-      result += contentSection.render(sectionData)
+    if (allowedSections.has('content')) {
+      const contentSection = this.sections.get('content')
+      if (contentSection) {
+        result += contentSection.render(sectionData)
+      }
     }
 
     // Position section (x, y, z - only for stacked containers)
-    const positionSection = this.sections.get('position')
-    if (positionSection) {
-      result += positionSection.render({ ...sectionData, isInPositionedContainer })
+    if (isInPositionedContainer) {
+      const positionSection = this.sections.get('position')
+      if (positionSection) {
+        result += positionSection.render({ ...sectionData, isInPositionedContainer })
+      }
     }
 
-    if (layoutCat) {
+    // Layout section
+    if (allowedSections.has('layout') && layoutCat) {
       const section = this.sections.get('layout')
       if (section) {
         result += section.render(sectionData)
       }
     }
 
-    if (sizingCat) {
+    // Sizing section
+    if (allowedSections.has('sizing') && sizingCat) {
       const section = this.sections.get('sizing')
       if (section) {
         result += section.render({
           ...sectionData,
           category: sizingCat,
-          // Pass positioning context
           spacingTokens: isInPositionedContainer ? [] : undefined,
         })
       }
     }
 
-    if (spacingCat) {
+    // Spacing section
+    if (allowedSections.has('spacing') && spacingCat) {
       const section = this.sections.get('spacing')
       if (section) {
         const padTokens = this.ports.tokens.getSpacingTokens('pad')
@@ -327,7 +527,8 @@ export class PropertyPanelView {
       }
     }
 
-    if (borderCat) {
+    // Border section
+    if (allowedSections.has('border') && borderCat) {
       const section = this.sections.get('border')
       if (section) {
         const radTokens = this.ports.tokens.getSpacingTokens('rad')
@@ -335,14 +536,21 @@ export class PropertyPanelView {
       }
     }
 
-    // Color section always renders (uses allProperties)
-    const colorSection = this.sections.get('color')
-    if (colorSection) {
-      const colorTokens = this.ports.tokens.getColorTokens()
-      result += colorSection.render({ ...sectionData, colorTokens })
+    // Color section - pass colorProps to filter which colors to show
+    if (allowedSections.has('color')) {
+      const colorSection = this.sections.get('color')
+      if (colorSection) {
+        const colorTokens = this.ports.tokens.getColorTokens()
+        result += colorSection.render({
+          ...sectionData,
+          colorTokens,
+          colorProps: config.colorProps,
+        })
+      }
     }
 
-    if (typographyCat) {
+    // Typography section
+    if (allowedSections.has('typography') && typographyCat) {
       const section = this.sections.get('typography')
       if (section) {
         result += section.render({ ...sectionData, category: typographyCat })

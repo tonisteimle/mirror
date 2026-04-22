@@ -50,3 +50,27 @@ export {
   typographyErrorTests,
   panelEdgeCaseTests,
 } from './errors.test'
+
+// Token Dropdown Tests
+export {
+  allTokenDropdownTests,
+  tokenDropdownVisibilityTests,
+  tokenDropdownHoverTests,
+  tokenDropdownSelectionTests,
+  gapTokenDropdownTests,
+  radiusTokenDropdownTests,
+  fontSizeTokenDropdownTests,
+} from './token-dropdown.test'
+
+// Primitive-specific Sections Tests
+export {
+  allPrimitiveSectionTests,
+  iconPanelTests,
+  textPanelTests,
+  imagePanelTests,
+  buttonPanelTests,
+  framePanelTests,
+  inputPanelTests,
+  interactionTests,
+  headingPanelTests,
+} from './primitive-sections.test'

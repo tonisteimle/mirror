@@ -61,6 +61,11 @@ export class SizingSection extends BaseSection {
     const category = data.category
     if (!category) return ''
 
+    // For Icon primitive, show icon-size (is) instead of w/h
+    if (data.primitive === 'Icon') {
+      return this.renderIconSize(data, category)
+    }
+
     const props = category.properties
 
     // Find width and height values
@@ -164,6 +169,34 @@ export class SizingSection extends BaseSection {
     `
   }
 
+  /**
+   * Render simplified sizing for Icon (just icon-size)
+   */
+  private renderIconSize(
+    data: SectionData,
+    category: { properties: Array<{ name: string; value: string }> }
+  ): string {
+    const props = category.properties
+    const allProps = data.allProperties || []
+
+    // Find icon-size (is) from allProperties since it might not be in sizing category
+    const isProp = allProps.find((p: { name: string }) => p.name === 'icon-size' || p.name === 'is')
+    const isValue = isProp?.value || '20'
+
+    return `
+      <div class="section">
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">Size</span>
+            <div class="prop-content">
+              <input type="text" class="prop-input" autocomplete="off" value="${this.deps.escapeHtml(isValue)}" data-prop="icon-size" placeholder="20">
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
   getHandlers(): EventHandlerMap {
     return {
       'select[data-device-preset]': {
@@ -200,6 +233,12 @@ export class SizingSection extends BaseSection {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           this.deps.onPropertyChange('height', input.value, 'input')
+        },
+      },
+      'input[data-prop="icon-size"]': {
+        input: (e: Event, target: HTMLElement) => {
+          const input = target as HTMLInputElement
+          this.deps.onPropertyChange('is', input.value, 'input')
         },
       },
     }

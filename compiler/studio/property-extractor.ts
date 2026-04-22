@@ -266,6 +266,8 @@ const CATEGORY_MAP: Record<string, string> = {
   'max-height': 'sizing',
   maxh: 'sizing',
   size: 'sizing',
+  'icon-size': 'sizing',
+  is: 'sizing',
 
   // Spacing
   padding: 'spacing',
@@ -282,6 +284,8 @@ const CATEGORY_MAP: Record<string, string> = {
   bg: 'color',
   'border-color': 'color',
   boc: 'color',
+  'icon-color': 'color',
+  ic: 'color',
 
   // Border
   border: 'border',
@@ -313,6 +317,7 @@ const CATEGORY_MAP: Record<string, string> = {
   disabled: 'visual',
   scroll: 'visual',
   'scroll-ver': 'visual',
+  fill: 'visual',
   'scroll-hor': 'visual',
   clip: 'visual',
 }

@@ -97,6 +97,8 @@ import {
   colorPickerTests,
   iconPickerTests,
   allEventsTests,
+  allTokenDropdownTests,
+  allPrimitiveSectionTests,
 } from './property-panel'
 import { allPropertyRobustnessTests } from './property-robustness-tests'
 
@@ -249,6 +251,8 @@ export const propertyPanelTests: TestCase[] = [
   ...allEventsTests,
   ...allPropertyRobustnessTests,
   ...allAgentSettingsTests,
+  ...allTokenDropdownTests,
+  ...allPrimitiveSectionTests,
 ]
 
 /**

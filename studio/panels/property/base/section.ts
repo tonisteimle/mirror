@@ -18,6 +18,10 @@ export interface SectionData {
     componentName: string
     isDefinition: boolean
   }
+  /** The primitive type (Frame, Text, Icon, etc.) - used for filtering properties */
+  primitive?: string
+  /** Whether to hide section headers (for simple primitives) */
+  compact?: boolean
   // Token data
   spacingTokens?: SpacingToken[]
   colorTokens?: ColorToken[]
@@ -28,6 +32,8 @@ export interface SectionData {
   getColorTokens?: () => ColorToken[]
   /** Resolve token value. propType is needed for short references like "$s" → "$s.pad" */
   resolveTokenValue?: (tokenRef: string, propType?: string) => string | null
+  /** Which color properties to show (bg, col, ic, boc) - for primitive-specific filtering */
+  colorProps?: string[]
 }
 
 /**
