@@ -70,6 +70,18 @@ export {
   tooltipKeyboardTests,
 } from './keyboard-navigation.test'
 
+// Panel Drag All Components Tests
+export {
+  allPanelDragTests,
+  layoutDragTests,
+  basicPrimitiveDragTests,
+  presetDragTests,
+  zagComponentDragTests,
+  dataComponentDragTests,
+  insertionPositionTests,
+  codeVerificationTests,
+} from './panel-drag-all.test'
+
 import { checkboxTests } from './checkbox.test'
 import { switchTests } from './switch.test'
 import { sliderTests } from './slider.test'
@@ -87,6 +99,7 @@ import { allTabsDropTests } from './tabs-drop.test'
 import { allAccordionTests } from './accordion.test'
 import { allAccordionDropTests } from './accordion-drop.test'
 import { allZagKeyboardTests } from './keyboard-navigation.test'
+import { allPanelDragTests } from './panel-drag-all.test'
 
 export const allZagTests: TestCase[] = [
   ...checkboxTests,
@@ -106,5 +119,7 @@ export const allZagTests: TestCase[] = [
   ...allTabsDropTests,
   ...allAccordionTests,
   ...allAccordionDropTests,
+  // Panel Drag All Components Tests
+  ...allPanelDragTests,
   // NOTE: Keyboard tests moved to 'headed' category (require real browser window)
 ]
