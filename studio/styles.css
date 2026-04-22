@@ -3790,7 +3790,7 @@
       font-weight: var(--weight-semibold);
       text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
-      color: var(--text-primary);
+      color: var(--text-muted);
     }
 
     .pp-close {
@@ -6213,7 +6213,7 @@
       font-weight: var(--weight-semibold);
       text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
-      color: var(--text-primary);
+      color: var(--text-muted);
     }
 
     .file-panel-add-btn {
@@ -6579,7 +6579,7 @@
       font-weight: var(--weight-semibold);
       text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
-      color: var(--text-primary);
+      color: var(--text-muted);
     }
 
     .cp-header-actions {
