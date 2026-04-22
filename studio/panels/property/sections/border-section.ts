@@ -85,7 +85,8 @@ export class BorderSection extends BaseSection {
       ...tokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` })),
     ]
 
-    const MAX_VISIBLE = 3 // 0 + 2 tokens, then dropdown
+    const MAX_DIRECT = 4 // Show all directly if 4 or fewer
+    const VISIBLE_COUNT = 3 // When using dropdown, show 3 visible
     const renderToken = (token: { label: string; value: string; tokenRef: string }) => {
       const isActive = isTokenRef ? radiusValue === token.tokenRef : radiusValue === token.value
       const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
@@ -93,11 +94,12 @@ export class BorderSection extends BaseSection {
     }
 
     let tokenButtons: string
-    if (allTokens.length <= MAX_VISIBLE) {
+    if (allTokens.length <= MAX_DIRECT) {
       tokenButtons = allTokens.map(renderToken).join('')
     } else {
-      const visibleTokens = allTokens.slice(0, MAX_VISIBLE)
-      const hiddenTokens = allTokens.slice(MAX_VISIBLE)
+      // 5+ tokens: show 3 + dropdown for rest
+      const visibleTokens = allTokens.slice(0, VISIBLE_COUNT)
+      const hiddenTokens = allTokens.slice(VISIBLE_COUNT)
       const activeInHidden = hiddenTokens.some(t =>
         isTokenRef ? radiusValue === t.tokenRef : radiusValue === t.value
       )

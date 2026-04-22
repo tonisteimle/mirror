@@ -4102,13 +4102,6 @@
       color: var(--color-primary);
     }
 
-    /* Show dropdown on hover over container */
-    .pp-content .token-more-container:hover .token-dropdown {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
     .pp-content .token-dropdown {
       display: none;
       position: absolute;
@@ -7719,27 +7712,161 @@
   background: var(--color-success);
 }
 
-/* Settings Panel - Uses same styles as Property Panel */
-.settings-panel {
-  width: 240px;
-  min-width: 200px;
-  background: var(--bg-panel);
-  border-left: 1px solid var(--border-default);
+/* ============================================================================
+ * Settings Dialog - Modal Overlay
+ * ============================================================================ */
+
+.settings-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   display: none;
-  flex-direction: column;
-  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-24);
 }
 
-.settings-panel.visible {
+.settings-dialog-overlay.visible {
   display: flex;
 }
 
-/* Settings panel unit label */
-.settings-panel .prop-unit {
-  font-size: var(--font-xs);
+.settings-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.settings-dialog {
+  position: relative;
+  width: 400px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 96px);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 24px 48px rgba(0, 0, 0, 0.5),
+    0 8px 16px rgba(0, 0, 0, 0.3);
+  animation: dialogFadeIn 0.15s ease-out;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.settings-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+}
+
+.settings-dialog-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-default);
+  letter-spacing: -0.01em;
+}
+
+.settings-dialog-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
   color: var(--text-muted);
-  width: 20px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settings-dialog-close:hover {
+  background: var(--bg-hover);
+  color: var(--text-default);
+}
+
+.settings-dialog-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.settings-dialog-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+/* Sections */
+.settings-dialog-overlay .section {
+  padding: 8px 0;
+}
+
+.settings-dialog-overlay .section:not(:last-child) {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.settings-dialog-overlay .section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 20px 12px;
+}
+
+.settings-dialog-overlay .section-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Rows */
+.settings-dialog-overlay .prop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 20px;
+  min-height: 44px;
+  transition: background 0.1s ease;
+}
+
+.settings-dialog-overlay .prop-row:hover {
+  background: var(--bg-hover);
+}
+
+.settings-dialog-overlay .prop-label {
+  font-size: 13px;
+  color: var(--text-default);
   flex-shrink: 0;
+}
+
+.settings-dialog-overlay .prop-label.hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.settings-dialog-overlay .prop-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* ============================================================================
@@ -8168,29 +8295,132 @@ select.tomselected,
   flex-shrink: 0 !important;
 }
 
-/* Settings panel: ensure all containers constrain their children */
-.settings-panel .prop-content {
-  overflow: hidden !important;
-  min-width: 0 !important;
+/* Settings dialog: form controls */
+
+/* Toggle button (checkbox style) */
+.settings-dialog-overlay .toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  color: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-/* Settings panel: input wrapper must fit within available space */
-.settings-panel .input-wrapper {
-  display: flex !important;
-  align-items: center !important;
-  background: var(--bg-input) !important;
-  border-radius: var(--radius-md) !important;
-  height: var(--input-height) !important;
-  box-sizing: border-box !important;
-  flex-shrink: 1 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
+.settings-dialog-overlay .toggle-btn:hover {
+  border-color: var(--color-primary-muted);
+}
+
+.settings-dialog-overlay .toggle-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.settings-dialog-overlay .toggle-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Select dropdown */
+.settings-dialog-overlay .prop-select {
+  width: 160px;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-default);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.settings-dialog-overlay .prop-select:hover {
+  border-color: var(--border-hover);
+}
+
+.settings-dialog-overlay .prop-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Text/password input */
+.settings-dialog-overlay .prop-input.full-width {
+  width: 160px;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-default);
+  font-size: 13px;
+  transition: border-color 0.15s ease;
+}
+
+.settings-dialog-overlay .prop-input.full-width:hover {
+  border-color: var(--border-hover);
+}
+
+.settings-dialog-overlay .prop-input.full-width:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Number input with unit */
+.settings-dialog-overlay .input-wrapper {
+  display: flex;
+  align-items: center;
+  width: 80px;
+  height: 32px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  transition: border-color 0.15s ease;
+}
+
+.settings-dialog-overlay .input-wrapper:hover {
+  border-color: var(--border-hover);
+}
+
+.settings-dialog-overlay .input-wrapper:focus-within {
+  border-color: var(--color-primary);
+}
+
+.settings-dialog-overlay .input-wrapper .prop-input {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-default);
+  font-size: 13px;
+  text-align: right;
+}
+
+.settings-dialog-overlay .input-wrapper .prop-input:focus {
+  outline: none;
+}
+
+.settings-dialog-overlay .input-unit {
+  padding-right: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+/* Agent fields container */
+.settings-dialog-overlay .agent-fields {
+  /* No extra spacing needed */
 }
 
 .input-wrapper .prop-input,
-.settings-panel .input-wrapper .prop-input,
-.settings-panel .section-content .input-wrapper .prop-input,
 .pp-content .input-wrapper .prop-input {
   background: none !important;
   background-color: transparent !important;
@@ -8206,8 +8436,7 @@ select.tomselected,
   max-height: unset !important;
 }
 
-.input-unit,
-.settings-panel .input-unit {
+.input-unit {
   padding: 0 8px 0 0;
   font-size: var(--font-xs);
   color: var(--text-disabled);

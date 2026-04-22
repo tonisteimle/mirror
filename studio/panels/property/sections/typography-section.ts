@@ -170,19 +170,22 @@ export class TypographySection extends BaseSection {
   }
 
   private renderSizeTokens(fontSizeValue: string, tokens: SpacingToken[]): string {
-    const MAX_VISIBLE = 3
+    const MAX_DIRECT = 4 // Show all directly if 4 or fewer
+    const VISIBLE_COUNT = 3 // When using dropdown, show 3 visible
 
     const renderToken = (token: SpacingToken) => {
       const isActive = fontSizeValue === token.value
       return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${token.value}" title="${token.value}px">${token.name}</button>`
     }
 
-    if (tokens.length <= MAX_VISIBLE) {
+    // Show all if 4 or fewer tokens
+    if (tokens.length <= MAX_DIRECT) {
       return tokens.map(renderToken).join('')
     }
 
-    const visibleTokens = tokens.slice(0, MAX_VISIBLE)
-    const hiddenTokens = tokens.slice(MAX_VISIBLE)
+    // 5+ tokens: show 3 + dropdown for rest
+    const visibleTokens = tokens.slice(0, VISIBLE_COUNT)
+    const hiddenTokens = tokens.slice(VISIBLE_COUNT)
     const activeInHidden = hiddenTokens.some(t => fontSizeValue === t.value)
 
     const dropdownItems = hiddenTokens

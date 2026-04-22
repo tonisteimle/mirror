@@ -130,7 +130,8 @@ export class LayoutSection extends BaseSection {
 
   private renderGapTokens(gapValue: string, tokens: SpacingToken[]): string {
     const isGapTokenRef = gapValue.startsWith('$')
-    const MAX_VISIBLE = 3
+    const MAX_DIRECT = 4 // Show all directly if 4 or fewer
+    const VISIBLE_COUNT = 3 // When using dropdown, show 3 visible
 
     const renderToken = (token: SpacingToken) => {
       const tokenRef = `$${token.fullName}`
@@ -138,14 +139,14 @@ export class LayoutSection extends BaseSection {
       return `<button class="token-btn ${active ? 'active' : ''}" data-gap-token="${token.value}" data-token-ref="${tokenRef}" title="${tokenRef}: ${token.value}">${token.name}</button>`
     }
 
-    // Show all if 3 or fewer tokens
-    if (tokens.length <= MAX_VISIBLE) {
+    // Show all if 4 or fewer tokens
+    if (tokens.length <= MAX_DIRECT) {
       return tokens.map(renderToken).join('')
     }
 
-    // Show first 3 + dropdown for rest
-    const visibleTokens = tokens.slice(0, MAX_VISIBLE)
-    const hiddenTokens = tokens.slice(MAX_VISIBLE)
+    // 5+ tokens: show 3 + dropdown for rest
+    const visibleTokens = tokens.slice(0, VISIBLE_COUNT)
+    const hiddenTokens = tokens.slice(VISIBLE_COUNT)
 
     // Check if active token is in hidden list
     const activeInHidden = hiddenTokens.some(token => {

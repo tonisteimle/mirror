@@ -5,15 +5,9 @@
  */
 
 import {
-  gridSettings,
-  smartGuidesSettings,
   handleSnapSettings,
-  generalSettings,
   agentSettings,
-  type GridSettings,
-  type SmartGuidesSettings,
   type HandleSnapSettings,
-  type GeneralSettings,
   type AgentSettings,
   type AgentType,
 } from '../../core/settings'
@@ -92,16 +86,16 @@ export class SettingsPanel {
 
   private render(): void {
     this.container.innerHTML = `
-      <div class="pp-header">
-        <span class="pp-title">Settings</span>
-        <button class="pp-close" data-action="close" title="Close (Esc)">${ICONS.close}</button>
-      </div>
-      <div class="pp-content">
-        ${this.renderAgentSection()}
-        ${this.renderGridSection()}
-        ${this.renderSmartGuidesSection()}
-        ${this.renderHandleSnapSection()}
-        ${this.renderGeneralSection()}
+      <div class="settings-dialog-backdrop" data-action="close"></div>
+      <div class="settings-dialog">
+        <div class="settings-dialog-header">
+          <span class="settings-dialog-title">Settings</span>
+          <button class="settings-dialog-close" data-action="close" title="Close (Esc)">${ICONS.close}</button>
+        </div>
+        <div class="settings-dialog-content">
+          ${this.renderAgentSection()}
+          ${this.renderSnappingSection()}
+        </div>
       </div>
     `
   }
@@ -230,57 +224,14 @@ export class SettingsPanel {
     `
   }
 
-  private renderGridSection(): string {
-    const settings = gridSettings.get()
-    return `
-      <div class="section">
-        <div class="section-label">Grid</div>
-        <div class="section-content">
-          ${this.renderToggle('grid.enabled', 'Snap to Grid', settings.enabled)}
-          ${this.renderToggle('grid.showVisual', 'Show Grid', settings.showVisual)}
-          ${this.renderNumberInput('grid.size', 'Grid Size', settings.size, 1, 100)}
-        </div>
-      </div>
-    `
-  }
-
-  private renderSmartGuidesSection(): string {
-    const settings = smartGuidesSettings.get()
-    return `
-      <div class="section">
-        <div class="section-label">Smart Guides</div>
-        <div class="section-content">
-          ${this.renderToggle('smartGuides.enabled', 'Enable', settings.enabled)}
-          ${this.renderToggle('smartGuides.showDistances', 'Distances', settings.showDistances)}
-          ${this.renderNumberInput('smartGuides.threshold', 'Threshold', settings.threshold, 1, 20)}
-        </div>
-      </div>
-    `
-  }
-
-  private renderHandleSnapSection(): string {
+  private renderSnappingSection(): string {
     const settings = handleSnapSettings.get()
     return `
       <div class="section">
-        <div class="section-label">Handle Snap</div>
+        <div class="section-label">Snapping</div>
         <div class="section-content">
-          ${this.renderToggle('handleSnap.enabled', 'Enable', settings.enabled)}
-          ${this.renderToggle('handleSnap.tokenSnapping', 'Tokens', settings.tokenSnapping)}
+          ${this.renderToggle('handleSnap.tokenSnapping', 'Token Snapping', settings.tokenSnapping)}
           ${this.renderNumberInput('handleSnap.gridSize', 'Snap Grid', settings.gridSize, 1, 64)}
-        </div>
-      </div>
-    `
-  }
-
-  private renderGeneralSection(): string {
-    const settings = generalSettings.get()
-    return `
-      <div class="section">
-        <div class="section-label">General</div>
-        <div class="section-content">
-          ${this.renderToggle('general.showPositionLabels', 'Position Labels', settings.showPositionLabels)}
-          ${this.renderNumberInput('general.moveStep', 'Arrow Step', settings.moveStep, 1, 20)}
-          ${this.renderNumberInput('general.moveStepShift', 'Shift + Arrow', settings.moveStepShift, 1, 100)}
         </div>
       </div>
     `
@@ -291,10 +242,10 @@ export class SettingsPanel {
 
     const signal = this.abortController.signal
 
-    // Close button
-    this.container
-      .querySelector('[data-action="close"]')
-      ?.addEventListener('click', () => this.hide(), { signal })
+    // Close button and backdrop
+    this.container.querySelectorAll('[data-action="close"]').forEach(el => {
+      el.addEventListener('click', () => this.hide(), { signal })
+    })
 
     // Escape key
     document.addEventListener(
@@ -389,10 +340,7 @@ export class SettingsPanel {
 
     // External settings changes
     this.eventUnsubscribes.push(
-      events.on('grid:changed', () => this.refreshValues()),
-      events.on('smartGuides:changed', () => this.refreshValues()),
       events.on('handleSnap:changed', () => this.refreshValues()),
-      events.on('settings:changed', () => this.refreshValues()),
       events.on('agent:changed', () => this.refreshValues())
     )
   }
@@ -424,17 +372,8 @@ export class SettingsPanel {
 
   private updateSetting(section: string, key: string, value: boolean | number | string): void {
     switch (section) {
-      case 'grid':
-        gridSettings.set({ [key]: value } as Partial<GridSettings>)
-        break
-      case 'smartGuides':
-        smartGuidesSettings.set({ [key]: value } as Partial<SmartGuidesSettings>)
-        break
       case 'handleSnap':
         handleSnapSettings.set({ [key]: value } as Partial<HandleSnapSettings>)
-        break
-      case 'general':
-        generalSettings.set({ [key]: value } as Partial<GeneralSettings>)
         break
       case 'agent':
         agentSettings.set({ [key]: value } as Partial<AgentSettings>)
@@ -452,19 +391,11 @@ export class SettingsPanel {
   }
 
   private refreshValues(): void {
-    const allSettings: Record<string, boolean | number> = {
-      'grid.enabled': gridSettings.get().enabled,
-      'grid.showVisual': gridSettings.get().showVisual,
-      'grid.size': gridSettings.get().size,
-      'smartGuides.enabled': smartGuidesSettings.get().enabled,
-      'smartGuides.showDistances': smartGuidesSettings.get().showDistances,
-      'smartGuides.threshold': smartGuidesSettings.get().threshold,
-      'handleSnap.enabled': handleSnapSettings.get().enabled,
-      'handleSnap.tokenSnapping': handleSnapSettings.get().tokenSnapping,
-      'handleSnap.gridSize': handleSnapSettings.get().gridSize,
-      'general.showPositionLabels': generalSettings.get().showPositionLabels,
-      'general.moveStep': generalSettings.get().moveStep,
-      'general.moveStepShift': generalSettings.get().moveStepShift,
+    // Snapping settings
+    const snapSettings = handleSnapSettings.get()
+    const snappingValues: Record<string, boolean | number> = {
+      'handleSnap.tokenSnapping': snapSettings.tokenSnapping,
+      'handleSnap.gridSize': snapSettings.gridSize,
     }
 
     // Agent settings (string values)
@@ -477,7 +408,7 @@ export class SettingsPanel {
       'agent.openrouterModel': agentSettingsValues.openrouterModel,
     }
 
-    for (const [key, value] of Object.entries(allSettings)) {
+    for (const [key, value] of Object.entries(snappingValues)) {
       // Toggle buttons
       const btn = this.container.querySelector(`.toggle-btn[data-setting="${key}"]`)
       if (btn) {
