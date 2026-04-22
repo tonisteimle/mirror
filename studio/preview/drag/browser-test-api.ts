@@ -26,6 +26,30 @@ import type {
   Point,
 } from './types'
 import type { AlignPosition } from './indicator'
+import { LAYOUT_SECTION, COMPONENTS_SECTION } from '../../panels/components/layout-presets'
+import type { ComponentItem } from '../../panels/components/types'
+
+// =============================================================================
+// Component Lookup Helper
+// =============================================================================
+
+/**
+ * Look up a component by name from the palette sections
+ * Returns the component definition if found, undefined otherwise
+ */
+function lookupComponentByName(name: string): ComponentItem | undefined {
+  // First check layout section
+  const layoutItem = LAYOUT_SECTION.find(item => item.name.toLowerCase() === name.toLowerCase())
+  if (layoutItem) return layoutItem
+
+  // Then check components section
+  const componentItem = COMPONENTS_SECTION.find(
+    item => item.name.toLowerCase() === name.toLowerCase()
+  )
+  if (componentItem) return componentItem
+
+  return undefined
+}
 
 // =============================================================================
 // Types
@@ -120,6 +144,7 @@ export class BrowserTestRunner {
     template?: string
     properties?: string
     textContent?: string
+    children?: any[]
   }): Promise<BrowserTestResult> {
     const startTime = performance.now()
     const codeBefore = this.getCode()
@@ -137,15 +162,13 @@ export class BrowserTestRunner {
       }
 
       // 2. Set drag data (as ComponentPanel would)
-      // NOTE: Children are NOT included here because the ZagComponentHandler requires
-      // runtime dependencies (updateFileList, etc.) that aren't available in the test environment.
-      // This means drag tests for complex Zag components (Dialog, Tabs with children)
-      // won't generate the full component structure. See CLAUDE.md for known limitations.
+      // Include children for complex components (Dialog, Tabs, etc.)
       const dragData: ComponentDragData = {
         componentName: params.componentName,
         properties: params.properties,
         textContent: params.textContent,
         mirTemplate: params.template,
+        children: params.children,
       }
       setCurrentDragData(dragData)
 
@@ -508,6 +531,7 @@ export class BrowserTestRunner {
     template?: string
     properties?: string
     textContent?: string
+    children?: any[]
   }): Promise<BrowserTestResult> {
     const startTime = performance.now()
     const codeBefore = this.getCode()
@@ -525,12 +549,13 @@ export class BrowserTestRunner {
       }
 
       // 2. Set drag data (as ComponentPanel would)
-      // NOTE: Children are NOT included - see comment in executePaletteDrop
+      // Include children for complex components
       const dragData: ComponentDragData = {
         componentName: params.componentName,
         properties: params.properties,
         textContent: params.textContent,
         mirTemplate: params.template,
+        children: params.children,
       }
       setCurrentDragData(dragData)
 
@@ -579,6 +604,7 @@ export class BrowserTestRunner {
     template?: string
     properties?: string
     textContent?: string
+    children?: any[]
   }): Promise<BrowserTestResult> {
     const startTime = performance.now()
     const codeBefore = this.getCode()
@@ -615,6 +641,7 @@ export class BrowserTestRunner {
         properties: params.properties,
         textContent: params.textContent,
         mirTemplate: params.template,
+        children: params.children,
       }
       setCurrentDragData(dragData)
 
@@ -924,10 +951,25 @@ class PaletteDragBuilder {
   private template?: string
   private properties?: string
   private text?: string
+  private mirTemplate?: string
+  private children?: any[]
 
   constructor(runner: BrowserTestRunner, componentName: string) {
     this.runner = runner
-    this.componentName = componentName
+
+    // Look up component definition from palette sections
+    const componentDef = lookupComponentByName(componentName)
+    if (componentDef) {
+      // Use the actual template (e.g., 'Frame' for 'Column')
+      this.componentName = componentDef.template
+      this.properties = componentDef.properties
+      this.text = componentDef.textContent
+      this.mirTemplate = componentDef.mirTemplate
+      this.children = componentDef.children
+    } else {
+      // Fallback: use component name directly (for primitives like 'Button')
+      this.componentName = componentName
+    }
   }
 
   withTemplate(template: string): this {
@@ -991,9 +1033,10 @@ class PaletteDragBuilder {
         componentName: this.componentName,
         targetNodeId: this.targetId,
         alignmentZone: this.alignZone,
-        template: this.template,
+        template: this.template ?? this.mirTemplate,
         properties: this.properties,
         textContent: this.text,
+        children: this.children,
       })
     }
 
@@ -1003,9 +1046,10 @@ class PaletteDragBuilder {
         componentName: this.componentName,
         targetNodeId: this.targetId,
         position: this.position,
-        template: this.template,
+        template: this.template ?? this.mirTemplate,
         properties: this.properties,
         textContent: this.text,
+        children: this.children,
       })
     }
 
@@ -1014,9 +1058,10 @@ class PaletteDragBuilder {
       componentName: this.componentName,
       targetNodeId: this.targetId,
       insertionIndex: this.index,
-      template: this.template,
+      template: this.template ?? this.mirTemplate,
       properties: this.properties,
       textContent: this.text,
+      children: this.children,
     })
   }
 }
