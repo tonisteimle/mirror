@@ -21,6 +21,8 @@ import {
   history,
   historyKeymap,
   indentWithTab,
+  indentMore,
+  indentLess,
   undo,
   redo,
   undoDepth,
@@ -119,7 +121,15 @@ import {
   setGlobalIconPickerCallback,
   // Draft Lines Extension (AI-assist visual feedback)
   draftLinesExtension,
-} from './dist/index.js?v=141'
+  // Draft Mode Extension (-- marker for AI-assisted editing)
+  draftModeExtension,
+  initDraftModeManager,
+  createDraftModeKeymap,
+  // Indent Guides Extension (visual indentation guides)
+  indentGuidesExtension,
+  // Smart Paste Extension (auto-adjust indentation on paste)
+  smartPasteExtension,
+} from './dist/index.js?v=143'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1554,9 +1564,17 @@ const componentExtractConfig = {
 const componentExtractExtension = createComponentExtractExtensionFromConfig(componentExtractConfig)
 const tokenExtractExtension = createTokenExtractExtensionFromConfig(componentExtractConfig)
 
+// Initialize Draft Mode Manager (AI-assisted editing with -- marker)
+// Note: We pass a getter function since editor isn't created yet
+let editor // Forward declaration for draft mode manager
+const draftModeManager = initDraftModeManager({
+  getEditorView: () => editor,
+})
+const draftModeKeymap = createDraftModeKeymap(draftModeManager)
+
 // Initialize modular color picker API for property panel
 
-const editor = new EditorView({
+editor = new EditorView({
   state: EditorState.create({
     doc: initialCode,
     extensions: [
@@ -1566,13 +1584,25 @@ const editor = new EditorView({
       highlightActiveLine(),
       drawSelection(),
       history(),
+      indentGuidesExtension(), // Visual indent guides (vertical lines)
+      smartPasteExtension(), // Auto-adjust indentation on paste
       draftLinesExtension(),
+      draftModeExtension(), // AI-assisted editing: -- marker detection
+      draftModeKeymap, // AI-assisted editing: Cmd+Enter to submit, Escape to cancel
       mirrorHighlight,
       autocompletion({
         override: [mirrorCompletions],
         activateOnTyping: true,
       }),
-      keymap.of([...completionKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
+      keymap.of([
+        // Block indent: Cmd+]/[ for indent/outdent
+        { key: 'Mod-]', run: indentMore },
+        { key: 'Mod-[', run: indentLess },
+        ...completionKeymap,
+        ...defaultKeymap,
+        ...historyKeymap,
+        indentWithTab,
+      ]),
       EditorView.updateListener.of(update => {
         if (update.docChanged) {
           // Skip debounced compile if change came from property panel (already compiled immediately)
@@ -1648,7 +1678,7 @@ const editor = new EditorView({
             isMultiLine: fromLine.number !== toLine.number,
           })
 
-          if (fromLine.number !== toLine.number && studio.sync) {
+          if (fromLine.number !== toLine.number && studio.sync?.handleEditorSelection) {
             // Multi-line selection → trigger multiselection in preview
             studio.sync.handleEditorSelection(fromLine.number, toLine.number)
           } else {
@@ -2831,6 +2861,9 @@ function initStudio() {
   // Set up icon picker for property panel
   setupPropertyPanelIconPicker()
 
+  // Set up event listeners for property panel (add/delete/edit events)
+  setupPropertyPanelEventListeners()
+
   // Initialize preview zoom controls
   initPreviewZoom()
 
@@ -3206,6 +3239,92 @@ function setupPropertyPanelIconPicker() {
         const rect = propertyPanel.getBoundingClientRect()
         iconPicker.showAt(rect.left + 20, rect.top + 100)
       }
+    }
+  })
+}
+
+/**
+ * Setup event listeners for property panel events
+ * Handles add-event, delete-event, and event-change
+ */
+function setupPropertyPanelEventListeners() {
+  // Handle adding a new event to an element
+  document.addEventListener('property-panel:add-event', event => {
+    const { nodeId, eventName } = event.detail || {}
+    if (!nodeId || !eventName || !studioCodeModifier) {
+      console.warn('[PropertyPanel] Add event: missing data', { nodeId, eventName })
+      return
+    }
+
+    console.log('[PropertyPanel] Adding event:', eventName, 'to node:', nodeId)
+
+    // Add the event with a default action
+    const result = studioCodeModifier.addEvent(nodeId, eventName, 'toggle')
+    if (result.success) {
+      handleStudioCodeChange(result)
+    } else {
+      console.warn('[PropertyPanel] Failed to add event:', result.error)
+    }
+  })
+
+  // Handle deleting an event from an element
+  document.addEventListener('property-panel:delete-event', event => {
+    const { nodeId, eventName } = event.detail || {}
+    if (!nodeId || !eventName || !studioCodeModifier) {
+      console.warn('[PropertyPanel] Delete event: missing data', { nodeId, eventName })
+      return
+    }
+
+    console.log('[PropertyPanel] Deleting event:', eventName, 'from node:', nodeId)
+
+    // Remove the event
+    const result = studioCodeModifier.removeEvent(nodeId, eventName)
+    if (result.success) {
+      handleStudioCodeChange(result)
+    } else {
+      console.warn('[PropertyPanel] Failed to delete event:', result.error)
+    }
+  })
+
+  // Handle changing an event's actions
+  document.addEventListener('property-panel:event-change', event => {
+    const { nodeId, eventName, actionsString } = event.detail || {}
+    if (!nodeId || !eventName || !studioCodeModifier) {
+      console.warn('[PropertyPanel] Event change: missing data', { nodeId, eventName })
+      return
+    }
+
+    console.log('[PropertyPanel] Changing event:', eventName, 'actions to:', actionsString)
+
+    // Parse the actionsString to extract action name and target
+    // Format: "actionName(target)" or "actionName()" or "actionName"
+    let actionName = actionsString || 'toggle'
+    let target = undefined
+
+    const match = actionsString?.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\(([^)]*)\)$/)
+    if (match) {
+      actionName = match[1]
+      target = match[2] || undefined
+    } else if (actionsString && !actionsString.includes('(')) {
+      // Simple action without parentheses
+      actionName = actionsString
+    }
+
+    // Update the event's actions
+    // updateEvent(nodeId, oldEventName, oldKey, newEventName, newActionName, newTarget, newKey)
+    const result = studioCodeModifier.updateEvent(
+      nodeId,
+      eventName, // oldEventName
+      undefined, // oldKey (no key)
+      eventName, // newEventName (keep same)
+      actionName, // newActionName
+      target, // newTarget
+      undefined // newKey
+    )
+    if (result.success) {
+      handleStudioCodeChange(result)
+    } else {
+      console.warn('[PropertyPanel] Failed to update event:', result.error)
     }
   })
 }

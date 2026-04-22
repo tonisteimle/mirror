@@ -168,6 +168,12 @@ export {
   findDefinitionInsertPosition,
 } from '../panels/components/component-templates'
 
+// Re-export indent guides extension (visual indentation guides)
+export { indentGuidesExtension } from './indent-guides'
+
+// Re-export smart paste extension (auto-adjust indentation on paste)
+export { smartPasteExtension } from './smart-paste'
+
 export interface EditorConfig {
   container: HTMLElement
 }
