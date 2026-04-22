@@ -6575,11 +6575,11 @@
     }
 
     .cp-title {
-      font-size: var(--font-sm);
+      font-size: var(--font-xs);
       font-weight: var(--weight-semibold);
-      text-transform: var(--text-uppercase);
+      text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
-      color: var(--text-muted);
+      color: var(--text-primary);
     }
 
     .cp-header-actions {
