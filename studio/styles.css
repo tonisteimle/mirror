@@ -3879,6 +3879,19 @@
       margin-bottom: 10px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border-default);
+      /* Extend border to panel edges */
+      margin-left: calc(-1 * var(--space-6));
+      margin-right: calc(-1 * var(--space-6));
+      padding-left: var(--space-6);
+      padding-right: var(--space-6);
+    }
+
+    /* Section header (used by visual section) - extend border to panel edges */
+    .pp-content .section-header {
+      margin-left: calc(-1 * var(--space-6));
+      margin-right: calc(-1 * var(--space-6));
+      padding-left: var(--space-6);
+      padding-right: var(--space-6);
     }
 
     /* Section expand/collapse button */

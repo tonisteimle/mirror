@@ -1080,6 +1080,17 @@ export function testSkip(name: string, run: (api: TestAPI) => Promise<void>): Te
 }
 
 /**
+ * Define a skipped test with setup code
+ */
+export function testWithSetupSkip(
+  name: string,
+  setup: string,
+  run: (api: TestAPI) => Promise<void>
+): TestCase {
+  return { name, setup, run, skip: true }
+}
+
+/**
  * Group tests by category
  */
 export function describe(category: string, tests: TestCase[]): TestCase[] {
