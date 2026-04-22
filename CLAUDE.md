@@ -1294,6 +1294,31 @@ npx tsx tools/test.ts --retries=2                   # Retry bei Failures
 | `--screenshot-dir=DIR` | Screenshot-Verzeichnis      |
 | `--no-screenshot`      | Keine Screenshots           |
 
+**Geschätzte Testdauer pro Kategorie:**
+
+| Kategorie  | Tests | Dauer   | Empfehlung             |
+| ---------- | ----- | ------- | ---------------------- |
+| core       | ~50   | ~30s    | Direkt ausführen       |
+| layout     | ~80   | ~45s    | Direkt ausführen       |
+| styling    | ~60   | ~35s    | Direkt ausführen       |
+| editor     | ~40   | ~30s    | Direkt ausführen       |
+| components | ~250  | ~3min   | Direkt oder Background |
+| drag       | ~100  | ~2min   | Direkt oder Background |
+| --all      | ~2100 | ~15-20m | Background empfohlen   |
+
+**Test-Ausführung für Claude:**
+
+```bash
+# SCHNELLE TESTS (< 2 min): Direkt ausführen
+npx tsx tools/test.ts --category=layout
+
+# LÄNGERE TESTS: Mit run_in_background, dann TaskOutput prüfen
+# (Nie sleep verwenden - das wartet immer die volle Zeit!)
+
+# FILTER für gezielte Tests (am schnellsten):
+npx tsx tools/test.ts --filter="Drag Column"
+```
+
 **Architektur:** `tools/test-runner/`
 
 ```
