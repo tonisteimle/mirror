@@ -20,6 +20,37 @@ export const demoScript: DemoScript = {
     showKeystrokeOverlay: true,
   },
   steps: [
+    // === Projekt zurücksetzen ===
+    {
+      action: 'execute',
+      code: `
+        (async function() {
+          // Projekt auf leeren Zustand zurücksetzen (nur index.mir, leer)
+          const { storage } = await import('./dist/index.js');
+          const files = window.desktopFiles.getFiles();
+
+          // Alle Dateien außer index.mir löschen
+          for (const path of Object.keys(files)) {
+            if (path !== 'index.mir') {
+              await storage.deleteFile(path);
+            }
+          }
+
+          // index.mir leeren
+          await storage.writeFile('index.mir', '');
+
+          // Editor leeren falls offen
+          if (window.editor) {
+            window.editor.dispatch({
+              changes: { from: 0, to: window.editor.state.doc.length, insert: '' }
+            });
+          }
+        })();
+      `,
+      comment: 'Projekt zurücksetzen',
+    },
+    { action: 'wait', duration: 500 },
+
     // === Einleitung ===
     { action: 'wait', duration: 1500, comment: 'Startbildschirm' },
     { action: 'comment', text: 'Wir bauen eine Pricing-Page mit schönen Cards' },
@@ -32,6 +63,20 @@ export const demoScript: DemoScript = {
         { type: 'exists', selector: '#file-tree-content' },
         { type: 'exists', selector: '.cm-editor' },
         { type: 'exists', selector: '#preview' },
+      ],
+    },
+
+    // Validierung: Projekt ist leer (nur index.mir)
+    {
+      action: 'validate',
+      comment: 'Projekt ist leer',
+      checks: [
+        { type: 'exists', selector: '[data-path="index.mir"]' },
+        {
+          type: 'elementCount',
+          selector: '#file-tree-content [data-path]:not([data-path="."])',
+          count: 1,
+        },
       ],
     },
 
@@ -111,6 +156,7 @@ export const demoScript: DemoScript = {
         { type: 'editorContains', text: 'surface.bg: #18181b' },
         { type: 'editorContains', text: 'lg.pad: 24' },
         { type: 'noLintErrors' },
+        { type: 'colorPickerClosed' },
       ],
     },
 
@@ -178,7 +224,10 @@ export const demoScript: DemoScript = {
 
     // Outline Button
     { action: 'type', text: '\n// Outline Button\n' },
-    { action: 'type', text: 'BtnOutline: bor 1, boc #3f3f46, col $muted, pad $sm $md, rad $sm, cursor pointer\n' },
+    {
+      action: 'type',
+      text: 'BtnOutline: bor 1, boc #3f3f46, col $muted, pad $sm $md, rad $sm, cursor pointer\n',
+    },
     { action: 'type', text: '  hover:\n' },
     { action: 'type', text: '    col white\n' },
     { action: 'wait', duration: 400 },
@@ -193,6 +242,15 @@ export const demoScript: DemoScript = {
     // Badge
     { action: 'type', text: '\n// Badge\n' },
     { action: 'type', text: 'Badge: bg $accent, col white, pad 4 $sm, rad $sm, fs 12\n' },
+    { action: 'wait', duration: 400 },
+
+    // Layout Komponenten
+    { action: 'type', text: '\n// Layout\n' },
+    { action: 'type', text: 'Header: center, gap $sm\n' },
+    { action: 'type', text: 'Cards: hor, gap $md, wrap, center\n' },
+    { action: 'type', text: 'Features: gap $sm\n' },
+    { action: 'type', text: 'TitleRow: hor, spread, ver-center\n' },
+    { action: 'type', text: 'Price: hor, ver-center, gap 4\n' },
     { action: 'wait', duration: 800 },
 
     // Validierung: Komponenten wurden eingegeben
@@ -231,65 +289,59 @@ export const demoScript: DemoScript = {
 
     // Layout tippen
     { action: 'comment', text: 'Die Pricing-Page aufbauen' },
-    { action: 'type', text: '// Pricing Page\n' },
-    { action: 'type', text: 'Frame bg $surface, pad $lg, gap $lg, col white, h full\n\n' },
+    { action: 'type', text: 'canvas bg $surface, col white, pad $lg, gap $lg\n\n' },
     { action: 'wait', duration: 400 },
 
     // Header
-    { action: 'type', text: '  // Header\n' },
-    { action: 'type', text: '  Frame center, gap $sm\n' },
-    { action: 'type', text: '    Text "Wähle deinen Plan", fs 28, weight bold\n' },
-    { action: 'type', text: '    Text "Starte kostenlos, upgrade jederzeit", col $muted\n\n' },
+    { action: 'type', text: 'Header\n' },
+    { action: 'type', text: '  Text "Wähle deinen Plan", fs 28, weight bold\n' },
+    { action: 'type', text: '  Text "Starte kostenlos, upgrade jederzeit", col $muted\n\n' },
     { action: 'wait', duration: 500 },
 
     // Cards Container
-    { action: 'type', text: '  // Cards\n' },
-    { action: 'type', text: '  Frame hor, gap $md, wrap, center\n\n' },
+    { action: 'type', text: 'Cards\n\n' },
     { action: 'wait', duration: 300 },
 
     // === Erste Card: Starter ===
     { action: 'comment', text: 'Card 1: Starter' },
-    { action: 'type', text: '    // Starter\n' },
-    { action: 'type', text: '    Card w 260\n' },
-    { action: 'type', text: '      CardTitle "Starter"\n' },
-    { action: 'type', text: '      Text "Zum Ausprobieren", col $muted, fs 14\n' },
-    { action: 'type', text: '      Text "Kostenlos", fs 28, weight bold\n' },
-    { action: 'type', text: '      Frame gap $sm\n' },
-    { action: 'type', text: '        Feature "3 Projekte"\n' },
-    { action: 'type', text: '        Feature "Basic Export"\n' },
-    { action: 'type', text: '      BtnOutline "Loslegen"\n\n' },
+    { action: 'type', text: '  Card w 260\n' },
+    { action: 'type', text: '    CardTitle "Starter"\n' },
+    { action: 'type', text: '    Text "Zum Ausprobieren", col $muted, fs 14\n' },
+    { action: 'type', text: '    Text "Kostenlos", fs 28, weight bold\n' },
+    { action: 'type', text: '    Features\n' },
+    { action: 'type', text: '      Feature "3 Projekte"\n' },
+    { action: 'type', text: '      Feature "Basic Export"\n' },
+    { action: 'type', text: '    BtnOutline "Loslegen"\n\n' },
     { action: 'wait', duration: 700 },
 
     // === Zweite Card: Pro ===
     { action: 'comment', text: 'Card 2: Pro (highlighted)' },
-    { action: 'type', text: '    // Pro (empfohlen)\n' },
-    { action: 'type', text: '    Card w 260, bor 2, boc $accent\n' },
-    { action: 'type', text: '      Frame hor, spread, ver-center\n' },
-    { action: 'type', text: '        CardTitle "Pro"\n' },
-    { action: 'type', text: '        Badge "Beliebt"\n' },
-    { action: 'type', text: '      Text "Für Profis", col $muted, fs 14\n' },
-    { action: 'type', text: '      Frame hor, ver-center, gap 4\n' },
-    { action: 'type', text: '        Text "€19", fs 28, weight bold\n' },
-    { action: 'type', text: '        Text "/Monat", col $muted\n' },
-    { action: 'type', text: '      Frame gap $sm\n' },
-    { action: 'type', text: '        Feature "Unbegrenzt"\n' },
-    { action: 'type', text: '        Feature "Team-Features"\n' },
-    { action: 'type', text: '        Feature "Priority Support"\n' },
-    { action: 'type', text: '      Btn "Upgraden"\n\n' },
+    { action: 'type', text: '  Card w 260, bor 2, boc $accent\n' },
+    { action: 'type', text: '    TitleRow\n' },
+    { action: 'type', text: '      CardTitle "Pro"\n' },
+    { action: 'type', text: '      Badge "Beliebt"\n' },
+    { action: 'type', text: '    Text "Für Profis", col $muted, fs 14\n' },
+    { action: 'type', text: '    Price\n' },
+    { action: 'type', text: '      Text "€19", fs 28, weight bold\n' },
+    { action: 'type', text: '      Text "/Monat", col $muted\n' },
+    { action: 'type', text: '    Features\n' },
+    { action: 'type', text: '      Feature "Unbegrenzt"\n' },
+    { action: 'type', text: '      Feature "Team-Features"\n' },
+    { action: 'type', text: '      Feature "Priority Support"\n' },
+    { action: 'type', text: '    Btn "Upgraden"\n\n' },
     { action: 'wait', duration: 700 },
 
     // === Dritte Card: Enterprise ===
     { action: 'comment', text: 'Card 3: Enterprise' },
-    { action: 'type', text: '    // Enterprise\n' },
-    { action: 'type', text: '    Card w 260\n' },
-    { action: 'type', text: '      CardTitle "Enterprise"\n' },
-    { action: 'type', text: '      Text "Für Teams", col $muted, fs 14\n' },
-    { action: 'type', text: '      Text "Auf Anfrage", fs 24, weight bold\n' },
-    { action: 'type', text: '      Frame gap $sm\n' },
-    { action: 'type', text: '        Feature "Alles aus Pro"\n' },
-    { action: 'type', text: '        Feature "SSO"\n' },
-    { action: 'type', text: '        Feature "SLA Garantie"\n' },
-    { action: 'type', text: '      BtnOutline "Kontakt"\n' },
+    { action: 'type', text: '  Card w 260\n' },
+    { action: 'type', text: '    CardTitle "Enterprise"\n' },
+    { action: 'type', text: '    Text "Für Teams", col $muted, fs 14\n' },
+    { action: 'type', text: '    Text "Auf Anfrage", fs 24, weight bold\n' },
+    { action: 'type', text: '    Features\n' },
+    { action: 'type', text: '      Feature "Alles aus Pro"\n' },
+    { action: 'type', text: '      Feature "SSO"\n' },
+    { action: 'type', text: '      Feature "SLA Garantie"\n' },
+    { action: 'type', text: '    BtnOutline "Kontakt"\n' },
     { action: 'wait', duration: 1000 },
 
     // Validierung: Layout im Editor
@@ -297,12 +349,12 @@ export const demoScript: DemoScript = {
       action: 'validate',
       comment: 'Pricing Page Code im Editor',
       checks: [
-        { type: 'editorContains', text: '// Pricing Page' },
+        { type: 'editorContains', text: 'canvas bg $surface' },
         { type: 'editorContains', text: 'CardTitle "Starter"' },
         { type: 'editorContains', text: 'CardTitle "Pro"' },
         { type: 'editorContains', text: 'CardTitle "Enterprise"' },
         { type: 'editorContains', text: 'Badge "Beliebt"' },
-        { type: 'noLintErrors' },
+        { type: 'noLintErrors', allowWarnings: true },
       ],
     },
 

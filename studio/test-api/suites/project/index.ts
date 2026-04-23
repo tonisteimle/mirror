@@ -11,6 +11,17 @@
 
 import type { TestSuite, TestAPI, TestCase } from '../../types'
 
+// Import empty project tests
+export {
+  allEmptyProjectTests,
+  emptyProjectConstantTests,
+  emptyProjectStateTests,
+  emptyProjectPreviewTests,
+  emptyProjectStorageTests,
+} from './empty-project.test'
+
+import { allEmptyProjectTests } from './empty-project.test'
+
 // =============================================================================
 // Project File Contents
 // =============================================================================
@@ -1109,6 +1120,7 @@ export const fileSwitchingTests: TestSuite = [
 // =============================================================================
 
 export const allProjectTests: TestSuite = [
+  ...allEmptyProjectTests,
   ...projectSetupTests,
   ...tokenComponentTests,
   ...screenNavigationTests,

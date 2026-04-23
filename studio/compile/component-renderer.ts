@@ -352,10 +352,79 @@ export class ComponentRenderer {
     let css = ':root {\n'
     for (const token of tokens) {
       const varName = this.toVarName(token.name)
-      const value = this.resolveValue(token.value, tokenMap)
+      const rawValue = this.resolveValue(token.value, tokenMap)
+      const value = this.formatCSSValue(token.name, rawValue)
       css += `  --${varName}: ${value};\n`
     }
     return css + '}\n'
+  }
+
+  /**
+   * Format CSS value with proper units based on token name suffix.
+   * Tokens like `l.pad: 16` need to become `--l-pad: 16px` for valid CSS.
+   */
+  private formatCSSValue(tokenName: string, value: any): string {
+    // If value is not a number, return as-is (e.g., colors, strings)
+    if (typeof value !== 'number' && (typeof value !== 'string' || isNaN(Number(value)))) {
+      return String(value)
+    }
+
+    // Extract property suffix from token name (e.g., "l.pad" → "pad", "accent.bg" → "bg")
+    const parts = tokenName.split('.')
+    const suffix = parts[parts.length - 1]
+
+    // Properties that require px units
+    const pxProperties = [
+      'pad',
+      'padding',
+      'p',
+      'px',
+      'py',
+      'pt',
+      'pr',
+      'pb',
+      'pl',
+      'mar',
+      'margin',
+      'm',
+      'mx',
+      'my',
+      'mt',
+      'mr',
+      'mb',
+      'ml',
+      'gap',
+      'g',
+      'gx',
+      'gy',
+      'rad',
+      'radius',
+      'fs',
+      'font-size',
+      'w',
+      'width',
+      'h',
+      'height',
+      'minw',
+      'maxw',
+      'minh',
+      'maxh',
+      'bor',
+      'border',
+      'bort',
+      'borr',
+      'borb',
+      'borl',
+      'is',
+      'icon-size',
+      'line',
+    ]
+
+    if (pxProperties.includes(suffix)) {
+      return `${value}px`
+    }
+
+    return String(value)
   }
 
   private toVarName(name: string): string {

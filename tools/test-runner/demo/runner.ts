@@ -5,12 +5,32 @@
  */
 
 import type { CDPSession } from '../types'
-import type { DemoScript, DemoAction, DemoConfig, SpeedPreset, ValidationCheck, ValidationResult, StepTiming, TimingReport, TimingSuggestion } from './types'
+import type {
+  DemoScript,
+  DemoAction,
+  DemoConfig,
+  SpeedPreset,
+  ValidationCheck,
+  ValidationResult,
+  StepTiming,
+  TimingReport,
+  TimingSuggestion,
+} from './types'
 import type { PacingProfile, ActionTimings } from './timing'
-import type { ValidationConfig, ValidationIssue, ConsoleError, StateSnapshot, DemoValidationReport } from './validation'
+import type {
+  ValidationConfig,
+  ValidationIssue,
+  ConsoleError,
+  StateSnapshot,
+  DemoValidationReport,
+} from './validation'
 import { DEFAULT_CONFIG, SPEED_PRESETS, PACING_TO_SPEED } from './types'
 import { getTimingProfile, TimingCalculator, formatDuration, compareProfiles } from './timing'
-import { getElementValidationCode, getValidationConfig, DEFAULT_VALIDATION_CONFIG } from './validation'
+import {
+  getElementValidationCode,
+  getValidationConfig,
+  DEFAULT_VALIDATION_CONFIG,
+} from './validation'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -642,7 +662,8 @@ export class DemoRunner {
     // Generate result
     const failedValidations = this.validationResults.filter(r => !r.success)
     const autoValidationSuccess = !validationReport || validationReport.success
-    const success = failedValidations.length === 0 && this.errors.length === 0 && autoValidationSuccess
+    const success =
+      failedValidations.length === 0 && this.errors.length === 0 && autoValidationSuccess
 
     // Print summary
     this.printSummary(script.name, success, failedValidations, timingReport, validationReport)
@@ -670,12 +691,18 @@ export class DemoRunner {
    */
   private getStepTarget(step: DemoAction): string | undefined {
     switch (step.action) {
-      case 'moveTo': return step.target
-      case 'click': return step.target
-      case 'doubleClick': return step.target
-      case 'drag': return step.from
-      case 'highlight': return step.target
-      default: return undefined
+      case 'moveTo':
+        return step.target
+      case 'click':
+        return step.target
+      case 'doubleClick':
+        return step.target
+      case 'drag':
+        return step.from
+      case 'highlight':
+        return step.target
+      default:
+        return undefined
     }
   }
 
@@ -683,21 +710,30 @@ export class DemoRunner {
    * Check if action changes state
    */
   private changesState(step: DemoAction): boolean {
-    return ['click', 'doubleClick', 'type', 'pressKey', 'createFile', 'clearEditor'].includes(step.action)
+    return ['click', 'doubleClick', 'type', 'pressKey', 'createFile', 'clearEditor'].includes(
+      step.action
+    )
   }
 
   /**
    * Pre-validate action target
    */
-  private async preValidateAction(target: string, stepNum: number, action: string): Promise<{ ready: boolean }> {
+  private async preValidateAction(
+    target: string,
+    stepNum: number,
+    action: string
+  ): Promise<{ ready: boolean }> {
     try {
-      const result = await this.evaluate<{ ready: boolean; issues: Array<{ check: string; passed: boolean; message: string; warning?: boolean }> }>(`
+      const result = await this.evaluate<{
+        ready: boolean
+        issues: Array<{ check: string; passed: boolean; message: string; warning?: boolean }>
+      }>(`
         window.__demoValidation?.validateTargetReady('${this.escape(target)}') || { ready: true, issues: [] }
       `)
 
       // Add issues to tracking
       for (const issue of result.issues) {
-        const level = issue.warning ? 'warning' : (issue.passed ? 'info' : 'error')
+        const level = issue.warning ? 'warning' : issue.passed ? 'info' : 'error'
         this.validationIssues.push({
           level,
           stepIndex: stepNum,
@@ -738,12 +774,15 @@ export class DemoRunner {
       // Action-specific validation
       switch (step.action) {
         case 'type': {
-          const result = await this.evaluate<{ valid: boolean; issues: Array<{ check: string; passed: boolean; message: string; warning?: boolean }> }>(`
+          const result = await this.evaluate<{
+            valid: boolean
+            issues: Array<{ check: string; passed: boolean; message: string; warning?: boolean }>
+          }>(`
             window.__demoValidation?.validateType('${this.escape(step.text)}', ${JSON.stringify(preState)}, ${JSON.stringify(postState)}) || { valid: true, issues: [] }
           `)
           for (const issue of result.issues) {
             this.validationIssues.push({
-              level: issue.warning ? 'warning' : (issue.passed ? 'info' : 'error'),
+              level: issue.warning ? 'warning' : issue.passed ? 'info' : 'error',
               stepIndex: stepNum,
               action: step.action,
               check: issue.check,
@@ -756,12 +795,15 @@ export class DemoRunner {
         case 'click':
         case 'doubleClick': {
           const target = step.target || ''
-          const result = await this.evaluate<{ valid: boolean; issues: Array<{ check: string; passed: boolean; message: string; warning?: boolean }> }>(`
+          const result = await this.evaluate<{
+            valid: boolean
+            issues: Array<{ check: string; passed: boolean; message: string; warning?: boolean }>
+          }>(`
             window.__demoValidation?.validateClick('${this.escape(target)}', ${JSON.stringify(preState)}, ${JSON.stringify(postState)}) || { valid: true, issues: [] }
           `)
           for (const issue of result.issues) {
             this.validationIssues.push({
-              level: issue.warning ? 'warning' : (issue.passed ? 'info' : 'error'),
+              level: issue.warning ? 'warning' : issue.passed ? 'info' : 'error',
               stepIndex: stepNum,
               action: step.action,
               check: issue.check,
@@ -772,12 +814,15 @@ export class DemoRunner {
         }
 
         case 'createFile': {
-          const result = await this.evaluate<{ valid: boolean; issues: Array<{ check: string; passed: boolean; message: string; warning?: boolean }> }>(`
+          const result = await this.evaluate<{
+            valid: boolean
+            issues: Array<{ check: string; passed: boolean; message: string; warning?: boolean }>
+          }>(`
             window.__demoValidation?.validateFileCreated('${this.escape(step.path)}', ${JSON.stringify(preState)}, ${JSON.stringify(postState)}) || { valid: true, issues: [] }
           `)
           for (const issue of result.issues) {
             this.validationIssues.push({
-              level: issue.warning ? 'warning' : (issue.passed ? 'info' : 'error'),
+              level: issue.warning ? 'warning' : issue.passed ? 'info' : 'error',
               stepIndex: stepNum,
               action: step.action,
               check: issue.check,
@@ -839,9 +884,8 @@ export class DemoRunner {
     const infos = this.validationIssues.filter(i => i.level === 'info').length
 
     // In strict mode, warnings are also failures
-    const success = this.validationConfig.level === 'strict'
-      ? errors === 0 && warnings === 0
-      : errors === 0
+    const success =
+      this.validationConfig.level === 'strict' ? errors === 0 && warnings === 0 : errors === 0
 
     return {
       success,
@@ -858,20 +902,34 @@ export class DemoRunner {
    */
   private getStepDetail(step: DemoAction): string | undefined {
     switch (step.action) {
-      case 'moveTo': return step.target
-      case 'click': return step.target
-      case 'doubleClick': return step.target
-      case 'type': return step.text.substring(0, 20) + (step.text.length > 20 ? '...' : '')
-      case 'pressKey': return step.modifiers ? `${step.modifiers.join('+')}+${step.key}` : step.key
-      case 'wait': return step.comment || `${step.duration}ms`
-      case 'navigate': return step.url
-      case 'highlight': return step.target
-      case 'comment': return step.text.substring(0, 30) + (step.text.length > 30 ? '...' : '')
-      case 'execute': return step.comment
-      case 'validate': return step.comment || `${step.checks.length} checks`
-      case 'createFile': return step.path
-      case 'switchFile': return step.path
-      default: return undefined
+      case 'moveTo':
+        return step.target
+      case 'click':
+        return step.target
+      case 'doubleClick':
+        return step.target
+      case 'type':
+        return step.text.substring(0, 20) + (step.text.length > 20 ? '...' : '')
+      case 'pressKey':
+        return step.modifiers ? `${step.modifiers.join('+')}+${step.key}` : step.key
+      case 'wait':
+        return step.comment || `${step.duration}ms`
+      case 'navigate':
+        return step.url
+      case 'highlight':
+        return step.target
+      case 'comment':
+        return step.text.substring(0, 30) + (step.text.length > 30 ? '...' : '')
+      case 'execute':
+        return step.comment
+      case 'validate':
+        return step.comment || `${step.checks.length} checks`
+      case 'createFile':
+        return step.path
+      case 'switchFile':
+        return step.path
+      default:
+        return undefined
     }
   }
 
@@ -909,7 +967,9 @@ export class DemoRunner {
   /**
    * Generate optimization suggestions based on timing data
    */
-  private generateTimingSuggestions(byAction: Record<string, { count: number; totalMs: number; avgMs: number }>): TimingSuggestion[] {
+  private generateTimingSuggestions(
+    byAction: Record<string, { count: number; totalMs: number; avgMs: number }>
+  ): TimingSuggestion[] {
     const suggestions: TimingSuggestion[] = []
 
     // Optimal timing targets (in ms)
@@ -1038,7 +1098,9 @@ export class DemoRunner {
         issuesByStep.get(issue.stepIndex)!.push(issue)
       }
 
-      for (const [stepNum, issues] of Array.from(issuesByStep.entries()).sort((a, b) => a[0] - b[0])) {
+      for (const [stepNum, issues] of Array.from(issuesByStep.entries()).sort(
+        (a, b) => a[0] - b[0]
+      )) {
         console.log(`   Step ${stepNum}:`)
         for (const issue of issues) {
           const icon = issue.level === 'error' ? '❌' : issue.level === 'warning' ? '⚠️' : 'ℹ️'
@@ -1083,8 +1145,9 @@ export class DemoRunner {
     console.log('   ├─────────────────┼───────┼──────────┼──────────┤')
 
     // Sort by total time descending
-    const sortedActions = Object.entries(timing.byAction)
-      .sort((a, b) => b[1].totalMs - a[1].totalMs)
+    const sortedActions = Object.entries(timing.byAction).sort(
+      (a, b) => b[1].totalMs - a[1].totalMs
+    )
 
     for (const [action, stats] of sortedActions) {
       const actionPadded = action.padEnd(15)
@@ -1104,7 +1167,9 @@ export class DemoRunner {
     console.log('🐢 Top 10 Slowest Steps:')
     for (const step of slowestSteps) {
       const detail = step.detail ? ` (${step.detail})` : ''
-      console.log(`   ${String(step.stepIndex).padStart(3)}. ${step.action}${detail}: ${step.executionMs}ms`)
+      console.log(
+        `   ${String(step.stepIndex).padStart(3)}. ${step.action}${detail}: ${step.executionMs}ms`
+      )
     }
     console.log('')
 
@@ -1224,7 +1289,9 @@ export class DemoRunner {
             `__mirrorDemo.moveTo('${this.escape(step.target)}'${step.duration ? `, ${step.duration}` : ''})`
           )
         } catch (err) {
-          console.log(`        ⚠️  MoveTo warning: ${err instanceof Error ? err.message : String(err)}`)
+          console.log(
+            `        ⚠️  MoveTo warning: ${err instanceof Error ? err.message : String(err)}`
+          )
         }
         break
 
@@ -1235,7 +1302,9 @@ export class DemoRunner {
             `__mirrorDemo.click(${step.target ? `'${this.escape(step.target)}'` : ''})`
           )
         } catch (err) {
-          console.log(`        ⚠️  Click warning: ${err instanceof Error ? err.message : String(err)}`)
+          console.log(
+            `        ⚠️  Click warning: ${err instanceof Error ? err.message : String(err)}`
+          )
         }
         break
 
@@ -1247,7 +1316,9 @@ export class DemoRunner {
         break
 
       case 'type':
-        console.log(`${prefix} Type: "${step.text.substring(0, 30)}${step.text.length > 30 ? '...' : ''}"`)
+        console.log(
+          `${prefix} Type: "${step.text.substring(0, 30)}${step.text.length > 30 ? '...' : ''}"`
+        )
         await this.evaluate(
           `__mirrorDemo.type('${this.escape(step.text)}'${step.target ? `, '${this.escape(step.target)}'` : ''})`
         )
@@ -1269,7 +1340,9 @@ export class DemoRunner {
         break
 
       case 'scroll':
-        console.log(`${prefix} Scroll ${step.deltaY > 0 ? 'down' : 'up'} ${Math.abs(step.deltaY)}px`)
+        console.log(
+          `${prefix} Scroll ${step.deltaY > 0 ? 'down' : 'up'} ${Math.abs(step.deltaY)}px`
+        )
         await this.evaluate(
           `__mirrorDemo.scroll(${step.deltaY}${step.target ? `, '${this.escape(step.target)}'` : ''})`
         )
@@ -1294,7 +1367,9 @@ export class DemoRunner {
           await this.evaluate('__mirrorDemo.wait(100)')
         } catch (err) {
           // Log but don't fail on execute errors - they're often non-critical
-          console.log(`        ⚠️  Execute warning: ${err instanceof Error ? err.message : String(err)}`)
+          console.log(
+            `        ⚠️  Execute warning: ${err instanceof Error ? err.message : String(err)}`
+          )
         }
         break
 
@@ -1314,7 +1389,10 @@ export class DemoRunner {
 
       case 'createFile':
         console.log(`${prefix} 📄 Create file: ${step.path}`)
-        const escapedContent = step.content.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$')
+        const escapedContent = step.content
+          .replace(/\\/g, '\\\\')
+          .replace(/`/g, '\\`')
+          .replace(/\$/g, '\\$')
         await this.evaluate(`
           (async () => {
             const content = \`${escapedContent}\`;
@@ -1353,7 +1431,9 @@ export class DemoRunner {
         break
 
       case 'validate':
-        console.log(`${prefix} 🔍 Validate${step.comment ? `: ${step.comment}` : ` (${step.checks.length} checks)`}`)
+        console.log(
+          `${prefix} 🔍 Validate${step.comment ? `: ${step.comment}` : ` (${step.checks.length} checks)`}`
+        )
         for (const check of step.checks) {
           const result = await this.runValidationCheck(check)
           this.validationResults.push(result)
@@ -1476,9 +1556,7 @@ export class DemoRunner {
         return {
           success: exists,
           check,
-          message: exists
-            ? `File exists: ${check.path}`
-            : `File NOT found: ${check.path}`,
+          message: exists ? `File exists: ${check.path}` : `File NOT found: ${check.path}`,
         }
       }
 
@@ -1529,7 +1607,12 @@ export class DemoRunner {
 
       case 'noLintErrors': {
         const allowWarnings = check.allowWarnings ?? false
-        const result = await this.evaluate<{ hasErrors: boolean; hasWarnings: boolean; errorCount: number; warningCount: number }>(`
+        const result = await this.evaluate<{
+          hasErrors: boolean
+          hasWarnings: boolean
+          errorCount: number
+          warningCount: number
+        }>(`
           (function() {
             const editor = window.editor;
             if (!editor || !editor.dom) return { hasErrors: false, hasWarnings: false, errorCount: 0, warningCount: 0 };
@@ -1543,7 +1626,9 @@ export class DemoRunner {
             };
           })()
         `)
-        const hasProblems = allowWarnings ? result.hasErrors : (result.hasErrors || result.hasWarnings)
+        const hasProblems = allowWarnings
+          ? result.hasErrors
+          : result.hasErrors || result.hasWarnings
         let message: string
         if (!hasProblems) {
           message = allowWarnings
@@ -1552,7 +1637,8 @@ export class DemoRunner {
         } else {
           const parts = []
           if (result.errorCount > 0) parts.push(`${result.errorCount} error(s)`)
-          if (!allowWarnings && result.warningCount > 0) parts.push(`${result.warningCount} warning(s)`)
+          if (!allowWarnings && result.warningCount > 0)
+            parts.push(`${result.warningCount} warning(s)`)
           message = `Lint issues found: ${parts.join(', ')}`
         }
         return {
@@ -1560,6 +1646,20 @@ export class DemoRunner {
           check,
           message,
           actual: result.errorCount + result.warningCount,
+        }
+      }
+
+      case 'colorPickerClosed': {
+        const isOpen = await this.evaluate<boolean>(`
+          (function() {
+            const picker = document.getElementById('color-picker');
+            return picker && picker.classList.contains('visible');
+          })()
+        `)
+        return {
+          success: !isOpen,
+          check,
+          message: isOpen ? 'Color picker is still open' : 'Color picker is closed',
         }
       }
 
@@ -1624,16 +1724,14 @@ export class DemoRunner {
  * Load a demo script from file
  */
 export async function loadDemoScript(filePath: string): Promise<DemoScript> {
-  const absolutePath = path.isAbsolute(filePath)
-    ? filePath
-    : path.join(process.cwd(), filePath)
+  const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath)
 
   // Handle TypeScript and JavaScript files - use dynamic import
   if (absolutePath.endsWith('.ts') || absolutePath.endsWith('.js')) {
     // Use file:// URL for cross-platform compatibility
     const fileUrl = `file://${absolutePath}`
     const module = await import(fileUrl)
-    return module.default || module.demoScript || Object.values(module)[0] as DemoScript
+    return module.default || module.demoScript || (Object.values(module)[0] as DemoScript)
   }
 
   // Handle JSON files

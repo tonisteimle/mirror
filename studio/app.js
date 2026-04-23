@@ -1601,7 +1601,7 @@ editor = new EditorView({
       highlightActiveLine(),
       drawSelection(),
       history(),
-      lintGutter(), // Show error markers in gutter
+      // lintGutter() removed - only inline underlines, no gutter markers
       mirrorLinter, // Dynamic diagnostics (updated on compile)
       indentGuidesExtension(), // Visual indent guides (vertical lines)
       smartPasteExtension(), // Auto-adjust indentation on paste
@@ -2373,7 +2373,23 @@ function compile(code) {
 
     // Validate code and update linter diagnostics
     // We validate the user's code (not resolved with prelude) so errors show at correct positions
-    const validationResult = validateCode(code)
+    // BUT we pass prelude tokens/components so the validator knows what's defined in other files
+    const preludeForValidation = getPreludeCode(currentFile)
+    let preludeTokens = new Set()
+    let preludeComponents = new Set()
+    if (preludeForValidation) {
+      const preludeAST = MirrorLang.parse(preludeForValidation)
+      for (const token of preludeAST.tokens || []) {
+        const baseName = token.name.startsWith('$') ? token.name.slice(1) : token.name
+        const rootName = baseName.split('.')[0]
+        preludeTokens.add(rootName)
+        preludeTokens.add(baseName)
+      }
+      for (const comp of preludeAST.components || []) {
+        preludeComponents.add(comp.name)
+      }
+    }
+    const validationResult = validateCode(code, { preludeTokens, preludeComponents })
     currentDiagnostics = toCodeMirrorDiagnostics(validationResult, code)
     if (editor) {
       forceLinting(editor)
@@ -2439,13 +2455,36 @@ function compile(code) {
 
 function getTokensSource() {
   // Only get tokens and data files (not layouts or components)
+  // Read from both active files cache AND localStorage to ensure all project files are included
   let tokensSource = ''
+  const processedFiles = new Set()
+
+  // First, check active files cache
   for (const filename of Object.keys(files)) {
     const type = getFileType(filename)
     if (type === 'tokens' || type === 'data') {
       tokensSource += files[filename] + '\n'
+      processedFiles.add(filename)
     }
   }
+
+  // Also check localStorage for files not yet loaded into active cache
+  try {
+    const storedFiles = localStorage.getItem('mirror-files')
+    if (storedFiles) {
+      const allFiles = JSON.parse(storedFiles)
+      for (const filename of Object.keys(allFiles)) {
+        if (processedFiles.has(filename)) continue
+        const type = getFileType(filename)
+        if (type === 'tokens' || type === 'data') {
+          tokensSource += allFiles[filename] + '\n'
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[getTokensSource] Failed to read from localStorage:', e)
+  }
+
   return tokensSource
 }
 

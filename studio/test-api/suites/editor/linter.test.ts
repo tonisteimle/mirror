@@ -82,9 +82,7 @@ function hasLintMarkers(type: 'error' | 'warning' | 'any' = 'any'): boolean {
   } else if (type === 'warning') {
     return view.dom.querySelectorAll('.cm-lintRange-warning').length > 0
   } else {
-    return (
-      view.dom.querySelectorAll('.cm-lintRange-error, .cm-lintRange-warning').length > 0
-    )
+    return view.dom.querySelectorAll('.cm-lintRange-error, .cm-lintRange-warning').length > 0
   }
 }
 
@@ -100,9 +98,7 @@ function hasGutterMarkers(type: 'error' | 'warning' | 'any' = 'any'): boolean {
   } else if (type === 'warning') {
     return view.dom.querySelectorAll('.cm-lint-marker-warning').length > 0
   } else {
-    return (
-      view.dom.querySelectorAll('.cm-lint-marker-error, .cm-lint-marker-warning').length > 0
-    )
+    return view.dom.querySelectorAll('.cm-lint-marker-error, .cm-lint-marker-warning').length > 0
   }
 }
 
@@ -172,11 +168,7 @@ export const unknownPropertyTests: TestCase[] = describe('Linter - Unknown Prope
     api.assert.ok(errorCount >= 2, `Should show at least 2 errors, got ${errorCount}`)
   }),
 
-  test('Gutter shows error marker for unknown property', async (api: TestAPI) => {
-    await setEditorContent('Button bgg blue')
-
-    api.assert.ok(hasGutterMarkers('error'), 'Gutter should show error marker')
-  }),
+  // Gutter marker test removed - we only use inline underlines now, no gutter markers
 
   test('Valid code shows no errors', async (api: TestAPI) => {
     await setEditorContent('Frame bg #333, w 100, h 50')
@@ -194,10 +186,7 @@ export const unknownPropertyTests: TestCase[] = describe('Linter - Unknown Prope
     // Check if tooltip contains suggestion
     const tooltipContent = getTooltipContent()
     // The suggestion should mention 'background' or 'bg'
-    api.assert.ok(
-      hasLintMarkers('error'),
-      'Should show error for "backgrond" typo'
-    )
+    api.assert.ok(hasLintMarkers('error'), 'Should show error for "backgrond" typo')
   }),
 ])
 
@@ -250,13 +239,7 @@ export const undefinedTokenTests: TestCase[] = describe('Linter - Undefined Toke
 // =============================================================================
 
 export const lintUITests: TestCase[] = describe('Linter - UI Integration', [
-  test('Lint gutter is visible', async (api: TestAPI) => {
-    const view = getEditorView()
-    api.assert.ok(!!view, 'Editor should exist')
-
-    const gutterLint = view?.dom?.querySelector('.cm-gutter-lint')
-    api.assert.ok(!!gutterLint, 'Lint gutter should be present in editor')
-  }),
+  // Lint gutter test removed - we only use inline underlines now, no gutter markers
 
   test('Errors cleared on valid code', async (api: TestAPI) => {
     // First set invalid code

@@ -60,6 +60,9 @@ export {
   codeVerificationTests,
 } from './panel-drag-all.test'
 
+// Component Preview Styling Tests
+export { componentPreviewStylingTests } from './component-preview-styling.test'
+
 // Imports for aggregation
 import { datePickerTests } from './date-picker.test'
 import { allAccordionTests } from './accordion.test'
@@ -68,6 +71,7 @@ import { pureCheckboxTests } from './pure-checkbox.test'
 import { pureRadioGroupTests } from './pure-radio-group.test'
 import { allPanelDragTests } from './panel-drag-all.test'
 import { allSelectDragAndVerifyTests } from './select-drag-and-verify.test'
+import { componentPreviewStylingTests } from './component-preview-styling.test'
 
 // Legacy exports for backwards compatibility (empty arrays or filled)
 export const checkboxTests: TestCase[] = []
@@ -95,4 +99,5 @@ export const allComponentTests: TestCase[] = [
   ...pureRadioGroupTests,
   ...allPanelDragTests,
   ...allSelectDragAndVerifyTests,
+  ...componentPreviewStylingTests,
 ]

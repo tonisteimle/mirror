@@ -426,6 +426,15 @@ export class EditorTriggerManager {
             this.hidePicker()
             return
           }
+
+          // Check custom close handler (even when liveFilter is false)
+          if (
+            this.state.context &&
+            config?.shouldClose?.(update, insertedText, this.state.context)
+          ) {
+            this.hidePicker()
+            return
+          }
         }
 
         // Check for new triggers

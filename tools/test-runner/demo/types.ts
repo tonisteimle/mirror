@@ -216,6 +216,7 @@ export type ValidationCheck =
   | EditorContainsCheck
   | PreviewContainsCheck
   | NoLintErrorsCheck
+  | ColorPickerClosedCheck
 
 interface ExistsCheck {
   type: 'exists'
@@ -275,6 +276,10 @@ interface NoLintErrorsCheck {
   type: 'noLintErrors'
   /** Optional: allow warnings but fail on errors (default: fail on both) */
   allowWarnings?: boolean
+}
+
+interface ColorPickerClosedCheck {
+  type: 'colorPickerClosed'
 }
 
 // =============================================================================

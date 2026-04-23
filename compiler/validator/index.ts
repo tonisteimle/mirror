@@ -49,7 +49,9 @@ function getParserErrorCode(message: string): string {
 /**
  * Convert parser errors to validation errors
  */
-function convertParserErrors(parserErrors: Array<{ message: string; line: number; column: number; hint?: string }>): ValidationError[] {
+function convertParserErrors(
+  parserErrors: Array<{ message: string; line: number; column: number; hint?: string }>
+): ValidationError[] {
   return parserErrors.map(err => ({
     severity: 'error' as const,
     code: getParserErrorCode(err.message),
@@ -65,9 +67,11 @@ function convertParserErrors(parserErrors: Array<{ message: string; line: number
  */
 function isLexerWarning(message: string): boolean {
   // These are style suggestions, not critical errors
-  return message.includes('Leading decimal') ||
-         message.includes('Trailing decimal') ||
-         message.includes('Inconsistent indentation')
+  return (
+    message.includes('Leading decimal') ||
+    message.includes('Trailing decimal') ||
+    message.includes('Inconsistent indentation')
+  )
 }
 
 /**
@@ -75,7 +79,7 @@ function isLexerWarning(message: string): boolean {
  */
 function convertLexerErrors(lexerErrors: LexerError[]): ValidationError[] {
   return lexerErrors.map(err => ({
-    severity: isLexerWarning(err.message) ? 'warning' as const : 'error' as const,
+    severity: isLexerWarning(err.message) ? ('warning' as const) : ('error' as const),
     code: getLexerErrorCode(err.message),
     message: err.message,
     line: err.line,
@@ -108,12 +112,23 @@ export type {
 } from './studio-integration'
 
 /**
+ * Options for validate function
+ */
+export interface ValidateOptions {
+  /** Pre-defined tokens from other files (e.g., from prelude) */
+  preludeTokens?: Set<string>
+  /** Pre-defined components from other files (e.g., from prelude) */
+  preludeComponents?: Set<string>
+}
+
+/**
  * Validate Mirror DSL source code.
  *
  * @param source - The Mirror DSL source code to validate
+ * @param options - Optional: prelude tokens/components from other files
  * @returns Validation result with errors and warnings
  */
-export function validate(source: string): ValidationResult {
+export function validate(source: string, options?: ValidateOptions): ValidationResult {
   // Tokenize with error collection
   const lexerResult = tokenizeWithErrors(source)
   const lexerValidationErrors = convertLexerErrors(lexerResult.errors)
@@ -127,15 +142,24 @@ export function validate(source: string): ValidationResult {
 
   // Validate AST
   const validator = new Validator()
+
+  // Set prelude if provided
+  if (options?.preludeTokens || options?.preludeComponents) {
+    validator.setPrelude(options.preludeTokens || new Set(), options.preludeComponents || new Set())
+  }
+
   const validatorResult = validator.validate(ast)
 
   // Merge lexer errors, parser errors, and validator errors
   const allErrors = [
     ...lexerValidationErrors.filter(e => e.severity === 'error'),
     ...parserValidationErrors,
-    ...validatorResult.errors
+    ...validatorResult.errors,
   ]
-  const allWarnings = [...lexerValidationErrors.filter(e => e.severity === 'warning'), ...validatorResult.warnings]
+  const allWarnings = [
+    ...lexerValidationErrors.filter(e => e.severity === 'warning'),
+    ...validatorResult.warnings,
+  ]
 
   return {
     valid: allErrors.length === 0,

@@ -56,6 +56,8 @@ import {
   allPanelDragTests,
   // Keyboard tests require headed browser (real window focus)
   allZagKeyboardTests,
+  // Component preview styling tests
+  componentPreviewStylingTests,
 } from './components'
 import { allComponentTests } from './component-tests'
 
@@ -205,6 +207,7 @@ export const componentsTests: TestCase[] = [
   ...allAccordionDropTests,
   ...allPanelDragTests,
   ...allComponentTests,
+  ...componentPreviewStylingTests,
 ]
 
 /**

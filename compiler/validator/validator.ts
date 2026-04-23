@@ -50,9 +50,21 @@ export class Validator {
   private tokenDefinitions: Map<string, { line: number; column: number }> = new Map() // Track token definition locations
   private errors: ValidationError[] = []
   private warnings: ValidationError[] = []
+  // Prelude definitions (from other files, e.g., tokens.tok)
+  private preludeTokens: Set<string> = new Set()
+  private preludeComponents: Set<string> = new Set()
 
   constructor() {
     this.rules = generateValidationRules()
+  }
+
+  /**
+   * Set tokens and components from the prelude (other files).
+   * These won't trigger "unused" warnings and will be recognized as defined.
+   */
+  setPrelude(tokens: Set<string>, components: Set<string>): void {
+    this.preludeTokens = tokens
+    this.preludeComponents = components
   }
 
   /**
@@ -69,6 +81,14 @@ export class Validator {
     this.tokenDefinitions.clear()
     this.errors = []
     this.warnings = []
+
+    // Add prelude definitions (tokens/components from other files)
+    for (const token of this.preludeTokens) {
+      this.definedTokens.add(token)
+    }
+    for (const component of this.preludeComponents) {
+      this.definedComponents.add(component)
+    }
 
     // Phase 1: Collect all definitions
     this.collectDefinitions(ast)
@@ -97,7 +117,8 @@ export class Validator {
     this.checkUndefinedReferences()
 
     // Phase 5: Check for unused definitions
-    this.checkUnusedDefinitions()
+    // DISABLED: Unused definitions are allowed - only undefined references are errors
+    // this.checkUnusedDefinitions()
 
     return {
       valid: this.errors.length === 0,

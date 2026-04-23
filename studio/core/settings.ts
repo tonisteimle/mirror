@@ -317,7 +317,7 @@ const DEFAULT_HANDLE_SNAP: HandleSnapSettings = {
   customPoints: [],
   threshold: 4,
   maxValue: 200,
-  tokenSnapping: true,
+  tokenSnapping: false, // Token snapping disabled by default
 }
 
 // In-memory state

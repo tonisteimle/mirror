@@ -497,6 +497,12 @@ import {
   screenNavigationTests,
   complexLayoutTests as projectComplexLayoutTests,
   fileSwitchingTests,
+  // Empty Project Tests
+  allEmptyProjectTests,
+  emptyProjectConstantTests,
+  emptyProjectStateTests,
+  emptyProjectPreviewTests,
+  emptyProjectStorageTests,
 } from './project'
 
 // Demo Project Tests
@@ -900,13 +906,7 @@ export {
 }
 
 // Linter (code validation)
-export {
-  allLinterTests,
-  unknownPropertyTests,
-  undefinedTokenTests,
-  lintUITests,
-  lintEdgeCases,
-}
+export { allLinterTests, unknownPropertyTests, undefinedTokenTests, lintUITests, lintEdgeCases }
 
 // Comprehensive Drag Tests (unified from browser-test-api.ts)
 export {
