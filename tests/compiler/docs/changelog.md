@@ -4,6 +4,48 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Themen 4/3/8/12 Iter X — Tutorial-Audits abgeschlossen)
+
+Vier Tutorial-Audits in einem Schritt durchgezogen. Insgesamt **0 neue Bugs**
+entdeckt (alle Bugs der bekannten Pipeline-Bereiche bereits in früheren
+Iterationen gefunden + gefixt/dokumentiert).
+
+### Thema 4 (Layout) — `04-layout.html`
+
+`tests/compiler/tutorial/tutorial-04-layout-aspects.test.ts` — 7 Tests
+schließen 5 Tutorial-Lücken: Device Presets (canvas mobile), Grid-als-
+Komponente, Badge-on-Icon (stacked + x/y), Eingebaute Size-States (compact:),
+Custom Size-State Threshold (compact.max: 250 Token).
+
+13/13 Tutorial-Aspekte (100%).
+
+### Thema 3 (Properties) — `05-styling.html`
+
+4 zusätzliche Tests in `tutorial-08-styling-behavior.test.ts`:
+
+- Gradients (`bg grad #a #b`, `grad-ver`)
+- Gerichtete Borders (`bor 0 0 1 0` — nur border-bottom)
+- Fonts (`font sans`, `font mono`)
+- Hover-Properties (`hover-bg #f00` Inline-Shorthand)
+
+14/14 Tutorial-Aspekte (100%).
+
+### Thema 8 (Events & Actions) — `08-functions.html`
+
+Alle 12 Tutorial-Aspekte bereits durch `events-actions.test.ts` Iter 1+2
+(80 Tests) vollständig abgedeckt. Nur Doku-Mapping ergänzt — keine neuen
+Tests nötig.
+
+12/12 Tutorial-Aspekte (100%).
+
+### Thema 12 (DatePicker)
+
+DatePicker wird im **Tutorial nicht erwähnt** → keine Tutorial-Aspekt-
+Coverage anwendbar. Code-Coverage über `datepicker.test.ts` (47 Tests)
+und Iter 1+2 abgeschlossen.
+
+---
+
 ## 2026-04-25 (Thema 6 Iter 2 — Tutorial-Audit für 03-tokens.html)
 
 10 Tutorial-Aspekte auditiert. 7 bereits abgedeckt durch existierende Tests,

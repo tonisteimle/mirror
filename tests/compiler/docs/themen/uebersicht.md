@@ -58,15 +58,15 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 1   | Lexer (Tokens, Indentation, Edge-Cases)                | Internals                             | abgeschlossen                 | [01-lexer.md](01-lexer.md)                                 |
 | 2   | Parser (AST, Error-Recovery)                           | Internals                             | abgeschlossen                 | [02-parser.md](02-parser.md)                               |
 | 3   | Properties & Aliases                                   | `05-styling.html` (Subset)            | Code ✓ / Tutorial-Audit nötig | [03-properties.md](03-properties.md)                       |
-| 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | `04-layout.html`                      | Code ✓ / Tutorial-Audit nötig | [04-layout.md](04-layout.md)                               |
+| 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | `04-layout.html`                      | abgeschlossen                 | [04-layout.md](04-layout.md)                               |
 | 5   | Komponenten & Vererbung                                | `02-komponenten.html`                 | abgeschlossen                 | [05-komponenten-vererbung.md](05-komponenten-vererbung.md) |
 | 6   | Tokens & Property-Sets                                 | `03-tokens.html`                      | abgeschlossen                 | [06-tokens.md](06-tokens.md)                               |
 | 7   | States (System + Custom + Cross-Element + Transitions) | `06-states.html`                      | abgeschlossen                 | [07-states.md](07-states.md)                               |
-| 8   | Events & Actions                                       | `08-functions.html`                   | Code ✓ / Tutorial-Audit nötig | [08-events-actions.md](08-events-actions.md)               |
+| 8   | Events & Actions                                       | `08-functions.html`                   | abgeschlossen                 | [08-events-actions.md](08-events-actions.md)               |
 | 9   | Data-Binding & Iteration (each)                        | `09-daten.html` (Daten-Subset)        | abgeschlossen                 | [09-data.md](09-data.md)                                   |
 | 10  | Conditionals & Expressions                             | `09-daten.html` (Conditionals-Subset) | offen                         | —                                                          |
 | 11  | Slots                                                  | (verteilt)                            | offen                         | —                                                          |
-| 12  | DatePicker (einzige verbleibende Zag-Komponente)       | (in `11-eingabe.html` erwähnt)        | Code ✓ / Tutorial-Audit nötig | [12-datepicker.md](12-datepicker.md)                       |
+| 12  | DatePicker (einzige verbleibende Zag-Komponente)       | (kein Tutorial-Mapping)               | abgeschlossen                 | [12-datepicker.md](12-datepicker.md)                       |
 | 13  | Animationen & Transitions                              | `07-animationen.html`                 | abgeschlossen                 | [13-animations.md](13-animations.md)                       |
 | 14  | Input Mask & Two-way Binding                           | `11-eingabe.html`                     | offen                         | —                                                          |
 | 15  | Tables / Charts                                        | `14-tabellen.html`, `15-charts.html`  | offen                         | —                                                          |

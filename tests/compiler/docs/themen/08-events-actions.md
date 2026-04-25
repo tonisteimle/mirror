@@ -201,3 +201,26 @@ produzierte `e.key === 'home'` (lowercase, browser-incompatible) statt
 - **`assign(target, value)`**: komplexer Pfad in `emitValueAction`.
 - **`emitTemplateEventListener`**: spezifischer Pfad für Template-Events im
   each/if-Kontext — wird durch loop-emitter-Tests abgedeckt.
+
+## Tutorial-Aspekt-Coverage (Iter 3, Tutorial-Audit nachgezogen)
+
+**Tutorial:** `docs/tutorial/08-functions.html` (deckt sich vollständig mit
+`events-actions.test.ts` + `events-actions-iter2.test.ts`).
+
+| Tutorial-Aspekt                         | Test                                            |
+| --------------------------------------- | ----------------------------------------------- |
+| Funktionen als Properties (Syntax)      | implizit alle 80 Event-Tests                    |
+| toast (1-arg + 2-arg + 3-arg)           | events-actions Iter 1 + 2 toast variants        |
+| focus / clear / setError                | events-actions Iter 1 + 2 input action variants |
+| increment / decrement                   | events-actions Iter 1 counter actions           |
+| Warenkorb-Zähler (Beispiel)             | implizit (Multi-Action-Combination + counter)   |
+| copy                                    | events-actions Iter 1 + 2 copy variants         |
+| show / hide                             | events-actions Iter 1 + 2 show/hide             |
+| navigate / back / forward / openUrl     | events-actions Iter 1 + 2 navigation            |
+| scrollTo / scrollToTop / scrollToBottom | events-actions Iter 1 + 2 scroll                |
+| Funktionen kombinieren                  | events-actions Iter 1 multi-action chains       |
+| Formular mit Feedback (Beispiel)        | implizit (focus + setError + toast)             |
+| Eigene Funktionen (Custom)              | events-actions Iter 2 custom function fallback  |
+
+**Tutorial-Coverage:** 12/12 Aspekte (100%). Alle bereits durch
+events-actions Iter 1+2 abgedeckt — keine neuen Tests nötig.
