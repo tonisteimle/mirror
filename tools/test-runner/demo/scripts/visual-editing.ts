@@ -127,10 +127,32 @@ export const demoScript: DemoScript = {
         '  Frame w 280, h hug, bg #27272a, rad 8',
     },
 
+    // === 3c. Padding rundum — Card bekommt Innenabstand ===
+    // Padding-Handle mit Shift gedrückt zieht alle 4 Seiten gleichzeitig.
+    // Delta 16 → pad 16 rundum. So sieht der Inhalt von Anfang an gut aus,
+    // und wir haben das Padding-Werkzeug einmal sauber demonstriert.
+    { action: 'comment', text: 'Schritt 3: Padding rundum — Card-Innenabstand' },
+    {
+      action: 'dragPadding',
+      selector: { byId: 'node-2' },
+      side: 'top',
+      delta: 16,
+      mode: 'all',
+      comment: 'Padding +16 rundum (Shift = alle Seiten)',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after pad=16',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16',
+    },
+
     // === 4. H1 in die leere Card ===
-    // Index-Drop statt Alignment-Zone: mit `h hug` ist die leere Card 0px hoch,
-    // Alignment-Zonen brauchen >= 80×80 Container.
-    { action: 'comment', text: 'Schritt 3: Titel (H1) in die Card draggen' },
+    // Index-Drop statt Alignment-Zone: die Card hat zwar Padding, ist aber
+    // immer noch sehr flach (h=32 mit pad 16); Alignment-Zonen brauchen 80x80.
+    { action: 'comment', text: 'Schritt 4: Titel (H1) in die Card draggen' },
     ...paletteHighlight('comp-h1'),
     {
       action: 'dropFromPalette',
@@ -145,7 +167,7 @@ export const demoScript: DemoScript = {
       comment: 'after H1 drop',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16\n' +
         '    H1 "Heading 1", col #e4e4e7',
     },
 
@@ -165,7 +187,7 @@ export const demoScript: DemoScript = {
       comment: 'after Text drop',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7',
     },
@@ -186,38 +208,17 @@ export const demoScript: DemoScript = {
       comment: 'after Button drop',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
     },
 
-    // === 7. Padding ===
+    // === 7. Margin ===
+    // Padding wurde bereits in Schritt 3 demonstriert (rundum 16 vor Content).
+    // Hier zeigen wir Margin: Card vom Canvas-Rand wegrücken.
     // Reorder kommt erst am Ende — sobald Knoten umsortiert werden, vergibt
-    // Mirror neue node-IDs nach AST-Reihenfolge. Würden wir vor Inline-Edit
-    // reordern, würden die hardcodierten IDs (node-3 = H1, node-5 = Button)
-    // auf andere Elemente zeigen.
-    { action: 'comment', text: 'Schritt 6: Padding-Handle ziehen' },
-    {
-      action: 'dragPadding',
-      selector: { byId: 'node-2' },
-      side: 'top',
-      delta: 24,
-      comment: 'Top-Padding +24',
-    },
-    { action: 'wait', duration: 400 },
-    {
-      action: 'expectCode',
-      comment: 'after padding top +24',
-      code:
-        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24\n' +
-        '    H1 "Heading 1", col #e4e4e7\n' +
-        '    Text "Text", fs 14, col #e4e4e7\n' +
-        '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
-    },
-
-    // === 8. Margin ===
+    // Mirror neue node-IDs nach AST-Reihenfolge.
     { action: 'comment', text: 'Schritt 7: Margin-Handle ziehen' },
     {
       action: 'dragMargin',
@@ -232,7 +233,7 @@ export const demoScript: DemoScript = {
       comment: 'after margin top +16',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16, mar-t 16\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -252,7 +253,7 @@ export const demoScript: DemoScript = {
       comment: 'after H1 inline-edit',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16, mar-t 16\n' +
         '    H1 "Willkommen", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -272,7 +273,7 @@ export const demoScript: DemoScript = {
       comment: 'after Button inline-edit',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16, mar-t 16\n' +
         '    H1 "Willkommen", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Loslegen", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -295,7 +296,7 @@ export const demoScript: DemoScript = {
       comment: 'after reorder (Button → index 0)',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16, mar-t 16\n' +
         '    Button "Loslegen", pad 12 24, bg #5BA8F5, col white, rad 6\n' +
         '    H1 "Willkommen", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7',
