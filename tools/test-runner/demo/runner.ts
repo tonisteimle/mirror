@@ -675,6 +675,83 @@ const MIRROR_ACTIONS_API = `
     return withVisibleDrag(endPoint, realOpFn, { moveMs: durationMs });
   }
 
+  /**
+   * Truly visible drag: dispatches real mousedown → many slow mousemove →
+   * mouseup events ourselves so the dragged handle / element follows the
+   * cursor in real time. Replaces the atomic 5-step __mirrorTest.interact
+   * helpers (~100ms total) with a paced loop.
+   *
+   * The handle/document listeners react naturally to each mousemove, so the
+   * resize / padding / margin code paths stay genuine — only the cadence
+   * changes. Cursor position is updated synchronously with each event.
+   */
+  // Mirrors studio/test-api/interactions.ts dispatchMouseEvent — no button/
+  // buttons fields, so we match the existing tests' working contract exactly.
+  function _dispatchMouse(target, type, x, y, eventOpts) {
+    const ev = new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: x,
+      clientY: y,
+      shiftKey: !!(eventOpts && eventOpts.shiftKey),
+      altKey:   !!(eventOpts && eventOpts.altKey),
+      ctrlKey:  !!(eventOpts && eventOpts.ctrlKey),
+      metaKey:  !!(eventOpts && eventOpts.metaKey),
+    });
+    target.dispatchEvent(ev);
+  }
+
+  function _easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  /**
+   * @param sourceEl    DOM element where the drag starts (target of mousedown)
+   * @param startPoint  client coords for mousedown
+   * @param endPoint    client coords for final mouseup
+   * @param opts        { durationMs, steps, eventOpts, moveTarget }
+   *                    moveTarget defaults to document — many app drag
+   *                    listeners attach to document, not the handle.
+   */
+  async function manualDrag(sourceEl, startPoint, endPoint, opts) {
+    opts = opts || {};
+    const cursor = window.__mirrorDemo && window.__mirrorDemo.cursor;
+    const dx = endPoint.x - startPoint.x;
+    const dy = endPoint.y - startPoint.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    // Default cadence: ~16ms per step (≈60fps); duration scales with distance
+    // but at least 600ms so the eye can follow.
+    const durationMs = opts.durationMs ?? Math.max(600, Math.min(2000, 400 + dist * 3));
+    const steps = opts.steps ?? Math.max(20, Math.round(durationMs / 16));
+    const stepMs = durationMs / steps;
+    const eventOpts = opts.eventOpts || {};
+    const moveTarget = opts.moveTarget || document;
+
+    // Mouse-down on the actual handle element
+    _dispatchMouse(sourceEl, 'mousedown', startPoint.x, startPoint.y, eventOpts);
+    if (cursor) {
+      cursor.updatePosition(startPoint);
+      cursor.showClickEffect();
+    }
+    await delay(80);
+
+    // Paced mousemove loop with eased progress
+    for (let i = 1; i <= steps; i++) {
+      const eased = _easeInOutCubic(i / steps);
+      const x = startPoint.x + dx * eased;
+      const y = startPoint.y + dy * eased;
+      _dispatchMouse(moveTarget, 'mousemove', x, y, eventOpts);
+      if (cursor) cursor.updatePosition({ x, y });
+      await delay(stepMs);
+    }
+
+    // Mouse-up at end
+    _dispatchMouse(moveTarget, 'mouseup', endPoint.x, endPoint.y, eventOpts);
+    if (cursor) cursor.showClickEffect();
+    await delay(140);
+  }
+
   // ===========================================================================
   // Mirror actions
   // ===========================================================================
@@ -744,7 +821,11 @@ const MIRROR_ACTIONS_API = `
 
   async function dragResize(sel, position, deltaX, deltaY, _opts) {
     const nodeId = resolveSelector(sel);
-    window.__dragTest.selectNode(nodeId);
+    // Use interact.click — selectNode is programmatic-only and doesn't fully
+    // wire the resize-manager's mousedown listener. The interact.click path
+    // dispatches real events, matching what worked in the original
+    // __mirrorTest.interact.dragResizeHandle.
+    await window.__mirrorTest.interact.click(nodeId);
     await delay(220);
     const handle = document.querySelector('.visual-overlay .resize-handles .resize-handle[data-position="' + position + '"]');
     if (!handle) throw new Error('Resize handle not found for ' + position);
@@ -753,11 +834,12 @@ const MIRROR_ACTIONS_API = `
     await visitElement(handle);
 
     const r = handle.getBoundingClientRect();
-    const endPoint = { x: r.left + r.width / 2 + deltaX, y: r.top + r.height / 2 + deltaY };
-    await withVisibleDrag(endPoint, () =>
-      window.__mirrorTest.interact.dragResizeHandle(nodeId, position, deltaX, deltaY)
-    );
-    await delay(160);
+    const startPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const endPoint = { x: startPoint.x + deltaX, y: startPoint.y + deltaY };
+    // Drive the drag ourselves so the handle visibly follows the cursor.
+    // resize-manager listens on document; document.body works via bubbling
+    // and matches the existing __mirrorTest.interact.dragResizeHandle path.
+    await manualDrag(handle, startPoint, endPoint, { moveTarget: document.body });
   }
 
   async function dragPadding(sel, side, delta, mode, _bypassSnap) {
@@ -772,16 +854,16 @@ const MIRROR_ACTIONS_API = `
     await visitElement(handle);
 
     const r = handle.getBoundingClientRect();
-    let endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const startPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const endPoint = { x: startPoint.x, y: startPoint.y };
     if (side === 'top')        endPoint.y += delta;
     else if (side === 'bottom') endPoint.y -= delta;
     else if (side === 'left')   endPoint.x += delta;
     else                        endPoint.x -= delta;
-    const opts = mode === 'all' ? { shift: true } : mode === 'axis' ? { alt: true } : undefined;
-    await withVisibleDrag(endPoint, () =>
-      window.__mirrorTest.interact.dragPaddingHandle(side, delta, opts)
-    );
-    await delay(160);
+    const eventOpts = mode === 'all' ? { shiftKey: true }
+                    : mode === 'axis' ? { altKey: true }
+                    : undefined;
+    await manualDrag(handle, startPoint, endPoint, { eventOpts });
     await window.__mirrorTest.interact.exitPaddingMode();
   }
 
@@ -797,16 +879,16 @@ const MIRROR_ACTIONS_API = `
     await visitElement(handle);
 
     const r = handle.getBoundingClientRect();
-    let endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const startPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const endPoint = { x: startPoint.x, y: startPoint.y };
     if (side === 'top')        endPoint.y -= delta;
     else if (side === 'bottom') endPoint.y += delta;
     else if (side === 'left')   endPoint.x -= delta;
     else                        endPoint.x += delta;
-    const opts = mode === 'all' ? { shift: true } : mode === 'axis' ? { alt: true } : undefined;
-    await withVisibleDrag(endPoint, () =>
-      window.__mirrorTest.interact.dragMarginHandle(side, delta, opts)
-    );
-    await delay(160);
+    const eventOpts = mode === 'all' ? { shiftKey: true }
+                    : mode === 'axis' ? { altKey: true }
+                    : undefined;
+    await manualDrag(handle, startPoint, endPoint, { eventOpts });
     await window.__mirrorTest.interact.exitMarginMode();
   }
 
