@@ -1509,6 +1509,10 @@ export class DemoRunner {
   // OS-level mouse driver (drives the real macOS cursor)
   private osMouseEnabled: boolean = false
   private osMouse?: import('./os-mouse').OsMouse
+  // Frame capture: write a PNG after every interesting step so a reviewer
+  // (human or an LLM) can see the demo unfold without watching the live run.
+  private framesDir?: string
+  private frameCounter: number = 0
 
   constructor(cdp: CDPSession, options: DemoRunnerOptions = {}) {
     this.cdp = cdp
@@ -1539,6 +1543,7 @@ export class DemoRunner {
     // OS mouse: enable when configured. The actual OsMouse is constructed
     // lazily in injectDemoAPI so we can pass evaluate as a bound callback.
     this.osMouseEnabled = (options as { osMouse?: boolean }).osMouse ?? false
+    this.framesDir = (options as { framesDir?: string }).framesDir
   }
 
   /**
@@ -1635,6 +1640,28 @@ export class DemoRunner {
 
       try {
         await this.executeStep(effectiveStep, stepNum, script.steps.length)
+        // Frame capture: PNG after every "interesting" step so a reviewer
+        // can leaf through the demo run statically.
+        if (this.framesDir && DemoRunner.isFrameWorthyAction(effectiveStep.action)) {
+          const label =
+            (effectiveStep as { comment?: string; text?: string }).comment ||
+            (effectiveStep as { text?: string }).text ||
+            effectiveStep.action
+          await this.captureFrame(effectiveStep.action, label)
+        }
+        // Auto-validate after every mutating step: check Mirror's parser is
+        // still happy with the editor source. A failed parse mid-demo means
+        // every subsequent operation works on a stale SourceMap and corrupts
+        // further. Better to halt and surface the first bad step.
+        if (DemoRunner.isMutatingStep(effectiveStep)) {
+          const issue = await this.checkParseHealth()
+          if (issue) {
+            const msg = `Step ${stepNum} (${effectiveStep.action}) left the editor in a parse-error state: ${issue}`
+            this.errors.push(msg)
+            console.error(`   ❌ ${msg}`)
+            if (this.validationConfig.failFast) break
+          }
+        }
         if (this.stepMode && !fastForward && DemoRunner.isMutatingStep(effectiveStep)) {
           await this.waitForEnter(
             `        ⏸  paused after step ${stepNum} — press Enter to continue`
@@ -2704,6 +2731,76 @@ export class DemoRunner {
   // Snapshots (C4)
   // ===========================================================================
 
+  /**
+   * Capture a PNG frame + the editor source after a mutating step. Used
+   * to give a reviewer (human or LLM) a way to inspect the demo run
+   * statically — no need to watch the live headed run, just leaf through
+   * the frames. The .txt sidecar lets the reviewer immediately spot a
+   * source-corruption issue without having to OCR the screenshot.
+   */
+  private async captureFrame(action: string, comment?: string): Promise<void> {
+    if (!this.framesDir) return
+    try {
+      this.frameCounter += 1
+      const seq = String(this.frameCounter).padStart(3, '0')
+      const labelParts = [action, comment].filter(Boolean) as string[]
+      const sanitized = labelParts
+        .join('-')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 60)
+      const baseName = `${seq}-${sanitized || 'step'}`
+      const fsLazy = await import('fs')
+      const pathLazy = await import('path')
+      fsLazy.mkdirSync(this.framesDir, { recursive: true })
+
+      // PNG screenshot
+      const shot = await this.cdp.send<{ data: string }>('Page.captureScreenshot', {
+        format: 'png',
+      })
+      fsLazy.writeFileSync(
+        pathLazy.resolve(this.framesDir, baseName + '.png'),
+        Buffer.from(shot.data, 'base64')
+      )
+
+      // Editor source dump — easy to grep/review without screenshots.
+      const source = await this.evaluate<string>(`
+        (() => {
+          const ed = window.editor;
+          return ed && ed.state ? ed.state.doc.toString() : '';
+        })()
+      `)
+      fsLazy.writeFileSync(pathLazy.resolve(this.framesDir, baseName + '.mir'), source)
+    } catch (_err) {
+      // Frame capture is best-effort — never fail a demo run because of it.
+    }
+  }
+
+  private static isFrameWorthyAction(action: string): boolean {
+    return [
+      'execute',
+      'type',
+      'pressKey',
+      'createFile',
+      'switchFile',
+      'clearEditor',
+      'dropFromPalette',
+      'moveElement',
+      'dragResize',
+      'dragPadding',
+      'dragMargin',
+      'inlineEdit',
+      'selectInPreview',
+      'setProperty',
+      'pickColor',
+      'aiPrompt',
+      'click',
+      'doubleClick',
+      'comment',
+    ].includes(action)
+  }
+
   private async captureSnapshot(label: string): Promise<void> {
     if (!this.snapshotDir) return
     try {
@@ -2993,6 +3090,38 @@ export class DemoRunner {
         if (window.__dragTest && window.__dragTest.waitForCompile) {
           await window.__dragTest.waitForCompile();
         }
+      })()
+    `)
+  }
+
+  /**
+   * Check Mirror's parse health after a mutating step.
+   *
+   * Re-parses the current editor source via Mirror's bundled parser
+   * (window.MirrorLang.parse, which is how __compileTestCode validates
+   * too). Returns null if all clean, or a short description of the first
+   * error. Catches the silent setTestCode-rejected case where the editor
+   * shows new text but the parser refuses it.
+   */
+  private async checkParseHealth(): Promise<string | null> {
+    return await this.evaluate<string | null>(`
+      (async () => {
+        await new Promise(r => setTimeout(r, 250));
+        const editor = window.editor;
+        if (!editor || !editor.state) return null;
+        const code = editor.state.doc.toString();
+        const lang = window.MirrorLang;
+        if (!lang || typeof lang.parse !== 'function') return null;
+        try {
+          const ast = lang.parse(code);
+          if (ast && ast.errors && ast.errors.length > 0) {
+            const e = ast.errors[0];
+            return ast.errors.length + ' parse error(s); first: Line ' + e.line + ': ' + e.message;
+          }
+        } catch (err) {
+          return 'Parser threw: ' + (err && err.message ? err.message : String(err));
+        }
+        return null;
       })()
     `)
   }

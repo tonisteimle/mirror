@@ -70,6 +70,8 @@ interface CLIArgs {
   demoSnapshotThreshold?: number
   // OS mouse driver (real macOS cursor)
   osMouse?: boolean
+  // Frame capture (one PNG per mutating step, for static review)
+  framesDir?: string
 }
 
 // Panel visibility presets for test categories
@@ -146,6 +148,7 @@ function parseArgs(): CLIArgs {
     demoSnapshots: getArgValue(args, '--snapshot-dir'),
     demoSnapshotBaseline: getArgValue(args, '--snapshot-baseline'),
     osMouse: args.includes('--driver=os') || args.includes('--os-mouse'),
+    framesDir: getArgValue(args, '--frames'),
     demoSnapshotThreshold: getArgValue(args, '--snapshot-threshold')
       ? parseFloat(getArgValue(args, '--snapshot-threshold')!)
       : undefined,
@@ -688,6 +691,7 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
         snapshotBaselineDir?: string
         snapshotThreshold?: number
         osMouse?: boolean
+        framesDir?: string
       } = {
         speed: isValidateMode ? 'fast' : args.demoSpeed || 'normal',
         pacing: pacing as any,
@@ -703,6 +707,7 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
         snapshotBaselineDir: args.demoSnapshotBaseline,
         snapshotThreshold: args.demoSnapshotThreshold,
         osMouse: args.osMouse,
+        framesDir: args.framesDir,
       }
 
       // Get CDP session for demo runner
