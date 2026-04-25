@@ -63,7 +63,7 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 9   | Data-Binding & Iteration (each, where, by)             | offen         | —                                                          |
 | 10  | Conditionals & Expressions                             | offen         | —                                                          |
 | 11  | Slots                                                  | offen         | —                                                          |
-| 12  | Zag-Komponenten (Slot-Styling, Nesting)                | offen         | —                                                          |
+| 12  | DatePicker (einzige verbleibende Zag-Komponente)       | offen         | —                                                          |
 | 13  | Animationen & Transitions                              | offen         | —                                                          |
 | 14  | Input Mask & Two-way Binding                           | offen         | —                                                          |
 | 15  | Tables / Charts                                        | offen         | —                                                          |
@@ -96,12 +96,18 @@ Aufbau:
 | Schritt 4     | Tests werden geschrieben / Bugs werden gefixt.              |
 | abgeschlossen | Alle identifizierten Lücken geschlossen, Bugs dokumentiert. |
 
-## Echte Code-Coverage (Stand: 2026-04-25)
+## Echte Code-Coverage (Stand: 2026-04-25, post-Zag-Cleanup)
 
 Gemessen mit `npx vitest run tests/compiler/ --coverage` (V8-Provider). Diese
 Zahlen ersetzen frühere Bauchgefühl-Schätzungen.
 
-**Gesamt:** 52.5% Lines / 52.0% Branches / 63.5% Functions
+**Gesamt:** 62.95% Lines / 55.81% Branches / 65.63% Functions
+
+Sprung gegenüber Pre-Cleanup (52.5% → 62.95% Lines, **+10.4 pp**) kommt durch
+Entfernung von ~12'000 LOC totem Zag-Code (siehe „Zag-Cleanup 2026-04-25"
+unten). Die verbleibenden Zag-Files (`zag-parser.ts`, `zag-transformer.ts`,
+`zag-runtime.ts` reduziert auf DatePicker, `zag/overlay-emitters.ts`) haben
+weiterhin ~0% Coverage — DatePicker-spezifische Tests sind das Thema 12.
 
 ### Sehr gut abgedeckt (≥90% Lines)
 
@@ -218,3 +224,30 @@ einzelnen Bereich gebunden sind, sondern **Test-Methodik** ergänzen:
 - **Ergebnis:** Keine neuen Bugs entdeckt — die Funktionen halten ihre
   Invarianten unter Random-Stress. Quantitative Bestätigung der Robustheit
   der Themen 1–6.
+
+## Zag-Cleanup (2026-04-25)
+
+Vor Beginn von Thema 12 entdeckt: das ursprüngliche Thema 12 („Zag-Komponenten")
+existierte schon nicht mehr — nur DatePicker bleibt als Zag-Komponente, alle
+anderen sind Pure-Mirror-Templates (`studio/panels/components/component-templates.ts`).
+Das alte Zag-Code lebte als toter Code im Repo. Cleanup-Aktion:
+
+| Schritt | Was                                                   | LOC    | Commit    |
+| ------- | ----------------------------------------------------- | ------ | --------- |
+| 3a/b    | Emitter (form/nav/select gelöscht, overlay reduziert) | -2'982 | `e528237` |
+| 3c      | zag-runtime.ts auf DatePicker reduziert               | -8'672 | `6592afc` |
+| 3e      | zag-prop-metadata.ts auf DatePicker reduziert         | -1'323 | `d6f7d11` |
+| 4       | 8 ungenutzte `@zag-js/*` deps entfernt                | (deps) | `e9ad76e` |
+
+**Total: ~12'977 LOC tot entfernt, 8 npm-deps weg.**
+
+DatePicker-Compile-Output schrumpft von 12'443 → 3'823 LOC (~70% kleiner).
+Coverage-Sprung global: 52.5% → 62.95% Lines (+10.4 pp), weil die
+0%-Coverage-Module aus der Total-Average entfernt wurden.
+
+Bewusst **nicht** angefasst: `compiler/parser/zag-parser.ts` (1065 LOC),
+`compiler/ir/transformers/zag-transformer.ts` (587 LOC), `compiler/compiler/zag/*`
+(765 LOC). Diese sind durch das `isZagPrimitive()`-Gate jetzt nur noch für
+DatePicker aktiv; die nicht-DatePicker-Pfade sind technisch tot, bringen aber
+keinen User-Bundle-Gewinn (Parser läuft nicht im Output) und Reduktion hätte
+hohes Bruchrisiko. Ggf. später, wenn Coverage-Audit zeigt, dass es lohnt.

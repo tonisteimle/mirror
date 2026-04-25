@@ -4,6 +4,66 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Zag-Cleanup vor Thema 12)
+
+Vor Beginn des geplanten Thema 12 („Zag-Komponenten") entdeckt: das Thema
+existiert nicht mehr im klassischen Sinn. Schema (`zag-primitives.ts`)
+listet nur DatePicker; alle anderen Komponenten (Switch, Checkbox, Slider,
+RadioGroup, Tabs, SideNav, Select, Dialog, Tooltip, …) sind Pure-Mirror-
+Templates in `studio/panels/components/component-templates.ts`. Der alte
+Zag-Code blieb als Dead Code im Repo.
+
+### Removed (~13'000 LOC)
+
+- **`compiler/backends/dom/zag/form-emitters.ts`** (1174 LOC) — komplett
+- **`compiler/backends/dom/zag/nav-emitters.ts`** (618 LOC) — komplett
+- **`compiler/backends/dom/zag/select-emitters.ts`** (458 LOC) — komplett
+- **`compiler/backends/dom/zag/overlay-emitters.ts`** (690 → 137 LOC) — auf
+  `emitDatePickerComponent` reduziert. Tooltip, Dialog, Popover, HoverCard,
+  Collapsible weg.
+- **`compiler/backends/dom/zag/index.ts`** (179 → 67 LOC) — Dispatcher von
+  28 Einträgen auf 2 (`date-picker`, `datepicker`).
+- **`compiler/backends/dom/zag-emitters.ts`** (61 → 17 LOC) — Re-exports
+  schrumpfen.
+- **`compiler/runtime/parts/zag-runtime.ts`** (9306 → 634 LOC) — alle
+  init-Funktionen außer `initDatePickerComponent` weg (33 → 1).
+- **`compiler/schema/zag-prop-metadata.ts`** (1402 → 79 LOC) — Metadata
+  nur noch für DatePicker.
+- **8 `@zag-js/*` deps**: checkbox, dialog, radio-group, select, slider,
+  switch, tabs, tooltip.
+
+### Bewusst nicht angefasst
+
+- `compiler/parser/zag-parser.ts` (1065 LOC), `compiler/ir/transformers/zag-transformer.ts`
+  (587 LOC), `compiler/compiler/zag/*` (765 LOC): durch `isZagPrimitive()`-
+  Gate jetzt nur für DatePicker aktiv; nicht-DatePicker-Pfade technisch tot,
+  aber Reduktion bringt keinen User-Bundle-Gewinn (Parser läuft nicht im
+  Output) und Risiko-vs-Nutzen ungünstig.
+
+### Effekt
+
+- DatePicker-Compile-Output schrumpft 12'443 → 3'823 LOC (~70% kleiner)
+- Globale Coverage-Sprung: 52.5% → 62.95% Lines (+10.4 pp)
+- Bundle-size für Studio-Build leicht kleiner (sichtbar in `studio/dist/index.js`:
+  2.55 MB → 2.26 MB nach Runtime-Cleanup, also -290 KB)
+
+### Verbleibende Arbeit für Thema 12
+
+DatePicker selbst hat aktuell ~0% Coverage. Thema 12 ist jetzt fokussiert:
+DatePicker-Pfade in `parser`, `transformer`, `runtime`, `overlay-emitters`
+gezielt mit Tests abdecken (selectionMode single/multiple/range, locale,
+positioning, fixedWeeks, startOfWeek, closeOnSelect, min/max, value/
+defaultValue, slot-Aliases).
+
+### Doku-Sync
+
+- `CLAUDE.md` „Zag Primitives"-Tabelle (Select, Checkbox, Switch, …) ist
+  veraltet und sollte auf nur DatePicker reduziert werden — TODO als
+  separater Schritt, weil CLAUDE.md die Compiler-Reference ist und vom
+  User aktualisiert wird.
+
+---
+
 ## 2026-04-25 (Property-based Testing – Phase 2)
 
 Phase 2 der Bullet-Proof-Strategie: Property-based Testing mit fast-check
