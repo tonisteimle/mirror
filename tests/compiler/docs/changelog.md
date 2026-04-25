@@ -4,6 +4,64 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Properties Deep – Thema 3 Vertiefung)
+
+Zweiter, aggressiverer Pass über Properties: gezielte Provokationen für Lücken
+des ersten Pass. Resultat: **2 echte Bugs gefunden und gefixt**, 1 Pipeline-
+Verhalten dokumentiert, 40 Deep-Tests, 4 Limitations dokumentiert.
+
+### Fixed
+
+- **`bor t 1` (Space-Syntax) verlor die `currentColor`-Fallback-Farbe**.
+  `bor-t 1` und `border-top 1` produzierten `1px solid currentColor`, aber
+  `bor t 1` (mit Leerzeichen statt Bindestrich) produzierte nur `1px solid` —
+  ungültiges CSS. Fix in `formatBorderValue()`
+  (`compiler/ir/transformers/style-utils-transformer.ts`): wenn weder Stil noch
+  Farbe explizit gesetzt, werden jetzt beide Defaults (`solid` + `currentColor`)
+  ergänzt.
+- **State-Property-Aliase nur für `hover-*`**. `disabled-bg`, `focus-bor`,
+  `active-col` etc. wurden komplett ignoriert (keine Styles, kein Error). Fix:
+  `hoverPropertyToCSS()` in `compiler/schema/ir-helpers.ts` zu generischer
+  `STATE_PROPERTY_PREFIXES = ['hover', 'focus', 'active', 'disabled']` Logik
+  generalisiert. `property-transformer.ts` greift den passenden Prefix ab und
+  emittiert die Style mit dem entsprechenden `state`-Feld.
+
+### Added
+
+- `tests/compiler/properties-deep.test.ts` (40 Tests) — Bug-Tests für D1, D3
+  (siehe oben), Pipeline-Test für D2 (siehe unten), Schema-Type-Konflikte als
+  documenting tests, Computed-Expressions als documenting tests, Self-
+  Referential Tokens, Cross-Property Layout-Konflikte, Unknown Properties,
+  comprehensive Sweep aller directional Aliase (`pad-t/r/b/l`, `pt/pr/pb/pl`,
+  `pad top/right/bottom/left`, `pad-x/y`, alle Margin/Border-Direktionen).
+
+### Documented
+
+- **D2 (Conditional-Marker im IR)**: `Frame bg active ? red : blue` produziert
+  im IR den Marker-String `__conditional:active?red:blue` als style-value. Der
+  Marker ist beabsichtigt — das Backend (`compiler/backends/dom/node-emitter.ts`)
+  erkennt ihn und generiert Runtime-Ternary-Code (`($get("active") ? "red" :
+"blue")`). Im finalen JS-Output ist der Marker weg. Test fixiert die
+  Pipeline.
+
+### Known limitations (dokumentiert, nicht gefixt)
+
+- **Schema-Type-Konflikte werden roh durchgelassen**: `Frame pad #f00`
+  (Color als Spacing), `Frame bg 5` (Number als Color), `Frame opacity "high"`
+  (String als Number) — alle erzeugen invalides CSS ohne Compiler-Warning.
+  Validator-Thema (18) wird das fangen.
+- **Computed Expressions nicht ausgewertet**: `Frame w 100 + 50` emittiert
+  `width: 100 + 50` (ungültiges CSS). Sollte zu `calc()` werden oder Error.
+- **Self-referential Tokens**: `a: $a; Frame bg $a` erzeugt `background: $a`
+  literal, kein Cycle-Check.
+- **Cross-Property Layout-Konflikte**: `Frame stacked, hor` setzt sowohl
+  `position: relative` als auch `flex-direction: row` — kein Layout-System-
+  Konflikt-Resolver. `hor`, `grid 12`, `stacked` koexistieren wider Erwarten.
+- **Unknown Properties** (z.B. `Frame foobar 5`) werden silent ignoriert ohne
+  Error im IR-Layer. Validator-Thema.
+
+---
+
 ## 2026-04-25 (Properties & Aliases – Thema 3)
 
 Property-Logik systematisch durchleuchtet: 50 Property-Aliase, „letzter gewinnt"

@@ -500,17 +500,19 @@ export function propertyToCSS(
     return [{ property: 'animation', value: animValue }]
   }
 
-  // Handle inline hover properties: hover-bg, hover-col, etc.
-  // Uses hoverPropertyToCSS from schema/ir-helpers.ts
-  if (name.startsWith('hover-')) {
+  // Handle inline state-prefixed properties: hover-bg, focus-bor, active-col, disabled-opa, etc.
+  // Uses hoverPropertyToCSS from schema/ir-helpers.ts (now generalized for all system states).
+  const STATE_PREFIXES = ['hover-', 'focus-', 'active-', 'disabled-']
+  const matchedPrefix = STATE_PREFIXES.find(p => name.startsWith(p))
+  if (matchedPrefix) {
     const hoverResult = hoverPropertyToCSS(name, value)
     if (hoverResult.handled) {
       return hoverResult.styles
     }
-    // Fallback for unknown hover properties
-    const baseProp = name.replace('hover-', '')
+    // Fallback for unknown state-prefixed properties
+    const baseProp = name.slice(matchedPrefix.length)
     const cssValue = formatCSSValue(baseProp, value)
-    return [{ property: baseProp, value: cssValue, state: 'hover' }]
+    return [{ property: baseProp, value: cssValue, state: matchedPrefix.slice(0, -1) }]
   }
 
   // Handle special cases FIRST (before the early return check)

@@ -7,10 +7,22 @@
  * Extracted from ir/index.ts for modularity.
  */
 
-import type { TokenReference, LoopVarReference, Conditional, ComputedExpression } from '../../parser/ast'
+import type {
+  TokenReference,
+  LoopVarReference,
+  Conditional,
+  ComputedExpression,
+} from '../../parser/ast'
 
 // Local type definition - matches parser usage
-type PropertyValue = string | number | boolean | TokenReference | LoopVarReference | Conditional | ComputedExpression
+type PropertyValue =
+  | string
+  | number
+  | boolean
+  | TokenReference
+  | LoopVarReference
+  | Conditional
+  | ComputedExpression
 import type { IRStyle } from '../types'
 import { DIRECTION_MAP, schemaPropertyToCSS } from '../../schema/ir-helpers'
 
@@ -22,18 +34,38 @@ import { DIRECTION_MAP, schemaPropertyToCSS } from '../../schema/ir-helpers'
  * Properties that need px units for numeric values.
  */
 const NEEDS_PX_PROPERTIES = new Set([
-  'padding', 'pad', 'p',
-  'margin', 'm',
-  'gap', 'g',
-  'gap-x', 'gx', 'gap-y', 'gy',
-  'row-height', 'rh',
-  'width', 'w', 'height', 'h',
-  'min-width', 'minw', 'max-width', 'maxw',
-  'min-height', 'minh', 'max-height', 'maxh',
-  'font-size', 'fs',
-  'radius', 'rad',
+  'padding',
+  'pad',
+  'p',
+  'margin',
+  'm',
+  'gap',
+  'g',
+  'gap-x',
+  'gx',
+  'gap-y',
+  'gy',
+  'row-height',
+  'rh',
+  'width',
+  'w',
+  'height',
+  'h',
+  'min-width',
+  'minw',
+  'max-width',
+  'maxw',
+  'min-height',
+  'minh',
+  'max-height',
+  'maxh',
+  'font-size',
+  'fs',
+  'radius',
+  'rad',
   'border-radius',
-  'border', 'bor',
+  'border',
+  'bor',
 ])
 
 /**
@@ -47,14 +79,17 @@ const NEEDS_PX_PROPERTIES = new Set([
 export function formatCSSValue(property: string, value: string): string {
   if (NEEDS_PX_PROPERTIES.has(property)) {
     // Handle multi-value properties (e.g., "8 16" → "8px 16px")
-    return value.split(' ').map(v => {
-      // Only add px to pure integer values, not values with existing units
-      // (%, vh, vw, vmin, vmax, em, rem, etc.)
-      if (/^\d+$/.test(v)) {
-        return `${v}px`
-      }
-      return v
-    }).join(' ')
+    return value
+      .split(' ')
+      .map(v => {
+        // Only add px to pure integer values, not values with existing units
+        // (%, vh, vw, vmin, vmax, em, rem, etc.)
+        if (/^\d+$/.test(v)) {
+          return `${v}px`
+        }
+        return v
+      })
+      .join(' ')
   }
 
   return value
@@ -119,8 +154,15 @@ export function parseDirectionalSpacing(property: string, values: PropertyValue[
  * Border styles that are recognized.
  */
 const BORDER_STYLES = new Set([
-  'solid', 'dashed', 'dotted', 'double',
-  'groove', 'ridge', 'inset', 'outset', 'none',
+  'solid',
+  'dashed',
+  'dotted',
+  'double',
+  'groove',
+  'ridge',
+  'inset',
+  'outset',
+  'none',
 ])
 
 /**
@@ -150,6 +192,13 @@ export function formatBorderValue(values: PropertyValue[]): string {
   // If no explicit style, add 'solid' after width
   if (!hasStyle && parts.length > 0 && parts[0].endsWith('px')) {
     parts.splice(1, 0, 'solid')
+  }
+
+  // If no explicit color was provided (parts contains only width and/or style),
+  // add currentColor — matches the behavior of the schema-driven `border-*` paths.
+  const hasColor = parts.some(p => !p.endsWith('px') && !BORDER_STYLES.has(p))
+  if (!hasColor && parts.length > 0 && parts[0].endsWith('px')) {
+    parts.push('currentColor')
   }
 
   return parts.join(' ')

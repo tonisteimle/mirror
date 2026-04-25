@@ -48,10 +48,27 @@ export function getCSSPropertyName(dslProperty: string): string | undefined {
  */
 export const NON_CSS_PROPERTIES = new Set([
   // HTML attributes
-  'content', 'data', 'src', 'alt', 'placeholder', 'type', 'name', 'value',
-  'href', 'target', 'for', 'aria-label', 'role', 'tabindex', 'icon',
+  'content',
+  'data',
+  'src',
+  'alt',
+  'placeholder',
+  'type',
+  'name',
+  'value',
+  'href',
+  'target',
+  'for',
+  'aria-label',
+  'role',
+  'tabindex',
+  'icon',
   // Animation properties
-  'animation', 'transition', 'delay', 'easing', 'duration',
+  'animation',
+  'transition',
+  'delay',
+  'easing',
+  'duration',
 ])
 
 /**
@@ -60,27 +77,39 @@ export const NON_CSS_PROPERTIES = new Set([
  * Includes 9-zone shortcuts which also set direction.
  */
 export const ALIGNMENT_PROPERTIES = new Set([
-  'left', 'right', 'top', 'bottom',
-  'hor-center', 'ver-center', 'center', 'cen',
+  'left',
+  'right',
+  'top',
+  'bottom',
+  'hor-center',
+  'ver-center',
+  'center',
+  'cen',
   'spread',
   // 9-zone shortcuts (set both alignment AND direction)
-  'top-left', 'tl',
-  'top-center', 'tc',
-  'top-right', 'tr',
-  'center-left', 'cl',
-  'center-right', 'cr',
-  'bottom-left', 'bl',
-  'bottom-center', 'bc',
-  'bottom-right', 'br',
+  'top-left',
+  'tl',
+  'top-center',
+  'tc',
+  'top-right',
+  'tr',
+  'center-left',
+  'cl',
+  'center-right',
+  'cr',
+  'bottom-left',
+  'bl',
+  'bottom-center',
+  'bc',
+  'bottom-right',
+  'br',
 ])
 
 /**
  * Direction property names for layout processing.
  * These properties set flex-direction.
  */
-export const DIRECTION_PROPERTIES = new Set([
-  'horizontal', 'hor', 'vertical', 'ver',
-])
+export const DIRECTION_PROPERTIES = new Set(['horizontal', 'hor', 'vertical', 'ver'])
 
 /**
  * Property name mapping from DSL to CSS.
@@ -88,75 +117,75 @@ export const DIRECTION_PROPERTIES = new Set([
  */
 export const PROPERTY_TO_CSS: Record<string, string> = {
   // From schema - sizing
-  'width': 'width',
-  'w': 'width',
-  'height': 'height',
-  'h': 'height',
+  width: 'width',
+  w: 'width',
+  height: 'height',
+  h: 'height',
   'min-width': 'min-width',
-  'minw': 'min-width',
+  minw: 'min-width',
   'max-width': 'max-width',
-  'maxw': 'max-width',
+  maxw: 'max-width',
   'min-height': 'min-height',
-  'minh': 'min-height',
+  minh: 'min-height',
   'max-height': 'max-height',
-  'maxh': 'max-height',
+  maxh: 'max-height',
 
   // Spacing
-  'padding': 'padding',
-  'pad': 'padding',
-  'p': 'padding',
-  'margin': 'margin',
-  'm': 'margin',
-  'gap': 'gap',
-  'g': 'gap',
+  padding: 'padding',
+  pad: 'padding',
+  p: 'padding',
+  margin: 'margin',
+  m: 'margin',
+  gap: 'gap',
+  g: 'gap',
   'gap-x': 'column-gap',
-  'gx': 'column-gap',
+  gx: 'column-gap',
   'gap-y': 'row-gap',
-  'gy': 'row-gap',
+  gy: 'row-gap',
   'row-height': 'grid-auto-rows',
-  'rh': 'grid-auto-rows',
+  rh: 'grid-auto-rows',
 
   // Colors
-  'background': 'background',
-  'bg': 'background',
-  'color': 'color',
-  'col': 'color',
-  'c': 'color',
+  background: 'background',
+  bg: 'background',
+  color: 'color',
+  col: 'color',
+  c: 'color',
   'border-color': 'border-color',
-  'boc': 'border-color',
+  boc: 'border-color',
 
   // Border
-  'border': 'border',
-  'bor': 'border',
-  'radius': 'border-radius',
-  'rad': 'border-radius',
+  border: 'border',
+  bor: 'border',
+  radius: 'border-radius',
+  rad: 'border-radius',
 
   // Typography
   'font-size': 'font-size',
-  'fs': 'font-size',
-  'weight': 'font-weight',
-  'line': 'line-height',
-  'font': 'font-family',
+  fs: 'font-size',
+  weight: 'font-weight',
+  line: 'line-height',
+  font: 'font-family',
   'text-align': 'text-align',
 
   // Effects
-  'opacity': 'opacity',
-  'o': 'opacity',
-  'opa': 'opacity',
-  'shadow': 'box-shadow',
-  'cursor': 'cursor',
-  'z': 'z-index',
+  opacity: 'opacity',
+  o: 'opacity',
+  opa: 'opacity',
+  shadow: 'box-shadow',
+  cursor: 'cursor',
+  z: 'z-index',
 
   // Scroll
-  'scroll': 'overflow-y',
+  scroll: 'overflow-y',
   'scroll-ver': 'overflow-y',
   'scroll-hor': 'overflow-x',
   'scroll-both': 'overflow',
-  'clip': 'overflow',
+  clip: 'overflow',
 
   // Animation
-  'animation': 'animation',
-  'anim': 'animation',
+  animation: 'animation',
+  anim: 'animation',
 }
 
 /**
@@ -320,10 +349,7 @@ export function schemaPropertyToCSS(
  * Handles: numeric values, color values, keyword values.
  * Does NOT handle: directional properties, multi-value properties, special cases.
  */
-export function simplePropertyToCSS(
-  propName: string,
-  value: string | number
-): CSSResult {
+export function simplePropertyToCSS(propName: string, value: string | number): CSSResult {
   // Try schema first
   const schemaResult = schemaPropertyToCSS(propName, [value])
   if (schemaResult.handled) {
@@ -340,12 +366,32 @@ export function simplePropertyToCSS(
   let cssValue = String(value)
   if (typeof value === 'number' || /^\d+$/.test(cssValue)) {
     const needsPx = new Set([
-      'padding', 'pad', 'p', 'margin', 'm', 'gap', 'g',
-      'width', 'w', 'height', 'h',
-      'min-width', 'minw', 'max-width', 'maxw',
-      'min-height', 'minh', 'max-height', 'maxh',
-      'font-size', 'fs', 'radius', 'rad', 'border-radius',
-      'border', 'bor',
+      'padding',
+      'pad',
+      'p',
+      'margin',
+      'm',
+      'gap',
+      'g',
+      'width',
+      'w',
+      'height',
+      'h',
+      'min-width',
+      'minw',
+      'max-width',
+      'maxw',
+      'min-height',
+      'minh',
+      'max-height',
+      'maxh',
+      'font-size',
+      'fs',
+      'radius',
+      'rad',
+      'border-radius',
+      'border',
+      'bor',
     ])
     // z, opacity, weight, line-height etc. don't need px
     if (needsPx.has(propName)) {
@@ -368,38 +414,55 @@ export function simplePropertyToCSS(
  * Maps base property name to CSS property.
  */
 export const HOVER_PROPERTIES: Record<string, string> = {
-  'bg': 'background',
-  'background': 'background',
-  'col': 'color',
-  'color': 'color',
-  'c': 'color',
-  'opacity': 'opacity',
-  'opa': 'opacity',
-  'o': 'opacity',
-  'scale': 'transform',  // special handling needed
-  'bor': 'border',
-  'border': 'border',
-  'boc': 'border-color',
+  bg: 'background',
+  background: 'background',
+  col: 'color',
+  color: 'color',
+  c: 'color',
+  opacity: 'opacity',
+  opa: 'opacity',
+  o: 'opacity',
+  scale: 'transform', // special handling needed
+  bor: 'border',
+  border: 'border',
+  boc: 'border-color',
   'border-color': 'border-color',
-  'rad': 'border-radius',
-  'radius': 'border-radius',
+  rad: 'border-radius',
+  radius: 'border-radius',
 }
 
 /**
- * Convert a hover property to CSS.
- * Returns CSS styles with state: 'hover' if handled.
+ * System states that support a `<state>-<prop>` shorthand syntax.
+ * E.g. hover-bg, focus-bor, active-col, disabled-opa.
+ */
+const STATE_PROPERTY_PREFIXES = ['hover', 'focus', 'active', 'disabled'] as const
+
+/**
+ * Convert a state-prefixed property (hover-bg, focus-bor, …) to CSS.
+ * Returns CSS styles with the matching state if handled.
+ *
+ * Renamed from `hoverPropertyToCSS` to a generic state-aware helper but kept
+ * the export name for backwards compatibility.
  */
 export function hoverPropertyToCSS(
   propName: string,
   value: string | number
 ): { styles: Array<{ property: string; value: string; state: string }>; handled: boolean } {
-  if (!propName.startsWith('hover-')) {
+  // Detect any of the supported state prefixes
+  let state: string | null = null
+  let baseProp = ''
+  for (const prefix of STATE_PROPERTY_PREFIXES) {
+    if (propName.startsWith(`${prefix}-`)) {
+      state = prefix
+      baseProp = propName.slice(prefix.length + 1)
+      break
+    }
+  }
+  if (!state) {
     return { styles: [], handled: false }
   }
 
-  const baseProp = propName.replace('hover-', '')
   const cssProp = HOVER_PROPERTIES[baseProp]
-
   if (!cssProp) {
     return { styles: [], handled: false }
   }
@@ -418,7 +481,7 @@ export function hoverPropertyToCSS(
   }
 
   return {
-    styles: [{ property: cssProp, value: cssValue, state: 'hover' }],
+    styles: [{ property: cssProp, value: cssValue, state }],
     handled: true,
   }
 }
@@ -432,49 +495,56 @@ export function hoverPropertyToCSS(
  * Maps direction keywords to CSS direction suffixes.
  */
 export const DIRECTION_MAP: Record<string, string[]> = {
-  'left': ['left'],
-  'right': ['right'],
-  'top': ['top'],
-  'bottom': ['bottom'],
-  'down': ['bottom'],  // Alias
-  'l': ['left'],
-  'r': ['right'],
-  't': ['top'],
-  'b': ['bottom'],
-  'x': ['left', 'right'],      // Horizontal shortcut
-  'y': ['top', 'bottom'],      // Vertical shortcut
-  'horizontal': ['left', 'right'],
-  'vertical': ['top', 'bottom'],
-  'hor': ['left', 'right'],
-  'ver': ['top', 'bottom'],
+  left: ['left'],
+  right: ['right'],
+  top: ['top'],
+  bottom: ['bottom'],
+  down: ['bottom'], // Alias
+  l: ['left'],
+  r: ['right'],
+  t: ['top'],
+  b: ['bottom'],
+  x: ['left', 'right'], // Horizontal shortcut
+  y: ['top', 'bottom'], // Vertical shortcut
+  horizontal: ['left', 'right'],
+  vertical: ['top', 'bottom'],
+  hor: ['left', 'right'],
+  ver: ['top', 'bottom'],
 }
 
 /**
  * Corner mapping for radius properties.
  */
 export const CORNER_MAP: Record<string, string[]> = {
-  'tl': ['top-left'],
-  'tr': ['top-right'],
-  'bl': ['bottom-left'],
-  'br': ['bottom-right'],
-  't': ['top-left', 'top-right'],
-  'b': ['bottom-left', 'bottom-right'],
-  'l': ['top-left', 'bottom-left'],
-  'r': ['top-right', 'bottom-right'],
+  tl: ['top-left'],
+  tr: ['top-right'],
+  bl: ['bottom-left'],
+  br: ['bottom-right'],
+  t: ['top-left', 'top-right'],
+  b: ['bottom-left', 'bottom-right'],
+  l: ['top-left', 'bottom-left'],
+  r: ['top-right', 'bottom-right'],
 }
 
 /**
  * Border direction mapping.
  */
 export const BORDER_DIRECTION_MAP: Record<string, string[]> = {
-  't': ['top'], 'top': ['top'],
-  'b': ['bottom'], 'bottom': ['bottom'], 'down': ['bottom'],
-  'l': ['left'], 'left': ['left'],
-  'r': ['right'], 'right': ['right'],
-  'x': ['left', 'right'],
-  'y': ['top', 'bottom'],
-  'horizontal': ['left', 'right'], 'hor': ['left', 'right'],
-  'vertical': ['top', 'bottom'], 'ver': ['top', 'bottom'],
+  t: ['top'],
+  top: ['top'],
+  b: ['bottom'],
+  bottom: ['bottom'],
+  down: ['bottom'],
+  l: ['left'],
+  left: ['left'],
+  r: ['right'],
+  right: ['right'],
+  x: ['left', 'right'],
+  y: ['top', 'bottom'],
+  horizontal: ['left', 'right'],
+  hor: ['left', 'right'],
+  vertical: ['top', 'bottom'],
+  ver: ['top', 'bottom'],
 }
 
 /**
@@ -548,41 +618,41 @@ export function getColorAcceptingProperties(): string[] {
  */
 export const PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
   // Background
-  'bg': '.bg',
-  'background': '.bg',
+  bg: '.bg',
+  background: '.bg',
   // Color
-  'col': '.col',
-  'color': '.col',
-  'c': '.col',
+  col: '.col',
+  color: '.col',
+  c: '.col',
   // Border color
-  'boc': '.boc',
+  boc: '.boc',
   'border-color': '.boc',
   // Radius
-  'rad': '.rad',
-  'radius': '.rad',
+  rad: '.rad',
+  radius: '.rad',
   // Padding
-  'pad': '.pad',
-  'padding': '.pad',
-  'p': '.pad',
+  pad: '.pad',
+  padding: '.pad',
+  p: '.pad',
   // Margin
-  'mar': '.mar',
-  'margin': '.mar',
-  'm': '.mar',
+  mar: '.mar',
+  margin: '.mar',
+  m: '.mar',
   // Gap
-  'gap': '.gap',
-  'g': '.gap',
+  gap: '.gap',
+  g: '.gap',
   // Width/Height
-  'w': '.w',
-  'width': '.w',
-  'h': '.h',
-  'height': '.h',
+  w: '.w',
+  width: '.w',
+  h: '.h',
+  height: '.h',
   // Font size
-  'fs': '.fs',
+  fs: '.fs',
   'font-size': '.fs',
   // Icon
-  'ic': '.ic',
+  ic: '.ic',
   'icon-color': '.ic',
-  'is': '.is',
+  is: '.is',
   'icon-size': '.is',
 }
 
