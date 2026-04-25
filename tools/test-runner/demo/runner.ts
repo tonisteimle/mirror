@@ -1044,32 +1044,67 @@ const MIRROR_ACTIONS_API = `
 
   async function setProperty(sel, propName, value) {
     await selectInPreview(sel);
-    const input = _findPropertyInput(propName);
-    const r = input.getBoundingClientRect();
-    const endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-    if (input.tagName.toLowerCase() === 'select') {
-      await withCursorSync(endPoint, 250, async () => {
-        input.focus();
-        input.value = value;
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        await delay(100);
-        input.blur();
-      });
+    // Try the property-panel input first; if not visible (section collapsed
+    // or not rendered for this prop), fall back to the studio API which
+    // pickColor already uses successfully.
+    let input = null;
+    try { input = _findPropertyInput(propName); } catch (_e) { input = null; }
+    if (input) {
+      const r = input.getBoundingClientRect();
+      const endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      if (input.tagName.toLowerCase() === 'select') {
+        await withCursorSync(endPoint, 250, async () => {
+          input.focus();
+          input.value = value;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          await delay(100);
+          input.blur();
+        });
+      } else {
+        await withCursorSync(endPoint, 250, async () => {
+          input.focus();
+          input.select();
+          await delay(60);
+          input.value = value;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          await delay(100);
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          input.dispatchEvent(new KeyboardEvent('keydown', {
+            key: 'Enter', code: 'Enter', bubbles: true, cancelable: true,
+          }));
+          await delay(80);
+          input.blur();
+        });
+      }
     } else {
-      await withCursorSync(endPoint, 250, async () => {
-        input.focus();
-        input.select();
-        await delay(60);
-        input.value = value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        await delay(100);
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        input.dispatchEvent(new KeyboardEvent('keydown', {
-          key: 'Enter', code: 'Enter', bubbles: true, cancelable: true,
-        }));
-        await delay(80);
-        input.blur();
-      });
+      // Fallback: drive the change through the studio API. The cursor still
+      // visits the property panel so the viewer sees the action originating
+      // there; the change fires programmatically and the new value flows
+      // back into the editor like a normal user edit.
+      const panelEl = document.querySelector('#property-panel');
+      if (panelEl) {
+        const r = panelEl.getBoundingClientRect();
+        await withCursorSync(
+          { x: r.left + r.width / 2, y: r.top + 60 },
+          400,
+          async () => {
+            const studio = window.__mirrorStudio__;
+            const panel = studio && studio.propertyPanel;
+            if (!panel || typeof panel.changeProperty !== 'function') {
+              throw new Error('setProperty: studio.propertyPanel.changeProperty not available');
+            }
+            panel.changeProperty(propName, value);
+            await delay(180);
+          }
+        );
+      } else {
+        const studio = window.__mirrorStudio__;
+        const panel = studio && studio.propertyPanel;
+        if (!panel || typeof panel.changeProperty !== 'function') {
+          throw new Error('setProperty: panel input not visible and studio API unavailable');
+        }
+        panel.changeProperty(propName, value);
+      }
     }
     await delay(180);
   }

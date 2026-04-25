@@ -85,9 +85,8 @@ export const demoScript: DemoScript = {
     },
 
     // === 3. Resize: Card breiter ziehen ===
-    // bypassSnap: true für deterministische 280px-Breite (sonst würde 280
-    // selbst auf 280 snappen, +180-delta auf 100 → könnte aber je nach
-    // initialer Resize-Handle-Position anders rauskommen).
+    // Erst resize-east für die Breite. h wird dabei auf einen fixen Wert
+    // gesetzt (104), das ist erwartet — wir korrigieren das gleich.
     { action: 'comment', text: 'Schritt 2: Card breiter ziehen (Resize-Handle Ost)' },
     {
       action: 'dragResize',
@@ -107,15 +106,38 @@ export const demoScript: DemoScript = {
         '  Frame w 280, h 104, bg #27272a, rad 8',
     },
 
+    // === 3b. Höhe auf hug — wächst mit Inhalt ===
+    // Card mit fixer Höhe wäre für H1+Text+Button zu klein und würde
+    // überlaufen. `h hug` ist die idiomatische Mirror-Lösung: Höhe folgt
+    // dem Inhalt automatisch. Nach dem Resize gesetzt damit die Breite fix bleibt.
+    { action: 'comment', text: 'Card-Höhe auto — wächst mit Inhalt' },
+    {
+      action: 'setProperty',
+      selector: { byId: 'node-2' },
+      prop: 'h',
+      value: 'hug',
+      comment: 'h = hug (auto-height)',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after h=hug',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8',
+    },
+
     // === 4. H1 in die leere Card ===
+    // Index-Drop statt Alignment-Zone: mit `h hug` ist die leere Card 0px hoch,
+    // Alignment-Zonen brauchen >= 80×80 Container.
     { action: 'comment', text: 'Schritt 3: Titel (H1) in die Card draggen' },
     ...paletteHighlight('comp-h1'),
     {
       action: 'dropFromPalette',
       component: 'H1',
       target: { byId: 'node-2' },
-      at: { kind: 'zone', zone: 'center' },
-      comment: 'H1 in leere Card (Alignment-Zone)',
+      at: { kind: 'index', index: 0 },
+      comment: 'H1 in leere Card',
     },
     { action: 'wait', duration: 400 },
     {
@@ -123,7 +145,7 @@ export const demoScript: DemoScript = {
       comment: 'after H1 drop',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h 104, bg #27272a, rad 8, center\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8\n' +
         '    H1 "Heading 1", col #e4e4e7',
     },
 
@@ -143,7 +165,7 @@ export const demoScript: DemoScript = {
       comment: 'after Text drop',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h 104, bg #27272a, rad 8, center\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7',
     },
@@ -164,7 +186,7 @@ export const demoScript: DemoScript = {
       comment: 'after Button drop',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h 104, bg #27272a, rad 8, center\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -189,7 +211,7 @@ export const demoScript: DemoScript = {
       comment: 'after padding top +24',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -210,7 +232,7 @@ export const demoScript: DemoScript = {
       comment: 'after margin top +16',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24, mar-t 16\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -230,7 +252,7 @@ export const demoScript: DemoScript = {
       comment: 'after H1 inline-edit',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24, mar-t 16\n' +
         '    H1 "Willkommen", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -250,7 +272,7 @@ export const demoScript: DemoScript = {
       comment: 'after Button inline-edit',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24, mar-t 16\n' +
         '    H1 "Willkommen", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Loslegen", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -273,7 +295,7 @@ export const demoScript: DemoScript = {
       comment: 'after reorder (Button → index 0)',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad-t 24, mar-t 16\n' +
         '    Button "Loslegen", pad 12 24, bg #5BA8F5, col white, rad 6\n' +
         '    H1 "Willkommen", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7',
