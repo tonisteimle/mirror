@@ -21009,6 +21009,18 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                         "name": "textContent",
                         "value": "heart",
                       },
+                      {
+                        "name": "data-icon-color",
+                        "value": "white",
+                      },
+                      {
+                        "name": "data-icon-size",
+                        "value": "16",
+                      },
+                      {
+                        "name": "data-icon-fill",
+                        "value": true,
+                      },
                     ],
                     "styles": [
                       {
@@ -21340,6 +21352,18 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                       {
                         "name": "textContent",
                         "value": "heart",
+                      },
+                      {
+                        "name": "data-icon-color",
+                        "value": "white",
+                      },
+                      {
+                        "name": "data-icon-size",
+                        "value": "16",
+                      },
+                      {
+                        "name": "data-icon-fill",
+                        "value": true,
                       },
                     ],
                     "styles": [
@@ -21711,6 +21735,14 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
                     "name": "textContent",
                     "value": "chevron-up",
                   },
+                  {
+                    "name": "data-icon-color",
+                    "value": "white",
+                  },
+                  {
+                    "name": "data-icon-size",
+                    "value": "16",
+                  },
                 ],
                 "styles": [
                   {
@@ -21854,6 +21886,14 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
                     "name": "textContent",
                     "value": "clock",
                   },
+                  {
+                    "name": "data-icon-color",
+                    "value": "white",
+                  },
+                  {
+                    "name": "data-icon-size",
+                    "value": "14",
+                  },
                 ],
                 "styles": [
                   {
@@ -21910,6 +21950,14 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
                     "name": "textContent",
                     "value": "check",
                   },
+                  {
+                    "name": "data-icon-color",
+                    "value": "white",
+                  },
+                  {
+                    "name": "data-icon-size",
+                    "value": "14",
+                  },
                 ],
                 "styles": [
                   {
@@ -21965,6 +22013,14 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
                   {
                     "name": "textContent",
                     "value": "circle",
+                  },
+                  {
+                    "name": "data-icon-color",
+                    "value": "white",
+                  },
+                  {
+                    "name": "data-icon-size",
+                    "value": "14",
                   },
                 ],
                 "styles": [
@@ -24892,6 +24948,18 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
                     "name": "textContent",
                     "value": "heart",
                   },
+                  {
+                    "name": "data-icon-color",
+                    "value": "white",
+                  },
+                  {
+                    "name": "data-icon-size",
+                    "value": "18",
+                  },
+                  {
+                    "name": "data-icon-fill",
+                    "value": true,
+                  },
                 ],
                 "styles": [
                   {
@@ -26209,6 +26277,14 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
                   {
                     "name": "textContent",
                     "value": "check",
+                  },
+                  {
+                    "name": "data-icon-color",
+                    "value": "white",
+                  },
+                  {
+                    "name": "data-icon-size",
+                    "value": "16",
                   },
                 ],
                 "styles": [
@@ -29718,6 +29794,18 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
                       {
                         "name": "textContent",
                         "value": "heart",
+                      },
+                      {
+                        "name": "data-icon-color",
+                        "value": "white",
+                      },
+                      {
+                        "name": "data-icon-size",
+                        "value": "18",
+                      },
+                      {
+                        "name": "data-icon-fill",
+                        "value": true,
                       },
                     ],
                     "styles": [

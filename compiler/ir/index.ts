@@ -1887,6 +1887,8 @@ class IRTransformer {
     const ctx: StateChildContext = {
       generateNodeId: () => `state-child-${this.stateChildCounter++}`,
       transformProperties: (props, prim) => this.transformProperties(props, prim),
+      extractHtmlProperties: (props, prim) =>
+        extractHTMLPropertiesExtracted(props, this.tokenSet, prim),
     }
     return transformStateChildExtracted(instance, ctx)
   }

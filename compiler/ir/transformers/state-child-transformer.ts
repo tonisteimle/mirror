@@ -6,7 +6,7 @@
  */
 
 import type { Instance, Property } from '../../parser/ast'
-import type { IRNode, IRStyle } from '../types'
+import type { IRNode, IRStyle, IRProperty } from '../types'
 import { getPrimitiveDefaults } from '../../schema/primitives'
 import { getHtmlTag } from '../../schema/ir-helpers'
 import { convertDefaultsToProperties, mergeProperties } from './property-utils-transformer'
@@ -17,6 +17,13 @@ import { convertDefaultsToProperties, mergeProperties } from './property-utils-t
 export interface StateChildContext {
   generateNodeId: () => string
   transformProperties: (properties: Property[], primitive: string) => IRStyle[]
+  /**
+   * Extract HTML properties (placeholder, disabled, type, value, …) from the
+   * raw property list — same logic as for the top-level pipeline. Optional
+   * for backward-compat: if missing, only `content → textContent` is mapped
+   * (legacy behavior, loses Input attributes for state-children).
+   */
+  extractHtmlProperties?: (properties: Property[], primitive: string) => IRProperty[]
 }
 
 /**
@@ -27,10 +34,7 @@ export interface StateChildContext {
  * @param ctx Transformation context
  * @returns IRNode or null if invalid
  */
-export function transformStateChild(
-  instance: Instance,
-  ctx: StateChildContext
-): IRNode | null {
+export function transformStateChild(instance: Instance, ctx: StateChildContext): IRNode | null {
   if (!instance || !instance.component) {
     return null
   }
@@ -63,13 +67,20 @@ export function transformStateChild(
     children: [],
   }
 
-  // Add text content if present
-  const contentProp = instance.properties.find(p => p.name === 'content')
-  if (contentProp && contentProp.values.length > 0) {
-    node.properties.push({
-      name: 'textContent',
-      value: String(contentProp.values[0]),
-    })
+  // Extract HTML properties (placeholder, disabled, type, value, …) so that
+  // state-children spawned by states (e.g. `on: \n  Input placeholder "x"`)
+  // carry the same attributes as top-level instances. When the context does
+  // not provide an extractor, fall back to the legacy content-only path.
+  if (ctx.extractHtmlProperties) {
+    node.properties.push(...ctx.extractHtmlProperties(instance.properties, primitive))
+  } else {
+    const contentProp = instance.properties.find(p => p.name === 'content')
+    if (contentProp && contentProp.values.length > 0) {
+      node.properties.push({
+        name: 'textContent',
+        value: String(contentProp.values[0]),
+      })
+    }
   }
 
   // Transform children recursively

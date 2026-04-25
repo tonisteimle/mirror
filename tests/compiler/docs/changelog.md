@@ -4,6 +4,49 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 7 — States)
+
+1 Bug in der state-child-Transformation gefixt + 12 Coverage-Tests.
+state-machine-emitter von 83% auf 98% Lines.
+
+### Fixed
+
+- **State-children verlieren HTML-Properties** — `compiler/ir/transformers/state-child-transformer.ts`
+  übersetzte nur `content → textContent`, alle anderen HTML-Properties
+  (`placeholder`, `disabled`, `type`, `value`, `name`, `readonly`,
+  `data-icon-color`, `data-icon-size`, `data-icon-fill`, `tabindex`, etc.)
+  wurden verworfen. Beispiel: `Btn ... on: \n Input placeholder "x", disabled`
+  → state-child-IR mit `properties: []`. Fix: optionalen
+  `extractHtmlProperties`-Callback im StateChildContext, in `compiler/ir/index.ts`
+  mit dem gleichen Extractor wie für Top-Level-Properties verbunden.
+
+### Added
+
+- `tests/compiler/states-coverage.test.ts` — 12 Tests in 6 Bereichen
+  (HTML-Properties, nested children, transition timing, escape paths,
+  combined system+custom states).
+
+### Snapshot-Update
+
+- 6 Tutorial-Snapshots aktualisiert (06-states Examples 4-6, 07-animationen
+  Examples 4+9, 08-functions Example 10): vorherige Snapshots haben das
+  Bug-Verhalten memorialized (state-child Icons ohne `data-icon-color`/
+  `data-icon-size`/`data-icon-fill`). Mit dem Fix sind diese Properties
+  jetzt korrekt durchgereicht.
+
+### Coverage
+
+| Modul                                                 | Vorher | Nachher                                                           |
+| ----------------------------------------------------- | ------ | ----------------------------------------------------------------- |
+| `compiler/backends/dom/state-machine-emitter.ts`      | 83.24% | **98.47%** L / **88.34%** B / **100%** F                          |
+| `compiler/ir/transformers/state-child-transformer.ts` | 72.22% | **80%** L (Legacy-Branch nicht aktiv → Branches scheinbar runter) |
+
+Globaler Effekt: 65.56% → **66.07% Lines (+0.51 pp)**.
+
+Details: `tests/compiler/docs/themen/07-states.md`.
+
+---
+
 ## 2026-04-25 (Thema 12 — DatePicker)
 
 3 Bugs in der Zag-Pipeline gefixt + 27 Compiler-Tests für die einzige
