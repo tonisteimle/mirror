@@ -1048,25 +1048,27 @@ const MIRROR_ACTIONS_API = `
   async function dragPadding(sel, side, delta, mode, _bypassSnap) {
     const nodeId = resolveSelector(sel);
     window.__dragTest.selectNode(nodeId);
+    // Blur the CodeMirror editor: pressKey() dispatches to document.activeElement,
+    // and the keyboard-handler skips events whose target is contentEditable.
+    if (document.activeElement && document.activeElement !== document.body && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
     await delay(150);
     await window.__mirrorTest.interact.enterPaddingMode(nodeId);
     const handle = document.querySelector('.padding-handle-' + side);
     if (!handle) throw new Error('Padding handle not visible for ' + side);
 
-    // 1. Visit the padding handle.
+    // 1. Visit the padding handle (cursor animation only).
     await visitElement(handle);
 
-    const r = handle.getBoundingClientRect();
-    const startPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-    const endPoint = { x: startPoint.x, y: startPoint.y };
-    if (side === 'top')        endPoint.y += delta;
-    else if (side === 'bottom') endPoint.y -= delta;
-    else if (side === 'left')   endPoint.x += delta;
-    else                        endPoint.x -= delta;
-    const eventOpts = mode === 'all' ? { shiftKey: true }
-                    : mode === 'axis' ? { altKey: true }
-                    : undefined;
-    await manualDrag(handle, startPoint, endPoint, { eventOpts });
+    // 2. Delegate the actual drag to the Mirror test API — it talks to the
+    //    PaddingManager directly (mousedown on handle, mousemove/mouseup on
+    //    document, with proper RAF pacing). Manual mouse synthesis used to
+    //    flake here because PaddingManager's RAF coalescing dropped frames.
+    const opts = mode === 'all' ? { shift: true }
+              : mode === 'axis' ? { alt: true }
+              : undefined;
+    await window.__mirrorTest.interact.dragPaddingHandle(side, delta, opts);
     if (window.__dragTest && window.__dragTest.waitForCompile) {
       await window.__dragTest.waitForCompile();
     }
@@ -1076,25 +1078,20 @@ const MIRROR_ACTIONS_API = `
   async function dragMargin(sel, side, delta, mode, _bypassSnap) {
     const nodeId = resolveSelector(sel);
     window.__dragTest.selectNode(nodeId);
+    if (document.activeElement && document.activeElement !== document.body && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
     await delay(150);
     await window.__mirrorTest.interact.enterMarginMode(nodeId);
     const handle = document.querySelector('.margin-handle-' + side);
     if (!handle) throw new Error('Margin handle not visible for ' + side);
 
-    // 1. Visit the margin handle.
     await visitElement(handle);
 
-    const r = handle.getBoundingClientRect();
-    const startPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-    const endPoint = { x: startPoint.x, y: startPoint.y };
-    if (side === 'top')        endPoint.y -= delta;
-    else if (side === 'bottom') endPoint.y += delta;
-    else if (side === 'left')   endPoint.x -= delta;
-    else                        endPoint.x += delta;
-    const eventOpts = mode === 'all' ? { shiftKey: true }
-                    : mode === 'axis' ? { altKey: true }
-                    : undefined;
-    await manualDrag(handle, startPoint, endPoint, { eventOpts });
+    const opts = mode === 'all' ? { shift: true }
+              : mode === 'axis' ? { alt: true }
+              : undefined;
+    await window.__mirrorTest.interact.dragMarginHandle(side, delta, opts);
     if (window.__dragTest && window.__dragTest.waitForCompile) {
       await window.__dragTest.waitForCompile();
     }
