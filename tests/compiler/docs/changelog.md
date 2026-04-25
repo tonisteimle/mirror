@@ -4,6 +4,74 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Komponenten & Vererbung – Thema 5)
+
+Aggressive Coverage-Tests für Inheritance-System. **1 Parser-Bug entdeckt + als
+known limitation dokumentiert** (Fix invasiv, eigene Iteration), ~55 neue Tests,
+0 Regressionen.
+
+### Fixed
+
+(Keine Source-Fixes in diesem Thema — der entdeckte Bug ist tief im Parser.)
+
+### Discovered (Parser bug — known limitation, not yet fixed)
+
+- **Komma-Actions in Component-Body parsen asymmetrisch**:
+  - Instance-Body: `Btn onclick toggle(), toast("p")` → 2 separate click-Events
+    (laut Thema 2 dokumentierten Verhalten)
+  - Component-Body: `Base as Btn: onclick toggle(), toast("p")` → 1 click-Event
+    (toggle), und `toast("p")` wird fälschlich als CHILD-Instance
+    `{ type: 'Instance', component: 'toast' }` interpretiert
+  - Workaround: separate Zeilen pro Event
+  - Fix: invasiv in `parseComponentBody`, in eigener Iteration angehen
+
+### Added
+
+- `tests/compiler/inheritance-bugs.test.ts` (~20 Tests):
+  - **C1–C6 Cycle-Detection**: alle 5 Cycle-Formen (1-self, 2-cycle, 3-cycle,
+    10-deep cycle, extends NonExistent) — alle terminieren < 1s ohne Crash
+  - **E1–E4 Events-Concat**: BOTH onclick-Events bleiben (kein Dedup), parent
+    onclick + child onkeydown beide präsent, E4 dokumentiert oben genannten Bug
+  - **F1–F2 Forward-Reference**: Instance vor Definition + Forward-Base-Reference
+  - **N1–N2 Naming-Conflicts**: doppelte Component-Definition + Component shadows
+    primitive (`Frame as Button:`)
+  - **SI1–SI2 Self-Inheritance** Varianten
+  - **M5 Recursive Mixin**: Component referenziert sich selbst als Style-Mixin
+  - **PA2–PA3 Stress**: 10-deep Inheritance-Chain mit alle Properties merged,
+    Unicode-Component-Namen (`Bütton`)
+
+- `tests/compiler/inheritance-coverage.test.ts` (~35 Tests):
+  - **P5–P11 Properties**: Token-Override, Multi-Value-Override, Hover-Property
+    in Inheritance, Direction-Property in Inheritance, 5-deep Property-Chain,
+    different aliases (w vs width) in inheritance
+  - **S1–S5 States**: hover bg + col merged, hover only + focus only both
+    present, 3-Level state chain accumulates
+  - **E5 Events**: 3 events from 3-level chain
+  - **CH1–CH5 Children**: parent+child concat order, Slot+Frame mixed,
+    named-instance-conflicts both present (no dedup), 4-deep stack
+  - **M1–M3 Style-Mixin**: PascalCase mixin expand, multiple mixins, mixin +
+    own property override
+  - **PS1–PS5 Property-Set**: lowercase mixin expand, ordering matters
+    (`pad 8, $cardstyle` vs `$cardstyle, pad 8`), token references inside
+  - **EB1–EB3 Empty Bodies**: minimal component, empty inheritance
+  - **DC1–DC3 Deep Chains**: 5-Level all-properties, 10-Level no stack
+    overflow, override-at-every-level
+  - **AE1–AE3 Mixed as/extends**: A as Frame + B extends A, B extends primitive
+    directly, 3-level mixed
+  - **X1–X2 Cross-Cases**: parent state-layout-change + child default-direction
+    override, 3 states across 2 levels
+  - **PA1–PA2 Pathological**: 50-deep chain, 30 props with single override
+
+4913 Compiler-Tests grün, keine neuen Regressionen.
+
+### Coverage-Status
+
+~80% der Inheritance-Edge-Cases abgedeckt. Verbleibende bewusste Lücken:
+Komma-Action-Parser-Bug (Workaround dokumentiert), Slot-Inheritance (Thema 12),
+State-Trigger-Override, Animation-Inheritance (Thema 13).
+
+---
+
 ## 2026-04-25 (Layout Iteration 2 – Thema 4 deep)
 
 Zweiter Pass über Layout mit systematischer Coverage-Matrix. Anspruch laut
