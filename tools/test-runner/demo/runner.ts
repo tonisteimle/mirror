@@ -767,6 +767,60 @@ const MIRROR_ACTIONS_API = `
     return point;
   }
 
+  // Brief "success ring" pulse on an element to confirm a drop or move
+  // landed on it. Green, soft glow, fades over ~700ms. The viewer's eye
+  // is drawn to the element that just changed, so the action is no longer
+  // ambiguous even without a follow-the-cursor ghost during the drag.
+  async function _flashSuccess(el) {
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return;
+    const ring = document.createElement('div');
+    ring.style.cssText =
+      'position:fixed;' +
+      'left:' + (r.left - 6) + 'px;' +
+      'top:' + (r.top - 6) + 'px;' +
+      'width:' + (r.width + 12) + 'px;' +
+      'height:' + (r.height + 12) + 'px;' +
+      'border:3px solid #10b981;' +
+      'border-radius:10px;' +
+      'box-shadow:0 0 0 6px rgba(16,185,129,0.18), 0 0 24px rgba(16,185,129,0.55);' +
+      'background:rgba(16,185,129,0.06);' +
+      'pointer-events:none;' +
+      'z-index:999995;' +
+      'opacity:0;' +
+      'transition:opacity 180ms ease-out;';
+    document.body.appendChild(ring);
+    requestAnimationFrame(() => { ring.style.opacity = '1'; });
+    await delay(420);
+    ring.style.transition = 'opacity 320ms ease-in';
+    ring.style.opacity = '0';
+    await delay(340);
+    ring.remove();
+  }
+
+  // Find the newly added descendant under targetEl after a drop, by
+  // comparing data-mirror-ids before/after.
+  function _findNewChild(targetEl, beforeIds) {
+    const after = targetEl.querySelectorAll('[data-mirror-id]');
+    for (let i = 0; i < after.length; i++) {
+      const id = after[i].getAttribute('data-mirror-id');
+      if (id && !beforeIds.has(id)) return after[i];
+    }
+    return null;
+  }
+
+  function _captureChildIds(targetEl) {
+    const set = new Set();
+    if (!targetEl) return set;
+    const all = targetEl.querySelectorAll('[data-mirror-id]');
+    for (let i = 0; i < all.length; i++) {
+      const id = all[i].getAttribute('data-mirror-id');
+      if (id) set.add(id);
+    }
+    return set;
+  }
+
   async function dropFromPalette(component, targetSel, at) {
     const targetId = resolveSelector(targetSel);
     const targetEl = document.querySelector('[data-mirror-id="' + targetId + '"]');
@@ -789,6 +843,10 @@ const MIRROR_ACTIONS_API = `
       chain = chain.atAlignmentZone(at.zone);
     }
 
+    // Capture children BEFORE the drop so we can pinpoint the new element
+    // afterwards and flash a success ring around it.
+    const beforeIds = _captureChildIds(targetEl);
+
     // 2. Visible drag: __dragTest's animation has been slowed (60 steps in
     //    video pacing ≈ 1300ms), so we fire it immediately and let the
     //    cursor traverse the same span — both arrive at the target together.
@@ -802,6 +860,12 @@ const MIRROR_ACTIONS_API = `
       throw new Error('Drop failed: ' + ((result && result.error) || 'unknown'));
     }
     await window.__dragTest.waitForCompile();
+
+    // 3. Success feedback: flash a green ring around the just-dropped element
+    //    so the viewer can clearly see *where* the drop landed.
+    const refreshedTarget = document.querySelector('[data-mirror-id="' + targetId + '"]');
+    const newChild = refreshedTarget ? _findNewChild(refreshedTarget, beforeIds) : null;
+    await _flashSuccess(newChild || refreshedTarget);
   }
 
   async function moveElement(sourceSel, targetSel, index) {
@@ -827,6 +891,12 @@ const MIRROR_ACTIONS_API = `
       throw new Error('Move failed: ' + ((result && result.error) || 'unknown'));
     }
     await window.__dragTest.waitForCompile();
+
+    // 2. Success feedback: flash a ring around the moved element at its new
+    //    spot. The element keeps its data-mirror-id across moves, so we can
+    //    look it up directly.
+    const moved = document.querySelector('[data-mirror-id="' + sourceId + '"]');
+    await _flashSuccess(moved);
   }
 
   async function dragResize(sel, position, deltaX, deltaY, _opts) {
