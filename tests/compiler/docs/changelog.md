@@ -6,24 +6,23 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ## 2026-04-25 (Komponenten & Vererbung – Thema 5)
 
-Aggressive Coverage-Tests für Inheritance-System. **1 Parser-Bug entdeckt + als
-known limitation dokumentiert** (Fix invasiv, eigene Iteration), ~55 neue Tests,
-0 Regressionen.
+Aggressive Coverage-Tests für Inheritance-System. **1 echter Parser-Bug entdeckt
+UND gefixt**, ~55 neue Tests, 0 Regressionen.
 
 ### Fixed
 
-(Keine Source-Fixes in diesem Thema — der entdeckte Bug ist tief im Parser.)
-
-### Discovered (Parser bug — known limitation, not yet fixed)
-
-- **Komma-Actions in Component-Body parsen asymmetrisch**:
+- **Komma-Actions in Component-Body parsen jetzt symmetrisch zu Instance-Body**.
+  Vorher:
   - Instance-Body: `Btn onclick toggle(), toast("p")` → 2 separate click-Events
-    (laut Thema 2 dokumentierten Verhalten)
+    (korrekt)
   - Component-Body: `Base as Btn: onclick toggle(), toast("p")` → 1 click-Event
-    (toggle), und `toast("p")` wird fälschlich als CHILD-Instance
-    `{ type: 'Instance', component: 'toast' }` interpretiert
-  - Workaround: separate Zeilen pro Event
-  - Fix: invasiv in `parseComponentBody`, in eigener Iteration angehen
+    - `toast` wurde fälschlich als phantom Child-Instance interpretiert (Bug)
+
+  Fix: `parseComponentBody()` in `compiler/parser/parser.ts` erkennt jetzt vor
+  dem Catch-All-Branch `IDENTIFIER + LPAREN + isImplicitOnclickCandidate` und
+  ruft `parseImplicitOnclick()` auf — analog zur Logik in
+  `parseInlineProperties()` für Instance-Bodies. Damit entstehen 2 click-Events
+  und keine phantom children mehr.
 
 ### Added
 

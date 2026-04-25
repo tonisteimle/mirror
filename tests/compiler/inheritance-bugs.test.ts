@@ -109,12 +109,11 @@ Btn`
     expect(events.some((e: any) => e.name === 'keydown')).toBe(true)
   })
 
-  it('E4: Known limitation — comma-actions in Component-Body parse asymmetrically', () => {
-    // KNOWN PARSER BUG: in Component-Body, `onclick X, Y` parses Y as a child
-    // instance, not a second click event (unlike Instance-Body where comma splits
-    // into two events per Thema 2). Workaround: use separate lines per event.
-    //
-    // Until the parser is fixed, this test documents the actual behavior.
+  it('E4: Comma-actions in Component-Body now parse symmetrically with Instance-Body', () => {
+    // Fixed: parseComponentBody now recognises identifier+LPAREN as an implicit
+    // onclick (analog to parseInlineProperties for instances). So
+    // `onclick toggle(), toast("p")` produces TWO click events, not one event
+    // plus a phantom toast child.
     const code = `Base as Button:
   onclick toggle(), toast("p")
 Btn as Base:
@@ -123,12 +122,13 @@ Btn`
     const ir = toIR(parse(code))
     const inst = ir.nodes[0] as any
     const clickEvents = (inst.events ?? []).filter((e: any) => e.name === 'click')
-    // Current: parent yields 1 click (toggle); toast becomes a child instance.
-    // Child adds 1 click (show). Total: 2 clicks at instance level.
-    expect(clickEvents.length).toBe(2)
+    // Parent: 2 click events (toggle, toast). Child: 1 click (show). Total: 3.
+    expect(clickEvents.length).toBe(3)
+    // No phantom child instance created from the comma-action
+    expect(inst.children.length).toBe(0)
   })
 
-  it('E4b (workaround): separate lines for multi-action events in Component-Body works', () => {
+  it('E4b: separate lines for multi-action events still works', () => {
     const code = `Base as Button:
   onclick toggle()
   onclick toast("p")

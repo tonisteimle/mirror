@@ -2701,6 +2701,25 @@ export class Parser {
         continue
       }
 
+      // Implicit onclick action: identifier followed by `(` that is a known
+      // action function (toggle/show/hide/toast/...). Mirror's instance-body
+      // parser turns `Btn toggle(), toast()` into TWO onclick events; for
+      // consistency the component-body parser does the same. Without this
+      // branch, the identifier falls through to parseInstance below and
+      // becomes a phantom child component (e.g. `Base as Btn: onclick t(), s()`
+      // would parse `s` as a child instance instead of a second onclick event).
+      if (
+        this.check('IDENTIFIER') &&
+        this.checkNext('LPAREN') &&
+        this.isImplicitOnclickCandidate(this.current().value)
+      ) {
+        const implicitEvent = this.parseImplicitOnclick()
+        if (implicitEvent) {
+          component.events.push(implicitEvent)
+          continue
+        }
+      }
+
       // Child instance (without COLON - those are handled above as slots/states)
       if (this.check('IDENTIFIER')) {
         const name = this.advance()

@@ -2,8 +2,8 @@
 
 **Status:** Abgeschlossen (2026-04-25).
 
-**Ergebnis:** 1 echter Parser-Bug entdeckt (asymmetrisches Komma-Handling in
-Component-Body), als known limitation dokumentiert. ~55 neue Tests in 11 Bereichen.
+**Ergebnis:** 1 echter Parser-Bug entdeckt UND gefixt (asymmetrisches Komma-Handling in
+Component-Body). ~55 neue Tests in 11 Bereichen.
 
 **Was gefunden wurde:**
 
@@ -19,12 +19,13 @@ Component-Body), als known limitation dokumentiert. ~55 neue Tests in 11 Bereich
 
 **Was nicht abgedeckt ist:**
 
-- **Komma-Actions in Component-Body**: `Base as Btn: onclick toggle(), toast()`
-  parst toast als Child statt als zweites Event. Workaround: separate Zeilen.
-  Parser-Fix in eigener Iteration.
 - **Slot-Inheritance** (Zag-spezifisch) — gehört zu Thema 12
 - **State-Trigger-Override** in Inheritance (Parent toggle, Child onclick)
 - **Animation-Inheritance**
+
+**Bug nachträglich gefixt:** Der ursprünglich entdeckte Parser-Bug
+(Komma-Actions in Component-Body) wurde in der gleichen Session noch behoben.
+`parseComponentBody` erkennt jetzt implicit-onclick analog zu Instance-Body.
 
 Details: `tests/compiler/docs/changelog.md` Eintrag „2026-04-25 (Komponenten & Vererbung – Thema 5)".
 
