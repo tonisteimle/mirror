@@ -4,6 +4,72 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Properties Deep Coverage – Thema 3 Iteration 3)
+
+Auf User-Hinweis (70% Coverage zu wenig) ein dritter, systematischer Pass.
+Resultat: **3 weitere echte Bugs gefixt** (alle in Property-Resolution),
+~122 neue Tests in 11 systematischen Bereichen.
+
+### Fixed
+
+- **Unit-Verlust für Prozent-Werte**: `Frame w 50%` produzierte
+  `width: 50px` (Einheit wurde vom Schema-Pfad zu `px` umgeschrieben).
+  Auch `pad 50%`, `mar 25%` etc. waren betroffen. Fix in
+  `compiler/schema/ir-helpers.ts`: `schemaPropertyToCSS()` extrahiert die
+  explicit unit aus dem regex-match und ersetzt schema-emittiertes `px` mit
+  der User-Einheit (`%`). Schema's hardcoded `${n}px` wird nicht mehr blind
+  übernommen wenn User explizite Einheit angab.
+
+- **`mar`-Alias für margin nicht in PROPERTY_TO_CSS-Map**: Token-References
+  wie `Frame mar $space` produzierten gar kein margin (kein style, kein
+  Error). Fix: `mar: 'margin'` zu `PROPERTY_TO_CSS` ergänzt.
+
+- **`mar`-Alias nicht im directional/multi-value margin-Pfad**: Sowohl
+  `Frame mar 0 0 4 0` (4-Wert) als auch `Frame mar left 8` (directional)
+  wurden komplett verschluckt. Fix: `'mar'` im Branch-Check
+  `(name === 'margin' || name === 'm' || name === 'mar')` und in
+  `NEEDS_PX_PROPERTIES`-Set ergänzt. Hat 5 Tutorial-Snapshot-Tests
+  „repariert" (die zuvor das fehlerhafte Verhalten festhielten).
+
+### Added
+
+- `tests/compiler/properties-deep-coverage.test.ts` (122 Tests in 11 Bereichen):
+  - **1. Alias-Matrix** (~37 Tests): jede der ~50 Aliase aus
+    `PROPERTY_TO_CSS` testet, dass die korrekte CSS-Property + Wert mit
+    `px`-Einheit erzeugt wird (sizing, spacing, colors, border, typography,
+    effects).
+  - **2. Token×Property Matrix** (~16 Tests): Token-References für jede
+    der wichtigsten Property-Klassen (bg/col/boc, pad/mar/gap variants,
+    w/h/min/max, border/radius, font-size, opacity).
+  - **3. Einheiten-Coverage**: %, vh, vw, vmin, vmax — sowohl single-value
+    als auch mixed multi-value (`pad 8 50% 16 25%`).
+  - **4. Multi-Value pro Property-Type**: 1/2/3/4/5+ Werte für padding,
+    border-Varianten, single-value Properties mit Excess.
+  - **5. Aspect-Ratio**: `aspect square`, `aspect video`, `aspect 16/9`,
+    `aspect 4/3`.
+  - **6. Property × State Matrix**: hover/focus/active/disabled mit
+    bg/col/opacity/rad/bor.
+  - **7. Conditional/Ternary für viele Property-Types**: bg/w/opacity/pad/rad
+    mit Ternary; final DOM-Output verifiziert Marker-Resolution.
+  - **8. Properties in Each-Loop-Item-Reference** (`bg $item.color`).
+  - **9. Negative-Werte** für mar, pad-direction, gap, z-index.
+  - **10. Boolean-Properties**: 15 standalone keywords (hor, ver, center,
+    spread, wrap, hidden, visible, clip, truncate, italic, underline,
+    uppercase, lowercase, shrink, grow), Idempotenz-Check.
+  - **11. Token vs Literal Cascades**: letzter wins in beiden Richtungen,
+    multiple Token-Refs in einer Property-List.
+
+5070 Compiler-Tests grün, 5 Tutorial-Snapshots aktualisiert (alte
+Snapshots dokumentierten den jetzt gefixten margin-Bug).
+
+### Coverage-Status
+
+Properties-Coverage auf ~85% gehoben (vorher 70%). Verbleibende Lücken:
+Komputierte Expressions (`w 100 + 50` als known limitation), self-
+referential Tokens (Thema 6 abgedeckt).
+
+---
+
 ## 2026-04-25 (Tokens & Property-Sets – Thema 6)
 
 Aggressive Provokationen für Token-Definition-Varianten und Property-Set-

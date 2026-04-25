@@ -1,10 +1,30 @@
 # Thema 3: Properties & Aliases
 
-**Status:** Abgeschlossen (2026-04-25).
+**Status:** Abgeschlossen (2026-04-25, 3 Iterationen).
 
-Keine echten Bugs gefunden. ~46 neue Tests als Regressionsschutz. 1 dokumentierte
-Limitation. 413 Property-bezogene Tests grün. Details:
-`tests/compiler/docs/changelog.md` Eintrag „2026-04-25 (Properties & Aliases)".
+**Iteration 1** (~46 Tests): Coverage-Tests, keine Bugs gefunden — schien zu robust.
+
+**Iteration 2 (Deep)** (~40 Tests): aggressivere Hypothesen, **2 Bugs gefixt**
+(`bor t 1` ohne currentColor; State-Property-Aliase nur für hover) +
+Conditional-Pipeline dokumentiert.
+
+**Iteration 3 (Deep Coverage)** (~122 Tests): systematische Property-Matrizen
+(Alias-Matrix, Token×Property, Einheiten, Multi-Value, States, Negative,
+Boolean, Token-vs-Literal-Cascade). **3 weitere Bugs gefixt**:
+
+1. `Frame w 50%` produzierte `width: 50px` statt `50%` — explicit unit
+   wurde vom Schema-Pfad zu `px` umgeschrieben. Fix in
+   `schemaPropertyToCSS()`: explicit unit aus regex-match preservieren.
+2. `Frame mar $space` produzierte gar kein margin — `mar` fehlte in
+   `PROPERTY_TO_CSS`-Map. Fix: `mar: 'margin'` ergänzt.
+3. `Frame mar 0 0 4 0` produzierte gar kein margin — `mar` fehlte in
+   `(name === 'margin' || name === 'm')`-Check für directional/multi-value
+   margin und in `NEEDS_PX_PROPERTIES`. Fix: alle drei Stellen ergänzt. Hat
+   5 Tutorial-Snapshot-Tests „repariert" (die zuvor das fehlerhafte
+   Verhalten dokumentierten).
+
+**Coverage-Status:** ~85% der Property-Edge-Cases. Insgesamt ~210 neue
+Tests, 7 Bugs gefixt. Verbleibende Lücken siehe Changelog.
 
 ## 1. Scope
 

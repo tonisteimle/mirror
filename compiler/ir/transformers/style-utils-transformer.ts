@@ -38,6 +38,7 @@ const NEEDS_PX_PROPERTIES = new Set([
   'pad',
   'p',
   'margin',
+  'mar',
   'm',
   'gap',
   'g',

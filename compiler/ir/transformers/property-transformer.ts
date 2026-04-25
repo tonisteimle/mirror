@@ -261,7 +261,7 @@ export function propertyToCSS(
   }
 
   // Handle directional margin: margin left 8, margin top 16 bottom 24, margin x 16
-  if ((name === 'margin' || name === 'm') && values.length >= 2) {
+  if ((name === 'margin' || name === 'm' || name === 'mar') && values.length >= 2) {
     const directions = [
       'left',
       'right',

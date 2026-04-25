@@ -25206,6 +25206,10 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
                     "property": "align-items",
                     "value": "flex-start",
                   },
+                  {
+                    "property": "margin",
+                    "value": "2px 2px 2px 22px",
+                  },
                 ],
                 "tag": "div",
               },
@@ -28918,6 +28922,10 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
               "property": "background",
               "value": "#333",
             },
+            {
+              "property": "margin",
+              "value": "8px 0px",
+            },
           ],
           "tag": "hr",
         },
@@ -30940,6 +30948,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 6 1`] = `
                 "property": "border-radius",
                 "value": "6px",
               },
+              {
+                "property": "margin",
+                "value": "0px 0px 4px 0px",
+              },
             ],
             "tag": "div",
           },
@@ -31216,6 +31228,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 8 1`] = `
                 "property": "border-radius",
                 "value": "6px",
               },
+              {
+                "property": "margin",
+                "value": "0px 0px 4px 0px",
+              },
             ],
             "tag": "div",
           },
@@ -31408,6 +31424,10 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 9 1`] = `
             {
               "property": "gap",
               "value": "4px",
+            },
+            {
+              "property": "margin",
+              "value": "8px 0px 0px 0px",
             },
           ],
           "tag": "div",

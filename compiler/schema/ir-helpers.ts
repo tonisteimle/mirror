@@ -135,6 +135,7 @@ export const PROPERTY_TO_CSS: Record<string, string> = {
   pad: 'padding',
   p: 'padding',
   margin: 'margin',
+  mar: 'margin',
   m: 'margin',
   gap: 'gap',
   g: 'gap',
@@ -305,23 +306,25 @@ export function schemaPropertyToCSS(
     }
   }
 
-  // Numeric string (e.g., "16" or "16px")
+  // Numeric string (e.g., "16" or "16px" or "50%")
   if (typeof value === 'string' && prop.numeric) {
     const numMatch = value.match(/^(-?\d+(?:\.\d+)?)(px|%)?$/)
     if (numMatch) {
       const num = parseFloat(numMatch[1])
-      // Use explicit unit from match, or schema's unit, or default to 'px'
-      // Empty string unit means unitless (e.g., z-index, opacity)
-      const schemaUnit = prop.numeric.unit
-      const unit = numMatch[2] || (schemaUnit !== undefined ? schemaUnit : 'px')
-      // If schema returns the value correctly, use it directly
+      const explicitUnit = numMatch[2]
       const cssOutput = prop.numeric.css(num)
       return {
-        styles: cssOutput.map(c => ({
-          property: c.property,
-          // Use schema's CSS output directly - it handles units correctly
-          value: c.value,
-        })),
+        styles: cssOutput.map(c => {
+          // Schema's css() function hard-codes the unit (usually 'px'). When the
+          // user wrote an explicit unit (e.g. `w 50%` → unit '%'), preserve it
+          // instead of overriding to px. We swap any trailing 'px' on the
+          // schema-emitted value with the user's unit.
+          if (explicitUnit && explicitUnit !== 'px' && typeof c.value === 'string') {
+            const replaced = c.value.replace(/(\d+(?:\.\d+)?)px\b/g, `$1${explicitUnit}`)
+            return { property: c.property, value: replaced }
+          }
+          return { property: c.property, value: c.value }
+        }),
         handled: true,
       }
     }
