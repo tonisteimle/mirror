@@ -789,10 +789,15 @@ const MIRROR_ACTIONS_API = `
       chain = chain.atAlignmentZone(at.zone);
     }
 
-    // 2. Visible drag: cursor glides to the drop point, the API call fires
-    //    near the end so the dropped element materialises *as* the cursor
-    //    arrives (no payload appearing before the pointer).
-    const result = await withVisibleDrag(endPoint, () => chain.execute());
+    // 2. Visible drag: __dragTest's animation has been slowed (60 steps in
+    //    video pacing ≈ 1300ms), so we fire it immediately and let the
+    //    cursor traverse the same span — both arrive at the target together.
+    const result = await withVisibleDrag(endPoint, () => chain.execute(), {
+      moveMs: 1500,
+      triggerFrac: 0.05,
+      preHoldMs: 240,
+      settleMs: 320,
+    });
     if (!result || !result.success) {
       throw new Error('Drop failed: ' + ((result && result.error) || 'unknown'));
     }
@@ -812,7 +817,12 @@ const MIRROR_ACTIONS_API = `
 
     const endPoint = dropChildIndexPoint(targetEl, index);
     const chain = window.__dragTest.moveElement(sourceId).toContainer(targetId).atIndex(index);
-    const result = await withVisibleDrag(endPoint, () => chain.execute());
+    const result = await withVisibleDrag(endPoint, () => chain.execute(), {
+      moveMs: 1500,
+      triggerFrac: 0.05,
+      preHoldMs: 240,
+      settleMs: 320,
+    });
     if (!result || !result.success) {
       throw new Error('Move failed: ' + ((result && result.error) || 'unknown'));
     }
@@ -2050,11 +2060,20 @@ export class DemoRunner {
     await this.evaluate(apiCode)
     await this.evaluate(`window.__mirrorDemo.init(${JSON.stringify(config)})`)
 
-    // Single-cursor mode: hide __dragTest's own cursor while demo runs
+    // Single-cursor mode: hide __dragTest's own cursor while demo runs.
+    // Also slow the underlying palette/move drag animation: default is 15
+    // steps × 20ms = 300ms which is too fast for video pacing. We bump it
+    // so the dragged payload visibly travels alongside the demo cursor.
+    const dragSteps = config.pacing === 'instant' ? 8 : 60
+    const dragStepDelay = config.pacing === 'instant' ? 4 : 22
     await this.evaluate(`
       (function() {
         if (window.__dragTest && window.__dragTest.setAnimation) {
-          window.__dragTest.setAnimation({ showCursor: false });
+          window.__dragTest.setAnimation({
+            showCursor: false,
+            steps: ${dragSteps},
+            stepDelay: ${dragStepDelay},
+          });
         }
       })()
     `)
