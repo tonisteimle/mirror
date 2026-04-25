@@ -71,8 +71,8 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 14  | Input Mask & Two-way Binding                           | `11-eingabe.html`                     | abgeschlossen          | [14-input-mask.md](14-input-mask.md)                       |
 | 15  | Tables / Charts                                        | `14-tabellen.html`, `15-charts.html`  | abgeschlossen          | [15-tables-charts.md](15-tables-charts.md)                 |
 | 16  | Canvas / Device Presets / Custom Icons                 | `01-elemente.html`                    | abgeschlossen          | [16-canvas-elemente.md](16-canvas-elemente.md)             |
-| 17  | SourceMap (bidirektional)                              | Internals                             | offen                  | —                                                          |
-| 18  | Validator                                              | Internals                             | offen                  | —                                                          |
+| 17  | SourceMap (bidirektional)                              | Internals                             | abgeschlossen          | [17-source-map.md](17-source-map.md)                       |
+| 18  | Validator                                              | Internals                             | abgeschlossen          | [18-validator.md](18-validator.md)                         |
 | 19  | Robustheit (Whitespace, Strings, Kommentare, Fuzz)     | Internals                             | offen                  | —                                                          |
 | 20  | Performance / Stress / Skalierbarkeit                  | Internals                             | offen                  | —                                                          |
 | 21  | React-Backend (NEU — 0% coverage)                      | offen                                 | —                      |

@@ -4,6 +4,36 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Themen 17 + 18 — SourceMap + Validator Internals abgeschlossen)
+
+### Thema 17 (SourceMap)
+
+`tests/compiler/ir-source-map-coverage.test.ts` — 37 zusätzliche Tests
+zur bestehenden `ir-source-map.test.ts` (44 Tests). Geschlossen:
+`getSiblings`/`getNextSibling`/`getPreviousSibling`/`getParent`/
+`isDescendantOf` (mit Cycle-Schutz), `getDefinitionAtLine`, `getRootNodes`,
+`getMainRoot` (App-Präferenz × 3 Varianten), `calculatePropertyPosition`,
+`SourceMapBuilder` no-op-Edge-Case, plus Integration-Tests parse → IR →
+SourceMap. Doku: [themen/17-source-map.md](themen/17-source-map.md).
+
+### Thema 18 (Validator)
+
+`tests/compiler/validator-error-codes-completeness.test.ts` — 7 Tests
+für zuvor nicht abgedeckte Codes (E020/E021/E022 Parser-Mapping, E203
+MISSING_ACTION, E301 INVALID_TARGET).
+
+**Audit-Finding:** 9 Error-Codes sind in `types.ts` definiert, aber
+**niemals** von `validator.ts` emittiert (Dead Codes — vorbereitet für
+zukünftige Validierungs-Regeln, nicht verdrahtet): E102 MISSING_VALUE,
+E103 INVALID_DIRECTION, E106 INVALID_KEYWORD, E111 INVALID_COMBINATION,
+E302 MISSING_TARGET, E401 DUPLICATE_STATE, W502 INVALID_TOKEN_TYPE,
+E600 INVALID_NESTING, E601 DEFINITION_AFTER_USE.
+
+Total Validator-Coverage: 559 + 7 = 566 Tests. Doku:
+[themen/18-validator.md](themen/18-validator.md).
+
+---
+
 ## 2026-04-25 (Thema 11 — Slots / Kind-Komponenten, verteilt über Tutorials)
 
 `tests/compiler/tutorial/tutorial-11-slots-aspects.test.ts` — 5 Tests + 1
