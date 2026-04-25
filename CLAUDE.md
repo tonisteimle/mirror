@@ -1214,6 +1214,56 @@ escape, enter, space, tab, backspace, delete, arrow-up, arrow-down, arrow-left, 
 
 <!-- GENERATED:DSL-PROPERTIES:END -->
 
+## Demos (Spec-by-Example E2E)
+
+Demos sind in `tools/test-runner/demo/` und nutzen den existierenden CDP-
+Test-Runner. Sie sind gleichzeitig **Tutorials, Video-Skripte und E2E-Tests**:
+ein Skript zeigt einen User-Workflow, validiert nach jedem Schritt sowohl
+den Editor-Code als auch das gerenderte DOM, und kann sowohl headless (CI)
+als auch headed (Video) laufen.
+
+**Schnelleinstieg:**
+
+```bash
+npm run studio              # Studio-Server (Terminal 1)
+npm run test:demos          # Suite headless, alle Demos (Terminal 2)
+npm run test:demos:headed   # Suite mit sichtbarem Browser
+```
+
+**Vorhandene Demos** (`tools/test-runner/demo/scripts/`):
+
+| Demo                      | Zeigt                                               |
+| ------------------------- | --------------------------------------------------- |
+| `visual-editing.ts`       | Drag/Resize/Padding/Margin/Inline-Edit/Reorder      |
+| `property-workflow.ts`    | Cross-Panel Preview ↔ Properties ↔ Code             |
+| `ai-assisted-card.ts`     | `--`-Prompt → AI-generiertes UI → Property-Tweaking |
+| `token-system.ts`         | Multi-File `tokens.tok` + `$token`-Resolution       |
+| `responsive-design.ts`    | `canvas mobile/tablet/desktop` Presets              |
+| `state-interactions.ts`   | Hover/active States + computed-style                |
+| `component-extraction.ts` | `components.com` + 3× Card-Verwendung               |
+
+**Validation pro Demo-Schritt:**
+
+- `expectCode` — Editor-Source strict gegen Snapshot
+- `expectCodeMatches` — Editor-Source gegen RegExp (für AI-Output)
+- `expectDom` — Computed-Style/Layout (tag-spezialisiertes Schema)
+- `--snapshot-baseline=DIR` — Pixel-Diff gegen Baseline-PNGs
+
+**Iteration:**
+
+- `--from-step=N` / `--until-step=N` — schnell zum Problem-Step springen
+- `--step` — interaktiv pausen nach jedem Schritt (TTY)
+- `--watch` — Re-run on file save
+
+**Volle User-Doc:** `tools/test-runner/demo/README.md`
+**Architektur/Roadmap:** `docs/concepts/demo-infrastructure.md`
+**Headed-Verification-Checkliste:** `docs/concepts/demo-headed-verification.md`
+
+> ⚠️ **Headless validiert** Editor-Source und Computed-Style. **Cursor-
+> Animation, Pacing, Single-Cursor-Effekt, Highlights, Keystroke-Overlay**
+> sind nur im headed-Lauf sichtbar — vor Major-Releases die Headed-
+> Verification-Checkliste durchlaufen.
+
 ## Tests
 
 Tests in `tests/`:

@@ -495,6 +495,539 @@ function getInlineDemoAPI(timings: ActionTimings): string {
 }
 
 // =============================================================================
+// Mirror Actions API (injected separately, alongside the demo cursor API)
+//
+// Provides high-level helpers used by dropFromPalette / moveElement /
+// dragResize / dragPadding / dragMargin / inlineEdit / selectInPreview /
+// setProperty / pickColor / aiPrompt. Centralizes cursor sync + selector
+// resolution + DOM snapshotting + AI mock listener.
+// =============================================================================
+
+const MIRROR_ACTIONS_API = `
+(function() {
+  if (window.__mirrorActions) return;
+
+  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+  // ===========================================================================
+  // Selector resolution (E1) — strukturierte Objekte → nodeId
+  // ===========================================================================
+
+  function _allMirrorElements() {
+    return Array.from(document.querySelectorAll('#preview [data-mirror-id]'));
+  }
+
+  function _matchByText(needle, all) {
+    if (needle instanceof RegExp) {
+      return all.filter(el => needle.test(el.textContent || ''));
+    }
+    return all.filter(el => (el.textContent || '').trim() === needle);
+  }
+
+  function _matchByPath(path) {
+    const segments = path.split('>').map(s => s.trim()).filter(Boolean);
+    if (segments.length === 0) return [];
+    const preview = document.getElementById('preview');
+    if (!preview) return [];
+    const matchSegment = (el, seg) => {
+      const lower = seg.toLowerCase();
+      if (el.tagName.toLowerCase() === lower) return true;
+      if ((el.getAttribute('data-mirror-name') || '').toLowerCase() === lower) return true;
+      return false;
+    };
+    let candidates = Array.from(preview.querySelectorAll('[data-mirror-id]'));
+    candidates = candidates.filter(el => matchSegment(el, segments[0]));
+    for (let i = 1; i < segments.length; i++) {
+      const next = [];
+      for (const c of candidates) {
+        const descendants = Array.from(c.querySelectorAll('[data-mirror-id]'));
+        for (const d of descendants) {
+          if (matchSegment(d, segments[i])) next.push(d);
+        }
+      }
+      candidates = next;
+    }
+    return candidates;
+  }
+
+  function _selectorDescription(sel) { return JSON.stringify(sel); }
+
+  function resolveSelector(sel) {
+    if (!sel || typeof sel !== 'object') {
+      throw new Error('Selector must be a structured object, got: ' + JSON.stringify(sel));
+    }
+    if ('byId' in sel) {
+      const el = document.querySelector('[data-mirror-id="' + sel.byId + '"]');
+      if (!el) throw new Error('Selector ' + _selectorDescription(sel) + ' matched 0 elements');
+      return sel.byId;
+    }
+    if ('byTestId' in sel) {
+      const el = document.querySelector('[data-test-id="' + sel.byTestId + '"][data-mirror-id]');
+      if (!el) throw new Error('Selector ' + _selectorDescription(sel) + ' matched 0 elements');
+      return el.getAttribute('data-mirror-id');
+    }
+    let matches = [];
+    if ('byText' in sel) {
+      matches = _matchByText(sel.byText, _allMirrorElements());
+    } else if ('byTag' in sel) {
+      matches = _allMirrorElements().filter(el => el.tagName.toLowerCase() === sel.byTag.toLowerCase());
+    } else if ('byRole' in sel) {
+      matches = _allMirrorElements().filter(el => (el.getAttribute('role') || '').toLowerCase() === sel.byRole.toLowerCase());
+    } else if ('byPath' in sel) {
+      matches = _matchByPath(sel.byPath);
+    } else {
+      throw new Error('Unknown selector kind: ' + _selectorDescription(sel));
+    }
+    const nth = (sel && 'nth' in sel) ? sel.nth : undefined;
+    if (matches.length === 0) {
+      throw new Error('Selector ' + _selectorDescription(sel) + ' matched 0 elements');
+    }
+    if (matches.length > 1 && nth === undefined) {
+      throw new Error('Selector ' + _selectorDescription(sel) + ' matched ' + matches.length +
+        ' elements; specify nth (0-based) to disambiguate');
+    }
+    const target = nth === undefined ? matches[0] : matches[nth];
+    if (!target) {
+      throw new Error('Selector ' + _selectorDescription(sel) + ' nth=' + nth +
+        ' out of range (matched ' + matches.length + ')');
+    }
+    const id = target.getAttribute('data-mirror-id');
+    if (!id) throw new Error('Resolved element has no data-mirror-id: ' + _selectorDescription(sel));
+    return id;
+  }
+
+  // ===========================================================================
+  // Cursor sync — animate demo cursor in parallel with real Studio op
+  // ===========================================================================
+
+  function dropChildIndexPoint(targetEl, index) {
+    const children = Array.from(targetEl.children)
+      .filter(el => el.hasAttribute && el.hasAttribute('data-mirror-id'));
+    if (children.length === 0) {
+      const r = targetEl.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }
+    if (index >= children.length) {
+      const r = children[children.length - 1].getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.bottom + 8 };
+    }
+    const r = children[index].getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top - 4 };
+  }
+
+  async function withCursorSync(endPoint, durationMs, realOpFn) {
+    const cursor = window.__mirrorDemo && window.__mirrorDemo.cursor;
+    const ops = [realOpFn()];
+    if (cursor && endPoint) {
+      ops.unshift(cursor.moveTo(endPoint, durationMs));
+    }
+    const results = await Promise.all(ops);
+    return cursor && endPoint ? results[1] : results[0];
+  }
+
+  // ===========================================================================
+  // Mirror actions
+  // ===========================================================================
+
+  async function dropFromPalette(component, targetSel, at) {
+    const targetId = resolveSelector(targetSel);
+    const targetEl = document.querySelector('[data-mirror-id="' + targetId + '"]');
+    if (!targetEl) throw new Error('Target ' + targetId + ' not found');
+    let endPoint;
+    let chain = window.__dragTest.fromPalette(component).toContainer(targetId);
+    if (at.kind === 'index') {
+      endPoint = dropChildIndexPoint(targetEl, at.index);
+      chain = chain.atIndex(at.index);
+    } else {
+      const r = targetEl.getBoundingClientRect();
+      endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      chain = chain.atAlignmentZone(at.zone);
+    }
+    const result = await withCursorSync(endPoint, 500, () => chain.execute());
+    if (!result || !result.success) {
+      throw new Error('Drop failed: ' + ((result && result.error) || 'unknown'));
+    }
+    await window.__dragTest.waitForCompile();
+  }
+
+  async function moveElement(sourceSel, targetSel, index) {
+    const sourceId = resolveSelector(sourceSel);
+    const targetId = resolveSelector(targetSel);
+    const targetEl = document.querySelector('[data-mirror-id="' + targetId + '"]');
+    if (!targetEl) throw new Error('Target ' + targetId + ' not found');
+    const endPoint = dropChildIndexPoint(targetEl, index);
+    const chain = window.__dragTest.moveElement(sourceId).toContainer(targetId).atIndex(index);
+    const result = await withCursorSync(endPoint, 500, () => chain.execute());
+    if (!result || !result.success) {
+      throw new Error('Move failed: ' + ((result && result.error) || 'unknown'));
+    }
+    await window.__dragTest.waitForCompile();
+  }
+
+  async function dragResize(sel, position, deltaX, deltaY, opts) {
+    const nodeId = resolveSelector(sel);
+    window.__dragTest.selectNode(nodeId);
+    await delay(180);
+    const handle = document.querySelector('.visual-overlay .resize-handles .resize-handle[data-position="' + position + '"]');
+    if (!handle) throw new Error('Resize handle not found for ' + position);
+    const r = handle.getBoundingClientRect();
+    const endPoint = { x: r.left + r.width / 2 + deltaX, y: r.top + r.height / 2 + deltaY };
+    await withCursorSync(endPoint, 350, () =>
+      window.__mirrorTest.interact.dragResizeHandle(nodeId, position, deltaX, deltaY)
+    );
+    await delay(120);
+  }
+
+  async function dragPadding(sel, side, delta, mode, _bypassSnap) {
+    const nodeId = resolveSelector(sel);
+    window.__dragTest.selectNode(nodeId);
+    await delay(120);
+    await window.__mirrorTest.interact.enterPaddingMode(nodeId);
+    const handle = document.querySelector('.padding-handle-' + side);
+    if (!handle) throw new Error('Padding handle not visible for ' + side);
+    const r = handle.getBoundingClientRect();
+    let endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    if (side === 'top')        endPoint.y += delta;
+    else if (side === 'bottom') endPoint.y -= delta;
+    else if (side === 'left')   endPoint.x += delta;
+    else                        endPoint.x -= delta;
+    const opts = mode === 'all' ? { shift: true } : mode === 'axis' ? { alt: true } : undefined;
+    await withCursorSync(endPoint, 250, () =>
+      window.__mirrorTest.interact.dragPaddingHandle(side, delta, opts)
+    );
+    await delay(120);
+    await window.__mirrorTest.interact.exitPaddingMode();
+  }
+
+  async function dragMargin(sel, side, delta, mode, _bypassSnap) {
+    const nodeId = resolveSelector(sel);
+    window.__dragTest.selectNode(nodeId);
+    await delay(120);
+    await window.__mirrorTest.interact.enterMarginMode(nodeId);
+    const handle = document.querySelector('.margin-handle-' + side);
+    if (!handle) throw new Error('Margin handle not visible for ' + side);
+    const r = handle.getBoundingClientRect();
+    let endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    if (side === 'top')        endPoint.y -= delta;
+    else if (side === 'bottom') endPoint.y += delta;
+    else if (side === 'left')   endPoint.x -= delta;
+    else                        endPoint.x += delta;
+    const opts = mode === 'all' ? { shift: true } : mode === 'axis' ? { alt: true } : undefined;
+    await withCursorSync(endPoint, 250, () =>
+      window.__mirrorTest.interact.dragMarginHandle(side, delta, opts)
+    );
+    await delay(120);
+    await window.__mirrorTest.interact.exitMarginMode();
+  }
+
+  async function inlineEdit(sel, text, charDelay) {
+    const nodeId = resolveSelector(sel);
+    const cd = (typeof charDelay === 'number') ? charDelay : 60;
+    if (window.__mirrorDemo && window.__mirrorDemo.cursor) {
+      const el = document.querySelector('[data-mirror-id="' + nodeId + '"]');
+      if (el) {
+        const r = el.getBoundingClientRect();
+        await window.__mirrorDemo.cursor.moveTo({ x: r.left + r.width / 2, y: r.top + r.height / 2 }, 250);
+        window.__mirrorDemo.cursor.showClickEffect();
+        await delay(120);
+        window.__mirrorDemo.cursor.showClickEffect();
+        await delay(180);
+      }
+    }
+    const controller = window.__mirrorStudio__ && window.__mirrorStudio__.inlineEdit;
+    if (!controller) throw new Error('InlineEditController not available');
+    if (!controller.startEdit(nodeId)) throw new Error('startEdit returned false for ' + nodeId);
+
+    let input = null;
+    for (let i = 0; i < 30; i++) {
+      input = document.querySelector('.inline-edit-input');
+      if (input) break;
+      await delay(30);
+    }
+    if (!input) throw new Error('inline-edit-input did not appear');
+
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await delay(120);
+    for (const ch of text) {
+      input.value += ch;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      await delay(cd);
+    }
+    await delay(200);
+    if (typeof controller.endEdit === 'function') {
+      controller.endEdit(true);
+    } else {
+      input.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Enter', code: 'Enter', bubbles: true, cancelable: true,
+      }));
+    }
+    await delay(300);
+  }
+
+  // === Property-Panel actions (B1) ===
+
+  async function selectInPreview(sel) {
+    const nodeId = resolveSelector(sel);
+    const el = document.querySelector('[data-mirror-id="' + nodeId + '"]');
+    if (!el) throw new Error('selectInPreview: element ' + nodeId + ' not in DOM');
+    const r = el.getBoundingClientRect();
+    const endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    await withCursorSync(endPoint, 350, async () => {
+      window.__dragTest.selectNode(nodeId);
+      await delay(150);
+    });
+  }
+
+  function _findPropertyInput(propName) {
+    const sel = '#property-panel input[data-prop="' + propName + '"], ' +
+                '#property-panel select[data-prop="' + propName + '"]';
+    const input = document.querySelector(sel);
+    if (!input) {
+      throw new Error('Property field ' + JSON.stringify(propName) + ' not visible — ' +
+        'is the right element selected and the section open?');
+    }
+    return input;
+  }
+
+  async function setProperty(sel, propName, value) {
+    await selectInPreview(sel);
+    const input = _findPropertyInput(propName);
+    const r = input.getBoundingClientRect();
+    const endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    if (input.tagName.toLowerCase() === 'select') {
+      await withCursorSync(endPoint, 250, async () => {
+        input.focus();
+        input.value = value;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        await delay(100);
+        input.blur();
+      });
+    } else {
+      await withCursorSync(endPoint, 250, async () => {
+        input.focus();
+        input.select();
+        await delay(60);
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        await delay(100);
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'Enter', code: 'Enter', bubbles: true, cancelable: true,
+        }));
+        await delay(80);
+        input.blur();
+      });
+    }
+    await delay(180);
+  }
+
+  async function pickColor(sel, propName, color) {
+    await selectInPreview(sel);
+    const trigger = document.querySelector('#property-panel [data-color-prop="' + propName + '"]');
+    if (!trigger) {
+      throw new Error('pickColor: color trigger for ' + JSON.stringify(propName) +
+        ' not visible — is the right element selected?');
+    }
+    const triggerRect = trigger.getBoundingClientRect();
+    await withCursorSync(
+      { x: triggerRect.left + triggerRect.width / 2, y: triggerRect.top + triggerRect.height / 2 },
+      250,
+      async () => { trigger.click(); await delay(220); }
+    );
+    document.body.click();
+    await delay(150);
+    const studio = window.__mirrorStudio__;
+    const panel = studio && studio.propertyPanel;
+    if (!panel || typeof panel.changeProperty !== 'function') {
+      throw new Error('pickColor: studio.propertyPanel.changeProperty not available');
+    }
+    panel.changeProperty(propName, color);
+    await delay(450);
+  }
+
+  // === DOM snapshot (E2) ===
+
+  const DOM_SCHEMA = {
+    '*': [
+      'tag', 'text', 'visible',
+      'width', 'height',
+      'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+      'marginTop', 'marginRight', 'marginBottom', 'marginLeft',
+      'color', 'background',
+      'childCount', 'layout',
+    ],
+    'button': ['disabled'],
+    'img':    ['src', 'alt'],
+    'input':  ['type', 'placeholder', 'value', 'disabled'],
+  };
+
+  function _rgbToHex(rgb) {
+    if (!rgb) return '';
+    if (rgb[0] === '#' || !rgb.startsWith('rgb')) return rgb;
+    const m = rgb.match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?\\s*\\)/);
+    if (!m) return rgb;
+    const r = parseInt(m[1], 10), g = parseInt(m[2], 10), b = parseInt(m[3], 10);
+    const a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+    const hex = '#' + [r, g, b].map(n => n.toString(16).padStart(2, '0')).join('');
+    if (a < 1) {
+      const ah = Math.round(a * 255).toString(16).padStart(2, '0');
+      return hex + ah;
+    }
+    return hex;
+  }
+
+  function _layoutInfo(el, style) {
+    const display = style.display;
+    if (display !== 'flex' && display !== 'inline-flex') return undefined;
+    const direction = (style.flexDirection || 'row').startsWith('row') ? 'horizontal' : 'vertical';
+    const gap = parseInt(style.gap || '0', 10);
+    const j = style.justifyContent;
+    const a = style.alignItems;
+    let align = 'start';
+    if (j === 'center' && a === 'center') align = 'center';
+    else if (j === 'space-between') align = 'spread';
+    else if (j === 'flex-end' || a === 'flex-end') align = 'end';
+    return { direction: direction, gap: gap, align: align };
+  }
+
+  function snapshotElement(nodeId, extras) {
+    const el = document.querySelector('[data-mirror-id="' + nodeId + '"]');
+    if (!el) throw new Error('snapshotElement: not found ' + nodeId);
+    const style = window.getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    const tag = el.tagName.toLowerCase();
+    const tagExtras = DOM_SCHEMA[tag] || [];
+    const fields = [].concat(DOM_SCHEMA['*'], tagExtras, extras || []);
+    const out = {};
+    for (const f of fields) {
+      switch (f) {
+        case 'tag':           out.tag = tag; break;
+        case 'text':          out.text = (el.textContent || '').trim(); break;
+        case 'visible':       out.visible = rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none'; break;
+        case 'width':         out.width = Math.round(rect.width); break;
+        case 'height':        out.height = Math.round(rect.height); break;
+        case 'paddingTop':    out.paddingTop = parseInt(style.paddingTop || '0', 10); break;
+        case 'paddingRight':  out.paddingRight = parseInt(style.paddingRight || '0', 10); break;
+        case 'paddingBottom': out.paddingBottom = parseInt(style.paddingBottom || '0', 10); break;
+        case 'paddingLeft':   out.paddingLeft = parseInt(style.paddingLeft || '0', 10); break;
+        case 'marginTop':     out.marginTop = parseInt(style.marginTop || '0', 10); break;
+        case 'marginRight':   out.marginRight = parseInt(style.marginRight || '0', 10); break;
+        case 'marginBottom':  out.marginBottom = parseInt(style.marginBottom || '0', 10); break;
+        case 'marginLeft':    out.marginLeft = parseInt(style.marginLeft || '0', 10); break;
+        case 'color':         out.color = _rgbToHex(style.color); break;
+        case 'background':    out.background = _rgbToHex(style.backgroundColor); break;
+        case 'childCount':    out.childCount = Array.from(el.children).filter(c => c.hasAttribute && c.hasAttribute('data-mirror-id')).length; break;
+        case 'layout':        { const li = _layoutInfo(el, style); if (li) out.layout = li; break; }
+        case 'disabled':      out.disabled = el.disabled === true; break;
+        case 'src':           out.src = el.getAttribute('src') || ''; break;
+        case 'alt':           out.alt = el.getAttribute('alt') || ''; break;
+        case 'type':          out.type = el.getAttribute('type') || ''; break;
+        case 'placeholder':   out.placeholder = el.getAttribute('placeholder') || ''; break;
+        case 'value':         out.value = ('value' in el) ? el.value : ''; break;
+        default:
+          if (f in style) out[f] = style[f];
+          break;
+      }
+    }
+    return out;
+  }
+
+  function snapshotAllByPreviewOrder() {
+    const preview = document.getElementById('preview');
+    if (!preview) return [];
+    const els = preview.querySelectorAll('[data-mirror-id]');
+    const out = [];
+    for (const el of els) {
+      const id = el.getAttribute('data-mirror-id');
+      out.push({ selector: { byId: id }, snapshot: snapshotElement(id, []) });
+    }
+    return out;
+  }
+
+  // === AI / Draft-mode (B2, E3) ===
+
+  function _normalizePrompt(p) { return (p || '').replace(/\\s+/g, ' ').trim(); }
+
+  function installAiMockListener() {
+    if (window.__mirrorAiMockInstalled) return;
+    window.__mirrorAiMockInstalled = true;
+    const studio = window.__mirrorStudio__;
+    if (!studio || !studio.events) return;
+    studio.events.on('draft:submit', (event) => {
+      const fixtures = window.__mirrorAiMock || {};
+      const key = _normalizePrompt(event && event.prompt);
+      if (key in fixtures) {
+        const code = fixtures[key];
+        setTimeout(() => {
+          studio.events.emit('draft:ai-response', { code: code, error: null });
+        }, 80);
+      } else {
+        setTimeout(() => {
+          studio.events.emit('draft:ai-response', {
+            code: '',
+            error: 'No AI mock for prompt: ' + JSON.stringify(key) +
+                   '. Available: ' + Object.keys(fixtures).slice(0, 5).join(' | '),
+          });
+        }, 50);
+      }
+    });
+  }
+
+  async function aiPrompt(promptText, options) {
+    options = options || {};
+    const charDelay = options.charDelay || 50;
+    installAiMockListener();
+    const studio = window.__mirrorStudio__;
+    const editor = window.editor;
+    if (!editor) throw new Error('aiPrompt: editor not available');
+    if (!studio || !studio.draftModeManager) {
+      throw new Error('aiPrompt: studio.draftModeManager not available');
+    }
+    const doc = editor.state.doc;
+    const insertPos = doc.length;
+    const draftLines = '\\n-- ' + promptText + '\\n--';
+    let pos = insertPos;
+    for (const ch of draftLines) {
+      editor.dispatch({
+        changes: { from: pos, insert: ch },
+        selection: { anchor: pos + 1 },
+      });
+      pos += 1;
+      if (window.__mirrorDemo && window.__mirrorDemo.overlay && ch !== '\\n') {
+        window.__mirrorDemo.overlay.show(ch === ' ' ? 'Space' : ch);
+      }
+      await delay(charDelay);
+    }
+    await delay(120);
+    const submitted = await studio.draftModeManager.handleSubmit();
+    if (!submitted) {
+      throw new Error('aiPrompt: draftModeManager.handleSubmit returned false');
+    }
+    await window.__dragTest.waitForCompile();
+    await delay(150);
+  }
+
+  window.__mirrorActions = {
+    resolveSelector,
+    snapshotElement,
+    snapshotAllByPreviewOrder,
+    dropFromPalette,
+    moveElement,
+    dragResize,
+    dragPadding,
+    dragMargin,
+    inlineEdit,
+    selectInPreview,
+    setProperty,
+    pickColor,
+    aiPrompt,
+    installAiMockListener,
+  };
+})();
+`.trim()
+
+// =============================================================================
 // Demo Runner
 // =============================================================================
 
@@ -511,12 +1044,23 @@ export interface DemoRunResult {
 }
 
 export interface DemoRunnerOptions extends Partial<DemoConfig> {
-  /** Enable timing measurement */
   timing?: boolean
-  /** Validation level: strict, normal, lenient */
   validationLevel?: 'strict' | 'normal' | 'lenient'
-  /** Enable auto-validation for all actions */
   autoValidate?: boolean
+  /** Fast-forward steps before this 1-based index (skip pure-visual, shrink waits). */
+  fromStep?: number
+  /** Stop after this 1-based step index (inclusive). */
+  untilStep?: number
+  /** Pause after every mutating step until Enter is pressed (interactive). */
+  stepMode?: boolean
+  /** AI mock fixtures: normalized prompt → Mirror code response (B2). */
+  aiMock?: Record<string, string>
+  /** Directory to write a screenshot at every expectCode/expectDom (C4). */
+  snapshotDir?: string
+  /** Directory with baseline PNGs — captures get compared, diffs written. */
+  snapshotBaselineDir?: string
+  /** pixelmatch threshold 0..1 (default 0.1). */
+  snapshotThreshold?: number
 }
 
 export class DemoRunner {
@@ -534,14 +1078,45 @@ export class DemoRunner {
   private consoleErrors: ConsoleError[] = []
   private blockedSteps: number[] = []
   private failedSteps: number[] = []
+  // Iteration window (C3)
+  private fromStep?: number
+  private untilStep?: number
+  private stepMode: boolean = false
+  // AI mock (B2)
+  private aiMock?: Record<string, string>
+  // Snapshots (C4)
+  private snapshotDir?: string
+  private snapshotBaselineDir?: string
+  private snapshotThreshold: number = 0.1
+  private snapshotCounter: number = 0
+  private snapshotMismatches: string[] = []
 
   constructor(cdp: CDPSession, options: DemoRunnerOptions = {}) {
     this.cdp = cdp
-    const { timing, validationLevel, autoValidate, ...configOptions } = options
+    const {
+      timing,
+      validationLevel,
+      autoValidate,
+      fromStep,
+      untilStep,
+      stepMode,
+      aiMock,
+      snapshotDir,
+      snapshotBaselineDir,
+      snapshotThreshold,
+      ...configOptions
+    } = options
     this.config = { ...DEFAULT_CONFIG, ...configOptions }
     this.timingEnabled = timing ?? false
     this.validationConfig = getValidationConfig(validationLevel ?? 'normal')
     this.autoValidate = autoValidate ?? this.validationConfig.autoValidate
+    this.fromStep = fromStep
+    this.untilStep = untilStep
+    this.stepMode = stepMode ?? false
+    this.aiMock = aiMock
+    this.snapshotDir = snapshotDir
+    this.snapshotBaselineDir = snapshotBaselineDir
+    if (typeof snapshotThreshold === 'number') this.snapshotThreshold = snapshotThreshold
   }
 
   /**
@@ -590,10 +1165,34 @@ export class DemoRunner {
     this.demoStartTime = performance.now()
 
     // Execute steps
+    if (this.fromStep || this.untilStep) {
+      const range = `[${this.fromStep ?? 1}..${this.untilStep ?? script.steps.length}]`
+      console.log(
+        `   ⏩  Iteration window: ${range}` +
+          (this.fromStep ? ' (steps before fromStep run fast-forward)' : '')
+      )
+    }
+
     for (let i = 0; i < script.steps.length; i++) {
       const step = script.steps[i]
       const stepNum = i + 1
       const stepStart = performance.now()
+
+      // Iteration window — stop after untilStep
+      if (this.untilStep !== undefined && stepNum > this.untilStep) {
+        console.log(`   ⏹  Stopped at step ${this.untilStep} (--until-step)`)
+        break
+      }
+      // Iteration window — fast-forward before fromStep
+      const fastForward = this.fromStep !== undefined && stepNum < this.fromStep
+      if (fastForward && DemoRunner.shouldSkipInFastForward(step)) {
+        continue
+      }
+      // Shrink waits in fast-forward
+      let effectiveStep: DemoAction = step
+      if (fastForward && step.action === 'wait') {
+        effectiveStep = { ...step, duration: Math.min(50, step.duration) }
+      }
 
       // Pre-validation for targetable actions
       let preState: StateSnapshot | undefined
@@ -613,7 +1212,12 @@ export class DemoRunner {
       }
 
       try {
-        await this.executeStep(step, stepNum, script.steps.length)
+        await this.executeStep(effectiveStep, stepNum, script.steps.length)
+        if (this.stepMode && !fastForward && DemoRunner.isMutatingStep(effectiveStep)) {
+          await this.waitForEnter(
+            `        ⏸  paused after step ${stepNum} — press Enter to continue`
+          )
+        }
       } catch (error) {
         const errorMsg = `Step ${stepNum} failed: ${error instanceof Error ? error.message : String(error)}`
         this.errors.push(errorMsg)
@@ -662,11 +1266,20 @@ export class DemoRunner {
     // Generate result
     const failedValidations = this.validationResults.filter(r => !r.success)
     const autoValidationSuccess = !validationReport || validationReport.success
+    const snapshotsOk = this.snapshotMismatches.length === 0
     const success =
-      failedValidations.length === 0 && this.errors.length === 0 && autoValidationSuccess
+      failedValidations.length === 0 &&
+      this.errors.length === 0 &&
+      autoValidationSuccess &&
+      snapshotsOk
 
     // Print summary
     this.printSummary(script.name, success, failedValidations, timingReport, validationReport)
+    if (this.snapshotMismatches.length > 0) {
+      console.log('🖼  Snapshot mismatches:')
+      for (const m of this.snapshotMismatches) console.log('   • ' + m)
+      console.log('')
+    }
 
     return {
       success,
@@ -928,6 +1541,35 @@ export class DemoRunner {
         return step.path
       case 'switchFile':
         return step.path
+      case 'expectCode':
+        return step.comment ?? (step.code === undefined ? 'learn-mode' : 'strict')
+      case 'expectCodeMatches':
+        return step.comment ?? String(step.pattern)
+      case 'expectDom':
+        return (
+          step.comment ??
+          (step.checks === undefined ? 'learn-mode' : `${step.checks.length} checks`)
+        )
+      case 'dropFromPalette':
+        return `${step.component} → ${JSON.stringify(step.target)}`
+      case 'moveElement':
+        return `${JSON.stringify(step.source)} → ${JSON.stringify(step.target)}@${step.index}`
+      case 'dragResize':
+        return `${JSON.stringify(step.selector)} ${step.position} Δ(${step.deltaX},${step.deltaY})`
+      case 'dragPadding':
+        return `${JSON.stringify(step.selector)} ${step.side}+${step.delta}`
+      case 'dragMargin':
+        return `${JSON.stringify(step.selector)} ${step.side}+${step.delta}`
+      case 'inlineEdit':
+        return `${JSON.stringify(step.selector)} → "${step.text.substring(0, 24)}"`
+      case 'selectInPreview':
+        return JSON.stringify(step.selector)
+      case 'setProperty':
+        return `${step.prop}=${step.value}`
+      case 'pickColor':
+        return `${step.prop}=${step.color}`
+      case 'aiPrompt':
+        return step.prompt.substring(0, 30) + (step.prompt.length > 30 ? '…' : '')
       default:
         return undefined
     }
@@ -1235,6 +1877,28 @@ export class DemoRunner {
     const apiCode = getDemoAPISource(effectiveTimings)
     await this.evaluate(apiCode)
     await this.evaluate(`window.__mirrorDemo.init(${JSON.stringify(config)})`)
+
+    // Single-cursor mode: hide __dragTest's own cursor while demo runs
+    await this.evaluate(`
+      (function() {
+        if (window.__dragTest && window.__dragTest.setAnimation) {
+          window.__dragTest.setAnimation({ showCursor: false });
+        }
+      })()
+    `)
+
+    // High-level Mirror actions API (E1, E2, B1, B2)
+    await this.evaluate(MIRROR_ACTIONS_API)
+
+    // AI mock fixtures (B2): install on window before any aiPrompt
+    if (this.aiMock && Object.keys(this.aiMock).length > 0) {
+      await this.evaluate(`
+        window.__mirrorAiMock = ${JSON.stringify(this.aiMock)};
+        window.__mirrorActions.installAiMockListener();
+      `)
+      console.log(`   🤖 AI mock installed (${Object.keys(this.aiMock).length} fixtures)`)
+    }
+
     console.log(`   🎯 Demo API initialized (pacing: ${config.pacing})`)
   }
 
@@ -1389,26 +2053,19 @@ export class DemoRunner {
 
       case 'createFile':
         console.log(`${prefix} 📄 Create file: ${step.path}`)
-        const escapedContent = step.content
-          .replace(/\\/g, '\\\\')
-          .replace(/`/g, '\\`')
-          .replace(/\$/g, '\\$')
+        // storage is module-internal — re-import dist/index.js to access it
         await this.evaluate(`
           (async () => {
-            const content = \`${escapedContent}\`;
-            if (window.storage) {
-              await window.storage.writeFile('${step.path}', content);
-              await new Promise(r => setTimeout(r, 300));
-            }
+            const { storage } = await import('./dist/index.js');
+            await storage.writeFile(${JSON.stringify(step.path)}, ${JSON.stringify(step.content)});
+            await new Promise(r => setTimeout(r, 300));
           })()
         `)
         if (step.switchTo) {
           await this.evaluate(`
             (async () => {
-              if (window.selectFile) {
-                window.selectFile('${step.path}');
-              } else if (window.desktopFiles?.selectFile) {
-                window.desktopFiles.selectFile('${step.path}');
+              if (window.desktopFiles && typeof window.desktopFiles.selectFile === 'function') {
+                await window.desktopFiles.selectFile(${JSON.stringify(step.path)});
               }
               await new Promise(r => setTimeout(r, 300));
             })()
@@ -1444,6 +2101,527 @@ export class DemoRunner {
           }
         }
         break
+
+      case 'expectCode':
+        await this.runExpectCode(step, prefix)
+        break
+      case 'expectCodeMatches':
+        await this.runExpectCodeMatches(step, prefix)
+        break
+      case 'expectDom':
+        await this.runExpectDom(step, prefix)
+        break
+      case 'dropFromPalette':
+        await this.runDropFromPalette(step, prefix)
+        break
+      case 'moveElement':
+        await this.runMoveElement(step, prefix)
+        break
+      case 'dragResize':
+        await this.runDragResize(step, prefix)
+        break
+      case 'dragPadding':
+        await this.runDragPadding(step, prefix)
+        break
+      case 'dragMargin':
+        await this.runDragMargin(step, prefix)
+        break
+      case 'inlineEdit':
+        await this.runInlineEdit(step, prefix)
+        break
+      case 'selectInPreview':
+        await this.runSelectInPreview(step, prefix)
+        break
+      case 'setProperty':
+        await this.runSetProperty(step, prefix)
+        break
+      case 'pickColor':
+        await this.runPickColor(step, prefix)
+        break
+      case 'aiPrompt':
+        await this.runAiPrompt(step, prefix)
+        break
+    }
+  }
+
+  // ===========================================================================
+  // Helpers for step-mode + fast-forward
+  // ===========================================================================
+
+  private static shouldSkipInFastForward(step: DemoAction): boolean {
+    switch (step.action) {
+      case 'moveTo':
+      case 'highlight':
+      case 'comment':
+      case 'scroll':
+      case 'click':
+      case 'doubleClick':
+      case 'validate':
+      case 'expectCode':
+      case 'expectCodeMatches':
+      case 'expectDom':
+        return true
+      default:
+        return false
+    }
+  }
+
+  private static isMutatingStep(step: DemoAction): boolean {
+    switch (step.action) {
+      case 'execute':
+      case 'type':
+      case 'pressKey':
+      case 'createFile':
+      case 'switchFile':
+      case 'clearEditor':
+      case 'dropFromPalette':
+      case 'moveElement':
+      case 'dragResize':
+      case 'dragPadding':
+      case 'dragMargin':
+      case 'inlineEdit':
+      case 'selectInPreview':
+      case 'setProperty':
+      case 'pickColor':
+      case 'aiPrompt':
+        return true
+      default:
+        return false
+    }
+  }
+
+  private waitForEnter(prompt: string): Promise<void> {
+    return new Promise(resolve => {
+      const stdin = process.stdin
+      if (!stdin.isTTY) {
+        console.log(prompt + '   [non-interactive: skipping pause]')
+        resolve()
+        return
+      }
+      console.log(prompt)
+      const onData = () => {
+        stdin.removeListener('data', onData)
+        if (typeof (stdin as any).setRawMode === 'function') {
+          ;(stdin as any).setRawMode(false)
+        }
+        stdin.pause()
+        resolve()
+      }
+      if (typeof (stdin as any).setRawMode === 'function') {
+        ;(stdin as any).setRawMode(true)
+      }
+      stdin.resume()
+      stdin.once('data', onData)
+    })
+  }
+
+  // ===========================================================================
+  // Selector formatting + inline expectCode resolution
+  // ===========================================================================
+
+  private describeSelector(sel: unknown): string {
+    if (sel && typeof sel === 'object') {
+      const s = sel as Record<string, unknown>
+      if ('byId' in s) return `#${s.byId}`
+      if ('byText' in s) return `text=${JSON.stringify(s.byText)}${'nth' in s ? `[${s.nth}]` : ''}`
+      if ('byTag' in s) return `<${s.byTag}>${'nth' in s ? `[${s.nth}]` : ''}`
+      if ('byPath' in s) return `path=${s.byPath}`
+      if ('byRole' in s) return `role=${s.byRole}${'nth' in s ? `[${s.nth}]` : ''}`
+      if ('byTestId' in s) return `testid=${s.byTestId}`
+    }
+    return JSON.stringify(sel)
+  }
+
+  private async runInlineExpectCode(
+    inline: string | { code?: string; comment?: string } | undefined,
+    prefix: string,
+    fallbackComment?: string
+  ): Promise<void> {
+    if (inline === undefined) return
+    const step =
+      typeof inline === 'string'
+        ? { action: 'expectCode' as const, code: inline, comment: fallbackComment }
+        : {
+            action: 'expectCode' as const,
+            code: inline.code,
+            comment: inline.comment ?? fallbackComment,
+          }
+    await this.runExpectCode(step, prefix)
+  }
+
+  // ===========================================================================
+  // Snapshots (C4)
+  // ===========================================================================
+
+  private async captureSnapshot(label: string): Promise<void> {
+    if (!this.snapshotDir) return
+    try {
+      this.snapshotCounter += 1
+      const seq = String(this.snapshotCounter).padStart(3, '0')
+      const sanitized = label
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 60)
+      const filename = `${seq}-${sanitized || 'step'}.png`
+      const result = await this.cdp.send<{ data: string }>('Page.captureScreenshot', {
+        format: 'png',
+      })
+      const fsLazy = await import('fs')
+      const pathLazy = await import('path')
+      const fullPath = pathLazy.resolve(this.snapshotDir, filename)
+      fsLazy.mkdirSync(pathLazy.dirname(fullPath), { recursive: true })
+      const pngBuffer = Buffer.from(result.data, 'base64')
+      fsLazy.writeFileSync(fullPath, pngBuffer)
+      if (this.snapshotBaselineDir) {
+        const baselinePath = pathLazy.resolve(this.snapshotBaselineDir, filename)
+        if (!fsLazy.existsSync(baselinePath)) {
+          console.log(
+            `        ⚠️  no baseline for ${filename} — first run? Copy to baseline dir to seed.`
+          )
+          return
+        }
+        const diff = await comparePngFiles(baselinePath, fullPath, this.snapshotThreshold)
+        if (diff.match) return
+        const diffPath = pathLazy.resolve(this.snapshotDir, filename.replace(/\.png$/, '.diff.png'))
+        if (diff.diffPng) fsLazy.writeFileSync(diffPath, diff.diffPng)
+        const ratio = (diff.diffPixels / diff.totalPixels) * 100
+        const msg = `${filename}: ${diff.diffPixels}/${diff.totalPixels} px (${ratio.toFixed(2)}%) differ`
+        this.snapshotMismatches.push(msg)
+        console.log(`        ✗ pixel-diff: ${msg}`)
+      }
+    } catch (err) {
+      console.log(
+        `        ⚠️  snapshot failed: ${err instanceof Error ? err.message : String(err)}`
+      )
+    }
+  }
+
+  // ===========================================================================
+  // expectCode / expectCodeMatches / expectDom handlers
+  // ===========================================================================
+
+  private async runExpectCode(
+    step: Extract<DemoAction, { action: 'expectCode' }>,
+    prefix: string
+  ): Promise<void> {
+    await this.captureSnapshot('expectCode-' + (step.comment ?? 'unnamed'))
+    const actualRaw = await this.evaluate<string>(`
+      (function() {
+        const editor = window.editor;
+        return editor && editor.state ? editor.state.doc.toString() : '';
+      })()
+    `)
+    const opts = {
+      collapseSpaces: step.normalize?.collapseSpaces ?? false,
+      trimEnds: step.normalize?.trimEnds ?? true,
+    }
+    if (step.code === undefined) {
+      console.log(`${prefix} 📝 expectCode (learn): ${step.comment ?? ''}`)
+      console.log('   ┌──── current code ────────────────────────────────────────────')
+      for (const line of actualRaw.split('\n')) console.log('   │ ' + line)
+      console.log('   └──────────────────────────────────────────────────────────────')
+      console.log("   Paste this into the step's `code` field to lock it.")
+      return
+    }
+    const actual = normalizeCode(actualRaw, opts)
+    const expected = normalizeCode(step.code, opts)
+    const success = actual === expected
+    const result: ValidationResult = {
+      success,
+      check: { type: 'editorContains', text: '<expectCode>' },
+      message: success
+        ? `expectCode matched${step.comment ? ` (${step.comment})` : ''}`
+        : `expectCode MISMATCH${step.comment ? ` (${step.comment})` : ''}`,
+      actual: actual.length,
+    }
+    this.validationResults.push(result)
+    if (success) {
+      console.log(`${prefix} ✓ expectCode matched${step.comment ? ` — ${step.comment}` : ''}`)
+      return
+    }
+    console.log(`${prefix} ✗ expectCode MISMATCH${step.comment ? ` — ${step.comment}` : ''}`)
+    const diff = lineDiff(expected, actual)
+    for (const line of diff) console.log('   ' + line)
+  }
+
+  private async runExpectCodeMatches(
+    step: Extract<DemoAction, { action: 'expectCodeMatches' }>,
+    prefix: string
+  ): Promise<void> {
+    const re =
+      step.pattern instanceof RegExp ? step.pattern : new RegExp(step.pattern, step.flags ?? 's')
+    const actual = await this.evaluate<string>(`
+      (function() {
+        const editor = window.editor;
+        return editor && editor.state ? editor.state.doc.toString() : '';
+      })()
+    `)
+    const ok = re.test(actual)
+    const result: ValidationResult = {
+      success: ok,
+      check: { type: 'editorContains', text: '<expectCodeMatches>' },
+      message: ok
+        ? `expectCodeMatches matched ${re}${step.comment ? ` — ${step.comment}` : ''}`
+        : `expectCodeMatches MISMATCH ${re}${step.comment ? ` — ${step.comment}` : ''}`,
+      actual: actual.length,
+    }
+    this.validationResults.push(result)
+    if (ok) {
+      console.log(`${prefix} ✓ expectCodeMatches ${re}${step.comment ? ` — ${step.comment}` : ''}`)
+    } else {
+      console.log(
+        `${prefix} ✗ expectCodeMatches MISMATCH ${re}${step.comment ? ` — ${step.comment}` : ''}`
+      )
+      const trunc = actual.length > 400 ? actual.substring(0, 400) + '…' : actual
+      console.log('   actual code:')
+      for (const line of trunc.split('\n').slice(0, 20)) console.log('   │ ' + line)
+    }
+  }
+
+  private async runExpectDom(
+    step: Extract<DemoAction, { action: 'expectDom' }>,
+    prefix: string
+  ): Promise<void> {
+    await this.captureSnapshot('expectDom-' + (step.comment ?? 'unnamed'))
+    if (step.checks === undefined) {
+      console.log(`${prefix} 🌳 expectDom (learn): ${step.comment ?? ''}`)
+      let entries: Array<{ selector: unknown; snapshot: Record<string, unknown> }>
+      if (step.learnSelectors && step.learnSelectors.length > 0) {
+        entries = []
+        for (const sel of step.learnSelectors) {
+          const snap = await this.evaluate<Record<string, unknown>>(`
+            (function() {
+              const id = window.__mirrorActions.resolveSelector(${JSON.stringify(sel)});
+              return window.__mirrorActions.snapshotElement(id, []);
+            })()
+          `)
+          entries.push({ selector: sel, snapshot: snap })
+        }
+      } else {
+        entries = await this.evaluate<typeof entries>(
+          `window.__mirrorActions.snapshotAllByPreviewOrder()`
+        )
+      }
+      console.log('   ┌──── current DOM ─────────────────────────────────────────────')
+      console.log('   │ checks: [')
+      for (const e of entries) {
+        const fields = Object.entries(e.snapshot)
+          .map(([k, v]) => `${k}: ${formatSnapshotValue(v)}`)
+          .join(', ')
+        console.log(`   │   { selector: ${formatSnapshotValue(e.selector)}, ${fields} },`)
+      }
+      console.log('   │ ]')
+      console.log('   └──────────────────────────────────────────────────────────────')
+      console.log("   Paste the `checks` array into the step's `checks` field to lock it.")
+      return
+    }
+    let allOk = true
+    const failures: string[] = []
+    for (let i = 0; i < step.checks.length; i++) {
+      const check = step.checks[i] as Record<string, unknown>
+      const extras: string[] = Array.isArray(check.extras) ? (check.extras as string[]) : []
+      for (const k of Object.keys(check)) {
+        if (!KNOWN_DOM_CHECK_KEYS.has(k) && !extras.includes(k)) extras.push(k)
+      }
+      const snap = await this.evaluate<Record<string, unknown> | null>(`
+        (function() {
+          try {
+            const id = window.__mirrorActions.resolveSelector(${JSON.stringify(check.selector)});
+            return window.__mirrorActions.snapshotElement(id, ${JSON.stringify(extras)});
+          } catch (e) {
+            return { __error: String(e && e.message || e) };
+          }
+        })()
+      `)
+      if (snap && (snap as Record<string, unknown>).__error) {
+        allOk = false
+        failures.push(
+          `   ✗ #${i} ${this.describeSelector(check.selector)} — ${(snap as Record<string, unknown>).__error}`
+        )
+        continue
+      }
+      const checkResult = compareDomCheck(check, snap as Record<string, unknown>)
+      if (checkResult.length === 0) continue
+      allOk = false
+      failures.push(
+        `   ✗ #${i} ${this.describeSelector(check.selector)}${check.label ? ` (${check.label})` : ''}`
+      )
+      for (const f of checkResult) failures.push(`      ${f}`)
+    }
+    const result: ValidationResult = {
+      success: allOk,
+      check: { type: 'previewContains', selector: '<expectDom>' },
+      message: allOk
+        ? `expectDom matched (${step.checks.length} checks)${step.comment ? ` — ${step.comment}` : ''}`
+        : `expectDom MISMATCH${step.comment ? ` — ${step.comment}` : ''}`,
+      actual: step.checks.length,
+    }
+    this.validationResults.push(result)
+    if (allOk) {
+      console.log(
+        `${prefix} ✓ expectDom matched (${step.checks.length} checks)${step.comment ? ` — ${step.comment}` : ''}`
+      )
+    } else {
+      console.log(`${prefix} ✗ expectDom MISMATCH${step.comment ? ` — ${step.comment}` : ''}`)
+      for (const line of failures) console.log(line)
+    }
+  }
+
+  // ===========================================================================
+  // Mirror action handlers (delegate to window.__mirrorActions)
+  // ===========================================================================
+
+  private async runDropFromPalette(
+    step: Extract<DemoAction, { action: 'dropFromPalette' }>,
+    prefix: string
+  ): Promise<void> {
+    const where = step.at.kind === 'index' ? `index ${step.at.index}` : `zone ${step.at.zone}`
+    console.log(
+      `${prefix} 🧩 Drop ${step.component} → ${this.describeSelector(step.target)} @ ${where}` +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    await this.evaluate(
+      `window.__mirrorActions.dropFromPalette(${JSON.stringify(step.component)}, ${JSON.stringify(step.target)}, ${JSON.stringify(step.at)})`
+    )
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runMoveElement(
+    step: Extract<DemoAction, { action: 'moveElement' }>,
+    prefix: string
+  ): Promise<void> {
+    console.log(
+      `${prefix} ↪️  Move ${this.describeSelector(step.source)} → ${this.describeSelector(step.target)} @ index ${step.index}` +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    await this.evaluate(
+      `window.__mirrorActions.moveElement(${JSON.stringify(step.source)}, ${JSON.stringify(step.target)}, ${step.index})`
+    )
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runDragResize(
+    step: Extract<DemoAction, { action: 'dragResize' }>,
+    prefix: string
+  ): Promise<void> {
+    console.log(
+      `${prefix} ↔️  Resize ${this.describeSelector(step.selector)} ${step.position} Δ(${step.deltaX},${step.deltaY})` +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    await this.evaluate(
+      `window.__mirrorActions.dragResize(${JSON.stringify(step.selector)}, ${JSON.stringify(step.position)}, ${step.deltaX}, ${step.deltaY}, ${JSON.stringify({ bypassSnap: step.bypassSnap ?? false })})`
+    )
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runDragPadding(
+    step: Extract<DemoAction, { action: 'dragPadding' }>,
+    prefix: string
+  ): Promise<void> {
+    console.log(
+      `${prefix} 📐 Padding ${this.describeSelector(step.selector)} ${step.side}+${step.delta}` +
+        (step.mode ? ` (${step.mode})` : '') +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    await this.evaluate(
+      `window.__mirrorActions.dragPadding(${JSON.stringify(step.selector)}, ${JSON.stringify(step.side)}, ${step.delta}, ${JSON.stringify(step.mode ?? 'single')}, ${step.bypassSnap ?? false})`
+    )
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runDragMargin(
+    step: Extract<DemoAction, { action: 'dragMargin' }>,
+    prefix: string
+  ): Promise<void> {
+    console.log(
+      `${prefix} 📏 Margin ${this.describeSelector(step.selector)} ${step.side}+${step.delta}` +
+        (step.mode ? ` (${step.mode})` : '') +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    await this.evaluate(
+      `window.__mirrorActions.dragMargin(${JSON.stringify(step.selector)}, ${JSON.stringify(step.side)}, ${step.delta}, ${JSON.stringify(step.mode ?? 'single')}, ${step.bypassSnap ?? false})`
+    )
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runInlineEdit(
+    step: Extract<DemoAction, { action: 'inlineEdit' }>,
+    prefix: string
+  ): Promise<void> {
+    const preview = step.text.length > 24 ? step.text.substring(0, 24) + '…' : step.text
+    console.log(
+      `${prefix} ✏️  Inline-edit ${this.describeSelector(step.selector)} → "${preview}"` +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    const cd = step.charDelay ?? 60
+    await this.evaluate(
+      `window.__mirrorActions.inlineEdit(${JSON.stringify(step.selector)}, ${JSON.stringify(step.text)}, ${cd})`
+    )
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runSelectInPreview(
+    step: Extract<DemoAction, { action: 'selectInPreview' }>,
+    prefix: string
+  ): Promise<void> {
+    console.log(
+      `${prefix} 👆 Select ${this.describeSelector(step.selector)}` +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    await this.evaluate(`window.__mirrorActions.selectInPreview(${JSON.stringify(step.selector)})`)
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runSetProperty(
+    step: Extract<DemoAction, { action: 'setProperty' }>,
+    prefix: string
+  ): Promise<void> {
+    console.log(
+      `${prefix} ⚙️  Set ${step.prop}=${step.value} on ${this.describeSelector(step.selector)}` +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    await this.evaluate(
+      `window.__mirrorActions.setProperty(${JSON.stringify(step.selector)}, ${JSON.stringify(step.prop)}, ${JSON.stringify(step.value)})`
+    )
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runPickColor(
+    step: Extract<DemoAction, { action: 'pickColor' }>,
+    prefix: string
+  ): Promise<void> {
+    console.log(
+      `${prefix} 🎨 Pick ${step.prop}=${step.color} on ${this.describeSelector(step.selector)}` +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    await this.evaluate(
+      `window.__mirrorActions.pickColor(${JSON.stringify(step.selector)}, ${JSON.stringify(step.prop)}, ${JSON.stringify(step.color)})`
+    )
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runAiPrompt(
+    step: Extract<DemoAction, { action: 'aiPrompt' }>,
+    prefix: string
+  ): Promise<void> {
+    const preview = step.prompt.length > 40 ? step.prompt.substring(0, 40) + '…' : step.prompt
+    console.log(`${prefix} 🤖 AI prompt: "${preview}"` + (step.comment ? ` — ${step.comment}` : ''))
+    const opts = JSON.stringify({ charDelay: step.charDelay ?? 50 })
+    await this.evaluate(`window.__mirrorActions.aiPrompt(${JSON.stringify(step.prompt)}, ${opts})`)
+    if (step.expectCodeMatches) {
+      const inline =
+        typeof step.expectCodeMatches === 'object' && 'pattern' in step.expectCodeMatches
+          ? step.expectCodeMatches
+          : { pattern: step.expectCodeMatches as string | RegExp, comment: step.comment }
+      await this.runExpectCodeMatches(
+        {
+          action: 'expectCodeMatches',
+          pattern: inline.pattern,
+          comment: inline.comment ?? step.comment,
+        },
+        prefix
+      )
     }
   }
 
@@ -1677,6 +2855,14 @@ export class DemoRunner {
    */
   private async cleanup(): Promise<void> {
     try {
+      // Restore __dragTest's own cursor for other test scenarios
+      await this.evaluate(`
+        (function() {
+          if (window.__dragTest && window.__dragTest.setAnimation) {
+            window.__dragTest.setAnimation({ showCursor: true });
+          }
+        })()
+      `)
       await this.evaluate('window.__mirrorDemo?.destroy()')
     } catch {
       // Ignore cleanup errors
@@ -1718,6 +2904,207 @@ export class DemoRunner {
   private escape(str: string): string {
     return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n')
   }
+}
+
+// ============================================================================
+// Top-level helpers used by the DemoRunner
+// ============================================================================
+
+interface NormalizeOpts {
+  collapseSpaces: boolean
+  trimEnds: boolean
+}
+
+function normalizeCode(input: string, opts: NormalizeOpts): string {
+  let lines = input
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map(l => l.replace(/[ \t]+$/, ''))
+  if (opts.collapseSpaces) {
+    lines = lines.map(l => {
+      const m = l.match(/^([ \t]*)(.*)$/)
+      if (!m) return l
+      return m[1] + m[2].replace(/ {2,}/g, ' ')
+    })
+  }
+  if (opts.trimEnds) {
+    while (lines.length && lines[0] === '') lines.shift()
+    while (lines.length && lines[lines.length - 1] === '') lines.pop()
+  }
+  return lines.join('\n')
+}
+
+function lineDiff(expected: string, actual: string): string[] {
+  const exp = expected.split('\n')
+  const act = actual.split('\n')
+  const max = Math.max(exp.length, act.length)
+  const out: string[] = ['expected ↓                                            actual ↓']
+  for (let i = 0; i < max; i++) {
+    const e = exp[i] ?? ''
+    const a = act[i] ?? ''
+    const same = e === a
+    const marker = same ? '  ' : '✗ '
+    out.push(`${marker}${pad(e, 50)}  │  ${a}`)
+  }
+  return out
+}
+
+function pad(s: string, width: number): string {
+  if (s.length >= width) return s.substring(0, width - 1) + '…'
+  return s + ' '.repeat(width - s.length)
+}
+
+function formatSnapshotValue(v: unknown): string {
+  if (v === undefined) return 'undefined'
+  if (v === null) return 'null'
+  if (typeof v === 'string') return JSON.stringify(v)
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  if (Array.isArray(v)) return '[' + v.map(x => formatSnapshotValue(x)).join(', ') + ']'
+  if (typeof v === 'object') {
+    const obj = v as Record<string, unknown>
+    const inner = Object.entries(obj)
+      .map(([k, val]) => `${k}: ${formatSnapshotValue(val)}`)
+      .join(', ')
+    return `{ ${inner} }`
+  }
+  return String(v)
+}
+
+const KNOWN_DOM_CHECK_KEYS = new Set([
+  'selector',
+  'label',
+  'extras',
+  'tag',
+  'text',
+  'visible',
+  'width',
+  'height',
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
+  'marginTop',
+  'marginRight',
+  'marginBottom',
+  'marginLeft',
+  'color',
+  'background',
+  'childCount',
+  'layout',
+])
+
+function compareDomCheck(
+  check: Record<string, unknown>,
+  snapshot: Record<string, unknown>
+): string[] {
+  const failures: string[] = []
+  for (const key of Object.keys(check)) {
+    if (key === 'selector' || key === 'label' || key === 'extras') continue
+    const expected = check[key]
+    if (expected === undefined) continue
+    const actual = snapshot[key]
+    if (key === 'layout') {
+      const lf = compareLayout(
+        expected as Record<string, unknown>,
+        actual as Record<string, unknown> | undefined
+      )
+      for (const f of lf) failures.push(`layout.${f}`)
+      continue
+    }
+    const f = compareField(key, expected, actual)
+    if (f) failures.push(f)
+  }
+  return failures
+}
+
+function compareLayout(
+  expected: Record<string, unknown> | undefined,
+  actual: Record<string, unknown> | undefined
+): string[] {
+  if (!expected) return []
+  if (!actual) return ['expected layout, got none']
+  const failures: string[] = []
+  for (const k of Object.keys(expected)) {
+    const f = compareField(k, expected[k], actual[k])
+    if (f) failures.push(f)
+  }
+  return failures
+}
+
+function compareField(name: string, expected: unknown, actual: unknown): string | null {
+  if (expected instanceof RegExp) {
+    return typeof actual === 'string' && expected.test(actual)
+      ? null
+      : `${name}: expected match ${expected}, got ${JSON.stringify(actual)}`
+  }
+  if (
+    expected &&
+    typeof expected === 'object' &&
+    !Array.isArray(expected) &&
+    ('min' in (expected as object) || 'max' in (expected as object))
+  ) {
+    const r = expected as { min?: number; max?: number }
+    if (typeof actual !== 'number')
+      return `${name}: expected number in range, got ${JSON.stringify(actual)}`
+    if (r.min !== undefined && actual < r.min) return `${name}: expected >= ${r.min}, got ${actual}`
+    if (r.max !== undefined && actual > r.max) return `${name}: expected <= ${r.max}, got ${actual}`
+    return null
+  }
+  if (
+    expected &&
+    typeof expected === 'object' &&
+    !Array.isArray(expected) &&
+    'contains' in (expected as object)
+  ) {
+    const c = (expected as { contains: string }).contains
+    return typeof actual === 'string' && actual.includes(c)
+      ? null
+      : `${name}: expected to contain "${c}", got ${JSON.stringify(actual)}`
+  }
+  // Hex-color case-insensitive
+  if (
+    typeof expected === 'string' &&
+    typeof actual === 'string' &&
+    isHexColor(expected) &&
+    isHexColor(actual)
+  ) {
+    return expected.toLowerCase() === actual.toLowerCase()
+      ? null
+      : `${name}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+  }
+  return expected === actual
+    ? null
+    : `${name}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+}
+
+function isHexColor(s: string): boolean {
+  return /^#[0-9a-fA-F]{3,8}$/.test(s)
+}
+
+// Pixel-diff (C4-followup) via lazy-loaded pngjs + pixelmatch
+async function comparePngFiles(
+  baselinePath: string,
+  currentPath: string,
+  threshold: number
+): Promise<{ match: boolean; diffPixels: number; totalPixels: number; diffPng?: Buffer }> {
+  const fsLazy = await import('fs')
+  // @ts-ignore — no type defs shipped
+  const pngMod: any = await import('pngjs')
+  const PNG: any = pngMod.PNG
+  // @ts-ignore — no type defs shipped
+  const pmMod: any = await import('pixelmatch')
+  const pixelmatch: any = pmMod.default ?? pmMod
+
+  const a = PNG.sync.read(fsLazy.readFileSync(baselinePath))
+  const b = PNG.sync.read(fsLazy.readFileSync(currentPath))
+  if (a.width !== b.width || a.height !== b.height) {
+    return { match: false, diffPixels: a.width * a.height, totalPixels: a.width * a.height }
+  }
+  const diff = new PNG({ width: a.width, height: a.height })
+  const diffPixels = pixelmatch(a.data, b.data, diff.data, a.width, a.height, { threshold })
+  const totalPixels = a.width * a.height
+  if (diffPixels === 0) return { match: true, diffPixels: 0, totalPixels }
+  return { match: false, diffPixels, totalPixels, diffPng: PNG.sync.write(diff) }
 }
 
 /**

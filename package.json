@@ -31,6 +31,8 @@
     "test:browser:drag": "npx tsx tools/test.ts --drag",
     "test:browser:mirror": "npx tsx tools/test.ts --mirror",
     "test:browser:headed": "npx tsx tools/test.ts --headed",
+    "test:demos": "npx tsx tools/test.ts --demo-suite=tools/test-runner/demo/scripts --pacing=instant",
+    "test:demos:headed": "npx tsx tools/test.ts --demo-suite=tools/test-runner/demo/scripts --headed --pacing=video",
     "test:image": "npx tsx tools/image-to-mirror-test/cli.ts",
     "test:image:headed": "npx tsx tools/image-to-mirror-test/cli.ts --headed --verbose",
     "test:image:basic": "npx tsx tools/image-to-mirror-test/cli.ts --level=basic --verbose",

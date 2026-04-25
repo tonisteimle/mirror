@@ -85,6 +85,19 @@ export type DemoAction =
   | CreateFileAction
   | SwitchFileAction
   | ValidateAction
+  | ExpectCodeAction
+  | ExpectCodeMatchesAction
+  | ExpectDomAction
+  | DropFromPaletteAction
+  | MoveElementAction
+  | DragResizeAction
+  | DragPaddingAction
+  | DragMarginAction
+  | InlineEditAction
+  | SelectInPreviewAction
+  | SetPropertyAction
+  | PickColorAction
+  | AiPromptAction
 
 interface NavigateAction {
   action: 'navigate'
@@ -201,6 +214,220 @@ interface ValidateAction {
   checks: ValidationCheck[]
   /** Optional comment for logging */
   comment?: string
+}
+
+// =============================================================================
+// Selectors (Architektur-Entscheidung E1) — strukturierte Objekte, keine
+// String-Shortcuts. byId ist explizit; alle anderen sind semantisch und
+// reorder-resistenter als Mirror-Node-IDs.
+// =============================================================================
+
+export type Selector =
+  | { byId: string }
+  | { byText: string | RegExp; nth?: number }
+  | { byTag: string; nth?: number }
+  | { byPath: string }
+  | { byRole: string; nth?: number }
+  | { byTestId: string }
+
+// =============================================================================
+// Validation actions (E2)
+// =============================================================================
+
+/** Inline expectCode runs immediately after a mutating action (sugar for the
+ *  common pattern of "do this thing, then check the editor"). */
+type InlineExpectCode = string | { code?: string; comment?: string }
+
+/**
+ * Strict-compares the editor source against an expected snapshot.
+ * - Without `code` → learn mode: dumps the current editor contents.
+ * - With `code` → strict-compare after normalization, line-diff on mismatch.
+ */
+interface ExpectCodeAction {
+  action: 'expectCode'
+  code?: string
+  comment?: string
+  normalize?: {
+    collapseSpaces?: boolean
+    trimEnds?: boolean
+  }
+}
+
+/** Loose validation — regex on editor source. Useful for AI-generated code. */
+interface ExpectCodeMatchesAction {
+  action: 'expectCodeMatches'
+  pattern: string | RegExp
+  flags?: string
+  comment?: string
+}
+
+/** A numeric expectation: exact value, range, or comparison. */
+type NumExpect = number | { min?: number; max?: number }
+
+/** A string expectation: exact, regex, or substring. */
+type StrExpect = string | RegExp | { contains: string }
+
+export interface DomCheck {
+  selector: Selector
+  label?: string
+  tag?: StrExpect
+  text?: StrExpect
+  visible?: boolean
+  width?: NumExpect
+  height?: NumExpect
+  paddingTop?: NumExpect
+  paddingRight?: NumExpect
+  paddingBottom?: NumExpect
+  paddingLeft?: NumExpect
+  marginTop?: NumExpect
+  marginRight?: NumExpect
+  marginBottom?: NumExpect
+  marginLeft?: NumExpect
+  color?: StrExpect
+  background?: StrExpect
+  childCount?: NumExpect
+  layout?: {
+    direction?: 'horizontal' | 'vertical'
+    gap?: NumExpect
+    align?: StrExpect
+  }
+  extras?: string[]
+  [extra: string]: unknown
+}
+
+/**
+ * Validate the rendered preview DOM against per-element expectations.
+ * Without `checks` → learn mode dumps a snapshot of every Mirror-tagged
+ * element. With `checks` → strict per-field comparison.
+ */
+interface ExpectDomAction {
+  action: 'expectDom'
+  checks?: DomCheck[]
+  /** Optional restriction for learn mode — only dump these selectors. */
+  learnSelectors?: Selector[]
+  comment?: string
+}
+
+// =============================================================================
+// High-level Mirror actions
+//
+// Wrap real Studio interactions. Each handler in runner.ts drives the demo
+// cursor in parallel via withCursorSync (in MIRROR_ACTIONS_API).
+// =============================================================================
+
+/** Where in a target container a drop / move ends up. */
+type DropTarget =
+  | { kind: 'index'; index: number }
+  | {
+      kind: 'zone'
+      zone:
+        | 'top-left'
+        | 'top-center'
+        | 'top-right'
+        | 'center-left'
+        | 'center'
+        | 'center-right'
+        | 'bottom-left'
+        | 'bottom-center'
+        | 'bottom-right'
+    }
+
+interface DropFromPaletteAction {
+  action: 'dropFromPalette'
+  component: string
+  target: Selector
+  at: DropTarget
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+interface MoveElementAction {
+  action: 'moveElement'
+  source: Selector
+  target: Selector
+  index: number
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+interface DragResizeAction {
+  action: 'dragResize'
+  selector: Selector
+  position: 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se'
+  deltaX: number
+  deltaY: number
+  bypassSnap?: boolean
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+interface DragPaddingAction {
+  action: 'dragPadding'
+  selector: Selector
+  side: 'top' | 'right' | 'bottom' | 'left'
+  delta: number
+  mode?: 'single' | 'all' | 'axis'
+  bypassSnap?: boolean
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+interface DragMarginAction {
+  action: 'dragMargin'
+  selector: Selector
+  side: 'top' | 'right' | 'bottom' | 'left'
+  delta: number
+  mode?: 'single' | 'all' | 'axis'
+  bypassSnap?: boolean
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+interface InlineEditAction {
+  action: 'inlineEdit'
+  selector: Selector
+  text: string
+  charDelay?: number
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+// === Property-Panel actions (B1) ===
+
+interface SelectInPreviewAction {
+  action: 'selectInPreview'
+  selector: Selector
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+interface SetPropertyAction {
+  action: 'setProperty'
+  selector: Selector
+  prop: string
+  value: string
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+interface PickColorAction {
+  action: 'pickColor'
+  selector: Selector
+  prop: string
+  color: string
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+// === AI / Draft-mode (B2, E3) ===
+
+interface AiPromptAction {
+  action: 'aiPrompt'
+  prompt: string
+  insertAt?: 'end' | { line: number }
+  charDelay?: number
+  comment?: string
+  expectCodeMatches?: string | RegExp | { pattern: string | RegExp; comment?: string }
 }
 
 // =============================================================================

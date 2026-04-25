@@ -12,6 +12,8 @@ import { DemoRunner, loadDemoScript } from './demo'
 import type { TestConfig, TestSuite } from './types'
 import { defaultConfig } from './types'
 import type { DemoConfig } from './demo/types'
+import * as fsSync from 'fs'
+import * as pathSync from 'path'
 
 // =============================================================================
 // CLI Arguments
@@ -47,6 +49,7 @@ interface CLIArgs {
   panelMode?: 'test' | 'focus' | 'normal' | 'minimal' // Predefined panel modes
   // Demo mode options
   demo?: string // Path to demo script
+  demoSuite?: string // Directory containing demo scripts (.ts)
   demoSpeed?: 'slow' | 'normal' | 'fast' // Demo speed preset (legacy)
   demoPacing?: 'video' | 'presentation' | 'tutorial' | 'testing' | 'instant' // Pacing profile
   demoOverlay: boolean // Show keystroke overlay (default: true)
@@ -55,6 +58,16 @@ interface CLIArgs {
   // Validation options
   demoAutoValidate: boolean // Enable auto-validation for all actions
   demoValidationLevel?: 'strict' | 'normal' | 'lenient' // Validation strictness
+  // Iteration helpers (C3)
+  fromStep?: number
+  untilStep?: number
+  stepMode?: boolean
+  // AI mock (B2)
+  aiMock?: string
+  // Snapshots (C4)
+  demoSnapshots?: string
+  demoSnapshotBaseline?: string
+  demoSnapshotThreshold?: number
 }
 
 // Panel visibility presets for test categories
@@ -108,6 +121,7 @@ function parseArgs(): CLIArgs {
     panelMode: getArgValue(args, '--panel-mode') as CLIArgs['panelMode'],
     // Demo mode
     demo: getArgValue(args, '--demo'),
+    demoSuite: getArgValue(args, '--demo-suite'),
     demoSpeed: (getArgValue(args, '--demo-speed') || 'normal') as CLIArgs['demoSpeed'],
     demoPacing: (getArgValue(args, '--pacing') || 'video') as CLIArgs['demoPacing'],
     demoOverlay: !args.includes('--no-overlay'),
@@ -116,6 +130,22 @@ function parseArgs(): CLIArgs {
     // Validation options
     demoAutoValidate: args.includes('--validate') || args.includes('--auto-validate'),
     demoValidationLevel: getArgValue(args, '--validation-level') as CLIArgs['demoValidationLevel'],
+    // Iteration helpers (C3)
+    fromStep: getArgValue(args, '--from-step')
+      ? parseInt(getArgValue(args, '--from-step')!, 10)
+      : undefined,
+    untilStep: getArgValue(args, '--until-step')
+      ? parseInt(getArgValue(args, '--until-step')!, 10)
+      : undefined,
+    stepMode: args.includes('--step'),
+    // AI mock (B2)
+    aiMock: getArgValue(args, '--ai-mock'),
+    // Snapshots (C4)
+    demoSnapshots: getArgValue(args, '--snapshot-dir'),
+    demoSnapshotBaseline: getArgValue(args, '--snapshot-baseline'),
+    demoSnapshotThreshold: getArgValue(args, '--snapshot-threshold')
+      ? parseFloat(getArgValue(args, '--snapshot-threshold')!)
+      : undefined,
   }
 }
 
@@ -307,6 +337,256 @@ async function configurePanels(runner: TestRunner, args: CLIArgs): Promise<strin
 // Demo Mode
 // =============================================================================
 
+// =============================================================================
+// Demo Suite Mode (C1) — multiple demos sequentially against one browser
+// =============================================================================
+
+interface SuiteResult {
+  file: string
+  name: string
+  success: boolean
+  durationMs: number
+  failedValidations: number
+  errors: number
+  errorMessage?: string
+}
+
+async function runDemoSuiteMode(args: CLIArgs): Promise<number> {
+  const dir = pathSync.resolve(args.demoSuite!)
+  if (!fsSync.existsSync(dir) || !fsSync.statSync(dir).isDirectory()) {
+    console.error(`❌ --demo-suite=${args.demoSuite} is not a directory`)
+    return 1
+  }
+
+  // Discover .ts/.js demo scripts. Skip files starting with _ (smokes/legacy).
+  const allFiles = fsSync
+    .readdirSync(dir)
+    .filter(f => /\.(ts|js)$/.test(f) && !f.startsWith('_'))
+    .map(f => pathSync.join(dir, f))
+    .sort()
+
+  const filterRe = args.filter ? new RegExp(args.filter, 'i') : null
+  const files = filterRe ? allFiles.filter(f => filterRe.test(pathSync.basename(f))) : allFiles
+
+  if (files.length === 0) {
+    console.error(
+      `❌ No demo scripts found in ${dir}` + (filterRe ? ` matching /${args.filter}/i` : '')
+    )
+    return 1
+  }
+
+  console.log(`\n🎬 ${bold('Demo Suite')}\n`)
+  console.log(`📁 Directory: ${dir}`)
+  console.log(
+    `📄 Scripts:   ${files.length}` + (filterRe ? ` (filtered by /${args.filter}/i)` : '')
+  )
+
+  // Shared AI mock fixtures
+  let aiMockFixtures: Record<string, string> | undefined
+  if (args.aiMock) {
+    try {
+      const raw = fsSync.readFileSync(pathSync.resolve(args.aiMock), 'utf-8')
+      aiMockFixtures = JSON.parse(raw)
+      console.log(
+        `🤖 AI mock:   ${Object.keys(aiMockFixtures!).length} fixture(s) from ${args.aiMock}`
+      )
+    } catch (err) {
+      console.error(`❌ Cannot load AI mock from ${args.aiMock}: ${(err as Error).message}`)
+      return 1
+    }
+  }
+  console.log('')
+
+  const config: Partial<TestConfig> = {
+    headless: !args.headed,
+    url: args.url,
+    verbose: args.verbose,
+    silent: args.silent,
+  }
+  const runner = new TestRunner(config)
+
+  const results: SuiteResult[] = []
+  const suiteStart = Date.now()
+  const pacing = args.demoPacing || 'instant'
+
+  try {
+    await runner.start()
+    const cdp = (runner as any).cdp
+    if (!cdp) throw new Error('Could not access CDP session')
+
+    for (const file of files) {
+      const rel = pathSync.relative(process.cwd(), file)
+      const t0 = Date.now()
+      const result: SuiteResult = {
+        file: rel,
+        name: pathSync.basename(file),
+        success: false,
+        durationMs: 0,
+        failedValidations: 0,
+        errors: 0,
+      }
+      try {
+        const script = await loadDemoScript(file)
+        result.name = script.name
+        await runner.navigate(args.url)
+        await new Promise(r => setTimeout(r, 1500))
+        const demoConfig: Partial<DemoConfig> & {
+          timing?: boolean
+          autoValidate?: boolean
+          aiMock?: Record<string, string>
+          snapshotDir?: string
+          snapshotBaselineDir?: string
+          snapshotThreshold?: number
+        } = {
+          speed: args.demoSpeed || 'fast',
+          pacing: pacing as any,
+          showKeystrokeOverlay: false,
+          timing: args.demoTiming,
+          autoValidate: args.demoAutoValidate,
+          aiMock: aiMockFixtures,
+          snapshotDir: args.demoSnapshots
+            ? pathSync.join(args.demoSnapshots, pathSync.basename(file, pathSync.extname(file)))
+            : undefined,
+          snapshotBaselineDir: args.demoSnapshotBaseline,
+          snapshotThreshold: args.demoSnapshotThreshold,
+        }
+        const demoRunner = new DemoRunner(cdp, demoConfig)
+        const runRes = await demoRunner.run(script)
+        result.success = runRes.success
+        result.failedValidations = runRes.failedValidations.length
+        result.errors = runRes.errors.length
+      } catch (err) {
+        result.errorMessage = err instanceof Error ? err.message : String(err)
+        result.errors = 1
+      }
+      result.durationMs = Date.now() - t0
+      results.push(result)
+      const icon = result.success ? '✅' : '❌'
+      const dur = (result.durationMs / 1000).toFixed(1)
+      console.log(`${icon} ${result.name.padEnd(40)} ${dur.padStart(6)}s   ${rel}`)
+      if (!result.success && result.errorMessage) {
+        console.log(`     ${result.errorMessage}`)
+      }
+      if (args.bail && !result.success) {
+        console.log('\n⏹  --bail set; stopping after first failure.\n')
+        break
+      }
+    }
+  } finally {
+    await runner.stop()
+  }
+
+  const totalMs = Date.now() - suiteStart
+  const passed = results.filter(r => r.success).length
+  const failed = results.length - passed
+  console.log('\n' + '─'.repeat(70))
+  console.log(`Suite: ${passed} passed, ${failed} failed in ${(totalMs / 1000).toFixed(1)}s`)
+  if (failed > 0) {
+    console.log('\nFailing demos:')
+    for (const r of results) if (!r.success) console.log(`  • ${r.name} (${r.file})`)
+  }
+  console.log('')
+
+  if (args.junit) {
+    writeDemoSuiteJUnit(results, totalMs, args.junit)
+    console.log(`📄 JUnit report:  ${args.junit}`)
+  }
+  if (args.html) {
+    writeDemoSuiteHTML(results, totalMs, args.html)
+    console.log(`📄 HTML report:   ${args.html}`)
+  }
+  if (args.junit || args.html) console.log('')
+
+  return failed === 0 ? 0 : 1
+}
+
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+function writeDemoSuiteJUnit(results: SuiteResult[], totalMs: number, outputPath: string): void {
+  fsSync.mkdirSync(pathSync.dirname(pathSync.resolve(outputPath)), { recursive: true })
+  const passed = results.filter(r => r.success).length
+  const failed = results.length - passed
+  const totalSec = (totalMs / 1000).toFixed(3)
+  const cases = results
+    .map(r => {
+      const time = (r.durationMs / 1000).toFixed(3)
+      const fileAttr = escapeXml(r.file)
+      if (r.success) {
+        return `    <testcase classname="demos" name="${escapeXml(r.name)}" time="${time}" file="${fileAttr}"/>`
+      }
+      const msg = r.errorMessage ?? `${r.failedValidations} failed validations, ${r.errors} errors`
+      return [
+        `    <testcase classname="demos" name="${escapeXml(r.name)}" time="${time}" file="${fileAttr}">`,
+        `      <failure message="${escapeXml(msg)}"></failure>`,
+        `    </testcase>`,
+      ].join('\n')
+    })
+    .join('\n')
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="demos" tests="${results.length}" failures="${failed}" time="${totalSec}">
+  <testsuite name="demos" tests="${results.length}" failures="${failed}" time="${totalSec}">
+${cases}
+  </testsuite>
+</testsuites>
+`
+  fsSync.writeFileSync(outputPath, xml, 'utf-8')
+}
+
+function writeDemoSuiteHTML(results: SuiteResult[], totalMs: number, outputPath: string): void {
+  fsSync.mkdirSync(pathSync.dirname(pathSync.resolve(outputPath)), { recursive: true })
+  const passed = results.filter(r => r.success).length
+  const failed = results.length - passed
+  const totalSec = (totalMs / 1000).toFixed(1)
+  const rows = results
+    .map(r => {
+      const dur = (r.durationMs / 1000).toFixed(1)
+      const status = r.success
+        ? '<span class="ok">✅ pass</span>'
+        : '<span class="bad">❌ fail</span>'
+      const detail = r.success
+        ? ''
+        : r.errorMessage
+          ? `<div class="err">${escapeXml(r.errorMessage)}</div>`
+          : `<div class="err">${r.failedValidations} failed validations, ${r.errors} errors</div>`
+      return `      <tr><td>${status}</td><td>${escapeXml(r.name)}</td><td class="dur">${dur}s</td><td class="file">${escapeXml(r.file)}</td></tr>${detail ? `\n      <tr><td colspan="4">${detail}</td></tr>` : ''}`
+    })
+    .join('\n')
+  const html = `<!doctype html>
+<html><head><meta charset="utf-8"><title>Mirror Demos — Suite Report</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
+  h1 { margin: 0 0 0.5rem; }
+  .summary { color: #555; margin-bottom: 1.5rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: left; }
+  th { background: #f5f5f5; }
+  .ok { color: #10b981; font-weight: 600; }
+  .bad { color: #ef4444; font-weight: 600; }
+  .dur { font-variant-numeric: tabular-nums; color: #666; }
+  .file { font-family: ui-monospace, monospace; font-size: 0.85em; color: #666; }
+  .err { color: #b91c1c; padding: 4px 12px 12px; font-family: ui-monospace, monospace; font-size: 0.85em; }
+</style></head>
+<body>
+  <h1>Mirror Demos</h1>
+  <div class="summary">${passed} passed, ${failed} failed in ${totalSec}s</div>
+  <table>
+    <thead><tr><th>Status</th><th>Demo</th><th>Time</th><th>Script</th></tr></thead>
+    <tbody>
+${rows}
+    </tbody>
+  </table>
+</body></html>
+`
+  fsSync.writeFileSync(outputPath, html, 'utf-8')
+}
+
 async function runDemoMode(args: CLIArgs): Promise<number> {
   const isValidateMode = args.demoValidate
 
@@ -356,18 +636,45 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
         pacing = 'testing' // Use testing profile for validation
       }
 
-      // Create demo config with validation options
+      // Load AI mock fixtures if given
+      let aiMockFixtures: Record<string, string> | undefined
+      if (args.aiMock) {
+        try {
+          const raw = fsSync.readFileSync(pathSync.resolve(args.aiMock), 'utf-8')
+          aiMockFixtures = JSON.parse(raw)
+          const count = Object.keys(aiMockFixtures!).length
+          console.log(`🤖 AI mock: ${count} fixture${count === 1 ? '' : 's'} from ${args.aiMock}`)
+        } catch (err) {
+          throw new Error(`Cannot load AI mock from ${args.aiMock}: ${(err as Error).message}`)
+        }
+      }
+
+      // Create demo config with validation options + iteration + snapshots
       const demoConfig: Partial<DemoConfig> & {
         timing?: boolean
         autoValidate?: boolean
         validationLevel?: 'strict' | 'normal' | 'lenient'
+        fromStep?: number
+        untilStep?: number
+        stepMode?: boolean
+        aiMock?: Record<string, string>
+        snapshotDir?: string
+        snapshotBaselineDir?: string
+        snapshotThreshold?: number
       } = {
-        speed: isValidateMode ? 'fast' : (args.demoSpeed || 'normal'),
+        speed: isValidateMode ? 'fast' : args.demoSpeed || 'normal',
         pacing: pacing as any,
         showKeystrokeOverlay: isValidateMode ? false : args.demoOverlay,
         timing: args.demoTiming,
         autoValidate: args.demoAutoValidate,
         validationLevel: args.demoValidationLevel,
+        fromStep: args.fromStep,
+        untilStep: args.untilStep,
+        stepMode: args.stepMode,
+        aiMock: aiMockFixtures,
+        snapshotDir: args.demoSnapshots,
+        snapshotBaselineDir: args.demoSnapshotBaseline,
+        snapshotThreshold: args.demoSnapshotThreshold,
       }
 
       // Get CDP session for demo runner
@@ -451,7 +758,13 @@ async function main(): Promise<void> {
     process.exit(0)
   }
 
-  // Handle demo mode
+  // Handle demo suite mode (multiple demo scripts)
+  if (args.demoSuite) {
+    const exitCode = await runDemoSuiteMode(args)
+    process.exit(exitCode)
+  }
+
+  // Handle single demo mode
   if (args.demo) {
     const exitCode = await runDemoMode(args)
     process.exit(exitCode)

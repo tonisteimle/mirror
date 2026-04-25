@@ -1,297 +1,305 @@
 /**
  * Visual Editing Demo
  *
- * Zeigt das visuelle Editieren mit Drag & Drop und Handles:
- * 1. Frame als Container
- * 2. Titel, Text und Button hinzufügen
- * 3. Padding mit Handles anpassen
- * 4. Texte per Doppelklick bearbeiten
+ * Vollständiger Mirror-Workflow per Drag & Drop, Resize/Padding/Margin-Handles
+ * und Inline-Editing — als Spec-by-Example. Jede mutierende Aktion ist eine
+ * dedizierte Demo-Action, kein eingebettetes JavaScript. Cursor-Sync und
+ * Browser-Interaction laufen zentral im Runner (siehe MIRROR_ACTIONS_API in
+ * tools/test-runner/demo/runner.ts).
  *
- * Baut eine Card komplett visuell - ohne Code zu tippen.
+ * Spec & Plan: docs/concepts/visual-editing-demo.md
+ *
+ * Validierung: pro mutierender Schritt ein `expectCode` mit erwartetem
+ * Editor-Inhalt. Lern-Modus (kein `code`-Feld) dumpt den aktuellen Code für die
+ * Erstkalibrierung; danach werden die Snapshots eingefroren.
  */
 
 import type { DemoScript } from '../types'
+import { resetCanvas, validateStudioReady } from '../fragments/setup'
+import { paletteHighlight } from '../fragments/palette'
 
 export const demoScript: DemoScript = {
   name: 'Visual Editing',
-  description: 'Drag & Drop, Handles und Inline-Editing - UI bauen ohne Code',
+  description: 'Card per Drag & Drop bauen — Hierarchie, Sizing, Padding, Margin, Inline-Editing',
   config: {
     speed: 'normal',
     showKeystrokeOverlay: true,
   },
   steps: [
-    // === Projekt zurücksetzen ===
-    {
-      action: 'execute',
-      code: `
-        (async function() {
-          // Basis-Frame setzen
-          const baseCode = 'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\\n';
-          window.__dragTest.setCode(baseCode);
-          await window.__dragTest.waitForCompile();
-        })();
-      `,
-      comment: 'Projekt zurücksetzen',
-    },
+    // === 1. Reset ===
+    ...resetCanvas(),
+
+    // === Intro ===
+    { action: 'comment', text: 'Card komplett visuell bauen — ohne Code zu tippen' },
     { action: 'wait', duration: 1000 },
+    ...validateStudioReady(),
 
-    // === Einleitung ===
-    { action: 'comment', text: 'Visual Editing - Eine Card komplett visuell bauen' },
-    { action: 'wait', duration: 1500 },
-
-    // Validierung: Studio ist bereit
+    // === 2. Frame als Card-Container in Canvas droppen ===
+    // atIndex(0) statt atAlignmentZone('center') — node-1 hat schon `center`,
+    // ein zweites würde via parent-property-add ein Duplikat einfügen.
+    { action: 'comment', text: 'Schritt 1: Card-Container aus der Palette' },
+    ...paletteHighlight('comp-frame', { duration: 500 }),
     {
-      action: 'validate',
-      comment: 'Studio ist bereit',
+      action: 'dropFromPalette',
+      component: 'Frame',
+      target: { byId: 'node-1' },
+      at: { kind: 'index', index: 0 },
+      comment: 'Frame in Canvas',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after Frame drop',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8',
+    },
+    // expectDom (A2): structurelle DOM-Validation. Wir prüfen nur das, was
+    // tatsächlich vom Drop verändert wurde — die innere Card wurde mit Default-
+    // Properties eingefügt und sollte 100×100, kein Padding, bg #27272a haben.
+    // Outer-Frame-Werte (Width/Height) sind viewport-abhängig und werden hier
+    // nicht festgenagelt; childCount wird geprüft.
+    {
+      action: 'expectDom',
+      comment: 'after Frame drop',
       checks: [
-        { type: 'exists', selector: '#components-panel' },
-        { type: 'exists', selector: '#preview' },
-        { type: 'exists', selector: '.cm-editor' },
-        { type: 'exists', selector: '#preview [data-mirror-id="node-1"]' },
+        {
+          selector: { byId: 'node-1' },
+          tag: 'div',
+          childCount: 1,
+          layout: { direction: 'vertical', gap: 16, align: 'center' },
+        },
+        {
+          selector: { byId: 'node-2' },
+          tag: 'div',
+          width: 100,
+          height: 100,
+          background: '#27272a',
+          paddingTop: 0,
+          paddingRight: 0,
+          paddingBottom: 0,
+          paddingLeft: 0,
+          childCount: 0,
+        },
       ],
     },
 
-    // === SCHRITT 1: Card-Frame hinzufügen ===
-    { action: 'comment', text: 'Schritt 1: Frame als Card hinzufügen' },
+    // === 3. Resize: Card breiter ziehen ===
+    // bypassSnap: true für deterministische 280px-Breite (sonst würde 280
+    // selbst auf 280 snappen, +180-delta auf 100 → könnte aber je nach
+    // initialer Resize-Handle-Position anders rauskommen).
+    { action: 'comment', text: 'Schritt 2: Card breiter ziehen (Resize-Handle Ost)' },
+    {
+      action: 'dragResize',
+      selector: { byId: 'node-2' },
+      position: 'e',
+      deltaX: 180,
+      deltaY: 0,
+      bypassSnap: true,
+      comment: 'Card auf ~280 breit',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after resize east +180',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h 104, bg #27272a, rad 8',
+    },
+
+    // === 4. H1 in die leere Card ===
+    { action: 'comment', text: 'Schritt 3: Titel (H1) in die Card draggen' },
+    ...paletteHighlight('comp-h1'),
+    {
+      action: 'dropFromPalette',
+      component: 'H1',
+      target: { byId: 'node-2' },
+      at: { kind: 'zone', zone: 'center' },
+      comment: 'H1 in leere Card (Alignment-Zone)',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after H1 drop',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h 104, bg #27272a, rad 8, center\n' +
+        '    H1 "Heading 1", col #e4e4e7',
+    },
+
+    // === 5. Text in die Card ===
+    { action: 'comment', text: 'Schritt 4: Beschreibung (Text) in die Card' },
+    ...paletteHighlight('comp-text'),
+    {
+      action: 'dropFromPalette',
+      component: 'Text',
+      target: { byId: 'node-2' },
+      at: { kind: 'index', index: 1 },
+      comment: 'Text an Index 1',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after Text drop',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h 104, bg #27272a, rad 8, center\n' +
+        '    H1 "Heading 1", col #e4e4e7\n' +
+        '    Text "Text", fs 14, col #e4e4e7',
+    },
+
+    // === 6. Button in die Card ===
+    { action: 'comment', text: 'Schritt 5: Button in die Card' },
+    ...paletteHighlight('comp-button'),
+    {
+      action: 'dropFromPalette',
+      component: 'Button',
+      target: { byId: 'node-2' },
+      at: { kind: 'index', index: 2 },
+      comment: 'Button an Index 2',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after Button drop',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h 104, bg #27272a, rad 8, center\n' +
+        '    H1 "Heading 1", col #e4e4e7\n' +
+        '    Text "Text", fs 14, col #e4e4e7\n' +
+        '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
+    },
+
+    // === 7. Padding ===
+    // Reorder kommt erst am Ende — sobald Knoten umsortiert werden, vergibt
+    // Mirror neue node-IDs nach AST-Reihenfolge. Würden wir vor Inline-Edit
+    // reordern, würden die hardcodierten IDs (node-3 = H1, node-5 = Button)
+    // auf andere Elemente zeigen.
+    { action: 'comment', text: 'Schritt 6: Padding-Handle ziehen' },
+    {
+      action: 'dragPadding',
+      selector: { byId: 'node-2' },
+      side: 'top',
+      delta: 24,
+      comment: 'Top-Padding +24',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after padding top +24',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24\n' +
+        '    H1 "Heading 1", col #e4e4e7\n' +
+        '    Text "Text", fs 14, col #e4e4e7\n' +
+        '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
+    },
+
+    // === 8. Margin ===
+    { action: 'comment', text: 'Schritt 7: Margin-Handle ziehen' },
+    {
+      action: 'dragMargin',
+      selector: { byId: 'node-2' },
+      side: 'top',
+      delta: 16,
+      comment: 'Top-Margin +16',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after margin top +16',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24, mar-t 16\n' +
+        '    H1 "Heading 1", col #e4e4e7\n' +
+        '    Text "Text", fs 14, col #e4e4e7\n' +
+        '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
+    },
+
+    // === 9. Inline-Edit Titel ===
+    { action: 'comment', text: 'Schritt 8: Titel per Doppelklick bearbeiten' },
+    {
+      action: 'inlineEdit',
+      selector: { byTag: 'h1' },
+      text: 'Willkommen',
+      comment: 'H1 → "Willkommen"',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after H1 inline-edit',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24, mar-t 16\n' +
+        '    H1 "Willkommen", col #e4e4e7\n' +
+        '    Text "Text", fs 14, col #e4e4e7\n' +
+        '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
+    },
+
+    // === 10. Inline-Edit Button ===
+    { action: 'comment', text: 'Schritt 9: Button-Text bearbeiten' },
+    {
+      action: 'inlineEdit',
+      selector: { byTag: 'button' },
+      text: 'Loslegen',
+      comment: 'Button → "Loslegen"',
+    },
     { action: 'wait', duration: 500 },
-
-    // Zum Component Panel bewegen und Frame visuell zeigen
-    { action: 'moveTo', target: '#components-panel' },
-    { action: 'wait', duration: 300 },
     {
-      action: 'highlight',
-      target: '#components-panel [data-component-id="comp-frame"]',
-      duration: 500,
+      action: 'expectCode',
+      comment: 'after Button inline-edit',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24, mar-t 16\n' +
+        '    H1 "Willkommen", col #e4e4e7\n' +
+        '    Text "Text", fs 14, col #e4e4e7\n' +
+        '    Button "Loslegen", pad 12 24, bg #5BA8F5, col white, rad 6',
     },
 
-    // Frame hinzufügen per Code
+    // === 11. Reorder: Button nach vorne (Index 0) ===
+    // Demonstriert Hierarchie-Manipulation 2. Stufe: bestehende Knoten
+    // umordnen. Bewusst am Ende, weil moveElement node-IDs neu vergibt.
+    { action: 'comment', text: 'Schritt 10: Reorder — Button vor den Titel' },
     {
-      action: 'execute',
-      code: `
-        (async function() {
-          const code = 'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\\n  Frame bg #27272a, pad 24, rad 12, gap 16, w 320\\n';
-          window.__dragTest.setCode(code);
-          await window.__dragTest.waitForCompile();
-        })();
-      `,
-      comment: 'Frame hinzufügen',
+      action: 'moveElement',
+      source: { byTag: 'button' },
+      target: { byPath: 'Frame > Frame' },
+      index: 0,
+      comment: 'Button auf Index 0',
     },
-    { action: 'wait', duration: 800 },
-
-    // Validierung: Frame wurde hinzugefügt
+    { action: 'wait', duration: 400 },
     {
-      action: 'validate',
-      comment: 'Frame wurde eingefügt',
-      checks: [{ type: 'elementCount', selector: '#preview [data-mirror-id]', min: 2 }],
+      action: 'expectCode',
+      comment: 'after reorder (Button → index 0)',
+      code:
+        'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
+        '  Frame w 280, h 104, bg #27272a, rad 8, center, pad-t 24, mar-t 16\n' +
+        '    Button "Loslegen", pad 12 24, bg #5BA8F5, col white, rad 6\n' +
+        '    H1 "Willkommen", col #e4e4e7\n' +
+        '    Text "Text", fs 14, col #e4e4e7',
     },
-
-    // === SCHRITT 2: Titel (H1) hinzufügen ===
-    { action: 'comment', text: 'Schritt 2: Titel hinzufügen' },
-    { action: 'wait', duration: 500 },
-
-    // H1 visuell zeigen
-    { action: 'moveTo', target: '#components-panel' },
-    {
-      action: 'highlight',
-      target: '#components-panel [data-component-id="comp-h1"]',
-      duration: 500,
-    },
-
-    // H1 hinzufügen
-    {
-      action: 'execute',
-      code: `
-        (async function() {
-          const code = 'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\\n  Frame bg #27272a, pad 24, rad 12, gap 16, w 320\\n    H1 "Willkommen", col white\\n';
-          window.__dragTest.setCode(code);
-          await window.__dragTest.waitForCompile();
-        })();
-      `,
-      comment: 'H1 Titel hinzufügen',
-    },
-    { action: 'wait', duration: 800 },
-
-    // === SCHRITT 3: Text hinzufügen ===
-    { action: 'comment', text: 'Schritt 3: Beschreibungstext hinzufügen' },
-    { action: 'wait', duration: 500 },
-
-    // Text visuell zeigen
-    {
-      action: 'highlight',
-      target: '#components-panel [data-component-id="comp-text"]',
-      duration: 500,
-    },
-
-    // Text hinzufügen
-    {
-      action: 'execute',
-      code: `
-        (async function() {
-          const code = 'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\\n  Frame bg #27272a, pad 24, rad 12, gap 16, w 320\\n    H1 "Willkommen", col white\\n    Text "Eine kurze Beschreibung", col #a1a1aa, fs 14\\n';
-          window.__dragTest.setCode(code);
-          await window.__dragTest.waitForCompile();
-        })();
-      `,
-      comment: 'Text hinzufügen',
-    },
-    { action: 'wait', duration: 800 },
-
-    // === SCHRITT 4: Button hinzufügen ===
-    { action: 'comment', text: 'Schritt 4: Button hinzufügen' },
-    { action: 'wait', duration: 500 },
-
-    // Button visuell zeigen
-    {
-      action: 'highlight',
-      target: '#components-panel [data-component-id="comp-button"]',
-      duration: 500,
-    },
-
-    // Button hinzufügen
-    {
-      action: 'execute',
-      code: `
-        (async function() {
-          const code = 'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\\n  Frame bg #27272a, pad 24, rad 12, gap 16, w 320\\n    H1 "Willkommen", col white\\n    Text "Eine kurze Beschreibung", col #a1a1aa, fs 14\\n    Button "Jetzt starten", bg #5BA8F5, col white, pad 12 24, rad 6\\n';
-          window.__dragTest.setCode(code);
-          await window.__dragTest.waitForCompile();
-        })();
-      `,
-      comment: 'Button hinzufügen',
-    },
-    { action: 'wait', duration: 800 },
-
-    // Validierung: Alle Elemente
-    {
-      action: 'validate',
-      comment: 'Elemente wurden hinzugefügt',
-      checks: [
-        { type: 'editorContains', text: 'H1' },
-        { type: 'editorContains', text: 'Button' },
-        { type: 'editorContains', text: 'Text' },
-      ],
-    },
-
-    // === SCHRITT 5: Padding anpassen ===
-    { action: 'comment', text: 'Schritt 5: Padding mit Handles anpassen' },
-    { action: 'wait', duration: 500 },
-
-    // Card-Frame auswählen
-    {
-      action: 'execute',
-      code: `
-        (async function() {
-          await window.__dragTest.waitForCompile();
-          window.__dragTest.selectNode('node-2');
-        })();
-      `,
-      comment: 'Card auswählen',
-    },
-    { action: 'wait', duration: 300 },
-
-    // P drücken für Padding-Modus
-    { action: 'pressKey', key: 'p' },
-    { action: 'wait', duration: 500 },
-
-    // Auf Padding-Handle zeigen
-    { action: 'moveTo', target: '.padding-handle-top' },
-    { action: 'wait', duration: 300 },
-    { action: 'highlight', target: '.padding-handle-top', duration: 800 },
-
-    // Padding ändern (simuliert)
-    {
-      action: 'execute',
-      code: `
-        (async function() {
-          // Padding vergrößern im Code
-          const code = 'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\\n  Frame bg #27272a, pad 32, rad 12, gap 16, w 320\\n    H1 "Willkommen", col white\\n    Text "Eine kurze Beschreibung", col #a1a1aa, fs 14\\n    Button "Jetzt starten", bg #5BA8F5, col white, pad 12 24, rad 6\\n';
-          window.__dragTest.setCode(code);
-          await window.__dragTest.waitForCompile();
-        })();
-      `,
-      comment: 'Padding vergrößern',
-    },
-    { action: 'wait', duration: 600 },
-
-    // Padding-Modus verlassen
-    { action: 'pressKey', key: 'p' },
-    { action: 'wait', duration: 300 },
-
-    // === SCHRITT 6: Titel per Doppelklick bearbeiten ===
-    { action: 'comment', text: 'Schritt 6: Titel per Doppelklick bearbeiten' },
-    { action: 'wait', duration: 500 },
-
-    // Zum Titel bewegen und Doppelklick simulieren
-    { action: 'moveTo', target: '#preview [data-mirror-id="node-3"]' },
-    { action: 'wait', duration: 300 },
-    { action: 'doubleClick', target: '#preview [data-mirror-id="node-3"]' },
-    { action: 'wait', duration: 500 },
-
-    // Text ändern
-    {
-      action: 'execute',
-      code: `
-        (async function() {
-          const code = 'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\\n  Frame bg #27272a, pad 32, rad 12, gap 16, w 320\\n    H1 "Hallo Welt!", col white\\n    Text "Eine kurze Beschreibung", col #a1a1aa, fs 14\\n    Button "Jetzt starten", bg #5BA8F5, col white, pad 12 24, rad 6\\n';
-          window.__dragTest.setCode(code);
-          await window.__dragTest.waitForCompile();
-        })();
-      `,
-      comment: 'Titel-Text ändern',
-    },
-    { action: 'wait', duration: 600 },
-
-    // === SCHRITT 7: Button-Text bearbeiten ===
-    { action: 'comment', text: 'Schritt 7: Button-Text per Doppelklick ändern' },
-    { action: 'wait', duration: 500 },
-
-    // Zum Button bewegen
-    { action: 'moveTo', target: '#preview button[data-mirror-id]' },
-    { action: 'wait', duration: 300 },
-    { action: 'doubleClick', target: '#preview button[data-mirror-id]' },
-    { action: 'wait', duration: 500 },
-
-    // Button-Text ändern
-    {
-      action: 'execute',
-      code: `
-        (async function() {
-          const code = 'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\\n  Frame bg #27272a, pad 32, rad 12, gap 16, w 320\\n    H1 "Hallo Welt!", col white\\n    Text "Eine kurze Beschreibung", col #a1a1aa, fs 14\\n    Button "Los geht\\'s!", bg #5BA8F5, col white, pad 12 24, rad 6\\n';
-          window.__dragTest.setCode(code);
-          await window.__dragTest.waitForCompile();
-        })();
-      `,
-      comment: 'Button-Text ändern',
-    },
-    { action: 'wait', duration: 600 },
 
     // === Finale ===
-    { action: 'comment', text: 'Fertig! Eine Card mit Titel, Text und Button' },
-    { action: 'wait', duration: 500 },
-
-    // Code zeigen
+    { action: 'comment', text: 'Fertig — UI komplett visuell aufgebaut' },
     { action: 'moveTo', target: '.cm-editor' },
-    { action: 'wait', duration: 300 },
-    { action: 'highlight', target: '.cm-editor', duration: 2000 },
-
-    { action: 'comment', text: 'Der Code wurde automatisch generiert - nur mit visuellen Tools' },
+    { action: 'highlight', target: '.cm-editor', duration: 1500 },
     { action: 'moveTo', target: '#preview' },
-    { action: 'wait', duration: 300 },
-    { action: 'highlight', target: '#preview', duration: 2000 },
+    { action: 'highlight', target: '#preview', duration: 1500 },
 
-    // Validierung
     {
       action: 'validate',
-      comment: 'UI wurde visuell erstellt',
+      comment: 'Endstand',
       checks: [
         { type: 'editorContains', text: 'Frame' },
         { type: 'editorContains', text: 'H1' },
         { type: 'editorContains', text: 'Button' },
+        { type: 'editorContains', text: 'Willkommen' },
+        { type: 'editorContains', text: 'Loslegen' },
         { type: 'noLintErrors', allowWarnings: true },
       ],
     },
 
-    { action: 'wait', duration: 2000, comment: 'Demo abgeschlossen' },
+    { action: 'wait', duration: 1000, comment: 'Demo abgeschlossen' },
   ],
 }
 
