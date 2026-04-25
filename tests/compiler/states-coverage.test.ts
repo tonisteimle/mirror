@@ -19,6 +19,10 @@
 import { describe, it, expect } from 'vitest'
 import { parse } from '../../compiler/parser'
 import { generateDOM } from '../../compiler/backends/dom'
+import {
+  transformStateChild,
+  type StateChildContext,
+} from '../../compiler/ir/transformers/state-child-transformer'
 
 function dom(src: string): string {
   return generateDOM(parse(src))
@@ -208,6 +212,84 @@ Slider
 // =============================================================================
 // Combined: System + Custom states on same element
 // =============================================================================
+
+// =============================================================================
+// state-child-transformer direct unit tests (Iter 2)
+// =============================================================================
+
+describe('States Iter 2 — state-child-transformer unit tests', () => {
+  function makeCtx(withHtmlExtractor = true): StateChildContext {
+    let counter = 0
+    const ctx: StateChildContext = {
+      generateNodeId: () => `state-child-${counter++}`,
+      transformProperties: () => [],
+    }
+    if (withHtmlExtractor) {
+      ctx.extractHtmlProperties = (props: any[]) =>
+        props
+          .filter(p => ['placeholder', 'disabled', 'type'].includes(p.name))
+          .map(p => ({ name: p.name, value: p.values?.[0] ?? true }))
+    }
+    return ctx
+  }
+
+  it('U1: returns null for null instance', () => {
+    expect(transformStateChild(null as any, makeCtx())).toBeNull()
+  })
+
+  it('U2: returns null for instance without component', () => {
+    expect(transformStateChild({ component: '' } as any, makeCtx())).toBeNull()
+  })
+
+  it('U3: legacy fallback path: ctx.extractHtmlProperties absent → only content→textContent', () => {
+    const instance = {
+      component: 'Text',
+      properties: [{ name: 'content', values: ['Hello'], type: 'Property' }],
+      children: [],
+    } as any
+    const node = transformStateChild(instance, makeCtx(/*withHtmlExtractor=*/ false))!
+    expect(node.properties).toEqual([{ name: 'textContent', value: 'Hello' }])
+  })
+
+  it('U4: legacy fallback path: instance.properties without content → empty properties', () => {
+    const instance = {
+      component: 'Frame',
+      properties: [{ name: 'placeholder', values: ['x'], type: 'Property' }],
+      children: [],
+    } as any
+    const node = transformStateChild(instance, makeCtx(/*withHtmlExtractor=*/ false))!
+    // No `content` prop → legacy path produces no HTML props
+    expect(node.properties).toEqual([])
+  })
+
+  it('U5: recursive transformation of state-children adds them to node.children', () => {
+    const instance = {
+      component: 'Frame',
+      properties: [],
+      children: [
+        { component: 'Text', properties: [], children: [] },
+        { component: 'Text', properties: [], children: [] },
+      ],
+    } as any
+    const node = transformStateChild(instance, makeCtx())!
+    expect(node.children).toHaveLength(2)
+  })
+
+  it('U6: extractHtmlProperties path: HTML props are appended', () => {
+    const instance = {
+      component: 'Input',
+      properties: [
+        { name: 'placeholder', values: ['Pick'], type: 'Property' },
+        { name: 'disabled', values: [], type: 'Property' },
+      ],
+      children: [],
+    } as any
+    const node = transformStateChild(instance, makeCtx())!
+    const names = node.properties.map(p => p.name)
+    expect(names).toContain('placeholder')
+    expect(names).toContain('disabled')
+  })
+})
 
 describe('States — combined system and custom states', () => {
   it('S11: hover + on combined on toggle button', () => {

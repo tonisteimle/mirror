@@ -58,7 +58,7 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | abgeschlossen | [04-layout.md](04-layout.md)                               |
 | 5   | Komponenten & Vererbung                                | abgeschlossen | [05-komponenten-vererbung.md](05-komponenten-vererbung.md) |
 | 6   | Tokens & Property-Sets                                 | abgeschlossen | [06-tokens.md](06-tokens.md)                               |
-| 7   | States (System + Custom + Cross-Element + Transitions) | Iter 2 nötig  | [07-states.md](07-states.md)                               |
+| 7   | States (System + Custom + Cross-Element + Transitions) | abgeschlossen | [07-states.md](07-states.md)                               |
 | 8   | Events & Actions                                       | abgeschlossen | [08-events-actions.md](08-events-actions.md)               |
 | 9   | Data-Binding & Iteration (each, where, by)             | offen         | —                                                          |
 | 10  | Conditionals & Expressions                             | offen         | —                                                          |
