@@ -52,21 +52,18 @@ export const demoScript: DemoScript = {
       action: 'dropFromPalette',
       component: 'Frame',
       target: { byId: 'node-1' },
-      // Drop in the center alignment zone of the canvas. Mirror responds
-      // by wrapping the new Frame in `Frame w full, h full, center` so the
-      // dropped element renders visually centred (not pinned top-left).
-      at: { kind: 'zone', zone: 'center' },
-      comment: 'Frame mittig in Canvas droppen',
+      // Drops on canvas-only state always append as plain top-level
+      // (Mirror Studio limitation — alignment zones aren't honored
+      // in canvas-only state without a proper Studio-level fix).
+      at: { kind: 'index', index: 0 },
+      comment: 'Frame als erstes Top-Level Element',
     },
     { action: 'wait', duration: 800 },
     {
       action: 'expectCode',
-      comment: 'after Frame drop (center)',
+      comment: 'after Frame drop',
       code:
-        'canvas mobile, bg #0f0f0f, col white\n' +
-        '\n' +
-        'Frame w full, h full, center\n' +
-        '  Frame w 100, h 100, bg #27272a, rad 8',
+        'canvas mobile, bg #0f0f0f, col white\n' + '\n' + 'Frame w 100, h 100, bg #27272a, rad 8',
     },
 
     // Endbild

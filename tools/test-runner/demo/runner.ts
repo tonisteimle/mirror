@@ -1668,6 +1668,17 @@ export class DemoRunner {
             console.error(`   ❌ ${msg}`)
             if (this.validationConfig.failFast) break
           }
+          // Render-hierarchy check: the AST's parent → child relations
+          // must match the DOM's parent → child relations. Catches Mirror
+          // render bugs where source says "X is child of Y" but the DOM
+          // renders X as a sibling.
+          const hierarchyIssue = await this.verifyDomHierarchy()
+          if (hierarchyIssue) {
+            const msg = `Step ${stepNum} (${effectiveStep.action}) DOM hierarchy mismatch: ${hierarchyIssue}`
+            this.errors.push(msg)
+            console.error(`   ❌ ${msg}`)
+            if (this.validationConfig.failFast) break
+          }
         }
         if (this.stepMode && !fastForward && DemoRunner.isMutatingStep(effectiveStep)) {
           await this.waitForEnter(
@@ -3315,6 +3326,89 @@ export class DemoRunner {
   }
 
   /**
+   * Verify that the rendered DOM hierarchy matches the editor source's
+   * AST hierarchy. Catches the worst class of Mirror bugs: source says
+   * "Text as child of Frame" but DOM renders Text as a sibling.
+   *
+   * Walks Mirror's IR, builds a parent → child node-id map, then for
+   * every parent-child relationship checks the DOM: the child's nearest
+   * [data-mirror-id] ancestor must be the parent.
+   *
+   * Returns null if all clean, or a short description of the first
+   * mismatch.
+   */
+  private async verifyDomHierarchy(): Promise<string | null> {
+    return await this.evaluate<string | null>(`
+      (() => {
+        const lang = window.MirrorLang;
+        if (!lang || typeof lang.parse !== 'function' || typeof lang.toIR !== 'function') {
+          return null;
+        }
+        const editor = window.editor;
+        if (!editor || !editor.state) return null;
+        const source = editor.state.doc.toString();
+        if (source.trim() === '') return null;
+
+        let ir;
+        try {
+          const ast = lang.parse(source);
+          if (ast.errors && ast.errors.length > 0) return null; // parse-health handles this
+          const irRes = lang.toIR(ast, true);
+          ir = irRes && irRes.ir ? irRes.ir : irRes;
+        } catch (e) {
+          return null;
+        }
+        if (!ir) return null;
+
+        const expectedParent = {};
+        function walk(node, parentId) {
+          if (!node) return;
+          const id = node.id || node.nodeId;
+          if (id) {
+            if (parentId) expectedParent[id] = parentId;
+            const kids = node.children || node.body || [];
+            for (const k of kids) walk(k, id);
+          } else {
+            const kids = node.children || node.body || [];
+            for (const k of kids) walk(k, parentId);
+          }
+        }
+        if (Array.isArray(ir)) {
+          for (const root of ir) walk(root, null);
+        } else if (ir.children) {
+          walk(ir, null);
+        } else if (ir.root) {
+          walk(ir.root, null);
+        } else {
+          walk(ir, null);
+        }
+
+        const preview = document.querySelector('#preview');
+        if (!preview) return null;
+        for (const childId of Object.keys(expectedParent)) {
+          const wantParent = expectedParent[childId];
+          const childEl = preview.querySelector('[data-mirror-id="' + childId + '"]');
+          if (!childEl) {
+            return 'expected node ' + childId + ' (child of ' + wantParent + ') in DOM, not found';
+          }
+          let cur = childEl.parentElement;
+          let gotParent = null;
+          while (cur && cur !== preview) {
+            const id = cur.getAttribute && cur.getAttribute('data-mirror-id');
+            if (id) { gotParent = id; break; }
+            cur = cur.parentElement;
+          }
+          if (gotParent !== wantParent) {
+            return 'node ' + childId + ' parent-in-source=' + wantParent +
+                   ' but parent-in-DOM=' + (gotParent || '<root>') + ' (render hierarchy mismatch)';
+          }
+        }
+        return null;
+      })()
+    `)
+  }
+
+  /**
    * Verify that a drop landed visually in the requested alignment zone.
    * For a `center` zone drop, the new element's center should be in the
    * middle third of the preview — not pinned top-left as the canvas-only
@@ -3362,6 +3456,13 @@ export class DemoRunner {
     step: Extract<DemoAction, { action: 'dropFromPalette' }>
   ): Promise<void> {
     const lower = step.component.toLowerCase()
+    // Snapshot the existing node-id set so we can identify what's new
+    // after the drop (for drop-intent validation).
+    const beforeIds = await this.evaluate<string[]>(`
+      Array.from(document.querySelectorAll('#preview [data-mirror-id]'))
+        .map(el => el.getAttribute('data-mirror-id'))
+    `)
+    const beforeIdsJson = JSON.stringify(beforeIds)
     // Find palette item rect (page coords)
     const paletteRect = await this.evaluate<{ x: number; y: number; w: number; h: number } | null>(`
       (() => {
@@ -3431,6 +3532,119 @@ export class DemoRunner {
         console.error('   ❌ ' + msg)
       }
     }
+
+    // Drop-intent validation: the newly added node must actually be a
+    // child of the requested target. Catches the silent failure where
+    // Mirror's hit-detector chose a different target than the demo
+    // asked for (so source-text is internally consistent but the new
+    // element ends up where the user didn't want it).
+    //
+    // Wait for the DOM to settle: waitForCompile resolves on
+    // code:changed, but the render pipeline that adds data-mirror-id
+    // attributes runs in a microtask afterwards. Without this poll the
+    // validator sometimes sees an empty "new ids" set even when the
+    // drop actually succeeded.
+    await this.waitForNewMirrorNode(beforeIdsJson)
+    const intentIssue = await this.verifyDropIntent(targetSelector, beforeIdsJson)
+    if (intentIssue) {
+      const msg =
+        'Drop intent mismatch: ' + intentIssue + (step.comment ? ' (' + step.comment + ')' : '')
+      this.errors.push(msg)
+      console.error('   ❌ ' + msg)
+    }
+  }
+
+  /**
+   * Wait until at least one new [data-mirror-id] appears in the preview
+   * compared to the snapshot in beforeIdsJson. Bounded by a short
+   * timeout so a genuinely-rejected drop doesn't hang the demo.
+   */
+  private async waitForNewMirrorNode(beforeIdsJson: string): Promise<void> {
+    await this.evaluate(`
+      (async () => {
+        const before = new Set(${beforeIdsJson});
+        const deadline = Date.now() + 1200;
+        while (Date.now() < deadline) {
+          const all = Array.from(document.querySelectorAll('#preview [data-mirror-id]'));
+          const fresh = all.some(el => !before.has(el.getAttribute('data-mirror-id')));
+          if (fresh) return;
+          await new Promise(r => setTimeout(r, 50));
+        }
+      })()
+    `)
+  }
+
+  /**
+   * After a palette drop, find the newly added node and verify it's
+   * actually a descendant (preferably direct child) of the target the
+   * demo author asked for. If Mirror's hit-detector picked a different
+   * container, the demo says "drop into Card" but the element ends up
+   * elsewhere. Returns null if all clean, or a short reason string.
+   */
+  private async verifyDropIntent(
+    targetSelectorJson: string,
+    beforeIdsJson: string
+  ): Promise<string | null> {
+    return await this.evaluate<string | null>(`
+      (() => {
+        const targetSel = ${targetSelectorJson};
+        const beforeIds = new Set(${beforeIdsJson});
+        let targetId;
+        try { targetId = window.__mirrorActions.resolveSelector(targetSel); } catch (e) {
+          return 'cannot resolve target after drop: ' + (e && e.message ? e.message : String(e));
+        }
+        const targetEl = document.querySelector('[data-mirror-id="' + targetId + '"]');
+        if (!targetEl) return 'target ' + targetId + ' not in DOM after drop';
+        const allAfter = Array.from(document.querySelectorAll('#preview [data-mirror-id]'));
+        const newOnes = allAfter.filter(el => !beforeIds.has(el.getAttribute('data-mirror-id')));
+        if (newOnes.length === 0) {
+          return 'no new node appeared in the preview — drop was silently rejected';
+        }
+        // The "new" set may include nested children too (if a wrapper was
+        // also added). For the intent check we want the SHALLOWEST new
+        // element: that's what the user dropped. The deeper ones are its
+        // own children or wrappers around it.
+        let shallowest = newOnes[0];
+        let shallowestDepth = depth(shallowest);
+        for (const el of newOnes) {
+          const d = depth(el);
+          if (d < shallowestDepth) {
+            shallowest = el;
+            shallowestDepth = d;
+          }
+        }
+        // Walk up from the dropped element and find the nearest existing
+        // (pre-drop) node. That's the *effective* drop container.
+        let cur = shallowest.parentElement;
+        let effective = null;
+        while (cur && cur.id !== 'preview') {
+          const id = cur.getAttribute && cur.getAttribute('data-mirror-id');
+          if (id && beforeIds.has(id)) { effective = id; break; }
+          cur = cur.parentElement;
+        }
+        if (!effective) {
+          // Dropped at top level (no pre-existing parent in the chain).
+          // That's only OK if the target itself was top-level / canvas.
+          return null;
+        }
+        if (effective !== targetId) {
+          const newId = shallowest.getAttribute('data-mirror-id');
+          return 'asked drop into ' + targetId + ' but new element ' + newId +
+                 ' actually landed in ' + effective;
+        }
+        return null;
+
+        function depth(el) {
+          let d = 0;
+          let cur = el;
+          while (cur && cur.id !== 'preview') {
+            d++;
+            cur = cur.parentElement;
+          }
+          return d;
+        }
+      })()
+    `)
   }
 
   private async runMoveElement(
@@ -4154,6 +4368,21 @@ function normalizeCode(input: string, opts: NormalizeOpts): string {
       if (!m) return l
       return m[1] + m[2].replace(/ {2,}/g, ' ')
     })
+  }
+  // Dedent: strip the common leading whitespace across all non-empty
+  // lines. Mirror Studio wraps the source with an implicit App after a
+  // real drop, which adds 2 spaces of indent everywhere; the demo
+  // author writes expectCode without that wrapper, so we normalize it
+  // away on both sides.
+  let minIndent = Infinity
+  for (const l of lines) {
+    if (l.trim() === '') continue
+    const m = l.match(/^[ \t]*/)
+    const w = m ? m[0].length : 0
+    if (w < minIndent) minIndent = w
+  }
+  if (minIndent !== Infinity && minIndent > 0) {
+    lines = lines.map(l => (l.trim() === '' ? l : l.slice(minIndent)))
   }
   if (opts.trimEnds) {
     while (lines.length && lines[0] === '') lines.shift()

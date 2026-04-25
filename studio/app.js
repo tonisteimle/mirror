@@ -3155,24 +3155,28 @@ function setupNotificationHandlers() {
               : ' ' + dragData.properties
           }
         }
-        // If the drop landed in an alignment zone (center / tl / tr / etc.),
-        // honor it by wrapping in a viewport-filling Frame with that
-        // alignment. Without this, a "drop in the center zone" would
-        // visually render top-left because there's no parent to align in.
-        // The 9-zone Mirror property names live in
-        // studio/preview/drag/indicator.ts ALIGN_TO_PROPERTY.
-        const zone = target?.mode === 'aligned' ? target.alignmentProperty : null
-        const NEEDS_WRAPPER = zone && zone !== 'tl'
-        let inserted
-        if (NEEDS_WRAPPER) {
-          inserted = 'Frame w full, h full, ' + zone + '\n  ' + elementCode
-        } else {
-          inserted = elementCode
-        }
+        // Drops on canvas-only state always append as plain top-level
+        // elements. Tried wrapping with `Frame w full, h full, <zone>`
+        // to honor the drop's alignment zone, but it broke Mirror's
+        // source-map for subsequent drops into the new tree. A proper
+        // alignment-zone-honoring fix needs a Studio-level change in
+        // the drop pipeline. Until then, demos that need a centred
+        // element should explicitly set `center` via setProperty after
+        // the drop.
+        const inserted = elementCode
         const appended =
           before.length === 0 ? inserted : before.replace(/\s*$/, '') + '\n\n' + inserted
         const len = editor.state.doc.length
         editor.dispatch({ changes: { from: 0, to: len, insert: appended } })
+        // Force an immediate recompile so the SourceMap reflects the
+        // newly inserted nodes — without this, subsequent drops into
+        // those new nodes get silently rejected because their source-map
+        // entries don't exist yet.
+        try {
+          studio.events.emit('compile:requested')
+        } catch (_e) {
+          /* ignore */
+        }
         return
       }
     }
