@@ -115,7 +115,11 @@ export function parseZagComponent(
   // Parse inline properties (e.g., placeholder "Choose...", multiple, disabled)
   parseZagInlineProperties(ctx, zagNode, callbacks)
 
-  // Extract initial state from properties (same logic as for regular instances)
+  // Extract initial state from properties (same logic as for regular instances).
+  // Zag-component-specific properties (from primitiveDef.props) must be excluded
+  // here — otherwise a Zag prop without a value (e.g. `DatePicker fixedWeeks`)
+  // would be misread as the component's initial state.
+  const zagPropNames = new Set(zagPrimitive?.props ?? [])
   const initialStateIndex = zagNode.properties.findIndex(p => {
     const name = p.name
     return (
@@ -125,6 +129,7 @@ export function parseZagComponent(
       !ALL_BOOLEAN_PROPERTIES.has(name) &&
       !EVENT_NAMES.has(name) &&
       !STATE_MODIFIERS.has(name) &&
+      !zagPropNames.has(name) &&
       name !== 'when' &&
       name !== 'as' &&
       name !== 'content'
@@ -196,12 +201,19 @@ function parseZagInlineProperties(
     if (U.check(ctx, 'IDENTIFIER')) {
       const propName = U.current(ctx).value
 
-      // Boolean Zag properties (e.g., multiple, searchable, clearable, disabled)
+      // Boolean Zag properties (e.g., multiple, searchable, clearable, disabled).
+      // The Mirror lexer emits `true`/`false` as IDENTIFIER tokens — they are an
+      // explicit value for the current property, not the next property. So we
+      // peek for them and exclude that case from the bare-boolean path.
+      const nextTok = U.peekAt(ctx, 1)
+      const nextIsExplicitBool =
+        nextTok?.type === 'IDENTIFIER' && (nextTok.value === 'true' || nextTok.value === 'false')
       if (
         validProps.has(propName) &&
         !U.checkNext(ctx, 'STRING') &&
         !U.checkNext(ctx, 'NUMBER') &&
-        !U.checkNext(ctx, 'LBRACKET')
+        !U.checkNext(ctx, 'LBRACKET') &&
+        !nextIsExplicitBool
       ) {
         const token = U.advance(ctx)
         zagNode.properties.push({
@@ -232,6 +244,12 @@ function parseZagInlineProperties(
             values.push(U.advance(ctx).value)
           } else if (U.check(ctx, 'NUMBER')) {
             values.push(parseFloat(U.advance(ctx).value))
+          } else if (
+            U.check(ctx, 'IDENTIFIER') &&
+            (U.current(ctx).value === 'true' || U.current(ctx).value === 'false')
+          ) {
+            // Explicit boolean value (`closeOnSelect false`, `disabled true`)
+            values.push(U.advance(ctx).value === 'true')
           } else if (U.check(ctx, 'LBRACKET')) {
             // Array value: [20, 80]
             values.push(callbacks.parseNumericArray())

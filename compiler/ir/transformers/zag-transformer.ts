@@ -147,6 +147,7 @@ const MACHINE_CONFIG_PROPS = new Set([
   'startOfWeek',
   'closeOnSelect',
   'closeIcon',
+  'positioning',
   'inline',
   'icon',
   'mask',
@@ -368,6 +369,9 @@ function processMachineConfigProperty(
       break
     case 'placement':
       machineConfig.placement = String(values[0] ?? 'bottom-start')
+      break
+    case 'positioning':
+      machineConfig.positioning = String(values[0] ?? 'bottom-start')
       break
     case 'label':
     case 'name':

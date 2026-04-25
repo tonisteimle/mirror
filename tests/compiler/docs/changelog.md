@@ -4,6 +4,55 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 12 — DatePicker)
+
+3 Bugs in der Zag-Pipeline gefixt + 27 Compiler-Tests für die einzige
+verbleibende Zag-Komponente. Coverage in DatePicker-Pfaden von ~0% auf
+40-70%.
+
+### Fixed
+
+- **Zag-Boolean-Property als initialState misinterpretiert** — In
+  `compiler/parser/zag-parser.ts` extrahierte die initialState-Detection
+  jede value-lose lowercase-IDENTIFIER-Property; Zag-Component-spezifische
+  Boolean-Properties wie `fixedWeeks`, `closeOnSelect` ohne Wert fielen
+  durch und wurden aus `properties` entfernt. Fix: Zag-component
+  `primitiveDef.props` als zusätzliches Exclusion-Set für die Detection.
+
+- **`positioning` fehlt in MACHINE_CONFIG_PROPS** — In
+  `compiler/ir/transformers/zag-transformer.ts` war `positioning` weder im
+  Property-Whitelist-Set noch im processMachineConfigProperty-Switch.
+  `DatePicker positioning "top-end"` → wurde als styling-Property abgewertet
+  und kam nicht in machineConfig. Fix: beides ergänzt (analog zu `placement`).
+
+- **`closeOnSelect false` als boolean-true mit `false` als initialState** —
+  Mirror-Lexer emittiert `true`/`false` als IDENTIFIER (es gibt keinen
+  BOOLEAN-Token-Typ). Der zag-parser sah `closeOnSelect` (IDENTIFIER)
+  gefolgt von einem IDENTIFIER → traf die bare-boolean-Branch und nahm
+  `false` als nächste Property → die dann als initialState landete. Fix:
+  next-token explizit auf `'true'`/`'false'` Identifier prüfen, dann als
+  boolean im Wert-Pfad übergeben.
+
+### Added
+
+- `tests/compiler/datepicker.test.ts` — 27 Tests in 4 Bereichen (Property-
+  Mapping, bind, DOM Code-Emission, pathologische Inputs).
+
+### Coverage (V8, gemessen 2026-04-25)
+
+| Modul                                           | Vorher | Nachher    |
+| ----------------------------------------------- | ------ | ---------- |
+| `compiler/backends/dom/zag/overlay-emitters.ts` | 1.21%  | **70.73%** |
+| `compiler/ir/transformers/zag-transformer.ts`   | 0.75%  | **42.96%** |
+| `compiler/backends/dom/zag/helpers.ts`          | 2.17%  | **45.65%** |
+| `compiler/parser/zag-parser.ts`                 | 0.26%  | **11.88%** |
+
+Globaler Effekt: 62.95% → **65.56% Lines (+2.6 pp)**.
+
+Details: `tests/compiler/docs/themen/12-datepicker.md`.
+
+---
+
 ## 2026-04-25 (Zag-Cleanup vor Thema 12)
 
 Vor Beginn des geplanten Thema 12 („Zag-Komponenten") entdeckt: das Thema
