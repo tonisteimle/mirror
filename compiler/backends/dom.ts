@@ -1236,7 +1236,12 @@ class DOMGenerator {
       }
     }
 
-    this.emit(`(${collectionExpr} || []).forEach((${innerItemVar}, ${innerIndexVar}) => {`)
+    // Object→Array conversion: Object collections (e.g., `users:\n  max:\n    ...`)
+    // must be normalized to arrays before .forEach. Without this, nested-each
+    // crashes on `forEach is not a function` for object-shaped collections.
+    this.emit(
+      `((d => Array.isArray(d) ? d : (d && typeof d === 'object' ? Object.entries(d).map(([k, v]) => typeof v === 'object' && v !== null ? { _key: k, ...v } : v) : []))(${collectionExpr})).forEach((${innerItemVar}, ${innerIndexVar}) => {`
+    )
     this.indent++
 
     // Create container for each item (display: contents makes it layout-transparent)

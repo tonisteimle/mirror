@@ -68,8 +68,12 @@ export function emitTokens(ctx: TokenEmitterContext, data: TokenEmitterData): vo
         typeof token.value === 'string' ? `"${escapeJSString(token.value)}"` : token.value
       ctx.emit(`"${tokenKey}": ${value},`)
     } else if (token.data !== undefined) {
-      // Inline data object - serialize nested structure
-      const dataJS = serializeDataObject(token.data)
+      // Inline data object OR list. List form preserves duplicate values
+      // and ordering for `colors:\n  red\n  blue\n  red`-style tokens
+      // (without it, `colors.count` returns 2 instead of 3).
+      const dataJS = Array.isArray(token.data)
+        ? serializeDataValue(token.data)
+        : serializeDataObject(token.data)
       ctx.emit(`"${tokenKey}": ${dataJS},`)
     }
   }

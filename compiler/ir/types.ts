@@ -285,8 +285,13 @@ export interface IRToken {
   type?: 'color' | 'size' | 'font' | 'icon'
   /** Simple token value (e.g., $primary.bg: #2271C1 or loggedIn: true) */
   value?: string | number | boolean
-  /** Nested data object (e.g., tasks: task1: title: "...") */
-  data?: IRDataObject
+  /**
+   * Nested data object OR list. List form is used when the token body is a
+   * sequence of bare values (e.g. `colors:\n  red\n  blue\n  red`). Without
+   * the list form duplicate values would be deduplicated by JS-object key
+   * uniqueness, breaking `$colors.count` and `$colors.unique`.
+   */
+  data?: IRDataObject | IRDataValue[]
 }
 
 /**

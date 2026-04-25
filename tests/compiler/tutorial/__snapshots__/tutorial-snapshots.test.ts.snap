@@ -31055,11 +31055,11 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 6 1`] = `
   ],
   "tokens": [
     {
-      "data": {
-        "blue": "blue",
-        "green": "green",
-        "red": "red",
-      },
+      "data": [
+        "red",
+        "green",
+        "blue",
+      ],
       "name": "colors",
     },
   ],
@@ -31820,11 +31820,14 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
   ],
   "tokens": [
     {
-      "data": {
-        "blue": "blue",
-        "green": "green",
-        "red": "red",
-      },
+      "data": [
+        "red",
+        "blue",
+        "red",
+        "green",
+        "blue",
+        "red",
+      ],
       "name": "colors",
     },
   ],
@@ -35993,15 +35996,32 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
               "events": [],
               "id": "node-3",
               "isDefinition": false,
-              "name": "Option",
-              "primitive": "option",
+              "name": "Item",
+              "primitive": "item",
               "properties": [
                 {
                   "name": "textContent",
                   "value": "Berlin",
                 },
               ],
-              "styles": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
               "tag": "div",
             },
             {
@@ -36009,15 +36029,32 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
               "events": [],
               "id": "node-4",
               "isDefinition": false,
-              "name": "Option",
-              "primitive": "option",
+              "name": "Item",
+              "primitive": "item",
               "properties": [
                 {
                   "name": "textContent",
                   "value": "Hamburg",
                 },
               ],
-              "styles": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
               "tag": "div",
             },
             {
@@ -36025,15 +36062,32 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
               "events": [],
               "id": "node-5",
               "isDefinition": false,
-              "name": "Option",
-              "primitive": "option",
+              "name": "Item",
+              "primitive": "item",
               "properties": [
                 {
                   "name": "textContent",
                   "value": "München",
                 },
               ],
-              "styles": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
               "tag": "div",
             },
             {
@@ -36041,15 +36095,32 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 4 1`] = `
               "events": [],
               "id": "node-6",
               "isDefinition": false,
-              "name": "Option",
-              "primitive": "option",
+              "name": "Item",
+              "primitive": "item",
               "properties": [
                 {
                   "name": "textContent",
                   "value": "Köln",
                 },
               ],
-              "styles": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
               "tag": "div",
             },
           ],
@@ -36132,8 +36203,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 5 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
-          "name": "Option",
-          "primitive": "option",
+          "name": "Item",
+          "primitive": "item",
           "properties": [
             {
               "name": "textContent",
@@ -36144,7 +36215,24 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 5 1`] = `
               "value": "in_progress",
             },
           ],
-          "styles": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
           "tag": "div",
         },
         {
@@ -36152,8 +36240,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 5 1`] = `
           "events": [],
           "id": "node-3",
           "isDefinition": false,
-          "name": "Option",
-          "primitive": "option",
+          "name": "Item",
+          "primitive": "item",
           "properties": [
             {
               "name": "textContent",
@@ -36164,7 +36252,24 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 5 1`] = `
               "value": "done",
             },
           ],
-          "styles": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
           "tag": "div",
         },
         {
@@ -36172,8 +36277,8 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 5 1`] = `
           "events": [],
           "id": "node-4",
           "isDefinition": false,
-          "name": "Option",
-          "primitive": "option",
+          "name": "Item",
+          "primitive": "item",
           "properties": [
             {
               "name": "textContent",
@@ -36184,7 +36289,24 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 5 1`] = `
               "value": "cancelled",
             },
           ],
-          "styles": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
           "tag": "div",
         },
       ],
@@ -36360,15 +36482,32 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
               "events": [],
               "id": "node-3",
               "isDefinition": false,
-              "name": "Option",
-              "primitive": "option",
+              "name": "Item",
+              "primitive": "item",
               "properties": [
                 {
                   "name": "textContent",
                   "value": "Berlin",
                 },
               ],
-              "styles": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
               "tag": "div",
             },
             {
@@ -36376,15 +36515,32 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
               "events": [],
               "id": "node-4",
               "isDefinition": false,
-              "name": "Option",
-              "primitive": "option",
+              "name": "Item",
+              "primitive": "item",
               "properties": [
                 {
                   "name": "textContent",
                   "value": "Hamburg",
                 },
               ],
-              "styles": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
               "tag": "div",
             },
             {
@@ -36392,15 +36548,32 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
               "events": [],
               "id": "node-5",
               "isDefinition": false,
-              "name": "Option",
-              "primitive": "option",
+              "name": "Item",
+              "primitive": "item",
               "properties": [
                 {
                   "name": "textContent",
                   "value": "München",
                 },
               ],
-              "styles": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
               "tag": "div",
             },
           ],
@@ -36503,6 +36676,522 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
 `;
 
 exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Slider",
+      "primitive": "slider",
+      "properties": [
+        {
+          "name": "value",
+          "value": "50",
+        },
+      ],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "bind": "volume",
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Slider",
+          "primitive": "slider",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Lautstärke: $volume%",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "300px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "volume",
+      "type": "size",
+      "value": 30,
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "RadioItem",
+          "primitive": "radioitem",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Monatlich – €9/Monat",
+            },
+            {
+              "name": "value",
+              "value": "monthly",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "RadioItem",
+          "primitive": "radioitem",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Jährlich – €99/Jahr",
+            },
+            {
+              "name": "value",
+              "value": "yearly",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "RadioItem",
+          "primitive": "radioitem",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Lifetime – €299",
+            },
+            {
+              "name": "value",
+              "value": "lifetime",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "RadioGroup",
+      "primitive": "radiogroup",
+      "properties": [
+        {
+          "name": "value",
+          "value": "monthly",
+        },
+      ],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "bind": "plan",
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "RadioItem",
+              "primitive": "radioitem",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Monatlich",
+                },
+                {
+                  "name": "value",
+                  "value": "monthly",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "RadioItem",
+              "primitive": "radioitem",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Jährlich",
+                },
+                {
+                  "name": "value",
+                  "value": "yearly",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "RadioItem",
+              "primitive": "radioitem",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Lifetime",
+                },
+                {
+                  "name": "value",
+                  "value": "lifetime",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "RadioGroup",
+          "primitive": "radiogroup",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Gewählt: $plan",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "320px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "plan",
+      "type": "font",
+      "value": "monthly",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -36900,7 +37589,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 13 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -37085,7 +37774,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 14 1`] = `
 {
   "animations": [],
   "icons": [],

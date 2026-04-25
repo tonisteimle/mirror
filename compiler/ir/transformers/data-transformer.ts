@@ -35,17 +35,35 @@ import type {
 
 /**
  * Transform data attributes (from data blocks) to IR format.
- * Handles nested objects recursively.
+ *
+ * Detects two shapes:
+ * - **List style** — every attr is a bare `value` line where `key === value`,
+ *   no children. The Mirror DSL `colors:\n  red\n  blue\n  red` produces this.
+ *   Returned as `IRDataValue[]` to preserve duplicates and ordering. Without
+ *   this, the JS-object key uniqueness would deduplicate the entries.
+ * - **Object style** — anything else (key/value pairs, nested children).
+ *   Returned as `IRDataObject` (Record<string, IRDataValue>).
  */
-export function transformDataAttributes(attrs: DataAttribute[]): IRDataObject {
-  const result: IRDataObject = {}
+export function transformDataAttributes(attrs: DataAttribute[]): IRDataObject | IRDataValue[] {
+  // List-style detection: all attrs are simple `key === value` items
+  // without nested children. This is how the Mirror parser stores
+  // bare-value list lines (see `parser.ts` parseDataObjectBody).
+  const isListStyle =
+    attrs.length > 0 &&
+    attrs.every(
+      a => (!a.children || a.children.length === 0) && a.value !== undefined && a.value === a.key
+    )
 
+  if (isListStyle) {
+    return attrs.map(a => transformDataValue(a.value!))
+  }
+
+  const result: IRDataObject = {}
   for (const attr of attrs) {
     if (attr.children && attr.children.length > 0) {
-      // Nested object - recurse
-      result[attr.key] = transformDataAttributes(attr.children)
+      // Nested object - recurse (list-style detection is recursive too)
+      result[attr.key] = transformDataAttributes(attr.children) as IRDataValue
     } else if (attr.value !== undefined) {
-      // Simple value
       result[attr.key] = transformDataValue(attr.value)
     }
   }

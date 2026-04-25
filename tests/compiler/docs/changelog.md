@@ -4,6 +4,54 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 9 — Data-Binding & Each, Pilot für Tutorial-Coverage)
+
+User-Feedback: „Jeder Aspekt im Tutorial muss durch Tests abgedeckt werden …
+das geht pro Thema." → Tutorial-Coverage-Prozess etabliert
+(`tests/compiler/docs/tutorial-coverage.md`), Thema 9 als Pilot. **3 echte
+Bugs** beim Tutorial-Aspekt-Audit gefunden und gefixt.
+
+### Fixed
+
+- **List-Style Daten dedupliziert via JS-Object-Map**: Tutorial-Beispiel
+  `colors:\n  red\n  blue\n  red\n  green\n  blue\n  red` produzierte
+  `$colors.count = 3` statt 6 (Tutorial verspricht 6). Fix in
+  `transformDataAttributes`: List-Style-Detection → `IRDataValue[]` statt
+  Object-Map.
+- **Token-Array als Object serialisiert**: Nach Bug-1-Fix wurde der Array
+  als `{0: 'red', ...}` serialisiert (verlor Array-Semantik). Fix:
+  Array-Check in `token-emitter.ts:72` vor Serialisierung.
+- **Nested-Each crasht bei Object-Collections**: `each x in $xs\n  each y in
+$ys` mit Object-`$ys` warf `forEach is not a function`. Fix in
+  `emitNestedEachLoop` (dom.ts:1239): Object→Array-IIFE davorsetzen.
+
+### Added
+
+- `tests/compiler/docs/tutorial-coverage.md` — Prozess-Doc.
+- `tests/compiler/tutorial/tutorial-09-data-aspects.test.ts` — 14 Verhaltens-
+  Tests (Attribut-Typen, Aggregationen, Relationen, Provokationen).
+- `tests/compiler/data-transformer-coverage.test.ts` — 52 Direct-unit-Tests.
+- `themen/09-data.md` — Pilot-Themen-Doc mit Tutorial-Aspekt-Tabelle.
+
+### Snapshot-Update
+
+- 7 Tutorial-Snapshots aktualisiert: list-style Tokens werden jetzt korrekt
+  als Array statt Object-Map serialisiert.
+
+### Coverage
+
+| Modul                                          | Vorher | Nachher                         |
+| ---------------------------------------------- | ------ | ------------------------------- |
+| `compiler/ir/transformers/data-transformer.ts` | 29.7%  | **100% L / 94.44% B / 100% F**  |
+| `compiler/ir/transformers/loop-utils.ts`       | 52.6%  | **100%** in allen drei Metriken |
+| `compiler/parser/data-types.ts`                | 33.3%  | **100%** in allen drei Metriken |
+
+Globaler Effekt: 74.7% → **75.13% Lines**. **Tutorial-Coverage 20/20 (100%)**.
+
+Details: `tests/compiler/docs/themen/09-data.md`.
+
+---
+
 ## 2026-04-25 (Themen 7/12/13 Iter 2 — Coverage-Anspruch erreicht)
 
 User-Feedback: „Die Coverage ist nie auf dem Stand, den wir wollen … bei den

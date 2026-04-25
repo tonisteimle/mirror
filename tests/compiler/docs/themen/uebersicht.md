@@ -63,7 +63,7 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 6   | Tokens & Property-Sets                                 | `03-tokens.html`                      | Code ✓ / Tutorial-Audit nötig | [06-tokens.md](06-tokens.md)                               |
 | 7   | States (System + Custom + Cross-Element + Transitions) | `06-states.html`                      | Code ✓ / Tutorial-Audit nötig | [07-states.md](07-states.md)                               |
 | 8   | Events & Actions                                       | `08-functions.html`                   | Code ✓ / Tutorial-Audit nötig | [08-events-actions.md](08-events-actions.md)               |
-| 9   | Data-Binding & Iteration (each)                        | `09-daten.html` (Daten-Subset)        | offen                         | [09-data.md](09-data.md)                                   |
+| 9   | Data-Binding & Iteration (each)                        | `09-daten.html` (Daten-Subset)        | abgeschlossen                 | [09-data.md](09-data.md)                                   |
 | 10  | Conditionals & Expressions                             | `09-daten.html` (Conditionals-Subset) | offen                         | —                                                          |
 | 11  | Slots                                                  | (verteilt)                            | offen                         | —                                                          |
 | 12  | DatePicker (einzige verbleibende Zag-Komponente)       | (in `11-eingabe.html` erwähnt)        | Code ✓ / Tutorial-Audit nötig | [12-datepicker.md](12-datepicker.md)                       |
