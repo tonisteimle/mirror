@@ -430,6 +430,29 @@ async function runDemoSuiteMode(args: CLIArgs): Promise<number> {
         result.name = script.name
         await runner.navigate(args.url)
         await new Promise(r => setTimeout(r, 1500))
+        // Auto-discover per-demo AI fixture: scripts/<name>.ts → fixtures/<name>.json
+        const demoBasename = pathSync.basename(file, pathSync.extname(file))
+        const demoFixturePath = pathSync.join(
+          pathSync.dirname(file),
+          '..',
+          'fixtures',
+          `${demoBasename}.json`
+        )
+        let perDemoAiMock = aiMockFixtures
+        if (fsSync.existsSync(demoFixturePath)) {
+          try {
+            const raw = fsSync.readFileSync(demoFixturePath, 'utf-8')
+            const fix = JSON.parse(raw)
+            perDemoAiMock = { ...(aiMockFixtures || {}), ...fix }
+            console.log(
+              `   🤖 Loaded ${Object.keys(fix).length} AI fixture(s) from ${pathSync.basename(demoFixturePath)}`
+            )
+          } catch (err) {
+            console.warn(
+              `   ⚠️  Could not load fixture ${demoFixturePath}: ${(err as Error).message}`
+            )
+          }
+        }
         const demoConfig: Partial<DemoConfig> & {
           timing?: boolean
           autoValidate?: boolean
@@ -443,7 +466,7 @@ async function runDemoSuiteMode(args: CLIArgs): Promise<number> {
           showKeystrokeOverlay: false,
           timing: args.demoTiming,
           autoValidate: args.demoAutoValidate,
-          aiMock: aiMockFixtures,
+          aiMock: perDemoAiMock,
           snapshotDir: args.demoSnapshots
             ? pathSync.join(args.demoSnapshots, pathSync.basename(file, pathSync.extname(file)))
             : undefined,
