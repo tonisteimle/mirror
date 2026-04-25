@@ -94,8 +94,15 @@ function getInlineDemoAPI(timings: ActionTimings): string {
       if (this.element) return;
       this.element = document.createElement('div');
       this.element.id = '__demo-cursor';
-      this.element.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 3.21V20.79C5.5 21.33 6.12 21.64 6.54 21.32L10.56 18.18C10.82 17.98 11.16 17.9 11.48 17.97L16.75 19.03C17.32 19.14 17.82 18.64 17.71 18.07L14.75 3.71C14.6 2.96 13.64 2.76 13.22 3.39L5.73 13.5C5.26 14.16 5.5 15.13 6.24 15.5" fill="white" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      this.element.style.cssText = 'position:fixed;width:24px;height:24px;pointer-events:none;z-index:999999;transform:translate(0,0);transition:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));';
+      // Hand-built mac-style pointer. Tip is at SVG (0,0) so element.left/top
+      // align directly with the cursor hotspot (no offset math needed).
+      // Mac-style pointer. Body is a triangle (tip 0,0 → left-bottom 0,14 →
+      // right-shoulder 12,11). The tail is a parallelogram whose base sits
+      // exactly on the body's bottom diagonal: left-attach (4,13) and
+      // right-attach (7,12) both lie on the line y = 14 - 0.25x. So the
+      // "Strich" actually stands on the "Dreieck".
+      this.element.innerHTML = '<svg width="20" height="22" viewBox="-1 -1 16 22" xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 0,14 4,13 7,18 10,17 7,12 12,11" fill="white" stroke="black" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+      this.element.style.cssText = 'position:fixed;width:20px;height:22px;pointer-events:none;z-index:999999;transform:translate(-1px,-1px);transition:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.45));';
       this.updatePosition(pos);
       document.body.appendChild(this.element);
     }
@@ -227,6 +234,17 @@ function getInlineDemoAPI(timings: ActionTimings): string {
       if (config) this.config = { ...this.config, ...config };
       this.overlay.init();
       this.overlay.setEnabled(this.config.showKeystrokeOverlay);
+      // Show the cursor immediately at a reasonable starting position so the
+      // viewer always sees the pointer — no invisible-cursor frames at start.
+      const previewEl = document.querySelector('#preview');
+      let startPos;
+      if (previewEl) {
+        const r = previewEl.getBoundingClientRect();
+        startPos = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      } else {
+        startPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      }
+      this.cursor.show(startPos);
     }
 
     destroy() { this.cursor.hide(); this.overlay.destroy(); }
@@ -615,24 +633,74 @@ const MIRROR_ACTIONS_API = `
     return { x: r.left + r.width / 2, y: r.top - 4 };
   }
 
-  async function withCursorSync(endPoint, durationMs, realOpFn) {
+  /**
+   * Sequential, watcher-friendly drag flow:
+   *  1. press-effect at the current cursor position (the source)
+   *  2. cursor glides to targetPoint (paced by ACTION_TIMINGS.moveTo)
+   *  3. real DOM operation fires roughly when the cursor is near the target
+   *     (so the drop materializes as the pointer arrives — feels like a drag)
+   *  4. release-effect at the target
+   *  5. settle pause so the viewer can see the result
+   *
+   * Use this instead of the old parallel withCursorSync — it makes the
+   * pointer-and-payload connection visible.
+   */
+  async function withVisibleDrag(targetPoint, realOpFn, opts) {
+    opts = opts || {};
     const cursor = window.__mirrorDemo && window.__mirrorDemo.cursor;
-    const ops = [realOpFn()];
-    if (cursor && endPoint) {
-      ops.unshift(cursor.moveTo(endPoint, durationMs));
-    }
-    const results = await Promise.all(ops);
-    return cursor && endPoint ? results[1] : results[0];
+
+    // 1. Source press-effect (cursor is already at the source from a prior moveTo)
+    if (cursor) cursor.showClickEffect();
+    await delay(opts.preHoldMs ?? 200);
+
+    // 2. Cursor motion + delayed op fire so payload appears just before arrival
+    const moveDur = opts.moveMs ?? (cursor && targetPoint ? cursor.calculateDuration(targetPoint) : 0);
+    const triggerAt = Math.max(0, Math.round(moveDur * (opts.triggerFrac ?? 0.7)));
+    const motionPromise = cursor && targetPoint ? cursor.moveTo(targetPoint, moveDur) : Promise.resolve();
+    const opPromise = (async () => { await delay(triggerAt); return realOpFn(); })();
+
+    await motionPromise;
+    const result = await opPromise;
+
+    // 3. Release-effect + settle
+    if (cursor) cursor.showClickEffect();
+    await delay(opts.settleMs ?? 280);
+
+    return result;
+  }
+
+  // Back-compat shim: existing callers using withCursorSync still work but get
+  // the new sequential semantics. Same signature.
+  async function withCursorSync(endPoint, durationMs, realOpFn) {
+    return withVisibleDrag(endPoint, realOpFn, { moveMs: durationMs });
   }
 
   // ===========================================================================
   // Mirror actions
   // ===========================================================================
 
+  // Move the demo cursor to an element's center, paced by ACTION_TIMINGS.moveTo.
+  // Returns the visited point so callers can compose drag flows around it.
+  async function visitElement(el) {
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const point = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const cursor = window.__mirrorDemo && window.__mirrorDemo.cursor;
+    if (cursor) await cursor.moveTo(point);
+    return point;
+  }
+
   async function dropFromPalette(component, targetSel, at) {
     const targetId = resolveSelector(targetSel);
     const targetEl = document.querySelector('[data-mirror-id="' + targetId + '"]');
     if (!targetEl) throw new Error('Target ' + targetId + ' not found');
+
+    // 1. Make sure the cursor is sitting on the palette source so the viewer
+    //    sees where the dragged item is coming from.
+    const paletteEl = document.querySelector('#components-panel [data-component-id="' + component.toLowerCase() + '"]')
+      || document.querySelector('#components-panel [data-component-id="comp-' + component.toLowerCase() + '"]');
+    if (paletteEl) await visitElement(paletteEl);
+
     let endPoint;
     let chain = window.__dragTest.fromPalette(component).toContainer(targetId);
     if (at.kind === 'index') {
@@ -643,7 +711,11 @@ const MIRROR_ACTIONS_API = `
       endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
       chain = chain.atAlignmentZone(at.zone);
     }
-    const result = await withCursorSync(endPoint, 500, () => chain.execute());
+
+    // 2. Visible drag: cursor glides to the drop point, the API call fires
+    //    near the end so the dropped element materialises *as* the cursor
+    //    arrives (no payload appearing before the pointer).
+    const result = await withVisibleDrag(endPoint, () => chain.execute());
     if (!result || !result.success) {
       throw new Error('Drop failed: ' + ((result && result.error) || 'unknown'));
     }
@@ -653,38 +725,52 @@ const MIRROR_ACTIONS_API = `
   async function moveElement(sourceSel, targetSel, index) {
     const sourceId = resolveSelector(sourceSel);
     const targetId = resolveSelector(targetSel);
+    const sourceEl = document.querySelector('[data-mirror-id="' + sourceId + '"]');
     const targetEl = document.querySelector('[data-mirror-id="' + targetId + '"]');
     if (!targetEl) throw new Error('Target ' + targetId + ' not found');
+
+    // 1. Cursor visits the element being moved, so the viewer knows what's
+    //    about to fly across the screen.
+    if (sourceEl) await visitElement(sourceEl);
+
     const endPoint = dropChildIndexPoint(targetEl, index);
     const chain = window.__dragTest.moveElement(sourceId).toContainer(targetId).atIndex(index);
-    const result = await withCursorSync(endPoint, 500, () => chain.execute());
+    const result = await withVisibleDrag(endPoint, () => chain.execute());
     if (!result || !result.success) {
       throw new Error('Move failed: ' + ((result && result.error) || 'unknown'));
     }
     await window.__dragTest.waitForCompile();
   }
 
-  async function dragResize(sel, position, deltaX, deltaY, opts) {
+  async function dragResize(sel, position, deltaX, deltaY, _opts) {
     const nodeId = resolveSelector(sel);
     window.__dragTest.selectNode(nodeId);
-    await delay(180);
+    await delay(220);
     const handle = document.querySelector('.visual-overlay .resize-handles .resize-handle[data-position="' + position + '"]');
     if (!handle) throw new Error('Resize handle not found for ' + position);
+
+    // 1. Visit the resize handle so the viewer sees where the drag starts.
+    await visitElement(handle);
+
     const r = handle.getBoundingClientRect();
     const endPoint = { x: r.left + r.width / 2 + deltaX, y: r.top + r.height / 2 + deltaY };
-    await withCursorSync(endPoint, 350, () =>
+    await withVisibleDrag(endPoint, () =>
       window.__mirrorTest.interact.dragResizeHandle(nodeId, position, deltaX, deltaY)
     );
-    await delay(120);
+    await delay(160);
   }
 
   async function dragPadding(sel, side, delta, mode, _bypassSnap) {
     const nodeId = resolveSelector(sel);
     window.__dragTest.selectNode(nodeId);
-    await delay(120);
+    await delay(150);
     await window.__mirrorTest.interact.enterPaddingMode(nodeId);
     const handle = document.querySelector('.padding-handle-' + side);
     if (!handle) throw new Error('Padding handle not visible for ' + side);
+
+    // 1. Visit the padding handle.
+    await visitElement(handle);
+
     const r = handle.getBoundingClientRect();
     let endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     if (side === 'top')        endPoint.y += delta;
@@ -692,20 +778,24 @@ const MIRROR_ACTIONS_API = `
     else if (side === 'left')   endPoint.x += delta;
     else                        endPoint.x -= delta;
     const opts = mode === 'all' ? { shift: true } : mode === 'axis' ? { alt: true } : undefined;
-    await withCursorSync(endPoint, 250, () =>
+    await withVisibleDrag(endPoint, () =>
       window.__mirrorTest.interact.dragPaddingHandle(side, delta, opts)
     );
-    await delay(120);
+    await delay(160);
     await window.__mirrorTest.interact.exitPaddingMode();
   }
 
   async function dragMargin(sel, side, delta, mode, _bypassSnap) {
     const nodeId = resolveSelector(sel);
     window.__dragTest.selectNode(nodeId);
-    await delay(120);
+    await delay(150);
     await window.__mirrorTest.interact.enterMarginMode(nodeId);
     const handle = document.querySelector('.margin-handle-' + side);
     if (!handle) throw new Error('Margin handle not visible for ' + side);
+
+    // 1. Visit the margin handle.
+    await visitElement(handle);
+
     const r = handle.getBoundingClientRect();
     let endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     if (side === 'top')        endPoint.y -= delta;
@@ -713,10 +803,10 @@ const MIRROR_ACTIONS_API = `
     else if (side === 'left')   endPoint.x -= delta;
     else                        endPoint.x += delta;
     const opts = mode === 'all' ? { shift: true } : mode === 'axis' ? { alt: true } : undefined;
-    await withCursorSync(endPoint, 250, () =>
+    await withVisibleDrag(endPoint, () =>
       window.__mirrorTest.interact.dragMarginHandle(side, delta, opts)
     );
-    await delay(120);
+    await delay(160);
     await window.__mirrorTest.interact.exitMarginMode();
   }
 
