@@ -172,6 +172,14 @@ export interface StudioState {
   preludeOffset: number
   /** Line offset where current file starts in resolvedSource (for line-based operations) */
   preludeLineOffset: number
+  /**
+   * True when the resolved source was produced by wrapping the user code
+   * with an implicit `App` root (which prepends `App\n` and indents every
+   * non-empty user line by 2 spaces). Consumers translating offsets from
+   * resolved-source to editor coordinates must subtract those synthetic
+   * indents in addition to `preludeOffset`.
+   */
+  isWrappedWithApp: boolean
   /** Pending selection to be resolved after compile completes (line-based) */
   pendingSelection: PendingSelection | null
   /** Queued selection when SourceMap not yet available (nodeId-based) */

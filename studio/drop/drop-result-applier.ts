@@ -133,40 +133,62 @@ export class DropResultApplier {
   }
 
   private adjustStandardChange(change: Change): Change {
-    // Calculate indent correction for wrapped code
-    // When code is wrapped with App, each user line gets 2 extra spaces
-    // The preludeOffset accounts for the first line's indent, but not subsequent lines
-    const indentCorrection = this.calculateIndentCorrection(change.from)
+    // Calculate indent correction separately for `from` and `to`. Both must
+    // count *actual* wrap-indent chars (`'  '` at start of each non-empty
+    // user line) that have been passed by the position. The previous
+    // implementation used `(userLine - 1) * 2` which (a) over-counted when
+    // user lines were empty (empty lines stay empty in the wrap, so they
+    // contribute no indent) and (b) under-counted when `to` was past the
+    // indent on its own line — leaving `to - from` 2 chars too long and
+    // either pushing the change out of bounds (silent reject) or shifting
+    // the user-side replacement forward by 2 chars (corrupted `\n\n`).
+    const fromCorrection = this.calculateIndentCorrection(change.from)
+    const toCorrection = this.calculateIndentCorrection(change.to)
 
     return {
-      from: change.from - this.deps.preludeOffset - indentCorrection,
-      to: change.to - this.deps.preludeOffset - indentCorrection,
+      from: change.from - this.deps.preludeOffset - fromCorrection,
+      to: change.to - this.deps.preludeOffset - toCorrection,
       insert: this.adjustInsertIndent(change.insert),
     }
   }
 
   /**
-   * Calculate the indent correction for a position in the full source.
-   * When code is wrapped with App, each line after the first gets 2 extra spaces.
+   * Calculate the indent correction for a position in the full (resolved)
+   * source. When code is wrapped with `App`, each non-empty user line gets
+   * 2 extra leading spaces inserted at its start. To map a resolved-source
+   * offset back to the user-source offset we must subtract:
+   *   - `preludeOffset` (the `App\n` prefix), plus
+   *   - 2 chars for every wrap-indent the position has *fully passed*.
+   *
+   * "Fully passed" means: the position is at or past the second char of
+   * that line's leading `'  '`. A position that lands exactly at the start
+   * of a line (right after `\n`) has *not* passed that line's indent yet.
    */
   private calculateIndentCorrection(fullPosition: number): number {
     if (!this.deps.isWrappedWithApp || !this.deps.resolvedSource) {
       return 0
     }
-
-    // Find which line in the full source this position is on
-    const textBefore = this.deps.resolvedSource.substring(0, fullPosition)
-    const fullLineNumber = textBefore.split('\n').length
-
-    // Calculate user line (1-based)
-    const userLine = fullLineNumber - this.deps.preludeLineOffset
-
-    if (userLine <= 1) {
-      return 0 // First line indent is already in preludeOffset
+    if (fullPosition <= this.deps.preludeOffset) {
+      return 0
     }
 
-    // Each additional user line has 2 extra indent chars
-    return 2 * (userLine - 1)
+    const region = this.deps.resolvedSource.substring(this.deps.preludeOffset, fullPosition)
+
+    let passed = 0
+    // First user line starts at preludeOffset (offset 0 in `region`).
+    if (region.length >= 2 && region.substring(0, 2) === '  ') {
+      passed++
+    }
+    // Each subsequent line starts after a `\n`.
+    let nlIdx = region.indexOf('\n')
+    while (nlIdx !== -1) {
+      const lineStart = nlIdx + 1
+      if (region.length >= lineStart + 2 && region.substring(lineStart, lineStart + 2) === '  ') {
+        passed++
+      }
+      nlIdx = region.indexOf('\n', lineStart)
+    }
+    return passed * 2
   }
 
   /**

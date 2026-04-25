@@ -34,6 +34,13 @@ export interface CommandContext {
   getResolvedSource(): string
   /** Get prelude character offset (to adjust CodeModifier changes for editor) */
   getPreludeOffset(): number
+  /**
+   * Whether the user code is currently wrapped with an implicit `App` root
+   * (which prepends `App\n` and indents every non-empty user line by 2
+   * spaces). When true, `adjustChangeForEditor` must subtract those
+   * synthetic indents in addition to `preludeOffset`.
+   */
+  isWrappedWithApp?(): boolean
   applyChange(change: CodeChange): void
   compile(): void
   /** Clear selection through SyncCoordinator (optional, falls back to direct action) */
@@ -59,17 +66,76 @@ export function getCommandContext(): CommandContext {
 
 /**
  * Adjust a CodeModifier change for the editor.
- * CodeModifier operates on resolved source (with prelude), but editor only has current file.
- * This subtracts the prelude offset from change positions.
+ *
+ * CodeModifier operates on the resolved source (prelude + optional App
+ * wrapper + indented user code), but the editor only contains the current
+ * file's user code. This function maps a change from resolved-source
+ * coordinates back to editor coordinates by subtracting:
+ *
+ *   1. `preludeOffset` — the leading prelude/`App\n` chars, AND
+ *   2. The synthetic 2-space indent that wrapping prepends to every
+ *      non-empty user line, for each such indent that the position has
+ *      already passed. This second correction is required (and was
+ *      missing) whenever `isWrappedWithApp()` is true.
+ *
+ * It also strips the same 2-space prefix from each line of the insert
+ * payload so the editor doc never accumulates wrapper indentation.
  */
 function adjustChangeForEditor(change: CodeChange, ctx: CommandContext): CodeChange {
   const offset = ctx.getPreludeOffset()
-  if (offset === 0) return change
-  return {
-    from: change.from - offset,
-    to: change.to - offset,
-    insert: change.insert,
+  const wrapped = ctx.isWrappedWithApp?.() ?? false
+
+  if (!wrapped) {
+    if (offset === 0) return change
+    return {
+      from: change.from - offset,
+      to: change.to - offset,
+      insert: change.insert,
+    }
   }
+
+  const resolved = ctx.getResolvedSource()
+  return {
+    from: change.from - offset - countWrapIndents(resolved, offset, change.from),
+    to: change.to - offset - countWrapIndents(resolved, offset, change.to),
+    insert: stripWrapIndentFromInsert(change.insert),
+  }
+}
+
+/**
+ * Count the number of synthetic 2-space wrap indents that exist in the
+ * region `[startOffset, endOffset)` of `resolved`. Each non-empty user
+ * line starts with `'  '`; we count one indent (= 2 chars) per such line
+ * whose `'  '` lies fully before `endOffset`. A position landing exactly
+ * at the start of a line (right after `\n`) has *not* passed that line's
+ * indent yet.
+ */
+function countWrapIndents(resolved: string, startOffset: number, endOffset: number): number {
+  if (endOffset <= startOffset) return 0
+  const region = resolved.substring(startOffset, endOffset)
+  let count = 0
+  if (region.length >= 2 && region.startsWith('  ')) count++
+  let nlIdx = region.indexOf('\n')
+  while (nlIdx !== -1) {
+    const lineStart = nlIdx + 1
+    if (region.length >= lineStart + 2 && region.substring(lineStart, lineStart + 2) === '  ') {
+      count++
+    }
+    nlIdx = region.indexOf('\n', lineStart)
+  }
+  return count * 2
+}
+
+/** Strip the leading 2-space wrap indent from each non-empty line of an insert payload. */
+function stripWrapIndentFromInsert(insert: string): string {
+  return insert
+    .split('\n')
+    .map((line, i) => {
+      if (i === 0 && line === '') return line
+      if (line.startsWith('  ')) return line.substring(2)
+      return line
+    })
+    .join('\n')
 }
 
 /**
@@ -843,8 +909,16 @@ export class ResizeCommand implements Command {
       source = result.newSource
     }
 
-    // Extract the part after prelude (the editor content)
-    const newEditorContent = preludeOffset > 0 ? source.substring(preludeOffset) : source
+    // Extract the editor-side content. Strip the prelude *and* the
+    // wrap-indent (2 spaces per non-empty user line) when the source was
+    // wrapped with an implicit App root — otherwise each invocation would
+    // accumulate another layer of indent in the editor doc, which then
+    // gets re-wrapped on the next compile and breaks every subsequent
+    // resolved↔editor offset translation.
+    const afterPrelude = preludeOffset > 0 ? source.substring(preludeOffset) : source
+    const newEditorContent = ctx.isWrappedWithApp?.()
+      ? stripWrapIndentFromInsert(afterPrelude)
+      : afterPrelude
 
     // Apply full document change to editor
     const change: CodeChange = {
@@ -920,8 +994,16 @@ export class SetPositionCommand implements Command {
     }
     source = yResult.newSource
 
-    // Extract the part after prelude (the editor content)
-    const newEditorContent = preludeOffset > 0 ? source.substring(preludeOffset) : source
+    // Extract the editor-side content. Strip the prelude *and* the
+    // wrap-indent (2 spaces per non-empty user line) when the source was
+    // wrapped with an implicit App root — otherwise each invocation would
+    // accumulate another layer of indent in the editor doc, which then
+    // gets re-wrapped on the next compile and breaks every subsequent
+    // resolved↔editor offset translation.
+    const afterPrelude = preludeOffset > 0 ? source.substring(preludeOffset) : source
+    const newEditorContent = ctx.isWrappedWithApp?.()
+      ? stripWrapIndentFromInsert(afterPrelude)
+      : afterPrelude
 
     // Apply full document change to editor
     const change: CodeChange = {

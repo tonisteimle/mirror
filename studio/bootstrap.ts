@@ -569,6 +569,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       return resolved || editorController.getContent()
     },
     getPreludeOffset: () => state.get().preludeOffset,
+    isWrappedWithApp: () => state.get().isWrappedWithApp,
     applyChange: (change: CodeChange) => config.editor.dispatch({ changes: change }),
     compile: () => events.emit('compile:requested', {}),
     clearSelection: origin => syncCoordinator.clearSelection(origin),

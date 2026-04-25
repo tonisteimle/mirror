@@ -331,7 +331,7 @@ export class DragController implements Reportable<ControllerReport> {
       // element. Keeps the v3 controller agnostic about the editor source.
       log.info('Dropped:', (source as any).componentName || source.type, '→ root (no target)')
       this.reset(true)
-      await this.executeDropCallback(source, null as unknown as DropTarget)
+      await this.executeDropCallback(source, null)
       return
     }
     log.info('Dropped:', (source as any).componentName || source.type, '→', target.containerId)
@@ -340,13 +340,13 @@ export class DragController implements Reportable<ControllerReport> {
     await this.executeDropCallback(source, target)
   }
 
-  /** Execute drop callback safely */
-  private async executeDropCallback(source: DragSource, target: DropTarget): Promise<void> {
+  /** Execute drop callback safely. Tolerates a null target (root-drop path). */
+  private async executeDropCallback(source: DragSource, target: DropTarget | null): Promise<void> {
     console.log('[DragController] executeDropCallback called', {
       hasCallbacks: !!this.callbacks,
       hasOnDrop: !!this.callbacks?.onDrop,
       source: source.type,
-      targetMode: target.mode,
+      targetMode: target?.mode ?? null,
     })
 
     if (!this.callbacks?.onDrop) {
@@ -356,7 +356,7 @@ export class DragController implements Reportable<ControllerReport> {
 
     try {
       console.log('[DragController] Calling onDrop callback...')
-      await this.callbacks.onDrop(source, target)
+      await this.callbacks.onDrop(source, target as DropTarget)
       console.log('[DragController] onDrop callback completed')
     } catch (error) {
       console.error('[DragController] Drop failed:', error)

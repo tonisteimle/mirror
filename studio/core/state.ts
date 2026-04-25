@@ -131,6 +131,7 @@ const initialState: StudioState = {
   mode: 'mirror',
   preludeOffset: 0,
   preludeLineOffset: 0,
+  isWrappedWithApp: false,
   pendingSelection: null,
   queuedSelection: null,
   deferredSelection: null,

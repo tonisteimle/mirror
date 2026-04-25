@@ -134,7 +134,7 @@ import {
   // Validator (for code linting)
   validate as validateCode,
   toCodeMirrorDiagnostics,
-} from './dist/index.js?v=147'
+} from './dist/index.js?v=148'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -2218,11 +2218,12 @@ function compile(code) {
         resolvedSource: resolvedCode,
         preludeOffset: currentPreludeOffset,
         preludeLineOffset: preludeLineCount,
+        isWrappedWithApp: isWrappedWithApp,
       })
     } else if (studio?.state) {
       // In test mode, only update resolvedSource (which is just the code itself)
       currentPreludeLineOffset = 0
-      studio.state.set({ resolvedSource: resolvedCode })
+      studio.state.set({ resolvedSource: resolvedCode, isWrappedWithApp: false })
     }
 
     // Parse
@@ -3621,6 +3622,39 @@ function makePreviewElementsDraggable() {
   })
 }
 
+/**
+ * Count synthetic 2-space wrap indents in resolved source's
+ * `[startOffset, endOffset)` region. One indent = 2 chars per non-empty
+ * user line whose `'  '` prefix lies fully before `endOffset`.
+ */
+function countWrapIndentChars(resolved, startOffset, endOffset) {
+  if (!resolved || endOffset <= startOffset) return 0
+  const region = resolved.substring(startOffset, endOffset)
+  let count = 0
+  if (region.length >= 2 && region.substring(0, 2) === '  ') count++
+  let nlIdx = region.indexOf('\n')
+  while (nlIdx !== -1) {
+    const lineStart = nlIdx + 1
+    if (region.length >= lineStart + 2 && region.substring(lineStart, lineStart + 2) === '  ') {
+      count++
+    }
+    nlIdx = region.indexOf('\n', lineStart)
+  }
+  return count * 2
+}
+
+/** Strip the leading 2-space wrap indent from each non-empty line of an insert payload. */
+function stripWrapIndentLines(insert) {
+  return insert
+    .split('\n')
+    .map((line, i) => {
+      if (i === 0 && line === '') return line
+      if (line.startsWith('  ')) return line.substring(2)
+      return line
+    })
+    .join('\n')
+}
+
 // Handle code changes from property panel
 function handleStudioCodeChange(result) {
   if (!result.success) {
@@ -3628,28 +3662,30 @@ function handleStudioCodeChange(result) {
     return
   }
 
-  // Adjust change positions for prelude offset
-  // The CodeModifier operates on the merged source (prelude + current file),
-  // but the editor only contains the current file
+  // Adjust change positions for prelude offset *and* wrap-indent. The
+  // CodeModifier operates on the resolved source (prelude + optional
+  // implicit `App` wrapper + indented user lines), but the editor only
+  // contains the user code. We must subtract the prelude offset and,
+  // when wrapped, the synthetic 2-space indent for every non-empty user
+  // line that the position has fully passed — and strip the same prefix
+  // from the insert payload so we never accumulate wrapper indentation.
   let adjustedChange = {
     from: result.change.from - currentPreludeOffset,
     to: result.change.to - currentPreludeOffset,
     insert: result.change.insert,
   }
 
-  // When user code is wrapped with App, each line in the resolved source
-  // has a 2-space indent prefix that doesn't exist in the editor.
-  // We need to:
-  // 1. Remove the indent prefix from the insert text
-  // 2. Adjust 'to' position since the resolved line is 2 chars longer
-  // Note: Empty lines have no indent, so we only adjust when indent is present.
   if (isWrappedWithApp) {
-    const appIndent = 2
-    // Remove indent prefix from insert if present (non-empty lines have 2-space indent)
-    if (adjustedChange.insert.startsWith('  ')) {
-      adjustedChange.insert = adjustedChange.insert.substring(appIndent)
-      // Adjust 'to' since resolved line length includes the indent we just stripped
-      adjustedChange.to = adjustedChange.to - appIndent
+    const fromIndents = countWrapIndentChars(
+      resolvedSource,
+      currentPreludeOffset,
+      result.change.from
+    )
+    const toIndents = countWrapIndentChars(resolvedSource, currentPreludeOffset, result.change.to)
+    adjustedChange = {
+      from: result.change.from - currentPreludeOffset - fromIndents,
+      to: result.change.to - currentPreludeOffset - toIndents,
+      insert: stripWrapIndentLines(result.change.insert),
     }
   }
 

@@ -178,10 +178,20 @@ export class BrowserTestRunner {
       }
       setCurrentDragData(dragData)
 
-      // 3. Calculate start and end positions
+      // 3. Calculate start and end positions. For an empty container that
+      //    is large enough for the 9-zone alignment grid, an `index 0`
+      //    drop semantically means "anywhere inside" — there are no
+      //    existing children to insert before. Aim for the visual centre
+      //    so the live drag-controller promotes this to an aligned
+      //    `center` target (matching the manual-drag UX), instead of
+      //    landing at `top+20` and producing a `top-center` zone.
       const targetRect = targetEl.getBoundingClientRect()
       const startPos = this.getPalettePosition()
-      const endPos = this.calculateDropPosition(targetRect, params.insertionIndex)
+      const isEmptyTarget = !targetEl.querySelector('[data-mirror-id]')
+      const endPos =
+        params.insertionIndex === 0 && isEmptyTarget
+          ? this.calculateContainerCenter(targetRect)
+          : this.calculateDropPosition(targetRect, params.insertionIndex)
 
       // 4. Create drag source
       const source: DragSource = {
@@ -537,6 +547,15 @@ export class BrowserTestRunner {
     }
   }
 
+  /** Visual centre of a container — used for empty-target drops so the
+   *  live drag-controller promotes the drop to a `center` alignment zone. */
+  private calculateContainerCenter(targetRect: DOMRect): Point {
+    return {
+      x: targetRect.left + targetRect.width / 2,
+      y: targetRect.top + targetRect.height / 2,
+    }
+  }
+
   /**
    * Execute animated drag with visual feedback
    *
@@ -584,10 +603,19 @@ export class BrowserTestRunner {
       this.hideVisualCursor()
     }
 
-    // ALWAYS use simulateDrop with explicit target for tests
-    // Hit detection can find wrong targets (e.g., child instead of container)
-    // when coordinates don't perfectly align with visual elements
-    const target: FlexDropTarget = { mode: 'flex', containerId: targetNodeId, insertionIndex }
+    // Prefer the target the live controller computed for the *same*
+    // container during the animation: empty large containers naturally
+    // promote to a 9-zone alignment target (see DragController.
+    // updatePosition → storeAlignedTarget). Falling back to an explicit
+    // flex target keeps the deterministic behaviour for the cases where
+    // hit detection lands on a wrong element or stays unset.
+    const computed = controller.getTestState().target
+    let target: DropTarget
+    if (computed && computed.mode === 'aligned' && computed.containerId === targetNodeId) {
+      target = computed
+    } else {
+      target = { mode: 'flex', containerId: targetNodeId, insertionIndex }
+    }
     await controller.simulateDrop(source, target)
   }
 
