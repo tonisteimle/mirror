@@ -4,6 +4,41 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Themen 19/20/21/22 — Robustheit, Stress, React, Cross-Cutting)
+
+Vier Internal-Themen in einem Schwung abgeschlossen.
+
+### Thema 19 (Robustheit / Fuzz)
+
+`tests/compiler/fuzz-pipeline.test.ts` — 13 Pipeline-Fuzz-Tests
+(~2615 Iterationen) zur bestehenden `fuzz.test.ts` (454 Tests).
+Property: parse-erfolgreiche Inputs müssen IR + DOM ohne Throw überstehen.
+**0 neue Crashes entdeckt.** Doku: [themen/19-robustness.md](themen/19-robustness.md).
+
+### Thema 20 (Performance / Stress)
+
+`tests/compiler/stress-dom-generation.test.ts` — 7 Performance-Budget-Tests
+für DOM-Generation (200/500 Instances < 200/400ms, 50 Levels < 100ms,
+Linearitäts-Check). Doku: [themen/20-performance-stress.md](themen/20-performance-stress.md).
+
+### Thema 21 (React-Backend, NEU)
+
+`tests/compiler/backend-react.test.ts` — 22 erste Tests für
+`compiler/backends/react.ts` (440 LOC, vorher 0% Coverage).
+Header/Tag-Mapping/Style-Object/Verschachtelung/Tokens/Components/
+Heuristiken/Skipping. 2 dokumentierte Limitationen (Image, Title-Heuristik).
+Doku: [themen/21-react-backend.md](themen/21-react-backend.md).
+
+### Thema 22 (DOM-Backend Cross-Cutting, NEU)
+
+`tests/compiler/backend-dom-cross-cutting.test.ts` — 12 Cross-Cutting-Tests
+(`dataFiles`-Option, Empty-Inputs, Combined-Features, Output-Determinismus).
+Doku: [themen/22-dom-backend-cross-cutting.md](themen/22-dom-backend-cross-cutting.md).
+
+**Alle 22 Themen sind jetzt abgeschlossen.**
+
+---
+
 ## 2026-04-25 (Themen 17 + 18 — SourceMap + Validator Internals abgeschlossen)
 
 ### Thema 17 (SourceMap)
