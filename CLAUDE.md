@@ -955,28 +955,18 @@ Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is
 
 ### Zag Primitives (Behavior Components)
 
-> Note: Select, Checkbox, Radio are now Zag components with full accessibility and keyboard navigation.
+> Mirror nutzt nur **eine einzige** Zag-Komponente: **DatePicker**. Alle
+> früheren Zag-Komponenten (Select, Checkbox, Switch, RadioGroup, Slider,
+> Tabs, SideNav, Dialog, Tooltip, …) sind heute **Pure-Mirror-Templates**
+> in `studio/panels/components/component-templates.ts` — d.h. sie sind als
+> Mirror-DSL definiert (Frame/Slot/Icon/State) und kommen ohne
+> Zag-Runtime aus. Verwendung im Code (`Checkbox "Newsletter"`,
+> `Dialog`, `Select`, …) bleibt identisch; intern wird das Template
+> expandiert. Siehe `docs/concepts/pure-mirror-components.md`.
 
-| Component                 | Machine     | Slots                            | Description                              |
-| ------------------------- | ----------- | -------------------------------- | ---------------------------------------- |
-| **Selection & Dropdowns** |             |                                  |                                          |
-| Select                    | select      | Trigger, Content, Item +8        | Dropdown select with keyboard navigation |
-| **Menus**                 |             |                                  |                                          |
-| **Form Controls**         |             |                                  |                                          |
-| Checkbox                  | checkbox    | Root, Control, Label +2          | Checkbox with label                      |
-| Switch                    | switch      | Track, Thumb, Label              | Toggle switch                            |
-| RadioGroup                | radio-group | Root, Item, ItemControl +4       | Radio button group                       |
-| Slider                    | slider      | Root, Track, Range +6            | Range slider                             |
-| **Date & Time**           |             |                                  |                                          |
-| DatePicker                | date-picker | Root, Label, Control +20         | Date picker calendar                     |
-| **Overlays & Modals**     |             |                                  |                                          |
-| Dialog                    | dialog      | Trigger, Backdrop, Positioner +4 | Modal dialog                             |
-| Tooltip                   | tooltip     | Trigger, Positioner, Content +1  | Hover tooltip                            |
-| **Navigation**            |             |                                  |                                          |
-| Tabs                      | tabs        | Root, List, Trigger +2           | Tabbed navigation                        |
-| **Media & Files**         |             |                                  |                                          |
-| **Feedback & Status**     |             |                                  |                                          |
-| **Utility**               |             |                                  |                                          |
+| Component  | Machine     | Slots                    | Description          |
+| ---------- | ----------- | ------------------------ | -------------------- |
+| DatePicker | date-picker | Root, Label, Control +20 | Date picker calendar |
 
 ### Compound Primitives (Layout Components)
 
@@ -1112,19 +1102,27 @@ Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is
 | hover-border-color | hover-boc            | <color>, $token                                                                                                                                                              |
 | hover-radius       | hover-rad            | <number>                                                                                                                                                                     |
 
-### Zag Behavior Properties
+### Zag Behavior Properties (DatePicker)
 
-> Component-specific behavior properties for Zag components.
+> Component-specific behavior properties. Da nur DatePicker als Zag-Komponente
+> bleibt, listen wir hier nur dessen Properties. Pure-Mirror-Komponenten
+> (Checkbox/Switch/Slider/etc.) verwenden direkte Mirror-Properties statt
+> Zag-Properties.
 
-_50 components with 195 behavior properties total._
-
-**Boolean:** addOnBlur, addOnPaste, allowCustomValue, allowDrop, allowDuplicate, allowHalf, allowMouseWheel, autoFocus, autoStart, autoplay, checked, clampValueOnBlur, clearable, closeOnClick, closeOnEscape, closeOnOutsideClick, closeOnScroll, closeOnSelect, collapsible, countdown, deselectable, directory, disabled, draggable, fixedWeeks, indeterminate, interactive, invalid, lazyMount, linear, lockAspectRatio, loop, loopFocus, mask, modal, multiple, open, openOnChange, otp, pauseOnHover, preventInteraction, preventScroll, readOnly, required, resizable, restoreFocus, searchable, selectOnFocus, trapFocus, typeahead, unmountOnExit, visible
-
-**Enum:** activationMode, encoding, errorCorrection, orientation, origin, placement, positioning, selectionMode, submitMode
-
-**Number:** aspectRatio, autoplayInterval, closeDelay, count, duration, gap, interval, length, max, maxFiles, maxTags, maxZoom, min, minStepsBetweenThumbs, minZoom, openDelay, pageSize, scrollHideDelay, siblingCount, slidesPerView, speed, spotlightOffset, spotlightRadius, startOfWeek, step, timeout
-
-**String:** label, locale, name, placeholder
+| Property        | Type    | Default        | Description                                    |
+| --------------- | ------- | -------------- | ---------------------------------------------- |
+| `selectionMode` | enum    | `single`       | `single` / `multiple` / `range`                |
+| `fixedWeeks`    | boolean | `false`        | Always show 6 weeks                            |
+| `closeOnSelect` | boolean | `true`         | Close after selection                          |
+| `startOfWeek`   | number  | `0`            | First day of week (0=Sun, 1=Mon)               |
+| `positioning`   | enum    | `bottom-start` | `bottom`/`bottom-start`/`bottom-end`/`top`/... |
+| `value`         | string  | —              | Selected date(s)                               |
+| `defaultValue`  | string  | —              | Initial date(s)                                |
+| `disabled`      | boolean | `false`        | Disable interaction                            |
+| `readOnly`      | boolean | `false`        | Read-only state                                |
+| `min`           | string  | —              | Min selectable date                            |
+| `max`           | string  | —              | Max selectable date                            |
+| `locale`        | string  | `en-US`        | Locale identifier                              |
 
 ### Events
 
