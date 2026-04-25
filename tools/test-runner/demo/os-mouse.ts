@@ -148,4 +148,15 @@ export class OsMouse {
   async park(): Promise<void> {
     await this.moveToPage(20, 20)
   }
+
+  /** Tap a single key (e.g. 'p' to enter padding mode, 'm' for margin). */
+  async tapKey(letter: string): Promise<void> {
+    const k = (Key as unknown as Record<string, number>)[letter.toUpperCase()]
+    if (typeof k !== 'number') {
+      throw new Error(`Unknown key for tapKey: ${letter}`)
+    }
+    await keyboard.pressKey(k)
+    await new Promise(r => setTimeout(r, 40))
+    await keyboard.releaseKey(k)
+  }
 }

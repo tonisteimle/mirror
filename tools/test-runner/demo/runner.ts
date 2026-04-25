@@ -3125,10 +3125,10 @@ export class DemoRunner {
     step: Extract<DemoAction, { action: 'dragResize' }>
   ): Promise<void> {
     const nodeId = await this.resolveSelectorOnPage(step.selector)
-    // Real click selects the element so resize-manager wires up its mousedown
-    // listener (programmatic selectNode would skip that path).
-    await this.evaluate(`window.__mirrorTest.interact.click(${JSON.stringify(nodeId)})`)
-    await new Promise(r => setTimeout(r, 220))
+    // Real OS click selects the element — same input path a user would take.
+    const elRect = await this.getRectByMirrorId(nodeId)
+    await this.osMouse!.clickPage(elRect.x + elRect.w / 2, elRect.y + elRect.h / 2)
+    await new Promise(r => setTimeout(r, 240))
     const handleSel = `.visual-overlay .resize-handles .resize-handle[data-position="${step.position}"]`
     const handle = await this.getRect(handleSel)
     const startX = handle.x + handle.w / 2
@@ -3161,6 +3161,8 @@ export class DemoRunner {
 
   // Combined padding / margin OS-mouse handler — they share the structure:
   // select node → enter mode → drag handle (with optional Shift/Alt) → exit.
+  // Selection AND mode entry both happen via real OS input (click + key tap),
+  // so the visual-overlay engages exactly as it would for a hand user.
   private async runDragSpacingOs(
     step:
       | Extract<DemoAction, { action: 'dragPadding' }>
@@ -3168,11 +3170,15 @@ export class DemoRunner {
     kind: 'padding' | 'margin'
   ): Promise<void> {
     const nodeId = await this.resolveSelectorOnPage(step.selector)
-    const enterFn = kind === 'padding' ? 'enterPaddingMode' : 'enterMarginMode'
-    const exitFn = kind === 'padding' ? 'exitPaddingMode' : 'exitMarginMode'
+    const modeKey = kind === 'padding' ? 'P' : 'M'
     const handleClass = kind === 'padding' ? 'padding-handle-' : 'margin-handle-'
-    await this.evaluate(`window.__mirrorTest.interact.${enterFn}(${JSON.stringify(nodeId)})`)
-    await new Promise(r => setTimeout(r, 180))
+    // Real OS click on the preview node — selects it.
+    const elRect = await this.getRectByMirrorId(nodeId)
+    await this.osMouse!.clickPage(elRect.x + elRect.w / 2, elRect.y + elRect.h / 2)
+    await new Promise(r => setTimeout(r, 220))
+    // Real keyboard tap to toggle the spacing mode (P / M).
+    await this.osMouse!.tapKey(modeKey)
+    await new Promise(r => setTimeout(r, 220))
     const handle = await this.getRect(`.${handleClass}${step.side}`)
     const startX = handle.x + handle.w / 2
     const startY = handle.y + handle.h / 2
@@ -3207,7 +3213,9 @@ export class DemoRunner {
       })
     }
     await this.waitForCompile()
-    await this.evaluate(`window.__mirrorTest.interact.${exitFn}()`)
+    // Tap the same key again to exit the mode (real toggle, not JS dispatch).
+    await this.osMouse!.tapKey(modeKey)
+    await new Promise(r => setTimeout(r, 120))
   }
 
   private async runDragMargin(
