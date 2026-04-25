@@ -40,40 +40,43 @@ hat die Hypothesen-Liste Lücken? Sind die Tests nur die Standard-Pfade?
 
 1. **Scope abstecken** — Was gehört zum Thema, was nicht. Granularität: ein Sprach-Feature/Bereich, der typischerweise die ganze Pipeline durchläuft (Lexer → Parser → IR → Backend → Runtime).
 2. **Ist-Aufnahme** — Existierende Tests zum Thema durchgehen. Nicht nur Datei-Namen, sondern was tatsächlich an Assertions geprüft wird.
-3. **Provokations-Liste** — „Wie kann ich das kaputt machen?" Bug-Hypothesen sammeln, jede als konkreten Test formulieren. Mindestens die Coverage-Kriterien aus „Anspruch" oben durchgehen.
-4. **Lücken schließen** — Tests schreiben, gefundene Bugs fixen, in `changelog.md` dokumentieren.
-5. **Coverage-Audit** — Bevor abgeschlossen: explizit prüfen, dass die Pair-/Triple-/Kontext-Coverage wirklich erreicht ist. Was nicht, in einer „Was nicht abgedeckt ist"-Sektion festhalten.
+3. **Tutorial-Aspekt-Audit** — Tutorial-Seite(n) zum Thema durchgehen (`docs/tutorial/NN-*.html`). **Jeden** dort erklärten Aspekt — Konzept-Texte UND Code-Beispiele — als Hypothese in die Liste aufnehmen. „Compile passes" reicht hier ausdrücklich nicht; jeder Aspekt braucht einen **Verhaltens-Test**, der das im Tutorial beschriebene Resultat prüft. Detail-Prozess: [tutorial-coverage.md](../tutorial-coverage.md).
+4. **Provokations-Liste** — „Wie kann ich das kaputt machen?" Bug-Hypothesen ergänzend zu Schritt 3.
+5. **Lücken schließen** — Tests schreiben, gefundene Bugs fixen, in `changelog.md` dokumentieren.
+6. **Coverage-Audit** — Code-Coverage **plus** Tutorial-Coverage (siehe Schritt 3) explizit prüfen. Was nicht abgedeckt ist, in einer „Was nicht abgedeckt ist"-Sektion festhalten.
 
-**Aufgabenteilung:** Schritte 1–3 + 5 macht Claude eigenständig (Inventar, Analyse, Test-Vorschläge, Audit). Schritt 4 erfolgt in Abstimmung mit dem User (Test-Implementierung, Bug-Fix-Entscheidungen).
+**Tutorial-Coverage als harter Gate:** Ein Thema ist erst dann „abgeschlossen", wenn jeder Aspekt der zugeordneten Tutorial-Seite(n) durch mindestens einen Test belegt ist (Compile-Tests gelten nicht). Das Thema-Doc muss eine Tabelle „Tutorial-Aspekt → Test" enthalten.
+
+**Aufgabenteilung:** Schritte 1–4 + 6 macht Claude eigenständig (Inventar, Analyse, Test-Vorschläge, Audit). Schritt 5 erfolgt in Abstimmung mit dem User (Test-Implementierung, Bug-Fix-Entscheidungen).
 
 ## Themen-Liste
 
 Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 
-| #   | Thema                                                  | Status        | Dokument                                                   |
-| --- | ------------------------------------------------------ | ------------- | ---------------------------------------------------------- |
-| 1   | Lexer (Tokens, Indentation, Edge-Cases)                | abgeschlossen | [01-lexer.md](01-lexer.md)                                 |
-| 2   | Parser (AST, Error-Recovery)                           | abgeschlossen | [02-parser.md](02-parser.md)                               |
-| 3   | Properties & Aliases (inkl. „letzter gewinnt")         | abgeschlossen | [03-properties.md](03-properties.md)                       |
-| 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | abgeschlossen | [04-layout.md](04-layout.md)                               |
-| 5   | Komponenten & Vererbung                                | abgeschlossen | [05-komponenten-vererbung.md](05-komponenten-vererbung.md) |
-| 6   | Tokens & Property-Sets                                 | abgeschlossen | [06-tokens.md](06-tokens.md)                               |
-| 7   | States (System + Custom + Cross-Element + Transitions) | abgeschlossen | [07-states.md](07-states.md)                               |
-| 8   | Events & Actions                                       | abgeschlossen | [08-events-actions.md](08-events-actions.md)               |
-| 9   | Data-Binding & Iteration (each, where, by)             | offen         | —                                                          |
-| 10  | Conditionals & Expressions                             | offen         | —                                                          |
-| 11  | Slots                                                  | offen         | —                                                          |
-| 12  | DatePicker (einzige verbleibende Zag-Komponente)       | abgeschlossen | [12-datepicker.md](12-datepicker.md)                       |
-| 13  | Animationen & Transitions                              | abgeschlossen | [13-animations.md](13-animations.md)                       |
-| 14  | Input Mask & Two-way Binding                           | offen         | —                                                          |
-| 15  | Tables / Charts                                        | offen         | —                                                          |
-| 16  | Canvas / Device Presets / Custom Icons                 | offen         | —                                                          |
-| 17  | SourceMap (bidirektional)                              | offen         | —                                                          |
-| 18  | Validator                                              | offen         | —                                                          |
-| 19  | Robustheit (Whitespace, Strings, Kommentare, Fuzz)     | offen         | —                                                          |
-| 20  | Performance / Stress / Skalierbarkeit                  | offen         | —                                                          |
-| 21  | React-Backend (NEU — 0% coverage)                      | offen         | —                                                          |
-| 22  | DOM-Backend Cross-Cutting (NEU — `dom.ts`, internals)  | offen         | —                                                          |
+| #   | Thema                                                  | Tutorial-Seite                        | Status (Code+Tutorial)        | Dokument                                                   |
+| --- | ------------------------------------------------------ | ------------------------------------- | ----------------------------- | ---------------------------------------------------------- |
+| 1   | Lexer (Tokens, Indentation, Edge-Cases)                | Internals                             | abgeschlossen                 | [01-lexer.md](01-lexer.md)                                 |
+| 2   | Parser (AST, Error-Recovery)                           | Internals                             | abgeschlossen                 | [02-parser.md](02-parser.md)                               |
+| 3   | Properties & Aliases                                   | `05-styling.html` (Subset)            | Code ✓ / Tutorial-Audit nötig | [03-properties.md](03-properties.md)                       |
+| 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | `04-layout.html`                      | Code ✓ / Tutorial-Audit nötig | [04-layout.md](04-layout.md)                               |
+| 5   | Komponenten & Vererbung                                | `02-komponenten.html`                 | Code ✓ / Tutorial-Audit nötig | [05-komponenten-vererbung.md](05-komponenten-vererbung.md) |
+| 6   | Tokens & Property-Sets                                 | `03-tokens.html`                      | Code ✓ / Tutorial-Audit nötig | [06-tokens.md](06-tokens.md)                               |
+| 7   | States (System + Custom + Cross-Element + Transitions) | `06-states.html`                      | Code ✓ / Tutorial-Audit nötig | [07-states.md](07-states.md)                               |
+| 8   | Events & Actions                                       | `08-functions.html`                   | Code ✓ / Tutorial-Audit nötig | [08-events-actions.md](08-events-actions.md)               |
+| 9   | Data-Binding & Iteration (each)                        | `09-daten.html` (Daten-Subset)        | offen                         | [09-data.md](09-data.md)                                   |
+| 10  | Conditionals & Expressions                             | `09-daten.html` (Conditionals-Subset) | offen                         | —                                                          |
+| 11  | Slots                                                  | (verteilt)                            | offen                         | —                                                          |
+| 12  | DatePicker (einzige verbleibende Zag-Komponente)       | (in `11-eingabe.html` erwähnt)        | Code ✓ / Tutorial-Audit nötig | [12-datepicker.md](12-datepicker.md)                       |
+| 13  | Animationen & Transitions                              | `07-animationen.html`                 | Code ✓ / Tutorial-Audit nötig | [13-animations.md](13-animations.md)                       |
+| 14  | Input Mask & Two-way Binding                           | `11-eingabe.html`                     | offen                         | —                                                          |
+| 15  | Tables / Charts                                        | `14-tabellen.html`, `15-charts.html`  | offen                         | —                                                          |
+| 16  | Canvas / Device Presets / Custom Icons                 | `01-elemente.html`                    | offen                         | —                                                          |
+| 17  | SourceMap (bidirektional)                              | Internals                             | offen                         | —                                                          |
+| 18  | Validator                                              | Internals                             | offen                         | —                                                          |
+| 19  | Robustheit (Whitespace, Strings, Kommentare, Fuzz)     | Internals                             | offen                         | —                                                          |
+| 20  | Performance / Stress / Skalierbarkeit                  | Internals                             | offen                         | —                                                          |
+| 21  | React-Backend (NEU — 0% coverage)                      | offen                                 | —                             |
+| 22  | DOM-Backend Cross-Cutting (NEU — `dom.ts`, internals)  | offen                                 | —                             |
 
 ## Themen-Dokument-Struktur
 
