@@ -67,7 +67,7 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 10  | Conditionals & Expressions                             | `09-daten.html` (Conditionals-Subset) | offen                         | —                                                          |
 | 11  | Slots                                                  | (verteilt)                            | offen                         | —                                                          |
 | 12  | DatePicker (einzige verbleibende Zag-Komponente)       | (in `11-eingabe.html` erwähnt)        | Code ✓ / Tutorial-Audit nötig | [12-datepicker.md](12-datepicker.md)                       |
-| 13  | Animationen & Transitions                              | `07-animationen.html`                 | Code ✓ / Tutorial-Audit nötig | [13-animations.md](13-animations.md)                       |
+| 13  | Animationen & Transitions                              | `07-animationen.html`                 | abgeschlossen                 | [13-animations.md](13-animations.md)                       |
 | 14  | Input Mask & Two-way Binding                           | `11-eingabe.html`                     | offen                         | —                                                          |
 | 15  | Tables / Charts                                        | `14-tabellen.html`, `15-charts.html`  | offen                         | —                                                          |
 | 16  | Canvas / Device Presets / Custom Icons                 | `01-elemente.html`                    | offen                         | —                                                          |

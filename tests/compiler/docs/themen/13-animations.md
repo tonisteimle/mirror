@@ -109,6 +109,34 @@ target+string/identifier value (3 Tests), error-recovery zwischen Definitionen
 - **Roles / duration auf Animation-Level** — emitter unterstützt es
   (`emitDuration`/`emitRoles`), DSL-Syntax dazu unklar
 
+## 7. Tutorial-Aspekt-Coverage (Iter 3, Tutorial-Audit nachgezogen)
+
+**Tutorial:** `docs/tutorial/07-animationen.html`
+
+| Tutorial-Abschnitt               | Aspekt                                       | Test                                                                             |
+| -------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------- |
+| Transitions: Sanfte Übergänge    | `hover 0.3s:` Duration-Modifier              | `tutorial-07-animations-behavior` Transitions                                    |
+| Easing                           | `ease-out`, `ease-in`, `ease-in-out`         | Easing-Tests                                                                     |
+| Animation Presets                | `anim pulse`/`bounce`/`shake`/`spin`         | Presets-Tests (4)                                                                |
+| Animation bei State-Wechsel      | LikeBtn `on: anim bounce`                    | Beispiel: Like-Button mit Animation                                              |
+| **Transition auf Custom States** | `on 0.2s: bg #..` (Timing auf Custom State)  | `tutorial-07-animations-behavior` Aspekt-Test (Iter 3) — **Tutorial-Limitation** |
+| Sichtbarkeit animieren           | `Btn.open 0.2s: visible`                     | Visibility-Toggle + Slide-In Menü                                                |
+| Praktisch: Animiertes Menü       | Button + Menu mit transition                 | Beispiel: Slide-In Menü                                                          |
+| Praktisch: Loading Spinner       | `Icon "loader-2" anim spin`                  | Beispiel: Loading Spinner                                                        |
+| **Praktisch: Erfolgs-Feedback**  | `saved: anim bounce` Multi-State + Animation | `tutorial-07-animations-behavior` Aspekt-Test (Iter 3)                           |
+
+**Tutorial-Coverage:** 9 von 9 Aspekten direkt getestet (100%).
+1 Tutorial-Limitation als `it.todo`.
+
+## Tutorial-Limitations (entdeckt in Iter 3)
+
+- **Custom-State Timing-Modifier:** `on 0.2s:` (timing-suffix auf einem
+  Custom-State) wird weder als CSS-`transition` emittiert noch im
+  runtime-`_stateMachine.states.on.duration` gespeichert. Die styles
+  sind korrekt da, aber der Wechsel passiert ohne Animation. System-
+  State-Timing (`hover 0.2s:`) funktioniert dagegen einwandfrei.
+  Test als `it.todo` markiert.
+
 ## Status
 
 - [x] Schritt 1: Scope abgesteckt
@@ -116,3 +144,4 @@ target+string/identifier value (3 Tests), error-recovery zwischen Definitionen
 - [x] Schritt 3: Provokations-Liste (Bug-Fix als zentrale Frage)
 - [x] Schritt 4: 14 Tests, 1 Bug gefixt
 - [x] Schritt 5: Coverage-Audit
+- [x] Iter 3: Tutorial-Audit + 2 Aspekt-Tests + 1 Tutorial-Limitation

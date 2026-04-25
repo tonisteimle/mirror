@@ -30,15 +30,17 @@ afterEach(() => {
 // TRANSITIONS - Sanfte Übergänge
 // ============================================================
 describe('Transitions', () => {
-
   it('hover 0.2s: generiert CSS transition', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 12 24, bg #333, col white, cursor pointer
   hover 0.2s:
     bg #2563eb
 
 Btn "Hover me"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -49,13 +51,16 @@ Btn "Hover me"
   })
 
   it('hover: ohne Dauer hat keine transition', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 12 24, bg #333, col white, cursor pointer
   hover:
     bg #2563eb
 
 Btn "Hover me"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -65,13 +70,16 @@ Btn "Hover me"
   })
 
   it('active 0.15s: generiert CSS transition', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 12, bg #333, col white, rad 6
   active 0.15s:
     bg #222
 
 Btn "Press me"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -81,14 +89,17 @@ Btn "Press me"
   })
 
   it('Mehrere Properties werden animiert', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 12, bg #333, col #888
   hover 0.2s:
     bg #2563eb
     col white
 
 Btn "Multi"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -103,15 +114,17 @@ Btn "Multi"
 // EASING - Beschleunigungskurven
 // ============================================================
 describe('Easing', () => {
-
   it('hover 0.3s ease-out: setzt easing', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 12, bg #333
   hover 0.3s ease-out:
     bg #2563eb
 
 Btn "Ease out"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -121,13 +134,16 @@ Btn "Ease out"
   })
 
   it('hover 0.2s ease-in: setzt easing', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 12, bg #333
   hover 0.2s ease-in:
     bg #2563eb
 
 Btn "Ease in"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -136,13 +152,16 @@ Btn "Ease in"
   })
 
   it('Default easing ist ease', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 12, bg #333
   hover 0.2s:
     bg #2563eb
 
 Btn "Default"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -156,11 +175,13 @@ Btn "Default"
 // ANIMATION PRESETS
 // ============================================================
 describe('Animation Presets', () => {
-
   it('anim pulse kompiliert', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame w 60, h 60, bg #2563eb, rad 8, anim pulse
-`, container)
+`,
+      container
+    )
 
     const frame = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(frame).toBeTruthy()
@@ -170,9 +191,12 @@ Frame w 60, h 60, bg #2563eb, rad 8, anim pulse
   })
 
   it('anim bounce kompiliert', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame w 60, h 60, bg #10b981, rad 8, anim bounce
-`, container)
+`,
+      container
+    )
 
     const frame = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(frame).toBeTruthy()
@@ -181,9 +205,12 @@ Frame w 60, h 60, bg #10b981, rad 8, anim bounce
   })
 
   it('anim shake kompiliert', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame w 60, h 60, bg #f59e0b, rad 8, anim shake
-`, container)
+`,
+      container
+    )
 
     const frame = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(frame).toBeTruthy()
@@ -192,9 +219,12 @@ Frame w 60, h 60, bg #f59e0b, rad 8, anim shake
   })
 
   it('anim spin kompiliert', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame w 60, h 60, bg #ef4444, rad 8, anim spin
-`, container)
+`,
+      container
+    )
 
     const frame = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(frame).toBeTruthy()
@@ -207,9 +237,9 @@ Frame w 60, h 60, bg #ef4444, rad 8, anim spin
 // STATE-BASIERTE ANIMATIONEN
 // ============================================================
 describe('State-basierte Animationen', () => {
-
   it('State mit anim bounce', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 LikeBtn: pad 12, bg #1a1a1a, col #888, cursor pointer
   on:
     bg #dc2626
@@ -218,7 +248,9 @@ LikeBtn: pad 12, bg #1a1a1a, col #888, cursor pointer
   onclick toggle()
 
 LikeBtn "Like"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="LikeBtn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -232,7 +264,8 @@ LikeBtn "Like"
   })
 
   it('toggle() mit mehreren States', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 StatusBtn: pad 12, bg #333, col white, cursor pointer
   todo:
     bg #888
@@ -243,7 +276,9 @@ StatusBtn: pad 12, bg #333, col white, cursor pointer
   onclick cycle(todo, doing, done)
 
 StatusBtn "Status"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="StatusBtn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -264,23 +299,26 @@ StatusBtn "Status"
 // ENTER/EXIT ANIMATIONEN
 // ============================================================
 describe('Enter/Exit Animationen', () => {
-
   it('enter: und exit: kompilieren', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Panel: bg #1a1a1a, pad 16, rad 8
   enter: fade-in
   exit: fade-out
 
 Frame
   Panel "Content"
-`, container)
+`,
+      container
+    )
 
     const panel = root.querySelector('[data-mirror-name="Panel"]') as HTMLElement
     expect(panel).toBeTruthy()
   })
 
   it('Visibility-Toggle mit Animation', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 12, bg #333, col white
   open:
     bg #2563eb
@@ -294,7 +332,9 @@ Frame gap 12
   Btn name Btn, "Toggle"
   Hint name Hint
     Text "Visible content"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -309,15 +349,17 @@ Frame gap 12
 // TUTORIAL BEISPIELE
 // ============================================================
 describe('Tutorial 07 Beispiele', () => {
-
   it('Beispiel: Hover mit Transition', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 BtnSoft: pad 12 24, rad 6, bg #333, col white, cursor pointer
   hover 0.2s:
     bg #2563eb
 
 BtnSoft "Mit Transition"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="BtnSoft"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -325,7 +367,8 @@ BtnSoft "Mit Transition"
   })
 
   it('Beispiel: Like-Button mit Animation', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center, gap 8
   Icon "heart", ic #666, is 18
   "Gefällt mir"
@@ -338,7 +381,9 @@ LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center
   onclick toggle()
 
 LikeBtn
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="LikeBtn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -353,11 +398,14 @@ LikeBtn
   })
 
   it('Beispiel: Loading Spinner', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame hor, ver-center, gap 12, bg #1a1a1a, pad 16, rad 8
   Icon "loader-2", ic #2563eb, is 24, anim spin
   Text "Lädt...", col #888
-`, container)
+`,
+      container
+    )
 
     const icon = root.querySelector('[data-mirror-name="Icon"]') as HTMLElement
     expect(icon).toBeTruthy()
@@ -365,7 +413,8 @@ Frame hor, ver-center, gap 12, bg #1a1a1a, pad 16, rad 8
   })
 
   it('Beispiel: Slide-In Menü', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 10 20, bg #333, col white, rad 6
   open:
     bg #2563eb
@@ -382,7 +431,9 @@ Frame hor, gap 12
   Menu name Menu
     Text "Dashboard", col white, pad 8 12
     Text "Settings", col white, pad 8 12
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -400,16 +451,18 @@ Frame hor, gap 12
 // EDGE CASES
 // ============================================================
 describe('Edge Cases', () => {
-
   it('Transition auf Komponente mit hover', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Card: pad 16, bg #1a1a1a, rad 8, cursor pointer
   hover 0.2s:
     bg #2a2a2a
     scale 1.02
 
 Card "Hover Card"
-`, container)
+`,
+      container
+    )
 
     const card = root.querySelector('[data-mirror-name="Card"]') as HTMLElement
     expect(card).toBeTruthy()
@@ -417,13 +470,16 @@ Card "Hover Card"
   })
 
   it('Transition auf Frame mit hover', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Card: Frame bg #1a1a1a, pad 16, rad 8
   hover 0.2s:
     bg #2a2a2a
 
 Card "Content"
-`, container)
+`,
+      container
+    )
 
     const card = root.querySelector('[data-mirror-name="Card"]') as HTMLElement
     expect(card).toBeTruthy()
@@ -431,14 +487,17 @@ Card "Content"
   })
 
   it('Kombination: hover mit mehreren Properties', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Btn: pad 12, bg #333, col #888, rad 6
   hover 0.2s:
     bg #2563eb
     col white
 
 Btn "Both"
-`, container)
+`,
+      container
+    )
 
     const btn = root.querySelector('[data-mirror-name="Btn"]') as HTMLElement
     expect(btn).toBeTruthy()
@@ -446,5 +505,65 @@ Btn "Both"
     // Beide Properties sollten in transition sein
     expect(btn.style.transition).toContain('background')
     expect(btn.style.transition).toContain('color')
+  })
+})
+
+// =============================================================================
+// Tutorial 07 — Aspect Closure (Iter 3, added 2026-04-25)
+// =============================================================================
+
+describe('Tutorial 07 Aspekte: Transition auf Custom States', () => {
+  it('on (without duration) sets up the state machine correctly', () => {
+    // The Tutorial example uses `on 0.2s: …` to make the custom-state
+    // transition smooth. Currently the timing on a custom state is
+    // *neither* serialized into the state-machine config *nor* emitted
+    // as CSS — known Tutorial-Limitation (see `themen/13-animations.md`
+    // and the it.todo below). System-state timing (`hover 0.2s:`) works.
+    const { root } = renderWithRuntime(
+      `Toggle: w 48, h 28, rad 99, bg #333, cursor pointer, toggle()
+  on:
+    bg #2271C1
+
+Toggle`,
+      container
+    )
+    const btn = root.querySelector('[data-mirror-name="Toggle"]') as HTMLElement
+    const sm = (btn as any)._stateMachine
+    expect(sm.states?.on).toBeDefined()
+    expect(sm.states.on.styles?.background).toBe('#2271C1')
+  })
+
+  // Known Tutorial-Limitation: `on 0.2s:` (timing on a custom state)
+  // does not emit transition timing — neither in CSS nor in the runtime
+  // state-machine config.
+  it.todo('on 0.2s: timing on custom state propagates as CSS transition')
+})
+
+describe('Tutorial 07 Aspekte: Erfolgs-Feedback (saved + anim bounce)', () => {
+  it('SaveBtn cycling toggles between default and saved with bounce', () => {
+    const { root } = renderWithRuntime(
+      `SaveBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
+  Icon "save", ic white, is 16
+  Text "Speichern"
+  saved:
+    bg #10b981
+    anim bounce
+    Icon "check", ic white, is 16
+    Text "Gespeichert!"
+
+SaveBtn`,
+      container
+    )
+    const btn = root.querySelector('[data-mirror-name="SaveBtn"]') as HTMLElement
+    expect(btn).toBeTruthy()
+    // Initially: shows "Speichern"
+    const initialTexts = Array.from(btn.querySelectorAll('span')).map(s => s.textContent)
+    expect(initialTexts).toContain('Speichern')
+    // Click to toggle into saved
+    btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(btn.dataset.state).toBe('saved')
+    // After click: state-children swap to "Gespeichert!"
+    const savedTexts = Array.from(btn.querySelectorAll('span')).map(s => s.textContent)
+    expect(savedTexts).toContain('Gespeichert!')
   })
 })

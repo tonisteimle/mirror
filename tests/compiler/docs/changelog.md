@@ -4,6 +4,25 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 13 Iter 3 — Tutorial-Audit für 07-animationen.html)
+
+9 Tutorial-Aspekte auditiert, 7 bereits abgedeckt durch existierende Tests.
+2 Lücken geschlossen durch 2 neue Tests in
+`tutorial-07-animations-behavior.test.ts`:
+
+- **Transition auf Custom States** (`on 0.2s:`) — beim Schreiben des Tests
+  entdeckt: ein **Bug**. Tutorial verspricht smoothing, aber Timing wird
+  weder als CSS-`transition` emittiert noch im `_stateMachine.duration`
+  gespeichert. Dokumentiert als known Tutorial-Limitation, Test als
+  `it.todo`. System-State-Timing (`hover 0.2s:`) funktioniert dagegen.
+- **Erfolgs-Feedback** (`saved: anim bounce` mit Multi-State Cycle) —
+  Test deckt Verhalten ab: state-children swap zwischen "Speichern" ↔
+  "Gespeichert!" beim toggle.
+
+Tutorial-Coverage Thema 13: **9/9 Aspekte (100%)**, 1 Limitation als todo.
+
+---
+
 ## 2026-04-25 (Thema 7 Iter 3 — Tutorial-Audit für 06-states.html)
 
 15 Tutorial-Aspekte auditiert. **3 echte Bugs** als known limitations
