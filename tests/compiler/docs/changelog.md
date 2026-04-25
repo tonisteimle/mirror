@@ -4,6 +4,46 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 8 — Events & Actions)
+
+25 Coverage-Tests für die Event-Pipeline. Keine Bugs entdeckt — Pipeline ist
+robust. Hauptgewinn: event-emitter.ts von 43.5% auf 55.33% Lines.
+
+### Added
+
+- `tests/compiler/events-actions.test.ts` — 25 Tests in 10 Bereichen:
+  - **Lifecycle**: onviewenter/onviewexit (IntersectionObserver-Pfad,
+    vorher 0%), onload
+  - **Show/Hide/Toggle**: show()/hide()/toggle() ohne Args (auf currentVar)
+  - **Counter**: increment/decrement/set/reset mit Token-Variablen
+  - **Feedback**: toast (1-arg + 2-arg), copy
+  - **Navigation**: navigate(View), back(), openUrl(url)
+  - **Scroll**: scrollToTop, scrollToBottom
+  - **Input**: focus, clear
+  - **onclick-outside**
+  - **Multi-Action Chains**: 3 Actions in einem onclick
+  - **Keyboard variants**: onkeydown(arrow-down), onenter, onescape
+
+### Coverage
+
+| Modul                                           | Vorher | Nachher                                    |
+| ----------------------------------------------- | ------ | ------------------------------------------ |
+| `compiler/backends/dom/event-emitter.ts`        | 43.5%  | **55.33%** L / **43.03%** B / **57.14%** F |
+| `compiler/ir/transformers/event-transformer.ts` | 100%   | 100% (unverändert)                         |
+
+Globaler Effekt: 66.07% → **66.63% Lines (+0.56 pp)**.
+
+### Verbleibende Lücken (nicht in Iteration 1)
+
+`emitRuntimeAction`-Branches für: showAt/Below/Above/Left/Right (Position-
+Actions), animate, scrollTo(target)/scrollBy(n), assign/get, setError/
+submit, select/activate/dismiss/open/close/page/call. Eigene Iteration
+falls Bedarf — kein Bug-Hunt-Ergebnis, alle gängigen Patterns abgedeckt.
+
+Details: `tests/compiler/docs/themen/08-events-actions.md`.
+
+---
+
 ## 2026-04-25 (Thema 7 — States)
 
 1 Bug in der state-child-Transformation gefixt + 12 Coverage-Tests.
