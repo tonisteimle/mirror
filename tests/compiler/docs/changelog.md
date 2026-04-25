@@ -4,6 +4,27 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 15 — Tables / Charts, Tutorials 14-tabellen + 15-charts)
+
+`tests/compiler/tutorial/tutorial-14-15-tables-charts-aspects.test.ts` —
+29 Tests, 0 Bugs.
+
+**Tables (Tutorial 14):** 8 Aspekte abgedeckt — Statische Tabellen,
+Datengebundene Tabellen mit `each`, Header-Einmaligkeit trotz Loop, Filter
+(`where`), Sortierung (`by`/`by ... desc`), Footer.
+
+**Charts (Tutorial 15):** 21 Aspekte abgedeckt — alle 7 Chart-Typen (Line/
+Bar/Pie/Donut/Area/Scatter/Radar), Datenformate (Key-Value + `x`/`y` Field-
+Mapping), Top-Level-Properties (`colors`, `title`, `legend`, `grid`), alle
+Subkomponenten (XAxis/YAxis/Grid/Point/Legend/Title/Line), Layout-Einbettung.
+
+Charts-Tests laufen auf IR-/Code-Ebene (jsdom hat kein Canvas), Tabellen-
+Tests via `renderWithRuntime`.
+
+Doku: [themen/15-tables-charts.md](themen/15-tables-charts.md).
+
+---
+
 ## 2026-04-25 (Thema 14 — Input Mask & Two-way Binding, Tutorial 11-eingabe)
 
 `tests/compiler/tutorial/tutorial-11-eingabe-aspects.test.ts` — 35 Verhaltens-
