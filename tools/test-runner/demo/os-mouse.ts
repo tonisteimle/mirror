@@ -75,18 +75,23 @@ export class OsMouse {
    * Drag from one page point to another with a real OS mouse press.
    * The browser receives native mousedown / mousemove* / mouseup, and
    * — for `draggable=true` elements — fires native HTML5 drag events.
+   *
+   * dwellMs lets the cursor sit at the destination with the button still
+   * held down before release — gives Mirror's drop indicator (and the
+   * viewer) a moment to register where we're about to drop.
    */
   async dragPage(
     startPageX: number,
     startPageY: number,
     endPageX: number,
     endPageY: number,
-    opts: { preHoldMs?: number; settleMs?: number } = {}
+    opts: { preHoldMs?: number; dwellMs?: number; settleMs?: number } = {}
   ): Promise<void> {
     await this.moveToPage(startPageX, startPageY)
     await mouse.pressButton(Button.LEFT)
     if (opts.preHoldMs) await new Promise(r => setTimeout(r, opts.preHoldMs))
     await this.moveToPage(endPageX, endPageY)
+    if (opts.dwellMs) await new Promise(r => setTimeout(r, opts.dwellMs))
     await mouse.releaseButton(Button.LEFT)
     if (opts.settleMs) await new Promise(r => setTimeout(r, opts.settleMs))
   }
@@ -121,7 +126,7 @@ export class OsMouse {
     endPageX: number,
     endPageY: number,
     modifier: 'shift' | 'alt' | 'cmd' | 'ctrl',
-    opts: { preHoldMs?: number; settleMs?: number } = {}
+    opts: { preHoldMs?: number; dwellMs?: number; settleMs?: number } = {}
   ): Promise<void> {
     const key =
       modifier === 'shift'
@@ -137,6 +142,7 @@ export class OsMouse {
       await mouse.pressButton(Button.LEFT)
       if (opts.preHoldMs) await new Promise(r => setTimeout(r, opts.preHoldMs))
       await this.moveToPage(endPageX, endPageY)
+      if (opts.dwellMs) await new Promise(r => setTimeout(r, opts.dwellMs))
       await mouse.releaseButton(Button.LEFT)
       if (opts.settleMs) await new Promise(r => setTimeout(r, opts.settleMs))
     } finally {

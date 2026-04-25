@@ -3178,6 +3178,10 @@ export class DemoRunner {
     const startY = paletteRect.y + paletteRect.h / 2
     await this.osMouse!.dragPage(startX, startY, dropPoint.x, dropPoint.y, {
       preHoldMs: 220,
+      // Dwell at the drop target with the button still held — gives
+      // Mirror's drop indicator time to render and the viewer time to
+      // see *where* the drop is about to land before it commits.
+      dwellMs: 800,
       settleMs: 360,
     })
 
@@ -3227,7 +3231,7 @@ export class DemoRunner {
       sourceRect.y + sourceRect.h / 2,
       dropPoint.x,
       dropPoint.y,
-      { preHoldMs: 200, settleMs: 300 }
+      { preHoldMs: 200, dwellMs: 800, settleMs: 300 }
     )
     await this.waitForCompile()
   }
@@ -3264,6 +3268,7 @@ export class DemoRunner {
     const startY = handle.y + handle.h / 2
     await this.osMouse!.dragPage(startX, startY, startX + step.deltaX, startY + step.deltaY, {
       preHoldMs: 180,
+      dwellMs: 600,
       settleMs: 260,
     })
     await this.waitForCompile()
@@ -3328,16 +3333,19 @@ export class DemoRunner {
     if (step.mode === 'all') {
       await this.osMouse!.dragPageWithModifier(startX, startY, endX, endY, 'shift', {
         preHoldMs: 180,
+        dwellMs: 500,
         settleMs: 260,
       })
     } else if (step.mode === 'axis') {
       await this.osMouse!.dragPageWithModifier(startX, startY, endX, endY, 'alt', {
         preHoldMs: 180,
+        dwellMs: 500,
         settleMs: 260,
       })
     } else {
       await this.osMouse!.dragPage(startX, startY, endX, endY, {
         preHoldMs: 180,
+        dwellMs: 500,
         settleMs: 260,
       })
     }
