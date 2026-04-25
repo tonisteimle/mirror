@@ -1389,6 +1389,13 @@ export class Interactions implements InteractionAPI {
         )
       })
 
+    // PaddingManager coalesces mousemove via requestAnimationFrame and reads
+    // `currentPadding` synchronously on mouseup. If we mouseup before the
+    // last mousemove's RAF has fired, the snapped value is from the previous
+    // frame (e.g. delta 24 → snapped to 16 because the RAF only saw the
+    // intermediate at delta 19.2). Wait two RAF ticks to flush.
+    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+
     // End drag - dispatch directly to document
     const upEvent = new MouseEvent('mouseup', {
       bubbles: true,
@@ -1666,6 +1673,9 @@ export class Interactions implements InteractionAPI {
           Math.abs(z.top - d.top) > 1
         )
       })
+
+    // Flush MarginManager's RAF coalescing — see dragPaddingHandle for context.
+    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 
     // End drag - dispatch directly to document
     const upEvent = new MouseEvent('mouseup', {

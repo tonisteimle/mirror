@@ -190,5 +190,21 @@ export const demoScript: DemoScript = {
         '  Text "Text", fs 14, col #e4e4e7',
     },
     { action: 'wait', duration: 600 },
+
+    // === Step 11: Endbild — Preview + Editor highlighten, Lint-clean prüfen ===
+    { action: 'comment', text: 'Schritt 11: Endbild' },
+    { action: 'highlight', target: '#preview', duration: 1500 },
+    { action: 'highlight', target: '.cm-editor', duration: 1500 },
+    {
+      action: 'validate',
+      comment: 'Endbild — Texte vorhanden + lint-clean',
+      checks: [
+        { type: 'editorContains', text: '"Willkommen"' },
+        { type: 'editorContains', text: '"Loslegen"' },
+        { type: 'editorContains', text: 'pad-t 24' },
+        { type: 'editorContains', text: 'mar-t 16' },
+        { type: 'noLintErrors' },
+      ],
+    },
   ],
 }
