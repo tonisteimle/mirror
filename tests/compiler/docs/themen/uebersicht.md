@@ -15,28 +15,28 @@ Ziel: Den Mirror-Compiler systematisch absichern, Thema für Thema.
 
 Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 
-| #   | Thema                                                  | Status        | Dokument                     |
-| --- | ------------------------------------------------------ | ------------- | ---------------------------- |
-| 1   | Lexer (Tokens, Indentation, Edge-Cases)                | abgeschlossen | [01-lexer.md](01-lexer.md)   |
-| 2   | Parser (AST, Error-Recovery)                           | abgeschlossen | [02-parser.md](02-parser.md) |
-| 3   | Properties & Aliases (inkl. „letzter gewinnt")         | offen         | —                            |
-| 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | offen         | —                            |
-| 5   | Komponenten & Vererbung                                | offen         | —                            |
-| 6   | Tokens & Property-Sets                                 | offen         | —                            |
-| 7   | States (System + Custom + Cross-Element + Transitions) | offen         | —                            |
-| 8   | Events & Actions                                       | offen         | —                            |
-| 9   | Data-Binding & Iteration (each, where, by)             | offen         | —                            |
-| 10  | Conditionals & Expressions                             | offen         | —                            |
-| 11  | Slots                                                  | offen         | —                            |
-| 12  | Zag-Komponenten (Slot-Styling, Nesting)                | offen         | —                            |
-| 13  | Animationen & Transitions                              | offen         | —                            |
-| 14  | Input Mask & Two-way Binding                           | offen         | —                            |
-| 15  | Tables / Charts                                        | offen         | —                            |
-| 16  | Canvas / Device Presets / Custom Icons                 | offen         | —                            |
-| 17  | SourceMap (bidirektional)                              | offen         | —                            |
-| 18  | Validator                                              | offen         | —                            |
-| 19  | Robustheit (Whitespace, Strings, Kommentare, Fuzz)     | offen         | —                            |
-| 20  | Performance / Stress / Skalierbarkeit                  | offen         | —                            |
+| #   | Thema                                                  | Status        | Dokument                             |
+| --- | ------------------------------------------------------ | ------------- | ------------------------------------ |
+| 1   | Lexer (Tokens, Indentation, Edge-Cases)                | abgeschlossen | [01-lexer.md](01-lexer.md)           |
+| 2   | Parser (AST, Error-Recovery)                           | abgeschlossen | [02-parser.md](02-parser.md)         |
+| 3   | Properties & Aliases (inkl. „letzter gewinnt")         | abgeschlossen | [03-properties.md](03-properties.md) |
+| 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | offen         | —                                    |
+| 5   | Komponenten & Vererbung                                | offen         | —                                    |
+| 6   | Tokens & Property-Sets                                 | offen         | —                                    |
+| 7   | States (System + Custom + Cross-Element + Transitions) | offen         | —                                    |
+| 8   | Events & Actions                                       | offen         | —                                    |
+| 9   | Data-Binding & Iteration (each, where, by)             | offen         | —                                    |
+| 10  | Conditionals & Expressions                             | offen         | —                                    |
+| 11  | Slots                                                  | offen         | —                                    |
+| 12  | Zag-Komponenten (Slot-Styling, Nesting)                | offen         | —                                    |
+| 13  | Animationen & Transitions                              | offen         | —                                    |
+| 14  | Input Mask & Two-way Binding                           | offen         | —                                    |
+| 15  | Tables / Charts                                        | offen         | —                                    |
+| 16  | Canvas / Device Presets / Custom Icons                 | offen         | —                                    |
+| 17  | SourceMap (bidirektional)                              | offen         | —                                    |
+| 18  | Validator                                              | offen         | —                                    |
+| 19  | Robustheit (Whitespace, Strings, Kommentare, Fuzz)     | offen         | —                                    |
+| 20  | Performance / Stress / Skalierbarkeit                  | offen         | —                                    |
 
 ## Themen-Dokument-Struktur
 

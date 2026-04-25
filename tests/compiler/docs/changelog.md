@@ -4,6 +4,47 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Properties & Aliases – Thema 3)
+
+Property-Logik systematisch durchleuchtet: 50 Property-Aliase, „letzter gewinnt"
+über Aliase hinweg, Boolean-Properties, Multi-Value-Excess, Token-References,
+Edge-Werte. Resultat: **keine echten Bugs gefunden**, ~46 neue Tests als
+Regressionsschutz, 1 dokumentierte Limitation.
+
+### Added
+
+- `tests/compiler/properties-bugs.test.ts` (~21 Tests) — gezielte Bug-Hypothesen:
+  Alias-Konflikte (`w` vs `width`, `pad` vs `padding`, `bg` vs `background` usw.),
+  Multi-Value-Excess für Single-Value-Properties (border, fs, opacity, rotate),
+  Boolean-Properties mit Werten, Token-Reference-Edge-Cases, Edge-Werte (negative
+  pad-direction, opacity 0/-0.5/1.5). Alle Tests grün — Property-Logik ist robust.
+- `tests/compiler/properties-additional.test.ts` (~25 Tests) — Coverage für direkte
+  CSS-Property-Namen (`width 100`, `max-width 200`), Edge-Werte (negative margin,
+  z-index, scale 0, rotate ±720), Boolean-Kombinationen (`truncate, italic, uppercase`),
+  Transform-Kombinationen, Token-References mit Suffixen, Hover-Properties
+  (`hover-bg`, `hover-opacity`, `hover-scale`), Property-Listen-Edge-Cases.
+
+### Documented
+
+- `tests/compiler/docs/themen/03-properties.md` — Scope, Inventar (~10 Test-Files
+  thematisch + viele indirekte), 50 Provokations-Hypothesen in 10 Bereichen.
+- Bestätigte Verhaltensweisen:
+  - „Letzter gewinnt" funktioniert über alle Alias-Kombinationen hinweg
+  - Multi-Value-Properties mit Überschuss crashen nicht
+  - Boolean-Properties idempotent
+  - Token-References werden zu CSS-Variablen
+  - Negative Werte (margin, z-index, rotate, opacity) werden roh durchgelassen
+  - opacity-Werte werden nicht clamped (CSS-Engine macht das)
+
+### Known limitations (dokumentiert, nicht gefixt)
+
+- **CSS-Property-Form-Aliase fehlen für manche Properties**: `border-radius 8`
+  als direkte CSS-Form-Schreibweise wird stillschweigend ignoriert (kein Style,
+  kein Error). Nur `radius` und `rad` mappen zu `border-radius` in
+  `compiler/schema/ir-helpers.ts`. Validator-Thema (18) wird das später fangen.
+
+---
+
 ## 2026-04-25 (Parser Bulletproof – Thema 2)
 
 Fortsetzung des Compiler-Bulletproof-Plans. Parser systematisch durchleuchtet:
