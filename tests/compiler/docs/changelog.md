@@ -4,6 +4,58 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Lexer Bulletproof – Thema 1)
+
+Erste systematische Absicherung des Lexers im Rahmen des Compiler-Bulletproof-Plans
+(`tests/compiler/docs/themen/uebersicht.md`). 5 Bugs gefunden und behoben, ~120
+neue Tests hinzugefügt.
+
+### Fixed
+
+- **Section headers nur am Zeilenanfang**: `Button -- Foo --` (inline) erzeugte
+  bisher fälschlich einen `SECTION`-Token mitten in der Zeile. Der Lexer prüft
+  jetzt via `isAtLineStart()`, dass der vorherige Token `NEWLINE`/`INDENT`/
+  `DEDENT` war oder die Token-Liste leer ist. Ebenso für `---5` inline.
+- **Lone `&` und `|`** wurden bislang lautlos verschluckt (kein Token, kein
+  Error). Sie emittieren jetzt einen `Unexpected character`-Error mit Hinweis
+  „Did you mean '&&'?" / „Did you mean '||'?".
+- **Negative Numbers verlieren Suffixe nicht mehr**: `-100vh`, `-50%`,
+  `-0.5s`, `-200ms` wurden bisher als `NUMBER "-100"` + separater Identifier
+  tokenisiert. `scanNegativeNumber` ruft jetzt `consumeNumberSuffixes()` auf,
+  das aus `scanNumber` extrahiert und geteilt wird.
+
+### Added
+
+- `tests/compiler/lexer-bugs.test.ts` – 18 Tests, die jeden der 5 Bugs als
+  Erwartung formulieren und gleichzeitig Regressionschutz für die unveränderten
+  Code-Pfade (Tab-Column-Tracking, Surrogate-Pair-Spalten) liefern.
+- `tests/compiler/lexer-number-suffixes.test.ts` – ~45 Tests für `%`, `s`,
+  `ms`, `vh`, `vw`, `vmin`, `vmax`, Aspect-Ratio `16/9`, inkl. Edge-Cases
+  (`100v`, `100vmix`, `100sms`, `1e10`, `0xff`).
+- `tests/compiler/lexer-additional.test.ts` – ~56 Tests für Hex-Color-Edges,
+  Single-Quote-Strings, Mixed-Quote-Strings, Unicode-Identifier (CJK, Umlaut),
+  Indent-Inkonsistenzen, Section-Edges, Block-Comment-Splitting (`/* */`),
+  Operator-Sequenzen (`> =`, `====`, `!==`), BOM/Smart-Quotes/Lone-`\r`.
+
+### Documented
+
+- `tests/compiler/docs/themen/uebersicht.md` – 20-Themen-Roadmap für die
+  systematische Compiler-Absicherung. Vorgehen: 4 Schritte pro Thema.
+- `tests/compiler/docs/themen/01-lexer.md` – Vollständige Analyse: Scope,
+  Ist-Aufnahme von 240 existierenden Lexer-Tests, 66 Provokations-Hypothesen
+  in 11 Bereichen, Test-Plan, dokumentierte Limitierungen (Column = char-index
+  basiert, Hyphen in Section-Namen).
+
+### Known limitations (dokumentiert, nicht gefixt)
+
+- **Hyphen im Section-Namen** (`--- foo-bar ---`) ergibt `SECTION 'foo'` statt
+  `'foo-bar'`, weil `scanSection` am ersten `-` stoppt. Test fixiert das
+  Verhalten; Behebung ist Folge-PR.
+- **Column-Tracking Tab/Emoji**: Tabs zählen 1 Spalte (statt 4), Emoji-
+  Surrogate-Pairs zählen 2 (statt 1). Tests fixieren das.
+
+---
+
 ## 2026-03-28 (Animation Integration)
 
 ### Added
@@ -59,11 +111,11 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ### Test Coverage
 
-| Test-Datei | Tests | Beschreibung |
-|------------|-------|--------------|
-| `state-animations.test.ts` | 17 | Parser: Animation-Syntax |
-| `state-machine-animation.test.ts` | 11 | IR: Animation-Transformation |
-| `state-animation-codegen.test.ts` | 11 | Code-Generation: Animation-Output |
+| Test-Datei                        | Tests | Beschreibung                      |
+| --------------------------------- | ----- | --------------------------------- |
+| `state-animations.test.ts`        | 17    | Parser: Animation-Syntax          |
+| `state-machine-animation.test.ts` | 11    | IR: Animation-Transformation      |
+| `state-animation-codegen.test.ts` | 11    | Code-Generation: Animation-Output |
 
 **Gesamt: 39 Animation-Integration Tests**
 
@@ -87,7 +139,7 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 - **Keyboard Triggers** - `onkeydown escape:` Syntax
   - Event mit Key-Filter: `onkeydown`, `onkeyup` + Key-Name
-  - Unterstützte Keys: escape, enter, space, tab, arrow-*, home, end
+  - Unterstützte Keys: escape, enter, space, tab, arrow-\*, home, end
   - Test: `tests/parser/state-triggers.test.ts`
 
 - **When Dependencies** - `visible when Menu open:` Syntax
@@ -102,6 +154,7 @@ Chronologische Liste aller Bug-Fixes und Features.
     Menu open
     Backdrop visible
   ```
+
   - Parser: Event-Parsing in `parseInstanceBody()`
   - Code-Generation: `_runtime.transitionTo(_elements['Target'], 'state')`
   - Test: `tests/parser/multi-element-triggers.test.ts` (4 Tests)
@@ -121,12 +174,12 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ### Test Coverage
 
-| Test-Datei | Tests | Beschreibung |
-|------------|-------|--------------|
-| `state-triggers.test.ts` | 14 | Parser: Trigger-Syntax, When-Clause |
-| `multi-element-triggers.test.ts` | 4 | Parser: Block-Actions |
-| `state-machine.test.ts` | 11 | IR: State-Machine-Generierung |
-| `state-machine-codegen.test.ts` | 22 | Code-Generation + Edge Cases |
+| Test-Datei                       | Tests | Beschreibung                        |
+| -------------------------------- | ----- | ----------------------------------- |
+| `state-triggers.test.ts`         | 14    | Parser: Trigger-Syntax, When-Clause |
+| `multi-element-triggers.test.ts` | 4     | Parser: Block-Actions               |
+| `state-machine.test.ts`          | 11    | IR: State-Machine-Generierung       |
+| `state-machine-codegen.test.ts`  | 22    | Code-Generation + Edge Cases        |
 
 **Gesamt: 51 Interaction Model Tests**
 
@@ -139,28 +192,33 @@ Chronologische Liste aller Bug-Fixes und Features.
 Systematische Analyse nach Strategie-Ansatz (`provocation-025.test.ts`) - 76 Tests, 5 echte Bugs gefunden (alle gefixt):
 
 **Transform + Pin Kombinationen - BUG (2 Tests failed):**
+
 - `pin-center-x rotate 45` → rotate überschreibt translate statt zu kombinieren
 - `pin-center scale 1.5` → scale überschreibt translate statt zu kombinieren
 - Ursache: Transform-Werte werden nicht gemerged
 - Betrifft: `compiler/ir/index.ts` - Transform-Handling
 
 **State Vererbung - BUG (2 Tests failed):**
+
 - `Parent hover: bg #f00` + `Child hover: bg #00f` → Parent gewinnt statt Child
 - Focus-State von Parent wird bei Child-Override nicht erhalten
 - Ursache: State-Merging in Vererbung fehlerhaft
 - Betrifft: `compiler/ir/index.ts` - `resolveComponent` / `mergeProperties`
 
 **Alias Reihenfolge - BUG (1 Test failed):**
+
 - `bg #f00 background #00f` → erster gewinnt statt letzter
 - Ursache: Alias nicht als gleiche Property erkannt bei Merging
 - Betrifft: `compiler/ir/index.ts` - Property-Key-Generierung
 
 **Text-Align - BUG (1 Test failed):**
+
 - `Text text-align center` → text-align wird nicht gesetzt
 - Ursache: Property wird auf Text-Primitive nicht transformiert
 - Betrifft: `compiler/ir/index.ts` - `propertyToCSS`
 
 **Truncate + Sizing - BUG (2 Tests failed):**
+
 - `Text truncate w 100` → width nicht gesetzt (nur overflow)
 - `Text truncate maxw 200` → maxw nicht gesetzt
 - Ursache: truncate setzt overflow, aber width/maxw werden ignoriert
@@ -192,11 +250,13 @@ Systematische Analyse nach Strategie-Ansatz (`provocation-025.test.ts`) - 76 Tes
 Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestanden:
 
 **Directional Properties - VERIFIED WORKING:**
+
 - `pad left 10`, `pad right 20` → ✓ generiert korrektes CSS
 - `pad x 10`, `margin x 20`, `margin y 10` → ✓ Achsen-Syntax funktioniert
 - `rad t 10`, `rad l 10`, `rad r 20` → ✓ Direktionale Radius funktioniert
 
 **Schema-Definiert aber Nicht-Implementiert (20 Tests skipped):**
+
 - Custom States: `expanded`, `collapsed`, `on`, `off`, `open`, `closed`, `filled`, `valid`, `invalid`, `loading`, `error`
 - State-Variant Props: `hover-bg`, `hover-col`, `hover-opacity`, `hover-scale`, `hover-border`, `hover-border-color`, `hover-radius`
 - Icon Properties: `icon-size`, `icon-color`, `icon-weight`, `fill`, `material`
@@ -204,6 +264,7 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
 - Input Properties: `focusable` (tabindex)
 
 ### Fixed
+
 - **Event-Vererbung** - `onclick:` wurde fälschlich als State geparst
   - Ursache: Event-Detection kam nach State/Slot-Detection
   - Fix: `compiler/parser/parser.ts` - Event-Check vor State-Check
@@ -215,6 +276,7 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
   - Test: `parser-child-overrides.test.ts`
 
 ### Added
+
 - **Single Quotes** - Strings können jetzt mit `'` oder `"` geschrieben werden
   - Fix: `compiler/parser/lexer.ts` - `scanString()` unterstützt beide Quote-Typen
   - Test: `html-output-022.test.ts` - "single quotes"
@@ -228,6 +290,7 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
 ## 2026-03-27 (Session 5)
 
 ### Fixed
+
 - **Nested h full / w full Tests** - Test-Syntax war falsch
   - Problem: Komma-separierte Properties, Doppelpunkte nach Instance-Namen
   - Fix: Tests korrigiert
@@ -241,6 +304,7 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
 ## 2026-03-26 (Session 4)
 
 ### Fixed
+
 - **Bug 6: Inline Hover State** - `Frame bg #333 hover: bg light` ignoriert
   - Ursache: Parser stoppte nicht bei `identifier:`
   - Fix: `parseInlineProperties` stoppt bei lowercase + `:`
@@ -266,6 +330,7 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
 ## 2026-03-25 (Session 3)
 
 ### Fixed
+
 - **Bug 5: x -50 ohne px** - `left: -50` statt `left: -50px`
   - Ursache: Regex `/^\d+$/` matcht keine negativen Zahlen
   - Fix: Regex zu `/^-?\d+$/` geändert
@@ -276,6 +341,7 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
 ## 2026-03-24 (Session 2)
 
 ### Fixed
+
 - **Bug 2: minw/maxw + w full** - min-width wurde ignoriert
   - Ursache: Flex-Konvertierung entfernte explizite min/max
   - Fix: Nur automatisches `min-width: 0` entfernen
@@ -295,6 +361,7 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
 ## 2026-03-23 (Session 1)
 
 ### Fixed
+
 - **Bug 1: 9-Zone + hor/ver Konflikt** - `Frame tc hor` → column statt row
   - Ursache: 9-Zone Properties nicht in Source-Reihenfolge
   - Fix: Layout-Properties in Reihenfolge verarbeiten
@@ -304,10 +371,10 @@ Systematische Schema-Analyse (`provocation-024.test.ts`) - 81 Tests, alle bestan
 
 ## Legende
 
-| Tag | Bedeutung |
-|-----|-----------|
-| Fixed | Bug behoben |
-| Added | Neues Feature |
-| Changed | Verhalten geändert |
-| Deprecated | Wird entfernt |
-| Removed | Entfernt |
+| Tag        | Bedeutung          |
+| ---------- | ------------------ |
+| Fixed      | Bug behoben        |
+| Added      | Neues Feature      |
+| Changed    | Verhalten geändert |
+| Deprecated | Wird entfernt      |
+| Removed    | Entfernt           |

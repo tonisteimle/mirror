@@ -191,8 +191,8 @@ export class Lexer {
       return
     }
 
-    // Section headers: --- Name ---
-    if (this.peek() === '-' && this.peekNext() === '-') {
+    // Section headers: --- Name --- (only at line start)
+    if (this.peek() === '-' && this.peekNext() === '-' && this.isAtLineStart()) {
       this.scanSection()
       return
     }
@@ -301,6 +301,8 @@ export class Lexer {
         if (this.peek() === '&') {
           this.advance()
           this.addToken('AND_AND', '&&')
+        } else {
+          this.addError(`Unexpected character '&' (use && for logical AND)`, `Did you mean '&&'?`)
         }
         break
       case '|':
@@ -308,6 +310,8 @@ export class Lexer {
         if (this.peek() === '|') {
           this.advance()
           this.addToken('OR_OR', '||')
+        } else {
+          this.addError(`Unexpected character '|' (use || for logical OR)`, `Did you mean '||'?`)
         }
         break
       case '>':
@@ -575,12 +579,30 @@ export class Lexer {
       }
     }
 
-    // Include % suffix for percentages
+    value = this.consumeNumberSuffixes(value)
+    this.addToken('NUMBER', value)
+  }
+
+  private scanNegativeNumber(): void {
+    let value = this.advance() // consume -
+    while (this.isDigit(this.peek())) value += this.advance()
+    if (this.peek() === '.' && this.isDigit(this.peekNext())) {
+      value += this.advance()
+      while (this.isDigit(this.peek())) value += this.advance()
+    }
+    value = this.consumeNumberSuffixes(value)
+    this.addToken('NUMBER', value)
+  }
+
+  /**
+   * Consume CSS-like number suffixes after digits/decimal:
+   *   %, s, ms, vh, vw, vmin, vmax, and aspect-ratio fraction (/n).
+   */
+  private consumeNumberSuffixes(value: string): string {
     if (this.peek() === '%') {
       value += this.advance()
     }
 
-    // Include time unit suffixes (s, ms) for durations
     if (this.peek() === 's') {
       value += this.advance()
     } else if (this.peek() === 'm' && this.peekNext() === 's') {
@@ -588,14 +610,12 @@ export class Lexer {
       value += this.advance() // s
     }
 
-    // Include viewport unit suffixes (vh, vw, vmin, vmax)
     if (this.peek() === 'v') {
       const next = this.peekNext()
       if (next === 'h' || next === 'w') {
         value += this.advance() // v
         value += this.advance() // h or w
       } else if (next === 'm') {
-        // Check for vmin or vmax
         const afterNext = this.source[this.pos + 2]
         if (afterNext === 'i' || afterNext === 'a') {
           const afterAfterNext = this.source[this.pos + 3]
@@ -612,7 +632,6 @@ export class Lexer {
       }
     }
 
-    // Include fraction notation for aspect ratios (e.g., 16/9, 4/3)
     if (this.peek() === '/' && this.isDigit(this.peekNext())) {
       value += this.advance() // /
       while (this.isDigit(this.peek())) {
@@ -620,17 +639,7 @@ export class Lexer {
       }
     }
 
-    this.addToken('NUMBER', value)
-  }
-
-  private scanNegativeNumber(): void {
-    let value = this.advance() // consume -
-    while (this.isDigit(this.peek())) value += this.advance()
-    if (this.peek() === '.' && this.isDigit(this.peekNext())) {
-      value += this.advance()
-      while (this.isDigit(this.peek())) value += this.advance()
-    }
-    this.addToken('NUMBER', value)
+    return value
   }
 
   private scanLeadingDecimal(): void {
@@ -679,6 +688,17 @@ export class Lexer {
       return word.toUpperCase() as TokenType
     }
     return undefined
+  }
+
+  /**
+   * True when the next token would start a logical line: at file start,
+   * or directly after NEWLINE/INDENT/DEDENT. Used to scope section-headers
+   * (--- Name ---) to line-level so that inline `--` doesn't trigger them.
+   */
+  private isAtLineStart(): boolean {
+    if (this.tokens.length === 0) return true
+    const last = this.tokens[this.tokens.length - 1]
+    return last.type === 'NEWLINE' || last.type === 'INDENT' || last.type === 'DEDENT'
   }
 
   private scanSection(): void {
