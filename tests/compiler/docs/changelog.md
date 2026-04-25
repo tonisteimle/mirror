@@ -4,6 +4,26 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 11 — Slots / Kind-Komponenten, verteilt über Tutorials)
+
+`tests/compiler/tutorial/tutorial-11-slots-aspects.test.ts` — 5 Tests + 1
+`it.todo`. Basis-Aspekte (Slot-Definition, Layout-Komposition, Multi-
+Element-Slots) waren schon in `tutorial-02-components-behavior.test.ts`
+(12 Tests) abgedeckt.
+
+**Neu abgedeckt:** Praxis-Card mit nested Footer-Slots (Status + Action),
+Slot-Property-Override bei Instanz, AppShell-Pattern (Sidebar + Main),
+Slot-Reihenfolge (Slots erscheinen in Usage-Order, nicht Definition-Order),
+Slot mit `as Button` (Primitive-Vererbung).
+
+**1 Tutorial-Limitation entdeckt:** `data-slot`-Attribut wird inkonsistent
+gesetzt — `Title` und `Footer` bekommen es, `Desc`/`Status`/`Action` nicht.
+`data-mirror-name` ist die zuverlässige Alternative.
+
+Doku: [themen/11-slots.md](themen/11-slots.md).
+
+---
+
 ## 2026-04-25 (Thema 15 — Tables / Charts, Tutorials 14-tabellen + 15-charts)
 
 `tests/compiler/tutorial/tutorial-14-15-tables-charts-aspects.test.ts` —

@@ -65,7 +65,7 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 8   | Events & Actions                                       | `08-functions.html`                   | abgeschlossen                 | [08-events-actions.md](08-events-actions.md)               |
 | 9   | Data-Binding & Iteration (each)                        | `09-daten.html` (Daten-Subset)        | abgeschlossen                 | [09-data.md](09-data.md)                                   |
 | 10  | Conditionals & Expressions                             | `09-daten.html` (Conditionals-Subset) | abgeschlossen                 | [10-conditionals.md](10-conditionals.md)                   |
-| 11  | Slots                                                  | (verteilt)                            | offen                         | —                                                          |
+| 11  | Slots                                                  | `02-komponenten.html` + verteilt      | abgeschlossen                 | [11-slots.md](11-slots.md)                                 |
 | 12  | DatePicker (einzige verbleibende Zag-Komponente)       | (kein Tutorial-Mapping)               | abgeschlossen                 | [12-datepicker.md](12-datepicker.md)                       |
 | 13  | Animationen & Transitions                              | `07-animationen.html`                 | abgeschlossen                 | [13-animations.md](13-animations.md)                       |
 | 14  | Input Mask & Two-way Binding                           | `11-eingabe.html`                     | abgeschlossen                 | [14-input-mask.md](14-input-mask.md)                       |
