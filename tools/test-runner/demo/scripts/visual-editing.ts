@@ -129,24 +129,23 @@ export const demoScript: DemoScript = {
 
     // === 3c. Padding rundum — Card bekommt Innenabstand ===
     // Padding-Handle mit Shift gedrückt zieht alle 4 Seiten gleichzeitig.
-    // Delta 16 → pad 16 rundum. So sieht der Inhalt von Anfang an gut aus,
-    // und wir haben das Padding-Werkzeug einmal sauber demonstriert.
+    // Delta 24 → pad 24 rundum, deutlich sichtbar im 280px Card.
     { action: 'comment', text: 'Schritt 3: Padding rundum — Card-Innenabstand' },
     {
       action: 'dragPadding',
       selector: { byId: 'node-2' },
       side: 'top',
-      delta: 16,
+      delta: 24,
       mode: 'all',
-      comment: 'Padding +16 rundum (Shift = alle Seiten)',
+      comment: 'Padding +24 rundum (Shift = alle Seiten)',
     },
     { action: 'wait', duration: 400 },
     {
       action: 'expectCode',
-      comment: 'after pad=16',
+      comment: 'after pad=24',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16',
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 24',
     },
 
     // === 4. H1 in die leere Card ===
@@ -167,7 +166,7 @@ export const demoScript: DemoScript = {
       comment: 'after H1 drop',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 24\n' +
         '    H1 "Heading 1", col #e4e4e7',
     },
 
@@ -187,7 +186,7 @@ export const demoScript: DemoScript = {
       comment: 'after Text drop',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 24\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7',
     },
@@ -208,7 +207,7 @@ export const demoScript: DemoScript = {
       comment: 'after Button drop',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 24\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -233,7 +232,7 @@ export const demoScript: DemoScript = {
       comment: 'after margin top +16',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 24, mar-t 16\n' +
         '    H1 "Heading 1", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -253,7 +252,7 @@ export const demoScript: DemoScript = {
       comment: 'after H1 inline-edit',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 24, mar-t 16\n' +
         '    H1 "Willkommen", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -273,7 +272,7 @@ export const demoScript: DemoScript = {
       comment: 'after Button inline-edit',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 24, mar-t 16\n' +
         '    H1 "Willkommen", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7\n' +
         '    Button "Loslegen", pad 12 24, bg #5BA8F5, col white, rad 6',
@@ -296,7 +295,7 @@ export const demoScript: DemoScript = {
       comment: 'after reorder (Button → index 0)',
       code:
         'Frame bg #0f0f0f, col white, pad 24, gap 16, w full, h full, center\n' +
-        '  Frame w 280, h hug, bg #27272a, rad 8, pad 16, mar-t 16\n' +
+        '  Frame w 280, h hug, bg #27272a, rad 8, pad 24, mar-t 16\n' +
         '    Button "Loslegen", pad 12 24, bg #5BA8F5, col white, rad 6\n' +
         '    H1 "Willkommen", col #e4e4e7\n' +
         '    Text "Text", fs 14, col #e4e4e7',
