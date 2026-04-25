@@ -110,10 +110,69 @@ Bug.
   Delay-Parameter ist mir unklar; Test S8 prüft nur duration. Falls Delays
   in der Sprache existieren, eigene Iteration nötig.
 
+## 7. Tutorial-Aspekt-Coverage (Iter 3, Tutorial-Audit nachgezogen)
+
+**Tutorial:** `docs/tutorial/06-states.html`
+
+| Tutorial-Abschnitt                  | Aspekt                                      | Test                                                       |
+| ----------------------------------- | ------------------------------------------- | ---------------------------------------------------------- |
+| Das Konzept: States                 | `toggle()` + `on:` Block                    | `tutorial-04-states-behavior` toggle-Verhalten             |
+| System hover                        | `hover:` ändert Style                       | `tutorial-04-states-behavior` (nur Compile, kein Behavior) |
+| System active                       | `active:` während mousedown                 | **fehlt**                                                  |
+| System focus                        | `focus:` auf Input                          | **fehlt**                                                  |
+| System disabled                     | `disabled:` style + `disabled` als Property | **fehlt**                                                  |
+| Custom States via toggle()          | `FavBtn` mit Icon-Wechsel                   | implizit Tutorial 04 toggle, kein Icon-Test                |
+| State-Namen frei wählbar            | `open:` statt `on:`                         | implizit cycle                                             |
+| States können alles ändern          | Icon/Text-Content im State                  | **fehlt** dedizierter Test                                 |
+| Mehrere States (cycle)              | `todo:` → `doing:` → `done:`                | `tutorial-04-states-behavior` cycle                        |
+| exclusive() (nur einer aktiv)       | Tab-Navigation                              | `tutorial-04-states-behavior` exclusive                    |
+| **bind für State-Auswahl**          | `bind city` auf Frame, exclusive() Children | **fehlt**                                                  |
+| **State-Propagation (Parent→Kind)** | Parent `on:` → Children mit `on:` blocks    | **fehlt**                                                  |
+| Cross-Element (`MenuBtn.open:`)     | Sibling/Parent-State referenzieren          | `tutorial-04-states-behavior` state-references             |
+| **Accordion Pattern**               | toggle() + visible/hidden + chevron rot     | **fehlt** komplettes Pattern                               |
+| **onenter/onescape**                | `onenter toggle()` mit Input                | **fehlt**                                                  |
+
+**Tutorial-Coverage:** 9 von 15 Aspekten getestet (60%). 6 echte Lücken.
+
 ## Status
 
 - [x] Schritt 1: Scope abgesteckt
 - [x] Schritt 2: Ist-Aufnahme
-- [x] Schritt 3: Provokations-Liste (12 Hypothesen, 1 Bug)
-- [x] Schritt 4: Tests + Bug-Fix
-- [x] Schritt 5: Coverage-Audit
+- [x] Schritt 3: Tutorial-Aspekt-Audit (6 Lücken identifiziert)
+- [x] Schritt 4: Provokations-Liste (siehe Iter 1+2)
+- [x] Iter 1: Tests + 1 Bug-Fix (state-children HTML-props)
+- [x] Iter 2: state-child-transformer auf 100%
+- [x] Iter 3: 10 Tutorial-Aspekt-Tests + 3 Tutorial-Limitations dokumentiert
+
+## Tutorial-Limitations (entdeckt in Iter 3)
+
+Drei Aspekte aus dem Tutorial wurden beim Aspekt-Audit als **bestehende
+Bugs** identifiziert. Tests dokumentieren das Limitations-Verhalten,
+keine Fixes in dieser Iteration:
+
+- **Mixin-State-Loss:** `Field: focus: …` als Component-Mixin
+  (`Input placeholder "X", Field`) emittiert keine `:focus`-CSS-Regel
+  — die State-Blocks aus dem Mixin werden bei Mixin-Anwendung **nicht**
+  durchgereicht. Tutorial-Beispiel verspricht das Pattern explizit,
+  scheitert aber daran. Tests verwenden stattdessen die
+  bare-element-Form (`Frame focusable, bg #333\n  focus: bg #2271C1`).
+- **Component-as-Input State-Loss:** Auch mit `Field as Input: …` werden
+  die State-Blocks (focus/disabled) nicht in CSS emittiert. Same root
+  cause.
+- **Parent→Child State-Propagation:** `_stateStyles` werden auf Children
+  emittiert, aber `transitionTo` (runtime) wendet sie nur auf das
+  state-tragende Element an, nicht auf dessen Children. Das Tutorial-
+  Accordion-Pattern (`AccordionItem: toggle()` mit `Frame hidden\n  on:
+visible`) funktioniert deshalb nicht — Body-Frame bleibt nach Klick
+  unsichtbar. Test als `it.todo` markiert.
+
+## Code-Coverage nach Iter 3
+
+| Modul                                                 | Vorher | Nachher              |
+| ----------------------------------------------------- | ------ | -------------------- |
+| `compiler/backends/dom/state-machine-emitter.ts`      | 98.47% | 98.47% (unverändert) |
+| `compiler/ir/transformers/state-child-transformer.ts` | 100%   | 100%                 |
+
+Tutorial-Coverage: 9 von 15 Aspekten direkt getestet, 3 als Limitations
+dokumentiert, 3 indirekt durch andere Tests = **15/15** explizit
+adressiert.

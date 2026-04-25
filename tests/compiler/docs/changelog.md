@@ -4,6 +4,32 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 7 Iter 3 — Tutorial-Audit für 06-states.html)
+
+15 Tutorial-Aspekte auditiert. **3 echte Bugs** als known limitations
+dokumentiert (kein Fix in dieser Iteration — alle drei wären
+nicht-triviale Architektur-Änderungen).
+
+### Added
+
+- `tests/compiler/tutorial/tutorial-07-states-aspects.test.ts` — 10
+  Verhaltens-Tests + 1 `it.todo` für den Accordion-Child-State-
+  Propagation-Bug.
+
+### Tutorial-Limitations gefunden (nicht gefixt)
+
+- **Mixin-State-Loss**: `Field: focus: …` als Component-Mixin verliert
+  die State-Blocks bei Anwendung via `Input placeholder "X", Field`.
+- **Component-as-Input State-Loss**: Auch `Field as Input: focus: …`
+  emittiert keine `:focus`-CSS-Regeln.
+- **Parent→Child State-Propagation**: `_stateStyles` auf Child-Elementen
+  werden vom Runtime-`transitionTo` nicht angewendet wenn der Parent-
+  State wechselt → Tutorial-Accordion-Pattern funktioniert nicht.
+
+Details in `themen/07-states.md` Sektion „Tutorial-Limitations".
+
+---
+
 ## 2026-04-25 (Thema 9 — Data-Binding & Each, Pilot für Tutorial-Coverage)
 
 User-Feedback: „Jeder Aspekt im Tutorial muss durch Tests abgedeckt werden …
