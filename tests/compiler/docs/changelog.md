@@ -4,6 +4,28 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 14 — Input Mask & Two-way Binding, Tutorial 11-eingabe)
+
+`tests/compiler/tutorial/tutorial-11-eingabe-aspects.test.ts` — 35 Verhaltens-
+Tests + 2 `it.todo`.
+
+**33/33 Tutorial-Aspekte adressiert** (Input/Textarea/Checkbox/Switch/Select/
+Item-mit-value/Two-Way-Binding mit Live-Update/Slider/RadioGroup/RadioItem/
+Login-Formular/Input Mask Pattern + Bind + Runtime-Helpers `formatWithMask` /
+`getRawValue`).
+
+**2 echte Tutorial-Bugs entdeckt (als `it.todo` markiert):**
+
+- **Variable-Name-Kollision mit String-Literal:** `email: ""` + `type "email"`
+  → `<input type="var(--email)">`. Value-Resolver substituiert auch in HTML-
+  Attributen, wo Token-Referenzen keinen Sinn ergeben.
+- **Slider min/max/step werden vom Compiler verschluckt:** Pure-Compiler-
+  Output ohne Studio-Prelude verliert diese Properties; nur `value` überlebt.
+
+Doku: [themen/14-input-mask.md](themen/14-input-mask.md).
+
+---
+
 ## 2026-04-25 (Themen 4/3/8/12 Iter X — Tutorial-Audits abgeschlossen)
 
 Vier Tutorial-Audits in einem Schritt durchgezogen. Insgesamt **0 neue Bugs**

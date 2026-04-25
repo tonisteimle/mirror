@@ -64,13 +64,13 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 7   | States (System + Custom + Cross-Element + Transitions) | `06-states.html`                      | abgeschlossen                 | [07-states.md](07-states.md)                               |
 | 8   | Events & Actions                                       | `08-functions.html`                   | abgeschlossen                 | [08-events-actions.md](08-events-actions.md)               |
 | 9   | Data-Binding & Iteration (each)                        | `09-daten.html` (Daten-Subset)        | abgeschlossen                 | [09-data.md](09-data.md)                                   |
-| 10  | Conditionals & Expressions                             | `09-daten.html` (Conditionals-Subset) | offen                         | —                                                          |
+| 10  | Conditionals & Expressions                             | `09-daten.html` (Conditionals-Subset) | abgeschlossen                 | [10-conditionals.md](10-conditionals.md)                   |
 | 11  | Slots                                                  | (verteilt)                            | offen                         | —                                                          |
 | 12  | DatePicker (einzige verbleibende Zag-Komponente)       | (kein Tutorial-Mapping)               | abgeschlossen                 | [12-datepicker.md](12-datepicker.md)                       |
 | 13  | Animationen & Transitions                              | `07-animationen.html`                 | abgeschlossen                 | [13-animations.md](13-animations.md)                       |
-| 14  | Input Mask & Two-way Binding                           | `11-eingabe.html`                     | offen                         | —                                                          |
+| 14  | Input Mask & Two-way Binding                           | `11-eingabe.html`                     | abgeschlossen                 | [14-input-mask.md](14-input-mask.md)                       |
 | 15  | Tables / Charts                                        | `14-tabellen.html`, `15-charts.html`  | offen                         | —                                                          |
-| 16  | Canvas / Device Presets / Custom Icons                 | `01-elemente.html`                    | offen                         | —                                                          |
+| 16  | Canvas / Device Presets / Custom Icons                 | `01-elemente.html`                    | abgeschlossen                 | [16-canvas-elemente.md](16-canvas-elemente.md)             |
 | 17  | SourceMap (bidirektional)                              | Internals                             | offen                         | —                                                          |
 | 18  | Validator                                              | Internals                             | offen                         | —                                                          |
 | 19  | Robustheit (Whitespace, Strings, Kommentare, Fuzz)     | Internals                             | offen                         | —                                                          |
