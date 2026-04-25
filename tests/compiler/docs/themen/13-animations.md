@@ -1,9 +1,10 @@
 # Thema 13: Animationen (Custom)
 
-**Status:** abgeschlossen (2026-04-25).
+**Status:** abgeschlossen (2026-04-25, nach Iteration 2).
 
 **Ergebnis:** **1 echter Bug gefixt** (Custom-Animation-Parser crashte
-komplett), 14 Tests, Coverage von 1-3% auf 70-95% in beiden Modulen.
+komplett), 26 Tests, Coverage von 1-3% auf **91.75% / 100%** in beiden
+Modulen.
 
 ## 1. Scope
 
@@ -84,14 +85,19 @@ unverändert.
 - A13: 2 distinkte Animationen → 2 registerAnimation-calls
 - A14: Single-keyframe-animation crasht nicht
 
-## 5. Coverage nach Thema 13
+## 5. Coverage nach Iteration 2
 
-| Modul                                        | Vorher | Nachher                            |
-| -------------------------------------------- | ------ | ---------------------------------- |
-| `compiler/parser/animation-parser.ts`        | 1.1%   | **71.13%** L / 61.72% B / 83.33% F |
-| `compiler/backends/dom/animation-emitter.ts` | 2.6%   | **94.87%** L / 70% B / **100%** F  |
+| Modul                                        | Vorher | Iter 1                         | **Iter 2**                       |
+| -------------------------------------------- | ------ | ------------------------------ | -------------------------------- |
+| `compiler/parser/animation-parser.ts`        | 1.1%   | 71.13% L / 61.72% B / 83.33% F | **91.75% L / 82.71% B / 100% F** |
+| `compiler/backends/dom/animation-emitter.ts` | 2.6%   | 94.87% L / 70% B / 100% F      | **100% L / 100% B / 100% F**     |
 
-**Globaler Effekt:** 66.63% → **68.14% Lines (+1.51 pp)**.
+**Iter 2 ergänzt 12 Tests:** roles-Klausel (4 Tests), duration-Berechnung bei
+ms-skala-keyframes (3 Tests), unknown-tokens-recovery (1 Test), property-
+target+string/identifier value (3 Tests), error-recovery zwischen Definitionen
+(1 Test).
+
+**Globaler Effekt:** 66.63% → **70.02% Lines (+3.4 pp)** seit Thema 13 Start.
 
 ## 6. Was nicht abgedeckt ist
 

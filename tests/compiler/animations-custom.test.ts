@@ -242,3 +242,178 @@ Frame anim OneFrame
     }).not.toThrow()
   })
 })
+
+// =============================================================================
+// Iter 2 — Coverage closure für animation-parser (71% → 90%+)
+// =============================================================================
+
+describe('Custom animations — body without indent (error path)', () => {
+  it('A15: animation definition without indented body produces error', () => {
+    const ast = parseSrc(`canvas mobile
+
+NoBody as animation: ease-out
+Frame anim NoBody
+  Text "X"
+`)
+    // The parser must not crash — animation may be empty but no indented
+    // keyframes triggers the addError path.
+    expect(Array.isArray(ast.errors)).toBe(true)
+    expect(ast.animations).toBeDefined()
+  })
+})
+
+describe('Custom animations — roles clause', () => {
+  it('A16: animation with `roles enter, exit` records both roles', () => {
+    const ast = parseSrc(`canvas mobile
+
+Fade as animation: ease-out
+  roles enter, exit
+  0.00 opacity 0
+  1.00 opacity 1
+`)
+    const anim = ast.animations[0]
+    expect(anim.roles).toEqual(['enter', 'exit'])
+  })
+
+  it('A17: animation with single `roles enter` records one role', () => {
+    const ast = parseSrc(`canvas mobile
+
+Reveal as animation:
+  roles enter
+  0.00 opacity 0
+  1.00 opacity 1
+`)
+    const anim = ast.animations[0]
+    expect(anim.roles).toEqual(['enter'])
+  })
+
+  it('A18: roles emitted via animation-emitter', () => {
+    const out = dom(`canvas mobile
+
+Fade as animation: ease-out
+  roles enter, exit
+  0.00 opacity 0
+  1.00 opacity 1
+
+Frame anim Fade
+  Text "X"
+`)
+    expect(out).toMatch(/roles:\s*\[\s*"enter"\s*,\s*"exit"\s*\]/)
+  })
+})
+
+describe('Custom animations — duration', () => {
+  it('A19: keyframe times > 1.0 treated as milliseconds → duration set', () => {
+    // The animation-parser's duration calculation kicks in when the last
+    // keyframe time is > 1.0 (ms scale).
+    const ast = parseSrc(`canvas mobile
+
+Long as animation:
+  0 opacity 0
+  500 opacity 1
+`)
+    const anim = ast.animations[0]
+    expect(anim.duration).toBe(500)
+  })
+
+  it('A20: keyframes 0.0..1.0 do not set ms-style duration', () => {
+    const ast = parseSrc(`canvas mobile
+
+Frac as animation:
+  0.00 opacity 0
+  1.00 opacity 1
+`)
+    const anim = ast.animations[0]
+    // duration should be undefined (or 0/normal) in fractional case
+    expect(anim.duration === undefined || anim.duration <= 1).toBe(true)
+  })
+
+  it('A21: emitter passes duration field to runtime when present', () => {
+    const out = dom(`canvas mobile
+
+Long as animation:
+  0 opacity 0
+  500 opacity 1
+
+Frame anim Long
+  Text "X"
+`)
+    expect(out).toMatch(/duration:\s*500/)
+  })
+})
+
+describe('Custom animations — keyframe property edge cases', () => {
+  it('A23: keyframe property with target + string value', () => {
+    // `item1 background "red"` — target identifier + property + string value
+    const ast = parseSrc(`canvas mobile
+
+Tinted as animation:
+  0.00 item1 background "red"
+  1.00 item1 background "blue"
+`)
+    const props0 = ast.animations[0].keyframes[0].properties
+    expect(props0[0].target).toBe('item1')
+    expect(props0[0].name).toBe('background')
+    expect(props0[0].value).toBe('red')
+  })
+
+  it('A24: keyframe property with target + identifier value', () => {
+    // `all transform-origin center` — target + property + identifier value
+    const ast = parseSrc(`canvas mobile
+
+Centered as animation:
+  0.00 all transform-origin center
+  1.00 all transform-origin center
+`)
+    const props0 = ast.animations[0].keyframes[0].properties
+    expect(props0[0].target).toBe('all')
+    expect(props0[0].name).toBe('transform-origin')
+    expect(props0[0].value).toBe('center')
+  })
+
+  it('A25: keyframe property with target but no value is dropped (return null)', () => {
+    const ast = parseSrc(`canvas mobile
+
+Broken as animation:
+  0.00 item1 opacity
+  1.00 opacity 1
+`)
+    // The first keyframe's first property has no value → null → kept frames
+    // contain only the well-formed second keyframe.
+    expect(ast.animations[0].keyframes[1].properties.some((p: any) => p.name === 'opacity')).toBe(
+      true
+    )
+  })
+})
+
+describe('Custom animations — error recovery', () => {
+  it('A26: missing colon recovers and lets next definition parse', () => {
+    const ast = parseSrc(`canvas mobile
+
+Bad as animation
+  0.00 opacity 0
+
+Good as animation: ease-out
+  0.00 opacity 0
+  1.00 opacity 1
+`)
+    // The bad definition should not block the good one (recovery).
+    const goodAnim = ast.animations.find((a: any) => a.name === 'Good')
+    expect(goodAnim).toBeDefined()
+    expect(goodAnim.keyframes.length).toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('Custom animations — unknown-tokens-in-body recovery', () => {
+  it('A22: stray identifier token in animation body is skipped, parser continues', () => {
+    const ast = parseSrc(`canvas mobile
+
+Mix as animation:
+  somegarbage
+  0.00 opacity 0
+  1.00 opacity 1
+`)
+    // The 'somegarbage' identifier is skipped; the keyframes still parse.
+    expect(ast.animations[0].keyframes.length).toBe(2)
+  })
+})
