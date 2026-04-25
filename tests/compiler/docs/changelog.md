@@ -4,6 +4,21 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 5 Iter 2 — Tutorial-Audit für 02-komponenten.html)
+
+11 Tutorial-Aspekte auditiert, 8 bereits durch existierende Tests abgedeckt.
+3 Lücken geschlossen (alle bestanden, **0 Bugs entdeckt** — solides Component-
+System):
+
+- Definition ohne body + Kinder bei Instance (`Card: ...\n\nCard\n  Text`)
+- Komplexe Komponenten (nested children in Definition: Footer mit Frame +
+  Text-Children)
+- Slots mit mehreren Elementen (`Content` slot mit Text+Text+Button)
+
+Tutorial-Coverage Thema 5: 11/11 Aspekte (100%).
+
+---
+
 ## 2026-04-25 (Thema 13 Iter 3 — Tutorial-Audit für 07-animationen.html)
 
 9 Tutorial-Aspekte auditiert, 7 bereits abgedeckt durch existierende Tests.

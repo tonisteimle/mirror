@@ -279,6 +279,27 @@ Systematische Coverage:
 - **3.14 Cross-Cases (3)**: X1, X2, X3
 - **3.15 Pathologische (3)**: PA1, PA2, PA3
 
+## Tutorial-Aspekt-Coverage (Iter 2, Tutorial-Audit nachgezogen)
+
+**Tutorial:** `docs/tutorial/02-komponenten.html`
+
+| Tutorial-Abschnitt                                       | Aspekt                                   | Test                                                     |
+| -------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------- |
+| Komponenten definieren                                   | `Btn: pad 10 20, …` Definition mit `:`   | `tutorial-02-components-behavior` Komponenten-Definition |
+| Komponenten verwenden                                    | `Btn "Speichern"` ohne `:`               | implizit                                                 |
+| Properties überschreiben                                 | `Btn "X", bg #333`                       | Property-Überschreibung                                  |
+| Mehrere Instanzen                                        | `Btn "A"; Btn "B"; Btn "C"`              | Mehrere Instanzen möglich                                |
+| **Kinder hinzufügen (def ohne body, instance mit body)** | `Card: bg #1a1a1a\n\nCard\n  Text "..."` | `tutorial-02-components-behavior` Aspekt-Test (Iter 2)   |
+| Variationen via `as`                                     | `PrimaryBtn as Btn: bg #2271C1`          | Beispiel: Button-Varianten                               |
+| **Komplexe Komponenten (nested children in def)**        | `Footer: ...\n  Text\n  Frame\n    Text` | `tutorial-02-components-behavior` Aspekt-Test (Iter 2)   |
+| Slots / Sub-Components                                   | `Card: \n  Title:` + `Title "..."`       | Slot-Definition + Beispiel: Card mit Slots               |
+| **Slots mit mehreren Elementen**                         | `Content` slot mit Text+Text+Button      | `tutorial-02-components-behavior` Aspekt-Test (Iter 2)   |
+| Layouts (AppShell)                                       | `Sidebar: + Main:` slots                 | Layout mit Slots                                         |
+| Card-Praxis                                              | komplette Card mit Title/Desc/Footer     | (deckt sich mit Card mit Slots)                          |
+
+**Tutorial-Coverage:** 11 von 11 Aspekten getestet (100%). Iter 2 schließt die 3
+Lücken (Kinder-bei-Instance, nested-children-in-def, multi-element-slots).
+
 ## Status
 
 - [x] Schritt 1: Scope abgesteckt
@@ -286,3 +307,4 @@ Systematische Coverage:
 - [x] Schritt 3: Provokations-Liste (~75 Hypothesen in 15 Bereichen)
 - [x] Schritt 4: ~55 neue Tests, 1 Parser-Bug entdeckt + dokumentiert (Komma-Actions in Component-Body)
 - [x] Schritt 5: Coverage-Audit dokumentiert (siehe „Was nicht abgedeckt ist")
+- [x] Iter 2: Tutorial-Audit + 3 Aspekt-Tests (Tutorial-Coverage 100%)
