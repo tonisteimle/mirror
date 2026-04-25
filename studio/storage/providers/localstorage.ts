@@ -36,6 +36,17 @@ export class LocalStorageProvider implements StorageProvider {
   private files: Record<string, string> = {}
 
   constructor() {
+    // Demo blank mode (?demo=blank): skip storage entirely and start with
+    // a single empty index.mir. Used by the demo runner so a fresh
+    // headed run isn't polluted by the previous session's files.
+    if (typeof window !== 'undefined' && window.location) {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('demo') === 'blank') {
+        this.files = { 'index.mir': '' }
+        log.info('Demo blank mode — empty project, storage bypassed')
+        return
+      }
+    }
     this.loadFromStorage()
   }
 

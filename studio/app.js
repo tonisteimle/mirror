@@ -134,7 +134,7 @@ import {
   // Validator (for code linting)
   validate as validateCode,
   toCodeMirrorDiagnostics,
-} from './dist/index.js?v=146'
+} from './dist/index.js?v=147'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -3133,6 +3133,31 @@ function setupNotificationHandlers() {
     if (!target) {
       console.warn('[Drag v3] Missing target')
       return
+    }
+    // Canvas-only state: editor has no Mirror node tree (just an empty
+    // editor or a `canvas …` declaration). Mirror still synthesizes an
+    // implicit wrapper node for hit-detection, but it has no source-map
+    // entry, so handleStudioDropNew can't insert into it. Fall back to
+    // "append as new top-level element" — what the user actually means
+    // by dropping a palette item there.
+    if (source?.type === 'palette') {
+      const before = editor?.state?.doc?.toString() ?? ''
+      const trimmed = before.trim()
+      const isEmptyOrCanvasOnly = trimmed === '' || /^canvas\b[^\n]*$/i.test(trimmed)
+      if (isEmptyOrCanvasOnly) {
+        const componentName = (dragData && dragData.componentName) || source.componentName
+        let code = (dragData && dragData.mirTemplate) || componentName
+        if (dragData && !dragData.mirTemplate) {
+          if (dragData.textContent) code += ' "' + dragData.textContent + '"'
+          if (dragData.properties) {
+            code += dragData.textContent ? ', ' + dragData.properties : ' ' + dragData.properties
+          }
+        }
+        const appended = before.length === 0 ? code : before.replace(/\s*$/, '') + '\n\n' + code
+        const len = editor.state.doc.length
+        editor.dispatch({ changes: { from: 0, to: len, insert: appended } })
+        return
+      }
     }
 
     // Handle canvas element move (type: 'canvas')

@@ -155,6 +155,16 @@ function parseArgs(): CLIArgs {
   }
 }
 
+function appendQuery(url: string, key: string, value: string): string {
+  try {
+    const u = new URL(url)
+    u.searchParams.set(key, value)
+    return u.toString()
+  } catch {
+    return url + (url.includes('?') ? '&' : '?') + key + '=' + value
+  }
+}
+
 function getArgValue(args: string[], flag: string): string | undefined {
   const arg = args.find(a => a.startsWith(`${flag}=`))
   return arg?.split('=')[1]
@@ -434,7 +444,7 @@ async function runDemoSuiteMode(args: CLIArgs): Promise<number> {
       try {
         const script = await loadDemoScript(file)
         result.name = script.name
-        await runner.navigate(args.url)
+        await runner.navigate(appendQuery(args.url, 'demo', 'blank'))
         await new Promise(r => setTimeout(r, 1500))
         // Auto-discover per-demo AI fixture: scripts/<name>.ts → fixtures/<name>.json
         const demoBasename = pathSync.basename(file, pathSync.extname(file))
@@ -654,7 +664,10 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
 
     try {
       await runner.start()
-      await runner.navigate(args.url)
+      // Demo runs navigate with ?demo=blank so Studio starts with an empty
+      // index.mir, untainted by the previous session's localStorage.
+      const demoUrl = appendQuery(args.url, 'demo', 'blank')
+      await runner.navigate(demoUrl)
 
       // Wait for page to be ready
       await new Promise(resolve => setTimeout(resolve, 2000))

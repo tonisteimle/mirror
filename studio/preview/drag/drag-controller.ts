@@ -316,13 +316,24 @@ export class DragController implements Reportable<ControllerReport> {
 
   /** Complete the drag operation */
   async drop(): Promise<void> {
-    if (!this.source || !this.lastTarget) {
-      log.warn('Drop aborted: missing source or target')
+    if (!this.source) {
+      log.warn('Drop aborted: missing source')
       return this.reset(false)
     }
 
     const source = this.source
     const target = this.lastTarget
+    if (!target) {
+      // No node-tree target was identified during dragover (the editor has
+      // no rendered Mirror elements yet — e.g. blank or `canvas …`-only
+      // state). Forward the drop with a null target so the
+      // drag:dropped subscriber can decide to append as a new top-level
+      // element. Keeps the v3 controller agnostic about the editor source.
+      log.info('Dropped:', (source as any).componentName || source.type, '→ root (no target)')
+      this.reset(true)
+      await this.executeDropCallback(source, null as unknown as DropTarget)
+      return
+    }
     log.info('Dropped:', (source as any).componentName || source.type, '→', target.containerId)
     this.reset(true)
 
