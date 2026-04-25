@@ -851,6 +851,11 @@ const MIRROR_ACTIONS_API = `
     // resize-manager listens on document; document.body works via bubbling
     // and matches the existing __mirrorTest.interact.dragResizeHandle path.
     await manualDrag(handle, startPoint, endPoint, { moveTarget: document.body });
+    // Wait for compile so the preview reflects the new dimensions before
+    // the next demo step looks for handles or new layout.
+    if (window.__dragTest && window.__dragTest.waitForCompile) {
+      await window.__dragTest.waitForCompile();
+    }
   }
 
   async function dragPadding(sel, side, delta, mode, _bypassSnap) {
@@ -875,6 +880,9 @@ const MIRROR_ACTIONS_API = `
                     : mode === 'axis' ? { altKey: true }
                     : undefined;
     await manualDrag(handle, startPoint, endPoint, { eventOpts });
+    if (window.__dragTest && window.__dragTest.waitForCompile) {
+      await window.__dragTest.waitForCompile();
+    }
     await window.__mirrorTest.interact.exitPaddingMode();
   }
 
@@ -900,6 +908,9 @@ const MIRROR_ACTIONS_API = `
                     : mode === 'axis' ? { altKey: true }
                     : undefined;
     await manualDrag(handle, startPoint, endPoint, { eventOpts });
+    if (window.__dragTest && window.__dragTest.waitForCompile) {
+      await window.__dragTest.waitForCompile();
+    }
     await window.__mirrorTest.interact.exitMarginMode();
   }
 
