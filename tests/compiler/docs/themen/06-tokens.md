@@ -187,6 +187,26 @@ token-emitter.ts könnte in eigener Iteration auf 95%+ gebracht werden
 
 Eine Datei `tests/compiler/tokens-coverage.test.ts` mit allen Bereichen, ~50 Tests.
 
+## Tutorial-Aspekt-Coverage (Iter 2, Tutorial-Audit nachgezogen)
+
+**Tutorial:** `docs/tutorial/03-tokens.html`
+
+| Tutorial-Abschnitt               | Aspekt                                    | Test                                               |
+| -------------------------------- | ----------------------------------------- | -------------------------------------------------- |
+| Tokens definieren                | `name.suffix: value` (ohne $)             | `tutorial-03-tokens-behavior` Token-Definition     |
+| Tokens verwenden                 | `$name` (ohne Suffix → automatic mapping) | Beispiel: Design System Tokens                     |
+| Mehrere Tokens                   | `primary.bg`, `card.bg`, …                | Mehrere Tokens werden ausgegeben                   |
+| Hierarchische Tokens             | `card.bg`, `card.rad`                     | Hierarchische Tokens                               |
+| Suffix-Auto-Mapping              | `bg $primary` → `var(--primary-bg)`       | (implizit über CSS-Vars-Test)                      |
+| Semantische Tokens               | semantic naming pattern                   | Beispiel: Button-System mit Vererbung und Tokens   |
+| **Property Sets (Style-Bündel)** | `cardstyle: bg #1a, pad 16, rad 8`        | `tutorial-03-tokens-behavior` Aspekt-Test (Iter 2) |
+| **Property Sets verwenden**      | `Frame $cardstyle`                        | `tutorial-03-tokens-behavior` Aspekt-Test (Iter 2) |
+| **Property Sets + Tokens**       | `primarybutton: bg $primary, …`           | `tutorial-03-tokens-behavior` Aspekt-Test (Iter 2) |
+| Drei Stufen (Tokens→Komp→Inst)   | komplettes Pattern                        | Beispiel: Button-System                            |
+
+**Tutorial-Coverage:** 10/10 Aspekten getestet (100%). Iter 2 schließt die
+3 Property-Set-Lücken (Definition, Verwendung, Kombi mit Tokens).
+
 ## Status
 
 - [x] Schritt 1: Scope abgesteckt
@@ -194,3 +214,4 @@ Eine Datei `tests/compiler/tokens-coverage.test.ts` mit allen Bereichen, ~50 Tes
 - [x] Schritt 3: Provokations-Liste (~50 Hypothesen in 8 Bereichen)
 - [x] Schritt 4: 35 neue Tests, 2 Bugs gefixt (Property-Set-Verschachtelung)
 - [x] Schritt 5: Coverage-Audit dokumentiert (siehe oben)
+- [x] Iter 2: Tutorial-Audit + 3 Aspekt-Tests (Tutorial-Coverage 100%, 0 Bugs)

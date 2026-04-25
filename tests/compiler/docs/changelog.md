@@ -4,6 +4,20 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 6 Iter 2 — Tutorial-Audit für 03-tokens.html)
+
+10 Tutorial-Aspekte auditiert. 7 bereits abgedeckt durch existierende Tests,
+3 Lücken geschlossen (alle bestanden, **0 Bugs entdeckt**):
+
+- Property Sets (Style-Bündel) — `cardstyle: bg #1a, pad 16, rad 8`
+- Property Sets verwenden — `Frame $cardstyle` mit Override
+- Property Sets + Tokens kombiniert — `primarybutton: bg $primary, …`
+
+Tutorial-Coverage Thema 6: 10/10 Aspekte (100%). Solides Token-System mit
+Property-Sets (Bugs in dieser Pipeline wurden bereits in Iter 1 gefixt).
+
+---
+
 ## 2026-04-25 (Thema 5 Iter 2 — Tutorial-Audit für 02-komponenten.html)
 
 11 Tutorial-Aspekte auditiert, 8 bereits durch existierende Tests abgedeckt.
