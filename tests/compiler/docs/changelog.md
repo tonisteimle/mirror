@@ -4,6 +4,55 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Parser Bulletproof – Thema 2)
+
+Fortsetzung des Compiler-Bulletproof-Plans. Parser systematisch durchleuchtet:
+~605 existierende Tests katalogisiert, 70 Hypothesen in 13 Bereichen geprüft,
+1 Soft-Error-Verbesserung, 11 deaktivierte Schema-Tests reaktiviert, ~75 neue Tests.
+
+### Fixed
+
+- **Top-Level skip-unknown emittiert jetzt einen Soft-Error**, wenn der Parser
+  vor einem `IDENTIFIER COLON` strandet, das keiner Definition entspricht.
+  Vorher: lautloses Verschlucken. Jetzt: „Unrecognized definition: ':' has no
+  value or body" mit Hinweis (`compiler/parser/parser.ts` Z. 514).
+
+### Added
+
+- `tests/compiler/parser-bugs.test.ts` (~33 Tests) — Bug-Hypothesen für Top-Level-
+  Detection (reserved keywords, Canvas-Position, JS-Keyword-Mid-Doc), Token-Edge-Cases,
+  Self-Inheritance, Empty-Inline-Slots, Multi-Value-Excess, State-Doppel-Definition,
+  Each-Edge-Cases, Else-If-Chain, Robustness (1000 props / 50 nesting / 100 components).
+  Drei vermutete Bugs sind bestätigt-aber-nicht-Silent-Swallow (Parser produziert
+  „verkorkste" AST-Knoten statt Fehler) — als known limitations dokumentiert.
+- `tests/compiler/parser-additional.test.ts` (~44 Tests) — Coverage für Top-Level-
+  Constructs, Token-Definitionen, Component-Patterns, Property-Patterns (inkl.
+  `bg`/`pad` bleiben raw bis IR), States (inline, mit Trigger, mit when-Clause),
+  Events (Multi-Action wird zu 2 Events!), Each-Loops (mit `where`, index, nested),
+  Conditionals, systematisches Position-Tracking.
+- 11 reaktivierte Schema-Tests in `parser-schema.test.ts` (vorher `describe.skip(`).
+  API-Calls von `ast.program.schema` auf `ast.schema` umgestellt. 6 Constraint-
+  Tests bleiben skipped (Feature nicht implementiert).
+
+### Documented
+
+- `tests/compiler/docs/themen/02-parser.md` — Scope, Inventar von 29 Test-Files
+  (~605 Tests), 70 Provokations-Hypothesen in 13 Bereichen, Test-Plan.
+- Wichtige fixierte Verhaltensweisen:
+  - Property-Namen bleiben im AST roh (`bg`, `pad`) — Alias-Resolution passiert in IR
+  - Token-References sind Objects: `{ kind: 'token', name: 'primary' }`
+  - `onclick toggle(), toast(...)` produziert 2 Events (nicht 1 mit 2 Actions)
+  - `Btn:` wird Component mit Default-Primitive Frame
+  - `if: #f00` wird (suboptimal) als malformed Conditional interpretiert
+  - `each in $list` (ohne loop-var) wird als Instance reinterpretiert
+
+### Known limitations (dokumentiert, nicht gefixt)
+
+- Reserved Keywords als Token-Namen (`if:`, `each:`) ergeben verkorkste AST-Knoten
+- Schema-Constraints (`required`, `max`, `onDelete`) noch nicht implementiert
+
+---
+
 ## 2026-04-25 (Lexer Bulletproof – Thema 1)
 
 Erste systematische Absicherung des Lexers im Rahmen des Compiler-Bulletproof-Plans
@@ -149,6 +198,7 @@ neue Tests hinzugefügt.
   - Test: `tests/ir/state-machine.test.ts`, `tests/compiler/state-machine-codegen.test.ts`
 
 - **Multi-Element Triggers** - Block-Syntax für mehrere Targets
+
   ```
   onclick:
     Menu open

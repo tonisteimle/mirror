@@ -511,7 +511,17 @@ export class Parser {
         continue
       }
 
-      // Skip unknown
+      // Skip unknown — but if the current token is an IDENTIFIER followed by COLON
+      // that didn't match any of the definition patterns above, surface an error so
+      // the user gets feedback instead of a silently swallowed input (e.g. `name:`
+      // with no value).
+      const skipped = this.current()
+      if (skipped && skipped.type === 'IDENTIFIER' && this.checkNext('COLON')) {
+        this.addError(
+          `Unrecognized definition: '${skipped.value}:' has no value or body`,
+          `Provide a token value, component definition, or property set after ':'`
+        )
+      }
       this.advance()
     }
 
