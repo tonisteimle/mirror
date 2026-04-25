@@ -64,7 +64,7 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 10  | Conditionals & Expressions                             | offen         | —                                                          |
 | 11  | Slots                                                  | offen         | —                                                          |
 | 12  | DatePicker (einzige verbleibende Zag-Komponente)       | abgeschlossen | [12-datepicker.md](12-datepicker.md)                       |
-| 13  | Animationen & Transitions                              | offen         | —                                                          |
+| 13  | Animationen & Transitions                              | abgeschlossen | [13-animations.md](13-animations.md)                       |
 | 14  | Input Mask & Two-way Binding                           | offen         | —                                                          |
 | 15  | Tables / Charts                                        | offen         | —                                                          |
 | 16  | Canvas / Device Presets / Custom Icons                 | offen         | —                                                          |

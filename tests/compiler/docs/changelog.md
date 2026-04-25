@@ -4,6 +4,44 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 13 — Animationen)
+
+1 Bug gefixt (Custom-Animation-Parser crashte komplett) + 14 Tests.
+
+### Fixed
+
+- **Animation-parser crashte mit `U.expect is not a function`** — In
+  `compiler/parser/animation-parser.ts` wurden zwei Methoden aufgerufen,
+  die nicht auf `ParserUtils` existieren: `U.expect(ctx, 'COLON')` und
+  `U.addError(ctx, msg)`. Jede Mirror-Datei mit `Foo as animation:` blieb
+  beim Parsen hängen. Bug blieb unentdeckt, weil 0 Examples das Feature
+  nutzen und 0 Compiler-Tests es testeten. Fix: lokale `expect`/`addError`-
+  Helper in animation-parser.ts (basierend auf existierendem `ParserUtils.check`/
+  `reportError`). Keine API-Brüche.
+
+### Added
+
+- `tests/compiler/animations-custom.test.ts` — 14 Tests:
+  - **Parser** (6): Simple anim, ohne easing, multi-property keyframe, `all`
+    target, 3+ keyframes, missing colon → graceful error
+  - **DOM Emission** (5): registerAnimation Aufruf, keyframes-Array, target
+    marker, y-offset → translateY, x-offset → translateX
+  - **Pathologisch** (3): unused animation registriert trotzdem, 2 distinct
+    animations, single-keyframe ohne crash
+
+### Coverage
+
+| Modul                                        | Vorher | Nachher                            |
+| -------------------------------------------- | ------ | ---------------------------------- |
+| `compiler/parser/animation-parser.ts`        | 1.1%   | **71.13%** L / 61.72% B / 83.33% F |
+| `compiler/backends/dom/animation-emitter.ts` | 2.6%   | **94.87%** L / 70% B / **100%** F  |
+
+Globaler Effekt: 66.63% → **68.14% Lines (+1.51 pp)**.
+
+Details: `tests/compiler/docs/themen/13-animations.md`.
+
+---
+
 ## 2026-04-25 (Thema 8 — Events & Actions)
 
 25 Coverage-Tests für die Event-Pipeline. Keine Bugs entdeckt — Pipeline ist

@@ -11,13 +11,34 @@
  *   1.00 all opacity 1, y-offset 0
  */
 
-import type { Token } from './lexer'
+import type { Token, TokenType } from './lexer'
 import type { AnimationDefinition, AnimationKeyframe, AnimationKeyframeProperty } from './ast'
 import type { ParserContext } from './parser-context'
 import { ParserUtils } from './parser-context'
 
 // Shorthand alias
 const U = ParserUtils
+
+/**
+ * Local fallbacks for API methods that animation-parser was written against
+ * but that don't exist on `ParserUtils`. Without these, even a syntactically
+ * valid `Foo as animation:` block would crash with `U.expect is not a function`.
+ *
+ * `expect` consumes the token if it matches the expected type, otherwise
+ * reports an error and returns false.
+ * `addError` is a thin alias around `reportError` for legacy call sites.
+ */
+function expect(ctx: ParserContext, type: TokenType): boolean {
+  if (U.check(ctx, type)) {
+    U.advance(ctx)
+    return true
+  }
+  U.reportError(ctx, `Expected ${type}`)
+  return false
+}
+function addError(ctx: ParserContext, msg: string): void {
+  U.reportError(ctx, msg)
+}
 
 /**
  * Parse an animation definition
@@ -32,7 +53,7 @@ export function parseAnimationDefinition(
   U.advance(ctx) // consume 'as'
   U.advance(ctx) // consume 'animation'
 
-  if (!U.expect(ctx, 'COLON')) {
+  if (!expect(ctx, 'COLON')) {
     const lastError = ctx.errors[ctx.errors.length - 1]
     if (lastError) lastError.hint = 'Add a colon after "animation"'
     recoverToNextDefinition(ctx)
@@ -56,7 +77,7 @@ export function parseAnimationDefinition(
   U.skipNewlines(ctx)
 
   if (!U.check(ctx, 'INDENT')) {
-    U.addError(ctx, 'Animation definition must have an indented body with keyframes')
+    addError(ctx, 'Animation definition must have an indented body with keyframes')
     return animation
   }
 
