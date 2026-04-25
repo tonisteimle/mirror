@@ -4,6 +4,60 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Layout – Thema 4)
+
+Aggressive Tests gegen Layout-Edge-Cases. **1 echter Bug gefixt**, ~30 neue Tests.
+Großer Lerneffekt: vermeintliche „Layout-System-Konflikte" sind **dokumentierte
+Mirror-Semantik**, nicht Bugs.
+
+### Fixed
+
+- `formatCSSValue()` versah negative Zahlen nicht mit `px`-Suffix. `Frame gap -10`
+  produzierte `gap: -10` (ungültiges CSS) statt `gap: -10px`. Regex
+  `/^\d+$/` erweitert auf `/^-?\d+$/` in
+  `compiler/ir/transformers/style-utils-transformer.ts`.
+
+### Documented (Layout-Semantik klargestellt)
+
+Mein erster Pass nahm an, dass `Frame stacked, hor` ein Konflikt sei („letzter
+gewinnt"). Aggressive Bug-Tests deckten auf: das ist **keine Konfliktsituation**,
+sondern die korrekte Mirror-Semantik:
+
+- **`stacked` = Modifier** (`position: relative`), der mit Flex und Grid
+  KOEXISTIERT. Stacked ist kein eigenes Layout-System, das Flex/Grid ersetzt.
+- **`hor`/`ver` IM Grid-Kontext** interpretieren sich als `grid-auto-flow: row`
+  bzw. `column`, NICHT als Flex-Direction. Beabsichtigte Funktion: in einem
+  Grid die Flow-Direction kontrollieren.
+- **9-Zone-Alignment + explizite Direction**: `Frame hor, tl` ergibt flex-row
+  mit Top-Left-Alignment (hor wins direction; tl liefert \_hAlign/\_vAlign). Auch
+  beabsichtigt.
+- **Grid + Flex auf demselben Container**: Grid hat Vorrang für `display:`,
+  Flex-Properties werden ignoriert. `display:flex` und `display:grid` schließen
+  sich aus.
+
+Limitation #8 aus dem ersten Pass ist damit aufgelöst — sie war kein Bug,
+sondern eine Wissenslücke.
+
+### Added
+
+- `tests/compiler/layout-bugs.test.ts` (~30 Tests) — pathologische Layout-
+  Kombinationen: Cross-System „Konflikte" (alle dokumentiert als Koexistenz),
+  extreme Werte (`grid 999`, `gap 99999`, `gap -10`), 50 Layout-Properties in
+  Folge, alle 9 Zonen hintereinander, tiefe Verschachtelung mit gemischten
+  Layouts (4 Levels: stacked → grid → flex → stacked), Layout in Inheritance,
+  Layout in States, Layout in Each-Loops, Sizing-Konflikte (`w hug, w full,
+w 100`), Gap-Konflikte (gap-x vs general gap), 9-Zone vs explicit Direction.
+
+564 Layout-bezogene Tests grün, keine Regressionen in 4669 Compiler-Tests
+insgesamt.
+
+### Updated documented limitations
+
+Limitation #8 (Cross-Property Layout-Konflikte) wird gestrichen — kein Bug.
+Stacked/Flex/Grid-Koexistenz ist die korrekte Semantik.
+
+---
+
 ## 2026-04-25 (Properties Deep – Thema 3 Vertiefung)
 
 Zweiter, aggressiverer Pass über Properties: gezielte Provokationen für Lücken

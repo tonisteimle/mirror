@@ -20,7 +20,7 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 1   | Lexer (Tokens, Indentation, Edge-Cases)                | abgeschlossen | [01-lexer.md](01-lexer.md)           |
 | 2   | Parser (AST, Error-Recovery)                           | abgeschlossen | [02-parser.md](02-parser.md)         |
 | 3   | Properties & Aliases (inkl. „letzter gewinnt")         | abgeschlossen | [03-properties.md](03-properties.md) |
-| 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | offen         | —                                    |
+| 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | abgeschlossen | [04-layout.md](04-layout.md)         |
 | 5   | Komponenten & Vererbung                                | offen         | —                                    |
 | 6   | Tokens & Property-Sets                                 | offen         | —                                    |
 | 7   | States (System + Custom + Cross-Element + Transitions) | offen         | —                                    |

@@ -82,9 +82,9 @@ export function formatCSSValue(property: string, value: string): string {
     return value
       .split(' ')
       .map(v => {
-        // Only add px to pure integer values, not values with existing units
+        // Only add px to integer values (incl. negatives), not values with existing units
         // (%, vh, vw, vmin, vmax, em, rem, etc.)
-        if (/^\d+$/.test(v)) {
+        if (/^-?\d+$/.test(v)) {
           return `${v}px`
         }
         return v
