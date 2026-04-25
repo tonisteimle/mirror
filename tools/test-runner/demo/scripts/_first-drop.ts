@@ -52,15 +52,21 @@ export const demoScript: DemoScript = {
       action: 'dropFromPalette',
       component: 'Frame',
       target: { byId: 'node-1' },
-      at: { kind: 'index', index: 0 },
-      comment: 'Frame als erstes Top-Level Element',
+      // Drop in the center alignment zone of the canvas. Mirror responds
+      // by wrapping the new Frame in `Frame w full, h full, center` so the
+      // dropped element renders visually centred (not pinned top-left).
+      at: { kind: 'zone', zone: 'center' },
+      comment: 'Frame mittig in Canvas droppen',
     },
     { action: 'wait', duration: 800 },
     {
       action: 'expectCode',
-      comment: 'after Frame drop',
+      comment: 'after Frame drop (center)',
       code:
-        'canvas mobile, bg #0f0f0f, col white\n' + '\n' + 'Frame w 100, h 100, bg #27272a, rad 8',
+        'canvas mobile, bg #0f0f0f, col white\n' +
+        '\n' +
+        'Frame w full, h full, center\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8',
     },
 
     // Endbild

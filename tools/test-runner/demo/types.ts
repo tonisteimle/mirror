@@ -98,6 +98,7 @@ export type DemoAction =
   | SetPropertyAction
   | PickColorAction
   | AiPromptAction
+  | ExpectUiStateAction
 
 interface NavigateAction {
   action: 'navigate'
@@ -138,6 +139,13 @@ interface TypeAction {
   text: string
   /** Optional target to focus first */
   target?: string
+  /**
+   * Map of trigger characters to extra pause (in ms) AFTER typing the
+   * character. Lets popovers (color picker on '#', token picker on '$',
+   * autocomplete on space) stay open long enough to be visible. Defaults
+   * apply when omitted (see DEFAULT_TYPE_PAUSE_TRIGGERS in runner.ts).
+   */
+  pauseAfter?: Record<string, number>
 }
 
 interface PressKeyAction {
@@ -259,6 +267,30 @@ interface ExpectCodeMatchesAction {
   pattern: string | RegExp
   flags?: string
   comment?: string
+}
+
+/**
+ * UI-State validation — assert which Studio overlays/popovers are
+ * visible, which alignment zone is highlighted etc. Use this for
+ * ephemeral UI states that don't show in editor source: color picker
+ * during typing, alignment zones during drag, hover focus etc.
+ *
+ * Examples:
+ *   { action: 'expectUiState', anyVisible: ['#color-picker', '.cm-tooltip-autocomplete'] }
+ *   { action: 'expectUiState', alignmentZone: 'center' }
+ *   { action: 'expectUiState', allVisible: ['.padding-handle-top'] }
+ */
+interface ExpectUiStateAction {
+  action: 'expectUiState'
+  comment?: string
+  /** All these CSS selectors must match a *visible* element. */
+  allVisible?: string[]
+  /** At least one of these selectors must match a visible element. */
+  anyVisible?: string[]
+  /** None of these selectors may match a visible element. */
+  noneVisible?: string[]
+  /** Asserts the highlighted alignment zone (top-left, center etc.). */
+  alignmentZone?: string
 }
 
 /** A numeric expectation: exact value, range, or comparison. */

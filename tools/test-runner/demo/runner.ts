@@ -26,6 +26,7 @@ import type {
 } from './validation'
 import { DEFAULT_CONFIG, SPEED_PRESETS, PACING_TO_SPEED } from './types'
 import { getTimingProfile, TimingCalculator, formatDuration, compareProfiles } from './timing'
+import { getTimingClass } from './timing-classes'
 import {
   getElementValidationCode,
   getValidationConfig,
@@ -1567,6 +1568,12 @@ export class DemoRunner {
   async run(script: DemoScript): Promise<DemoRunResult> {
     this.resetState()
 
+    // Blueprint enforcement (see docs/concepts/demo-blueprint.md):
+    // 1. expectCode is required on every mutating step.
+    // 2. The first step is auto-injected as expectCode '' so the demo
+    //    starts from a known-empty editor (assumes ?demo=blank in URL).
+    script = DemoRunner.applyBlueprint(script)
+
     console.log(`\n🎬 Running demo: ${script.name}`)
     if (script.description) {
       console.log(`   ${script.description}`)
@@ -2461,9 +2468,7 @@ export class DemoRunner {
         console.log(
           `${prefix} Type: "${step.text.substring(0, 30)}${step.text.length > 30 ? '...' : ''}"`
         )
-        await this.evaluate(
-          `__mirrorDemo.type('${this.escape(step.text)}'${step.target ? `, '${this.escape(step.target)}'` : ''})`
-        )
+        await this.runTypeWithPauseTriggers(step)
         break
 
       case 'pressKey':
@@ -2589,6 +2594,9 @@ export class DemoRunner {
       case 'expectDom':
         await this.runExpectDom(step, prefix)
         break
+      case 'expectUiState':
+        await this.runExpectUiState(step, prefix)
+        break
       case 'dropFromPalette':
         await this.runDropFromPalette(step, prefix)
         break
@@ -2642,6 +2650,69 @@ export class DemoRunner {
       default:
         return false
     }
+  }
+
+  /**
+   * Apply the demo blueprint contract:
+   *  - First step (after any leading non-mutating steps like `comment`)
+   *    must be a known starting state. If the demo doesn't supply one,
+   *    inject `expectCode: ''` as step 0.
+   *  - Every mutating step MUST carry an expectCode. We don't fail the
+   *    whole demo at load time — instead we record a warning step right
+   *    after the missing one so the runner reports it but keeps going.
+   *    (Hard-fail at load surprises authors mid-iteration; a warning
+   *    surfaces the gap without blocking exploration.)
+   */
+  private static applyBlueprint(script: DemoScript): DemoScript {
+    const steps: DemoAction[] = []
+
+    // Auto-inject blank-editor expectCode as the very first step unless
+    // the author already wrote one.
+    const hasInitialExpect = script.steps.some(
+      (s, i) =>
+        i < 5 &&
+        s.action === 'expectCode' &&
+        ((s as { code?: string }).code === '' || (s as { code?: string }).code === undefined)
+    )
+    if (!hasInitialExpect) {
+      steps.push({
+        action: 'expectCode',
+        comment: 'blueprint: blank editor at boot',
+        code: '',
+      } as DemoAction)
+    }
+
+    for (let i = 0; i < script.steps.length; i++) {
+      const step = script.steps[i]
+      steps.push(step)
+
+      // Blueprint check: every mutating step needs an expectCode. Either
+      // inline on the step itself, or a standalone `expectCode` action
+      // within the next 3 steps (covering the common "action → wait →
+      // expectCode" pattern).
+      if (
+        DemoRunner.isMutatingStep(step) &&
+        step.action !== 'expectCode' &&
+        // execute / pressKey are sometimes side-effect-only.
+        step.action !== 'execute' &&
+        step.action !== 'pressKey'
+      ) {
+        const hasInline = !!(step as { expectCode?: unknown }).expectCode
+        const lookahead = script.steps.slice(i + 1, i + 4)
+        const hasNextExpectCode = lookahead.some(s => s.action === 'expectCode')
+        if (!hasInline && !hasNextExpectCode) {
+          steps.push({
+            action: 'comment',
+            text:
+              '⚠️  blueprint: step "' +
+              step.action +
+              '" is mutating but has no expectCode within 3 steps — please add one',
+          } as DemoAction)
+        }
+      }
+    }
+
+    return { ...script, steps }
   }
 
   private static isMutatingStep(step: DemoAction): boolean {
@@ -3132,6 +3203,161 @@ export class DemoRunner {
    * events (palette items are draggable=true), so Mirror's full drag
    * pipeline engages — drop indicator, hover effects, the works.
    */
+  private async runExpectUiState(
+    step: Extract<DemoAction, { action: 'expectUiState' }>,
+    prefix: string
+  ): Promise<void> {
+    const result = await this.evaluate<{ ok: boolean; reason?: string }>(`
+      (() => {
+        function vis(sel) {
+          const el = document.querySelector(sel);
+          if (!el) return false;
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) return false;
+          const cs = getComputedStyle(el);
+          if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return false;
+          return true;
+        }
+        const need = ${JSON.stringify(step)};
+        if (need.allVisible) {
+          for (const s of need.allVisible) {
+            if (!vis(s)) return { ok: false, reason: 'not visible: ' + s };
+          }
+        }
+        if (need.anyVisible) {
+          const any = need.anyVisible.some(vis);
+          if (!any) return { ok: false, reason: 'none visible: ' + need.anyVisible.join(', ') };
+        }
+        if (need.noneVisible) {
+          for (const s of need.noneVisible) {
+            if (vis(s)) return { ok: false, reason: 'should be hidden: ' + s };
+          }
+        }
+        if (need.alignmentZone) {
+          const zone = document.querySelector('.alignment-zone.hovered, [data-alignment-zone].active');
+          const got = zone ? (zone.getAttribute('data-position') || zone.getAttribute('data-alignment-zone') || '') : '';
+          if (got !== need.alignmentZone) {
+            return { ok: false, reason: 'alignmentZone want=' + need.alignmentZone + ' got=' + (got || '<none>') };
+          }
+        }
+        return { ok: true };
+      })()
+    `)
+    const check = { type: 'editorContains' as const, text: '<expectUiState>' }
+    if (result.ok) {
+      console.log(`${prefix} ✓ expectUiState${step.comment ? ` — ${step.comment}` : ''}`)
+      this.validationResults.push({
+        success: true,
+        check,
+        message: 'UI state matched' + (step.comment ? ` (${step.comment})` : ''),
+      })
+    } else {
+      const msg =
+        `expectUiState MISMATCH: ${result.reason}` + (step.comment ? ` (${step.comment})` : '')
+      console.log(`${prefix} ✗ ${msg}`)
+      this.validationResults.push({
+        success: false,
+        check,
+        message: msg,
+        actual: result.reason,
+      })
+    }
+  }
+
+  /**
+   * Default trigger map: characters that pop a Studio popover
+   * (color picker, token list, autocomplete) and need a pause after
+   * typing so the popover stays visible long enough to read. Demo
+   * authors can override per-step with TypeAction.pauseAfter.
+   */
+  private static DEFAULT_TYPE_PAUSE_TRIGGERS: Record<string, number> = {
+    '#': 1500, // color picker
+    $: 1500, // token list
+    ' ': 600, // value autocomplete
+  }
+
+  private async runTypeWithPauseTriggers(
+    step: Extract<DemoAction, { action: 'type' }>
+  ): Promise<void> {
+    const triggers = { ...DemoRunner.DEFAULT_TYPE_PAUSE_TRIGGERS, ...(step.pauseAfter || {}) }
+    // Split the text into segments at trigger chars. Each segment ends WITH
+    // the trigger char (so the popover shows after that char is typed) and
+    // is followed by a pause + frame capture. The last segment has no
+    // trailing trigger.
+    type Seg = { text: string; trigger?: string; pauseMs?: number }
+    const segments: Seg[] = []
+    let buf = ''
+    for (let i = 0; i < step.text.length; i++) {
+      const ch = step.text[i]
+      buf += ch
+      const pause = triggers[ch]
+      if (pause && pause > 0) {
+        segments.push({ text: buf, trigger: ch, pauseMs: pause })
+        buf = ''
+      }
+    }
+    if (buf.length > 0) segments.push({ text: buf })
+
+    if (step.target) {
+      await this.evaluate(`__mirrorDemo.moveTo('${this.escape(step.target)}')`)
+    }
+    for (const seg of segments) {
+      // Type the whole segment in one call so the demo cursor's existing
+      // fluid typing pacing (charMs + variance + word/line pauses) applies.
+      await this.evaluate(`__mirrorDemo.type('${this.escape(seg.text)}')`)
+      if (seg.pauseMs) {
+        // Tiny wait so the popover has time to mount before the frame.
+        await new Promise(r => setTimeout(r, 100))
+        await this.captureFrame('type-popover', 'after typing "' + seg.trigger + '"')
+        await new Promise(r => setTimeout(r, Math.max(0, seg.pauseMs - 100)))
+      }
+    }
+  }
+
+  /**
+   * Verify that a drop landed visually in the requested alignment zone.
+   * For a `center` zone drop, the new element's center should be in the
+   * middle third of the preview — not pinned top-left as the canvas-only
+   * fallback used to do. Returns null if OK, or a short reason string.
+   */
+  private async verifyDropAlignment(zone: string): Promise<string | null> {
+    return await this.evaluate<string | null>(`
+      (() => {
+        const preview = document.querySelector('#preview');
+        if (!preview) return 'no #preview';
+        const all = preview.querySelectorAll('[data-mirror-id]');
+        if (all.length === 0) return 'no Mirror node landed in the preview';
+        let dropped = all[0];
+        for (const el of all) {
+          const a = parseInt((dropped.getAttribute('data-mirror-id') || '').replace(/[^0-9]/g, ''), 10) || 0;
+          const b = parseInt((el.getAttribute('data-mirror-id') || '').replace(/[^0-9]/g, ''), 10) || 0;
+          if (b > a) dropped = el;
+        }
+        const elR = dropped.getBoundingClientRect();
+        const pR = preview.getBoundingClientRect();
+        const elCx = elR.left + elR.width / 2;
+        const elCy = elR.top + elR.height / 2;
+        const px = (elCx - pR.left) / pR.width;
+        const py = (elCy - pR.top) / pR.height;
+        const horiz = px < 1/3 ? 'l' : (px > 2/3 ? 'r' : 'c');
+        const vert = py < 1/3 ? 't' : (py > 2/3 ? 'b' : 'c');
+        let actual;
+        if (vert === 't' && horiz === 'l') actual = 'tl';
+        else if (vert === 't' && horiz === 'c') actual = 'tc';
+        else if (vert === 't' && horiz === 'r') actual = 'tr';
+        else if (vert === 'c' && horiz === 'l') actual = 'cl';
+        else if (vert === 'c' && horiz === 'c') actual = 'center';
+        else if (vert === 'c' && horiz === 'r') actual = 'cr';
+        else if (vert === 'b' && horiz === 'l') actual = 'bl';
+        else if (vert === 'b' && horiz === 'c') actual = 'bc';
+        else actual = 'br';
+        const expected = ${JSON.stringify(zone)};
+        if (actual === expected) return null;
+        return 'expected zone "' + expected + '" but element rendered at "' + actual + '" (px=' + px.toFixed(2) + ', py=' + py.toFixed(2) + ')';
+      })()
+    `)
+  }
+
   private async runDropFromPaletteOs(
     step: Extract<DemoAction, { action: 'dropFromPalette' }>
   ): Promise<void> {
@@ -3176,13 +3402,10 @@ export class DemoRunner {
 
     const startX = paletteRect.x + paletteRect.w / 2
     const startY = paletteRect.y + paletteRect.h / 2
+    const t = getTimingClass('drop')
     await this.osMouse!.dragPage(startX, startY, dropPoint.x, dropPoint.y, {
-      preHoldMs: 220,
-      // Dwell at the drop target with the button still held — gives
-      // Mirror's drop indicator time to render and the viewer time to
-      // see *where* the drop is about to land before it commits.
-      dwellMs: 800,
-      settleMs: 360,
+      ...t,
+      onDwell: () => this.captureFrame('dwell-' + step.action, step.component + ' over target'),
     })
 
     // Give Mirror's drop handler time to process and the editor to compile.
@@ -3193,6 +3416,21 @@ export class DemoRunner {
         }
       })()
     `)
+
+    // Visual-position validation for alignment-zone drops. Catches the
+    // case where the source-text is plausible but the rendered element
+    // ends up in a different visual zone than the demo asked for.
+    if (step.at.kind === 'zone') {
+      const issue = await this.verifyDropAlignment(step.at.zone)
+      if (issue) {
+        const msg =
+          'Drop visual position mismatch: ' +
+          issue +
+          (step.comment ? ' (' + step.comment + ')' : '')
+        this.errors.push(msg)
+        console.error('   ❌ ' + msg)
+      }
+    }
   }
 
   private async runMoveElement(
@@ -3231,7 +3469,10 @@ export class DemoRunner {
       sourceRect.y + sourceRect.h / 2,
       dropPoint.x,
       dropPoint.y,
-      { preHoldMs: 200, dwellMs: 800, settleMs: 300 }
+      {
+        ...getTimingClass('drop'),
+        onDwell: () => this.captureFrame('dwell-moveElement', 'element over target'),
+      }
     )
     await this.waitForCompile()
   }
@@ -3266,11 +3507,13 @@ export class DemoRunner {
     const handle = await this.getRect(handleSel)
     const startX = handle.x + handle.w / 2
     const startY = handle.y + handle.h / 2
-    await this.osMouse!.dragPage(startX, startY, startX + step.deltaX, startY + step.deltaY, {
-      preHoldMs: 180,
-      dwellMs: 600,
-      settleMs: 260,
-    })
+    await this.osMouse!.dragPage(
+      startX,
+      startY,
+      startX + step.deltaX,
+      startY + step.deltaY,
+      getTimingClass('handle')
+    )
     await this.waitForCompile()
   }
 
@@ -3330,24 +3573,13 @@ export class DemoRunner {
       else if (step.side === 'left') endX -= step.delta
       else endX += step.delta
     }
+    const t = getTimingClass('handle')
     if (step.mode === 'all') {
-      await this.osMouse!.dragPageWithModifier(startX, startY, endX, endY, 'shift', {
-        preHoldMs: 180,
-        dwellMs: 500,
-        settleMs: 260,
-      })
+      await this.osMouse!.dragPageWithModifier(startX, startY, endX, endY, 'shift', t)
     } else if (step.mode === 'axis') {
-      await this.osMouse!.dragPageWithModifier(startX, startY, endX, endY, 'alt', {
-        preHoldMs: 180,
-        dwellMs: 500,
-        settleMs: 260,
-      })
+      await this.osMouse!.dragPageWithModifier(startX, startY, endX, endY, 'alt', t)
     } else {
-      await this.osMouse!.dragPage(startX, startY, endX, endY, {
-        preHoldMs: 180,
-        dwellMs: 500,
-        settleMs: 260,
-      })
+      await this.osMouse!.dragPage(startX, startY, endX, endY, t)
     }
     await this.waitForCompile()
     // Tap the same key again to exit the mode (real toggle, not JS dispatch).

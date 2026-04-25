@@ -79,19 +79,57 @@ export class OsMouse {
    * dwellMs lets the cursor sit at the destination with the button still
    * held down before release — gives Mirror's drop indicator (and the
    * viewer) a moment to register where we're about to drop.
+   *
+   * via lets the cursor visit intermediate page coords with the button
+   * still held; useful to make hover-during-drag states (alignment-zone
+   * indicators, drop-zone highlights) visible to the viewer.
+   *
+   * onDwell fires once mid-dwell (button still held at destination), so
+   * callers can capture a frame of the live drop state before release.
    */
   async dragPage(
     startPageX: number,
     startPageY: number,
     endPageX: number,
     endPageY: number,
-    opts: { preHoldMs?: number; dwellMs?: number; settleMs?: number } = {}
+    opts: {
+      preHoldMs?: number
+      dwellMs?: number
+      settleMs?: number
+      via?: Array<{ x: number; y: number; pauseMs?: number }>
+      onDwell?: () => Promise<void> | void
+    } = {}
   ): Promise<void> {
     await this.moveToPage(startPageX, startPageY)
     await mouse.pressButton(Button.LEFT)
     if (opts.preHoldMs) await new Promise(r => setTimeout(r, opts.preHoldMs))
+    if (opts.via) {
+      for (const wp of opts.via) {
+        await this.moveToPage(wp.x, wp.y)
+        if (wp.pauseMs) await new Promise(r => setTimeout(r, wp.pauseMs))
+      }
+    }
     await this.moveToPage(endPageX, endPageY)
-    if (opts.dwellMs) await new Promise(r => setTimeout(r, opts.dwellMs))
+    if (opts.dwellMs) {
+      // Split the dwell so onDwell fires while the button is still held
+      // and the drop indicator is fully rendered.
+      const half = Math.max(50, Math.floor(opts.dwellMs / 2))
+      await new Promise(r => setTimeout(r, half))
+      if (opts.onDwell) {
+        try {
+          await opts.onDwell()
+        } catch (_e) {
+          // onDwell is best-effort instrumentation; never fail the drag.
+        }
+      }
+      await new Promise(r => setTimeout(r, opts.dwellMs - half))
+    } else if (opts.onDwell) {
+      try {
+        await opts.onDwell()
+      } catch (_e) {
+        // ignore
+      }
+    }
     await mouse.releaseButton(Button.LEFT)
     if (opts.settleMs) await new Promise(r => setTimeout(r, opts.settleMs))
   }
@@ -126,7 +164,12 @@ export class OsMouse {
     endPageX: number,
     endPageY: number,
     modifier: 'shift' | 'alt' | 'cmd' | 'ctrl',
-    opts: { preHoldMs?: number; dwellMs?: number; settleMs?: number } = {}
+    opts: {
+      preHoldMs?: number
+      dwellMs?: number
+      settleMs?: number
+      onDwell?: () => Promise<void> | void
+    } = {}
   ): Promise<void> {
     const key =
       modifier === 'shift'
@@ -142,7 +185,24 @@ export class OsMouse {
       await mouse.pressButton(Button.LEFT)
       if (opts.preHoldMs) await new Promise(r => setTimeout(r, opts.preHoldMs))
       await this.moveToPage(endPageX, endPageY)
-      if (opts.dwellMs) await new Promise(r => setTimeout(r, opts.dwellMs))
+      if (opts.dwellMs) {
+        const half = Math.max(50, Math.floor(opts.dwellMs / 2))
+        await new Promise(r => setTimeout(r, half))
+        if (opts.onDwell) {
+          try {
+            await opts.onDwell()
+          } catch (_e) {
+            /* ignore */
+          }
+        }
+        await new Promise(r => setTimeout(r, opts.dwellMs - half))
+      } else if (opts.onDwell) {
+        try {
+          await opts.onDwell()
+        } catch (_e) {
+          /* ignore */
+        }
+      }
       await mouse.releaseButton(Button.LEFT)
       if (opts.settleMs) await new Promise(r => setTimeout(r, opts.settleMs))
     } finally {

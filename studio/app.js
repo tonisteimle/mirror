@@ -3146,14 +3146,31 @@ function setupNotificationHandlers() {
       const isEmptyOrCanvasOnly = trimmed === '' || /^canvas\b[^\n]*$/i.test(trimmed)
       if (isEmptyOrCanvasOnly) {
         const componentName = (dragData && dragData.componentName) || source.componentName
-        let code = (dragData && dragData.mirTemplate) || componentName
+        let elementCode = (dragData && dragData.mirTemplate) || componentName
         if (dragData && !dragData.mirTemplate) {
-          if (dragData.textContent) code += ' "' + dragData.textContent + '"'
+          if (dragData.textContent) elementCode += ' "' + dragData.textContent + '"'
           if (dragData.properties) {
-            code += dragData.textContent ? ', ' + dragData.properties : ' ' + dragData.properties
+            elementCode += dragData.textContent
+              ? ', ' + dragData.properties
+              : ' ' + dragData.properties
           }
         }
-        const appended = before.length === 0 ? code : before.replace(/\s*$/, '') + '\n\n' + code
+        // If the drop landed in an alignment zone (center / tl / tr / etc.),
+        // honor it by wrapping in a viewport-filling Frame with that
+        // alignment. Without this, a "drop in the center zone" would
+        // visually render top-left because there's no parent to align in.
+        // The 9-zone Mirror property names live in
+        // studio/preview/drag/indicator.ts ALIGN_TO_PROPERTY.
+        const zone = target?.mode === 'aligned' ? target.alignmentProperty : null
+        const NEEDS_WRAPPER = zone && zone !== 'tl'
+        let inserted
+        if (NEEDS_WRAPPER) {
+          inserted = 'Frame w full, h full, ' + zone + '\n  ' + elementCode
+        } else {
+          inserted = elementCode
+        }
+        const appended =
+          before.length === 0 ? inserted : before.replace(/\s*$/, '') + '\n\n' + inserted
         const len = editor.state.doc.length
         editor.dispatch({ changes: { from: 0, to: len, insert: appended } })
         return
