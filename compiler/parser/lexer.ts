@@ -610,6 +610,12 @@ export class Lexer {
       value += this.advance() // s
     }
 
+    // CSS Grid fractional unit: 1fr, 2fr, …
+    if (this.peek() === 'f' && this.peekNext() === 'r') {
+      value += this.advance() // f
+      value += this.advance() // r
+    }
+
     if (this.peek() === 'v') {
       const next = this.peekNext()
       if (next === 'h' || next === 'w') {

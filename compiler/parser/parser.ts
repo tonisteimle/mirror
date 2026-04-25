@@ -2746,6 +2746,23 @@ export class Parser {
         }
       }
 
+      // Property-set reference at start of line: `$lay` in Component-Body
+      // composes the referenced property-set's properties into the component.
+      // Without this, `$lay` falls through to parseInstance below and becomes
+      // a phantom child component named `$lay`.
+      if (this.check('IDENTIFIER') && this.current().value.startsWith('$')) {
+        const refToken = this.advance()
+        const refName = refToken.value.slice(1)
+        component.properties.push({
+          type: 'Property',
+          name: 'propset',
+          values: [{ kind: 'token', name: refName }],
+          line: refToken.line,
+          column: refToken.column,
+        })
+        continue
+      }
+
       // Child instance (without COLON - those are handled above as slots/states)
       if (this.check('IDENTIFIER')) {
         const name = this.advance()

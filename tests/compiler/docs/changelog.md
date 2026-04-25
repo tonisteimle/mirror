@@ -4,6 +4,63 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Layout Iteration 3 – Thema 4 noch tiefer)
+
+Dritter Pass über Layout. Coverage von ~70-75% auf ~85% gehoben.
+**2 weitere Bugs gefixt**, ~67 neue Tests in 8 Bereichen.
+
+### Fixed
+
+- **Lexer fehlte `fr`-Unit-Suffix für CSS-Grid**: `Frame grid 1fr 2fr 1fr`
+  produzierte `grid-template-columns: 1px fr 2px fr 1px fr` weil der Lexer
+  `1fr` in zwei Tokens (`1` Number + `fr` Identifier) zerlegte. Fix in
+  `compiler/parser/lexer.ts` `consumeNumberSuffixes()`: `fr` als Suffix
+  ergänzt analog zu `vh/vw/vmin/vmax`.
+
+- **Property-Set-Reference in Component-Body verloren**: `Card as Frame: $lay`
+  wurde als Child-Instance mit Component-Name `$lay` geparst statt als
+  propset-Reference. Bei `Frame $lay` (Instance-Body) funktionierte es
+  korrekt. Fix in `parseComponentBody`: $-Identifier am Zeilenanfang wird
+  zu Property `propset` mit Token-Reference, analog zur Instance-Body-
+  Logik. `expandPropertySets` expandiert das dann rekursiv.
+
+### Added
+
+- `tests/compiler/layout-deep-coverage.test.ts` (~67 Tests in 8 Bereichen):
+  - **1. Triple-Matrix**: 30 wichtigste 3er-Kombinationen (direction × align
+    × size, direction × gap × wrap, grid × X × Y, stacked × X × Y, sizing
+    trios, position trios, multi-alignment, …)
+  - **2. Layout-Properties in Property-Sets**: `lay: hor; Frame $lay`,
+    grid in mixin, stacked in mixin, mixin + own override, nested mixins,
+    9-zone in mixin
+  - **3. Cross-Schicht**: IR → DOM-Backend für flex/grid/stacked. JS-Output
+    enthält die richtigen CSS-Eigenschaften (display:flex, grid-template,
+    position:relative+absolute)
+  - **4. Performance/Stress**: 500-row grid, 100 stacked-children mit x/y,
+    20-deep mixed nesting (flex/grid/stacked), 200 properties auf einem
+    Frame
+  - **5. Grid-Cell deep edges**: float position (`x 1.5`), gleiche
+    Positionen für mehrere Children, auto-flow ohne x/y, extreme auto-fill
+    (`grid auto 1000`), explicit columns mit % und fr
+  - **6. Sizing-Cascade durch nested layouts**: flex column → flex row child
+    → w full grandchild, grid → child mit w 100 (span!), stacked → child
+    w full (100%), 4-deep container chain stretch, Non-Container in
+    Container hugs
+  - **7. align-Verb systematisch**: `align top`, `align center`,
+    `align bottom`, `align top right`, `align bottom left`
+  - **8. Komplexe Compositions**: Component-Definition mit voller Layout-
+    Signatur, Layout in Conditional, Layout in each-Loop mit grid,
+    Inheritance + Property-Set + own Override
+
+5137 Compiler-Tests grün, 0 neue Regressionen.
+
+### Coverage-Status
+
+Layout auf ~85% gehoben (Iter 1: 35%, Iter 2: 70-75%). Verbleibende Lücken:
+~100 weitere Triples, Subgrid, 1MB+ Stress.
+
+---
+
 ## 2026-04-25 (Properties Deep Coverage – Thema 3 Iteration 3)
 
 Auf User-Hinweis (70% Coverage zu wenig) ein dritter, systematischer Pass.
