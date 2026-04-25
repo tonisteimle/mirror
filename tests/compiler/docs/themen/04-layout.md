@@ -13,6 +13,14 @@
 
 **Coverage-Status:** ~85% aller realistischen Layout-Kombinationen.
 
+**Echte Code-Coverage** (V8, gemessen 2026-04-25):
+
+| Modul                                   | Lines     | Branches | Funcs |
+| --------------------------------------- | --------- | -------- | ----- |
+| `ir/transformers/layout-transformer.ts` | **95.8%** | 87.8%    | 96.7% |
+
+Sehr gut.
+
 **Was noch nicht abgedeckt ist (bewusste Auslassungen):**
 
 - Triple-Pairs vollständig (~50 von ~150 wichtigen abgedeckt)

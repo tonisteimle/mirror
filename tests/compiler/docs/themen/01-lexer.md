@@ -5,6 +5,14 @@
 5 Bugs behoben, ~120 neue Tests hinzugefügt, alle 364 Lexer-Tests grün. Details
 siehe `tests/compiler/docs/changelog.md` Eintrag „2026-04-25 (Lexer Bulletproof)".
 
+**Echte Code-Coverage** (V8, gemessen 2026-04-25):
+
+| Modul                      | Lines     | Branches | Funcs |
+| -------------------------- | --------- | -------- | ----- |
+| `compiler/parser/lexer.ts` | **99.7%** | 97.8%    | 100%  |
+
+Exzellent — höchste Coverage im ganzen Compiler.
+
 ## 1. Scope
 
 Der Lexer (`compiler/parser/lexer.ts`, 767 Zeilen) wandelt Mirror-Source in eine Token-Liste um.

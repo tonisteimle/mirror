@@ -8,6 +8,19 @@
 (`bor t 1` ohne currentColor; State-Property-Aliase nur für hover) +
 Conditional-Pipeline dokumentiert.
 
+**Echte Code-Coverage** (V8, gemessen 2026-04-25):
+
+| Modul                                           | Lines     | Branches | Funcs |
+| ----------------------------------------------- | --------- | -------- | ----- |
+| `ir/transformers/property-transformer.ts`       | 79.7%     | 78.8%    | 91.7% |
+| `ir/transformers/property-utils-transformer.ts` | **97.9%** | 93.5%    | 100%  |
+| `ir/transformers/property-set-expander.ts`      | **100%**  | 96%      | 100%  |
+| `ir/transformers/style-utils-transformer.ts`    | 85.2%     | 75.0%    | 100%  |
+| `backends/dom/style-emitter.ts`                 | **97.9%** | 81.5%    | 100%  |
+
+property-transformer.ts ist die größte Lücke (~80%). Der Rest liegt bei 95%+.
+Weitere ~10 Tests könnten property-transformer.ts auf 90%+ bringen.
+
 **Iteration 3 (Deep Coverage)** (~122 Tests): systematische Property-Matrizen
 (Alias-Matrix, Token×Property, Einheiten, Multi-Value, States, Negative,
 Boolean, Token-vs-Literal-Cascade). **3 weitere Bugs gefixt**:

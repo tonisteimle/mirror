@@ -26,6 +26,17 @@ values: [{ kind: 'token', name: 'a' }] }`, was der existierende
 
 Details: `tests/compiler/docs/changelog.md` Eintrag „2026-04-25 (Tokens & Property-Sets – Thema 6)".
 
+**Echte Code-Coverage** (V8, gemessen 2026-04-25):
+
+| Modul                                      | Lines    | Branches | Funcs |
+| ------------------------------------------ | -------- | -------- | ----- |
+| `ir/transformers/value-resolver.ts`        | 81.9%    | 83.3%    | 100%  |
+| `ir/transformers/property-set-expander.ts` | **100%** | 96%      | 100%  |
+| `backends/dom/token-emitter.ts`            | 86.0%    | 63.5%    | 68.8% |
+
+token-emitter.ts könnte in eigener Iteration auf 95%+ gebracht werden
+(Branches und Functions unter 70%).
+
 ## 1. Scope
 
 **Im Scope:**

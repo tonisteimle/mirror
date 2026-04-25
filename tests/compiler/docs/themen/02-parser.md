@@ -6,6 +6,19 @@
 ~75 neue Tests. Insgesamt 662 Parser-Tests grün, 6 skipped (Schema-Constraints).
 Details: `tests/compiler/docs/changelog.md` Eintrag „2026-04-25 (Parser Bulletproof)".
 
+**Echte Code-Coverage** (V8, gemessen 2026-04-25):
+
+| Modul                               | Lines | Branches | Funcs |
+| ----------------------------------- | ----- | -------- | ----- |
+| `compiler/parser/parser.ts`         | 77.3% | 70.9%    | 81.8% |
+| `compiler/parser/ast.ts`            | 60.0% | 60.0%    | 60.0% |
+| `compiler/parser/parser-context.ts` | 13.0% | 0.0%     | 83.3% |
+
+**Lücke:** `parser-context.ts` (Internal-Helper) und `ast.ts` (AST-Types-Helper).
+Die Hauptdatei `parser.ts` ist okay, könnte auf 85%+ wachsen mit gezielter
+Nachschärfung der Branches in selten genommenen Pfaden (Schema-Constraints,
+Markdown, etc.).
+
 ## 1. Scope
 
 Der Parser (`compiler/parser/parser.ts`, 5466 Zeilen, plus AST-Definition `ast.ts` 840 Z., Sub-Parser `animation-parser.ts` 248 Z., `data-parser.ts` 466 Z., `zag-parser.ts` 1065 Z.) wandelt eine Token-Liste in eine AST um.

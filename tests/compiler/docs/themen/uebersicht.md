@@ -72,6 +72,8 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 18  | Validator                                              | offen         | —                                                          |
 | 19  | Robustheit (Whitespace, Strings, Kommentare, Fuzz)     | offen         | —                                                          |
 | 20  | Performance / Stress / Skalierbarkeit                  | offen         | —                                                          |
+| 21  | React-Backend (NEU — 0% coverage)                      | offen         | —                                                          |
+| 22  | DOM-Backend Cross-Cutting (NEU — `dom.ts`, internals)  | offen         | —                                                          |
 
 ## Themen-Dokument-Struktur
 
@@ -93,3 +95,101 @@ Aufbau:
 | Schritt 1–3   | Scope/Ist-Aufnahme/Provokationen dokumentiert.              |
 | Schritt 4     | Tests werden geschrieben / Bugs werden gefixt.              |
 | abgeschlossen | Alle identifizierten Lücken geschlossen, Bugs dokumentiert. |
+
+## Echte Code-Coverage (Stand: 2026-04-25)
+
+Gemessen mit `npx vitest run tests/compiler/ --coverage` (V8-Provider). Diese
+Zahlen ersetzen frühere Bauchgefühl-Schätzungen.
+
+**Gesamt:** 52.5% Lines / 52.0% Branches / 63.5% Functions
+
+### Sehr gut abgedeckt (≥90% Lines)
+
+| Modul                                           | Lines | Branches | Funcs | Thema |
+| ----------------------------------------------- | ----- | -------- | ----- | ----- |
+| `parser/lexer.ts`                               | 99.7% | 97.8%    | 100%  | 1     |
+| `ir/transformers/validation.ts`                 | 100%  | 89.5%    | 100%  | –     |
+| `ir/transformers/state-styles-transformer.ts`   | 100%  | –        | 100%  | 7     |
+| `ir/transformers/event-transformer.ts`          | 100%  | 100%     | 100%  | 8     |
+| `ir/transformers/property-set-expander.ts`      | 100%  | 96%      | 100%  | 6     |
+| `ir/transformers/property-utils-transformer.ts` | 97.9% | 93.5%    | 100%  | 3     |
+| `ir/transformers/expression-transformer.ts`     | 95.5% | 96.7%    | 100%  | 10    |
+| `ir/transformers/layout-transformer.ts`         | 95.8% | 87.8%    | 96.7% | 4     |
+| `ir/transformers/chart-transformer.ts`          | 90.4% | 71.3%    | 100%  | 15    |
+| `ir/transformers/control-flow-transformer.ts`   | 89.5% | 83.3%    | 100%  | 10    |
+| `backends/dom/loop-emitter.ts`                  | 98.2% | 90.9%    | 100%  | 9     |
+| `backends/dom/style-emitter.ts`                 | 97.9% | 81.5%    | 100%  | 3     |
+| `backends/dom/api-emitter.ts`                   | 94.0% | 83.3%    | 95.2% | –     |
+| `backends/dom/chart-emitter.ts`                 | 93.5% | 80.0%    | 100%  | 15    |
+
+### Gut abgedeckt (70–89% Lines)
+
+| Modul                                          | Lines | Branches | Funcs | Thema     |
+| ---------------------------------------------- | ----- | -------- | ----- | --------- |
+| `parser/parser.ts`                             | 77.3% | 70.9%    | 81.8% | 2         |
+| `parser/data-parser.ts`                        | 84.5% | 78.1%    | 89.5% | 9         |
+| `ir/index.ts`                                  | 81.3% | 79.0%    | 84.4% | – (multi) |
+| `ir/transformers/state-machine-transformer.ts` | 88.7% | 80.2%    | 85.7% | 7         |
+| `ir/transformers/state-child-transformer.ts`   | 72.2% | 71.4%    | 100%  | 7         |
+| `ir/transformers/property-transformer.ts`      | 79.7% | 78.8%    | 91.7% | 3         |
+| `ir/transformers/component-resolver.ts`        | 75.6% | 60.8%    | 100%  | 5         |
+| `ir/transformers/style-utils-transformer.ts`   | 85.2% | 75.0%    | 100%  | 3         |
+| `ir/transformers/value-resolver.ts`            | 81.9% | 83.3%    | 100%  | 6         |
+| `ir/transformers/slot-utils.ts`                | 81.8% | 50.0%    | 80.0% | 11        |
+| `backends/dom/node-emitter.ts`                 | 87.8% | 79.6%    | 90.4% | –         |
+| `backends/dom/state-machine-emitter.ts`        | 83.2% | 68.9%    | 71.4% | 7         |
+| `backends/dom/token-emitter.ts`                | 86.0% | 63.5%    | 68.8% | 6         |
+| `backends/dom/utils.ts`                        | 77.8% | 28.6%    | 80.0% | –         |
+
+### Mittelmäßig (50–69% Lines)
+
+| Modul                           | Lines | Branches | Funcs | Thema |
+| ------------------------------- | ----- | -------- | ----- | ----- |
+| `backends/dom.ts`               | 59.9% | 53.3%    | 66.9% | –     |
+| `parser/ast.ts`                 | 60.0% | 60.0%    | 60.0% | 2     |
+| `ir/source-map.ts`              | 55.1% | 49.4%    | 60.5% | 17    |
+| `ir/transformers/loop-utils.ts` | 52.6% | 64.7%    | 100%  | 9     |
+
+### Kritisch ungeschützt (<50% Lines)
+
+| Modul                                    | Lines    | Thema  | Note                |
+| ---------------------------------------- | -------- | ------ | ------------------- |
+| `backends/react.ts`                      | **0.0%** | NEU 21 | Komplett ungetestet |
+| `backends/dom/zag-emitters.ts`           | **0.0%** | 12     |                     |
+| `backends/dom/zag-emitter-context.ts`    | **0.0%** | 12     |                     |
+| `backends/dom/template-emitter.ts`       | **0.0%** | 12     |                     |
+| `backends/dom/value-resolver.ts`         | **0.0%** | 12     |                     |
+| `backends/dom/emitter-context.ts`        | **0.0%** | –      |                     |
+| `backends/dom/base-emitter-context.ts`   | **0.0%** | –      |                     |
+| `backends/dom/index.ts`                  | 8.3%     | –      |                     |
+| `backends/dom/form-emitters.ts`          | 0.1%     | 12     |                     |
+| `backends/dom/overlay-emitters.ts`       | 0.2%     | 12     |                     |
+| `backends/dom/nav-emitters.ts`           | 0.3%     | 12     |                     |
+| `backends/dom/select-emitters.ts`        | 0.4%     | 12     |                     |
+| `backends/dom/animation-emitter.ts`      | 2.6%     | 13     |                     |
+| `backends/framework.ts`                  | 0.4%     | NEU 21 |                     |
+| `parser/animation-parser.ts`             | **1.1%** | 13     |                     |
+| `parser/zag-parser.ts`                   | **0.3%** | 12     |                     |
+| `parser/parser-context.ts`               | 13.0%    | –      | Internal            |
+| `ir/transformers/zag-transformer.ts`     | **0.8%** | 12     |                     |
+| `ir/transformers/transformer-context.ts` | **0.0%** | –      | Internal            |
+| `ir/transformers/data-transformer.ts`    | 29.7%    | 9      |                     |
+| `ir/transformers/inline-extraction.ts`   | 41.9%    | –      | Internal            |
+| `backends/dom/event-emitter.ts`          | 43.5%    | 8      |                     |
+| `parser/data-types.ts`                   | 33.3%    | 9      |                     |
+
+## Prioritäten und Themen-Anpassung
+
+Die Themen 7–20 müssen **konkrete Coverage-Ziele** pro Modul setzen:
+
+- **Thema 7 (States)**: state-machine-emitter, state-machine-transformer (beide ~85%) → 95%; **state-child-transformer (72%)** → 90%
+- **Thema 8 (Events)**: **event-emitter (43.5%)** → 90% — kritische Lücke
+- **Thema 9 (Data/Each)**: **loop-utils (52.6%)** → 90%, **data-transformer (29.7%)** → 90%
+- **Thema 12 (Zag)**: **alle Zag-Emitters (0–8%)** → 80% — größte Lücke (~3000 Zeilen)
+- **Thema 13 (Animationen)**: **animation-parser (1.1%)** → 90%, **animation-emitter (2.6%)** → 90%
+- **Thema 17 (SourceMap)**: source-map.ts (55%) → 90%
+
+**Neu hinzugefügt:**
+
+- **Thema 21 (NEU): React-Backend** — 0% Coverage, eigenes Thema notwendig
+- **Thema 22 (NEU): DOM-Backend Cross-Cutting** — `backends/dom.ts` (60%) und Backend-Internals (emitter-context, helpers)

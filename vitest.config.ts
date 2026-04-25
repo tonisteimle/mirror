@@ -14,7 +14,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
+      reporter: ['text', 'html', 'json-summary'],
       include: ['compiler/parser/**/*.ts', 'compiler/ir/**/*.ts', 'compiler/backends/**/*.ts'],
       exclude: ['tests/**'],
       thresholds: {

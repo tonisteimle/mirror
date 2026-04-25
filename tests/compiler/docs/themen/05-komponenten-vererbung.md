@@ -27,6 +27,16 @@ Component-Body). ~55 neue Tests in 11 Bereichen.
 (Komma-Actions in Component-Body) wurde in der gleichen Session noch behoben.
 `parseComponentBody` erkennt jetzt implicit-onclick analog zu Instance-Body.
 
+**Echte Code-Coverage** (V8, gemessen 2026-04-25):
+
+| Modul                                        | Lines | Branches | Funcs |
+| -------------------------------------------- | ----- | -------- | ----- |
+| `ir/transformers/component-resolver.ts`      | 75.6% | 60.8%    | 100%  |
+| `ir/transformers/state-child-transformer.ts` | 72.2% | 71.4%    | 100%  |
+
+Beide knapp unter 80%. Branches besonders bei `component-resolver.ts` (60.8%) —
+Multi-Inheritance-Pfade sind nicht alle abgedeckt.
+
 Details: `tests/compiler/docs/changelog.md` Eintrag „2026-04-25 (Komponenten & Vererbung – Thema 5)".
 
 ## 1. Scope
