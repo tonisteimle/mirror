@@ -17,23 +17,23 @@ import { properties as schemaProperties } from '../schema/properties'
  * Parsed property from a line
  */
 export interface ParsedProperty {
-  name: string           // Original name as used in source (e.g., "bg")
-  canonicalName: string  // Canonical name (e.g., "background")
-  value: string          // Full value including all parts
-  startIndex: number     // Start position in line
-  endIndex: number       // End position in line (exclusive)
-  isBoolean: boolean     // Property has no value
+  name: string // Original name as used in source (e.g., "bg")
+  canonicalName: string // Canonical name (e.g., "background")
+  value: string // Full value including all parts
+  startIndex: number // Start position in line
+  endIndex: number // End position in line (exclusive)
+  isBoolean: boolean // Property has no value
 }
 
 /**
  * Parsed line structure
  */
 export interface ParsedLine {
-  indent: string                    // Leading whitespace
-  componentPart: string             // Component name and definition marker
-  properties: ParsedProperty[]      // All properties in order
-  textContent: string | null        // Quoted text content at end
-  original: string                  // Original line
+  indent: string // Leading whitespace
+  componentPart: string // Component name and definition marker
+  properties: ParsedProperty[] // All properties in order
+  textContent: string | null // Quoted text content at end
+  original: string // Original line
 }
 
 /**
@@ -112,10 +112,22 @@ export function isMultiValueProperty(name: string): boolean {
  * Direction keywords that can follow a property name
  */
 const DIRECTION_KEYWORDS = new Set([
-  'top', 'right', 'bottom', 'left',
-  't', 'r', 'b', 'l',
-  'tl', 'tr', 'bl', 'br',
-  'x', 'y', 'hor', 'ver'
+  'top',
+  'right',
+  'bottom',
+  'left',
+  't',
+  'r',
+  'b',
+  'l',
+  'tl',
+  'tr',
+  'bl',
+  'br',
+  'x',
+  'y',
+  'hor',
+  'ver',
 ])
 
 /**
@@ -323,9 +335,7 @@ export function updatePropertyInLine(
   const canonicalName = getCanonicalName(propName)
 
   // Find the property (by canonical name)
-  const propIndex = parsedLine.properties.findIndex(
-    p => p.canonicalName === canonicalName
-  )
+  const propIndex = parsedLine.properties.findIndex(p => p.canonicalName === canonicalName)
 
   if (propIndex === -1) {
     // Property doesn't exist, add it
@@ -352,13 +362,22 @@ export function updatePropertyInLine(
 }
 
 /**
- * Add a new property to a line
+ * Add a new property to a line. If the property already exists with the
+ * same canonical name and the same value, return the line unchanged so that
+ * idempotent operations (e.g. dropping into a center-aligned container that
+ * already has `center`) don't produce duplicate directives.
  */
-export function addPropertyToLine(
-  parsedLine: ParsedLine,
-  propName: string,
-  value: string
-): string {
+export function addPropertyToLine(parsedLine: ParsedLine, propName: string, value: string): string {
+  const canonicalName = getCanonicalName(propName)
+  const existing = parsedLine.properties.find(p => p.canonicalName === canonicalName)
+  if (existing) {
+    const existingValue = existing.value ?? ''
+    const isStandalone = (value === '' || value === 'true') && existingValue === ''
+    if (isStandalone || existingValue === value) {
+      return parsedLine.original.trimEnd()
+    }
+  }
+
   const line = parsedLine.original.trimEnd()
 
   // Format the new property
@@ -380,16 +399,11 @@ export function addPropertyToLine(
 /**
  * Remove a property from a line
  */
-export function removePropertyFromLine(
-  parsedLine: ParsedLine,
-  propName: string
-): string {
+export function removePropertyFromLine(parsedLine: ParsedLine, propName: string): string {
   const canonicalName = getCanonicalName(propName)
 
   // Find the property
-  const propIndex = parsedLine.properties.findIndex(
-    p => p.canonicalName === canonicalName
-  )
+  const propIndex = parsedLine.properties.findIndex(p => p.canonicalName === canonicalName)
 
   if (propIndex === -1) {
     return parsedLine.original
@@ -435,10 +449,7 @@ export function findPropertyInLine(
 /**
  * Get property value from a line (supports aliases)
  */
-export function getPropertyValue(
-  parsedLine: ParsedLine,
-  propName: string
-): string | null {
+export function getPropertyValue(parsedLine: ParsedLine, propName: string): string | null {
   const prop = findPropertyInLine(parsedLine, propName)
   return prop ? prop.value : null
 }
