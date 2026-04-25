@@ -57,7 +57,7 @@ Reihenfolge: Pipeline-Basis zuerst, dann Sprach-Features, dann Querschnitt.
 | 3   | Properties & Aliases (inkl. „letzter gewinnt")         | abgeschlossen | [03-properties.md](03-properties.md)                       |
 | 4   | Layout (flex, grid, stacked, 9-Zone-Alignment)         | abgeschlossen | [04-layout.md](04-layout.md)                               |
 | 5   | Komponenten & Vererbung                                | abgeschlossen | [05-komponenten-vererbung.md](05-komponenten-vererbung.md) |
-| 6   | Tokens & Property-Sets                                 | offen         | —                                                          |
+| 6   | Tokens & Property-Sets                                 | abgeschlossen | [06-tokens.md](06-tokens.md)                               |
 | 7   | States (System + Custom + Cross-Element + Transitions) | offen         | —                                                          |
 | 8   | Events & Actions                                       | offen         | —                                                          |
 | 9   | Data-Binding & Iteration (each, where, by)             | offen         | —                                                          |

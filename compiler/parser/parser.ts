@@ -444,12 +444,22 @@ export class Parser {
           // Check for Property Set: name: propertyName value, ...
           // Property Set has a valid property name after the colon (not followed by another colon or equals)
           // Note: If position 3 is EQUALS, it's legacy syntax: name: type = value
+          // The first item after `:` may also be a `$other` propset-reference
+          // (`b: $a, bg #f00`), so we accept identifiers starting with $ here.
           const afterColon = this.peekAt(2)?.value
+          const afterColonIsRef = !!afterColon && afterColon.startsWith('$')
           if (
             afterColon &&
-            isValidProperty(afterColon) &&
+            (isValidProperty(afterColon) || afterColonIsRef) &&
             !this.checkAt(3, 'COLON') &&
-            !this.checkAt(3, 'EQUALS')
+            !this.checkAt(3, 'EQUALS') &&
+            // For $-ref form, only treat as property-set if the line continues
+            // beyond the single ref (otherwise it's a token-reference like
+            // `accent.bg: $primary` which the earlier branch handles).
+            !(
+              afterColonIsRef &&
+              (this.checkAt(3, 'NEWLINE') || this.checkAt(3, 'EOF') || this.checkAt(3, 'COMMENT'))
+            )
           ) {
             const propSet = this.parsePropertySet(currentSection)
             if (propSet) program.tokens.push(propSet)
@@ -1440,6 +1450,22 @@ export class Parser {
       // Skip comma separators
       if (this.check('COMMA')) {
         this.advance()
+        continue
+      }
+
+      // Token reference inside a property-set: `$other` becomes a propset-property
+      // so the property-set-expander recursively expands the referenced mixin.
+      // E.g. `b: $a, bg #f00` → b has properties [propset(a), bg #f00].
+      if (this.check('IDENTIFIER') && this.current().value.startsWith('$')) {
+        const refToken = this.advance()
+        const refName = refToken.value.slice(1) // strip $
+        properties.push({
+          type: 'Property',
+          name: 'propset',
+          values: [{ kind: 'token', name: refName }],
+          line: refToken.line,
+          column: refToken.column,
+        })
         continue
       }
 

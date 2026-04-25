@@ -4,6 +4,61 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Tokens & Property-Sets – Thema 6)
+
+Aggressive Provokationen für Token-Definition-Varianten und Property-Set-
+Verschachtelung. **2 echte Parser-Bugs entdeckt UND gefixt**, 35 neue Tests
+in 8 Bereichen, 0 Regressionen.
+
+### Fixed
+
+- **Property-Set-Detection erkennt jetzt `$ref` als zulässigen Start-Wert**.
+  `b: $a, bg #f00` wurde vorher als Component-Definition geparst (weil der
+  Property-Set-Branch `isValidProperty('$a')` prüfte und `$a` keine valid
+  Property ist). Jetzt akzeptiert der Branch zusätzlich Identifier mit
+  `$`-Prefix, solange weitere Properties nach Komma folgen (verhindert
+  Konflikt mit der Token-Reference-Form `accent.bg: $primary` am Zeilenende).
+- **Property-Set-Body erweitert Token-References als propset-Property**.
+  `$a` innerhalb eines Property-Sets wurde vorher als Property mit Name `$a`
+  und leeren Values gespeichert (nutzlos). Jetzt wird es als
+  `{ name: 'propset', values: [{ kind: 'token', name: 'a' }] }` gespeichert,
+  was der existierende `expandPropertySets`-Transformer rekursiv expandiert.
+  Dadurch funktionieren nested Property-Sets: `a: pad 8; b: $a, bg #f00;
+Frame $b` produziert sowohl `padding: 8px` als auch `background: #f00`.
+
+### Added
+
+- `tests/compiler/tokens-coverage.test.ts` (35 Tests in 8 Bereichen):
+  - **C1–C4 Self/Circular**: 1-self, 2-cycle, 3-cycle, 10-deep cycle
+    terminieren ohne Crash
+  - **R1–R3 Re-Definition**: same-name twice, suffixed twice, different
+    types (last wins)
+  - **N3–N6 Name Edge-Cases**: hyphenated, Unicode (`primärfarbe`),
+    suffix is reserved word, empty suffix
+  - **V1–V5 Value Edge-Cases**: multi-value, boolean (`loggedIn: true`),
+    forward-reference, unresolved (literal leaks), negative numbers
+  - **PS1, PS3, PS4, PS6, PS7, PS8**: basic, direction-in-mixin, **nested
+    mixin (Bug-Fix)**, re-defined property-set, mixin with single token-ref,
+    recursive Property-Sets terminate
+  - **P1–P5 Suffix-Path-References**: basic, auto-suffix-pick, explicit
+    suffix, multi-suffix, unknown suffix
+  - **SE1, SE3 Section-Tracking**: tokens before any section,
+    tokens after multiple sections track last
+  - **PA1, PA3, PA4 Pathologische**: 500 tokens, 50 token-refs in one
+    property list, long suffix chain
+  - **CSS-Variable Output Checks**: `var(--name)` form, hyphenated tokens,
+    tokens in hover state
+
+4948 Compiler-Tests grün insgesamt, keine Regressionen.
+
+### Coverage-Status
+
+~80% der Token- und Property-Set-Edge-Cases abgedeckt. Verbleibende bewusste
+Lücken: Validator-spezifische Type-Konflikte (gehört zu Thema 18),
+systematische Forward-Resolution zwischen Tokens.
+
+---
+
 ## 2026-04-25 (Komponenten & Vererbung – Thema 5)
 
 Aggressive Coverage-Tests für Inheritance-System. **1 echter Parser-Bug entdeckt
