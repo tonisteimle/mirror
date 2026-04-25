@@ -132,15 +132,59 @@ function getPropertyKey(prop: Property): string {
  * - pad right 20 → key: "pad:right"
  * - pad 10 → key: "pad" (overwrites all directional pads)
  */
+/**
+ * Layout-direction and alignment properties whose RELATIVE ORDER in the property
+ * list must be preserved across merges. Without re-ordering, `Frame hor, ver, hor`
+ * would resolve to `column` (the second `ver` overwrites the first `hor`'s map
+ * value, but the third `hor` only updates the value at the original `hor` key
+ * position — making `ver` the last in iteration order). For these keywords we
+ * delete-then-reinsert so the latest assignment wins both in value and order.
+ */
+const ORDER_SENSITIVE_LAYOUT_PROPS = new Set([
+  'horizontal',
+  'hor',
+  'vertical',
+  'ver',
+  'center',
+  'cen',
+  'spread',
+  'left',
+  'right',
+  'top',
+  'bottom',
+  'hor-center',
+  'ver-center',
+  'top-left',
+  'tl',
+  'top-center',
+  'tc',
+  'top-right',
+  'tr',
+  'center-left',
+  'cl',
+  'center-right',
+  'cr',
+  'bottom-left',
+  'bl',
+  'bottom-center',
+  'bc',
+  'bottom-right',
+  'br',
+])
+
 export function mergeProperties(base: Property[], overrides: Property[]): Property[] {
   const map = new Map<string, Property>()
 
-  for (const prop of base) {
-    map.set(getPropertyKey(prop), prop)
+  const setProp = (prop: Property) => {
+    const key = getPropertyKey(prop)
+    if (ORDER_SENSITIVE_LAYOUT_PROPS.has(prop.name) && map.has(key)) {
+      map.delete(key)
+    }
+    map.set(key, prop)
   }
-  for (const prop of overrides) {
-    map.set(getPropertyKey(prop), prop)
-  }
+
+  for (const prop of base) setProp(prop)
+  for (const prop of overrides) setProp(prop)
   return Array.from(map.values())
 }
 

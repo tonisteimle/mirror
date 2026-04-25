@@ -2,14 +2,49 @@
 
 Ziel: Den Mirror-Compiler systematisch absichern, Thema für Thema.
 
+## Anspruch: Radikal gute Absicherung pro Thema
+
+**Ein Thema gilt erst dann als abgeschlossen, wenn jeder vernünftige User-Input
+entweder korrekt verarbeitet oder mit klarem Error abgewiesen wird — keine
+Silent-Failures, keine inkonsistenten Behaviors, keine ungetesteten
+Pipeline-Pfade.**
+
+Konkret heißt das pro Thema:
+
+- **Pair-Coverage** für die wichtigsten Property-Achsen (≥ 80% der relevanten
+  2-er Kombinationen, nicht nur Pairwise-Sample)
+- **Triple-Coverage** für die häufigen Konflikt-Konstellationen (mindestens
+  alle Konflikt-Triples, plus Stichprobe der nicht-konfliktären)
+- **Eltern-Kind-Interaktionen** für jede strukturelle Property
+  (z.B. Layout-System des Parents × Layout-Property des Childs)
+- **Kontext-Achsen** für jede Property:
+  Container vs. Non-Container, in States, in Inheritance, in Iteration,
+  in Conditionals, mit Token-Reference
+- **Pathologische Werte**: extreme Zahlen, Negative, Zero, sehr lange
+  Strings, Unicode-Edges, malformed Input
+- **Tiefe Verschachtelung** mit gemischten Zuständen (4+ Levels)
+- **Cross-Schichten-Tests**: nicht nur IR, sondern bis zum finalen DOM-Output
+  wo relevant
+
+Jedes Thema-Doc soll explizit auflisten, **was nicht abgedeckt ist** — keine
+„abgehakten" Themen mit versteckten Lücken. Ein Thema, das nur bei 30–40%
+Coverage hängt, bleibt im Status „Schritt 4 in Arbeit", auch wenn schon Tests
+geschrieben wurden.
+
+Zur Erinnerung an mich (Claude): **„Bulletproof"** ist nicht „keine Bugs
+gefunden", sondern „aggressiv gesucht und systematisch dokumentiert was
+verbleibt". Bei 0 gefundenen Bugs in einem Bereich ist die Frage:
+hat die Hypothesen-Liste Lücken? Sind die Tests nur die Standard-Pfade?
+
 ## Vorgehen pro Thema
 
 1. **Scope abstecken** — Was gehört zum Thema, was nicht. Granularität: ein Sprach-Feature/Bereich, der typischerweise die ganze Pipeline durchläuft (Lexer → Parser → IR → Backend → Runtime).
 2. **Ist-Aufnahme** — Existierende Tests zum Thema durchgehen. Nicht nur Datei-Namen, sondern was tatsächlich an Assertions geprüft wird.
-3. **Provokations-Liste** — „Wie kann ich das kaputt machen?" Bug-Hypothesen sammeln, jede als konkreten Test formulieren.
+3. **Provokations-Liste** — „Wie kann ich das kaputt machen?" Bug-Hypothesen sammeln, jede als konkreten Test formulieren. Mindestens die Coverage-Kriterien aus „Anspruch" oben durchgehen.
 4. **Lücken schließen** — Tests schreiben, gefundene Bugs fixen, in `changelog.md` dokumentieren.
+5. **Coverage-Audit** — Bevor abgeschlossen: explizit prüfen, dass die Pair-/Triple-/Kontext-Coverage wirklich erreicht ist. Was nicht, in einer „Was nicht abgedeckt ist"-Sektion festhalten.
 
-**Aufgabenteilung:** Schritte 1–3 macht Claude eigenständig (Inventar, Analyse, Test-Vorschläge). Schritt 4 erfolgt in Abstimmung mit dem User (Test-Implementierung, Bug-Fix-Entscheidungen).
+**Aufgabenteilung:** Schritte 1–3 + 5 macht Claude eigenständig (Inventar, Analyse, Test-Vorschläge, Audit). Schritt 4 erfolgt in Abstimmung mit dem User (Test-Implementierung, Bug-Fix-Entscheidungen).
 
 ## Themen-Liste
 

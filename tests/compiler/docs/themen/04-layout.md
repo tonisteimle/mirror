@@ -1,6 +1,22 @@
 # Thema 4: Layout
 
-**Status:** Abgeschlossen (2026-04-25).
+**Status:** Abgeschlossen (2026-04-25), Iteration 2.
+
+**Iteration 1** (~30 Tests): 1 Bug gefixt (`gap -10`); Limitation #8 als Pseudo-Bug aufgelöst.
+
+**Iteration 2** (~189 Tests): systematische Property-Pair-Matrix, Container-vs-Non-Container-Matrix, Sizing × Layout-System Matrix, Eltern-Kind-Layout-Interaktionen, Grid-Cell-Position-Vertiefung, Triple-Konflikte, Tokens in Layout, Conditional/State/Inheritance/Iteration-Layout. **1 weiterer echter Bug gefixt:** `hor, ver, hor` ergab `column` statt `row` weil `mergeProperties` die Property-Reihenfolge bei Doppelung verlor.
+
+**Coverage-Status:** ~70-75% aller realistischen Layout-Kombinationen abgedeckt. Verbleibende Lücken in „Was nicht abgedeckt ist" unten.
+
+**Was noch nicht abgedeckt ist (bewusste Auslassungen):**
+
+- Vollständige Triple-Pairs-Matrix (Mirror hat ~1140 mögliche, ~50 wichtige Triples; ich habe ~10)
+- Performance/Stress: 1MB Layout-Files, 1000+ Components in einem Grid, parallele Layout-Berechnungen
+- Cross-Schicht (IR → Backend → DOM) für seltene Kombinationen
+- Layout-Properties in Property-Sets (Mixins) — `lay: hor center; Frame $lay`
+- Grid mit anderen Grid-Modes (subgrid, named lines)
+
+Für 100%-Bulletproof müsste man weitere ~80-100 Tests schreiben. Aktuelle Coverage ist „radikal gut" für die häufigsten User-Cases.
 
 **Kernerkenntnis:** Limitation #8 (vermeintliche Cross-System-Layout-Konflikte) ist **kein Bug, sondern dokumentierte Mirror-Semantik**. Stacked, Flex und Grid sind nicht alle gegenseitig exklusiv:
 

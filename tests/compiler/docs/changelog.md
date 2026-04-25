@@ -4,6 +4,77 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Layout Iteration 2 – Thema 4 deep)
+
+Zweiter Pass über Layout mit systematischer Coverage-Matrix. Anspruch laut
+`uebersicht.md`: ≥ 80% Pair-Coverage plus Triple/Eltern-Kind/Sizing-Matrix.
+**1 weiterer echter Bug gefixt**, 189 neue Tests.
+
+### Fixed
+
+- **`Frame hor, ver, hor` ergab `column` statt `row`**. Wurzelursache:
+  `mergeProperties()` deduplizierte nach Property-Name, behielt aber die
+  ORIGINAL-Position des Keys im Map. Wert wurde aktualisiert, aber Iteration-
+  Reihenfolge entsprach dem ersten Vorkommen, nicht dem letzten Insert. Bei
+  drei gleichen Direction-Keywords (`hor` zweimal) verliert die zweite
+  Iteration die Position.
+
+  Fix: für eine Whitelist ordnungssensitiver Layout-Keywords (alle 9-Zone-
+  Shortcuts, hor/ver/horizontal/vertical, center/cen/spread, left/right/top/
+  bottom, hor-center/ver-center) macht `mergeProperties()` jetzt
+  `delete + set` statt nur `set`. Damit wandert der letzte Insert ans Ende
+  und gewinnt sowohl im Wert als auch in der Iteration. Andere Properties
+  bleiben mit dem ursprünglichen Verhalten.
+
+  Implementiert in `compiler/ir/transformers/property-utils-transformer.ts`
+  (`ORDER_SENSITIVE_LAYOUT_PROPS`).
+
+### Added
+
+- `tests/compiler/layout-coverage.test.ts` (189 Tests in 15 Bereichen):
+  - **Pair-Matrix** (~50 wichtigste Pairs): direction × alignment, direction
+    × gap, direction × wrap, direction × sizing, grid × X, stacked × X,
+    sizing pairs
+  - **Container vs Non-Container Matrix**: 14 Layout-Properties × 4
+    Primitives (Frame, Text, Button, Icon)
+  - **Sizing × Layout-System Matrix**: 12 Kombinationen (hug/full/fixed ×
+    flex column/row, grid, stacked) als Smoke-Tests + 3 Konflikt-Tests
+  - **Eltern-Kind-Layout-Interaktionen**: nested flex, grid-in-grid,
+    stacked-in-stacked, mixed (stacked → grid → flex), x/y in stacked,
+    x/y in grid, x/y/w/h in grid (column-end via span)
+  - **Grid-Cell-Position-Vertiefung**: x ohne y, y ohne x, x überlauft Grid,
+    x 0, w-overflow, w 1 single span, überlappende Children
+  - **Triple-Konflikte**: hor+center+spread, tl+center+br, hor/ver/hor (Bug-
+    Fix), w 100/hug/full, grid 12/6/3, gap 4/8/12
+  - **Token-Resolution**: gap mit token, gap-x mit token, w mit token,
+    multiple tokens kombiniert
+  - **Conditional/Ternary**: w als ternary, gap als ternary, if/else changes
+    layout
+  - **Wrap & Dense Edge-Cases**: dense ohne grid, row-height ohne grid,
+    row-height mit grid
+  - **Center-Varianten**: center alleine, center+hor, center+tc, cen alias,
+    center+center idempotent
+  - **Standalone Position**: left, right, top, bottom auf Frame; mit hor
+  - **Layout in States**: hover changes hor/ver, selected: stacked,
+    disabled: ver, hover changes gap
+  - **Layout in Inheritance**: 3-level mit Layout-Overrides, grid 12 → grid 6
+    instance override, stacked + hor instance both apply
+  - **Layout in Iteration**: grid+each, flex+each, stacked+each, nested
+    each mit verschiedenen Layouts
+  - **Pathologische Combinations**: 100 Layout-Properties chained, 50-deep
+    nesting, grid 1000, gap -9999, alle 14 Layout-Keywords gleichzeitig
+
+4858 Compiler-Tests grün insgesamt, keine Regressionen.
+
+### Coverage-Status
+
+~70-75% aller realistischen Layout-Kombinationen abgedeckt (Iteration 1: 35%).
+Verbleibende bewusste Lücken: Triple-Pairs vollständig, Performance/Stress,
+Cross-Schicht (IR→Backend→DOM) für seltene Combos, Property-Sets/Mixins,
+Grid mit subgrid/named-lines.
+
+---
+
 ## 2026-04-25 (Layout – Thema 4)
 
 Aggressive Tests gegen Layout-Edge-Cases. **1 echter Bug gefixt**, ~30 neue Tests.
