@@ -171,11 +171,16 @@ if count != 0
     expect(texts(root)).toContain('Has items')
   })
 
-  // Known Tutorial-Limitation: `$variable` in `Text "..."` *inside* an if-block
-  // is NOT substituted at runtime — the literal string `$count Punkte` remains.
-  // The same expression *outside* an if-block works correctly. Likely root cause:
-  // template-resolver path for if-conditional children differs from top-level.
-  it.todo('Variable-Substitution inside if-block-Text-Property')
+  it('Variable-Substitution inside if-block-Text-Property (fixed 2026-04-25)', () => {
+    const { root } = renderWithRuntime(
+      `count: 5
+
+if count > 0
+  Text "$count Punkte"`,
+      container
+    )
+    expect(texts(root)).toContain('5 Punkte')
+  })
 })
 
 // =============================================================================
@@ -220,10 +225,29 @@ Frame bg active ? #2271C1 : #333, w 100, h 50, name Box`,
 // =============================================================================
 
 describe('Tutorial 09 Conditionals — if mit each', () => {
-  // Known Tutorial-Limitation: `if $loopvar.attr` inside an each-loop renders
-  // 0 children (the loop-var is not visible to the if-evaluator). The
-  // tutorial-promised `if + each` filter pattern doesn't work today.
-  it.todo('if $task.done inside each task in $tasks filters items correctly')
+  it('if $task.done inside each task in $tasks filters items correctly (fixed 2026-04-25)', () => {
+    const { root } = renderWithRuntime(
+      `tasks:
+  t1:
+    title: "Erledigt"
+    done: true
+  t2:
+    title: "Offen"
+    done: false
+  t3:
+    title: "Auch erledigt"
+    done: true
+
+each task in $tasks
+  if $task.done
+    Text task.title`,
+      container
+    )
+    const t = texts(root)
+    expect(t).toContain('Erledigt')
+    expect(t).toContain('Auch erledigt')
+    expect(t).not.toContain('Offen')
+  })
 
   it('plain each over a collection works (no if filter)', () => {
     const { root } = renderWithRuntime(

@@ -320,12 +320,18 @@ export function resolveConditionVariables(condition: string): string {
 
 /**
  * Resolve loop condition - handles loop variables specially
+ *
+ * $-prefixed variables that reference the loop variable (`$task.done` when
+ * itemVar is `task`) are stripped of their $ to use the local JS variable
+ * directly. Other $-vars are wrapped in $get() for global data lookup.
  */
 export function resolveLoopCondition(condition: string, itemVar: string, indexVar: string): string {
-  // Replace $-prefixed data variables
-  const result = condition.replace(
+  return condition.replace(
     /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
-    '$get("$1")'
+    (_match, path: string) => {
+      const root = path.split('.')[0]
+      if (root === itemVar || root === indexVar) return path
+      return `$get("${path}")`
+    }
   )
-  return result
 }

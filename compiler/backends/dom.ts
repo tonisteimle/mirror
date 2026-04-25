@@ -925,8 +925,9 @@ class DOMGenerator {
           const resolved = this.parseTopLevelConditional(propValue)
           this.emit(`${varName}.textContent = ${resolved}`)
         } else {
-          const value =
-            typeof prop.value === 'string' ? `"${this.escapeString(prop.value)}"` : prop.value
+          // Use resolveContentValue to interpolate $variables
+          // (e.g. "$count Punkte" → `${$get("count")} Punkte`)
+          const value = this.resolveContentValue(prop.value)
           this.emit(`${varName}.textContent = ${value}`)
         }
       } else if (prop.name === 'disabled' || prop.name === 'hidden') {
@@ -1915,10 +1916,17 @@ class DOMGenerator {
   private resolveLoopCondition(condition: string, itemVar: string, indexVar: string): string {
     let result = condition
 
-    // Handle $-prefixed data variables - wrap in $get()
+    // Handle $-prefixed variables. Two cases:
+    //   1. $itemVar / $itemVar.field — refers to the loop variable. Strip the
+    //      $ so we get the local JS access (`task.done`, not `$get("task.done")`).
+    //   2. $globalVar.field — wrap in $get() for global data lookup.
     result = result.replace(
       /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
-      '$get("$1")'
+      (_match, path: string) => {
+        const root = path.split('.')[0]
+        if (root === itemVar || root === indexVar) return path
+        return `$get("${path}")`
+      }
     )
 
     // Loop variables (itemVar, indexVar) and their properties are local JS variables,

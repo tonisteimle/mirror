@@ -47,10 +47,12 @@ beide sind nicht-trivial zu fixen.
   `$count Punkte`. Vermutlich greift der template-resolver für conditional
   children einen anderen Pfad als für top-level. `it.todo` für
   „Variable-Substitution inside if-block-Text-Property".
-- **`if + each` Filter funktioniert nicht:** `each task in $tasks\n  if
-$task.done\n    Text task.title` rendert **0 Children** (Loop-Variable
-  unsichtbar für if-Evaluator). Tutorial verspricht das Filter-Pattern
-  explizit. `it.todo` für „if $task.done inside each task in $tasks".
+- ~~**`if + each` Filter funktioniert nicht**~~ — **gefixt 2026-04-25.**
+  `resolveLoopCondition` in `compiler/backends/dom.ts` und
+  `compiler/backends/dom/value-resolver.ts` checkt jetzt, ob die Wurzel
+  einer `$variable.field` Referenz dem Loop-`itemVar`/`indexVar` entspricht.
+  Wenn ja, wird das `$` gestrippt → lokaler JS-Zugriff `task.done`. Sonst
+  bleibt es `$get("global.path")`.
 
 ## Status
 
