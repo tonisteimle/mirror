@@ -1313,6 +1313,16 @@ class IRTransformer {
           continue
         }
 
+        // Sub-slot definitions: if this slot defines its own slots (Footer
+        // with Status:, Action: as children), collect their names so we can
+        // mark matching children of the filler as isSlotFiller too.
+        const subSlotNames = new Set<string>()
+        const slotDefChildren = (slotDef as Instance | ComponentDefinition).children || []
+        for (const subSlot of slotDefChildren) {
+          if (isInstance(subSlot)) subSlotNames.add((subSlot as Instance).component)
+          else if (isComponent(subSlot)) subSlotNames.add((subSlot as ComponentDefinition).name)
+        }
+
         // Process ALL instances for this slot (there may be multiple)
         const fillers = slotFillers.get(childName) || []
         for (const filler of fillers) {
@@ -1323,6 +1333,15 @@ class IRTransformer {
           }
           if (slotInitialState && !node.initialState) {
             node.initialState = slotInitialState
+          }
+          node.isSlotFiller = true
+          // Mark sub-slot fillers based on the slot-def's child slots
+          if (subSlotNames.size > 0) {
+            for (const child of node.children) {
+              if (child.name && subSlotNames.has(child.name)) {
+                child.isSlotFiller = true
+              }
+            }
           }
           result.push(node)
         }
@@ -1389,6 +1408,7 @@ class IRTransformer {
               if (slotInitialState && !node.initialState) {
                 node.initialState = slotInitialState
               }
+              node.isSlotFiller = true
               result.push(node)
             }
             // Mark as used
@@ -1411,19 +1431,25 @@ class IRTransformer {
                 visibleWhen: slotVisibleWhen,
                 initialState: slotInitialState,
               }
-              result.push(
-                this.transformInstance(pseudoInstance, parentId, false, false, parentLayoutContext)
+              const node = this.transformInstance(
+                pseudoInstance,
+                parentId,
+                false,
+                false,
+                parentLayoutContext
               )
+              node.isSlotFiller = true
+              result.push(node)
             } else if (slotIsInstance) {
-              result.push(
-                this.transformInstance(
-                  slot as Instance,
-                  parentId,
-                  false,
-                  false,
-                  parentLayoutContext
-                )
+              const node = this.transformInstance(
+                slot as Instance,
+                parentId,
+                false,
+                false,
+                parentLayoutContext
               )
+              node.isSlotFiller = true
+              result.push(node)
             }
           }
         } else if (isSlot(slot)) {

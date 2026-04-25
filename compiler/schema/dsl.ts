@@ -317,6 +317,7 @@ export const DSL = {
     open: { description: 'Open (modal, dropdown)' },
     close: { description: 'Close' },
     select: { description: 'Select item' },
+    deselect: { description: 'Deselect item' },
     highlight: { description: 'Highlight item', targets: ['next', 'prev', 'first', 'last'] },
     activate: { description: 'Activate element' },
     deactivate: { description: 'Deactivate element' },
@@ -2401,6 +2402,33 @@ export const SCHEMA: Record<string, PropertyDef> = {
         example: 'Checkbox checked',
       },
     },
+  },
+
+  min: {
+    name: 'min',
+    aliases: [],
+    category: 'input',
+    description: 'Minimum numeric value (Slider, Input number)',
+
+    keywords: {}, // Accepts any number
+  },
+
+  max: {
+    name: 'max',
+    aliases: [],
+    category: 'input',
+    description: 'Maximum numeric value (Slider, Input number)',
+
+    keywords: {}, // Accepts any number
+  },
+
+  step: {
+    name: 'step',
+    aliases: [],
+    category: 'input',
+    description: 'Step increment (Slider, Input number)',
+
+    keywords: {}, // Accepts any number
   },
 
   text: {

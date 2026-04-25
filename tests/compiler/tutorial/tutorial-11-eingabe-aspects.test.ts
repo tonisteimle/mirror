@@ -250,11 +250,13 @@ Slider bind volume, min 0, max 100`,
     expect(sl.dataset.bind).toBe('volume')
   })
 
-  // Known Tutorial-Limitation: `min`, `max`, `step` are silently dropped from
-  // the compiled output. The Slider primitive needs these to actually work,
-  // but they survive only if the user uses the studio component template
-  // expansion. Pure compiler output ignores them.
-  it.todo('Slider min/max/step survive into the compiled output (currently dropped)')
+  it('Slider min/max/step are emitted as HTML attributes', () => {
+    const { root } = renderWithRuntime(`Slider value 50, min 0, max 100, step 5`, container)
+    const sl = root.querySelector('[data-mirror-name="Slider"]') as HTMLElement
+    expect(sl.getAttribute('min')).toBe('0')
+    expect(sl.getAttribute('max')).toBe('100')
+    expect(sl.getAttribute('step')).toBe('5')
+  })
 })
 
 // =============================================================================
@@ -350,13 +352,23 @@ Frame gap 16, w 300, bg #1a1a1a, pad 24, rad 12
     expect(btn.textContent).toContain('Anmelden')
   })
 
-  // Known Tutorial-Limitation: when a variable is named `email` (or any name
-  // that matches a string literal used elsewhere) the value-resolver substitutes
-  // the literal — e.g. `type "email"` becomes `type="var(--email)"`. The
-  // Tutorial Login-Formular example uses exactly `email: ""` + `type "email"`
-  // and breaks today. Fix needs scoping the value-resolver to property
-  // contexts where token references make sense (i.e. not HTML attributes).
-  it.todo('Tutorial Login-Formular as-is (email variable name + type "email")')
+  it('Tutorial Login-Formular as-is (email variable name + type "email")', () => {
+    // Bug fixed 2026-04-25: HTML attribute resolution now skips string-token
+    // substitution. Variables named like literal strings used as type/
+    // placeholder/name/href/src no longer collide.
+    const { root } = renderWithRuntime(
+      `email: ""
+password: ""
+
+Frame
+  Input bind email, type "email"
+  Input bind password, type "password"`,
+      container
+    )
+    const inputs = root.querySelectorAll('input')
+    expect(inputs[0].getAttribute('type')).toBe('email')
+    expect(inputs[1].getAttribute('type')).toBe('password')
+  })
 })
 
 // =============================================================================

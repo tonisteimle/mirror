@@ -132,11 +132,17 @@ function processConditionalValue(value: string): string {
 /**
  * Resolve property values to CSS value string
  * Converts token references to CSS variables, handles expressions and conditionals
+ *
+ * @param skipStringTokens - When true, plain string values are NEVER turned
+ *   into `var(--token)` even if a same-named token exists. Used for HTML
+ *   attribute resolution (e.g., `type "email"` should always produce the
+ *   literal string "email" even if a variable `email` exists in data).
  */
 export function resolveValue(
   values: PropertyValue[],
   tokenSet: Set<string>,
-  propertyName?: string
+  propertyName?: string,
+  skipStringTokens: boolean = false
 ): string {
   return values
     .map(v => {
@@ -175,7 +181,10 @@ export function resolveValue(
         return `$${tokenName}`
       }
       // String that matches a token name
-      if (typeof v === 'string' && tokenSet.has(v)) {
+      // skipStringTokens: HTML attributes (type, placeholder, etc.) never
+      // get token-substituted — `type "email"` stays "email" literal even
+      // if a data variable named `email` exists.
+      if (typeof v === 'string' && tokenSet.has(v) && !skipStringTokens) {
         // Convert dots to hyphens for valid CSS variable name
         const cssVarName = v.replace(/\./g, '-')
         return `var(--${cssVarName})`
@@ -236,13 +245,16 @@ export function extractHTMLProperties(
       htmlProps.push({ name: 'textContent', value: resolveContentValue(prop.values) })
     }
     if (prop.name === 'href') {
-      htmlProps.push({ name: 'href', value: resolveValue(prop.values, tokenSet) })
+      htmlProps.push({ name: 'href', value: resolveValue(prop.values, tokenSet, undefined, true) })
     }
     if (prop.name === 'src') {
-      htmlProps.push({ name: 'src', value: resolveValue(prop.values, tokenSet) })
+      htmlProps.push({ name: 'src', value: resolveValue(prop.values, tokenSet, undefined, true) })
     }
     if (prop.name === 'placeholder') {
-      htmlProps.push({ name: 'placeholder', value: resolveValue(prop.values, tokenSet) })
+      htmlProps.push({
+        name: 'placeholder',
+        value: resolveValue(prop.values, tokenSet, undefined, true),
+      })
     }
     if (prop.name === 'disabled') {
       htmlProps.push({ name: 'disabled', value: true })
@@ -251,15 +263,19 @@ export function extractHTMLProperties(
       htmlProps.push({ name: 'readonly', value: true })
     }
     if (prop.name === 'type') {
-      htmlProps.push({ name: 'type', value: resolveValue(prop.values, tokenSet) })
+      htmlProps.push({ name: 'type', value: resolveValue(prop.values, tokenSet, undefined, true) })
     }
     if (prop.name === 'name') {
-      htmlProps.push({ name: 'name', value: resolveValue(prop.values, tokenSet) })
+      htmlProps.push({ name: 'name', value: resolveValue(prop.values, tokenSet, undefined, true) })
     }
     if (prop.name === 'value') {
       // For value properties, use resolveContentValue to preserve $-references for two-way binding
       // This allows Input value $user.name to become a bidirectional binding
       htmlProps.push({ name: 'value', value: resolveContentValue(prop.values) })
+    }
+    if (prop.name === 'min' || prop.name === 'max' || prop.name === 'step') {
+      // Numeric input bounds (Slider, Input number)
+      htmlProps.push({ name: prop.name, value: resolveValue(prop.values, tokenSet) })
     }
     if (prop.name === 'checked') {
       // If checked has a value (like todo.done), preserve it as a binding reference

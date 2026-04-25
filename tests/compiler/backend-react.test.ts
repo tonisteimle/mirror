@@ -61,14 +61,9 @@ describe('React Backend — Primitive → HTML tag mapping', () => {
     expect(out).toContain('<input')
   })
 
-  it('Image src "..." → produces some output (current limitation: no <img>)', () => {
-    // The React backend currently does not recognize Image as a primitive
-    // because Image has no component definition with primitive: 'image'.
-    // The heuristic name match doesn't include "image" either, so it
-    // falls back to <div />. Documented as a known limitation.
+  it('Image src "..." → <img>', () => {
     const out = react(`Image src "/foo.jpg"`)
-    // We assert only that compilation succeeds and produces an App
-    expect(out).toContain('export default function App()')
+    expect(out).toContain('<img')
   })
 
   it('Link "Home" → <a>', () => {

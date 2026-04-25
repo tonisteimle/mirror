@@ -63,19 +63,16 @@
 
 ## Tutorial-Limitations (entdeckt 2026-04-25)
 
-- **Variable-Name-Kollision mit String-Literal:** Wenn eine Variable `email`
-  heißt und an einer beliebigen Stelle im selben Compile-Lauf
-  `type "email"` (oder ähnliches String-Literal) verwendet wird, ersetzt der
-  Value-Resolver das Literal durch `var(--email)`. Folge: Das Tutorial-
-  Login-Formular (`email: ""` + `type "email"`) erzeugt
-  `<input type="var(--email)">`. Fix bedingt, dass der Value-Resolver auf
-  Property-Kontexte beschränkt wird, in denen Token-Referenzen sinnvoll sind
-  (also nicht für HTML-Attribute wie `type`/`placeholder`/`href`/...).
-- **Slider min/max/step werden verschluckt:** `Slider value 50, min 0, max 100, step 5`
-  emittiert nur `setAttribute('value', "50")`. `min`, `max`, `step` werden
-  vom Compiler stillschweigend gedroppt. Solange der Studio-Component-Template
-  die Pure-Mirror-Expansion liefert, funktioniert es im Studio — Pure-
-  Compiler-Output ohne Studio-Prelude verliert die Properties aber.
+- ~~**Variable-Name-Kollision mit String-Literal**~~ — **gefixt 2026-04-25.**
+  `resolveValue()` bekommt jetzt einen `skipStringTokens`-Flag, der für
+  HTML-Attribute (`type`, `placeholder`, `href`, `src`, `name`) gesetzt
+  wird. So bleibt `type "email"` literal "email" auch wenn eine Variable
+  `email` existiert. Test in `tutorial-11-eingabe-aspects.test.ts`.
+- ~~**Slider min/max/step werden verschluckt**~~ — **gefixt 2026-04-25.**
+  Schema-Definitionen für `min`, `max`, `step` (Kategorie `input`) ergänzt
+  und in `extractHTMLProperties` als HTML-Attribute durchgereicht.
+  `Slider value 50, min 0, max 100, step 5` emittiert jetzt alle vier
+  Attribute. Test in `tutorial-11-eingabe-aspects.test.ts`.
 
 ## Status
 

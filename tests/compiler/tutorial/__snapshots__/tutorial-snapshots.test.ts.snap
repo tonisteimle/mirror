@@ -2522,6 +2522,306 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 8 1`] = `
 exports[`Tutorial IR Snapshots > 01 - elemente > Example 9 1`] = `
 {
   "animations": [],
+  "icons": [
+    {
+      "name": "hbox",
+      "path": "M3 3h18v18H3z|M9 3v18|M15 3v18",
+      "viewBox": "0 0 24 24",
+    },
+    {
+      "name": "vbox",
+      "path": "M3 3h18v18H3z|M21 9H3|M21 15H3",
+      "viewBox": "0 0 24 24",
+    },
+    {
+      "name": "grid",
+      "path": "M3 3h8v8H3z|M13 3h8v8h-8z|M3 13h8v8H3z|M13 13h8v8h-8z",
+      "viewBox": "0 0 24 24",
+    },
+  ],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Icon",
+          "primitive": "icon",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "hbox",
+            },
+            {
+              "name": "data-icon-size",
+              "value": "24",
+            },
+            {
+              "name": "data-icon-color",
+              "value": "#888",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "font-size",
+              "value": "24px",
+            },
+            {
+              "property": "width",
+              "value": "24px",
+            },
+            {
+              "property": "height",
+              "value": "24px",
+            },
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Icon",
+          "primitive": "icon",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "vbox",
+            },
+            {
+              "name": "data-icon-size",
+              "value": "24",
+            },
+            {
+              "name": "data-icon-color",
+              "value": "#2271C1",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "font-size",
+              "value": "24px",
+            },
+            {
+              "property": "width",
+              "value": "24px",
+            },
+            {
+              "property": "height",
+              "value": "24px",
+            },
+            {
+              "property": "color",
+              "value": "#2271C1",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Icon",
+          "primitive": "icon",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "grid",
+            },
+            {
+              "name": "data-icon-size",
+              "value": "24",
+            },
+            {
+              "name": "data-icon-color",
+              "value": "#10b981",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "font-size",
+              "value": "24px",
+            },
+            {
+              "property": "width",
+              "value": "24px",
+            },
+            {
+              "property": "height",
+              "value": "24px",
+            },
+            {
+              "property": "color",
+              "value": "#10b981",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "name": "Icon",
+          "primitive": "icon",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "check",
+            },
+            {
+              "name": "data-icon-size",
+              "value": "24",
+            },
+            {
+              "name": "data-icon-color",
+              "value": "#ef4444",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "font-size",
+              "value": "24px",
+            },
+            {
+              "property": "width",
+              "value": "24px",
+            },
+            {
+              "property": "height",
+              "value": "24px",
+            },
+            {
+              "property": "color",
+              "value": "#ef4444",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 01 - elemente > Example 10 1`] = `
+{
+  "animations": [],
   "icons": [],
   "nodes": [
     {
@@ -4357,6 +4657,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 7 1`] = `
               "events": [],
               "id": "node-4",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Text",
               "primitive": "text",
               "properties": [
@@ -4458,6 +4759,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 7 1`] = `
               "events": [],
               "id": "node-5",
               "isDefinition": false,
+              "isSlotFiller": true,
               "layoutType": "flex",
               "name": "Frame",
               "primitive": "frame",
@@ -4588,6 +4890,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
               "events": [],
               "id": "node-3",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Text",
               "primitive": "text",
               "properties": [
@@ -4617,6 +4920,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
               "events": [],
               "id": "node-4",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Text",
               "primitive": "text",
               "properties": [
@@ -4687,6 +4991,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
               "events": [],
               "id": "node-6",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Text",
               "primitive": "text",
               "properties": [
@@ -4716,6 +5021,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
               "events": [],
               "id": "node-7",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Text",
               "primitive": "text",
               "properties": [
@@ -4786,6 +5092,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
               "events": [],
               "id": "node-9",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Text",
               "primitive": "text",
               "properties": [
@@ -4815,6 +5122,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 8 1`] = `
               "events": [],
               "id": "node-10",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Text",
               "primitive": "text",
               "properties": [
@@ -4941,6 +5249,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
               "events": [],
               "id": "node-3",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Title",
               "primitive": "title",
               "properties": [
@@ -4986,6 +5295,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
               "events": [],
               "id": "node-4",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Desc",
               "primitive": "desc",
               "properties": [
@@ -5076,6 +5386,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
               "events": [],
               "id": "node-6",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Title",
               "primitive": "title",
               "properties": [
@@ -5121,6 +5432,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 9 1`] = `
               "events": [],
               "id": "node-7",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Desc",
               "primitive": "desc",
               "properties": [
@@ -5265,6 +5577,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 10 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Title",
           "primitive": "title",
           "properties": [
@@ -5418,6 +5731,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 10 1`] = `
           "events": [],
           "id": "node-3",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Content",
           "primitive": "content",
           "properties": [],
@@ -5585,6 +5899,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 11 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Sidebar",
           "primitive": "sidebar",
           "properties": [],
@@ -5667,6 +5982,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 11 1`] = `
           "events": [],
           "id": "node-6",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Main",
           "primitive": "main",
           "properties": [],
@@ -5767,6 +6083,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Title",
           "primitive": "title",
           "properties": [
@@ -5824,6 +6141,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
           "events": [],
           "id": "node-3",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Desc",
           "primitive": "desc",
           "properties": [
@@ -5879,6 +6197,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
               "events": [],
               "id": "node-5",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Status",
               "primitive": "status",
               "properties": [
@@ -5912,6 +6231,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
               "events": [],
               "id": "node-6",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Action",
               "primitive": "action",
               "properties": [
@@ -5944,6 +6264,7 @@ exports[`Tutorial IR Snapshots > 02 - komponenten > Example 12 1`] = `
           "events": [],
           "id": "node-4",
           "isDefinition": false,
+          "isSlotFiller": true,
           "layoutType": "flex",
           "name": "Footer",
           "primitive": "footer",
@@ -6588,6 +6909,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 4 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Title",
           "primitive": "title",
           "properties": [
@@ -7198,6 +7520,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Title",
           "primitive": "title",
           "properties": [
@@ -7243,6 +7566,7 @@ exports[`Tutorial IR Snapshots > 03 - tokens > Example 7 1`] = `
           "events": [],
           "id": "node-3",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Desc",
           "primitive": "desc",
           "properties": [
@@ -9164,6 +9488,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
                   "events": [],
                   "id": "node-4",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -9246,6 +9571,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
                   "events": [],
                   "id": "node-6",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -9328,6 +9654,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
                   "events": [],
                   "id": "node-8",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -9444,6 +9771,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
                   "events": [],
                   "id": "node-11",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -9526,6 +9854,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
                   "events": [],
                   "id": "node-13",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -9608,6 +9937,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
                   "events": [],
                   "id": "node-15",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -9724,6 +10054,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
                   "events": [],
                   "id": "node-18",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -9806,6 +10137,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
                   "events": [],
                   "id": "node-20",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -9888,6 +10220,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 6 1`] = `
                   "events": [],
                   "id": "node-22",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -11347,6 +11680,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "layoutType": "flex",
           "name": "Header",
           "primitive": "header",
@@ -11492,6 +11826,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
           "events": [],
           "id": "node-5",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Nav",
           "primitive": "nav",
           "properties": [],
@@ -11560,6 +11895,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
                   "events": [],
                   "id": "node-11",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Title",
                   "primitive": "title",
                   "properties": [
@@ -11605,6 +11941,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
                   "events": [],
                   "id": "node-12",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Value",
                   "primitive": "value",
                   "properties": [
@@ -11695,6 +12032,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
                   "events": [],
                   "id": "node-14",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Title",
                   "primitive": "title",
                   "properties": [
@@ -11740,6 +12078,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
                   "events": [],
                   "id": "node-15",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Value",
                   "primitive": "value",
                   "properties": [
@@ -11827,6 +12166,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
           "events": [],
           "id": "node-9",
           "isDefinition": false,
+          "isSlotFiller": true,
           "layoutType": "grid",
           "name": "Main",
           "primitive": "main",
@@ -12442,6 +12782,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 12 1`] = `
                   "events": [],
                   "id": "node-6",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Count",
                   "primitive": "count",
                   "properties": [
@@ -13676,6 +14017,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
               "events": [],
               "id": "node-3",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Title",
               "primitive": "title",
               "properties": [
@@ -13731,6 +14073,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
               "events": [],
               "id": "node-4",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Desc",
               "primitive": "desc",
               "properties": [
@@ -13847,6 +14190,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
               "events": [],
               "id": "node-6",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Title",
               "primitive": "title",
               "properties": [
@@ -13902,6 +14246,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
               "events": [],
               "id": "node-7",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Desc",
               "primitive": "desc",
               "properties": [
@@ -14018,6 +14363,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
               "events": [],
               "id": "node-9",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Title",
               "primitive": "title",
               "properties": [
@@ -14073,6 +14419,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 15 1`] = `
               "events": [],
               "id": "node-10",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Desc",
               "primitive": "desc",
               "properties": [
@@ -14866,6 +15213,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
                   "events": [],
                   "id": "node-5",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -14886,6 +15234,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
               "events": [],
               "id": "node-3",
               "isDefinition": false,
+              "isSlotFiller": true,
               "layoutType": "flex",
               "name": "NavItem",
               "primitive": "navitem",
@@ -15018,6 +15367,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
                   "events": [],
                   "id": "node-8",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -15038,6 +15388,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
               "events": [],
               "id": "node-6",
               "isDefinition": false,
+              "isSlotFiller": true,
               "layoutType": "flex",
               "name": "NavItem",
               "primitive": "navitem",
@@ -15150,6 +15501,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
                   "events": [],
                   "id": "node-11",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -15170,6 +15522,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
               "events": [],
               "id": "node-9",
               "isDefinition": false,
+              "isSlotFiller": true,
               "layoutType": "flex",
               "name": "NavItem",
               "primitive": "navitem",
@@ -15353,6 +15706,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
                   "events": [],
                   "id": "node-15",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -15373,6 +15727,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
               "events": [],
               "id": "node-13",
               "isDefinition": false,
+              "isSlotFiller": true,
               "layoutType": "flex",
               "name": "NavItem",
               "primitive": "navitem",
@@ -15505,6 +15860,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
                   "events": [],
                   "id": "node-18",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -15525,6 +15881,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
               "events": [],
               "id": "node-16",
               "isDefinition": false,
+              "isSlotFiller": true,
               "layoutType": "flex",
               "name": "NavItem",
               "primitive": "navitem",
@@ -15637,6 +15994,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
                   "events": [],
                   "id": "node-21",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -15657,6 +16015,7 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 17 1`] = `
               "events": [],
               "id": "node-19",
               "isDefinition": false,
+              "isSlotFiller": true,
               "layoutType": "flex",
               "name": "NavItem",
               "primitive": "navitem",
@@ -20815,6 +21174,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
               "events": [],
               "id": "node-3",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Icon",
               "primitive": "icon",
               "properties": [
@@ -20872,6 +21232,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
               "events": [],
               "id": "node-4",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Text",
               "primitive": "text",
               "properties": [
@@ -20913,6 +21274,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                     "events": [],
                     "id": "node-3",
                     "isDefinition": false,
+                    "isSlotFiller": true,
                     "name": "Icon",
                     "primitive": "icon",
                     "properties": [
@@ -20970,6 +21332,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                     "events": [],
                     "id": "node-4",
                     "isDefinition": false,
+                    "isSlotFiller": true,
                     "name": "Text",
                     "primitive": "text",
                     "properties": [
@@ -21158,6 +21521,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
               "events": [],
               "id": "node-6",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Icon",
               "primitive": "icon",
               "properties": [
@@ -21215,6 +21579,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
               "events": [],
               "id": "node-7",
               "isDefinition": false,
+              "isSlotFiller": true,
               "name": "Text",
               "primitive": "text",
               "properties": [
@@ -21257,6 +21622,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                     "events": [],
                     "id": "node-6",
                     "isDefinition": false,
+                    "isSlotFiller": true,
                     "name": "Icon",
                     "primitive": "icon",
                     "properties": [
@@ -21314,6 +21680,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                     "events": [],
                     "id": "node-7",
                     "isDefinition": false,
+                    "isSlotFiller": true,
                     "name": "Text",
                     "primitive": "text",
                     "properties": [
@@ -21544,6 +21911,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Text",
           "primitive": "text",
           "properties": [
@@ -21560,6 +21928,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
           "events": [],
           "id": "node-3",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Icon",
           "primitive": "icon",
           "properties": [
@@ -21638,6 +22007,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
                 "events": [],
                 "id": "node-2",
                 "isDefinition": false,
+                "isSlotFiller": true,
                 "name": "Text",
                 "primitive": "text",
                 "properties": [
@@ -21654,6 +22024,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
                 "events": [],
                 "id": "node-3",
                 "isDefinition": false,
+                "isSlotFiller": true,
                 "name": "Icon",
                 "primitive": "icon",
                 "properties": [
@@ -22953,6 +23324,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Icon",
           "primitive": "icon",
           "properties": [
@@ -23015,6 +23387,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 9 1`] = `
           "events": [],
           "id": "node-3",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Text",
           "primitive": "text",
           "properties": [
@@ -23522,6 +23895,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 11 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "layoutType": "flex",
           "name": "Frame",
           "primitive": "frame",
@@ -23585,6 +23959,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 11 1`] = `
           "events": [],
           "id": "node-5",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Frame",
           "primitive": "frame",
           "properties": [],
@@ -24750,10 +25125,290 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
     {
       "children": [
         {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "reveal-up",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "18px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [
+            {
+              "actions": [
+                {
+                  "target": "reveal-up",
+                  "type": "anim",
+                },
+              ],
+              "name": "enter",
+            },
+          ],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "padding",
+              "value": "32px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-radius",
+              "value": "12px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "reveal-fade",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "18px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [
+            {
+              "actions": [
+                {
+                  "target": "reveal-fade",
+                  "type": "anim",
+                },
+              ],
+              "name": "enter",
+            },
+          ],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "padding",
+              "value": "32px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-radius",
+              "value": "12px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "reveal-scale",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "18px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [
+            {
+              "actions": [
+                {
+                  "target": "reveal-scale",
+                  "type": "anim",
+                },
+              ],
+              "name": "enter",
+            },
+          ],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "padding",
+              "value": "32px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-radius",
+              "value": "12px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "80px",
+        },
+        {
+          "property": "padding",
+          "value": "24px",
+        },
+        {
+          "property": "width",
+          "value": "360px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
           "children": [],
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Icon",
           "primitive": "icon",
           "properties": [
@@ -24811,6 +25466,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
           "events": [],
           "id": "node-3",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Text",
           "primitive": "text",
           "properties": [
@@ -24852,6 +25508,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
                 "events": [],
                 "id": "node-2",
                 "isDefinition": false,
+                "isSlotFiller": true,
                 "name": "Icon",
                 "primitive": "icon",
                 "properties": [
@@ -24909,6 +25566,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
                 "events": [],
                 "id": "node-3",
                 "isDefinition": false,
+                "isSlotFiller": true,
                 "name": "Text",
                 "primitive": "text",
                 "properties": [
@@ -25108,7 +25766,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
+exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -25120,6 +25778,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Frame",
           "primitive": "frame",
           "properties": [],
@@ -25196,6 +25855,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
                 "events": [],
                 "id": "node-2",
                 "isDefinition": false,
+                "isSlotFiller": true,
                 "name": "Frame",
                 "primitive": "frame",
                 "properties": [],
@@ -25354,7 +26014,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 5 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
+exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -25616,7 +26276,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 6 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
+exports[`Tutorial IR Snapshots > 07 - animationen > Example 8 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -25942,7 +26602,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 7 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 8 1`] = `
+exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -26080,7 +26740,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 8 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
+exports[`Tutorial IR Snapshots > 07 - animationen > Example 10 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -26092,6 +26752,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Icon",
           "primitive": "icon",
           "properties": [
@@ -26145,6 +26806,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
           "events": [],
           "id": "node-3",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Text",
           "primitive": "text",
           "properties": [
@@ -26186,6 +26848,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
                 "events": [],
                 "id": "node-2",
                 "isDefinition": false,
+                "isSlotFiller": true,
                 "name": "Icon",
                 "primitive": "icon",
                 "properties": [
@@ -26239,6 +26902,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
                 "events": [],
                 "id": "node-3",
                 "isDefinition": false,
+                "isSlotFiller": true,
                 "name": "Text",
                 "primitive": "text",
                 "properties": [
@@ -27361,6 +28025,280 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
     {
       "children": [
         {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "E-Mail",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "font-size",
+                  "value": "12px",
+                },
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "bind": "email",
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "initialState": "placeholder",
+              "instanceName": "EmailField",
+              "isDefinition": false,
+              "name": "Input",
+              "primitive": "input",
+              "properties": [
+                {
+                  "name": "type",
+                  "value": "email",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "padding",
+                  "value": "10px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "1px solid currentColor",
+                },
+                {
+                  "property": "width",
+                  "value": "200px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "background",
+                  "value": "#0a0a0a",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "border-color",
+                  "value": "#333",
+                },
+                {
+                  "property": "border-color",
+                  "state": "invalid",
+                  "value": "#ef4444",
+                },
+              ],
+              "tag": "input",
+              "valueBinding": "email",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "4px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "EmailField",
+                    "Bitte gültige E-Mail eintragen",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "setError",
+                },
+              ],
+              "name": "click",
+            },
+            {
+              "actions": [
+                {
+                  "args": [
+                    "EmailField",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "focus",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-5",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Speichern",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#2271C1",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "320px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "email",
+      "type": "font",
+      "value": "",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
           "children": [],
           "events": [
             {
@@ -27618,7 +28556,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 4 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
+exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -28223,7 +29161,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 5 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
+exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -28510,7 +29448,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 6 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
+exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -28782,7 +29720,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 7 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
+exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -29182,7 +30120,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
+exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -29570,7 +30508,1005 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 9 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
+exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "1",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "24px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "100px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#2271C1",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "2",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "24px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "100px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#10b981",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "3",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "24px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "justify-content",
+              "value": "center",
+            },
+            {
+              "property": "align-items",
+              "value": "center",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "100px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#f59e0b",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "instanceName": "Carousel",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "padding",
+          "value": "12px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+        {
+          "property": "width",
+          "value": "320px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+        {
+          "property": "overflow-x",
+          "value": "auto",
+        },
+      ],
+      "tag": "div",
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "Carousel",
+                    "-200",
+                    "0",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "scrollBy",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-9",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "←",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "Carousel",
+                    "200",
+                    "0",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "scrollBy",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-10",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "→",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+      ],
+      "events": [],
+      "id": "node-8",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "margin",
+          "value": "12px 0px 0px 0px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 12 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Datei öffnen",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "padding",
+              "value": "8px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "background",
+              "state": "highlighted",
+              "value": "#2271C1",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Speichern",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "padding",
+              "value": "8px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "background",
+              "state": "highlighted",
+              "value": "#2271C1",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Schließen",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "padding",
+              "value": "8px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "background",
+              "state": "highlighted",
+              "value": "#2271C1",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "instanceName": "Cmds",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "4px",
+        },
+        {
+          "property": "width",
+          "value": "280px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "8px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-9",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Erster",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-10",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "↑",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-11",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "↓",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-12",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Letzter",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#333",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+      ],
+      "events": [],
+      "id": "node-8",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "margin",
+          "value": "12px 0px 0px 0px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 08 - functions > Example 13 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -29978,7 +31914,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 08 - functions > Example 11 1`] = `
+exports[`Tutorial IR Snapshots > 08 - functions > Example 14 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -31742,6 +33678,191 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
           "properties": [
             {
               "name": "textContent",
+              "value": "$tasks.count Aufgaben",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "font-size",
+              "value": "16px",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Gesamt: $tasks.sum(hours) h",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Schnitt: $tasks.avg(hours) h",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Höchste Prio: $tasks.max(priority)",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Niedrigste Prio: $tasks.min(priority)",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "t1": {
+          "hours": 2,
+          "priority": 1,
+          "title": "Review",
+        },
+        "t2": {
+          "hours": 5,
+          "priority": 3,
+          "title": "Build",
+        },
+        "t3": {
+          "hours": 1,
+          "priority": 2,
+          "title": "Test",
+        },
+      },
+      "name": "tasks",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
               "value": "Alle: $colors.count Farben",
             },
           ],
@@ -31834,7 +33955,1000 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 11 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "each": {
+            "collection": "$todos",
+            "id": "node-2",
+            "itemVar": "todo",
+            "template": [
+              {
+                "children": [
+                  {
+                    "children": [],
+                    "events": [],
+                    "id": "node-4",
+                    "isDefinition": false,
+                    "name": "Text",
+                    "primitive": "text",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "__loopVar:todo.text",
+                      },
+                    ],
+                    "styles": [
+                      {
+                        "property": "color",
+                        "value": "white",
+                      },
+                      {
+                        "property": "flex-grow",
+                        "value": "1",
+                      },
+                    ],
+                    "tag": "span",
+                  },
+                  {
+                    "children": [],
+                    "events": [
+                      {
+                        "actions": [
+                          {
+                            "args": [
+                              "todo",
+                            ],
+                            "isBuiltinStateFunction": false,
+                            "isFunctionCall": true,
+                            "type": "remove",
+                          },
+                        ],
+                        "name": "click",
+                      },
+                    ],
+                    "id": "node-5",
+                    "isDefinition": false,
+                    "name": "Button",
+                    "primitive": "button",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "×",
+                      },
+                    ],
+                    "styles": [
+                      {
+                        "property": "width",
+                        "value": "fit-content",
+                      },
+                      {
+                        "property": "height",
+                        "value": "36px",
+                      },
+                      {
+                        "property": "flex-shrink",
+                        "value": "0",
+                      },
+                      {
+                        "property": "min-width",
+                        "value": "36px",
+                      },
+                      {
+                        "property": "padding",
+                        "value": "0px 16px",
+                      },
+                      {
+                        "property": "border-radius",
+                        "value": "6px",
+                      },
+                      {
+                        "property": "border",
+                        "value": "0px solid currentColor",
+                      },
+                      {
+                        "property": "cursor",
+                        "value": "pointer",
+                      },
+                      {
+                        "property": "background",
+                        "value": "transparent",
+                      },
+                      {
+                        "property": "color",
+                        "value": "#888",
+                      },
+                    ],
+                    "tag": "button",
+                  },
+                ],
+                "events": [],
+                "id": "node-3",
+                "isDefinition": false,
+                "layoutType": "flex",
+                "name": "Frame",
+                "primitive": "frame",
+                "properties": [],
+                "styles": [
+                  {
+                    "property": "display",
+                    "value": "flex",
+                  },
+                  {
+                    "property": "flex-direction",
+                    "value": "row",
+                  },
+                  {
+                    "property": "align-self",
+                    "value": "stretch",
+                  },
+                  {
+                    "property": "align-items",
+                    "value": "center",
+                  },
+                  {
+                    "property": "gap",
+                    "value": "8px",
+                  },
+                  {
+                    "property": "padding",
+                    "value": "12px",
+                  },
+                  {
+                    "property": "background",
+                    "value": "#1a1a1a",
+                  },
+                  {
+                    "property": "border-radius",
+                    "value": "6px",
+                  },
+                ],
+                "tag": "div",
+              },
+            ],
+          },
+          "events": [],
+          "id": "node-2",
+          "name": "Each",
+          "properties": [],
+          "styles": [],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "todos",
+                    "text: Neue Aufgabe",
+                    "done: false",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "add",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Neue Aufgabe",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#2271C1",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "8px",
+        },
+        {
+          "property": "width",
+          "value": "360px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "t1": {
+          "done": false,
+          "text": "Mirror lernen",
+        },
+      },
+      "name": "todos",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "each": {
+            "collection": "$contacts",
+            "id": "node-2",
+            "itemVar": "contact",
+            "template": [
+              {
+                "children": [
+                  {
+                    "children": [],
+                    "events": [],
+                    "id": "node-4",
+                    "isDefinition": false,
+                    "name": "Text",
+                    "primitive": "text",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "__loopVar:contact.name",
+                      },
+                    ],
+                    "styles": [
+                      {
+                        "property": "color",
+                        "value": "white",
+                      },
+                      {
+                        "property": "font-weight",
+                        "value": "500",
+                      },
+                    ],
+                    "tag": "span",
+                  },
+                  {
+                    "children": [],
+                    "events": [],
+                    "id": "node-5",
+                    "isDefinition": false,
+                    "name": "Text",
+                    "primitive": "text",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "__loopVar:contact.email",
+                      },
+                    ],
+                    "styles": [
+                      {
+                        "property": "color",
+                        "value": "#888",
+                      },
+                      {
+                        "property": "font-size",
+                        "value": "12px",
+                      },
+                    ],
+                    "tag": "span",
+                  },
+                ],
+                "events": [],
+                "id": "node-3",
+                "isDefinition": false,
+                "name": "Frame",
+                "primitive": "frame",
+                "properties": [],
+                "styles": [
+                  {
+                    "property": "display",
+                    "value": "flex",
+                  },
+                  {
+                    "property": "flex-direction",
+                    "value": "column",
+                  },
+                  {
+                    "property": "align-self",
+                    "value": "stretch",
+                  },
+                  {
+                    "property": "align-items",
+                    "value": "flex-start",
+                  },
+                  {
+                    "property": "padding",
+                    "value": "12px",
+                  },
+                  {
+                    "property": "background",
+                    "value": "#1a1a1a",
+                  },
+                  {
+                    "property": "border-radius",
+                    "value": "6px",
+                  },
+                ],
+                "tag": "div",
+              },
+            ],
+          },
+          "events": [],
+          "id": "node-2",
+          "name": "Each",
+          "properties": [],
+          "styles": [],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "contacts",
+                    "name: ",
+                    "email: ",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "create",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Neuer Kontakt",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "10px 20px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#2271C1",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "360px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "c1": {
+          "email": "max@example.com",
+          "name": "Max",
+        },
+      },
+      "name": "contacts",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "each": {
+            "collection": "$tasks",
+            "id": "node-2",
+            "itemVar": "task",
+            "template": [
+              {
+                "children": [
+                  {
+                    "children": [],
+                    "events": [],
+                    "id": "node-4",
+                    "isDefinition": false,
+                    "name": "Text",
+                    "primitive": "text",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "__loopVar:task.title",
+                      },
+                    ],
+                    "styles": [
+                      {
+                        "property": "color",
+                        "value": "white",
+                      },
+                      {
+                        "property": "flex-grow",
+                        "value": "1",
+                      },
+                    ],
+                    "tag": "span",
+                  },
+                  {
+                    "children": [],
+                    "events": [
+                      {
+                        "actions": [
+                          {
+                            "args": [
+                              "task",
+                            ],
+                            "isBuiltinStateFunction": false,
+                            "isFunctionCall": true,
+                            "type": "remove",
+                          },
+                        ],
+                        "name": "click",
+                      },
+                    ],
+                    "id": "node-5",
+                    "isDefinition": false,
+                    "name": "Button",
+                    "primitive": "button",
+                    "properties": [
+                      {
+                        "name": "textContent",
+                        "value": "×",
+                      },
+                    ],
+                    "styles": [
+                      {
+                        "property": "width",
+                        "value": "fit-content",
+                      },
+                      {
+                        "property": "height",
+                        "value": "36px",
+                      },
+                      {
+                        "property": "flex-shrink",
+                        "value": "0",
+                      },
+                      {
+                        "property": "min-width",
+                        "value": "36px",
+                      },
+                      {
+                        "property": "padding",
+                        "value": "0px 16px",
+                      },
+                      {
+                        "property": "border-radius",
+                        "value": "6px",
+                      },
+                      {
+                        "property": "border",
+                        "value": "0px solid currentColor",
+                      },
+                      {
+                        "property": "cursor",
+                        "value": "pointer",
+                      },
+                      {
+                        "property": "background",
+                        "value": "transparent",
+                      },
+                      {
+                        "property": "color",
+                        "value": "#888",
+                      },
+                    ],
+                    "tag": "button",
+                  },
+                ],
+                "events": [],
+                "id": "node-3",
+                "isDefinition": false,
+                "layoutType": "flex",
+                "name": "Frame",
+                "primitive": "frame",
+                "properties": [],
+                "styles": [
+                  {
+                    "property": "display",
+                    "value": "flex",
+                  },
+                  {
+                    "property": "flex-direction",
+                    "value": "row",
+                  },
+                  {
+                    "property": "align-self",
+                    "value": "stretch",
+                  },
+                  {
+                    "property": "align-items",
+                    "value": "center",
+                  },
+                  {
+                    "property": "gap",
+                    "value": "8px",
+                  },
+                  {
+                    "property": "padding",
+                    "value": "12px",
+                  },
+                  {
+                    "property": "background",
+                    "value": "#1a1a1a",
+                  },
+                  {
+                    "property": "border-radius",
+                    "value": "6px",
+                  },
+                ],
+                "tag": "div",
+              },
+            ],
+          },
+          "events": [],
+          "id": "node-2",
+          "name": "Each",
+          "properties": [],
+          "styles": [],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [
+                        "tasks",
+                        "title: Neu",
+                        "done: false",
+                      ],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "add",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "+ Aufgabe",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 16px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#2271C1",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "button",
+            },
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [
+                        "tasks",
+                      ],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "save",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-8",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Speichern",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 16px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#10b981",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "button",
+            },
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [
+                        "tasks",
+                      ],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "revert",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-9",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Verwerfen",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
+                  "property": "padding",
+                  "value": "8px 16px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#333",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "button",
+            },
+          ],
+          "events": [],
+          "id": "node-6",
+          "isDefinition": false,
+          "layoutType": "flex",
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "row",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "gap",
+              "value": "8px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "360px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "data": {
+        "t1": {
+          "done": true,
+          "title": "Design Review",
+        },
+        "t2": {
+          "done": false,
+          "title": "Tests schreiben",
+        },
+      },
+      "name": "tasks",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -32063,7 +35177,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 12 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -32115,7 +35229,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 13 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -32226,7 +35340,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 14 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -32426,7 +35540,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 15 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -32557,7 +35671,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 16 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -32662,7 +35776,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 17 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -32750,7 +35864,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 18 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -32809,7 +35923,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 19 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -33022,7 +36136,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 20 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -33298,7 +36412,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 21 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 26 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -33371,7 +36485,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 22 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 27 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -33630,7 +36744,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 28 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -33713,7 +36827,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 29 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -33914,7 +37028,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 25 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 26 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 30 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -34114,7 +37228,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 26 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 09 - daten > Example 27 1`] = `
+exports[`Tutorial IR Snapshots > 09 - daten > Example 31 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -36352,6 +39466,363 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 6 1`] = `
   "icons": [],
   "nodes": [
     {
+      "bind": "selectedFruit",
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Apfel",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [],
+                  "isBuiltinStateFunction": true,
+                  "isFunctionCall": true,
+                  "type": "exclusive",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "value",
+              "value": "apple",
+            },
+          ],
+          "stateMachine": {
+            "initial": "default",
+            "states": {
+              "default": {
+                "isInitial": true,
+                "name": "default",
+                "styles": [],
+              },
+              "highlighted": {
+                "isInitial": false,
+                "name": "highlighted",
+                "styles": [
+                  {
+                    "property": "background",
+                    "value": "#333",
+                  },
+                ],
+              },
+              "selected": {
+                "isInitial": false,
+                "name": "selected",
+                "styles": [
+                  {
+                    "property": "background",
+                    "value": "#2271C1",
+                  },
+                ],
+              },
+            },
+            "transitions": [
+              {
+                "modifier": "exclusive",
+                "to": "highlighted",
+                "trigger": "onclick",
+              },
+            ],
+          },
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "padding",
+              "value": "8px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "state": "highlighted",
+              "value": "#333",
+            },
+            {
+              "property": "background",
+              "state": "selected",
+              "value": "#2271C1",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Banane",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [],
+                  "isBuiltinStateFunction": true,
+                  "isFunctionCall": true,
+                  "type": "exclusive",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [
+            {
+              "name": "value",
+              "value": "banana",
+            },
+          ],
+          "stateMachine": {
+            "initial": "default",
+            "states": {
+              "default": {
+                "isInitial": true,
+                "name": "default",
+                "styles": [],
+              },
+              "highlighted": {
+                "isInitial": false,
+                "name": "highlighted",
+                "styles": [
+                  {
+                    "property": "background",
+                    "value": "#333",
+                  },
+                ],
+              },
+              "selected": {
+                "isInitial": false,
+                "name": "selected",
+                "styles": [
+                  {
+                    "property": "background",
+                    "value": "#2271C1",
+                  },
+                ],
+              },
+            },
+            "transitions": [
+              {
+                "modifier": "exclusive",
+                "to": "highlighted",
+                "trigger": "onclick",
+              },
+            ],
+          },
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "padding",
+              "value": "8px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "state": "highlighted",
+              "value": "#333",
+            },
+            {
+              "property": "background",
+              "state": "selected",
+              "value": "#2271C1",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [
+        {
+          "actions": [
+            {
+              "args": [],
+              "isBuiltinStateFunction": false,
+              "isFunctionCall": true,
+              "type": "highlightNext",
+            },
+          ],
+          "key": "arrow-down",
+          "name": "keydown",
+        },
+        {
+          "actions": [
+            {
+              "args": [],
+              "isBuiltinStateFunction": false,
+              "isFunctionCall": true,
+              "type": "highlightPrev",
+            },
+          ],
+          "key": "arrow-up",
+          "name": "keydown",
+        },
+        {
+          "actions": [
+            {
+              "args": [],
+              "isBuiltinStateFunction": false,
+              "isFunctionCall": true,
+              "type": "selectHighlighted",
+            },
+          ],
+          "key": "enter",
+          "name": "keydown",
+        },
+      ],
+      "id": "node-1",
+      "isDefinition": false,
+      "loopFocus": true,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "4px",
+        },
+        {
+          "property": "width",
+          "value": "240px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "8px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
+        },
+      ],
+      "tag": "div",
+      "typeahead": true,
+    },
+  ],
+  "tokens": [
+    {
+      "name": "selectedFruit",
+      "type": "font",
+      "value": "",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
       "children": [
         {
           "bind": "searchTerm",
@@ -36467,7 +39938,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 6 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -36675,7 +40146,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -36691,6 +40162,14 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
         {
           "name": "value",
           "value": "50",
+        },
+        {
+          "name": "min",
+          "value": "0",
+        },
+        {
+          "name": "max",
+          "value": "100",
         },
       ],
       "styles": [
@@ -36718,7 +40197,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -36733,7 +40212,16 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
           "isDefinition": false,
           "name": "Slider",
           "primitive": "slider",
-          "properties": [],
+          "properties": [
+            {
+              "name": "min",
+              "value": "0",
+            },
+            {
+              "name": "max",
+              "value": "100",
+            },
+          ],
           "styles": [
             {
               "property": "display",
@@ -36821,7 +40309,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -36976,7 +40464,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -37191,7 +40679,1280 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 13 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "bind": "selectedDate",
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "isZagComponent": true,
+          "items": [],
+          "machineConfig": {
+            "id": "node-2",
+            "placeholder": "Datum wählen",
+          },
+          "name": "DatePicker",
+          "primitive": "datepicker",
+          "properties": [],
+          "slots": {
+            "ClearTrigger": {
+              "apiMethod": "getClearTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "ClearTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "Content": {
+              "apiMethod": "getContentProps",
+              "children": [],
+              "element": "div",
+              "name": "Content",
+              "portal": true,
+              "styles": [],
+            },
+            "Control": {
+              "apiMethod": "getControlProps",
+              "children": [],
+              "element": "div",
+              "name": "Control",
+              "portal": false,
+              "styles": [],
+            },
+            "Input": {
+              "apiMethod": "getInputProps",
+              "children": [],
+              "element": "div",
+              "name": "Input",
+              "portal": false,
+              "styles": [],
+            },
+            "Label": {
+              "apiMethod": "getLabelProps",
+              "children": [],
+              "element": "div",
+              "name": "Label",
+              "portal": false,
+              "styles": [],
+            },
+            "MonthSelect": {
+              "apiMethod": "getMonthSelectProps",
+              "children": [],
+              "element": "div",
+              "name": "MonthSelect",
+              "portal": false,
+              "styles": [],
+            },
+            "NextTrigger": {
+              "apiMethod": "getNextTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "NextTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "Positioner": {
+              "apiMethod": "getPositionerProps",
+              "children": [],
+              "element": "div",
+              "name": "Positioner",
+              "portal": true,
+              "styles": [],
+            },
+            "PresetTrigger": {
+              "apiMethod": "getPresetTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "PresetTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "PrevTrigger": {
+              "apiMethod": "getPrevTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "PrevTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "RangeText": {
+              "apiMethod": "getRangeTextProps",
+              "children": [],
+              "element": "div",
+              "name": "RangeText",
+              "portal": false,
+              "styles": [],
+            },
+            "Root": {
+              "apiMethod": "getRootProps",
+              "children": [],
+              "element": "div",
+              "name": "Root",
+              "portal": false,
+              "styles": [],
+            },
+            "Table": {
+              "apiMethod": "getTableProps",
+              "children": [],
+              "element": "div",
+              "name": "Table",
+              "portal": false,
+              "styles": [],
+            },
+            "TableBody": {
+              "apiMethod": "getTableBodyProps",
+              "children": [],
+              "element": "div",
+              "name": "TableBody",
+              "portal": false,
+              "styles": [],
+            },
+            "TableCell": {
+              "apiMethod": "getTableCellProps",
+              "children": [],
+              "element": "div",
+              "name": "TableCell",
+              "portal": false,
+              "styles": [],
+            },
+            "TableCellTrigger": {
+              "apiMethod": "getTableCellTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "TableCellTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "TableHead": {
+              "apiMethod": "getTableHeadProps",
+              "children": [],
+              "element": "div",
+              "name": "TableHead",
+              "portal": false,
+              "styles": [],
+            },
+            "TableHeader": {
+              "apiMethod": "getTableHeaderProps",
+              "children": [],
+              "element": "div",
+              "name": "TableHeader",
+              "portal": false,
+              "styles": [],
+            },
+            "TableRow": {
+              "apiMethod": "getTableRowProps",
+              "children": [],
+              "element": "div",
+              "name": "TableRow",
+              "portal": false,
+              "styles": [],
+            },
+            "Trigger": {
+              "apiMethod": "getTriggerProps",
+              "children": [],
+              "element": "button",
+              "name": "Trigger",
+              "portal": false,
+              "styles": [],
+            },
+            "ViewControl": {
+              "apiMethod": "getViewControlProps",
+              "children": [],
+              "element": "div",
+              "name": "ViewControl",
+              "portal": false,
+              "styles": [],
+            },
+            "ViewTrigger": {
+              "apiMethod": "getViewTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "ViewTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "YearSelect": {
+              "apiMethod": "getYearSelectProps",
+              "children": [],
+              "element": "div",
+              "name": "YearSelect",
+              "portal": false,
+              "styles": [],
+            },
+          },
+          "sourcePosition": {
+            "column": 13,
+            "endColumn": 13,
+            "endLine": 4,
+            "line": 4,
+          },
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+          "zagType": "datepicker",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Gewählt: $selectedDate",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "320px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "selectedDate",
+      "type": "font",
+      "value": "",
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 14 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "isZagComponent": true,
+          "items": [],
+          "machineConfig": {
+            "id": "node-2",
+            "placeholder": "Ein Datum",
+            "selectionMode": "single",
+          },
+          "name": "DatePicker",
+          "primitive": "datepicker",
+          "properties": [],
+          "slots": {
+            "ClearTrigger": {
+              "apiMethod": "getClearTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "ClearTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "Content": {
+              "apiMethod": "getContentProps",
+              "children": [],
+              "element": "div",
+              "name": "Content",
+              "portal": true,
+              "styles": [],
+            },
+            "Control": {
+              "apiMethod": "getControlProps",
+              "children": [],
+              "element": "div",
+              "name": "Control",
+              "portal": false,
+              "styles": [],
+            },
+            "Input": {
+              "apiMethod": "getInputProps",
+              "children": [],
+              "element": "div",
+              "name": "Input",
+              "portal": false,
+              "styles": [],
+            },
+            "Label": {
+              "apiMethod": "getLabelProps",
+              "children": [],
+              "element": "div",
+              "name": "Label",
+              "portal": false,
+              "styles": [],
+            },
+            "MonthSelect": {
+              "apiMethod": "getMonthSelectProps",
+              "children": [],
+              "element": "div",
+              "name": "MonthSelect",
+              "portal": false,
+              "styles": [],
+            },
+            "NextTrigger": {
+              "apiMethod": "getNextTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "NextTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "Positioner": {
+              "apiMethod": "getPositionerProps",
+              "children": [],
+              "element": "div",
+              "name": "Positioner",
+              "portal": true,
+              "styles": [],
+            },
+            "PresetTrigger": {
+              "apiMethod": "getPresetTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "PresetTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "PrevTrigger": {
+              "apiMethod": "getPrevTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "PrevTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "RangeText": {
+              "apiMethod": "getRangeTextProps",
+              "children": [],
+              "element": "div",
+              "name": "RangeText",
+              "portal": false,
+              "styles": [],
+            },
+            "Root": {
+              "apiMethod": "getRootProps",
+              "children": [],
+              "element": "div",
+              "name": "Root",
+              "portal": false,
+              "styles": [],
+            },
+            "Table": {
+              "apiMethod": "getTableProps",
+              "children": [],
+              "element": "div",
+              "name": "Table",
+              "portal": false,
+              "styles": [],
+            },
+            "TableBody": {
+              "apiMethod": "getTableBodyProps",
+              "children": [],
+              "element": "div",
+              "name": "TableBody",
+              "portal": false,
+              "styles": [],
+            },
+            "TableCell": {
+              "apiMethod": "getTableCellProps",
+              "children": [],
+              "element": "div",
+              "name": "TableCell",
+              "portal": false,
+              "styles": [],
+            },
+            "TableCellTrigger": {
+              "apiMethod": "getTableCellTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "TableCellTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "TableHead": {
+              "apiMethod": "getTableHeadProps",
+              "children": [],
+              "element": "div",
+              "name": "TableHead",
+              "portal": false,
+              "styles": [],
+            },
+            "TableHeader": {
+              "apiMethod": "getTableHeaderProps",
+              "children": [],
+              "element": "div",
+              "name": "TableHeader",
+              "portal": false,
+              "styles": [],
+            },
+            "TableRow": {
+              "apiMethod": "getTableRowProps",
+              "children": [],
+              "element": "div",
+              "name": "TableRow",
+              "portal": false,
+              "styles": [],
+            },
+            "Trigger": {
+              "apiMethod": "getTriggerProps",
+              "children": [],
+              "element": "button",
+              "name": "Trigger",
+              "portal": false,
+              "styles": [],
+            },
+            "ViewControl": {
+              "apiMethod": "getViewControlProps",
+              "children": [],
+              "element": "div",
+              "name": "ViewControl",
+              "portal": false,
+              "styles": [],
+            },
+            "ViewTrigger": {
+              "apiMethod": "getViewTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "ViewTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "YearSelect": {
+              "apiMethod": "getYearSelectProps",
+              "children": [],
+              "element": "div",
+              "name": "YearSelect",
+              "portal": false,
+              "styles": [],
+            },
+          },
+          "sourcePosition": {
+            "column": 13,
+            "endColumn": 13,
+            "endLine": 2,
+            "line": 2,
+          },
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+          "zagType": "datepicker",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "isZagComponent": true,
+          "items": [],
+          "machineConfig": {
+            "id": "node-3",
+            "placeholder": "Mehrere Daten",
+            "selectionMode": "multiple",
+          },
+          "name": "DatePicker",
+          "primitive": "datepicker",
+          "properties": [],
+          "slots": {
+            "ClearTrigger": {
+              "apiMethod": "getClearTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "ClearTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "Content": {
+              "apiMethod": "getContentProps",
+              "children": [],
+              "element": "div",
+              "name": "Content",
+              "portal": true,
+              "styles": [],
+            },
+            "Control": {
+              "apiMethod": "getControlProps",
+              "children": [],
+              "element": "div",
+              "name": "Control",
+              "portal": false,
+              "styles": [],
+            },
+            "Input": {
+              "apiMethod": "getInputProps",
+              "children": [],
+              "element": "div",
+              "name": "Input",
+              "portal": false,
+              "styles": [],
+            },
+            "Label": {
+              "apiMethod": "getLabelProps",
+              "children": [],
+              "element": "div",
+              "name": "Label",
+              "portal": false,
+              "styles": [],
+            },
+            "MonthSelect": {
+              "apiMethod": "getMonthSelectProps",
+              "children": [],
+              "element": "div",
+              "name": "MonthSelect",
+              "portal": false,
+              "styles": [],
+            },
+            "NextTrigger": {
+              "apiMethod": "getNextTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "NextTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "Positioner": {
+              "apiMethod": "getPositionerProps",
+              "children": [],
+              "element": "div",
+              "name": "Positioner",
+              "portal": true,
+              "styles": [],
+            },
+            "PresetTrigger": {
+              "apiMethod": "getPresetTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "PresetTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "PrevTrigger": {
+              "apiMethod": "getPrevTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "PrevTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "RangeText": {
+              "apiMethod": "getRangeTextProps",
+              "children": [],
+              "element": "div",
+              "name": "RangeText",
+              "portal": false,
+              "styles": [],
+            },
+            "Root": {
+              "apiMethod": "getRootProps",
+              "children": [],
+              "element": "div",
+              "name": "Root",
+              "portal": false,
+              "styles": [],
+            },
+            "Table": {
+              "apiMethod": "getTableProps",
+              "children": [],
+              "element": "div",
+              "name": "Table",
+              "portal": false,
+              "styles": [],
+            },
+            "TableBody": {
+              "apiMethod": "getTableBodyProps",
+              "children": [],
+              "element": "div",
+              "name": "TableBody",
+              "portal": false,
+              "styles": [],
+            },
+            "TableCell": {
+              "apiMethod": "getTableCellProps",
+              "children": [],
+              "element": "div",
+              "name": "TableCell",
+              "portal": false,
+              "styles": [],
+            },
+            "TableCellTrigger": {
+              "apiMethod": "getTableCellTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "TableCellTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "TableHead": {
+              "apiMethod": "getTableHeadProps",
+              "children": [],
+              "element": "div",
+              "name": "TableHead",
+              "portal": false,
+              "styles": [],
+            },
+            "TableHeader": {
+              "apiMethod": "getTableHeaderProps",
+              "children": [],
+              "element": "div",
+              "name": "TableHeader",
+              "portal": false,
+              "styles": [],
+            },
+            "TableRow": {
+              "apiMethod": "getTableRowProps",
+              "children": [],
+              "element": "div",
+              "name": "TableRow",
+              "portal": false,
+              "styles": [],
+            },
+            "Trigger": {
+              "apiMethod": "getTriggerProps",
+              "children": [],
+              "element": "button",
+              "name": "Trigger",
+              "portal": false,
+              "styles": [],
+            },
+            "ViewControl": {
+              "apiMethod": "getViewControlProps",
+              "children": [],
+              "element": "div",
+              "name": "ViewControl",
+              "portal": false,
+              "styles": [],
+            },
+            "ViewTrigger": {
+              "apiMethod": "getViewTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "ViewTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "YearSelect": {
+              "apiMethod": "getYearSelectProps",
+              "children": [],
+              "element": "div",
+              "name": "YearSelect",
+              "portal": false,
+              "styles": [],
+            },
+          },
+          "sourcePosition": {
+            "column": 13,
+            "endColumn": 13,
+            "endLine": 3,
+            "line": 3,
+          },
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+          "zagType": "datepicker",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "isZagComponent": true,
+          "items": [],
+          "machineConfig": {
+            "id": "node-4",
+            "placeholder": "Zeitraum",
+            "selectionMode": "range",
+          },
+          "name": "DatePicker",
+          "primitive": "datepicker",
+          "properties": [],
+          "slots": {
+            "ClearTrigger": {
+              "apiMethod": "getClearTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "ClearTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "Content": {
+              "apiMethod": "getContentProps",
+              "children": [],
+              "element": "div",
+              "name": "Content",
+              "portal": true,
+              "styles": [],
+            },
+            "Control": {
+              "apiMethod": "getControlProps",
+              "children": [],
+              "element": "div",
+              "name": "Control",
+              "portal": false,
+              "styles": [],
+            },
+            "Input": {
+              "apiMethod": "getInputProps",
+              "children": [],
+              "element": "div",
+              "name": "Input",
+              "portal": false,
+              "styles": [],
+            },
+            "Label": {
+              "apiMethod": "getLabelProps",
+              "children": [],
+              "element": "div",
+              "name": "Label",
+              "portal": false,
+              "styles": [],
+            },
+            "MonthSelect": {
+              "apiMethod": "getMonthSelectProps",
+              "children": [],
+              "element": "div",
+              "name": "MonthSelect",
+              "portal": false,
+              "styles": [],
+            },
+            "NextTrigger": {
+              "apiMethod": "getNextTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "NextTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "Positioner": {
+              "apiMethod": "getPositionerProps",
+              "children": [],
+              "element": "div",
+              "name": "Positioner",
+              "portal": true,
+              "styles": [],
+            },
+            "PresetTrigger": {
+              "apiMethod": "getPresetTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "PresetTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "PrevTrigger": {
+              "apiMethod": "getPrevTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "PrevTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "RangeText": {
+              "apiMethod": "getRangeTextProps",
+              "children": [],
+              "element": "div",
+              "name": "RangeText",
+              "portal": false,
+              "styles": [],
+            },
+            "Root": {
+              "apiMethod": "getRootProps",
+              "children": [],
+              "element": "div",
+              "name": "Root",
+              "portal": false,
+              "styles": [],
+            },
+            "Table": {
+              "apiMethod": "getTableProps",
+              "children": [],
+              "element": "div",
+              "name": "Table",
+              "portal": false,
+              "styles": [],
+            },
+            "TableBody": {
+              "apiMethod": "getTableBodyProps",
+              "children": [],
+              "element": "div",
+              "name": "TableBody",
+              "portal": false,
+              "styles": [],
+            },
+            "TableCell": {
+              "apiMethod": "getTableCellProps",
+              "children": [],
+              "element": "div",
+              "name": "TableCell",
+              "portal": false,
+              "styles": [],
+            },
+            "TableCellTrigger": {
+              "apiMethod": "getTableCellTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "TableCellTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "TableHead": {
+              "apiMethod": "getTableHeadProps",
+              "children": [],
+              "element": "div",
+              "name": "TableHead",
+              "portal": false,
+              "styles": [],
+            },
+            "TableHeader": {
+              "apiMethod": "getTableHeaderProps",
+              "children": [],
+              "element": "div",
+              "name": "TableHeader",
+              "portal": false,
+              "styles": [],
+            },
+            "TableRow": {
+              "apiMethod": "getTableRowProps",
+              "children": [],
+              "element": "div",
+              "name": "TableRow",
+              "portal": false,
+              "styles": [],
+            },
+            "Trigger": {
+              "apiMethod": "getTriggerProps",
+              "children": [],
+              "element": "button",
+              "name": "Trigger",
+              "portal": false,
+              "styles": [],
+            },
+            "ViewControl": {
+              "apiMethod": "getViewControlProps",
+              "children": [],
+              "element": "div",
+              "name": "ViewControl",
+              "portal": false,
+              "styles": [],
+            },
+            "ViewTrigger": {
+              "apiMethod": "getViewTriggerProps",
+              "children": [],
+              "element": "div",
+              "name": "ViewTrigger",
+              "portal": false,
+              "styles": [],
+            },
+            "YearSelect": {
+              "apiMethod": "getYearSelectProps",
+              "children": [],
+              "element": "div",
+              "name": "YearSelect",
+              "portal": false,
+              "styles": [],
+            },
+          },
+          "sourcePosition": {
+            "column": 13,
+            "endColumn": 13,
+            "endLine": 4,
+            "line": 4,
+          },
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+          "zagType": "datepicker",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "16px",
+        },
+        {
+          "property": "width",
+          "value": "320px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 15 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "isZagComponent": true,
+      "items": [],
+      "machineConfig": {
+        "id": "node-1",
+        "max": "2025-12-31",
+        "min": "2025-01-01",
+        "placeholder": "Termin 2025",
+        "startOfWeek": 1,
+      },
+      "name": "DatePicker",
+      "primitive": "datepicker",
+      "properties": [],
+      "slots": {
+        "ClearTrigger": {
+          "apiMethod": "getClearTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "ClearTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "Content": {
+          "apiMethod": "getContentProps",
+          "children": [],
+          "element": "div",
+          "name": "Content",
+          "portal": true,
+          "styles": [],
+        },
+        "Control": {
+          "apiMethod": "getControlProps",
+          "children": [],
+          "element": "div",
+          "name": "Control",
+          "portal": false,
+          "styles": [],
+        },
+        "Input": {
+          "apiMethod": "getInputProps",
+          "children": [],
+          "element": "div",
+          "name": "Input",
+          "portal": false,
+          "styles": [],
+        },
+        "Label": {
+          "apiMethod": "getLabelProps",
+          "children": [],
+          "element": "div",
+          "name": "Label",
+          "portal": false,
+          "styles": [],
+        },
+        "MonthSelect": {
+          "apiMethod": "getMonthSelectProps",
+          "children": [],
+          "element": "div",
+          "name": "MonthSelect",
+          "portal": false,
+          "styles": [],
+        },
+        "NextTrigger": {
+          "apiMethod": "getNextTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "NextTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "Positioner": {
+          "apiMethod": "getPositionerProps",
+          "children": [],
+          "element": "div",
+          "name": "Positioner",
+          "portal": true,
+          "styles": [],
+        },
+        "PresetTrigger": {
+          "apiMethod": "getPresetTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "PresetTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "PrevTrigger": {
+          "apiMethod": "getPrevTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "PrevTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "RangeText": {
+          "apiMethod": "getRangeTextProps",
+          "children": [],
+          "element": "div",
+          "name": "RangeText",
+          "portal": false,
+          "styles": [],
+        },
+        "Root": {
+          "apiMethod": "getRootProps",
+          "children": [],
+          "element": "div",
+          "name": "Root",
+          "portal": false,
+          "styles": [],
+        },
+        "Table": {
+          "apiMethod": "getTableProps",
+          "children": [],
+          "element": "div",
+          "name": "Table",
+          "portal": false,
+          "styles": [],
+        },
+        "TableBody": {
+          "apiMethod": "getTableBodyProps",
+          "children": [],
+          "element": "div",
+          "name": "TableBody",
+          "portal": false,
+          "styles": [],
+        },
+        "TableCell": {
+          "apiMethod": "getTableCellProps",
+          "children": [],
+          "element": "div",
+          "name": "TableCell",
+          "portal": false,
+          "styles": [],
+        },
+        "TableCellTrigger": {
+          "apiMethod": "getTableCellTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "TableCellTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "TableHead": {
+          "apiMethod": "getTableHeadProps",
+          "children": [],
+          "element": "div",
+          "name": "TableHead",
+          "portal": false,
+          "styles": [],
+        },
+        "TableHeader": {
+          "apiMethod": "getTableHeaderProps",
+          "children": [],
+          "element": "div",
+          "name": "TableHeader",
+          "portal": false,
+          "styles": [],
+        },
+        "TableRow": {
+          "apiMethod": "getTableRowProps",
+          "children": [],
+          "element": "div",
+          "name": "TableRow",
+          "portal": false,
+          "styles": [],
+        },
+        "Trigger": {
+          "apiMethod": "getTriggerProps",
+          "children": [],
+          "element": "button",
+          "name": "Trigger",
+          "portal": false,
+          "styles": [],
+        },
+        "ViewControl": {
+          "apiMethod": "getViewControlProps",
+          "children": [],
+          "element": "div",
+          "name": "ViewControl",
+          "portal": false,
+          "styles": [],
+        },
+        "ViewTrigger": {
+          "apiMethod": "getViewTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "ViewTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "YearSelect": {
+          "apiMethod": "getYearSelectProps",
+          "children": [],
+          "element": "div",
+          "name": "YearSelect",
+          "portal": false,
+          "styles": [],
+        },
+      },
+      "sourcePosition": {
+        "column": 11,
+        "endColumn": 11,
+        "endLine": 1,
+        "line": 1,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+      ],
+      "tag": "div",
+      "zagType": "datepicker",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 16 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -37269,7 +42030,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
                 },
                 {
                   "name": "type",
-                  "value": "var(--email)",
+                  "value": "email",
                 },
               ],
               "styles": [
@@ -37378,7 +42139,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
                 },
                 {
                   "name": "type",
-                  "value": "var(--password)",
+                  "value": "password",
                 },
               ],
               "styles": [
@@ -37589,7 +42350,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 13 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 17 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -37774,7 +42535,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 13 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 14 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 18 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -41585,6 +46346,273 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
         {
           "property": "align-items",
           "value": "flex-start",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "InfoPopover",
+                    "InfoBtn",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "showBelow",
+                },
+              ],
+              "name": "click",
+            },
+          ],
+          "id": "node-2",
+          "instanceName": "InfoBtn",
+          "isDefinition": false,
+          "name": "Button",
+          "primitive": "button",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Info",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "fit-content",
+            },
+            {
+              "property": "height",
+              "value": "36px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "min-width",
+              "value": "36px",
+            },
+            {
+              "property": "padding",
+              "value": "8px 16px",
+            },
+            {
+              "property": "border-radius",
+              "value": "6px",
+            },
+            {
+              "property": "border",
+              "value": "0px solid currentColor",
+            },
+            {
+              "property": "cursor",
+              "value": "pointer",
+            },
+            {
+              "property": "background",
+              "value": "#2271C1",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+          ],
+          "tag": "button",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Erklär-Popover unter dem Trigger",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "font-size",
+                  "value": "14px",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [
+                {
+                  "actions": [
+                    {
+                      "args": [
+                        "InfoPopover",
+                      ],
+                      "isBuiltinStateFunction": false,
+                      "isFunctionCall": true,
+                      "type": "dismiss",
+                    },
+                  ],
+                  "name": "click",
+                },
+              ],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Schließen",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
+                  "property": "padding",
+                  "value": "6px 12px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "4px",
+                },
+                {
+                  "property": "border",
+                  "value": "0px solid currentColor",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#333",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "button",
+            },
+          ],
+          "events": [],
+          "id": "node-3",
+          "instanceName": "InfoPopover",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "display",
+              "value": "none",
+            },
+            {
+              "property": "padding",
+              "value": "16px",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+            {
+              "property": "border-radius",
+              "value": "8px",
+            },
+            {
+              "property": "color",
+              "value": "white",
+            },
+            {
+              "property": "width",
+              "value": "240px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "padding",
+          "value": "16px",
         },
       ],
       "tag": "div",
@@ -46570,6 +51598,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 20 1`] = `
           "events": [],
           "id": "node-2",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Title",
           "primitive": "title",
           "properties": [
@@ -46615,6 +51644,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 20 1`] = `
           "events": [],
           "id": "node-3",
           "isDefinition": false,
+          "isSlotFiller": true,
           "name": "Subtitle",
           "primitive": "subtitle",
           "properties": [
@@ -46791,6 +51821,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                   "events": [],
                   "id": "node-4",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -46820,6 +51851,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                   "events": [],
                   "id": "node-5",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Value",
                   "primitive": "value",
                   "properties": [],
@@ -46967,6 +51999,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                   "events": [],
                   "id": "node-8",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Label",
                   "primitive": "label",
                   "properties": [
@@ -46996,6 +52029,7 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 21 1`] = `
                   "events": [],
                   "id": "node-9",
                   "isDefinition": false,
+                  "isSlotFiller": true,
                   "name": "Value",
                   "primitive": "value",
                   "properties": [],

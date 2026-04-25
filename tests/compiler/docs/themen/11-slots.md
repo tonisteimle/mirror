@@ -38,14 +38,15 @@ sondern verteilt:
 
 **Coverage:** 9/9 Aspekte abgedeckt (zusammen mit Tutorial 02 Tests).
 
-## Tutorial-Limitations (entdeckt 2026-04-25)
+## Bugs gefixt (2026-04-25)
 
-- **`data-slot`-Attribut inkonsistent gesetzt:** Bei einer Card mit
-  `Title:` / `Desc:` / `Footer:` bekommen nur `Title` und `Footer` das
-  `data-slot="<name>"`-Attribut, `Desc` nicht. Sub-Slots (`Status:`,
-  `Action:` innerhalb von `Footer:`) bekommen es ebenfalls nicht.
-  Das `data-mirror-name`-Attribut wird konsistent gesetzt — Tests sollten
-  daher dieses verwenden, bis das Slot-Marker-Attribut konsistent gemacht ist.
+- **`data-slot`-Attribut inkonsistent gesetzt:** Vorher bekamen nur Slots
+  in der hardcoded `ZAG_SLOT_NAMES` (Title, Footer, Header, etc.) das
+  `data-slot="<name>"`-Attribut. Jetzt: jeder Slot-Filler bekommt es
+  konsistent. Implementiert via neues `IRNode.isSlotFiller` Flag, das im
+  IR-Transformer für alle Slot-Fillers (inkl. nested Sub-Slots wie
+  Status/Action innerhalb von Footer) gesetzt wird; der DOM-Emitter
+  emittiert dann `data-slot` für alle isSlotFiller-Nodes.
 
 ## Status
 

@@ -492,7 +492,7 @@ export function emitComponentAttributes(
   if (!node.name) return
 
   ctx.emit(`${varName}.dataset.component = '${node.name}'`)
-  if (zagSlotNames.has(node.name)) {
+  if (zagSlotNames.has(node.name) || node.isSlotFiller) {
     ctx.emit(`${varName}.dataset.slot = '${node.name}'`)
   }
 }

@@ -107,6 +107,7 @@ export interface IRNode {
   _sizing?: SizingFlags // Internal: tracks how width/height were sized (not CSS marker)
   needsContainer?: boolean // True if element uses size-states (needs container-type: inline-size)
   device?: string // Device size preset (mobile, tablet, desktop)
+  isSlotFiller?: boolean // True when this node is a slot filling a parent component's named slot
 }
 
 export interface IRProperty {

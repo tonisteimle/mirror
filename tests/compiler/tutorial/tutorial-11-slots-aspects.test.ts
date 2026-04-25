@@ -76,11 +76,32 @@ Card
     expect(action?.textContent).toBe('Weiter')
   })
 
-  // Known Tutorial-Limitation: only some slots get `data-slot="<name>"`
-  // attribute. In a Card with Title:/Desc:/Footer:, only Title and Footer
-  // get the data-slot attribute, Desc does not. Sub-slots (Status:, Action:)
-  // never get data-slot. The data-mirror-name attribute is consistent.
-  it.todo('data-slot attribute is consistent across all named slot definitions')
+  it('data-slot attribute is consistent across all named slot definitions', () => {
+    const { root } = renderWithRuntime(
+      `Card: w 260, bg #1a1a1a, rad 12
+  Title: w full, pad 16, col white
+  Desc: w full, pad 16, col #888
+  Footer: w full, pad 12 16, hor
+    Status: col #666
+    Action: pad 8 16, bg #2271C1
+
+Card
+  Title "T"
+  Desc "D"
+  Footer
+    Status "S"
+    Action "A"`,
+      container
+    )
+    const card = root.querySelector('[data-mirror-name="Card"]') as HTMLElement
+    // Every slot-defined component gets data-slot
+    expect(card.querySelector('[data-slot="Title"]')?.textContent).toBe('T')
+    expect(card.querySelector('[data-slot="Desc"]')?.textContent).toBe('D')
+    expect(card.querySelector('[data-slot="Footer"]')).toBeTruthy()
+    // Sub-slots inside Footer also get data-slot
+    expect(card.querySelector('[data-slot="Status"]')?.textContent).toBe('S')
+    expect(card.querySelector('[data-slot="Action"]')?.textContent).toBe('A')
+  })
 })
 
 // =============================================================================

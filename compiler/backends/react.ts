@@ -133,7 +133,37 @@ function generateJSX(
 }
 
 function getHtmlTag(componentName: string, compDef?: ComponentDefinition): string {
-  // Check primitive type
+  // Direct primitive name lookup (when used as instance without component def)
+  const primitiveTagMap: Record<string, string> = {
+    Frame: 'div',
+    Box: 'div',
+    Text: 'span',
+    Button: 'button',
+    Input: 'input',
+    Textarea: 'textarea',
+    Image: 'img',
+    Img: 'img',
+    Icon: 'span',
+    Link: 'a',
+    Divider: 'hr',
+    Spacer: 'div',
+    Header: 'header',
+    Nav: 'nav',
+    Main: 'main',
+    Section: 'section',
+    Article: 'article',
+    Aside: 'aside',
+    Footer: 'footer',
+    H1: 'h1',
+    H2: 'h2',
+    H3: 'h3',
+    H4: 'h4',
+    H5: 'h5',
+    H6: 'h6',
+  }
+  if (primitiveTagMap[componentName]) return primitiveTagMap[componentName]
+
+  // Check primitive type from component definition
   const primitive = compDef?.primitive?.toLowerCase()
 
   if (primitive === 'button') return 'button'
