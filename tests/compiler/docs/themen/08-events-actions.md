@@ -1,13 +1,10 @@
 # Thema 8: Events & Actions
 
-**Status:** Iteration 1 abgeschlossen (2026-04-25).
+**Status:** abgeschlossen (2026-04-25, nach Iteration 2).
 
-**Ergebnis:** 25 Tests, **0 Bugs gefunden** (Pipeline robust), event-emitter
-von 43.5% → **55.33% Lines (+11.8 pp)**. Ziel ≥80% wurde nicht erreicht —
-verbleibende Lücken sind in `emitRuntimeAction` (Show-Varianten showAt/
-Below/Above/Left/Right, animate, position, scroll-by, sämtliche CRUD-
-Actions: add/remove/create/save/delete/revert). Diese werden in einer
-Folge-Iteration angegangen, falls Bedarf.
+**Ergebnis:** **1 Bug gefixt** (`mapKeyName` fehlten `home`/`end` Mappings),
+73 Tests in 18 Bereichen, event-emitter von 43.5% → **93.25% Lines / 87.97%
+Branches / 96.42% Functions**.
 
 ## 1. Scope
 
@@ -148,33 +145,59 @@ Folge-Iteration angegangen, falls Bedarf.
       action chains, keyboard variants), 0 Bugs entdeckt
 - [x] Schritt 5: Coverage-Audit
 
-## Coverage nach Iteration 1
+## Coverage nach Iteration 2
 
-| Modul                                    | Vorher                  | Nachher                            |
-| ---------------------------------------- | ----------------------- | ---------------------------------- |
-| `compiler/backends/dom/event-emitter.ts` | 43.5% L / 32% B / 41% F | **55.33% L / 43.03% B / 57.14% F** |
+| Modul                                    | Vorher                  | Nach Iter 1                    | Nach Iter 2                        |
+| ---------------------------------------- | ----------------------- | ------------------------------ | ---------------------------------- |
+| `compiler/backends/dom/event-emitter.ts` | 43.5% L / 32% B / 41% F | 55.33% L / 43.03% B / 57.14% F | **93.25% L / 87.97% B / 96.42% F** |
 
-Globaler Effekt: 66.07% → **66.63% Lines (+0.56 pp)**.
+Globaler Effekt nach Iteration 2: **69.76% Lines** (gegenüber 66.07% vor Thema 8).
 
-## Was nicht abgedeckt ist (verbleibend bei 55%)
+## Bug-Fix
 
-- **Show-Varianten**: `showAt(target)`, `showBelow(target)`, `showAbove(target)`,
-  `showLeft(target)`, `showRight(target)`, `showModal()` — alle in
-  `emitPositionAction` (Zeile 475+ in event-emitter)
-- **Animate**: `animate(elem, "shake")` — `emitAnimateAction` (Zeile 450+)
-- **Scroll mit Args**: `scrollTo(target)`, `scrollBy(100)` — variante Pfade
-  in `emitScrollAction` (Zeile 497+)
-- **CRUD-Actions in Detail**: `add(items, {...})`, `remove(item)`,
-  `create({...})`, `save()`, `delete()`, `revert()` — werden in
-  `crud-operations.test.ts` separat getestet (keine Doppelarbeit hier)
-- **Value-Actions**: `assign(target, value)`, `get(target)` — in
-  `emitValueAction` (Zeile 538+)
-- **Input-Actions** (detail): `setError(F, "msg")`, `clearError(F)`,
-  `submit(form)` — in `emitInputAction` (Zeile 595+)
-- **State-Actions**: `select`, `activate`, `deactivate`, `dismiss`, `open`,
-  `close`, `page`, `call`, `blur`, `highlight(first/last)` — diverse
-  ungetestete Varianten in `emitRuntimeAction` (Zeile 214+)
+**`mapKeyName` fehlten `home`/`end` Key-Mappings.** Mirror-DSL `onkeydown(home)`
+produzierte `e.key === 'home'` (lowercase, browser-incompatible) statt
+`e.key === 'Home'` (Browser-Konstante). Bug entdeckt durch Iter-2-Test
+„onkeydown(home) maps to Home key". Fix: 2 Einträge in `mapKeyName` ergänzt
+(home → Home, end → End).
 
-Eine zweite Iteration mit fokussierten Tests für diese könnte event-emitter
-auf 80%+ heben — derzeit nicht priorisiert, da kein Bug-Hunt-Ergebnis
-und alle gängigen Patterns abgedeckt sind.
+## Iteration 2 — was getestet wurde
+
+73 Tests in 18 Bereichen:
+
+- **4.1 Position-Actions**: showBelow/Above/Left/Right (mit/ohne offset),
+  showAt mit position, showModal, dismiss (mit/ohne args)
+- **4.2 Animate**: single target, multi target, stagger
+- **4.3 Scroll**: scrollTo(target), scrollToTop(container), scrollToBottom,
+  scrollBy(2-arg), scrollBy(3-arg)
+- **4.4 Value Edges**: get(), increment(token, n), increment(token, key:val),
+  reset(token, n), set(token, "string")
+- **4.5 Input Variants**: blur, selectText, setError, clearError, clear
+- **4.6 State Actions**: open, close, select(highlighted), select(target),
+  activate, deactivate, deselect
+- **4.7 Highlight**: first, last, named target, selectHighlighted, Next/Prev
+- **4.8 Navigation**: forward, openUrl(url, true/false)
+- **4.9 toast**: 3-arg variant (message, type, position)
+- **4.10 copy/show/hide** mit explicit target
+- **4.11 Custom Function Fallback**: typeof X === 'function' Branch
+- **4.12 Keyboard Variants**: onspace, onkeyenter, arrow-left/right, home,
+  end, backspace
+- **4.13 No-Arg Variants**: activate(), deactivate(), close(), select(),
+  deselect(), selectHighlighted(), highlightNext/Prev(), blur(), setError(),
+  clearError() — alle ohne args (currentVar Fallback)
+- **4.14 setState**: 1-arg + 2-arg
+- **4.15 reset**: string-Initialwert
+- **4.17 CRUD**: create, save, revert, delete
+
+## Was nicht abgedeckt ist (verbleibend bei 93%)
+
+- **`toggle("on", "off")` mit explicit state list**: parsed als state-
+  trigger im Parser, nicht als action via emitRuntimeAction. Der
+  `_runtime.stateMachineToggle(currentVar, [states])`-Pfad ist über inline
+  `onclick toggle(...)` nicht erreichbar (nur über Component-Definition mit
+  `toggle()`-modifier).
+- **`page("next")`**: parser routet das offenbar nicht zur action-pipeline.
+  Möglicherweise inaktive Funktionalität — kann separat geprüft werden.
+- **`assign(target, value)`**: komplexer Pfad in `emitValueAction`.
+- **`emitTemplateEventListener`**: spezifischer Pfad für Template-Events im
+  each/if-Kontext — wird durch loop-emitter-Tests abgedeckt.

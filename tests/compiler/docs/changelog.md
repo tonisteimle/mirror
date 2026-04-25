@@ -4,6 +4,39 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Thema 8 Iteration 2 — Events & Actions abgeschlossen)
+
+User-Feedback: Iteration 1 (55% Coverage) entsprach nicht dem Anspruch. Iter
+2 schließt event-emitter auf bullet-proof-Niveau.
+
+### Fixed
+
+- **`mapKeyName` fehlten `home`/`end` Mappings**: `onkeydown(home)` produzierte
+  `e.key === 'home'` (lowercase, browser-incompatible) statt `'Home'`. Bug
+  entdeckt durch Iter-2-Test der Browser-Kompatibilität prüft. Fix: 2 Einträge
+  in `compiler/backends/dom/event-emitter.ts mapKeyName()` ergänzt.
+
+### Added
+
+- `tests/compiler/events-actions-iter2.test.ts` — 48 Tests in 13 zusätzlichen
+  Bereichen (Position-Actions, Animate, Scroll-mit-Args, Value-Edges, Input-
+  Variants, State-Actions, Highlight first/last, Navigation extras, toast
+  3-arg, copy-Variants, Custom-Function-Fallback, Keyboard-Shortcuts inkl.
+  home/end/backspace, No-Arg-Variants, setState, reset-string, CRUD
+  create/save/revert/delete).
+
+### Coverage
+
+| Modul                                    | Vorher | Nach Iter 1 | **Nach Iter 2**                            |
+| ---------------------------------------- | ------ | ----------- | ------------------------------------------ |
+| `compiler/backends/dom/event-emitter.ts` | 43.5%  | 55.33%      | **93.25%** L / **87.97%** B / **96.42%** F |
+
+Globaler Effekt: 66.07% → **69.76% Lines (+3.69 pp)**.
+
+Details: `tests/compiler/docs/themen/08-events-actions.md`.
+
+---
+
 ## 2026-04-25 (Thema 13 — Animationen)
 
 1 Bug gefixt (Custom-Animation-Parser crashte komplett) + 14 Tests.

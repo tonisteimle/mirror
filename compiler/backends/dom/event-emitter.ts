@@ -26,6 +26,8 @@ export function mapKeyName(key: string): string {
     'arrow-right': 'ArrowRight',
     backspace: 'Backspace',
     delete: 'Delete',
+    home: 'Home',
+    end: 'End',
   }
   return mapping[key] || key
 }
