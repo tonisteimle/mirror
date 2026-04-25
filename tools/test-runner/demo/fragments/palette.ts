@@ -24,7 +24,10 @@ export function paletteHighlight(
   componentId: string,
   opts: PaletteHighlightOptions = {}
 ): DemoAction[] {
-  const selector = `#components-panel [data-component-id="${componentId}"]`
+  // Palette items render as `.component-panel-item` with `dataset.id` —
+  // selector must be [data-id="..."], NOT [data-component-id]. (The earlier
+  // typo silently matched nothing, so the cursor visited an empty point.)
+  const selector = `#components-panel [data-id="${componentId}"]`
   return [
     { action: 'moveTo', target: selector },
     { action: 'highlight', target: selector, duration: opts.duration ?? 1200 },

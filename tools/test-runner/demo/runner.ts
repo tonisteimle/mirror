@@ -234,17 +234,10 @@ function getInlineDemoAPI(timings: ActionTimings): string {
       if (config) this.config = { ...this.config, ...config };
       this.overlay.init();
       this.overlay.setEnabled(this.config.showKeystrokeOverlay);
-      // Show the cursor immediately at a reasonable starting position so the
-      // viewer always sees the pointer — no invisible-cursor frames at start.
-      const previewEl = document.querySelector('#preview');
-      let startPos;
-      if (previewEl) {
-        const r = previewEl.getBoundingClientRect();
-        startPos = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-      } else {
-        startPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-      }
-      this.cursor.show(startPos);
+      // Fake demo cursor removed — the OS-level mouse driver (driver=os)
+      // now drives the real macOS cursor, so any synthetic SVG pointer would
+      // produce a confusing double-cursor. KeystrokeOverlay (key chips
+      // bottom-right) stays — it complements typing visually.
     }
 
     destroy() { this.cursor.hide(); this.overlay.destroy(); }
@@ -767,17 +760,198 @@ const MIRROR_ACTIONS_API = `
     return point;
   }
 
+  // Create a small "drag ghost" that follows the demo cursor by RAF
+  // polling the cursor's position. Returns a destroy function.
+  function attachDragGhost(label) {
+    const cursor = window.__mirrorDemo && window.__mirrorDemo.cursor;
+    if (!cursor) return function() {};
+    const ghost = document.createElement('div');
+    ghost.style.cssText =
+      'position:fixed;' +
+      'width:80px;height:60px;' +
+      'background:rgba(91,168,245,0.18);' +
+      'border:2px solid rgba(91,168,245,0.85);' +
+      'border-radius:6px;' +
+      'box-shadow:0 6px 20px rgba(0,0,0,0.35);' +
+      'pointer-events:none;' +
+      'z-index:999998;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'color:white;font-family:system-ui,-apple-system,sans-serif;' +
+      'font-size:11px;font-weight:600;' +
+      'text-shadow:0 1px 2px rgba(0,0,0,0.6);' +
+      'transform:translate(0,0);' +
+      'opacity:0;' +
+      'transition:opacity 180ms ease-out;';
+    ghost.textContent = label || '';
+    document.body.appendChild(ghost);
+
+    let rafHandle = 0;
+    let alive = true;
+    function tick() {
+      if (!alive) return;
+      const p = cursor.getPosition();
+      // Cursor tip is at p; offset ghost so it sits down-right of the tip.
+      ghost.style.left = (p.x + 14) + 'px';
+      ghost.style.top  = (p.y + 14) + 'px';
+      rafHandle = requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(function() { ghost.style.opacity = '1'; tick(); });
+
+    return function destroy() {
+      alive = false;
+      if (rafHandle) cancelAnimationFrame(rafHandle);
+      ghost.style.transition = 'opacity 220ms ease-in';
+      ghost.style.opacity = '0';
+      setTimeout(function() { ghost.remove(); }, 240);
+    };
+  }
+
+
+  // Apply a transient "pressed/grabbed" style to a palette item so the
+  // viewer sees the cursor actually engaging with it. Returns a release
+  // function that restores the original style.
+  function pressPaletteItem(el) {
+    if (!el) return function() {};
+    const prev = {
+      transform: el.style.transform,
+      boxShadow: el.style.boxShadow,
+      transition: el.style.transition,
+      filter: el.style.filter,
+    };
+    el.style.transition = 'transform 140ms ease-out, box-shadow 140ms ease-out, filter 140ms ease-out';
+    el.style.transform = (prev.transform || '') + ' scale(1.06)';
+    el.style.boxShadow = '0 8px 24px rgba(91,168,245,0.55), 0 0 0 2px rgba(91,168,245,0.85) inset';
+    el.style.filter = 'brightness(1.15)';
+    return function release() {
+      el.style.transition = 'transform 200ms ease-in, box-shadow 200ms ease-in, filter 200ms ease-in';
+      el.style.transform = prev.transform;
+      el.style.boxShadow = prev.boxShadow;
+      el.style.filter = prev.filter;
+      setTimeout(function() {
+        el.style.transition = prev.transition;
+      }, 220);
+    };
+  }
 
   async function dropFromPalette(component, targetSel, at) {
+    // 1. Always visit the palette source first so the viewer sees where
+    //    the dragged item is coming from. Palette items render as
+    //    .component-panel-item with dataset.id — selector must be
+    //    [data-id], NOT [data-component-id].
+    const lower = component.toLowerCase();
+    const paletteEl = document.querySelector('#components-panel [data-id="comp-' + lower + '"]')
+      || document.querySelector('#components-panel [data-id="' + lower + '"]');
+    if (paletteEl) await visitElement(paletteEl);
+
+    // === Special case: empty / canvas-only editor (no node tree yet) ===
+    // Mirror only renders DOM nodes for layout elements; a bare canvas
+    // declaration produces no [data-mirror-id]. The real Studio drag
+    // pipeline can't engage in this state. We synthesize a convincing
+    // drop visual ourselves: container highlight + insertion line at the
+    // predicted landing point, cursor glides there, code is appended via
+    // setTestCode just as the cursor arrives.
+    {
+      const editor = window.editor;
+      const codeBefore = editor && editor.state ? editor.state.doc.toString() : '';
+      const trimmed = codeBefore.trim();
+      const isEmpty = trimmed === '';
+      // Regex inside MIRROR_ACTIONS_API template — escape backslashes so
+      // \\b and \\n survive into the browser-side string.
+      const isCanvasOnly = /^canvas\\b[^\\n]*$/i.test(trimmed);
+      if (isEmpty || isCanvasOnly) {
+        const previewEl = document.querySelector('#preview');
+        const previewRect = previewEl.getBoundingClientRect();
+
+        // Predicted landing: a Frame w 100 h 100 would render at the
+        // top-left of the canvas in flex-column layout. The drop point
+        // sits just below the canvas top, horizontally centered on where
+        // the new element will appear (left + half the new element width).
+        const NEW_W = 100;
+        const dropPoint = {
+          x: previewRect.left + 24 + NEW_W / 2,
+          y: previewRect.top + 24 + NEW_W / 2,
+        };
+
+        // Synthetic container highlight + insertion line. Matches Mirror's
+        // own indicator colors so the viewer can't tell it's our fake.
+        const containerRing = document.createElement('div');
+        containerRing.style.cssText =
+          'position:fixed;' +
+          'left:' + (previewRect.left + 8) + 'px;' +
+          'top:' + (previewRect.top + 8) + 'px;' +
+          'width:' + (previewRect.width - 16) + 'px;' +
+          'height:' + (previewRect.height - 16) + 'px;' +
+          'border:2px dashed #5BA8F5;' +
+          'border-radius:8px;' +
+          'background:rgba(91,168,245,0.05);' +
+          'pointer-events:none;' +
+          'z-index:999990;' +
+          'opacity:0;' +
+          'transition:opacity 240ms ease-out;';
+        document.body.appendChild(containerRing);
+
+        const insertionLine = document.createElement('div');
+        insertionLine.style.cssText =
+          'position:fixed;' +
+          'left:' + (previewRect.left + 24) + 'px;' +
+          'top:' + (previewRect.top + 22) + 'px;' +
+          'width:' + Math.min(NEW_W * 1.5, previewRect.width - 48) + 'px;' +
+          'height:3px;' +
+          'background:#5BA8F5;' +
+          'box-shadow:0 0 8px rgba(91,168,245,0.6);' +
+          'border-radius:2px;' +
+          'pointer-events:none;' +
+          'z-index:999991;' +
+          'opacity:0;' +
+          'transition:opacity 200ms ease-out;';
+        document.body.appendChild(insertionLine);
+
+        // Visual pickup: press the palette item, then a ghost rectangle
+        // follows the cursor so the viewer literally sees the Frame
+        // travel from palette to drop point.
+        const releasePalette = pressPaletteItem(paletteEl);
+        const destroyGhost = attachDragGhost(component);
+
+        try {
+          // Show indicators just BEFORE the cursor arrives so they hit
+          // the eye at the right beat (not when cursor is far away).
+          const showAt = setTimeout(() => {
+            containerRing.style.opacity = '1';
+            insertionLine.style.opacity = '1';
+          }, 800);
+
+          const newLine = component + ' w 100, h 100, bg #27272a, rad 8';
+          const newCode = isEmpty ? newLine : (trimmed + '\\n\\n' + newLine);
+
+          await withVisibleDrag(dropPoint, async () => {
+            await window.__dragTest.setTestCode(newCode);
+          }, {
+            moveMs: 2500,
+            triggerFrac: 0.85,
+            preHoldMs: 300,
+            settleMs: 420,
+          });
+
+          clearTimeout(showAt);
+        } finally {
+          releasePalette();
+          destroyGhost();
+          // Fade out the synthetic indicators after the drop has landed.
+          containerRing.style.transition = 'opacity 280ms ease-in';
+          insertionLine.style.transition = 'opacity 200ms ease-in';
+          containerRing.style.opacity = '0';
+          insertionLine.style.opacity = '0';
+          setTimeout(() => { containerRing.remove(); insertionLine.remove(); }, 300);
+        }
+
+        await window.__dragTest.waitForCompile();
+        return;
+      }
+    }
+
     const targetId = resolveSelector(targetSel);
     const targetEl = document.querySelector('[data-mirror-id="' + targetId + '"]');
     if (!targetEl) throw new Error('Target ' + targetId + ' not found');
-
-    // 1. Make sure the cursor is sitting on the palette source so the viewer
-    //    sees where the dragged item is coming from.
-    const paletteEl = document.querySelector('#components-panel [data-component-id="' + component.toLowerCase() + '"]')
-      || document.querySelector('#components-panel [data-component-id="comp-' + component.toLowerCase() + '"]');
-    if (paletteEl) await visitElement(paletteEl);
 
     let endPoint;
     let chain = window.__dragTest.fromPalette(component).toContainer(targetId);
@@ -790,15 +964,27 @@ const MIRROR_ACTIONS_API = `
       chain = chain.atAlignmentZone(at.zone);
     }
 
-    // Visible drag: __dragTest's animation has been slowed (60 steps in
-    // video pacing ≈ 1300ms), so we fire it immediately and let the
-    // cursor traverse the same span — both arrive at the target together.
-    const result = await withVisibleDrag(endPoint, () => chain.execute(), {
-      moveMs: 1500,
-      triggerFrac: 0.05,
-      preHoldMs: 240,
-      settleMs: 320,
-    });
+    // Visual pickup of the palette item (press effect + drag ghost).
+    // The ghost lives independently of __dragTest's own visual cursor —
+    // showCursor:false is set in injectDemoAPI, so only our ghost shows.
+    const releasePalette = pressPaletteItem(paletteEl);
+    const destroyGhost = attachDragGhost(component);
+
+    let result;
+    try {
+      // Visible drag: __dragTest's animation has been slowed (60 steps in
+      // video pacing ≈ 1300ms), so we fire it immediately and let the
+      // cursor traverse the same span — both arrive at the target together.
+      result = await withVisibleDrag(endPoint, () => chain.execute(), {
+        moveMs: 1500,
+        triggerFrac: 0.05,
+        preHoldMs: 240,
+        settleMs: 320,
+      });
+    } finally {
+      releasePalette();
+      destroyGhost();
+    }
     if (!result || !result.success) {
       throw new Error('Drop failed: ' + ((result && result.error) || 'unknown'));
     }
@@ -1239,6 +1425,7 @@ const MIRROR_ACTIONS_API = `
 
   window.__mirrorActions = {
     resolveSelector,
+    dropChildIndexPoint,
     snapshotElement,
     snapshotAllByPreviewOrder,
     dropFromPalette,
@@ -1319,6 +1506,9 @@ export class DemoRunner {
   private snapshotThreshold: number = 0.1
   private snapshotCounter: number = 0
   private snapshotMismatches: string[] = []
+  // OS-level mouse driver (drives the real macOS cursor)
+  private osMouseEnabled: boolean = false
+  private osMouse?: import('./os-mouse').OsMouse
 
   constructor(cdp: CDPSession, options: DemoRunnerOptions = {}) {
     this.cdp = cdp
@@ -1346,6 +1536,9 @@ export class DemoRunner {
     this.snapshotDir = snapshotDir
     this.snapshotBaselineDir = snapshotBaselineDir
     if (typeof snapshotThreshold === 'number') this.snapshotThreshold = snapshotThreshold
+    // OS mouse: enable when configured. The actual OsMouse is constructed
+    // lazily in injectDemoAPI so we can pass evaluate as a bound callback.
+    this.osMouseEnabled = (options as { osMouse?: boolean }).osMouse ?? false
   }
 
   /**
@@ -2128,6 +2321,14 @@ export class DemoRunner {
     // High-level Mirror actions API (E1, E2, B1, B2)
     await this.evaluate(MIRROR_ACTIONS_API)
 
+    // OS-level mouse: load lazily so the import is only paid for when used.
+    if (this.osMouseEnabled) {
+      const { OsMouse } = await import('./os-mouse')
+      this.osMouse = new OsMouse(expr => this.evaluate(expr))
+      await this.osMouse.calibrate()
+      console.log(`   🖱️  OS mouse driver active (real macOS cursor)`)
+    }
+
     // AI mock fixtures (B2): install on window before any aiPrompt
     if (this.aiMock && Object.keys(this.aiMock).length > 0) {
       await this.evaluate(`
@@ -2719,10 +2920,79 @@ export class DemoRunner {
       `${prefix} 🧩 Drop ${step.component} → ${this.describeSelector(step.target)} @ ${where}` +
         (step.comment ? ` — ${step.comment}` : '')
     )
-    await this.evaluate(
-      `window.__mirrorActions.dropFromPalette(${JSON.stringify(step.component)}, ${JSON.stringify(step.target)}, ${JSON.stringify(step.at)})`
-    )
+    if (this.osMouse) {
+      await this.runDropFromPaletteOs(step)
+    } else {
+      await this.evaluate(
+        `window.__mirrorActions.dropFromPalette(${JSON.stringify(step.component)}, ${JSON.stringify(step.target)}, ${JSON.stringify(step.at)})`
+      )
+    }
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  /**
+   * OS-mouse-driven palette drop: real macOS cursor visibly travels from the
+   * palette item to the drop target. Browser receives native HTML5 drag
+   * events (palette items are draggable=true), so Mirror's full drag
+   * pipeline engages — drop indicator, hover effects, the works.
+   */
+  private async runDropFromPaletteOs(
+    step: Extract<DemoAction, { action: 'dropFromPalette' }>
+  ): Promise<void> {
+    const lower = step.component.toLowerCase()
+    // Find palette item rect (page coords)
+    const paletteRect = await this.evaluate<{ x: number; y: number; w: number; h: number } | null>(`
+      (() => {
+        const el = document.querySelector('#components-panel [data-id="comp-${lower}"]')
+                 || document.querySelector('#components-panel [data-id="${lower}"]');
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { x: r.left, y: r.top, w: r.width, h: r.height };
+      })()
+    `)
+    if (!paletteRect) throw new Error(`Palette item for ${step.component} not found`)
+
+    // Find drop point (page coords). For canvas-only states we drop in the
+    // preview center; otherwise use the resolved target's child-index point.
+    const targetSelector = JSON.stringify(step.target)
+    const at = JSON.stringify(step.at)
+    const dropPoint = await this.evaluate<{ x: number; y: number }>(`
+      (() => {
+        const target = ${targetSelector};
+        const at = ${at};
+        let targetId = null;
+        try { targetId = window.__mirrorActions.resolveSelector(target); } catch (_e) {}
+        const targetEl = targetId ? document.querySelector('[data-mirror-id="' + targetId + '"]') : null;
+        if (!targetEl) {
+          // No target node — drop just inside the preview top, where the
+          // first top-level Mirror element will render in flex-column.
+          const preview = document.querySelector('#preview');
+          const r = preview.getBoundingClientRect();
+          return { x: r.left + 80, y: r.top + 80 };
+        }
+        if (at.kind === 'index') {
+          return window.__mirrorActions.dropChildIndexPoint(targetEl, at.index);
+        }
+        const r = targetEl.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      })()
+    `)
+
+    const startX = paletteRect.x + paletteRect.w / 2
+    const startY = paletteRect.y + paletteRect.h / 2
+    await this.osMouse!.dragPage(startX, startY, dropPoint.x, dropPoint.y, {
+      preHoldMs: 220,
+      settleMs: 360,
+    })
+
+    // Give Mirror's drop handler time to process and the editor to compile.
+    await this.evaluate(`
+      (async () => {
+        if (window.__dragTest && window.__dragTest.waitForCompile) {
+          await window.__dragTest.waitForCompile();
+        }
+      })()
+    `)
   }
 
   private async runMoveElement(

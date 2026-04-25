@@ -68,6 +68,8 @@ interface CLIArgs {
   demoSnapshots?: string
   demoSnapshotBaseline?: string
   demoSnapshotThreshold?: number
+  // OS mouse driver (real macOS cursor)
+  osMouse?: boolean
 }
 
 // Panel visibility presets for test categories
@@ -143,6 +145,7 @@ function parseArgs(): CLIArgs {
     // Snapshots (C4)
     demoSnapshots: getArgValue(args, '--snapshot-dir'),
     demoSnapshotBaseline: getArgValue(args, '--snapshot-baseline'),
+    osMouse: args.includes('--driver=os') || args.includes('--os-mouse'),
     demoSnapshotThreshold: getArgValue(args, '--snapshot-threshold')
       ? parseFloat(getArgValue(args, '--snapshot-threshold')!)
       : undefined,
@@ -684,6 +687,7 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
         snapshotDir?: string
         snapshotBaselineDir?: string
         snapshotThreshold?: number
+        osMouse?: boolean
       } = {
         speed: isValidateMode ? 'fast' : args.demoSpeed || 'normal',
         pacing: pacing as any,
@@ -698,6 +702,7 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
         snapshotDir: args.demoSnapshots,
         snapshotBaselineDir: args.demoSnapshotBaseline,
         snapshotThreshold: args.demoSnapshotThreshold,
+        osMouse: args.osMouse,
       }
 
       // Get CDP session for demo runner
