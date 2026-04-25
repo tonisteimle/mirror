@@ -4,6 +4,48 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Property-based Testing – Phase 2)
+
+Phase 2 der Bullet-Proof-Strategie: Property-based Testing mit fast-check
+für die 5 zentralen Compiler-Funktionen.
+
+### Added
+
+- **fast-check 4.7** als devDependency (`--legacy-peer-deps` wegen Vitest 4
+  Peer-Konflikt).
+- **`tests/compiler/properties-property-based.test.ts`** — 31 Property-Tests
+  (à 1000 Runs = 31'000 randomisierte Inputs, ~570ms Laufzeit) für:
+  - **mergeProperties** (8 Properties): identity, last-wins, layout-keyword
+    Order-Sensitivität, directional-key-Separation, Längen-Invariante,
+    Idempotenz.
+  - **formatCSSValue** (6 Properties): integer→px, Unit-Preservation
+    (%, vh/vw, em/rem/ch), non-px-Properties unverändert, Multi-Value-
+    Roundtrip, Idempotenz auf bereits formatierten Werten, Float-Behandlung.
+  - **schemaPropertyToCSS** (5 Properties): unknown → handled=false,
+    `width N%` preserve %, numeric → px, hex-Color-Preservation,
+    boolean-Standalone-Properties.
+  - **expandPropertySets** (5 Properties): empty Map → identity, Pass-through
+    bei nicht-matchenden Properties, Propset-Expansion, PascalCase-Component-
+    Mixin-Expansion, unbekannte Propset-Refs werden nicht gecrasht.
+  - **generateLayoutStyles** (7 Properties): Frame default (flex+column),
+    Text default (kein flex), grid-Präzedenz, gap-Hierarchie, last-hor/ver-wins
+    via `applyAlignmentsToContext`, no-crash auf arbitrary keyword sequences,
+    alle Style-Outputs haben non-empty property+value.
+
+### Bedeutung
+
+Bisherige Tests prüften ausgewählte Beispiele ("klappt für 7 Cases"); diese
+Tests prüfen **Invarianten** ("klappt für jeden Input in der Domäne").
+fast-check shrinkt Counter-Examples automatisch zur minimalen Form — wenn
+eine Regression auftritt, kommt der kleinste fehlerhafte Input zurück, nicht
+ein zufällig grosser.
+
+Keine neuen Bugs entdeckt — die Funktionen halten ihre Invarianten unter
+Random-Stress. Das bestätigt die Robustheit der bereits durchgegangenen
+Themen 1–6 quantitativ.
+
+---
+
 ## 2026-04-25 (Layout Iteration 3 – Thema 4 noch tiefer)
 
 Dritter Pass über Layout. Coverage von ~70-75% auf ~85% gehoben.

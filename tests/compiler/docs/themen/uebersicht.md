@@ -193,3 +193,28 @@ Die Themen 7–20 müssen **konkrete Coverage-Ziele** pro Modul setzen:
 
 - **Thema 21 (NEU): React-Backend** — 0% Coverage, eigenes Thema notwendig
 - **Thema 22 (NEU): DOM-Backend Cross-Cutting** — `backends/dom.ts` (60%) und Backend-Internals (emitter-context, helpers)
+
+## Querschnitts-Phasen (Bullet-Proof-Strategie)
+
+Parallel zu den Themen 1–22 laufen Querschnitts-Phasen, die nicht an einen
+einzelnen Bereich gebunden sind, sondern **Test-Methodik** ergänzen:
+
+| Phase | Methode                      | Status        | Notiz                                                                  |
+| ----- | ---------------------------- | ------------- | ---------------------------------------------------------------------- |
+| 1     | Real Coverage (V8)           | abgeschlossen | `npm test -- --coverage` (siehe Tabellen oben)                         |
+| 2     | Property-based (fast-check)  | abgeschlossen | 31 Properties × 1000 Runs für die 5 zentralen IR-Funktionen            |
+| 3     | Mutation Testing (Stryker)   | offen         | Misst, ob Tests Mutationen wirklich fangen                             |
+| 4     | Differential Testing         | offen         | DOM-Backend ↔ React-Backend (gleiches IR, äquivalentes Output)         |
+| 5     | Fuzz-Expansion (Parser/IR)   | offen         | Heutiger `fuzz.test.ts` ist klein — auf alle Pipeline-Stufen erweitern |
+| 6     | Visual Regression            | offen         | Pixel-Diff für Demo-Outputs                                            |
+| 7     | Integration-Tests (Pipeline) | offen         | End-to-end: `.mir` → DOM → gerendert → Snapshot                        |
+
+**Phase 2 (abgeschlossen, 2026-04-25):**
+
+- **31 Property-Tests** in `tests/compiler/properties-property-based.test.ts`
+- **31'000 zufällige Inputs** pro Lauf (1000 Runs × 31 Properties)
+- **Funktionen unter Test:** `mergeProperties`, `formatCSSValue`,
+  `schemaPropertyToCSS`, `expandPropertySets`, `generateLayoutStyles`
+- **Ergebnis:** Keine neuen Bugs entdeckt — die Funktionen halten ihre
+  Invarianten unter Random-Stress. Quantitative Bestätigung der Robustheit
+  der Themen 1–6.
