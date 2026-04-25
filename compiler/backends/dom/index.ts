@@ -25,15 +25,8 @@ export type {
 // Utilities
 export { escapeJSString, sanitizeVarName, cssPropertyToJS, generateVarName } from './utils'
 
-// Zag Emitters
-export {
-  dispatchZagEmitter,
-  registerZagEmitter,
-  emitSlotStyles,
-  emitComponentHeader,
-  emitMachineConfig,
-  emitRuntimeInit,
-} from './zag-emitters'
+// Zag Emitters (DatePicker only)
+export { dispatchZagEmitter, emitRuntimeInit, emitDatePickerComponent } from './zag-emitters'
 
 // State Machine Emitter
 export {

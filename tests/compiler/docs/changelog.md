@@ -4,6 +4,63 @@ Chronologische Liste aller Bug-Fixes und Features.
 
 ---
 
+## 2026-04-25 (Themen 7/12/13 Iter 2 — Coverage-Anspruch erreicht)
+
+User-Feedback: „Die Coverage ist nie auf dem Stand, den wir wollen … bei den
+ersten Themen hatten wir Coverage über 90%." `uebersicht.md` sagt explizit:
+„Ein Thema, das nur bei 30-40% Coverage hängt, bleibt im Status 'Schritt 4
+in Arbeit'." Iter 2 für Themen 7, 12, 13:
+
+### Thema 7 (States)
+
+- 6 direkte Unit-Tests für state-child-transformer (null-Instance,
+  Legacy-Pfad, recursive children, HTML-extraction).
+- state-child-transformer **80% L → 100% L / 93.75% B / 100% F**.
+
+### Thema 12 (DatePicker)
+
+- ~700 LOC dead code entfernt — analog zur ersten Zag-Cleanup-Aktion:
+  - `parser/zag-parser.ts`: parseZagItem (356 LOC) + parseZagGroup (100 LOC)
+    - Aufrufstellen weg → 1083 → 547 LOC. DatePicker hat keine Items/Groups
+      (`itemKeywords: []` im Schema).
+  - `ir/transformers/zag-transformer.ts`: transformItems, getDefaultForProp,
+    ExtendedIRItem-Interface, alle nicht-DatePicker case-Branches in
+    processMachineConfigProperty entfernt. MACHINE_CONFIG_PROPS auf 14
+    Einträge reduziert (von 81).
+  - `backends/dom/zag/helpers.ts`: emitSlotStyles, emitComponentHeader,
+    emitMachineConfig, formatFieldLabel entfernt.
+  - `backends/dom/zag/index.ts`: registerZagEmitter entfernt.
+- 17 zusätzliche Tests (Slot-Bodies, Transformer-Paths, Calendar-Slots,
+  Parser-Branches).
+- Coverage:
+  - overlay-emitters **70.73% → 100%** L
+  - helpers **45.65% → 100%** L
+  - zag-transformer **42.96% → 85.71%** L / 85.71% F
+  - zag-parser **11.88% → 69.69%** L / **100%** F
+  - (Funcs 100% in beiden → keine ungetestete Funktion mehr;
+    Branches in zag-parser bei 65% durch optionale slot-body-Pfade)
+
+### Thema 13 (Animations)
+
+- 12 zusätzliche Tests: roles-Klausel (4), duration bei ms-keyframes (3),
+  unknown-tokens-recovery (1), property-target+string/identifier value (3),
+  error-recovery zwischen Definitionen (1).
+- animation-parser **71.13% → 91.75%** L / 82.71% B / **100%** F.
+- animation-emitter **94.87% → 100%** L / **100%** B / **100%** F.
+
+### Globaler Coverage-Effekt
+
+Lines: 70.02% → **74.7% (+4.68 pp)** durch die drei Iter-2-Aktionen
+zusammen.
+
+### Lesson learned
+
+Kein Thema mehr „abgeschlossen" markieren bevor Coverage-Audit wirklich
+durchgezogen ist. Bei niedrigen Coverage-Werten: erst dead code löschen,
+dann gezielt Tests für die letzten Branches.
+
+---
+
 ## 2026-04-25 (Thema 8 Iteration 2 — Events & Actions abgeschlossen)
 
 User-Feedback: Iteration 1 (55% Coverage) entsprach nicht dem Anspruch. Iter

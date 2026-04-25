@@ -1,28 +1,15 @@
 /**
  * Zag Emitter Helper Functions
  *
- * Shared utilities for all Zag component emitters.
+ * Shared utilities for the DatePicker emitter (the only remaining Zag
+ * component after the 2026-04-25 cleanup).
  */
 
-import type { IRZagNode, IRSlot } from '../../../ir/types'
+import type { IRZagNode } from '../../../ir/types'
 import type { ZagEmitterContext } from '../zag-emitter-context'
 
-export function emitSlotStyles(
-  ctx: ZagEmitterContext,
-  varName: string,
-  slot: IRSlot | undefined
-): void {
-  if (!slot?.styles?.length) return
-  ctx.emit(`${varName}.setAttribute('data-styled', 'true')`)
-  ctx.emit(`Object.assign(${varName}.style, {`)
-  ctx.indentIn()
-  slot.styles.forEach(s => ctx.emit(`'${s.property}': '${s.value}',`))
-  ctx.indentOut()
-  ctx.emit('})')
-}
-
 /**
- * Container default styles that should NOT be applied to Zag components
+ * Container default styles that should NOT be applied to Zag components.
  * These are automatically added by the IR transformer for Frame elements
  * but Zag components have their own default layout.
  */
@@ -39,14 +26,13 @@ const CONTAINER_DEFAULTS_TO_SKIP = new Set([
 ])
 
 /**
- * Emit root element styles combining node.styles and Root slot styles
+ * Emit root element styles combining node.styles and Root slot styles.
  * Filters out container defaults that shouldn't override Zag component styling.
  */
 export function emitRootStyles(ctx: ZagEmitterContext, varName: string, node: IRZagNode): void {
   const nodeStyles = node.styles || []
   const rootSlotStyles = node.slots?.['Root']?.styles || []
 
-  // Filter out container defaults from node.styles
   const filteredNodeStyles = nodeStyles.filter(style => {
     const styleKey = `${style.property}:${style.value}`
     return !CONTAINER_DEFAULTS_TO_SKIP.has(styleKey)
@@ -65,47 +51,8 @@ export function emitRootStyles(ctx: ZagEmitterContext, varName: string, node: IR
   ctx.emit('})')
 }
 
-export function emitComponentHeader(
-  ctx: ZagEmitterContext,
-  node: IRZagNode,
-  varName: string,
-  tagName: string,
-  zagType: string
-): void {
-  ctx.emit(`// ${node.name || zagType} Component`)
-  ctx.emit(`const ${varName} = document.createElement('${tagName}')`)
-  ctx.emit(`_elements['${node.id}'] = ${varName}`)
-  ctx.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-  ctx.emit(`${varName}.dataset.zagComponent = '${zagType}'`)
-  if (node.name) ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-}
-
 /**
- * Emit the machine configuration
- */
-export function emitMachineConfig(
-  ctx: ZagEmitterContext,
-  varName: string,
-  zagType: string,
-  nodeId: string,
-  machineConfig: Record<string, unknown>,
-  extra?: string
-): void {
-  ctx.emit(`${varName}._zagConfig = {`)
-  ctx.indentIn()
-  ctx.emit(`type: '${zagType}',`)
-  ctx.emit(`id: '${nodeId}',`)
-  ctx.emit(`machineConfig: ${JSON.stringify(machineConfig)},`)
-  if (extra) {
-    ctx.emit(extra)
-  }
-  ctx.indentOut()
-  ctx.emit(`}`)
-  ctx.emit('')
-}
-
-/**
- * Emit runtime initialization
+ * Emit runtime initialization for a Zag component.
  */
 export function emitRuntimeInit(ctx: ZagEmitterContext, varName: string, initFn: string): void {
   ctx.emit(`// Initialize ${initFn.replace('init', '').replace('Component', '')}`)
@@ -115,19 +62,4 @@ export function emitRuntimeInit(ctx: ZagEmitterContext, varName: string, initFn:
   ctx.indentOut()
   ctx.emit(`}`)
   ctx.emit('')
-}
-
-/**
- * Format a field name into a human-readable label
- * e.g., "firstName" -> "First Name", "user_email" -> "User Email"
- */
-export function formatFieldLabel(fieldName: string): string {
-  return fieldName
-    .replace(/([A-Z])/g, ' $1') // camelCase to spaces
-    .replace(/[_-]/g, ' ') // snake_case/kebab-case to spaces
-    .replace(/\s+/g, ' ') // normalize spaces
-    .trim()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ')
 }

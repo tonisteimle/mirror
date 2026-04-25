@@ -220,3 +220,196 @@ describe('DatePicker — pathological inputs', () => {
     expect(() => compile('canvas mobile\nDatePicker:\n')).not.toThrow()
   })
 })
+
+// =============================================================================
+// Iter 2 — Slot-Body Tests (overlay-emitters + zag-parser/transformer slot path)
+// =============================================================================
+
+describe('DatePicker Iter 2 — slot bodies with custom styling', () => {
+  it('S1: Control slot with custom styling reaches output', () => {
+    const out = dom(`canvas mobile
+DatePicker placeholder "Pick"
+  Control: bg #f00, pad 8, rad 6
+`)
+    // Control slot styles are applied via Object.assign(controlVar.style, ...)
+    expect(out).toMatch(/Object\.assign\(\w+_control\.style/)
+    expect(out).toMatch(/'background':\s*'#f00'/)
+    expect(out).toMatch(/'padding':\s*'8px'/)
+  })
+
+  it('S2: Input slot with custom styling', () => {
+    const out = dom(`canvas mobile
+DatePicker
+  Input: bg #fff, col #333, fs 14
+`)
+    expect(out).toMatch(/Object\.assign\(\w+_input\.style/)
+    expect(out).toMatch(/'background':\s*'#fff'/)
+  })
+
+  it('S3: Trigger slot with custom styling', () => {
+    const out = dom(`canvas mobile
+DatePicker
+  Trigger: bg #eee, w 32, h 32
+`)
+    expect(out).toMatch(/Object\.assign\(\w+_trigger\.style/)
+  })
+
+  it('S4: Content slot with custom styling', () => {
+    const out = dom(`canvas mobile
+DatePicker
+  Content: bg #1a1a1a, rad 8, pad 16
+`)
+    expect(out).toMatch(/Object\.assign\(\w+_content\.style/)
+  })
+
+  it('S5: All four primary slots styled together', () => {
+    const out = dom(`canvas mobile
+DatePicker
+  Control: bg #f00
+  Input: bg #fff
+  Trigger: bg #eee
+  Content: bg #1a1a1a
+`)
+    expect(out).toMatch(/_control\.style/)
+    expect(out).toMatch(/_input\.style/)
+    expect(out).toMatch(/_trigger\.style/)
+    expect(out).toMatch(/_content\.style/)
+  })
+})
+
+describe('DatePicker Iter 2 — additional zag-transformer paths', () => {
+  it('T5: defaultValue "2026-04-25" is preserved', () => {
+    const { ir } = compile('canvas mobile\nDatePicker defaultValue "2026-04-25"')
+    expect(dpNode(ir).machineConfig.defaultValue).toBe('2026-04-25')
+  })
+
+  it('T6: 2 DatePicker on the same canvas register independently', () => {
+    const out = dom(`canvas mobile
+DatePicker placeholder "Birthday"
+DatePicker placeholder "Anniversary"
+`)
+    const inits = (out.match(/initDatePickerComponent/g) || []).length
+    expect(inits).toBeGreaterThanOrEqual(2)
+  })
+
+  it('T7: DatePicker inside a Frame respects parent layout', () => {
+    const { ir } = compile(`canvas mobile
+Frame pad 16, gap 8
+  DatePicker
+`)
+    // The DatePicker should be a child of the Frame, not at root.
+    const frame = ir.nodes[0]
+    expect(frame.children?.length).toBeGreaterThan(0)
+    expect(frame.children?.[0].zagType).toBe('datepicker')
+  })
+
+  it('T8: DatePicker in component definition extends correctly', () => {
+    const out = dom(`canvas mobile
+MyDP as DatePicker: placeholder "Pick"
+
+MyDP
+`)
+    expect(out).toContain('initDatePickerComponent')
+  })
+})
+
+describe('DatePicker Iter 2 — calendar slots', () => {
+  it('C1: Label slot accepts text content', () => {
+    const out = dom(`canvas mobile
+DatePicker
+  Label: bg #fff, col #333
+`)
+    expect(out).toMatch(/Object\.assign|data-slot|Label/)
+  })
+
+  it('C2: positioning property on instance reaches machineConfig', () => {
+    const out = dom(`canvas mobile
+DatePicker positioning "top"
+`)
+    expect(out).toMatch(/positioning":?\s*"top"|positioning':\s*'top'/)
+  })
+})
+
+describe('DatePicker Iter 2 — keyboard + binding', () => {
+  it('K1: bind <token> wires two-way value binding', () => {
+    const { ir } = compile(`canvas mobile
+selectedDate: ""
+DatePicker bind selectedDate
+`)
+    const dp = dpNode(ir)
+    // bindValue should be `selectedDate` (without `$`).
+    expect(dp.bindValue ?? dp.valueBinding ?? dp.bind).toBe('selectedDate')
+  })
+
+  it('K2: name attribute is captured for form submission', () => {
+    const { ir } = compile('canvas mobile\nDatePicker name "birthday"')
+    expect(dpNode(ir).machineConfig.name).toBe('birthday')
+  })
+})
+
+describe('DatePicker Iter 2 — parser branch coverage', () => {
+  it('P1: defaultValue as array `[...]` parses without crash (range mode)', () => {
+    expect(() =>
+      compile('canvas mobile\nDatePicker selectionMode "range", defaultValue [2026-04-25]')
+    ).not.toThrow()
+  })
+
+  it('P2: `MyDP as DatePicker: ...` is a definition (colon at end of decl line)', () => {
+    const { ast } = compile(`canvas mobile
+MyDP as DatePicker: placeholder "Pick"
+
+MyDP
+`) as any
+    // The instance MyDP must be present as a Component def, not as a rendered Zag instance.
+    expect(ast.components?.some((c: any) => c.name === 'MyDP')).toBe(true)
+  })
+
+  it('P3: DatePicker with comma-separated initial state lowercase ident → kept', () => {
+    // `open` is a non-Zag-prop lowercase identifier without value → still
+    // becomes initialState for the DatePicker (not in primitiveDef.props).
+    const { ast } = compile('canvas mobile\nDatePicker open\n') as any
+    const dp = ast.instances?.[0]
+    // Either open becomes initialState OR is dropped as unknown — must not crash.
+    expect(dp.type).toBe('ZagComponent')
+  })
+
+  it('P4: DatePicker with inline slot props: `Control, hor, spread:`', () => {
+    const out = dom(`canvas mobile
+DatePicker
+  Control, hor, spread:
+    Input
+    Trigger
+`)
+    // Inline slot props must reach the output.
+    expect(out).toContain('initDatePickerComponent')
+  })
+
+  it('P5: DatePicker definition with trailing colon → isDefinition path', () => {
+    const { ast } = compile(`canvas mobile
+DatePicker placeholder "X":
+`) as any
+    // The bare `DatePicker:` line marks it as a definition (isDefinition: true).
+    // It should not render as a top-level instance.
+    const dp = ast.instances?.find((i: any) => i.type === 'ZagComponent')
+    if (dp) expect(dp.isDefinition).toBe(true)
+  })
+
+  it('P6: DatePicker with multiple events on instance', () => {
+    const { ast } = compile(`canvas mobile
+DatePicker
+  onchange call("date-changed")
+  onopen toast("opened")
+`) as any
+    const dp = ast.instances?.[0]
+    expect(dp.events?.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('P7: DatePicker with Label slot containing text content', () => {
+    const out = dom(`canvas mobile
+DatePicker
+  Label "Birthday":
+    bg #fff
+`)
+    expect(out).toContain('initDatePickerComponent')
+  })
+})

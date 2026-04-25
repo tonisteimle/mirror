@@ -124,8 +124,8 @@ export interface EmitterContext extends BaseEmitterContext {
 // =============================================================================
 
 /**
- * Context for Zag component emitters.
- * Subset of EmitterContext with methods needed by Zag emitters.
+ * Context for the DatePicker (sole) Zag component emitter.
+ * Subset of EmitterContext with the methods used by overlay-emitters.ts.
  */
 export type ZagEmitterContext = Pick<
   EmitterContext,
@@ -137,7 +137,6 @@ export type ZagEmitterContext = Pick<
   | 'sanitizeVarName'
   | 'escapeString'
   | 'emitNode'
-  | 'emitSlotStyles'
 >
 
 /**

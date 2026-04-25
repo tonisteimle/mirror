@@ -1,9 +1,19 @@
 # Thema 12: DatePicker
 
-**Status:** abgeschlossen (2026-04-25).
+**Status:** abgeschlossen (2026-04-25, nach Iteration 2).
 
-**Ergebnis:** **3 echte Bugs entdeckt UND gefixt**, 27 Tests in 4 Bereichen,
-Coverage-Sprung in den DatePicker-Pfaden.
+**Ergebnis (Iter 1+2):** **3 echte Bugs gefixt** (Iter 1: zag-parser
+initialState misinterpret, MACHINE_CONFIG_PROPS missing positioning,
+boolean-as-IDENTIFIER Token-Bug), **47 Tests** in 9 Bereichen, dazu
+**~700 LOC dead code aus zag-parser, zag-transformer, zag/helpers entfernt**.
+
+| Modul                                  | Vorher | Nachher                           |
+| -------------------------------------- | ------ | --------------------------------- |
+| `backends/dom/zag/overlay-emitters.ts` | 1.21%  | **100%** L / 95% B / 100% F       |
+| `backends/dom/zag/helpers.ts`          | 2.17%  | **100%** L / 50% B / 100% F       |
+| `backends/dom/zag/index.ts`            | 8.33%  | **83.33%** L / 50% B / 100% F     |
+| `ir/transformers/zag-transformer.ts`   | 0.75%  | **85.71%** L / 60.6% B / 85.71% F |
+| `parser/zag-parser.ts`                 | 0.26%  | **69.69%** L / 65.74% B / 100% F  |
 
 **Was gefixt wurde:**
 

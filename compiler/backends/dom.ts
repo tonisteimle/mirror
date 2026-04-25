@@ -174,18 +174,6 @@ class DOMGenerator {
       sanitizeVarName: (id: string) => this.sanitizeVarName(id),
       escapeString: str => this.escapeString(str),
       emitNode: (node: IRNode, parentVar: string) => this.emitNode(node, parentVar),
-      emitSlotStyles: (varName: string, slot) => {
-        if (slot?.styles && slot.styles.length > 0) {
-          this.emit(`${varName}.setAttribute('data-styled', 'true')`)
-          this.emit(`Object.assign(${varName}.style, {`)
-          this.indent++
-          for (const style of slot.styles) {
-            this.emit(`'${style.property}': '${style.value}',`)
-          }
-          this.indent--
-          this.emit('})')
-        }
-      },
     }
   }
 

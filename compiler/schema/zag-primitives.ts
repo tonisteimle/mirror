@@ -99,6 +99,9 @@ export const ZAG_PRIMITIVES: Record<string, ZagPrimitiveDef> = {
     events: ['onchange', 'onopen', 'onclose', 'onviewchange'],
     description: 'Date picker calendar',
     pattern: 'complex-nested',
+    // DatePicker has no Items or Groups — default `['Item']` would otherwise
+    // route stray `Item ...` lines through parseZagItem (dead code path).
+    itemKeywords: [],
   },
 }
 
