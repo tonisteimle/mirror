@@ -2388,9 +2388,13 @@ export class DemoRunner {
       case 'moveTo':
         console.log(`${prefix} Move to ${step.target}`)
         try {
-          await this.evaluate(
-            `__mirrorDemo.moveTo('${this.escape(step.target)}'${step.duration ? `, ${step.duration}` : ''})`
-          )
+          if (this.osMouse) {
+            await this.osMoveToSelector(step.target)
+          } else {
+            await this.evaluate(
+              `__mirrorDemo.moveTo('${this.escape(step.target)}'${step.duration ? `, ${step.duration}` : ''})`
+            )
+          }
         } catch (err) {
           console.log(
             `        ⚠️  MoveTo warning: ${err instanceof Error ? err.message : String(err)}`
@@ -2401,9 +2405,13 @@ export class DemoRunner {
       case 'click':
         console.log(`${prefix} Click${step.target ? ` on ${step.target}` : ''}`)
         try {
-          await this.evaluate(
-            `__mirrorDemo.click(${step.target ? `'${this.escape(step.target)}'` : ''})`
-          )
+          if (this.osMouse && step.target) {
+            await this.osClickSelector(step.target)
+          } else {
+            await this.evaluate(
+              `__mirrorDemo.click(${step.target ? `'${this.escape(step.target)}'` : ''})`
+            )
+          }
         } catch (err) {
           console.log(
             `        ⚠️  Click warning: ${err instanceof Error ? err.message : String(err)}`
@@ -2413,9 +2421,13 @@ export class DemoRunner {
 
       case 'doubleClick':
         console.log(`${prefix} Double-click${step.target ? ` on ${step.target}` : ''}`)
-        await this.evaluate(
-          `__mirrorDemo.doubleClick(${step.target ? `'${this.escape(step.target)}'` : ''})`
-        )
+        if (this.osMouse && step.target) {
+          await this.osDoubleClickSelector(step.target)
+        } else {
+          await this.evaluate(
+            `__mirrorDemo.doubleClick(${step.target ? `'${this.escape(step.target)}'` : ''})`
+          )
+        }
         break
 
       case 'type':
@@ -2930,6 +2942,61 @@ export class DemoRunner {
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
   }
 
+  // ---------------------------------------------------------------------
+  // OS-mouse helpers — read element rects via JS evaluate, drive the real
+  // macOS cursor via the OsMouse wrapper.
+  // ---------------------------------------------------------------------
+
+  private async getRect(selector: string): Promise<{ x: number; y: number; w: number; h: number }> {
+    const r = await this.evaluate<{ x: number; y: number; w: number; h: number } | null>(`
+      (() => {
+        const el = document.querySelector(${JSON.stringify(selector)});
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { x: r.left, y: r.top, w: r.width, h: r.height };
+      })()
+    `)
+    if (!r) throw new Error(`Selector matched no element: ${selector}`)
+    return r
+  }
+
+  private async getRectByMirrorId(
+    nodeId: string
+  ): Promise<{ x: number; y: number; w: number; h: number }> {
+    return this.getRect(`[data-mirror-id="${nodeId}"]`)
+  }
+
+  private async resolveSelectorOnPage(sel: import('./types').Selector): Promise<string> {
+    return await this.evaluate<string>(
+      `window.__mirrorActions.resolveSelector(${JSON.stringify(sel)})`
+    )
+  }
+
+  private async osMoveToSelector(selector: string): Promise<void> {
+    const r = await this.getRect(selector)
+    await this.osMouse!.moveToPage(r.x + r.w / 2, r.y + r.h / 2)
+  }
+
+  private async osClickSelector(selector: string): Promise<void> {
+    const r = await this.getRect(selector)
+    await this.osMouse!.clickPage(r.x + r.w / 2, r.y + r.h / 2)
+  }
+
+  private async osDoubleClickSelector(selector: string): Promise<void> {
+    const r = await this.getRect(selector)
+    await this.osMouse!.doubleClickPage(r.x + r.w / 2, r.y + r.h / 2)
+  }
+
+  private async waitForCompile(): Promise<void> {
+    await this.evaluate(`
+      (async () => {
+        if (window.__dragTest && window.__dragTest.waitForCompile) {
+          await window.__dragTest.waitForCompile();
+        }
+      })()
+    `)
+  }
+
   /**
    * OS-mouse-driven palette drop: real macOS cursor visibly travels from the
    * palette item to the drop target. Browser receives native HTML5 drag
@@ -3003,10 +3070,37 @@ export class DemoRunner {
       `${prefix} ↪️  Move ${this.describeSelector(step.source)} → ${this.describeSelector(step.target)} @ index ${step.index}` +
         (step.comment ? ` — ${step.comment}` : '')
     )
-    await this.evaluate(
-      `window.__mirrorActions.moveElement(${JSON.stringify(step.source)}, ${JSON.stringify(step.target)}, ${step.index})`
-    )
+    if (this.osMouse) {
+      await this.runMoveElementOs(step)
+    } else {
+      await this.evaluate(
+        `window.__mirrorActions.moveElement(${JSON.stringify(step.source)}, ${JSON.stringify(step.target)}, ${step.index})`
+      )
+    }
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runMoveElementOs(
+    step: Extract<DemoAction, { action: 'moveElement' }>
+  ): Promise<void> {
+    const sourceId = await this.resolveSelectorOnPage(step.source)
+    const targetId = await this.resolveSelectorOnPage(step.target)
+    const sourceRect = await this.getRectByMirrorId(sourceId)
+    const dropPoint = await this.evaluate<{ x: number; y: number }>(`
+      (() => {
+        const targetEl = document.querySelector('[data-mirror-id="${targetId}"]');
+        if (!targetEl) throw new Error('Target not in DOM: ${targetId}');
+        return window.__mirrorActions.dropChildIndexPoint(targetEl, ${step.index});
+      })()
+    `)
+    await this.osMouse!.dragPage(
+      sourceRect.x + sourceRect.w / 2,
+      sourceRect.y + sourceRect.h / 2,
+      dropPoint.x,
+      dropPoint.y,
+      { preHoldMs: 200, settleMs: 300 }
+    )
+    await this.waitForCompile()
   }
 
   private async runDragResize(
@@ -3017,10 +3111,33 @@ export class DemoRunner {
       `${prefix} ↔️  Resize ${this.describeSelector(step.selector)} ${step.position} Δ(${step.deltaX},${step.deltaY})` +
         (step.comment ? ` — ${step.comment}` : '')
     )
-    await this.evaluate(
-      `window.__mirrorActions.dragResize(${JSON.stringify(step.selector)}, ${JSON.stringify(step.position)}, ${step.deltaX}, ${step.deltaY}, ${JSON.stringify({ bypassSnap: step.bypassSnap ?? false })})`
-    )
+    if (this.osMouse) {
+      await this.runDragResizeOs(step)
+    } else {
+      await this.evaluate(
+        `window.__mirrorActions.dragResize(${JSON.stringify(step.selector)}, ${JSON.stringify(step.position)}, ${step.deltaX}, ${step.deltaY}, ${JSON.stringify({ bypassSnap: step.bypassSnap ?? false })})`
+      )
+    }
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runDragResizeOs(
+    step: Extract<DemoAction, { action: 'dragResize' }>
+  ): Promise<void> {
+    const nodeId = await this.resolveSelectorOnPage(step.selector)
+    // Real click selects the element so resize-manager wires up its mousedown
+    // listener (programmatic selectNode would skip that path).
+    await this.evaluate(`window.__mirrorTest.interact.click(${JSON.stringify(nodeId)})`)
+    await new Promise(r => setTimeout(r, 220))
+    const handleSel = `.visual-overlay .resize-handles .resize-handle[data-position="${step.position}"]`
+    const handle = await this.getRect(handleSel)
+    const startX = handle.x + handle.w / 2
+    const startY = handle.y + handle.h / 2
+    await this.osMouse!.dragPage(startX, startY, startX + step.deltaX, startY + step.deltaY, {
+      preHoldMs: 180,
+      settleMs: 260,
+    })
+    await this.waitForCompile()
   }
 
   private async runDragPadding(
@@ -3032,10 +3149,65 @@ export class DemoRunner {
         (step.mode ? ` (${step.mode})` : '') +
         (step.comment ? ` — ${step.comment}` : '')
     )
-    await this.evaluate(
-      `window.__mirrorActions.dragPadding(${JSON.stringify(step.selector)}, ${JSON.stringify(step.side)}, ${step.delta}, ${JSON.stringify(step.mode ?? 'single')}, ${step.bypassSnap ?? false})`
-    )
+    if (this.osMouse) {
+      await this.runDragSpacingOs(step, 'padding')
+    } else {
+      await this.evaluate(
+        `window.__mirrorActions.dragPadding(${JSON.stringify(step.selector)}, ${JSON.stringify(step.side)}, ${step.delta}, ${JSON.stringify(step.mode ?? 'single')}, ${step.bypassSnap ?? false})`
+      )
+    }
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  // Combined padding / margin OS-mouse handler — they share the structure:
+  // select node → enter mode → drag handle (with optional Shift/Alt) → exit.
+  private async runDragSpacingOs(
+    step:
+      | Extract<DemoAction, { action: 'dragPadding' }>
+      | Extract<DemoAction, { action: 'dragMargin' }>,
+    kind: 'padding' | 'margin'
+  ): Promise<void> {
+    const nodeId = await this.resolveSelectorOnPage(step.selector)
+    const enterFn = kind === 'padding' ? 'enterPaddingMode' : 'enterMarginMode'
+    const exitFn = kind === 'padding' ? 'exitPaddingMode' : 'exitMarginMode'
+    const handleClass = kind === 'padding' ? 'padding-handle-' : 'margin-handle-'
+    await this.evaluate(`window.__mirrorTest.interact.${enterFn}(${JSON.stringify(nodeId)})`)
+    await new Promise(r => setTimeout(r, 180))
+    const handle = await this.getRect(`.${handleClass}${step.side}`)
+    const startX = handle.x + handle.w / 2
+    const startY = handle.y + handle.h / 2
+    let endX = startX
+    let endY = startY
+    // Padding: drag inward grows padding. Margin: drag outward grows margin.
+    if (kind === 'padding') {
+      if (step.side === 'top') endY += step.delta
+      else if (step.side === 'bottom') endY -= step.delta
+      else if (step.side === 'left') endX += step.delta
+      else endX -= step.delta
+    } else {
+      if (step.side === 'top') endY -= step.delta
+      else if (step.side === 'bottom') endY += step.delta
+      else if (step.side === 'left') endX -= step.delta
+      else endX += step.delta
+    }
+    if (step.mode === 'all') {
+      await this.osMouse!.dragPageWithModifier(startX, startY, endX, endY, 'shift', {
+        preHoldMs: 180,
+        settleMs: 260,
+      })
+    } else if (step.mode === 'axis') {
+      await this.osMouse!.dragPageWithModifier(startX, startY, endX, endY, 'alt', {
+        preHoldMs: 180,
+        settleMs: 260,
+      })
+    } else {
+      await this.osMouse!.dragPage(startX, startY, endX, endY, {
+        preHoldMs: 180,
+        settleMs: 260,
+      })
+    }
+    await this.waitForCompile()
+    await this.evaluate(`window.__mirrorTest.interact.${exitFn}()`)
   }
 
   private async runDragMargin(
@@ -3047,9 +3219,13 @@ export class DemoRunner {
         (step.mode ? ` (${step.mode})` : '') +
         (step.comment ? ` — ${step.comment}` : '')
     )
-    await this.evaluate(
-      `window.__mirrorActions.dragMargin(${JSON.stringify(step.selector)}, ${JSON.stringify(step.side)}, ${step.delta}, ${JSON.stringify(step.mode ?? 'single')}, ${step.bypassSnap ?? false})`
-    )
+    if (this.osMouse) {
+      await this.runDragSpacingOs(step, 'margin')
+    } else {
+      await this.evaluate(
+        `window.__mirrorActions.dragMargin(${JSON.stringify(step.selector)}, ${JSON.stringify(step.side)}, ${step.delta}, ${JSON.stringify(step.mode ?? 'single')}, ${step.bypassSnap ?? false})`
+      )
+    }
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
   }
 
@@ -3062,11 +3238,51 @@ export class DemoRunner {
       `${prefix} ✏️  Inline-edit ${this.describeSelector(step.selector)} → "${preview}"` +
         (step.comment ? ` — ${step.comment}` : '')
     )
-    const cd = step.charDelay ?? 60
-    await this.evaluate(
-      `window.__mirrorActions.inlineEdit(${JSON.stringify(step.selector)}, ${JSON.stringify(step.text)}, ${cd})`
-    )
+    if (this.osMouse) {
+      await this.runInlineEditOs(step)
+    } else {
+      const cd = step.charDelay ?? 60
+      await this.evaluate(
+        `window.__mirrorActions.inlineEdit(${JSON.stringify(step.selector)}, ${JSON.stringify(step.text)}, ${cd})`
+      )
+    }
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runInlineEditOs(
+    step: Extract<DemoAction, { action: 'inlineEdit' }>
+  ): Promise<void> {
+    const nodeId = await this.resolveSelectorOnPage(step.selector)
+    const rect = await this.getRectByMirrorId(nodeId)
+    // Real double-click triggers Mirror's inline-edit mode.
+    await this.osMouse!.doubleClickPage(rect.x + rect.w / 2, rect.y + rect.h / 2)
+    await new Promise(r => setTimeout(r, 240))
+    // The inline editor is now focused. Replace the selection with the new
+    // text via JS — typing through the OS keyboard would depend on the
+    // user's keyboard layout, JS dispatch keeps the demo deterministic.
+    const cd = step.charDelay ?? 50
+    await this.evaluate(`
+      (async function() {
+        const text = ${JSON.stringify(step.text)};
+        const cd = ${cd};
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          // Empty current text in the focused contentEditable, then type.
+          document.execCommand('selectAll', false);
+          document.execCommand('delete', false);
+          for (let i = 0; i < text.length; i++) {
+            document.execCommand('insertText', false, text[i]);
+            await new Promise(r => setTimeout(r, cd));
+          }
+        }
+        // Commit the edit — Mirror listens for blur or Enter.
+        const ctrl = window.__mirrorStudio__ && window.__mirrorStudio__.inlineEdit;
+        if (ctrl && typeof ctrl.endEdit === 'function') ctrl.endEdit(true);
+        else document.activeElement && document.activeElement.blur();
+      })()
+    `)
+    await new Promise(r => setTimeout(r, 200))
+    await this.waitForCompile()
   }
 
   private async runSelectInPreview(
@@ -3077,7 +3293,16 @@ export class DemoRunner {
       `${prefix} 👆 Select ${this.describeSelector(step.selector)}` +
         (step.comment ? ` — ${step.comment}` : '')
     )
-    await this.evaluate(`window.__mirrorActions.selectInPreview(${JSON.stringify(step.selector)})`)
+    if (this.osMouse) {
+      const nodeId = await this.resolveSelectorOnPage(step.selector)
+      const rect = await this.getRectByMirrorId(nodeId)
+      await this.osMouse!.clickPage(rect.x + rect.w / 2, rect.y + rect.h / 2)
+      await new Promise(r => setTimeout(r, 180))
+    } else {
+      await this.evaluate(
+        `window.__mirrorActions.selectInPreview(${JSON.stringify(step.selector)})`
+      )
+    }
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
   }
 
@@ -3089,10 +3314,92 @@ export class DemoRunner {
       `${prefix} ⚙️  Set ${step.prop}=${step.value} on ${this.describeSelector(step.selector)}` +
         (step.comment ? ` — ${step.comment}` : '')
     )
-    await this.evaluate(
-      `window.__mirrorActions.setProperty(${JSON.stringify(step.selector)}, ${JSON.stringify(step.prop)}, ${JSON.stringify(step.value)})`
-    )
+    if (this.osMouse) {
+      await this.runSetPropertyOs(step)
+    } else {
+      await this.evaluate(
+        `window.__mirrorActions.setProperty(${JSON.stringify(step.selector)}, ${JSON.stringify(step.prop)}, ${JSON.stringify(step.value)})`
+      )
+    }
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runSetPropertyOs(
+    step: Extract<DemoAction, { action: 'setProperty' }>
+  ): Promise<void> {
+    const nodeId = await this.resolveSelectorOnPage(step.selector)
+    // First select the element (real click on preview node) so the property
+    // panel renders for it.
+    const previewRect = await this.getRectByMirrorId(nodeId)
+    await this.osMouse!.clickPage(
+      previewRect.x + previewRect.w / 2,
+      previewRect.y + previewRect.h / 2
+    )
+    await new Promise(r => setTimeout(r, 220))
+
+    // Try to find a visible input/select for this property in the panel.
+    const inputRect = await this.evaluate<{
+      x: number
+      y: number
+      w: number
+      h: number
+      tag: string
+    } | null>(`
+      (() => {
+        const sel = '#property-panel input[data-prop="${step.prop}"], #property-panel select[data-prop="${step.prop}"]';
+        const el = document.querySelector(sel);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { x: r.left, y: r.top, w: r.width, h: r.height, tag: el.tagName.toLowerCase() };
+      })()
+    `)
+
+    if (inputRect) {
+      // Click into the field, then update via JS (deterministic across
+      // keyboard layouts) and dispatch Enter to commit.
+      await this.osMouse!.clickPage(inputRect.x + inputRect.w / 2, inputRect.y + inputRect.h / 2)
+      await new Promise(r => setTimeout(r, 140))
+      await this.evaluate(`
+        (async function() {
+          const sel = '#property-panel input[data-prop="${step.prop}"], #property-panel select[data-prop="${step.prop}"]';
+          const el = document.querySelector(sel);
+          if (!el) return;
+          el.focus();
+          if (el.tagName.toLowerCase() === 'select') {
+            el.value = ${JSON.stringify(step.value)};
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            el.select();
+            await new Promise(r => setTimeout(r, 60));
+            el.value = ${JSON.stringify(step.value)};
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            await new Promise(r => setTimeout(r, 80));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            el.dispatchEvent(new KeyboardEvent('keydown', {
+              key: 'Enter', code: 'Enter', bubbles: true, cancelable: true,
+            }));
+          }
+          await new Promise(r => setTimeout(r, 80));
+          el.blur();
+        })()
+      `)
+    } else {
+      // Fallback: section may be collapsed and the input not rendered.
+      // Drive the change through the studio API. Visible cursor stays on
+      // the property panel area so the action reads as "panel updated".
+      await this.evaluate(`
+        (function() {
+          const studio = window.__mirrorStudio__;
+          const panel = studio && studio.propertyPanel;
+          if (!panel || typeof panel.changeProperty !== 'function') {
+            throw new Error('setProperty: studio.propertyPanel.changeProperty unavailable');
+          }
+          panel.changeProperty(${JSON.stringify(step.prop)}, ${JSON.stringify(step.value)});
+        })()
+      `)
+    }
+    await new Promise(r => setTimeout(r, 180))
+    await this.waitForCompile()
   }
 
   private async runPickColor(
@@ -3103,10 +3410,46 @@ export class DemoRunner {
       `${prefix} 🎨 Pick ${step.prop}=${step.color} on ${this.describeSelector(step.selector)}` +
         (step.comment ? ` — ${step.comment}` : '')
     )
-    await this.evaluate(
-      `window.__mirrorActions.pickColor(${JSON.stringify(step.selector)}, ${JSON.stringify(step.prop)}, ${JSON.stringify(step.color)})`
-    )
+    if (this.osMouse) {
+      await this.runPickColorOs(step)
+    } else {
+      await this.evaluate(
+        `window.__mirrorActions.pickColor(${JSON.stringify(step.selector)}, ${JSON.stringify(step.prop)}, ${JSON.stringify(step.color)})`
+      )
+    }
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  private async runPickColorOs(step: Extract<DemoAction, { action: 'pickColor' }>): Promise<void> {
+    const nodeId = await this.resolveSelectorOnPage(step.selector)
+    const previewRect = await this.getRectByMirrorId(nodeId)
+    await this.osMouse!.clickPage(
+      previewRect.x + previewRect.w / 2,
+      previewRect.y + previewRect.h / 2
+    )
+    await new Promise(r => setTimeout(r, 220))
+    // Click the color trigger button in the panel — opens the color popover.
+    const triggerRect = await this.getRect(`#property-panel [data-color-prop="${step.prop}"]`)
+    await this.osMouse!.clickPage(
+      triggerRect.x + triggerRect.w / 2,
+      triggerRect.y + triggerRect.h / 2
+    )
+    await new Promise(r => setTimeout(r, 220))
+    // Drive the color value through the studio API — the picker UI varies
+    // (swatch grid, hex input, etc.) and isn't reliable to navigate by mouse.
+    await this.evaluate(`
+      (function() {
+        document.body.click();
+        const studio = window.__mirrorStudio__;
+        const panel = studio && studio.propertyPanel;
+        if (!panel || typeof panel.changeProperty !== 'function') {
+          throw new Error('pickColor: studio.propertyPanel.changeProperty unavailable');
+        }
+        panel.changeProperty(${JSON.stringify(step.prop)}, ${JSON.stringify(step.color)});
+      })()
+    `)
+    await new Promise(r => setTimeout(r, 180))
+    await this.waitForCompile()
   }
 
   private async runAiPrompt(
