@@ -6,6 +6,7 @@
  */
 
 import { Token, TokenType, tokenize } from './lexer'
+import { resolvePositionalArgs } from '../positional-resolver'
 import type {
   AST,
   Program,
@@ -5576,6 +5577,9 @@ export class Parser {
 }
 
 export function parse(source: string): AST {
-  const tokens = tokenize(source)
-  return new Parser(tokens, source).parse()
+  // Pre-parse: expand positional shorthand (e.g. `Button hug, 32, #333`)
+  // to explicit property syntax. See docs/concepts/positional-args.md.
+  const expanded = resolvePositionalArgs(source)
+  const tokens = tokenize(expanded)
+  return new Parser(tokens, expanded).parse()
 }

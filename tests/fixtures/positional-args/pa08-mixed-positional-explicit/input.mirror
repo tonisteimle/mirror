@@ -1,0 +1,3 @@
+Frame hor, 200, 80, #2271C1, gap 12, pad 16
+  Text "Hello", white, fs 14
+  Button "Click", hug, 32, #ef4444
