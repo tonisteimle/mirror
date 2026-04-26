@@ -1315,6 +1315,87 @@ export const demoScript: DemoScript = {
     { action: 'moveTo', target: '#preview' },
     { action: 'highlight', target: '#preview', duration: 1500 },
     { action: 'wait', duration: 600 },
+
+    // =========================================================================
+    // Chapter 5: Privacy — direkter Toggle-Reuse
+    // =========================================================================
+    { action: 'comment', text: 'Chapter 5: Privacy — Toggle-Komponente zahlt sich aus' },
+    { action: 'wait', duration: 600 },
+    {
+      action: 'execute',
+      code: `
+        (() => {
+          const ed = window.editor;
+          const end = ed.state.doc.length;
+          ed.dispatch({ selection: { anchor: end, head: end } });
+          ed.focus();
+        })();
+      `,
+    },
+    { action: 'wait', duration: 200 },
+    {
+      action: 'comment',
+      text: 'Schritt 5.1: Privacy-Section, 2 Toggles direkt als Komponente — kein Frame-Block mehr',
+    },
+    {
+      action: 'type',
+      text:
+        '\nText "Privacy", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Allow analytics", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Public profile", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99',
+      expectCode:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Indentation guides", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Text "Workspace", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Text "Theme", fs 12, col #71717a, mar 0 16 8 16\n' +
+        'Frame hor, gap 8, mar 0 16\n' +
+        '  ColorTile\n' +
+        '  ColorTile bg #ec4899\n' +
+        '  ColorTile bg #10b981\n' +
+        '  ColorTile bg #f59e0b\n' +
+        'Text "Default font", fs 12, col #71717a, mar 16 16 8 16\n' +
+        'Frame hor, gap 16, mar 0 16\n' +
+        '  Text "Sans", fs 14, col #a1a1aa\n' +
+        '  Text "Serif", fs 14, col #6366f1, weight 500\n' +
+        '  Text "Mono", fs 14, col #a1a1aa\n' +
+        'Text "Privacy", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Allow analytics", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Public profile", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99',
+    },
+    { action: 'wait', duration: 800 },
+    {
+      action: 'comment',
+      text: 'Privacy fertig — Toggles direkt als Komponente, kein redundanter Frame-Block.',
+    },
+    { action: 'moveTo', target: '#preview' },
+    { action: 'highlight', target: '#preview', duration: 1500 },
+    { action: 'wait', duration: 600 },
   ],
 }
 
