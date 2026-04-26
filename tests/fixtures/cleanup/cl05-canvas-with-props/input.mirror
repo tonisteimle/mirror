@@ -1,0 +1,6 @@
+canvas bg #1a1a1a, w 375, h 812, col white, font sans
+
+Text "Title"
+Frame hor, gap 12
+  Button "A"
+  Button "B"

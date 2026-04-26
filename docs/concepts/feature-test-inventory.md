@@ -24,8 +24,8 @@
 | 2   | **Tokens**       | TK1 single, TK2 property-set, TK3 suffix, TK4 direct, TK5 in component, TK6 token-in-token, TK7 in conditional, TK8 in each, TK9 numeric, TK10 multi-suffix |   ✅   | F·B·C·D·S | Sprint 2.1, ~50 Tests, 1 Bug gepinnt |
 | 3   | **Primitives**   | Frame, Text, Button, Input, Textarea, Image, Icon, Link, Divider, Spacer, semantic HTML                                                                     |   🔵   | -         | Tests bestehen, nicht pyramidisiert  |
 | 4   | **Properties**   | ~120 Properties (Layout, Spacing, Color, Typo, Effects, Visibility, …)                                                                                      |   🔵   | -         | Verteilt auf andere Features         |
-| 5   | **Canvas**       | mobile/tablet/desktop preset, properties, inheritance to children                                                                                           |   🔵   | -         | Eigene `canvas.test.ts`              |
-| 6   | **Custom Icons** | `$icons:` Definition, SVG paths, Mix mit Lucide                                                                                                             |   🔵   | -         | `icons.test.ts`                      |
+| 5   | **Canvas**       | mobile/tablet/desktop preset, properties, inheritance to children                                                                                           |   ✅   | F·B·C·D·S | Sprint 6                             |
+| 6   | **Custom Icons** | `$icons:` Definition, SVG paths, Mix mit Lucide                                                                                                             |   ✅   | F·B·C·D·S | Sprint 6 — Bug #34 gepinnt           |
 
 ## Layout & Styling
 
@@ -115,23 +115,23 @@
 
 | #   | Feature               | Sub-Features                                                                       | Status | Schichten | Notizen           |
 | --- | --------------------- | ---------------------------------------------------------------------------------- | :----: | --------- | ----------------- |
-| 66  | **Animation-Presets** | fade-in, slide-up/down/left/right, scale-in, bounce, pulse, shake, spin, reveal-\* |   🔵   | -         |                   |
+| 66  | **Animation-Presets** | fade-in, slide-up/down/left/right, scale-in, bounce, pulse, shake, spin, reveal-\* |   ✅   | F·B·C·D·S | Sprint 6          |
 | 67  | **Custom-Animations** | duration, easing, mit `anim`-Property                                              |   🔵   | -         |                   |
 | 68  | **State-Transitions** | hover 0.15s, on 0.2s ease-out                                                      |   🔵   | -         | überlappt mit #32 |
 
 ## UI-Komponenten (Pure Mirror)
 
-| #   | Feature               | Sub-Features                                                               | Status | Schichten | Notizen               |
-| --- | --------------------- | -------------------------------------------------------------------------- | :----: | --------- | --------------------- |
-| 69  | **Dialog**            | Trigger, Backdrop, Content, CloseTrigger, Open/Close, ESC, Click-Outside   |   ✅   | F·B·C·D·S | Sprint 5.2            |
-| 70  | **Tooltip**           | Trigger, Content, Positioning (top/bottom/left/right)                      |   ✅   | F·B·C·D·S | Sprint 5.2 — Bug #32  |
-| 71  | **Tabs**              | defaultValue, Tab-Triggers, Tab-Contents, Switching                        |   ✅   | F·B·C·D·S | Sprint 5.2 — Bug #33  |
-| 72  | **Select (Dropdown)** | Trigger, Content, Items, trigger-text, loop-focus, typeahead, keyboard-nav |   ✅   | F·B·C·D·S | Sprint 5.2            |
-| 73  | **Checkbox**          | label, checked default, click toggles                                      |   ✅   | F·B·C·D·S | Sprint 5.2            |
-| 74  | **Switch**            | label, checked, click toggles                                              |   ✅   | F·B·C·D·S | Sprint 5.2            |
-| 75  | **Slider**            | min, max, value, step                                                      |   ✅   | F·B·C·D·S | Sprint 5.2            |
-| 76  | **RadioGroup**        | value, RadioItem, exclusive selection                                      |   ✅   | F·B·C·D·S | Sprint 5.2            |
-| 77  | **DatePicker** (Zag)  | selectionMode, fixedWeeks, startOfWeek, positioning, min/max               |   🔵   | -         | Letzter Zag-Component |
+| #   | Feature               | Sub-Features                                                               | Status | Schichten | Notizen                |
+| --- | --------------------- | -------------------------------------------------------------------------- | :----: | --------- | ---------------------- |
+| 69  | **Dialog**            | Trigger, Backdrop, Content, CloseTrigger, Open/Close, ESC, Click-Outside   |   ✅   | F·B·C·D·S | Sprint 5.2             |
+| 70  | **Tooltip**           | Trigger, Content, Positioning (top/bottom/left/right)                      |   ✅   | F·B·C·D·S | Sprint 5.2 — Bug #32   |
+| 71  | **Tabs**              | defaultValue, Tab-Triggers, Tab-Contents, Switching                        |   ✅   | F·B·C·D·S | Sprint 5.2 — Bug #33   |
+| 72  | **Select (Dropdown)** | Trigger, Content, Items, trigger-text, loop-focus, typeahead, keyboard-nav |   ✅   | F·B·C·D·S | Sprint 5.2             |
+| 73  | **Checkbox**          | label, checked default, click toggles                                      |   ✅   | F·B·C·D·S | Sprint 5.2             |
+| 74  | **Switch**            | label, checked, click toggles                                              |   ✅   | F·B·C·D·S | Sprint 5.2             |
+| 75  | **Slider**            | min, max, value, step                                                      |   ✅   | F·B·C·D·S | Sprint 5.2             |
+| 76  | **RadioGroup**        | value, RadioItem, exclusive selection                                      |   ✅   | F·B·C·D·S | Sprint 5.2             |
+| 77  | **DatePicker** (Zag)  | selectionMode, fixedWeeks, startOfWeek, positioning, min/max               |   ✅   | F·B·C·D·S | Sprint 6 — letzter Zag |
 
 ## Compound Primitives
 
@@ -287,25 +287,26 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 
 ## Laufende Notiz: Bekannte Bugs aus Pyramide-Arbeit
 
-| #   | Bug                                                        | Gefunden in        | Status    |
-| --- | ---------------------------------------------------------- | ------------------ | --------- |
-| 17  | Doppelter `tasksData` bei zwei `each`-Loops                | Smoke-Tests        | ✅ gefixt |
-| 18  | Strings ohne Quotes in Conditional                         | Smoke-Tests        | ✅ gefixt |
-| 19  | Colon-Splitting in `__loopVar:` Markern                    | Smoke-Tests        | ✅ gefixt |
-| 20  | `__loopVar:` ohne Wrap als bare Identifier                 | Smoke-Tests        | ✅ gefixt |
-| 21  | Self-Reference Stack-Overflow                              | Components-F.      | ✅ gefixt |
-| 22  | `Text $var` (bare ref) emittiert keinen `textContent`      | Variables-Contract | ✅ gefixt |
-| 23  | Nested ternary in Text → mehrere Sibling-Elemente          | Conditionals-F.    | ✅ gefixt |
-| 24  | Ternary mit `$token` in style → kein `background`          | Conditionals-F.    | ✅ gefixt |
-| 25  | Ternary in style mit `$var`-Operand fällt auf var()        | Conditionals-F.    | ✅ gefixt |
-| 26  | Ternary in Text mit Interpolation → leerer textContent     | Conditionals-F.    | ✅ gefixt |
-| 27  | `each x, idx in $list` — `$idx` wird nicht substituiert    | Each-Fixtures      | ✅ gefixt |
-| 28  | `if/else` innerhalb `each` rendert BEIDE Branches          | Each-Fixtures      | ✅ gefixt |
-| 29  | `bor`-Shorthand überschreibt `boc $token` mit currentColor | Tokens-Fixtures    | ✅ gefixt |
-| 30  | `bind item.value` in each-Loop initialisiert nicht         | Bind-Fixtures      | ✅ gefixt |
-| 31  | `bind user.email` bindet auf `user` (ganzes Object)        | Bind-Fixtures      | ✅ gefixt |
-| 32  | `Tooltip positioning "X"` parst, emittiert kein Attribut   | Pure-UI-Behavior   | offen     |
-| 33  | `Tabs defaultValue "X"` parst, emittiert kein Attribut     | Pure-UI-Behavior   | offen     |
+| #   | Bug                                                                    | Gefunden in        | Status    |
+| --- | ---------------------------------------------------------------------- | ------------------ | --------- |
+| 17  | Doppelter `tasksData` bei zwei `each`-Loops                            | Smoke-Tests        | ✅ gefixt |
+| 18  | Strings ohne Quotes in Conditional                                     | Smoke-Tests        | ✅ gefixt |
+| 19  | Colon-Splitting in `__loopVar:` Markern                                | Smoke-Tests        | ✅ gefixt |
+| 20  | `__loopVar:` ohne Wrap als bare Identifier                             | Smoke-Tests        | ✅ gefixt |
+| 21  | Self-Reference Stack-Overflow                                          | Components-F.      | ✅ gefixt |
+| 22  | `Text $var` (bare ref) emittiert keinen `textContent`                  | Variables-Contract | ✅ gefixt |
+| 23  | Nested ternary in Text → mehrere Sibling-Elemente                      | Conditionals-F.    | ✅ gefixt |
+| 24  | Ternary mit `$token` in style → kein `background`                      | Conditionals-F.    | ✅ gefixt |
+| 25  | Ternary in style mit `$var`-Operand fällt auf var()                    | Conditionals-F.    | ✅ gefixt |
+| 26  | Ternary in Text mit Interpolation → leerer textContent                 | Conditionals-F.    | ✅ gefixt |
+| 27  | `each x, idx in $list` — `$idx` wird nicht substituiert                | Each-Fixtures      | ✅ gefixt |
+| 28  | `if/else` innerhalb `each` rendert BEIDE Branches                      | Each-Fixtures      | ✅ gefixt |
+| 29  | `bor`-Shorthand überschreibt `boc $token` mit currentColor             | Tokens-Fixtures    | ✅ gefixt |
+| 30  | `bind item.value` in each-Loop initialisiert nicht                     | Bind-Fixtures      | ✅ gefixt |
+| 31  | `bind user.email` bindet auf `user` (ganzes Object)                    | Bind-Fixtures      | ✅ gefixt |
+| 32  | `Tooltip positioning "X"` parst, emittiert kein Attribut               | Pure-UI-Behavior   | offen     |
+| 33  | `Tabs defaultValue "X"` parst, emittiert kein Attribut                 | Pure-UI-Behavior   | offen     |
+| 34  | `$icons:` emittiert `_runtime.registerIcon` vor `_runtime`-const → TDZ | Cleanup-F.         | offen     |
 
 ## Nicht-Ziele
 
