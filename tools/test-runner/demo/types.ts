@@ -5,6 +5,7 @@
  */
 
 import type { PacingProfile, ActionTimings } from './timing'
+import type { SpeedMultipliers } from './timing-classes'
 
 // =============================================================================
 // Configuration
@@ -23,6 +24,9 @@ export interface DemoConfig {
   pauseMultiplier: number
   /** Custom timing overrides (optional) */
   customTimings?: Partial<ActionTimings>
+  /** Speed multipliers (global + per timing-class). Higher = faster.
+   *  Composed multiplicatively: effective = global × class. */
+  speedMultipliers?: SpeedMultipliers
 }
 
 export const DEFAULT_CONFIG: DemoConfig = {

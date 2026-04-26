@@ -44,5 +44,57 @@ export const TIMING_CLASSES: Record<TimingClassName, TimingClassValues> = {
 }
 
 export function getTimingClass(name: TimingClassName): TimingClassValues {
-  return TIMING_CLASSES[name]
+  return scaleTimingClass(TIMING_CLASSES[name], name)
+}
+
+// =============================================================================
+// Speed multipliers
+// =============================================================================
+//
+// A multiplier of 2.0 makes that class twice as slow (delays × 2); 0.5 makes
+// it twice as fast. The global multiplier composes with the per-class one:
+// effectiveDivisor = globalSpeed × classSpeed. We DIVIDE delays by the speed
+// because higher speed → shorter delays.
+//
+// Set via CLI:
+//   --global-speed=2.0
+//   --typing-speed=0.5  --drop-speed=2.0  --handle-speed=1.5
+//   --edit-speed=1.0    --click-speed=1.0
+// or programmatically in DemoConfig.speedMultipliers.
+
+export interface SpeedMultipliers {
+  global?: number
+  drop?: number
+  handle?: number
+  edit?: number
+  click?: number
+  typing?: number
+}
+
+let activeMultipliers: SpeedMultipliers = {}
+
+export function setSpeedMultipliers(m: SpeedMultipliers): void {
+  activeMultipliers = { ...m }
+}
+
+export function getSpeedMultipliers(): SpeedMultipliers {
+  return { ...activeMultipliers }
+}
+
+export function getEffectiveSpeed(name: TimingClassName): number {
+  const g = activeMultipliers.global ?? 1
+  const c = activeMultipliers[name] ?? 1
+  // Clamp to a safe range — 0 would divide-by-zero, very tiny values would
+  // collapse pacing entirely.
+  return Math.max(0.05, g * c)
+}
+
+function scaleTimingClass(t: TimingClassValues, name: TimingClassName): TimingClassValues {
+  const speed = getEffectiveSpeed(name)
+  if (speed === 1) return t
+  return {
+    preHoldMs: Math.round(t.preHoldMs / speed),
+    dwellMs: Math.round(t.dwellMs / speed),
+    settleMs: Math.round(t.settleMs / speed),
+  }
 }

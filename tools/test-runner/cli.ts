@@ -52,6 +52,13 @@ interface CLIArgs {
   demoSuite?: string // Directory containing demo scripts (.ts)
   demoSpeed?: 'slow' | 'normal' | 'fast' // Demo speed preset (legacy)
   demoPacing?: 'video' | 'presentation' | 'tutorial' | 'testing' | 'instant' // Pacing profile
+  // Speed multipliers (1.0 = baseline; 2.0 = twice as fast; 0.5 = half speed)
+  globalSpeed?: number
+  typingSpeed?: number
+  dropSpeed?: number
+  handleSpeed?: number
+  editSpeed?: number
+  clickSpeed?: number
   demoOverlay: boolean // Show keystroke overlay (default: true)
   demoValidate: boolean // Only validate demo script (dry-run)
   demoTiming: boolean // Show timing report
@@ -128,6 +135,12 @@ function parseArgs(): CLIArgs {
     demoSuite: getArgValue(args, '--demo-suite'),
     demoSpeed: (getArgValue(args, '--demo-speed') || 'normal') as CLIArgs['demoSpeed'],
     demoPacing: (getArgValue(args, '--pacing') || 'video') as CLIArgs['demoPacing'],
+    globalSpeed: parseSpeedFlag(args, '--global-speed'),
+    typingSpeed: parseSpeedFlag(args, '--typing-speed'),
+    dropSpeed: parseSpeedFlag(args, '--drop-speed'),
+    handleSpeed: parseSpeedFlag(args, '--handle-speed'),
+    editSpeed: parseSpeedFlag(args, '--edit-speed'),
+    clickSpeed: parseSpeedFlag(args, '--click-speed'),
     demoOverlay: !args.includes('--no-overlay'),
     demoValidate: args.includes('--demo-validate'),
     demoTiming: args.includes('--timing'),
@@ -168,6 +181,27 @@ function appendQuery(url: string, key: string, value: string): string {
 function getArgValue(args: string[], flag: string): string | undefined {
   const arg = args.find(a => a.startsWith(`${flag}=`))
   return arg?.split('=')[1]
+}
+
+function parseSpeedFlag(args: string[], flag: string): number | undefined {
+  const raw = getArgValue(args, flag)
+  if (raw === undefined) return undefined
+  const n = parseFloat(raw)
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new Error(`${flag}=${raw} must be a positive number (e.g. ${flag}=2.0)`)
+  }
+  return n
+}
+
+function buildSpeedMultipliers(args: CLIArgs): Record<string, number> | undefined {
+  const m: Record<string, number> = {}
+  if (args.globalSpeed !== undefined) m.global = args.globalSpeed
+  if (args.typingSpeed !== undefined) m.typing = args.typingSpeed
+  if (args.dropSpeed !== undefined) m.drop = args.dropSpeed
+  if (args.handleSpeed !== undefined) m.handle = args.handleSpeed
+  if (args.editSpeed !== undefined) m.edit = args.editSpeed
+  if (args.clickSpeed !== undefined) m.click = args.clickSpeed
+  return Object.keys(m).length > 0 ? m : undefined
 }
 
 // =============================================================================
@@ -239,6 +273,13 @@ ${bold('Demo Mode (for video recording):')}
                       - instant: No delays (CI/validation only)
   --demo-speed=SPEED  Legacy speed preset: slow, normal, fast
   --no-overlay        Disable keystroke overlay
+  --global-speed=N    Speed multiplier for ALL classes (1.0 = baseline,
+                      2.0 = twice as fast, 0.5 = half speed)
+  --typing-speed=N    Multiplier just for typing (composes with --global-speed)
+  --drop-speed=N      Multiplier just for palette/component drops
+  --handle-speed=N    Multiplier just for resize/padding/margin handle drags
+  --edit-speed=N      Multiplier just for inline-edit / setProperty / pickColor
+  --click-speed=N     Multiplier just for plain selection clicks
   --demo-validate     Validate demo script with built-in checks (test mode)
   --timing            Show detailed timing report with optimization suggestions
 
@@ -488,6 +529,7 @@ async function runDemoSuiteMode(args: CLIArgs): Promise<number> {
             : undefined,
           snapshotBaselineDir: args.demoSnapshotBaseline,
           snapshotThreshold: args.demoSnapshotThreshold,
+          speedMultipliers: buildSpeedMultipliers(args),
         }
         const demoRunner = new DemoRunner(cdp, demoConfig)
         const runRes = await demoRunner.run(script)
@@ -721,6 +763,7 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
         snapshotThreshold: args.demoSnapshotThreshold,
         osMouse: args.osMouse,
         framesDir: args.framesDir,
+        speedMultipliers: buildSpeedMultipliers(args),
       }
 
       // Get CDP session for demo runner

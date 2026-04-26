@@ -26,7 +26,7 @@ import type {
 } from './validation'
 import { DEFAULT_CONFIG, SPEED_PRESETS, PACING_TO_SPEED } from './types'
 import { getTimingProfile, TimingCalculator, formatDuration, compareProfiles } from './timing'
-import { getTimingClass } from './timing-classes'
+import { getTimingClass, setSpeedMultipliers } from './timing-classes'
 import {
   getElementValidationCode,
   getValidationConfig,
@@ -1583,8 +1583,34 @@ export class DemoRunner {
     }
     console.log('')
 
-    // Merge script config
+    // Merge script config (script values win for normal fields)
     const effectiveConfig = { ...this.config, ...script.config }
+    // Speed multipliers compose: script-level provides defaults, CLI-level
+    // overrides per key. CLI is more specific (user explicitly opted in).
+    if (this.config.speedMultipliers || script.config?.speedMultipliers) {
+      effectiveConfig.speedMultipliers = {
+        ...(script.config?.speedMultipliers ?? {}),
+        ...(this.config.speedMultipliers ?? {}),
+      }
+    }
+
+    // Activate speed multipliers for the timing classes used by getTimingClass
+    // (drop, handle, edit, click, typing). The browser-injected DemoAPI gets
+    // its typing pacing pre-scaled inside injectDemoAPI.
+    setSpeedMultipliers(effectiveConfig.speedMultipliers ?? {})
+    const sm = effectiveConfig.speedMultipliers
+    if (sm && Object.keys(sm).length > 0) {
+      const fmt = (k: string, v?: number) => (v !== undefined ? `${k}=${v}×` : '')
+      const parts = [
+        fmt('global', sm.global),
+        fmt('typing', sm.typing),
+        fmt('drop', sm.drop),
+        fmt('handle', sm.handle),
+        fmt('edit', sm.edit),
+        fmt('click', sm.click),
+      ].filter(Boolean)
+      console.log(`   ⏱️  Speed multipliers: ${parts.join(' ')}`)
+    }
 
     // Inject demo API and validation code
     await this.injectDemoAPI(effectiveConfig)
@@ -2334,9 +2360,32 @@ export class DemoRunner {
     const timings = getTimingProfile(config.pacing)
 
     // Apply custom timing overrides if provided
-    const effectiveTimings = config.customTimings
+    let effectiveTimings = config.customTimings
       ? this.mergeTimings(timings, config.customTimings)
       : timings
+
+    // Apply speed multipliers — divide all type/click delays by the
+    // effective speed (= global × class). Higher number → faster.
+    const sm = config.speedMultipliers
+    if (sm && (sm.global || sm.typing || sm.click)) {
+      const typingSpeed = Math.max(0.05, (sm.global ?? 1) * (sm.typing ?? 1))
+      const clickSpeed = Math.max(0.05, (sm.global ?? 1) * (sm.click ?? 1))
+      effectiveTimings = {
+        ...effectiveTimings,
+        type: {
+          ...effectiveTimings.type,
+          charMs: Math.round(effectiveTimings.type.charMs / typingSpeed),
+          wordPauseMs: Math.round(effectiveTimings.type.wordPauseMs / typingSpeed),
+          linePauseMs: Math.round(effectiveTimings.type.linePauseMs / typingSpeed),
+          thoughtPauseMs: Math.round(effectiveTimings.type.thoughtPauseMs / typingSpeed),
+        },
+        click: {
+          ...effectiveTimings.click,
+          preDelayMs: Math.round(effectiveTimings.click.preDelayMs / clickSpeed),
+          postDelayMs: Math.round(effectiveTimings.click.postDelayMs / clickSpeed),
+        },
+      }
+    }
 
     const apiCode = getDemoAPISource(effectiveTimings)
     await this.evaluate(apiCode)
