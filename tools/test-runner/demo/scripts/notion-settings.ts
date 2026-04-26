@@ -707,6 +707,133 @@ export const demoScript: DemoScript = {
     { action: 'moveTo', target: '#preview' },
     { action: 'highlight', target: '#preview', duration: 1500 },
     { action: 'wait', duration: 600 },
+
+    // =========================================================================
+    // Chapter 3: Preferences — 2 Toggles inline, dann `::`-Extraktion
+    // =========================================================================
+    //
+    // User baut die ersten beiden Toggles direkt im Code (Frame + Label +
+    // pseudo-Switch). Beim Anlauf zum dritten merkt sie: das Pattern
+    // wiederholt sich. Sie tippt `Toggle::` an Toggle 1 — Mirror Studio
+    // extrahiert die Properties in eine `.com`-Datei und ersetzt das
+    // Original durch eine Komponenten-Instanz.
+
+    { action: 'comment', text: 'Chapter 3: Preferences-Section mit Toggles' },
+    { action: 'wait', duration: 600 },
+
+    // Cursor an Doc-Ende, damit `type` an die richtige Stelle fügt.
+    {
+      action: 'execute',
+      code: `
+        (() => {
+          const ed = window.editor;
+          if (ed) {
+            const end = ed.state.doc.length;
+            ed.dispatch({ selection: { anchor: end, head: end } });
+            ed.focus();
+          }
+        })();
+      `,
+    },
+    { action: 'wait', duration: 200 },
+
+    // === Schritt 3.1: Section-Label "Preferences" tippen ===
+    { action: 'comment', text: 'Schritt 3.1: Section-Label "Preferences"' },
+    {
+      action: 'type',
+      text: '\nText "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16',
+    },
+    { action: 'wait', duration: 400 },
+    {
+      action: 'expectCode',
+      comment: 'after Preferences label',
+      code:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16',
+    },
+
+    // === Schritt 3.2: Toggle 1 — "Dark mode" inline ===
+    // Frame hor + spread + ver-center → Label links, Switch-Visual rechts.
+    { action: 'comment', text: 'Schritt 3.2: Toggle 1 — "Dark mode" inline' },
+    {
+      action: 'type',
+      text:
+        '\nFrame hor, spread, ver-center, pad 12 16, mar 0 16\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99',
+    },
+    { action: 'wait', duration: 600 },
+    {
+      action: 'expectCode',
+      comment: 'after Toggle 1 (Dark mode)',
+      code:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame hor, spread, ver-center, pad 12 16, mar 0 16\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99',
+    },
+
+    // === Schritt 3.3: Toggle 2 — "Notifications" inline ===
+    { action: 'comment', text: 'Schritt 3.3: Toggle 2 — "Notifications" inline' },
+    {
+      action: 'type',
+      text:
+        '\nFrame hor, spread, ver-center, pad 12 16, mar 0 16\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99',
+    },
+    { action: 'wait', duration: 1000 },
+    {
+      action: 'expectCode',
+      comment: 'after Toggle 2 (Notifications)',
+      code:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame hor, spread, ver-center, pad 12 16, mar 0 16\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Frame hor, spread, ver-center, pad 12 16, mar 0 16\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99',
+    },
+
+    // === Schritt 3.4: User pausiert — "ok das ist redundant" ===
+    {
+      action: 'comment',
+      text:
+        'User merkt: dieser Toggle-Block wiederholt sich. Bevor sie den ' +
+        'dritten tippt, extrahiert sie das Pattern als wiederverwendbare ' +
+        'Komponente — `Toggle::` aus dem Frame.',
+    },
+    { action: 'wait', duration: 1000 },
   ],
 }
 

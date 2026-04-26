@@ -150,6 +150,12 @@ interface TypeAction {
    * apply when omitted (see DEFAULT_TYPE_PAUSE_TRIGGERS in runner.ts).
    */
   pauseAfter?: Record<string, number>
+  /** Optional comment for logging */
+  comment?: string
+  /** Inline expectCode validation that runs immediately after the typing
+   *  finishes (sugar for the common "type, then verify the editor source"
+   *  pattern). Same shape as on dropFromPalette / setProperty / pickColor. */
+  expectCode?: InlineExpectCode
 }
 
 interface PressKeyAction {

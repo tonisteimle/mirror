@@ -2526,6 +2526,11 @@ export class DemoRunner {
           `${prefix} Type: "${step.text.substring(0, 30)}${step.text.length > 30 ? '...' : ''}"`
         )
         await this.runTypeWithPauseTriggers(step)
+        // Inline expectCode runs immediately after typing completes. Same
+        // sugar as on drop / setProperty / pickColor — keeps the
+        // "every mutating step is validated" contract honest for typed
+        // chunks of source.
+        await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
         break
 
       case 'pressKey':
