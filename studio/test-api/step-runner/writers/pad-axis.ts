@@ -2,7 +2,7 @@
  * Property Writers: `pad-x`, `pad-y` — generated from the axis factory.
  */
 
-import { createAxisPadWriter } from './_pad-axis-factory'
+import { createAxisWriter } from './_axis-factory'
 
-export const padXWriter = createAxisPadWriter('x')
-export const padYWriter = createAxisPadWriter('y')
+export const padXWriter = createAxisWriter('pad', 'x')
+export const padYWriter = createAxisWriter('pad', 'y')

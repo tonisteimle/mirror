@@ -2,7 +2,7 @@
  * Property Readers: `pad-x`, `pad-y` — generated from the axis factory.
  */
 
-import { createAxisPadReader } from './_pad-axis-factory'
+import { createAxisReader } from './_axis-factory'
 
-export const padXReader = createAxisPadReader('x')
-export const padYReader = createAxisPadReader('y')
+export const padXReader = createAxisReader('pad', 'x')
+export const padYReader = createAxisReader('pad', 'y')

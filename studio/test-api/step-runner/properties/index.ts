@@ -19,6 +19,7 @@ export { padRReader, padBReader, padLReader } from './pad-sides'
 export { padXReader, padYReader } from './pad-axis'
 export { marReader } from './mar'
 export { marTReader, marRReader, marBReader, marLReader } from './mar-sides'
+export { marXReader, marYReader } from './mar-axis'
 
 import type { PropertyReader } from './types'
 import { padReader } from './pad'
@@ -27,6 +28,7 @@ import { padRReader, padBReader, padLReader } from './pad-sides'
 import { padXReader, padYReader } from './pad-axis'
 import { marReader } from './mar'
 import { marTReader, marRReader, marBReader, marLReader } from './mar-sides'
+import { marXReader, marYReader } from './mar-axis'
 
 export const PROPERTY_READERS: Record<string, PropertyReader> = {
   pad: padReader,
@@ -41,6 +43,8 @@ export const PROPERTY_READERS: Record<string, PropertyReader> = {
   'mar-r': marRReader,
   'mar-b': marBReader,
   'mar-l': marLReader,
+  'mar-x': marXReader,
+  'mar-y': marYReader,
 }
 
 export function getReader(propertyName: string): PropertyReader | null {

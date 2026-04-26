@@ -1,19 +1,21 @@
 /**
- * Factory: axis padding writers (`pad-x`, `pad-y`).
+ * Factory: axis spacing writers (`pad-x/y`, `mar-x/y`).
  *
- *   toCode    — replaces or appends `pad-{axis} N`
- *   toPanel   — panel.setProperty('pad-{axis}', N)
- *   toPreview — throws. The spacing-keyboard-mode has no axis shortcut yet
- *               (only individual sides via Option+Arrow{side}). Use
- *               via:'code' or via:'panel' for axis padding from tests.
+ *   toCode    — replaces or appends `<kind>-{axis} N`
+ *   toPanel   — panel.setProperty('<kind>-{axis}', N)
+ *   toPreview — throws. The spacing-keyboard-mode has no axis shortcut
+ *               yet (only individual sides via Option+Arrow{side}).
  */
 
 import type { PropertyWriter } from './types'
 
+export type Kind = 'pad' | 'mar'
 export type Axis = 'x' | 'y'
 
-export function createAxisPadWriter(axis: Axis): PropertyWriter {
-  const propName = `pad-${axis}`
+const KIND_PROP: Record<Kind, 'pad' | 'mar'> = { pad: 'pad', mar: 'mar' }
+
+export function createAxisWriter(kind: Kind, axis: Axis): PropertyWriter {
+  const propName = `${KIND_PROP[kind]}-${axis}`
 
   return {
     name: propName,
@@ -50,7 +52,7 @@ export function createAxisPadWriter(axis: Axis): PropertyWriter {
     async toPreview(_nodeId, _value, _ctx): Promise<void> {
       throw new Error(
         `toPreview(${propName}): no axis shortcut in spacing-keyboard-mode yet. ` +
-          `Use via:'code' or via:'panel' for axis padding.`
+          `Use via:'code' or via:'panel' for axis spacing.`
       )
     },
   }
