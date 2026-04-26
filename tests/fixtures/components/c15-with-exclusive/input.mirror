@@ -1,0 +1,9 @@
+Tab: Button pad 10, col #888, cursor pointer, exclusive()
+  selected:
+    col white
+    bor 0 0 2 0, boc #2271C1
+
+Frame hor, gap 0
+  Tab "Home", selected
+  Tab "Profile"
+  Tab "Settings"

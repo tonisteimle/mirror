@@ -1,0 +1,7 @@
+Btn: Button pad 10, bg #333, col white, rad 4, toggle()
+  on:
+    bg #ef4444
+
+Frame hor, gap 8
+  Btn "A"
+  Btn "B"

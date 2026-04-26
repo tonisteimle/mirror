@@ -1,0 +1,5 @@
+Btn: Button pad 10, bg #333, col white, rad 4
+Card: pad 16, bg #1a1a1a, rad 8, gap 8
+  Btn "Inside Card"
+
+Card

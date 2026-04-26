@@ -1,0 +1,4 @@
+Btn: Button pad 10, bg #333, col white, rad 4
+DangerBtn as Btn: bg #ef4444
+
+DangerBtn "Delete"

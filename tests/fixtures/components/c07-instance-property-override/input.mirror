@@ -1,0 +1,4 @@
+Btn: Button pad 10, bg #333, col white, rad 4
+
+Btn "Default"
+Btn "Override", bg #ef4444

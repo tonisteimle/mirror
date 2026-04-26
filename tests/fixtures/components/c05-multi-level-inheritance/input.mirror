@@ -1,0 +1,5 @@
+Btn: Button pad 10, rad 4
+PrimaryBtn as Btn: bg #2271C1, col white
+LoudBtn as PrimaryBtn: fs 18, weight bold
+
+LoudBtn "Loud"

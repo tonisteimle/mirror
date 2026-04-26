@@ -1,0 +1,3 @@
+PrimaryBtn as Button: bg #2271C1, col white, pad 12 24, rad 6
+
+PrimaryBtn "Save"

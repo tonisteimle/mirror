@@ -1,0 +1,5 @@
+Card: pad 16, bg #1a1a1a, rad 8
+  Title: fs 18, col #888
+
+Card
+  Title "Hello", col #ef4444

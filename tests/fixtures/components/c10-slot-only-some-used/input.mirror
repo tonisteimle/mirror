@@ -1,0 +1,7 @@
+Card: pad 16, bg #1a1a1a, rad 8
+  Title: fs 18, weight bold, col white
+  Body: gap 4
+  Footer: hor, gap 8
+
+Card
+  Title "Only Title"

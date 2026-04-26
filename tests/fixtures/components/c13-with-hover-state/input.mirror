@@ -1,0 +1,5 @@
+Btn: Button pad 10, bg #333, col white, rad 4
+  hover:
+    bg #444
+
+Btn "Hover me"
