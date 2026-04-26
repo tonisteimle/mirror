@@ -286,7 +286,7 @@ export interface StudioEvents {
   'rename:undone': { oldName: string; newName: string; symbolType: 'component' | 'token' }
   /** File update requested (from rename or other cross-file operations) */
   'file:update-requested': { filename: string; content: string }
-  /** Draft mode events (AI-assisted code editing with -- marker) */
+  /** Draft mode events (AI-assisted code editing with ?? marker) */
   'draft:submit': {
     prompt: string | null
     startLine: number

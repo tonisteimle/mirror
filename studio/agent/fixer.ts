@@ -381,20 +381,22 @@ export class FixerService {
     if (this.isProcessing) {
       throw new Error('Fixer ist bereits aktiv')
     }
-
-    const bridge = this.getTauriBridge()
-    if (!bridge || !bridge.isTauri()) {
-      throw new Error('Claude CLI ist nur in der Desktop-App verfügbar')
-    }
-    const cliAvailable = await bridge.agent.checkClaudeCli()
-    if (!cliAvailable) {
-      throw new Error(
-        'Claude CLI nicht gefunden. Bitte installieren: npm install -g @anthropic-ai/claude-code'
-      )
-    }
-
+    // Claim the busy flag synchronously — before any await — so a second call
+    // fired in the same microtask can't slip past the guard above.
     this.isProcessing = true
+
     try {
+      const bridge = this.getTauriBridge()
+      if (!bridge || !bridge.isTauri()) {
+        throw new Error('Claude CLI ist nur in der Desktop-App verfügbar')
+      }
+      const cliAvailable = await bridge.agent.checkClaudeCli()
+      if (!cliAvailable) {
+        throw new Error(
+          'Claude CLI nicht gefunden. Bitte installieren: npm install -g @anthropic-ai/claude-code'
+        )
+      }
+
       const fullPrompt = buildDraftPrompt({ prompt, content, fullSource })
       const result = await bridge.agent.runAgent(fullPrompt, 'draft', '', this.sessionId)
       this.sessionId = result.session_id
@@ -732,8 +734,8 @@ Frame hor, gap 8
 
 /**
  * Extract the first \`\`\`mirror or \`\`\` code block from an AI response.
- * Falls back to the trimmed response if no code block is found but the text
- * looks like Mirror code (starts with a known primitive or a component name).
+ * Falls back to the trimmed response if no code block is found but the first
+ * line is a recognizable Mirror DSL construct.
  */
 function extractCodeBlock(response: string): string | null {
   if (!response) return null
@@ -744,13 +746,88 @@ function extractCodeBlock(response: string): string | null {
     return fenceMatch[1].trim()
   }
 
-  // Fallback: looks like Mirror DSL (capitalized identifier or known primitive)
+  // Fallback: first line must look like a Mirror declaration. Strict whitelist —
+  // matching free German prose that happens to start with a capital ("Ich…")
+  // would be a worse outcome than asking the user to retry.
   const trimmed = response.trim()
-  if (/^[A-Z][A-Za-z0-9]*(\b|:)/.test(trimmed) || /^canvas\b/.test(trimmed)) {
+  const firstLine = trimmed.split('\n')[0]
+  if (looksLikeMirrorLine(firstLine)) {
     return trimmed
   }
 
   return null
+}
+
+const MIRROR_PRIMITIVES = new Set([
+  'Frame',
+  'Box',
+  'Text',
+  'Button',
+  'Input',
+  'Textarea',
+  'Label',
+  'Image',
+  'Img',
+  'Icon',
+  'Link',
+  'Slot',
+  'Divider',
+  'Spacer',
+  'Header',
+  'Nav',
+  'Main',
+  'Section',
+  'Article',
+  'Aside',
+  'Footer',
+  'H1',
+  'H2',
+  'H3',
+  'H4',
+  'H5',
+  'H6',
+  'Dialog',
+  'Tooltip',
+  'Tabs',
+  'Tab',
+  'Select',
+  'Item',
+  'Checkbox',
+  'Switch',
+  'Slider',
+  'RadioGroup',
+  'RadioItem',
+  'DatePicker',
+  'Table',
+  'Row',
+  'Column',
+  'Line',
+  'Bar',
+  'Pie',
+  'Donut',
+  'Area',
+])
+
+function looksLikeMirrorLine(line: string): boolean {
+  const trimmed = line.trim()
+  if (!trimmed) return false
+  // canvas declaration
+  if (/^canvas\b/.test(trimmed)) return true
+  // Token / property-set / data definition (lowercase identifier with .key: value pattern)
+  if (/^[a-z][\w]*(?:\.[a-z][\w]*)*\s*:/.test(trimmed)) return true
+  // Component definition or instance: must start with capitalized identifier
+  const head = trimmed.match(/^([A-Z][A-Za-z0-9]*)/)
+  if (!head) return false
+  const name = head[1]
+  const rest = trimmed.slice(name.length)
+  // Bare primitive (e.g. just "Frame" or "Divider") — accept
+  if (rest === '' && MIRROR_PRIMITIVES.has(name)) return true
+  // Component definition: ends with `:` after optional properties
+  if (/:/.test(rest)) return true
+  // Otherwise we need a structural Mirror value character (string/token/color/digit)
+  // to distinguish DSL ("Button \"OK\", bg #fff") from prose ("Sorry, I cannot do that").
+  // Note: comma alone is too weak — prose like "Sorry, I cannot" would slip through.
+  return /["$#(]|\b\d/.test(rest)
 }
 
 // ============================================
