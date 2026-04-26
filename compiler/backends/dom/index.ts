@@ -102,26 +102,7 @@ export { emitAnimations, type AnimationEmitterContext } from './animation-emitte
 // Style Emitter
 export { emitStyles, type StyleEmitterContext } from './style-emitter'
 
-// Value Resolver
-export {
-  escapeString,
-  escapeTemplateString,
-  resolveLoopVarMarkers,
-  resolveExpressionVariables,
-  resolveContentValue,
-  resolveConditionVariables,
-  resolveLoopCondition,
-} from './value-resolver'
-
-// Template Emitter
-export {
-  emitConditionalTemplateNode,
-  emitEachTemplateNode,
-  emitEachTemplateNodeContent,
-  emitNestedEachLoop,
-  resolveTemplateValue,
-  resolveTemplateStyleValue,
-  resolveConditionalExpression,
-  emitTemplateAction,
-  type TemplateEmitterContext,
-} from './template-emitter'
+// Note: dom/value-resolver.ts and dom/template-emitter.ts were removed
+// 2026-04-26 — they were dead duplicates of inline code in `dom.ts`. The
+// authoritative implementations live there. If you need to re-extract,
+// also remove the inline copies in dom.ts.

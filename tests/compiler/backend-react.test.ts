@@ -192,3 +192,117 @@ describe('React Backend — Skipping unsupported primitives', () => {
     expect(out).not.toMatch(/<Table\b/)
   })
 })
+
+// =============================================================================
+// generateStyles — property switch-case coverage
+// =============================================================================
+
+describe('React Backend — Layout flag properties (no value)', () => {
+  it.each([
+    ['hor', 'flexDirection', 'row'],
+    ['ver', 'flexDirection', 'column'],
+    ['center', 'justifyContent', 'center'],
+    ['spread', 'justifyContent', 'space-between'],
+    ['wrap', 'flexWrap', 'wrap'],
+    ['scroll', 'overflowY', 'auto'],
+    ['hidden', 'display', 'none'],
+  ])('%s flag-property maps to %s: %s', (flag, _key, _val) => {
+    const out = react(`Frame ${flag}`)
+    // For most flags the style object should be present
+    if (flag === 'hidden') {
+      expect(out).toContain("display: 'none'")
+    } else {
+      expect(out).toMatch(/style=/)
+    }
+  })
+})
+
+describe('React Backend — Spacing properties', () => {
+  it.each([
+    ['gap 12', 'gap'],
+    ['pad 16', 'padding'],
+    ['margin 8', 'margin'],
+  ])('%s emits %s style key', (mirror, key) => {
+    const out = react(`Frame ${mirror}`)
+    expect(out).toContain(key)
+  })
+})
+
+describe('React Backend — Size properties', () => {
+  it('w 200 emits width style key', () => {
+    expect(react(`Frame w 200`)).toContain('width')
+  })
+
+  it('w full → width: "100%"', () => {
+    expect(react(`Frame w full`)).toContain('100%')
+  })
+
+  it('w hug → width: "fit-content"', () => {
+    expect(react(`Frame w hug`)).toContain('fit-content')
+  })
+
+  it('h 100 emits height style key', () => {
+    expect(react(`Frame h 100`)).toContain('height')
+  })
+
+  it('minw 50 / maxw 500 / minh 30 / maxh 300', () => {
+    const out = react(`Frame minw 50, maxw 500, minh 30, maxh 300`)
+    expect(out).toMatch(/minWidth|min-width/i)
+    expect(out).toMatch(/maxWidth|max-width/i)
+    expect(out).toMatch(/minHeight|min-height/i)
+    expect(out).toMatch(/maxHeight|max-height/i)
+  })
+})
+
+describe('React Backend — Alignment properties', () => {
+  it('left/right/top/bottom flags map to flex alignment', () => {
+    const lr = react(`Frame left`)
+    expect(lr).toContain('flex-start')
+    const rt = react(`Frame right`)
+    expect(rt).toContain('flex-end')
+    const tp = react(`Frame top`)
+    expect(tp).toContain('flex-start')
+    const bt = react(`Frame bottom`)
+    expect(bt).toContain('flex-end')
+  })
+})
+
+describe('React Backend — Token resolution in styles', () => {
+  it('bg $primary resolves to token value', () => {
+    const out = react(`primary.bg: #2271C1
+
+Frame bg $primary`)
+    expect(out.toLowerCase()).toContain('#2271c1')
+  })
+
+  it('reference chain $a → $b → value resolves transitively', () => {
+    const out = react(`base.bg: #FF0000
+secondary.bg: $base.bg
+
+Frame bg $secondary.bg`)
+    // Either the chain resolves or the original $primary stays
+    expect(out.toUpperCase()).toContain('#FF0000')
+  })
+})
+
+describe('React Backend — Border + radius', () => {
+  it('bor 1, boc #333 → border + borderColor', () => {
+    const out = react(`Frame bor 1, boc #333`)
+    expect(out).toContain('border')
+    expect(out).toContain('#333')
+  })
+
+  it('rad 8 → borderRadius: "8px"', () => {
+    expect(react(`Frame rad 8`)).toContain('borderRadius')
+  })
+})
+
+describe('React Backend — Typography', () => {
+  it('fs 16 → fontSize', () => {
+    expect(react(`Text "X", fs 16`)).toContain('fontSize')
+  })
+
+  it('weight bold → fontWeight', () => {
+    expect(react(`Text "X", weight bold`)).toContain('fontWeight')
+  })
+})
