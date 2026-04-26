@@ -1,0 +1,2 @@
+Frame bg #333, w 200, h 100, onhover toast("Hovered")
+  Text "Hover me", col white

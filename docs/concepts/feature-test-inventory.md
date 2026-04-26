@@ -89,27 +89,27 @@
 
 ## Events & Actions
 
-| #   | Feature               | Sub-Features                                                                                   | Status | Schichten | Notizen |
-| --- | --------------------- | ---------------------------------------------------------------------------------------------- | :----: | --------- | ------- |
-| 47  | **Click-Events**      | onclick, mit Action, mit Multi-Action, mit `()`                                                |   🔵   | -         |         |
-| 48  | **Hover-Events**      | onhover, mit Custom-State, mit Animation                                                       |   🔵   | -         |         |
-| 49  | **Focus-Events**      | onfocus, onblur                                                                                |   🔵   | -         |         |
-| 50  | **Input-Events**      | oninput, onchange, mit `bind`                                                                  |   🔵   | -         |         |
-| 51  | **Keyboard-Events**   | onkeydown, onkeyup, mit Key-Filter (enter, escape, space, arrow-up/down/left/right, home, end) |   🔵   | -         |         |
-| 52  | **Click-Outside**     | onclick-outside (für Dialogs, Dropdowns)                                                       |   🔵   | -         |         |
-| 53  | **Viewport-Events**   | onviewenter, onviewexit (IntersectionObserver)                                                 |   🔵   | -         |         |
-| 54  | **Load-Events**       | onload                                                                                         |   🔵   | -         |         |
-| 55  | **Show/Hide-Actions** | show, hide, toggle, open, close, dismiss                                                       |   🔵   | -         |         |
-| 56  | **State-Actions**     | activate, deactivate, select, highlight (next/prev/first/last), assign                         |   🔵   | -         |         |
-| 57  | **Counter-Actions**   | increment, decrement, set, get, reset                                                          |   🔵   | -         |         |
-| 58  | **Toast/Feedback**    | toast(message, type?, position?)                                                               |   🔵   | -         |         |
-| 59  | **Input-Control**     | focus, blur, clear, setError, clearError, submit, reset                                        |   🔵   | -         |         |
-| 60  | **Navigation**        | navigate, back, forward, openUrl                                                               |   🔵   | -         |         |
-| 61  | **Scroll-Actions**    | scrollTo, scrollBy, scrollToTop, scrollToBottom                                                |   🔵   | -         |         |
-| 62  | **Position-Actions**  | showAt, showBelow, showAbove, showLeft, showRight, showModal                                   |   🔵   | -         |         |
-| 63  | **CRUD-Actions**      | add, remove, create, save, revert, delete (auf Collections)                                    |   🔵   | -         |         |
-| 64  | **Clipboard**         | copy(text)                                                                                     |   🔵   | -         |         |
-| 65  | **Multi-Action**      | mehrere Aktionen kombiniert: `toggle(), increment(count), toast("Liked!")`                     |   🔵   | -         |         |
+| #   | Feature               | Sub-Features                                                               | Status | Schichten | Notizen        |
+| --- | --------------------- | -------------------------------------------------------------------------- | :----: | --------- | -------------- |
+| 47  | **Click-Events**      | EV1 onclick, EV9 multi-action                                              |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 48  | **Hover-Events**      | EV2 onhover                                                                |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 49  | **Focus-Events**      | EV3 onfocus, onblur                                                        |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 50  | **Input-Events**      | EV4 oninput, onchange                                                      |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 51  | **Keyboard-Events**   | EV5 enter, EV6 arrows, EV10 escape                                         |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 52  | **Click-Outside**     | EV7 onclick-outside                                                        |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 53  | **Viewport-Events**   | EV8 onviewenter, onviewexit                                                |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 54  | **Load-Events**       | onload                                                                     |   🔵   | -         | Tutorial-Tests |
+| 55  | **Show/Hide-Actions** | show, hide, toggle, open, close, dismiss                                   |   🔵   | -         |                |
+| 56  | **State-Actions**     | activate, deactivate, select, highlight (next/prev/first/last), assign     |   🔵   | -         |                |
+| 57  | **Counter-Actions**   | increment, decrement, set, get, reset                                      |   🔵   | -         |                |
+| 58  | **Toast/Feedback**    | toast(message, type?, position?)                                           |   🔵   | -         |                |
+| 59  | **Input-Control**     | focus, blur, clear, setError, clearError, submit, reset                    |   🔵   | -         |                |
+| 60  | **Navigation**        | navigate, back, forward, openUrl                                           |   🔵   | -         |                |
+| 61  | **Scroll-Actions**    | scrollTo, scrollBy, scrollToTop, scrollToBottom                            |   🔵   | -         |                |
+| 62  | **Position-Actions**  | showAt, showBelow, showAbove, showLeft, showRight, showModal               |   🔵   | -         |                |
+| 63  | **CRUD-Actions**      | add, remove, create, save, revert, delete (auf Collections)                |   🔵   | -         |                |
+| 64  | **Clipboard**         | copy(text)                                                                 |   🔵   | -         |                |
+| 65  | **Multi-Action**      | mehrere Aktionen kombiniert: `toggle(), increment(count), toast("Liked!")` |   🔵   | -         |                |
 
 ## Animationen
 

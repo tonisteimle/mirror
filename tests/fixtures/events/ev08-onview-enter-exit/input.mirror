@@ -1,0 +1,2 @@
+Frame bg #333, h 200, onviewenter toast("In view"), onviewexit toast("Out of view")
+  Text "Scroll to me", col white

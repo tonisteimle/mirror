@@ -1,0 +1,5 @@
+isOpen: true
+
+if isOpen
+  Frame bg #1a1a1a, pad 12, focusable, onkeydown(escape) set(isOpen, false)
+    Text "Press ESC to close", col white

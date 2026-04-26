@@ -1,0 +1,4 @@
+count: 0
+
+Button "Multi", onclick increment(count), toast("Incremented")
+Text "$count"

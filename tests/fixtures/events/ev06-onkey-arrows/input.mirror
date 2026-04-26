@@ -1,0 +1,2 @@
+Frame focusable, onkeydown(arrow-up) toast("Up"), onkeydown(arrow-down) toast("Down")
+  Text "Arrow keys"

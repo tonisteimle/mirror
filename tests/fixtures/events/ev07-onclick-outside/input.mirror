@@ -1,0 +1,8 @@
+menuOpen: false
+
+Button "Toggle Menu", onclick toggle(menuOpen)
+
+if menuOpen
+  Frame bg #1a1a1a, pad 12, onclick-outside set(menuOpen, false)
+    Text "Menu Item 1", col white
+    Text "Menu Item 2", col white
