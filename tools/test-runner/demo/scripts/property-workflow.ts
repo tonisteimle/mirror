@@ -173,10 +173,9 @@ export const demoScript: DemoScript = {
       comment: 'col → weiß',
     },
     { action: 'wait', duration: 400 },
-    // Note: Mirror's changeProperty appends a new `col` rather than updating
-    // the existing one (palette default `col #e4e4e7` is preserved). The
-    // duplicate is harmless — last wins at compile — and is the actual
-    // behavior we want to lock in here.
+    // Mit dem parseLine-Fix in compiler/studio/line-property-parser.ts
+    // wird der existing `col #e4e4e7` jetzt korrekt erkannt und replaced
+    // statt zu duplizieren (vorher: `col #e4e4e7, col #FFFFFF`).
     {
       action: 'expectCode',
       comment: 'after col=#FFFFFF',
@@ -184,7 +183,7 @@ export const demoScript: DemoScript = {
         'canvas mobile, bg #0f0f0f, col white\n' +
         '\n' +
         'Frame w 320, h 200, bg #2196F3, rad 8, gap 12, center\n' +
-        '  H1 "Heading 1", col #e4e4e7, col #FFFFFF',
+        '  H1 "Heading 1", col #FFFFFF',
     },
 
     // === 11. Title-Text per Inline-Edit ===
@@ -203,7 +202,7 @@ export const demoScript: DemoScript = {
         'canvas mobile, bg #0f0f0f, col white\n' +
         '\n' +
         'Frame w 320, h 200, bg #2196F3, rad 8, gap 12, center\n' +
-        '  H1 "Willkommen", col #e4e4e7, col #FFFFFF',
+        '  H1 "Willkommen", col #FFFFFF',
     },
 
     // === Finale: DOM-Verifikation ===

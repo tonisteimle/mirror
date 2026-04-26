@@ -630,7 +630,7 @@ export const demoScript: DemoScript = {
         '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
         '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
         '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
-        '    Text "toni@example.com", fs 14, col #e4e4e7, col #a1a1aa',
+        '    Text "toni@example.com", fs 14, col #a1a1aa',
     },
     { action: 'wait', duration: 400 },
 
@@ -652,7 +652,7 @@ export const demoScript: DemoScript = {
         '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
         '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
         '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
-        '    Text "toni@example.com", fs 14, col #e4e4e7, col #a1a1aa\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
         '  Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
     },
     { action: 'wait', duration: 400 },
@@ -672,21 +672,22 @@ export const demoScript: DemoScript = {
         '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
         '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
         '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
-        '    Text "toni@example.com", fs 14, col #e4e4e7, col #a1a1aa\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
         '  Button "Edit", pad 12 24, bg #5BA8F5, col white, rad 6',
     },
     { action: 'wait', duration: 400 },
 
     // === Schritt 2.27: Button bg auf raised ===
-    // Mirror's changeProperty appendet `bg` statt zu replacen — siehe
-    // property-workflow.ts ("col #e4e4e7, col #FFFFFF"). Pattern wird
-    // hier eingelockt; Root-Cause-Fix in Task #68.
+    // Mit dem parseLine-Fix in compiler/studio/line-property-parser.ts
+    // werden Properties NACH dem textContent (z.B. `Button "Edit", bg …`)
+    // jetzt korrekt erkannt — pickColor REPLACEd den existing bg statt
+    // zu appendieren (vorher: `bg #5BA8F5, col …, bg #3f3f46`).
     {
       action: 'pickColor',
       selector: { byId: 'node-9' },
       prop: 'bg',
       color: '#3f3f46',
-      comment: 'Button raised-grau (Mirror appended bg statt zu replacen)',
+      comment: 'Button raised-grau',
       expectCode:
         'canvas mobile, bg #18181b, col #e4e4e7\n' +
         '\n' +
@@ -696,8 +697,8 @@ export const demoScript: DemoScript = {
         '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
         '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
         '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
-        '    Text "toni@example.com", fs 14, col #e4e4e7, col #a1a1aa\n' +
-        '  Button "Edit", pad 12 24, bg #5BA8F5, col white, rad 6, bg #3f3f46',
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6',
     },
     { action: 'wait', duration: 600 },
 

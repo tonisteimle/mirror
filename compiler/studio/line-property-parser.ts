@@ -175,16 +175,29 @@ export function parseLine(line: string): ParsedLine {
 
     if (!remaining.length) break
 
-    // Check for quoted text content (final element)
+    // Check for quoted text content. In Mirror's DSL, components like
+    // `Button "Edit", bg #fff, …` carry the textContent BEFORE the
+    // property list — so we must record it and KEEP parsing properties.
+    // Previously this branch `break`-ed out of the loop, which silently
+    // dropped every property after a textContent. That made
+    // findPropertyInLine return null for `bg` on Button/Text/H1/…
+    // lines, so updateProperty fell back to addProperty and appended
+    // duplicates instead of replacing.
     if (remaining.startsWith('"') || remaining.startsWith("'")) {
       const quote = remaining[0]
       const endQuote = remaining.indexOf(quote, 1)
       if (endQuote !== -1) {
         result.textContent = remaining.substring(0, endQuote + 1)
+        const consumed = endQuote + 1
+        currentPos += consumed
+        remaining = remaining.substring(consumed)
+        continue
       } else {
+        // Unterminated quote — best effort: treat the rest as text and
+        // stop, since we can't reliably find the property boundary.
         result.textContent = remaining
+        break
       }
-      break
     }
 
     // Parse property: name [direction] [value(s)]
