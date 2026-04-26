@@ -1396,6 +1396,64 @@ export const demoScript: DemoScript = {
     { action: 'moveTo', target: '#preview' },
     { action: 'highlight', target: '#preview', duration: 1500 },
     { action: 'wait', duration: 600 },
+
+    // =========================================================================
+    // Chapter 6: Save/Cancel-Bar via AI-Prompt (Draft Mode)
+    // =========================================================================
+    //
+    // User schließt das Settings-UI mit einer Save/Cancel-Bar — schreibt den
+    // Wunsch als `--`-Prompt + Cmd+Enter und lässt Mirror's Anthropic-SDK-
+    // Agent (im Test: Mock aus fixtures/notion-settings.json) den Code
+    // generieren.
+
+    { action: 'comment', text: 'Chapter 6: Save/Cancel-Bar via AI-Prompt' },
+    { action: 'wait', duration: 800 },
+    {
+      action: 'execute',
+      code: `
+        (() => {
+          const ed = window.editor;
+          const end = ed.state.doc.length;
+          ed.dispatch({ selection: { anchor: end, head: end } });
+          ed.focus();
+        })();
+      `,
+    },
+    { action: 'wait', duration: 200 },
+    {
+      action: 'aiPrompt',
+      prompt: 'Save Cancel Bar — links Cancel ghost, rechts Save primary',
+      comment: 'Draft-Mode-Prompt → AI generiert Save/Cancel-Bar',
+      // Pin: AI-Output muss eine Zeile mit "Save" und "Cancel" enthalten
+      // (genauer Code in der fixture-Datei festgelegt).
+      expectCodeMatches: /Button "Cancel"[\s\S]+Button "Save"/,
+    },
+    { action: 'wait', duration: 1000 },
+
+    // Final-Validation: alle Section-Headlines sind da, kein lint error,
+    // und die AI-generierten Buttons stehen unten im Code.
+    {
+      action: 'validate',
+      comment: 'Endbild — alle Texte und Komponenten vorhanden',
+      checks: [
+        { type: 'editorContains', text: '"Settings"' },
+        { type: 'editorContains', text: '"Profile"' },
+        { type: 'editorContains', text: '"Preferences"' },
+        { type: 'editorContains', text: '"Workspace"' },
+        { type: 'editorContains', text: '"Privacy"' },
+        { type: 'editorContains', text: '"Toni Steimle"' },
+        { type: 'editorContains', text: 'Toggle' },
+        { type: 'editorContains', text: 'ColorTile' },
+        { type: 'editorContains', text: '"Cancel"' },
+        { type: 'editorContains', text: '"Save"' },
+        { type: 'noLintErrors' },
+      ],
+    },
+
+    { action: 'comment', text: 'Notion-Settings UI komplett gebaut — Story-Ende.' },
+    { action: 'moveTo', target: '#preview' },
+    { action: 'highlight', target: '#preview', duration: 2000 },
+    { action: 'wait', duration: 800 },
   ],
 }
 

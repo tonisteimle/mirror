@@ -720,7 +720,8 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
         pacing = 'testing' // Use testing profile for validation
       }
 
-      // Load AI mock fixtures if given
+      // Load AI mock fixtures if given (--ai-mock=PATH explicit + auto-discovered
+      // sidecar at fixtures/<demo-name>.json — same convention as suite mode).
       let aiMockFixtures: Record<string, string> | undefined
       if (args.aiMock) {
         try {
@@ -730,6 +731,26 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
           console.log(`🤖 AI mock: ${count} fixture${count === 1 ? '' : 's'} from ${args.aiMock}`)
         } catch (err) {
           throw new Error(`Cannot load AI mock from ${args.aiMock}: ${(err as Error).message}`)
+        }
+      }
+      if (args.demo) {
+        const demoBasename = pathSync.basename(args.demo, pathSync.extname(args.demo))
+        const sidecar = pathSync.join(
+          pathSync.dirname(args.demo),
+          '..',
+          'fixtures',
+          `${demoBasename}.json`
+        )
+        if (fsSync.existsSync(sidecar)) {
+          try {
+            const fix = JSON.parse(fsSync.readFileSync(sidecar, 'utf-8'))
+            aiMockFixtures = { ...(aiMockFixtures || {}), ...fix }
+            console.log(
+              `🤖 AI mock: +${Object.keys(fix).length} fixture(s) from ${pathSync.basename(sidecar)}`
+            )
+          } catch (err) {
+            console.warn(`   ⚠️  Could not load fixture ${sidecar}: ${(err as Error).message}`)
+          }
         }
       }
 
