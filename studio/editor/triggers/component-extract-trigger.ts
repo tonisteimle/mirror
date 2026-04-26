@@ -30,8 +30,8 @@ import { EditorView, ViewUpdate } from '@codemirror/view'
 import { Transaction } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import { createLogger } from '../../../compiler/utils/logger'
-import { findProjectMatches, type MatchResult } from '../extract/pattern-match'
-import { applyBatchReplace } from '../extract/apply-batch-replace'
+import { findProjectMatches, findNearMatches } from '../extract/pattern-match'
+import { applyBatchReplace, applyNearMatchReplace } from '../extract/apply-batch-replace'
 import { showBatchReplaceDialog } from '../extract/batch-replace-dialog'
 
 const log = createLogger('ComponentExtract')
@@ -427,7 +427,7 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
     source: f.name === currentFilename ? doc.toString() : f.code,
   }))
 
-  const matches = findProjectMatches({
+  const exactMatches = findProjectMatches({
     targetReferenceLine,
     files: projectFiles,
     targetFilename: currentFilename,
@@ -435,26 +435,53 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
     componentName,
   })
 
-  if (matches.length === 0) return
+  const nearMatches = findNearMatches({
+    targetReferenceLine,
+    files: projectFiles,
+    targetFilename: currentFilename,
+    targetLineNumber: lineNumber,
+    componentName,
+  })
+
+  if (exactMatches.length === 0 && nearMatches.length === 0) return
 
   // Capture callbacks in a non-null local for the deferred onApply callback.
   const cb = callbacks
   showBatchReplaceDialog({
     componentName,
-    matches,
-    onApply: (selected: MatchResult[]) => {
-      if (selected.length === 0) return
-      const result = applyBatchReplace({
-        files: projectFiles,
-        acceptedMatches: selected,
-        componentName,
-      })
-      // Apply changes per file. For the current file (editor), use
-      // editor.dispatch to keep undo coherent. For other files, write
-      // through the callback.
-      for (const [filename, newSource] of result.changedFiles) {
+    matches: exactMatches,
+    nearMatches,
+    onApply: ({ exact, near }) => {
+      if (exact.length === 0 && near.length === 0) return
+
+      // Apply both replace types and merge into one changedFiles map.
+      const merged = new Map<string, string>()
+      let runningFiles = projectFiles
+
+      if (exact.length > 0) {
+        const r = applyBatchReplace({
+          files: runningFiles,
+          acceptedMatches: exact,
+          componentName,
+        })
+        for (const [f, s] of r.changedFiles) merged.set(f, s)
+        // Update running view of files so near-match step sees the
+        // exact-match changes.
+        runningFiles = runningFiles.map(f =>
+          merged.has(f.filename) ? { filename: f.filename, source: merged.get(f.filename)! } : f
+        )
+      }
+      if (near.length > 0) {
+        const r = applyNearMatchReplace({
+          files: runningFiles,
+          acceptedMatches: near,
+          componentName,
+        })
+        for (const [f, s] of r.changedFiles) merged.set(f, s)
+      }
+
+      for (const [filename, newSource] of merged) {
         if (filename === currentFilename) {
-          // Replace the entire current-file source.
           const fullDoc = view.state.doc
           view.dispatch({
             changes: { from: 0, to: fullDoc.length, insert: newSource },
@@ -465,7 +492,7 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
         }
       }
       log.info(
-        `Batch-replaced ${selected.length} match(es) across ${result.changedFiles.size} file(s)`
+        `Batch-replaced ${exact.length} exact + ${near.length} near match(es) across ${merged.size} file(s)`
       )
     },
   })

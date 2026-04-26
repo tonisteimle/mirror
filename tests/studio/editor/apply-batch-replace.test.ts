@@ -209,3 +209,97 @@ describe('applySegmentReplace', () => {
     expect(result.changedFiles.size).toBe(0)
   })
 })
+
+import {
+  applyNearMatchReplace,
+  rewriteNearMatchLine,
+} from '../../../studio/editor/extract/apply-batch-replace'
+
+describe('rewriteNearMatchLine', () => {
+  it('replaces with element + override list', () => {
+    const result = rewriteNearMatchLine('Frame pad 16, bg #ef4444, rad 8', 'Card', [
+      { name: 'bg', rawValue: '#ef4444' },
+    ])
+    expect(result).toBe('Card bg #ef4444')
+  })
+
+  it('multi-override', () => {
+    const result = rewriteNearMatchLine('Frame pad 24, bg #ef4444', 'Card', [
+      { name: 'pad', rawValue: '24' },
+      { name: 'bg', rawValue: '#ef4444' },
+    ])
+    expect(result).toBe('Card pad 24, bg #ef4444')
+  })
+
+  it('preserves indent', () => {
+    expect(
+      rewriteNearMatchLine('  Frame bg #ef4444', 'Card', [{ name: 'bg', rawValue: '#ef4444' }])
+    ).toBe('  Card bg #ef4444')
+  })
+
+  it('preserves leading content string + adds overrides separated by comma', () => {
+    expect(
+      rewriteNearMatchLine('Text "Hi", col #ef4444, fs 16', 'Headline', [
+        { name: 'col', rawValue: '#ef4444' },
+        { name: 'fs', rawValue: '16' },
+      ])
+    ).toBe('Headline "Hi", col #ef4444, fs 16')
+  })
+
+  it('preserves trailing inline comment', () => {
+    expect(
+      rewriteNearMatchLine('Frame bg #ef4444  // danger card', 'Card', [
+        { name: 'bg', rawValue: '#ef4444' },
+      ])
+    ).toBe('Card bg #ef4444  // danger card')
+  })
+
+  it('multi-token value rendered correctly', () => {
+    expect(
+      rewriteNearMatchLine('Frame pad 12 24', 'Card', [{ name: 'pad', rawValue: '12 24' }])
+    ).toBe('Card pad 12 24')
+  })
+})
+
+describe('applyNearMatchReplace', () => {
+  it('rewrites multiple files with overrides', () => {
+    const result = applyNearMatchReplace({
+      files: [
+        { filename: 'a.mir', source: 'Frame pad 16, bg #ef4444\nFrame pad 16, bg #2271C1' },
+        { filename: 'b.mir', source: 'Btn pad 16, bg #10b981' },
+      ],
+      acceptedMatches: [
+        {
+          filename: 'a.mir',
+          lineNumber: 1,
+          originalText: 'Frame pad 16, bg #ef4444',
+          overrides: [{ name: 'bg', rawValue: '#ef4444' }],
+        },
+        {
+          filename: 'a.mir',
+          lineNumber: 2,
+          originalText: 'Frame pad 16, bg #2271C1',
+          overrides: [{ name: 'bg', rawValue: '#2271C1' }],
+        },
+        {
+          filename: 'b.mir',
+          lineNumber: 1,
+          originalText: 'Btn pad 16, bg #10b981',
+          overrides: [{ name: 'bg', rawValue: '#10b981' }],
+        },
+      ],
+      componentName: 'Card',
+    })
+    expect(result.changedFiles.get('a.mir')).toBe('Card bg #ef4444\nCard bg #2271C1')
+    expect(result.changedFiles.get('b.mir')).toBe('Card bg #10b981')
+  })
+
+  it('handles empty matches', () => {
+    const result = applyNearMatchReplace({
+      files: [{ filename: 'a.mir', source: 'Frame pad 16' }],
+      acceptedMatches: [],
+      componentName: 'Card',
+    })
+    expect(result.changedFiles.size).toBe(0)
+  })
+})

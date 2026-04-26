@@ -542,3 +542,138 @@ Text col #2271C1`
     expect(matches).toHaveLength(2)
   })
 })
+
+// ---------------------------------------------------------------------------
+// findNearMatches — override mode for Component-Extract Phase C
+// ---------------------------------------------------------------------------
+
+import { findNearMatches } from '../../../studio/editor/extract/pattern-match'
+
+describe('findNearMatches', () => {
+  it('finds lines with one differing value (the override candidate)', () => {
+    const file = `Frame pad 16, bg #1a1a1a, rad 8
+Frame pad 16, bg #2271C1, rad 8
+Frame pad 16, bg #ef4444, rad 8`
+    const matches = findNearMatches({
+      targetReferenceLine: 'Frame pad 16, bg #1a1a1a, rad 8',
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      componentName: 'Card',
+    })
+    expect(matches).toHaveLength(2)
+    expect(matches[0].overrides).toEqual([{ name: 'bg', rawValue: '#2271C1' }])
+    expect(matches[1].overrides).toEqual([{ name: 'bg', rawValue: '#ef4444' }])
+  })
+
+  it('skips exact matches (those go through findProjectMatches)', () => {
+    const file = `Frame pad 16, bg #1a1a1a
+Frame pad 16, bg #1a1a1a`
+    const matches = findNearMatches({
+      targetReferenceLine: 'Frame pad 16, bg #1a1a1a',
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      componentName: 'Card',
+    })
+    expect(matches).toHaveLength(0)
+  })
+
+  it('skips lines with different property NAMES (not just values)', () => {
+    const file = `Frame pad 16, bg #1a1a1a
+Frame pad 16, col white`
+    const matches = findNearMatches({
+      targetReferenceLine: 'Frame pad 16, bg #1a1a1a',
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      componentName: 'Card',
+    })
+    expect(matches).toHaveLength(0)
+  })
+
+  it('respects max-diffs limit (3)', () => {
+    // 4 differing values → not a near match
+    const file = `Frame pad 16, bg #1a1a1a, rad 8, gap 12, col white
+Frame pad 100, bg #ef4444, rad 99, gap 88, col black`
+    const matches = findNearMatches({
+      targetReferenceLine: 'Frame pad 16, bg #1a1a1a, rad 8, gap 12, col white',
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      componentName: 'Card',
+    })
+    expect(matches).toHaveLength(0)
+  })
+
+  it('respects 2-diff threshold (still in)', () => {
+    const file = `Frame pad 16, bg #1a1a1a, rad 8
+Frame pad 16, bg #ef4444, rad 4`
+    const matches = findNearMatches({
+      targetReferenceLine: 'Frame pad 16, bg #1a1a1a, rad 8',
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      componentName: 'Card',
+    })
+    expect(matches).toHaveLength(1)
+    expect(matches[0].overrides.map(o => o.name).sort()).toEqual(['bg', 'rad'])
+  })
+
+  it('skips lines that are already the new component', () => {
+    const file = `Frame pad 16, bg #1a1a1a, rad 8
+Card pad 16, bg #ef4444, rad 8`
+    const matches = findNearMatches({
+      targetReferenceLine: 'Frame pad 16, bg #1a1a1a, rad 8',
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      componentName: 'Card',
+    })
+    // Card line is already this component → skip even with diff
+    expect(matches).toHaveLength(0)
+  })
+
+  it('skips lines with positional bare values (too ambiguous)', () => {
+    const file = `Frame pad 16, bg #1a1a1a
+Frame 100, 50, #1a1a1a`
+    const matches = findNearMatches({
+      targetReferenceLine: 'Frame pad 16, bg #1a1a1a',
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      componentName: 'Card',
+    })
+    // The second line has positional values which after resolver expand
+    // to w/h/bg — different property NAME set than target → no match.
+    expect(matches).toHaveLength(0)
+  })
+
+  it('numeric value differences also count', () => {
+    const file = `Frame pad 16, bg #1a1a1a
+Frame pad 24, bg #1a1a1a`
+    const matches = findNearMatches({
+      targetReferenceLine: 'Frame pad 16, bg #1a1a1a',
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      componentName: 'Card',
+    })
+    expect(matches).toHaveLength(1)
+    expect(matches[0].overrides).toEqual([{ name: 'pad', rawValue: '24' }])
+  })
+
+  it('different element names but same shape are still near matches', () => {
+    const file = `Frame pad 16, bg #1a1a1a
+Btn pad 16, bg #ef4444`
+    const matches = findNearMatches({
+      targetReferenceLine: 'Frame pad 16, bg #1a1a1a',
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      componentName: 'Card',
+    })
+    expect(matches).toHaveLength(1)
+    expect(matches[0].overrides).toEqual([{ name: 'bg', rawValue: '#ef4444' }])
+  })
+})

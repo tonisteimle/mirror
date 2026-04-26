@@ -256,10 +256,12 @@ function performExtraction(
       lineNumber: m.lineNumber,
       originalText: m.originalText,
     })),
-    onApply: selectedMatchResults => {
-      // Map back from MatchResult to SegmentMatch by (filename, lineNumber).
+    onApply: ({ exact }) => {
+      // Token-extract has no near-match concept — only exact matches are
+      // produced. Map back from MatchResult to SegmentMatch by
+      // (filename, lineNumber).
       const selected: SegmentMatch[] = []
-      for (const sel of selectedMatchResults) {
+      for (const sel of exact) {
         const orig = matches.find(
           m => m.filename === sel.filename && m.lineNumber === sel.lineNumber
         )

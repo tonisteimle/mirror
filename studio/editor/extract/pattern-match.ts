@@ -364,6 +364,158 @@ export function findProjectMatches(input: FindMatchesInput): MatchResult[] {
 }
 
 // ---------------------------------------------------------------------------
+// Near-Match (Override Mode) for Component-Extract
+// ---------------------------------------------------------------------------
+
+/** Maximum value-differences before we stop calling something "near". */
+const NEAR_MATCH_MAX_DIFFS = 3
+
+export interface NearMatchOverride {
+  /** Property name (e.g. `bg`). */
+  name: string
+  /** The candidate's value text, formatted as it should appear in the
+   *  override (e.g. `#2271C1` → emit as `bg #2271C1`). */
+  rawValue: string
+}
+
+export interface NearMatchResult {
+  filename: string
+  lineNumber: number
+  originalText: string
+  /** Properties whose values differ from the target — become overrides
+   *  on the new instance line. */
+  overrides: NearMatchOverride[]
+}
+
+/**
+ * Find lines that don't exactly match the target but are CLOSE: same
+ * element name, same set of property names, ≤ NEAR_MATCH_MAX_DIFFS
+ * value differences. Differing values become overrides on the resulting
+ * instance line (e.g. `Card bg #ef4444`).
+ *
+ * Lines that exactly match the target are EXCLUDED — those go through
+ * findProjectMatches. Same skip-list applies (target line itself,
+ * lines already the new component).
+ */
+export function findNearMatches(input: FindMatchesInput): NearMatchResult[] {
+  let targetResolved: string
+  try {
+    targetResolved = resolvePositionalArgs(input.targetReferenceLine)
+  } catch {
+    targetResolved = input.targetReferenceLine
+  }
+  const targetCanonical = canonicalize(targetResolved)
+  if (!targetCanonical) return []
+
+  const results: NearMatchResult[] = []
+
+  for (const file of input.files) {
+    let resolvedSource: string
+    try {
+      resolvedSource = resolvePositionalArgs(file.source)
+    } catch {
+      continue
+    }
+
+    const originalLines = file.source.split('\n')
+    const resolvedLines = resolvedSource.split('\n')
+    if (resolvedLines.length !== originalLines.length) continue
+
+    for (let i = 0; i < resolvedLines.length; i++) {
+      if (file.filename === input.targetFilename && i + 1 === input.targetLineNumber) {
+        continue
+      }
+
+      const candidate = canonicalize(resolvedLines[i])
+      if (!candidate) continue
+      if (candidate.elementName === input.componentName) continue
+
+      // Exact match → not a near match. Skip.
+      if (propertiesMatch(targetCanonical, candidate)) continue
+
+      const overrides = computeOverrides(targetCanonical, candidate)
+      if (!overrides) continue
+      if (overrides.length === 0 || overrides.length > NEAR_MATCH_MAX_DIFFS) continue
+
+      results.push({
+        filename: file.filename,
+        lineNumber: i + 1,
+        originalText: originalLines[i],
+        overrides,
+      })
+    }
+  }
+
+  return results
+}
+
+/**
+ * Compute the override list when candidate is a near-match of target.
+ * Returns null if the lines are too different to consider near
+ * (different shape, leading-string mismatch, missing properties).
+ *
+ * Allowed differences:
+ *   - Same property NAMES (sets equal)
+ *   - 1..NEAR_MATCH_MAX_DIFFS values differ
+ * Everything else returns null.
+ */
+function computeOverrides(
+  target: CanonicalLine,
+  candidate: CanonicalLine
+): NearMatchOverride[] | null {
+  // Leading-string presence must match.
+  if ((target.leadingString === null) !== (candidate.leadingString === null)) return null
+
+  // Build property-name → value lookups (sorted canonical form).
+  const targetByName = new Map<string, ClassifiedValue[]>()
+  for (const p of target.properties) {
+    if (p.name === null) return null // positional in target — too ambiguous
+    targetByName.set(p.name, p.values)
+  }
+  const candidateByName = new Map<string, ClassifiedValue[]>()
+  for (const p of candidate.properties) {
+    if (p.name === null) return null // positional in candidate — too ambiguous
+    candidateByName.set(p.name, p.values)
+  }
+
+  // Same set of property names required.
+  if (targetByName.size !== candidateByName.size) return null
+  for (const name of targetByName.keys()) {
+    if (!candidateByName.has(name)) return null
+  }
+
+  // Walk and find differences.
+  const overrides: NearMatchOverride[] = []
+  for (const [name, targetValues] of targetByName) {
+    const candValues = candidateByName.get(name)!
+    if (targetValues.length !== candValues.length) {
+      // Different number of value tokens — count as one diff and emit
+      // the candidate's raw value list as the override.
+      overrides.push({
+        name,
+        rawValue: candValues.map(v => v.raw).join(' '),
+      })
+      continue
+    }
+    let matches = true
+    for (let i = 0; i < targetValues.length; i++) {
+      if (!valueMatch(targetValues[i], candValues[i])) {
+        matches = false
+        break
+      }
+    }
+    if (!matches) {
+      overrides.push({
+        name,
+        rawValue: candValues.map(v => v.raw).join(' '),
+      })
+    }
+  }
+
+  return overrides
+}
+
+// ---------------------------------------------------------------------------
 // Segment-Level Matching (for Token-Extract Batch-Replace)
 // ---------------------------------------------------------------------------
 

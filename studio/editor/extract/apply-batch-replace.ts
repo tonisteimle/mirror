@@ -12,7 +12,7 @@
  * to the editor / writing the files.
  */
 
-import type { MatchResult, SegmentMatch } from './pattern-match'
+import type { MatchResult, NearMatchResult, SegmentMatch } from './pattern-match'
 
 export interface BatchReplaceResult {
   /** filename → new content (only files with at least one accepted match). */
@@ -102,6 +102,96 @@ export function rewriteMatchLine(line: string, newComponentName: string): string
 
   let result = indent + newComponentName
   if (leadingString) result += ' ' + leadingString
+  if (comment) result += '  ' + comment
+  return result
+}
+
+// ---------------------------------------------------------------------------
+// Near-Match Replace (Override Mode)
+// ---------------------------------------------------------------------------
+
+export interface ApplyNearMatchReplaceInput {
+  files: { filename: string; source: string }[]
+  acceptedMatches: NearMatchResult[]
+  componentName: string
+}
+
+/**
+ * Replace near-match lines with `<ComponentName> <override-list>`.
+ * Preserves indent + trailing comment. Leading content string (if any)
+ * is preserved at the new instance, just like component-extract.
+ */
+export function applyNearMatchReplace(input: ApplyNearMatchReplaceInput): BatchReplaceResult {
+  const changedFiles = new Map<string, string>()
+
+  const matchesByFile = new Map<string, NearMatchResult[]>()
+  for (const m of input.acceptedMatches) {
+    const list = matchesByFile.get(m.filename) ?? []
+    list.push(m)
+    matchesByFile.set(m.filename, list)
+  }
+
+  for (const [filename, matches] of matchesByFile) {
+    const file = input.files.find(f => f.filename === filename)
+    if (!file) continue
+    const lines = file.source.split('\n')
+    for (const m of matches) {
+      const idx = m.lineNumber - 1
+      if (idx < 0 || idx >= lines.length) continue
+      lines[idx] = rewriteNearMatchLine(lines[idx], input.componentName, m.overrides)
+    }
+    changedFiles.set(filename, lines.join('\n'))
+  }
+
+  return { changedFiles }
+}
+
+/**
+ * Rewrite a near-match line: replace element + properties with the new
+ * component name plus the override list, preserving indent + leading
+ * content string + trailing comment.
+ */
+export function rewriteNearMatchLine(
+  line: string,
+  newComponentName: string,
+  overrides: { name: string; rawValue: string }[]
+): string {
+  const indentMatch = line.match(/^(\s*)/)
+  const indent = indentMatch ? indentMatch[1] : ''
+  const { code, comment } = splitInlineComment(line.slice(indent.length))
+
+  const elementMatch = code.match(/^[A-Z][a-zA-Z0-9_]*\b/)
+  if (!elementMatch) return line
+
+  let pos = elementMatch[0].length
+  while (pos < code.length && /\s/.test(code[pos])) pos++
+
+  let leadingString = ''
+  if (code[pos] === '"' || code[pos] === "'") {
+    const quote = code[pos]
+    let end = pos + 1
+    while (end < code.length) {
+      if (code[end] === '\\') {
+        end += 2
+        continue
+      }
+      if (code[end] === quote) {
+        end++
+        break
+      }
+      end++
+    }
+    leadingString = code.slice(pos, end)
+  }
+
+  const overrideText = overrides.map(o => `${o.name} ${o.rawValue}`).join(', ')
+
+  let result = indent + newComponentName
+  if (leadingString) result += ' ' + leadingString
+  if (overrideText) {
+    // If there's a leading string, separate with comma; otherwise space.
+    result += leadingString ? ', ' + overrideText : ' ' + overrideText
+  }
   if (comment) result += '  ' + comment
   return result
 }
