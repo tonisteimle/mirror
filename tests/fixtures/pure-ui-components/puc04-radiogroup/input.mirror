@@ -1,0 +1,3 @@
+RadioGroup value "monthly"
+  RadioItem "Monthly", value "monthly"
+  RadioItem "Yearly", value "yearly"

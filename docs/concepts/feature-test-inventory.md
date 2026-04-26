@@ -123,14 +123,14 @@
 
 | #   | Feature               | Sub-Features                                                               | Status | Schichten | Notizen               |
 | --- | --------------------- | -------------------------------------------------------------------------- | :----: | --------- | --------------------- |
-| 69  | **Dialog**            | Trigger, Backdrop, Content, CloseTrigger, Open/Close, ESC, Click-Outside   |   🔵   | -         | `compound-primitives` |
-| 70  | **Tooltip**           | Trigger, Content, Positioning (top/bottom/left/right)                      |   🔵   | -         |                       |
-| 71  | **Tabs**              | defaultValue, Tab-Triggers, Tab-Contents, Switching                        |   🔵   | -         |                       |
-| 72  | **Select (Dropdown)** | Trigger, Content, Items, trigger-text, loop-focus, typeahead, keyboard-nav |   🔵   | -         |                       |
-| 73  | **Checkbox**          | label, checked default, click toggles                                      |   🔵   | -         |                       |
-| 74  | **Switch**            | label, checked, click toggles                                              |   🔵   | -         |                       |
-| 75  | **Slider**            | min, max, value, step                                                      |   🔵   | -         |                       |
-| 76  | **RadioGroup**        | value, RadioItem, exclusive selection                                      |   🔵   | -         |                       |
+| 69  | **Dialog**            | Trigger, Backdrop, Content, CloseTrigger, Open/Close, ESC, Click-Outside   |   ✅   | F·B·C·D·S | Sprint 5.2            |
+| 70  | **Tooltip**           | Trigger, Content, Positioning (top/bottom/left/right)                      |   ✅   | F·B·C·D·S | Sprint 5.2 — Bug #32  |
+| 71  | **Tabs**              | defaultValue, Tab-Triggers, Tab-Contents, Switching                        |   ✅   | F·B·C·D·S | Sprint 5.2 — Bug #33  |
+| 72  | **Select (Dropdown)** | Trigger, Content, Items, trigger-text, loop-focus, typeahead, keyboard-nav |   ✅   | F·B·C·D·S | Sprint 5.2            |
+| 73  | **Checkbox**          | label, checked default, click toggles                                      |   ✅   | F·B·C·D·S | Sprint 5.2            |
+| 74  | **Switch**            | label, checked, click toggles                                              |   ✅   | F·B·C·D·S | Sprint 5.2            |
+| 75  | **Slider**            | min, max, value, step                                                      |   ✅   | F·B·C·D·S | Sprint 5.2            |
+| 76  | **RadioGroup**        | value, RadioItem, exclusive selection                                      |   ✅   | F·B·C·D·S | Sprint 5.2            |
 | 77  | **DatePicker** (Zag)  | selectionMode, fixedWeeks, startOfWeek, positioning, min/max               |   🔵   | -         | Letzter Zag-Component |
 
 ## Compound Primitives
@@ -304,6 +304,8 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 | 29  | `bor`-Shorthand überschreibt `boc $token` mit currentColor | Tokens-Fixtures    | ✅ gefixt |
 | 30  | `bind item.value` in each-Loop initialisiert nicht         | Bind-Fixtures      | ✅ gefixt |
 | 31  | `bind user.email` bindet auf `user` (ganzes Object)        | Bind-Fixtures      | ✅ gefixt |
+| 32  | `Tooltip positioning "X"` parst, emittiert kein Attribut   | Pure-UI-Behavior   | offen     |
+| 33  | `Tabs defaultValue "X"` parst, emittiert kein Attribut     | Pure-UI-Behavior   | offen     |
 
 ## Nicht-Ziele
 

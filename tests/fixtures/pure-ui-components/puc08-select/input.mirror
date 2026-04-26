@@ -1,0 +1,7 @@
+Select
+  Trigger
+    Text "Choose..."
+  Content
+    Item "Berlin"
+    Item "Hamburg"
+    Item "Munich"

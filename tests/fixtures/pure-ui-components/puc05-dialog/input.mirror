@@ -1,0 +1,7 @@
+Dialog
+  Trigger: Button "Open Dialog"
+  Backdrop: bg rgba(0,0,0,0.5)
+  Content: Frame pad 24, bg #1a1a1a, rad 12, gap 16, w 400
+    Text "Title", fs 18, weight bold, col white
+    Text "Body content", col #888
+    CloseTrigger: Button "Close"

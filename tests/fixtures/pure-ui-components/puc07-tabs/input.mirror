@@ -1,0 +1,10 @@
+Tabs defaultValue "home"
+  Tab "Home"
+    Frame pad 16
+      Text "Home content"
+  Tab "Profile"
+    Frame pad 16
+      Text "Profile content"
+  Tab "Settings"
+    Frame pad 16
+      Text "Settings content"

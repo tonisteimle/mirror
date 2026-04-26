@@ -1,0 +1,3 @@
+Tooltip positioning "bottom"
+  Trigger: Icon "info", ic #888, is 20
+  Content: Text "Help text", fs 12
