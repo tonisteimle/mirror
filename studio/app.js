@@ -134,6 +134,8 @@ import {
   // Validator (for code linting)
   validate as validateCode,
   toCodeMirrorDiagnostics,
+  // Wrap-aware change adjuster (single source of truth — see studio/core/wrap-utils.ts)
+  adjustChangeForWrap,
 } from './dist/index.js?v=148'
 
 // Annotation to mark changes from property panel (for skipping debounce)
@@ -3622,72 +3624,22 @@ function makePreviewElementsDraggable() {
   })
 }
 
-/**
- * Count synthetic 2-space wrap indents in resolved source's
- * `[startOffset, endOffset)` region. One indent = 2 chars per non-empty
- * user line whose `'  '` prefix lies fully before `endOffset`.
- */
-function countWrapIndentChars(resolved, startOffset, endOffset) {
-  if (!resolved || endOffset <= startOffset) return 0
-  const region = resolved.substring(startOffset, endOffset)
-  let count = 0
-  if (region.length >= 2 && region.substring(0, 2) === '  ') count++
-  let nlIdx = region.indexOf('\n')
-  while (nlIdx !== -1) {
-    const lineStart = nlIdx + 1
-    if (region.length >= lineStart + 2 && region.substring(lineStart, lineStart + 2) === '  ') {
-      count++
-    }
-    nlIdx = region.indexOf('\n', lineStart)
-  }
-  return count * 2
-}
-
-/** Strip the leading 2-space wrap indent from each non-empty line of an insert payload. */
-function stripWrapIndentLines(insert) {
-  return insert
-    .split('\n')
-    .map((line, i) => {
-      if (i === 0 && line === '') return line
-      if (line.startsWith('  ')) return line.substring(2)
-      return line
-    })
-    .join('\n')
-}
-
-// Handle code changes from property panel
+// Handle code changes from property panel.
+// Delegates the resolved-source → editor-source coordinate translation
+// to studio/core/wrap-utils.ts so this path and bootstrap.ts's
+// PropertyPanel onCodeChange callback can never drift apart.
 function handleStudioCodeChange(result) {
   if (!result.success) {
     console.warn('Studio: Code modification failed:', result.error)
     return
   }
 
-  // Adjust change positions for prelude offset *and* wrap-indent. The
-  // CodeModifier operates on the resolved source (prelude + optional
-  // implicit `App` wrapper + indented user lines), but the editor only
-  // contains the user code. We must subtract the prelude offset and,
-  // when wrapped, the synthetic 2-space indent for every non-empty user
-  // line that the position has fully passed — and strip the same prefix
-  // from the insert payload so we never accumulate wrapper indentation.
-  let adjustedChange = {
-    from: result.change.from - currentPreludeOffset,
-    to: result.change.to - currentPreludeOffset,
-    insert: result.change.insert,
-  }
-
-  if (isWrappedWithApp) {
-    const fromIndents = countWrapIndentChars(
-      resolvedSource,
-      currentPreludeOffset,
-      result.change.from
-    )
-    const toIndents = countWrapIndentChars(resolvedSource, currentPreludeOffset, result.change.to)
-    adjustedChange = {
-      from: result.change.from - currentPreludeOffset - fromIndents,
-      to: result.change.to - currentPreludeOffset - toIndents,
-      insert: stripWrapIndentLines(result.change.insert),
-    }
-  }
+  const adjustedChange = adjustChangeForWrap(
+    result.change,
+    currentPreludeOffset,
+    isWrappedWithApp,
+    resolvedSource
+  )
 
   // Validate adjusted change range before applying (prevents RangeError crashes)
   const docLength = editor.state.doc.length
