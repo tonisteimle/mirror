@@ -903,11 +903,6 @@ export const demoScript: DemoScript = {
 
     // Verifikation: components.com hat die Toggle-Definition.
     {
-      action: 'validate',
-      comment: 'components.com hat Toggle-Definition',
-      checks: [],
-    },
-    {
       action: 'execute',
       code: `
         (() => {
@@ -922,6 +917,104 @@ export const demoScript: DemoScript = {
       comment: 'check components.com Toggle-Definition',
     },
     { action: 'wait', duration: 500 },
+
+    // === Schritt 3.5: Toggle 2 ("Notifications") manuell zur Instanz konvertieren ===
+    // Mirror's `::`-Extraktion ersetzt nur das eine `Frame` das mit `::`
+    // markiert wurde. Toggle 2 ist immer noch ein expliziter Frame-Block. User
+    // ersetzt manuell den `Frame`-Header dieser Zeile durch `Toggle`.
+    { action: 'comment', text: 'Schritt 3.5: Toggle 2 manuell zur Toggle-Instanz machen' },
+    {
+      action: 'execute',
+      code: `
+        (() => {
+          const ed = window.editor;
+          const src = ed.state.doc.toString();
+          const toggle2Marker = 'Frame hor, spread, ver-center, pad 12 16, mar 0 16\\n  Text "Notifications"';
+          const matchPos = src.indexOf(toggle2Marker);
+          if (matchPos === -1) throw new Error('Toggle 2 marker not found');
+          // Whole Frame-Header-Zeile durch "Toggle" ersetzen.
+          const lineEnd = src.indexOf('\\n', matchPos);
+          ed.dispatch({
+            changes: { from: matchPos, to: lineEnd, insert: 'Toggle' },
+            selection: { anchor: matchPos + 'Toggle'.length },
+          });
+        })();
+      `,
+      comment: 'replace Frame line with Toggle for Toggle 2',
+    },
+    { action: 'wait', duration: 600 },
+    {
+      action: 'expectCode',
+      comment: 'Toggle 2 ist jetzt Toggle-Instanz',
+      code:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99',
+    },
+
+    // === Schritt 3.6: Toggle 3 ("Indentation guides") als clean Komponenten-Instanz ===
+    { action: 'comment', text: 'Schritt 3.6: Toggle 3 — sauber als Komponenten-Instanz' },
+    {
+      action: 'execute',
+      code: `
+        (() => {
+          const ed = window.editor;
+          const end = ed.state.doc.length;
+          ed.dispatch({ selection: { anchor: end, head: end } });
+          ed.focus();
+        })();
+      `,
+    },
+    { action: 'wait', duration: 200 },
+    {
+      action: 'type',
+      text:
+        '\nToggle\n' +
+        '  Text "Indentation guides", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99',
+      expectCode:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Indentation guides", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99',
+      comment: 'Toggle 3 als 3. Toggle-Instanz',
+    },
+    { action: 'wait', duration: 800 },
+
+    { action: 'comment', text: 'Preferences-Section komplett — 3 Toggles, eine Komponente.' },
+    { action: 'moveTo', target: '#preview' },
+    { action: 'highlight', target: '#preview', duration: 1500 },
+    { action: 'wait', duration: 600 },
   ],
 }
 
