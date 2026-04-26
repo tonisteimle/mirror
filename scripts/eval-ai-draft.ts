@@ -27,6 +27,201 @@ import { connectCDP, getPageTarget } from '../tools/test-runner/cdp'
 import type { CDPSession } from '../tools/test-runner/types'
 
 // =============================================================================
+// ASSERTIONS
+// =============================================================================
+
+/**
+ * Each scenario can declare structural expectations as assertions. The eval
+ * runs each predicate against (extractedCode, finalSource, domSnapshot,
+ * compileOk) and reports per-assertion pass/fail. This catches behavioral
+ * regressions that "compiles cleanly" alone cannot.
+ *
+ * Levels:
+ *   - 'must'   → failure makes the scenario red
+ *   - 'should' → failure is a warning, not a failure
+ */
+interface Assertion {
+  label: string
+  level: 'must' | 'should'
+  check: (ctx: AssertContext) => { pass: boolean; detail?: string }
+}
+
+interface DomSnapshot {
+  /** Number of [data-mirror-id] elements rendered into the preview */
+  mirrorElementCount: number
+  /** Counts by data-component attribute (e.g. { Button: 1, Frame: 3 }) */
+  componentCounts: Record<string, number>
+  /** Concatenated visible text from preview, trimmed */
+  visibleText: string
+  /** Approx total HTML size in bytes — sanity check that preview isn't empty */
+  htmlBytes: number
+}
+
+interface AssertContext {
+  extractedCode: string
+  finalSource: string
+  dom: DomSnapshot | null
+  compileOk: boolean
+}
+
+interface AssertResult {
+  label: string
+  level: 'must' | 'should'
+  pass: boolean
+  detail?: string
+}
+
+/** Terse assertion builders. Each returns an Assertion. */
+const must = {
+  /** Output must contain literal substring or match regex. */
+  contain(needle: string | RegExp, label?: string): Assertion {
+    return {
+      label: label ?? `contains ${describe(needle)}`,
+      level: 'must',
+      check: ctx => ({
+        pass: matches(ctx.extractedCode, needle),
+        detail: matches(ctx.extractedCode, needle) ? undefined : 'not found in extracted code',
+      }),
+    }
+  },
+  /** Output must NOT contain substring/regex. */
+  notContain(needle: string | RegExp, label?: string): Assertion {
+    return {
+      label: label ?? `does not contain ${describe(needle)}`,
+      level: 'must',
+      check: ctx => ({
+        pass: !matches(ctx.extractedCode, needle),
+        detail: matches(ctx.extractedCode, needle) ? `unexpected match in code` : undefined,
+      }),
+    }
+  },
+  /** Must use a $token by name (i.e. `$name` appears as a value). */
+  useToken(name: string, label?: string): Assertion {
+    const re = new RegExp(`\\$${escape(name)}\\b`)
+    return {
+      label: label ?? `uses $${name} token`,
+      level: 'must',
+      check: ctx => ({
+        pass: re.test(ctx.extractedCode),
+        detail: re.test(ctx.extractedCode) ? undefined : `$${name} not used`,
+      }),
+    }
+  },
+  /** Must reference (instantiate) a component by name, e.g. `PrimaryBtn "..."`. */
+  useComponent(name: string, label?: string): Assertion {
+    const re = new RegExp(`(^|[\\s,])${escape(name)}(\\s+["$\\w]|$|\\s*\\n)`, 'm')
+    return {
+      label: label ?? `uses ${name} component`,
+      level: 'must',
+      check: ctx => ({
+        pass: re.test(ctx.extractedCode),
+        detail: re.test(ctx.extractedCode) ? undefined : `${name} not instantiated`,
+      }),
+    }
+  },
+  /** Must NOT (re)define a component or token by name. Catches "defined parallel". */
+  notDefine(name: string, label?: string): Assertion {
+    const re = new RegExp(`^\\s*${escape(name)}\\s*(:|as\\b)`, 'm')
+    return {
+      label: label ?? `does not define ${name}`,
+      level: 'must',
+      check: ctx => ({
+        pass: !re.test(ctx.extractedCode),
+        detail: re.test(ctx.extractedCode) ? `${name} was redefined` : undefined,
+      }),
+    }
+  },
+  /** Must NOT contain raw hex color (when tokens exist they should win). */
+  noInventedHex(label = 'no invented hex colors'): Assertion {
+    const re = /#[0-9a-fA-F]{3,8}\b/
+    return {
+      label,
+      level: 'must',
+      check: ctx => ({
+        pass: !re.test(ctx.extractedCode),
+        detail: re.test(ctx.extractedCode)
+          ? `found hex: ${ctx.extractedCode.match(re)![0]}`
+          : undefined,
+      }),
+    }
+  },
+  /** Preview rendered something — non-empty Mirror element count. */
+  render(label = 'preview renders elements'): Assertion {
+    return {
+      label,
+      level: 'must',
+      check: ctx => ({
+        pass: !!ctx.dom && ctx.dom.mirrorElementCount > 0,
+        detail: !ctx.dom
+          ? 'no DOM snapshot (compile failed?)'
+          : ctx.dom.mirrorElementCount === 0
+            ? 'preview empty'
+            : undefined,
+      }),
+    }
+  },
+  /** Preview must contain at least N elements of given component type. */
+  renderElement(component: string, minCount = 1, label?: string): Assertion {
+    return {
+      label: label ?? `renders ≥${minCount}× ${component}`,
+      level: 'must',
+      check: ctx => {
+        const got = ctx.dom?.componentCounts[component] ?? 0
+        return {
+          pass: got >= minCount,
+          detail: got >= minCount ? undefined : `got ${got}, expected ≥${minCount}`,
+        }
+      },
+    }
+  },
+  /** Preview's visible text must contain string. */
+  renderText(text: string, label?: string): Assertion {
+    return {
+      label: label ?? `preview text contains "${text}"`,
+      level: 'must',
+      check: ctx => ({
+        pass: !!ctx.dom && ctx.dom.visibleText.includes(text),
+        detail: !ctx.dom
+          ? 'no DOM'
+          : !ctx.dom.visibleText.includes(text)
+            ? `text not found in: "${ctx.dom.visibleText.slice(0, 80)}…"`
+            : undefined,
+      }),
+    }
+  },
+}
+
+/** "should" variants — soft expectations that warn but don't fail the run. */
+const should = {
+  contain(needle: string | RegExp, label?: string): Assertion {
+    return { ...must.contain(needle, label), level: 'should' }
+  },
+  notContain(needle: string | RegExp, label?: string): Assertion {
+    return { ...must.notContain(needle, label), level: 'should' }
+  },
+  lineCountAtMost(max: number, label?: string): Assertion {
+    return {
+      label: label ?? `extracted code ≤ ${max} lines`,
+      level: 'should',
+      check: ctx => {
+        const n = ctx.extractedCode.split('\n').length
+        return { pass: n <= max, detail: n <= max ? undefined : `${n} lines` }
+      },
+    }
+  },
+}
+
+function matches(haystack: string, needle: string | RegExp): boolean {
+  return typeof needle === 'string' ? haystack.includes(needle) : needle.test(haystack)
+}
+function describe(needle: string | RegExp): string {
+  return typeof needle === 'string' ? `"${needle}"` : `/${needle.source}/`
+}
+function escape(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// =============================================================================
 // SCENARIOS
 // =============================================================================
 
@@ -41,6 +236,8 @@ interface Scenario {
   prompt: string
   /** Prose description of what success looks like — for manual analysis. */
   expectations: string
+  /** Structural assertions checked automatically against output + DOM. */
+  asserts?: Assertion[]
 }
 
 const PROMPT_MARKER = '__PROMPT_HERE__'
@@ -56,6 +253,13 @@ const SCENARIOS: Scenario[] = [
     prompt: 'blauer button',
     expectations:
       'Erwarte einen einzelnen Button mit blauer Hintergrundfarbe, weißem Text, sinnvollem Padding/Radius. Keine erfundenen Komponenten-Definitionen. Sollte als Child von Frame pad 16 funktionieren (also 2-Space-Indent passend).',
+    asserts: [
+      must.contain(/^Button\b/m, 'output starts with Button primitive'),
+      must.notDefine('Button'),
+      must.render(),
+      must.renderElement('Button', 1),
+      should.lineCountAtMost(2),
+    ],
   },
   {
     id: '2-multi-element-empty-context',
@@ -67,6 +271,16 @@ const SCENARIOS: Scenario[] = [
     prompt: 'card mit titel und beschreibung und einem mehr-lesen button',
     expectations:
       'Erwarte: Card-artiger Container (Frame mit bg, pad, rad) → enthält Text-Titel (groß/bold), Text-Beschreibung (kleiner/muted), Button "Mehr lesen". Hierarchie/Indent korrekt. Kein erfundenes "Card:"-Component-Define falls keine Tokens/Components vorhanden.',
+    asserts: [
+      must.contain(/^Frame\b/m, 'starts with Frame container'),
+      must.contain(/Text\s/, 'contains Text element(s)'),
+      must.contain(/Button\s/, 'contains Button'),
+      must.notDefine('Card'),
+      must.render(),
+      must.renderElement('Frame', 1),
+      must.renderElement('Text', 2),
+      must.renderElement('Button', 1),
+    ],
   },
   {
     id: '3-token-aware',
@@ -93,6 +307,15 @@ m.rad: 8
     prompt: 'primärer button mit text "Speichern"',
     expectations:
       'KRITISCH: muss `bg $primary` nutzen, NICHT `bg #2271C1`. Sollte auch $text, $m oder $s für padding nutzen. Wenn AI #-Werte erfindet die in tokens.tok existieren = Test-Fail.',
+    asserts: [
+      must.useToken('primary'),
+      must.useToken('text'),
+      must.noInventedHex(),
+      must.contain('"Speichern"'),
+      must.render(),
+      must.renderElement('Button', 1),
+      must.renderText('Speichern'),
+    ],
   },
   {
     id: '4-component-reuse',
@@ -114,6 +337,18 @@ DangerBtn as Btn: bg $danger
     prompt: 'drei buttons nebeneinander: Speichern (primär), Abbrechen, Löschen (gefährlich)',
     expectations:
       'KRITISCH: muss `PrimaryBtn "Speichern"`, `Btn "Abbrechen"`, `DangerBtn "Löschen"` nutzen. Nicht neue Buttons frisch definieren. Layout horizontal (hor) mit gap. Wenn AI eigene Btn:-Variante neu definiert = Test-Fail.',
+    asserts: [
+      must.useComponent('PrimaryBtn'),
+      must.useComponent('DangerBtn'),
+      must.notDefine('Btn'),
+      must.notDefine('PrimaryBtn'),
+      must.notDefine('DangerBtn'),
+      must.contain(/\bhor\b/, 'uses horizontal layout'),
+      must.render(),
+      must.renderText('Speichern'),
+      must.renderText('Abbrechen'),
+      must.renderText('Löschen'),
+    ],
   },
   {
     id: '5-real-feature',
@@ -141,6 +376,25 @@ m.fs: 14
       'drei sections untereinander: 1) "Notifications" mit einem Switch-Toggle, 2) "Theme" mit RadioGroup für Light/Dark/Auto, 3) "Language" mit Select für Deutsch/English/Français',
     expectations:
       'Komplexe Komposition: drei vertikal gestapelte Sections, jede mit Label + Control. Nutzt Tokens. Verwendet Mirror-Komponenten Switch, RadioGroup/RadioItem, Select/Item korrekt. Hierarchie tief aber nicht chaotisch.',
+    asserts: [
+      must.useToken('m'),
+      must.useToken('muted'),
+      must.noInventedHex(),
+      must.contain(/Switch\b/, 'contains Switch primitive'),
+      must.contain(/RadioGroup\b/, 'contains RadioGroup'),
+      must.contain(/RadioItem\b.*RadioItem\b.*RadioItem\b/s, 'three RadioItems'),
+      must.contain(/Select\b/, 'contains Select'),
+      must.contain(/Item\b.*Item\b.*Item\b/s, 'three Select Items'),
+      must.contain('"Deutsch"'),
+      must.contain('"Français"'),
+      must.render(),
+      must.renderElement('Switch', 1),
+      must.renderElement('RadioGroup', 1),
+      must.renderElement('Select', 1),
+      must.renderText('Notifications'),
+      must.renderText('Theme'),
+      must.renderText('Language'),
+    ],
   },
 ]
 
@@ -245,6 +499,8 @@ interface ScenarioResult {
   draftError: string | null
   compileOk: boolean
   compileErrors: string[]
+  dom: DomSnapshot | null
+  assertResults: AssertResult[]
   totalElapsedMs: number
 }
 
@@ -350,11 +606,12 @@ async function runScenario(cdp: CDPSession, scenario: Scenario): Promise<Scenari
     response = { error: err instanceof Error ? err.message : String(err) }
   }
 
-  // Wait for the editor to settle after replacement
-  await sleep(500)
+  // Wait for the editor to settle after replacement, then for the studio's
+  // own compile pipeline to finish so the preview DOM reflects the new code.
+  await sleep(300)
+  await waitForCompileSettled(cdp, 5000)
 
   const finalSource = await evaluate<string>(cdp, `window.editor.state.doc.toString()`)
-
   const calls = await evaluate<BridgeCall[]>(cdp, `window.__bridgeCalls || []`)
   const bridgeCall = calls[0] ?? null
 
@@ -364,8 +621,36 @@ async function runScenario(cdp: CDPSession, scenario: Scenario): Promise<Scenari
       ` (bridge: ${bridgeCall ? `${bridgeCall.elapsedMs}ms` : 'no call'}, total: ${totalElapsedMs}ms)`
   )
 
-  // Compile-check: run the resulting source through the compiler
+  // Compile-check (independent of studio's own compile, runs the compiler CLI
+  // against the final source — catches issues that the studio's renderer might
+  // have masked).
   const { compileOk, compileErrors } = await compileSource(finalSource, scenario.files)
+
+  // Snapshot the rendered preview DOM. Only meaningful if compileOk + no draft
+  // error — otherwise the preview likely shows an error, not the AI output.
+  const dom = compileOk && !response.error ? await snapshotPreviewDom(cdp) : null
+
+  // Run the scenario's assertions against the captured context.
+  const assertCtx: AssertContext = {
+    extractedCode: response.code ?? '',
+    finalSource,
+    dom,
+    compileOk,
+  }
+  const assertResults: AssertResult[] = (scenario.asserts ?? []).map(a => {
+    const r = a.check(assertCtx)
+    return { label: a.label, level: a.level, pass: r.pass, detail: r.detail }
+  })
+  if (assertResults.length > 0) {
+    const failed = assertResults.filter(r => !r.pass)
+    const mustFails = failed.filter(r => r.level === 'must').length
+    const shouldFails = failed.filter(r => r.level === 'should').length
+    console.log(
+      `  asserts: ${assertResults.length - failed.length}/${assertResults.length} pass` +
+        (mustFails > 0 ? ` — ${mustFails} MUST failed` : '') +
+        (shouldFails > 0 ? ` (${shouldFails} should-warnings)` : '')
+    )
+  }
 
   return {
     scenario,
@@ -375,8 +660,73 @@ async function runScenario(cdp: CDPSession, scenario: Scenario): Promise<Scenari
     draftError: response.error ?? null,
     compileOk,
     compileErrors,
+    dom,
+    assertResults,
     totalElapsedMs,
   }
+}
+
+/**
+ * Wait for the studio's own compile pipeline to finish (compile:completed or
+ * compile:failed event), then a render-ready RAF tick. Times out silently if
+ * no compile event arrives — caller proceeds to compile-check anyway.
+ */
+async function waitForCompileSettled(cdp: CDPSession, timeoutMs: number): Promise<void> {
+  await evaluate<void>(
+    cdp,
+    `new Promise((resolve) => {
+       const events = window.__mirrorStudio__?.events
+       if (!events) { resolve(undefined); return }
+       const timeoutId = setTimeout(resolve, ${timeoutMs})
+       const onDone = () => {
+         clearTimeout(timeoutId)
+         requestAnimationFrame(() => requestAnimationFrame(() => resolve(undefined)))
+       }
+       events.once('compile:completed', onDone)
+       events.once('compile:failed', onDone)
+     })`
+  )
+}
+
+/**
+ * Capture a snapshot of the rendered preview DOM. Looks at #preview, counts
+ * Mirror elements ([data-mirror-id]) and groups by component type
+ * (data-component), and grabs the visible text for content asserts.
+ */
+async function snapshotPreviewDom(cdp: CDPSession): Promise<DomSnapshot> {
+  return evaluate<DomSnapshot>(
+    cdp,
+    `(() => {
+       const preview = document.querySelector('#preview')
+       if (!preview) {
+         return { mirrorElementCount: 0, componentCounts: {}, visibleText: '', htmlBytes: 0 }
+       }
+       const mirrorEls = preview.querySelectorAll('[data-mirror-id]')
+       const counts = {}
+       mirrorEls.forEach(el => {
+         const c = el.getAttribute('data-component')
+         if (c) counts[c] = (counts[c] || 0) + 1
+       })
+       // Visible text from rendered Mirror elements only — exclude <style>
+       // and <script> chatter from the preview iframe/runtime.
+       const texts = []
+       mirrorEls.forEach(el => {
+         // Only leaf-ish elements have meaningful direct text; skip pure containers.
+         const own = Array.from(el.childNodes)
+           .filter(n => n.nodeType === 3) // TEXT_NODE
+           .map(n => n.nodeValue || '')
+           .join(' ')
+           .trim()
+         if (own) texts.push(own)
+       })
+       return {
+         mirrorElementCount: mirrorEls.length,
+         componentCounts: counts,
+         visibleText: texts.join(' | ').replace(/\\s+/g, ' ').trim(),
+         htmlBytes: (preview.innerHTML || '').length,
+       }
+     })()`
+  )
 }
 
 // =============================================================================
@@ -452,11 +802,25 @@ function formatReport(results: ScenarioResult[]): string {
   lines.push('')
 
   // Summary table
-  lines.push('| # | Scenario | Bridge OK | Compile OK | Bridge ms | Total ms |')
-  lines.push('|---|----------|-----------|------------|-----------|----------|')
+  lines.push('| # | Scenario | Bridge | Compile | Renders | Asserts | Bridge ms |')
+  lines.push('|---|----------|--------|---------|---------|---------|-----------|')
   for (const r of results) {
+    const mustResults = r.assertResults.filter(a => a.level === 'must')
+    const shouldResults = r.assertResults.filter(a => a.level === 'should')
+    const mustPass = mustResults.filter(a => a.pass).length
+    const shouldPass = shouldResults.filter(a => a.pass).length
+    const assertCell =
+      mustResults.length === 0
+        ? '—'
+        : `${mustPass}/${mustResults.length}` +
+          (shouldResults.length > 0 ? ` (+${shouldPass}/${shouldResults.length} should)` : '')
+    const rendersCell = r.dom
+      ? r.dom.mirrorElementCount > 0
+        ? `✓ ${r.dom.mirrorElementCount}`
+        : '✗ empty'
+      : '—'
     lines.push(
-      `| ${r.scenario.id} | ${r.scenario.label} | ${r.bridgeCall && !r.bridgeCall.responseError ? '✓' : '✗'} | ${r.compileOk ? '✓' : '✗'} | ${r.bridgeCall?.elapsedMs ?? '-'} | ${r.totalElapsedMs} |`
+      `| ${r.scenario.id} | ${r.scenario.label} | ${r.bridgeCall && !r.bridgeCall.responseError ? '✓' : '✗'} | ${r.compileOk ? '✓' : '✗'} | ${rendersCell} | ${assertCell} | ${r.bridgeCall?.elapsedMs ?? '-'} |`
     )
   }
   lines.push('')
@@ -534,6 +898,37 @@ function formatReport(results: ScenarioResult[]): string {
       lines.push('```')
     }
     lines.push('')
+
+    if (r.dom) {
+      const componentList = Object.entries(r.dom.componentCounts)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([name, n]) => `${name}×${n}`)
+        .join(', ')
+      lines.push(
+        `### Render: ${r.dom.mirrorElementCount} Mirror elements, ${r.dom.htmlBytes} HTML bytes`
+      )
+      if (componentList) lines.push(`Components: ${componentList}`)
+      if (r.dom.visibleText) {
+        const text =
+          r.dom.visibleText.length > 240 ? r.dom.visibleText.slice(0, 240) + '…' : r.dom.visibleText
+        lines.push(`Visible text: \`${text}\``)
+      }
+      lines.push('')
+    } else {
+      lines.push('### Render: skipped (compile failed or no AI response)')
+      lines.push('')
+    }
+
+    if (r.assertResults.length > 0) {
+      lines.push('### Assertions')
+      lines.push('')
+      for (const a of r.assertResults) {
+        const icon = a.pass ? '✓' : a.level === 'must' ? '✗' : '⚠'
+        const tag = a.level === 'should' && !a.pass ? ' _(should)_' : ''
+        lines.push(`- ${icon} ${a.label}${tag}${a.detail ? ` — ${a.detail}` : ''}`)
+      }
+      lines.push('')
+    }
   }
 
   return lines.join('\n')
@@ -616,8 +1011,16 @@ async function main() {
 
   // Brief stats line
   const ok = results.filter(r => r.compileOk && !r.draftError).length
+  const renders = results.filter(r => r.dom && r.dom.mirrorElementCount > 0).length
+  const allMust = results.flatMap(r => r.assertResults.filter(a => a.level === 'must'))
+  const mustPass = allMust.filter(a => a.pass).length
+  const mustFails = allMust.length - mustPass
   console.log('')
-  console.log(`Done. ${ok}/${results.length} scenarios compiled cleanly.`)
+  console.log(
+    `Done. compile ${ok}/${results.length} | renders ${renders}/${results.length} | ` +
+      `must-asserts ${mustPass}/${allMust.length}` +
+      (mustFails > 0 ? ` (${mustFails} failed)` : '')
+  )
   console.log(`Report: ${reportPath}`)
 }
 
