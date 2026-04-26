@@ -30,6 +30,9 @@ import { EditorView, ViewUpdate } from '@codemirror/view'
 import { Transaction } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import { createLogger } from '../../../compiler/utils/logger'
+import { findProjectMatches, type MatchResult } from '../extract/pattern-match'
+import { applyBatchReplace } from '../extract/apply-batch-replace'
+import { showBatchReplaceDialog } from '../extract/batch-replace-dialog'
 
 const log = createLogger('ComponentExtract')
 
@@ -402,6 +405,70 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
   // The order matters: see comment in computeExtraction's call site.
   callbacks.updateFile(comFilename, action.newComContent)
   log.info(`Updated ${componentName} in ${comFilename}`)
+
+  // Project-scan for batch-replace candidates: other lines styled the
+  // same way that should also become this component. The reference
+  // is synthesized from `<element-placeholder> + propertiesAfterColons`,
+  // because propertiesMatch ignores element name.
+  const lineText = doc.line(lineNumber).text
+  const colonIndex = lineText.lastIndexOf('::')
+  if (colonIndex === -1) return
+  const propertiesAfterColons = lineText.slice(colonIndex + 2).trim()
+  if (!propertiesAfterColons) return
+
+  const targetReferenceLine = `Frame ${propertiesAfterColons}`
+  const currentFilename = callbacks.getCurrentFile()
+
+  // Build the file list using the AT-EDIT in-memory state for the
+  // current file (the editor has unsaved changes), and the on-disk
+  // version for all others.
+  const projectFiles = files.map(f => ({
+    filename: f.name,
+    source: f.name === currentFilename ? doc.toString() : f.code,
+  }))
+
+  const matches = findProjectMatches({
+    targetReferenceLine,
+    files: projectFiles,
+    targetFilename: currentFilename,
+    targetLineNumber: lineNumber,
+    componentName,
+  })
+
+  if (matches.length === 0) return
+
+  // Capture callbacks in a non-null local for the deferred onApply callback.
+  const cb = callbacks
+  showBatchReplaceDialog({
+    componentName,
+    matches,
+    onApply: (selected: MatchResult[]) => {
+      if (selected.length === 0) return
+      const result = applyBatchReplace({
+        files: projectFiles,
+        acceptedMatches: selected,
+        componentName,
+      })
+      // Apply changes per file. For the current file (editor), use
+      // editor.dispatch to keep undo coherent. For other files, write
+      // through the callback.
+      for (const [filename, newSource] of result.changedFiles) {
+        if (filename === currentFilename) {
+          // Replace the entire current-file source.
+          const fullDoc = view.state.doc
+          view.dispatch({
+            changes: { from: 0, to: fullDoc.length, insert: newSource },
+            annotations: Transaction.userEvent.of('input.extract.batch'),
+          })
+        } else {
+          cb.updateFile(filename, newSource)
+        }
+      }
+      log.info(
+        `Batch-replaced ${selected.length} match(es) across ${result.changedFiles.size} file(s)`
+      )
+    },
+  })
 }
 
 /**
