@@ -18,9 +18,18 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Text'
-  node_2.textContent = "Leaf"
+  node_2.textContent = "Node"
   node_2.dataset.component = 'Text'
   node_2.dataset.slot = 'Text'
   node_1.appendChild(node_2)
+  
+  // Unknown
+  const node_3 = document.createElement('div')
+  _elements['node-3'] = node_3
+  node_3.dataset.mirrorId = 'node-3'
+  node_3.dataset.mirrorName = 'Unknown'
+  node_3.dataset.component = 'Unknown'
+  node_3.dataset.slot = 'Unknown'
+  node_1.appendChild(node_3)
   
   _root.appendChild(node_1)

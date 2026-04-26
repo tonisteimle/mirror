@@ -39,7 +39,9 @@ Legende:
 
 ## Bekannte Bugs
 
-- **#21 — Self-Reference Stack-Overflow**: `TreeNode: …\n  TreeNode`
-  führt im IR-Transformer zu `Maximum call stack size exceeded` ohne
-  klare Diagnostik. Pinned in `tests/behavior/components.test.ts`
-  (Test ist als TODO markiert bis Fix vorhanden).
+- **#21 — Self-Reference Stack-Overflow** — ✅ gefixt. IR-Transformer
+  hat jetzt einen `componentInstantiationStack`, der nur user-defined
+  Components trackt (Primitives wie `Frame` werden nicht falsch als
+  rekursiv erkannt). Bei Cycle wird ein leerer Placeholder emittiert
+  und eine `recursive-component`-Warnung geloggt. Pinned in
+  `tests/behavior/components.test.ts`.

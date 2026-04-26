@@ -484,25 +484,38 @@ Frame hor
   // C20: Pinned regression — self-reference must not stack-overflow (Bug #21)
   // ---------------------------------------------------------------------------
 
-  describe('Bug #21: self-referencing component', () => {
-    it('compiling a self-referencing component should not crash with stack overflow', () => {
+  describe('Bug #21 (fixed): self-referencing component', () => {
+    it('compiling a self-referencing component does NOT crash', () => {
       const src = `TreeNode: Frame pad 8\n  TreeNode\n\nTreeNode`
-      // Today this throws RangeError (Maximum call stack size exceeded) inside
-      // the IR transformer. The acceptable behavior is either:
-      //   (a) throw a clean parse/IR error explaining the cycle, or
-      //   (b) limit recursion (e.g. only render N levels).
-      // What is NOT acceptable: a hard runtime crash without a useful message.
-      let err: unknown = null
-      try {
-        generateDOM(parse(src))
-      } catch (e) {
-        err = e
-      }
-      // We accept any error here — the regression is only that it shouldn't
-      // be the unbounded stack overflow with no diagnostics.
-      // Skip this assertion until Bug #21 is fixed; it currently DOES crash.
-      // expect(err === null || (err as Error).message?.includes('cycle') || (err as Error).message?.includes('recursive')).toBe(true)
-      expect(true).toBe(true) // placeholder — to be tightened when #21 is fixed
+      expect(() => generateDOM(parse(src))).not.toThrow()
+    })
+
+    it('renders the outer TreeNode (recursion is stopped at the inner ref)', () => {
+      const src = `TreeNode: Frame pad 8\n  Text "Node"\n  TreeNode\n\nTreeNode`
+      const root = render(src, container)
+      // Outer TreeNode renders, including its Text child. The recursive
+      // TreeNode inside is replaced by an empty placeholder.
+      expect(findByName(root, 'TreeNode')).not.toBeNull()
+      expect(visibleText(root)).toContain('Node')
+    })
+
+    it('multi-level cycle (A → B → A) is also caught', () => {
+      const src = `A: Frame pad 8\n  B\nB: Frame pad 4\n  A\n\nA`
+      expect(() => generateDOM(parse(src))).not.toThrow()
     })
   })
+
+  // Helper for visibleText — kept local to this describe-suite
+  function visibleText(el: Element): string {
+    const out: string[] = []
+    const walk = (node: Element) => {
+      if (node.tagName === 'STYLE' || node.tagName === 'SCRIPT') return
+      for (const child of Array.from(node.childNodes)) {
+        if (child.nodeType === 3) out.push(child.textContent ?? '')
+        else if (child.nodeType === 1) walk(child as Element)
+      }
+    }
+    walk(el)
+    return out.join(' ').replace(/\s+/g, ' ').trim()
+  }
 })

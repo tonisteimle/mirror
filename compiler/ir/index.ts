@@ -266,6 +266,10 @@ class IRTransformer {
   // Custom size-state thresholds from tokens like "compact.max: 300" or "tiny.max: 200"
   private customSizeStates: Map<string, { min?: number; max?: number }> = new Map()
   private customSizeStateNames: Set<string> = new Set()
+  // Cycle detection: stack of component names currently being instantiated
+  // (Bug #21). When a component references itself in its body, we'd recurse
+  // infinitely. Detect via stack-membership and bail with a warning.
+  private componentInstantiationStack: string[] = []
 
   constructor(ast: AST, includeSourceMap: boolean = false) {
     this.ast = ast
@@ -792,8 +796,19 @@ class IRTransformer {
       return this.createEmptyNode(instance)
     }
 
-    // Resolve component definition first
+    // Cycle detection (Bug #21): only kicks in for user-defined components
+    // (in componentMap). Primitives like Frame-in-Frame are NOT recursion —
+    // they're just nested boxes. The check has to be after componentMap
+    // lookup, see below.
     const component = this.componentMap.get(instance.component)
+    if (component && this.componentInstantiationStack.includes(instance.component)) {
+      this.addWarning({
+        type: 'recursive-component',
+        message: `Component '${instance.component}' references itself recursively (cycle: ${[...this.componentInstantiationStack, instance.component].join(' → ')}). Recursion stopped — Mirror does not support self-referential components.`,
+        position: instance.position,
+      })
+      return this.createEmptyNode(instance)
+    }
     const resolverCtx: ComponentResolverContext = {
       componentMap: this.componentMap,
       addWarning: warning => this.addWarning(warning as IRWarning),
@@ -1005,6 +1020,16 @@ class IRTransformer {
       childLayoutContext = { type: 'flex', flexDirection: isHorizontal ? 'row' : 'column' }
     }
 
+    // Push this component onto the cycle-detection stack before resolving
+    // children. (Bug #21: TreeNode → TreeNode would otherwise recurse.)
+    // Only track user-defined components — primitives (Frame, Text, …)
+    // don't have a self-referential cycle problem; they're just HTML
+    // wrappers that nest naturally.
+    const trackedForCycle = component != null
+    if (trackedForCycle) {
+      this.componentInstantiationStack.push(instance.component)
+    }
+
     // Transform children with slot filling (excluding inline states/events)
     // Include both regular children and childOverrides as slot fillers
     // Pass nodeId as parentId so children know their parent in the sourceMap
@@ -1014,6 +1039,11 @@ class IRTransformer {
       nodeId,
       childLayoutContext
     )
+
+    // Pop the cycle-detection stack now that children are resolved.
+    if (trackedForCycle) {
+      this.componentInstantiationStack.pop()
+    }
 
     // Merge dropdown features from component definition and instance
     // Instance values override component definition values
