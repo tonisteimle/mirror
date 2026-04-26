@@ -313,10 +313,17 @@ export function createDraftModeKeymap(manager: DraftModeManager) {
 // ===========================================
 
 /**
- * Create an updateListener extension that auto-submits when the user
- * types the closing `??` marker (transitions from open block → closed block).
+ * Create an updateListener extension that auto-submits when a closed
+ * `??` block appears in the document.
  *
- * This is the primary trigger — Cmd+Enter is the fallback for open blocks.
+ * Two flows trigger this:
+ *   (1) User types `?? prompt`, then later types closing `??`
+ *       — open-block → closed-block transition.
+ *   (2) User pastes / inserts a complete `?? prompt ?? ... ??` block in
+ *       one go — inactive → closed-block transition. Treated the same:
+ *       a fully-formed bookend means the user is asking for AI help.
+ *
+ * Cmd+Enter remains the fallback for open (unclosed) blocks.
  *
  * @param manager - The DraftModeManager instance
  */
@@ -328,17 +335,16 @@ export function createDraftModeAutoSubmit(manager: DraftModeManager) {
     const newState = update.state.field(draftModeField, false)
     if (!oldState || !newState) return
 
-    // Trigger conditions: was open (endLine null) and just got closed (endLine set),
-    // not currently processing, and not the result of an AI replacement.
-    const justClosed =
-      oldState.active &&
-      oldState.endLine === null &&
+    // Required: now have an active, closed block, not currently processing,
+    // and the previous state was NOT already a closed block (otherwise typing
+    // outside a closed block would re-trigger).
+    const newlyClosed =
       newState.active &&
       newState.endLine !== null &&
-      !oldState.processing &&
-      !newState.processing
+      !newState.processing &&
+      !(oldState.active && oldState.endLine !== null)
 
-    if (!justClosed) return
+    if (!newlyClosed) return
 
     // Defer to next microtask so the document settles before we read it
     queueMicrotask(() => {
