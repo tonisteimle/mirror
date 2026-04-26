@@ -35,12 +35,14 @@
         node_4_tpl.textContent = "✓"
         node_2_tpl.appendChild(node_4_tpl)
       }
-      const node_5_tpl = document.createElement('span')
-      node_5_tpl.dataset.mirrorId = 'node-5[' + index + ']'
-      node_5_tpl._loopItem = task
-      node_5_tpl.dataset.mirrorName = 'Text'
-      node_5_tpl.textContent = "○"
-      node_2_tpl.appendChild(node_5_tpl)
+      if (!(task.done)) {
+        const node_5_tpl = document.createElement('span')
+        node_5_tpl.dataset.mirrorId = 'node-5[' + index + ']'
+        node_5_tpl._loopItem = task
+        node_5_tpl.dataset.mirrorName = 'Text'
+        node_5_tpl.textContent = "○"
+        node_2_tpl.appendChild(node_5_tpl)
+      }
       itemContainer.appendChild(node_2_tpl)
       return itemContainer
     },

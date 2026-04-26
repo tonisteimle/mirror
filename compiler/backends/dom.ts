@@ -1054,12 +1054,12 @@ class DOMGenerator {
     // When a node has visibleWhen referencing a loop variable (e.g., "entry.billable" or "!entry.billable"),
     // wrap the node creation in an if statement instead of using _visibleWhen runtime binding
     if (node.visibleWhen) {
-      // Check if the visibleWhen references the loop variable
-      // Strip leading ! for negated conditions
-      const conditionWithoutNot = node.visibleWhen.startsWith('!')
-        ? node.visibleWhen.slice(1)
-        : node.visibleWhen
-      const firstPart = conditionWithoutNot.split('.')[0]
+      // Bug #28 fix: an else-branch from `if/else` becomes
+      // `visibleWhen: "!(task.done)"` (with parens). Strip both leading `!`
+      // and any wrapping parentheses before deriving the first identifier
+      // path — otherwise firstPart was `(task` and didn't match itemVar.
+      const conditionWithoutNot = node.visibleWhen.replace(/^!\(?/, '').replace(/\)$/, '')
+      const firstPart = conditionWithoutNot.split('.')[0].trim()
       if (firstPart === itemVar || firstPart === indexVar) {
         // Loop variable reference - emit inline if statement
         const resolvedCondition = this.resolveLoopCondition(node.visibleWhen, itemVar, indexVar)
@@ -1303,7 +1303,10 @@ class DOMGenerator {
       }
 
       // Check if value contains item variable reference like $task.title
-      if (value.includes(`$${itemVar}.`) || value.includes(`\${${itemVar}.`)) {
+      // OR an index variable reference like $idx (Bug #27 fix: handle index
+      // var alongside item var in mixed template strings).
+      const hasIndexRef = new RegExp(`\\$${indexVar}\\b`).test(value)
+      if (value.includes(`$${itemVar}.`) || value.includes(`\${${itemVar}.`) || hasIndexRef) {
         // Two cases:
         //   (a) value is EXACTLY "$task.title" (with leading $) → JS expression
         //   (b) value is e.g. "before $task.title after" → template literal
@@ -1316,10 +1319,16 @@ class DOMGenerator {
         // (also escape user-provided ${...} to prevent JS injection)
         const ESC = '\x00ESC\x00'
         let processed = value.replace(/\$\{/g, ESC)
+        // Substitute $itemVar.path FIRST (more specific than $indexVar),
+        // then $indexVar (bare reference).
         processed = processed.replace(
           new RegExp(`\\$${itemVar}\\.([a-zA-Z_][a-zA-Z0-9_.]*)`, 'g'),
           `\$\${${itemVar}.$1}`
         )
+        // Bug #27 fix: also substitute $indexVar in template strings.
+        // Use word-boundary so `$indexVar` doesn't accidentally match inside
+        // a longer identifier like `$indexVar2`.
+        processed = processed.replace(new RegExp(`\\$${indexVar}\\b`, 'g'), `\$\${${indexVar}}`)
         const escaped = this.escapeTemplateString(processed)
         const safe = escaped.replace(new RegExp(ESC, 'g'), '\\${')
         return `\`${safe}\``

@@ -78,16 +78,14 @@ describe('Each-Loop — Behavior Spec', () => {
     })
   })
 
-  describe('E2: each with index variable (Bug #27 — pinned)', () => {
-    it('PIN Bug #27: `$idx` is not substituted, renders literal text', () => {
+  describe('E2: each with index variable (Bug #27 fixed)', () => {
+    it('`$idx` substitutes to numeric index', () => {
       const root = render(
         `items:\n  a:\n    label: "First"\n  b:\n    label: "Second"\n\neach item, idx in $items\n  Text "$idx: $item.label"`,
         container
       )
       const texts = allByName(root, 'Text').map(t => t.textContent?.trim())
-      // Currently: "$idx: First" (idx not substituted), should be "0: First"
-      expect(texts[0]).toBe('$idx: First')
-      expect(texts[1]).toBe('$idx: Second')
+      expect(texts).toEqual(['0: First', '1: Second'])
     })
   })
 
@@ -185,21 +183,18 @@ describe('Each-Loop — Behavior Spec', () => {
   // E10: Inner conditional (Bug #28 — pinned)
   // ---------------------------------------------------------------------------
 
-  describe('E10: each with inner if/else (Bug #28 pinned)', () => {
-    // Bug #28: in `each` with inner `if/else`, BOTH then- and else-branches
-    // render when the condition is true. Should render only the then-branch.
-    it('PIN Bug #28: if/else inside each renders both branches for truthy', () => {
+  describe('E10: each with inner if/else (Bug #28 fixed)', () => {
+    it('truthy → only then-branch renders', () => {
       const root = render(
         `tasks:\n  t1:\n    title: "Active"\n    done: true\n\neach task in $tasks\n  Frame\n    Text "$task.title"\n    if task.done\n      Text "✓"\n    else\n      Text "○"`,
         container
       )
       const texts = allByName(root, 'Text').map(t => t.textContent?.trim())
-      // Currently rendering: ['Active', '✓', '○'] — both then AND else visible.
       expect(texts).toContain('✓')
-      expect(texts).toContain('○') // bug — should NOT be present
+      expect(texts).not.toContain('○')
     })
 
-    it('falsy → only else-branch (works correctly)', () => {
+    it('falsy → only else-branch renders', () => {
       const root = render(
         `tasks:\n  t1:\n    title: "Pending"\n    done: false\n\neach task in $tasks\n  Frame\n    Text "$task.title"\n    if task.done\n      Text "✓"\n    else\n      Text "○"`,
         container
@@ -207,6 +202,15 @@ describe('Each-Loop — Behavior Spec', () => {
       const texts = allByName(root, 'Text').map(t => t.textContent?.trim())
       expect(texts).toContain('○')
       expect(texts).not.toContain('✓')
+    })
+
+    it('mixed list: each item gets the right branch', () => {
+      const root = render(
+        `tasks:\n  t1:\n    title: "A"\n    done: true\n  t2:\n    title: "B"\n    done: false\n\neach task in $tasks\n  Frame\n    Text "$task.title"\n    if task.done\n      Text "✓"\n    else\n      Text "○"`,
+        container
+      )
+      const texts = allByName(root, 'Text').map(t => t.textContent?.trim())
+      expect(texts).toEqual(['A', '✓', 'B', '○'])
     })
   })
 

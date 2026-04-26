@@ -15,7 +15,7 @@
       node_2_tpl.dataset.mirrorId = 'node-2[' + idx + ']'
       node_2_tpl._loopItem = item
       node_2_tpl.dataset.mirrorName = 'Text'
-      node_2_tpl.textContent = `$idx: ${item.label}`
+      node_2_tpl.textContent = `${idx}: ${item.label}`
       itemContainer.appendChild(node_2_tpl)
       return itemContainer
     },

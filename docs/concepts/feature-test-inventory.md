@@ -299,8 +299,8 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 | 24  | Ternary mit `$token` in style → kein `background`       | Conditionals-F.    | ✅ gefixt |
 | 25  | Ternary in style mit `$var`-Operand fällt auf var()     | Conditionals-F.    | ✅ gefixt |
 | 26  | Ternary in Text mit Interpolation → leerer textContent  | Conditionals-F.    | ✅ gefixt |
-| 27  | `each x, idx in $list` — `$idx` wird nicht substituiert | Each-Fixtures      | ⬜ offen  |
-| 28  | `if/else` innerhalb `each` rendert BEIDE Branches       | Each-Fixtures      | ⬜ offen  |
+| 27  | `each x, idx in $list` — `$idx` wird nicht substituiert | Each-Fixtures      | ✅ gefixt |
+| 28  | `if/else` innerhalb `each` rendert BEIDE Branches       | Each-Fixtures      | ✅ gefixt |
 
 ## Nicht-Ziele
 
