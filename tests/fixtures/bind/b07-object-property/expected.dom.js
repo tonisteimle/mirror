@@ -39,20 +39,15 @@
     'width': '200px',
     'flex-shrink': '0',
   })
-  node_3.dataset.state = 'email'
-  node_3._initialState = 'email'
-  if (node_3._stateStyles && node_3._stateStyles['email']) {
-    Object.assign(node_3.style, node_3._stateStyles['email'])
-  }
-  node_3.dataset.bind = 'user'
+  node_3.dataset.bind = 'user.email'
   node_3.dataset.component = 'Input'
   node_3.dataset.slot = 'Input'
-  // Two-way data binding: user
-  node_3.value = $get("user") ?? ""
+  // Two-way data binding: user.email
+  node_3.value = $get("user.email") ?? ""
   node_3.addEventListener('input', (e) => {
-    $set("user", e.target.value)
+    $set("user.email", e.target.value)
   })
-  _runtime.bindValue(node_3, "user")
+  _runtime.bindValue(node_3, "user.email")
   node_1.appendChild(node_3)
   
   _root.appendChild(node_1)

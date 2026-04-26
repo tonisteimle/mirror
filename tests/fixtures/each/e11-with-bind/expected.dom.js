@@ -31,6 +31,8 @@
       node_4_tpl.dataset.mirrorId = 'node-4[' + index + ']'
       node_4_tpl._loopItem = item
       node_4_tpl.dataset.mirrorName = 'Input'
+      node_4_tpl.dataset.bind = 'item.value'
+      node_4_tpl.value = item.value
       Object.assign(node_4_tpl.style, {
         'height': '36px',
         'flex-shrink': '0',

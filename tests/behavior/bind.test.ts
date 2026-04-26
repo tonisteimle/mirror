@@ -104,18 +104,18 @@ describe('Bind — Behavior Spec', () => {
   // B4: Bind in each-loop (Bug #30 pinned)
   // ---------------------------------------------------------------------------
 
-  describe('B4: bind on loop-variable-property (Bug #30 pinned)', () => {
-    it('PIN Bug #30: `bind item.value` in each-loop does not init/track', () => {
+  describe('B4: bind on loop-variable-property (Bug #30 fixed)', () => {
+    it('`bind item.value` in each-loop sets initial value + data-bind', () => {
       const root = render(
         `items:\n  a:\n    label: "A"\n    value: "x"\n  b:\n    label: "B"\n    value: "y"\n\neach item in $items\n  Input bind item.value`,
         container
       )
       const inputs = allByName(root, 'Input') as HTMLInputElement[]
       expect(inputs.length).toBe(2)
-      // Today: input.value is empty, data-bind is null
-      // (would expect "x" and "y" if working)
-      expect(inputs[0].value).toBe('')
-      expect(inputs[0].getAttribute('data-bind')).toBeNull()
+      expect(inputs[0].value).toBe('x')
+      expect(inputs[1].value).toBe('y')
+      expect(inputs[0].getAttribute('data-bind')).toBe('item.value')
+      expect(inputs[1].getAttribute('data-bind')).toBe('item.value')
     })
   })
 
@@ -153,16 +153,15 @@ describe('Bind — Behavior Spec', () => {
   // B7: Object-property bind (Bug #31 pinned)
   // ---------------------------------------------------------------------------
 
-  describe('B7: bind on `user.email` (Bug #31 pinned)', () => {
-    it('PIN Bug #31: `bind user.email` binds to `user` (the whole object) instead', () => {
+  describe('B7: bind on `user.email` (Bug #31 fixed)', () => {
+    it('`bind user.email` follows the dot-path; input.value reflects the property', () => {
       const root = render(
         `user:\n  name: "Max"\n  email: "max@example.com"\n\nInput bind user.email`,
         container
       )
       const input = findByName(root, 'Input') as HTMLInputElement
-      // Today: data-bind is "user" only, dot-path lost. Value becomes "[object Object]".
-      expect(input.getAttribute('data-bind')).toBe('user')
-      expect(input.value).toBe('[object Object]')
+      expect(input.getAttribute('data-bind')).toBe('user.email')
+      expect(input.value).toBe('max@example.com')
     })
   })
 

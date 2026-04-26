@@ -1100,6 +1100,24 @@ class DOMGenerator {
       this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
     }
 
+    // Bug #30 fix: per-item bind on loop-template nodes (e.g.
+    // `Input bind item.value`). The container-level bind is handled in
+    // loop-emitter.ts; here we emit the per-item bind on the actual element.
+    if (node.bind) {
+      const bindVar = node.bind.startsWith('$') ? node.bind.slice(1) : node.bind
+      const firstPart = bindVar.split('.')[0]
+      if (firstPart === itemVar) {
+        // Per-item bind: data-bind keeps the loop-var path so the runtime
+        // can mutate the loop-item property; initial value comes from
+        // the item itself.
+        this.emit(`${varName}.dataset.bind = '${bindVar}'`)
+        // For input-like elements set the initial value
+        if (node.tag === 'input' || node.tag === 'textarea') {
+          this.emit(`${varName}.value = ${bindVar}`)
+        }
+      }
+    }
+
     // Set HTML properties (with data binding)
     for (const prop of node.properties) {
       if (prop.name === 'textContent') {

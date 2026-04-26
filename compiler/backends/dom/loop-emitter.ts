@@ -54,8 +54,17 @@ export function emitEachLoop(ctx: LoopEmitterContext, each: IREach, parentVar: s
   ctx.emit(`${containerId}_container.dataset.eachContainer = '${each.id}'`)
   ctx.emit(`${containerId}_container.style.display = 'contents';`)
 
-  // Check if any template node has bind - set data-bind on container so runtime can find it
-  const bindNode = each.template.find(node => node.bind)
+  // Check if any template node has a CONTAINER-level bind (e.g.
+  // `AddressCard exclusive(), bind selectedItem` — selection state stored
+  // outside the loop scope). A bind path that starts with the loop-var
+  // (`item.value`) is a PER-ITEM input-bind and belongs on the Input
+  // element instead, so we skip it here (Bug #30 fix).
+  const bindNode = each.template.find(node => {
+    if (!node.bind) return false
+    const bind = node.bind.startsWith('$') ? node.bind.slice(1) : node.bind
+    const firstPart = bind.split('.')[0]
+    return firstPart !== itemVar // skip per-item binds
+  })
   if (bindNode) {
     const bindVar = bindNode.bind!.startsWith('$') ? bindNode.bind!.slice(1) : bindNode.bind!
     ctx.emit(`${containerId}_container.dataset.bind = '${bindVar}'`)

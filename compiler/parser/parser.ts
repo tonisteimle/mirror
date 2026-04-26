@@ -2146,12 +2146,16 @@ export class Parser {
         continue
       }
 
-      // Bind: bind varName (track active exclusive() child content)
+      // Bind: bind varName (or dot-path: bind user.email — Bug #31 fix)
       if (this.check('BIND')) {
         this.advance() // consume 'bind'
         if (this.check('IDENTIFIER')) {
-          const varToken = this.advance()
-          component.bind = varToken.value
+          let path = this.advance().value
+          while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
+            this.advance() // consume DOT
+            path += '.' + this.advance().value
+          }
+          component.bind = path
         }
         continue
       }
@@ -2897,12 +2901,19 @@ export class Parser {
         continue
       }
 
-      // Bind: bind varName (track active exclusive() child content)
+      // Bind: bind varName (or dot-path: bind user.email)
+      // Bug #31 fix: the parser used to read only the first identifier and
+      // leave `.email` for the next iteration (which mis-interpreted it as
+      // an initialState). Now we consume the full dot-path.
       if (this.check('BIND')) {
         this.advance() // consume 'bind'
         if (this.check('IDENTIFIER')) {
-          const varToken = this.advance()
-          instance.bind = varToken.value
+          let path = this.advance().value
+          while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
+            this.advance() // consume DOT
+            path += '.' + this.advance().value
+          }
+          instance.bind = path
         }
         continue
       }
@@ -3465,16 +3476,19 @@ export class Parser {
         continue
       }
 
-      // Bind: bind varName - track active exclusive() child content in a variable
+      // Bind: bind varName (or dot-path: bind user.email — Bug #31 fix)
       if (this.check('BIND')) {
         const bindToken = this.advance()
-        // Get the variable name (could be an identifier or $token)
         if (this.check('IDENTIFIER')) {
-          const varName = this.advance()
+          let path = this.advance().value
+          while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
+            this.advance() // consume DOT
+            path += '.' + this.advance().value
+          }
           properties.push({
             type: 'Property',
             name: 'bind',
-            values: [varName.value],
+            values: [path],
             line: bindToken.line,
             column: bindToken.column,
           })

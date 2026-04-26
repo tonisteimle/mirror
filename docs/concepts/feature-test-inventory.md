@@ -302,8 +302,8 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 | 27  | `each x, idx in $list` — `$idx` wird nicht substituiert    | Each-Fixtures      | ✅ gefixt |
 | 28  | `if/else` innerhalb `each` rendert BEIDE Branches          | Each-Fixtures      | ✅ gefixt |
 | 29  | `bor`-Shorthand überschreibt `boc $token` mit currentColor | Tokens-Fixtures    | ✅ gefixt |
-| 30  | `bind item.value` in each-Loop initialisiert nicht         | Bind-Fixtures      | ⬜ offen  |
-| 31  | `bind user.email` bindet auf `user` (ganzes Object)        | Bind-Fixtures      | ⬜ offen  |
+| 30  | `bind item.value` in each-Loop initialisiert nicht         | Bind-Fixtures      | ✅ gefixt |
+| 31  | `bind user.email` bindet auf `user` (ganzes Object)        | Bind-Fixtures      | ✅ gefixt |
 
 ## Nicht-Ziele
 

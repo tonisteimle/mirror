@@ -42,23 +42,20 @@ describe('Bind — DOM emits data-bind attribute on Input', () => {
   })
 })
 
-describe('Bind — Pinned bugs', () => {
-  it('Bug #30 PIN: bind in each-loop does not propagate data-bind', () => {
-    // The Input inside an each-loop with `bind item.value` doesn't get
-    // the data-bind attribute set per loop-item.
+describe('Bind — Fixed bugs (regression tests)', () => {
+  it('Bug #30 fixed: bind in each-loop emits per-item data-bind', () => {
     const src = `items:\n  a:\n    value: "x"\n\neach item in $items\n  Input bind item.value`
     const dom = generateDOM(parse(src))
-    // Pin: today, no data-bind="item.value" inside the renderItem template
-    expect(dom).not.toMatch(/setAttribute\(['"]data-bind['"], ['"]item\.value['"]\)/)
+    // Now: data-bind = 'item.value' is emitted on the input template
+    expect(dom).toContain("dataset.bind = 'item.value'")
+    // And the initial value is set
+    expect(dom).toContain('= item.value')
   })
 
-  it('Bug #31 PIN: bind on object property emits top-level only', () => {
-    // `bind user.email` should bind to user.email, but currently emits user
+  it('Bug #31 fixed: bind follows dot-path through identifiers', () => {
     const src = `user:\n  email: "x"\n\nInput bind user.email`
     const dom = generateDOM(parse(src))
-    // Pin: today, data-bind value is just "user", not "user.email"
-    expect(dom).toContain('data-bind')
-    // The bind value used at runtime is "user" (the top-level key)
-    expect(dom).not.toContain("data-bind', 'user.email'")
+    // The dot-path makes it through to the data-bind attribute
+    expect(dom).toContain("'user.email'")
   })
 })
