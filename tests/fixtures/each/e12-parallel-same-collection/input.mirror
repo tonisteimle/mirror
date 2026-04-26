@@ -1,0 +1,15 @@
+tasks:
+  t1:
+    title: "Alpha"
+  t2:
+    title: "Beta"
+
+Frame
+  Text "List 1:"
+  each task in $tasks
+    Text "$task.title"
+
+Frame
+  Text "List 2:"
+  each task in $tasks
+    Text "$task.title"

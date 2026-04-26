@@ -1,0 +1,12 @@
+users:
+  max:
+    name: "Max"
+    role: "Admin"
+  anna:
+    name: "Anna"
+    role: "Designer"
+
+each user in $users
+  Frame
+    Text "$user.name"
+    Text "$user.role"

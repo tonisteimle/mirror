@@ -1,0 +1,13 @@
+tasks:
+  t1:
+    title: "Done task"
+    done: true
+  t2:
+    title: "Open task"
+    done: false
+  t3:
+    title: "Another done"
+    done: true
+
+each task in $tasks where task.done
+  Text "$task.title"

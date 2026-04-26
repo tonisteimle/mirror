@@ -1,0 +1,13 @@
+tasks:
+  t1:
+    title: "B"
+    priority: 2
+  t2:
+    title: "A"
+    priority: 1
+  t3:
+    title: "C"
+    priority: 3
+
+each task in $tasks by priority
+  Text "$task.title"

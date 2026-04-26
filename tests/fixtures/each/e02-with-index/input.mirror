@@ -1,0 +1,10 @@
+items:
+  a:
+    label: "First"
+  b:
+    label: "Second"
+  c:
+    label: "Third"
+
+each item, idx in $items
+  Text "$idx: $item.label"

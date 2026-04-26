@@ -1,0 +1,10 @@
+tasks:
+  t1:
+    title: "Design"
+  t2:
+    title: "Develop"
+  t3:
+    title: "Test"
+
+each task in $tasks
+  Text "$task.title"

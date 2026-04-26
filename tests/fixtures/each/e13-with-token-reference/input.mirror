@@ -1,0 +1,12 @@
+accent.bg: #10b981
+muted.col: #888
+
+tasks:
+  t1:
+    title: "Alpha"
+  t2:
+    title: "Beta"
+
+each task in $tasks
+  Frame bg $accent
+    Text "$task.title", col $muted

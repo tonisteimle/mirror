@@ -1,0 +1,19 @@
+categories:
+  food:
+    name: "Food"
+    items:
+      a:
+        label: "Pizza"
+      b:
+        label: "Pasta"
+  drinks:
+    name: "Drinks"
+    items:
+      c:
+        label: "Water"
+
+each cat in $categories
+  Frame
+    Text "$cat.name"
+    each item in cat.items
+      Text "$item.label"

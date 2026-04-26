@@ -79,13 +79,13 @@
 
 ## Komposition & Kontrollfluss
 
-| #   | Feature                  | Sub-Features                                                                             | Status | Schichten | Notizen                    |
-| --- | ------------------------ | ---------------------------------------------------------------------------------------- | :----: | --------- | -------------------------- |
-| 42  | **Each-Loop**            | basic, with-index, inline-array, over-object, nested, where-Filter, by-OrderBy, asc/desc |   🔵   | -         | Bug-Cluster #17/19/20 dort |
-| 43  | **Conditional (Block)**  | T1 if, T2 if/else, T3 boolean ops, T4 comparison, T5 string-comparison                   |   ✅   | F·B·C·D·S | Sprint 1.2, ~36 Tests      |
-| 44  | **Conditional (Inline)** | T6 ternary, T7 nested, T8 in style, T9 token-ref, T10 loopVar, T11 in text, T12 unicode  |   ✅   | F·B·C·D·S | Sprint 1.2, 4 Bugs gepinnt |
-| 45  | **Computed Expression**  | `count + 1`, `name.toUpperCase()`, `$var > 10`                                           |   🔵   | -         |                            |
-| 46  | **Show/Hide**            | `if loggedIn`-Block vs. `hidden`-Property                                                |   🔵   | -         |                            |
+| #   | Feature                  | Sub-Features                                                                                                                                                    | Status | Schichten | Notizen                               |
+| --- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: | --------- | ------------------------------------- |
+| 42  | **Each-Loop**            | E1 basic, E2 index, E3 inline-array, E4 object, E5 where, E6 by, E7 desc, E8 combined, E9 nested, E10 inner-conditional, E11 bind, E12 parallel, E13 with-token |   ✅   | F·B·C·D·S | Sprint 1.3, ~53 Tests, 2 Bugs gepinnt |
+| 43  | **Conditional (Block)**  | T1 if, T2 if/else, T3 boolean ops, T4 comparison, T5 string-comparison                                                                                          |   ✅   | F·B·C·D·S | Sprint 1.2, ~36 Tests                 |
+| 44  | **Conditional (Inline)** | T6 ternary, T7 nested, T8 in style, T9 token-ref, T10 loopVar, T11 in text, T12 unicode                                                                         |   ✅   | F·B·C·D·S | Sprint 1.2, 4 Bugs gepinnt            |
+| 45  | **Computed Expression**  | `count + 1`, `name.toUpperCase()`, `$var > 10`                                                                                                                  |   🔵   | -         |                                       |
+| 46  | **Show/Hide**            | `if loggedIn`-Block vs. `hidden`-Property                                                                                                                       |   🔵   | -         |                                       |
 
 ## Events & Actions
 
@@ -287,18 +287,20 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 
 ## Laufende Notiz: Bekannte Bugs aus Pyramide-Arbeit
 
-| #   | Bug                                                    | Gefunden in        | Status    |
-| --- | ------------------------------------------------------ | ------------------ | --------- |
-| 17  | Doppelter `tasksData` bei zwei `each`-Loops            | Smoke-Tests        | ✅ gefixt |
-| 18  | Strings ohne Quotes in Conditional                     | Smoke-Tests        | ✅ gefixt |
-| 19  | Colon-Splitting in `__loopVar:` Markern                | Smoke-Tests        | ✅ gefixt |
-| 20  | `__loopVar:` ohne Wrap als bare Identifier             | Smoke-Tests        | ✅ gefixt |
-| 21  | Self-Reference Stack-Overflow                          | Components-F.      | ✅ gefixt |
-| 22  | `Text $var` (bare ref) emittiert keinen `textContent`  | Variables-Contract | ✅ gefixt |
-| 23  | Nested ternary in Text → mehrere Sibling-Elemente      | Conditionals-F.    | ✅ gefixt |
-| 24  | Ternary mit `$token` in style → kein `background`      | Conditionals-F.    | ✅ gefixt |
-| 25  | Ternary in style mit `$var`-Operand fällt auf var()    | Conditionals-F.    | ✅ gefixt |
-| 26  | Ternary in Text mit Interpolation → leerer textContent | Conditionals-F.    | ✅ gefixt |
+| #   | Bug                                                     | Gefunden in        | Status    |
+| --- | ------------------------------------------------------- | ------------------ | --------- |
+| 17  | Doppelter `tasksData` bei zwei `each`-Loops             | Smoke-Tests        | ✅ gefixt |
+| 18  | Strings ohne Quotes in Conditional                      | Smoke-Tests        | ✅ gefixt |
+| 19  | Colon-Splitting in `__loopVar:` Markern                 | Smoke-Tests        | ✅ gefixt |
+| 20  | `__loopVar:` ohne Wrap als bare Identifier              | Smoke-Tests        | ✅ gefixt |
+| 21  | Self-Reference Stack-Overflow                           | Components-F.      | ✅ gefixt |
+| 22  | `Text $var` (bare ref) emittiert keinen `textContent`   | Variables-Contract | ✅ gefixt |
+| 23  | Nested ternary in Text → mehrere Sibling-Elemente       | Conditionals-F.    | ✅ gefixt |
+| 24  | Ternary mit `$token` in style → kein `background`       | Conditionals-F.    | ✅ gefixt |
+| 25  | Ternary in style mit `$var`-Operand fällt auf var()     | Conditionals-F.    | ✅ gefixt |
+| 26  | Ternary in Text mit Interpolation → leerer textContent  | Conditionals-F.    | ✅ gefixt |
+| 27  | `each x, idx in $list` — `$idx` wird nicht substituiert | Each-Fixtures      | ⬜ offen  |
+| 28  | `if/else` innerhalb `each` rendert BEIDE Branches       | Each-Fixtures      | ⬜ offen  |
 
 ## Nicht-Ziele
 

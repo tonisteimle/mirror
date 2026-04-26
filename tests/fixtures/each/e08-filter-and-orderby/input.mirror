@@ -1,0 +1,16 @@
+tasks:
+  t1:
+    title: "Important done"
+    done: true
+    priority: 1
+  t2:
+    title: "Open"
+    done: false
+    priority: 2
+  t3:
+    title: "Lower done"
+    done: true
+    priority: 3
+
+each task in $tasks where task.done by priority
+  Text "$task.title"

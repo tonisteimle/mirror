@@ -1,0 +1,15 @@
+tasks:
+  t1:
+    title: "Active"
+    done: true
+  t2:
+    title: "Pending"
+    done: false
+
+each task in $tasks
+  Frame
+    Text "$task.title"
+    if task.done
+      Text "✓"
+    else
+      Text "○"
