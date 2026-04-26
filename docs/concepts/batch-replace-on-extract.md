@@ -1,6 +1,6 @@
 # Batch-Replace on Extract — Konzept
 
-> **Status**: Draft / Exploration. Noch nicht implementiert.
+> **Status**: Implementiert (Phase A, B, C).
 >
 > Erweitert die bestehenden `::`-Trigger (Component-Extract,
 > Token-Extract) um einen automatischen Project-Scan: nach der
@@ -8,6 +8,16 @@
 > Pattern als Batch-Replace-Kandidaten angeboten. Schliesst die
 > "Cleanup-Phase"-Lücke, in der Designer aus rohem Draft-Code
 > wiederverwendbare Tokens und Components herausziehen.
+>
+> **Implementation**:
+>
+> - `studio/editor/extract/pattern-match.ts` — pure match-Logik
+> - `studio/editor/extract/apply-batch-replace.ts` — pure Datei-Rewrites
+> - `studio/editor/extract/batch-replace-dialog.ts` — Modal-UI
+> - Trigger-Hooks in `component-extract-trigger.ts` und `token-extract-trigger.ts`
+> - 90 vitest-Tests in `tests/studio/editor/{pattern-match,apply-batch-replace}.test.ts`
+>
+> **Commits**: Phase A (`1db3d618`), Phase B (`39058560`), Phase C (`3bfef9af`).
 
 ## Motivation
 
@@ -280,24 +290,49 @@ Funktionen → testbar ohne Studio-Kontext (analog zu `computeExtraction`).
 
 ## Phasing
 
-### Phase A — Component-Extract Batch-Replace
+### Phase A — Component-Extract Batch-Replace ✅
 
-1. `pattern-match.ts` mit canonicalize / linesMatch / findProjectMatches
-2. Dialog-UI für Match-Liste
-3. Trigger-Integration: nach `computeExtraction` Scan + Dialog
-4. Vitest-Tests für pattern-match (reine Funktionen)
-5. CDP-Test für End-to-End mit Studio
+Fertig in Commit `1db3d618`. Komponenten:
 
-### Phase B — Token-Extract Batch-Replace
+- `pattern-match.ts`: `canonicalize` / `linesMatch` / `propertiesMatch` /
+  `findProjectMatches`
+- `apply-batch-replace.ts`: `applyBatchReplace` / `rewriteMatchLine`
+- `batch-replace-dialog.ts`: Modal mit Per-Match-Checkboxen
+- Trigger-Integration in `component-extract-trigger.ts`
+- 51 vitest-Tests + 11 apply-Tests
 
-1. Match-Granularität auf Property-Segment-Level (statt Line)
-2. Trigger-Integration für token-extract
-3. Tests
+Match ist **element-name-agnostic** (Frame, Btn, Box etc. matchen
+gegenseitig wenn die Properties gleich sind), weil User nicht weiss
+was vorher dort stand und Designer-Workflow oft mehrere Element-Typen
+mit gleichem Styling hat.
 
-### Phase C — (optional, später) Override-Modus
+### Phase B — Token-Extract Batch-Replace ✅
 
-Bei "fast-gleich" (gleiche Property-Namen, eine oder zwei Werte
-abweichend) anbieten: "Replace mit Override?". Beispiel:
+Fertig in Commit `39058560`. Komponenten:
+
+- `pattern-match.ts`: `findSegmentMatches` (Property-Segment-Granularität)
+- `apply-batch-replace.ts`: `applySegmentReplace`
+- Trigger-Integration in `token-extract-trigger.ts`
+- 7 vitest-Tests für findSegmentMatches + 4 apply-Tests
+
+**v1-Limit**: positional Werte (`Frame #2271C1`) werden NICHT gematcht,
+nur explizite (`bg #2271C1`). Positional-Replace im Source ist
+ambiguous; mixed-syntax Projekte brauchen einen manuellen Pass.
+
+### Phase C — Override-Modus ✅
+
+Fertig in Commit `3bfef9af`. Komponenten:
+
+- `pattern-match.ts`: `findNearMatches` (≤3 abweichende Werte)
+- `apply-batch-replace.ts`: `applyNearMatchReplace` / `rewriteNearMatchLine`
+- Dialog erweitert: zwei Sektionen (Exakt grün, Ähnlich amber)
+- Component-Extract-Trigger ruft jetzt `findProjectMatches` UND
+  `findNearMatches` auf
+- 9 vitest-Tests für findNearMatches + 8 apply-Tests
+
+**Verhalten**: bei "fast-gleich" (gleiche Property-Namen, ≤3 Werte
+abweichend) wird die abweichende Property zur Override am neuen
+Instance. Beispiel:
 
 ```
 Frame pad 16, bg #2271C1, rad 8     → Card bg #2271C1
@@ -305,54 +340,71 @@ Frame pad 16, bg #1a1a1a, rad 8     → Card                 (target — exact m
 Frame pad 16, bg #ef4444, rad 8     → Card bg #ef4444
 ```
 
-UX: separate Sektion im Dialog, "Möchtest du auch ähnliche Patterns mit
-Override ersetzen?". Höheres Risiko für False-Positives → opt-in,
-nicht default-checked.
+UX: separate Sektion "Ähnlich (N) — mit Override" im Dialog,
+**default uncheck** (opt-in). Designer sieht Preview wie
+`Frame ... → Card bg #ef4444`, kann pro Match entscheiden.
 
-## Offene Fragen
+**v1-Limits in Phase C**:
 
-1. **Performance bei grossen Projekten**: Project-Scan über alle
-   `.mir`/`.com`-Files bei jedem `::` — bei 1000+-Lines-Projekten
-   merkbar? Wahrscheinlich nicht (1000 lineMatches sind ms-Operationen),
-   aber wir sollten messen.
+- Maximal 3 abweichende Werte (`NEAR_MATCH_MAX_DIFFS`); mehr werden
+  ignoriert
+- Property-Namen-SETS müssen identisch sein (extra/fehlende Properties
+  → kein Near-Match)
+- Lines mit positional bare values werden ignoriert (zu ambig)
 
-2. **Multi-File-Replace und Konsistenz**: Wenn ein Match in einem
-   File ist, das gerade ungespeicherte Änderungen hat (anderer File
-   im Editor offen), wie verhalten wir uns? Vorschlag: Match auf
-   in-memory Source operieren (was der User aktuell sieht), nicht
-   Disk-State.
+## Entscheidungen aus dem Implementations-Verlauf
 
-3. **Children-Matching für Component-Extract**: Aktuell ignoriert das
-   Pattern die Children-Struktur. Sollte es auch matchen wenn die
-   Children-Struktur identisch ist? Oder ist die heutige Logik
-   ausreichend (Children werden beim Replace einfach übernommen)?
-   _Vorschlag_: Children ignorieren — sie wandern beim Replace mit,
-   müssen also nicht matchen. Decken die "Card-mit-verschiedenem-Content"-
-   Pattern.
+Während der Phase-A-Diskussion wurden folgende Punkte geklärt:
 
-4. **Hover-/State-Children-Blöcke**: Sollen Lines innerhalb von
-   `hover:`-Blöcken auch matchen können? In v1 lassen wir's aus
-   (Komplexität), in v2 prüfen.
+1. **Element-Name strikt vs. agnostisch**: ursprünglich war `linesMatch`
+   strikt (gleiches Element). Problem: User typt `Card::` auf einer
+   Frame-Zeile, wir wissen nicht was es war. Lösung: `propertiesMatch`
+   (element-name-agnostic) für Component-Extract; `linesMatch` (strikt)
+   bleibt für Spezialfälle (Token-Extract). Designer entscheidet im
+   Dialog welche Element-Typen unifiziert werden.
 
-5. **Whitespace-Toleranz im Property-Value**: `pad 12 24` vs
-   `pad  12  24` (mehr Whitespace) — als gleicher Wert behandeln?
-   Vorschlag: ja, normalisieren auf single-space.
+2. **String-Toleranz**: Quoted Strings (`"..."`) dürfen abweichen, alles
+   andere muss byte-genau matchen. Per-Instance-Content (Text, Icon-
+   Name, Image-Src, Button-Label) ist genau das was zwischen Instances
+   unterschiedlich sein darf.
 
-6. **Reihenfolge im Multi-Value-Property**: `pad 12 24` vs `pad 24 12`
-   — semantisch unterschiedlich (vertical/horizontal vs umgekehrt). Match
-   nur bei exakter Token-Reihenfolge im Value. Bestätigt: ja.
+3. **Children-Matching**: Children werden NICHT für die Match-Entscheidung
+   herangezogen. Beim Replace wandern sie einfach mit (`Frame x → Card`
+   lässt die indented Children unter Card stehen). Decken automatisch
+   die "Card-mit-verschiedenem-Content"-Pattern.
 
-7. **Token-Resolution beim Vergleich**: `bg #2271C1` und `bg $primary`
-   wo `$primary.bg = #2271C1` — semantisch dasselbe, aber syntaktisch
-   verschieden. v1: kein Match (token-Wert vs hex-Wert klassifizieren
-   sich anders). User würde das mit `value::token` separat erledigen.
+4. **Positional vs. explizit**: Component-Extract nutzt den
+   Positional-Resolver für Kanonisierung — `Frame 100, 50, #333`
+   matcht `Frame w 100, h 50, bg #333`. Token-Extract bleibt
+   explizit-only (positional-Replace im Source ist ambig).
 
-8. **`as`-Komponenten**: `MyBtn as Button: bg #333` — User extrahiert
-   `MyBtn` und es findet ähnliche `Button`s im Projekt. Sollen die
-   auch ersetzt werden? Wahrscheinlich nicht — `Button` und `MyBtn`
-   sind verschiedene Element-Namen → naturally kein Match. Aber wenn
-   User absichtlich extrahiert um sie zu vereinheitlichen, müsste er
-   einen anderen Workflow nutzen.
+5. **Multi-Value-Property-Reihenfolge**: `pad 12 24` und `pad 24 12`
+   matchen NICHT (Reihenfolge ist semantisch).
+
+## Offene Fragen / nicht-implementiert
+
+1. **Performance bei grossen Projekten**: nicht systematisch gemessen;
+   bei 1000+-Lines-Projekten könnten 3 separate Scans (exact + near +
+   bei Token-Extract segments) merkbar werden. Bei Bedarf cachen.
+
+2. **Hover-/State-Children-Blöcke**: Lines innerhalb von `hover:` /
+   `state:`-Blöcken werden derzeit nicht als Match-Kandidaten
+   betrachtet. Wenn Designer auch Hover-Variant-Lines unifizieren
+   wollen, braucht's einen separaten Pass mit Indentation-Awareness.
+
+3. **Token-zu-Hex-Match**: `bg #2271C1` und `bg $primary` (wo
+   `$primary.bg = #2271C1`) matchen NICHT — token-Wert vs hex-Wert
+   klassifizieren sich verschieden. User muss separat mit `value::token`
+   konvertieren. Möglich, aber nicht in v1.
+
+4. **CDP-Browser-Test für Dialog**: vitest deckt die Pure-Logik ab,
+   aber das DOM-Rendering und der End-to-End-Click-Flow im laufenden
+   Studio sind nur manuell verifiziert. Ein CDP-Test wäre die letzte
+   noch offene Test-Lücke.
+
+5. **Reverse-Operation**: keine Geste um eine Komponente / einen Token
+   wieder zu inlinen (z.B. `~~`). Niedrige Priorität — Designer
+   editieren die Definition direkt, wenn nötig.
 
 ## Tradeoffs
 
