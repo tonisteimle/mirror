@@ -16,6 +16,7 @@ import {
   DeleteNodeCommand,
   createStudioContext,
   setStudioContext,
+  adjustChangeForWrap,
   type Command,
   type CommandContext,
   type StudioContext,
@@ -940,19 +941,27 @@ export function updateStudioState(
         codeModifier,
         result => {
           if (result.success && result.newSource && result.change) {
-            // Apply the change to the editor
+            // Apply the change to the editor. The CodeModifier returns
+            // offsets relative to the resolved (prelude + optional `App`-
+            // wrapped + indented) source; the editor only contains the
+            // user's source. Use the shared wrap-aware adjuster so this
+            // path stays in sync with studio/app.js's
+            // handleStudioCodeChange (single source of truth).
             const ctx = getCommandContext()
             if (ctx?.applyChange) {
-              // Adjust for prelude offset
-              const preludeOffset = state.get().preludeOffset || 0
-              const adjustedChange = {
-                from: result.change.from - preludeOffset,
-                to: result.change.to - preludeOffset,
-                insert: result.change.insert,
-              }
-              // Validate before applying
+              const s = state.get()
+              const adjustedChange = adjustChangeForWrap(
+                result.change,
+                s.preludeOffset || 0,
+                s.isWrappedWithApp || false,
+                s.resolvedSource || ''
+              )
               const editorSource = ctx.getSource?.() ?? ''
-              if (adjustedChange.from >= 0 && adjustedChange.to <= editorSource.length) {
+              if (
+                adjustedChange.from >= 0 &&
+                adjustedChange.to <= editorSource.length &&
+                adjustedChange.from <= adjustedChange.to
+              ) {
                 ctx.applyChange(adjustedChange)
               }
             }

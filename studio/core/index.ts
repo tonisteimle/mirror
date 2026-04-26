@@ -117,3 +117,4 @@ export {
   type ElementLayout,
   type LayoutReadOptions,
 } from './layout-service'
+export { countWrapIndentChars, stripWrapIndentLines, adjustChangeForWrap } from './wrap-utils'
