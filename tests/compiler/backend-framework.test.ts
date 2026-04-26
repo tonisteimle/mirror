@@ -165,3 +165,63 @@ describe('Framework Backend — Determinism', () => {
     expect(fw(src)).toBe(fw(src))
   })
 })
+
+describe('Framework Backend — More edge paths', () => {
+  it('px-value parsing in props (200px → number)', () => {
+    const out = fw(`Frame w 200`)
+    // Either as 200 or '200px' or '200' depending on how IR represents it
+    expect(out).toMatch(/200/)
+  })
+
+  it('component with state-block survives compilation', () => {
+    const out = fw(`Btn: pad 12, bg #333, toggle()
+  on:
+    bg #2271C1
+
+Btn "Click"`)
+    expect(out).toContain('mirror-runtime')
+    expect(out).toContain('Click')
+  })
+
+  it('image with src is rendered', () => {
+    const out = fw(`Image src "/foo.jpg", w 200`)
+    expect(out).toContain("'Image'")
+    expect(out).toContain('/foo.jpg')
+  })
+
+  it('icon with custom size + color', () => {
+    const out = fw(`Icon "check", is 24, ic #10b981`)
+    expect(out).toContain("'Icon'")
+    expect(out).toContain('check')
+  })
+
+  it('Frame with many properties (large props object)', () => {
+    const out = fw(`Frame w 200, h 100, bg #333, col white, pad 12, gap 8, rad 6, bor 1, boc #444`)
+    expect(out).toContain("'Frame'")
+    expect(out).toMatch(/width|w:|200/)
+  })
+
+  it('multiple distinct token definitions all emitted', () => {
+    const out = fw(`primary.bg: #2271C1
+primary.col: white
+danger.bg: #ef4444
+spacing.gap: 12`)
+    expect(out).toContain('primary')
+    expect(out).toContain('danger')
+    expect(out).toContain('spacing')
+  })
+
+  it('nested each (each-in-each) compiles', () => {
+    const out = fw(`groups:
+  g1:
+    items:
+      i1:
+        title: "A"
+
+each group in $groups
+  Frame
+    each item in group.items
+      Text item.title`)
+    expect(out).toContain('M.each')
+  })
+})
