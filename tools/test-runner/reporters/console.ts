@@ -134,7 +134,7 @@ export class ConsoleReporter implements Reporter {
 
   private formatError(error: string): string {
     // Truncate long errors
-    const maxLength = 200
+    const maxLength = 1000
     if (error.length > maxLength) {
       return error.slice(0, maxLength) + '...'
     }

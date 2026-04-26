@@ -15,6 +15,7 @@
 
 import type { PropertyReader, PropertyValue } from './types'
 import { normalizeColor } from './_color'
+import { maybeResolveToken } from './_tokens'
 
 export interface ColorPropertyConfig {
   /** Canonical Mirror name (e.g. 'bg'). */
@@ -36,7 +37,10 @@ export function createColorReader(config: ColorPropertyConfig): PropertyReader {
       if (!line) return null
       const raw = readColorFromLine(line, config.aliases)
       if (raw === null) return null
-      return normalizeColor(raw)
+      // Resolve `$tokenName` against the project source before normalising.
+      // If the value isn't a token, maybeResolveToken returns it unchanged.
+      const resolved = maybeResolveToken(raw, config.name, ctx.source)
+      return normalizeColor(resolved)
     },
 
     fromDom(nodeId, ctx): PropertyValue {
@@ -48,8 +52,24 @@ export function createColorReader(config: ColorPropertyConfig): PropertyReader {
 
     fromPanel(nodeId, ctx): PropertyValue {
       const raw = ctx.api.panel.property.getPropertyValue(config.name)
-      if (raw === null) return null
-      return normalizeColor(raw)
+      if (raw !== null) {
+        const resolved = maybeResolveToken(raw, config.name, ctx.source)
+        return normalizeColor(resolved)
+      }
+      // Studio's panel-api currently returns null for token-bound
+      // properties (the panel UI shows a token chip, but
+      // getPropertyValue doesn't expose that). For framework consistency,
+      // fall back to source parsing: if the source has `<prop> $tokenName`
+      // and we can resolve it, that IS what the panel logically displays.
+      const node = ctx.sourceMap.getNodeById(nodeId)
+      if (!node) return null
+      const line = ctx.source.split('\n')[node.position.line - 1]
+      if (!line) return null
+      const fromSrc = readColorFromLine(line, config.aliases)
+      if (fromSrc === null || !fromSrc.startsWith('$')) return null
+      const resolved = maybeResolveToken(fromSrc, config.name, ctx.source)
+      if (resolved === fromSrc) return null
+      return normalizeColor(resolved)
     },
 
     // Apply to the expected value too, so tests can write `bg: 'white'`
@@ -74,8 +94,9 @@ export function createColorReader(config: ColorPropertyConfig): PropertyReader {
  *   - named colors (single word starting with a letter)
  *   - `rgb(...)` / `rgba(...)`
  *
- * Tokens (`$primary`) and gradients (`grad ...`) are deliberately not
- * handled here — those would return null from normalizeColor anyway.
+ * Tokens (`$primary`) are matched and returned as-is — the caller
+ * resolves them via the project source. Gradients (`grad ...`) are not
+ * handled and would return null from normalizeColor anyway.
  */
 function readColorFromLine(line: string, aliases: readonly string[]): string | null {
   const aliasGroup = aliases.map(a => a.replace(/-/g, '\\-')).join('|')
@@ -90,7 +111,12 @@ function readColorFromLine(line: string, aliases: readonly string[]): string | n
   const rgbMatch = line.match(reRgb)
   if (rgbMatch) return rgbMatch[1]
 
-  // Named color (single identifier)
+  // Token reference: `$tokenName`. Resolution happens in the caller.
+  const reToken = new RegExp(`(?:^|[,\\s])(?:${aliasGroup})\\s+(\\$[A-Za-z_][\\w-]*)\\s*(?=,|$)`)
+  const tokenMatch = line.match(reToken)
+  if (tokenMatch) return tokenMatch[1]
+
+  // Named color (single identifier — letters only, no leading $)
   const reNamed = new RegExp(`(?:^|[,\\s])(?:${aliasGroup})\\s+([a-zA-Z]+)\\s*(?=,|$)`)
   const namedMatch = line.match(reNamed)
   if (namedMatch) return namedMatch[1]
