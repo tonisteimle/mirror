@@ -83,6 +83,7 @@ import {
   allSnappingTests,
   tokenExtractTests,
   componentExtractTests,
+  batchReplaceTests,
   allKeyboardEditingTests,
 } from './interactions'
 
@@ -237,6 +238,7 @@ export const handlesTests: TestCase[] = [
   ...allSnappingTests,
   ...tokenExtractTests,
   ...componentExtractTests,
+  ...batchReplaceTests,
   ...allKeyboardEditingTests,
   ...allStepRunnerExampleTests,
 ]

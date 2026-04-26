@@ -151,6 +151,7 @@ import {
   paddingModeSelectionTests,
   tokenExtractTests,
   componentExtractTests,
+  batchReplaceTests,
   resizeHandleDragTests,
   allMultiselectTests,
   shiftClickTests,
@@ -837,6 +838,7 @@ export {
   paddingModeSelectionTests,
   tokenExtractTests,
   componentExtractTests,
+  batchReplaceTests,
   resizeHandleDragTests,
   allMultiselectTests,
   shiftClickTests,
@@ -1348,6 +1350,7 @@ export const allTests: TestCase[] = [
   ...allPaddingHandlerTests,
   ...tokenExtractTests,
   ...componentExtractTests,
+  ...batchReplaceTests,
   ...resizeHandleDragTests,
   ...allMultiselectTests,
   ...allEditorMultiselectTests,
@@ -1548,6 +1551,7 @@ export const testCounts: Record<string, number> = {
   'paddingHandlers.modeSelection': paddingModeSelectionTests.length,
   tokenExtract: tokenExtractTests.length,
   componentExtract: componentExtractTests.length,
+  batchReplace: batchReplaceTests.length,
   wrapLayout: allWrapLayoutTests.length,
   'wrapLayout.hKey': hKeyBehaviorTests.length,
   'wrapLayout.vKey': vKeyBehaviorTests.length,
@@ -2144,6 +2148,7 @@ export type TestCategory =
   | 'paddingHandlers.modeSelection'
   | 'tokenExtract'
   | 'componentExtract'
+  | 'batchReplace'
 
   // === Validation Tests (B3.1) ===
   | 'validation'
@@ -2683,6 +2688,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'paddingHandlers.modeSelection': paddingModeSelectionTests,
     tokenExtract: tokenExtractTests,
     componentExtract: componentExtractTests,
+    batchReplace: batchReplaceTests,
     wrapLayout: allWrapLayoutTests,
     'wrapLayout.hKey': hKeyBehaviorTests,
     'wrapLayout.vKey': vKeyBehaviorTests,
@@ -3248,6 +3254,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'paddingHandlers.modeSelection': 'Padding: Mode Selection',
     tokenExtract: 'Token Extract',
     componentExtract: 'Component Extract',
+    batchReplace: 'Batch Replace',
 
     // === Validation Tests (B3.1) ===
     validation: 'Validation Tests',
