@@ -215,7 +215,9 @@ function emitReferenceResolver(ctx: TokenEmitterContext): void {
 function emitAggregationHelpers(ctx: TokenEmitterContext): void {
   ctx.emit('// Aggregation methods for collections')
   ctx.emit('// Helper to get nested property value: "data.stats.value" -> obj.data.stats.value')
-  ctx.emit('const $getField = (obj, path) => path.split(".").reduce((o, k) => o?.[k], obj)')
+  ctx.emit(
+    'const $getField = (obj, path) => path == null ? obj : String(path).split(".").reduce((o, k) => o?.[k], obj)'
+  )
   ctx.emit('const $agg = {')
   ctx.indentIn()
   ctx.emit('count: (arr) => Array.isArray(arr) ? arr.length : 0,')

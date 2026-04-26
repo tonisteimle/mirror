@@ -63,16 +63,26 @@ function emitAPIComment(ctx: APIEmitterContext): void {
 }
 
 function emitNodeAccessors(ctx: APIEmitterContext, namedNodes: IRNode[]): void {
+  // De-duplicate by instanceName: when a user gives the same `name` to
+  // multiple elements (which is unusual but valid), only emit one accessor.
+  // Otherwise the second `Object.defineProperty` call throws "Cannot redefine
+  // property" at runtime, crashing the entire UI.
+  const seen = new Set<string>()
   for (const node of namedNodes) {
+    if (!node.instanceName || seen.has(node.instanceName)) continue
+    seen.add(node.instanceName)
     emitNodeAccessor(ctx, node)
   }
 }
 
 function emitNodeAccessor(ctx: APIEmitterContext, node: IRNode): void {
+  // configurable: true allows the property to be redefined safely (e.g. when
+  // re-mounting the UI in the same root, or in tests that compile twice).
   ctx.emit(`Object.defineProperty(_root, '${node.instanceName}', {`)
   ctx.indentIn()
   ctx.emit(`get() { return _runtime.wrap(_elements['${node.instanceName}']) },`)
-  ctx.emit('enumerable: true')
+  ctx.emit('enumerable: true,')
+  ctx.emit('configurable: true')
   ctx.indentOut()
   ctx.emit('})')
 }
@@ -88,6 +98,10 @@ function emitSetState(ctx: APIEmitterContext): void {
   ctx.emit('_root.setState = function(key, value) {')
   ctx.indentIn()
   ctx.emit('_state[key] = value')
+  // Also update __mirrorData so that $get() (used by conditionals, text
+  // bindings, each loops, etc.) sees the new value. Without this, setState
+  // only affects local _state but $-references still read the old data.
+  ctx.emit('if (typeof __mirrorData !== "undefined") __mirrorData[key] = value')
   ctx.emit('this.update()')
   ctx.indentOut()
   ctx.emit('}')
@@ -97,7 +111,10 @@ function emitSetState(ctx: APIEmitterContext): void {
 function emitGetState(ctx: APIEmitterContext): void {
   ctx.emit('_root.getState = function(key) {')
   ctx.indentIn()
-  ctx.emit('return _state[key]')
+  // Read from __mirrorData (the authoritative store) with _state fallback.
+  ctx.emit(
+    'return (typeof __mirrorData !== "undefined" && key in __mirrorData) ? __mirrorData[key] : _state[key]'
+  )
   ctx.indentOut()
   ctx.emit('}')
   ctx.emit('')

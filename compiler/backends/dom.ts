@@ -1842,9 +1842,13 @@ class DOMGenerator {
         )
 
         // Then, convert remaining $varName to ${$get("varName")}
-        // Uses negative lookahead to skip $get( which shouldn't be re-processed
+        // Uses negative lookahead to skip $get( which shouldn't be re-processed.
+        // The optional (...) group at the end captures aggregation arguments
+        // like `$items.sum(value)` — the runtime $get() handles the full
+        // pattern via aggMatch. Without this, `$items.sum(value)` would split
+        // at the `(`, leaving `(value)` as literal trailing text.
         processed = processed.replace(
-          /\$(?!get\()([a-zA-Z_][a-zA-Z0-9_.]*)/g,
+          /\$(?!get\()([a-zA-Z_][a-zA-Z0-9_.]*(?:\([^)]*\))?)/g,
           (match, varName) => `\${$get("${varName}")}`
         )
 
