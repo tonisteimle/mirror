@@ -1,0 +1,5 @@
+primary.bg: #2271C1
+primary.col: white
+primary.rad: 8
+
+Frame bg $primary, col $primary, rad $primary

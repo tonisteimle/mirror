@@ -1,0 +1,6 @@
+brand.bg: #2271C1
+brand.col: white
+brand.boc: #1a5d9c
+
+Frame bg $brand, col $brand, boc $brand, bor 2, pad 8
+  Text "Branded", col $brand

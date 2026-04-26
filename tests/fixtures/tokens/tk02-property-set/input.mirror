@@ -1,0 +1,4 @@
+cardstyle: bg #1a1a1a, pad 16, rad 8, gap 8
+
+Frame $cardstyle
+  Text "Hello"

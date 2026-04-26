@@ -1,0 +1,6 @@
+primary.bg: #2271C1
+muted.bg: #888
+
+active: true
+
+Frame bg active ? $primary : $muted

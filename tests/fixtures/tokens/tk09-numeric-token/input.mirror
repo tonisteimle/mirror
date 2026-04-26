@@ -1,0 +1,6 @@
+space.pad: 16
+space.gap: 12
+size.fs: 18
+
+Frame pad $space, gap $space
+  Text "Hello", fs $size

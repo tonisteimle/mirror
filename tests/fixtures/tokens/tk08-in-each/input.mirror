@@ -1,0 +1,11 @@
+accent.bg: #10b981
+
+items:
+  a:
+    label: "First"
+  b:
+    label: "Second"
+
+each item in $items
+  Frame bg $accent
+    Text "$item.label"

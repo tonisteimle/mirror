@@ -18,14 +18,14 @@
 
 ## Sprache & Compiler-Pipeline
 
-| #   | Feature          | Sub-Features                                                                              | Status | Schichten | Notizen                             |
-| --- | ---------------- | ----------------------------------------------------------------------------------------- | :----: | --------- | ----------------------------------- |
-| 1   | **Components**   | Definition, `as`, Multi-Level, Slots, Override, States, Events, Composition (20)          |   ✅   | F·B·C·D·S | Commit `44fd84ae`, 112 Tests        |
-| 2   | **Tokens**       | Single-value, property-set, suffix-resolution, $-ref, nested, propagation, runtime-tokens |   ⬜   | -         | Höchste Prio nach Components        |
-| 3   | **Primitives**   | Frame, Text, Button, Input, Textarea, Image, Icon, Link, Divider, Spacer, semantic HTML   |   🔵   | -         | Tests bestehen, nicht pyramidisiert |
-| 4   | **Properties**   | ~120 Properties (Layout, Spacing, Color, Typo, Effects, Visibility, …)                    |   🔵   | -         | Verteilt auf andere Features        |
-| 5   | **Canvas**       | mobile/tablet/desktop preset, properties, inheritance to children                         |   🔵   | -         | Eigene `canvas.test.ts`             |
-| 6   | **Custom Icons** | `$icons:` Definition, SVG paths, Mix mit Lucide                                           |   🔵   | -         | `icons.test.ts`                     |
+| #   | Feature          | Sub-Features                                                                                                                                                | Status | Schichten | Notizen                              |
+| --- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: | --------- | ------------------------------------ |
+| 1   | **Components**   | Definition, `as`, Multi-Level, Slots, Override, States, Events, Composition (20)                                                                            |   ✅   | F·B·C·D·S | Commit `44fd84ae`, 112 Tests         |
+| 2   | **Tokens**       | TK1 single, TK2 property-set, TK3 suffix, TK4 direct, TK5 in component, TK6 token-in-token, TK7 in conditional, TK8 in each, TK9 numeric, TK10 multi-suffix |   ✅   | F·B·C·D·S | Sprint 2.1, ~50 Tests, 1 Bug gepinnt |
+| 3   | **Primitives**   | Frame, Text, Button, Input, Textarea, Image, Icon, Link, Divider, Spacer, semantic HTML                                                                     |   🔵   | -         | Tests bestehen, nicht pyramidisiert  |
+| 4   | **Properties**   | ~120 Properties (Layout, Spacing, Color, Typo, Effects, Visibility, …)                                                                                      |   🔵   | -         | Verteilt auf andere Features         |
+| 5   | **Canvas**       | mobile/tablet/desktop preset, properties, inheritance to children                                                                                           |   🔵   | -         | Eigene `canvas.test.ts`              |
+| 6   | **Custom Icons** | `$icons:` Definition, SVG paths, Mix mit Lucide                                                                                                             |   🔵   | -         | `icons.test.ts`                      |
 
 ## Layout & Styling
 
@@ -287,20 +287,21 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 
 ## Laufende Notiz: Bekannte Bugs aus Pyramide-Arbeit
 
-| #   | Bug                                                     | Gefunden in        | Status    |
-| --- | ------------------------------------------------------- | ------------------ | --------- |
-| 17  | Doppelter `tasksData` bei zwei `each`-Loops             | Smoke-Tests        | ✅ gefixt |
-| 18  | Strings ohne Quotes in Conditional                      | Smoke-Tests        | ✅ gefixt |
-| 19  | Colon-Splitting in `__loopVar:` Markern                 | Smoke-Tests        | ✅ gefixt |
-| 20  | `__loopVar:` ohne Wrap als bare Identifier              | Smoke-Tests        | ✅ gefixt |
-| 21  | Self-Reference Stack-Overflow                           | Components-F.      | ✅ gefixt |
-| 22  | `Text $var` (bare ref) emittiert keinen `textContent`   | Variables-Contract | ✅ gefixt |
-| 23  | Nested ternary in Text → mehrere Sibling-Elemente       | Conditionals-F.    | ✅ gefixt |
-| 24  | Ternary mit `$token` in style → kein `background`       | Conditionals-F.    | ✅ gefixt |
-| 25  | Ternary in style mit `$var`-Operand fällt auf var()     | Conditionals-F.    | ✅ gefixt |
-| 26  | Ternary in Text mit Interpolation → leerer textContent  | Conditionals-F.    | ✅ gefixt |
-| 27  | `each x, idx in $list` — `$idx` wird nicht substituiert | Each-Fixtures      | ✅ gefixt |
-| 28  | `if/else` innerhalb `each` rendert BEIDE Branches       | Each-Fixtures      | ✅ gefixt |
+| #   | Bug                                                        | Gefunden in        | Status    |
+| --- | ---------------------------------------------------------- | ------------------ | --------- |
+| 17  | Doppelter `tasksData` bei zwei `each`-Loops                | Smoke-Tests        | ✅ gefixt |
+| 18  | Strings ohne Quotes in Conditional                         | Smoke-Tests        | ✅ gefixt |
+| 19  | Colon-Splitting in `__loopVar:` Markern                    | Smoke-Tests        | ✅ gefixt |
+| 20  | `__loopVar:` ohne Wrap als bare Identifier                 | Smoke-Tests        | ✅ gefixt |
+| 21  | Self-Reference Stack-Overflow                              | Components-F.      | ✅ gefixt |
+| 22  | `Text $var` (bare ref) emittiert keinen `textContent`      | Variables-Contract | ✅ gefixt |
+| 23  | Nested ternary in Text → mehrere Sibling-Elemente          | Conditionals-F.    | ✅ gefixt |
+| 24  | Ternary mit `$token` in style → kein `background`          | Conditionals-F.    | ✅ gefixt |
+| 25  | Ternary in style mit `$var`-Operand fällt auf var()        | Conditionals-F.    | ✅ gefixt |
+| 26  | Ternary in Text mit Interpolation → leerer textContent     | Conditionals-F.    | ✅ gefixt |
+| 27  | `each x, idx in $list` — `$idx` wird nicht substituiert    | Each-Fixtures      | ✅ gefixt |
+| 28  | `if/else` innerhalb `each` rendert BEIDE Branches          | Each-Fixtures      | ✅ gefixt |
+| 29  | `bor`-Shorthand überschreibt `boc $token` mit currentColor | Tokens-Fixtures    | ⬜ offen  |
 
 ## Nicht-Ziele
 

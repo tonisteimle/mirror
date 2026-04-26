@@ -1,0 +1,4 @@
+primary.bg: #2271C1
+secondary.bg: $primary
+
+Frame bg $secondary

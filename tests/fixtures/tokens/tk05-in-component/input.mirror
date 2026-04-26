@@ -1,0 +1,6 @@
+primary.bg: #2271C1
+text.col: white
+
+Btn: Button pad 12 24, bg $primary, col $text, rad 6
+
+Btn "Save"
