@@ -1304,9 +1304,25 @@ class DOMGenerator {
 
       // Check if value contains item variable reference like $task.title
       if (value.includes(`$${itemVar}.`) || value.includes(`\${${itemVar}.`)) {
-        // Convert $task.title to task.title
-        const resolved = value.replace(new RegExp(`\\$${itemVar}\\.`, 'g'), `${itemVar}.`)
-        return resolved
+        // Two cases:
+        //   (a) value is EXACTLY "$task.title" (with leading $) → JS expression
+        //   (b) value is e.g. "before $task.title after" → template literal
+        const exactMatch = value.match(new RegExp(`^\\$${itemVar}\\.([a-zA-Z_][a-zA-Z0-9_.]*)$`))
+        if (exactMatch) {
+          // Pure expression — emit as raw JS access
+          return `${itemVar}.${exactMatch[1]}`
+        }
+        // Mixed string with $loopvar references — template literal
+        // (also escape user-provided ${...} to prevent JS injection)
+        const ESC = '\x00ESC\x00'
+        let processed = value.replace(/\$\{/g, ESC)
+        processed = processed.replace(
+          new RegExp(`\\$${itemVar}\\.([a-zA-Z_][a-zA-Z0-9_.]*)`, 'g'),
+          `\$\${${itemVar}.$1}`
+        )
+        const escaped = this.escapeTemplateString(processed)
+        const safe = escaped.replace(new RegExp(ESC, 'g'), '\\${')
+        return `\`${safe}\``
       }
       // Check for plain item reference $task -> task
       if (value === `$${itemVar}`) {
@@ -1805,7 +1821,15 @@ class DOMGenerator {
       // Handle $$ as escape for literal $ sign followed by variable value
       if (/\$[a-zA-Z_][a-zA-Z0-9_.]*/.test(value)) {
         const GET_PLACEHOLDER = '\x00GET\x00'
+        const ESC_PLACEHOLDER = '\x00ESC\x00'
         let processed = value
+
+        // SECURITY: Mark user-provided ${...} patterns so we can escape them
+        // back into LITERAL `\${` after `escapeTemplateString` runs. Mirror's
+        // variable syntax is `$name` only — there is no `${...}` in the DSL.
+        // Without this, user input `${alert('xss')}` would become a live
+        // template-literal interpolation (arbitrary code execution).
+        processed = processed.replace(/\$\{/g, ESC_PLACEHOLDER)
 
         // First, handle $$varName pattern: literal $ + variable value
         // e.g., "$$price" → "$${__GET__("price")}" (placeholder to avoid re-matching)
@@ -1821,10 +1845,18 @@ class DOMGenerator {
           (match, varName) => `\${$get("${varName}")}`
         )
 
-        // Restore placeholder
+        // Restore $get placeholder
         processed = processed.replace(new RegExp(GET_PLACEHOLDER, 'g'), '$get')
 
-        return `\`${this.escapeTemplateString(processed)}\``
+        // Run the standard backtick/backslash/newline escaping
+        const escaped = this.escapeTemplateString(processed)
+        // NOW restore user `${` as literal `\${` (backslash-dollar-curly).
+        // In a JS template literal, `\${...}` is read as: `\` is escape for `$`
+        // (a no-op that yields a literal `$`), then `{...}` is literal text.
+        // Net effect: the user's `${...}` content is preserved verbatim in the
+        // output, never executed as JS.
+        const safe = escaped.replace(new RegExp(ESC_PLACEHOLDER, 'g'), '\\${')
+        return `\`${safe}\``
       }
 
       // Handle $$ in strings without other variables (e.g., "$$100")
