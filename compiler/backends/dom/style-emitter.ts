@@ -325,6 +325,14 @@ function emitCustomTokens(ctx: StyleEmitterContext): void {
       }
     }
 
+    // SECURITY: the entire CSS block is wrapped in a JS template literal
+    // (`_style.textContent = \`...\``). Any `${...}` in a user-provided token
+    // value would otherwise become a live JS interpolation at runtime.
+    // Escape `${` to `\${` so it survives as literal CSS text.
+    if (typeof value === 'string') {
+      value = value.replace(/\$\{/g, '\\${')
+    }
+
     ctx.emit(`--${cssVarName}: ${value};`)
   }
 

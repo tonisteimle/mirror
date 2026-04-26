@@ -358,13 +358,15 @@ function emitRuntimeAction(
     // Feedback functions
     case 'toast':
       if (action.args && action.args.length > 0) {
-        const message = action.args[0]
+        // Use JSON.stringify for proper quote escaping. Without this, a user
+        // message containing single quotes would break the `'...'` wrapping.
+        const message = JSON.stringify(String(action.args[0]))
         if (action.args.length > 1) {
-          const type = action.args[1] || 'info'
-          const position = action.args[2] || 'bottom'
-          ctx.emit(`_runtime.toast('${message}', { type: '${type}', position: '${position}' })`)
+          const type = JSON.stringify(String(action.args[1] || 'info'))
+          const position = JSON.stringify(String(action.args[2] || 'bottom'))
+          ctx.emit(`_runtime.toast(${message}, { type: ${type}, position: ${position} })`)
         } else {
-          ctx.emit(`_runtime.toast('${message}')`)
+          ctx.emit(`_runtime.toast(${message})`)
         }
       }
       break

@@ -453,7 +453,11 @@ describe('Events Iter2 — toast variants', () => {
 
 Button "X", onclick toast("Failed", "error", "top-right")
 `)
-    expect(out).toMatch(/_runtime\.toast\([^)]*'Failed'[^)]*'error'[^)]*'top-right'/)
+    // Accept both single- and double-quoted variants (compiler uses JSON.stringify
+    // for proper escaping, which produces double quotes).
+    expect(out).toMatch(
+      /_runtime\.toast\([^)]*["']Failed["'][^)]*["']error["'][^)]*["']top-right["']/
+    )
   })
 })
 

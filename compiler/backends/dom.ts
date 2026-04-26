@@ -1748,7 +1748,10 @@ class DOMGenerator {
           if (!isNaN(numVal) && token.value.trim() !== '') {
             value = String(numVal)
           } else {
-            value = `'${this.escapeString(token.value)}'`
+            // Use JSON.stringify for proper quote escaping. Without this, a
+            // user value containing single quotes would break the outer
+            // `'...'` wrapping (and could leak as JS via injection).
+            value = JSON.stringify(token.value)
           }
         } else {
           value = String(token.value)
@@ -2011,6 +2014,29 @@ class DOMGenerator {
     // Handle __loopVar: markers - strip the prefix but keep the variable name
     let result = condition.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
 
+    // SECURITY/CORRECTNESS: Mask string literals BEFORE identifier wrapping so
+    // (a) bare identifiers inside `"..."` are NOT wrapped (which would break
+    //     quote balance — `t.s == "${$get("x")}"` is invalid JS), and
+    // (b) `${...}` template-literal-like patterns inside user strings stay
+    //     literal (they're inside JS double/single quotes, so safe at runtime,
+    //     but escaping helps if the string later moves to a backtick context).
+    const stringPlaceholders: string[] = []
+    // The placeholder is wrapped in quotes so it looks like a string literal:
+    // the surrounding `"` triggers the bare-identifier regex's lookbehind
+    // exclusion (`(?<!["\w$.)])`), so the inner `MIRROR_STR_X_END` token
+    // doesn't get wrapped. On restore, we strip the outer quotes back to
+    // the original string content (which had its own quotes).
+    const placeholderFor = (idx: number) => `"__MIRROR_STR_${idx}_END__"`
+    result = result.replace(/"((?:[^"\\]|\\.)*)"/g, match => {
+      const idx = stringPlaceholders.length
+      stringPlaceholders.push(match)
+      return placeholderFor(idx)
+    })
+    result = result.replace(/'((?:[^'\\]|\\.)*)'/g, match => {
+      const idx = stringPlaceholders.length
+      stringPlaceholders.push(match)
+      return placeholderFor(idx)
+    })
     // Convert Mirror logical operators (and/or) to JavaScript (&&/||)
     result = result.replace(/\s+and\s+/g, ' && ').replace(/\s+or\s+/g, ' || ')
 
@@ -2075,6 +2101,13 @@ class DOMGenerator {
         // Don't wrap if it's already wrapped in $get
         return `$get("${identifier}")`
       }
+    )
+
+    // Restore the masked string literals (strip the outer quote-wrapping that
+    // we added in the mask step — the original content already has its quotes).
+    result = result.replace(
+      /"__MIRROR_STR_(\d+)_END__"/g,
+      (_, idx) => stringPlaceholders[parseInt(idx, 10)]
     )
 
     return result
