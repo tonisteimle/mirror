@@ -19,6 +19,8 @@ export { marXWriter, marYWriter } from './mar-axis'
 export { gapWriter } from './gap'
 export { fsWriter } from './fs'
 export { radWriter } from './rad'
+export { bgWriter } from './bg'
+export { colWriter } from './col'
 
 import type { PropertyWriter } from './types'
 import { padWriter } from './pad'
@@ -31,6 +33,8 @@ import { marXWriter, marYWriter } from './mar-axis'
 import { gapWriter } from './gap'
 import { fsWriter } from './fs'
 import { radWriter } from './rad'
+import { bgWriter } from './bg'
+import { colWriter } from './col'
 
 export const PROPERTY_WRITERS: Record<string, PropertyWriter> = {
   pad: padWriter,
@@ -50,6 +54,8 @@ export const PROPERTY_WRITERS: Record<string, PropertyWriter> = {
   gap: gapWriter,
   fs: fsWriter,
   rad: radWriter,
+  bg: bgWriter,
+  col: colWriter,
 }
 
 export function getWriter(propertyName: string): PropertyWriter | null {

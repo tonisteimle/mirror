@@ -53,4 +53,16 @@ export interface PropertyReader {
   fromDom(nodeId: string, ctx: ReaderContext): PropertyValue
   /** Read this property from the Property Panel for the given node. */
   fromPanel(nodeId: string, ctx: ReaderContext): PropertyValue
+
+  /**
+   * Optional value normaliser. When present, the runner applies it to the
+   * expected value (and to each read result) before comparison. This lets
+   * properties with multiple equivalent representations (e.g. colors:
+   * `white` ≡ `#ffffff` ≡ `rgb(255,255,255)`) accept any form in
+   * `expect.props` and match any form coming back from code/DOM/panel.
+   *
+   * Number-valued properties don't need this — readers return canonical
+   * integer strings already.
+   */
+  normalize?(value: PropertyValue): PropertyValue
 }

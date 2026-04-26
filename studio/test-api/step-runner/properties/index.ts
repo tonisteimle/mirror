@@ -23,6 +23,8 @@ export { marXReader, marYReader } from './mar-axis'
 export { gapReader } from './gap'
 export { fsReader } from './fs'
 export { radReader } from './rad'
+export { bgReader } from './bg'
+export { colReader } from './col'
 
 import type { PropertyReader } from './types'
 import { padReader } from './pad'
@@ -35,6 +37,8 @@ import { marXReader, marYReader } from './mar-axis'
 import { gapReader } from './gap'
 import { fsReader } from './fs'
 import { radReader } from './rad'
+import { bgReader } from './bg'
+import { colReader } from './col'
 
 export const PROPERTY_READERS: Record<string, PropertyReader> = {
   pad: padReader,
@@ -54,6 +58,8 @@ export const PROPERTY_READERS: Record<string, PropertyReader> = {
   gap: gapReader,
   fs: fsReader,
   rad: radReader,
+  bg: bgReader,
+  col: colReader,
 }
 
 export function getReader(propertyName: string): PropertyReader | null {

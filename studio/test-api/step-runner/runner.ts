@@ -266,16 +266,21 @@ function validateExpectations(
             )
             continue
           }
-          const code = reader.fromCode(nodeId, ctx)
-          const dom = reader.fromDom(nodeId, ctx)
-          const panel = reader.fromPanel(nodeId, ctx)
-          const codeOk = code === expected
-          const domOk = dom === expected
-          const panelOk = panel === expected
+          // Normalise expected and all reads through the reader's optional
+          // normaliser, so multi-form properties (colors etc.) compare on a
+          // single canonical representation.
+          const norm = reader.normalize ?? ((v: typeof expected) => v)
+          const expectedN = norm(expected)
+          const code = norm(reader.fromCode(nodeId, ctx))
+          const dom = norm(reader.fromDom(nodeId, ctx))
+          const panel = norm(reader.fromPanel(nodeId, ctx))
+          const codeOk = code === expectedN
+          const domOk = dom === expectedN
+          const panelOk = panel === expectedN
           if (!codeOk || !domOk || !panelOk) {
             issues.push(
               `property ${propName} on ${nodeId}:\n` +
-                `      expected: ${formatPanelValue(expected)}\n` +
+                `      expected: ${formatPanelValue(expectedN)}\n` +
                 `      code:     ${formatPanelValue(code)}    ${codeOk ? '✓' : '✗'}\n` +
                 `      dom:      ${formatPanelValue(dom)}    ${domOk ? '✓' : '✗'}\n` +
                 `      panel:    ${formatPanelValue(panel)}    ${panelOk ? '✓' : '✗'}`
