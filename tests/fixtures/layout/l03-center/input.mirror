@@ -1,0 +1,2 @@
+Frame w 200, h 100, center
+  Text "Centered"

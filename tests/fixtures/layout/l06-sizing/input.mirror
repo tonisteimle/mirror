@@ -1,0 +1,5 @@
+Frame w full, gap 8
+  Frame w 100, h 50, bg red
+  Frame w hug, h 50, bg blue
+    Text "Hug"
+  Frame minw 50, maxw 200, h 50, bg green

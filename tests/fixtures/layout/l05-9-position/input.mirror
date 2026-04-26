@@ -1,0 +1,2 @@
+Frame w 300, h 200, bg #1a1a1a, tr
+  Text "Top Right", col white

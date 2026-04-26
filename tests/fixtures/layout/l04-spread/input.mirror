@@ -1,0 +1,3 @@
+Frame hor, spread, ver-center, w 300
+  Text "Left"
+  Text "Right"

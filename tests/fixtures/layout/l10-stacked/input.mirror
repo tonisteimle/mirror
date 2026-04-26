@@ -1,0 +1,3 @@
+Frame stacked, w 100, h 100
+  Frame w 100, h 100, bg #2271C1
+  Frame x 70, y 70, w 30, h 30, bg #ef4444, rad 99

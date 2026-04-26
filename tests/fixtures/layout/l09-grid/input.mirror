@@ -1,0 +1,7 @@
+Frame grid 3, gap 8
+  Frame h 40, bg red
+  Frame h 40, bg blue
+  Frame h 40, bg green
+  Frame h 40, bg yellow
+  Frame h 40, bg purple
+  Frame h 40, bg orange

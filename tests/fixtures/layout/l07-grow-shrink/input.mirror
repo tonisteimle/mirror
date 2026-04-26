@@ -1,0 +1,4 @@
+Frame hor, gap 8, w 300
+  Frame w 50, h 50, bg red
+  Frame grow, h 50, bg blue
+  Frame w 50, h 50, bg green

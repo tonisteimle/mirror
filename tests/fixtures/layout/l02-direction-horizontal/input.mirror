@@ -1,0 +1,4 @@
+Frame hor, gap 8
+  Text "A"
+  Text "B"
+  Text "C"

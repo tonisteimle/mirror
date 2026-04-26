@@ -1,0 +1,4 @@
+Frame hor, wrap, gap 8, w 200
+  Frame w 80, h 40, bg red
+  Frame w 80, h 40, bg blue
+  Frame w 80, h 40, bg green
