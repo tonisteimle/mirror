@@ -1015,6 +1015,306 @@ export const demoScript: DemoScript = {
     { action: 'moveTo', target: '#preview' },
     { action: 'highlight', target: '#preview', duration: 1500 },
     { action: 'wait', duration: 600 },
+
+    // =========================================================================
+    // Chapter 4: Workspace — Theme-Tiles (`ColorTile::`-Extraktion) + Font-Radio
+    // =========================================================================
+    //
+    // User baut die Theme-Auswahl (4 Farb-Tiles in einer Reihe) inline,
+    // extrahiert dann `ColorTile` als Komponente. Tiles 2-4 werden manuell
+    // zur `ColorTile`-Instanz mit `bg`-Override umgewandelt — zeigt Mirror's
+    // smart-diff Konzept (gleiche Properties weglassen, nur Unterschiede
+    // bleiben).
+
+    { action: 'comment', text: 'Chapter 4: Workspace — Theme-Tiles + Font-Radio' },
+    { action: 'wait', duration: 600 },
+    {
+      action: 'execute',
+      code: `
+        (() => {
+          const ed = window.editor;
+          if (ed) {
+            const end = ed.state.doc.length;
+            ed.dispatch({ selection: { anchor: end, head: end } });
+            ed.focus();
+          }
+        })();
+      `,
+    },
+    { action: 'wait', duration: 200 },
+
+    // === Schritt 4.1: Workspace + Theme labels ===
+    { action: 'comment', text: 'Schritt 4.1: Section-Label "Workspace" + "Theme"' },
+    {
+      action: 'type',
+      text:
+        '\nText "Workspace", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Text "Theme", fs 12, col #71717a, mar 0 16 8 16',
+      expectCode:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Indentation guides", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Text "Workspace", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Text "Theme", fs 12, col #71717a, mar 0 16 8 16',
+    },
+    { action: 'wait', duration: 600 },
+
+    // === Schritt 4.2: 4 Color-Tiles inline (in horizontalem Container) ===
+    { action: 'comment', text: 'Schritt 4.2: 4 ColorTiles inline in horizontalem Container' },
+    {
+      action: 'type',
+      text:
+        '\nFrame hor, gap 8, mar 0 16\n' +
+        '  Frame w 32, h 32, rad 99, bg #6366f1\n' +
+        '  Frame w 32, h 32, rad 99, bg #ec4899\n' +
+        '  Frame w 32, h 32, rad 99, bg #10b981\n' +
+        '  Frame w 32, h 32, rad 99, bg #f59e0b',
+      expectCode:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Indentation guides", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Text "Workspace", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Text "Theme", fs 12, col #71717a, mar 0 16 8 16\n' +
+        'Frame hor, gap 8, mar 0 16\n' +
+        '  Frame w 32, h 32, rad 99, bg #6366f1\n' +
+        '  Frame w 32, h 32, rad 99, bg #ec4899\n' +
+        '  Frame w 32, h 32, rad 99, bg #10b981\n' +
+        '  Frame w 32, h 32, rad 99, bg #f59e0b',
+    },
+    { action: 'wait', duration: 1000 },
+
+    // === Schritt 4.3: ColorTile:: auf 1. Tile (Indigo) ===
+    { action: 'comment', text: 'Schritt 4.3: ColorTile:: extrahiert ColorTile als Komponente' },
+    {
+      action: 'execute',
+      code: `
+        (async () => {
+          const ed = window.editor;
+          const src = ed.state.doc.toString();
+          // 1. ColorTile: das Frame VOR den anderen Tile-Frames mit bg #6366f1
+          //    (Avatar hat auch bg #6366f1 aber ohne w 32 — wir matchen w 32 + h 32).
+          const tileMarker = '  Frame w 32, h 32, rad 99, bg #6366f1';
+          const matchPos = src.indexOf(tileMarker);
+          if (matchPos === -1) throw new Error('ColorTile 1 marker not found');
+          // Frame ist nach Indent ("  Frame ..."). Wir wollen "  Frame" zu "  ColorTile:" ersetzen.
+          const frameStart = matchPos + 2; // skip indent
+          const frameEnd = frameStart + 'Frame'.length;
+          ed.dispatch({
+            changes: { from: frameStart, to: frameEnd, insert: 'ColorTile:' },
+            selection: { anchor: frameStart + 'ColorTile:'.length },
+          });
+          await new Promise(r => setTimeout(r, 150));
+          const insertAt = frameStart + 'ColorTile:'.length;
+          ed.dispatch({
+            changes: { from: insertAt, to: insertAt, insert: ':' },
+            selection: { anchor: insertAt + 1 },
+            userEvent: 'input.type',
+          });
+          if (window.__dragTest?.waitForCompile) await window.__dragTest.waitForCompile();
+          await new Promise(r => setTimeout(r, 800));
+        })();
+      `,
+      comment: 'ColorTile:: extract',
+    },
+    { action: 'wait', duration: 1000 },
+    { action: 'switchFile', path: 'index.mir' },
+    { action: 'wait', duration: 500 },
+    {
+      action: 'expectCode',
+      comment: 'ColorTile 1 ist Komponenten-Instanz',
+      code:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Indentation guides", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Text "Workspace", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Text "Theme", fs 12, col #71717a, mar 0 16 8 16\n' +
+        'Frame hor, gap 8, mar 0 16\n' +
+        '  ColorTile\n' +
+        '  Frame w 32, h 32, rad 99, bg #ec4899\n' +
+        '  Frame w 32, h 32, rad 99, bg #10b981\n' +
+        '  Frame w 32, h 32, rad 99, bg #f59e0b',
+    },
+
+    // === Schritt 4.4: Tiles 2-4 manuell zur ColorTile-Instanz mit bg-Override ===
+    {
+      action: 'comment',
+      text: 'Schritt 4.4: Tiles 2–4 manuell zur ColorTile-Instanz mit bg-Override',
+    },
+    {
+      action: 'execute',
+      code: `
+        (() => {
+          const ed = window.editor;
+          let src = ed.state.doc.toString();
+          // Replace each remaining inline Frame ColorTile with ColorTile bg #...
+          const tiles = [
+            { from: '  Frame w 32, h 32, rad 99, bg #ec4899', to: '  ColorTile bg #ec4899' },
+            { from: '  Frame w 32, h 32, rad 99, bg #10b981', to: '  ColorTile bg #10b981' },
+            { from: '  Frame w 32, h 32, rad 99, bg #f59e0b', to: '  ColorTile bg #f59e0b' },
+          ];
+          for (const { from, to } of tiles) {
+            const pos = src.indexOf(from);
+            if (pos === -1) throw new Error('tile not found: ' + from);
+            ed.dispatch({
+              changes: { from: pos, to: pos + from.length, insert: to },
+              selection: { anchor: pos + to.length },
+            });
+            src = ed.state.doc.toString();
+          }
+        })();
+      `,
+      comment: 'Tiles 2-4 → ColorTile-Instances mit bg-Override',
+    },
+    { action: 'wait', duration: 600 },
+    {
+      action: 'expectCode',
+      comment: 'alle 4 Tiles als ColorTile-Instanzen',
+      code:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Indentation guides", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Text "Workspace", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Text "Theme", fs 12, col #71717a, mar 0 16 8 16\n' +
+        'Frame hor, gap 8, mar 0 16\n' +
+        '  ColorTile\n' +
+        '  ColorTile bg #ec4899\n' +
+        '  ColorTile bg #10b981\n' +
+        '  ColorTile bg #f59e0b',
+    },
+
+    // === Schritt 4.5: Default font label + 3 Optionen ===
+    { action: 'comment', text: 'Schritt 4.5: "Default font" Sublabel + 3 Optionen' },
+    {
+      action: 'execute',
+      code: `
+        (() => {
+          const ed = window.editor;
+          const end = ed.state.doc.length;
+          ed.dispatch({ selection: { anchor: end, head: end } });
+          ed.focus();
+        })();
+      `,
+    },
+    { action: 'wait', duration: 200 },
+    {
+      action: 'type',
+      text:
+        '\nText "Default font", fs 12, col #71717a, mar 16 16 8 16\n' +
+        'Frame hor, gap 16, mar 0 16\n' +
+        '  Text "Sans", fs 14, col #a1a1aa\n' +
+        '  Text "Serif", fs 14, col #6366f1, weight 500\n' +
+        '  Text "Mono", fs 14, col #a1a1aa',
+      expectCode:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99\n' +
+        'Toggle\n' +
+        '  Text "Indentation guides", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Text "Workspace", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Text "Theme", fs 12, col #71717a, mar 0 16 8 16\n' +
+        'Frame hor, gap 8, mar 0 16\n' +
+        '  ColorTile\n' +
+        '  ColorTile bg #ec4899\n' +
+        '  ColorTile bg #10b981\n' +
+        '  ColorTile bg #f59e0b\n' +
+        'Text "Default font", fs 12, col #71717a, mar 16 16 8 16\n' +
+        'Frame hor, gap 16, mar 0 16\n' +
+        '  Text "Sans", fs 14, col #a1a1aa\n' +
+        '  Text "Serif", fs 14, col #6366f1, weight 500\n' +
+        '  Text "Mono", fs 14, col #a1a1aa',
+    },
+    { action: 'wait', duration: 800 },
+
+    {
+      action: 'comment',
+      text: 'Workspace komplett — 4 Theme-Tiles (1 Komponente, 3 Overrides) + Font-Optionen.',
+    },
+    { action: 'moveTo', target: '#preview' },
+    { action: 'highlight', target: '#preview', duration: 1500 },
+    { action: 'wait', duration: 600 },
   ],
 }
 
