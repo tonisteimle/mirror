@@ -206,8 +206,10 @@ export function getKeywordCSS(propName: string, value: string): CSSOutput[] {
   const prop = findProperty(propName)
   if (!prop?.keywords) return []
 
+  // hasOwnProperty guard prevents matching prototype methods (valueOf, toString, etc.)
+  if (!Object.prototype.hasOwnProperty.call(prop.keywords, value)) return []
   const keyword = prop.keywords[value]
-  if (!keyword) return []
+  if (!keyword || !keyword.css) return []
 
   return keyword.css
 }
@@ -285,7 +287,15 @@ export function schemaPropertyToCSS(
   const value = values[0]
 
   // Keyword value
-  if (typeof value === 'string' && prop.keywords && prop.keywords[value]) {
+  // SECURITY/CORRECTNESS: use Object.prototype.hasOwnProperty.call to avoid
+  // matching inherited properties like `valueOf`, `toString`, `constructor`.
+  // Without this, user input `Text "valueOf"` (or any prototype method name)
+  // would crash with `Cannot read properties of undefined (reading 'map')`.
+  if (
+    typeof value === 'string' &&
+    prop.keywords &&
+    Object.prototype.hasOwnProperty.call(prop.keywords, value)
+  ) {
     return {
       styles: prop.keywords[value].css.map(c => ({
         property: c.property,

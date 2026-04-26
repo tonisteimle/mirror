@@ -66,6 +66,16 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
       if (instance.type === 'Slot') continue
       // Skip Table for now - not yet supported in React backend
       if (instance.type === 'Table') continue
+      // Skip Each / Conditional / ZagComponent / etc. — the static React
+      // backend supports only plain Instance trees. Without this guard,
+      // generateJSX would try to read `.properties` on a node that doesn't
+      // have it and throw TypeError.
+      if ((instance as { type: string }).type !== 'Instance') {
+        // Emit a comment so the user sees what was skipped.
+        const skipped = (instance as { type?: string }).type ?? 'Unknown'
+        lines.push(`    {/* ${skipped} not supported in React backend */}`)
+        continue
+      }
       const jsx = generateJSX(instance as Instance, componentMap, program.tokens || [], '    ')
       lines.push(jsx)
     }
@@ -96,6 +106,9 @@ function generateJSX(
   const style = generateStyles(allProps, tokens)
   const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : ''
 
+  // HTML attributes from properties (placeholder, type, href, src, etc.)
+  const attrStr = generateHtmlAttributes(allProps)
+
   // Determine HTML tag based on component type
   const tag = getHtmlTag(instance.component, compDef)
 
@@ -106,11 +119,11 @@ function generateJSX(
   const hasChildren = instance.children.length > 0 || textContent
 
   if (!hasChildren) {
-    return `${indent}<${tag}${styleStr} />`
+    return `${indent}<${tag}${attrStr}${styleStr} />`
   }
 
   const lines: string[] = []
-  lines.push(`${indent}<${tag}${styleStr}>`)
+  lines.push(`${indent}<${tag}${attrStr}${styleStr}>`)
 
   // Add text content
   if (textContent) {
@@ -188,6 +201,44 @@ function getHtmlTag(componentName: string, compDef?: ComponentDefinition): strin
   if (name.includes('aside') || name.includes('sidebar')) return 'aside'
 
   return 'div'
+}
+
+/**
+ * Set of property names that map directly to HTML attributes in JSX
+ * (and the corresponding JSX prop names — React uses some camelCase
+ * variants like className, htmlFor — but for these we map 1:1).
+ */
+const HTML_ATTR_PROPS: Record<string, string> = {
+  placeholder: 'placeholder',
+  type: 'type',
+  href: 'href',
+  src: 'src',
+  alt: 'alt',
+  name: 'name',
+  value: 'defaultValue', // React uses defaultValue for uncontrolled inputs
+  disabled: 'disabled',
+  checked: 'defaultChecked',
+  readonly: 'readOnly',
+}
+
+function generateHtmlAttributes(properties: Property[]): string {
+  const attrs: string[] = []
+  for (const prop of properties) {
+    const jsxName = HTML_ATTR_PROPS[prop.name]
+    if (!jsxName) continue
+    if (prop.values.length === 0) {
+      // Standalone flag — boolean attribute (e.g. `disabled`)
+      attrs.push(jsxName)
+      continue
+    }
+    const v = prop.values[0]
+    if (typeof v === 'boolean') {
+      if (v) attrs.push(jsxName)
+    } else if (typeof v === 'string' || typeof v === 'number') {
+      attrs.push(`${jsxName}=${JSON.stringify(String(v))}`)
+    }
+  }
+  return attrs.length > 0 ? ' ' + attrs.join(' ') : ''
 }
 
 function getTextContent(instance: Instance, properties: Property[]): string | null {

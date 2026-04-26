@@ -507,26 +507,28 @@ class FrameworkGenerator {
 
     const parts: string[] = []
 
+    // Quote any key that isn't a valid bare JS identifier. Without this,
+    // CSS-style hyphenated keys like `font-size` become illegal JS:
+    //   `M('X', { font-size: 0 })` ← SyntaxError on the hyphen.
+    const isValidIdent = (k: string) => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)
+    const fmtKey = (k: string) => (isValidIdent(k) ? k : `'${k}'`)
+
     for (const [key, value] of entries) {
+      const k = fmtKey(key)
       if (key === 'states') {
         // States need special formatting
         parts.push(`states: ${this.statesToString(value)}`)
       } else if (typeof value === 'string') {
-        // Use single quotes for strings, but handle keys with special chars
-        if (key.includes(' ') || key.includes('-')) {
-          parts.push(`'${key}': '${value}'`)
-        } else {
-          parts.push(`${key}: '${value}'`)
-        }
+        parts.push(`${k}: '${value}'`)
       } else if (typeof value === 'boolean') {
-        parts.push(`${key}: ${value}`)
+        parts.push(`${k}: ${value}`)
       } else if (typeof value === 'number') {
-        parts.push(`${key}: ${value}`)
+        parts.push(`${k}: ${value}`)
       } else if (Array.isArray(value)) {
         const arrayStr = value.map(v => (typeof v === 'string' ? `'${v}'` : v)).join(', ')
-        parts.push(`${key}: [${arrayStr}]`)
+        parts.push(`${k}: [${arrayStr}]`)
       } else {
-        parts.push(`${key}: ${JSON.stringify(value)}`)
+        parts.push(`${k}: ${JSON.stringify(value)}`)
       }
     }
 
