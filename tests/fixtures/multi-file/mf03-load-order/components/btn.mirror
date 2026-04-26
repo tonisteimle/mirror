@@ -1,0 +1,1 @@
+PrimaryBtn as Button: bg $primary, col $primary, rad $radius, pad 10 20

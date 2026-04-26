@@ -1,0 +1,2 @@
+PrimaryBtn as Button: bg #2271C1, col white, pad 10 20, rad 6
+DangerBtn as Button: bg #ef4444, col white, pad 10 20, rad 6

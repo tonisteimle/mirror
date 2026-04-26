@@ -142,12 +142,12 @@
 
 ## Multi-File & Projekt-Struktur
 
-| #   | Feature                | Sub-Features                                                | Status | Schichten | Notizen                |
-| --- | ---------------------- | ----------------------------------------------------------- | :----: | --------- | ---------------------- |
-| 80  | **Multi-File-Projekt** | data/, tokens/, components/, layouts/, screens/ Reihenfolge |   🔵   | -         | Smoke-Tests rudimentär |
-| 81  | **`use`-Statement**    | use tokens, use components, use data                        |   🔵   | -         |                        |
-| 82  | **File-Load-Order**    | Dependency-Resolution, Token-Reuse, Data-Cross-File         |   🔵   | -         |                        |
-| 83  | **Page-Navigation**    | navigate(PageName), Page-Loading, Page-Container            |   🔵   | -         |                        |
+| #   | Feature                | Sub-Features                                                | Status | Schichten | Notizen                 |
+| --- | ---------------------- | ----------------------------------------------------------- | :----: | --------- | ----------------------- |
+| 80  | **Multi-File-Projekt** | data/, tokens/, components/, layouts/, screens/ Reihenfolge |   ✅   | 1-4       | Sprint 5.1              |
+| 81  | **`use`-Statement**    | use tokens, use components, use data                        |   ✅   | 1-4       | Sprint 5.1 — kosmetisch |
+| 82  | **File-Load-Order**    | Dependency-Resolution, Token-Reuse, Data-Cross-File         |   ✅   | 1-4       | Sprint 5.1              |
+| 83  | **Page-Navigation**    | navigate(PageName), Page-Loading, Page-Container            |   🔵   | -         | (Actions-Pyramide)      |
 
 ## Test-Pyramide-Roadmap
 

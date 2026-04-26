@@ -1,0 +1,3 @@
+Frame bg $primary, pad $space, gap $space
+  Frame bg $danger, pad $space
+    Text "X", col white

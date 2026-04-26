@@ -1,0 +1,3 @@
+Frame hor, gap 12
+  PrimaryBtn "Save"
+  DangerBtn "Delete"

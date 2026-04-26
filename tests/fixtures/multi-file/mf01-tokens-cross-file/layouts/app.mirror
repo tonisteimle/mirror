@@ -1,0 +1,2 @@
+Frame bg $primary, col $primary, pad 12
+  Text "Hello"

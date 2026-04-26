@@ -1,0 +1,4 @@
+use tokens
+
+Frame bg $primary, col $primary, pad 16
+  Text "Hi"
