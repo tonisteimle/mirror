@@ -825,7 +825,7 @@ export const demoScript: DemoScript = {
         '  Frame w 36, h 20, bg #3f3f46, rad 99',
     },
 
-    // === Schritt 3.4: User pausiert — "ok das ist redundant" ===
+    // === Schritt 3.4: User extrahiert Toggle 1 als Komponente via `::` ===
     {
       action: 'comment',
       text:
@@ -834,6 +834,94 @@ export const demoScript: DemoScript = {
         'Komponente — `Toggle::` aus dem Frame.',
     },
     { action: 'wait', duration: 1000 },
+
+    // Programmatic two-step trigger für Mirror's `::`-Extension:
+    //   1) "Frame hor, spread, ver-center, pad 12 16, mar 0 16"
+    //      → "Toggle: hor, spread, ver-center, pad 12 16, mar 0 16"
+    //   2) Insert second `:` after "Toggle:" → "Toggle:: …"
+    // Die Extension feuert beim zweiten `:` und extrahiert Toggle in eine
+    // .com-Datei, ersetzt das Original durch eine Toggle-Instanz.
+    // Programmatic 2-step trigger der `::`-Extension:
+    //   1) `Frame ` → `Toggle:` (single-colon Replace)
+    //   2) Insert second `:` → triggert `Name::` Pattern → Mirror erstellt
+    //      `components.com` mit der Definition + ersetzt im index.mir die
+    //      Frame-Zeile durch eine `Toggle`-Instanz mit Children.
+    {
+      action: 'execute',
+      code: `
+        (async () => {
+          const ed = window.editor;
+          const src = ed.state.doc.toString();
+          const toggle1Marker = 'Frame hor, spread, ver-center, pad 12 16, mar 0 16\\n  Text "Dark mode"';
+          const matchPos = src.indexOf(toggle1Marker);
+          if (matchPos === -1) throw new Error('Toggle 1 marker not found');
+          ed.dispatch({
+            changes: { from: matchPos, to: matchPos + 'Frame'.length, insert: 'Toggle:' },
+            selection: { anchor: matchPos + 'Toggle:'.length },
+          });
+          await new Promise(r => setTimeout(r, 150));
+          const insertAt = matchPos + 'Toggle:'.length;
+          ed.dispatch({
+            changes: { from: insertAt, to: insertAt, insert: ':' },
+            selection: { anchor: insertAt + 1 },
+            userEvent: 'input.type',
+          });
+          if (window.__dragTest?.waitForCompile) await window.__dragTest.waitForCompile();
+          await new Promise(r => setTimeout(r, 800));
+        })();
+      `,
+      comment: '`Toggle::` extract — Mirror creates components.com + replaces Frame inline',
+    },
+    { action: 'wait', duration: 1000 },
+
+    // Studio auto-switched zu components.com. Zurück zu index.mir für die
+    // weitere Story.
+    { action: 'switchFile', path: 'index.mir' },
+    { action: 'wait', duration: 500 },
+    {
+      action: 'expectCode',
+      comment: 'index.mir: Toggle 1 ist jetzt eine Komponenten-Instanz',
+      code:
+        'canvas mobile, bg #18181b, col #e4e4e7\n' +
+        '\n' +
+        'Text "Settings", fs 20, weight bold, mar 16 16 0 16\n' +
+        'Text "Profile", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Frame w 100, h 100, bg #3f3f46, rad 12, pad 16, gap 12, hor, ver-center, mar 0 16, center\n' +
+        '  Frame w 48, h 48, bg #6366f1, rad 99\n' +
+        '  Frame w 100, h 100, bg #27272a, rad 8, gap 4, grow, center\n' +
+        '    Text "Toni Steimle", fs 14, col #e4e4e7, weight 500\n' +
+        '    Text "toni@example.com", fs 14, col #a1a1aa\n' +
+        '  Button "Edit", pad 12 24, bg #3f3f46, col white, rad 6\n' +
+        'Text "Preferences", fs 14, col #a1a1aa, mar 24 16 8 16\n' +
+        'Toggle\n' +
+        '  Text "Dark mode", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #6366f1, rad 99\n' +
+        'Frame hor, spread, ver-center, pad 12 16, mar 0 16\n' +
+        '  Text "Notifications", fs 14, col #e4e4e7\n' +
+        '  Frame w 36, h 20, bg #3f3f46, rad 99',
+    },
+
+    // Verifikation: components.com hat die Toggle-Definition.
+    {
+      action: 'validate',
+      comment: 'components.com hat Toggle-Definition',
+      checks: [],
+    },
+    {
+      action: 'execute',
+      code: `
+        (() => {
+          const files = window.desktopFiles?.getFiles?.() || {};
+          const com = files['components.com'] || files['components.components'] || '';
+          if (!com.includes('Toggle: hor, spread, ver-center, pad 12 16, mar 0 16')) {
+            throw new Error('components.com missing Toggle definition; got: ' + JSON.stringify(com));
+          }
+          console.log('  [✓] components.com contains Toggle definition');
+        })();
+      `,
+      comment: 'check components.com Toggle-Definition',
+    },
+    { action: 'wait', duration: 500 },
   ],
 }
 

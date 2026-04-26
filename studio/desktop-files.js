@@ -601,10 +601,30 @@ export async function loadFolder(folderPath) {
 // =============================================================================
 
 /**
- * Select and load a file
+ * Select and load a file.
+ *
+ * IMPORTANT: persists the OLD file's current editor content to storage
+ * before switching. Without this, any pending editor edits (e.g. the
+ * `view.dispatch` performed by the `::` component-extract trigger) are
+ * silently dropped when the editor swaps to the new file's content.
  */
 export async function selectFile(filePath) {
   try {
+    // Persist the previous file's live editor content first so we don't
+    // lose unsaved edits on the switch.
+    if (currentFile && currentFile !== filePath && window.editor) {
+      try {
+        const liveContent = window.editor.state.doc.toString()
+        const stored = filesCache[currentFile]
+        if (liveContent !== stored) {
+          filesCache[currentFile] = liveContent
+          await storage.writeFile(currentFile, liveContent)
+        }
+      } catch (saveErr) {
+        console.warn('[DesktopFiles] Failed to persist outgoing file:', currentFile, saveErr)
+      }
+    }
+
     const content = await storage.readFile(filePath)
     currentFile = filePath
 

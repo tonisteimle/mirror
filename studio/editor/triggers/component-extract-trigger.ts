@@ -389,10 +389,6 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
   // Add to components file
   const newComContent = addToComponentsFile(comContent, propsOnlyDefinition)
 
-  // Update components file
-  callbacks.updateFile(comFilename, newComContent)
-  log.info(`Added ${componentName} to ${comFilename}`)
-
   // Calculate what to replace in current file
   const baseLine = doc.line(lineNumber)
 
@@ -446,12 +442,23 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
     replacement += '\n' + children.map(c => indent + c).join('\n')
   }
 
+  // ORDER MATTERS: dispatch the editor change FIRST (while the editor
+  // still hosts the file the user typed `::` in), THEN createFile via
+  // updateFile. The `file:created` event from updateFile auto-selects
+  // the new components file (see studio/desktop-files.js); doing it the
+  // other way around makes our `view.dispatch` land on the wrong
+  // editor — overwriting the freshly-created definition with the
+  // instance-replacement.
   const endLineObj = doc.line(childEndLine)
   view.dispatch({
     changes: { from: baseLine.from, to: endLineObj.to, insert: replacement },
     selection: { anchor: baseLine.from + indent.length + componentName.length },
     annotations: Transaction.userEvent.of('input.extract'),
   })
+
+  // Update components file AFTER the editor change has been applied.
+  callbacks.updateFile(comFilename, newComContent)
+  log.info(`Added ${componentName} to ${comFilename}`)
 
   log.info(`Created component ${componentName}, kept ${children.length} children in editor`)
 }
