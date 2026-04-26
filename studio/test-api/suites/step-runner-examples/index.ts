@@ -12,6 +12,7 @@ export { bgScenarios, bgStepRunnerTests } from './bg.scenarios'
 export { colScenarios, colStepRunnerTests } from './col.scenarios'
 export { bocWeightScenarios, bocWeightStepRunnerTests } from './boc-weight.scenarios'
 export { whScenarios, whStepRunnerTests } from './wh.scenarios'
+export { useCaseButtonScenarios, useCaseButtonStepRunnerTests } from './use-case-button.scenarios'
 
 import { padStepRunnerTests } from './pad.scenarios'
 import { padTStepRunnerTests } from './pad-t.scenarios'
@@ -27,6 +28,7 @@ import { bgStepRunnerTests } from './bg.scenarios'
 import { colStepRunnerTests } from './col.scenarios'
 import { bocWeightStepRunnerTests } from './boc-weight.scenarios'
 import { whStepRunnerTests } from './wh.scenarios'
+import { useCaseButtonStepRunnerTests } from './use-case-button.scenarios'
 
 export const allStepRunnerExampleTests = [
   ...padStepRunnerTests,
@@ -43,4 +45,5 @@ export const allStepRunnerExampleTests = [
   ...colStepRunnerTests,
   ...bocWeightStepRunnerTests,
   ...whStepRunnerTests,
+  ...useCaseButtonStepRunnerTests,
 ]
