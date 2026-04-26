@@ -1,0 +1,3 @@
+active: true
+
+Frame bg active ? #2271C1 : #333, w 100, h 50

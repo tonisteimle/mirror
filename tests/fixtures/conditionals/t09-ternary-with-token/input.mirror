@@ -1,0 +1,6 @@
+accent.bg: #10b981
+danger.bg: #ef4444
+
+change: 5
+
+Frame bg change > 0 ? $accent : $danger, w 100, h 50

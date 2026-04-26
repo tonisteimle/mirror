@@ -1,0 +1,5 @@
+isAdmin: true
+hasPermission: true
+
+if isAdmin && hasPermission
+  Text "Access granted"

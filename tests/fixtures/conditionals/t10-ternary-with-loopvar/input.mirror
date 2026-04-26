@@ -1,0 +1,14 @@
+accent.bg: #10b981
+danger.bg: #ef4444
+
+positions:
+  p1:
+    name: "Apple"
+    change: 2.34
+  p2:
+    name: "Tesla"
+    change: -1.5
+
+each pos in $positions
+  Frame bg pos.change > 0 ? $accent : $danger, w 100, h 30
+    Text "$pos.name"

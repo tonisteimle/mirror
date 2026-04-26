@@ -1,0 +1,4 @@
+cat: "Geschäftlich"
+
+Frame bg cat == "Geschäftlich" ? #dbeafe : #fef3c7, w 100, h 50
+  Text "$cat"

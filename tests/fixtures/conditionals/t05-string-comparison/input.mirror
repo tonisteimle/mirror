@@ -1,0 +1,4 @@
+category: "Privat"
+
+if category == "Privat"
+  Text "Private section"

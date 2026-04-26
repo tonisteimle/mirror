@@ -1,0 +1,6 @@
+loggedIn: false
+
+if loggedIn
+  Text "Welcome back"
+else
+  Text "Please log in"

@@ -1,0 +1,3 @@
+count: 3
+
+Text count > 0 ? "Items: $count" : "Empty"
