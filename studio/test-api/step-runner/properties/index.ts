@@ -16,11 +16,13 @@ export type { PropertyReader, PropertyValue, ReaderContext, SourceMapLike } from
 export { padReader } from './pad'
 export { padTReader } from './pad-t'
 export { padRReader, padBReader, padLReader } from './pad-sides'
+export { padXReader, padYReader } from './pad-axis'
 
 import type { PropertyReader } from './types'
 import { padReader } from './pad'
 import { padTReader } from './pad-t'
 import { padRReader, padBReader, padLReader } from './pad-sides'
+import { padXReader, padYReader } from './pad-axis'
 
 export const PROPERTY_READERS: Record<string, PropertyReader> = {
   pad: padReader,
@@ -28,6 +30,8 @@ export const PROPERTY_READERS: Record<string, PropertyReader> = {
   'pad-r': padRReader,
   'pad-b': padBReader,
   'pad-l': padLReader,
+  'pad-x': padXReader,
+  'pad-y': padYReader,
 }
 
 export function getReader(propertyName: string): PropertyReader | null {

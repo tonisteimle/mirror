@@ -16,11 +16,14 @@ export interface ConsoleCollector {
   dispose(): void
 }
 
+type OnErrorFn = NonNullable<typeof window.onerror>
+type OnRejectionFn = NonNullable<typeof window.onunhandledrejection>
+
 export function installConsoleCollector(): ConsoleCollector {
   const errors: string[] = []
   const originalError = console.error
-  const originalWindowError = window.onerror
-  const originalUnhandled = window.onunhandledrejection
+  const originalWindowError: OnErrorFn | null = window.onerror
+  const originalUnhandled: OnRejectionFn | null = window.onunhandledrejection
 
   console.error = (...args: unknown[]): void => {
     errors.push(args.map(stringify).join(' '))
@@ -30,7 +33,8 @@ export function installConsoleCollector(): ConsoleCollector {
   window.onerror = (message, source, lineno, colno, error): boolean | undefined => {
     errors.push(`Uncaught: ${stringify(error ?? message)}`)
     if (originalWindowError) {
-      return originalWindowError.call(window, message, source, lineno, colno, error)
+      const r = originalWindowError(message, source, lineno, colno, error)
+      return r === true ? true : undefined
     }
     return undefined
   }
