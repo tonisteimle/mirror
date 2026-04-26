@@ -1,10 +1,8 @@
 /**
- * Property Writer: `pad-t` (top side padding)
- *
- * Generated from the single-side factory. See `_pad-side-factory.ts` for
- * the three input paths (toCode/toPanel/toPreview).
+ * Property Writer: `pad-t` (top side padding) — generated from the side
+ * factory.
  */
 
-import { createSidePadWriter } from './_pad-side-factory'
+import { createSideWriter } from './_side-factory'
 
-export const padTWriter = createSidePadWriter('top')
+export const padTWriter = createSideWriter('pad', 'top')

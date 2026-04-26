@@ -14,6 +14,7 @@ export { padTWriter } from './pad-t'
 export { padRWriter, padBWriter, padLWriter } from './pad-sides'
 export { padXWriter, padYWriter } from './pad-axis'
 export { marWriter } from './mar'
+export { marTWriter, marRWriter, marBWriter, marLWriter } from './mar-sides'
 
 import type { PropertyWriter } from './types'
 import { padWriter } from './pad'
@@ -21,6 +22,7 @@ import { padTWriter } from './pad-t'
 import { padRWriter, padBWriter, padLWriter } from './pad-sides'
 import { padXWriter, padYWriter } from './pad-axis'
 import { marWriter } from './mar'
+import { marTWriter, marRWriter, marBWriter, marLWriter } from './mar-sides'
 
 export const PROPERTY_WRITERS: Record<string, PropertyWriter> = {
   pad: padWriter,
@@ -31,6 +33,10 @@ export const PROPERTY_WRITERS: Record<string, PropertyWriter> = {
   'pad-x': padXWriter,
   'pad-y': padYWriter,
   mar: marWriter,
+  'mar-t': marTWriter,
+  'mar-r': marRWriter,
+  'mar-b': marBWriter,
+  'mar-l': marLWriter,
 }
 
 export function getWriter(propertyName: string): PropertyWriter | null {

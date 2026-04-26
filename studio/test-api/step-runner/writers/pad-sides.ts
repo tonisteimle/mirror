@@ -1,10 +1,10 @@
 /**
- * Property Writers: `pad-r`, `pad-b`, `pad-l` — generated from the
- * single-side factory.
+ * Property Writers: `pad-r`, `pad-b`, `pad-l` — generated from the side
+ * factory.
  */
 
-import { createSidePadWriter } from './_pad-side-factory'
+import { createSideWriter } from './_side-factory'
 
-export const padRWriter = createSidePadWriter('right')
-export const padBWriter = createSidePadWriter('bottom')
-export const padLWriter = createSidePadWriter('left')
+export const padRWriter = createSideWriter('pad', 'right')
+export const padBWriter = createSideWriter('pad', 'bottom')
+export const padLWriter = createSideWriter('pad', 'left')

@@ -1,10 +1,8 @@
 /**
- * Property Reader: `pad-t` (top side padding)
- *
- * Generated from the single-side factory. See `_pad-side-factory.ts` for
- * the resolution rules (most-specific declaration wins, in CSS order).
+ * Property Reader: `pad-t` (top side padding) — generated from the side
+ * factory. See `_side-factory.ts` for the resolution rules.
  */
 
-import { createSidePadReader } from './_pad-side-factory'
+import { createSideReader } from './_side-factory'
 
-export const padTReader = createSidePadReader('top')
+export const padTReader = createSideReader('pad', 'top')

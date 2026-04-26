@@ -1,37 +1,58 @@
 /**
- * Factory: single-side padding writers (`pad-t`, `pad-r`, `pad-b`, `pad-l`).
+ * Factory: single-side spacing writers (`pad-t/r/b/l`, `mar-t/r/b/l`).
  *
- *   toCode    — replaces or appends `pad-{side} N` on the line. Does not
- *               try to interact with existing uniform/multi-value `pad`.
- *   toPanel   — selects the node, then writes via panel.setProperty.
- *   toPreview — enters padding-mode (P), then uses Option+Arrow{side}
- *               (Shift inverts sign) to step the value. Each press is
- *               waited-for-compile to keep the SourceMap fresh.
+ * Generalised across kind ∈ {pad, mar}. Three input paths each:
+ *   toCode    — replaces or appends `<kind>-{side} N`
+ *   toPanel   — panel.setProperty('<kind>-{side}', N)
+ *   toPreview — enters the spacing mode (P for pad, M for mar) and uses
+ *               Option+Arrow{side} (Shift inverts sign) to step the value.
  */
 
 import type { PropertyWriter } from './types'
 
+export type Kind = 'pad' | 'mar'
 export type Side = 'top' | 'right' | 'bottom' | 'left'
 
 const GRID_SIZE = 8
 
+interface KindInfo {
+  prop: 'pad' | 'mar'
+  /** Spacing-mode trigger key. */
+  modeKey: 'p' | 'm'
+  cssPrefix: 'padding' | 'margin'
+}
+
+const KIND_INFO: Record<Kind, KindInfo> = {
+  pad: { prop: 'pad', modeKey: 'p', cssPrefix: 'padding' },
+  mar: { prop: 'mar', modeKey: 'm', cssPrefix: 'margin' },
+}
+
 interface SideInfo {
   short: 't' | 'r' | 'b' | 'l'
-  cssProp: 'paddingTop' | 'paddingRight' | 'paddingBottom' | 'paddingLeft'
-  /** Arrow key whose direction matches the side in spacing-keyboard-mode. */
+  cap: 'Top' | 'Right' | 'Bottom' | 'Left'
   arrowKey: 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight'
 }
 
 const SIDE_INFO: Record<Side, SideInfo> = {
-  top: { short: 't', cssProp: 'paddingTop', arrowKey: 'ArrowUp' },
-  right: { short: 'r', cssProp: 'paddingRight', arrowKey: 'ArrowRight' },
-  bottom: { short: 'b', cssProp: 'paddingBottom', arrowKey: 'ArrowDown' },
-  left: { short: 'l', cssProp: 'paddingLeft', arrowKey: 'ArrowLeft' },
+  top: { short: 't', cap: 'Top', arrowKey: 'ArrowUp' },
+  right: { short: 'r', cap: 'Right', arrowKey: 'ArrowRight' },
+  bottom: { short: 'b', cap: 'Bottom', arrowKey: 'ArrowDown' },
+  left: { short: 'l', cap: 'Left', arrowKey: 'ArrowLeft' },
 }
 
-export function createSidePadWriter(side: Side): PropertyWriter {
-  const info = SIDE_INFO[side]
-  const propName = `pad-${info.short}`
+export function createSideWriter(kind: Kind, side: Side): PropertyWriter {
+  const k = KIND_INFO[kind]
+  const s = SIDE_INFO[side]
+  const propName = `${k.prop}-${s.short}`
+  const cssKey = `${k.cssPrefix}${s.cap}` as
+    | 'paddingTop'
+    | 'paddingRight'
+    | 'paddingBottom'
+    | 'paddingLeft'
+    | 'marginTop'
+    | 'marginRight'
+    | 'marginBottom'
+    | 'marginLeft'
 
   return {
     name: propName,
@@ -82,25 +103,23 @@ export function createSidePadWriter(side: Side): PropertyWriter {
 
       const el = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement | null
       if (!el) throw new Error(`toPreview(${propName}): element ${nodeId} not in DOM`)
-      const current = parsePx(window.getComputedStyle(el)[info.cssProp])
-      if (current === null)
-        throw new Error(`toPreview(${propName}): could not read ${info.cssProp}`)
+      const current = parsePx(window.getComputedStyle(el)[cssKey])
+      if (current === null) throw new Error(`toPreview(${propName}): could not read ${cssKey}`)
       if (current % GRID_SIZE !== 0) {
         throw new Error(
-          `toPreview(${propName}): node ${nodeId} starts off-grid (${info.cssProp}=${current})`
+          `toPreview(${propName}): node ${nodeId} starts off-grid (${cssKey}=${current})`
         )
       }
 
-      // Enter padding mode
-      await ctx.api.interact.pressKey('p')
+      // Enter spacing mode (P for pad, M for mar)
+      await ctx.api.interact.pressKey(k.modeKey)
       await ctx.api.utils.delay(150)
 
       // Option+Arrow{side} = side + 1 step. Option+Shift+Arrow{side} = side - 1.
-      // Direction is "more padding" by default; Shift inverts.
       const stepCount = Math.abs(target - current) / GRID_SIZE
       const decreasing = target < current
       for (let i = 0; i < stepCount; i++) {
-        await ctx.api.interact.pressKey(info.arrowKey, { alt: true, shift: decreasing })
+        await ctx.api.interact.pressKey(s.arrowKey, { alt: true, shift: decreasing })
         await ctx.api.utils.waitForCompile()
       }
 
@@ -114,12 +133,6 @@ export function createSidePadWriter(side: Side): PropertyWriter {
 // Helpers
 // =============================================================================
 
-/**
- * Set `pad-{short} N` on a Mirror line. Replaces an existing
- * `pad-{short} M` declaration or appends one. Does not touch uniform `pad`
- * or other side properties — overrides interact at the Mirror parser level
- * (specific-side wins for that side, leaving the others untouched).
- */
 function setSideOnLine(line: string, propName: string, value: string): string {
   const escaped = propName.replace(/-/g, '\\-')
   const re = new RegExp(`(^|,|\\s)${escaped}\\s+\\d+\\s*(?=,|$)`)
