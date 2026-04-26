@@ -149,6 +149,30 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
     case 'editorInsert':
       api.editor.insertAt(step.text, step.line, step.indent)
       return
+    case 'editText': {
+      // Find the node's source line and replace the first quoted segment
+      // (the text content right after the element name).
+      const sourceMap = api.studio.getSourceMap() as {
+        getNodeById: (id: string) => { position: { line: number } } | null
+      } | null
+      if (!sourceMap) throw new Error('editText: SourceMap not available')
+      const node = sourceMap.getNodeById(step.target)
+      if (!node) throw new Error(`editText: node ${step.target} not in SourceMap`)
+      const code = api.editor.getCode()
+      const lines = code.split('\n')
+      const lineIdx = node.position.line - 1
+      const original = lines[lineIdx]
+      if (!original) throw new Error(`editText: line ${node.position.line} not found`)
+      // Replace the first "..."-quoted string on the line.
+      const escaped = step.text.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+      const updated = original.replace(/"((?:[^"\\]|\\.)*)"/, `"${escaped}"`)
+      if (updated === original) {
+        throw new Error(`editText: no quoted text content found on line: "${original}"`)
+      }
+      lines[lineIdx] = updated
+      await api.editor.setCode(lines.join('\n'))
+      return
+    }
     case 'wait':
       await api.utils.delay(step.ms)
       return
@@ -340,6 +364,8 @@ function describeStep(step: Step): string {
       return `${prefix}editorSet (${step.code.length} chars)${suffix}`
     case 'editorInsert':
       return `${prefix}editorInsert@${step.line}${suffix}`
+    case 'editText':
+      return `${prefix}editText ${step.target}=${JSON.stringify(step.text)}${suffix}`
     case 'wait':
       return `${prefix}wait ${step.ms}ms${suffix}`
   }

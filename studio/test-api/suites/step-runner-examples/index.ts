@@ -14,6 +14,7 @@ export { bocWeightScenarios, bocWeightStepRunnerTests } from './boc-weight.scena
 export { whScenarios, whStepRunnerTests } from './wh.scenarios'
 export { useCaseButtonScenarios, useCaseButtonStepRunnerTests } from './use-case-button.scenarios'
 export { tokensScenarios, tokensStepRunnerTests } from './tokens.scenarios'
+export { editTextScenarios, editTextStepRunnerTests } from './edit-text.scenarios'
 
 import { padStepRunnerTests } from './pad.scenarios'
 import { padTStepRunnerTests } from './pad-t.scenarios'
@@ -31,6 +32,7 @@ import { bocWeightStepRunnerTests } from './boc-weight.scenarios'
 import { whStepRunnerTests } from './wh.scenarios'
 import { useCaseButtonStepRunnerTests } from './use-case-button.scenarios'
 import { tokensStepRunnerTests } from './tokens.scenarios'
+import { editTextStepRunnerTests } from './edit-text.scenarios'
 
 export const allStepRunnerExampleTests = [
   ...padStepRunnerTests,
@@ -49,4 +51,5 @@ export const allStepRunnerExampleTests = [
   ...whStepRunnerTests,
   ...useCaseButtonStepRunnerTests,
   ...tokensStepRunnerTests,
+  ...editTextStepRunnerTests,
 ]

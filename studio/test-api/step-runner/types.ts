@@ -58,6 +58,14 @@ export type StepAction =
   | { do: 'editorInsert'; line: number; text: string; indent?: number }
 
   // ---------------------------------------------------------------------------
+  // High-level: change the text content of an element. Mirror text content
+  // is the quoted string right after the element name on its line. This
+  // action finds and replaces it in source — equivalent to inline-edit
+  // with a new value.
+  // ---------------------------------------------------------------------------
+  | { do: 'editText'; target: string; text: string }
+
+  // ---------------------------------------------------------------------------
   // Utility
   // ---------------------------------------------------------------------------
   | { do: 'wait'; ms: number }
