@@ -19,49 +19,52 @@ funktioniert in allen.
 
 ## Backend-Support
 
-| Sub-feature                      | DOM | React | Framework | Bemerkung                                     |
-| -------------------------------- | --- | ----- | --------- | --------------------------------------------- |
-| PA1 Container hex bg             | ✅  | ✅    | ✅        | `Frame #2271C1`                               |
-| PA2 Container number → w         | ✅  | ✅    | ✅        | `Frame 100`                                   |
-| PA3 Container size pair → w/h    | ✅  | ✅    | ✅        | `Frame 100, 50`                               |
-| PA4 Button full positional mix   | ✅  | ✅    | ✅        | `Button "X", hug, 32, #333`                   |
-| PA5 Text bare hex → col (not bg) | ✅  | ✅    | ✅        | `Text "Hi", #fff`                             |
-| PA6 Icon → ic + is               | ✅  | ✅    | ✅        | `Icon "check", #888, 24`                      |
-| PA7 Image → w/h, no color slot   | ✅  | ✅    | ✅        | `Image src "x.jpg", 200, 100`                 |
-| PA8 Mixed positional + explicit  | ✅  | ✅    | ✅        | smart slot-filling                            |
-| PA9 Named colors                 | ✅  | ✅    | ✅        | `Frame red`                                   |
-| PA10 rgba()                      | ✅  | ✅    | ✅        | `Frame rgba(0,0,0,0.5)`                       |
-| PA11 Slot conflicts → error      | ✅  | ✅    | ✅        | klare Fehlermeldungen                         |
-| PA12 `$name.suffix` token-ref    | ✅  | ✅    | ✅        | `Frame $primary.bg`                           |
-| PA13 `$name` single-suffix token | ✅  | ✅    | ✅        | `Frame $space` (space.pad def)                |
-| PA14 `$name` multi-suffix token  | ✅  | ✅    | ✅        | role-based pick (Frame→bg, Text→col, Icon→ic) |
-| PA15 Object property passthrough | ✅  | ✅    | ✅        | `$user.name` bei `user:` Object               |
-| PA16 Multi-token shorthand       | ✅  | ✅    | ✅        | `Frame $primary, $space, $rad`                |
-| PA17 Property-set refs untouched | ✅  | ✅    | ✅        | `Frame $cardstyle` unverändert                |
-| Components pass through          | ✅  | ✅    | ✅        | Phase-2-Theme                                 |
+| Sub-feature                                   | DOM | React | Framework | Bemerkung                                     |
+| --------------------------------------------- | --- | ----- | --------- | --------------------------------------------- |
+| PA1 Container hex bg                          | ✅  | ✅    | ✅        | `Frame #2271C1`                               |
+| PA2 Container number → w                      | ✅  | ✅    | ✅        | `Frame 100`                                   |
+| PA3 Container size pair → w/h                 | ✅  | ✅    | ✅        | `Frame 100, 50`                               |
+| PA4 Button full positional mix                | ✅  | ✅    | ✅        | `Button "X", hug, 32, #333`                   |
+| PA5 Text bare hex → col (not bg)              | ✅  | ✅    | ✅        | `Text "Hi", #fff`                             |
+| PA6 Icon → ic + is                            | ✅  | ✅    | ✅        | `Icon "check", #888, 24`                      |
+| PA7 Image → w/h, no color slot                | ✅  | ✅    | ✅        | `Image src "x.jpg", 200, 100`                 |
+| PA8 Mixed positional + explicit               | ✅  | ✅    | ✅        | smart slot-filling                            |
+| PA9 Named colors                              | ✅  | ✅    | ✅        | `Frame red`                                   |
+| PA10 rgba()                                   | ✅  | ✅    | ✅        | `Frame rgba(0,0,0,0.5)`                       |
+| PA11 Slot conflicts → error                   | ✅  | ✅    | ✅        | klare Fehlermeldungen                         |
+| PA12 `$name.suffix` token-ref                 | ✅  | ✅    | ✅        | `Frame $primary.bg`                           |
+| PA13 `$name` single-suffix token              | ✅  | ✅    | ✅        | `Frame $space` (space.pad def)                |
+| PA14 `$name` multi-suffix token               | ✅  | ✅    | ✅        | role-based pick (Frame→bg, Text→col, Icon→ic) |
+| PA15 Object property passthrough              | ✅  | ✅    | ✅        | `$user.name` bei `user:` Object               |
+| PA16 Multi-token shorthand                    | ✅  | ✅    | ✅        | `Frame $primary, $space, $rad`                |
+| PA17 Property-set refs untouched              | ✅  | ✅    | ✅        | `Frame $cardstyle` unverändert                |
+| PA-P2 Custom components default Container     | ✅  | ✅    | ✅        | `Btn 100, 50, #333` (mit `Btn:` Definition)   |
+| PA-P2 Custom `as Text/Link` → col             | ✅  | ✅    | ✅        | `Headline as Text:` → Instance ist Content    |
+| PA-P2 Custom `as Icon` → ic + is              | ✅  | ✅    | ✅        | `DangerIcon as Icon:` → Instance ist Icon     |
+| PA-P2 Component inheritance chain             | ✅  | ✅    | ✅        | `DangerBtn as PrimaryBtn as Btn`              |
+| PA-P2 Definitions NOT transformed             | ✅  | ✅    | ✅        | `Btn: 100, #333` bleibt Definition            |
+| PA-P2 Slots inside components NOT transformed | ✅  | ✅    | ✅        | indented `Title:` ist Slot, kein Component    |
 
-## Token-Resolution-Heuristik
+## Pre-Scan-Heuristik
 
-Pre-Scan vor der Transformation klassifiziert jeden Top-Level-Identifier
-in eine von drei Kategorien:
+Klassifiziert jeden Identifier basierend auf seiner Definition:
 
-| Pattern in Definition          | Kategorie    | `$name`-Verwendung am Use-Site              |
-| ------------------------------ | ------------ | ------------------------------------------- |
-| `name.suffix: VALUE` (flach)   | **Token**    | wird transformiert (suffix → property-name) |
-| `name:` + eingerückte Children | **Object**   | bleibt unverändert (es ist Property-Access) |
-| `name: prop1, prop2, ...`      | Property-Set | bleibt unverändert (Parser macht Expansion) |
-| nicht definiert                | Unknown      | bleibt unverändert                          |
+| Pattern in Definition                 | Kategorie        | `$name` / `Name` am Use-Site                            |
+| ------------------------------------- | ---------------- | ------------------------------------------------------- |
+| `name.suffix: VALUE` (flach)          | **Token**        | `$name` transformiert (suffix → property-name)          |
+| `name:` + eingerückt, **camelCase**   | **Object**       | `$name.x` ist Property-Access → unverändert             |
+| `name: prop1, prop2, ...` (camelCase) | **Property-Set** | `$cardstyle` unverändert (Parser macht Expansion)       |
+| `Name:` (PascalCase, Spalte 0)        | **Component**    | `Name 100, #333` mit Container-Role                     |
+| `Name as Primitive:`                  | **Component**    | erbt Primitive-Role (Frame→bg/wh, Text→col, Icon→ic/is) |
+| `Name as OtherComponent:`             | **Component**    | resolved über `as`-Chain (mehrere Pässe)                |
+| nicht definiert                       | Unknown          | bleibt unverändert                                      |
 
-## Phase-2-Themen
-
-**Components**: `PrimaryBtn 100, #ef4444` wird durchgereicht — der
-Resolver kennt nur Built-in-Primitives in der `PRIMITIVE_ROLES`-
-Tabelle. Komponenten brauchen Phase-2-Support (Tracking der `as`-
-Vererbungs-Chain).
+## Phase-3-Themen
 
 **Hover-/State-Children-Blocks**: Innerhalb von `hover:` / `state:`
 funktioniert positional bisher nur, wenn das Eltern-Element ein
-Built-in-Primitive ist und der Resolver Indentation versteht. Phase 2.
+Built-in-Primitive oder Custom-Component ist und der Resolver
+Indentation auflöst.
 
 ## Smart Slot-Filling
 

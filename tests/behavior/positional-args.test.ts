@@ -389,6 +389,88 @@ describe('Positional Arguments — Behavior Spec', () => {
     })
   })
 
+  // -------------------------------------------------------------------------
+  // PA-Phase2: Custom Components support
+  // -------------------------------------------------------------------------
+
+  describe('PA-Phase2a: Custom components — default Container role', () => {
+    it('Btn (no `as`) defaults to Container: 100, 50, #333 → w/h/bg', () => {
+      const root = render(`Btn: pad 10, rad 6\n\nBtn 100, 50, #2271C1`, container)
+      const btn = findByName(root, 'Btn') as HTMLElement
+      expect(btn.style.width).toBe('100px')
+      expect(btn.style.height).toBe('50px')
+      expect(btn.style.background).toContain('rgb(34, 113, 193)')
+    })
+
+    it('Custom component definition itself is NOT transformed', () => {
+      const out = resolvePositionalArgs(`Btn: 100, 50, #333\n\nBtn 50, 25`)
+      expect(out).toContain('Btn: 100, 50, #333')
+      expect(out).toContain('Btn w 50, h 25')
+    })
+  })
+
+  describe('PA-Phase2b: Custom components — `as Text` inherits col role', () => {
+    it('Headline (as Text): #2271C1 → col, not bg', () => {
+      const root = render(
+        `Headline as Text: fs 24, weight bold\n\nHeadline "Hello", #2271C1`,
+        container
+      )
+      const headline = findByName(root, 'Headline') as HTMLElement
+      expect(headline.style.color).toContain('rgb(34, 113, 193)')
+    })
+
+    it('Definition `Headline as Text:` itself is NOT transformed', () => {
+      const out = resolvePositionalArgs(`Headline as Text: 24, #333`)
+      expect(out).toContain('Headline as Text: 24, #333')
+    })
+  })
+
+  describe('PA-Phase2c: Custom components — `as Icon` inherits ic + is', () => {
+    it('DangerIcon (as Icon): #ff0000, 32 → ic + is', () => {
+      const root = render(
+        `DangerIcon as Icon: ic #ef4444\n\nDangerIcon "trash", #ff0000, 32`,
+        container
+      )
+      const icon = findByName(root, 'DangerIcon') as HTMLElement
+      expect(icon.dataset.iconColor).toBe('#ff0000')
+      expect(icon.dataset.iconSize).toBe('32')
+    })
+  })
+
+  describe('PA-Phase2d: Component inheritance chain', () => {
+    it('DangerBtn as PrimaryBtn as Btn: still Container role', () => {
+      const root = render(
+        `Btn: pad 10\nPrimaryBtn as Btn: bg #2271C1\nDangerBtn as PrimaryBtn: bg #ef4444\n\nDangerBtn 200, 60, #c00`,
+        container
+      )
+      const btn = findByName(root, 'DangerBtn') as HTMLElement
+      expect(btn.style.width).toBe('200px')
+      expect(btn.style.height).toBe('60px')
+      expect(btn.style.background).toContain('rgb(204, 0, 0)')
+    })
+  })
+
+  describe('PA-Phase2e: Slot definitions are NOT components', () => {
+    it('`Title:` indented under `Card:` is a slot, leave Title positional alone', () => {
+      const out = resolvePositionalArgs(`Card:\n  Title:\n    Text "X"\n\nCard\n  Title 100, #333`)
+      // Title is a slot — NOT registered as component → leave untouched
+      expect(out).toContain('Title 100, #333')
+    })
+  })
+
+  describe('PA-Phase2f: Tokens + custom components combined', () => {
+    it('PrimaryBtn $primary, 100, 32 → bg + w + h', () => {
+      const root = render(
+        `primary.bg: #2271C1\nPrimaryBtn as Button: pad 10\n\nPrimaryBtn $primary, 100, 32`,
+        container
+      )
+      const btn = findByName(root, 'PrimaryBtn') as HTMLElement
+      expect(btn.style.background).toContain('var(--primary-bg)')
+      expect(btn.style.width).toBe('100px')
+      expect(btn.style.height).toBe('32px')
+    })
+  })
+
   describe('PA17: Property-set refs still pass through (no token def → not transformed)', () => {
     it('Frame $cardstyle (no token, no object) → unchanged', () => {
       // cardstyle is a property-set, not a token. Without a token def

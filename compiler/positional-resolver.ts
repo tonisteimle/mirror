@@ -119,28 +119,43 @@ type TokenSuffixMap = Map<string, Set<string>>
 interface SourceScan {
   /** Token definitions: `primary.bg: #2271C1` → primary → {bg, col, ...} */
   tokens: TokenSuffixMap
-  /** Object/variable names with nested sub-properties: `user:\n  name: "X"` → {user} */
+  /** Object/variable names (camelCase) with nested sub-properties. */
   objects: Set<string>
+  /**
+   * Custom components (PascalCase) with their resolved primitive role.
+   * Includes `Btn:` (defaults to Container/Frame role) and
+   * `MyText as Text:` (inherits Text's role). `as` chains are resolved.
+   */
+  components: Map<string, PrimitiveRole>
 }
 
 /**
  * Pre-scan source to distinguish:
- *  - Token definitions: `primary.bg: VALUE` (flat, dot in name)
- *  - Object/variable definitions: `user:` followed by indented children
+ *  - Token definitions: `primary.bg: VALUE` (flat, dot in name) → tokens map
+ *  - Object/variable defs: `user:` (camelCase) + indented children → objects set
+ *  - Component defs: `Btn:` or `Btn as Button:` (PascalCase, top-level) →
+ *    components map with resolved primitive role
  *
- * The distinction matters for `$X.Y` use sites: if X is an object,
- * `$X.Y` is property access (don't transform); if X is a token, `$X.Y`
- * is a suffixed token-ref and Y becomes the property name.
+ * Slots inside component definitions (`Title:` indented under `Card:`) are
+ * NOT registered as components — only column-0 PascalCase definitions count.
  */
 export function scanSource(source: string): SourceScan {
   const lines = source.split('\n')
   const tokens: TokenSuffixMap = new Map()
   const objects = new Set<string>()
+  const components = new Map<string, PrimitiveRole>()
+
+  // First pass: tokens, objects, and component definitions with direct
+  // `as Primitive` resolution. Component-to-component `as` chains are
+  // collected as deferred so we can resolve them in a second pass.
+  const deferredAs: Array<{ name: string; base: string }> = []
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmed = line.trimStart()
     if (!trimmed || trimmed.startsWith('//')) continue
+
+    const indent = line.length - trimmed.length
 
     // Token definition: name.suffix: value
     const tokenMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9_-]*)\.([a-zA-Z][a-zA-Z0-9_-]*)\s*:/)
@@ -151,23 +166,75 @@ export function scanSource(source: string): SourceScan {
       continue
     }
 
-    // Object/variable: `name:` followed by indented child line.
-    // Only matches when the colon ends the line (no value on same line).
+    // Component definition (only at top level, column 0):
+    //   `Btn:` (default Container role)
+    //   `Btn: pad 10, bg #333` (default Container role)
+    //   `MyText as Text:`  → inherits Text's role
+    //   `DangerBtn as Btn:` → deferred chain
+    if (indent === 0) {
+      const compAs = trimmed.match(/^([A-Z][a-zA-Z0-9_]*)\s+as\s+([A-Z][a-zA-Z0-9_]*)\s*:/)
+      if (compAs) {
+        const baseRole = PRIMITIVE_ROLES[compAs[2]]
+        if (baseRole) {
+          components.set(compAs[1], baseRole)
+        } else {
+          deferredAs.push({ name: compAs[1], base: compAs[2] })
+        }
+        continue
+      }
+      const compNoAs = trimmed.match(/^([A-Z][a-zA-Z0-9_]*)\s*:/)
+      if (compNoAs && !PRIMITIVE_ROLES[compNoAs[1]]) {
+        // Default to Frame's role (Container)
+        components.set(compNoAs[1], PRIMITIVE_ROLES.Frame)
+        continue
+      }
+    }
+
+    // Object/variable (camelCase) with indented children, or PascalCase
+    // component-with-no-inline-properties (also indented children).
     const objectMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9_-]*)\s*:\s*$/)
     if (objectMatch) {
-      const myIndent = line.length - trimmed.length
-      // Look ahead for next non-empty/non-comment line.
+      const name = objectMatch[1]
+      const myIndent = indent
       for (let j = i + 1; j < lines.length; j++) {
         const next = lines[j]
         if (!next.trim() || next.trimStart().startsWith('//')) continue
         const nextIndent = next.length - next.trimStart().length
-        if (nextIndent > myIndent) objects.add(objectMatch[1])
+        if (nextIndent > myIndent) {
+          // PascalCase + indented children + column 0 → component
+          if (myIndent === 0 && /^[A-Z]/.test(name)) {
+            if (!components.has(name) && !PRIMITIVE_ROLES[name]) {
+              components.set(name, PRIMITIVE_ROLES.Frame)
+            }
+          } else {
+            objects.add(name)
+          }
+        }
         break
       }
     }
   }
 
-  return { tokens, objects }
+  // Second pass: resolve deferred `Component as OtherComponent` chains.
+  // Bounded iteration (each pass either resolves or terminates).
+  for (let iter = 0; iter < deferredAs.length + 1; iter++) {
+    let changed = false
+    for (const def of deferredAs) {
+      if (components.has(def.name)) continue
+      const baseRole = components.get(def.base)
+      if (baseRole) {
+        components.set(def.name, baseRole)
+        changed = true
+      }
+    }
+    if (!changed) break
+  }
+  // Any still-unresolved components default to Container.
+  for (const def of deferredAs) {
+    if (!components.has(def.name)) components.set(def.name, PRIMITIVE_ROLES.Frame)
+  }
+
+  return { tokens, objects, components }
 }
 
 /** @deprecated Use scanSource(); kept for backwards compat. */
@@ -205,11 +272,15 @@ function transformSegment(segment: string, lineNo: number, scan: SourceScan): st
   if (!elementMatch) return segment
 
   const elementName = elementMatch[1]
-  const role = PRIMITIVE_ROLES[elementName]
+  const role = PRIMITIVE_ROLES[elementName] ?? scan.components.get(elementName)
   if (!role) return segment
 
   let pos = elementMatch[0].length
   while (pos < body.length && /\s/.test(body[pos])) pos++
+
+  // Definition site (`Btn:` or `Btn as Button:`) — not a use, leave alone.
+  if (body[pos] === ':') return segment
+  if (body.slice(pos).match(/^as\s+[A-Z][a-zA-Z0-9_]*\s*:/)) return segment
 
   if (body[pos] === '"') {
     const end = findStringEnd(body, pos)
@@ -430,7 +501,11 @@ function pickSuffixForRole(suffixes: Set<string>, role: PrimitiveRole): string |
  * it without a scan. Treats input as if no tokens or objects were defined.
  */
 export function classifyBareValue(s: string): 'color' | 'size' | null {
-  const emptyScan: SourceScan = { tokens: new Map(), objects: new Set() }
+  const emptyScan: SourceScan = {
+    tokens: new Map(),
+    objects: new Set(),
+    components: new Map(),
+  }
   const result = classifyBare(s, { sizes: [] }, emptyScan)
   if (!result || result.kind === 'fixed') return null
   return result.kind

@@ -1,0 +1,7 @@
+Btn: pad 10, rad 6
+PrimaryBtn as Btn: bg #2271C1
+DangerBtn as PrimaryBtn: bg #ef4444
+
+Btn 100, 32, #888
+PrimaryBtn 100, 32, #444
+DangerBtn 100, 32, #c00
