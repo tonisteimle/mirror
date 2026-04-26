@@ -26,5 +26,22 @@ const padTViaCode: Scenario = {
   ],
 }
 
-export const padTScenarios: Scenario[] = [padTViaCode]
+const padTViaPanel: Scenario = {
+  name: 'pad-t set via panel is consistent across code+dom+panel',
+  category: 'step-runner',
+  setup: 'Frame pad-t 8',
+  steps: [
+    { do: 'select', nodeId: 'node-1', expect: { selection: 'node-1' } },
+    {
+      do: 'setProperty',
+      via: 'panel',
+      target: 'node-1',
+      property: 'pad-t',
+      value: '24',
+      expect: { props: { 'node-1': { 'pad-t': '24' } } },
+    },
+  ],
+}
+
+export const padTScenarios: Scenario[] = [padTViaCode, padTViaPanel]
 export const padTStepRunnerTests: TestCase[] = padTScenarios.map(scenarioToTestCase)

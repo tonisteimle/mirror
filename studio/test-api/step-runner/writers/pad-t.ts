@@ -40,8 +40,11 @@ export const padTWriter: PropertyWriter = {
     await ctx.api.editor.setCode(lines.join('\n'))
   },
 
-  async toPanel(_nodeId, _value, _ctx): Promise<void> {
-    throw new Error('toPanel(pad-t): not implemented yet (sub-increment 3.2)')
+  async toPanel(nodeId, value, ctx): Promise<void> {
+    await ctx.api.studio.setSelection(nodeId)
+    await ctx.api.utils.delay(100)
+    const ok = await ctx.api.panel.property.setProperty('pad-t', value)
+    if (!ok) throw new Error(`toPanel(pad-t): panel.setProperty returned false`)
   },
 
   async toPreview(_nodeId, _value, _ctx): Promise<void> {
