@@ -4,15 +4,8 @@
  * Uses same styling patterns as Property Panel.
  */
 
-import {
-  handleSnapSettings,
-  agentSettings,
-  type HandleSnapSettings,
-  type AgentSettings,
-  type AgentType,
-} from '../../core/settings'
+import { handleSnapSettings, type HandleSnapSettings } from '../../core/settings'
 import { events } from '../../core/events'
-import { getUserSettings } from '../../storage/user-settings'
 
 export interface SettingsPanelConfig {
   container?: HTMLElement
@@ -93,7 +86,6 @@ export class SettingsPanel {
           <button class="settings-dialog-close" data-action="close" title="Close (Esc)">${ICONS.close}</button>
         </div>
         <div class="settings-dialog-content">
-          ${this.renderAgentSection()}
           ${this.renderSnappingSection()}
         </div>
       </div>
@@ -175,55 +167,6 @@ export class SettingsPanel {
     `
   }
 
-  private renderAgentSection(): string {
-    const settings = agentSettings.get()
-    const agentOptions = [
-      { value: 'openrouter', label: 'OpenRouter' },
-      { value: 'anthropic-sdk', label: 'Anthropic SDK' },
-      { value: 'claude-cli', label: 'Claude CLI (Desktop)' },
-    ]
-
-    const anthropicModels = [
-      { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-      { value: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
-    ]
-
-    const openrouterModels = [
-      { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4' },
-      { value: 'anthropic/claude-opus-4', label: 'Claude Opus 4' },
-      { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
-    ]
-
-    // Conditionally show fields based on agent type
-    const showAnthropicFields = settings.type === 'anthropic-sdk'
-    const showOpenrouterFields = settings.type === 'openrouter'
-
-    return `
-      <div class="section">
-        <div class="section-label">AI Agent</div>
-        <div class="section-content">
-          ${this.renderSelect('agent.type', 'Backend', settings.type, agentOptions)}
-
-          <div class="agent-fields anthropic-fields" style="display: ${showAnthropicFields ? 'block' : 'none'}">
-            ${this.renderTextInput('agent.anthropicApiKey', 'API Key', settings.anthropicApiKey, 'sk-ant-...', 'password')}
-            ${this.renderSelect('agent.anthropicModel', 'Model', settings.anthropicModel, anthropicModels)}
-          </div>
-
-          <div class="agent-fields openrouter-fields" style="display: ${showOpenrouterFields ? 'block' : 'none'}">
-            ${this.renderTextInput('agent.openrouterApiKey', 'API Key', settings.openrouterApiKey, 'sk-or-...', 'password')}
-            ${this.renderSelect('agent.openrouterModel', 'Model', settings.openrouterModel, openrouterModels)}
-          </div>
-
-          <div class="agent-fields claude-cli-fields" style="display: ${settings.type === 'claude-cli' ? 'block' : 'none'}">
-            <div class="prop-row">
-              <span class="prop-label hint">Verwendet Claude Code CLI in der Desktop-App</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `
-  }
-
   private renderSnappingSection(): string {
     const settings = handleSnapSettings.get()
     return `
@@ -283,38 +226,23 @@ export class SettingsPanel {
       const setting = inputEl.dataset.setting
       if (!setting) return
 
-      // Skip agent text inputs (they use different handling)
-      if (setting.startsWith('agent.') && !inputEl.dataset.min) {
-        // Text input for agent settings (API keys)
-        inputEl.addEventListener(
-          'change',
-          e => {
-            const target = e.target as HTMLInputElement
-            const [section, key] = setting.split('.')
-            this.updateSetting(section, key, target.value)
-          },
-          { signal }
-        )
-      } else {
-        // Number input
-        inputEl.addEventListener(
-          'change',
-          e => {
-            const target = e.target as HTMLInputElement
-            const [section, key] = setting.split('.')
-            const value = parseInt(target.value, 10)
-            const min = parseInt(target.dataset.min || '0', 10)
-            const max = parseInt(target.dataset.max || '100', 10)
+      inputEl.addEventListener(
+        'change',
+        e => {
+          const target = e.target as HTMLInputElement
+          const [section, key] = setting.split('.')
+          const value = parseInt(target.value, 10)
+          const min = parseInt(target.dataset.min || '0', 10)
+          const max = parseInt(target.dataset.max || '100', 10)
 
-            if (!isNaN(value)) {
-              const clampedValue = Math.max(min, Math.min(max, value))
-              target.value = String(clampedValue)
-              this.updateSetting(section, key, clampedValue)
-            }
-          },
-          { signal }
-        )
-      }
+          if (!isNaN(value)) {
+            const clampedValue = Math.max(min, Math.min(max, value))
+            target.value = String(clampedValue)
+            this.updateSetting(section, key, clampedValue)
+          }
+        },
+        { signal }
+      )
     })
 
     // Select inputs
@@ -328,37 +256,13 @@ export class SettingsPanel {
 
           const [section, key] = setting.split('.')
           this.updateSetting(section, key, target.value)
-
-          // Special handling for agent type change - show/hide fields
-          if (setting === 'agent.type') {
-            this.toggleAgentFields(target.value as AgentType)
-          }
         },
         { signal }
       )
     })
 
     // External settings changes
-    this.eventUnsubscribes.push(
-      events.on('handleSnap:changed', () => this.refreshValues()),
-      events.on('agent:changed', () => this.refreshValues())
-    )
-  }
-
-  private toggleAgentFields(agentType: AgentType): void {
-    const anthropicFields = this.container.querySelector('.anthropic-fields') as HTMLElement
-    const openrouterFields = this.container.querySelector('.openrouter-fields') as HTMLElement
-    const cliFields = this.container.querySelector('.claude-cli-fields') as HTMLElement
-
-    if (anthropicFields) {
-      anthropicFields.style.display = agentType === 'anthropic-sdk' ? 'block' : 'none'
-    }
-    if (openrouterFields) {
-      openrouterFields.style.display = agentType === 'openrouter' ? 'block' : 'none'
-    }
-    if (cliFields) {
-      cliFields.style.display = agentType === 'claude-cli' ? 'block' : 'none'
-    }
+    this.eventUnsubscribes.push(events.on('handleSnap:changed', () => this.refreshValues()))
   }
 
   private unbindEvents(): void {
@@ -371,74 +275,30 @@ export class SettingsPanel {
   }
 
   private updateSetting(section: string, key: string, value: boolean | number | string): void {
-    switch (section) {
-      case 'handleSnap':
-        handleSnapSettings.set({ [key]: value } as Partial<HandleSnapSettings>)
-        break
-      case 'agent':
-        agentSettings.set({ [key]: value } as Partial<AgentSettings>)
-        // Persist to localStorage
-        this.saveAgentSettings()
-        break
+    if (section === 'handleSnap') {
+      handleSnapSettings.set({ [key]: value } as Partial<HandleSnapSettings>)
     }
 
     this.callbacks.onSettingsChange?.(section, { [key]: value })
   }
 
-  private saveAgentSettings(): void {
-    const settings = agentSettings.get()
-    getUserSettings().setAgentSettings(settings)
-  }
-
   private refreshValues(): void {
-    // Snapping settings
     const snapSettings = handleSnapSettings.get()
     const snappingValues: Record<string, boolean | number> = {
       'handleSnap.tokenSnapping': snapSettings.tokenSnapping,
       'handleSnap.gridSize': snapSettings.gridSize,
     }
 
-    // Agent settings (string values)
-    const agentSettingsValues = agentSettings.get()
-    const allAgentSettings: Record<string, string> = {
-      'agent.type': agentSettingsValues.type,
-      'agent.anthropicApiKey': agentSettingsValues.anthropicApiKey,
-      'agent.anthropicModel': agentSettingsValues.anthropicModel,
-      'agent.openrouterApiKey': agentSettingsValues.openrouterApiKey,
-      'agent.openrouterModel': agentSettingsValues.openrouterModel,
-    }
-
     for (const [key, value] of Object.entries(snappingValues)) {
-      // Toggle buttons
       const btn = this.container.querySelector(`.toggle-btn[data-setting="${key}"]`)
       if (btn) {
         btn.classList.toggle('active', value as boolean)
       }
-
-      // Number inputs
       const input = this.container.querySelector(`input[data-setting="${key}"]`) as HTMLInputElement
       if (input) {
         input.value = String(value)
       }
     }
-
-    // Update agent settings
-    for (const [key, value] of Object.entries(allAgentSettings)) {
-      const input = this.container.querySelector(`input[data-setting="${key}"]`) as HTMLInputElement
-      if (input) {
-        input.value = value
-      }
-
-      const select = this.container.querySelector(
-        `select[data-setting="${key}"]`
-      ) as HTMLSelectElement
-      if (select) {
-        select.value = value
-      }
-    }
-
-    // Update field visibility based on agent type
-    this.toggleAgentFields(agentSettingsValues.type)
   }
 
   dispose(): void {

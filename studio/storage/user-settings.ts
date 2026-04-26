@@ -6,7 +6,6 @@
  */
 
 import { events } from '../core/events'
-import { agentSettings, type AgentSettings } from '../core/settings'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('UserSettings')
@@ -17,49 +16,6 @@ const log = createLogger('UserSettings')
 
 export interface UserSettings {
   recentIcons: string[]
-  agentMemory: AgentMemoryData | null
-  agentSettings: AgentSettings | null
-}
-
-export interface AgentMemoryData {
-  preferences: [string, Preference][]
-  patterns: [string, Pattern][]
-  corrections: Correction[]
-  snippets: [string, Snippet][]
-}
-
-interface Preference {
-  category: 'color' | 'spacing' | 'layout' | 'typography' | 'component'
-  key: string
-  value: string
-  confidence: number
-}
-
-interface Pattern {
-  trigger: string
-  action: PatternAction
-  successCount: number
-  failureCount: number
-}
-
-interface PatternAction {
-  type: 'set_property' | 'add_component' | 'apply_pattern' | 'batch_edit' | string
-  params: Record<string, unknown>
-}
-
-interface Correction {
-  originalRequest: string
-  originalAction: unknown
-  correctedAction: unknown
-  timestamp: string
-}
-
-interface Snippet {
-  name: string
-  description: string
-  code: string
-  tags: string[]
-  usageCount: number
 }
 
 // =============================================================================
@@ -70,8 +26,6 @@ const STORAGE_KEY = 'mirror-user-settings'
 
 const DEFAULT_SETTINGS: UserSettings = {
   recentIcons: [],
-  agentMemory: null,
-  agentSettings: null,
 }
 
 // =============================================================================
@@ -83,25 +37,13 @@ class UserSettingsService {
   private loaded = false
   private saveTimeout: ReturnType<typeof setTimeout> | null = null
 
-  /**
-   * Load settings from localStorage
-   */
   async load(): Promise<void> {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const data = JSON.parse(stored)
-        this.settings = {
-          ...DEFAULT_SETTINGS,
-          ...data,
-        }
+        this.settings = { ...DEFAULT_SETTINGS, ...data }
         log.info('Loaded from localStorage')
-
-        // Apply agent settings to the agent settings store
-        if (this.settings.agentSettings) {
-          agentSettings.load(this.settings.agentSettings)
-          log.info('Applied stored agent settings')
-        }
       } else {
         this.settings = { ...DEFAULT_SETTINGS }
         log.info('No settings found, using defaults')
@@ -117,22 +59,11 @@ class UserSettingsService {
     }
   }
 
-  /**
-   * Save settings to localStorage (debounced)
-   */
   private scheduleSave(): void {
-    if (this.saveTimeout) {
-      clearTimeout(this.saveTimeout)
-    }
-
-    this.saveTimeout = setTimeout(() => {
-      this.saveNow()
-    }, 500)
+    if (this.saveTimeout) clearTimeout(this.saveTimeout)
+    this.saveTimeout = setTimeout(() => this.saveNow(), 500)
   }
 
-  /**
-   * Save settings immediately
-   */
   private saveNow(): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings))
@@ -163,43 +94,6 @@ class UserSettingsService {
   }
 
   // ===========================================================================
-  // Agent Memory
-  // ===========================================================================
-
-  getAgentMemory(): AgentMemoryData | null {
-    return this.settings.agentMemory
-  }
-
-  setAgentMemory(memory: AgentMemoryData): void {
-    this.settings.agentMemory = memory
-    this.scheduleSave()
-  }
-
-  clearAgentMemory(): void {
-    this.settings.agentMemory = null
-    this.scheduleSave()
-  }
-
-  // ===========================================================================
-  // Agent Settings
-  // ===========================================================================
-
-  getAgentSettings(): AgentSettings | null {
-    return this.settings.agentSettings
-  }
-
-  setAgentSettings(settings: AgentSettings): void {
-    this.settings.agentSettings = settings
-    this.scheduleSave()
-    log.info('Agent settings saved')
-  }
-
-  clearAgentSettings(): void {
-    this.settings.agentSettings = null
-    this.scheduleSave()
-  }
-
-  // ===========================================================================
   // General
   // ===========================================================================
 
@@ -211,9 +105,6 @@ class UserSettingsService {
     return { ...this.settings }
   }
 
-  /**
-   * Clear all settings and reset to defaults
-   */
   reset(): void {
     this.settings = { ...DEFAULT_SETTINGS }
     this.saveNow()
@@ -233,9 +124,6 @@ export function getUserSettings(): UserSettingsService {
   return instance
 }
 
-/**
- * Initialize user settings (call on app startup)
- */
 export async function initUserSettings(): Promise<void> {
   const settings = getUserSettings()
   await settings.load()

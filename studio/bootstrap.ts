@@ -47,8 +47,7 @@ import {
   createPreviewBreadcrumb,
 } from './preview'
 import { RenderPipeline, createRenderPipeline } from './preview/render-pipeline'
-import { LLMBridge, getLLMBridge, getContextBuilder, getEditPrompt, type LLMResponse } from './llm'
-import { initializeAgent, getAgentIntegration, type AgentIntegration } from './agent'
+import { createFixer, type FixerService } from './agent'
 import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../compiler/studio'
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel, SettingsPanel, createSettingsPanel } from './panels'
@@ -71,7 +70,7 @@ import { initStudioTestAPI } from './test-api'
 import { triggerRename, isRenameActive, closeRename } from './rename'
 import type { AST, IR, SourceMap, CodeChange } from '../compiler'
 import type { EditorView } from '@codemirror/view'
-import { logBootstrap, logAgent } from '../compiler/utils/logger'
+import { logBootstrap } from '../compiler/utils/logger'
 
 export interface BootstrapConfig {
   /** CodeMirror EditorView instance */
@@ -82,7 +81,6 @@ export interface BootstrapConfig {
   userComponentsPanelContainer?: HTMLElement
   explorerPanelContainer?: HTMLElement
   fileTreeContainer?: HTMLElement
-  chatPanelContainer?: HTMLElement
   initialSource?: string
   currentFile?: string
   /** Callback to get all project source (for token extraction from all files) */
@@ -99,8 +97,6 @@ export interface BootstrapConfig {
   updateFile?: (filename: string, content: string) => void
   /** Callback to switch to file */
   switchToFile?: (filename: string) => void
-  /** OpenRouter API key for AI agent */
-  agentApiKey?: string
 }
 
 export interface StudioInstance {
@@ -117,8 +113,7 @@ export interface StudioInstance {
   userComponentsPanel: UserComponentsPanel | null
   breadcrumb: PreviewBreadcrumb | null
   autocomplete: AutocompleteEngine
-  llm: LLMBridge
-  agent: AgentIntegration | null
+  fixer: FixerService | null
   drawManager: DrawManager | null
   inlineEdit: InlineEditController | null
   /** Draft lines manager for AI-assisted editing visual feedback */
@@ -155,8 +150,7 @@ export const studio: StudioInstance = {
   userComponentsPanel: null,
   breadcrumb: null,
   autocomplete: getAutocompleteEngine(),
-  llm: getLLMBridge(),
-  agent: null,
+  fixer: null,
   drawManager: null,
   inlineEdit: null,
   draftLinesManager: null,
@@ -196,7 +190,7 @@ export const studio: StudioInstance = {
     studio.draftLinesManager = null
     studio.draftModeManager = null
     studio.settingsPanel = null
-    studio.agent = null
+    studio.fixer = null
   },
 }
 
@@ -208,12 +202,6 @@ let componentPanelContainer: HTMLElement | null = null
 
 // Store user components panel container for lazy initialization
 let userComponentsPanelContainer: HTMLElement | null = null
-
-// Store chat panel container for lazy initialization
-let chatPanelContainer: HTMLElement | null = null
-
-// Store agent API key
-let agentApiKey: string | null = null
 
 // Store getAllSource callback for token extraction from all files
 let getAllSourceCallback: (() => string) | null = null
@@ -369,8 +357,6 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
 
   if (config.propertyPanelContainer) propertyPanelContainer = config.propertyPanelContainer
   if (config.componentPanelContainer) componentPanelContainer = config.componentPanelContainer
-  if (config.chatPanelContainer) chatPanelContainer = config.chatPanelContainer
-  if (config.agentApiKey) agentApiKey = config.agentApiKey
   if (config.getAllSource) getAllSourceCallback = config.getAllSource
   if (config.getCurrentFile) getCurrentFileCallback = config.getCurrentFile
 
@@ -444,26 +430,6 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       }
     )
     logBootstrap.info(' UserComponentsPanel initialized')
-  }
-
-  // Initialize AI Agent if API key provided
-  if (agentApiKey && chatPanelContainer) {
-    studio.agent = initializeAgent({
-      apiKey: agentApiKey,
-      chatContainer: chatPanelContainer,
-      getCurrentFile: config.getCurrentFile,
-      getFiles: config.getFiles,
-      getAllCode: config.getAllSource,
-      updateFile: config.updateFile,
-      switchToFile: config.switchToFile,
-      onCommand: command => {
-        logAgent.info(' Command executed:', command.type)
-      },
-      onError: error => {
-        logAgent.error(' Error:', error)
-      },
-    })
-    logBootstrap.info(' AI Agent initialized')
   }
 
   // Editor
@@ -1001,23 +967,6 @@ export function updateStudioState(
 
 export function getCompletions(request: AutocompleteRequest): AutocompleteResult {
   return studio.autocomplete.getCompletions(request)
-}
-
-export function executeLLMResponse(response: LLMResponse | string): {
-  success: boolean
-  error?: string
-} {
-  return typeof response === 'string'
-    ? studio.llm.executeJSON(response)
-    : studio.llm.executeResponse(response)
-}
-
-export function buildLLMPrompt(userRequest: string): string {
-  return getEditPrompt(userRequest)
-}
-
-export function getLLMContext() {
-  return getContextBuilder().buildContext()
 }
 
 export function handleSelectionChange(

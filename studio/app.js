@@ -65,8 +65,6 @@ import {
   getIconTriggerPrimitives,
   createComponentExtractExtensionFromConfig,
   createTokenExtractExtensionFromConfig,
-  // Inline Prompt Extension (AI code generation)
-  inlinePromptExtension,
   // Fixer Service (AI multi-file code generation)
   createFixer,
   getFixer,
@@ -136,7 +134,7 @@ import {
   toCodeMirrorDiagnostics,
   // Wrap-aware change adjuster (single source of truth — see studio/core/wrap-utils.ts)
   adjustChangeForWrap,
-} from './dist/index.js?v=148'
+} from './dist/index.js?v=149'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1502,40 +1500,6 @@ function initializeFixer() {
   return fixerService
 }
 
-// Inline Prompt submit handler
-async function handleInlinePromptSubmit(prompt, line, view) {
-  console.log('[InlinePrompt] Submit:', prompt, 'at line', line)
-
-  // Check if TauriBridge is available
-  const bridge = window.TauriBridge
-  if (!bridge || !bridge.isTauri()) {
-    console.warn('[InlinePrompt] Only available in desktop app')
-    return null
-  }
-
-  // Initialize Fixer if needed
-  const fixer = initializeFixer()
-  if (!fixer) {
-    console.error('[InlinePrompt] Failed to initialize fixer')
-    return null
-  }
-
-  try {
-    // Use quick fix for inline prompts
-    const response = await fixer.quickFix(prompt)
-    return response
-  } catch (error) {
-    console.error('[InlinePrompt] Error:', error)
-    return null
-  }
-}
-
-// Create inline prompt extension configuration
-const inlinePromptConfig = {
-  onSubmit: handleInlinePromptSubmit,
-  onCancel: () => console.log('[InlinePrompt] Cancelled'),
-}
-
 // Create component extract extension (:: syntax for inline component definition)
 const componentExtractConfig = {
   getFiles: () => {
@@ -1716,8 +1680,6 @@ editor = new EditorView({
       // New Unified Trigger System (replaces legacy token, color, icon, animation triggers)
       ...createTriggerExtensions(),
       Prec.high(inlineTokenExtension),
-      // Inline Prompt Extension (AI code generation via /prompt)
-      ...inlinePromptExtension(inlinePromptConfig),
       // Note: App lock removed - implicit root wrapper is now added in compile()
       // Component Drop: Proper CodeMirror integration for drag & drop from component palette
       // Uses insertComponentWithDefinition to add component definition at top if needed
@@ -2857,11 +2819,6 @@ function initStudio() {
   // NEW ARCHITECTURE: Initialize new studio
   // ============================================
   try {
-    // Get chat panel container (content area) and API key
-    const chatPanelContainer = document.getElementById('chat-panel-content')
-    // API Key for AI agent
-    const agentApiKey = getOpenrouterKey()
-
     initNewStudio({
       editor: editor,
       previewContainer: previewContainer,
@@ -2872,15 +2829,11 @@ function initStudio() {
       // Components Panel containers (separate from explorer)
       componentPanelContainer: isPlaygroundMode ? undefined : componentsPanelContainer,
       userComponentsPanelContainer: isPlaygroundMode ? undefined : userComponentsPanelContainer,
-      chatPanelContainer: chatPanelContainer,
-      agentApiKey: agentApiKey,
       initialSource: files[currentFile] || '',
       currentFile: currentFile,
       getAllSource: getAllProjectSource,
-      // Project context for AI Agent
       getCurrentFile: () => currentFile,
       getFiles: () => {
-        // Use desktop files cache if available (includes all preloaded files)
         const allFiles = window.desktopFiles?.getFiles?.() || files
         return Object.entries(allFiles).map(([name, code]) => ({
           name,
@@ -2890,13 +2843,11 @@ function initStudio() {
       },
       updateFile: (filename, content) => {
         files[filename] = content
-        // If it's the current file, update editor
         if (filename === currentFile) {
           editor.dispatch({
             changes: { from: 0, to: editor.state.doc.length, insert: content },
           })
         }
-        // Save to storage
         saveFile(filename, content)
       },
       switchToFile: filename => {
@@ -2905,15 +2856,7 @@ function initStudio() {
         }
       },
     })
-    // Line offset handling is now done in SyncCoordinator via LineOffsetService
-    // Offset is set in updateStudio() after each compile
     console.log('Studio: New architecture initialized')
-
-    // Show setup message only if no agent was initialized
-    // Agent initialization happens in bootstrap.ts if agentApiKey is provided
-    if (!agentApiKey) {
-      initChatPanel()
-    }
   } catch (e) {
     console.warn('Studio: New architecture failed to initialize:', e)
   }
@@ -3451,50 +3394,6 @@ function setupPropertyPanelEventListeners() {
     } else {
       console.warn('[PropertyPanel] Failed to update event:', result.error)
     }
-  })
-}
-
-// ============================================
-// Chat Panel (permanent left panel)
-// ============================================
-
-/**
- * Show setup message in chat panel when no API key is configured
- * Only called when agentApiKey is not set at startup
- */
-function initChatPanel() {
-  const chatContent = document.getElementById('chat-panel-content')
-
-  if (!chatContent) {
-    console.warn('[ChatPanel] Missing content element')
-    return
-  }
-
-  // Show setup message (this function is only called when no API key exists)
-  chatContent.innerHTML = `
-    <div class="chat-panel">
-      <div class="chat-header">
-        <span class="chat-title">AI Chat</span>
-      </div>
-      <div class="chat-setup">
-        <div class="chat-setup-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-        </div>
-        <div class="chat-setup-text">
-          Für den AI-Assistenten wird ein OpenRouter API Key benötigt.
-        </div>
-        <button class="chat-setup-btn" id="chat-setup-btn">
-          API Key einrichten
-        </button>
-      </div>
-    </div>
-  `
-
-  // Open settings when button is clicked
-  document.getElementById('chat-setup-btn')?.addEventListener('click', () => {
-    settingsButton?.click()
   })
 }
 
@@ -4143,10 +4042,6 @@ function getImgbbKey() {
   return '' // Disabled in desktop
 }
 
-function getOpenrouterKey() {
-  return '' // Not used - Claude CLI handles AI
-}
-
 // ==========================================
 // Image Upload Feature
 // ==========================================
@@ -4357,28 +4252,6 @@ document.addEventListener('paste', async e => {
     await handleImageUpload(file)
   }
 })
-
-// =========================================================================
-// LLM CODE GENERATION
-// =========================================================================
-
-function getApiKey() {
-  return getOpenrouterKey()
-}
-
-async function promptForApiKey() {
-  const key = await prompt(
-    'Hol dir einen Key bei https://openrouter.ai/keys\n\nDer Key wird in den Einstellungen gespeichert.',
-    { title: 'OpenRouter API Key eingeben', placeholder: 'sk-or-...' }
-  )
-  if (key && key.trim()) {
-    const settings = loadSettings()
-    settings.openrouterKey = key.trim()
-    saveSettings(settings)
-    return key.trim()
-  }
-  return null
-}
 
 // ==========================================================================
 // LLM Integration - React to Mirror Workflow (use Clean Code module)

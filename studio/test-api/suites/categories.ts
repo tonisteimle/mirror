@@ -83,6 +83,7 @@ import {
   allSnappingTests,
   tokenExtractTests,
   componentExtractTests,
+  allKeyboardEditingTests,
 } from './interactions'
 
 // Selection
@@ -104,9 +105,6 @@ import {
   allPrimitiveSectionTests,
 } from './property-panel'
 import { allPropertyRobustnessTests } from './property-robustness-tests'
-
-// Settings Panel
-import { allAgentSettingsTests } from './settings'
 
 // Editor
 import { allBidirectionalTests } from './bidirectional'
@@ -150,6 +148,9 @@ import { stressTests as stressTestsFromStress } from './stress'
 import { allIntegrationTests } from './integration'
 import { allPlayModeTests } from './playmode'
 import { allTestSystemTests } from './test-system-tests'
+
+// Step-Runner Examples (new declarative test framework)
+import { allStepRunnerExampleTests } from './step-runner-examples'
 
 // =============================================================================
 // Consolidated Categories
@@ -236,6 +237,8 @@ export const handlesTests: TestCase[] = [
   ...allSnappingTests,
   ...tokenExtractTests,
   ...componentExtractTests,
+  ...allKeyboardEditingTests,
+  ...allStepRunnerExampleTests,
 ]
 
 /**
@@ -258,7 +261,6 @@ export const propertyPanelTests: TestCase[] = [
   ...iconPickerTests,
   ...allEventsTests,
   ...allPropertyRobustnessTests,
-  ...allAgentSettingsTests,
   ...allTokenDropdownTests,
   ...allPrimitiveSectionTests,
 ]

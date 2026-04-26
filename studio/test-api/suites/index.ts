@@ -332,9 +332,6 @@ import {
   panelEdgeCaseTests,
 } from './property-panel'
 
-// Settings
-import { allAgentSettingsTests } from './settings'
-
 // Drag & Drop
 import {
   // Comprehensive drag tests (migrated from browser-test-api.ts)
@@ -1075,9 +1072,6 @@ export {
   gradientWithEffectsTests,
   quickGradientTests,
 }
-
-// Settings
-export { allAgentSettingsTests }
 
 // Stress Tests (aggressive edge case testing)
 // Note: stressTests already includes raceConditionTests and codeModifierTests

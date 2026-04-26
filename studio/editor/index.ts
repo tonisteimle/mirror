@@ -90,15 +90,6 @@ export {
 // Re-export all triggers
 export * from './triggers'
 
-// Re-export inline prompt
-export {
-  inlinePromptExtension,
-  inlinePromptStyles,
-  type InlinePromptConfig,
-  type InlinePromptState,
-  type PromptStatus,
-} from './inline-prompt'
-
 // Re-export editor drop handler (CodeMirror extension)
 export {
   createComponentDropExtension,

@@ -32,10 +32,7 @@ export * from './preview'
 // Visual (overlay, resize, etc.)
 export * from './visual'
 
-// LLM
-export * from './llm'
-
-// Agent (Fixer, Context, etc.)
+// Agent (Fixer-only AI integration via Claude CLI)
 export * from './agent'
 
 // Storage (abstracted file system)
@@ -76,9 +73,6 @@ export {
   insertComponent,
   deleteNode,
   getCompletions,
-  executeLLMResponse,
-  buildLLMPrompt,
-  getLLMContext,
   onSelectionChange,
   onSourceChange,
   onCompileComplete,
