@@ -26,7 +26,8 @@
     'min-width': '36px',
     'padding': '10px',
     'border-radius': '6px',
-    'border': '0px solid currentColor',
+    'border-width': '0px',
+    'border-style': 'solid',
     'cursor': 'pointer',
     'color': '#888',
   })
@@ -88,7 +89,8 @@
     'min-width': '36px',
     'padding': '10px',
     'border-radius': '6px',
-    'border': '0px solid currentColor',
+    'border-width': '0px',
+    'border-style': 'solid',
     'cursor': 'pointer',
     'color': '#888',
   })
@@ -150,7 +152,8 @@
     'min-width': '36px',
     'padding': '10px',
     'border-radius': '6px',
-    'border': '0px solid currentColor',
+    'border-width': '0px',
+    'border-style': 'solid',
     'cursor': 'pointer',
     'color': '#888',
   })

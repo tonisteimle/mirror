@@ -189,10 +189,13 @@ describe('Properties Coverage 4: Multi-value per property type', () => {
   })
 
   // Border: width [style] [color]
-  it('bor 1 → "1px solid currentColor"', () => {
-    expect(findStyle(toIR(parse('Frame bor 1')).nodes[0] as any, 'border')?.value).toBe(
-      '1px solid currentColor'
-    )
+  // Bug #29 fix (2026-04-26): single-value `bor N` now emits border-width
+  // and border-style separately (no shorthand reset of border-color).
+  it('bor 1 → border-width: 1px + border-style: solid', () => {
+    const node = toIR(parse('Frame bor 1')).nodes[0] as any
+    expect(findStyle(node, 'border-width')?.value).toBe('1px')
+    expect(findStyle(node, 'border-style')?.value).toBe('solid')
+    expect(findStyle(node, 'border')).toBeUndefined()
   })
 
   it('bor 2 #333 → "2px solid #333"', () => {

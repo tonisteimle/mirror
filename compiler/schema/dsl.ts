@@ -1593,7 +1593,16 @@ export const SCHEMA: Record<string, PropertyDef> = {
     numeric: {
       description: 'Border width in pixels',
       unit: 'px',
-      css: n => [{ property: 'border', value: `${n}px solid currentColor` }],
+      // Bug #29 fix: emit `border-width` + `border-style` separately rather
+      // than the `border` shorthand. The shorthand resets ALL border-*
+      // properties (including border-color), which would override a
+      // previously-emitted `border-color: var(--token-boc)` from a token
+      // suffix-resolution. Separate properties layer correctly with the
+      // existing color rule.
+      css: n => [
+        { property: 'border-width', value: `${n}px` },
+        { property: 'border-style', value: 'solid' },
+      ],
       example: 'Box bor 1 #333',
     },
 

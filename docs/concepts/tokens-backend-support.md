@@ -22,16 +22,12 @@ Legende:
 - ⚠️ — kompiliert, Semantik teilweise (z.B. nicht in :root)
 - ❌ — nicht unterstützt
 
-## Bekannte Bugs
+## Gefixte Bugs
 
-- **#29** — `Frame boc $brand, bor 2` — der `bor` Shorthand emittiert
-  `border: 2px solid currentColor`, das den vorherigen
-  `border-color: var(--brand-boc)` überschreibt. Effekt: borderColor
-  fällt zur Laufzeit auf `currentColor` zurück. Pinned in
-  `tests/differential/tokens.test.ts`. Fix: entweder `bor` ohne
-  shorthand-color emittieren (`border-width: 2px; border-style: solid`),
-  oder Reihenfolge tauschen (`border` zuerst, dann `border-color`
-  überschreibt).
+- **#29** — ✅ gefixt. `compiler/schema/dsl.ts` emittiert für `bor N`
+  jetzt `border-width: Npx` + `border-style: solid` (statt
+  `border: Npx solid currentColor`). Der Shorthand-Reset entfällt;
+  `border-color: var(--token-boc)` aus Suffix-Resolution überlebt.
 
 ## CSS-Variable-Strategie
 

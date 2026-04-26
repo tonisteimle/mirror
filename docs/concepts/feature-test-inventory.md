@@ -301,7 +301,7 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 | 26  | Ternary in Text mit Interpolation → leerer textContent     | Conditionals-F.    | ✅ gefixt |
 | 27  | `each x, idx in $list` — `$idx` wird nicht substituiert    | Each-Fixtures      | ✅ gefixt |
 | 28  | `if/else` innerhalb `each` rendert BEIDE Branches          | Each-Fixtures      | ✅ gefixt |
-| 29  | `bor`-Shorthand überschreibt `boc $token` mit currentColor | Tokens-Fixtures    | ⬜ offen  |
+| 29  | `bor`-Shorthand überschreibt `boc $token` mit currentColor | Tokens-Fixtures    | ✅ gefixt |
 
 ## Nicht-Ziele
 

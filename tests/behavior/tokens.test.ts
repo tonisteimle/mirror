@@ -204,13 +204,12 @@ describe('Tokens — Behavior Spec', () => {
       expect(frame.style.color).toContain('var(--brand-col)')
     })
 
-    // Bug #29 (pinned): `boc $token` doesn't resolve to var(--token-boc).
-    // The border-color suffix is not applied. Pinning the IST-Stand.
-    it('PIN Bug #29: `boc $brand` does NOT resolve to var(--brand-boc)', () => {
+    it('Bug #29 fixed: `boc $brand, bor 2` keeps token-color (no shorthand reset)', () => {
       const root = render(`brand.boc: #1a5d9c\n\nFrame boc $brand, bor 2`, container)
       const frame = findByName(root, 'Frame') as HTMLElement
-      // Today: borderColor stays "" (or "currentcolor") — no var(--brand-boc).
-      expect(frame.style.borderColor).not.toContain('var(--brand-boc)')
+      expect(frame.style.borderColor).toBe('var(--brand-boc)')
+      expect(frame.style.borderWidth).toBe('2px')
+      expect(frame.style.borderStyle).toBe('solid')
     })
   })
 

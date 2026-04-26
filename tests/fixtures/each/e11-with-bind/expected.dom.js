@@ -36,7 +36,8 @@
         'flex-shrink': '0',
         'padding': '0px 12px',
         'border-radius': '6px',
-        'border': '0px solid currentColor',
+        'border-width': '0px',
+        'border-style': 'solid',
         'width': '200px',
         'flex-shrink': '0',
       })

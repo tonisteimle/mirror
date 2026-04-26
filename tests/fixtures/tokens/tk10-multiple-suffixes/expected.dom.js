@@ -12,7 +12,8 @@
     'background': 'var(--brand-bg)',
     'color': 'var(--brand-col)',
     'border-color': 'var(--brand-boc)',
-    'border': '2px solid currentColor',
+    'border-width': '2px',
+    'border-style': 'solid',
     'padding': '8px',
   })
   node_1.dataset.component = 'Frame'

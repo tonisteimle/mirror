@@ -77,12 +77,14 @@ describe('Tokens — Token-Name appears in DOM output', () => {
 // Bug #29 PIN — `bor` shorthand overrides `boc` token
 // =============================================================================
 
-describe('Tokens — Bug #29 pinned: `bor` shorthand overrides `boc` token', () => {
-  it('PIN: `boc $brand, bor 2` — border shorthand emits "currentColor", overriding the token', () => {
+describe('Tokens — Bug #29 fixed: `bor` no longer overrides `boc` token', () => {
+  it('`bor 2` emits `border-width` + `border-style` (no shorthand reset)', () => {
     const dom = generateDOM(parse(`brand.boc: #1a5d9c\n\nFrame boc $brand, bor 2`))
-    // Both lines are emitted — but the order means the `border` shorthand wins:
+    // Both border-color and border-width survive, no `border:` shorthand
     expect(dom).toContain("'border-color': 'var(--brand-boc)'")
-    expect(dom).toContain("'border': '2px solid currentColor'")
-    // Effect: at runtime borderColor falls back to currentColor.
+    expect(dom).toContain("'border-width': '2px'")
+    expect(dom).toContain("'border-style': 'solid'")
+    // Old shorthand-with-currentColor is gone
+    expect(dom).not.toContain('2px solid currentColor')
   })
 })
