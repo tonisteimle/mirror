@@ -61,11 +61,14 @@ async function callClaude(prompt: string, sessionId: string | null): Promise<Cla
   return new Promise(resolve => {
     // Pipe prompt via stdin → no argv length issues for large prompts.
     // --output-format text: plain stdout (no JSON wrapping).
+    //
+    // NOTE on sessionId: claude CLI's `--resume` requires a real UUID from a
+    // prior session. We don't have one (no JSON output, no session id capture),
+    // and the orchestrator's prompts are self-contained anyway (each prompt
+    // includes the full context). So we ignore sessionId — every call is a
+    // fresh session. Trade: slightly more tokens per call vs reliable
+    // multi-call orchestration. Reliability wins.
     const args = ['-p', '--output-format', 'text']
-    if (sessionId) {
-      // claude CLI uses --resume <id> to continue a prior conversation
-      args.push('--resume', sessionId)
-    }
 
     const proc = spawn(CLAUDE_BIN, args, { stdio: ['pipe', 'pipe', 'pipe'] })
     let stdout = ''

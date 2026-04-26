@@ -48,6 +48,8 @@ import {
 } from './preview'
 import { RenderPipeline, createRenderPipeline } from './preview/render-pipeline'
 import { createFixer, type FixerService } from './agent'
+import { orchestrate, type OrchestrationDeps } from './agent/orchestrator'
+import { validate as validateMirror } from '../compiler/validator'
 import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../compiler/studio'
 import { gridSettings } from './core/settings'
 import { PropertyPanel, createPropertyPanel, SettingsPanel, createSettingsPanel } from './panels'
@@ -490,11 +492,49 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     })
     studio.fixer = fixer
 
+    // Orchestrator deps — bind fixer methods + browser-side compile-check
+    // + a splice helper that mimics what replaceDraftBlock does (used by
+    // validator-loop modes to compile-check candidate code before applying).
+    const deps: OrchestrationDeps = {
+      generateCode: ({ prompt, content, fullSource }) =>
+        fixer.generateDraftCode(prompt, content, fullSource),
+      fixCompileErrors: (brokenCode, errors, input) =>
+        fixer.fixCompileErrors(brokenCode, errors, input),
+      planDraft: input => fixer.planDraft(input),
+      executePlan: (plan, input) => fixer.executePlan(plan, input),
+      checkCompile: async sourceWithCode => {
+        // CRITICAL: pass tokens + components from OTHER project files as
+        // prelude. Without this, validate() flags `$primary`, `PrimaryBtn`
+        // etc. as undefined — even though they're defined in tokens.tok /
+        // components.com — and the validator-loop "fixes" by inlining
+        // hex/Button, destroying token + component reuse.
+        const allFiles = config.getFiles!()
+        const currentFileName = config.getCurrentFile!()
+        const otherFiles = allFiles.filter(f => f.name !== currentFileName)
+        const prelude = extractPreludeFromFiles(otherFiles)
+        const result = validateMirror(sourceWithCode, {
+          preludeTokens: prelude.tokens,
+          preludeComponents: prelude.components,
+        })
+        return result.errors.map(e => `${e.line ? `Line ${e.line}: ` : ''}${e.message}`)
+      },
+      spliceCode: (code, originalFullSource) => spliceDraftCode(code, originalFullSource),
+    }
+
     eventUnsubscribes.push(
       events.on('draft:submit', async event => {
         try {
-          const code = await fixer.generateDraftCode(event.prompt, event.content, event.fullSource)
-          events.emit('draft:ai-response', { code })
+          // Mode override (eval / experiments). Production default: 'single-shot'.
+          const modeName =
+            (typeof window !== 'undefined' &&
+              ((window as any).__orchestrationMode as string | undefined)) ||
+            'single-shot'
+          const result = await orchestrate(
+            modeName,
+            { prompt: event.prompt, content: event.content, fullSource: event.fullSource },
+            deps
+          )
+          events.emit('draft:ai-response', { code: result.code })
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Unbekannter AI-Fehler'
           events.emit('draft:ai-response', { code: '', error: message })
@@ -1058,4 +1098,137 @@ export function onCompileComplete(
   callback: (data: { ast: AST; ir: IR | null; sourceMap: SourceMap }) => void
 ): () => void {
   return events.on('compile:completed', callback)
+}
+
+/**
+ * Pure-Mirror-Component templates and their slots — these are recognized by
+ * the compiler/runtime (expanded at compile time) but the standalone
+ * validator() doesn't know about them. Without this list as preludeComponents,
+ * the validator flags `Switch`, `RadioGroup`, `Select` etc. as undefined,
+ * causing the orchestrator's validator-loop to treat valid code as broken
+ * and "fix" it by inlining raw Frame structures — destroying the very
+ * components the user asked for.
+ *
+ * Source: studio/panels/components/component-templates.ts (the registry that
+ * defines what `Switch:`, `RadioGroup:` etc. expand to). Plus user-facing
+ * aliases like `RadioItem`, `Tab` that aren't in the template registry but
+ * are accepted by the parser (per docs/MIRROR-TUTORIAL-FULL.md).
+ *
+ * If a new Pure-Mirror-Component is added to component-templates.ts, add its
+ * top-level name + slot names here too.
+ */
+const PURE_MIRROR_COMPONENTS = new Set<string>([
+  // Top-level components
+  'Select',
+  'Checkbox',
+  'Switch',
+  'Slider',
+  'RadioGroup',
+  'Dialog',
+  'Tabs',
+  'SideNav',
+  'DatePicker',
+  'DateInput',
+  'PageLayout',
+  'SidebarLayout',
+  // Slot / sub-elements
+  'Trigger',
+  'Content',
+  'Item',
+  'RadioItem',
+  'Tab',
+  'Control',
+  'Label',
+  'Track',
+  'Thumb',
+  'Range',
+  'ItemControl',
+  'ItemText',
+  'Backdrop',
+  'Title',
+  'Description',
+  'CloseTrigger',
+  'List',
+  'Sidebar',
+  'Header',
+  'Footer',
+  'Main',
+  'NavItem',
+  'Root',
+  'Indicator',
+])
+
+/**
+ * Extract token + component names defined in other project files. Used as the
+ * `preludeTokens` / `preludeComponents` prelude when validating the current
+ * file in isolation — without this, the validator flags `$primary` and
+ * `PrimaryBtn` as undefined when they're actually defined in tokens.tok /
+ * components.com, leading to false-positive compile errors.
+ *
+ * Always seeds the components set with PURE_MIRROR_COMPONENTS so Switch,
+ * RadioGroup, Select etc. don't get flagged as undefined either.
+ *
+ * Light regex parsing — covers the standard syntax (`name.suffix: value`,
+ * `name: value`, `Name:`, `Name as Base:`) which is what >95% of project
+ * files use.
+ */
+function extractPreludeFromFiles(files: { name: string; type: string; code: string }[]): {
+  tokens: Set<string>
+  components: Set<string>
+} {
+  const tokens = new Set<string>()
+  const components = new Set<string>(PURE_MIRROR_COMPONENTS)
+  for (const file of files) {
+    if (file.type === 'tokens') {
+      for (const line of file.code.split('\n')) {
+        const m = line.match(/^([a-z][\w]*)(?:\.[a-z][\w]*)?\s*:/)
+        if (m) tokens.add(m[1])
+      }
+    } else if (file.type === 'components' || file.type === 'component') {
+      for (const line of file.code.split('\n')) {
+        const m = line.match(/^([A-Z][\w]*)(?:\s+as\s+\w+)?\s*:/)
+        if (m) components.add(m[1])
+      }
+    }
+  }
+  return { tokens, components }
+}
+
+/**
+ * Splice generated draft code into the original source where the `??` markers
+ * are. Mirrors what replaceDraftBlock does in the editor (re-indent to match
+ * the opening marker), but pure-function so the orchestrator's validator-loop
+ * can compile-check candidate code without touching the editor.
+ *
+ * Strategy: find the lines that match `^(\s*)\?\?(.*)$`. The first one's indent
+ * is the target. Replace from the first `??` line through the second (or to
+ * end-of-doc if open block) with the indented code.
+ */
+function spliceDraftCode(generatedCode: string, originalFullSource: string): string {
+  const lines = originalFullSource.split('\n')
+  let startIdx = -1
+  let endIdx = -1
+  let indent = ''
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^(\s*)\?\?(.*)$/)
+    if (!m) continue
+    if (startIdx === -1) {
+      startIdx = i
+      indent = m[1]
+    } else {
+      endIdx = i
+      break
+    }
+  }
+  if (startIdx === -1) {
+    // No markers found — append to end (best-effort, shouldn't happen in
+    // practice since orchestrator only runs when a draft block is active)
+    return originalFullSource + '\n' + generatedCode
+  }
+  const closingIdx = endIdx === -1 ? lines.length - 1 : endIdx
+  const indentedCode = generatedCode
+    .split('\n')
+    .map(line => (line.trim() ? indent + line : line))
+    .join('\n')
+  return [...lines.slice(0, startIdx), indentedCode, ...lines.slice(closingIdx + 1)].join('\n')
 }

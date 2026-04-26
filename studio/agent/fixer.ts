@@ -378,70 +378,185 @@ export class FixerService {
     content: string,
     fullSource: string
   ): Promise<string> {
-    if (this.isProcessing) {
-      throw new Error('Fixer ist bereits aktiv')
-    }
-    // Claim the busy flag synchronously — before any await — so a second call
-    // fired in the same microtask can't slip past the guard above.
-    this.isProcessing = true
-
-    try {
-      const bridge = this.getTauriBridge()
-      if (!bridge || !bridge.isTauri()) {
-        throw new Error('Claude CLI ist nur in der Desktop-App verfügbar')
-      }
-      const cliAvailable = await bridge.agent.checkClaudeCli()
-      if (!cliAvailable) {
-        throw new Error(
-          'Claude CLI nicht gefunden. Bitte installieren: npm install -g @anthropic-ai/claude-code'
-        )
-      }
-
-      // Pull tokens + components from OTHER project files (current file is
-      // already in fullSource). Without this the AI is token-blind and would
-      // invent hex colors / sizes instead of using `$primary`, `$surface` etc.
-      const allFiles = this.config.getFiles()
-      const currentFileName = this.config.getCurrentFile()
-      const tokenFiles: Record<string, string> = {}
-      const componentFiles: Record<string, string> = {}
-      for (const file of allFiles) {
-        if (file.name === currentFileName) continue
-        if (file.type === 'tokens') {
-          tokenFiles[file.name] = file.code
-        } else if (file.type === 'components' || file.type === 'component') {
-          componentFiles[file.name] = file.code
-        }
-      }
-
-      // Variant override (eval/A-B testing only). Production resolves to
-      // 'current' via the default branch in resolveDraftPromptBuilder.
-      const variantOverride =
-        typeof window !== 'undefined'
-          ? ((window as any).__draftPromptVariant as string | undefined)
-          : undefined
-      const builder = resolveDraftPromptBuilder(variantOverride)
+    return this.runWithLock(async () => {
+      const ctx = await this.prepareDraftContext()
+      const builder = resolveDraftPromptBuilder(this.getDraftPromptVariantOverride())
       const fullPrompt = builder({
         prompt,
         content,
         fullSource,
-        tokenFiles,
-        componentFiles,
+        tokenFiles: ctx.tokenFiles,
+        componentFiles: ctx.componentFiles,
       })
-      const result = await bridge.agent.runAgent(fullPrompt, 'draft', '', this.sessionId)
-      this.sessionId = result.session_id
-
-      if (!result.success) {
-        throw new Error(result.error || 'Claude CLI Fehler')
-      }
-
-      const code = extractCodeBlock(result.output)
+      const output = await this.runDraftClaudeCall(fullPrompt)
+      const code = extractCodeBlock(output)
       if (!code) {
         throw new Error('Keine Code-Antwort vom AI erhalten')
       }
       return code
+    })
+  }
+
+  /**
+   * Validator-loop helper: AI just generated `brokenCode` for this draft
+   * block, but the compiler reports `errors`. Ask AI to fix the code given
+   * the errors. Returns the corrected code.
+   *
+   * Reuses the current sessionId so Claude has the conversation history —
+   * doesn't need to re-explain everything.
+   */
+  async fixCompileErrors(
+    brokenCode: string,
+    errors: string[],
+    input: { prompt: string | null; content: string; fullSource: string }
+  ): Promise<string> {
+    return this.runWithLock(async () => {
+      const ctx = await this.prepareDraftContext()
+      const fullPrompt = buildFixCompileErrorsPrompt({
+        ...input,
+        brokenCode,
+        errors,
+        tokenFiles: ctx.tokenFiles,
+        componentFiles: ctx.componentFiles,
+      })
+      const output = await this.runDraftClaudeCall(fullPrompt)
+      const code = extractCodeBlock(output)
+      if (!code) {
+        throw new Error('Keine Code-Antwort vom AI bei Fix-Versuch')
+      }
+      return code
+    })
+  }
+
+  /**
+   * Plan-then-execute helper #1: ask AI to plan the draft block as 3-5
+   * structured bullet points BEFORE writing any code. Returns the plan
+   * text (not Mirror code).
+   */
+  async planDraft(input: {
+    prompt: string | null
+    content: string
+    fullSource: string
+  }): Promise<string> {
+    return this.runWithLock(async () => {
+      const ctx = await this.prepareDraftContext()
+      const fullPrompt = buildPlanDraftPrompt({
+        ...input,
+        tokenFiles: ctx.tokenFiles,
+        componentFiles: ctx.componentFiles,
+      })
+      const output = await this.runDraftClaudeCall(fullPrompt)
+      // Plan is plain text — no code-block extraction. Trim and return.
+      const plan = output.trim()
+      if (!plan) {
+        throw new Error('Leerer Plan vom AI erhalten')
+      }
+      return plan
+    })
+  }
+
+  /**
+   * Plan-then-execute helper #2: AI writes Mirror code that follows the
+   * plan from `planDraft`. Returns the code.
+   */
+  async executePlan(
+    plan: string,
+    input: { prompt: string | null; content: string; fullSource: string }
+  ): Promise<string> {
+    return this.runWithLock(async () => {
+      const ctx = await this.prepareDraftContext()
+      const fullPrompt = buildExecutePlanPrompt({
+        ...input,
+        plan,
+        tokenFiles: ctx.tokenFiles,
+        componentFiles: ctx.componentFiles,
+      })
+      const output = await this.runDraftClaudeCall(fullPrompt)
+      const code = extractCodeBlock(output)
+      if (!code) {
+        throw new Error('Keine Code-Antwort vom AI bei Plan-Execution')
+      }
+      return code
+    })
+  }
+
+  // ============================================
+  // INTERNAL HELPERS — shared by all draft-call methods
+  // ============================================
+
+  /**
+   * Wrap a draft operation with the isProcessing lock + try/finally cleanup.
+   * Throws synchronously if a previous call is still running (catches
+   * concurrent triggers without slipping past awaits).
+   */
+  private async runWithLock<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.isProcessing) {
+      throw new Error('Fixer ist bereits aktiv')
+    }
+    this.isProcessing = true
+    try {
+      return await fn()
     } finally {
       this.isProcessing = false
     }
+  }
+
+  /**
+   * Validate Tauri/CLI availability and gather token/component files from
+   * other project files. Returns the context every draft-call needs.
+   */
+  private async prepareDraftContext(): Promise<{
+    tokenFiles: Record<string, string>
+    componentFiles: Record<string, string>
+  }> {
+    const bridge = this.getTauriBridge()
+    if (!bridge || !bridge.isTauri()) {
+      throw new Error('Claude CLI ist nur in der Desktop-App verfügbar')
+    }
+    const cliAvailable = await bridge.agent.checkClaudeCli()
+    if (!cliAvailable) {
+      throw new Error(
+        'Claude CLI nicht gefunden. Bitte installieren: npm install -g @anthropic-ai/claude-code'
+      )
+    }
+
+    const allFiles = this.config.getFiles()
+    const currentFileName = this.config.getCurrentFile()
+    const tokenFiles: Record<string, string> = {}
+    const componentFiles: Record<string, string> = {}
+    for (const file of allFiles) {
+      if (file.name === currentFileName) continue
+      if (file.type === 'tokens') {
+        tokenFiles[file.name] = file.code
+      } else if (file.type === 'components' || file.type === 'component') {
+        componentFiles[file.name] = file.code
+      }
+    }
+    return { tokenFiles, componentFiles }
+  }
+
+  /**
+   * Read prompt-variant override from window (eval/A-B testing only).
+   * Production always resolves to 'current'.
+   */
+  private getDraftPromptVariantOverride(): string | undefined {
+    if (typeof window === 'undefined') return undefined
+    return (window as any).__draftPromptVariant as string | undefined
+  }
+
+  /**
+   * Single Claude CLI round-trip with session reuse and error normalization.
+   * Returns the raw output string (caller decides whether to extract code).
+   */
+  private async runDraftClaudeCall(fullPrompt: string): Promise<string> {
+    const bridge = this.getTauriBridge()
+    if (!bridge) throw new Error('Claude CLI ist nur in der Desktop-App verfügbar')
+    const result = await bridge.agent.runAgent(fullPrompt, 'draft', '', this.sessionId)
+    this.sessionId = result.session_id
+    if (!result.success) {
+      throw new Error(result.error || 'Claude CLI Fehler')
+    }
+    return result.output
   }
 
   /**
@@ -845,6 +960,153 @@ ${userInstruction}
 ## Antwort
 Nur \`\`\`mirror Code-Block. Keine Prosa. Tokens vor Hex. Komponenten wiederverwenden.
 Keine erfundenen Inhalte. Bei Wiederholungen: identische Struktur.
+`
+}
+
+/**
+ * Validator-loop fix prompt: AI generated `brokenCode` for the draft block,
+ * compiler reports `errors`. Ask AI to correct the code given the errors.
+ *
+ * Reuses the same context layout as the generator prompt — Claude knows the
+ * conventions (token use, no-invent, uniform-pattern) and what file context
+ * looks like. The new bits: the broken code + the error list.
+ */
+function buildFixCompileErrorsPrompt(input: {
+  prompt: string | null
+  content: string
+  fullSource: string
+  brokenCode: string
+  errors: string[]
+  tokenFiles?: Record<string, string>
+  componentFiles?: Record<string, string>
+}): string {
+  const tokenSection = formatProjectFileSection(
+    'Token-Dateien (verfügbare $tokens)',
+    input.tokenFiles
+  )
+  const componentSection = formatProjectFileSection(
+    'Komponenten-Dateien (verfügbare Komponenten)',
+    input.componentFiles
+  )
+  const userIntent = input.prompt
+    ? `Ursprüngliche User-Anfrage: ${input.prompt}`
+    : 'Es gab keinen expliziten User-Prompt — Code sollte den Block-Inhalt korrigieren.'
+
+  return `Dein vorheriger Code für einen Mirror DSL Draft-Block hat den Compiler nicht bestanden. Korrigiere die Fehler.
+${tokenSection}${componentSection}
+## Editor-Source (Kontext)
+\`\`\`mirror
+${input.fullSource}
+\`\`\`
+
+## Dein vorheriger Code (fehlerhaft)
+\`\`\`mirror
+${input.brokenCode}
+\`\`\`
+
+## Compiler-Fehler
+${input.errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}
+
+## ${userIntent}
+
+## ANTWORTFORMAT (kritisch)
+- Gib den KORRIGIERTEN Code zurück, eingeschlossen in einen einzigen \`\`\`mirror Code-Block
+- Behebe ALLE oben genannten Fehler
+- Behalte die Struktur und Intention des Codes bei — minimale Änderungen, nur was zur Korrektur nötig ist
+- Keine Erklärungen, kein JSON, keine \`??\` Marker
+- Tokens und Komponenten unverändert nutzen (nicht durch Hex-Werte ersetzen)
+`
+}
+
+/**
+ * Plan-mode prompt #1: ask AI to outline the structure as 3-5 bullet points
+ * BEFORE writing any code. Forces commitment to a structure — particularly
+ * helps with consistency across repeated items (sections, cards, tabs).
+ */
+function buildPlanDraftPrompt(input: {
+  prompt: string | null
+  content: string
+  fullSource: string
+  tokenFiles?: Record<string, string>
+  componentFiles?: Record<string, string>
+}): string {
+  const tokenSection = formatProjectFileSection('Token-Dateien', input.tokenFiles)
+  const componentSection = formatProjectFileSection('Komponenten-Dateien', input.componentFiles)
+  const userInstruction = input.prompt
+    ? `User-Anfrage: ${input.prompt}`
+    : 'Korrigiere oder vervollständige den Draft-Block-Inhalt.'
+
+  const draftContent = input.content.trim()
+    ? `\n\nDraft-Block-Inhalt:\n\`\`\`mirror\n${input.content}\n\`\`\``
+    : ''
+
+  return `Du planst die Mirror DSL Code-Generation für einen \`??\` Draft-Block. Schreibe noch KEINEN Code — erstelle einen kurzen Plan.
+${tokenSection}${componentSection}
+## Editor-Source (mit ?? Markern)
+\`\`\`mirror
+${input.fullSource}
+\`\`\`
+${draftContent}
+
+## ${userInstruction}
+
+## PLAN — 3 bis 5 Bulletpoints
+- Welche Mirror-Elemente brauche ich (Frame, Text, Button, Switch, RadioGroup, ...)?
+- Welche Hierarchie / Verschachtelung?
+- Welche Tokens nutze ich? Welche existierenden Komponenten?
+- Bei wiederholten Strukturen (mehrere Sections/Items): welches inner-Pattern verwende ich für ALLE Wiederholungen?
+- Welche Texte (User-Inhalt — nichts Erfundenes)?
+
+Antworte NUR mit dem Plan als Bulletpoints. Schreibe noch keinen Code.
+`
+}
+
+/**
+ * Plan-mode prompt #2: AI writes the actual Mirror code now that the plan is
+ * committed. Same context as buildDraftPromptCurrent + the plan.
+ */
+function buildExecutePlanPrompt(input: {
+  prompt: string | null
+  content: string
+  fullSource: string
+  plan: string
+  tokenFiles?: Record<string, string>
+  componentFiles?: Record<string, string>
+}): string {
+  const tokenSection = formatProjectFileSection(
+    'Token-Dateien (verfügbare $tokens)',
+    input.tokenFiles
+  )
+  const componentSection = formatProjectFileSection(
+    'Komponenten-Dateien (verfügbare Komponenten)',
+    input.componentFiles
+  )
+  const draftContent = input.content.trim()
+    ? `\n\nDraft-Block-Inhalt:\n\`\`\`mirror\n${input.content}\n\`\`\``
+    : ''
+  const userInstruction = input.prompt
+    ? `User-Anfrage: ${input.prompt}`
+    : 'Korrigiere oder vervollständige den Draft-Block-Inhalt.'
+
+  return `Du generierst Mirror DSL Code basierend auf einem zuvor erstellten Plan.
+${tokenSection}${componentSection}
+## Editor-Source (mit ?? Markern)
+\`\`\`mirror
+${input.fullSource}
+\`\`\`
+${draftContent}
+
+## ${userInstruction}
+
+## Plan (folge diesem strikt)
+${input.plan}
+
+## ANTWORTFORMAT (kritisch)
+- Gib NUR den Mirror-Code zurück, eingeschlossen in einen einzigen \`\`\`mirror Code-Block
+- Folge dem Plan strikt — keine Abweichungen, keine zusätzlichen Elemente
+- Bei wiederholten Strukturen: identische Hierarchie wie im Plan beschrieben
+- Tokens nutzen, Komponenten wiederverwenden
+- Keine Erklärungen, kein JSON, keine \`??\` Marker
 `
 }
 
