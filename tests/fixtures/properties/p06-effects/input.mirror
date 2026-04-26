@@ -1,0 +1,6 @@
+Frame gap 8
+  Frame w 100, h 50, bg white, shadow sm
+  Frame w 100, h 50, bg white, shadow md
+  Frame w 100, h 50, bg white, shadow lg
+  Frame w 100, h 50, bg blue, opacity 0.5
+  Frame w 100, h 50, bg red, blur 4

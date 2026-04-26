@@ -1,0 +1,4 @@
+Frame gap 8
+  Button "Pointer", cursor pointer
+  Frame w 100, h 50, bg gray, cursor grab
+  Frame w 100, h 50, bg red, cursor not-allowed

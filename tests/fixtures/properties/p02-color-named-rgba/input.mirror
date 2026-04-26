@@ -1,0 +1,2 @@
+Frame bg white, col black, w 100, h 50
+Frame bg rgba(0, 0, 0, 0.5), w 100, h 50

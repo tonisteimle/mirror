@@ -1,0 +1,2 @@
+Frame bg #2271C1, col white, w 100, h 50
+  Text "Hello"

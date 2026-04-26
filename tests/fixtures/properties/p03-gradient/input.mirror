@@ -1,0 +1,3 @@
+Frame bg grad #2271C1 #7c3aed, w 200, h 100
+Frame bg grad-ver #f59e0b #ef4444, w 200, h 100
+Frame bg grad 45 #10b981 #2271C1, w 200, h 100

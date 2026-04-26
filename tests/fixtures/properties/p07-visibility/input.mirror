@@ -1,0 +1,7 @@
+Frame gap 8
+  Frame w 100, h 50, bg red, hidden
+  Frame w 100, h 50, bg blue, visible
+  Frame w 100, h 100, bg green, scroll
+    Text "Long content that scrolls"
+  Frame w 100, h 50, bg yellow, clip
+    Text "Clipped content overflow"

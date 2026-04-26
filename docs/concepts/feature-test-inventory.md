@@ -29,28 +29,28 @@
 
 ## Layout & Styling
 
-| #   | Feature               | Sub-Features                                                                          | Status | Schichten | Notizen    |
-| --- | --------------------- | ------------------------------------------------------------------------------------- | :----: | --------- | ---------- |
-| 7   | **Layout-Direction**  | L1 vertical, L2 horizontal                                                            |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 8   | **Gap & Spacing**     | L1-L4 gap, pad/mar across fixtures                                                    |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 9   | **Center & Spread**   | L3 center, L4 spread                                                                  |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 10  | **9-Position-Grid**   | L5 tl/tr/etc.                                                                         |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 11  | **Sizing**            | L6 w/h/full/hug/min/max                                                               |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 12  | **Grow/Shrink**       | L7 grow                                                                               |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 13  | **Wrap**              | L8 wrap                                                                               |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 14  | **Grid-Layout**       | L9 grid                                                                               |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 15  | **Stacked-Layout**    | L10 stacked                                                                           |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 16  | **Device-Presets**    | L11 mobile/tablet/desktop                                                             |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 17  | **Position**          | L12 absolute, x/y                                                                     |   ✅   | F·B·C·D·S | Sprint 4.1 |
-| 18  | **Border & Radius**   | bor, boc, rad, per-side                                                               |   🔵   | -         |            |
-| 19  | **Color & Gradients** | bg, col, hex, rgba, named, grad, grad-ver, grad-NN                                    |   🔵   | -         |            |
-| 20  | **Typography**        | fs, weight, line, font, text-align, italic, underline, uppercase, lowercase, truncate |   🔵   | -         |            |
-| 21  | **Effects**           | shadow, opacity, blur, backdrop-blur                                                  |   🔵   | -         |            |
-| 22  | **Visibility**        | hidden, visible, disabled, scroll, scroll-hor, scroll-both, clip                      |   🔵   | -         |            |
-| 23  | **Hover-Properties**  | hover-bg/col/opacity/scale/border/border-color/radius (Inline-States)                 |   🔵   | -         |            |
-| 24  | **Cursor**            | pointer, grab, move, text, wait, not-allowed                                          |   🔵   | -         |            |
-| 25  | **Aspect-Ratio**      | square, video, numeric                                                                |   🔵   | -         |            |
-| 26  | **Transform**         | rotate, scale, x/y/z translate                                                        |   🔵   | -         |            |
+| #   | Feature               | Sub-Features                                    | Status | Schichten | Notizen    |
+| --- | --------------------- | ----------------------------------------------- | :----: | --------- | ---------- |
+| 7   | **Layout-Direction**  | L1 vertical, L2 horizontal                      |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 8   | **Gap & Spacing**     | L1-L4 gap, pad/mar across fixtures              |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 9   | **Center & Spread**   | L3 center, L4 spread                            |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 10  | **9-Position-Grid**   | L5 tl/tr/etc.                                   |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 11  | **Sizing**            | L6 w/h/full/hug/min/max                         |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 12  | **Grow/Shrink**       | L7 grow                                         |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 13  | **Wrap**              | L8 wrap                                         |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 14  | **Grid-Layout**       | L9 grid                                         |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 15  | **Stacked-Layout**    | L10 stacked                                     |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 16  | **Device-Presets**    | L11 mobile/tablet/desktop                       |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 17  | **Position**          | L12 absolute, x/y                               |   ✅   | F·B·C·D·S | Sprint 4.1 |
+| 18  | **Border & Radius**   | P9 bor, boc, rad                                |   ✅   | F·B·C·D·S | Sprint 4.2 |
+| 19  | **Color & Gradients** | P1 hex, P2 rgba/named, P3 grad/grad-ver/grad-NN |   ✅   | F·B·C·D·S | Sprint 4.2 |
+| 20  | **Typography**        | P4 fs/weight/font/case, P5 truncate             |   ✅   | F·B·C·D·S | Sprint 4.2 |
+| 21  | **Effects**           | P6 shadow, opacity, blur                        |   ✅   | F·B·C·D·S | Sprint 4.2 |
+| 22  | **Visibility**        | P7 hidden, scroll, clip                         |   ✅   | F·B·C·D·S | Sprint 4.2 |
+| 23  | **Hover-Properties**  | P11 hover-bg/scale                              |   ✅   | F·B·C·D·S | Sprint 4.2 |
+| 24  | **Cursor**            | P8 pointer/grab/not-allowed                     |   ✅   | F·B·C·D·S | Sprint 4.2 |
+| 25  | **Aspect-Ratio**      | square, video, numeric                          |   🔵   | -         |            |
+| 26  | **Transform**         | P10 rotate, scale                               |   ✅   | F·B·C·D·S | Sprint 4.2 |
 
 ## State & Interaktion
 

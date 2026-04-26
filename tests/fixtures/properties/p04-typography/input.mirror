@@ -1,0 +1,6 @@
+Frame gap 4
+  Text "Title", fs 24, weight bold
+  Text "Light", fs 12, weight 300, italic
+  Text "Caps", fs 14, uppercase
+  Text "Mono", font mono
+  Text "Underlined", underline

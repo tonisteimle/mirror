@@ -1,0 +1,1 @@
+Text "This is a very long string that should be truncated", truncate, w 100

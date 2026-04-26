@@ -1,0 +1,5 @@
+Frame gap 8
+  Frame w 100, h 50, bg red, rad 8
+  Frame w 50, h 50, bg blue, rad 99
+  Frame w 100, h 50, bg green, bor 2, boc #333, rad 4
+  Frame w 100, h 50, bg yellow, rad 0 0 16 16

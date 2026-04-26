@@ -1,0 +1,1 @@
+Button "Hover me", pad 10, bg #333, col white, hover-bg #444, hover-scale 1.05
