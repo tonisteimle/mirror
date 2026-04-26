@@ -1,0 +1,6 @@
+email: ""
+
+Frame gap 8
+  Input bind email, name EmailField, placeholder "Email"
+  Button "Set Error", onclick setError(EmailField, "Invalid email")
+  Button "Clear Error", onclick clearError(EmailField)

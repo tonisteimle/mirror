@@ -1,0 +1,6 @@
+searchTerm: ""
+
+Frame gap 8
+  Input bind searchTerm, name SearchField, placeholder "Search..."
+  Button "Focus", onclick focus(SearchField)
+  Button "Clear", onclick clear(SearchField)

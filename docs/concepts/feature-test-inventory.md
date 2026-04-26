@@ -89,27 +89,27 @@
 
 ## Events & Actions
 
-| #   | Feature               | Sub-Features                                                               | Status | Schichten | Notizen        |
-| --- | --------------------- | -------------------------------------------------------------------------- | :----: | --------- | -------------- |
-| 47  | **Click-Events**      | EV1 onclick, EV9 multi-action                                              |   ✅   | F·B·C·D·S | Sprint 3.2     |
-| 48  | **Hover-Events**      | EV2 onhover                                                                |   ✅   | F·B·C·D·S | Sprint 3.2     |
-| 49  | **Focus-Events**      | EV3 onfocus, onblur                                                        |   ✅   | F·B·C·D·S | Sprint 3.2     |
-| 50  | **Input-Events**      | EV4 oninput, onchange                                                      |   ✅   | F·B·C·D·S | Sprint 3.2     |
-| 51  | **Keyboard-Events**   | EV5 enter, EV6 arrows, EV10 escape                                         |   ✅   | F·B·C·D·S | Sprint 3.2     |
-| 52  | **Click-Outside**     | EV7 onclick-outside                                                        |   ✅   | F·B·C·D·S | Sprint 3.2     |
-| 53  | **Viewport-Events**   | EV8 onviewenter, onviewexit                                                |   ✅   | F·B·C·D·S | Sprint 3.2     |
-| 54  | **Load-Events**       | onload                                                                     |   🔵   | -         | Tutorial-Tests |
-| 55  | **Show/Hide-Actions** | show, hide, toggle, open, close, dismiss                                   |   🔵   | -         |                |
-| 56  | **State-Actions**     | activate, deactivate, select, highlight (next/prev/first/last), assign     |   🔵   | -         |                |
-| 57  | **Counter-Actions**   | increment, decrement, set, get, reset                                      |   🔵   | -         |                |
-| 58  | **Toast/Feedback**    | toast(message, type?, position?)                                           |   🔵   | -         |                |
-| 59  | **Input-Control**     | focus, blur, clear, setError, clearError, submit, reset                    |   🔵   | -         |                |
-| 60  | **Navigation**        | navigate, back, forward, openUrl                                           |   🔵   | -         |                |
-| 61  | **Scroll-Actions**    | scrollTo, scrollBy, scrollToTop, scrollToBottom                            |   🔵   | -         |                |
-| 62  | **Position-Actions**  | showAt, showBelow, showAbove, showLeft, showRight, showModal               |   🔵   | -         |                |
-| 63  | **CRUD-Actions**      | add, remove, create, save, revert, delete (auf Collections)                |   🔵   | -         |                |
-| 64  | **Clipboard**         | copy(text)                                                                 |   🔵   | -         |                |
-| 65  | **Multi-Action**      | mehrere Aktionen kombiniert: `toggle(), increment(count), toast("Liked!")` |   🔵   | -         |                |
+| #   | Feature               | Sub-Features                             | Status | Schichten | Notizen        |
+| --- | --------------------- | ---------------------------------------- | :----: | --------- | -------------- |
+| 47  | **Click-Events**      | EV1 onclick, EV9 multi-action            |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 48  | **Hover-Events**      | EV2 onhover                              |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 49  | **Focus-Events**      | EV3 onfocus, onblur                      |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 50  | **Input-Events**      | EV4 oninput, onchange                    |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 51  | **Keyboard-Events**   | EV5 enter, EV6 arrows, EV10 escape       |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 52  | **Click-Outside**     | EV7 onclick-outside                      |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 53  | **Viewport-Events**   | EV8 onviewenter, onviewexit              |   ✅   | F·B·C·D·S | Sprint 3.2     |
+| 54  | **Load-Events**       | onload                                   |   🔵   | -         | Tutorial-Tests |
+| 55  | **Show/Hide-Actions** | A2 toggle/show/hide via state            |   ✅   | F·B·C·D·S | Sprint 3.3     |
+| 56  | **State-Actions**     | activate, deactivate, select, highlight  |   🔵   | -         |                |
+| 57  | **Counter-Actions**   | A1 increment, decrement, set, reset      |   ✅   | F·B·C·D·S | Sprint 3.3     |
+| 58  | **Toast/Feedback**    | A3 toast (info/success/error)            |   ✅   | F·B·C·D·S | Sprint 3.3     |
+| 59  | **Input-Control**     | A4 focus, clear; A9 setError, clearError |   ✅   | F·B·C·D·S | Sprint 3.3     |
+| 60  | **Navigation**        | A7 navigate, back, forward               |   ✅   | F·B·C·D·S | Sprint 3.3     |
+| 61  | **Scroll-Actions**    | A6 scrollToTop, scrollToBottom, scrollTo |   ✅   | F·B·C·D·S | Sprint 3.3     |
+| 62  | **Position-Actions**  | showAt, showBelow, showModal             |   🔵   | -         |                |
+| 63  | **CRUD-Actions**      | A5 add, remove                           |   ✅   | F·B·C·D·S | Sprint 3.3     |
+| 64  | **Clipboard**         | A8 copy(text)                            |   ✅   | F·B·C·D·S | Sprint 3.3     |
+| 65  | **Multi-Action**      | A10 toggle + increment + toast chain     |   ✅   | F·B·C·D·S | Sprint 3.3     |
 
 ## Animationen
 

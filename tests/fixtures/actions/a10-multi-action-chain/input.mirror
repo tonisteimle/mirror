@@ -1,0 +1,9 @@
+count: 0
+liked: false
+
+LikeBtn: Button pad 10, bg #333, col white, toggle(), onclick increment(count), toast("Thanks!")
+  on:
+    bg #ef4444
+
+LikeBtn "Like"
+Text "$count likes"

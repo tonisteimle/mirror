@@ -1,0 +1,9 @@
+menuOpen: false
+
+Frame gap 8
+  Button "Show", onclick set(menuOpen, true)
+  Button "Hide", onclick set(menuOpen, false)
+  Button "Toggle", onclick toggle(menuOpen)
+  if menuOpen
+    Frame bg #1a1a1a, pad 12
+      Text "Menu"

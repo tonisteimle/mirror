@@ -1,0 +1,3 @@
+Frame gap 8
+  Text "Copy this!"
+  Button "Copy", onclick copy("Copied text"), toast("Copied!")

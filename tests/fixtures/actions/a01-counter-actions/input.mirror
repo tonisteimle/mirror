@@ -1,0 +1,7 @@
+count: 0
+
+Frame hor, gap 8
+  Button "-", onclick decrement(count)
+  Text "$count"
+  Button "+", onclick increment(count)
+  Button "Reset", onclick set(count, 0)

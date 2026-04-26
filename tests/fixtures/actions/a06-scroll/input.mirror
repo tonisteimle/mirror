@@ -1,0 +1,6 @@
+Frame gap 8
+  Button "Top", onclick scrollToTop()
+  Button "Bottom", onclick scrollToBottom()
+  Frame name Section1, h 200, bg #333
+    Text "Section 1"
+  Button "Section 1", onclick scrollTo(Section1)

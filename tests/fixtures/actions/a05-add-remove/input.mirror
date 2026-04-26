@@ -1,0 +1,11 @@
+todos:
+  t1:
+    text: "Initial task"
+    done: false
+
+Frame gap 8
+  Button "Add", onclick add(todos, text: "New", done: false)
+  each todo in $todos
+    Frame hor, gap 4
+      Text "$todo.text"
+      Button "X", onclick remove(todo)

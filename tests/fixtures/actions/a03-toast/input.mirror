@@ -1,0 +1,4 @@
+Frame hor, gap 8
+  Button "Info", onclick toast("Info message")
+  Button "Success", onclick toast("Done", "success")
+  Button "Error", onclick toast("Failed", "error")
