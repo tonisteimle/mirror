@@ -758,6 +758,13 @@ ${draftContent}
 - Die Einrückung wird vom Editor automatisch angepasst (relative Einrückung im Code-Block ist OK)
 - Wenn Tokens existieren ($name) → nutze sie statt Hex/Pixel-Werte zu erfinden
 - Wenn Komponenten existieren → wiederverwenden statt neue parallel zu definieren
+- Halte dich strikt an die User-Anfrage — erfinde KEINE zusätzlichen Sub-Labels, Hilfstexte
+  oder Inhalte die nicht explizit gefragt wurden. Wenn der User "Switch" sagt, gib einen Switch
+  ohne Sub-Beschreibung. "Mehr ist mehr" ist hier falsch — Designer iterieren weiter.
+- Bei wiederholten Strukturen (mehrere Sections, Tabs, Cards, Items) → nutze IDENTISCHE
+  innere Hierarchie für jede Wiederholung. Wenn Section 1 \`Frame > Text + Wrapper > Control\`
+  ist, dann müssen Section 2 und 3 dieselbe Struktur haben — gleiches Spacing, gleicher Wrapper,
+  gleiches Visual-Pattern.
 
 Beispiel:
 \`\`\`mirror
