@@ -40,20 +40,15 @@ export const COMPONENT_EXTRACT_TRIGGER_ID = 'component-extract'
 const EXTRACT_PATTERN = /([A-Z][a-zA-Z0-9]*)::$/
 
 /**
- * Parse properties from a property string like "pad 16, bg #333, rad 8"
- * Returns a Map of property name -> full property string (e.g., "pad" -> "pad 16")
+ * Split a property list string into comma-separated segments, respecting
+ * quoted strings.
  */
-function parseProperties(propsString: string): Map<string, string> {
-  const props = new Map<string, string>()
-  if (!propsString.trim()) return props
-
-  // Split by comma, handling potential quoted strings
+function splitOnComma(s: string): string[] {
   const parts: string[] = []
   let current = ''
   let inQuotes = false
   let quoteChar = ''
-
-  for (const char of propsString) {
+  for (const char of s) {
     if ((char === '"' || char === "'") && !inQuotes) {
       inQuotes = true
       quoteChar = char
@@ -70,58 +65,103 @@ function parseProperties(propsString: string): Map<string, string> {
     }
   }
   if (current.trim()) parts.push(current.trim())
+  return parts
+}
 
-  // Parse each property
-  for (const part of parts) {
-    const trimmed = part.trim()
-    if (!trimmed) continue
+/**
+ * Classify a single trimmed property segment into:
+ *   - 'content' — bare quoted string with no preceding property name
+ *     (e.g. `"Drück mich"`). Stays at the instance.
+ *   - 'property' — anything else, including positional bare values
+ *     (e.g. `#333`, `100`) and named properties (`pad 12`, `bg #333`).
+ *     Goes to the component definition.
+ *
+ * Returns the segment's "key" for merge purposes: the property name if
+ * named, or null if bare/positional (no merge possible — appended).
+ */
+type ClassifiedSegment =
+  | { kind: 'content'; full: string }
+  | { kind: 'property'; key: string | null; full: string }
 
-    // Extract property name (first word)
-    const spaceIndex = trimmed.indexOf(' ')
-    const propName = spaceIndex > 0 ? trimmed.slice(0, spaceIndex) : trimmed
-
-    // Store full property string
-    props.set(propName, trimmed)
+function classifySegment(s: string): ClassifiedSegment {
+  // Bare quoted string (with optional surrounding spaces): it's content.
+  if (/^"[^"]*"$/.test(s) || /^'[^']*'$/.test(s)) {
+    return { kind: 'content', full: s }
   }
-
-  return props
+  // Property: starts with an alpha identifier → that's the name.
+  // Otherwise it's a positional bare value (no name to merge by).
+  const named = s.match(/^([a-zA-Z][a-zA-Z0-9_-]*)\b/)
+  return { kind: 'property', key: named ? named[1] : null, full: s }
 }
 
 /**
- * Extract component definition properties from .com file content
+ * Parse a property list into classified segments. Used for both the new
+ * properties typed after `::` and the existing definition's properties.
  */
-function getComponentDefinitionProps(
-  comContent: string,
-  componentName: string
-): Map<string, string> | null {
-  // Find the component definition line
-  const pattern = new RegExp(`^${componentName}\\s*:\\s*(.*)$`, 'm')
-  const match = comContent.match(pattern)
-
-  if (!match) return null
-
-  return parseProperties(match[1])
+export function parseSegments(propsString: string): ClassifiedSegment[] {
+  if (!propsString.trim()) return []
+  return splitOnComma(propsString).map(classifySegment)
 }
 
 /**
- * Diff properties: return only properties that are different from the component definition
+ * Per-property merge: take an existing property list and apply updates
+ * from new segments. Rules:
+ *   - Named properties with matching key replace the existing one.
+ *   - Named properties with new keys are appended.
+ *   - Positional bare properties (no key) are always appended.
+ *   - Content segments are dropped (they go to the instance, not the
+ *     definition).
  */
-function diffProperties(
-  instanceProps: Map<string, string>,
-  componentProps: Map<string, string>
-): string[] {
-  const overrides: string[] = []
+export function mergeProperties(
+  existing: ClassifiedSegment[],
+  updates: ClassifiedSegment[]
+): string {
+  const result: ClassifiedSegment[] = [...existing]
+  const updateProps = updates.filter(s => s.kind === 'property') as Extract<
+    ClassifiedSegment,
+    { kind: 'property' }
+  >[]
 
-  for (const [propName, propValue] of instanceProps) {
-    const componentValue = componentProps.get(propName)
-
-    // Keep if: not in component, or different value
-    if (!componentValue || componentValue !== propValue) {
-      overrides.push(propValue)
+  for (const upd of updateProps) {
+    if (upd.key) {
+      const existingIdx = result.findIndex(s => s.kind === 'property' && s.key === upd.key)
+      if (existingIdx >= 0) {
+        result[existingIdx] = upd
+      } else {
+        result.push(upd)
+      }
+    } else {
+      result.push(upd)
     }
   }
 
-  return overrides
+  return result.map(s => s.full).join(', ')
+}
+
+/**
+ * Extract the existing definition body for a component from .com content.
+ * Returns the property list (without the `Name: ` prefix) or null if not found.
+ */
+export function getExistingDefinitionBody(
+  comContent: string,
+  componentName: string
+): string | null {
+  const pattern = new RegExp(`^${componentName}\\s*:\\s*(.*)$`, 'm')
+  const match = comContent.match(pattern)
+  return match ? match[1] : null
+}
+
+/**
+ * Replace the existing `ComponentName: ...` line in .com with a new
+ * definition line. Preserves any leading whitespace on that line.
+ */
+export function replaceDefinitionLine(
+  comContent: string,
+  componentName: string,
+  newBody: string
+): string {
+  const pattern = new RegExp(`^(\\s*)${componentName}\\s*:\\s*.*$`, 'm')
+  return comContent.replace(pattern, `$1${componentName}: ${newBody}`)
 }
 
 interface ComponentExtractCallbacks {
@@ -134,81 +174,6 @@ interface ComponentExtractCallbacks {
 }
 
 let callbacks: ComponentExtractCallbacks | null = null
-
-/**
- * Extract the component definition from the current line and children
- */
-function extractComponentDefinition(
-  view: EditorView,
-  lineNumber: number,
-  componentName: string,
-  propertiesAfterColons: string
-): { definition: string; endLine: number } {
-  const doc = view.state.doc
-  const baseLine = doc.line(lineNumber)
-
-  // Calculate base indentation of the component line
-  const baseIndentMatch = baseLine.text.match(/^(\s*)/)
-  const baseIndent = baseIndentMatch ? baseIndentMatch[1].length : 0
-
-  // Start building the definition
-  // Format: Name: properties
-  let definition = `${componentName}: ${propertiesAfterColons.trim()}`
-
-  // Find all children (lines with greater indentation)
-  let endLine = lineNumber
-  const totalLines = doc.lines
-
-  for (let i = lineNumber + 1; i <= totalLines; i++) {
-    const line = doc.line(i)
-    const lineText = line.text
-
-    // Empty lines are included if followed by more children
-    if (lineText.trim() === '') {
-      // Look ahead to see if there are more children
-      let hasMoreChildren = false
-      for (let j = i + 1; j <= totalLines; j++) {
-        const nextLine = doc.line(j)
-        const nextText = nextLine.text
-        if (nextText.trim() === '') continue
-
-        const nextIndentMatch = nextText.match(/^(\s*)/)
-        const nextIndent = nextIndentMatch ? nextIndentMatch[1].length : 0
-
-        if (nextIndent > baseIndent) {
-          hasMoreChildren = true
-        }
-        break
-      }
-
-      if (hasMoreChildren) {
-        definition += '\n'
-        endLine = i
-        continue
-      } else {
-        break
-      }
-    }
-
-    // Check indentation
-    const indentMatch = lineText.match(/^(\s*)/)
-    const indent = indentMatch ? indentMatch[1].length : 0
-
-    // If same or less indentation, we're done with children
-    if (indent <= baseIndent) {
-      break
-    }
-
-    // Add child line (preserve relative indentation)
-    // Convert absolute indent to relative (2 spaces per level from base)
-    const relativeIndent = indent - baseIndent
-    const relativeSpaces = '  '.repeat(Math.ceil(relativeIndent / 2))
-    definition += '\n' + relativeSpaces + lineText.trim()
-    endLine = i
-  }
-
-  return { definition, endLine }
-}
 
 /**
  * Find or create a components file
@@ -244,7 +209,66 @@ function addToComponentsFile(currentContent: string, definition: string): string
 }
 
 /**
- * Perform the component extraction
+ * Collect children of the component line (lines below with greater
+ * indentation). Returns the children as already-trimmed lines (with
+ * their relative indentation preserved as 2-space-per-level), plus the
+ * last line number that belongs to the children block.
+ */
+function collectChildren(
+  view: EditorView,
+  lineNumber: number,
+  baseIndent: number
+): { children: string[]; endLine: number } {
+  const doc = view.state.doc
+  const totalLines = doc.lines
+  const children: string[] = []
+  let endLine = lineNumber
+
+  for (let i = lineNumber + 1; i <= totalLines; i++) {
+    const childLine = doc.line(i)
+    const childText = childLine.text
+
+    if (childText.trim() === '') {
+      let hasMore = false
+      for (let j = i + 1; j <= totalLines; j++) {
+        const nextLine = doc.line(j)
+        if (nextLine.text.trim() === '') continue
+        const nextIndent = (nextLine.text.match(/^(\s*)/) || ['', ''])[1].length
+        if (nextIndent > baseIndent) hasMore = true
+        break
+      }
+      if (hasMore) {
+        children.push('')
+        endLine = i
+        continue
+      }
+      break
+    }
+
+    const childIndent = (childText.match(/^(\s*)/) || ['', ''])[1].length
+    if (childIndent <= baseIndent) break
+
+    const relativeIndent = childIndent - baseIndent
+    const relativeSpaces = '  '.repeat(Math.ceil(relativeIndent / 2))
+    children.push(relativeSpaces + childText.trim())
+    endLine = i
+  }
+  return { children, endLine }
+}
+
+/**
+ * Perform the component extraction.
+ *
+ * Behavior:
+ *   1. Split everything after `::` into property-segments and
+ *      content-segments. Bare quoted strings (without a preceding
+ *      property name) are content; everything else is properties.
+ *   2. Properties go to the .com definition. If the component already
+ *      exists, MERGE: same-named properties replace, new ones append,
+ *      properties only in the existing definition stay.
+ *   3. Content stays at the instance line: `Name "Drück mich"`.
+ *   4. Children (lines below with deeper indent) always stay at the
+ *      instance — unchanged.
  */
 function performExtraction(view: EditorView, componentName: string, lineNumber: number): void {
   if (!callbacks) {
@@ -256,7 +280,6 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
   const line = doc.line(lineNumber)
   const lineText = line.text
 
-  // Find the :: position
   const colonIndex = lineText.lastIndexOf('::')
   if (colonIndex === -1) {
     log.error('Could not find :: in line')
@@ -265,12 +288,10 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
 
   const propertiesAfterColons = lineText.slice(colonIndex + 2)
 
-  // If no properties after ::, just replace :: with nothing (convert to instance)
+  // No properties after :: — just remove the :: and convert to instance.
   if (!propertiesAfterColons.trim()) {
-    // Just remove the :: and keep the name
     const doubleColonStart = line.from + colonIndex
     const doubleColonEnd = line.from + colonIndex + 2
-
     view.dispatch({
       changes: { from: doubleColonStart, to: doubleColonEnd, insert: '' },
       selection: { anchor: doubleColonStart },
@@ -280,175 +301,59 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
     return
   }
 
-  // Extract full component definition (including children)
-  const { definition, endLine } = extractComponentDefinition(
-    view,
-    lineNumber,
-    componentName,
-    propertiesAfterColons
+  // Split into property + content segments.
+  const newSegments = parseSegments(propertiesAfterColons)
+  const newProps = newSegments.filter(s => s.kind === 'property')
+  const contentSegments = newSegments.filter(s => s.kind === 'content')
+
+  log.info(
+    `Parsed ${newProps.length} property segment(s) + ${contentSegments.length} content string(s)`
   )
 
-  log.info(`Extracted definition:\n${definition}`)
-
-  // Get files and find/create components file
+  // Get files and find/create components file.
   const files = callbacks.getFiles()
   const { filename: comFilename, content: comContent } = getComponentsFile(files)
 
-  // Check if component already exists
-  const existingPattern = new RegExp(`^${componentName}\\s*:`, 'm')
-  if (existingPattern.test(comContent)) {
-    log.info(`Component ${componentName} already exists - performing smart diff`)
-
-    // Get component definition properties
-    const componentProps = getComponentDefinitionProps(comContent, componentName)
-    if (!componentProps) {
-      log.error(`Could not parse component ${componentName} from ${comFilename}`)
-      return
-    }
-
-    // Get instance properties
-    const instanceProps = parseProperties(propertiesAfterColons)
-
-    // Diff: find properties that are different or new
-    const overrides = diffProperties(instanceProps, componentProps)
-
-    log.info(`Component props: ${[...componentProps.values()].join(', ')}`)
-    log.info(`Instance props: ${[...instanceProps.values()].join(', ')}`)
-    log.info(`Overrides: ${overrides.join(', ') || '(none)'}`)
-
-    // Build replacement: ComponentName [overrides]
-    const baseLine = doc.line(lineNumber)
-    const nameMatch = baseLine.text.match(new RegExp(`(\\s*)${componentName}::`))
-    const indent = nameMatch ? nameMatch[1] : ''
-
-    // Find children (lines with greater indentation)
-    let endLine = lineNumber
-    const baseIndentMatch = baseLine.text.match(/^(\s*)/)
-    const baseIndent = baseIndentMatch ? baseIndentMatch[1].length : 0
-    const totalLines = doc.lines
-
-    // Collect children
-    const children: string[] = []
-    for (let i = lineNumber + 1; i <= totalLines; i++) {
-      const childLine = doc.line(i)
-      const childText = childLine.text
-
-      if (childText.trim() === '') {
-        // Check if there are more children after empty line
-        let hasMore = false
-        for (let j = i + 1; j <= totalLines; j++) {
-          const nextLine = doc.line(j)
-          if (nextLine.text.trim() === '') continue
-          const nextIndent = (nextLine.text.match(/^(\s*)/) || ['', ''])[1].length
-          if (nextIndent > baseIndent) hasMore = true
-          break
-        }
-        if (hasMore) {
-          children.push('')
-          endLine = i
-          continue
-        }
-        break
-      }
-
-      const childIndent = (childText.match(/^(\s*)/) || ['', ''])[1].length
-      if (childIndent <= baseIndent) break
-
-      // Preserve relative indentation
-      const relativeIndent = childIndent - baseIndent
-      const relativeSpaces = '  '.repeat(Math.ceil(relativeIndent / 2))
-      children.push(relativeSpaces + childText.trim())
-      endLine = i
-    }
-
-    // Build replacement string
-    let replacement = indent + componentName
-    if (overrides.length > 0) {
-      replacement += ' ' + overrides.join(', ')
-    }
-
-    // Add children if any
-    if (children.length > 0) {
-      replacement += '\n' + children.map(c => indent + c).join('\n')
-    }
-
-    const endLineObj = doc.line(endLine)
-    view.dispatch({
-      changes: { from: baseLine.from, to: endLineObj.to, insert: replacement },
-      selection: { anchor: baseLine.from + replacement.length },
-      annotations: Transaction.userEvent.of('input.extract'),
-    })
-
-    log.info(`Converted to instance with ${overrides.length} override(s)`)
-    return
+  // Build new definition body via merge (or fresh) and update .com.
+  const existingBody = getExistingDefinitionBody(comContent, componentName)
+  let newComContent: string
+  if (existingBody !== null) {
+    const existingSegments = parseSegments(existingBody)
+    const mergedBody = mergeProperties(existingSegments, newProps)
+    newComContent = replaceDefinitionLine(comContent, componentName, mergedBody)
+    log.info(`Merged into existing ${componentName}: → ${mergedBody}`)
+  } else {
+    const freshBody = newProps.map(s => s.full).join(', ')
+    const newDefinition = `${componentName}: ${freshBody}`
+    newComContent = addToComponentsFile(comContent, newDefinition)
+    log.info(`Created new ${componentName}: ${freshBody}`)
   }
 
-  // Create component definition with ONLY properties (not children)
-  const propsOnlyDefinition = `${componentName}: ${propertiesAfterColons.trim()}`
-
-  // Add to components file
-  const newComContent = addToComponentsFile(comContent, propsOnlyDefinition)
-
-  // Calculate what to replace in current file
+  // Build the instance line: indent + name + (content strings) + children.
   const baseLine = doc.line(lineNumber)
-
-  // Find start of component name on the line
   const nameMatch = baseLine.text.match(new RegExp(`(\\s*)${componentName}::`))
   const indent = nameMatch ? nameMatch[1] : ''
 
-  // Collect children (keep them in the editor!)
-  const baseIndentMatch = baseLine.text.match(/^(\s*)/)
-  const baseIndent = baseIndentMatch ? baseIndentMatch[1].length : 0
-  const totalLines = doc.lines
-
-  const children: string[] = []
-  let childEndLine = lineNumber
-
-  for (let i = lineNumber + 1; i <= totalLines; i++) {
-    const childLine = doc.line(i)
-    const childText = childLine.text
-
-    if (childText.trim() === '') {
-      // Check if more children after empty line
-      let hasMore = false
-      for (let j = i + 1; j <= totalLines; j++) {
-        const nextLine = doc.line(j)
-        if (nextLine.text.trim() === '') continue
-        const nextIndent = (nextLine.text.match(/^(\s*)/) || ['', ''])[1].length
-        if (nextIndent > baseIndent) hasMore = true
-        break
-      }
-      if (hasMore) {
-        children.push('')
-        childEndLine = i
-        continue
-      }
-      break
-    }
-
-    const childIndent = (childText.match(/^(\s*)/) || ['', ''])[1].length
-    if (childIndent <= baseIndent) break
-
-    // Preserve relative indentation
-    const relativeIndent = childIndent - baseIndent
-    const relativeSpaces = '  '.repeat(Math.ceil(relativeIndent / 2))
-    children.push(relativeSpaces + childText.trim())
-    childEndLine = i
+  let instanceLine = indent + componentName
+  if (contentSegments.length > 0) {
+    instanceLine += ' ' + contentSegments.map(s => s.full).join(', ')
   }
 
-  // Build replacement: instance name + children
-  let replacement = indent + componentName
+  // Children stay below the instance, unchanged in their relative indent.
+  const baseIndentMatch = baseLine.text.match(/^(\s*)/)
+  const baseIndent = baseIndentMatch ? baseIndentMatch[1].length : 0
+  const { children, endLine: childEndLine } = collectChildren(view, lineNumber, baseIndent)
+
+  let replacement = instanceLine
   if (children.length > 0) {
     replacement += '\n' + children.map(c => indent + c).join('\n')
   }
 
-  // ORDER MATTERS: dispatch the editor change FIRST (while the editor
-  // still hosts the file the user typed `::` in), THEN createFile via
-  // updateFile. The `file:created` event from updateFile auto-selects
-  // the new components file (see studio/desktop-files.js); doing it the
-  // other way around makes our `view.dispatch` land on the wrong
-  // editor — overwriting the freshly-created definition with the
-  // instance-replacement.
+  // Order matters: dispatch the editor change FIRST (while the editor
+  // still hosts the file the user typed `::` in), THEN updateFile. The
+  // `file:created` event from updateFile auto-selects the new
+  // components file; doing it the other way makes view.dispatch land
+  // on the wrong editor.
   const endLineObj = doc.line(childEndLine)
   view.dispatch({
     changes: { from: baseLine.from, to: endLineObj.to, insert: replacement },

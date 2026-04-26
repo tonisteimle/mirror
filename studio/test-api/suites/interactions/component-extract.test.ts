@@ -178,7 +178,9 @@ export const componentExtractTests: TestCase[] = describe('Component Extract (::
       }
 
       // Properties should NOT be on the instance line (they're in component)
-      const actionBoxLine = code.split('\n').find(l => l.includes('ActionBox') && !l.includes('ActionBox:'))
+      const actionBoxLine = code
+        .split('\n')
+        .find(l => l.includes('ActionBox') && !l.includes('ActionBox:'))
       if (actionBoxLine && actionBoxLine.includes('pad 8')) {
         throw new Error('Properties should be in component file, not on instance')
       }
@@ -197,9 +199,7 @@ export const componentExtractTests: TestCase[] = describe('Component Extract (::
       // Find "Frame" (the second one, which is a child)
       const code = editor.state.doc.toString()
       const lines = code.split('\n')
-      const childFrameLineIdx = lines.findIndex(
-        (l, i) => i > 0 && l.trim() === 'Frame'
-      )
+      const childFrameLineIdx = lines.findIndex((l, i) => i > 0 && l.trim() === 'Frame')
 
       if (childFrameLineIdx === -1) throw new Error('Could not find child Frame')
 
@@ -298,7 +298,7 @@ export const componentExtractTests: TestCase[] = describe('Component Extract (::
   ),
 
   testWithSetup(
-    'Smart diff: only different properties kept as overrides',
+    'Merge: existing component definition is updated, instance has no overrides',
     'Frame pad 16\n  Frame bg #111, rad 4',
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
@@ -312,7 +312,7 @@ export const componentExtractTests: TestCase[] = describe('Component Extract (::
 
       await api.utils.delay(100)
 
-      // Now add another Frame with DIFFERENT rad value
+      // Now add another Frame with NEW + DIFFERENT properties
       const editor = window.editor
       if (!editor) throw new Error('Editor not found')
 
@@ -325,7 +325,9 @@ export const componentExtractTests: TestCase[] = describe('Component Extract (::
 
       await api.utils.delay(100)
 
-      // Extract with same component name but different properties
+      // Extract with same component name but different properties.
+      // Merge expectation: definition becomes `DiffTest: bg #111, rad 8, pad 12`
+      // (same-named rad replaced; new pad appended). Instance stays clean.
       await triggerComponentExtract(api, {
         componentName: 'DiffTest',
         properties: ' bg #111, rad 8, pad 12',
@@ -334,24 +336,126 @@ export const componentExtractTests: TestCase[] = describe('Component Extract (::
 
       await api.utils.delay(100)
 
+      // Editor: instance line should be PLAIN `DiffTest` (no override props)
       const finalCode = editor.state.doc.toString()
-
-      // Should have DiffTest with only the different properties
-      // bg #111 matches -> removed
-      // rad 8 differs from rad 4 -> kept
-      // pad 12 is new -> kept
-      if (!finalCode.includes('rad 8')) {
-        throw new Error('Override property "rad 8" should be kept')
+      const diffTestInstanceLine = finalCode
+        .split('\n')
+        .find(l => l.includes('DiffTest') && !l.includes('DiffTest:'))
+      if (!diffTestInstanceLine) {
+        throw new Error('Could not find DiffTest instance line')
+      }
+      if (
+        diffTestInstanceLine.includes('rad 8') ||
+        diffTestInstanceLine.includes('pad 12') ||
+        diffTestInstanceLine.includes('bg #111')
+      ) {
+        throw new Error(
+          `Instance should be clean (merge updates definition, not instance): ${diffTestInstanceLine}`
+        )
       }
 
-      if (!finalCode.includes('pad 12')) {
-        throw new Error('New property "pad 12" should be kept')
+      // .com: definition should reflect the merged properties
+      const files = window.desktopFiles?.getFiles?.() || {}
+      const comFile = Object.entries(files).find(
+        ([name]) => name.endsWith('.com') || name.endsWith('.components')
+      )
+      if (!comFile) throw new Error('No components file')
+      const [, comContent] = comFile
+
+      const defLine = String(comContent)
+        .split('\n')
+        .find(l => /^DiffTest\s*:/.test(l))
+      if (!defLine) throw new Error('DiffTest definition line not found')
+
+      // After merge: rad 8 replaces rad 4, pad 12 added, bg #111 unchanged
+      if (!defLine.includes('rad 8')) {
+        throw new Error(`Definition should have rad 8 after merge: ${defLine}`)
+      }
+      if (!defLine.includes('pad 12')) {
+        throw new Error(`Definition should have new pad 12: ${defLine}`)
+      }
+      if (!defLine.includes('bg #111')) {
+        throw new Error(`Definition should still have bg #111: ${defLine}`)
+      }
+      if (defLine.includes('rad 4')) {
+        throw new Error(`Old rad 4 should be replaced, not kept: ${defLine}`)
+      }
+    }
+  ),
+
+  testWithSetup(
+    'Content string stays at the instance, only properties go to .com',
+    'Frame pad 16\n  Frame',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+
+      const editor = window.editor
+      if (!editor) throw new Error('Editor not found')
+
+      // Manually build `MyBtn:: #333, pad 12, "Drück mich"` and trigger
+      // via the second-colon insertion (matches how the user types).
+      const code = editor.state.doc.toString()
+      const lines = code.split('\n')
+      const childIdx = lines.findIndex((l, i) => i > 0 && l.trim() === 'Frame')
+      if (childIdx === -1) throw new Error('Could not find child Frame')
+
+      let pos = 0
+      for (let i = 0; i < childIdx; i++) pos += lines[i].length + 1
+      const indent = lines[childIdx].match(/^(\s*)/)?.[1] || ''
+      pos += indent.length
+
+      // Replace `Frame` with `MyBtn:` then add second `:` to trigger.
+      editor.dispatch({
+        changes: {
+          from: pos,
+          to: pos + 'Frame'.length,
+          insert: 'MyBtn: #333, pad 12, "Drück mich"',
+        },
+      })
+      await api.utils.delay(50)
+
+      const intermediate = editor.state.doc.toString()
+      const colonPos = intermediate.indexOf('MyBtn:') + 'MyBtn:'.length
+      editor.dispatch({
+        changes: { from: colonPos, to: colonPos, insert: ':' },
+        selection: { anchor: colonPos + 1 },
+      })
+
+      await api.utils.delay(200)
+      await api.utils.waitForCompile()
+
+      // Editor: instance line should be `MyBtn "Drück mich"` (string preserved)
+      const finalCode = editor.state.doc.toString()
+      if (finalCode.includes('::')) {
+        throw new Error('Double colon should be removed after extraction')
+      }
+      const instanceLine = finalCode
+        .split('\n')
+        .find(l => l.includes('MyBtn') && !l.includes('MyBtn:'))
+      if (!instanceLine) throw new Error('MyBtn instance line not found')
+      if (!instanceLine.includes('"Drück mich"')) {
+        throw new Error(`Content string should stay at instance: ${instanceLine}`)
+      }
+      if (instanceLine.includes('#333') || instanceLine.includes('pad 12')) {
+        throw new Error(`Properties should NOT be on instance: ${instanceLine}`)
       }
 
-      // bg #111 should NOT appear after DiffTest (it matches component)
-      const diffTestLine = finalCode.split('\n').find(l => l.includes('DiffTest') && !l.includes('DiffTest:'))
-      if (diffTestLine && diffTestLine.includes('bg #111')) {
-        throw new Error('Matching property "bg #111" should be removed (it matches component)')
+      // .com: should have `MyBtn: #333, pad 12` (no quoted string)
+      const files = window.desktopFiles?.getFiles?.() || {}
+      const comFile = Object.entries(files).find(
+        ([name]) => name.endsWith('.com') || name.endsWith('.components')
+      )
+      if (!comFile) throw new Error('No components file')
+      const [, comContent] = comFile
+      const defLine = String(comContent)
+        .split('\n')
+        .find(l => /^MyBtn\s*:/.test(l))
+      if (!defLine) throw new Error('MyBtn definition not found in .com')
+      if (!defLine.includes('#333') || !defLine.includes('pad 12')) {
+        throw new Error(`Definition should have #333 + pad 12: ${defLine}`)
+      }
+      if (defLine.includes('"Drück mich"')) {
+        throw new Error(`Definition should NOT contain content string: ${defLine}`)
       }
     }
   ),
