@@ -74,35 +74,35 @@ describe('Conditionals — Inline-ternary in style: literal hex resolves', () =>
 // Pinned Bug Tests (#23-#26): documented limits in compiler
 // =============================================================================
 
-describe('Conditionals — Pinned bugs (compiler limits)', () => {
-  it('Bug #23 PIN: nested ternary in Text emits multiple sibling DOM nodes', () => {
-    // Compiles, but at runtime renders multiple elements where one was intended.
-    expect(() =>
-      generateDOM(parse(`level: 2\n\nText level == 1 ? "A" : level == 2 ? "B" : "C"`))
-    ).not.toThrow()
+describe('Conditionals — Bug #23-#26 fixed: regression pins', () => {
+  it('Bug #23 fixed: nested ternary in Text resolves correctly', () => {
+    const dom = generateDOM(parse(`level: 2\n\nText level == 1 ? "A" : level == 2 ? "B" : "C"`))
+    // Compiled output should contain the JS ternary expression
+    expect(dom).toContain('"B"')
   })
 
-  it('Bug #24 PIN: ternary with $token in style emits no `background`', () => {
-    // The output compiles but has no `background:` line in the style assignment.
+  it('Bug #24 fixed: ternary with $token in style resolves to var(--token)', () => {
     const dom = generateDOM(
-      parse(`accent.bg: #10b981\n\nchange: 5\n\nFrame bg change > 0 ? $accent : #333`)
+      parse(
+        `accent.bg: #10b981\ndanger.bg: #ef4444\n\nchange: 5\n\nFrame bg change > 0 ? $accent : $danger`
+      )
     )
-    // Should NOT contain any actual bg resolution (the bug).
-    // Once fixed, this test should fail and be tightened.
-    expect(dom).not.toContain("'background': 'var(--accent-bg)'")
-    expect(dom).not.toContain("'background': '#333'")
+    expect(dom).toContain('var(--accent-bg)')
+    expect(dom).toContain('var(--danger-bg)')
   })
 
-  it('Bug #25 PIN: ternary in style with $variable falls back to operand-as-token', () => {
+  it('Bug #25 fixed: ternary in style with $variable evaluates the conditional', () => {
     const dom = generateDOM(parse(`cat: "X"\n\nFrame bg cat == "X" ? #abc : #def`))
-    // Today: bg becomes `var(--cat)` instead of resolving to a hex
-    expect(dom).toContain('var(--cat)')
+    // Should contain both branches as proper hex strings
+    expect(dom).toContain('#abc')
+    expect(dom).toContain('#def')
   })
 
-  it('Bug #26 PIN: ternary in Text with interpolated string-branches → empty', () => {
+  it('Bug #26 fixed: ternary in Text with interpolated string-branches resolves', () => {
     const dom = generateDOM(parse(`count: 3\n\nText count > 0 ? "Items: $count" : "Empty"`))
-    // Compiles, but textContent is never set (empty render).
-    // Pin: compile doesn't crash. Behavior-spec pins the empty-text result.
-    expect(() => dom).not.toThrow()
+    // The interpolation now produces a template-literal substitution
+    expect(dom).toContain('$get("count")')
+    expect(dom).toContain('Items')
+    expect(dom).toContain('Empty')
   })
 })

@@ -124,7 +124,7 @@ describe('Parser: Inline Conditionals', () => {
     const cond = contentProp?.values[0] as any
     expect(cond.kind).toBe('conditional')
     expect(cond.condition).toBe('done === true')
-    expect(cond.then).toBe('check')
+    expect(cond.then).toBe('"check"')
     // `else` is collected as a token sequence (might be a nested ternary), so
     // STRING tokens stay quoted to survive into the JS expression.
     expect(cond.else).toBe('"circle"')
@@ -145,7 +145,7 @@ describe('Parser: Inline Conditionals', () => {
     const cond = prop?.values[0] as any
     expect(cond.kind).toBe('conditional')
     expect(cond.condition).toBe('task.done')
-    expect(cond.then).toBe('check')
+    expect(cond.then).toBe('"check"')
     expect(cond.else).toBe('"circle"')
   })
 })

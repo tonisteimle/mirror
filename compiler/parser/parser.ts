@@ -3840,7 +3840,24 @@ export class Parser {
         // Also, if NO tokens were collected and we hit ?, the "property name" IS the condition
         // e.g., `Text active ? "Aktiv" : "Inaktiv"` - active is the condition, not a property name
         const isSimpleTernary = collectedTokens.length === 0
-        if (startsWithDot || isSimpleTernary) {
+        // Bug #23 fix: if collected tokens start with a comparison operator,
+        // the "property name" was actually the LHS of the comparison.
+        // e.g., `Text level == 1 ? "A" : "B"` — `level` is part of condition,
+        // not a property name. Without this, condition becomes "== 1" and
+        // the parser treats `level` as a property, producing nonsense AST.
+        const COMPARISON_OPS = new Set([
+          'STRICT_EQUAL',
+          'STRICT_NOT_EQUAL',
+          'NOT_EQUAL',
+          'EQUALS',
+          'GT',
+          'LT',
+          'GTE',
+          'LTE',
+        ])
+        const startsWithComparison =
+          collectedTokens.length > 0 && COMPARISON_OPS.has(collectedTokens[0].type)
+        if (startsWithDot || isSimpleTernary || startsWithComparison) {
           condition = name.value
         }
 
@@ -3863,10 +3880,12 @@ export class Parser {
           }
         }
 
-        // Parse then value
+        // Parse then value. Re-quote STRING tokens so the IR's
+        // `__conditional:cond?then:else` format isn't broken by colons
+        // inside the then-string (Bug #26 fix).
         let thenValue: string | number = ''
         if (this.check('STRING')) {
-          thenValue = this.advance().value
+          thenValue = `"${this.advance().value.replace(/"/g, '\\"')}"`
         } else if (this.check('NUMBER')) {
           thenValue = this.advance().value
         } else if (this.check('IDENTIFIER')) {
@@ -3945,10 +3964,11 @@ export class Parser {
           else: elseValue,
         })
 
-        // If the condition started with a dot or was a simple ternary (identifier ? value : value),
-        // the "property name" was actually part of the expression
-        // So use 'content' as the implicit property name (like Icon "search" → content: "search")
-        const propertyName = startsWithDot || isSimpleTernary ? 'content' : name.value
+        // If the condition started with a dot, was a simple ternary, or
+        // started with a comparison op, the "property name" was actually
+        // part of the expression — use 'content' as the implicit property.
+        const propertyName =
+          startsWithDot || isSimpleTernary || startsWithComparison ? 'content' : name.value
 
         return {
           type: 'Property',
@@ -3965,6 +3985,7 @@ export class Parser {
         this.check('STRICT_EQUAL') ||
         this.check('STRICT_NOT_EQUAL') ||
         this.check('NOT_EQUAL') ||
+        this.check('EQUALS') || // `==` (Bug #25 fix — lexer emits EQUALS for ==)
         this.check('GT') ||
         this.check('LT') ||
         this.check('GTE') ||

@@ -47,8 +47,12 @@ export function resolveContentValue(values: PropertyValue[]): string {
       // Conditional (ternary) expression - build with __conditional: marker for backend
       if (typeof v === 'object' && v.kind === 'conditional') {
         const cond = v as Conditional
-        const thenVal = typeof cond.then === 'string' ? cond.then : String(cond.then)
-        const elseVal = typeof cond.else === 'string' ? cond.else : String(cond.else)
+        // Pass then/else through processConditionalValue so nested ternaries
+        // get their own __conditional: markers (Bug #23 fix). Without this,
+        // an else-branch like `level == 2 ? "X" : "Y"` would be emitted as
+        // a literal string, breaking JS evaluation.
+        const thenVal = processConditionalValue(String(cond.then))
+        const elseVal = processConditionalValue(String(cond.else))
         return `__conditional:${cond.condition}?${thenVal}:${elseVal}`
       }
       // Explicit token reference object - preserve as $name for runtime
@@ -107,8 +111,17 @@ export function resolveTokenWithContext(
  * Process a conditional value string, detecting and wrapping nested ternary expressions
  * e.g., "$a === 'X' ? #111 : $a === 'Y' ? #222 : #333" becomes
  *       "__conditional:__loopVar:a === 'X'?#111:__conditional:__loopVar:a === 'Y'?#222:#333"
+ *
+ * If `tokenSet`/`propertyName` are passed, `$tokenName` references in the
+ * then/else branches are resolved to `var(--token-suffix)` (Bug #24 fix).
+ * Otherwise (loop context where token-resolution happens at runtime), they
+ * fall through with the `__loopVar:` marker for the backend.
  */
-function processConditionalValue(value: string): string {
+function processConditionalValue(
+  value: string,
+  tokenSet?: Set<string>,
+  propertyName?: string
+): string {
   // Check if this value itself is a ternary expression
   // Pattern: condition ? then : else (where condition contains comparison operators)
   // Need to find the ? that separates condition from then/else
@@ -120,13 +133,37 @@ function processConditionalValue(value: string): string {
       // Mark loop variables in condition
       const condStr = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '__loopVar:$1')
       // Recursively process then/else parts
-      const processedThen = processConditionalValue(thenPart.trim())
-      const processedElse = processConditionalValue(elsePart.trim())
+      const processedThen = processConditionalValue(thenPart.trim(), tokenSet, propertyName)
+      const processedElse = processConditionalValue(elsePart.trim(), tokenSet, propertyName)
       return `__conditional:${condStr}?${processedThen}:${processedElse}`
     }
   }
-  // Not a ternary - return as-is (mark loop vars if any)
-  return value.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '__loopVar:$1')
+  // Not a ternary — `$name` references need to resolve. Two paths:
+  //  - With tokenSet + propertyName (top-level style context): resolve to
+  //    `var(--name-suffix)` like simple `bg $accent` does.
+  //  - Otherwise: leave the `__loopVar:` marker for the backend's loop-aware
+  //    resolver (in `each`-context the loop variable is resolved at runtime).
+  return value.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, (_, tokenName) => {
+    if (tokenSet) {
+      // Direct match
+      if (tokenSet.has(tokenName)) {
+        const resolved = resolveTokenWithContext(tokenName, tokenSet, propertyName)
+        return `var(--${resolved.replace(/\./g, '-')})`
+      }
+      // Suffix-resolution (e.g., `accent` + bg → `accent.bg`)
+      if (propertyName) {
+        const suffix = PROPERTY_TO_TOKEN_SUFFIX[propertyName]
+        if (suffix) {
+          const extended = tokenName + suffix
+          if (tokenSet.has(extended) || tokenSet.has('$' + extended)) {
+            return `var(--${extended.replace(/\./g, '-')})`
+          }
+        }
+      }
+    }
+    // Fall through: keep as loopVar marker for the backend
+    return `__loopVar:${tokenName}`
+  })
 }
 
 /**
@@ -202,9 +239,11 @@ export function resolveValue(
         const cond = v as Conditional
         // Mark loop variables in condition with __loopVar:
         const condStr = cond.condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '__loopVar:$1')
-        // Process then/else values - they might contain nested ternaries as strings
-        const thenVal = processConditionalValue(String(cond.then))
-        const elseVal = processConditionalValue(String(cond.else))
+        // Process then/else values — pass tokenSet + propertyName so
+        // `$tokenName` branches resolve to var(--token-suffix) at IR time
+        // instead of falling out as `__loopVar:tokenName` markers (Bug #24).
+        const thenVal = processConditionalValue(String(cond.then), tokenSet, propertyName)
+        const elseVal = processConditionalValue(String(cond.else), tokenSet, propertyName)
         return `__conditional:${condStr}?${thenVal}:${elseVal}`
       }
       return String(v)

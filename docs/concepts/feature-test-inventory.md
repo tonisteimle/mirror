@@ -295,10 +295,10 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 | 20  | `__loopVar:` ohne Wrap als bare Identifier             | Smoke-Tests        | ✅ gefixt |
 | 21  | Self-Reference Stack-Overflow                          | Components-F.      | ✅ gefixt |
 | 22  | `Text $var` (bare ref) emittiert keinen `textContent`  | Variables-Contract | ✅ gefixt |
-| 23  | Nested ternary in Text → mehrere Sibling-Elemente      | Conditionals-F.    | ⬜ offen  |
-| 24  | Ternary mit `$token` in style → kein `background`      | Conditionals-F.    | ⬜ offen  |
-| 25  | Ternary in style mit `$var`-Operand fällt auf var()    | Conditionals-F.    | ⬜ offen  |
-| 26  | Ternary in Text mit Interpolation → leerer textContent | Conditionals-F.    | ⬜ offen  |
+| 23  | Nested ternary in Text → mehrere Sibling-Elemente      | Conditionals-F.    | ✅ gefixt |
+| 24  | Ternary mit `$token` in style → kein `background`      | Conditionals-F.    | ✅ gefixt |
+| 25  | Ternary in style mit `$var`-Operand fällt auf var()    | Conditionals-F.    | ✅ gefixt |
+| 26  | Ternary in Text mit Interpolation → leerer textContent | Conditionals-F.    | ✅ gefixt |
 
 ## Nicht-Ziele
 

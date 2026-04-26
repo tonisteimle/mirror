@@ -176,18 +176,29 @@ describe('Conditionals — Behavior Spec', () => {
   // T7: Nested ternary
   // ---------------------------------------------------------------------------
 
-  describe('T7: nested ternary in Text', () => {
-    // Bug #23 (pinned): nested ternary in Text content currently emits
-    // multiple sibling DOM nodes instead of a single Text with the resolved
-    // value. Pinning the IST-Stand. When fixed, flip to assert one element.
-    it('PIN Bug #23: nested ternary creates multiple sibling elements', () => {
+  describe('T7: nested ternary in Text (Bug #23 fixed)', () => {
+    it('level == 2 → "Intermediate"', () => {
       const root = render(
         `level: 2\n\nText level == 1 ? "Beginner" : level == 2 ? "Intermediate" : "Advanced"`,
         container
       )
-      // Currently produces 1 Text + 1 misnamed Frame ('level')
-      const all = allByName(root, 'Text').concat(allByName(root, 'level'))
-      expect(all.length).toBeGreaterThan(1)
+      expect(findByName(root, 'Text')!.textContent?.trim()).toBe('Intermediate')
+    })
+
+    it('level == 1 → "Beginner"', () => {
+      const root = render(
+        `level: 1\n\nText level == 1 ? "Beginner" : level == 2 ? "Intermediate" : "Advanced"`,
+        container
+      )
+      expect(findByName(root, 'Text')!.textContent?.trim()).toBe('Beginner')
+    })
+
+    it('level == 3 → "Advanced" (else of else)', () => {
+      const root = render(
+        `level: 3\n\nText level == 1 ? "Beginner" : level == 2 ? "Intermediate" : "Advanced"`,
+        container
+      )
+      expect(findByName(root, 'Text')!.textContent?.trim()).toBe('Advanced')
     })
   })
 
@@ -213,20 +224,23 @@ describe('Conditionals — Behavior Spec', () => {
   // T9: Ternary with token references
   // ---------------------------------------------------------------------------
 
-  describe('T9: ternary with token references in style', () => {
-    // Bug #24 (pinned): ternary where then/else are token-references
-    // (e.g. `$accent`, `$danger`) currently emits NO `background` style at
-    // all — neither var() nor literal. The DOM renders without color.
-    // Pinning IST-Stand; flip to assert var(--accent-bg) when fixed.
-    it('PIN Bug #24: ternary with $token in style produces no bg', () => {
+  describe('T9: ternary with token references in style (Bug #24 fixed)', () => {
+    it('truthy condition → first $token resolves to var(--accent-bg)', () => {
       const root = render(
         `accent.bg: #10b981\ndanger.bg: #ef4444\n\nchange: 5\n\nFrame bg change > 0 ? $accent : $danger`,
         container
       )
       const frame = findByName(root, 'Frame') as HTMLElement
-      // Today: empty background. When fixed: should contain "var(--accent-bg)"
-      // or the resolved hex.
-      expect(frame.style.background).toBe('')
+      expect(frame.style.background).toContain('var(--accent-bg)')
+    })
+
+    it('falsy condition → second $token resolves to var(--danger-bg)', () => {
+      const root = render(
+        `accent.bg: #10b981\ndanger.bg: #ef4444\n\nchange: -5\n\nFrame bg change > 0 ? $accent : $danger`,
+        container
+      )
+      const frame = findByName(root, 'Frame') as HTMLElement
+      expect(frame.style.background).toContain('var(--danger-bg)')
     })
   })
 
@@ -235,20 +249,7 @@ describe('Conditionals — Behavior Spec', () => {
   // ---------------------------------------------------------------------------
 
   describe('T10: ternary inside `each`-loop body', () => {
-    it('PIN Bug #24 (loop variant): ternary with $token in loop-style produces no bg', () => {
-      const root = render(
-        `accent.bg: #10b981\ndanger.bg: #ef4444\n\npositions:\n  p1:\n    name: "Apple"\n    change: 2.34\n  p2:\n    name: "Tesla"\n    change: -1.5\n\neach pos in $positions\n  Frame bg pos.change > 0 ? $accent : $danger`,
-        container
-      )
-      const frames = allByName(root, 'Frame') as HTMLElement[]
-      expect(frames.length).toBe(2)
-      // Pin: backgrounds remain empty (Bug #24 in loop context)
-      for (const f of frames) {
-        expect(f.style.background).toBe('')
-      }
-    })
-
-    it('Texts inside each-loop with conditional render correctly', () => {
+    it('Texts inside each-loop render correctly', () => {
       const root = render(
         `positions:\n  p1:\n    name: "Apple"\n  p2:\n    name: "Tesla"\n\neach pos in $positions\n  Text "$pos.name"`,
         container
@@ -256,20 +257,33 @@ describe('Conditionals — Behavior Spec', () => {
       const texts = allByName(root, 'Text').map(t => t.textContent?.trim())
       expect(texts).toEqual(['Apple', 'Tesla'])
     })
+
+    it('Ternary with $token in each-loop body resolves per item (regression for Bug #24 in loop)', () => {
+      const root = render(
+        `accent.bg: #10b981\ndanger.bg: #ef4444\n\npositions:\n  p1:\n    name: "Apple"\n    change: 2.34\n  p2:\n    name: "Tesla"\n    change: -1.5\n\neach pos in $positions\n  Frame bg pos.change > 0 ? $accent : $danger`,
+        container
+      )
+      const frames = allByName(root, 'Frame') as HTMLElement[]
+      expect(frames.length).toBe(2)
+      // Apple: change=2.34 > 0 → accent. Tesla: change=-1.5 → danger.
+      expect(frames[0].style.background).toContain('var(--accent-bg)')
+      expect(frames[1].style.background).toContain('var(--danger-bg)')
+    })
   })
 
   // ---------------------------------------------------------------------------
   // T11: Ternary in Text-content with interpolation
   // ---------------------------------------------------------------------------
 
-  describe('T11: ternary in Text content with interpolation', () => {
-    // Bug #26 (pinned): `Text x > 0 ? "Items: $x" : "Empty"` produces an
-    // empty Text element. The ternary's quoted-string branches with
-    // $-interpolation aren't being resolved to textContent.
-    it('PIN Bug #26: ternary with interpolated string-branches → empty Text', () => {
+  describe('T11: ternary in Text content with interpolation (Bug #26 fixed)', () => {
+    it('truthy condition → interpolated then-branch', () => {
       const root = render(`count: 3\n\nText count > 0 ? "Items: $count" : "Empty"`, container)
-      const text = findByName(root, 'Text')!
-      expect(text.textContent?.trim()).toBe('')
+      expect(findByName(root, 'Text')!.textContent?.trim()).toBe('Items: 3')
+    })
+
+    it('falsy condition → else-branch literal', () => {
+      const root = render(`count: 0\n\nText count > 0 ? "Items: $count" : "Empty"`, container)
+      expect(findByName(root, 'Text')!.textContent?.trim()).toBe('Empty')
     })
   })
 
@@ -277,33 +291,35 @@ describe('Conditionals — Behavior Spec', () => {
   // T12: Non-ASCII string operand + further props on the same line
   // ---------------------------------------------------------------------------
 
-  describe('T12: non-ASCII string in inline ternary', () => {
-    // Bug #25 (pinned): `Frame bg cat == "Geschäftlich" ? #x : #y, w 100, h 50`
-    // — the parser fails to recover after the inline ternary; subsequent
-    // properties (w 100, h 50) get treated as a new sibling instance.
-    // Result: bg becomes `var(--cat)` (just the operand), and w/h appear
-    // on a phantom child element.
-    it('PIN Bug #25: ternary in style + trailing props mangled', () => {
+  describe('T12: non-ASCII string in inline ternary (Bug #25 fixed)', () => {
+    it('ternary with non-ASCII string operand resolves correctly', () => {
+      const root = render(
+        `cat: "Geschäftlich"\n\nFrame bg cat == "Geschäftlich" ? #dbeafe : #fef3c7\n  Text "$cat"`,
+        container
+      )
+      const frame = findByName(root, 'Frame') as HTMLElement
+      // Truthy → first hex
+      expect(frame.style.background).toContain('rgb(219, 234, 254)')
+    })
+
+    it('ternary with non-ASCII string + trailing props', () => {
       const root = render(
         `cat: "Geschäftlich"\n\nFrame bg cat == "Geschäftlich" ? #dbeafe : #fef3c7, w 100, h 50\n  Text "$cat"`,
         container
       )
       const frame = findByName(root, 'Frame') as HTMLElement
-      // Current: bg falls back to var(--cat) instead of the conditional hex
-      expect(frame.style.background).toContain('var(--cat)')
+      expect(frame.style.background).toContain('rgb(219, 234, 254)')
+      expect(frame.style.width).toBe('100px')
+      expect(frame.style.height).toBe('50px')
     })
 
-    // Bug #25 is broader: even without trailing props, the parser doesn't
-    // resolve the ternary in style — bg falls back to `var(--cat)` (just
-    // the operand variable). Pin that.
-    it('PIN Bug #25 (broad): ternary in style with $variable resolves to operand-as-token', () => {
+    it('ASCII string ternary in style: truthy', () => {
       const root = render(
         `cat: "Privat"\n\nFrame bg cat == "Privat" ? #dcfce7 : #fef3c7`,
         container
       )
       const frame = findByName(root, 'Frame') as HTMLElement
-      // Today: bg becomes var(--cat). When fixed: should be the resolved hex.
-      expect(frame.style.background).toContain('var(--cat)')
+      expect(frame.style.background).toContain('rgb(220, 252, 231)')
     })
   })
 })

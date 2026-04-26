@@ -13,6 +13,6 @@
     'height': '50px',
     'flex-shrink': '0',
   })
-  node_1.style['background'] = ($get("change") > 0 ? "__loopVar:accent" : "__loopVar:danger")
+  node_1.style['background'] = ($get("change") > 0 ? "var(--accent-bg)" : "var(--danger-bg)")
   node_1.dataset.component = 'Frame'
   _root.appendChild(node_1)

@@ -19,7 +19,7 @@
         'display': 'flex',
         'flex-direction': 'column',
         'align-items': 'flex-start',
-        'background': (pos.change > 0 ? $get("accent") : $get("danger")),
+        'background': (pos.change > 0 ? "var(--accent-bg)" : "var(--danger-bg)"),
         'width': '100px',
         'flex-shrink': '0',
         'height': '30px',

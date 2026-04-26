@@ -1558,8 +1558,20 @@ class DOMGenerator {
     let colonPos = -1
     depth = 0
     let inConditional = false
+    let inString: string | null = null // tracks open quote char
     for (let i = 0; i < rest.length; i++) {
       const char = rest[i]
+      // Skip colons inside string literals (Bug #26 fix). Without this, a
+      // then-branch like `"Items: $count"` would be split at the colon
+      // inside the string.
+      if (inString) {
+        if (char === inString && rest[i - 1] !== '\\') inString = null
+        continue
+      }
+      if (char === '"' || char === "'") {
+        inString = char
+        continue
+      }
       if (rest.slice(i).startsWith('__conditional:')) {
         inConditional = true
       }
@@ -1647,14 +1659,25 @@ class DOMGenerator {
   }
 
   private resolveTopLevelValue(value: string): string {
-    // Already-quoted string (from elseTokens collection) — pass through.
-    // Otherwise we'd produce `""Nein""` for inputs that already came in
-    // wrapped, and JS would parse the empty `""` as a stray expression.
+    // Already-quoted string (from elseTokens collection) — pass through,
+    // but rewrite `__loopVar:name` markers inside the string into a JS
+    // template literal so the runtime substitutes the variable value
+    // (Bug #26 fix: `"Items: __loopVar:count"` became literal text).
     if (
       value.length >= 2 &&
       ((value.startsWith('"') && value.endsWith('"')) ||
         (value.startsWith("'") && value.endsWith("'")))
     ) {
+      const quote = value[0]
+      const inner = value.slice(1, -1)
+      if (inner.includes('__loopVar:')) {
+        // Rewrite into a template literal: `Items: ${$get("count")}`
+        const tpl = inner.replace(
+          /__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*)/g,
+          (_, n) => `\${$get("${n}")}`
+        )
+        return `\`${tpl}\``
+      }
       return value
     }
     // Handle hex colors
@@ -1664,6 +1687,10 @@ class DOMGenerator {
     // Handle numbers
     if (/^-?\d+(\.\d+)?$/.test(value)) {
       return value
+    }
+    // Handle bare `__loopVar:name` — at top-level this is a $get() reference.
+    if (value.startsWith('__loopVar:')) {
+      return `$get("${value.slice('__loopVar:'.length)}")`
     }
     // Handle named colors and other values
     return `"${value}"`
