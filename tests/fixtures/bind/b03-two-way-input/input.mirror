@@ -1,0 +1,5 @@
+searchTerm: ""
+
+Frame gap 8
+  Input bind searchTerm, placeholder "Suchen..."
+  Text "Suche: $searchTerm"

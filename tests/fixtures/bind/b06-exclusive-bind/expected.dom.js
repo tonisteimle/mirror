@@ -1,0 +1,154 @@
+  // Frame
+  const node_1 = document.createElement('div')
+  _elements['node-1'] = node_1
+  node_1.dataset.mirrorId = 'node-1'
+  node_1.dataset.mirrorRoot = 'true'
+  node_1.dataset.mirrorName = 'Frame'
+  Object.assign(node_1.style, {
+    'display': 'flex',
+    'flex-direction': 'row',
+    'align-self': 'stretch',
+    'align-items': 'flex-start',
+    'gap': '0px',
+  })
+  node_1.dataset.layout = 'flex'
+  node_1.dataset.component = 'Frame'
+  // Tab
+  const node_2 = document.createElement('button')
+  _elements['node-2'] = node_2
+  node_2.dataset.mirrorId = 'node-2'
+  node_2.dataset.mirrorName = 'Tab'
+  node_2.textContent = "Home"
+  Object.assign(node_2.style, {
+    'width': 'fit-content',
+    'height': '36px',
+    'flex-shrink': '0',
+    'min-width': '36px',
+    'padding': '12px 20px',
+    'border-radius': '6px',
+    'border-width': '0px',
+    'border-style': 'solid',
+    'cursor': 'pointer',
+    'color': '#888',
+  })
+  node_2._stateMachine = {
+    initial: 'default',
+    current: 'default',
+    states: {
+      'on': {
+        styles: {
+        },
+      },
+      'default': {
+        styles: {
+        },
+      },
+    },
+    transitions: [
+      { to: 'on', trigger: 'onclick', modifier: 'exclusive' },
+    ],
+  }
+  node_2.dataset.state = 'default'
+  Object.assign(node_2.style, node_2._stateMachine.states['default'].styles)
+  node_2.addEventListener('click', (e) => {
+    const sm = node_2._stateMachine
+    const current = sm.current
+    _runtime.exclusiveTransition(node_2, 'on')
+  })
+  node_2.dataset.bind = 'selected'
+  node_2.dataset.component = 'Tab'
+  node_1.appendChild(node_2)
+  
+  // Tab
+  const node_3 = document.createElement('button')
+  _elements['node-3'] = node_3
+  node_3.dataset.mirrorId = 'node-3'
+  node_3.dataset.mirrorName = 'Tab'
+  node_3.textContent = "Profile"
+  Object.assign(node_3.style, {
+    'width': 'fit-content',
+    'height': '36px',
+    'flex-shrink': '0',
+    'min-width': '36px',
+    'padding': '12px 20px',
+    'border-radius': '6px',
+    'border-width': '0px',
+    'border-style': 'solid',
+    'cursor': 'pointer',
+    'color': '#888',
+  })
+  node_3._stateMachine = {
+    initial: 'default',
+    current: 'default',
+    states: {
+      'on': {
+        styles: {
+        },
+      },
+      'default': {
+        styles: {
+        },
+      },
+    },
+    transitions: [
+      { to: 'on', trigger: 'onclick', modifier: 'exclusive' },
+    ],
+  }
+  node_3.dataset.state = 'default'
+  Object.assign(node_3.style, node_3._stateMachine.states['default'].styles)
+  node_3.addEventListener('click', (e) => {
+    const sm = node_3._stateMachine
+    const current = sm.current
+    _runtime.exclusiveTransition(node_3, 'on')
+  })
+  node_3.dataset.bind = 'selected'
+  node_3.dataset.component = 'Tab'
+  node_1.appendChild(node_3)
+  
+  // Tab
+  const node_4 = document.createElement('button')
+  _elements['node-4'] = node_4
+  node_4.dataset.mirrorId = 'node-4'
+  node_4.dataset.mirrorName = 'Tab'
+  node_4.textContent = "Settings"
+  Object.assign(node_4.style, {
+    'width': 'fit-content',
+    'height': '36px',
+    'flex-shrink': '0',
+    'min-width': '36px',
+    'padding': '12px 20px',
+    'border-radius': '6px',
+    'border-width': '0px',
+    'border-style': 'solid',
+    'cursor': 'pointer',
+    'color': '#888',
+  })
+  node_4._stateMachine = {
+    initial: 'default',
+    current: 'default',
+    states: {
+      'on': {
+        styles: {
+        },
+      },
+      'default': {
+        styles: {
+        },
+      },
+    },
+    transitions: [
+      { to: 'on', trigger: 'onclick', modifier: 'exclusive' },
+    ],
+  }
+  node_4.dataset.state = 'default'
+  Object.assign(node_4.style, node_4._stateMachine.states['default'].styles)
+  node_4.addEventListener('click', (e) => {
+    const sm = node_4._stateMachine
+    const current = sm.current
+    _runtime.exclusiveTransition(node_4, 'on')
+  })
+  node_4.dataset.bind = 'selected'
+  node_4.dataset.component = 'Tab'
+  node_1.appendChild(node_4)
+  
+  _root.appendChild(node_1)

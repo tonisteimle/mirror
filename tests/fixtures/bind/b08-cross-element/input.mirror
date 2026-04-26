@@ -1,0 +1,6 @@
+value: "hello"
+
+Frame gap 4
+  Input bind value, placeholder "Type here"
+  Text "Echo: $value"
+  Text "Length: $value.length"

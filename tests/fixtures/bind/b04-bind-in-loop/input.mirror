@@ -1,0 +1,12 @@
+items:
+  a:
+    label: "First"
+    value: "x"
+  b:
+    label: "Second"
+    value: "y"
+
+each item in $items
+  Frame gap 4
+    Text "$item.label"
+    Input bind item.value

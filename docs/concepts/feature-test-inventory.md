@@ -71,11 +71,11 @@
 | 34  | **Variables**      | V1 number, V2 string, V3 boolean, V4 reference (style), V5 interpolation, V6 multi-interpolation, V7 nested object, V8 deep access, V9 collection, V10 aggregations |   ✅   | F·B·C·D·S | Sprint 1.1, ~75 Tests, Bug #22 entdeckt |
 | 35  | **Objects**        | nested (`user: { name: "X" }`), property access (`$user.name`)                                                                                                      |   🔵   | -         |                                         |
 | 36  | **Collections**    | object-of-entries, array, aggregations (count, first, last)                                                                                                         |   🔵   | -         |                                         |
-| 37  | **Bind (One-way)** | `Text $var`                                                                                                                                                         |   🔵   | -         |                                         |
-| 38  | **Bind (Two-way)** | `Input bind varName`, mit Mask                                                                                                                                      |   🔵   | -         | `bind-feature.test.ts`                  |
-| 39  | **Bind in Loops**  | each-Loop-Items mit `bind` auf Loop-Var-Property                                                                                                                    |   🔵   | -         |                                         |
-| 40  | **Exclusive-Bind** | `bind selectedItem` für Auswahl in Liste                                                                                                                            |   🔵   | -         |                                         |
-| 41  | **Input Mask**     | Pattern (`#`, `A`, `*`), Literal-Chars, mit `bind`                                                                                                                  |   🔵   | -         |                                         |
+| 37  | **Bind (One-way)** | B1 text, B2 style — `Text $var`                                                                                                                                     |   ✅   | F·B·C·D·S | Sprint 2.2, ~22 Tests, 2 Bugs gepinnt   |
+| 38  | **Bind (Two-way)** | B3 Input, B5 mit Mask                                                                                                                                               |   ✅   | F·B·C·D·S | Sprint 2.2, ~22 Tests, 2 Bugs gepinnt   |
+| 39  | **Bind in Loops**  | B4 each-Loop-Items mit `bind` auf Loop-Var-Property                                                                                                                 |   ✅   | F·B·C·D·S | Sprint 2.2, ~22 Tests, 2 Bugs gepinnt   |
+| 40  | **Exclusive-Bind** | B6 `bind selectedItem` für Auswahl                                                                                                                                  |   ✅   | F·B·C·D·S | Sprint 2.2, ~22 Tests, 2 Bugs gepinnt   |
+| 41  | **Input Mask**     | B5 Pattern, mit `bind`                                                                                                                                              |   ✅   | F·B·C·D·S | Sprint 2.2, ~22 Tests, 2 Bugs gepinnt   |
 
 ## Komposition & Kontrollfluss
 
@@ -302,6 +302,8 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 | 27  | `each x, idx in $list` — `$idx` wird nicht substituiert    | Each-Fixtures      | ✅ gefixt |
 | 28  | `if/else` innerhalb `each` rendert BEIDE Branches          | Each-Fixtures      | ✅ gefixt |
 | 29  | `bor`-Shorthand überschreibt `boc $token` mit currentColor | Tokens-Fixtures    | ✅ gefixt |
+| 30  | `bind item.value` in each-Loop initialisiert nicht         | Bind-Fixtures      | ⬜ offen  |
+| 31  | `bind user.email` bindet auf `user` (ganzes Object)        | Bind-Fixtures      | ⬜ offen  |
 
 ## Nicht-Ziele
 
