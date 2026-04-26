@@ -18,6 +18,9 @@ import { EditorView, ViewUpdate } from '@codemirror/view'
 import { Transaction } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import { createLogger } from '../../../compiler/utils/logger'
+import { findSegmentMatches, type SegmentMatch } from '../extract/pattern-match'
+import { applySegmentReplace } from '../extract/apply-batch-replace'
+import { showBatchReplaceDialog } from '../extract/batch-replace-dialog'
 
 const log = createLogger('TokenExtract')
 
@@ -226,6 +229,66 @@ function performExtraction(
   })
 
   log.info(`Replaced with: ${replacement}`)
+
+  // Project-scan for batch-replace candidates: other lines using the
+  // same `<property> <value>` pair that should also be replaced.
+  const currentFilename = callbacks.getCurrentFile()
+  const projectFiles = files.map(f => ({
+    filename: f.name,
+    source: f.name === currentFilename ? doc.toString() : f.code,
+  }))
+
+  const matches = findSegmentMatches({
+    files: projectFiles,
+    targetFilename: currentFilename,
+    targetLineNumber: lineNumber,
+    targetProperty: property,
+    targetValue: value,
+  })
+
+  if (matches.length === 0) return
+
+  const cb = callbacks
+  showBatchReplaceDialog({
+    componentName: `$${tokenName}`,
+    matches: matches.map(m => ({
+      filename: m.filename,
+      lineNumber: m.lineNumber,
+      originalText: m.originalText,
+    })),
+    onApply: selectedMatchResults => {
+      // Map back from MatchResult to SegmentMatch by (filename, lineNumber).
+      const selected: SegmentMatch[] = []
+      for (const sel of selectedMatchResults) {
+        const orig = matches.find(
+          m => m.filename === sel.filename && m.lineNumber === sel.lineNumber
+        )
+        if (orig) selected.push(orig)
+      }
+      if (selected.length === 0) return
+
+      const result = applySegmentReplace({
+        files: projectFiles,
+        acceptedMatches: selected,
+        property,
+        tokenName,
+      })
+      for (const [filename, newSource] of result.changedFiles) {
+        if (filename === currentFilename) {
+          const fullDoc = view.state.doc
+          view.dispatch({
+            changes: { from: 0, to: fullDoc.length, insert: newSource },
+            annotations: Transaction.userEvent.of('input.extract.batch'),
+          })
+        } else {
+          cb.updateFile(filename, newSource)
+        }
+      }
+      log.info(
+        `Token batch-replaced ${selected.length} segment(s) across ${result.changedFiles.size} file(s)`
+      )
+    },
+  })
 }
 
 /**

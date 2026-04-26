@@ -364,6 +364,191 @@ export function findProjectMatches(input: FindMatchesInput): MatchResult[] {
 }
 
 // ---------------------------------------------------------------------------
+// Segment-Level Matching (for Token-Extract Batch-Replace)
+// ---------------------------------------------------------------------------
+
+export interface SegmentMatch {
+  filename: string
+  /** 1-based line number. */
+  lineNumber: number
+  /** 0-based column where the matched property segment begins. */
+  columnStart: number
+  /** Length of the matched segment in characters. */
+  length: number
+  /** The full original line text. */
+  originalText: string
+  /** The original matched segment text (e.g. `bg #2271C1`). */
+  segmentText: string
+}
+
+export interface FindSegmentMatchesInput {
+  files: ProjectFile[]
+  targetFilename: string
+  targetLineNumber: number
+  /** Property name to match (e.g. `bg`). */
+  targetProperty: string
+  /** Verbatim value text (e.g. `#2271C1`). */
+  targetValue: string
+}
+
+/**
+ * Scan project files for explicit property segments matching the
+ * target `<property> <value>` pair. Used by token-extract batch-
+ * replace.
+ *
+ * v1 limit: matches only EXPLICIT property syntax (`bg #2271C1`).
+ * Positional values (`Frame #2271C1` where `#2271C1` resolves to bg)
+ * are not matched, because positional-replace in the source is
+ * ambiguous. Mixed-syntax projects need a manual pass.
+ */
+export function findSegmentMatches(input: FindSegmentMatchesInput): SegmentMatch[] {
+  const results: SegmentMatch[] = []
+  const targetValueClassified = tokenizeValue(input.targetValue)
+  if (targetValueClassified.length === 0) return results
+
+  for (const file of input.files) {
+    const lines = file.source.split('\n')
+    for (let i = 0; i < lines.length; i++) {
+      // Skip the target line itself.
+      if (file.filename === input.targetFilename && i + 1 === input.targetLineNumber) {
+        continue
+      }
+      const lineText = lines[i]
+      const lineMatches = findSegmentsInLine(lineText, input.targetProperty, targetValueClassified)
+      for (const m of lineMatches) {
+        results.push({
+          filename: file.filename,
+          lineNumber: i + 1,
+          columnStart: m.columnStart,
+          length: m.length,
+          originalText: lineText,
+          segmentText: lineText.slice(m.columnStart, m.columnStart + m.length),
+        })
+      }
+    }
+  }
+  return results
+}
+
+function findSegmentsInLine(
+  line: string,
+  targetProperty: string,
+  targetValue: ClassifiedValue[]
+): { columnStart: number; length: number }[] {
+  const stripped = stripInlineComment(line)
+  const matches: { columnStart: number; length: number }[] = []
+
+  // Detect element-name-prefixed lines so we skip the element name
+  // before scanning properties. Example: in `Btn pad 10, bg #2271C1`
+  // the comma-split should yield `pad 10`, `bg #2271C1` — NOT
+  // `Btn pad 10` (which would mis-classify `Btn` as the property name).
+  let scanText = stripped
+  let scanOffset = 0
+
+  const indentLen = (stripped.match(/^(\s*)/) || ['', ''])[1].length
+  const elemMatch = stripped.slice(indentLen).match(/^([A-Z][a-zA-Z0-9_]*)\b/)
+  if (elemMatch) {
+    let pos = indentLen + elemMatch[0].length
+    while (pos < stripped.length && /\s/.test(stripped[pos])) pos++
+
+    // Definition site (`Name:` / `Name as X:`) — skip the whole line.
+    if (stripped[pos] === ':') return matches
+    if (stripped.slice(pos).match(/^as\s+[A-Z][a-zA-Z0-9_]*\s*:/)) return matches
+
+    // Optional leading content string.
+    if (stripped[pos] === '"' || stripped[pos] === "'") {
+      const end = findStringEnd(stripped, pos)
+      if (end !== -1) {
+        pos = end + 1
+        while (pos < stripped.length && /\s/.test(stripped[pos])) pos++
+        if (stripped[pos] === ',') {
+          pos++
+          while (pos < stripped.length && /\s/.test(stripped[pos])) pos++
+        }
+      }
+    }
+
+    scanText = stripped.slice(pos)
+    scanOffset = pos
+  }
+
+  const parts = splitOnCommaWithPositions(scanText)
+
+  for (const part of parts) {
+    const segText = part.text.trim()
+    if (!segText) continue
+    const offsetWithinTrim = part.text.indexOf(segText)
+    const segStart = scanOffset + part.start + offsetWithinTrim
+
+    const parsed = parseProperty(segText)
+    if (!parsed) continue
+    if (parsed.name !== targetProperty) continue
+    if (!valuesEqualStrict(parsed.values, targetValue)) continue
+
+    matches.push({
+      columnStart: segStart,
+      length: segText.length,
+    })
+  }
+  return matches
+}
+
+function valuesEqualStrict(a: ClassifiedValue[], b: ClassifiedValue[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].kind !== b[i].kind || a[i].raw !== b[i].raw) return false
+  }
+  return true
+}
+
+function splitOnCommaWithPositions(s: string): { text: string; start: number }[] {
+  const parts: { text: string; start: number }[] = []
+  let buf = ''
+  let bufStart = 0
+  let depth = 0
+  let inString = false
+  let quote = ''
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]
+    if (inString) {
+      buf += c
+      if (c === '\\') {
+        buf += s[++i] ?? ''
+        continue
+      }
+      if (c === quote) inString = false
+      continue
+    }
+    if (c === '"' || c === "'") {
+      inString = true
+      quote = c
+      buf += c
+      continue
+    }
+    if (c === '(' || c === '[') {
+      depth++
+      buf += c
+      continue
+    }
+    if (c === ')' || c === ']') {
+      depth--
+      buf += c
+      continue
+    }
+    if (c === ',' && depth === 0) {
+      parts.push({ text: buf, start: bufStart })
+      buf = ''
+      bufStart = i + 1
+      continue
+    }
+    if (buf === '') bufStart = i
+    buf += c
+  }
+  if (buf) parts.push({ text: buf, start: bufStart })
+  return parts
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

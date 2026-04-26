@@ -112,3 +112,100 @@ Card
     expect(result.changedFiles.size).toBe(0)
   })
 })
+
+import { applySegmentReplace } from '../../../studio/editor/extract/apply-batch-replace'
+
+describe('applySegmentReplace', () => {
+  it('replaces single segment with token reference', () => {
+    const result = applySegmentReplace({
+      files: [{ filename: 'a.mir', source: 'Frame bg #2271C1, pad 10' }],
+      acceptedMatches: [
+        {
+          filename: 'a.mir',
+          lineNumber: 1,
+          columnStart: 6,
+          length: 10,
+          originalText: 'Frame bg #2271C1, pad 10',
+          segmentText: 'bg #2271C1',
+        },
+      ],
+      property: 'bg',
+      tokenName: 'primary',
+    })
+    expect(result.changedFiles.get('a.mir')).toBe('Frame bg $primary, pad 10')
+  })
+
+  it('multiple segments on same line replaced right-to-left', () => {
+    const line = 'Frame bg #2271C1, pad 10, bg #2271C1'
+    // Find the two `bg #2271C1` positions
+    const first = line.indexOf('bg #2271C1')
+    const second = line.lastIndexOf('bg #2271C1')
+
+    const result = applySegmentReplace({
+      files: [{ filename: 'a.mir', source: line }],
+      acceptedMatches: [
+        {
+          filename: 'a.mir',
+          lineNumber: 1,
+          columnStart: first,
+          length: 10,
+          originalText: line,
+          segmentText: 'bg #2271C1',
+        },
+        {
+          filename: 'a.mir',
+          lineNumber: 1,
+          columnStart: second,
+          length: 10,
+          originalText: line,
+          segmentText: 'bg #2271C1',
+        },
+      ],
+      property: 'bg',
+      tokenName: 'primary',
+    })
+    expect(result.changedFiles.get('a.mir')).toBe('Frame bg $primary, pad 10, bg $primary')
+  })
+
+  it('replaces across multiple files', () => {
+    const result = applySegmentReplace({
+      files: [
+        { filename: 'a.mir', source: 'Frame bg #2271C1' },
+        { filename: 'b.mir', source: 'Btn pad 10, bg #2271C1' },
+      ],
+      acceptedMatches: [
+        {
+          filename: 'a.mir',
+          lineNumber: 1,
+          columnStart: 6,
+          length: 10,
+          originalText: 'Frame bg #2271C1',
+          segmentText: 'bg #2271C1',
+        },
+        {
+          filename: 'b.mir',
+          lineNumber: 1,
+          columnStart: 12,
+          length: 10,
+          originalText: 'Btn pad 10, bg #2271C1',
+          segmentText: 'bg #2271C1',
+        },
+      ],
+      property: 'bg',
+      tokenName: 'primary',
+    })
+    expect(result.changedFiles.size).toBe(2)
+    expect(result.changedFiles.get('a.mir')).toBe('Frame bg $primary')
+    expect(result.changedFiles.get('b.mir')).toBe('Btn pad 10, bg $primary')
+  })
+
+  it('handles empty match list', () => {
+    const result = applySegmentReplace({
+      files: [{ filename: 'a.mir', source: 'Frame pad 10' }],
+      acceptedMatches: [],
+      property: 'bg',
+      tokenName: 'primary',
+    })
+    expect(result.changedFiles.size).toBe(0)
+  })
+})

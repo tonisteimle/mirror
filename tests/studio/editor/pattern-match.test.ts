@@ -13,6 +13,7 @@ import {
   linesMatch,
   propertiesMatch,
   findProjectMatches,
+  findSegmentMatches,
 } from '../../../studio/editor/extract/pattern-match'
 
 // ---------------------------------------------------------------------------
@@ -436,5 +437,108 @@ describe('Concept-doc Edge Cases (E1..E12)', () => {
       componentName: 'Card',
     })
     expect(matches.map(m => m.lineNumber)).toEqual([2])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// findSegmentMatches — token-extract batch (segment-level)
+// ---------------------------------------------------------------------------
+
+describe('findSegmentMatches', () => {
+  it('matches `bg #2271C1` segments across lines / files, skips target', () => {
+    const fileA = `Frame bg #2271C1, w 100
+Btn pad 10, bg #2271C1, col white
+Text col #2271C1`
+    const fileB = `Card bg #2271C1, rad 8`
+    const matches = findSegmentMatches({
+      files: [
+        { filename: 'a.mir', source: fileA },
+        { filename: 'b.mir', source: fileB },
+      ],
+      targetFilename: 'a.mir',
+      targetLineNumber: 1,
+      targetProperty: 'bg',
+      targetValue: '#2271C1',
+    })
+    // Target line skipped. col #2271C1 different property → no match.
+    expect(matches).toHaveLength(2)
+    expect(matches[0].filename).toBe('a.mir')
+    expect(matches[0].lineNumber).toBe(2)
+    expect(matches[1].filename).toBe('b.mir')
+    expect(matches[1].lineNumber).toBe(1)
+  })
+
+  it('reports correct columnStart + length for inline replacements', () => {
+    const file = `Btn pad 10, bg #2271C1, col white`
+    const matches = findSegmentMatches({
+      files: [{ filename: 'a.mir', source: file }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 99,
+      targetProperty: 'bg',
+      targetValue: '#2271C1',
+    })
+    expect(matches).toHaveLength(1)
+    const m = matches[0]
+    // segment "bg #2271C1" starts after "Btn pad 10, " (12 chars)
+    expect(file.slice(m.columnStart, m.columnStart + m.length)).toBe('bg #2271C1')
+  })
+
+  it('does not match different property name', () => {
+    const matches = findSegmentMatches({
+      files: [{ filename: 'a.mir', source: `Text col #2271C1` }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 99,
+      targetProperty: 'bg',
+      targetValue: '#2271C1',
+    })
+    expect(matches).toHaveLength(0)
+  })
+
+  it('does not match positional value (v1 limit)', () => {
+    // `Frame #2271C1` is positional bg — but token-extract batch only
+    // matches explicit property syntax. Positional is left alone.
+    const matches = findSegmentMatches({
+      files: [{ filename: 'a.mir', source: `Frame #2271C1, w 100` }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 99,
+      targetProperty: 'bg',
+      targetValue: '#2271C1',
+    })
+    expect(matches).toHaveLength(0)
+  })
+
+  it('does not match similar but different values', () => {
+    const matches = findSegmentMatches({
+      files: [{ filename: 'a.mir', source: `Frame bg #2271C180, bg #2271C2` }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 99,
+      targetProperty: 'bg',
+      targetValue: '#2271C1',
+    })
+    expect(matches).toHaveLength(0)
+  })
+
+  it('strips inline comments before matching', () => {
+    const matches = findSegmentMatches({
+      files: [{ filename: 'a.mir', source: `Frame bg #2271C1  // primary brand` }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 99,
+      targetProperty: 'bg',
+      targetValue: '#2271C1',
+    })
+    expect(matches).toHaveLength(1)
+  })
+
+  it('matches multiple segments on same line', () => {
+    // Edge case: same property twice (technically invalid Mirror but
+    // we tolerate it for replace purposes)
+    const matches = findSegmentMatches({
+      files: [{ filename: 'a.mir', source: `Frame bg #2271C1, pad 10, bg #2271C1` }],
+      targetFilename: 'a.mir',
+      targetLineNumber: 99,
+      targetProperty: 'bg',
+      targetValue: '#2271C1',
+    })
+    expect(matches).toHaveLength(2)
   })
 })

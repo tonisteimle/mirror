@@ -12,7 +12,7 @@
  * to the editor / writing the files.
  */
 
-import type { MatchResult } from './pattern-match'
+import type { MatchResult, SegmentMatch } from './pattern-match'
 
 export interface BatchReplaceResult {
   /** filename → new content (only files with at least one accepted match). */
@@ -104,6 +104,66 @@ export function rewriteMatchLine(line: string, newComponentName: string): string
   if (leadingString) result += ' ' + leadingString
   if (comment) result += '  ' + comment
   return result
+}
+
+// ---------------------------------------------------------------------------
+// Segment-Level Replace (for Token-Extract Batch-Replace)
+// ---------------------------------------------------------------------------
+
+export interface ApplySegmentReplaceInput {
+  files: { filename: string; source: string }[]
+  acceptedMatches: SegmentMatch[]
+  /** Property name (e.g. `bg`). */
+  property: string
+  /** Token name without `$` prefix (e.g. `primary`). */
+  tokenName: string
+}
+
+/**
+ * Replace each accepted segment-match's `<property> <value>` text with
+ * `<property> $<tokenName>`. Multiple matches on the same line are
+ * applied right-to-left so column positions stay valid.
+ */
+export function applySegmentReplace(input: ApplySegmentReplaceInput): BatchReplaceResult {
+  const changedFiles = new Map<string, string>()
+
+  // Group by file → line.
+  const byFile = new Map<string, Map<number, SegmentMatch[]>>()
+  for (const m of input.acceptedMatches) {
+    let lineMap = byFile.get(m.filename)
+    if (!lineMap) {
+      lineMap = new Map()
+      byFile.set(m.filename, lineMap)
+    }
+    const list = lineMap.get(m.lineNumber) ?? []
+    list.push(m)
+    lineMap.set(m.lineNumber, list)
+  }
+
+  const replacement = `${input.property} $${input.tokenName}`
+
+  for (const [filename, lineMap] of byFile) {
+    const file = input.files.find(f => f.filename === filename)
+    if (!file) continue
+    const lines = file.source.split('\n')
+
+    for (const [lineNumber, matches] of lineMap) {
+      const idx = lineNumber - 1
+      if (idx < 0 || idx >= lines.length) continue
+      // Apply right-to-left so left-side columns stay valid.
+      const sorted = [...matches].sort((a, b) => b.columnStart - a.columnStart)
+      let lineText = lines[idx]
+      for (const m of sorted) {
+        lineText =
+          lineText.slice(0, m.columnStart) + replacement + lineText.slice(m.columnStart + m.length)
+      }
+      lines[idx] = lineText
+    }
+
+    changedFiles.set(filename, lines.join('\n'))
+  }
+
+  return { changedFiles }
 }
 
 function splitInlineComment(s: string): { code: string; comment: string } {
