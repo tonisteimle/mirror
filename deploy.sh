@@ -130,7 +130,7 @@ mkdir -f mirror/assets
 
 # Upload studio files to /mirror/
 cd mirror
-lcd $STUDIO_DIR
+lcd "$STUDIO_DIR"
 put index.html
 put app.js
 put styles.css
@@ -143,7 +143,7 @@ put cleanup.js
 # Upload studio/dist (new architecture modules + chunks)
 mkdir -f dist
 cd dist
-lcd $STUDIO_DIR/dist
+lcd "$STUDIO_DIR/dist"
 mput *.js
 put mirror-defaults.css
 
@@ -151,14 +151,14 @@ put mirror-defaults.css
 cd /mirror/dist
 mkdir -f browser
 cd browser
-lcd $DIST_DIR/browser
+lcd "$DIST_DIR/browser"
 put index.global.js
 
 # Upload assets (CSS defaults)
 cd /mirror
 mkdir -f assets
 cd assets
-lcd $ASSETS_DIR
+lcd "$ASSETS_DIR"
 put mirror-defaults.css
 
 # Upload tutorial files (from temp with transformed paths)
@@ -167,7 +167,7 @@ cd /mirror
 rm -rf tutorial
 mkdir -f tutorial
 cd tutorial
-lcd $TEMP_DIR/tutorial
+lcd "$TEMP_DIR/tutorial"
 mput *.html
 mput *.css
 mput *.js
