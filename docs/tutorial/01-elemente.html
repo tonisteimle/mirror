@@ -211,6 +211,71 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
 
     <!-- ============================================================ -->
     <section>
+      <h2>Kurzschreibweise: Werte ohne Property-Namen</h2>
+      <p>Bei den häufigsten Properties – <code>w</code>, <code>h</code> und <code>bg</code> – kannst du den Property-Namen weglassen. Mirror erkennt am <em>Werttyp</em>, was du meinst:</p>
+      <ul>
+        <li>Eine <strong>Farbe</strong> (Hex, Named oder <code>rgba(...)</code>) → Hintergrund</li>
+        <li>Eine <strong>Zahl</strong> oder <code>hug</code> / <code>full</code> → Breite (erste Position) bzw. Höhe (zweite Position)</li>
+      </ul>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Lang
+Frame w 100, h 50, bg #2271C1
+Button "Speichern", w hug, h 32, bg #2271C1, col white, rad 6
+
+// Kurz – identische Wirkung
+Frame 100, 50, #2271C1
+Button "Speichern", hug, 32, #2271C1, col white, rad 6</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Pro Primitive ein etwas anderer Default</strong>, weil Designer es so erwarten:</p>
+      <table class="ref-table">
+        <tr><th>Primitive</th><th>Farbe ohne Name</th><th>Zahl-Slot 1</th><th>Zahl-Slot 2</th></tr>
+        <tr><td><code>Frame</code>, <code>Button</code>, <code>Box</code>, <code>Header</code>, …</td><td><code>bg</code></td><td><code>w</code></td><td><code>h</code></td></tr>
+        <tr><td><code>Text</code>, <code>Link</code></td><td><code>col</code></td><td><code>w</code></td><td><code>h</code></td></tr>
+        <tr><td><code>Icon</code></td><td><code>ic</code></td><td><code>is</code></td><td>—</td></tr>
+        <tr><td><code>Image</code></td><td>—</td><td><code>w</code></td><td><code>h</code></td></tr>
+      </table>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Text: Farbe → col (Textfarbe), nicht bg
+Text "Hallo", #2271C1, fs 18
+
+// Icon: Farbe → ic (Icon-Farbe), Zahl → is (Icon-Größe)
+Icon "check", #10b981, 24
+
+// Image: nur Größen, keine Farbe
+Image src "https://picsum.photos/200/100", 200, 100</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Mischen von Kurz- und Langschreibweise ist erlaubt</strong> – Mirror füllt die freien Slots intelligent:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Du kannst einzelne Properties explizit lassen, andere positional
+Frame w 100, 50, #2271C1
+//    explizit  positional positional
+
+// Auch in dieser Reihenfolge:
+Frame 100, 50, bg #2271C1, gap 12, pad 16</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Wenn du Tokens definiert hast (siehe <a href="03-tokens.html">Tokens-Kapitel</a>), funktioniert die Kurzform auch mit <code>$tokens</code> – mehr dazu dort.</p>
+
+      <div class="note">
+        <strong>Tipp-Abkürzung beim Schreiben:</strong> Diese Kurzschreibweise ist als Eingabe-Hilfe gedacht. Beide Schreibweisen sind 100 % äquivalent — der Compiler erzeugt identischen Output. Speichert das Studio den Code zurück, wird er auf die explizite Form normalisiert. Das Tutorial nutzt deshalb durchgängig die explizite Form (für Klarheit), aber im täglichen Schreiben sparst du dir mit der Kurzform viel Tipparbeit.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>Layout-Properties (Vorschau)</h2>
       <p>Mit Layout-Properties steuerst du, wie Kinder innerhalb eines Frames angeordnet werden. Hier die wichtigsten – Details im <a href="04-layout.html">Layout-Kapitel</a>:</p>
       <div class="playground" data-playground>

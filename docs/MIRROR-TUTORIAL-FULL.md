@@ -146,6 +146,54 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white
 
 > **Hinweis:** **Wann verwenden?** Die Semicolon-Syntax eignet sich für einfache, flache Strukturen wie Status-Meldungen oder Icon-Text-Kombinationen. Für komplexere Verschachtelungen ist Einrückung besser lesbar.
 
+### Kurzschreibweise: Werte ohne Property-Namen
+
+Bei den häufigsten Properties – `w`, `h` und `bg` – kannst du den Property-Namen weglassen. Mirror erkennt am _Werttyp_, was du meinst:
+
+- Eine **Farbe** (Hex, Named oder `rgba(...)`) → Hintergrund
+- Eine **Zahl** oder `hug` / `full` → Breite (erste Position) bzw. Höhe (zweite Position)
+
+```mirror
+// Lang
+Frame w 100, h 50, bg #2271C1
+Button "Speichern", w hug, h 32, bg #2271C1, col white, rad 6
+
+// Kurz – identische Wirkung
+Frame 100, 50, #2271C1
+Button "Speichern", hug, 32, #2271C1, col white, rad 6
+```
+
+**Pro Primitive ein etwas anderer Default**, weil Designer es so erwarten:
+
+| Primitive                             | Farbe ohne Name | Zahl-Slot 1 | Zahl-Slot 2 |
+| ------------------------------------- | --------------- | ----------- | ----------- |
+| `Frame`, `Button`, `Box`, `Header`, … | `bg`            | `w`         | `h`         |
+| `Text`, `Link`                        | `col`           | `w`         | `h`         |
+| `Icon`                                | `ic`            | `is`        | —           |
+| `Image`                               | —               | `w`         | `h`         |
+
+```mirror
+// Text: Farbe → col (Textfarbe), nicht bg
+Text "Hallo", #2271C1, fs 18
+
+// Icon: Farbe → ic (Icon-Farbe), Zahl → is (Icon-Größe)
+Icon "check", #10b981, 24
+
+// Image: nur Größen, keine Farbe
+Image src "https://picsum.photos/200/100", 200, 100
+```
+
+```mirror
+// Du kannst einzelne Properties explizit lassen, andere positional
+Frame w 100, 50, #2271C1
+//    explizit  positional positional
+
+// Auch in dieser Reihenfolge:
+Frame 100, 50, bg #2271C1, gap 12, pad 16
+```
+
+> **Hinweis:** **Tipp-Abkürzung beim Schreiben:** Diese Kurzschreibweise ist als Eingabe-Hilfe gedacht. Beide Schreibweisen sind 100 % äquivalent — der Compiler erzeugt identischen Output. Speichert das Studio den Code zurück, wird er auf die explizite Form normalisiert. Das Tutorial nutzt deshalb durchgängig die explizite Form (für Klarheit), aber im täglichen Schreiben sparst du dir mit der Kurzform viel Tipparbeit.
+
 ### Layout-Properties (Vorschau)
 
 Mit Layout-Properties steuerst du, wie Kinder innerhalb eines Frames angeordnet werden. Hier die wichtigsten – Details im Layout-Kapitel:
@@ -618,6 +666,45 @@ Card
 - `card.bg` und `card.rad` – Tokens für die Card: Hintergrund und Radius
 - Bei `bg $primary` wird automatisch `$primary.bg` verwendet
 - Bei `rad $card` wird automatisch `$card.rad` verwendet
+
+### Kurzschreibweise: Tokens ohne Property-Namen
+
+Genau wie bei direkten Werten kannst du auch bei Tokens den Property-Namen weglassen. Da der Token bereits einen Suffix hat (`primary.bg`, `space.pad`, …), weiß Mirror sofort, an welche Property er gehört:
+
+```mirror
+primary.bg: #2271C1
+space.pad: 16
+radius.rad: 8
+
+// Lang
+Frame bg $primary, pad $space, rad $radius, w 200, h 100
+
+// Kurz – identische Wirkung
+Frame $primary, $space, $radius, w 200, h 100
+```
+
+**Wenn ein Token mehrere Suffixe hat** (z. B. `primary.bg` + `primary.col`), entscheidet das Primitive welcher Suffix zum Zug kommt – genauso wie bei direkten Farben:
+
+```mirror
+primary.bg: #2271C1
+primary.col: white
+
+// Frame ist ein Container → wählt .bg
+Frame $primary, w 200, h 60, center
+  // Text ist Content → wählt .col
+  Text "Headline", $primary, fs 18
+```
+
+```mirror
+primary.bg: #2271C1
+primary.col: white
+
+// Explizite Suffixe – auch ohne Property-Namen
+Frame $primary.col, w 100, h 50
+//    └─ wird zu: col $primary.col (statt bg)
+```
+
+> **Hinweis:** **Wichtig:** Die Kurzform funktioniert nur für _Tokens_ (mit Suffix in der Definition wie `primary.bg:`). Variablen mit verschachtelten Sub-Properties (`user:` mit eingerücktem `name: "Max"`) und Property Sets (`cardstyle: bg #1a1a1a, pad 16`) bleiben weiterhin als `$name` oder `$user.name` stehen – Mirror erkennt am Definitions-Pattern, was was ist.
 
 ### Semantische Tokens
 

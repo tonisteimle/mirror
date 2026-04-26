@@ -137,6 +137,58 @@ Card
 
     <!-- ============================================================ -->
     <section>
+      <h2>Kurzschreibweise: Tokens ohne Property-Namen</h2>
+      <p>Genau wie bei <a href="01-elemente.html">direkten Werten</a> kannst du auch bei Tokens den Property-Namen weglassen. Da der Token bereits einen Suffix hat (<code>primary.bg</code>, <code>space.pad</code>, …), weiß Mirror sofort, an welche Property er gehört:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>primary.bg: #2271C1
+space.pad: 16
+radius.rad: 8
+
+// Lang
+Frame bg $primary, pad $space, rad $radius, w 200, h 100
+
+// Kurz – identische Wirkung
+Frame $primary, $space, $radius, w 200, h 100</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Wenn ein Token mehrere Suffixe hat</strong> (z. B. <code>primary.bg</code> + <code>primary.col</code>), entscheidet das Primitive welcher Suffix zum Zug kommt – genauso wie bei direkten Farben:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>primary.bg: #2271C1
+primary.col: white
+
+// Frame ist ein Container → wählt .bg
+Frame $primary, w 200, h 60, center
+  // Text ist Content → wählt .col
+  Text "Headline", $primary, fs 18</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Mit explizitem Suffix am Use-Site</strong> ist es immer eindeutig – nützlich, wenn du den Default überschreiben willst:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>primary.bg: #2271C1
+primary.col: white
+
+// Explizite Suffixe – auch ohne Property-Namen
+Frame $primary.col, w 100, h 50
+//    └─ wird zu: col $primary.col (statt bg)</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <div class="note">
+        <strong>Wichtig:</strong> Die Kurzform funktioniert nur für <em>Tokens</em> (mit Suffix in der Definition wie <code>primary.bg:</code>). Variablen mit verschachtelten Sub-Properties (<code>user:</code> mit eingerücktem <code>name: "Max"</code>) und Property Sets (<code>cardstyle: bg #1a1a1a, pad 16</code>) bleiben weiterhin als <code>$name</code> oder <code>$user.name</code> stehen – Mirror erkennt am Definitions-Pattern, was was ist.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>Semantische Tokens</h2>
       <p>Der wichtigste Tipp: Benenne Tokens nach ihrer <em>Bedeutung</em>, nicht nach ihrem Wert. Statt <code>$blue</code> schreib <code>$primary</code> – das beschreibt die Funktion, nicht die Farbe.</p>
       <p>Warum? Deine Komponenten wissen dann nicht, dass "primary" gerade blau ist – sie wissen nur, dass es die Hauptfarbe ist. Willst du später die Primärfarbe ändern, änderst du nur den Token.</p>
