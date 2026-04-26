@@ -2161,8 +2161,16 @@ ${ZAG_RUNTIME}
 
   // Icon cache and loading
   _iconCache: new Map(),
+  _customIcons: new Map(),
   _pendingIcons: new Map(),
   _fallbackIcon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
+
+  // Register a user-defined icon via $icons: name: "M..." path data.
+  // Stored in a separate registry that loadIcon consults first, ahead of
+  // the network/Lucide cache.
+  registerIcon(name, pathData, viewBox) {
+    this._customIcons.set(name, { path: pathData, viewBox: viewBox || '0 0 24 24' })
+  },
 
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
@@ -2170,6 +2178,19 @@ ${ZAG_RUNTIME}
     const color = el.dataset.iconColor || 'currentColor'
     const strokeWidth = el.dataset.iconWeight || '2'
     const isFilled = el.dataset.iconFill === 'true'
+
+    // Custom icons (via $icons:) take precedence over Lucide
+    const custom = this._customIcons.get(iconName)
+    if (custom) {
+      const paths = String(custom.path)
+        .split(/[\\n|]/)
+        .map(p => p.trim())
+        .filter(p => p.length > 0)
+        .map(d => \`<path d="\${d}"/>\`)
+        .join('')
+      el.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="\${custom.viewBox}" fill="\${isFilled ? 'currentColor' : 'none'}" stroke="\${isFilled ? 'none' : 'currentColor'}" stroke-width="\${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" style="width:\${size}px;height:\${size}px;color:\${color};display:block;">\${paths}</svg>\`
+      return
+    }
 
     // Check cache first
     let svgText = this._iconCache.get(iconName)

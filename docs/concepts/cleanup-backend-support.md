@@ -31,11 +31,9 @@
 | CL4 startOfWeek   | ✅  | ✅    | ✅        | 0=Sun, 1=Mon          |
 | CL4 min/max       | ✅  | ✅    | ✅        | Date-Range-Constraint |
 
-## Bekannte Einschränkungen
+## Custom Icons (`$icons:`)
 
-| Bug | Sub-Feature  | Problem                                               |
-| --- | ------------ | ----------------------------------------------------- |
-| #34 | Custom Icons | `$icons:` emittiert `_runtime.registerIcon(...)` VOR  |
-|     |              | dem `const _runtime = {}` — TDZ-Fehler bei standalone |
-|     |              | Ausführung. Ordering-Bug in `dom.ts` `generate()`     |
-|     |              | (`emitCustomIcons` müsste nach `emitRuntime` laufen). |
+| Sub-feature             | DOM | React | Framework | Bemerkung                   |
+| ----------------------- | --- | ----- | --------- | --------------------------- |
+| CL3 $icons: Definition  | ✅  | ✅    | ✅        | SVG path data → `<svg>`     |
+| CL3 Custom + Lucide mix | ✅  | ✅    | ✅        | Custom-Registry hat Vorrang |

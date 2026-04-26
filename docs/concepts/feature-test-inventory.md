@@ -25,7 +25,7 @@
 | 3   | **Primitives**   | Frame, Text, Button, Input, Textarea, Image, Icon, Link, Divider, Spacer, semantic HTML                                                                     |   🔵   | -         | Tests bestehen, nicht pyramidisiert  |
 | 4   | **Properties**   | ~120 Properties (Layout, Spacing, Color, Typo, Effects, Visibility, …)                                                                                      |   🔵   | -         | Verteilt auf andere Features         |
 | 5   | **Canvas**       | mobile/tablet/desktop preset, properties, inheritance to children                                                                                           |   ✅   | F·B·C·D·S | Sprint 6                             |
-| 6   | **Custom Icons** | `$icons:` Definition, SVG paths, Mix mit Lucide                                                                                                             |   ✅   | F·B·C·D·S | Sprint 6 — Bug #34 gepinnt           |
+| 6   | **Custom Icons** | `$icons:` Definition, SVG paths, Mix mit Lucide                                                                                                             |   ✅   | F·B·C·D·S | Sprint 6 — Bug #34 gefixt            |
 
 ## Layout & Styling
 
@@ -306,7 +306,7 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 | 31  | `bind user.email` bindet auf `user` (ganzes Object)                    | Bind-Fixtures      | ✅ gefixt |
 | 32  | `Tooltip positioning "X"` parst, emittiert kein Attribut               | Pure-UI-Behavior   | offen     |
 | 33  | `Tabs defaultValue "X"` parst, emittiert kein Attribut                 | Pure-UI-Behavior   | offen     |
-| 34  | `$icons:` emittiert `_runtime.registerIcon` vor `_runtime`-const → TDZ | Cleanup-F.         | offen     |
+| 34  | `$icons:` emittiert `_runtime.registerIcon` vor `_runtime`-const → TDZ | Cleanup-F.         | ✅ gefixt |
 
 ## Nicht-Ziele
 

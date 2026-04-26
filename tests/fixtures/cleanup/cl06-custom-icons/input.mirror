@@ -1,0 +1,8 @@
+$icons:
+  hbox: "M3 3h18v18H3z|M9 3v18|M15 3v18"
+  vbox: "M3 3h18v18H3z|M21 9H3|M21 15H3"
+
+Frame hor, gap 8
+  Icon "hbox", is 24, ic #2271C1
+  Icon "vbox", is 24, ic #888
+  Icon "check", is 24, ic #10b981

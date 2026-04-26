@@ -316,9 +316,12 @@ class DOMGenerator {
   generate(): string {
     this.emitHeader()
     this.emitTokens()
-    this.emitCustomIcons()
+    // Custom icon registrations call `_runtime.registerIcon(...)` at top
+    // level, so they must run AFTER the runtime const is declared. Order
+    // before this fix caused TDZ in standalone-execution contexts (Bug #34).
     this.emitCreateUI()
     this.emitRuntime()
+    this.emitCustomIcons()
     this.emitAnimations()
 
     // If there's JavaScript, emit initialization with named instance exposure

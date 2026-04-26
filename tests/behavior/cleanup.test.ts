@@ -130,22 +130,23 @@ describe('Cleanup — Behavior Spec', () => {
   // CL3: Custom Icons (pinned bug)
   // ---------------------------------------------------------------------------
 
-  describe('CL3: Custom Icons (Bug #34 pinned)', () => {
-    // Bug #34: `$icons:` with definition emits `_runtime.registerIcon(...)`
-    // BEFORE the `const _runtime = {...}` declaration, causing TDZ when run
-    // standalone via `new Function(code)`. The compiler accepts and emits
-    // the icon definition but execution fails until that order is fixed.
-    it('Bug #34: parses without errors but execution throws TDZ', () => {
-      const ast = parse(`$icons:\n  hbox: "M3 3h18v18H3z|M9 3v18"\n\nIcon "hbox", is 24`)
-      expect(ast.errors).toEqual([])
-      const code = generateDOM(ast)
-      expect(code).toContain('_runtime.registerIcon')
-      // Pinned: standalone execution currently throws
-      const stripped = code.replace(/^export\s+function/gm, 'function')
-      expect(() => {
-        const fn = new Function(stripped + '\nreturn createUI();')
-        fn()
-      }).toThrow(/before initialization|_runtime/)
+  describe('CL3: Custom Icons', () => {
+    it('$icons: definition + Icon usage compiles + renders without throwing', () => {
+      const root = render(
+        `$icons:\n  hbox: "M3 3h18v18H3z|M9 3v18"\n\nIcon "hbox", is 24, ic #2271C1`,
+        container
+      )
+      const icon = findByName(root, 'Icon') as HTMLElement
+      expect(icon).toBeTruthy()
+    })
+
+    it('emit order: registerIcon comes AFTER const _runtime declaration', () => {
+      const code = generateDOM(
+        parse(`$icons:\n  hbox: "M3 3h18v18H3z|M9 3v18"\n\nIcon "hbox", is 24`)
+      )
+      const idxRegister = code.indexOf('_runtime.registerIcon')
+      const idxConst = code.indexOf('const _runtime = {')
+      expect(idxRegister).toBeGreaterThan(idxConst)
     })
 
     it('built-in Icon (no $icons: registry) renders without throwing', () => {

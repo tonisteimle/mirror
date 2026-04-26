@@ -71,20 +71,18 @@ describe('Cleanup — Canvas presets across backends', () => {
   })
 })
 
-describe('Cleanup — Custom Icons (Bug #34 pinned)', () => {
-  it('Bug #34: $icons emits registerIcon BEFORE _runtime const → TDZ at runtime', () => {
+describe('Cleanup — Custom Icons across backends', () => {
+  it('$icons: emits registerIcon AFTER const _runtime declaration (Bug #34 fixed)', () => {
     const out = generateDOM(parse(`$icons:\n  hbox: "M3 3h18v18H3z"\n\nIcon "hbox"`))
-    // Compiles (parse + emit OK)
     expect(out).toContain('_runtime.registerIcon')
-    // Emit order is wrong: registerIcon at top level appears before const _runtime
     const idxRegister = out.indexOf('_runtime.registerIcon')
     const idxConst = out.indexOf('const _runtime = {')
     expect(idxRegister).toBeGreaterThan(-1)
     expect(idxConst).toBeGreaterThan(-1)
-    expect(idxRegister).toBeLessThan(idxConst)
+    expect(idxRegister).toBeGreaterThan(idxConst)
   })
 
-  it('Bug #34 — pinned: React/Framework backends compile $icons without throwing', () => {
+  it('React/Framework backends compile $icons without throwing', () => {
     const src = `$icons:\n  hbox: "M3 3h18v18H3z"\n\nIcon "hbox"`
     expect(() => generateReact(parse(src))).not.toThrow()
     expect(() => generateFramework(parse(src))).not.toThrow()
