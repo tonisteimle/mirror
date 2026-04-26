@@ -520,7 +520,7 @@ describe('Property-based: expandPropertySets', () => {
     )
   })
 
-  it('unknown propset reference → property kept as-is (no crash)', () => {
+  it('unknown propset reference → rewritten to `content` (Bug #22 fix)', () => {
     fc.assert(
       fc.property(
         fc.string({ minLength: 1, maxLength: 8 }).filter(s => /^[a-z]+$/.test(s)),
@@ -532,9 +532,12 @@ describe('Property-based: expandPropertySets', () => {
             line: 0,
             column: 0,
           }
-          // empty propsetMap → unknown name → must keep the propset prop
+          // empty propsetMap → unknown name → fall back to `content` so the
+          // value still reaches the user (was silently dropped before #22).
           const result = expandPropertySets([ref], new Map())
-          expect(result).toEqual([ref])
+          expect(result).toHaveLength(1)
+          expect(result[0].name).toBe('content')
+          expect(result[0].values).toEqual([`$${psName}`])
         }
       )
     )

@@ -109,14 +109,14 @@ describe('address-manager — Variable/Data Contract', () => {
       expect(text).toContain('Braun')
     })
 
-    // PIN — Bug #22: `Text $address.city` (bare reference, no quotes) emits
-    // NO `textContent` at all. The user-visible cities are empty. The fix
-    // would be to author with quotes: `Text "$address.city"`. Until #22 is
-    // fixed, this test pins the current (defective) behavior.
-    it('Bug #22: Städte sind aktuell NICHT sichtbar (bare $x.y in Text)', () => {
+    // Bug #22 (fixed): `Text $address.city` (bare reference, no quotes) now
+    // properly emits content. Cities of all 4 addresses are user-visible.
+    it('Bug #22 fixed: zeigt Städte aller 4 Adressen', () => {
       const text = visibleText(root)
-      expect(text).not.toContain('Berlin')
-      expect(text).not.toContain('München')
+      expect(text).toContain('Berlin')
+      expect(text).toContain('München')
+      expect(text).toContain('Hamburg')
+      expect(text).toContain('Köln')
     })
 
     // PIN: Mirror renders `Text $a + " " + $b` LITERALLY: it substitutes

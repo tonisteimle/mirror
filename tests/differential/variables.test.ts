@@ -131,21 +131,23 @@ describe('Variables — XSS-relevant content survives compile in all backends', 
 // Bug #22 — bare `$var` in Text drops content (DOM-confirmed)
 // =============================================================================
 
-describe('Variables — Bug #22: bare `$var` in Text', () => {
-  it('DOM compiler emits no textContent for `Text $name`', () => {
+describe('Variables — Bug #22 (fixed): bare `$var` in Text', () => {
+  it('DOM compiler emits textContent that resolves to the variable value', () => {
     const dom = generateDOM(parse(`name: "Max"\n\nText $name`))
-    // No `textContent = …` line for the Text node should appear if the first
-    // arg was the bare reference — it's silently dropped.
-    expect(dom).not.toContain('textContent = "Max"')
-    expect(dom).not.toContain('textContent = $get("name")')
+    // Either the literal "Max" appears, or `$get("name")` does — both are
+    // valid forms (literal vs runtime resolution). The point is that the
+    // content is no longer dropped.
+    const hasContent =
+      dom.includes('textContent') && (dom.includes('Max') || dom.includes('$get("name")'))
+    expect(hasContent).toBe(true)
   })
 
-  it('React backend behavior with bare `$var`', () => {
-    // Pin behavior — does React inline the value or drop it?
-    expect(() => generateReact(parse(`name: "Max"\n\nText $name`))).not.toThrow()
+  it('React backend now inlines the value for bare `$var`', () => {
+    const react = generateReact(parse(`name: "Max"\n\nText $name`))
+    expect(react).toContain('Max')
   })
 
-  it('Framework backend behavior with bare `$var`', () => {
+  it('Framework backend handles bare `$var` without crashing', () => {
     expect(() => generateFramework(parse(`name: "Max"\n\nText $name`))).not.toThrow()
   })
 })

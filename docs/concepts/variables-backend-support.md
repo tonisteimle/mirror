@@ -24,10 +24,12 @@ Legende:
 
 ## Bekannte Bugs
 
-- **#22 — `Text $var` (bare reference) emittiert keinen `textContent`**:
-  Der Compiler verwirft die Content-Property silent. Workaround:
-  immer `Text "$var"` (mit Quotes) verwenden. Pinned in
-  `tests/behavior/variables.test.ts`.
+- **#22 — `Text $var` (bare reference) emittiert keinen `textContent`** —
+  ✅ gefixt. Der `propset:`-Resolver fällt jetzt auf `content` zurück, wenn
+  die Token-Referenz keinem Property-Set entspricht. Tests in
+  `tests/behavior/variables.test.ts`, `tests/contract/address-manager…`
+  und `tests/differential/variables.test.ts` pinnen das korrigierte
+  Verhalten.
 
 ## Implications für die Test-Pyramide
 

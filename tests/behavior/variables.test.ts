@@ -293,24 +293,25 @@ describe('Variables/Data — Behavior Spec', () => {
     })
   })
 
-  describe('Bug #22: bare `$var` in Text first arg drops content silently', () => {
-    it('PIN: `Text $name` (bare) emits no textContent', () => {
-      // Today: the compiler silently drops the content when the first arg
-      // is a bare $-reference (no quotes). Workaround: `Text "$name"`.
-      // When #22 is fixed, this test should fail (good!) and be tightened
-      // to assert that bare refs ALSO substitute correctly.
+  describe('Bug #22 (fixed): bare `$var` in Text first arg', () => {
+    it('`Text $name` (bare) substitutes the variable as content', () => {
       const root = render(`name: "Max"\n\nText $name`, container)
-      expect(findByName(root, 'Text')!.textContent?.trim()).toBe('')
+      expect(findByName(root, 'Text')!.textContent?.trim()).toBe('Max')
     })
 
-    it('PIN: `Text $user.name` (bare property access) also drops content', () => {
+    it('`Text $user.name` (bare property access) substitutes correctly', () => {
       const root = render(`user:\n  name: "Max"\n\nText $user.name`, container)
-      expect(findByName(root, 'Text')!.textContent?.trim()).toBe('')
+      expect(findByName(root, 'Text')!.textContent?.trim()).toBe('Max')
     })
 
-    it('Quoted form `Text "$name"` works correctly (the workaround)', () => {
+    it('Quoted form `Text "$name"` continues to work', () => {
       const root = render(`name: "Max"\n\nText "$name"`, container)
       expect(findByName(root, 'Text')!.textContent?.trim()).toBe('Max')
+    })
+
+    it('`Button $label` also substitutes as content (broader fix)', () => {
+      const root = render(`label: "Save"\n\nButton $label`, container)
+      expect(findByName(root, 'Button')!.textContent?.trim()).toBe('Save')
     })
   })
 

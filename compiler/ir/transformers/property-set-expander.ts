@@ -40,6 +40,17 @@ export function expandPropertySets(
           expanded.push(...propertySet)
           continue
         }
+        // Bug #22 fix: `Text $name` (bare $-reference) reaches here when
+        // `name` is a plain variable, not a property-set. The parser parsed
+        // it as `propset:name`, but with no matching set we'd silently drop
+        // the value. Instead, rewrite as a `content` property — the next-
+        // most-likely user intent for content-bearing primitives.
+        expanded.push({
+          ...prop,
+          name: 'content',
+          values: [`$${tokenName}`],
+        })
+        continue
       }
     }
 
@@ -49,7 +60,11 @@ export function expandPropertySets(
     if (componentMap && prop.values.length === 0) {
       const name = prop.name
       // Check if name is PascalCase (starts with uppercase letter)
-      if (name.length > 0 && name[0] === name[0].toUpperCase() && name[0] !== name[0].toLowerCase()) {
+      if (
+        name.length > 0 &&
+        name[0] === name[0].toUpperCase() &&
+        name[0] !== name[0].toLowerCase()
+      ) {
         const component = componentMap.get(name)
         if (component && component.properties.length > 0) {
           // Expand the component's properties as a style mixin

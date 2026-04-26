@@ -294,7 +294,7 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 | 19  | Colon-Splitting in `__loopVar:` Markern               | Smoke-Tests        | ✅ gefixt |
 | 20  | `__loopVar:` ohne Wrap als bare Identifier            | Smoke-Tests        | ✅ gefixt |
 | 21  | Self-Reference Stack-Overflow                         | Components-F.      | ⬜ offen  |
-| 22  | `Text $var` (bare ref) emittiert keinen `textContent` | Variables-Contract | ⬜ offen  |
+| 22  | `Text $var` (bare ref) emittiert keinen `textContent` | Variables-Contract | ✅ gefixt |
 
 ## Nicht-Ziele
 
