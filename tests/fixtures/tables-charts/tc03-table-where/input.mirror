@@ -1,0 +1,16 @@
+tasks:
+  t1:
+    title: "A"
+    status: "done"
+  t2:
+    title: "B"
+    status: "progress"
+  t3:
+    title: "C"
+    status: "todo"
+
+Table bg #1a1a1a, rad 8
+  each task in $tasks where task.status != "done"
+    TableRow hor, gap 24, pad 12
+      Text task.title, col white
+      Text task.status, col #888

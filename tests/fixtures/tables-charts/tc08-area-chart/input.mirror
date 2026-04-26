@@ -1,0 +1,6 @@
+sales:
+  Q1: 100
+  Q2: 150
+  Q3: 200
+
+Area $sales, w 400, h 200

@@ -1,0 +1,5 @@
+data:
+  A: 40
+  B: 60
+
+Donut $data, w 250, h 250

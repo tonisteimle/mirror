@@ -135,10 +135,10 @@
 
 ## Compound Primitives
 
-| #   | Feature    | Sub-Features                                                               | Status | Schichten | Notizen          |
-| --- | ---------- | -------------------------------------------------------------------------- | :----: | --------- | ---------------- |
-| 78  | **Table**  | Header, Row, Footer, Group, data-driven, where-Filter, by-OrderBy, Spalten |   🔵   | -         |                  |
-| 79  | **Charts** | Line, Bar, Pie, Donut, Area, Title, Axis, Grid, Point, Line-Style          |   🔵   | -         | Chart.js-Backend |
+| #   | Feature    | Sub-Features                                                               | Status | Schichten | Notizen    |
+| --- | ---------- | -------------------------------------------------------------------------- | :----: | --------- | ---------- |
+| 78  | **Table**  | Header, Row, Footer, Group, data-driven, where-Filter, by-OrderBy, Spalten |   ✅   | F·B·C·D·S | Sprint 5.3 |
+| 79  | **Charts** | Line, Bar, Pie, Donut, Area, Title, Axis, Grid, Point, Line-Style          |   ✅   | F·B·C·D·S | Sprint 5.3 |
 
 ## Multi-File & Projekt-Struktur
 

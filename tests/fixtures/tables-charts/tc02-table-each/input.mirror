@@ -1,0 +1,16 @@
+tasks:
+  t1:
+    title: "Design"
+    status: "done"
+  t2:
+    title: "Dev"
+    status: "progress"
+
+Table bg #1a1a1a, rad 8
+  TableHeader hor, gap 24, pad 12 16, bg #252525
+    Text "Title", col #888, fs 11
+    Text "Status", col #888, fs 11
+  each task in $tasks
+    TableRow hor, gap 24, pad 12 16
+      Text task.title, col white
+      Text task.status, col #888

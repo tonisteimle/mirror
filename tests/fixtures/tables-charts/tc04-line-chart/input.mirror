@@ -1,0 +1,6 @@
+sales:
+  Jan: 120
+  Feb: 180
+  Mar: 240
+
+Line $sales, w 400, h 200

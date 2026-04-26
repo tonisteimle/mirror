@@ -1,0 +1,7 @@
+Table bg #1a1a1a, rad 8
+  TableHeader hor, gap 24, pad 12 16, bg #252525
+    Text "Name", col #888, fs 11
+    Text "Status", col #888, fs 11
+  TableRow hor, gap 24, pad 12 16
+    Text "Max", col white
+    Text "Active", col white

@@ -1,0 +1,6 @@
+data:
+  A: 30
+  B: 50
+  C: 70
+
+Bar $data, w 350, h 180, colors #2271C1
