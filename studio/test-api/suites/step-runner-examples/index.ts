@@ -11,6 +11,7 @@ export { radScenarios, radStepRunnerTests } from './rad.scenarios'
 export { bgScenarios, bgStepRunnerTests } from './bg.scenarios'
 export { colScenarios, colStepRunnerTests } from './col.scenarios'
 export { bocWeightScenarios, bocWeightStepRunnerTests } from './boc-weight.scenarios'
+export { whScenarios, whStepRunnerTests } from './wh.scenarios'
 
 import { padStepRunnerTests } from './pad.scenarios'
 import { padTStepRunnerTests } from './pad-t.scenarios'
@@ -25,6 +26,7 @@ import { radStepRunnerTests } from './rad.scenarios'
 import { bgStepRunnerTests } from './bg.scenarios'
 import { colStepRunnerTests } from './col.scenarios'
 import { bocWeightStepRunnerTests } from './boc-weight.scenarios'
+import { whStepRunnerTests } from './wh.scenarios'
 
 export const allStepRunnerExampleTests = [
   ...padStepRunnerTests,
@@ -40,4 +42,5 @@ export const allStepRunnerExampleTests = [
   ...bgStepRunnerTests,
   ...colStepRunnerTests,
   ...bocWeightStepRunnerTests,
+  ...whStepRunnerTests,
 ]

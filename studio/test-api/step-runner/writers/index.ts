@@ -23,6 +23,8 @@ export { bgWriter } from './bg'
 export { colWriter } from './col'
 export { bocWriter } from './boc'
 export { weightWriter } from './weight'
+export { wWriter } from './w'
+export { hWriter } from './h'
 
 import type { PropertyWriter } from './types'
 import { padWriter } from './pad'
@@ -39,6 +41,8 @@ import { bgWriter } from './bg'
 import { colWriter } from './col'
 import { bocWriter } from './boc'
 import { weightWriter } from './weight'
+import { wWriter } from './w'
+import { hWriter } from './h'
 
 export const PROPERTY_WRITERS: Record<string, PropertyWriter> = {
   pad: padWriter,
@@ -62,6 +66,8 @@ export const PROPERTY_WRITERS: Record<string, PropertyWriter> = {
   col: colWriter,
   boc: bocWriter,
   weight: weightWriter,
+  w: wWriter,
+  h: hWriter,
 }
 
 export function getWriter(propertyName: string): PropertyWriter | null {

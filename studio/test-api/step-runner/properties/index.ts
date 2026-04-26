@@ -27,6 +27,8 @@ export { bgReader } from './bg'
 export { colReader } from './col'
 export { bocReader } from './boc'
 export { weightReader } from './weight'
+export { wReader } from './w'
+export { hReader } from './h'
 
 import type { PropertyReader } from './types'
 import { padReader } from './pad'
@@ -43,6 +45,8 @@ import { bgReader } from './bg'
 import { colReader } from './col'
 import { bocReader } from './boc'
 import { weightReader } from './weight'
+import { wReader } from './w'
+import { hReader } from './h'
 
 export const PROPERTY_READERS: Record<string, PropertyReader> = {
   pad: padReader,
@@ -66,6 +70,8 @@ export const PROPERTY_READERS: Record<string, PropertyReader> = {
   col: colReader,
   boc: bocReader,
   weight: weightReader,
+  w: wReader,
+  h: hReader,
 }
 
 export function getReader(propertyName: string): PropertyReader | null {
