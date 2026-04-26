@@ -10,16 +10,33 @@
  * - P: Toggle padding handles (show inner padding handles for direct manipulation)
  * - M: Toggle margin handles (show outer margin handles for direct manipulation)
  * - G: Toggle gap handles (show gap handles between children for direct manipulation)
+ * - T: Insert Text as last child of selected element
+ * - R: Insert Frame (Rectangle) as last child of selected element
+ * - I: Insert Icon as last child of selected element
  * - Cmd/Ctrl+G: Group selected elements (wrap in Box)
  * - Shift+Cmd/Ctrl+G: Ungroup selected element (unwrap container)
  * - Cmd/Ctrl+D: Duplicate selected element
  * - Delete/Backspace: Delete selected element(s)
- * - Escape: Clear multi-selection, or navigate to parent element
+ * - Escape: Exit spacing mode, clear multi-selection, or navigate to parent element
  * - Enter: Navigate to first child element
- * - Arrow keys: Move selected element (1px normal, 10px with Shift)
+ * - Arrow keys (no spacing mode): Move selected element (1px normal, 10px with Shift)
+ * - Arrow keys (in P/M/G spacing mode): Adjust spacing in grid steps. Plain = all sides.
+ *   Option+arrow = single side +1 step. Option+Shift+arrow = single side -1 step.
  */
 
-import { state, actions, events, getLayoutService } from '../core'
+import {
+  state,
+  actions,
+  events,
+  executor,
+  getLayoutService,
+  handleSnapSettings,
+  SetPositionCommand,
+  SetPropertyCommand,
+  InsertComponentCommand,
+  type CommandContext,
+  type HandleMode,
+} from '../core'
 import {
   executeGroup,
   executeUngroup,
@@ -30,8 +47,6 @@ import {
   executeWrapWithLayout,
   executeToggleSpread,
 } from './shared-actions'
-import { SetPositionCommand } from '../core/commands'
-import type { CommandContext } from '../core/commands'
 import { isAbsoluteLayoutContainer } from '../../compiler/studio/utils/layout-detection'
 import { createLogger } from '../../compiler/utils/logger'
 
@@ -50,6 +65,7 @@ export class KeyboardHandler {
   private boundHandleKeyDown: (e: KeyboardEvent) => void
   private getCommandContext: () => CommandContext | null
   private nodeIdAttribute: string
+  private unsubscribeHandleMode: (() => void) | null = null
 
   constructor(config: KeyboardHandlerConfig) {
     this.container = config.container
@@ -60,10 +76,28 @@ export class KeyboardHandler {
 
   attach(): void {
     document.addEventListener('keydown', this.boundHandleKeyDown)
+
+    // End the spacing-mode coalescing session whenever the user leaves the
+    // current spacing mode (back to resize, or directly into another spacing
+    // mode). Each mode is one logical undo step.
+    this.unsubscribeHandleMode = events.on('handleMode:changed', ({ prevMode }) => {
+      const wasSpacing = prevMode === 'padding' || prevMode === 'margin' || prevMode === 'gap'
+      if (wasSpacing && executor.isInSession()) {
+        executor.endSession()
+      }
+    })
   }
 
   detach(): void {
     document.removeEventListener('keydown', this.boundHandleKeyDown)
+    if (this.unsubscribeHandleMode) {
+      this.unsubscribeHandleMode()
+      this.unsubscribeHandleMode = null
+    }
+    // Defensive: if a session was open (e.g. detach called mid-session), commit it.
+    if (executor.isInSession()) {
+      executor.endSession()
+    }
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
@@ -217,9 +251,38 @@ export class KeyboardHandler {
       }
     }
 
-    // Arrow keys = Move selected element (if in absolute container)
+    // T/R/I = Insert child element. Only active in normal (resize) mode —
+    // not while a spacing mode (P/M/G) is active, where these letters may
+    // gain modal sub-key meaning later.
+    const handleMode = state.get().handleMode
+    const isSpacingMode =
+      handleMode === 'padding' || handleMode === 'margin' || handleMode === 'gap'
+    if (
+      !isSpacingMode &&
+      !e.metaKey &&
+      !e.ctrlKey &&
+      !e.altKey &&
+      !e.shiftKey &&
+      (e.key === 't' || e.key === 'r' || e.key === 'i')
+    ) {
+      const nodeId = state.get().selection?.nodeId
+      if (nodeId) {
+        e.preventDefault()
+        const insertSpec = this.getInsertSpec(e.key)
+        this.handleInsertChild(nodeId, insertSpec.component, insertSpec.textContent)
+        return
+      }
+    }
+
+    // Arrow keys: in spacing mode → adjust spacing. Otherwise: move element
+    // (when in an absolute container).
     if (this.isArrowKey(e.key)) {
       const nodeId = state.get().selection?.nodeId
+      if (nodeId && isSpacingMode) {
+        e.preventDefault()
+        this.handleSpacingArrow(e, handleMode, nodeId)
+        return
+      }
       if (nodeId && this.isInAbsoluteContainer(nodeId)) {
         e.preventDefault()
         this.handleArrowMove(e, nodeId)
@@ -237,18 +300,33 @@ export class KeyboardHandler {
       }
     }
 
-    // Escape = Clear multi-selection OR navigate to parent
+    // Escape = Exit spacing mode → Clear multi-selection → Navigate to parent
     if (e.key === 'Escape') {
+      // First: exit spacing mode (P/M/G handles active) — toggle off via the
+      // existing handler, which switches back to resize and hides handles.
+      const currentMode = state.get().handleMode
+      const currentSelection = state.get().selection?.nodeId
+      if (currentSelection && currentMode !== 'resize') {
+        e.preventDefault()
+        const toggleEvent =
+          currentMode === 'padding'
+            ? 'handles:toggle-padding'
+            : currentMode === 'margin'
+              ? 'handles:toggle-margin'
+              : 'handles:toggle-gap'
+        events.emit(toggleEvent, { nodeId: currentSelection })
+        return
+      }
+
       const multiSelection = state.get().multiSelection
       if (multiSelection.length > 0) {
-        // First: clear multi-selection
+        // Second: clear multi-selection
         e.preventDefault()
         actions.clearMultiSelection()
         return
       }
 
-      // Second: navigate to parent element
-      const currentSelection = state.get().selection?.nodeId
+      // Third: navigate to parent element
       if (currentSelection) {
         e.preventDefault()
         this.selectParent(currentSelection)
@@ -477,6 +555,239 @@ export class KeyboardHandler {
     } else {
       events.emit('notification:warning', { message: result.error || 'Failed to move element' })
     }
+  }
+
+  /**
+   * Map T/R/I keys to the component to insert and its default text content.
+   * R = Rectangle (= Frame in Mirror's schema; designer-friendly key choice
+   * to avoid colliding with F = Set full dimension).
+   */
+  private getInsertSpec(key: string): { component: string; textContent?: string } {
+    switch (key) {
+      case 't':
+        return { component: 'Text', textContent: 'Text' }
+      case 'r':
+        return { component: 'Frame' }
+      case 'i':
+        return { component: 'Icon', textContent: 'circle' }
+      default:
+        return { component: 'Frame' }
+    }
+  }
+
+  /**
+   * Insert a new element as the last child of `parentId` and select it after
+   * the recompile completes. Selection works by diffing the parent's child
+   * list before vs. after — the new child is the one that wasn't there
+   * before.
+   */
+  private handleInsertChild(parentId: string, component: string, textContent?: string): void {
+    const sourceMap = state.get().sourceMap
+    if (!sourceMap) {
+      events.emit('notification:warning', { message: 'No source map available' })
+      return
+    }
+
+    const beforeIds = new Set(sourceMap.getChildren(parentId).map(c => c.nodeId))
+
+    // Set up selection of the newly inserted child after compile completes.
+    const off = events.once('compile:completed', () => {
+      const newSourceMap = state.get().sourceMap
+      if (!newSourceMap) return
+      const after = newSourceMap.getChildren(parentId)
+      const newChild = after.find(c => !beforeIds.has(c.nodeId))
+      if (newChild) {
+        actions.setSelection(newChild.nodeId, 'keyboard')
+      }
+    })
+
+    const result = executor.execute(
+      new InsertComponentCommand({
+        parentId,
+        component,
+        position: 'last',
+        textContent,
+      })
+    )
+
+    if (!result.success) {
+      // Cancel the deferred selection if the insert failed.
+      off()
+      events.emit('notification:warning', {
+        message: result.error || `Failed to insert ${component}`,
+      })
+      return
+    }
+
+    events.emit('notification:success', {
+      message: `Inserted ${component}`,
+      duration: 1500,
+    })
+  }
+
+  /**
+   * Handle arrow-key in spacing mode (P/M/G handles active). Plain ↑/↓ adjusts
+   * all sides; Option+arrow targets a single side; Shift inverts the sign on
+   * Option-variants.
+   *
+   * The arrow direction *is* the side: Option+↑ = top, Option+↓ = bottom,
+   * Option+← = left, Option+→ = right. Without Option, ↑ = increase all,
+   * ↓ = decrease all.
+   *
+   * Step size comes from `handleSnapSettings.gridSize` — same source the
+   * visual handles use, so mouse-drag and keyboard land on the same grid.
+   */
+  private handleSpacingArrow(e: KeyboardEvent, mode: HandleMode, nodeId: string): void {
+    if (mode !== 'padding' && mode !== 'margin' && mode !== 'gap') return
+
+    const gridSize = handleSnapSettings.get().gridSize
+    if (gridSize <= 0) return
+
+    const useSide = e.altKey
+    const isVerticalKey = e.key === 'ArrowUp' || e.key === 'ArrowDown'
+    const isHorizontalKey = e.key === 'ArrowLeft' || e.key === 'ArrowRight'
+
+    // Gap has no sides — only plain ↑/↓ is meaningful.
+    if (mode === 'gap' && (useSide || isHorizontalKey)) {
+      return
+    }
+
+    // Determine direction (+1 / -1) and target side.
+    let direction: 1 | -1
+    let side: 'top' | 'right' | 'bottom' | 'left' | null
+
+    if (useSide) {
+      // Option+arrow: arrow direction selects the side. Shift inverts sign.
+      direction = e.shiftKey ? -1 : 1
+      switch (e.key) {
+        case 'ArrowUp':
+          side = 'top'
+          break
+        case 'ArrowDown':
+          side = 'bottom'
+          break
+        case 'ArrowLeft':
+          side = 'left'
+          break
+        case 'ArrowRight':
+          side = 'right'
+          break
+        default:
+          return
+      }
+    } else {
+      // Plain ↑/↓: all sides ± step. Horizontal keys are ignored without Option.
+      if (!isVerticalKey) return
+      direction = e.key === 'ArrowUp' ? 1 : -1
+      side = null
+    }
+
+    const property = this.getSpacingProperty(mode, side)
+    const current = this.getCurrentSpacingValue(nodeId, mode, side)
+    if (current === null) return
+
+    const next = this.computeNextSnapValue(current, direction, gridSize)
+    if (next === current) return
+
+    // Session coalescing: many arrow presses in one mode collapse to one
+    // undo entry. Begin lazily on the first press; end is triggered by the
+    // handleMode:changed listener in attach() when the user leaves the mode.
+    if (!executor.isInSession()) {
+      executor.beginSession(`Adjust ${mode} via keyboard`)
+    }
+    executor.executeInSession(
+      new SetPropertyCommand({
+        nodeId,
+        property,
+        value: String(next),
+      })
+    )
+    events.emit('selection:refresh', { nodeId })
+  }
+
+  /**
+   * Map (mode, side) to the Mirror property name that SetPropertyCommand
+   * expects. side=null means "all sides" (or just `gap` for gap mode).
+   */
+  private getSpacingProperty(
+    mode: 'padding' | 'margin' | 'gap',
+    side: 'top' | 'right' | 'bottom' | 'left' | null
+  ): string {
+    if (mode === 'gap') return 'gap'
+    const prefix = mode === 'padding' ? 'pad' : 'mar'
+    if (side === null) return prefix
+    const sideMap: Record<'top' | 'right' | 'bottom' | 'left', string> = {
+      top: '-t',
+      right: '-r',
+      bottom: '-b',
+      left: '-l',
+    }
+    return `${prefix}${sideMap[side]}`
+  }
+
+  /**
+   * Read the current spacing value (in pixels) from the rendered element's
+   * computed style. For "all sides" mode we use the top side as a
+   * representative — this matches what the visual "all" handle does on drag.
+   */
+  private getCurrentSpacingValue(
+    nodeId: string,
+    mode: 'padding' | 'margin' | 'gap',
+    side: 'top' | 'right' | 'bottom' | 'left' | null
+  ): number | null {
+    const el = this.container.querySelector(
+      `[${this.nodeIdAttribute}="${nodeId}"]`
+    ) as HTMLElement | null
+    if (!el) return null
+
+    const style = window.getComputedStyle(el)
+    if (mode === 'gap') {
+      return parseInt(style.gap || '0', 10) || 0
+    }
+
+    const sideForRead = side ?? 'top'
+    if (mode === 'padding') {
+      switch (sideForRead) {
+        case 'top':
+          return parseInt(style.paddingTop || '0', 10) || 0
+        case 'right':
+          return parseInt(style.paddingRight || '0', 10) || 0
+        case 'bottom':
+          return parseInt(style.paddingBottom || '0', 10) || 0
+        case 'left':
+          return parseInt(style.paddingLeft || '0', 10) || 0
+      }
+    } else {
+      switch (sideForRead) {
+        case 'top':
+          return parseInt(style.marginTop || '0', 10) || 0
+        case 'right':
+          return parseInt(style.marginRight || '0', 10) || 0
+        case 'bottom':
+          return parseInt(style.marginBottom || '0', 10) || 0
+        case 'left':
+          return parseInt(style.marginLeft || '0', 10) || 0
+      }
+    }
+    return null
+  }
+
+  /**
+   * Compute the next snap value in the given direction.
+   * - On-grid value: just step ± gridSize
+   * - Off-grid value: snap to next/prev grid multiple (the first press
+   *   "rescues" off-grid values back onto the grid, then subsequent presses
+   *   step normally)
+   * Negative results are clamped to 0.
+   */
+  private computeNextSnapValue(current: number, direction: 1 | -1, gridSize: number): number {
+    if (current % gridSize === 0) {
+      return Math.max(0, current + direction * gridSize)
+    }
+    if (direction > 0) {
+      return Math.ceil(current / gridSize) * gridSize
+    }
+    return Math.max(0, Math.floor(current / gridSize) * gridSize)
   }
 
   private handleGroup(): void {

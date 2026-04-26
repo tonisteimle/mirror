@@ -164,3 +164,12 @@ export {
   selectionUndoRedoTests,
   multiselectVisualTests,
 } from './validation.test'
+
+export {
+  allKeyboardEditingTests,
+  insertElementTests,
+  paddingArrowTests,
+  marginGapArrowTests,
+  spacingModeEscTests,
+  spacingUndoCoalescingTests,
+} from './keyboard-editing.test'

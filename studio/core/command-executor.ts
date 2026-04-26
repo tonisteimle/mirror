@@ -3,12 +3,17 @@
  */
 
 import type { Command, CommandResult, CommandContext } from './commands'
-import { getCommandContext } from './commands'
+import { BatchCommand, getCommandContext } from './commands'
 import { events } from './events'
 
 interface HistoryEntry {
   command: Command
   timestamp: number
+}
+
+interface Session {
+  commands: Command[]
+  description?: string
 }
 
 export interface CommandExecutorOptions {
@@ -25,6 +30,7 @@ export class CommandExecutor {
   private emitEvents: boolean
   private executing = false
   private injectedContext: CommandContext | null
+  private session: Session | null = null
 
   constructor(options: CommandExecutorOptions = {}) {
     this.maxHistory = options.maxHistory ?? 100
@@ -92,6 +98,9 @@ export class CommandExecutor {
   }
 
   undo(): CommandResult {
+    // Commit any in-progress session first so the user undoes a complete unit
+    // of work, not a half-finished session.
+    if (this.session) this.endSession()
     return this.runHistoryOp(
       this.undoStack,
       this.redoStack,
@@ -102,6 +111,7 @@ export class CommandExecutor {
   }
 
   redo(): CommandResult {
+    if (this.session) this.endSession()
     return this.runHistoryOp(
       this.redoStack,
       this.undoStack,
@@ -122,6 +132,73 @@ export class CommandExecutor {
   clear(): void {
     this.undoStack = []
     this.redoStack = []
+    this.session = null
+  }
+
+  // ===========================================================================
+  // Session API — coalesce many small commands into one undo step
+  //
+  // Use case: Spacing-Mode keyboard arrows. Each press is a SetPropertyCommand
+  // that needs to be applied immediately for live preview, but the user thinks
+  // of the whole "I tweaked padding for 8 seconds" as a single undo unit.
+  //
+  // Begin → executeInSession×N → end. On end, the N commands are wrapped in a
+  // BatchCommand(alreadyExecuted) and pushed as one undo entry.
+  // ===========================================================================
+
+  beginSession(description?: string): void {
+    // Forgiving: if a previous session was left open, commit it cleanly.
+    if (this.session) this.endSession()
+    this.session = { commands: [], description }
+  }
+
+  /**
+   * Execute a command as part of the active session. The change is applied
+   * immediately (so the user sees live feedback), but it is NOT pushed to the
+   * undo stack as a separate entry — instead it accumulates in the session
+   * until endSession() collapses everything into one BatchCommand.
+   *
+   * If no session is active, falls back to normal execute().
+   */
+  executeInSession(command: Command): CommandResult {
+    if (!this.session) return this.execute(command)
+    if (this.executing) {
+      return { success: false, error: 'Execution already in progress' }
+    }
+
+    this.executing = true
+    try {
+      const ctx = this.getContext()
+      const result = command.execute(ctx)
+      if (result.success) {
+        this.session.commands.push(command)
+        // Intentionally no 'command:executed' event — the session emits one
+        // batched event in endSession() instead.
+      }
+      return result
+    } finally {
+      this.executing = false
+    }
+  }
+
+  endSession(): void {
+    const session = this.session
+    this.session = null
+    if (!session || session.commands.length === 0) return
+
+    const batch = new BatchCommand({
+      commands: session.commands,
+      description: session.description,
+      alreadyExecuted: true,
+    })
+    this.undoStack.push({ command: batch, timestamp: Date.now() })
+    if (this.undoStack.length > this.maxHistory) this.undoStack.shift()
+    this.redoStack = []
+    if (this.emitEvents) events.emit('command:executed', { command: batch })
+  }
+
+  isInSession(): boolean {
+    return this.session !== null
   }
 }
 

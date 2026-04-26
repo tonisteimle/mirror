@@ -814,9 +814,14 @@ export class BatchCommand implements Command {
   private commands: Command[]
   private executedCommands: Command[] = []
 
-  constructor(params: { commands: Command[]; description?: string }) {
+  constructor(params: { commands: Command[]; description?: string; alreadyExecuted?: boolean }) {
     this.commands = params.commands
     this.description = params.description || `Batch of ${params.commands.length} commands`
+    // For coalesced sessions: the commands were already executed individually
+    // before being wrapped, so undo must operate on them as if execute() ran.
+    if (params.alreadyExecuted) {
+      this.executedCommands = [...params.commands]
+    }
   }
 
   execute(ctx: CommandContext): CommandResult {
