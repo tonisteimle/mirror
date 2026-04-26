@@ -129,6 +129,7 @@ export {
   setupSnappingAPI,
   type SnappingAPI,
 } from './snapping-api'
+export { installCliBridgeShim, type CliBridgeShimConfig } from './cli-bridge-shim'
 
 export interface StudioTestAPI {
   /** Wait for any picker to open */
