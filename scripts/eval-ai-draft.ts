@@ -13,9 +13,10 @@
  *   npm run ai-bridge    (port 3456)
  *
  * Run:
- *   npx tsx scripts/eval-ai-draft.ts                 # headless
+ *   npx tsx scripts/eval-ai-draft.ts                 # headless, 1 run per scenario
  *   npx tsx scripts/eval-ai-draft.ts --headed        # watch the browser drive itself
  *   npx tsx scripts/eval-ai-draft.ts --only=3        # run only scenario index 3
+ *   npx tsx scripts/eval-ai-draft.ts --repeat=5      # variance mode: run each scenario 5x
  */
 
 import { mkdirSync, writeFileSync } from 'fs'
@@ -1062,13 +1063,148 @@ function formatReport(results: ScenarioResult[]): string {
 }
 
 // =============================================================================
+// VARIANCE REPORT
+// =============================================================================
+
+/**
+ * Aggregates N runs of each scenario. Surfaces:
+ *   - Per-assertion pass-rate across runs (e.g. useToken: 5/5, render: 4/5)
+ *   - Output diversity (how many distinct extracted-code strings emerged)
+ *   - Bridge-time min/max/avg
+ *   - Line count min/max/avg
+ *   - Compile + render success rates
+ *
+ * The verdict per scenario: deterministic (all runs equivalent) vs flaky
+ * (some runs differ in shape) vs broken (some runs fail outright).
+ */
+function formatVarianceReport(results: ScenarioResult[], repeat: number): string {
+  const ts = new Date().toISOString()
+  const lines: string[] = []
+  lines.push(`# AI Draft-Mode Eval — Variance Mode (${repeat}× per scenario) — ${ts}`)
+  lines.push('')
+
+  // Group results by scenario id, preserving scenario order
+  const byScenarioId = new Map<string, ScenarioResult[]>()
+  for (const r of results) {
+    const arr = byScenarioId.get(r.scenario.id) ?? []
+    arr.push(r)
+    byScenarioId.set(r.scenario.id, arr)
+  }
+
+  // Summary table — one row per scenario
+  lines.push(
+    '| # | Scenario | Compile | Renders | Must-asserts | Distinct outputs | Bridge ms (avg) |'
+  )
+  lines.push(
+    '|---|----------|---------|---------|--------------|------------------|-----------------|'
+  )
+  for (const [id, runs] of byScenarioId) {
+    const sc = runs[0].scenario
+    const compiled = runs.filter(r => r.compileOk).length
+    const rendered = runs.filter(r => r.dom && r.dom.mirrorElementCount > 0).length
+    const allMust = runs.flatMap(r => r.assertResults.filter(a => a.level === 'must'))
+    const mustPass = allMust.filter(a => a.pass).length
+    const distinct = new Set(runs.map(r => (r.extractedCode ?? '').trim())).size
+    const bridgeAvg = avg(runs.map(r => r.bridgeCall?.elapsedMs ?? 0))
+    lines.push(
+      `| ${id} | ${sc.label} | ${compiled}/${runs.length} | ${rendered}/${runs.length} | ` +
+        `${mustPass}/${allMust.length} | ${distinct}/${runs.length} | ${Math.round(bridgeAvg)} |`
+    )
+  }
+  lines.push('')
+
+  // Per-scenario detail
+  for (const [id, runs] of byScenarioId) {
+    const sc = runs[0].scenario
+    lines.push(`---`)
+    lines.push('')
+    lines.push(`## ${id}: ${sc.label}`)
+    lines.push('')
+    lines.push(`**Prompt:** \`${sc.prompt || '(empty)'}\``)
+    lines.push('')
+
+    // Per-assertion pass-rate
+    if (sc.asserts && sc.asserts.length > 0) {
+      lines.push(`### Assertion pass-rates across ${runs.length} runs`)
+      lines.push('')
+      for (let i = 0; i < sc.asserts.length; i++) {
+        const a = sc.asserts[i]
+        const passes = runs.filter(r => r.assertResults[i]?.pass).length
+        const icon = passes === runs.length ? '✓' : passes === 0 ? '✗' : '⚠'
+        const rate = `${passes}/${runs.length}`
+        const tag = a.level === 'should' ? ' _(should)_' : ''
+        lines.push(`- ${icon} **${rate}** ${a.label}${tag}`)
+        if (passes < runs.length) {
+          // Show first failure detail to help diagnose
+          const failed = runs.find(r => r.assertResults[i] && !r.assertResults[i].pass)
+          if (failed?.assertResults[i].detail) {
+            lines.push(`  - example failure: ${failed.assertResults[i].detail}`)
+          }
+        }
+      }
+      lines.push('')
+    }
+
+    // Stats
+    const bridges = runs.map(r => r.bridgeCall?.elapsedMs ?? 0).filter(n => n > 0)
+    const lineCounts = runs.map(r => (r.extractedCode ?? '').split('\n').length)
+    lines.push(`### Stats`)
+    lines.push('')
+    lines.push(
+      `- Bridge time: min ${Math.min(...bridges)}ms, max ${Math.max(...bridges)}ms, avg ${Math.round(avg(bridges))}ms`
+    )
+    lines.push(
+      `- Line count: min ${Math.min(...lineCounts)}, max ${Math.max(...lineCounts)}, avg ${avg(lineCounts).toFixed(1)}`
+    )
+    lines.push(`- Compile: ${runs.filter(r => r.compileOk).length}/${runs.length} successful`)
+    lines.push(
+      `- Render: ${runs.filter(r => r.dom && r.dom.mirrorElementCount > 0).length}/${runs.length} non-empty`
+    )
+    lines.push('')
+
+    // Outputs side-by-side, deduped — shows the actual variance
+    const outputs = runs.map(r => (r.extractedCode ?? '').trim())
+    const groups = new Map<string, number[]>()
+    outputs.forEach((out, idx) => {
+      const arr = groups.get(out) ?? []
+      arr.push(idx + 1)
+      groups.set(out, arr)
+    })
+    lines.push(`### Distinct outputs (${groups.size} variants across ${runs.length} runs)`)
+    lines.push('')
+    let variantIdx = 0
+    for (const [output, runIndices] of groups) {
+      variantIdx++
+      lines.push(`**Variant ${variantIdx}** — runs ${runIndices.join(', ')}:`)
+      lines.push('```mirror')
+      lines.push(output || '(empty)')
+      lines.push('```')
+      lines.push('')
+    }
+  }
+
+  return lines.join('\n')
+}
+
+function avg(arr: number[]): number {
+  if (arr.length === 0) return 0
+  return arr.reduce((a, b) => a + b, 0) / arr.length
+}
+
+// =============================================================================
 // MAIN
 // =============================================================================
 
 async function main() {
   const headed = process.argv.includes('--headed')
   const onlyArg = process.argv.find(a => a.startsWith('--only='))
+  const repeatArg = process.argv.find(a => a.startsWith('--repeat='))
   const onlyId = onlyArg?.split('=')[1]
+  const repeat = repeatArg ? parseInt(repeatArg.split('=')[1], 10) : 1
+  if (!Number.isFinite(repeat) || repeat < 1) {
+    console.error(`--repeat must be a positive integer, got: ${repeatArg}`)
+    process.exit(1)
+  }
   const scenarios = onlyId
     ? SCENARIOS.filter(s => s.id.startsWith(onlyId) || s.id === onlyId)
     : SCENARIOS
@@ -1082,14 +1218,19 @@ async function main() {
 
   const reportDir = join(
     'test-results',
-    `ai-eval-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}`
+    `ai-eval-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}` +
+      (repeat > 1 ? `-x${repeat}` : '')
   )
   mkdirSync(reportDir, { recursive: true })
   console.log(`\nReport dir: ${reportDir}`)
+  if (repeat > 1) {
+    console.log(
+      `Variance mode: each scenario runs ${repeat}× (${scenarios.length * repeat} total calls)`
+    )
+  }
 
   console.log(`\nLaunching Chrome (${headed ? 'headed' : 'headless'})...`)
   const chrome = await launchChrome({ headless: !headed })
-  // Extract DevTools port from wsEndpoint to find the page target
   const portMatch = chrome.wsEndpoint.match(/127\.0\.0\.1:(\d+)/)
   if (!portMatch) throw new Error(`Could not parse port from ${chrome.wsEndpoint}`)
   const port = parseInt(portMatch[1], 10)
@@ -1101,7 +1242,6 @@ async function main() {
   await cdp.send('Page.enable')
   await cdp.send('Console.enable')
 
-  // Forward browser warnings/errors to terminal for visibility
   cdp.on('Console.messageAdded', (params: any) => {
     const msg = params?.message
     if (!msg) return
@@ -1119,13 +1259,18 @@ async function main() {
   const results: ScenarioResult[] = []
   try {
     for (const scenario of scenarios) {
-      try {
-        const result = await runScenario(cdp, scenario)
-        results.push(result)
-        // Save partial report after each scenario in case of later failure
-        writeFileSync(join(reportDir, 'report.md'), formatReport(results))
-      } catch (err) {
-        console.error(`  ✗ scenario ${scenario.id} crashed:`, err)
+      for (let runIdx = 0; runIdx < repeat; runIdx++) {
+        if (repeat > 1) console.log(`\n--- run ${runIdx + 1}/${repeat} ---`)
+        try {
+          const result = await runScenario(cdp, scenario)
+          results.push(result)
+          writeFileSync(
+            join(reportDir, repeat > 1 ? 'report-variance.md' : 'report.md'),
+            repeat > 1 ? formatVarianceReport(results, repeat) : formatReport(results)
+          )
+        } catch (err) {
+          console.error(`  ✗ scenario ${scenario.id} run ${runIdx + 1} crashed:`, err)
+        }
       }
     }
   } finally {
@@ -1133,10 +1278,13 @@ async function main() {
     chrome.kill()
   }
 
-  const reportPath = join(reportDir, 'report.md')
-  writeFileSync(reportPath, formatReport(results))
+  const reportPath = join(reportDir, repeat > 1 ? 'report-variance.md' : 'report.md')
+  writeFileSync(
+    reportPath,
+    repeat > 1 ? formatVarianceReport(results, repeat) : formatReport(results)
+  )
 
-  // Brief stats line
+  // Stats summary
   const ok = results.filter(r => r.compileOk && !r.draftError).length
   const renders = results.filter(r => r.dom && r.dom.mirrorElementCount > 0).length
   const allMust = results.flatMap(r => r.assertResults.filter(a => a.level === 'must'))
@@ -1144,8 +1292,8 @@ async function main() {
   const mustFails = allMust.length - mustPass
   console.log('')
   console.log(
-    `Done. compile ${ok}/${results.length} | renders ${renders}/${results.length} | ` +
-      `must-asserts ${mustPass}/${allMust.length}` +
+    `Done. ${results.length} runs | compile ${ok}/${results.length} | ` +
+      `renders ${renders}/${results.length} | must-asserts ${mustPass}/${allMust.length}` +
       (mustFails > 0 ? ` (${mustFails} failed)` : '')
   )
   console.log(`Report: ${reportPath}`)
