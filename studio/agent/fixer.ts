@@ -397,7 +397,29 @@ export class FixerService {
         )
       }
 
-      const fullPrompt = buildDraftPrompt({ prompt, content, fullSource })
+      // Pull tokens + components from OTHER project files (current file is
+      // already in fullSource). Without this the AI is token-blind and would
+      // invent hex colors / sizes instead of using `$primary`, `$surface` etc.
+      const allFiles = this.config.getFiles()
+      const currentFileName = this.config.getCurrentFile()
+      const tokenFiles: Record<string, string> = {}
+      const componentFiles: Record<string, string> = {}
+      for (const file of allFiles) {
+        if (file.name === currentFileName) continue
+        if (file.type === 'tokens') {
+          tokenFiles[file.name] = file.code
+        } else if (file.type === 'components' || file.type === 'component') {
+          componentFiles[file.name] = file.code
+        }
+      }
+
+      const fullPrompt = buildDraftPrompt({
+        prompt,
+        content,
+        fullSource,
+        tokenFiles,
+        componentFiles,
+      })
       const result = await bridge.agent.runAgent(fullPrompt, 'draft', '', this.sessionId)
       this.sessionId = result.session_id
 
@@ -698,6 +720,10 @@ function buildDraftPrompt(input: {
   prompt: string | null
   content: string
   fullSource: string
+  /** Other token files (.tok) — keyed by filename → file content */
+  tokenFiles?: Record<string, string>
+  /** Other component files (.com) — keyed by filename → file content */
+  componentFiles?: Record<string, string>
 }): string {
   const userInstruction = input.prompt
     ? `User-Anfrage: ${input.prompt}`
@@ -707,9 +733,18 @@ function buildDraftPrompt(input: {
     ? `\n\nAktueller Inhalt des Draft-Blocks:\n\`\`\`mirror\n${input.content}\n\`\`\``
     : '\n\nDer Draft-Block ist leer — generiere neuen Code basierend auf User-Anfrage und Kontext.'
 
-  return `Du bist ein Mirror DSL Code-Generator. Im folgenden Editor-Source markieren \`??\` Zeilen einen "Draft-Block" — den Bereich, der durch deine generierte Code-Antwort ersetzt werden soll.
+  const tokenSection = formatProjectFileSection(
+    'Token-Dateien (verfügbare $tokens — bevorzugen statt Hex-Werte zu erfinden)',
+    input.tokenFiles
+  )
+  const componentSection = formatProjectFileSection(
+    'Komponenten-Dateien (verfügbare Komponenten — wiederverwenden statt neu zu definieren)',
+    input.componentFiles
+  )
 
-## Editor-Source (mit ?? Markern)
+  return `Du bist ein Mirror DSL Code-Generator. Im folgenden Editor-Source markieren \`??\` Zeilen einen "Draft-Block" — den Bereich, der durch deine generierte Code-Antwort ersetzt werden soll.
+${tokenSection}${componentSection}
+## Editor-Source (aktuelle Datei, mit ?? Markern)
 \`\`\`mirror
 ${input.fullSource}
 \`\`\`
@@ -721,7 +756,8 @@ ${draftContent}
 - Gib NUR den Mirror-Code zurück, eingeschlossen in einen einzigen \`\`\`mirror Code-Block
 - KEIN JSON, KEINE Erklärungen davor oder danach, KEINE \`??\` Marker im Output
 - Die Einrückung wird vom Editor automatisch angepasst (relative Einrückung im Code-Block ist OK)
-- Nutze existierende Tokens und Komponenten aus dem Source wenn möglich
+- Wenn Tokens existieren ($name) → nutze sie statt Hex/Pixel-Werte zu erfinden
+- Wenn Komponenten existieren → wiederverwenden statt neue parallel zu definieren
 
 Beispiel:
 \`\`\`mirror
@@ -730,6 +766,21 @@ Frame hor, gap 8
   Button "Abbrechen"
 \`\`\`
 `
+}
+
+function formatProjectFileSection(
+  heading: string,
+  files: Record<string, string> | undefined
+): string {
+  if (!files) return ''
+  const entries = Object.entries(files).filter(([, content]) => content.trim())
+  if (entries.length === 0) return ''
+
+  const blocks = entries
+    .map(([name, content]) => `### ${name}\n\`\`\`mirror\n${content}\n\`\`\``)
+    .join('\n\n')
+
+  return `\n## ${heading}\n${blocks}\n`
 }
 
 /**

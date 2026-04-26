@@ -18,16 +18,32 @@ import { createFixer, FixerService } from '../../studio/agent/fixer'
 // HELPERS
 // ============================================
 
-function makeFixer(): { fixer: FixerService; bridge: MockTauriBridge; cleanup: () => void } {
+type FileType = 'tokens' | 'components' | 'component' | 'layout' | 'data' | 'unknown'
+
+function detectType(name: string): FileType {
+  if (name.endsWith('.tok')) return 'tokens'
+  if (name.endsWith('.com')) return 'components'
+  if (name.endsWith('.mir') || name.endsWith('.mirror')) return 'layout'
+  return 'unknown'
+}
+
+function makeFixer(opts: { files?: Record<string, string>; currentFile?: string } = {}): {
+  fixer: FixerService
+  bridge: MockTauriBridge
+  cleanup: () => void
+} {
   const bridge = createMockTauriBridge({ useRealCli: false, responseDelay: 5 })
   ;(globalThis as any).window = (globalThis as any).window || {}
   ;(globalThis as any).window.TauriBridge = bridge
 
-  const files = { 'app.mir': 'Frame\n  Text "before"' }
+  const files = opts.files ?? { 'app.mir': 'Frame\n  Text "before"' }
+  const currentFile = opts.currentFile ?? Object.keys(files)[0]
+
   const fixer = createFixer({
-    getFiles: () => Object.entries(files).map(([name, code]) => ({ name, type: 'layout', code })),
-    getCurrentFile: () => 'app.mir',
-    getEditorContent: () => files['app.mir'],
+    getFiles: () =>
+      Object.entries(files).map(([name, code]) => ({ name, type: detectType(name), code })),
+    getCurrentFile: () => currentFile,
+    getEditorContent: () => files[currentFile],
     getCursor: () => ({ line: 1, column: 1, offset: 0 }),
     getSelection: () => null,
     getFileContent: f => files[f as keyof typeof files] ?? null,
@@ -38,7 +54,7 @@ function makeFixer(): { fixer: FixerService; bridge: MockTauriBridge; cleanup: (
       ;(files as any)[f] = c
     },
     updateEditor: c => {
-      files['app.mir'] = c
+      files[currentFile] = c
     },
     refreshFileTree: () => {},
   })
@@ -250,6 +266,161 @@ describe('FixerService.generateDraftCode', () => {
       await fixer.generateDraftCode('2', '', '')
 
       expect(spy.sessionIds[0]).toBeNull()
+    })
+  })
+
+  describe('Project Context Injection', () => {
+    /**
+     * The critical test: when other project files contain tokens or components,
+     * the AI must SEE them in the prompt — otherwise it invents hex colors and
+     * defines parallel components instead of reusing what exists.
+     */
+    function spyPrompt(b: MockTauriBridge): { last: () => string } {
+      let captured = ''
+      const orig = b.runAgent.bind(b)
+      ;(b as any).runAgent = async (
+        prompt: string,
+        agentType: string,
+        projectPath: string,
+        sessionId?: string | null
+      ) => {
+        captured = prompt
+        return orig(prompt, agentType, projectPath, sessionId)
+      }
+      return { last: () => captured }
+    }
+
+    afterEach(() => cleanup())
+
+    test('tokens.tok content from another file appears in the prompt', async () => {
+      const setup = makeFixer({
+        files: {
+          'app.mir': 'canvas mobile\n\nFrame pad 16',
+          'tokens.tok': 'primary.bg: #2271C1\nsurface.bg: #1a1a1a\nmuted.col: #888',
+        },
+        currentFile: 'app.mir',
+      })
+      cleanup = setup.cleanup
+      fixer = setup.fixer
+      bridge = setup.bridge
+
+      const spy = spyPrompt(bridge)
+      bridge.setMockRawOutput('```mirror\nButton\n```')
+
+      await fixer.generateDraftCode('button', '', 'canvas mobile')
+
+      const prompt = spy.last()
+      expect(prompt).toContain('tokens.tok')
+      expect(prompt).toContain('primary.bg: #2271C1')
+      expect(prompt).toContain('surface.bg: #1a1a1a')
+      expect(prompt).toMatch(/Tokens.*bevorzugen/i) // instruction nudges token use
+    })
+
+    test('components.com content from another file appears in the prompt', async () => {
+      const setup = makeFixer({
+        files: {
+          'app.mir': 'canvas mobile',
+          'components.com': 'Btn: pad 12 24, bg $primary, col white, rad 6',
+        },
+        currentFile: 'app.mir',
+      })
+      cleanup = setup.cleanup
+      fixer = setup.fixer
+      bridge = setup.bridge
+
+      const spy = spyPrompt(bridge)
+      bridge.setMockRawOutput('```mirror\nBtn\n```')
+
+      await fixer.generateDraftCode('button', '', 'canvas mobile')
+
+      const prompt = spy.last()
+      expect(prompt).toContain('components.com')
+      expect(prompt).toContain('Btn: pad 12 24')
+      expect(prompt).toMatch(/Komponenten.*wiederverwenden/i)
+    })
+
+    test('current file is NOT duplicated in the project-files section', async () => {
+      const setup = makeFixer({
+        files: {
+          'app.mir': 'canvas mobile\n\n?? button ??',
+          'tokens.tok': 'primary.bg: #2271C1',
+        },
+        currentFile: 'app.mir',
+      })
+      cleanup = setup.cleanup
+      fixer = setup.fixer
+      bridge = setup.bridge
+
+      const spy = spyPrompt(bridge)
+      bridge.setMockRawOutput('```mirror\nButton\n```')
+
+      await fixer.generateDraftCode('button', '', 'canvas mobile\n\n?? button ??')
+
+      const prompt = spy.last()
+      // Editor source appears exactly once (under "Editor-Source" header).
+      // app.mir as a project file would mean it's there twice.
+      const occurrences = prompt.split('canvas mobile').length - 1
+      expect(occurrences).toBe(1)
+    })
+
+    test('skips empty project files (avoid noise)', async () => {
+      const setup = makeFixer({
+        files: {
+          'app.mir': 'Frame',
+          'empty.tok': '',
+          'real.tok': 'primary.bg: #2271C1',
+        },
+        currentFile: 'app.mir',
+      })
+      cleanup = setup.cleanup
+      fixer = setup.fixer
+      bridge = setup.bridge
+
+      const spy = spyPrompt(bridge)
+      bridge.setMockRawOutput('```mirror\nButton\n```')
+
+      await fixer.generateDraftCode('button', '', 'Frame')
+
+      const prompt = spy.last()
+      expect(prompt).toContain('real.tok')
+      expect(prompt).not.toContain('empty.tok')
+    })
+
+    test('no token/component section when no other project files exist', async () => {
+      // (uses default makeFixer — only app.mir, no tokens, no components)
+      const spy = spyPrompt(bridge)
+      bridge.setMockRawOutput('```mirror\nButton\n```')
+
+      await fixer.generateDraftCode('button', '', 'Frame')
+
+      const prompt = spy.last()
+      expect(prompt).not.toContain('## Token-Dateien')
+      expect(prompt).not.toContain('## Komponenten-Dateien')
+    })
+
+    test('both tokens AND components present together', async () => {
+      const setup = makeFixer({
+        files: {
+          'app.mir': 'Frame',
+          'tokens.tok': 'primary.bg: #2271C1',
+          'components.com': 'Btn: pad 12, bg $primary',
+        },
+        currentFile: 'app.mir',
+      })
+      cleanup = setup.cleanup
+      fixer = setup.fixer
+      bridge = setup.bridge
+
+      const spy = spyPrompt(bridge)
+      bridge.setMockRawOutput('```mirror\nBtn\n```')
+
+      await fixer.generateDraftCode('button', '', 'Frame')
+
+      const prompt = spy.last()
+      expect(prompt).toContain('tokens.tok')
+      expect(prompt).toContain('components.com')
+      expect(prompt).toContain('primary.bg: #2271C1')
+      expect(prompt).toContain('Btn: pad 12, bg $primary')
     })
   })
 })
