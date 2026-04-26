@@ -1,0 +1,4 @@
+user:
+  name: "Max"
+
+Text $user.name, fs 16

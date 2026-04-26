@@ -1,0 +1,4 @@
+primary.bg: #2271C1
+primary.col: #ef4444
+
+Text "Hello", $primary

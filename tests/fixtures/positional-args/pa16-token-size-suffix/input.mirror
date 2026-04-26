@@ -1,0 +1,5 @@
+space.pad: 16
+radius.rad: 8
+primary.bg: #2271C1
+
+Frame $primary, $space, $radius, w 200, h 100

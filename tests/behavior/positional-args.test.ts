@@ -290,18 +290,118 @@ describe('Positional Arguments — Behavior Spec', () => {
   })
 
   // -------------------------------------------------------------------------
-  // PA12: Tokens are NOT positional (Phase 1 limitation)
+  // PA12: Token references (Phase 1.5)
   // -------------------------------------------------------------------------
 
-  describe('PA12: $tokens pass through unchanged (Phase 1)', () => {
-    it('Frame $primary stays as Frame $primary (treated by parser, not resolver)', () => {
-      const out = resolvePositionalArgs(`Frame $primary`)
-      expect(out).toBe(`Frame $primary`)
+  describe('PA12: Token references with explicit suffix ($name.suffix)', () => {
+    it('Frame $primary.bg → bg $primary.bg (var(--primary-bg))', () => {
+      const root = render(`primary.bg: #2271C1\n\nFrame $primary.bg, w 100, h 50`, container)
+      const frame = findByName(root, 'Frame') as HTMLElement
+      expect(frame.style.background).toContain('var(--primary-bg)')
     })
 
-    it('Frame $cardstyle (property-set ref) is unchanged', () => {
+    it('Text $primary.col → col $primary.col', () => {
+      const root = render(`primary.col: white\n\nText "Hi", $primary.col`, container)
+      const text = findByName(root, 'Text') as HTMLElement
+      expect(text.style.color).toContain('var(--primary-col)')
+    })
+
+    it('Frame $space.pad, $radius.rad → pad + rad properties', () => {
+      const root = render(
+        `space.pad: 16\nradius.rad: 8\n\nFrame $space.pad, $radius.rad, w 100, h 50`,
+        container
+      )
+      const frame = findByName(root, 'Frame') as HTMLElement
+      expect(frame.style.padding).toContain('var(--space-pad)')
+      expect(frame.style.borderRadius).toContain('var(--radius-rad)')
+    })
+  })
+
+  describe('PA13: Token references with single suffix ($name auto-resolves)', () => {
+    it('Frame $primary (only primary.bg defined) → bg $primary', () => {
+      const root = render(`primary.bg: #2271C1\n\nFrame $primary, w 100, h 50`, container)
+      const frame = findByName(root, 'Frame') as HTMLElement
+      expect(frame.style.background).toContain('var(--primary-bg)')
+    })
+
+    it('Frame $space (only space.pad defined) → pad $space', () => {
+      const root = render(`space.pad: 16\n\nFrame $space, w 100, h 50`, container)
+      const frame = findByName(root, 'Frame') as HTMLElement
+      expect(frame.style.padding).toContain('var(--space-pad)')
+    })
+  })
+
+  describe('PA14: Token references with multi-suffix (role-based pick)', () => {
+    it('Frame $primary picks .bg (Container role)', () => {
+      const root = render(
+        `primary.bg: #2271C1\nprimary.col: white\n\nFrame $primary, w 100, h 50`,
+        container
+      )
+      const frame = findByName(root, 'Frame') as HTMLElement
+      expect(frame.style.background).toContain('var(--primary-bg)')
+    })
+
+    it('Text $primary picks .col (Content role)', () => {
+      const root = render(
+        `primary.bg: #2271C1\nprimary.col: #ef4444\n\nText "Hi", $primary`,
+        container
+      )
+      const text = findByName(root, 'Text') as HTMLElement
+      expect(text.style.color).toContain('var(--primary-col)')
+    })
+
+    it('Icon $primary picks .ic (Icon role)', () => {
+      const root = render(
+        `primary.bg: #2271C1\nprimary.ic: #888\n\nIcon "check", $primary, 24`,
+        container
+      )
+      const icon = findByName(root, 'Icon') as HTMLElement
+      expect(icon.dataset.iconColor).toBe('var(--primary-ic)')
+    })
+  })
+
+  describe('PA15: Object property access ≠ token (passes through)', () => {
+    it('Text $user.name (where user is an object) → textContent', () => {
+      const root = render(`user:\n  name: "Max"\n\nText $user.name`, container)
+      const text = findByName(root, 'Text') as HTMLElement
+      expect(text.textContent?.trim()).toBe('Max')
+    })
+
+    it('resolver does not transform $user.name when user is an object', () => {
+      const out = resolvePositionalArgs(`user:\n  name: "Max"\n\nText $user.name`)
+      // The line `Text $user.name` should NOT have a property-name prefix
+      expect(out).toContain('Text $user.name')
+      expect(out).not.toContain('Text name $user.name')
+      expect(out).not.toContain('Text col $user.name')
+    })
+  })
+
+  describe('PA16: Multiple token-refs on one element', () => {
+    it('Frame $primary, $space, $radius → bg + pad + rad simultaneously', () => {
+      const root = render(
+        `space.pad: 16\nradius.rad: 8\nprimary.bg: #2271C1\n\nFrame $primary, $space, $radius, w 200, h 100`,
+        container
+      )
+      const frame = findByName(root, 'Frame') as HTMLElement
+      expect(frame.style.background).toContain('var(--primary-bg)')
+      expect(frame.style.padding).toContain('var(--space-pad)')
+      expect(frame.style.borderRadius).toContain('var(--radius-rad)')
+    })
+  })
+
+  describe('PA17: Property-set refs still pass through (no token def → not transformed)', () => {
+    it('Frame $cardstyle (no token, no object) → unchanged', () => {
+      // cardstyle is a property-set, not a token. Without a token def
+      // (`cardstyle.X:` flat), the resolver leaves it alone.
       const out = resolvePositionalArgs(`Frame $cardstyle, w 100`)
       expect(out).toBe(`Frame $cardstyle, w 100`)
+    })
+
+    it('Frame $cardstyle property-set still expands via existing parser', () => {
+      const root = render(`cardstyle: bg #1a1a1a, pad 16, rad 8\n\nFrame $cardstyle`, container)
+      const frame = findByName(root, 'Frame') as HTMLElement
+      expect(frame.style.background).toContain('rgb(26, 26, 26)')
+      expect(frame.style.padding).toBe('16px')
     })
   })
 

@@ -31,12 +31,30 @@ Icon "loader", #888, 24
 
 **R1 — Farbe ohne Property-Name** wird zur Default-Color-Property.
 Was als Farbe zählt: Hex (`#abc`/`#abc123`/`#abc12345`), Named-Color
-(`red`/`white`/`transparent`), `rgba(...)`, suffix-freier Token
-(`$primary`, `$danger`).
+(`red`/`white`/`transparent`), `rgba(...)`.
 
 **R2 — Zahl / `hug` / `full` ohne Property-Name** wird zur Size-Property.
 Erste Position → Slot 1, zweite → Slot 2, dritte → Fehler.
 Slot 2 ist optional (default `hug`).
+
+**R3 — Token-Referenz ohne Property-Name**:
+
+- `$name.suffix` (mit Punkt am Use-Site) → Suffix wird Property-Name.
+  `Frame $primary.bg` → `Frame bg $primary.bg`. Funktioniert immer,
+  weil ein Punkt am Use-Site nur bei Token-Refs vorkommt — _außer_
+  wenn `name` als Object/Variable mit Sub-Properties definiert ist
+  (dann ist es Property-Access, nicht Token-Suffix).
+- `$name` (suffixfrei am Use-Site, aber `name.suffix:` ist als Token
+  definiert) → Resolver scannt vorher die Definitionen.
+  Single-Suffix-Token (`space.pad: 16`) → Suffix wird Property-Name
+  (`Frame $space` → `Frame pad $space`). Multi-Suffix
+  (`primary.bg + primary.col`) → Per-Primitive-Role entscheidet
+  (Frame nimmt `bg`, Text nimmt `col`, Icon nimmt `ic`).
+
+Property-Set-Refs (`cardstyle:` ohne Punkt) und Object-Refs (`user:`
+mit eingerückten Sub-Properties) werden **nicht** als Token erkannt
+und passieren unverändert — der Parser/IR macht damit weiter wie
+bisher.
 
 Welche Property gemappt wird, hängt vom Primitive ab:
 
