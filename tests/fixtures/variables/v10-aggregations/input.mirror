@@ -1,0 +1,12 @@
+tasks:
+  t1:
+    title: "First"
+  t2:
+    title: "Second"
+  t3:
+    title: "Third"
+
+Frame gap 4
+  Text "Count: $tasks.count"
+  Text "First: $tasks.first.title"
+  Text "Last: $tasks.last.title"

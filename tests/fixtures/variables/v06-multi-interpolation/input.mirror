@@ -1,0 +1,5 @@
+first: "Max"
+last: "Mustermann"
+count: 42
+
+Text "Hello $first $last, you have $count points"

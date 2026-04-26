@@ -1,0 +1,7 @@
+user:
+  name: "Max"
+  email: "max@example.com"
+
+Frame gap 4
+  Text "$user.name"
+  Text "$user.email"

@@ -1,0 +1,6 @@
+company:
+  ceo:
+    name: "Anna"
+    title: "CEO"
+
+Text "$company.ceo.name, $company.ceo.title"

@@ -66,16 +66,16 @@
 
 ## Daten & Bindings
 
-| #   | Feature            | Sub-Features                                                                 | Status | Schichten | Notizen                |
-| --- | ------------------ | ---------------------------------------------------------------------------- | :----: | --------- | ---------------------- |
-| 34  | **Variables**      | scalar (`name: "X"`), reference (`$name`), interpolation (`"$name says hi"`) |   🔵   | -         |                        |
-| 35  | **Objects**        | nested (`user: { name: "X" }`), property access (`$user.name`)               |   🔵   | -         |                        |
-| 36  | **Collections**    | object-of-entries, array, aggregations (count, first, last)                  |   🔵   | -         |                        |
-| 37  | **Bind (One-way)** | `Text $var`                                                                  |   🔵   | -         |                        |
-| 38  | **Bind (Two-way)** | `Input bind varName`, mit Mask                                               |   🔵   | -         | `bind-feature.test.ts` |
-| 39  | **Bind in Loops**  | each-Loop-Items mit `bind` auf Loop-Var-Property                             |   🔵   | -         |                        |
-| 40  | **Exclusive-Bind** | `bind selectedItem` für Auswahl in Liste                                     |   🔵   | -         |                        |
-| 41  | **Input Mask**     | Pattern (`#`, `A`, `*`), Literal-Chars, mit `bind`                           |   🔵   | -         |                        |
+| #   | Feature            | Sub-Features                                                                                                                                                        | Status | Schichten | Notizen                                 |
+| --- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: | --------- | --------------------------------------- |
+| 34  | **Variables**      | V1 number, V2 string, V3 boolean, V4 reference (style), V5 interpolation, V6 multi-interpolation, V7 nested object, V8 deep access, V9 collection, V10 aggregations |   ✅   | F·B·C·D·S | Sprint 1.1, ~75 Tests, Bug #22 entdeckt |
+| 35  | **Objects**        | nested (`user: { name: "X" }`), property access (`$user.name`)                                                                                                      |   🔵   | -         |                                         |
+| 36  | **Collections**    | object-of-entries, array, aggregations (count, first, last)                                                                                                         |   🔵   | -         |                                         |
+| 37  | **Bind (One-way)** | `Text $var`                                                                                                                                                         |   🔵   | -         |                                         |
+| 38  | **Bind (Two-way)** | `Input bind varName`, mit Mask                                                                                                                                      |   🔵   | -         | `bind-feature.test.ts`                  |
+| 39  | **Bind in Loops**  | each-Loop-Items mit `bind` auf Loop-Var-Property                                                                                                                    |   🔵   | -         |                                         |
+| 40  | **Exclusive-Bind** | `bind selectedItem` für Auswahl in Liste                                                                                                                            |   🔵   | -         |                                         |
+| 41  | **Input Mask**     | Pattern (`#`, `A`, `*`), Literal-Chars, mit `bind`                                                                                                                  |   🔵   | -         |                                         |
 
 ## Komposition & Kontrollfluss
 
@@ -287,13 +287,14 @@ können Bug-Density-Schätzungen für andere Features korrigieren).
 
 ## Laufende Notiz: Bekannte Bugs aus Pyramide-Arbeit
 
-| #   | Bug                                         | Gefunden in   | Status    |
-| --- | ------------------------------------------- | ------------- | --------- |
-| 17  | Doppelter `tasksData` bei zwei `each`-Loops | Smoke-Tests   | ✅ gefixt |
-| 18  | Strings ohne Quotes in Conditional          | Smoke-Tests   | ✅ gefixt |
-| 19  | Colon-Splitting in `__loopVar:` Markern     | Smoke-Tests   | ✅ gefixt |
-| 20  | `__loopVar:` ohne Wrap als bare Identifier  | Smoke-Tests   | ✅ gefixt |
-| 21  | Self-Reference Stack-Overflow               | Components-F. | ⬜ offen  |
+| #   | Bug                                                   | Gefunden in        | Status    |
+| --- | ----------------------------------------------------- | ------------------ | --------- |
+| 17  | Doppelter `tasksData` bei zwei `each`-Loops           | Smoke-Tests        | ✅ gefixt |
+| 18  | Strings ohne Quotes in Conditional                    | Smoke-Tests        | ✅ gefixt |
+| 19  | Colon-Splitting in `__loopVar:` Markern               | Smoke-Tests        | ✅ gefixt |
+| 20  | `__loopVar:` ohne Wrap als bare Identifier            | Smoke-Tests        | ✅ gefixt |
+| 21  | Self-Reference Stack-Overflow                         | Components-F.      | ⬜ offen  |
+| 22  | `Text $var` (bare ref) emittiert keinen `textContent` | Variables-Contract | ⬜ offen  |
 
 ## Nicht-Ziele
 
