@@ -146,7 +146,10 @@ export function getExistingDefinitionBody(
   comContent: string,
   componentName: string
 ): string | null {
-  const pattern = new RegExp(`^${componentName}\\s*:\\s*(.*)$`, 'm')
+  // Use [ \t] for inline whitespace so we don't accidentally consume the
+  // line break and pick up a slot from the next line (e.g. `Card:\n  Title:`
+  // would otherwise return `Title: ...` instead of `''`).
+  const pattern = new RegExp(`^${componentName}[ \\t]*:[ \\t]*(.*)$`, 'm')
   const match = comContent.match(pattern)
   return match ? match[1] : null
 }
@@ -160,7 +163,8 @@ export function replaceDefinitionLine(
   componentName: string,
   newBody: string
 ): string {
-  const pattern = new RegExp(`^(\\s*)${componentName}\\s*:\\s*.*$`, 'm')
+  // Match only on the same line (use [ \t] not \s — see getExistingDefinitionBody).
+  const pattern = new RegExp(`^([ \\t]*)${componentName}[ \\t]*:[ \\t]*.*$`, 'm')
   return comContent.replace(pattern, `$1${componentName}: ${newBody}`)
 }
 
@@ -208,52 +212,129 @@ function addToComponentsFile(currentContent: string, definition: string): string
   return trimmedContent + '\n\n' + definition + '\n'
 }
 
+// =====================================================================
+// Pure-function core: takes the source + .com content + line number,
+// returns the new editor text and the new .com content (no EditorView).
+// performExtraction is a thin wrapper that calls this and dispatches.
+// =====================================================================
+
+export interface ExtractionInput {
+  /** Source text that contains the `Name::` line. */
+  source: string
+  /** 1-based line number of the line containing `Name::`. */
+  lineNumber: number
+  /** Detected component name from `Name::` pattern. */
+  componentName: string
+  /** Existing .com content (empty if no .com file yet). */
+  comContent: string
+}
+
+export type ExtractionAction =
+  /** No properties after `::` — just strip the second `:`. */
+  | { kind: 'strip-colon'; componentName: string }
+  /** Full extract: replace lines + write/update .com. */
+  | {
+      kind: 'extract'
+      /** Inclusive 1-based line range to replace in the editor. */
+      startLine: number
+      endLine: number
+      /** Replacement text (instance line + children). */
+      replacement: string
+      /** New .com content with the merged or fresh definition. */
+      newComContent: string
+      /** Cursor position after the component name on the instance line. */
+      cursorOffsetInReplacement: number
+    }
+
 /**
- * Collect children of the component line (lines below with greater
- * indentation). Returns the children as already-trimmed lines (with
- * their relative indentation preserved as 2-space-per-level), plus the
- * last line number that belongs to the children block.
+ * Pure orchestrator for component extraction. No EditorView required —
+ * everything is computed from the source text. This is the unit-testable
+ * core of `performExtraction`.
  */
-function collectChildren(
-  view: EditorView,
-  lineNumber: number,
-  baseIndent: number
-): { children: string[]; endLine: number } {
-  const doc = view.state.doc
-  const totalLines = doc.lines
-  const children: string[] = []
+export function computeExtraction(input: ExtractionInput): ExtractionAction | null {
+  const { source, lineNumber, componentName, comContent } = input
+
+  const lines = source.split('\n')
+  if (lineNumber < 1 || lineNumber > lines.length) return null
+  const lineText = lines[lineNumber - 1]
+
+  const colonIndex = lineText.lastIndexOf('::')
+  if (colonIndex === -1) return null
+
+  const propertiesAfterColons = lineText.slice(colonIndex + 2)
+
+  // No properties after :: — strip the second `:` and keep the name.
+  if (!propertiesAfterColons.trim()) {
+    return { kind: 'strip-colon', componentName }
+  }
+
+  const newSegments = parseSegments(propertiesAfterColons)
+  const newProps = newSegments.filter(s => s.kind === 'property')
+  const contentSegments = newSegments.filter(s => s.kind === 'content')
+
+  // Build new .com content via merge or fresh.
+  const existingBody = getExistingDefinitionBody(comContent, componentName)
+  let newComContent: string
+  if (existingBody !== null) {
+    const existingSegments = parseSegments(existingBody)
+    const mergedBody = mergeProperties(existingSegments, newProps)
+    newComContent = replaceDefinitionLine(comContent, componentName, mergedBody)
+  } else {
+    const freshBody = newProps.map(s => s.full).join(', ')
+    newComContent = addToComponentsFile(comContent, `${componentName}: ${freshBody}`)
+  }
+
+  // Build the instance line.
+  const indent = (lineText.match(/^(\s*)/) || ['', ''])[1]
+  let instanceLine = indent + componentName
+  if (contentSegments.length > 0) {
+    instanceLine += ' ' + contentSegments.map(s => s.full).join(', ')
+  }
+
+  // Collect children (lines below with deeper indent) — text-level.
+  const baseIndent = indent.length
+  const childTexts: string[] = []
   let endLine = lineNumber
-
-  for (let i = lineNumber + 1; i <= totalLines; i++) {
-    const childLine = doc.line(i)
-    const childText = childLine.text
-
-    if (childText.trim() === '') {
+  for (let i = lineNumber; i < lines.length; i++) {
+    const next = lines[i]
+    if (next.trim() === '') {
+      // Look ahead for more children
       let hasMore = false
-      for (let j = i + 1; j <= totalLines; j++) {
-        const nextLine = doc.line(j)
-        if (nextLine.text.trim() === '') continue
-        const nextIndent = (nextLine.text.match(/^(\s*)/) || ['', ''])[1].length
-        if (nextIndent > baseIndent) hasMore = true
+      for (let j = i + 1; j < lines.length; j++) {
+        const further = lines[j]
+        if (further.trim() === '') continue
+        const furtherIndent = (further.match(/^(\s*)/) || ['', ''])[1].length
+        if (furtherIndent > baseIndent) hasMore = true
         break
       }
       if (hasMore) {
-        children.push('')
-        endLine = i
+        childTexts.push('')
+        endLine = i + 1
         continue
       }
       break
     }
-
-    const childIndent = (childText.match(/^(\s*)/) || ['', ''])[1].length
-    if (childIndent <= baseIndent) break
-
-    const relativeIndent = childIndent - baseIndent
-    const relativeSpaces = '  '.repeat(Math.ceil(relativeIndent / 2))
-    children.push(relativeSpaces + childText.trim())
-    endLine = i
+    const ci = (next.match(/^(\s*)/) || ['', ''])[1].length
+    if (ci <= baseIndent) break
+    const relIndent = ci - baseIndent
+    const relSpaces = '  '.repeat(Math.ceil(relIndent / 2))
+    childTexts.push(relSpaces + next.trim())
+    endLine = i + 1
   }
-  return { children, endLine }
+
+  let replacement = instanceLine
+  if (childTexts.length > 0) {
+    replacement += '\n' + childTexts.map(c => indent + c).join('\n')
+  }
+
+  return {
+    kind: 'extract',
+    startLine: lineNumber,
+    endLine,
+    replacement,
+    newComContent,
+    cursorOffsetInReplacement: indent.length + componentName.length,
+  }
 }
 
 /**
@@ -277,95 +358,50 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
   }
 
   const doc = view.state.doc
-  const line = doc.line(lineNumber)
-  const lineText = line.text
+  const source = doc.toString()
 
-  const colonIndex = lineText.lastIndexOf('::')
-  if (colonIndex === -1) {
-    log.error('Could not find :: in line')
+  const files = callbacks.getFiles()
+  const { filename: comFilename, content: comContent } = getComponentsFile(files)
+
+  const action = computeExtraction({ source, lineNumber, componentName, comContent })
+  if (!action) {
+    log.error('computeExtraction returned null — could not find :: line')
     return
   }
 
-  const propertiesAfterColons = lineText.slice(colonIndex + 2)
-
-  // No properties after :: — just remove the :: and convert to instance.
-  if (!propertiesAfterColons.trim()) {
-    const doubleColonStart = line.from + colonIndex
-    const doubleColonEnd = line.from + colonIndex + 2
+  if (action.kind === 'strip-colon') {
+    // Just remove the second `:` from the line.
+    const line = doc.line(lineNumber)
+    const colonIndex = line.text.lastIndexOf('::')
+    if (colonIndex === -1) return
+    const start = line.from + colonIndex
     view.dispatch({
-      changes: { from: doubleColonStart, to: doubleColonEnd, insert: '' },
-      selection: { anchor: doubleColonStart },
+      changes: { from: start, to: start + 2, insert: '' },
+      selection: { anchor: start },
       annotations: Transaction.userEvent.of('input.extract'),
     })
     log.info(`Removed :: from ${componentName} (no properties to extract)`)
     return
   }
 
-  // Split into property + content segments.
-  const newSegments = parseSegments(propertiesAfterColons)
-  const newProps = newSegments.filter(s => s.kind === 'property')
-  const contentSegments = newSegments.filter(s => s.kind === 'content')
-
-  log.info(
-    `Parsed ${newProps.length} property segment(s) + ${contentSegments.length} content string(s)`
-  )
-
-  // Get files and find/create components file.
-  const files = callbacks.getFiles()
-  const { filename: comFilename, content: comContent } = getComponentsFile(files)
-
-  // Build new definition body via merge (or fresh) and update .com.
-  const existingBody = getExistingDefinitionBody(comContent, componentName)
-  let newComContent: string
-  if (existingBody !== null) {
-    const existingSegments = parseSegments(existingBody)
-    const mergedBody = mergeProperties(existingSegments, newProps)
-    newComContent = replaceDefinitionLine(comContent, componentName, mergedBody)
-    log.info(`Merged into existing ${componentName}: → ${mergedBody}`)
-  } else {
-    const freshBody = newProps.map(s => s.full).join(', ')
-    const newDefinition = `${componentName}: ${freshBody}`
-    newComContent = addToComponentsFile(comContent, newDefinition)
-    log.info(`Created new ${componentName}: ${freshBody}`)
-  }
-
-  // Build the instance line: indent + name + (content strings) + children.
-  const baseLine = doc.line(lineNumber)
-  const nameMatch = baseLine.text.match(new RegExp(`(\\s*)${componentName}::`))
-  const indent = nameMatch ? nameMatch[1] : ''
-
-  let instanceLine = indent + componentName
-  if (contentSegments.length > 0) {
-    instanceLine += ' ' + contentSegments.map(s => s.full).join(', ')
-  }
-
-  // Children stay below the instance, unchanged in their relative indent.
-  const baseIndentMatch = baseLine.text.match(/^(\s*)/)
-  const baseIndent = baseIndentMatch ? baseIndentMatch[1].length : 0
-  const { children, endLine: childEndLine } = collectChildren(view, lineNumber, baseIndent)
-
-  let replacement = instanceLine
-  if (children.length > 0) {
-    replacement += '\n' + children.map(c => indent + c).join('\n')
-  }
-
-  // Order matters: dispatch the editor change FIRST (while the editor
-  // still hosts the file the user typed `::` in), THEN updateFile. The
-  // `file:created` event from updateFile auto-selects the new
-  // components file; doing it the other way makes view.dispatch land
-  // on the wrong editor.
-  const endLineObj = doc.line(childEndLine)
+  const startLineObj = doc.line(action.startLine)
+  const endLineObj = doc.line(action.endLine)
   view.dispatch({
-    changes: { from: baseLine.from, to: endLineObj.to, insert: replacement },
-    selection: { anchor: baseLine.from + indent.length + componentName.length },
+    changes: {
+      from: startLineObj.from,
+      to: endLineObj.to,
+      insert: action.replacement,
+    },
+    selection: {
+      anchor: startLineObj.from + action.cursorOffsetInReplacement,
+    },
     annotations: Transaction.userEvent.of('input.extract'),
   })
 
   // Update components file AFTER the editor change has been applied.
-  callbacks.updateFile(comFilename, newComContent)
-  log.info(`Added ${componentName} to ${comFilename}`)
-
-  log.info(`Created component ${componentName}, kept ${children.length} children in editor`)
+  // The order matters: see comment in computeExtraction's call site.
+  callbacks.updateFile(comFilename, action.newComContent)
+  log.info(`Updated ${componentName} in ${comFilename}`)
 }
 
 /**
