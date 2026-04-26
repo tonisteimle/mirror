@@ -11,14 +11,19 @@
 export type { PropertyWriter, WriteVia, WriterContext } from './types'
 export { padWriter } from './pad'
 export { padTWriter } from './pad-t'
+export { padRWriter, padBWriter, padLWriter } from './pad-sides'
 
 import type { PropertyWriter } from './types'
 import { padWriter } from './pad'
 import { padTWriter } from './pad-t'
+import { padRWriter, padBWriter, padLWriter } from './pad-sides'
 
 export const PROPERTY_WRITERS: Record<string, PropertyWriter> = {
   pad: padWriter,
   'pad-t': padTWriter,
+  'pad-r': padRWriter,
+  'pad-b': padBWriter,
+  'pad-l': padLWriter,
 }
 
 export function getWriter(propertyName: string): PropertyWriter | null {
